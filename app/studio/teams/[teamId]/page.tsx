@@ -195,9 +195,9 @@ export default function TeamDetailPage() {
   if (!team) {
     return (
       <div className="p-6 text-center">
-        <h1 className="text-xl text-white mb-2">Team not found</h1>
+        <h1 className="text-xl text-white mb-2">Co-lab not found</h1>
         <a href="/studio/teams" className="text-amber-400 hover:underline">
-          Back to teams
+          Back to Co-labs
         </a>
       </div>
     );
@@ -213,7 +213,7 @@ export default function TeamDetailPage() {
         className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to teams
+        Back to Co-labs
       </a>
 
       {/* Header */}
@@ -243,7 +243,7 @@ export default function TeamDetailPage() {
             <button
               onClick={() => setShowSettingsModal(true)}
               className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title="Team settings"
+              title="Co-lab settings"
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -411,7 +411,7 @@ export default function TeamDetailPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-4 border-b border-slate-700">
-                <h2 className="text-lg font-medium text-white">Team Settings</h2>
+                <h2 className="text-lg font-medium text-white">Co-lab Settings</h2>
                 <button
                   onClick={() => setShowSettingsModal(false)}
                   className="p-1 text-slate-400 hover:text-white transition-colors"
@@ -421,7 +421,7 @@ export default function TeamDetailPage() {
               </div>
               <div className="p-4 space-y-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Team Name</label>
+                  <label className="block text-sm text-slate-400 mb-1">Co-lab Name</label>
                   <input
                     type="text"
                     value={editName}
@@ -444,7 +444,7 @@ export default function TeamDetailPage() {
                     className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Delete team
+                    Delete Co-lab
                   </button>
                 </div>
               </div>
@@ -486,9 +486,9 @@ export default function TeamDetailPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4">
-                <h2 className="text-lg font-medium text-white mb-2">Delete Team?</h2>
+                <h2 className="text-lg font-medium text-white mb-2">Delete Co-lab?</h2>
                 <p className="text-slate-400 text-sm">
-                  This will permanently delete the team and all shared items. This cannot be undone.
+                  This will permanently delete the Co-lab and all shared items. This cannot be undone.
                 </p>
               </div>
               <div className="flex gap-3 p-4 border-t border-slate-700">
@@ -503,7 +503,7 @@ export default function TeamDetailPage() {
                   disabled={deleting}
                   className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
                 >
-                  {deleting ? 'Deleting...' : 'Delete Team'}
+                  {deleting ? 'Deleting...' : 'Delete Co-lab'}
                 </button>
               </div>
             </motion.div>

@@ -155,7 +155,7 @@ export function TeamSwitcher({ collapsed = false }: TeamSwitcherProps) {
 
               {/* Teams */}
               {loading ? (
-                <div className="px-2 py-1.5 text-sm text-slate-500">Loading teams...</div>
+                <div className="px-2 py-1.5 text-sm text-slate-500">Loading Co-labs...</div>
               ) : (
                 teams.map((team) => (
                   <button
@@ -199,7 +199,7 @@ export function TeamSwitcher({ collapsed = false }: TeamSwitcherProps) {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-slate-400 hover:bg-slate-800/50 hover:text-slate-300 transition-colors"
               >
                 <Settings className="w-4 h-4" />
-                <span>Manage teams</span>
+                <span>Manage Co-labs</span>
               </Link>
               <Link
                 href="/studio/teams?create=true"
@@ -207,7 +207,7 @@ export function TeamSwitcher({ collapsed = false }: TeamSwitcherProps) {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-slate-400 hover:bg-slate-800/50 hover:text-slate-300 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span>Create team</span>
+                <span>Create Co-lab</span>
               </Link>
             </div>
           </motion.div>

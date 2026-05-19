@@ -181,7 +181,7 @@ export function ChannelVisibilityToggle({
               <ul className="space-y-2 text-xs text-white/55 mb-4">
                 <li className="flex gap-2">
                   <span className="text-amber-400/70 flex-shrink-0">•</span>
-                  <span>The channel becomes visible to everyone on the team</span>
+                  <span>The channel becomes visible to everyone in the Co-lab</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-amber-400/70 flex-shrink-0">•</span>

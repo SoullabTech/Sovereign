@@ -197,7 +197,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-[#16162a] border border-white/12 rounded-xl shadow-2xl w-80 p-5" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-white/90">Invite teammate</h3>
+          <h3 className="text-sm font-semibold text-white/90">Invite to Co-lab</h3>
           <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -407,7 +407,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
               <button
                 onClick={() => setShowInvite(true)}
                 className="text-white/25 hover:text-white/60 transition-colors text-xs"
-                title="Invite teammate"
+                title="Invite to Co-lab"
               >
                 + Invite
               </button>

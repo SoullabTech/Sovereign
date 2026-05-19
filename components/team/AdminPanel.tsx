@@ -254,8 +254,8 @@ export function AdminPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 flex-shrink-0">
         <div>
-          <h1 className="text-base font-semibold text-white/90">Team Admin</h1>
-          <p className="text-xs text-white/35 mt-0.5">Manage channels, members, and workspace settings</p>
+          <h1 className="text-base font-semibold text-white/90">Co-lab Admin</h1>
+          <p className="text-xs text-white/35 mt-0.5">Manage channels, collaborators, and Co-lab settings</p>
         </div>
         <button
           onClick={() => router.push('/team')}

@@ -321,11 +321,11 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   // ── Collaboration ──
   {
     slug: 'teams',
-    label: 'Teams',
+    label: 'Co-lab',
     icon: Users,
     href: '/team',
     category: 'collaboration',
-    description: 'Team collaboration and delegation',
+    description: 'Co-lab collaboration and delegation',
     alwaysOn: false,
     mode: 'practice',
   },

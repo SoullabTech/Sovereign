@@ -85,7 +85,7 @@ export function InviteAcceptClient({
             </svg>
           </div>
           <h1 className="text-xl font-semibold text-white/90">Welcome to Soullab</h1>
-          <p className="text-white/40 text-sm">Taking you to the team workspace...</p>
+          <p className="text-white/40 text-sm">Taking you to the Co-lab...</p>
         </div>
       </div>
     );
@@ -103,7 +103,7 @@ export function InviteAcceptClient({
           <div className="text-center space-y-2">
             <h1 className="text-xl font-semibold text-white/90">You've been invited</h1>
             <p className="text-white/50 text-sm">
-              <span className="text-amber-400/80">{inviterName}</span> has invited you to join the Soullab team workspace.
+              <span className="text-amber-400/80">{inviterName}</span> has invited you to join a Soullab Co-lab.
             </p>
           </div>
 

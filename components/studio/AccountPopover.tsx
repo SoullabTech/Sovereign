@@ -46,7 +46,7 @@ export function AccountPopover({ collapsed = false, studioMode }: AccountPopover
   const { teams, loading: teamsLoading } = useTeams();
   const currentTeam = currentTeamId ? teams.find(t => t.id === currentTeamId) : null;
   const workspaceName = currentTeamId
-    ? (currentTeam?.name || (teamsLoading ? 'Team\u2026' : 'Team'))
+    ? (currentTeam?.name || (teamsLoading ? 'Co-lab\u2026' : 'Co-lab'))
     : 'Personal';
 
   // Fetch member data
