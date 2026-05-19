@@ -1,3 +1,9 @@
+
+
+
+
+
+
 import { notFound } from 'next/navigation';
 import { getFieldBySlug } from '@/lib/masters/registry';
 import NathanPartnerPage from '@/components/masters/NathanPartnerPage';

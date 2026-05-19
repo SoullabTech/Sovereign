@@ -8,9 +8,10 @@
  * Never fully disappears — always reassuringly present.
  */
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Bookmark, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen, Compass } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bookmark, ChevronDown, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { MAIA_WORLDS, MAIA_UTILITIES, getBoundaryFromPathname, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
@@ -53,6 +54,18 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const { presenceState, amplitude } = useVoiceState();
   const { isAdmin, isPractitioner } = useSession();
 
+  const [railExpanded, setRailExpanded] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('maia_rail_expanded') === 'true') {
+      setRailExpanded(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('maia_rail_expanded', String(railExpanded));
+    }
+  }, [railExpanded]);
+
   // Founder/practitioner can see operational rooms (Pro Studio, Book Studio, Circles, Lab Tools).
   // Conflated for v1 per Move 1 spec — no separate founder role yet on the client.
   const isFounder = isAdmin || isPractitioner;
@@ -81,6 +94,88 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const isResponding = presenceState === 'responding';
   const glowIntensity = isResponding ? 0.2 + amplitude * 0.3 : 0;
 
+  const ideasIndex = MAIA_WORLDS.findIndex((w) => w.id === 'ideas');
+  const worldsBeforeIdeas = ideasIndex >= 0 ? MAIA_WORLDS.slice(0, ideasIndex) : MAIA_WORLDS;
+  const worldsFromIdeas = ideasIndex >= 0 ? MAIA_WORLDS.slice(ideasIndex) : [];
+
+  const renderWorldButton = (world: (typeof MAIA_WORLDS)[number]) => {
+    const Icon = world.icon;
+    const isActive = activeWorld === world.id;
+    const hasHint = !isActive && worldHints?.[world.id];
+
+    return (
+      <button
+        key={world.id}
+        onClick={() => handleItemClick(world.id, world.route)}
+        className={`
+          group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+          ${isActive
+            ? 'bg-[#D4B896]/15 text-[#D4B896]'
+            : hasHint
+              ? 'text-[#D4B896]/60 animate-[rail-breath_2s_ease-in-out_1]'
+              : 'text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5'
+          }
+        `}
+        style={isActive && glowIntensity > 0 ? {
+          boxShadow: `0 0 ${8 + amplitude * 8}px rgba(212, 184, 150, ${glowIntensity})`,
+          transition: 'box-shadow 0.3s ease-out',
+        } : undefined}
+        title={world.tooltip || world.label}
+      >
+        <Icon className="w-5 h-5" />
+        {isActive && (
+          <motion.div
+            layoutId="rail-active"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#D4B896] rounded-r-full"
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          />
+        )}
+        <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+          {world.label}
+        </span>
+      </button>
+    );
+  };
+
+  const renderBoundaryButton = (boundary: (typeof visibleBoundaries)[number]) => {
+    const Icon = boundary.icon;
+    const isActive = resolvedBoundary === boundary.id;
+    const accent = {
+      studio:              { text: 'text-blue-400',    hover: 'hover:text-blue-400/70 hover:bg-blue-400/5',     tooltip: 'text-blue-300/90 border-blue-500/30',     activeBg: 'bg-blue-400/15' },
+      circles:             { text: 'text-amber-400',   hover: 'hover:text-amber-400/70 hover:bg-amber-400/5',   tooltip: 'text-amber-300/90 border-amber-500/30',   activeBg: 'bg-amber-400/15' },
+      astrology:           { text: 'text-violet-400',  hover: 'hover:text-violet-400/70 hover:bg-violet-400/5', tooltip: 'text-violet-300/90 border-violet-500/30', activeBg: 'bg-violet-400/15' },
+      labtools:            { text: 'text-orange-300',  hover: 'hover:text-orange-300/70 hover:bg-orange-400/5', tooltip: 'text-orange-300/90 border-orange-500/30', activeBg: 'bg-orange-400/15' },
+      'community-library': { text: 'text-purple-400',  hover: 'hover:text-purple-400/70 hover:bg-purple-400/5', tooltip: 'text-purple-300/90 border-purple-500/30', activeBg: 'bg-purple-400/15' },
+    }[boundary.id as string] ?? { text: 'text-stone-400', hover: 'hover:text-stone-400/70 hover:bg-stone-400/5', tooltip: 'text-stone-300/90 border-stone-500/30', activeBg: 'bg-stone-400/15' };
+
+    return (
+      <button
+        key={boundary.id}
+        onClick={() => handleItemClick(boundary.id, boundary.route)}
+        className={`
+          group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+          ${isActive
+            ? `${accent.activeBg} ${accent.text}`
+            : `text-stone-500 ${accent.hover}`
+          }
+        `}
+        title={boundary.tooltip || boundary.label}
+      >
+        <Icon className="w-5 h-5" />
+        {isActive && (
+          <motion.div
+            layoutId="rail-boundary-active"
+            className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full ${accent.text.replace('text-', 'bg-')}`}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          />
+        )}
+        <span className={`absolute left-full ml-2 px-2 py-1 text-xs bg-[#1a1510]/95 border rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90] ${accent.tooltip}`}>
+          {boundary.label}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <nav
       className={`
@@ -92,71 +187,6 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
       `}
       style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)' }}
     >
-      {/* ─── GROUP 1: MODE (how I am entering) ─── */}
-      <div className="flex flex-col items-center gap-0.5 pt-2 pb-1.5">
-        {(Object.entries(MODE_CONFIG) as [MaiaMode, typeof MODE_CONFIG[MaiaMode]][]).map(([mode, config]) => {
-          const Icon = config.icon;
-          const isActive = activeMode === mode;
-          return (
-            <button
-              key={mode}
-              onClick={() => onModeChange?.(mode)}
-              className={`
-                group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg transition-all duration-200 gap-0.5
-                ${isActive
-                  ? `${config.activeBg} ${config.activeColor} border ${config.activeBorder}`
-                  : 'text-stone-500 hover:text-stone-400 hover:bg-white/5 border border-transparent'
-                }
-              `}
-            >
-              <Icon className="w-4 h-4" />
-              <span className={`text-[9px] leading-none ${isActive ? config.activeColor : 'text-stone-600'}`}>
-                {config.label}
-              </span>
-              {/* Active indicator */}
-              {isActive && (
-                <motion.div
-                  layoutId="rail-mode-active"
-                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full ${config.activeColor.replace('text-', 'bg-')}`}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              )}
-            </button>
-          );
-        })}
-
-        {/* Guide — orientation / process destination (routes to /maia/guide) */}
-        {(() => {
-          const isActive = pathname === '/maia/guide';
-          return (
-            <button
-              key="guide"
-              onClick={() => router.push('/maia/guide')}
-              className={`
-                group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg transition-all duration-200 gap-0.5
-                ${isActive
-                  ? 'bg-[#C8A060]/25 text-[#C8A060] border border-[#C8A060]/70'
-                  : 'text-stone-500 hover:text-stone-400 hover:bg-white/5 border border-transparent'
-                }
-              `}
-              title="Guide — orient this process"
-            >
-              <Compass className="w-4 h-4" />
-              <span className={`text-[9px] leading-none ${isActive ? 'text-[#C8A060]' : 'text-stone-600'}`}>
-                Guide
-              </span>
-              {isActive && (
-                <motion.div
-                  layoutId="rail-guide-active"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-[#C8A060]"
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              )}
-            </button>
-          );
-        })()}
-      </div>
-
       {/* ─── ASK MAIA: orientation + Knowledge Field stance (thinking surfaces) ─── */}
       {onAskModeChange && (
         <div className="flex flex-col items-center py-0.5">
@@ -210,119 +240,58 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
       {/* ─── divider: input / navigation ─── */}
       <div className="w-6 h-px bg-[#3a2a1f]/40 my-1" />
 
-      {/* ─── GROUP 3: NAVIGATION (worlds + capture threshold + boundaries) ─── */}
+      {/* ─── GROUP 3: NAVIGATION (worlds + capture threshold + collapsible ecosystem) ─── */}
       <div className="flex-1 flex flex-col items-center gap-1">
-        {MAIA_WORLDS.flatMap((world) => {
-          const Icon = world.icon;
-          const isActive = activeWorld === world.id;
-          const hasHint = !isActive && worldHints?.[world.id];
+        {worldsBeforeIdeas.map(renderWorldButton)}
 
-          const worldButton = (
-            <button
-              key={world.id}
-              onClick={() => handleItemClick(world.id, world.route)}
-              className={`
-                group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
-                ${isActive
-                  ? 'bg-[#D4B896]/15 text-[#D4B896]'
-                  : hasHint
-                    ? 'text-[#D4B896]/60 animate-[rail-breath_2s_ease-in-out_1]'
-                    : 'text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5'
-                }
-              `}
-              style={isActive && glowIntensity > 0 ? {
-                boxShadow: `0 0 ${8 + amplitude * 8}px rgba(212, 184, 150, ${glowIntensity})`,
-                transition: 'box-shadow 0.3s ease-out',
-              } : undefined}
-              title={world.tooltip || world.label}
+        {/* Keep — pre-interpretive intake threshold, always visible */}
+        <button
+          key="capture"
+          onClick={() => onCaptureSpirit?.()}
+          className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all duration-200"
+          title="Keep this moment"
+        >
+          <Bookmark className="w-5 h-5" />
+          <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+            Keep
+          </span>
+        </button>
+
+        {/* Chevron — quiet doorway to the rest of the ecosystem */}
+        <button
+          key="rail-chevron"
+          onClick={() => setRailExpanded((v) => !v)}
+          className="group relative w-10 h-6 flex items-center justify-center rounded-md text-stone-600 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all duration-200"
+          title={railExpanded ? 'Hide' : 'Show more'}
+          aria-label={railExpanded ? 'Collapse rail' : 'Expand rail'}
+          aria-expanded={railExpanded}
+        >
+          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${railExpanded ? 'rotate-180' : ''}`} />
+          <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+            {railExpanded ? 'Hide' : 'Show more'}
+          </span>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {railExpanded && (
+            <motion.div
+              key="rail-collapsible"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+              className="w-full flex flex-col items-center gap-1 overflow-hidden"
             >
-              <Icon className="w-5 h-5" />
+              {worldsFromIdeas.map(renderWorldButton)}
 
-              {/* Active indicator dot */}
-              {isActive && (
-                <motion.div
-                  layoutId="rail-active"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#D4B896] rounded-r-full"
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              )}
+              {/* Divider before boundaries */}
+              <div className="w-6 h-px bg-[#3a2a1f]/40 my-2" />
 
-              {/* Tooltip */}
-              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
-                {world.label}
-              </span>
-            </button>
-          );
-
-          // Capture sits as a pre-interpretive intake threshold, just above Ideas.
-          // Raw intake precedes formed exploration: jot, save, hold → then work.
-          if (world.id === 'ideas') {
-            return [
-              <button
-                key="capture"
-                onClick={() => onCaptureSpirit?.()}
-                className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all duration-200"
-                title="Capture the Spirit"
-              >
-                <Bookmark className="w-5 h-5" />
-                <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
-                  Capture
-                </span>
-              </button>,
-              worldButton,
-            ];
-          }
-
-          return [worldButton];
-        })}
-
-        {/* Divider before boundaries */}
-        <div className="w-6 h-px bg-[#3a2a1f]/40 my-2" />
-
-        {/* Boundary transitions — config-driven, filtered by audience */}
-        {visibleBoundaries.map((boundary) => {
-          const Icon = boundary.icon;
-          const isActive = resolvedBoundary === boundary.id;
-          // Per-boundary accent colors
-          const accent = {
-            studio:              { text: 'text-blue-400',    hover: 'hover:text-blue-400/70 hover:bg-blue-400/5',     tooltip: 'text-blue-300/90 border-blue-500/30',     activeBg: 'bg-blue-400/15' },
-            circles:             { text: 'text-amber-400',   hover: 'hover:text-amber-400/70 hover:bg-amber-400/5',   tooltip: 'text-amber-300/90 border-amber-500/30',   activeBg: 'bg-amber-400/15' },
-            astrology:           { text: 'text-violet-400',  hover: 'hover:text-violet-400/70 hover:bg-violet-400/5', tooltip: 'text-violet-300/90 border-violet-500/30', activeBg: 'bg-violet-400/15' },
-            labtools:            { text: 'text-orange-300',  hover: 'hover:text-orange-300/70 hover:bg-orange-400/5', tooltip: 'text-orange-300/90 border-orange-500/30', activeBg: 'bg-orange-400/15' },
-            'community-library': { text: 'text-purple-400',  hover: 'hover:text-purple-400/70 hover:bg-purple-400/5', tooltip: 'text-purple-300/90 border-purple-500/30', activeBg: 'bg-purple-400/15' },
-          }[boundary.id as string] ?? { text: 'text-stone-400', hover: 'hover:text-stone-400/70 hover:bg-stone-400/5', tooltip: 'text-stone-300/90 border-stone-500/30', activeBg: 'bg-stone-400/15' };
-
-          return (
-            <button
-              key={boundary.id}
-              onClick={() => handleItemClick(boundary.id, boundary.route)}
-              className={`
-                group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
-                ${isActive
-                  ? `${accent.activeBg} ${accent.text}`
-                  : `text-stone-500 ${accent.hover}`
-                }
-              `}
-              title={boundary.tooltip || boundary.label}
-            >
-              <Icon className="w-5 h-5" />
-
-              {/* Active indicator dot */}
-              {isActive && (
-                <motion.div
-                  layoutId="rail-boundary-active"
-                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full ${accent.text.replace('text-', 'bg-')}`}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              )}
-
-              {/* Tooltip */}
-              <span className={`absolute left-full ml-2 px-2 py-1 text-xs bg-[#1a1510]/95 border rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90] ${accent.tooltip}`}>
-                {boundary.label}
-              </span>
-            </button>
-          );
-        })}
+              {/* Boundary transitions — config-driven, filtered by audience */}
+              {visibleBoundaries.map(renderBoundaryButton)}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
 

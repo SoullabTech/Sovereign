@@ -9,31 +9,31 @@ PODS:
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
-  - Capacitor (8.2.0):
+  - Capacitor (8.0.2):
     - CapacitorCordova
-  - CapacitorApp (8.0.1):
+  - CapacitorApp (8.0.0):
     - Capacitor
-  - CapacitorClipboard (8.0.1):
+  - CapacitorClipboard (8.0.0):
     - Capacitor
   - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
-  - CapacitorCommunityBluetoothLe (8.1.2):
+  - CapacitorCommunityBluetoothLe (8.0.2):
     - Capacitor
   - CapacitorCommunitySpeechRecognition (7.0.1):
     - Capacitor
-  - CapacitorCordova (8.2.0)
-  - CapacitorFilesystem (8.1.2):
+  - CapacitorCordova (8.0.2)
+  - CapacitorFilesystem (8.1.0):
     - Capacitor
-    - IONFilesystemLib (~> 1.1.1)
-  - CapacitorHaptics (8.0.1):
+    - IONFilesystemLib (~> 1.1.0)
+  - CapacitorHaptics (8.0.0):
     - Capacitor
-  - CapacitorLocalNotifications (8.0.2):
+  - CapacitorLocalNotifications (8.0.0):
     - Capacitor
-  - CapacitorShare (8.0.1):
+  - CapacitorShare (8.0.0):
     - Capacitor
-  - CapacitorSplashScreen (8.0.1):
+  - CapacitorSplashScreen (8.0.0):
     - Capacitor
-  - CapacitorStatusBar (8.0.1):
+  - CapacitorStatusBar (8.0.0):
     - Capacitor
   - CapacitorVoiceRecorder (7.0.6):
     - Capacitor
@@ -124,19 +124,19 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
-  Capacitor: 49a454e1cdbd520bc106a220adca7913536a4933
-  CapacitorApp: 942306cd1acf7774a00e89a3986af3a67c8cad7a
-  CapacitorClipboard: c75fdaa6e622111119f35e7914ecfc67b05efecb
+  Capacitor: 2b79172ad27f3be2d103cce88b8eb9803fdcc744
+  CapacitorApp: 3963a84197280757b84f126afd1520a85ae3b092
+  CapacitorClipboard: 61832a3722adc61afed6e0191c8a0e11ba11674d
   CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
-  CapacitorCommunityBluetoothLe: b4ae50a19987beb9e40905e5bc2a01618c00ee57
+  CapacitorCommunityBluetoothLe: d2f5d34fbce20984511303efe9cebd406f8d91fa
   CapacitorCommunitySpeechRecognition: 3e03566c44c2bb3b52391a33d4518b1adbdeb38f
-  CapacitorCordova: a9ac88d84a1f5280f33b349fe50fce1902683ac0
-  CapacitorFilesystem: 2db285a1ac6e475cc27cae2e1bea999000f9e2be
-  CapacitorHaptics: 4df2c625445cef39b67ea635a21802bc92df3b82
-  CapacitorLocalNotifications: 4db83a7f6bdd2f30dcedf5c6f92c415065467a24
-  CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
-  CapacitorSplashScreen: 4b46c72298db552b3c57ce021ef028b6dc7f1fa7
-  CapacitorStatusBar: 32206abd53b14f339763da26f71286deaa891e16
+  CapacitorCordova: 921bdb690ebe82421b24fce45552fd3dea2ae43a
+  CapacitorFilesystem: a957d4a4b6860844c4eba5bf441607a5166f92a7
+  CapacitorHaptics: 2079d9fa04c5a71e18663b4722323c304c58245c
+  CapacitorLocalNotifications: 177cfbf8228d9bd82a147e094cb7984d7afb9e29
+  CapacitorShare: 12f1d192170cbcf9f108fd675ac8e343761a4638
+  CapacitorSplashScreen: 422880d7117605c30699eb4b21644b62db42e86c
+  CapacitorStatusBar: 312e2e67928dfe9514c4a8916a1fd610552f5f35
   CapacitorVoiceRecorder: 9158861be982f32d411769723a4d813d6ce46135
   GoogleSignIn: fcee2257188d5eda57a5e2b6a715550ffff9206d
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1

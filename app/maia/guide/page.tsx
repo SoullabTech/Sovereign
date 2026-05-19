@@ -284,7 +284,7 @@ const GUIDE_SECTIONS = {
   maia: {
     title: 'The MAIA Interface',
     icon: MessageSquare,
-    description: 'Modes, voice, sessions, capture',
+    description: 'Modes, voice, sessions, keep',
     subsections: [
       {
         id: 'modes',
@@ -313,8 +313,8 @@ Session synthesis available for review.`
       },
       {
         id: 'capture',
-        title: 'Capture & Reflections',
-        content: `Click Capture (sparkle icon) to distill conversation essence.
+        title: 'Keep & Reflections',
+        content: `Click Keep (sparkle icon) to distill conversation essence.
 Creates Reflection Capsule: Summary, Gold Lines, Decisions, Patterns.
 Stored in LabTools → Reflections.`
       }

@@ -1022,7 +1022,7 @@ function MAIAPageContent() {
                     )}
                   </motion.button>
 
-                  {/* ✨ Capture Button - Mobile (after Scribe, before Session) */}
+                  {/* ✨ Keep Button - Mobile (after Scribe, before Session) */}
                   <motion.button
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent('labAction', {
@@ -1033,10 +1033,10 @@ function MAIAPageContent() {
                              bg-[#D4B896]/10 hover:bg-[#D4B896]/20
                              border border-[#D4B896]/30 hover:border-[#D4B896]/50
                              text-[#D4B896] text-xs font-light transition-all flex-shrink-0"
-                    title="Capture the spirit of the last few turns"
+                    title="Keep this moment from the last few turns"
                   >
                     <Sparkles className="w-3 h-3" />
-                    <span className="text-xs">Capture</span>
+                    <span className="text-xs">Keep</span>
                   </motion.button>
 
                   {/* Session Button - Inside mode selector, after Capture */}
@@ -1090,19 +1090,6 @@ function MAIAPageContent() {
                 >
                   <BookOpen className="w-3 h-3" />
                   <span className="text-xs">Journal</span>
-                </motion.button>
-
-                {/* Guide Button - Mobile */}
-                <motion.button
-                  onClick={() => router.push('/maia/guide')}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
-                  title="User Guide"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span className="text-xs">Guide</span>
                 </motion.button>
 
                 {/* Changes Button - Mobile */}
@@ -1305,7 +1292,7 @@ function MAIAPageContent() {
                     </motion.button>
                   </FeatureTooltip>
 
-                  {/* Capture Button - Desktop (after Scribe, before Session) */}
+                  {/* Keep Button - Desktop (after Scribe, before Session) */}
                   <FeatureTooltip featureId="capture" side="bottom">
                     <motion.button
                       onClick={() => {
@@ -1319,10 +1306,10 @@ function MAIAPageContent() {
                                text-[#D4B896] text-xs font-light transition-all"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      title="Capture the spirit of the last few turns"
+                      title="Keep this moment from the last few turns"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      Capture
+                      Keep
                     </motion.button>
                   </FeatureTooltip>
 
@@ -1353,23 +1340,6 @@ function MAIAPageContent() {
                   )
                 }
                 </div>
-
-                {/* Guide Button - Desktop */}
-                <FeatureTooltip featureId="guide" side="bottom">
-                  <motion.button
-                    onClick={() => router.push('/maia/guide')}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-maia-navy-800/40 hover:bg-maia-navy-800
-                             border border-maia-navy-700/40 hover:border-maia-navy-700
-                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="User Guide"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span className="hidden sm:inline">Guide</span>
-                  </motion.button>
-                </FeatureTooltip>
 
                 {/* Help Hub Button - Desktop */}
                 <FeatureTooltip featureId="help" side="bottom">

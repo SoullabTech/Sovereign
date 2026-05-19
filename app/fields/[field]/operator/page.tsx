@@ -1,3 +1,9 @@
+
+
+
+
+
+
 import { notFound } from 'next/navigation';
 import { getFieldBySlug } from '@/lib/masters/registry';
 import NathanOperator from '@/components/masters/NathanOperator';

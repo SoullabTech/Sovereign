@@ -555,20 +555,33 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   askMode: askModeProp,
   onAskModeChange: onAskModeChangeProp,
 }) => {
-  // 🔖 BUILD STAMP - visible proof of which code is running
+  // Build telemetry — observability without ambient claim.
+  // Console log always runs (inspectable). Visible strip only on explicit opt-in:
+  //   ?debug=build (or ?debug=1) | localStorage.maia_debug_build='1' | window.__maiaShowBuildStamp()
   useEffect(() => {
     console.log('🔖 MAIA BUILD STAMP: 2026-01-31_pwa_voice_v3');
     console.log('🎙️ PWA Voice State Machine: ENABLED');
     console.log('🔍 isSafariPWA():', isSafariPWA());
-    // TEMPORARY: Show alert to prove new code is running
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+
+    const renderStamp = () => {
+      if (document.getElementById('build-stamp-v3')) return;
       const stamp = document.createElement('div');
       stamp.id = 'build-stamp-v3';
       stamp.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#10b981;color:white;padding:4px;text-align:center;font-size:12px;z-index:99999;font-family:monospace;';
       stamp.textContent = `BUILD v3 | PWA: ${isSafariPWA()} | ${new Date().toLocaleTimeString()}`;
       document.body.appendChild(stamp);
-      setTimeout(() => stamp.remove(), 10000); // Remove after 10 seconds
-    }
+      setTimeout(() => stamp.remove(), 10000);
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const optedIn =
+      params.get('debug') === 'build' ||
+      params.get('debug') === '1' ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('maia_debug_build') === '1');
+
+    if (optedIn) renderStamp();
+    (window as any).__maiaShowBuildStamp = renderStamp;
   }, []);
 
   // Circle sharing
@@ -7891,8 +7904,11 @@ I'm not sure what I'm feeling yet.`;
         {!isResponding && !isAudioPlaying && !isProcessing && (
           <div className="pointer-events-none text-center w-full" style={{ marginTop: 8 }}>
             <span
-              className="text-amber-300/60 text-xs tracking-widest uppercase"
-              style={{ letterSpacing: '0.15em' }}
+              className="text-amber-200/85 text-xs font-medium tracking-widest uppercase"
+              style={{
+                letterSpacing: '0.16em',
+                textShadow: '0 0 12px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35)',
+              }}
             >
               {isListening ? 'Listening' : 'Tap to Speak'}
             </span>

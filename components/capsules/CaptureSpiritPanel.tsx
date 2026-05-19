@@ -118,7 +118,7 @@ export default function CaptureSpiritPanel({
                   <div className="w-8 h-8 bg-[#D4B896]/10 rounded-lg flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-[#D4B896]" />
                   </div>
-                  <h2 className="text-lg font-medium text-[#D4B896]">Capture the Spirit</h2>
+                  <h2 className="text-lg font-medium text-[#D4B896]">Keep this moment</h2>
                 </div>
                 <button
                   onClick={onClose}

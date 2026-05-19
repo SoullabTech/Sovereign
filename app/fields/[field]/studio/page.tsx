@@ -1,3 +1,9 @@
+
+
+
+
+
+
 import { notFound } from 'next/navigation';
 import { getFieldBySlug } from '@/lib/masters/registry';
 import NathanStudio from '@/components/masters/NathanStudio';

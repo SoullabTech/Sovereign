@@ -111,7 +111,7 @@ export const FEATURE_TOOLTIPS: Record<string, FeatureTooltipContent> = {
 
   // ── Action Buttons ────────────────────────────────────
   'capture': {
-    label: 'Capture',
+    label: 'Keep',
     description: 'Save the essence of what just happened.',
     howToUse: 'Tap after a meaningful moment. MAIA distills the key threads.',
     gesture: 'Tap',
@@ -140,12 +140,6 @@ export const FEATURE_TOOLTIPS: Record<string, FeatureTooltipContent> = {
     label: 'Journal',
     description: 'Write something down. Dreams, reflections, raw thoughts.',
     howToUse: 'Tap to open. Write freely. Optionally share with MAIA.',
-    gesture: 'Tap',
-  },
-  'guide': {
-    label: 'Guide',
-    description: 'Full walkthrough of everything you can do here.',
-    howToUse: 'Tap to open.',
     gesture: 'Tap',
   },
   'shadow-work': {
