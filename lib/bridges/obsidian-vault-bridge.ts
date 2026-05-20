@@ -684,36 +684,153 @@ export class ObsidianVaultBridge {
   }
 
   /**
-   * Get wisdom for specific element
+   * Get wisdom for specific element.
+   *
+   * Two-path retrieval:
+   *
+   *   1. Structured path — looks for notes with frontmatter
+   *      `type: concept|practice|framework` and `elements: [<element>]`.
+   *      This is the bridge's original design contract.
+   *
+   *   2. Keyword fallback — engaged only when ALL THREE structured
+   *      categories return empty (which is the actual state of the AIN
+   *      vault, whose notes are prose, not frontmatter-tagged). Runs a
+   *      broad keyword search and partitions hits by title pattern.
+   *      Strictly read-only against the vault; bounded result count;
+   *      logged so callers can tell which path produced the wisdom.
+   *
+   * Return shape adds `source: 'structured' | 'keyword-fallback'` so
+   * consumers can distinguish provenance.
    */
   async getElementalWisdom(element: string): Promise<any> {
+    // ── Structured path (frontmatter-based) ───────────────────────────────
     const concepts = await this.getConcepts(element);
     const practices = await this.getPractices(element);
     const frameworks = await this.getFrameworks();
-
-    // Find frameworks that include this element
     const relevantFrameworks = frameworks.filter(f =>
       f.frontmatter.elements?.includes(element)
     );
 
+    const structuredEmpty =
+      concepts.length === 0 &&
+      practices.length === 0 &&
+      relevantFrameworks.length === 0;
+
+    if (!structuredEmpty) {
+      return {
+        element,
+        source: 'structured',
+        concepts: concepts.map(c => ({
+          title: c.title,
+          definition: this.extractDefinition(c.content),
+          connections: c.backlinks,
+        })),
+        practices: practices.map(p => ({
+          title: p.title,
+          purpose: this.extractPurpose(p.content),
+          duration: p.frontmatter.duration,
+          difficulty: p.frontmatter.difficulty,
+        })),
+        frameworks: relevantFrameworks.map(f => ({
+          name: f.title,
+          elementMapping: this.extractElementMapping(f.content, element),
+        })),
+      };
+    }
+
+    // ── Keyword fallback (when structured returns empty) ──────────────────
+    console.log(
+      `[ObsidianVaultBridge] getElementalWisdom("${element}"): structured retrieval empty — running keyword fallback`
+    );
+
+    const queryContext = [
+      element,
+      'Spiralogic',
+      'alchemy',
+      'consciousness',
+      'practice',
+      'integration',
+    ].join(' ');
+
+    const results = await this.keywordSearch(queryContext, 15);
+
+    // Lightweight title-pattern heuristic — honest about being approximate.
+    // We're not claiming the vault has structured types; we're partitioning
+    // keyword hits so the consuming prompt block can render them in the
+    // existing concepts/practices/frameworks shape without losing fidelity.
+    const practiceTerms  = /practice|ritual|meditation|exercise|attune|breathwork/i;
+    const frameworkTerms = /framework|system|model|architecture|protocol|engine|paradigm/i;
+
+    const fallbackConcepts:   NoteContent[] = [];
+    const fallbackPractices:  NoteContent[] = [];
+    const fallbackFrameworks: NoteContent[] = [];
+
+    results.forEach(note => {
+      if (practiceTerms.test(note.title)) {
+        fallbackPractices.push(note);
+      } else if (frameworkTerms.test(note.title)) {
+        fallbackFrameworks.push(note);
+      } else {
+        fallbackConcepts.push(note);
+      }
+    });
+
+    const boundedConcepts   = fallbackConcepts.slice(0, 5);
+    const boundedPractices  = fallbackPractices.slice(0, 5);
+    const boundedFrameworks = fallbackFrameworks.slice(0, 5);
+
+    console.log(
+      `[ObsidianVaultBridge] keyword fallback yielded: ` +
+        `concepts=${boundedConcepts.length} ` +
+        `practices=${boundedPractices.length} ` +
+        `frameworks=${boundedFrameworks.length}`
+    );
+
     return {
       element,
-      concepts: concepts.map(c => ({
+      source: 'keyword-fallback',
+      concepts: boundedConcepts.map(c => ({
         title: c.title,
-        definition: this.extractDefinition(c.content),
-        connections: c.backlinks
+        definition:
+          this.extractDefinition(c.content) ||
+          this.extractFirstParagraph(c.content),
+        connections: c.backlinks,
       })),
-      practices: practices.map(p => ({
+      practices: boundedPractices.map(p => ({
         title: p.title,
-        purpose: this.extractPurpose(p.content),
+        purpose:
+          this.extractPurpose(p.content) ||
+          this.extractFirstParagraph(p.content),
         duration: p.frontmatter.duration,
-        difficulty: p.frontmatter.difficulty
+        difficulty: p.frontmatter.difficulty,
       })),
-      frameworks: relevantFrameworks.map(f => ({
+      frameworks: boundedFrameworks.map(f => ({
         name: f.title,
-        elementMapping: this.extractElementMapping(f.content, element)
-      }))
+        elementMapping:
+          this.extractElementMapping(f.content, element) ||
+          this.extractFirstParagraph(f.content).slice(0, 200),
+      })),
     };
+  }
+
+  /**
+   * Extract first prose paragraph from a note. Used by the keyword
+   * fallback in getElementalWisdom when notes lack the structured
+   * "## Definition" / "## Purpose" headers the bridge originally
+   * expected.
+   */
+  private extractFirstParagraph(content: string): string {
+    let cleaned = content;
+    // Strip frontmatter block
+    cleaned = cleaned.replace(/^---\n[\s\S]*?\n---\n/, '');
+    // Strip code blocks
+    cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+    // Strip first H1 line
+    cleaned = cleaned.replace(/^#\s+.+$/m, '').trim();
+    // Take first non-empty paragraph
+    const firstParagraph =
+      cleaned.split(/\n\n+/).find(p => p.trim().length > 0) || '';
+    return firstParagraph.slice(0, 280).trim();
   }
 
   /**
