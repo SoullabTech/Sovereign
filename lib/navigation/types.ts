@@ -34,7 +34,8 @@ export type MaiaWorldId =
   | 'journal'
   | 'ideas'
   | 'relationships'
-  | 'wisdom';
+  | 'wisdom'
+  | 'anchor';
 
 export type BoundaryId = 'studio' | 'circles' | 'astrology' | 'labtools' | 'community-library';
 
