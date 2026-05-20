@@ -57,6 +57,23 @@ export interface IntegrationPattern {
   unlocks: string[];
 }
 
+export interface SpiralQuest {
+  question: string;
+  theme: string;
+  focus: string;
+}
+
+export interface FieldContextResult {
+  available: boolean;
+  vaultWisdom: any | null;
+  quest: SpiralQuest | null;
+  practices: string[];
+  integrations: string[];
+  reflections: string[];
+  element: string;
+  depth: number;
+}
+
 export class SpiralogicEngine {
   private states: Map<string, UserSpiralState> = new Map();
   private obsidian: ObsidianVaultBridge;
@@ -611,6 +628,76 @@ export class SpiralogicEngine {
   /**
    * Public API methods
    */
+
+  /**
+   * READ-ONLY field context retrieval.
+   *
+   * Returns vault-backed wisdom + spiral context for the given element
+   * WITHOUT advancing user state or tripping progression gates. Reuses
+   * getSpiralogicContent internally — same retrieval logic as enterSpiral
+   * but never mutates state.
+   *
+   * Fails soft: returns { available: false } if vault unreachable or
+   * retrieval throws. Logs bridge invocation outcomes for verification.
+   *
+   * Intended caller: lib/maia/fieldContextAdapter.ts (pre-substrate
+   * field-context enrichment in the conversation route). NOT a replacement
+   * for enterSpiral — this method never advances user spiral state.
+   */
+  public async getFieldContext(
+    userId: string,
+    element: string
+  ): Promise<FieldContextResult> {
+    // Use existing state if present; otherwise build ephemeral state for
+    // retrieval (NOT stored — read-only path).
+    const persistedState = this.states.get(userId);
+    const state = persistedState ?? this.initializeUserState(userId);
+    const currentDepth = state.elementDepths[element] || 1;
+
+    try {
+      console.log(
+        `[SpiralogicEngine] getFieldContext: userId=${userId} element=${element} ` +
+          `depth=${currentDepth} userKnown=${!!persistedState}`
+      );
+
+      const content = await this.getSpiralogicContent(element, currentDepth, state);
+
+      const vw = content?.vaultWisdom;
+      const conceptsCount = vw?.concepts?.length ?? 0;
+      const practicesCount = vw?.practices?.length ?? 0;
+      const frameworksCount = vw?.frameworks?.length ?? 0;
+      const vaultAvailable = conceptsCount + practicesCount + frameworksCount > 0;
+
+      console.log(
+        `[SpiralogicEngine] getFieldContext: vaultAvailable=${vaultAvailable} ` +
+          `concepts=${conceptsCount} practices=${practicesCount} frameworks=${frameworksCount}`
+      );
+
+      return {
+        available: vaultAvailable,
+        vaultWisdom: vw ?? null,
+        quest: content?.quest ?? null,
+        practices: content?.practices ?? [],
+        integrations: state.integrations ?? [],
+        reflections: content?.reflections ?? [],
+        element,
+        depth: currentDepth,
+      };
+    } catch (err) {
+      console.warn('[SpiralogicEngine] getFieldContext: retrieval failed', err);
+      return {
+        available: false,
+        vaultWisdom: null,
+        quest: null,
+        practices: [],
+        integrations: state.integrations ?? [],
+        reflections: [],
+        element,
+        depth: currentDepth,
+      };
+    }
+  }
+
   public async getUserState(userId: string): Promise<UserSpiralState | null> {
     return this.states.get(userId) || null;
   }
