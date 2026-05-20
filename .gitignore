@@ -413,3 +413,6 @@ data/sacred-texts/*.pdf
 
 # Soullab Press render outputs
 exports/
+
+# voice-ecosystem watch — per-instance state, gitignored
+scripts/voice-ecosystem-watch-state.json

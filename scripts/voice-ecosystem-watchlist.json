@@ -1,0 +1,61 @@
+{
+  "_doc": "Curated watchlist for scripts/watch-voice-ecosystem.ts. Tracks open/local projects in the layers most relevant to 'fluid manifestation layer for MAIA-governed cognition.' Edit freely — repos here are observed; repos not here are ignored.",
+  "_invariant": "This watchlist is a signal, not a noise feed. Only add repos where a new release would change MAIA's voice-sovereignty engineering window. If you find yourself muting alerts, the watchlist is wrong, not the alarm.",
+
+  "categories": {
+    "stt": {
+      "_description": "Speech-to-text. Already mature; we track for streaming/VAD improvements.",
+      "repos": [
+        { "repo": "openai/whisper", "note": "Reference STT" },
+        { "repo": "SYSTRAN/faster-whisper", "note": "CT2-backed fast Whisper — production STT path" },
+        { "repo": "ggerganov/whisper.cpp", "note": "Edge / CoreML Whisper" }
+      ]
+    },
+
+    "tts": {
+      "_description": "Text-to-speech. Most active improvement layer — prosody, expressivity, latency.",
+      "repos": [
+        { "repo": "hexgrad/kokoro", "note": "Kokoro — sovereign TTS currently in MAIA stack" },
+        { "repo": "rhasspy/piper", "note": "Piper — fast local TTS" },
+        { "repo": "coqui-ai/TTS", "note": "XTTS / multi-voice" },
+        { "repo": "canopyai/Orpheus-TTS", "note": "Orpheus — expressive TTS" },
+        { "repo": "fishaudio/fish-speech", "note": "Fish Speech — open expressive TTS" }
+      ]
+    },
+
+    "streaming_orchestration": {
+      "_description": "Realtime conversational orchestration — the layer most directly tied to 'voice that holds'.",
+      "repos": [
+        { "repo": "livekit/agents", "note": "LiveKit Agents — streaming voice orchestration framework" },
+        { "repo": "pipecat-ai/pipecat", "note": "Pipecat — voice-AI pipeline framework" },
+        { "repo": "ai-voice-cloning/realtime-voice-stack", "note": "Realtime stack candidates" }
+      ]
+    },
+
+    "realtime_small_llms": {
+      "_description": "Small models viable for realtime voice when MAIA-architecture carries cognition.",
+      "repos": [
+        { "repo": "ollama/ollama", "note": "Ollama — local LLM runtime in MAIA stack" },
+        { "repo": "ggerganov/llama.cpp", "note": "llama.cpp — edge inference engine" },
+        { "repo": "ml-explore/mlx", "note": "Apple MLX — Apple Silicon inference" },
+        { "repo": "ml-explore/mlx-lm", "note": "MLX-LM — small/medium LLMs on Apple Silicon" }
+      ]
+    },
+
+    "edge_inference_runtimes": {
+      "_description": "Runtimes that make local realtime cognition tractable on consumer hardware.",
+      "repos": [
+        { "repo": "vllm-project/vllm", "note": "vLLM — high-throughput inference" },
+        { "repo": "huggingface/text-generation-inference", "note": "TGI — inference server" }
+      ]
+    },
+
+    "interruption_resonance_governance": {
+      "_description": "Layers that determine whether voice is psyche-compatible vs merely fast — pauses, dormancy, threshold-based speaking.",
+      "repos": [
+        { "repo": "snakers4/silero-vad", "note": "Silero VAD — voice activity detection (precondition for interruption handling)" },
+        { "repo": "ricky0123/vad", "note": "Browser-side VAD for clean interruption boundaries" }
+      ]
+    }
+  }
+}
