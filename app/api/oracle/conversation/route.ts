@@ -83,6 +83,10 @@ import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
 import type { MemoryOrchestratorInput } from '@/lib/maia/types/memoryOrchestrator';
+import {
+  getFieldContext,
+  buildFieldContextPromptBlock,
+} from '@/lib/maia/fieldContextAdapter';
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
 import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { buildReflectionFromConductor } from '@/lib/oracle/iching';
@@ -760,6 +764,29 @@ export async function POST(request: NextRequest) {
     // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks
     const activeFrameworks = chooseFrameworksForCell(spiralogicCell);
 
+    // FIELD CONTEXT: vault-backed wisdom from SpiralogicEngine.getFieldContext
+    // Feature-flagged per docs/orientation/reconnection-scope.md step 9.
+    // Read-only path — does NOT advance user spiral state. Fail-soft: empty
+    // block on any failure. Block is appended to memberWebPrompt below.
+    let fieldContextBlock = '';
+    if (process.env.MAIA_FIELD_CONTEXT_ENABLED === 'true') {
+      try {
+        const fieldContext = await getFieldContext(userId, spiralogicCell);
+        fieldContextBlock = buildFieldContextPromptBlock(fieldContext);
+        console.log(
+          `[Oracle] field-context { available: ${fieldContext.available}, ` +
+            `element: ${fieldContext.element}, depth: ${fieldContext.depth}, ` +
+            `vaultConcepts: ${fieldContext.vaultWisdom?.concepts?.length ?? 0}, ` +
+            `vaultPractices: ${fieldContext.vaultWisdom?.practices?.length ?? 0}, ` +
+            `vaultFrameworks: ${fieldContext.vaultWisdom?.frameworks?.length ?? 0}, ` +
+            `source: ${fieldContext.vaultWisdom?.source ?? 'none'}, ` +
+            `blockLen: ${fieldContextBlock.length} }`
+        );
+      } catch (fcErr) {
+        console.warn('[Oracle] field-context failed (non-critical):', fcErr);
+      }
+    }
+
     // Initialize Panconscious Field for user
     const panconsciousField = await PanconsciousFieldService.initializeField(userId);
 
@@ -862,7 +889,7 @@ export async function POST(request: NextRequest) {
     const facetPrompt = facetRuntime && facetSignal
       ? buildInnerGuideFieldPrompt(facetRuntime, facetSignal)
       : null;
-    const memberWebPrompt = [memberWebBase, facetPrompt].filter(Boolean).join('\n\n');
+    const memberWebPrompt = [memberWebBase, facetPrompt, fieldContextBlock].filter(Boolean).join('\n\n');
 
     // ─────────────────────────────────────────────────────────────────
     // USE-FRAME v1: retrieval-hit activation (JOTC only).
