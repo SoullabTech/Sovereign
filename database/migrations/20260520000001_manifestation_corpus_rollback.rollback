@@ -1,0 +1,5 @@
+-- Rollback for manifestation_corpus.
+DROP INDEX IF EXISTS idx_manifestation_corpus_classified;
+DROP INDEX IF EXISTS idx_manifestation_corpus_member;
+DROP INDEX IF EXISTS idx_manifestation_corpus_unclassified;
+DROP TABLE IF EXISTS manifestation_corpus;

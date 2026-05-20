@@ -53,6 +53,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { captureManifestation } from '@/lib/sovereignty/manifestationCorpus';
 import { getMemberActiveEventContext } from '@/lib/events/eventService';
 import { getDayLanguage } from '@/lib/events/eventArcBehaviorMap';
 import type { ActiveEventContext } from '@/lib/events/types';
@@ -1514,6 +1515,22 @@ export async function POST(request: NextRequest) {
     // Writes to relationship_entries + relationship_entry_patterns side table.
     // Does NOT read back into the context block — observation only.
     observeRelationalContent(userId, message, maiaResponse.coreMessage);
+
+    // MANIFESTATION CORPUS: substrate-sovereignty observation layer.
+    // Captures the turn as raw observational data. Classification fields
+    // remain NULL until human review. No automated tagging — see
+    // lib/sovereignty/manifestationCorpus.ts header for invariants.
+    captureManifestation({
+      memberId: userId,
+      sessionId,
+      userInput: message,
+      maiaResponse: maiaResponse.coreMessage,
+      voiceMode: realtimeMode,
+      realtimeMode,
+      element: voiceHint.element,
+      phase: voiceHint.phase,
+      conversationDepth,
+    });
 
     // TRUST OBSERVATION: Phase 3 behavioral signal capture (fire-and-forget)
     // Captures response type + engagement proxy for future affinity weighting.
