@@ -21,16 +21,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
-# Load env. Prefer .env.local (dev/Mac Studio), fall back to .env.production.
-set -a
+# Resolve env file. Prefer .env.local (dev/Mac Studio), fall back to .env.production.
+# Use Node's --env-file flag (Node 20.6+) instead of bash sourcing — bash chokes
+# on dotenv files with comments, multi-line values, or bare lines, whereas
+# Node's parser tolerates them.
+ENV_FILE=""
 if [ -f ".env.local" ]; then
-  # shellcheck disable=SC1091
-  . ./.env.local
+  ENV_FILE=".env.local"
 elif [ -f ".env.production" ]; then
-  # shellcheck disable=SC1091
-  . ./.env.production
+  ENV_FILE=".env.production"
 fi
-set +a
 
 # Resolve npx — prefer Homebrew (Mac Studio) then PATH (server).
 if [ -x "/opt/homebrew/bin/npx" ]; then
@@ -43,4 +43,9 @@ else
 fi
 
 echo "[watch-voice-ecosystem] starting at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-exec "$NPX_BIN" tsx scripts/watch-voice-ecosystem.ts "$@"
+
+if [ -n "$ENV_FILE" ]; then
+  exec "$NPX_BIN" tsx --env-file="$ENV_FILE" scripts/watch-voice-ecosystem.ts "$@"
+else
+  exec "$NPX_BIN" tsx scripts/watch-voice-ecosystem.ts "$@"
+fi
