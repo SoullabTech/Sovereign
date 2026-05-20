@@ -6,12 +6,12 @@
  * shows on which date.
  *
  * ─────────────────────────────────────────────────────────────────────
- * DRAFT PROMPTS — KELLY VOICE PASS REQUIRED BEFORE REAL-USER CONTACT.
+ * PROMPTS — voice pass landed 2026-05-19.
  *
  * These are not "content." They are nervous-system entry conditions.
- * The first two are from operational guidance in conversation; three are
- * scaffold placeholders consistent with the doctrine but not in Kelly's
- * voice. Replace all five.
+ * Five orientation markers held to the re-entry frame below. The
+ * calibration rubric remains active for any future additions or
+ * refinements — every candidate must pass the same tests.
  *
  * ─── THE LOAD-BEARING FRAME ───
  * Daily Anchor is RE-ENTRY, not self-development.
@@ -79,11 +79,11 @@
  */
 
 const PROMPTS = [
-  "What is one thing that would preserve continuity today?",
-  "What would help you not disappear from your own life today?",
-  "What one thing matters today — not for completion, but for staying?",
-  "Where is your life right now — not the task list, the life?",
-  "What one thing would make today feel like yours?",
+  "What would help you stay with your life today?",
+  "What feels quietly present right now?",
+  "What would make today feel more inhabited?",
+  "What have you been meaning to return to?",
+  "What would help you remain here today?",
 ];
 
 export function promptForDate(isoDate: string): string {
