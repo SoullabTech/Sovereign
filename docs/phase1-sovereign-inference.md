@@ -1,7 +1,7 @@
 # Phase 1 Sovereign Inference — Runbook
 
-**Status:** Production-ready (profile: `sovereign`)
-**Last updated:** 2026-02-23
+**Status:** **Partial coverage — significant bypasses across runtime surface.** The 2026-05-19 routing audit ([`orientation/sovereign-routing-coverage-audit.md`](orientation/sovereign-routing-coverage-audit.md)) found ~45 files across 4 tiers that bypass `sovereignRouter` by importing `@anthropic-ai/sdk` directly. Setting `MAIA_INFERENCE_MODE=sovereign` does **not** currently enforce sovereignty on voice realtime or oracle text generation. Streaming is not supported in any layer of the sovereign path. Treat the audit as source of truth for routing coverage; treat this runbook as infrastructure/ops reference only.
+**Last updated:** 2026-05-19
 
 ---
 
@@ -41,6 +41,41 @@ MAIA app
 
 **Degraded response**: if the chosen path fails and no fallback is available, MAIA returns:
 > "MAIA is here. I've saved your message. My local voice is temporarily limited; I'll return with a fuller response as soon as capacity is back."
+
+---
+
+## Surface Coverage & Current Limitations
+
+**Read this before relying on `MAIA_INFERENCE_MODE` to enforce sovereignty.**
+
+The sovereign router only intercepts calls that route through `modelService.generateText()`. The 2026-05-19 routing audit found that only **one file in the entire app** (`lib/ai/modelService.ts`) routes through `sovereignRouter`. Every other cognitive surface — including the ones members actually feel — bypasses it by importing `@anthropic-ai/sdk` directly or going through `getClaudeService()`, which itself does not check `MAIA_INFERENCE_MODE`.
+
+**Setting `MAIA_INFERENCE_MODE=sovereign` does NOT currently enforce sovereignty on:**
+
+- **Voice realtime** (streaming, via `claudeService.generateOracleResponseStreaming` in `app/api/voice/stream-conversation/route.ts`)
+- **Oracle text generation** (via `ClaudeService`'s non-streaming methods, used by `MaiaOrchestrator`, `MayaIntelligenceOrchestrator`, `FireAgent`, `ResponseGenerator`, `integrated-oracle-system`)
+- **Consciousness layer** (`lib/consciousness/MAIAUnifiedConsciousness.ts`, `LLMProvider.ts`, `relationalCheckin.ts`, `CacheWarmingService.ts`)
+- **Memory/interpretation tier** (`lib/memory/bardic/*`, `lib/transcript-analysis/*`, `lib/scribe/*`, `lib/secondbrain/*`, `lib/dialectical-ai/core.ts`, `lib/patterns/*`)
+- **Sacred oracle variants** (`complete-sacred-oracle.ts`, `elegant-sacred-oracle.ts`, `layered-sacred-oracle.ts`)
+- **Backend script dialogues** (~10 files in `app/api/_backend/maia-*.js`)
+- **Content pipeline + library distillation** (`lib/content/*`, `lib/content-pipeline/*`, `lib/pipelines/document-analysis.ts`, `lib/consultation/*`)
+
+See [`orientation/sovereign-routing-coverage-audit.md`](orientation/sovereign-routing-coverage-audit.md) for the full ~45-file classification across 4 tiers and the proposed cut sequence.
+
+**Streaming gap (blocks voice from sovereign routing):**
+
+No layer of the sovereign path supports streaming:
+- `sovereignRouter.ts:128` — single entry returns `Promise<TextResult>`, no streaming variant
+- `localInferenceClient.ts:51` — `fetch().json()`, fully buffered
+- `services/local-inference/server.py:111` — explicitly passes `"stream": False` to Ollama
+
+Voice realtime cannot route through the sovereign path until streaming infrastructure exists end-to-end (adapter SSE endpoint → streaming client → streaming router entry point → routed `generateOracleResponseStreaming`). This is Cut 0 in the audit's sequence.
+
+**Engineering invariant** (proposed for adoption, not yet enforced):
+
+> No cognitive surface bypasses `sovereignRouter` without explicit documented exemption in the coverage audit.
+
+CI guard for new `@anthropic-ai/sdk` imports outside an explicit allowlist is tracked separately in the audit's cut sequence.
 
 ---
 
