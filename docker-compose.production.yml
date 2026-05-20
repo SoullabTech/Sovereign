@@ -153,6 +153,12 @@ services:
       - voice_notes_data:/app/storage/voice-notes
       # Media Studio storage - sovereign local media pipeline
       - media_data:/app/data/media
+      # AIN Obsidian Vault — sovereign field-context knowledge base (read-only)
+      # Host source: /home/soullab/AIN (synced from Mac Studio
+      # /Users/soullab/Documents/AIN/ via rsync). Read by ObsidianVaultBridge
+      # when OBSIDIAN_VAULT_PATH=/app/data/ain-vault is set in .env.production
+      # and MAIA_FIELD_CONTEXT_ENABLED=true.
+      - /home/soullab/AIN:/app/data/ain-vault:ro
 
     security_opt:
       - no-new-privileges:true
