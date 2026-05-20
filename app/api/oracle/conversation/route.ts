@@ -1525,8 +1525,6 @@ export async function POST(request: NextRequest) {
       sessionId,
       userInput: message,
       maiaResponse: maiaResponse.coreMessage,
-      voiceMode: realtimeMode,
-      realtimeMode,
       element: voiceHint.element,
       phase: voiceHint.phase,
       conversationDepth,
