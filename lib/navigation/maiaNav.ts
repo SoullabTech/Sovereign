@@ -23,6 +23,7 @@ import {
   FlaskConical,
   BookCopy,
   NotebookPen,
+  Compass,
 } from 'lucide-react';
 
 import type {
@@ -75,6 +76,14 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     route: '/wisdom-keepers/wisdom',
     classification: 'world',
     tooltip: 'Sacred texts & learning',
+  },
+  {
+    id: 'anchor',
+    label: 'Anchor',
+    icon: Compass,
+    route: '/maia/anchor',
+    classification: 'world',
+    tooltip: 'A quiet place to return',
   },
 ];
 
