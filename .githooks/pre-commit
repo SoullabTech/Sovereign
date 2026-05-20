@@ -19,7 +19,12 @@ PHI_EXIT=$?
 npm run check:phi-inventory
 INVENTORY_EXIT=$?
 
-if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ]; then
+# 5. No direct @anthropic-ai/sdk imports outside allowlist
+#    (drift prevention — see docs/orientation/maia-sovereign-runtime-intelligence-audit.md)
+npm run check:no-direct-anthropic
+ANTHROPIC_EXIT=$?
+
+if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ] && [ $ANTHROPIC_EXIT -eq 0 ]; then
   echo "✅ Sovereignty check passed"
   exit 0
 else
@@ -35,6 +40,9 @@ else
   fi
   if [ $INVENTORY_EXIT -ne 0 ]; then
     echo "   - PHI inventory inconsistent"
+  fi
+  if [ $ANTHROPIC_EXIT -ne 0 ]; then
+    echo "   - Direct @anthropic-ai/sdk imports outside allowlist (route through sovereignRouter)"
   fi
   exit 1
 fi

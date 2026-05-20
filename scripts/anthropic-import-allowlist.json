@@ -1,0 +1,73 @@
+{
+  "_doc": "Allowlist for direct @anthropic-ai/sdk imports. Enforced by scripts/check-no-direct-anthropic.ts. See docs/orientation/maia-sovereign-runtime-intelligence-audit.md for context.",
+  "_invariant": "MAIA is a layered intelligence architecture in which substrate inference is one conditional manifestation pathway, not the cognition center. New direct SDK imports bypass sovereignRouter and re-introduce drift. Additions here must be deliberate and pass PR review.",
+
+  "approved": {
+    "description": "Canonical provider-adapter layer. The ONLY files that should newly import @anthropic-ai/sdk are SovereignRouter-backed adapters. New additions here are load-bearing architectural decisions and require explicit PR review.",
+    "files": [
+      "lib/ai/claudeClient.ts"
+    ]
+  },
+
+  "operational": {
+    "description": "Non-cognitive endpoints that legitimately need direct SDK access (health checks, authentication probes, billing telemetry). Cognitive surfaces do NOT belong here.",
+    "files": [
+      "app/api/anthropic/ping/route.ts"
+    ]
+  },
+
+  "grandfathered": {
+    "description": "Legacy cognitive surfaces that bypass sovereignRouter. Each one is an intelligence layer that currently delegates its reasoning to substrate instead of executing its own logic. To be migrated per docs/orientation/maia-sovereign-runtime-intelligence-audit.md. New additions are strongly discouraged — they represent expansion of the drift this guard exists to prevent.",
+    "files": [
+      "app/api/_backend/maia-ask-needs.js",
+      "app/api/_backend/maia-first-contact-direct.js",
+      "app/api/_backend/maia-first-reflection.js",
+      "app/api/_backend/maia-i-thou.js",
+      "app/api/_backend/maia-session-closing.js",
+      "app/api/_backend/maia-supervision-session.js",
+      "app/api/_backend/maia-triad-continue.js",
+      "app/api/_backend/maia-triad-conversation.js",
+      "app/api/_backend/src/core/UnifiedOracleCore.ts",
+      "app/api/_backend/src/services/ElementalIntelligenceRouter.ts",
+      "app/api/_backend/src/services/hallucination-testing/maiaModelRunner.ts",
+      "app/api/portal/[slug]/chat/route.ts",
+      "lib/ai/ClaudeBridge.ts",
+      "lib/astrology/spiralogicReportGenerator.ts",
+      "lib/complete-sacred-oracle.ts",
+      "lib/consciousness/CacheWarmingService.ts",
+      "lib/consciousness/LLMProvider.ts",
+      "lib/consciousness/MAIAUnifiedConsciousness.ts",
+      "lib/consciousness/relationalCheckin.ts",
+      "lib/consultation/claude-consultation-service.ts",
+      "lib/content-pipeline/extractor.ts",
+      "lib/content-pipeline/qualityFilter.ts",
+      "lib/content-pipeline/transformer.ts",
+      "lib/content/extractor.ts",
+      "lib/content/transformer.ts",
+      "lib/dialectical-ai/core.ts",
+      "lib/elegant-sacred-oracle.ts",
+      "lib/layered-sacred-oracle.ts",
+      "lib/maia/sessionProcessor.ts",
+      "lib/memory/bardic/LinkingService.ts",
+      "lib/memory/bardic/TeleologyService.ts",
+      "lib/patterns/generatePatternIntelligence.ts",
+      "lib/pipelines/document-analysis.ts",
+      "lib/scribe/sessionSummaryGenerator.ts",
+      "lib/scribe/sovereignSummarizer.ts",
+      "lib/secondbrain/secondBrainClassifier.ts",
+      "lib/services/ClaudeService.ts",
+      "lib/services/UnifiedInsightEngine.ts",
+      "lib/services/conversationEssenceExtractor.ts",
+      "lib/songwriter/seedInterpreter.ts",
+      "lib/story/archetypalNarrativeService.ts",
+      "lib/team/maiaReflectService.ts",
+      "lib/team/maiaThreadReflection.ts",
+      "lib/transcript-analysis/PatternExtractor.ts",
+      "lib/transcript-analysis/TranscriptAnonymizer.ts",
+      "scripts/audit-sovereignty.ts",
+      "scripts/backfill-maia-turns-summaries.ts",
+      "scripts/generate-chapter-illustrations.ts",
+      "scripts/library/distillSource.ts"
+    ]
+  }
+}

@@ -17,6 +17,10 @@ export GIT_PRE_COMMIT=1
 # Supabase ban
 npm run check:no-supabase
 
+# Direct @anthropic-ai/sdk import ban (drift prevention — see
+# docs/orientation/maia-sovereign-runtime-intelligence-audit.md)
+npm run check:no-direct-anthropic
+
 # Vendor voice ban (no OpenAI/ElevenLabs names in UI)
 npm run check:no-vendor-voices
 
