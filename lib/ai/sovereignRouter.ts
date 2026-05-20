@@ -7,6 +7,7 @@
 
 import { generateWithClaude } from './claudeClient';
 import { callLocalInference, isLocalHealthy } from './localInferenceClient';
+import { emitDriftEvent } from '@/lib/sovereignty/driftAlarm';
 import type { TextRequest } from './modelService';
 import type { TextResult, InferenceMode, TokenUsage } from './types';
 
@@ -99,6 +100,15 @@ async function routeSovereignInference(
       // Billing/auth: fail fast, no fallback
       if (err?.noFallback || err?.code === 'ANTHROPIC_BILLING_ERROR') throw err;
       console.warn('[sovereignRouter] mode=primary: Anthropic failed, trying local:', err?.message);
+      // Drift alarm: Anthropic→local fallback occurred without explicit
+      // member-visible escalation. The member doesn't see this transition.
+      emitDriftEvent('silent_fallback', {
+        surface: 'sovereignRouter.primary',
+        provider: 'anthropic',
+        mode: 'primary',
+        escalation_reason: 'anthropic_failed',
+        detail: typeof err?.message === 'string' ? err.message.slice(0, 200) : 'unknown',
+      });
     }
 
     const healthy = await isLocalHealthy();

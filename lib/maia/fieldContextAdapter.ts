@@ -27,6 +27,7 @@ import {
   SpiralogicEngine,
   type FieldContextResult,
 } from '@/lib/spiralogic/core/spiralogic-engine';
+import { emitDriftEvent } from '@/lib/sovereignty/driftAlarm';
 
 export type { FieldContextResult };
 
@@ -94,12 +95,41 @@ export async function getFieldContext(
   if (!element) return emptyFor('');
 
   const e = await getEngineSingleton();
-  if (!e) return emptyFor(element);
+  if (!e) {
+    // Drift alarm: engine could not initialize (flag is presumed enabled
+    // because callers gate on MAIA_FIELD_CONTEXT_ENABLED before invoking).
+    emitDriftEvent('field_context_unavailable', {
+      surface: 'fieldContextAdapter.getEngineSingleton',
+      detail: 'engine_init_failed',
+    });
+    return emptyFor(element);
+  }
 
   try {
-    return await e.getFieldContext(userId, element);
+    const result = await e.getFieldContext(userId, element);
+
+    // Drift alarm: vault path is configured but returned nothing.
+    // Indicates path missing/unreadable, empty mount, or rsync drift.
+    if (
+      !result.available &&
+      typeof process.env.OBSIDIAN_VAULT_PATH === 'string' &&
+      process.env.OBSIDIAN_VAULT_PATH.length > 0
+    ) {
+      emitDriftEvent('vault_unreadable', {
+        surface: 'fieldContextAdapter.getFieldContext',
+        detail: `OBSIDIAN_VAULT_PATH=${process.env.OBSIDIAN_VAULT_PATH} returned empty wisdom for element=${element}`,
+      });
+    }
+
+    return result;
   } catch (err) {
     console.warn('[FieldContextAdapter] getFieldContext failed:', err);
+    emitDriftEvent('field_context_unavailable', {
+      surface: 'fieldContextAdapter.getFieldContext',
+      detail: typeof (err as Error)?.message === 'string'
+        ? (err as Error).message.slice(0, 200)
+        : 'retrieval_threw',
+    });
     return emptyFor(element);
   }
 }
