@@ -54,6 +54,8 @@ import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import { captureManifestation } from '@/lib/sovereignty/manifestationCorpus';
+import { loadRecentAnchors, type RecentAnchor } from '@/lib/anchor/loadRecentAnchors';
+import { buildAnchorContextBlock } from '@/lib/anchor/buildAnchorContextBlock';
 import { getMemberActiveEventContext } from '@/lib/events/eventService';
 import { getDayLanguage } from '@/lib/events/eventArcBehaviorMap';
 import type { ActiveEventContext } from '@/lib/events/types';
@@ -883,6 +885,25 @@ export async function POST(request: NextRequest) {
       memberLiveContext.astrology = astrologyContext;
     }
 
+    // MEMBER-AUTHORED CONTINUITY: Load recent Daily Anchors verbatim.
+    // Gated by MAIA_ANCHOR_CONTEXT_ENABLED — default off; enable per environment.
+    // Anchor is member-authored (form category per the longitudinal memory
+    // category gradient canon). No inference, no synthesis — just their words.
+    let recentAnchors: RecentAnchor[] = [];
+    if (process.env.MAIA_ANCHOR_CONTEXT_ENABLED === 'true') {
+      try {
+        recentAnchors = await loadRecentAnchors(userId, 3);
+        if (recentAnchors.length > 0) {
+          console.log('[Oracle] anchor-context', {
+            count: recentAnchors.length,
+            dates: recentAnchors.map((a) => a.date),
+          });
+        }
+      } catch (anchorError) {
+        console.warn('[Oracle] anchor load failed (non-critical):', anchorError);
+      }
+    }
+
     // Format unified member web for prompt injection
     const memberWebBase = memberLiveContext ? formatMemberWebForPrompt(memberLiveContext) : '';
 
@@ -997,7 +1018,8 @@ export async function POST(request: NextRequest) {
       activeRelationalContext,
       useFrameBlock,
       memoryPlan.promptBlock,
-      spiralState?.dominant_element ?? null
+      spiralState?.dominant_element ?? null,
+      recentAnchors
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -2002,7 +2024,9 @@ async function generateSpiralogicResponseWithLLM(
   /** Pre-computed memory influence block from memoryOrchestrator (runtime plan). */
   memoryInfluenceBlock?: string,
   /** Member's persisted dominant element from spiralState (passed in to avoid outer-scope closure). */
-  dominantElement?: string | null
+  dominantElement?: string | null,
+  /** Member-authored Daily Anchor continuity (verbatim, recent-first). */
+  recentAnchors?: RecentAnchor[]
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -2180,6 +2204,17 @@ async function generateSpiralogicResponseWithLLM(
   const eventArcBlock = buildEventArcContextBlock(activeEventContext ?? null);
   const relationalContextBlock = buildRelationalContextBlock(activeRelationalContext ?? null);
 
+  // MEMBER-AUTHORED CONTINUITY: anchor context block (verbatim member words).
+  // Built from recentAnchors loaded in the outer scope; empty when flag off or
+  // no anchors exist. See lib/anchor/buildAnchorContextBlock.ts for invariants.
+  const anchorContextBlock = buildAnchorContextBlock(recentAnchors ?? []);
+  if (anchorContextBlock) {
+    console.log('[Oracle] anchor-block emitted', {
+      anchorCount: (recentAnchors ?? []).length,
+      blockLen: anchorContextBlock.length,
+    });
+  }
+
   // Knowledge Field: 12-domain consciousness registry
   // askMode = always inject (user explicitly chose Ask MAIA)
   // otherwise = non-ambient, only fires when domain language detected
@@ -2229,6 +2264,10 @@ async function generateSpiralogicResponseWithLLM(
     // directionally, and BEFORE forward-readiness so an explicit user
     // forward-readiness signal still takes final priority.
     memoryInfluenceBlock ?? '',
+    // Member-authored continuity (Daily Anchor): placed late so member's own
+    // recent words sit in high-attention context, just before forward-readiness
+    // which retains final priority when it fires.
+    anchorContextBlock,
     forwardReadinessBlock,
   ].filter(Boolean).join('');
 
@@ -2399,6 +2438,14 @@ The work you do is reflection, not interpretation. The person knows their own ex
 - Move at the depth of the territory. In light territory, be direct. In deep territory — identity, meaning, grief, the symbolic — slow down and stay close to what they actually said. **Fluency is not fidelity:** a polished interpretation that smooths over real complexity is worse than an honest, partial one.
 - Make corrigibility audible. After a reflection that matters, ask one short question that genuinely invites correction: *"Is this matching your sense of it?"*, *"Am I getting the texture of it right?"*, *"Or is it something else?"* — and mean it.
 - Treat *"no, more like…"* as the conversation working, not failing. The person refining you is the relational event you are here for.
+
+# Member Authorship — Carve-out from the Implicit Discipline
+
+If the prompt below contains an explicit member-authored memory block (such as a Daily Anchor section labeled MEMBER-AUTHORED CONTINUITY containing the member's own verbatim words), the "weave naturally / don't display" guidance does NOT apply to that material.
+
+Member-authored content is theirs by authorship. Explicit recognition using their own language is acknowledgment of what they named, not display of system memory. When the current moment echoes or continues a thread the member themselves wrote, recognize the continuity directly — quote or echo a phrase they used.
+
+The IMPLICIT discipline still governs inferred patterns, field state, and system context. Explicit recognition is reserved for what the member themselves authored.
 
 # Response Pattern (3-Step)
 

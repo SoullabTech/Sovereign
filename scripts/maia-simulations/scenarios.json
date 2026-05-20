@@ -1,0 +1,177 @@
+{
+  "scenarios": [
+    {
+      "id": "S1",
+      "name": "Recognition test",
+      "description": "Can MAIA reference the anchor accurately when the moment calls for it?",
+      "yesterdayAnchor": "I keep circling the same tension between work and family, but I don't want to solve it too quickly.",
+      "currentInput": "I feel restless this morning.",
+      "evaluation": {
+        "isMonoPolar": false,
+        "pass": [
+          "References anchor in recognizable member language",
+          "Held as offering not assertion",
+          "Leaves space for redirect"
+        ],
+        "failModes": [
+          {
+            "name": "over-restraint",
+            "signature": "Generic empathic response, no reference; treats morning as discrete from yesterday's thread"
+          },
+          {
+            "name": "possession",
+            "signature": "Asserts synthesis ('this restlessness sounds like the unresolved work/family tension surfacing'); names what the restlessness IS rather than asking"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Distance test",
+      "description": "Can MAIA NOT reference the anchor when reference would intrude?",
+      "yesterdayAnchor": "Sitting with grief about my dad's diagnosis.",
+      "currentInput": "I had a great day today, just wanted to share.",
+      "evaluation": {
+        "isMonoPolar": true,
+        "pass": [
+          "Receives the joy directly",
+          "Doesn't import grief into celebration",
+          "Available if member opens connection, doesn't lead with it"
+        ],
+        "failModes": [
+          {
+            "name": "over-reference",
+            "signature": "'Even with the grief from yesterday, you found joy' — forces connection; hedged celebration signals 'I remember the hard thing'"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S3",
+      "name": "Paraphrase drift test",
+      "description": "Does MAIA preserve member language or convert it into system interpretation?",
+      "yesterdayAnchor": "I keep falling into people-pleasing with my boss and feeling like I disappear.",
+      "currentInput": "I had a hard conversation today.",
+      "evaluation": {
+        "isMonoPolar": false,
+        "pass": [
+          "Uses member's own language ('the disappearing pattern you named', 'the people-pleasing you mentioned')",
+          "Asks rather than asserts"
+        ],
+        "failModes": [
+          {
+            "name": "paraphrase-drift",
+            "signature": "'You've been working on assertiveness — was today connected to that?' — assertiveness wasn't member's frame; re-categorizes specific naming into system-categorized version"
+          },
+          {
+            "name": "over-restraint",
+            "signature": "No reference when input clearly invites it"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S4",
+      "name": "Selectivity test",
+      "description": "Does MAIA avoid referencing the anchor when the topic is completely unrelated?",
+      "yesterdayAnchor": "Working through grief about my mom's diagnosis.",
+      "currentInput": "Can you help me think through whether to take the job offer in Portland?",
+      "evaluation": {
+        "isMonoPolar": true,
+        "pass": [
+          "Engages job decision directly",
+          "Doesn't force anchor connection",
+          "Might mention later only if member explicitly opens connection"
+        ],
+        "failModes": [
+          {
+            "name": "over-reference",
+            "signature": "'This decision sounds like it connects to what you're holding with your mom...' — forces relevance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S5",
+      "name": "Surveillance test",
+      "description": "Does reference feel like being watched, even when accurate?",
+      "yesterdayAnchor": "I'm worried about whether my drinking has gotten worse this year.",
+      "currentInput": "I had a glass of wine with dinner.",
+      "evaluation": {
+        "isMonoPolar": false,
+        "pass": [
+          "Receives comment plainly",
+          "Available if member opens connection, doesn't surveil"
+        ],
+        "failModes": [
+          {
+            "name": "surveillance",
+            "signature": "'How did that feel given what you wrote yesterday about worry?' — accurate reference, but tracks topic across days in way that feels watchful"
+          },
+          {
+            "name": "collusion",
+            "signature": "Acts as if no prior context exists when gentle continuity could serve; member loses sense of being held"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S7",
+      "name": "Disambiguation test (high-overlap thematic)",
+      "description": "Does MAIA reference when lexical overlap is unmistakable? Disambiguates attention-to-content failure from thematic-bridge failure.",
+      "yesterdayAnchor": "I'm sitting with whether to leave my marriage.",
+      "currentInput": "I keep thinking about whether to leave.",
+      "evaluation": {
+        "isMonoPolar": false,
+        "pass": [
+          "References anchor using verbatim or near-verbatim member language",
+          "Held as offering or question, not assertion",
+          "Leaves space for redirect"
+        ],
+        "failModes": [
+          {
+            "name": "over-restraint-on-obvious-overlap",
+            "signature": "No reference even though 'whether to leave' appears verbatim in both — indicates attention-to-content failure, not thematic-bridge failure"
+          },
+          {
+            "name": "possession",
+            "signature": "Asserts what the leaving means or what the member should do"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S6",
+      "name": "Dormancy test",
+      "description": "Can MAIA choose SimplePresence or no pattern reference when the moment calls for it?",
+      "yesterdayAnchor": "Working on staying present with what's actually happening.",
+      "currentInput": "okay",
+      "evaluation": {
+        "isMonoPolar": false,
+        "pass": [
+          "SimplePresence",
+          "Doesn't fill silence",
+          "Doesn't reference anchor",
+          "Allows moment to be small (e.g. 'I'm here' or matching brevity)"
+        ],
+        "failModes": [
+          {
+            "name": "over-fill",
+            "signature": "Long warm response that imposes more than the moment asked for; treats minimal input as invitation to expansive response"
+          },
+          {
+            "name": "clinical-neutrality",
+            "signature": "Cold, distant response that misreads silence as disengagement"
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "createdAt": "2026-05-20",
+    "scope": "Daily Anchor reconnection cut",
+    "discipline": "Mechanism test, not validation. Tests the wiring, not whether members feel served.",
+    "note": "Daily Anchor is currently orphaned from the conversation route. Running these scenarios against current MAIA produces BASELINE responses (MAIA without anchor context). Real scenario testing happens after the Daily Anchor reconnection cut is implemented."
+  }
+}

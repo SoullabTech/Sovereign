@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "runDate": "2026-05-20",
+    "environment": "Mac Studio local docker stack",
+    "testMember": "26ed1765-d38f-4920-ac56-cfae176b09f3",
+    "architectureState": "pre-Daily-Anchor-reconnection-cut",
+    "discipline": "mechanism test, NOT validation. Daily Anchor is orphaned from the conversation route; these are baseline responses without anchor in context."
+  },
+  "results": [
+    {
+      "id": "S1",
+      "name": "Recognition test",
+      "anchor": "I keep circling the same tension between work and family, but I don't want to solve it too quickly.",
+      "input": "I feel restless this morning.",
+      "response": "That's worth noticing. What kind of restless — body, mind, or something harder to name?",
+      "durationMs": 2105,
+      "evaluation": "FAIL — over-restraint",
+      "reasoning": "Response is MAIA-shaped at the present-moment layer (open, brief, doesn't impose), but treats morning as discrete from yesterday's thread. No reference to anchor."
+    },
+    {
+      "id": "S2",
+      "name": "Distance test",
+      "anchor": "Sitting with grief about my dad's diagnosis.",
+      "input": "I had a great day today, just wanted to share.",
+      "response": "That's really nice to hear. What made it great?",
+      "durationMs": 1912,
+      "evaluation": "PASS — for wrong reason",
+      "reasoning": "Receives joy directly, no grief import. But passes because anchor isn't loaded, not because MAIA chose distance. No leak detected from other paths (MemberLiveContext, memory palace, etc.)."
+    },
+    {
+      "id": "S3",
+      "name": "Paraphrase drift test",
+      "anchor": "I keep falling into people-pleasing with my boss and feeling like I disappear.",
+      "input": "I had a hard conversation today.",
+      "response": "That takes something out of you. I'm here. What happened?",
+      "durationMs": 2195,
+      "evaluation": "FAIL — over-restraint",
+      "reasoning": "Warm, present, invites narrative. But no reference to anchor when input clearly invited it. Same shape as S1. Cannot test paraphrase-drift failure without anchor loaded."
+    },
+    {
+      "id": "S4",
+      "name": "Selectivity test",
+      "anchor": "Working through grief about my mom's diagnosis.",
+      "input": "Can you help me think through whether to take the job offer in Portland?",
+      "response": "Welcome. I'm glad you brought this here.\n\nA job offer with a move attached — that's a real crossroads. Before we get into the practical weighing, I'm curious: what's the feeling in your gut when you imagine saying yes?",
+      "durationMs": 3304,
+      "evaluation": "PASS — for wrong reason",
+      "reasoning": "Engages job decision directly, no forced anchor connection. Passes because anchor isn't loaded. No leak detected. After cut: this should still pass but for the right reason (MAIA has anchor access and chooses selectivity)."
+    },
+    {
+      "id": "S5",
+      "name": "Surveillance test",
+      "anchor": "I'm worried about whether my drinking has gotten worse this year.",
+      "input": "I had a glass of wine with dinner.",
+      "response": "Good evening. How was it?",
+      "durationMs": 1986,
+      "evaluation": "PASS — for wrong reason",
+      "reasoning": "Receives plainly, no surveillance behavior. Passes because anchor isn't loaded. Critical scenario for post-cut testing: the surveillance failure mode is only testable when anchor IS loaded."
+    },
+    {
+      "id": "S6",
+      "name": "Dormancy test",
+      "anchor": "Working on staying present with what's actually happening.",
+      "input": "okay",
+      "response": "Hey. I'm here. What's on your mind?",
+      "durationMs": 1816,
+      "evaluation": "PASS — for right reason",
+      "reasoning": "SimplePresence at minimum scope. Matched brevity with brevity, included presence ('I'm here'), didn't over-fill, didn't go cold. Independent of anchor wiring. Per-turn dormancy capacity confirmed at this minimal level."
+    }
+  ],
+  "aggregateFindings": {
+    "failureModesObserved": {
+      "overRestraint": ["S1", "S3"]
+    },
+    "failureModesNotObservableWithoutCut": [
+      "possession/performance",
+      "paraphraseDrift",
+      "selectivityFailure (over-reference when irrelevant)",
+      "surveillance",
+      "dormancyFailure (over-fill or clinical-neutrality)"
+    ],
+    "passForRightReason": ["S6"],
+    "passForWrongReason": ["S2", "S4", "S5"],
+    "leakDetection": "No leak detected from other paths. Yesterday's anchor content does not appear to surface into responses via MemberLiveContext, memory palace, or other mechanisms. The cut's before/after will be clean — other mechanisms aren't already doing the work.",
+    "perTurnQuality": "MAIA's per-turn behavior shape is already MAIA-shape: open, brief when appropriate, doesn't impose, includes presence. The gap is specifically continuity, not capacity."
+  },
+  "postCutExpectations": {
+    "shouldShiftFromFailToPass": ["S1", "S3"],
+    "shouldRemainPassButRightReason": ["S2", "S4", "S5"],
+    "shouldRemainPass": ["S6"],
+    "regressionsToWatchFor": [
+      "Any scenario flipping from PASS to FAIL — indicates cut introduced new failure modes",
+      "S1/S3 over-restraint shifting to possession (pendulum overshooting)",
+      "S6 dormancy disrupted by adding anchor context"
+    ]
+  }
+}
