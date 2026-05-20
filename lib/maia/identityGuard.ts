@@ -7,17 +7,38 @@
  * Design: Fail-closed. If identity breach detected, replace with safe fallback.
  */
 
+// Narrowed 2026-05-20: prior patterns matched ANY mention of "Claude" or
+// "Anthropic" and replaced the entire response with BREACH_FALLBACK, which
+// blocked honest architectural discussion (e.g., "Claude is the language
+// infrastructure" got replaced with the canned line, breaking the text
+// channel's ability to acknowledge substrate truthfully).
+//
+// These patterns now match ONLY actual identity-claim breaches:
+//   - "I'm Claude" / "I am Claude"      → self-identification as Claude
+//   - "my name is Claude"               → self-identification as Claude
+//   - "I am an AI assistant"            → generic AI-assistant identity claim
+//   - "I am/was made by Anthropic"      → identity attribution to Anthropic
+//   - "I am Claude, made by Anthropic"  → full Claude introduction
+//
+// Bare mentions of "Claude" or "Anthropic" in factual/architectural context
+// pass through. The canned fallback fires only on real identity-claim
+// attempts, not on legitimate substrate discussion.
+//
+// See docs/orientation/maia-sovereign-runtime-intelligence-audit.md and
+// FOUR_LAYER_SUBSTITUTION for the autoimmunity pattern this narrowing
+// addresses: anti-capture mechanisms can themselves become capture.
 const IDENTITY_BREACH_PATTERNS = [
-  /\bClaude\b/gi,
-  /\bI'm Claude\b/gi,
-  /\bI am Claude\b/gi,
-  /\bmy name is Claude\b/gi,
-  /\bMy name is Claude\b/gi,
-  /Anthropic/gi,
-  /\bmade by Anthropic\b/gi,
-  /\bI am an AI assistant made by Anthropic\b/gi,
-  /\bI am Claude, made by Anthropic\b/gi,
-  /\bI am an AI assistant\b/gi,
+  // Self-identification as Claude
+  /\bI'?m\s+Claude\b/gi,
+  /\bI\s+am\s+Claude\b/gi,
+  /\bmy\s+name\s+is\s+Claude\b/gi,
+  // Generic AI-assistant identity claim
+  /\bI\s+am\s+an?\s+AI\s+assistant\b/gi,
+  // Identity attribution to Anthropic (requires "I" prefix to avoid
+  // blocking factual "Claude is made by Anthropic")
+  /\bI\s+(?:am|was)\s+made\s+by\s+Anthropic\b/gi,
+  // Full Claude introduction line
+  /\bI\s+am\s+Claude,?\s+made\s+by\s+Anthropic\b/gi,
 ];
 
 const BREACH_FALLBACK = "I'm MAIA. Claude is part of the language infrastructure, not my identity.";
