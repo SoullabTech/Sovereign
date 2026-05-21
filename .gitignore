@@ -356,6 +356,10 @@ app/beta/
 docs/public/
 web/
 
+# Stewardship intake records — tester/practitioner/member contact logs.
+# Templates in docs/stewardship/ are tracked; lived intake stream is private.
+docs/stewardship/intake/
+
 .aetheric-consciousness-verification.json
 scripts/test-selflet-load.ts
 
