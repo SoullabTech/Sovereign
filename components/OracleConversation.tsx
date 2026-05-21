@@ -2740,11 +2740,23 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 💾 SOVEREIGN CONVERSATION PERSISTENCE: Load history for MAIA context (but don't display)
-  // NOTE: We intentionally do NOT restore messages to the UI on page load.
-  // The UI should always start fresh with the greeting, giving the user a clean slate.
-  // MAIA still has access to conversation history through historicalMessagesRef for context.
-  // The persistence layer keeps localStorage in sync with PostgreSQL for continuity.
+  // 💾 SOVEREIGN CONVERSATION PERSISTENCE: Load history and restore the thread.
+  //
+  // CONTINUITY INVARIANT (load-bearing — do not "optimize" back into flag-gated restore):
+  //   The thread cannot disappear in order to preserve the thread.
+  //
+  // If real messages exist for this session+user, the UI restores them — regardless of how
+  // the user arrived (SPA navigation, browser back, deeplink, refresh, new tab). Restoration
+  // is NOT gated by the `maia_nav_teardown` sessionStorage flag any more — that gate made
+  // return-path dependent, so a capture surface or world doorway could silently destroy the
+  // thread it was invited to honor.
+  //
+  // Welcome overlay reaches its correct condition through `loadedMessages.length === 0`,
+  // which is produced by explicit new-session actions (handleStartSession,
+  // handleStartNewSession) that clear localStorage. Fresh starts are deliberate, not accidental.
+  //
+  // The seam on restore must be invisible: no "restored your session" notice, no welcome
+  // header, no scroll reset.
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId) return;
 
@@ -2795,11 +2807,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.error('💾 [PostgreSQL] Failed to load messages:', error);
       }
 
-      // Detect whether this mount is a client-side navigation return vs. a fresh page load.
-      // React cleanup runs on client-side nav unmount but NOT on F5/hard refresh.
-      // So: flag present = navigation return (restore), flag absent = fresh load (welcome overlay).
-      const wasNavigationReturn = sessionStorage.getItem('maia_nav_teardown') === 'true';
-      sessionStorage.removeItem('maia_nav_teardown'); // consume immediately
+      // Consume the legacy teardown flag if present so it doesn't accumulate in sessionStorage.
+      // The flag is no longer used to gate restoration — see CONTINUITY INVARIANT header above.
+      // Setter sites elsewhere in this file are now no-ops; cleanup of those is a follow-up.
+      sessionStorage.removeItem('maia_nav_teardown');
 
       // Always populate historicalRef so MAIA has full context regardless of display mode
       historicalMessagesRef.current = loadedMessages;
@@ -2807,15 +2818,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       if (loadedMessages.length > 0) {
         const hasRealMessages = loadedMessages.some(m => !m.id?.startsWith('greeting-'));
 
-        if (hasRealMessages && wasNavigationReturn) {
-          // Navigation return: restore UI + skip welcome overlay
+        if (hasRealMessages) {
+          // Restore the thread. Invisible seam — no welcome overlay, no "restored" notice.
           sessionRestoredRef.current = true;
           setHasActivated(true);
           setMessages(loadedMessages);
-          console.log(`💾 [Context] Navigation return — restored ${loadedMessages.length} messages to UI`);
+          console.log(`💾 [Context] Restored ${loadedMessages.length} messages to UI`);
         } else {
-          // Fresh load (F5, new tab, returning member): MAIA has context but UI starts clean
-          console.log(`💾 [Context] Fresh load — ${loadedMessages.length} messages loaded for context only`);
+          console.log(`💾 [Context] Only greeting messages found — UI starts fresh`);
         }
       } else {
         console.log(`💾 [Context] No previous messages for this session`);
