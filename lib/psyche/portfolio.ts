@@ -515,8 +515,12 @@ export async function applyAtomGesture(
       break;
 
     case 'touch':
+      // The "Still here" gesture: member-explicit witness.
+      // Increments still_here_count alongside last_touched_at.
+      // Witness-as-gesture counter (vs lens-pass count = translation).
       sql = `UPDATE member_memory_atoms
-                SET last_touched_at = NOW()
+                SET last_touched_at = NOW(),
+                    still_here_count = still_here_count + 1
               WHERE member_id = $1 AND id = $2
               RETURNING ${ATOM_COLUMNS}`;
       params = [memberId, atomId];
@@ -559,8 +563,16 @@ export async function createLensPass(
     [memberId, input.memoryAtomId, input.lens, input.prompt, input.memberResponse],
   );
 
-  // Touch the atom so the lens-pass updates its liveness.
-  await applyAtomGesture(memberId, input.memoryAtomId, { kind: 'touch' });
+  // Update last_touched_at on the atom (encounter via lens IS continued presence).
+  // NOTE: direct UPDATE — does NOT use the 'touch' gesture, which is reserved
+  // for the member-explicit "Still here" affordance and increments still_here_count.
+  // We want lens passes to reflect liveness without inflating the witness counter.
+  await query(
+    `UPDATE member_memory_atoms
+        SET last_touched_at = NOW()
+      WHERE member_id = $1 AND id = $2`,
+    [memberId, input.memoryAtomId],
+  );
 
   return rowToLensPass(result.rows[0]);
 }

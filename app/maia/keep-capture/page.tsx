@@ -221,6 +221,10 @@ function KeptItem({
   const isSetAside = atom.status === 'set_aside';
   const isProtected = atom.status === 'protected';
 
+  // Witness-as-gesture feedback. Brief morph after "Still here" tap.
+  // Resets after 800ms — long enough to register, short enough not to linger.
+  const [justWitnessed, setJustWitnessed] = useState(false);
+
   return (
     <li className="bg-white rounded-lg p-5 border border-stone-200">
       <div className="flex items-start justify-between gap-3">
@@ -241,6 +245,18 @@ function KeptItem({
       )}
 
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+        {/* Witness affordance — equal weight to "Look at this another way" */}
+        <button
+          onClick={() => {
+            setJustWitnessed(true);
+            onGesture({ kind: 'touch' });
+            setTimeout(() => setJustWitnessed(false), 800);
+          }}
+          className="text-stone-700 hover:text-stone-900"
+        >
+          {justWitnessed ? '✓ Held' : 'Still here'}
+        </button>
+
         <button onClick={onLook} className="text-stone-700 hover:text-stone-900">
           Look at this another way
         </button>
