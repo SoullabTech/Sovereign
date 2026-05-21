@@ -52,6 +52,28 @@ import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
+// ═══════════════════════════════════════════════════════════════════════
+// Phase 1.5B — Conversational Keep (sidecar; feature-flagged; non-blocking)
+// ═══════════════════════════════════════════════════════════════════════
+import {
+  parseFilingInstruction,
+  parseGestureInstruction,
+  evaluateKeepOffer,
+  detectPauseRequest,
+  applyConversationalKeepResult,
+  type FilingInstruction,
+  type KeepOffer,
+} from '@/lib/psyche/conversational-keep';
+import {
+  canOfferKeep,
+  pauseOffers,
+  recordOffer,
+  resumeOffers,
+} from '@/lib/psyche/keep-governor';
+
+const CONVERSATIONAL_KEEP_ENABLED =
+  process.env.CONVERSATIONAL_KEEP_ENABLED === 'true';
+// ═══════════════════════════════════════════════════════════════════════
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import { captureManifestation } from '@/lib/sovereignty/manifestationCorpus';
 import { loadRecentAnchors, type RecentAnchor } from '@/lib/anchor/loadRecentAnchors';
@@ -1646,6 +1668,92 @@ export async function POST(request: NextRequest) {
       ...toolSuggestions,
     ];
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Phase 1.5B — Conversational Keep sidecar
+    // Runs in parallel to MAIA's reply. Never blocks the conductor.
+    // On any failure, keepIntent stays null and reply path proceeds normally.
+    // Disabled entirely when CONVERSATIONAL_KEEP_ENABLED !== 'true'.
+    // ═══════════════════════════════════════════════════════════════════
+    type KeepIntent =
+      | { kind: 'filed'; atomTitle: string; destination: FilingInstruction['destination'] }
+      | { kind: 'filing_confirmation'; instruction: FilingInstruction }
+      | { kind: 'offer'; offer: KeepOffer };
+
+    let keepIntent: KeepIntent | null = null;
+
+    if (CONVERSATIONAL_KEEP_ENABLED) {
+      try {
+        // Client-supplied runtime state (optional; defaults safe if absent)
+        const keepRuntime = (parsed as any).keepRuntimeState ?? {};
+        const conversationTurn: number =
+          typeof keepRuntime.conversationTurn === 'number' ? keepRuntime.conversationTurn : 1;
+        const sessionOfferCount: number =
+          typeof keepRuntime.sessionOfferCount === 'number' ? keepRuntime.sessionOfferCount : 0;
+        const lastOfferTurnInSession: number | undefined =
+          typeof keepRuntime.lastOfferTurnInSession === 'number'
+            ? keepRuntime.lastOfferTurnInSession
+            : undefined;
+
+        // 1. Pause/resume command (highest priority — no offer this turn)
+        const pauseSignal = detectPauseRequest(message);
+        if (pauseSignal === 'pause') {
+          await pauseOffers(userId);
+        } else if (pauseSignal === 'unpause') {
+          await resumeOffers(userId);
+        }
+
+        // 2. Direct filing instruction (high-confidence → execute)
+        if (!pauseSignal) {
+          const filing = parseFilingInstruction({ utterance: message });
+          if (filing) {
+            if (filing.confidence === 'high') {
+              const atom = await applyConversationalKeepResult(userId, {
+                kind: 'filing',
+                instruction: filing,
+                context: { sessionId },
+              });
+              keepIntent = {
+                kind: 'filed',
+                atomTitle: atom.title,
+                destination: filing.destination,
+              };
+            } else {
+              keepIntent = { kind: 'filing_confirmation', instruction: filing };
+            }
+          }
+        }
+
+        // 3. Gesture instruction — recognized but not actionable in 1.5B
+        //    (requires conversation-atom context tracking; Phase 2+)
+        if (!pauseSignal && !keepIntent) {
+          const gesture = parseGestureInstruction({ utterance: message });
+          if (gesture) {
+            // Recognized for telemetry only; no inline action.
+            // Member uses portfolio surface for gestures until context tracking ships.
+            console.log('[conv-keep] gesture recognized (no inline action in 1.5B):', gesture.gesture);
+          }
+        }
+
+        // 4. Salience-triggered keep offer (only if no direct command above)
+        if (!pauseSignal && !keepIntent) {
+          const state = await canOfferKeep(userId, {
+            conversationTurn,
+            sessionOfferCount,
+            lastOfferTurnInSession,
+          });
+          const offer = evaluateKeepOffer({ ...state, utterance: message });
+          if (offer) {
+            await recordOffer(userId);
+            keepIntent = { kind: 'offer', offer };
+          }
+        }
+      } catch (err) {
+        // Non-fatal. MAIA's reply path is never blocked by keep failures.
+        console.error('[conv-keep] sidecar error (non-fatal):', err);
+        keepIntent = null;
+      }
+    }
+
     const response = {
       success: true,
       response: maiaResponse.coreMessage,
@@ -1840,6 +1948,10 @@ export async function POST(request: NextRequest) {
       model: maiaResponse.providerMetadata.modelUsed,
       usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
     });
+
+    // Phase 1.5B — attach keep sidecar result to response payload.
+    // Null when flag is off, when no signal, or when sidecar errored (non-fatal).
+    (response as any).keepIntent = keepIntent;
 
     const jsonResponse = NextResponse.json(response);
     Object.entries(canonHeaders).forEach(([key, value]) => {

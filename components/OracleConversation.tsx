@@ -11,6 +11,10 @@ import { ContinuousConversation, ContinuousConversationRef } from './voice/Conti
 import { VoiceHUD } from './voice/VoiceHUD';
 import { VoiceInteractionBar } from './voice/VoiceInteractionBar';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
+// Phase 1.5B — Conversational Keep affordance (sidecar, feature-flagged; client flag default-off)
+import { KeepAffordance, type KeepIntent } from '@/components/psyche/KeepAffordance';
+const CONVERSATIONAL_KEEP_ENABLED =
+  process.env.NEXT_PUBLIC_CONVERSATIONAL_KEEP_ENABLED === 'true';
 // TEMPORARILY DISABLED - causing ReferenceError crash
 // import { usePWAVoiceStateMachine, type PWAVoiceState } from '@/hooks/usePWAVoiceStateMachine';
 // RelationalTelemetryPanel removed - dev-only component
@@ -443,6 +447,8 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+  // Phase 1.5B — attached keep affordance for this message (null when absent)
+  keepIntent?: KeepIntent | null;
   // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
   integrity?: IntegrityResult;
   lensSwitchOptions?: {
@@ -720,6 +726,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
   const [isHandsFreeMode, setIsHandsFreeMode] = useState(true); // UI state mirror for hands-free toggle — default ON for natural conversation
   const hasShownVoiceReentryToastRef = useRef(false); // Show once per session on re-enter voice
+
+  // Phase 1.5B — Conversational Keep runtime state (per-session, not persisted)
+  // Refs avoid re-renders on offer-state changes. Read by request body wiring (2D),
+  // updated when KeepAffordance.onResolved fires (2F).
+  const sessionOfferCountRef = useRef<number>(0);
+  const lastOfferTurnRef = useRef<number | undefined>(undefined);
+  const conversationTurnRef = useRef<number>(0);
+
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
