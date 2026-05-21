@@ -1,0 +1,566 @@
+/**
+ * Psyche Engagement Layer — Portfolio Service (Phase 1)
+ *
+ * Governed by:
+ *   - docs/canon/THE_CLEARING.md
+ *   - docs/canon/SPIRAL_CONTINUITY_ENGINE.md
+ *   - docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md
+ * Spec:
+ *   - docs/specs/PSYCHE_ENGAGEMENT_LAYER_SPEC.md
+ *
+ * Service shape:
+ *   This module is a ritual gesture interpreter, NOT a CRUD wrapper.
+ *   Reads are CRUD-shaped. Writes are gesture-shaped.
+ *
+ * Hard invariants (enforced by the absence of corresponding functions):
+ *   - No updateMemoryAtom(patch)
+ *   - No inferRegisters()
+ *   - No inferLenses()
+ *   - No surfaceRecallCandidates()       (Phase 2)
+ *   - No synthesizeAcrossAtoms()         (Phase 3)
+ *   - No computeDevelopmentalState()     (out of scope structurally)
+ *
+ * The only public write surface is a member gesture. Every write keeps
+ * crossing_allowed = false. The DB CHECK constraint backstops the discipline.
+ */
+
+import { query } from '@/lib/db/postgres';
+import type {
+  AtomGesture,
+  CrystallizedMemory,
+  ElementalLens,
+  KeepGestureInput,
+  LensPass,
+  LensPassInput,
+  MemoryAtomSourceType,
+  MemoryRegister,
+  PortfolioSourceCandidate,
+  PortfolioView,
+  ReturnPreference,
+} from './types';
+
+// ════════════════════════════════════════════════════════════════════════════
+// Row types (raw DB shape)
+// ════════════════════════════════════════════════════════════════════════════
+
+interface AtomRow {
+  id: string;
+  member_id: string;
+  source_type: MemoryAtomSourceType;
+  source_id: string | null;
+  title: string;
+  body: string | null;
+  primary_register: MemoryRegister | null;
+  registers: MemoryRegister[];
+  elemental_lenses: ElementalLens[];
+  thread_ids: string[];
+  status: CrystallizedMemory['status'];
+  return_preference: ReturnPreference;
+  last_surfaced_at: string | null;
+  surface_count: number;
+  kept_at: string;
+  last_touched_at: string;
+  created_at: string;
+  updated_at: string;
+  crossing_allowed: boolean;
+}
+
+interface LensPassRow {
+  id: string;
+  member_id: string;
+  memory_atom_id: string;
+  lens: ElementalLens;
+  prompt: string;
+  member_response: string;
+  created_at: string;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Row → Domain mapping
+// ════════════════════════════════════════════════════════════════════════════
+
+function rowToAtom(row: AtomRow): CrystallizedMemory {
+  return {
+    id: row.id,
+    memberId: row.member_id,
+    sourceType: row.source_type,
+    sourceId: row.source_id,
+    title: row.title,
+    body: row.body,
+    primaryRegister: row.primary_register,
+    registers: row.registers ?? [],
+    elementalLenses: row.elemental_lenses ?? [],
+    threadIds: row.thread_ids ?? [],
+    status: row.status,
+    returnPreference: row.return_preference,
+    lastSurfacedAt: row.last_surfaced_at,
+    surfaceCount: row.surface_count,
+    keptAt: row.kept_at,
+    lastTouchedAt: row.last_touched_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    // ReverberationGuard is derived, not stored.
+    // crossing_allowed is enforced at the DB level (CHECK = FALSE).
+    reverberationGuard: {
+      interpretationStatus: 'uninterpreted', // Phase 1 default
+      voiceEligibility: row.status === 'protected' ? 'record_only' : 'invitable',
+      crossingAllowed: false,
+    },
+  };
+}
+
+function rowToLensPass(row: LensPassRow): LensPass {
+  return {
+    id: row.id,
+    memberId: row.member_id,
+    memoryAtomId: row.memory_atom_id,
+    lens: row.lens,
+    prompt: row.prompt,
+    memberResponse: row.member_response,
+    createdAt: row.created_at,
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Public reads
+// ════════════════════════════════════════════════════════════════════════════
+
+const ATOM_COLUMNS = `
+  id, member_id, source_type, source_id, title, body,
+  primary_register, registers, elemental_lenses, thread_ids,
+  status, return_preference, last_surfaced_at, surface_count,
+  kept_at, last_touched_at, created_at, updated_at, crossing_allowed
+`;
+
+export async function getAtom(
+  memberId: string,
+  atomId: string,
+): Promise<CrystallizedMemory | null> {
+  const result = await query<AtomRow>(
+    `SELECT ${ATOM_COLUMNS}
+       FROM member_memory_atoms
+      WHERE member_id = $1 AND id = $2`,
+    [memberId, atomId],
+  );
+  const row = result.rows[0];
+  return row ? rowToAtom(row) : null;
+}
+
+export async function listAtoms(
+  memberId: string,
+  view: PortfolioView,
+): Promise<CrystallizedMemory[]> {
+  let sql: string;
+  let params: unknown[];
+
+  switch (view.kind) {
+    case 'chronological':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 ORDER BY kept_at DESC`;
+      params = [memberId];
+      break;
+    case 'still_alive':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 AND status = 'still_alive'
+              ORDER BY last_touched_at DESC`;
+      params = [memberId];
+      break;
+    case 'set_aside':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 AND status = 'set_aside'
+              ORDER BY last_touched_at DESC`;
+      params = [memberId];
+      break;
+    case 'protected':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 AND status = 'protected'
+              ORDER BY last_touched_at DESC`;
+      params = [memberId];
+      break;
+    case 'archived':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 AND status = 'archived'
+              ORDER BY last_touched_at DESC`;
+      params = [memberId];
+      break;
+    case 'by_source':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 AND source_type = $2
+              ORDER BY last_touched_at DESC`;
+      params = [memberId, view.sourceType];
+      break;
+    case 'by_register':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1
+                AND ($2 = primary_register OR $2 = ANY(registers))
+              ORDER BY last_touched_at DESC`;
+      params = [memberId, view.register];
+      break;
+    case 'by_lens':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 AND $2 = ANY(elemental_lenses)
+              ORDER BY last_touched_at DESC`;
+      params = [memberId, view.lens];
+      break;
+    case 'by_thread':
+      sql = `SELECT ${ATOM_COLUMNS} FROM member_memory_atoms
+              WHERE member_id = $1 AND $2::uuid = ANY(thread_ids)
+              ORDER BY last_touched_at DESC`;
+      params = [memberId, view.threadId];
+      break;
+  }
+
+  const result = await query<AtomRow>(sql, params);
+  return result.rows.map(rowToAtom);
+}
+
+export async function listLensPasses(
+  memberId: string,
+  atomId: string,
+): Promise<LensPass[]> {
+  const result = await query<LensPassRow>(
+    `SELECT id, member_id, memory_atom_id, lens, prompt, member_response, created_at
+       FROM member_lens_passes
+      WHERE member_id = $1 AND memory_atom_id = $2
+      ORDER BY created_at DESC`,
+    [memberId, atomId],
+  );
+  return result.rows.map(rowToLensPass);
+}
+
+/**
+ * Read candidates from a source surface that the member could choose to keep.
+ *
+ * Phase 1 bridges only `idea` and `idea_block`. Other source types return
+ * empty until their tables exist.
+ *
+ * Each candidate carries `alreadyKept` so the UI can mark what's already
+ * been kept and what's still available.
+ */
+export async function listSourceCandidates(
+  memberId: string,
+  sourceType: MemoryAtomSourceType,
+): Promise<PortfolioSourceCandidate[]> {
+  if (sourceType === 'idea') {
+    const result = await query<{
+      source_id: string;
+      title: string;
+      preview: string;
+      created_at: string;
+      kept_atom_id: string | null;
+    }>(
+      `SELECT
+         mi.id           AS source_id,
+         mi.title        AS title,
+         COALESCE(mi.framing, '') AS preview,
+         mi.created_at   AS created_at,
+         mma.id          AS kept_atom_id
+       FROM member_ideas mi
+       LEFT JOIN member_memory_atoms mma
+         ON mma.member_id = mi.member_id
+        AND mma.source_type = 'idea'
+        AND mma.source_id = mi.id
+        AND mma.status != 'archived'
+       WHERE mi.member_id = $1
+       ORDER BY mi.last_entered_at DESC`,
+      [memberId],
+    );
+    return result.rows.map((r) => ({
+      sourceType: 'idea',
+      sourceId: r.source_id,
+      title: r.title,
+      preview: r.preview,
+      createdAt: r.created_at,
+      alreadyKept: r.kept_atom_id !== null,
+      keptAtomId: r.kept_atom_id,
+    }));
+  }
+
+  if (sourceType === 'idea_block') {
+    const result = await query<{
+      source_id: string;
+      title: string;
+      preview: string;
+      created_at: string;
+      kept_atom_id: string | null;
+    }>(
+      `SELECT
+         mib.id          AS source_id,
+         LEFT(mib.content, 80) AS title,
+         mib.content     AS preview,
+         mib.created_at  AS created_at,
+         mma.id          AS kept_atom_id
+       FROM member_idea_blocks mib
+       LEFT JOIN member_memory_atoms mma
+         ON mma.member_id = mib.member_id
+        AND mma.source_type = 'idea_block'
+        AND mma.source_id = mib.id
+        AND mma.status != 'archived'
+       WHERE mib.member_id = $1
+       ORDER BY mib.created_at DESC
+       LIMIT 200`,
+      [memberId],
+    );
+    return result.rows.map((r) => ({
+      sourceType: 'idea_block',
+      sourceId: r.source_id,
+      title: r.title,
+      preview: r.preview,
+      createdAt: r.created_at,
+      alreadyKept: r.kept_atom_id !== null,
+      keptAtomId: r.kept_atom_id,
+    }));
+  }
+
+  // Other source types: tables don't exist yet (journal, dream, reflection,
+  // decision, change, session_excerpt). Return empty for Phase 1.
+  // Spontaneous never has candidates — it's created directly via keepSource.
+  return [];
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Public writes — gesture-shaped only
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * The formation event: a member keeps material into the portfolio.
+ *
+ * Arrival ≠ keeping. Source material exists; this gesture is the act of
+ * the member choosing to hold it. After this, the atom is portfolio memory.
+ *
+ * crossing_allowed defaults to FALSE at the DB level and is never written
+ * by the service.
+ */
+export async function keepSource(
+  memberId: string,
+  input: KeepGestureInput,
+): Promise<CrystallizedMemory> {
+  if (input.memberId !== memberId) {
+    throw new Error('keepSource: memberId mismatch between session and input');
+  }
+
+  // Spontaneous requires body; sourced requires sourceId (DB enforces too)
+  if (input.sourceType === 'spontaneous') {
+    if (!input.body) {
+      throw new Error('keepSource: spontaneous entries require a body');
+    }
+  } else {
+    if (!input.sourceId) {
+      throw new Error(`keepSource: source_id required for sourceType '${input.sourceType}'`);
+    }
+  }
+
+  const result = await query<AtomRow>(
+    `INSERT INTO member_memory_atoms (
+       member_id, source_type, source_id, title, body,
+       primary_register, registers, elemental_lenses, thread_ids,
+       status, return_preference,
+       kept_at, last_touched_at
+     ) VALUES (
+       $1, $2, $3, $4, $5,
+       $6, $7, $8, $9,
+       'active', 'member_pulled',
+       NOW(), NOW()
+     )
+     RETURNING ${ATOM_COLUMNS}`,
+    [
+      memberId,
+      input.sourceType,
+      input.sourceId ?? null,
+      input.title,
+      input.body ?? null,
+      input.primaryRegister ?? null,
+      input.registers ?? [],
+      input.elementalLenses ?? [],
+      input.threadIds ?? [],
+    ],
+  );
+
+  return rowToAtom(result.rows[0]);
+}
+
+/**
+ * Apply a member gesture to an existing atom.
+ *
+ * This is the only mutation surface for kept atoms (besides keepSource for
+ * creation). Each gesture is intentional; there is no generic patch.
+ *
+ * crossing_allowed is never written by this function. The DB CHECK
+ * constraint will reject any attempt to flip it.
+ */
+export async function applyAtomGesture(
+  memberId: string,
+  atomId: string,
+  gesture: AtomGesture,
+): Promise<CrystallizedMemory> {
+  let sql: string;
+  let params: unknown[];
+
+  switch (gesture.kind) {
+    case 'mark_still_alive':
+      sql = `UPDATE member_memory_atoms
+                SET status = 'still_alive', last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId];
+      break;
+
+    case 'set_aside':
+      sql = `UPDATE member_memory_atoms
+                SET status = 'set_aside', last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId];
+      break;
+
+    case 'protect':
+      sql = `UPDATE member_memory_atoms
+                SET status = 'protected', last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId];
+      break;
+
+    case 'archive':
+      sql = `UPDATE member_memory_atoms
+                SET status = 'archived', last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId];
+      break;
+
+    case 'return_to_active':
+      sql = `UPDATE member_memory_atoms
+                SET status = 'active', last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId];
+      break;
+
+    case 'replace_primary_register':
+      sql = `UPDATE member_memory_atoms
+                SET primary_register = $3, last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.register];
+      break;
+
+    case 'add_register':
+      // Idempotent: only add if not already present.
+      sql = `UPDATE member_memory_atoms
+                SET registers = (
+                      SELECT ARRAY(SELECT DISTINCT unnest(registers || ARRAY[$3]))
+                    ),
+                    last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.register];
+      break;
+
+    case 'remove_register':
+      sql = `UPDATE member_memory_atoms
+                SET registers = array_remove(registers, $3),
+                    last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.register];
+      break;
+
+    case 'add_lens':
+      sql = `UPDATE member_memory_atoms
+                SET elemental_lenses = (
+                      SELECT ARRAY(SELECT DISTINCT unnest(elemental_lenses || ARRAY[$3]))
+                    ),
+                    last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.lens];
+      break;
+
+    case 'remove_lens':
+      sql = `UPDATE member_memory_atoms
+                SET elemental_lenses = array_remove(elemental_lenses, $3),
+                    last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.lens];
+      break;
+
+    case 'add_thread':
+      sql = `UPDATE member_memory_atoms
+                SET thread_ids = (
+                      SELECT ARRAY(SELECT DISTINCT unnest(thread_ids || ARRAY[$3::uuid]))
+                    ),
+                    last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.threadId];
+      break;
+
+    case 'remove_thread':
+      sql = `UPDATE member_memory_atoms
+                SET thread_ids = array_remove(thread_ids, $3::uuid),
+                    last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.threadId];
+      break;
+
+    case 'set_return_preference':
+      sql = `UPDATE member_memory_atoms
+                SET return_preference = $3, last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId, gesture.preference];
+      break;
+
+    case 'touch':
+      sql = `UPDATE member_memory_atoms
+                SET last_touched_at = NOW()
+              WHERE member_id = $1 AND id = $2
+              RETURNING ${ATOM_COLUMNS}`;
+      params = [memberId, atomId];
+      break;
+  }
+
+  const result = await query<AtomRow>(sql, params);
+  if (result.rows.length === 0) {
+    throw new Error(`applyAtomGesture: atom not found for member ${memberId}, atom ${atomId}`);
+  }
+  return rowToAtom(result.rows[0]);
+}
+
+/**
+ * Record a lens pass — the member encountered a kept atom through a lens.
+ *
+ * The lens is an ACTION. The pass is the record of the encounter.
+ * The member is NEVER stored as a lens-type by this function.
+ */
+export async function createLensPass(
+  memberId: string,
+  input: LensPassInput,
+): Promise<LensPass> {
+  if (input.memberId !== memberId) {
+    throw new Error('createLensPass: memberId mismatch');
+  }
+
+  // Verify the atom belongs to the member before recording a pass against it.
+  // This is also enforced by the FK + member_id column on member_lens_passes.
+  const atom = await getAtom(memberId, input.memoryAtomId);
+  if (!atom) {
+    throw new Error(`createLensPass: atom ${input.memoryAtomId} not found for member ${memberId}`);
+  }
+
+  const result = await query<LensPassRow>(
+    `INSERT INTO member_lens_passes (
+       member_id, memory_atom_id, lens, prompt, member_response
+     ) VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, member_id, memory_atom_id, lens, prompt, member_response, created_at`,
+    [memberId, input.memoryAtomId, input.lens, input.prompt, input.memberResponse],
+  );
+
+  // Touch the atom so the lens-pass updates its liveness.
+  await applyAtomGesture(memberId, input.memoryAtomId, { kind: 'touch' });
+
+  return rowToLensPass(result.rows[0]);
+}
