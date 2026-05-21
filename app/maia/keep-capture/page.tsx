@@ -182,8 +182,8 @@ export default function KeepCapturePage() {
 
             {kept.length === 0 && candidates.length === 0 && (
               <p className="text-stone-500">
-                Nothing yet. When you create or reflect, the things you make will
-                appear here, and you can choose what to keep.
+                When you develop ideas, the ones you choose to shape and refine
+                can appear here for you to keep.
               </p>
             )}
           </>
