@@ -30,6 +30,7 @@ export async function generateStaticParams() {
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { isMemberTester } from '@/lib/auth/tester';
 import {
   buildPrepareSystemPrompt,
   buildIntegrateSystemPrompt,
@@ -200,6 +201,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Sign in required.' },
         { status: 401 }
+      );
+    }
+    const tester = await isMemberTester(session.memberId);
+    if (!tester) {
+      return NextResponse.json(
+        {
+          error:
+            'This is an experimental Field Lab surface. To participate, opt in from /maia/field-lab.',
+        },
+        { status: 403 }
       );
     }
 
