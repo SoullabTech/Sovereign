@@ -39,22 +39,31 @@ export interface MaiaIdentityContext {
   astrologyAddendum?: string;
   /** Display name resolved from member row (prevents "Friend" fallback when member exists) */
   userName?: string;
+  /** Preferred pronouns (freeform, e.g. 'he/him', 'she/her', 'they/them') — surfaced so MAIA does not infer from name */
+  pronouns?: string;
   /** Whether birth data is on file — callers may log this for observability */
   hasBirthData: boolean;
 }
 
-async function lookupMemberDisplayName(userId: string): Promise<string | null> {
+async function lookupMemberIdentity(
+  userId: string,
+): Promise<{ displayName: string | null; pronouns: string | null }> {
   try {
     const result = await query(
-      `SELECT id, name, username, passkey, preferred_name FROM members
+      `SELECT id, name, username, passkey, preferred_name, pronouns FROM members
        WHERE id::text = $1 OR username = $1 OR passkey = $1
        LIMIT 1`,
       [userId],
     );
-    if (result.rows.length === 0) return null;
-    return resolveMemberDisplayName(result.rows[0]);
+    if (result.rows.length === 0) return { displayName: null, pronouns: null };
+    const row = result.rows[0];
+    const pronouns =
+      typeof row.pronouns === 'string' && row.pronouns.trim().length > 0
+        ? row.pronouns.trim()
+        : null;
+    return { displayName: resolveMemberDisplayName(row), pronouns };
   } catch {
-    return null;
+    return { displayName: null, pronouns: null };
   }
 }
 
@@ -72,12 +81,12 @@ export async function buildMaiaContext(
     return { userId: '', hasBirthData: false };
   }
 
-  const [astrologyContext, displayName] = await Promise.all([
+  const [astrologyContext, identity] = await Promise.all([
     getAstrologyContextForUser(userId).catch((err) => {
       console.warn('[buildMaiaContext] astrology load failed:', err);
       return null;
     }),
-    lookupMemberDisplayName(userId),
+    lookupMemberIdentity(userId),
   ]);
 
   const astrologyAddendum = astrologyContext?.formattedContext || undefined;
@@ -85,7 +94,8 @@ export async function buildMaiaContext(
   return {
     userId,
     astrologyAddendum,
-    userName: displayName || undefined,
+    userName: identity.displayName || undefined,
+    pronouns: identity.pronouns || undefined,
     hasBirthData: astrologyContext?.hasBirthData ?? false,
   };
 }

@@ -2223,7 +2223,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       try {
         const needsAstrology = !(meta as any).astrologyAddendum;
         const needsUserName = !(meta as any).userName;
-        if (needsAstrology || needsUserName) {
+        const needsPronouns = !(meta as any).pronouns;
+        if (needsAstrology || needsUserName || needsPronouns) {
           const identity = await buildMaiaContext(effectiveUserId);
           if (needsAstrology && identity.astrologyAddendum) {
             (meta as any).astrologyAddendum = identity.astrologyAddendum;
@@ -2231,11 +2232,15 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           if (needsUserName && identity.userName) {
             (meta as any).userName = identity.userName;
           }
-          if (identity.hasBirthData || identity.userName) {
+          if (needsPronouns && identity.pronouns) {
+            (meta as any).pronouns = identity.pronouns;
+          }
+          if (identity.hasBirthData || identity.userName || identity.pronouns) {
             console.log(
               `🌟 [MaiaService] Identity layer filled for ${String(effectiveUserId).substring(0, 8)}... ` +
                 `(natal=${needsAstrology && !!identity.astrologyAddendum}, ` +
-                `name=${needsUserName && !!identity.userName})`,
+                `name=${needsUserName && !!identity.userName}, ` +
+                `pronouns=${needsPronouns && !!identity.pronouns})`,
             );
           }
         }

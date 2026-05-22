@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
       result = await query(
         `SELECT
           m.id, m.username, m.name, m.preferred_name, m.email, m.passkey,
-          m.avatar_url, m.bio, m.timezone,
+          m.avatar_url, m.bio, m.timezone, m.pronouns,
           m.onboarded, m.onboarding_step, m.created_at, m.last_sign_in,
           m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
           m.birth_location_name, m.birth_timezone,
@@ -146,12 +146,17 @@ export async function GET(request: NextRequest) {
       typeof member.preferred_name === 'string' && member.preferred_name.trim().length > 0
         ? member.preferred_name.trim()
         : null;
+    const pronouns =
+      typeof member.pronouns === 'string' && member.pronouns.trim().length > 0
+        ? member.pronouns.trim()
+        : null;
 
     return NextResponse.json({
       id: member.id,
       username: member.username,
       name: member.name,
       preferredName,
+      pronouns,
       email: member.email,
       passkey: maskedPasskey,
       avatarUrl: member.avatar_url,
@@ -243,7 +248,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { name, preferredName, email, bio, timezone, birthData, astrologyConsent } = body;
+    const { name, preferredName, pronouns, email, bio, timezone, birthData, astrologyConsent } = body;
 
     // Build SET clauses dynamically
     const setClauses: string[] = [];
@@ -257,6 +262,12 @@ export async function PUT(request: NextRequest) {
     if (preferredName !== undefined) {
       setClauses.push(`preferred_name = $${paramIndex++}`);
       values.push(preferredName);
+    }
+    if (pronouns !== undefined) {
+      // Normalize empty/whitespace to NULL so the prompt-layer doesn't get '' as pronouns
+      const trimmed = typeof pronouns === 'string' ? pronouns.trim() : '';
+      setClauses.push(`pronouns = $${paramIndex++}`);
+      values.push(trimmed.length > 0 ? trimmed : null);
     }
     if (email !== undefined) {
       setClauses.push(`email = $${paramIndex++}`);
@@ -337,7 +348,7 @@ export async function PUT(request: NextRequest) {
         `UPDATE members
          SET ${setClauses.join(', ')}
          WHERE id = $1
-         RETURNING id, username, name, preferred_name, email, bio, timezone,
+         RETURNING id, username, name, preferred_name, pronouns, email, bio, timezone,
                    birth_date, birth_time, birth_location_lat, birth_location_lng,
                    birth_location_name, birth_timezone, astrology_consent`,
         values

@@ -206,6 +206,7 @@ export function AccountSettings() {
   // Profile edit state
   const [editName, setEditName] = useState('');
   const [editPreferredName, setEditPreferredName] = useState('');
+  const [editPronouns, setEditPronouns] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editTimezone, setEditTimezone] = useState('');
@@ -286,6 +287,7 @@ export function AccountSettings() {
           setProfile(profileData);
           setEditName(profileData.name || '');
           setEditPreferredName(profileData.preferredName || '');
+          setEditPronouns(profileData.pronouns || '');
           setEditEmail(profileData.email || '');
           setEditBio(profileData.bio || '');
           setEditTimezone(profileData.timezone || '');
@@ -579,6 +581,7 @@ export function AccountSettings() {
           memberId: userId,
           name: editName,
           preferredName: editPreferredName,
+          pronouns: editPronouns.trim() || null,
           email: editEmail,
           bio: editBio,
           timezone: editTimezone || null,
@@ -613,7 +616,7 @@ export function AccountSettings() {
     } finally {
       setSaving(false);
     }
-  }, [userId, editName, editPreferredName, editEmail, editBio, editTimezone, showSaveIndicator]);
+  }, [userId, editName, editPreferredName, editPronouns, editEmail, editBio, editTimezone, showSaveIndicator]);
 
   // Search for birth location
   const searchLocation = useCallback(async (query: string) => {
@@ -936,6 +939,29 @@ export function AccountSettings() {
           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
         <p className="text-xs text-stone-400 mt-2">Used in greetings and voice conversations</p>
+      </div>
+      <div>
+        <label htmlFor="profile-pronouns" className="text-sm text-stone-400 mb-2 block">Pronouns</label>
+        <input
+          id="profile-pronouns"
+          type="text"
+          value={editPronouns}
+          onChange={(e) => setEditPronouns(e.target.value)}
+          list="pronoun-suggestions"
+          placeholder="e.g. he/him, she/her, they/them"
+          autoComplete="off"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
+        />
+        <datalist id="pronoun-suggestions">
+          <option value="he/him" />
+          <option value="she/her" />
+          <option value="they/them" />
+          <option value="he/they" />
+          <option value="she/they" />
+        </datalist>
+        <p className="text-xs text-stone-400 mt-2">
+          How MAIA refers to you. Leave blank to keep this unspecified — names alone don&apos;t imply pronouns.
+        </p>
       </div>
       <div>
         <label className="text-sm text-stone-400 mb-2 block">Email</label>
