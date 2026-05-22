@@ -761,12 +761,20 @@ export default function AstrologyPage() {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-black/30 border border-spice-orange/30 rounded-lg p-4 text-amber-200">
-                <h3 className="!text-spice-glow font-semibold mb-2">The Seeker</h3>
-                <p className="!text-amber-200/80 text-sm">Sagittarius Sun energy driving philosophical expansion and truth-seeking</p>
+                <h3 className="!text-spice-glow font-semibold mb-2">
+                  {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.facetName || 'The Explorer'}
+                </h3>
+                <p className="!text-amber-200/80 text-sm">
+                  {chartData.sun.sign} Sun · {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.archetypes?.jungian?.[0] || 'archetypal core identity'}
+                </p>
               </div>
               <div className="bg-black/30 border border-fremen-azure/30 rounded-lg p-4 text-amber-200">
-                <h3 className="!text-sky-300 font-semibold mb-2">The Mystic</h3>
-                <p className="!text-amber-200/80 text-sm">Pisces Moon connecting to emotional depth and universal compassion</p>
+                <h3 className="!text-sky-300 font-semibold mb-2">
+                  {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.facetName || 'The Mystic'}
+                </h3>
+                <p className="!text-amber-200/80 text-sm">
+                  {chartData.moon.sign} Moon · {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.archetypes?.jungian?.[0] || 'inner emotional landscape'}
+                </p>
               </div>
             </div>
           </div>

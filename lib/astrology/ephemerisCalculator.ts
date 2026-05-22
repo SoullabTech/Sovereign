@@ -24,7 +24,7 @@ export interface BirthData {
     lng: number;
     timezone: string;
   };
-  houseSystem?: HouseSystem; // Default: 'whole-sign'
+  houseSystem?: HouseSystem; // Default: 'porphyry' (matches calculateBirthChart default and DB column default)
 }
 
 export interface PlanetPosition {
@@ -377,11 +377,18 @@ const CHIRON_ELEMENTS: OrbitalElements = {
   Omega: 209.4138, omega: 339.6391, M0: 31.0,
   n: 360 / (50.42 * 365.25),
 };
+// M0 derived by back-propagation from Wikipedia 2024-07-21 epoch elements
+// (L=286.60°, ω̃=153.93°, n=0.2143°/day) → L(J2000)=164.60°, M0=10.95°.
 const CERES_ELEMENTS: OrbitalElements = {
   a: 2.7691, e: 0.0760, i: 10.5934,
-  Omega: 80.3293, omega: 73.5973, M0: 77.3722,
+  Omega: 80.3293, omega: 73.5973, M0: 10.95,
   n: 360 / (4.60 * 365.25),
 };
+// NOTE: Pallas / Juno / Vesta M0 values below are from the previous linear
+// stubs and have NOT been verified against J2000 ephemeris. Positions from
+// these will be approximate (potentially 20-60° off). The Keplerian math
+// itself is correct; only the reference mean anomaly is uncertain. Calibrate
+// when a reliable J2000 mean-longitude source is available.
 const PALLAS_ELEMENTS: OrbitalElements = {
   a: 2.7723, e: 0.2299, i: 34.8409,
   Omega: 173.0962, omega: 309.9290, M0: 78.9890,
