@@ -186,6 +186,11 @@ const nextConfig = {
         'node:stream': 'commonjs stream',
         'node:url': 'commonjs url',
         'node:zlib': 'commonjs zlib',
+        // pdf-parse v2 ships "type": "module" with a .cjs main entry, which
+        // webpack's RSC interop layer can't reconcile (Object.defineProperty
+        // on non-object error). Externalize so it loads via require() at
+        // runtime instead of going through the bundler.
+        'pdf-parse': 'commonjs pdf-parse',
       });
 
       // Additional externalization as function for problematic packages

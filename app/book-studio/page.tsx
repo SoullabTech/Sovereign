@@ -52,6 +52,11 @@ const ROOMS: RoomLink[] = [
     label: 'Canvas (Layout)',
     description: 'Visual page-by-page layout — Atticus-alternative rebuild, Phase A0.',
   },
+  {
+    href: '/book-studio/workbench',
+    label: 'Workbench',
+    description: 'Arrangement surface between captures and form — Slice 1.',
+  },
 ];
 
 async function listDrafts(): Promise<{ slug: string; title: string }[]> {

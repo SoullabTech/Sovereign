@@ -16,7 +16,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Large uploads and PDFs
-uploads/
+# Anchored to repo root — see also the rule lower in the file.
+/uploads/
 *.pdf
 
 # Next.js
@@ -240,7 +241,10 @@ training_data/
 model_checkpoints/
 
 # Large files and directories (GitHub size limits)
-uploads/
+# Anchored to repo root — only the top-level filesystem upload tree.
+# Otherwise this also catches API route dirs named "uploads" (e.g.
+# app/api/book-studio/workbench/uploads/) which need to be tracked.
+/uploads/
 liquid_test/
 apps/web/node_modules/
 apps/**/node_modules/

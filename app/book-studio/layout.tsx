@@ -20,6 +20,7 @@ const NAV = [
   { href: '/book-studio/illustrations', label: 'Illustration List' },
   { href: '/book-studio/design-system', label: 'Design System' },
   { href: '/book-studio/render', label: 'Render Print PDF' },
+  { href: '/book-studio/workbench', label: 'Workbench' },
 ];
 
 export default function BookStudioLayout({ children }: { children: ReactNode }) {
