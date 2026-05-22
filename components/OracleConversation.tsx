@@ -4934,6 +4934,13 @@ I'm not sure what I'm feeling yet.`;
             },
             onComplete: () => {
               console.log('✅ [STREAM] All audio chunks played - starting cooldown');
+              // PR 15 diagnostic: prove the OracleConversation-side onComplete callback
+              // actually runs on Android. If we see this marker, the state-clearing chain
+              // ran and any remaining "thinking" stuck-state is downstream of here. If we
+              // never see it (despite seeing the inner "🎬 onComplete firing"), the
+              // callback bridge between StreamingAudioQueue and OracleConversation is dead
+              // on Android — very unlikely but worth ruling out.
+              pushVoiceDebug('🧹 OC.onComplete entered → clearing state');
               // 🔥 CRITICAL FIX: Reset isProcessing HERE, not just in retry loop
               // Without this, the next transcript is ignored with "Already processing"
               setIsProcessing(false);
@@ -4941,6 +4948,7 @@ I'm not sure what I'm feeling yet.`;
               setIsResponding(false);
               // ✅ Set isAudioPlaying FALSE now - audio ended, visualizer shows user color
               setIsAudioPlaying(false);
+              pushVoiceDebug('🧹 state cleared (processing/responding/audio)');
               // 🔥 isMicrophonePaused stays TRUE to block mic during cooldown
               // (ContinuousConversation checks: isSpeaking={isAudioPlaying || isMicrophonePaused})
 
