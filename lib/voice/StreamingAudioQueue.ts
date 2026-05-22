@@ -11,6 +11,7 @@
 
 import { VoiceFeedbackPrevention } from './voice-feedback-prevention';
 import { ensureAudioReady, getAudioStatus } from './ios-audio-session';
+import { pushVoiceDebug } from './voiceDebugBus';
 
 export interface AudioQueueItem {
   audio: HTMLAudioElement;
@@ -159,6 +160,8 @@ export class StreamingAudioQueue {
         this.isPlaying = false;
         this.currentAudio = null;
         this.onPlayingChange?.(false);
+        // PR 15 diagnostic: prove queue.onComplete actually fires.
+        pushVoiceDebug(`🎬 onComplete firing (queue path, ${this.chunksPlayed}/${this.chunksEnqueued})`);
         this.onComplete?.();
       } else if (this.streamingComplete) {
         console.log(`⏳ [StreamingQueue] Queue empty, streaming complete, but only played ${this.chunksPlayed}/${this.chunksEnqueued} chunks - waiting...`);
@@ -214,6 +217,13 @@ export class StreamingAudioQueue {
         const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
         // 🔥 FIX: Track successfully played chunks
         this.chunksPlayed++;
+        // PR 15 diagnostic: prove that audio.onended fires on Capacitor Android.
+        // The 'thinking' state stuck-bug observed 2026-05-18 hangs somewhere
+        // in this completion chain. If we see "🔚 ended N/M" markers on the
+        // overlay but never the downstream "✅ onComplete firing", the hang
+        // is in markStreamingComplete logic. If we never see "🔚 ended" at
+        // all even though audio plays, it's the WebView audio event itself.
+        pushVoiceDebug(`🔚 audio ended ${this.chunksPlayed}/${this.chunksEnqueued}`);
         if (completionRatio < 0.9) {
           console.warn(`⚠️ [StreamingQueue] Chunk #${this.chunksPlayed} may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
         } else {
@@ -281,6 +291,10 @@ export class StreamingAudioQueue {
   markStreamingComplete(): void {
     console.log(`🏁 [StreamingQueue] Streaming marked complete - ${this.chunksEnqueued} chunks enqueued, ${this.chunksPlayed} played`);
     this.streamingComplete = true;
+    // PR 15 diagnostic: prove markStreamingComplete is reached.
+    // If we never see this marker, the stream-reader 'done' path didn't run,
+    // OR checkFinalize's condition (pendingTTSCount === 0) never holds on Android.
+    pushVoiceDebug(`🏁 markStreamingComplete (${this.chunksPlayed}/${this.chunksEnqueued})`);
 
     // 🔥 FIX: Only trigger completion if ALL enqueued chunks have been played
     const allChunksPlayed = this.chunksPlayed >= this.chunksEnqueued;
@@ -289,6 +303,8 @@ export class StreamingAudioQueue {
     if (this.queue.length === 0 && !this.isPlaying && allChunksPlayed) {
       console.log(`✅ [StreamingQueue] Queue already empty and all ${this.chunksPlayed} chunks played - triggering completion`);
       this.onPlayingChange?.(false);
+      // PR 15 diagnostic: prove this onComplete-entry path fires.
+      pushVoiceDebug(`🎬 onComplete firing (mark path, ${this.chunksPlayed}/${this.chunksEnqueued})`);
       this.onComplete?.();
     } else if (this.queue.length === 0 && !this.isPlaying) {
       console.log(`⏳ [StreamingQueue] Queue empty but only ${this.chunksPlayed}/${this.chunksEnqueued} chunks played - waiting`);
