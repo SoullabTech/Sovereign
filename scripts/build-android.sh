@@ -77,26 +77,57 @@ else
   fi
 fi
 
-# NOTE: We intentionally do NOT patch out/index.html on Android.
+# ─── Android entry point: embed maia.html directly as index.html ──────────────
 #
-# scripts/ios/build.sh replaces out/index.html with a static HTML page that
-# does window.location.replace('/enter'). On iOS that works because WKWebView
-# resolves /enter against the bundled assets (it auto-finds enter.html for the
-# bare /enter path).
+# WHY: Android cold-launch lands on the React-built out/index.html, which
+# renders <SoullabLanding /> (the marketing home page). MobileRouteGuard's
+# pathname==='/' → router.replace('/enter') was supposed to redirect away,
+# but in Capacitor Android static-export mode the client-side router can't
+# reliably resolve /enter against bundled assets, so the marketing surface
+# stays visible. Tara confirmed this 2026-05-22 (round 10): cold-launch hit
+# soullab.life-style landing page with "Enter MAIA" link that reload-looped.
+# (Surface-typology violation: marketing leaks into member app launch path.)
 #
-# Android Capacitor's WebView does NOT auto-fallback /enter → enter.html. When
-# the redirect fires, the WebView can't find the file, falls back to serving
-# index.html again, and the page's __maiaRedirected guard prevents a second
-# attempt — resulting in a blank dark page on launch (confirmed by tester
-# round 2 on 2026-05-14).
+# WHY embedding maia.html (not the older /enter redirect approach):
+#   - The previous attempt patched index.html with window.location.replace
+#     ('/enter'). Android WebView didn't auto-fallback /enter → enter.html,
+#     produced a blank dark page (round 2, 2026-05-14). That note used to
+#     live here as a reason NOT to patch.
+#   - The current iOS approach (scripts/build-ios.sh:99-136) is different:
+#     it embeds maia.html directly as index.html and uses
+#     history.replaceState (synchronous, in-document) to set pathname=/maia
+#     BEFORE React hydrates. No document navigation occurs. React sees the
+#     correct pathname and hydrates.
+#   - This sidesteps Capacitor's asset-fallback issue entirely. The same
+#     approach works on Android (same WebView semantics for history.replaceState).
+#   - For non-authenticated users, the /maia page's own auth check redirects
+#     to /signin via CapacitorHttp-served RSC — same as iOS.
 #
-# Instead, we let Next.js's React-built index.html (containing SoullabLanding)
-# load normally. MobileRouteGuard intercepts pathname === '/' on native and
-# does a client-side router.replace('/enter'), which doesn't need Capacitor's
-# asset resolver because it's React Router navigation within the already-
-# mounted app.
-#
-# See: components/mobile/MobileRouteGuard.tsx, PR #340.
+# See: scripts/build-ios.sh, components/mobile/MobileRouteGuard.tsx, PR #340.
+
+if [ -d "$OUT_DIR" ]; then
+  echo "📄 Patching out/index.html ← out/maia.html direct embed (no document navigation)..."
+  python3 - << 'PYEOF'
+import sys, os
+
+src = 'out/maia.html'
+dst = 'out/index.html'
+
+if not os.path.exists(src):
+    print('  WARNING: out/maia.html not found — keeping build default index.html')
+    sys.exit(0)
+
+content = open(src, encoding='utf-8').read()
+
+# Synchronous URL fixup: before React hydrates, set pathname to /maia.
+# React's router then sees /maia and hydrates the static HTML correctly.
+fix = '<script>if(location.pathname==="/")history.replaceState(null,"","/maia");</script>'
+
+patched = content.replace('<head>', '<head>' + fix, 1)
+open(dst, 'w', encoding='utf-8').write(patched)
+print(f'  OK index.html <- maia.html + URL fixup ({len(patched)} bytes)')
+PYEOF
+fi
 
 # Revert route patches before cap sync
 if ! $SKIP_WEB; then
