@@ -126,9 +126,11 @@ services:
       MAIA_EMBEDDINGS_MODE: queue
       # Admin cockpit password (set in .env.production)
       LABTOOLS_ADMIN_PASSWORD: ${LABTOOLS_ADMIN_PASSWORD:-}
-      # Shadow mode: local model for comparison learning
+      # Sovereign inference: qwen2.5:14b-instruct primary, Claude escalation for depth
       OLLAMA_BASE_URL: "http://host.docker.internal:11434"
-      OLLAMA_MODEL: "deepseek-r1:8b"
+      OLLAMA_MODEL: "qwen2.5:14b-instruct"
+      OLLAMA_MODEL_GENERAL: "qwen2.5:14b-instruct"
+      LOCAL_TIER_ENABLED: "true"
       # Voice notes storage directory
       VOICE_NOTES_DIR: "/app/storage/voice-notes"
       # Feature flag: Explainer Scripts for HeyGen (Phase 1)
@@ -740,7 +742,7 @@ services:
 
     environment:
       OLLAMA_BASE_URL:  ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      OLLAMA_MODEL:     ${OLLAMA_MODEL:-deepseek-r1:8b}
+      OLLAMA_MODEL:     ${OLLAMA_MODEL:-qwen2.5:14b-instruct}
       GENERATE_TIMEOUT_S: "30"
       PORT: "8080"   # Override .env.production PORT (Next.js default 3005) — server.py binds here
 
