@@ -37,22 +37,28 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-03-16 (evening)
-- **Current milestone**: 4-phase sequencing confirmed working. Participatory theme detection deployed. Typecheck clean.
-- **Last changes** (this session, commits on `main`):
-  1. `d0097f39` — **participatory marker expansion**: ~60 natural-language variants added to `THEME_LANGUAGE_MARKERS` across all 6 themes. Ops script (`scripts/check-maia-state.sh`) and email normalization tests committed.
-  2. `725216b1` — **typecheck fix**: removed untyped continuity-stack fields from `between/chat` AIN telemetry call. Typecheck now zero errors.
-- **AIN shape results** (4-phase sequencing is working):
-  - 2h window (330 turns): mirror=70%, bridge=33%, next_step=**30.7%**, pass=**13.6%**
-  - Baseline was: bridge=22%, next_step=1%, pass=0.2%
-  - Question answered: yes, 4-phase sequencing moved next_step from 1% → 30%
-- **Participatory theme signals**: 0 rows after rebuild (expected — new markers not yet exercised). Check again after 24–48h of traffic using `./scripts/check-maia-state.sh`.
-- **Next action**: Observe theme signal volume over next 24–48h. Run `./scripts/check-maia-state.sh 48` to evaluate marker expansion impact.
-- **Underlying question**: Do expanded participatory markers produce 10–25 signals per 170 turns (vs 1 previously)?
-- **State of the system**: All layers live. Container rebuilt with expanded markers. Worktrees pruned (~120 stale removed). 34 commits ahead of origin/main pushed. Typecheck clean.
+- **Date**: 2026-05-23 (evening)
+- **Current milestone**: Consented continuity proven in production. Default-flip live. Spiral Orientation Cut 2 deployed. Observation phase begins.
+- **Last changes** (this session, commits on `clean-main-no-secrets`):
+  1. `dc7d1efba` — docs: semantic memory surfaceability diagnostic closed, proof loop recorded
+  2. `0fa544bc4` — (Kelly) default kept atoms to contextual return — consent prompt removed, DB default flipped
+  3. `6932a5481` — feat(orientation): Spiral Orientation Cut 2 — API route + member surface
+- **Proof loop result** (confirmed in production):
+  - `sem: ok` — semantic memory live
+  - `atoms loaded: 8` — atoms surface per turn
+  - `PROMPT_BLOCK_CHARS: 8590` (floor was 7334 with 0 atoms)
+  - `MEMORY_HEALTH: low` — accurate; deeper layers not yet built
+- **Default doctrine** (live as of `0fa544bc4`):
+  - Keep = contextual return by default (`contextual_doorway`)
+  - Reseal = member exception
+  - DB column default changed; `keepSource` INSERT simplified
+- **Orientation state**: `/maia/orientation` live — all 6 domains quiet (no missions placed, no thematic atoms). Page reports honestly.
+- **Next action**: Observe. Keep meaningful items. Tag themes when the system supports it. Place missions. Revisit `/maia/orientation` after real use.
+- **Underlying question**: Does consented continuity produce felt difference in MAIA responses over days of live traffic?
+- **State of the system**: All layers live. Semantic memory surfacing. Orientation read-only surface deployed. Typecheck clean.
 - **Ops diagnostic**:
   ```bash
-  ./scripts/check-maia-state.sh 48   # theme signals + AIN aggregate
+  ssh soullab@minisforum 'docker logs maia-sovereign --since 1h 2>&1 | grep -E "MAIA/runtime|atoms loaded|MEMORY_HEALTH"'
   ```
 
 ## Re-entry vow (for this session)
@@ -354,3 +360,66 @@ After cloning this repo, run once:
 ```
 
 This configures versioned git hooks that enforce sovereignty on every commit.
+
+# context-mode — MANDATORY routing rules
+
+You have context-mode MCP tools available. These rules are NOT optional — they protect your context window from flooding. A single unrouted command can dump 56 KB into context and waste the entire session.
+
+## BLOCKED commands — do NOT attempt these
+
+### curl / wget — BLOCKED
+Any Bash command containing `curl` or `wget` is intercepted and replaced with an error message. Do NOT retry.
+Instead use:
+- `ctx_fetch_and_index(url, source)` to fetch and index web pages
+- `ctx_execute(language: "javascript", code: "const r = await fetch(...)")` to run HTTP calls in sandbox
+
+### Inline HTTP — BLOCKED
+Any Bash command containing `fetch('http`, `requests.get(`, `requests.post(`, `http.get(`, or `http.request(` is intercepted and replaced with an error message. Do NOT retry with Bash.
+Instead use:
+- `ctx_execute(language, code)` to run HTTP calls in sandbox — only stdout enters context
+
+### WebFetch — BLOCKED
+WebFetch calls are denied entirely. The URL is extracted and you are told to use `ctx_fetch_and_index` instead.
+Instead use:
+- `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` to query the indexed content
+
+## REDIRECTED tools — use sandbox equivalents
+
+### Bash (>20 lines output)
+Bash is ONLY for: `git`, `mkdir`, `rm`, `mv`, `cd`, `ls`, `npm install`, `pip install`, and other short-output commands.
+For everything else, use:
+- `ctx_batch_execute(commands, queries)` — run multiple commands + search in ONE call
+- `ctx_execute(language: "shell", code: "...")` — run in sandbox, only stdout enters context
+
+### Read (for analysis)
+If you are reading a file to **Edit** it → Read is correct (Edit needs content in context).
+If you are reading to **analyze, explore, or summarize** → use `ctx_execute_file(path, language, code)` instead. Only your printed summary enters context. The raw file content stays in the sandbox.
+
+### Grep (large results)
+Grep results can flood context. Use `ctx_execute(language: "shell", code: "grep ...")` to run searches in sandbox. Only your printed summary enters context.
+
+## Tool selection hierarchy
+
+1. **GATHER**: `ctx_batch_execute(commands, queries)` — Primary tool. Runs all commands, auto-indexes output, returns search results. ONE call replaces 30+ individual calls.
+2. **FOLLOW-UP**: `ctx_search(queries: ["q1", "q2", ...])` — Query indexed content. Pass ALL questions as array in ONE call.
+3. **PROCESSING**: `ctx_execute(language, code)` | `ctx_execute_file(path, language, code)` — Sandbox execution. Only stdout enters context.
+4. **WEB**: `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` — Fetch, chunk, index, query. Raw HTML never enters context.
+5. **INDEX**: `ctx_index(content, source)` — Store content in FTS5 knowledge base for later search.
+
+## Subagent routing
+
+When spawning subagents (Agent/Task tool), the routing block is automatically injected into their prompt. Bash-type subagents are upgraded to general-purpose so they have access to MCP tools. You do NOT need to manually instruct subagents about context-mode.
+
+## Output constraints
+
+- Keep responses under 500 words.
+- Write artifacts (code, configs, PRDs) to FILES — never return them as inline text. Return only: file path + 1-line description.
+- When indexing content, use descriptive source labels so others can `ctx_search(source: "label")` later.
+
+## ctx commands
+
+| Command | Action |
+|---------|--------|
+| `ctx stats` | Call the `ctx_stats` MCP tool and display the full output verbatim |
+| `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
+| `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |
