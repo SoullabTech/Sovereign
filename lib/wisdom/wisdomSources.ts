@@ -158,6 +158,7 @@ export const WISDOM_SOURCES: WisdomDomain[] = [
     sources: [
       { title: 'The Shaman\'s Body', author: 'Arnold Mindell', focus: 'Process-oriented shamanism' },
       { title: 'By Oak, Ash, & Thorn: Modern Celtic Shamanism', author: 'D.J. Conway', focus: 'Celtic shamanic practice — Three Realms of the Otherworlds, ogam divination, soul retrieval, shape-shifting, animal allies, tree mysteries' },
+      { title: 'A Gaelic Eschatological Folktale, Celtic Cosmology and Dumézil\'s "Three Realms"', author: 'John Shaw (Journal of Indo-European Studies, 2007)', focus: 'Comparative Indo-European cosmology in Gaelic oral tradition — tripartite sky-earth-sea structure, ATU 20C eschatological tale variants, pagan theonyms Crom and Donn, pre-Christian Celtic belief' },
       { title: 'Jung and Shamanism in Dialogue', author: 'C. Michael Smith', focus: 'Soul retrieval psychology' },
       { title: 'How to Know Higher Worlds', author: 'Rudolf Steiner', focus: 'Esoteric development' },
       { title: 'Norse Mythology', author: 'Mythological Text', focus: 'Northern tradition' },
