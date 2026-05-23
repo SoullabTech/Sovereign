@@ -61,11 +61,35 @@ Without it, the semantic memory layer is architecturally correct and experientia
 
 The loader filter is correct. `member_pulled` exclusion is the consent gate working as designed. The fix is not to loosen the query — it is to build the graduation path and the member-facing mechanism that populates it.
 
-## Status
+## Status — resolved 2026-05-23
 
-- [ ] Confirm whether organic atom formation is wired to `/api/sovereign/app/maia/list`
-- [ ] Identify where (if anywhere) `return_preference` can currently be updated
-- [ ] Design the consent/graduation interaction
-- [ ] Implement member-facing "May I bring this back?" mechanism
+- [x] Confirm whether organic atom formation is wired to `/api/sovereign/app/maia/list`
+      → Portfolio is member-explicit by design. Atoms form when members keep material,
+        not from automatic inference. The canonical route does not write atoms — correct.
+- [x] Identify where `return_preference` can currently be updated
+      → `POST /api/psyche/portfolio/atoms/[id]/gesture` with `{ kind: 'set_return_preference', preference: '...' }`
+      → Also available in bulk via `/maia/keep-capture` page (`allowReturnForAllKept`).
+- [x] Design the consent/graduation interaction
+      → Two-step keep-time consent: keep creates atom (`member_pulled`); second explicit
+        choice authorizes return (`contextual_doorway`). No default ambient graduation.
+- [x] Implement member-facing "May I bring this back?" mechanism
+      → `components/psyche/KeepAffordance.tsx` — keep-time consent prompt ships in
+        commit `74b401383`. Per-atom and bulk controls in `app/maia/keep-capture/page.tsx`.
+
+## Proof loop result — 2026-05-23
+
+First confirmed production turn with semantic memory live:
+
+```
+atoms loaded: { count: 8 }
+PROMPT_BLOCK_CHARS: 8590   (floor was ~7334 with 0 atoms)
+sem: ok
+base_degraded: false
+MEMORY_HEALTH: low         (accurate — conv/ep/dev layers not yet built)
+```
+
+`MEMORY_HEALTH: low` is not failure. It is honest reporting: semantic layer is live,
+deeper layers (episodic, developmental, patterns) remain unbuilt. The consent architecture
+works end-to-end: keep → allow return → atom surfaces → prompt carries it.
 
 See also: `docs/architecture/MAIA_ROUTE_AUTHORITY_MAP.md`, `lib/maia/memoryAtomsLoader.ts`
