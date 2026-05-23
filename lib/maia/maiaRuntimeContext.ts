@@ -36,7 +36,30 @@ import type { MemoryHealth } from './memoryHealth';
  *
  * Variants documented here carry awareness even before they are live callers.
  */
+/**
+ * REGISTRY CONVENTION — read before adding an entry:
+ *
+ * Adding a routeId here is a deliberate architectural act. It must not be done
+ * to silence a warning. Each entry requires:
+ *   - status: from the authority map (MAIA_ROUTE_AUTHORITY_MAP.md)
+ *   - reason: one sentence — why this route qualifies for registry membership
+ *   - registeredAt: ISO date when the entry was added
+ *   - registeredBy: which thread or session added it (de-frag / orientation / etc.)
+ *
+ * If you are adding an entry to make a console.warn go away, that is the
+ * wrong action. The correct action is to either:
+ *   (a) classify the route in the authority map and verify it meets the bar, or
+ *   (b) fix the route so it passes the canonical routeId from the existing registry.
+ *
+ * The CI guard (step 7) will enforce: any route classified canonical-live or
+ * live-secondary in the authority map that is NOT in this registry will fail CI.
+ * Registry additions are the answer to that failure — not workarounds.
+ */
 export const MAIA_ROUTE_REGISTRY: Readonly<Record<string, RouteRegistryEntry>> = {
+  // ── Registered 2026-05-23 | de-frag thread ──────────────────────────────
+  // Status: canonical-live (authority map Tier 1)
+  // Reason: sole production chat ingress; all continuity wiring (Cut 1) lives here;
+  //         confirmed by frontend traffic audit — every production surface routes here.
   'sovereign/app/maia/list': {
     status: 'canonical-live',
     description: 'Primary sovereign chat ingress — all production surfaces',
@@ -44,6 +67,12 @@ export const MAIA_ROUTE_REGISTRY: Readonly<Record<string, RouteRegistryEntry>> =
     memoryHealthExpected: true,
     atomsExpected: true,
   },
+
+  // ── Registered 2026-05-23 | de-frag thread ──────────────────────────────
+  // Status: live-secondary (authority map Tier 2)
+  // Reason: named variant for observability completeness; uses maiaOrchestrator
+  //         not getMaiaResponse(), so it is not a live caller of this wrapper.
+  //         Registered so the CI guard has an explicit record of its non-caller status.
   'between/chat': {
     status: 'live-secondary',
     description: 'Embedded oracle widget + dev chat-test (uses maiaOrchestrator, not getMaiaResponse)',
