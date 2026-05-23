@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bookmark, ChevronDown, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen } from 'lucide-react';
+import { Bookmark, BookMarked, ChevronDown, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { MAIA_WORLDS, MAIA_UTILITIES, getBoundaryFromPathname, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
@@ -256,6 +256,37 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
             Keep
           </span>
         </button>
+
+        {/* Keeps — destination for the list of kept items */}
+        {(() => {
+          const isKeepsActive = pathname === '/maia/keep-capture';
+          return (
+            <button
+              key="keeps-list"
+              onClick={() => router.push('/maia/keep-capture')}
+              className={`
+                group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+                ${isKeepsActive
+                  ? 'bg-[#D4B896]/15 text-[#D4B896]'
+                  : 'text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5'
+                }
+              `}
+              title="Keeps"
+            >
+              <BookMarked className="w-5 h-5" />
+              {isKeepsActive && (
+                <motion.div
+                  layoutId="rail-active"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#D4B896] rounded-r-full"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+                Keeps
+              </span>
+            </button>
+          );
+        })()}
 
         {/* Chevron — quiet doorway to the rest of the ecosystem */}
         <button

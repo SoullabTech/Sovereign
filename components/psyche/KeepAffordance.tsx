@@ -56,16 +56,17 @@ interface Props {
 
 export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
   const [resolvedText, setResolvedText] = useState<string | null>(null);
+  const [resolvedWithLink, setResolvedWithLink] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 'filed' arrives pre-resolved — high-confidence command already executed server-side.
   if (intent.kind === 'filed') {
-    return <ResolvedNote text={filedText(intent.destination, intent.atomTitle)} />;
+    return <ResolvedNote text={filedText(intent.destination, intent.atomTitle)} withLink />;
   }
 
   if (resolvedText !== null) {
-    return <ResolvedNote text={resolvedText} />;
+    return <ResolvedNote text={resolvedText} withLink={resolvedWithLink} />;
   }
 
   async function postResponse(
@@ -110,7 +111,7 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const { confirmation } = await postResponse({
+            const { confirmation, atomId } = await postResponse({
               kind: 'accept_offer',
               excerpt: intent.offer.excerpt,
               suggestedGesture: intent.offer.suggestedGesture,
@@ -119,6 +120,7 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
             if (confirmation !== null) {
               onResolved?.({ accepted: true });
               setResolvedText(confirmation);
+              if (atomId) setResolvedWithLink(true);
             }
           }}
           className="text-amber-700 hover:text-amber-900 disabled:text-stone-300"
@@ -168,13 +170,14 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const { confirmation } = await postResponse({
+            const { confirmation, atomId } = await postResponse({
               kind: 'confirm_filing',
               instruction: intent.instruction,
             });
             if (confirmation !== null) {
               onResolved?.({ accepted: true });
               setResolvedText(confirmation);
+              if (atomId) setResolvedWithLink(true);
             }
           }}
           className="text-amber-700 hover:text-amber-900 disabled:text-stone-300"
@@ -211,10 +214,21 @@ function AffordanceShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ResolvedNote({ text }: { text: string }) {
+function ResolvedNote({ text, withLink }: { text: string; withLink?: boolean }) {
   return (
     <div className="mt-2 text-xs text-stone-500 italic px-3 py-1">
       {text}
+      {withLink && (
+        <>
+          {' '}
+          <a
+            href="/maia/keep-capture"
+            className="text-amber-700 hover:text-amber-900 not-italic"
+          >
+            View your keeps →
+          </a>
+        </>
+      )}
     </div>
   );
 }
