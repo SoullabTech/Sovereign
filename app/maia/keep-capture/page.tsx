@@ -304,6 +304,26 @@ function KeptItem({
           Archive
         </button>
       </div>
+
+      <div className="mt-3 pt-3 border-t border-stone-100 flex items-center gap-3 text-xs">
+        <span className="text-stone-400">
+          {atom.returnPreference === 'member_pulled' ? 'Sealed' : 'May return'}
+        </span>
+        <button
+          onClick={() =>
+            onGesture({
+              kind: 'set_return_preference',
+              preference:
+                atom.returnPreference === 'member_pulled'
+                  ? 'contextual_doorway'
+                  : 'member_pulled',
+            })
+          }
+          className="text-stone-500 hover:text-stone-800"
+        >
+          {atom.returnPreference === 'member_pulled' ? 'Allow return' : 'Reseal'}
+        </button>
+      </div>
     </li>
   );
 }
