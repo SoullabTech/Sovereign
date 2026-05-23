@@ -96,6 +96,17 @@ import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext }
 import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
 
+// 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here because THIS is the live
+// sovereign-MAIA route the UI actually hits (not /api/sovereign/app/maia/route.ts,
+// which is dormant). Without this wiring MAIA confabulates about her own memory
+// because the orchestrator (which exists in lib/maia/) was previously only
+// invoked from /api/oracle/conversation and /api/between/chat. The 'list' in
+// this filename is misleading — it serves the chat path.
+// Reference implementation: app/api/between/chat/route.ts lines 1847–1885.
+import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
+import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
+
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 
@@ -631,6 +642,70 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       }
     }
 
+    // ═══ MEMORY ORCHESTRATOR (Phase 1.5 — live activation in sovereign chat route) ═══
+    // Build memory plan + forward-readiness BEFORE generation. Both flow into
+    // maiaService through meta.memoryInfluenceAddendum / meta.forwardReadinessAddendum,
+    // which the FAST/CORE/DEEP prompt assembly already reads
+    // (lib/sovereign/maiaService.ts lines 1164 and 1170).
+    // Gated by the same allowCrossSessionMemory check that gates the existing
+    // memory bundle build — recognized user, not sanctuary.
+    let memoryInfluenceAddendum: string | undefined;
+    let forwardReadinessAddendum: string | undefined;
+    if (allowCrossSessionMemory && userId) {
+      try {
+        const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
+          loadRecentDevelopmentalMemories(userId, 3),
+          loadRecentThemeSignals(userId, 10),
+        ]);
+        const memoryPlan = buildMemoryInfluencePlan({
+          message,
+          userId,
+          conversationHistory: [],
+          recentDevelopmentalMemories,
+          recentThemeSignals,
+          // The list route loads memory via MemoryBundleService (not the
+          // relationshipMemory variable used by /api/between/chat). Pass false
+          // for both flags — the orchestrator degrades gracefully on default-false.
+          hasMemberLiveContext: false,
+          hasRelationshipAnamnesis: false,
+        });
+        if (
+          memoryPlan.shouldUseMemory ||
+          memoryPlan.contradictionDetected ||
+          memoryPlan.reinforcementCandidate ||
+          memoryPlan.semanticCandidate ||
+          memoryPlan.somaticCandidate ||
+          memoryPlan.morphicCandidate
+        ) {
+          console.log('[MAIA/sovereign] memory-plan', summarizePlanForLog(memoryPlan));
+        } else {
+          console.log('[MAIA/sovereign] memory-plan inactive', {
+            userId: userId.slice(0, 8) + '...',
+            developmentalCount: recentDevelopmentalMemories.length,
+            themeCount: recentThemeSignals.length,
+            msgLen: message.length,
+          });
+        }
+        memoryInfluenceAddendum = memoryPlan.promptBlock || undefined;
+
+        const readiness = detectForwardReadiness(message);
+        if (readiness.ready) {
+          console.log('[MAIA/sovereign] forward-readiness', {
+            signals: readiness.signals,
+            preview: message.slice(0, 120),
+          });
+          forwardReadinessAddendum = buildForwardReadinessBlock();
+        }
+      } catch (memOrchErr) {
+        console.warn('[MAIA/sovereign] memory orchestrator non-fatal:', memOrchErr);
+      }
+    } else {
+      console.log('[MAIA/sovereign] memory orchestrator skipped', {
+        reason: isSanctuary ? 'sanctuary' : !userId ? 'no-userid' : 'anon-or-unrecognized',
+        userId: userId ? userId.slice(0, 8) + '...' : null,
+      });
+    }
+
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeoutLabeled(
       'getMaiaResponse',
@@ -661,6 +736,10 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
           ...meta,
+          // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — placed AFTER ...meta so server-built
+          // addenda cannot be overridden by stale client-supplied meta.
+          memoryInfluenceAddendum,
+          forwardReadinessAddendum,
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
