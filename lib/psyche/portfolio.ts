@@ -354,12 +354,12 @@ export async function keepSource(
     `INSERT INTO member_memory_atoms (
        member_id, source_type, source_id, title, body,
        primary_register, registers, elemental_lenses, thread_ids,
-       status, return_preference,
+       status,
        kept_at, last_touched_at
      ) VALUES (
        $1, $2, $3, $4, $5,
        $6, $7, $8, $9,
-       'active', 'member_pulled',
+       'active',
        NOW(), NOW()
      )
      RETURNING ${ATOM_COLUMNS}`,

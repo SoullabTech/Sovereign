@@ -58,10 +58,6 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
   const [resolvedText, setResolvedText] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Consent prompt state — set after a successful keep that returns an atomId.
-  // Null means no consent prompt is pending.
-  const [keptAtomId, setKeptAtomId] = useState<string | null>(null);
-  const [applyingGesture, setApplyingGesture] = useState(false);
 
   // 'filed' arrives pre-resolved — high-confidence command already executed server-side.
   if (intent.kind === 'filed') {
@@ -105,67 +101,6 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
   }
 
   // ────────────────────────────────────────────────────────────────────────
-  // Consent prompt — shown after a successful keep, before final resolution.
-  //
-  // Design rule: keeping creates the atom; a second explicit choice authorizes
-  // ambient return. No default graduation. Member_pulled is the sealed default.
-  //
-  // "Allow return" calls set_return_preference → contextual_doorway.
-  // "Keep sealed" does nothing — atom remains member_pulled.
-  // Either choice resolves to a persistent ResolvedNote (component never deletes).
-  // ────────────────────────────────────────────────────────────────────────
-  if (keptAtomId !== null) {
-    return (
-      <AffordanceShell>
-        <span className="text-stone-700">
-          Keep this sealed, or allow MAIA to bring it back when it may help?
-        </span>
-        <button
-          disabled={applyingGesture}
-          onClick={async () => {
-            setApplyingGesture(true);
-            try {
-              const r = await apiFetch(
-                `/api/psyche/portfolio/atoms/${keptAtomId}/gesture`,
-                {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    gesture: {
-                      kind: 'set_return_preference',
-                      preference: 'contextual_doorway',
-                    },
-                  }),
-                },
-              );
-              if (!r.ok) {
-                console.error('[KeepAffordance] gesture failed', r.status);
-              }
-            } catch (err) {
-              console.error('[KeepAffordance] gesture error', err);
-            } finally {
-              setApplyingGesture(false);
-              setResolvedText('Kept. MAIA may bring this back when it seems relevant.');
-            }
-          }}
-          className="text-amber-700 hover:text-amber-900 disabled:text-stone-300 whitespace-nowrap"
-        >
-          Allow return
-        </button>
-        <button
-          disabled={applyingGesture}
-          onClick={() => {
-            setResolvedText('Kept and sealed.');
-          }}
-          className="text-stone-500 hover:text-stone-700 disabled:text-stone-300 whitespace-nowrap"
-        >
-          Keep sealed
-        </button>
-      </AffordanceShell>
-    );
-  }
-
-  // ────────────────────────────────────────────────────────────────────────
   // Offer: "Keep this for me?" with Keep / Not now / Stop asking
   // ────────────────────────────────────────────────────────────────────────
   if (intent.kind === 'offer') {
@@ -175,7 +110,7 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const { confirmation, atomId } = await postResponse({
+            const { confirmation } = await postResponse({
               kind: 'accept_offer',
               excerpt: intent.offer.excerpt,
               suggestedGesture: intent.offer.suggestedGesture,
@@ -183,12 +118,7 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
             });
             if (confirmation !== null) {
               onResolved?.({ accepted: true });
-              if (atomId) {
-                // Atom created — show consent prompt before resolving.
-                setKeptAtomId(atomId);
-              } else {
-                setResolvedText(confirmation);
-              }
+              setResolvedText(confirmation);
             }
           }}
           className="text-amber-700 hover:text-amber-900 disabled:text-stone-300"
@@ -238,18 +168,13 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const { confirmation, atomId } = await postResponse({
+            const { confirmation } = await postResponse({
               kind: 'confirm_filing',
               instruction: intent.instruction,
             });
             if (confirmation !== null) {
               onResolved?.({ accepted: true });
-              if (atomId) {
-                // Atom created — show consent prompt before resolving.
-                setKeptAtomId(atomId);
-              } else {
-                setResolvedText(confirmation);
-              }
+              setResolvedText(confirmation);
             }
           }}
           className="text-amber-700 hover:text-amber-900 disabled:text-stone-300"

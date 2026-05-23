@@ -76,8 +76,6 @@ export default function KeepCapturePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeLensAtom, setActiveLensAtom] = useState<CrystallizedMemory | null>(null);
-  const [bulkAllowing, setBulkAllowing] = useState(false);
-  const [bulkConfirmation, setBulkConfirmation] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setError(null);
@@ -125,26 +123,6 @@ export default function KeepCapturePage() {
     }
   }
 
-  async function allowReturnForAllKept() {
-    const sealed = kept.filter((a) => a.returnPreference === 'member_pulled');
-    if (sealed.length === 0) return;
-    setBulkAllowing(true);
-    try {
-      for (const atom of sealed) {
-        await apiPost(`/api/psyche/portfolio/atoms/${atom.id}/gesture`, {
-          gesture: { kind: 'set_return_preference', preference: 'contextual_doorway' },
-        });
-      }
-      await reload();
-      setBulkConfirmation('All kept items may now return.');
-      setTimeout(() => setBulkConfirmation(null), 3000);
-    } catch (err) {
-      console.error('[keep-capture] bulk allow-return failed', err);
-    } finally {
-      setBulkAllowing(false);
-    }
-  }
-
   return (
     <main className="min-h-screen bg-stone-50">
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -184,34 +162,6 @@ export default function KeepCapturePage() {
                 </ul>
               </section>
             )}
-
-            {(() => {
-              const sealedCount = kept.filter((a) => a.returnPreference === 'member_pulled').length;
-              if (sealedCount === 0 && !bulkConfirmation) return null;
-              return (
-                <section className="mb-12 rounded-lg bg-stone-100 p-5">
-                  {bulkConfirmation ? (
-                    <p className="text-sm text-stone-600">{bulkConfirmation}</p>
-                  ) : (
-                    <>
-                      <p className="text-sm text-stone-700">
-                        Allow MAIA to bring back all kept items when relevant.
-                      </p>
-                      <p className="mt-1 text-xs text-stone-500">
-                        Only applies to items you intentionally kept. You can reseal any item anytime.
-                      </p>
-                      <button
-                        onClick={allowReturnForAllKept}
-                        disabled={bulkAllowing}
-                        className="mt-3 text-sm text-stone-700 hover:text-stone-900 disabled:text-stone-400"
-                      >
-                        {bulkAllowing ? 'Allowing return…' : 'Allow return for all kept items'}
-                      </button>
-                    </>
-                  )}
-                </section>
-              );
-            })()}
 
             {candidates.length > 0 && (
               <section>
