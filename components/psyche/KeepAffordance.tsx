@@ -58,6 +58,10 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
   const [resolvedText, setResolvedText] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Consent prompt state — set after a successful keep that returns an atomId.
+  // Null means no consent prompt is pending.
+  const [keptAtomId, setKeptAtomId] = useState<string | null>(null);
+  const [applyingGesture, setApplyingGesture] = useState(false);
 
   // 'filed' arrives pre-resolved — high-confidence command already executed server-side.
   if (intent.kind === 'filed') {
@@ -68,7 +72,9 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
     return <ResolvedNote text={resolvedText} />;
   }
 
-  async function postResponse(body: Record<string, unknown>): Promise<string | null> {
+  async function postResponse(
+    body: Record<string, unknown>,
+  ): Promise<{ confirmation: string | null; atomId: string | null }> {
     setSubmitting(true);
     setError(null);
     try {
@@ -82,17 +88,81 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         const errText = await r.text().catch(() => '');
         console.error('[KeepAffordance] response failed', r.status, errText);
         setError("Couldn't save right now.");
-        return null;
+        return { confirmation: null, atomId: null };
       }
       const data = await r.json();
-      return data.confirmation ?? null;
+      return {
+        confirmation: data.confirmation ?? null,
+        atomId: data.atom?.id ?? null,
+      };
     } catch (err) {
       console.error('[KeepAffordance] response error', err);
       setError("Couldn't save right now.");
-      return null;
+      return { confirmation: null, atomId: null };
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // Consent prompt — shown after a successful keep, before final resolution.
+  //
+  // Design rule: keeping creates the atom; a second explicit choice authorizes
+  // ambient return. No default graduation. Member_pulled is the sealed default.
+  //
+  // "Allow return" calls set_return_preference → contextual_doorway.
+  // "Keep sealed" does nothing — atom remains member_pulled.
+  // Either choice resolves to a persistent ResolvedNote (component never deletes).
+  // ────────────────────────────────────────────────────────────────────────
+  if (keptAtomId !== null) {
+    return (
+      <AffordanceShell>
+        <span className="text-stone-700">
+          Keep this sealed, or allow MAIA to bring it back when it may help?
+        </span>
+        <button
+          disabled={applyingGesture}
+          onClick={async () => {
+            setApplyingGesture(true);
+            try {
+              const r = await apiFetch(
+                `/api/psyche/portfolio/atoms/${keptAtomId}/gesture`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    gesture: {
+                      kind: 'set_return_preference',
+                      preference: 'contextual_doorway',
+                    },
+                  }),
+                },
+              );
+              if (!r.ok) {
+                console.error('[KeepAffordance] gesture failed', r.status);
+              }
+            } catch (err) {
+              console.error('[KeepAffordance] gesture error', err);
+            } finally {
+              setApplyingGesture(false);
+              setResolvedText('Kept. MAIA may bring this back when it seems relevant.');
+            }
+          }}
+          className="text-amber-700 hover:text-amber-900 disabled:text-stone-300 whitespace-nowrap"
+        >
+          Allow return
+        </button>
+        <button
+          disabled={applyingGesture}
+          onClick={() => {
+            setResolvedText('Kept and sealed.');
+          }}
+          className="text-stone-500 hover:text-stone-700 disabled:text-stone-300 whitespace-nowrap"
+        >
+          Keep sealed
+        </button>
+      </AffordanceShell>
+    );
   }
 
   // ────────────────────────────────────────────────────────────────────────
@@ -105,15 +175,20 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const confirmation = await postResponse({
+            const { confirmation, atomId } = await postResponse({
               kind: 'accept_offer',
               excerpt: intent.offer.excerpt,
               suggestedGesture: intent.offer.suggestedGesture,
               sessionId,
             });
-            if (confirmation) {
-              setResolvedText(confirmation);
+            if (confirmation !== null) {
               onResolved?.({ accepted: true });
+              if (atomId) {
+                // Atom created — show consent prompt before resolving.
+                setKeptAtomId(atomId);
+              } else {
+                setResolvedText(confirmation);
+              }
             }
           }}
           className="text-amber-700 hover:text-amber-900 disabled:text-stone-300"
@@ -123,7 +198,7 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const confirmation = await postResponse({ kind: 'decline_offer' });
+            const { confirmation } = await postResponse({ kind: 'decline_offer' });
             if (confirmation) {
               setResolvedText(confirmation);
               onResolved?.({ accepted: false });
@@ -136,7 +211,7 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const confirmation = await postResponse({ kind: 'pause_offers' });
+            const { confirmation } = await postResponse({ kind: 'pause_offers' });
             if (confirmation) {
               setResolvedText(confirmation);
               onResolved?.({ accepted: false });
@@ -163,13 +238,18 @@ export function KeepAffordance({ intent, sessionId, onResolved }: Props) {
         <button
           disabled={submitting}
           onClick={async () => {
-            const confirmation = await postResponse({
+            const { confirmation, atomId } = await postResponse({
               kind: 'confirm_filing',
               instruction: intent.instruction,
             });
-            if (confirmation) {
-              setResolvedText(confirmation);
+            if (confirmation !== null) {
               onResolved?.({ accepted: true });
+              if (atomId) {
+                // Atom created — show consent prompt before resolving.
+                setKeptAtomId(atomId);
+              } else {
+                setResolvedText(confirmation);
+              }
             }
           }}
           className="text-amber-700 hover:text-amber-900 disabled:text-stone-300"
