@@ -210,8 +210,7 @@ export async function getEnhancedMaiaResponse(req: EnhancedMaiaRequest): Promise
     console.error('❌ Enhanced MAIA processing failed:', error);
     const processingTimeMs = Date.now() - startTime;
 
-    // Use same fallback as original service
-    const text = "That last response didn't come out the way I intended. You're right to expect the focus to stay on you. Let's reset: what would feel most useful to talk about right now—support, clarity, or just a place to vent?";
+    const text = "Something went wrong in my processing layer just now. I'm not retrieving or responding reliably at the moment. Please try again in a moment.";
 
     return {
       text,

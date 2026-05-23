@@ -109,6 +109,17 @@ import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/f
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
 import type { MemoryOrchestratorInput } from '@/lib/maia/types/memoryOrchestrator';
 import {
+  loadMemberMemoryAtomsForPrompt,
+  formatAtomsForPrompt,
+  summarizeAtomsForLog,
+} from '@/lib/maia/memoryAtomsLoader';
+import {
+  buildMemoryHealth,
+  summarizeMemoryHealthForLog,
+  isBaseChainDegraded,
+} from '@/lib/maia/memoryHealth';
+import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
+import {
   getFieldContext,
   buildFieldContextPromptBlock,
 } from '@/lib/maia/fieldContextAdapter';
@@ -616,6 +627,14 @@ export async function POST(request: NextRequest) {
     // selection only — no raw transcripts or large payloads.
     const recentDevelopmentalMemories = await loadRecentDevelopmentalMemories(userId, 3);
     const recentThemeSignals = await loadRecentThemeSignals(userId, 10);
+
+    // CUT 1 — member_memory_atoms reader (Phase 1 of Psyche Engagement Layer surfacing).
+    // Loads ONLY atoms the member has opted into ambient surfacing of
+    // (return_preference IN contextual_doorway / ritual_review_opt_in), excludes
+    // sacred_protected register, status active/still_alive only. Schema-level
+    // crossing_must_be_false constraint backstops the no-cross-atom-synthesis rule.
+    // See docs/specs/CUT_1_SUBSTRATE_RESTORATION.md §II.B + canon authority chain.
+    const memberMemoryAtoms = await loadMemberMemoryAtomsForPrompt(userId, 8);
 
     // EVENT ARC: Load active event context if the member is inside a container.
     // Graceful fallback — if the lookup fails, conversation continues normally.
@@ -2359,6 +2378,37 @@ async function generateSpiralogicResponseWithLLM(
   }
   const forwardReadinessBlock = forwardReadiness.ready ? buildForwardReadinessBlock() : '';
 
+  // CUT 1 — member-placed portfolio (atoms) prompt block. Built late, next to
+  // anchorContextBlock, because both are member-authored continuity material
+  // (carve-out from the implicit "weave naturally" discipline per canon).
+  const atomsContextBlock = formatAtomsForPrompt(memberMemoryAtoms);
+  if (atomsContextBlock) {
+    console.log('[Oracle] atoms-block emitted', {
+      atomCount: memberMemoryAtoms.length,
+      summary: summarizeAtomsForLog(memberMemoryAtoms),
+    });
+  }
+
+  // CUT 1 — Canon §VII memoryHealth object. Tracks per-layer load status across
+  // the 12 canonical layers; subsequent cuts populate currently-empty layers.
+  const memoryHealth = buildMemoryHealth({
+    recentTurns: { count: conversationHistory.length },
+    session: { present: !!memberWebPrompt },
+    developmental: { count: recentDevelopmentalMemories.length },
+    semantic: { count: memberMemoryAtoms.length },
+    relational: { present: !!anamnesisPrompt },
+    pattern: { count: recentThemeSignals.length },
+    // episodic / somatic / breakthrough / field / meta / conversational
+    // intentionally undefined — Cut 1 does not wire those layers; they report
+    // 'empty' until subsequent cuts populate.
+  });
+  console.log('[Oracle] memoryHealth', summarizeMemoryHealthForLog(memoryHealth));
+  if (isBaseChainDegraded(memoryHealth)) {
+    console.warn('[Oracle] memoryHealth: base chain degraded — §VI fallback amplified', {
+      health: summarizeMemoryHealthForLog(memoryHealth),
+    });
+  }
+
   const finalSystemPrompt = [
     systemPrompt,
     orientationBlock,
@@ -2380,6 +2430,9 @@ async function generateSpiralogicResponseWithLLM(
     // recent words sit in high-attention context, just before forward-readiness
     // which retains final priority when it fires.
     anchorContextBlock,
+    // Member-placed portfolio (kept atoms): same member-authorship carve-out as
+    // anchor. Surfaced under canon discipline — see formatAtomsForPrompt.
+    atomsContextBlock,
     forwardReadinessBlock,
   ].filter(Boolean).join('');
 
@@ -2398,6 +2451,26 @@ async function generateSpiralogicResponseWithLLM(
       // Claude is now primary by default
     });
     coreMessage = llmResponse.text;
+
+    // CUT 1 — Canon §V post-generation scrubber. Verb-synonym-complete blocklist
+    // catches "I don't carry/hold/retain/keep memory" family — the lexical drift
+    // that produced the original incident. hasLoadedContext picks the §VI
+    // replacement shape (with-context vs without-context).
+    const memoryScrub = scrubMemoryAmnesia(coreMessage, {
+      hasLoadedContext:
+        conversationHistory.length > 0 ||
+        memberMemoryAtoms.length > 0 ||
+        recentDevelopmentalMemories.length > 0 ||
+        !!anamnesisPrompt ||
+        !!memberWebPrompt,
+    });
+    if (memoryScrub) {
+      console.warn('[Oracle] §V scrub fired', {
+        original_preview: coreMessage.slice(0, 200),
+        replacement_preview: memoryScrub.slice(0, 200),
+      });
+      coreMessage = memoryScrub;
+    }
 
     // TRUTHFUL PROVIDER TRACKING: Capture actual provider used
     providerUsed = llmResponse.provider as 'anthropic' | 'ollama';

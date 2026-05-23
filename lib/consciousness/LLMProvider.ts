@@ -181,8 +181,8 @@ export class MultiLLMProvider {
     // Log model selection for testing
     console.info(`[LLMProvider] level=${level} provider=${config.provider} model=${config.model}`);
 
-    // Force Ollama if explicitly requested (for data sovereignty use cases)
-    if (forceOllama) {
+    // Force Ollama if explicitly requested OR if tier config routes this level to local
+    if (forceOllama || config.provider === 'ollama') {
       try {
         return await this.generateOllama(systemPrompt, userInput, config, startTime);
       } catch (error) {

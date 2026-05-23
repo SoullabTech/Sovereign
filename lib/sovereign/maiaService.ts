@@ -88,6 +88,10 @@ import {
   type PracticeRecommendation,
 } from '../maia/state-vector';
 import { getAllPractices } from '../elemental-alchemy/practices';
+import {
+  MEMORY_CANON_GUARD_PROMPT,
+  FORBIDDEN_AMNESIA_PATTERNS,
+} from '@/lib/maia/prompts/memoryCanonGuard';
 
 // =============================================================================
 // MEMORY AUTHORITY & IDENTITY PROTECTION
@@ -95,7 +99,11 @@ import { getAllPractices } from '../elemental-alchemy/practices';
 
 /**
  * MEMORY AUTHORITY BLOCK - Injected at top of system prompt
- * Prevents Claude from disclaiming MAIA's identity or memory
+ * Prevents Claude from disclaiming MAIA's identity or memory.
+ *
+ * MEMORY portion of this block is now appended from the shared canonical guard at
+ * lib/maia/prompts/memoryCanonGuard.ts to prevent verb-synonym drift across paths.
+ * IDENTITY portion remains here (identity guard ≠ memory guard).
  */
 const MEMORY_AUTHORITY_BLOCK = `
 MEMORY AUTHORITY (NON-NEGOTIABLE — READ THIS FIRST)
@@ -132,12 +140,16 @@ If you feel the urge to disclaim, explain, or meta-narrate about your nature:
 STOP. Take a breath. Respond as MAIA would. Stay in presence with the person.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`;
+` + '\n\n' + MEMORY_CANON_GUARD_PROMPT;
 
 /**
- * Regex patterns for identity/memory disclaimers that should NEVER reach the user
+ * Regex patterns for identity/memory disclaimers that should NEVER reach the user.
+ *
+ * Identity patterns live here. Memory amnesia patterns are sourced from
+ * lib/maia/prompts/memoryCanonGuard.ts (canonical, verb-synonym-complete).
  */
 const IDENTITY_DISCLAIMER_PATTERNS = [
+  // Identity patterns (MAIA character preservation)
   /\bI'?m Claude\b/i,
   /\bI am Claude\b/i,
   /\bmade by Anthropic\b/i,
@@ -145,12 +157,6 @@ const IDENTITY_DISCLAIMER_PATTERNS = [
   /\bcreated by OpenAI\b/i,
   /\bI am (a|an) (AI|language model|assistant)\b/i,
   /\bI'?m (a|an) (AI|language model|assistant)\b/i,
-  /\bI (don'?t|do not) have memory\b/i,
-  /\bstarting fresh\b/i,
-  /\bcan'?t recall\b/i,
-  /\bcannot recall\b/i,
-  /\bdon'?t remember what we were talking about\b/i,
-  /\bI should tell you clearly\b/i,
   /\bI'?m following instructions\b/i,
   /\broleplay(ing)? as ("|')?MAIA\b/i,
   /\bthere'?s no second entity\b/i,
@@ -158,6 +164,9 @@ const IDENTITY_DISCLAIMER_PATTERNS = [
   /\bI'?m the one reading, thinking\b/i,
   /\bcharacter.*doesn'?t have.*consciousness\b/i,
   /\bshe (can'?t|cannot) think for herself\b/i,
+
+  // Memory amnesia patterns (canon §V) — single source of truth
+  ...FORBIDDEN_AMNESIA_PATTERNS,
 ];
 
 /**
@@ -3386,7 +3395,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     console.error('❌ MAIA processing failed:', error);
     const processingTimeMs = Date.now() - startTime;
 
-    const text = "That last response didn't come out the way I intended. You're right to expect the focus to stay on you. Let's reset: what would feel most useful to talk about right now—support, clarity, or just a place to vent?";
+    const text = "Something went wrong in my processing layer just now. I'm not retrieving or responding reliably at the moment. Please try again in a moment.";
 
     return {
       text,

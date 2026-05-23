@@ -35,6 +35,16 @@ import type { ConsultationDecision, ConsultationResult } from '@/lib/ain/types';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { inferStateVector, getDefaultStateVector, getDefaultPracticeRecommendation } from '@/lib/maia/state-vector/stateDefaults';
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
+import {
+  loadMemberMemoryAtomsForPrompt,
+  formatAtomsForPrompt,
+  summarizeAtomsForLog,
+} from '@/lib/maia/memoryAtomsLoader';
+import {
+  buildMemoryHealth,
+  summarizeMemoryHealthForLog,
+  isBaseChainDegraded,
+} from '@/lib/maia/memoryHealth';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
@@ -1853,9 +1863,14 @@ This user is in guest mode (no authenticated identity).
     let forwardReadinessAddendum: string | undefined;
     if (!isSanctuary && effectiveUserId && !effectiveUserId.startsWith('anon:')) {
       try {
-        const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
+        const [recentDevelopmentalMemories, recentThemeSignals, memberMemoryAtoms] = await Promise.all([
           loadRecentDevelopmentalMemories(effectiveUserId, 3),
           loadRecentThemeSignals(effectiveUserId, 10),
+          // CUT 1 — member-placed portfolio reader. Filters enforce canon:
+          // status active/still_alive, sacred_protected excluded, return_preference
+          // != member_pulled (member opt-in for ambient surfacing). See
+          // lib/maia/memoryAtomsLoader.ts + docs/specs/CUT_1_SUBSTRATE_RESTORATION.md.
+          loadMemberMemoryAtomsForPrompt(effectiveUserId, 8),
         ]);
         const memoryPlan = buildMemoryInfluencePlan({
           message,
@@ -1870,6 +1885,39 @@ This user is in guest mode (no authenticated identity).
           console.log('[MAIA/between] memory-plan', summarizePlanForLog(memoryPlan));
         }
         memoryInfluenceAddendum = memoryPlan.promptBlock || undefined;
+
+        // CUT 1 — append atoms block to the orchestrator addendum. Same prompt slot
+        // (member-authorship carve-out). Discipline lives inside formatAtomsForPrompt:
+        // no cross-atom synthesis, no system inference, atoms render as the member
+        // declared them. Empty string if no atoms surface (no injection).
+        const atomsContextBlock = formatAtomsForPrompt(memberMemoryAtoms);
+        if (atomsContextBlock) {
+          console.log('[MAIA/between] atoms-block emitted', {
+            atomCount: memberMemoryAtoms.length,
+            summary: summarizeAtomsForLog(memberMemoryAtoms),
+          });
+          memoryInfluenceAddendum = memoryInfluenceAddendum
+            ? `${memoryInfluenceAddendum}\n\n${atomsContextBlock}`
+            : atomsContextBlock;
+        }
+
+        // CUT 1 — Canon §VII memoryHealth telemetry. Tracks which of the 12 canon
+        // layers loaded successfully this turn. Subsequent cuts populate currently-
+        // empty layers; the full shape is built now so dashboards are stable.
+        const memoryHealth = buildMemoryHealth({
+          recentTurns: { count: conversationHistory.length },
+          session: { present: !!relationshipMemory },
+          developmental: { count: recentDevelopmentalMemories.length },
+          semantic: { count: memberMemoryAtoms.length },
+          relational: { present: !!relationshipMemory },
+          pattern: { count: recentThemeSignals.length },
+        });
+        console.log('[MAIA/between] memoryHealth', summarizeMemoryHealthForLog(memoryHealth));
+        if (isBaseChainDegraded(memoryHealth)) {
+          console.warn('[MAIA/between] memoryHealth: base chain degraded — §VI fallback amplified', {
+            health: summarizeMemoryHealthForLog(memoryHealth),
+          });
+        }
 
         const readiness = detectForwardReadiness(message);
         if (readiness.ready) {
