@@ -11,6 +11,16 @@ import { observeRelationalContent } from '@/lib/consciousness/relationalObserver
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
 
+// 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here so the live sovereign route
+// receives the same memory plan + forward-readiness signals that /api/between/chat
+// already gets. Without this wiring MAIA confabulates about her own memory because
+// the orchestrator (which exists in lib/maia/) was previously only invoked from
+// /api/oracle/conversation, a route the live UI no longer hits.
+// Reference implementation: app/api/between/chat/route.ts lines 1847–1885.
+import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
+import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
+
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
@@ -181,6 +191,68 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ═══ MEMORY ORCHESTRATOR (Phase 1.5 — live activation in sovereign route) ═══
+    // Build memory plan + forward-readiness BEFORE generation. Both flow into
+    // maiaService through meta.memoryInfluenceAddendum / meta.forwardReadinessAddendum,
+    // which the FAST/CORE/DEEP prompt assembly already reads
+    // (lib/sovereign/maiaService.ts lines 1164 and 1170).
+    // Loaders are graceful — empty arrays on failure, conversation continues.
+    // Skipped for sanctuary sessions and anon/guest users.
+    const isSanctuary = !!(meta as any)?.sanctuary;
+    let memoryInfluenceAddendum: string | undefined;
+    let forwardReadinessAddendum: string | undefined;
+    if (!isSanctuary && userId && userId !== 'guest' && !userId.startsWith('anon:')) {
+      try {
+        const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
+          loadRecentDevelopmentalMemories(userId, 3),
+          loadRecentThemeSignals(userId, 10),
+        ]);
+        const memoryPlan = buildMemoryInfluencePlan({
+          message,
+          userId,
+          conversationHistory: [],
+          recentDevelopmentalMemories,
+          recentThemeSignals,
+          hasMemberLiveContext: false,
+          hasRelationshipAnamnesis: false,
+        });
+        if (
+          memoryPlan.shouldUseMemory ||
+          memoryPlan.contradictionDetected ||
+          memoryPlan.reinforcementCandidate ||
+          memoryPlan.semanticCandidate ||
+          memoryPlan.somaticCandidate ||
+          memoryPlan.morphicCandidate
+        ) {
+          console.log('[MAIA/sovereign] memory-plan', summarizePlanForLog(memoryPlan));
+        } else {
+          console.log('[MAIA/sovereign] memory-plan inactive', {
+            userId,
+            developmentalCount: recentDevelopmentalMemories.length,
+            themeCount: recentThemeSignals.length,
+            msgLen: message.length,
+          });
+        }
+        memoryInfluenceAddendum = memoryPlan.promptBlock || undefined;
+
+        const readiness = detectForwardReadiness(message);
+        if (readiness.ready) {
+          console.log('[MAIA/sovereign] forward-readiness', {
+            signals: readiness.signals,
+            preview: message.slice(0, 120),
+          });
+          forwardReadinessAddendum = buildForwardReadinessBlock();
+        }
+      } catch (memOrchErr) {
+        console.warn('[MAIA/sovereign] memory orchestrator non-fatal:', memOrchErr);
+      }
+    } else {
+      console.log('[MAIA/sovereign] memory orchestrator skipped', {
+        reason: isSanctuary ? 'sanctuary' : !userId ? 'no-userid' : 'anon-or-guest',
+        userId: userId ?? null,
+      });
+    }
+
     let orchestratorResult;
 
     // 🎯 Use new three-tier processing system with voice integration
@@ -199,6 +271,10 @@ export async function POST(req: NextRequest) {
           fieldRouting: fieldSafety?.fieldRouting, // 🛡️ Pass field routing decision
           fieldWorkSafe: fieldSafety?.allowed ?? true, // 🛡️ Pass safety flag
           ...meta,
+          // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — placed AFTER ...meta so server-built
+          // addenda cannot be overridden by stale client-supplied meta.
+          memoryInfluenceAddendum,
+          forwardReadinessAddendum,
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
