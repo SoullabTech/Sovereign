@@ -106,6 +106,9 @@ import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/service
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
+// 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
+import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
+import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
@@ -651,6 +654,10 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // memory bundle build — recognized user, not sanctuary.
     let memoryInfluenceAddendum: string | undefined;
     let forwardReadinessAddendum: string | undefined;
+    // 🧬 Cut 1 — atoms (Layer 5) and health tracking (Layer 15)
+    let atomsResult: MemoryAtomSnapshot[] = [];
+    let atomsError = false;
+    let atomsAddendum: string | undefined;
     if (allowCrossSessionMemory && userId) {
       try {
         const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
@@ -688,6 +695,17 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         }
         memoryInfluenceAddendum = memoryPlan.promptBlock || undefined;
 
+        // 🧬 Layer 5 — member-placed portfolio atoms (consent-gated, non-synthesized)
+        const loadedAtoms = await loadMemberMemoryAtomsForPrompt(userId);
+        atomsResult = loadedAtoms;
+        const atomsBlock = formatAtomsForPrompt(loadedAtoms);
+        if (atomsBlock) {
+          atomsAddendum = atomsBlock;
+          console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: userId.slice(0, 8) + '...' });
+        } else {
+          console.log('[MAIA/sovereign] atoms: none surfacable for this member');
+        }
+
         const readiness = detectForwardReadiness(message);
         if (readiness.ready) {
           console.log('[MAIA/sovereign] forward-readiness', {
@@ -697,6 +715,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           forwardReadinessAddendum = buildForwardReadinessBlock();
         }
       } catch (memOrchErr) {
+        atomsError = true;
         console.warn('[MAIA/sovereign] memory orchestrator non-fatal:', memOrchErr);
       }
     } else {
@@ -704,6 +723,19 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         reason: isSanctuary ? 'sanctuary' : !userId ? 'no-userid' : 'anon-or-unrecognized',
         userId: userId ? userId.slice(0, 8) + '...' : null,
       });
+    }
+
+    // 🔬 Layer 15 — memoryHealth: what loaded, what failed, what is unknown (canon §VII)
+    const memoryHealth: MemoryHealth = buildMemoryHealth({
+      recentTurns: { count: session.turn_count ?? 0 },
+      session: { present: !!session },
+      relational: { present: !!(memoryBundle as any)?.recentTurns?.length || !!memoryBundle },
+      semantic: { count: atomsResult.length, error: atomsError },
+    });
+    if (isBaseChainDegraded(memoryHealth)) {
+      console.warn('[MAIA/sovereign] memoryHealth — base chain degraded:', summarizeMemoryHealthForLog(memoryHealth));
+    } else {
+      console.log('[MAIA/sovereign] memoryHealth:', summarizeMemoryHealthForLog(memoryHealth));
     }
 
     // 🎯 Use new three-tier processing system with voice integration
@@ -740,6 +772,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           // addenda cannot be overridden by stale client-supplied meta.
           memoryInfluenceAddendum,
           forwardReadinessAddendum,
+          atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
@@ -914,6 +947,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
         awarenessDescription: knowledgeGateResult.awarenessDescription,
       } : null,
+      // 🔬 Layer 15 — memoryHealth: per-turn continuity health (canon §VII)
+      memoryHealth,
       // 🔮 Top-level provider info for easy screenshot verification
       providerUsed,
       model: modelUsed,
