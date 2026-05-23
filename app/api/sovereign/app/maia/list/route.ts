@@ -109,6 +109,8 @@ import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/f
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
 import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
+// 🌀 Cut 2 — Spiral Orientation (read-only developmental context)
+import { buildMemberSpiralOrientation, type SpiralOrientationResult } from '@/lib/maia/spiralOrientation';
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
@@ -738,6 +740,22 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.log('[MAIA/sovereign] memoryHealth:', summarizeMemoryHealthForLog(memoryHealth));
     }
 
+    // 🌀 Cut 2 — Spiral Orientation: read-only developmental context (no writes, no assertions)
+    let spiralOrientation: SpiralOrientationResult | undefined;
+    try {
+      spiralOrientation = await buildMemberSpiralOrientation(userId);
+      const { dataPresence } = spiralOrientation;
+      console.log('[MAIA/sovereign] spiralOrientation:', {
+        intentions: spiralOrientation.activeIntentions.length,
+        themes: spiralOrientation.activeThemes.length,
+        thresholds: spiralOrientation.recentThresholds.length,
+        threads: spiralOrientation.thinkingThreads.length,
+        hasAny: dataPresence.hasIntentions || dataPresence.hasThemes || dataPresence.hasThresholds || dataPresence.hasThreads,
+      });
+    } catch (err) {
+      console.warn('[MAIA/sovereign] spiralOrientation failed (non-blocking):', err);
+    }
+
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeoutLabeled(
       'getMaiaResponse',
@@ -949,6 +967,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       } : null,
       // 🔬 Layer 15 — memoryHealth: per-turn continuity health (canon §VII)
       memoryHealth,
+      // 🌀 Cut 2 — spiralOrientation: read-only developmental context (evidence + questions, not conclusions)
+      spiralOrientation,
       // 🔮 Top-level provider info for easy screenshot verification
       providerUsed,
       model: modelUsed,
