@@ -77,23 +77,6 @@ The import is now commented out (commit `5eabe290c`) and the canonical route is 
 
 ## TIER 2 — Live Secondary (Production Traffic, Different Wiring)
 
-### `/api/sovereign/app/maia`
-| Field | Value |
-|-------|-------|
-| **File** | `app/api/sovereign/app/maia/route.ts` |
-| **Status** | `live-secondary` ⚠️ |
-| **Lines** | ~427 |
-| **Traffic evidence** | Possibly receiving traffic alongside /list — unclear split. Needs audit. |
-| **Calls getMaiaResponse()** | ✅ YES — `lib/sovereign/maiaService` |
-| **memoryHealth wired** | ❌ NO — Cut 1 not applied here |
-| **memoryAtomsLoader wired** | ❌ NO — Cut 1 not applied here |
-| **Provider routing** | Indirect via `getMaiaResponse()` → `modelService.ts` |
-| **Orientation wiring** | ❌ NO |
-| **@ts-nocheck** | ⚠️ YES |
-| **Owner thread** | `de-frag` |
-| **Allowed future edits** | De-frag thread must determine: (a) is this route still receiving traffic, (b) if yes — apply Cut 1, (c) if no — classify dormant. Do not apply orientation wiring until (a) is answered. |
-| **Notes** | Has Phase 1.5 memory orchestrator wired (buildMemoryInfluencePlan, forwardReadiness). Missing memoryHealth and atoms. If this route is live, it is the "fixed the wrong route" failure surface. |
-
 ### `/api/between/chat`
 | Field | Value |
 |-------|-------|
@@ -190,6 +173,23 @@ The import is now commented out (commit `5eabe290c`) and the canonical route is 
 ---
 
 ## TIER 4 — Dormant (Exists, Compiles, No Live Traffic)
+
+### `/api/sovereign/app/maia`
+| Field | Value |
+|-------|-------|
+| **File** | `app/api/sovereign/app/maia/route.ts` |
+| **Status** | `dormant` (reclassified 2026-05-23 from `live-secondary ⚠️`) |
+| **Lines** | ~445 (now includes dormant docblock) |
+| **Traffic evidence** | 48h production-log audit on 2026-05-23: **0 hits** (vs 99 for `/list`). Audit method: `docker logs maia-sovereign --since 48h \| grep "/api/sovereign/app/maia"` — only `/list/route` references returned. |
+| **Calls getMaiaResponse()** | ✅ YES (no-op — route never invoked in production) |
+| **memoryHealth wired** | ❌ NO |
+| **memoryAtomsLoader wired** | ❌ NO |
+| **Provider routing** | Indirect via `getMaiaResponse()` → `modelService.ts` |
+| **Orientation wiring** | ❌ NO |
+| **@ts-nocheck** | ⚠️ YES |
+| **Owner thread** | `legacy-ref` (reclassified from `de-frag`) |
+| **Allowed future edits** | **None to wiring.** Patches will not reach live traffic. If full removal is desired later, do so via a deletion commit that updates this map in the same diff. |
+| **Notes** | Phase 1.5 memory orchestrator wiring was added in commit `930cc412e` under the misapprehension that this was the canonical route. The wiring is preserved as a no-op reference; it has never fired in production. The supersession docblock at the top of `route.ts` cross-references this map and Divergence Pattern #5. **First real application of Pattern #5's supersession protocol.** |
 
 ### `/api/oracle/conversation`
 | Field | Value |
@@ -337,19 +337,22 @@ These require action independent of de-frag sequencing:
 
 ---
 
-## Critical Ambiguity
+## Critical Ambiguity — RESOLVED
 
-### Is `/api/sovereign/app/maia` receiving live traffic?
+### ~~Is `/api/sovereign/app/maia` receiving live traffic?~~ **RESOLVED 2026-05-23**
 
-Both `sovereign/app/maia` (427 lines, no Cut 1) and `sovereign/app/maia/list` (1143 lines, Cut 1 wired) call `getMaiaResponse()`. Only `/list` has memoryHealth and atoms wired. If both are receiving traffic:
+**Result: NO.** 48h production-log audit on 2026-05-23 returned 99 hits to `/api/sovereign/app/maia/list` and **zero hits** to `/api/sovereign/app/maia` (bare). The route has been reclassified `dormant` in Tier 4 and its top-of-file docblock now carries the supersession header per Divergence Pattern #5's protocol.
 
-- Turns hitting `/maia` get Phase 1.5 memory (orchestrator) but no atoms, no memoryHealth
-- Turns hitting `/maia/list` get the full Cut 1 spine
-- The member experiences MAIA as amnesiac depending on which route is hit
+**Audit details retained for traceability:**
 
-**Required before `buildMaiaRuntimeContext()` wrapper**: confirm which route(s) the frontend actually calls. Check client-side fetch calls and Capacitor routing.
+- **Devtools capture (2026-05-23):** production iOS Safari (`/maia` page, member `ce284751...`) confirmed the actual fetch URL is `/api/sovereign/app/maia/list`. Server logs from the same turn showed `[MAIA/sovereign] memory-plan`, `[MAIA/sovereign] memoryHealth`, and `[MAIA/sovereign] atoms: none surfacable for this member` — Cut 1 firing on the canonical route.
+- **48h log audit (2026-05-23):** `docker logs maia-sovereign --since 48h | grep -oE "/api/sovereign/app/maia[/a-z_-]*" | sort | uniq -c` → only `/list/route` references returned (99 occurrences). No bare-route hits, no other child-route hits.
 
-**Update 2026-05-23:** Devtools capture from production iOS Safari (`/maia` page, member `ce284751...`) confirmed the actual fetch URL is `/api/sovereign/app/maia/list`. Server logs from the same turn show `[MAIA/sovereign] memory-plan`, `[MAIA/sovereign] memoryHealth`, and `[MAIA/sovereign] atoms: none surfacable for this member` — i.e., Cut 1 firing on the canonical route. The status of `/api/sovereign/app/maia` (without `/list`) is still unconfirmed; treat as unknown until traffic evidence rules it dormant or live-secondary.
+**Implications closed:**
+
+- The "Required before `buildMaiaRuntimeContext()` wrapper" precondition is satisfied. The canonical surface is known.
+- The "member experiences MAIA as amnesiac depending on which route is hit" risk is closed — only `/list` receives traffic, and `/list` has the full Cut 1 spine.
+- Divergence Pattern #5's supersession protocol was applied to real code for the first time in the same commit as this resolution.
 
 ---
 
@@ -419,8 +422,8 @@ The route map (this document) must be updated in the same commit so the doc and 
 2. [DONE]     Cut 1 wired: memoryHealth + atoms in /list
 3. [DONE]     §V falsifiability suite: 18/18 on production
 4. [THIS DOC] Route authority map: surface is now explicit
-5. [NEXT]     Confirm /sovereign/app/maia traffic (is it live?)
-6. [NEXT]     buildMaiaRuntimeContext() wrapper — only after step 5 is answered
+5. [DONE]     Confirm /sovereign/app/maia traffic — 0 hits in 48h audit; reclassified dormant 2026-05-23
+6. [NEXT]     buildMaiaRuntimeContext() wrapper — step 5 is answered
 7. [DEFERRED] CI guard
 8. [DEFERRED] assertProviderAvailable()
 9. [DEFERRED] Remove @ts-nocheck from canonical routes
@@ -435,3 +438,4 @@ The route map (this document) must be updated in the same commit so the doc and 
 |------|--------|--------|
 | 2026-05-23 | Initial map created | de-frag thread |
 | 2026-05-23 | Added prominent `@ts-nocheck` warning at top + Known Divergence Patterns section (5 patterns including "route silently superseded without being marked dormant"). Annotated Critical Ambiguity with devtools-verified canonical route. | de-frag thread |
+| 2026-05-23 | 48h traffic audit confirmed `/api/sovereign/app/maia` (bare) receives zero traffic. Reclassified `live-secondary ⚠️` → `dormant`; moved section from Tier 2 to Tier 4; updated route file's top-of-file docblock with supersession header (STATUS/SUPERSEDED BY/SUPERSEDED ON/REASON) per Divergence Pattern #5 protocol. Critical Ambiguity section resolved. De-frag step 5 marked DONE. First real application of the supersession protocol. | de-frag thread |

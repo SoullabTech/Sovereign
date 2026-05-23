@@ -1,5 +1,23 @@
 // @ts-nocheck - Prototype file, not type-checked
 // backend: app/api/sovereign/app/maia/route.ts
+//
+// ═════════════════════════════════════════════════════════════════════════════
+// STATUS:        dormant (see docs/architecture/MAIA_ROUTE_AUTHORITY_MAP.md)
+// SUPERSEDED BY: /api/sovereign/app/maia/list (app/api/sovereign/app/maia/list/route.ts)
+// SUPERSEDED ON: 2026-05-23
+// REASON:        UI migrated to /list; 48h production-log audit on 2026-05-23
+//                confirmed zero requests to this path (99 hits to /list, 0 here).
+//
+// Do not add new wiring here. Patches to this route will not reach live traffic.
+// The Phase 1.5 memory orchestrator wiring present below was added in commit
+// 930cc412e under the misapprehension that this was the canonical route; it has
+// never fired in production and is preserved only as a no-op reference.
+//
+// For active runtime work on the sovereign MAIA chat path, edit
+// /api/sovereign/app/maia/list/route.ts instead. See the Route Authority Map
+// for the full surface inventory and the supersession protocol that produced
+// this header (Divergence Pattern #5).
+// ═════════════════════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from 'next/server';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
