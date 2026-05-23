@@ -35,7 +35,7 @@ These cannot fully collapse into one substrate. If merged too early:
 - companion logic bends outward
 - canon contamination becomes likely
 
-The repos are therefore separate. `soullab-media-engine/` is a sibling system, not a feature of `MAIA-SOVEREIGN/`. Bridges between them are carefully controlled, not default.
+Soullab Media is a distinct public-discourse surface with its own pacing, boundaries, and governance. Whether it lives inside MAIA-SOVEREIGN or as a sibling repository is an implementation decision; the boundary is ethical and architectural before it is infrastructural.
 
 ## Attention ethics — what the media system may optimize for
 
@@ -179,6 +179,6 @@ It coordinates with:
 
 It governs:
 
-- the future `soullab-media-engine/` repo
+- Soullab Media as a distinct public-discourse surface (whether inside MAIA-SOVEREIGN or as a sibling repository)
 - any bridge module between media output and MAIA's memory substrate
 - the Resonance Observatory's scoring function
