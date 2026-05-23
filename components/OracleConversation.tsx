@@ -298,7 +298,7 @@ function pickLastConversationTheme(opts: {
 
 // Performance: Cap conversation history to prevent UI lag and API bloat
 const MAX_DISPLAY_MESSAGES = 100; // Keep last 100 messages in UI state
-const MAX_API_HISTORY = 30; // Send last 30 messages (15 exchanges) to API
+const MAX_API_HISTORY = 100; // Send last 100 messages (~50 exchanges) to API. Raised from 30 to extend depth before MAIA hits the wall and confabulates about her own architecture. Paired with the "Memory Posture" instruction in buildSacredAttendingPrompt — when the gap is hit, she asks rather than fabricates.
 
 // Helper to cap messages array when adding new messages
 // Includes dedupe to prevent retry/resume double-inclusion
