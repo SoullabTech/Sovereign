@@ -128,10 +128,12 @@ services:
       LABTOOLS_ADMIN_PASSWORD: ${LABTOOLS_ADMIN_PASSWORD:-}
       # Sovereign inference: qwen2.5:14b-instruct primary, Claude escalation for depth
       OLLAMA_BASE_URL: "http://host.docker.internal:11434"
-      OLLAMA_MODEL: "qwen2.5:14b-instruct"
-      OLLAMA_MODEL_GENERAL: "qwen2.5:14b-instruct"
+      OLLAMA_MODEL: "qwen2.5:7b"
+      OLLAMA_MODEL_GENERAL: "qwen2.5:7b"
+      OLLAMA_MODEL_FAST: "qwen2.5:7b"
+      OLLAMA_MODEL_DEEP: "qwen2.5:14b-instruct"
       LOCAL_TIER_ENABLED: "true"
-      # MAIA_TEXT_PROVIDER: "local"   # re-enable once qwen2.5:7b verified (14b too large for this RAM config)
+      # MAIA_TEXT_PROVIDER: "local"   # enable when route timeout raised; 7b@5.8tok/s = ~30s/turn
       # Voice notes storage directory
       VOICE_NOTES_DIR: "/app/storage/voice-notes"
       # Feature flag: Explainer Scripts for HeyGen (Phase 1)
