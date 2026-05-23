@@ -7,6 +7,28 @@
 
 ---
 
+## ⚠️ Critical Warning — Typecheck Is Not Route Safety
+
+If a route file starts with `// @ts-nocheck`, TypeScript will not check its imports, types, or call sites. A route file under `@ts-nocheck` can:
+
+- pass `npm run typecheck` cleanly
+- pass `next build` cleanly
+- deploy without warning
+- **fail at runtime** when the module loader tries to resolve a non-existent import
+
+**This is not theoretical.** On 2026-05-23, the canonical route `/api/sovereign/app/maia/list` contained an unresolved import — `import { buildMemberSpiralOrientation, type SpiralOrientationResult } from '@/lib/maia/spiralOrientation'` — pointing at a file that did not exist. The actual implementation was at `lib/orientation/spiralOrientation.ts`, and exported `DomainOrientation[]`, not `SpiralOrientationResult`. The route file had `@ts-nocheck` at line 1. **Typecheck passed.** The runtime would have failed on the next live MAIA turn when the module loader tried to resolve the missing path. The failure was caught only because the de-frag thread re-read the route on a separate diagnostic pass.
+
+The import is now commented out (commit `5eabe290c`) and the canonical route is clean — verified in production logs the same day. **The warning stands because the mechanism that allowed the broken import to ship undetected is still present on every `@ts-nocheck` route in the codebase.** This bug is fixed; the pattern that hid it is not.
+
+**Implications for the authority protocol:**
+
+1. **Any route bearing live traffic should not have `@ts-nocheck`.** It is a prototype-era artifact that becomes a load-bearing risk once a route enters Tier 1 or Tier 2.
+2. **Removing `@ts-nocheck` from canonical routes is on the de-frag sequence (step 9).** Until then, every import added to a `@ts-nocheck` route must be manually verified to resolve against an actual file.
+3. **Deploy verification should include a runtime import-resolution check, not just typecheck.** `docker compose up --build` catches some missing modules at boot, but only if the affected route is invoked during the build's preflight.
+4. **`@ts-nocheck` is not a neutral comment.** Treat it as an opt-out from the language's safety guarantees. Per-route `@ts-nocheck` status is flagged in each route's table below.
+
+---
+
 ## Status Key
 
 | Status | Meaning |
@@ -327,6 +349,67 @@ Both `sovereign/app/maia` (427 lines, no Cut 1) and `sovereign/app/maia/list` (1
 
 **Required before `buildMaiaRuntimeContext()` wrapper**: confirm which route(s) the frontend actually calls. Check client-side fetch calls and Capacitor routing.
 
+**Update 2026-05-23:** Devtools capture from production iOS Safari (`/maia` page, member `ce284751...`) confirmed the actual fetch URL is `/api/sovereign/app/maia/list`. Server logs from the same turn show `[MAIA/sovereign] memory-plan`, `[MAIA/sovereign] memoryHealth`, and `[MAIA/sovereign] atoms: none surfacable for this member` — i.e., Cut 1 firing on the canonical route. The status of `/api/sovereign/app/maia` (without `/list`) is still unconfirmed; treat as unknown until traffic evidence rules it dormant or live-secondary.
+
+---
+
+## Known Divergence Patterns
+
+Five recurring failure modes that this map exists to prevent. Each has produced or nearly produced an incident in the current de-frag cycle. Naming them explicitly so future contributors recognize the shape before it bites again.
+
+### 1. Route created for one purpose, repurposed silently
+
+A route file is created with a name that describes its original purpose (`list`, `enhanced`, `between`, etc.). Over time the UI begins sending different traffic to it. The name no longer describes what it does. The next contributor reads the name and assumes the wrong scope.
+
+*Example:* `/api/sovereign/app/maia/list/route.ts` serves chat ingress, not a list endpoint. The "list" name is a relic.
+
+**Protocol:** When a route's purpose changes, update its top-of-file docblock in the same commit. Add a `ROUTING INVARIANT` block that names the actual purpose. Do not rename the file casually — clients depend on the URL — but make the misleading name harmless by documenting reality at the top.
+
+### 2. `@ts-nocheck` masking runtime import failures
+
+See the Critical Warning section above. A `@ts-nocheck` directive at the top of a route file silently disables type and import resolution checks for the whole file. Typecheck passes; runtime can fail when the module loader tries to resolve a non-existent path.
+
+**Protocol:** No `@ts-nocheck` on Tier 1 or Tier 2 routes. Removing existing directives from load-bearing routes is on the de-frag sequence (step 9). Until removed, every new import added to a `@ts-nocheck` route must be manually verified to resolve against an actual file.
+
+### 3. Misleading legacy labels in client analytics and response handlers
+
+The client may emit analytics events or log labels that reference an old route name even after the actual fetch URL has changed.
+
+*Example:* On 2026-05-23, devtools showed the request URL as `/api/sovereign/app/maia/list` while `[Analytics] api_call` reported `endpoint: '/api/between/chat'` and the client response handler logged `THE BETWEEN response data`. The labels were stale; the actual route was correct. A reader trusting the analytics would have been routed to investigate the wrong server-side surface.
+
+**Protocol:** When a route migration happens, audit and update analytics labels, client-side log markers, and response handler comments in the same commit as the routing change. Stale labels turn diagnostic logs into red herrings.
+
+### 4. Cross-thread parallel wiring without reconciliation
+
+When two threads (e.g., de-frag and orientation) modify adjacent surfaces in parallel, one thread may add imports or call sites for a module the other thread placed at a different path. Both diverge in the same commit window.
+
+*Example:* On 2026-05-23, the de-frag thread added imports referencing `@/lib/maia/spiralOrientation` (path) and `SpiralOrientationResult` (type) while the orientation thread had placed the actual file at `lib/orientation/spiralOrientation.ts` and exported `DomainOrientation[]`. Three layers diverged at once: path, type name, return shape. `@ts-nocheck` masked all three from typecheck.
+
+**Protocol:** Cross-thread wiring requires (a) an explicit reconciliation note in the commit message, (b) verification that both the import path AND return shape match the implementation, (c) authorization to cross the boundary from the thread that owns the affected file. When in doubt, park the wiring (comment out with parking note) rather than ship a guess.
+
+### 5. Route created, verified, then silently superseded — without the original being marked dormant
+
+A route is built, tested, deployed, confirmed working. Over time the UI migrates to a different route. The original keeps existing — still compiles, still passes typecheck, still has the most obvious-named file in its directory — but no longer receives traffic. New contributors read the original (because it has the canonical-looking name) and assume it's still live. Time is spent fixing the wrong route.
+
+*Example:* `/api/oracle/conversation/route.ts` (~2978 lines, the most complete Cut 1 implementation of any route in the codebase) was historically the primary oracle route. The UI has since migrated to `/api/sovereign/app/maia/list`. Early in the 2026-05-23 de-frag session, Cut 1 patches were applied to `/api/oracle/conversation` under the assumption it was canonical. The patches were correct code; the route was wrong code.
+
+**The failure pattern isn't "people create duplicates." It's "people don't mark the old one when they move."**
+
+**Protocol:** When a route is superseded — whether by a UI client change, a route refactor, or a new endpoint — the original route's top-of-file docblock must be updated *in the same commit* with:
+
+```ts
+/**
+ * STATUS: dormant (see docs/architecture/MAIA_ROUTE_AUTHORITY_MAP.md)
+ * SUPERSEDED BY: <new canonical route path>
+ * SUPERSEDED ON: YYYY-MM-DD
+ * REASON: <one line>
+ *
+ * Do not add new wiring here. Patches to this route will not reach live traffic.
+ */
+```
+
+The route map (this document) must be updated in the same commit so the doc and the code agree on which route is live. A divergence between this map and the routes themselves is itself an incident.
+
 ---
 
 ## De-frag Sequence (Updated)
@@ -351,3 +434,4 @@ Both `sovereign/app/maia` (427 lines, no Cut 1) and `sovereign/app/maia/list` (1
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-23 | Initial map created | de-frag thread |
+| 2026-05-23 | Added prominent `@ts-nocheck` warning at top + Known Divergence Patterns section (5 patterns including "route silently superseded without being marked dormant"). Annotated Critical Ambiguity with devtools-verified canonical route. | de-frag thread |
