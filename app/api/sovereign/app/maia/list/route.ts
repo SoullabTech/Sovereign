@@ -109,6 +109,8 @@ import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/f
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
 import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
+// 🔐 De-frag step 3 — runtime contract: every getMaiaResponse() call must pass through this
+import { buildMaiaRuntimeContext, formatRuntimeContextForResponse } from '@/lib/maia/maiaRuntimeContext';
 // 🌀 Cut 2 — Spiral Orientation (read-only developmental context)
 // PARKED: Cut 2 is design-only / parked. Orientation must not enter the MAIA
 // prompt automatically yet (preserves Path B: Journey surfaces orientation first,
@@ -745,6 +747,30 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.log('[MAIA/sovereign] memoryHealth:', summarizeMemoryHealthForLog(memoryHealth));
     }
 
+    // 🔐 De-frag step 3 — buildMaiaRuntimeContext: required contract before getMaiaResponse()
+    // Validates routeId, inspects provider config, emits canonical 8-field observability log.
+    // Non-blocking: unknown routeId = warn + passthrough (CI guard upgrade deferred to step 6).
+    const runtimeContext = buildMaiaRuntimeContext({
+      routeId: 'sovereign/app/maia/list',
+      member: {
+        userId: userId || null,
+        sessionId: session.id,
+        isSanctuary: isSanctuary || false,
+        allowCrossSessionMemory: allowCrossSessionMemory || false,
+      },
+      memoryHealth,
+      addenda: {
+        memoryInfluence: memoryInfluenceAddendum,
+        forwardReadiness: forwardReadinessAddendum,
+        atoms: atomsAddendum,
+        memberWeb: memberWebAddendum || undefined,
+        astrology: astrologyAddendum || undefined,
+        studio: studioAddendum || undefined,
+        knowledgeGate: knowledgeGateAddendum || undefined,
+        wuxing: wuxingAddendum || undefined,
+      },
+    });
+
     // 🌀 Cut 2 — Spiral Orientation: read-only developmental context (no writes, no assertions)
     // PARKED: orientation thread is design-only until spine is verified. See import
     // block above for full reasoning. Do not re-enable without:
@@ -978,6 +1004,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       } : null,
       // 🔬 Layer 15 — memoryHealth: per-turn continuity health (canon §VII)
       memoryHealth,
+      // 🔐 De-frag step 3 — runtimeContext: route identity + provider + prompt block summary
+      runtimeContext: formatRuntimeContextForResponse(runtimeContext),
       // 🌀 Cut 2 — spiralOrientation: PARKED (see import + call-site comments above)
       // spiralOrientation,
       // 🔮 Top-level provider info for easy screenshot verification
