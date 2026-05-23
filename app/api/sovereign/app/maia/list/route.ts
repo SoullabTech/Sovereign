@@ -110,7 +110,12 @@ import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/f
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
 import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
 // 🌀 Cut 2 — Spiral Orientation (read-only developmental context)
-import { buildMemberSpiralOrientation, type SpiralOrientationResult } from '@/lib/maia/spiralOrientation';
+// PARKED: Cut 2 is design-only / parked. Orientation must not enter the MAIA
+// prompt automatically yet (preserves Path B: Journey surfaces orientation first,
+// MAIA only receives what is brought into the room). Restore this import +
+// call site + meta passthrough only after Cut 2 is explicitly authorized AND
+// the import path / return-shape are reconciled with the actual implementation.
+// import { buildMemberSpiralOrientation, type SpiralOrientationResult } from '@/lib/maia/spiralOrientation';
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
@@ -741,20 +746,26 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     }
 
     // 🌀 Cut 2 — Spiral Orientation: read-only developmental context (no writes, no assertions)
-    let spiralOrientation: SpiralOrientationResult | undefined;
-    try {
-      spiralOrientation = await buildMemberSpiralOrientation(userId);
-      const { dataPresence } = spiralOrientation;
-      console.log('[MAIA/sovereign] spiralOrientation:', {
-        intentions: spiralOrientation.activeIntentions.length,
-        themes: spiralOrientation.activeThemes.length,
-        thresholds: spiralOrientation.recentThresholds.length,
-        threads: spiralOrientation.thinkingThreads.length,
-        hasAny: dataPresence.hasIntentions || dataPresence.hasThemes || dataPresence.hasThresholds || dataPresence.hasThreads,
-      });
-    } catch (err) {
-      console.warn('[MAIA/sovereign] spiralOrientation failed (non-blocking):', err);
-    }
+    // PARKED: orientation thread is design-only until spine is verified. See import
+    // block above for full reasoning. Do not re-enable without:
+    //   1. explicit Cut 2 authorization,
+    //   2. reconciliation of import path (lib/maia vs lib/orientation),
+    //   3. reconciliation of return shape (SpiralOrientationResult vs DomainOrientation[]),
+    //   4. and the Path A vs Path B decision.
+    // let spiralOrientation: SpiralOrientationResult | undefined;
+    // try {
+    //   spiralOrientation = await buildMemberSpiralOrientation(userId);
+    //   const { dataPresence } = spiralOrientation;
+    //   console.log('[MAIA/sovereign] spiralOrientation:', {
+    //     intentions: spiralOrientation.activeIntentions.length,
+    //     themes: spiralOrientation.activeThemes.length,
+    //     thresholds: spiralOrientation.recentThresholds.length,
+    //     threads: spiralOrientation.thinkingThreads.length,
+    //     hasAny: dataPresence.hasIntentions || dataPresence.hasThemes || dataPresence.hasThresholds || dataPresence.hasThreads,
+    //   });
+    // } catch (err) {
+    //   console.warn('[MAIA/sovereign] spiralOrientation failed (non-blocking):', err);
+    // }
 
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeoutLabeled(
@@ -967,8 +978,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       } : null,
       // 🔬 Layer 15 — memoryHealth: per-turn continuity health (canon §VII)
       memoryHealth,
-      // 🌀 Cut 2 — spiralOrientation: read-only developmental context (evidence + questions, not conclusions)
-      spiralOrientation,
+      // 🌀 Cut 2 — spiralOrientation: PARKED (see import + call-site comments above)
+      // spiralOrientation,
       // 🔮 Top-level provider info for easy screenshot verification
       providerUsed,
       model: modelUsed,
