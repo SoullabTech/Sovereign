@@ -157,6 +157,7 @@ export const WISDOM_SOURCES: WisdomDomain[] = [
     description: 'World mythology, shamanic traditions, and archetypal narratives',
     sources: [
       { title: 'The Shaman\'s Body', author: 'Arnold Mindell', focus: 'Process-oriented shamanism' },
+      { title: 'By Oak, Ash, & Thorn: Modern Celtic Shamanism', author: 'D.J. Conway', focus: 'Celtic shamanic practice — Three Realms of the Otherworlds, ogam divination, soul retrieval, shape-shifting, animal allies, tree mysteries' },
       { title: 'Jung and Shamanism in Dialogue', author: 'C. Michael Smith', focus: 'Soul retrieval psychology' },
       { title: 'How to Know Higher Worlds', author: 'Rudolf Steiner', focus: 'Esoteric development' },
       { title: 'Norse Mythology', author: 'Mythological Text', focus: 'Northern tradition' },
