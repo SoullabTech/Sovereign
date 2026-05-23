@@ -80,6 +80,23 @@ export const MAIA_ROUTE_REGISTRY: Readonly<Record<string, RouteRegistryEntry>> =
     memoryHealthExpected: true,
     atomsExpected: true,
   },
+
+  // ── Registered 2026-05-23 | de-frag thread ──────────────────────────────
+  // Status: dormant (authority map Tier 4 — reclassified from live-secondary)
+  // Reason: route DOES call getMaiaResponse() in its code (lines 278, 410) and
+  //         must be in the registry for the CI guard to pass. Registered as dormant
+  //         because 48h traffic audit (2026-05-23) confirmed zero production hits;
+  //         all traffic routes to sovereign/app/maia/list instead.
+  //         callsMaiaResponse: true because the code calls it — even though no
+  //         live traffic reaches those calls. Keeps the guard honest about what
+  //         is in the codebase, not just what is reachable.
+  'sovereign/app/maia': {
+    status: 'dormant',
+    description: 'Dormant predecessor to /list — superseded 2026-05-23; code still calls getMaiaResponse()',
+    callsMaiaResponse: true,
+    memoryHealthExpected: false,
+    atomsExpected: false,
+  },
 } as const;
 
 type RouteRegistryEntry = {
