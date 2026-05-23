@@ -131,6 +131,7 @@ services:
       OLLAMA_MODEL: "qwen2.5:14b-instruct"
       OLLAMA_MODEL_GENERAL: "qwen2.5:14b-instruct"
       LOCAL_TIER_ENABLED: "true"
+      MAIA_TEXT_PROVIDER: "local"
       # Voice notes storage directory
       VOICE_NOTES_DIR: "/app/storage/voice-notes"
       # Feature flag: Explainer Scripts for HeyGen (Phase 1)
