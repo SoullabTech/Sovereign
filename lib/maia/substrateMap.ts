@@ -279,10 +279,13 @@ export const CAPABILITY_CLAIMS: CapabilityClaim[] = [
   {
     name: 'Conversational memory',
     layer: 'conversational',
-    modules: ['lib/maia/memoryLoaders.ts'],
+    modules: [
+      'lib/maia/memoryLoaders.ts',
+      'lib/maia/conversationalRecallBlock.ts',
+    ],
     consumers: ['app/api/oracle/conversation/route.ts'],
     evidenceKey: 'conversational',
-    note: 'Prior related exchanges across sessions.',
+    note: 'Phase 2 — prior cross-session exchanges surfaced into prompt with provenance grounding, gated by members.conversational_recall_enabled (default TRUE). No synthesis, recency-ordered only.',
   },
   {
     name: 'Semantic memory (atoms)',

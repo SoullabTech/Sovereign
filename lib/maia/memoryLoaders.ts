@@ -169,14 +169,15 @@ export async function loadRecentThemeSignals(
 /**
  * Conversational memory — prior exchanges from sessions OTHER than the current one.
  *
- * Phase 1 observability: feeds memoryHealth.conversational count only.
- * Content is NOT injected into MAIA's prompt at this phase — the goal is to
- * make the layer observable (substrate row flips declared-unfed → observed)
- * before granting it interpretive power.
+ * Phase 2 (2026-05-24, Kelly lift on observation freeze for conversational layer):
+ * content IS surfaced into MAIA's prompt via lib/maia/conversationalRecallBlock.ts,
+ * gated by members.conversational_recall_enabled (default TRUE — matches the
+ * 0fa544bc4 atoms default-flip pattern). The retriever returns bounded content
+ * (LEFT 600 chars per row); the formatter applies further suppression rules and
+ * provenance-grounded rendering. No synthesis, no relevance scoring — order is
+ * recency only; "related" = structural (same member, different session, recent).
  *
- * "Related" = structural, not semantic: same member, different session, recent.
- * No relevance scoring, no synthesis. Provenance is the session boundary plus
- * timestamp. Phase 2 (prompt influence) will refine relatedness if/when wired.
+ * Authority: docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md
  *
  * Excludes:
  *   - the current session (covered by recentTurns / session layer)
@@ -188,6 +189,7 @@ export type PriorExchangeSnapshot = {
   session_id: string;
   role: 'user' | 'assistant';
   created_at: Date;
+  content: string;
 };
 
 export async function loadPriorCrossSessionExchanges(
@@ -201,8 +203,9 @@ export async function loadPriorCrossSessionExchanges(
       session_id: string;
       role: 'user' | 'assistant';
       created_at: Date;
+      content: string;
     }>(
-      `SELECT session_id, role, created_at
+      `SELECT session_id, role, created_at, LEFT(content, 600) AS content
        FROM conversation_turns
        WHERE user_id = $1
          AND session_id IS NOT NULL
@@ -215,9 +218,37 @@ export async function loadPriorCrossSessionExchanges(
       session_id: r.session_id,
       role: r.role,
       created_at: r.created_at,
+      content: r.content ?? '',
     }));
   } catch (err) {
     console.warn('[memoryLoaders] loadPriorCrossSessionExchanges failed (non-fatal):', err);
     return [];
+  }
+}
+
+/**
+ * Conversational recall preference — checks members.conversational_recall_enabled.
+ *
+ * Phase 2 consent gate (§II.A of spec, Option 3 — default-on with opt-out).
+ * When TRUE (default), the conversational block may surface prior cross-session
+ * exchanges into MAIA's prompt with provenance grounding. When FALSE, the
+ * block is suppressed entirely (count still feeds memoryHealth for observability
+ * but no content reaches MAIA's prompt).
+ *
+ * Graceful: returns true (default) on missing input or DB error so the
+ * conversation never blocks on preference lookup.
+ */
+export async function loadConversationalRecallPref(userId: string): Promise<boolean> {
+  if (!userId) return true;
+  try {
+    const result = await query<{ conversational_recall_enabled: boolean | null }>(
+      `SELECT conversational_recall_enabled FROM members WHERE id = $1 LIMIT 1`,
+      [userId],
+    );
+    if (result.rows.length === 0) return true; // member not found → default-on
+    return result.rows[0].conversational_recall_enabled !== false;
+  } catch (err) {
+    console.warn('[memoryLoaders] loadConversationalRecallPref failed (non-fatal):', err);
+    return true; // graceful: default-on
   }
 }

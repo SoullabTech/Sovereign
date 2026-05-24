@@ -124,7 +124,8 @@ import {
   getFieldContext,
   buildFieldContextPromptBlock,
 } from '@/lib/maia/fieldContextAdapter';
-import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges } from '@/lib/maia/memoryLoaders';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref } from '@/lib/maia/memoryLoaders';
+import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
 import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { buildReflectionFromConductor } from '@/lib/oracle/iching';
 import { isAiPermitted } from '@/lib/trust/service';
@@ -629,11 +630,16 @@ export async function POST(request: NextRequest) {
     const recentDevelopmentalMemories = await loadRecentDevelopmentalMemories(userId, 3);
     const recentThemeSignals = await loadRecentThemeSignals(userId, 10);
 
-    // Conversational memory — Phase 1: observability only. Prior exchanges from
-    // OTHER sessions (current session is covered by recentTurns/session layer).
-    // Count feeds memoryHealth.conversational; content is NOT injected into
-    // the prompt at this phase. See project_substrate_label_split_declared_unfed.
+    // Conversational memory — Phase 2 (2026-05-24, Kelly lift on observation
+    // freeze): prior cross-session exchanges are now surfaced into the prompt
+    // via lib/maia/conversationalRecallBlock.ts with provenance grounding and
+    // suppression rules per docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md.
+    // Retriever returns bounded content (LEFT 600 chars/row). Consent gate is
+    // members.conversational_recall_enabled (default TRUE per atoms default-flip
+    // pattern). The block formatter applies opt-out / Sanctuary / empty /
+    // session-resumption suppression before emission.
     const priorCrossSessionExchanges = await loadPriorCrossSessionExchanges(userId, sessionId, 6);
+    const conversationalRecallEnabled = await loadConversationalRecallPref(userId);
 
     // CUT 1 — member_memory_atoms reader (Phase 1 of Psyche Engagement Layer surfacing).
     // Loads ONLY atoms the member has opted into ambient surfacing of
@@ -2397,6 +2403,24 @@ async function generateSpiralogicResponseWithLLM(
     });
   }
 
+  // Phase 2 — conversational recall block (cross-session continuity). Sits at
+  // a lower authority tier than member-placed atoms/anchor: system-retrieved,
+  // not member-placed. Suppression rules (opt-out / Sanctuary / empty /
+  // session-resumption) live in the formatter; emission is logged here so
+  // production can verify the layer is doing what its substrate row reports.
+  // See docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md.
+  const conversationalRecall = formatPriorExchangesForPrompt(priorCrossSessionExchanges, {
+    recallEnabled: conversationalRecallEnabled,
+    mode: null, // Sanctuary sessions structurally do not reach this code path
+    currentSessionTurnCount: conversationHistory.length,
+    lastPriorSessionMinutesAgo: computeLastPriorSessionMinutesAgo(priorCrossSessionExchanges),
+  });
+  const conversationalRecallBlock = conversationalRecall.block;
+  console.log('[Oracle] conversational-block', {
+    candidateCount: priorCrossSessionExchanges.length,
+    ...summarizePriorExchangesForLog(conversationalRecall),
+  });
+
   // CUT 1 — Canon §VII memoryHealth object. Tracks per-layer load status across
   // the 12 canonical layers; subsequent cuts populate currently-empty layers.
   const memoryHealth = buildMemoryHealth({
@@ -2413,10 +2437,11 @@ async function generateSpiralogicResponseWithLLM(
     breakthrough: {
       count: memberMemoryAtoms.filter((a) => a.isBreakthrough).length,
     },
-    // Conversational layer: prior exchanges from other sessions. Phase 1 —
-    // observability only; content does NOT influence the prompt yet. A non-zero
-    // count means cross-session history exists for this member, NOT that MAIA
-    // has interpreted or surfaced it.
+    // Conversational layer (Phase 2, 2026-05-24): count remains the retriever's
+    // candidate count (does NOT distinguish emitted from suppressed — emission
+    // detail lives in the [Oracle] conversational-block log line per spec §II.D
+    // Option 2). 'ok' here means "the substrate carried candidate material this
+    // turn." Whether that material reached the prompt is a separate signal.
     conversational: { count: priorCrossSessionExchanges.length },
     // episodic / somatic / field / meta intentionally undefined — those layers
     // are not wired; they report 'empty' until subsequent cuts populate.
@@ -2445,6 +2470,12 @@ async function generateSpiralogicResponseWithLLM(
     // directionally, and BEFORE forward-readiness so an explicit user
     // forward-readiness signal still takes final priority.
     memoryInfluenceBlock ?? '',
+    // Conversational recall (Phase 2): system-retrieved prior cross-session
+    // exchanges. Lower authority tier than member-placed atoms/anchor, so it
+    // sits BEFORE them — member-authored continuity gets recency-priority over
+    // system-retrieved continuity. Provenance grounded, no synthesis. See
+    // docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md.
+    conversationalRecallBlock,
     // Member-authored continuity (Daily Anchor): placed late so member's own
     // recent words sit in high-attention context, just before forward-readiness
     // which retains final priority when it fires.
