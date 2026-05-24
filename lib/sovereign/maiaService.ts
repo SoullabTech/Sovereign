@@ -1506,6 +1506,9 @@ async function corePathResponse(
     consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
     // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
     fieldWisdomAddendum: (meta as any)?.fieldWisdomAddendum as string | undefined,
+    // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges. Injected
+    // inside buildMaiaWisePrompt via safeAddendum iteration. See spec §IX.
+    conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -2100,6 +2103,13 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
         // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
         fieldWisdomAddendum: (meta as any)?.fieldWisdomAddendum as string | undefined,
+        // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges.
+        // NOTE: DEEP-tier repair path goes through buildMaiaComprehensivePrompt
+        // → buildComprehensiveVoicePrompt, which currently does NOT iterate
+        // MaiaContext addenda (separate divergence-debt; see
+        // docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md). Field is
+        // set here for forward-compat with the eventual DEEP addenda repair.
+        conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

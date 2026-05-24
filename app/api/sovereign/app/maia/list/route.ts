@@ -812,6 +812,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         studio: studioAddendum || undefined,
         knowledgeGate: knowledgeGateAddendum || undefined,
         wuxing: wuxingAddendum || undefined,
+        // 💬 Phase 2 — conversational recall observability (PROMPT_BLOCK_CHARS sums this).
+        // Emission detail lives in [MAIA] conversational-block log line above.
+        conversational: conversationalRecallAddendum,
       },
     });
 

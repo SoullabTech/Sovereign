@@ -134,6 +134,8 @@ export type PromptBlockSummary = {
     studio: boolean;
     knowledgeGate: boolean;
     wuxing: boolean;
+    /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
+    conversational: boolean;
   };
 };
 
@@ -179,6 +181,8 @@ export type MaiaRuntimeContextInputs = {
     studio?: string;
     knowledgeGate?: string;
     wuxing?: string;
+    /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
+    conversational?: string;
   };
 };
 
@@ -280,7 +284,8 @@ function summarizePromptBlock(
     (addenda.astrology?.length ?? 0) +
     (addenda.studio?.length ?? 0) +
     (addenda.knowledgeGate?.length ?? 0) +
-    (addenda.wuxing?.length ?? 0);
+    (addenda.wuxing?.length ?? 0) +
+    (addenda.conversational?.length ?? 0);
 
   return {
     chars,
@@ -293,6 +298,7 @@ function summarizePromptBlock(
       studio: !!addenda.studio,
       knowledgeGate: !!addenda.knowledgeGate,
       wuxing: !!addenda.wuxing,
+      conversational: !!addenda.conversational,
     },
   };
 }

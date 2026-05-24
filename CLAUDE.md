@@ -39,13 +39,17 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 - **Date**: 2026-05-24 (evening)
 - **Current milestone**: Observation freeze lifted on conversational layer. Phase 2 (prompt influence, default-on, opt-out gate) shipped to branch. *"All arenas, safe but functional"* directive in effect — discipline reorients from blocking function to guiding it.
-- **Last changes** (this session, branch `clean-main-no-secrets`, uncommitted):
-  1. `lib/maia/memoryLoaders.ts` — extended `loadPriorCrossSessionExchanges` to include bounded content; added `loadConversationalRecallPref` (consent gate reader)
-  2. `lib/maia/conversationalRecallBlock.ts` (new) — `formatPriorExchangesForPrompt` with §II.C suppression rules (opt-out / Sanctuary / empty / session-resumption)
-  3. `database/migrations/20260524000001_member_conversational_recall.sql` — adds `members.conversational_recall_enabled BOOLEAN NOT NULL DEFAULT TRUE`
-  4. `app/api/oracle/conversation/route.ts` — wires consent gate load, block construction, `[Oracle] conversational-block` log line, prompt placement before atoms/anchor
-  5. `lib/maia/substrateMap.ts` — conversational row updated to Phase 2 note
-  6. `docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md` (new) — locked spec with §VII answers resolved
+- **Phase 2 commit chain on `clean-main-no-secrets`**:
+  1. `987b3ff28` — initial Phase 2 (loader extension, block formatter, migration, `[Oracle]` log line). Wired into `app/api/oracle/conversation/route.ts` — **post-audit: that route receives ~zero live traffic; wire was operationally null**.
+  2. `5179b162e` — (Kelly) Memory Expansion Plan — 9-layer activation map
+  3. `f74ab4204` — (Kelly) wire site correction. Moved Phase 2 to live route `app/api/sovereign/app/maia/list/route.ts` + extracted in FAST tier of `lib/sovereign/maiaService.ts` template literal. Renamed log marker to `[MAIA] conversational-block`. Spec §IX appended documenting the wire-site error + the architectural seam gap (`buildMaiaRuntimeContext` is observer, not orchestrator).
+  4. **Current cut (uncommitted)** — completes Kelly's deferred CORE/DEEP work:
+     - `lib/sovereign/maiaVoice.ts` — `conversationalRecallAddendum?: string` added to `MaiaContext`; `safeAddendum` injection added to `buildMaiaWisePrompt` (handles CORE tier via MaiaContext iteration)
+     - `lib/sovereign/maiaService.ts` — `conversationalRecallAddendum` set in CORE `MaiaContext` construction + DEEP `repairedContext`; DEEP-repair injection deferred pending §II.B fix
+     - `lib/maia/maiaRuntimeContext.ts` — added `conversational?: string` to `MaiaRuntimeContextInputs.addenda` + `conversational: boolean` to `PromptBlockSummary.layers` + updated `summarizePromptBlock` to count conversational chars
+     - `app/api/sovereign/app/maia/list/route.ts` — passes `conversational: conversationalRecallAddendum` to `buildMaiaRuntimeContext` addenda for observability completeness
+     - `docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md` (new) — divergence-debt note: (a) `atomsAddendum` never extracted by any tier, (b) DEEP tier `buildComprehensiveVoicePrompt` does NOT iterate MaiaContext addenda (silently drops every named addendum at DEEP), (c) `consciousnessOrchestrator` primary DEEP path needs separate audit
+- **Coverage after this cut**: FAST + CORE tiers receive Phase 2 in the prompt. DEEP tier carries it in MaiaContext + observability only (not in prompt — see divergence-debt §II.B). Most conversations are FAST/CORE; DEEP fires for explicit-depth requests.
 - **Prior session state preserved** (from 2026-05-23):
   - `sem: ok` — semantic memory live
   - `atoms loaded: 8` — atoms surface per turn
@@ -53,13 +57,20 @@ AIN is the broader ontological and architectural framework: a view of intelligen
   - `/maia/orientation` live, all 6 domains quiet, page reports honestly
 - **Posture shift (Kelly directive)**: *"yes I want full memory in all arenas in a safe but functional way. No more hardened rules against providing the one thing that makes soulful engagement possible and makes this platform more than a chat bot."* The observation-phase freeze doctrine **remains in force as discipline** (member-marked vs system-inferred, no synthesis, provenance-grounded, no-static-UI-claim-without-verified-state) but is **no longer used to block function**. Each remaining arena (episodic, somatic, field, meta) requires its own Phase 2-equivalent spec following the conversational pattern.
 - **Next actions (sequenced)**:
-  1. Run migration on minisforum: `psql -U soullab maia_consciousness -f database/migrations/20260524000001_member_conversational_recall.sql`
-  2. Typecheck + commit + deploy to minisforum
-  3. Verify in production logs: `[Oracle] conversational-block { emitted: true, surfacedCount: N, ... }` appearing for returning members
-  4. Ship Settings toggle UI for `conversational_recall_enabled` (member-facing opt-out surface) — UI cut, separate
+  1. Commit + deploy this cut (CORE/DEEP MaiaContext + observability + divergence-debt note)
+  2. Verify in production logs: `[MAIA] conversational-block { emitted: true, surfacedCount: N, ... }` on `sovereign/app/maia/list` for returning members across FAST + CORE turns; PROMPT_BLOCK_CHARS includes conversational
+  3. Ship Settings toggle UI for `conversational_recall_enabled` (member-facing opt-out surface) — UI cut, separate
+  4. Address `docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md` §V — extract shared `appendAllContextAddenda` helper, fix DEEP tier iteration, wire atoms end-to-end. **Not Phase 2 work.**
   5. Begin next arena: episodic Phase 2 spec (then somatic, field, meta — order TBD)
 - **Underlying question**: Does cross-session content surfacing, gated by consent and grounded in provenance, produce the felt continuity that makes MAIA more than a chatbot — without crossing into synthesis or interpretive displacement?
-- **State of the system**: Backend Phase 2 wired. Migration not yet applied to production. Verification gate (§IV of spec) requires 3 distinct members in real traffic with `emitted: true` before layer is declared functioning.
+- **State of the system (honest inventory — replaces earlier "all layers live" framing)**:
+  - **conversational** — Phase 2 deployed to branch, verification in progress (migration not yet applied to production; §IV gate requires 3 distinct members with `emitted: true`)
+  - **semantic / atoms** — surfacing operational (`sem: ok`, atoms surface per turn)
+  - **episodic, symbolic, somatic, field, meta** — architected but **not yet operationally verified** (services preserved, contracts defined where written, no live consumers wired; per `docs/specs/COHERENCE_FIELD_WIRE_UP_SPEC_2026-05-24.md` for field layer + `docs/architecture/MEMORY_SERVICE_STATUS_MATRIX_2026-05-24.md` for the rest)
+  - **orchestration** — partial (route-level loaders + memoryHealth + spiralState live; full MemoryOrchestrator integration not yet)
+  - **felt continuity** — emerging ahead of clean attribution (signal observable in MCP walks; provenance lags felt experience — see `docs/field-lab/LAB_POSTURE_MCP_SCENARIOS_2026-05-24.md`)
+  - **safeguards** — increasingly explicit and inspectable (`crossing_must_be_false`, `is_breakthrough` schema constraints, substrate map, `runtime_events`, `deriveStatus` fall-through, freeze doctrine + activation altitude clause in spec §0.D)
+- **Important not to collapse**: *declaration is not liveness; built ≠ wired; wired ≠ surfacing; surfacing ≠ verified.* Episodic is the first measurable substrate for continuity claims — the threshold layer where "MAIA remembers a life unfolding" becomes operationally testable rather than architecturally aspirational. Until Episodic ships and stabilizes, resonant-field / coherence talk remains mostly metaphorical architecture language; only after that does it begin having a measurable substrate underneath it.
 - **Ops diagnostic**:
   ```bash
   ssh soullab@minisforum 'docker logs maia-sovereign --since 1h 2>&1 | grep -E "MAIA/runtime|atoms loaded|MEMORY_HEALTH|conversational-block"'

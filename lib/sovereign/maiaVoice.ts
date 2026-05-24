@@ -96,6 +96,10 @@ export interface MaiaContext {
   consultationAddendum?: string;
   // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
   fieldWisdomAddendum?: string;
+  // 💬 CONVERSATIONAL RECALL (Phase 2, 2026-05-24): Prior cross-session exchanges
+  // with provenance grounding. System-retrieved continuity tier; lower authority
+  // than member-placed (atoms/anchor). See docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md.
+  conversationalRecallAddendum?: string;
 }
 
 /**
@@ -871,6 +875,16 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (fieldWisdomSafe) {
     adaptedPrompt += `\n\n${fieldWisdomSafe}`;
     console.log(`🌀 [Field Wisdom] Collective intelligence injected`);
+  }
+
+  // 1️⃣9️⃣ CONVERSATIONAL RECALL: Phase 2 cross-session continuity (system-retrieved
+  // tier). Provenance-grounded, no synthesis. The block itself carries the
+  // discipline instruction; this injection makes it reachable from CORE-tier
+  // routes that go through buildMaiaWisePrompt. See spec §IX.
+  const conversationalRecallSafe = safeAddendum(context.conversationalRecallAddendum);
+  if (conversationalRecallSafe) {
+    adaptedPrompt += `\n\n${conversationalRecallSafe}`;
+    console.log(`💬 [Conversational Recall] Cross-session continuity injected (${conversationalRecallSafe.length} chars)`);
   }
 
   return adaptedPrompt.trim();
