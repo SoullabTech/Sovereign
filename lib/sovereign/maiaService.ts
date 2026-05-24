@@ -3102,6 +3102,25 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         }
       }
 
+      // 🔬 LOOP C: Log primary engine response so paired comparison exists in maia_engine_comparisons.
+      // Without this row, shadow rows have nothing to compare against — Move 2 of the Learning Spine.
+      // Fire-and-forget — must never block user response.
+      if (turnId > 0) {
+        try {
+          const { EngineComparisonService } = await import('../learning/engineComparisonService');
+          EngineComparisonService.logEngineResponse({
+            turnId,
+            engineName: (meta.engine as string) || 'claude',
+            isPrimary: true,
+            responseText: text,
+            responseTimeMs: processingTimeMs,
+            processingProfile,
+          }).catch(err => console.warn('⚠️ [PRIMARY-LOG] Failed:', err));
+        } catch (primaryLogErr) {
+          console.warn('⚠️ [PRIMARY-LOG] Import failed:', primaryLogErr);
+        }
+      }
+
       // 🔄 DECISION PERSISTENCE: Store decision trace for ALL turns (not just uncertain)
       // This provides the denominator for learning - confident turns are the baseline
       if (atlasResult && turnId) {
