@@ -112,6 +112,7 @@ import {
   loadMemberMemoryAtomsForPrompt,
   formatAtomsForPrompt,
   summarizeAtomsForLog,
+  hasBreakthroughSignal,
 } from '@/lib/maia/memoryAtomsLoader';
 import {
   buildMemoryHealth,
@@ -2385,6 +2386,7 @@ async function generateSpiralogicResponseWithLLM(
   if (atomsContextBlock) {
     console.log('[Oracle] atoms-block emitted', {
       atomCount: memberMemoryAtoms.length,
+      breakthroughCarried: hasBreakthroughSignal(memberMemoryAtoms),
       summary: summarizeAtomsForLog(memberMemoryAtoms),
     });
   }
@@ -2398,9 +2400,16 @@ async function generateSpiralogicResponseWithLLM(
     semantic: { count: memberMemoryAtoms.length },
     relational: { present: !!anamnesisPrompt },
     pattern: { count: recentThemeSignals.length },
-    // episodic / somatic / breakthrough / field / meta / conversational
-    // intentionally undefined — Cut 1 does not wire those layers; they report
-    // 'empty' until subsequent cuts populate.
+    // Breakthrough layer: 'ok' when at least one surfaced atom carries the
+    // member-placed breakthrough flag (is_breakthrough = TRUE). This is an
+    // observability signal that the breakthrough substrate carried material
+    // this turn — NOT a state claim about the member. System never marks.
+    breakthrough: {
+      count: memberMemoryAtoms.filter((a) => a.isBreakthrough).length,
+    },
+    // episodic / somatic / field / meta / conversational intentionally
+    // undefined — Cut 1 does not wire those layers; they report 'empty' until
+    // subsequent cuts populate.
   });
   console.log('[Oracle] memoryHealth', summarizeMemoryHealthForLog(memoryHealth));
   if (isBaseChainDegraded(memoryHealth)) {

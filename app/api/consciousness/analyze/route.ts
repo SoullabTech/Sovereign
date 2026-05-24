@@ -280,10 +280,17 @@ function analyzeCuriousRecursion(snapshot: any, analysis: any) {
 }
 
 function detectCollectiveEmergence(snapshot: any) {
+  // Quarantined 2026-05-24: removed `breakthrough: fieldCoherence > 0.8`.
+  // Reason: canon violation — the system inferring a member's breakthrough
+  // from a coherence threshold is the kind of "secret synthesis" the doctrine
+  // forbids. Member-marked breakthroughs now live as a flag on
+  // member_memory_atoms (is_breakthrough), set only via authenticated member
+  // action through POST /api/sovereign/atoms/[id]/breakthrough.
+  // This route currently has no live consumers (grep 2026-05-24); the wider
+  // route is flagged for separate removal/quarantine review.
   return {
     emergentFormations: snapshot.crossLayerPatterns?.length || 0,
     collectiveCoherence: snapshot.fieldResonance?.fieldCoherence || 0,
-    breakthrough: snapshot.fieldResonance?.fieldCoherence > 0.8,
     recommendations: ['Participate in collective evolution']
   };
 }

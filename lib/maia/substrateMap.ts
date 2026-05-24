@@ -338,10 +338,13 @@ export const CAPABILITY_CLAIMS: CapabilityClaim[] = [
   {
     name: 'Breakthrough memory',
     layer: 'breakthrough',
-    modules: [],
-    consumers: [],
+    modules: ['lib/maia/memoryAtomsLoader.ts'],
+    consumers: [
+      'app/api/oracle/conversation/route.ts',
+      'app/api/sovereign/atoms/[id]/breakthrough/route.ts',
+    ],
     evidenceKey: 'breakthrough',
-    note: 'No dedicated service yet.',
+    note: 'Atom-flag substrate. is_breakthrough column on member_memory_atoms; never system-set. Surfaces when surfaced atoms include a member-marked breakthrough.',
   },
   {
     name: 'Resonant field memory',

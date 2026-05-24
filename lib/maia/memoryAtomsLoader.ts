@@ -100,6 +100,13 @@ export interface MemoryAtomSnapshot {
   keptAt: Date;
   returnPreference: MemoryAtomReturnPreference;
   sourceType: MemoryAtomSourceType;
+  /**
+   * Member-marked breakthrough. The system NEVER sets this — only the member,
+   * via POST /api/sovereign/atoms/[id]/breakthrough. Schema constraint
+   * breakthrough_flag_timestamp_coherent guarantees flag and timestamp align.
+   */
+  isBreakthrough: boolean;
+  markedBreakthroughAt: Date | null;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -116,7 +123,9 @@ const SELECT_COLUMNS = `
   status,
   kept_at,
   return_preference,
-  source_type
+  source_type,
+  is_breakthrough,
+  marked_breakthrough_at
 `;
 
 interface AtomRow {
@@ -130,6 +139,8 @@ interface AtomRow {
   kept_at: Date;
   return_preference: MemoryAtomReturnPreference;
   source_type: MemoryAtomSourceType;
+  is_breakthrough: boolean;
+  marked_breakthrough_at: Date | null;
 }
 
 /**
@@ -143,7 +154,9 @@ interface AtomRow {
  *   - NOT 'sacred_protected' = ANY(registers) — sacred-protected register is
  *     structurally voice-ineligible per migration constraint
  *
- * Ordering: kept_at DESC (most recently kept first).
+ * Ordering: is_breakthrough DESC, kept_at DESC. Member-marked breakthroughs
+ * surface first within the saliency window. The flag is never system-set —
+ * it reflects only material the member has explicitly marked as a breakthrough.
  *
  * @param memberId - the member's UUID
  * @param limit - max atoms to return (default 8)
@@ -166,7 +179,7 @@ export async function loadMemberMemoryAtomsForPrompt(
          AND status IN ('active', 'still_alive')
          AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
          AND NOT ('sacred_protected' = ANY(registers))
-       ORDER BY kept_at DESC
+       ORDER BY is_breakthrough DESC, kept_at DESC
        LIMIT $2`,
       [memberId, limit],
     );
@@ -183,6 +196,8 @@ export async function loadMemberMemoryAtomsForPrompt(
       keptAt: r.kept_at,
       returnPreference: r.return_preference,
       sourceType: r.source_type,
+      isBreakthrough: r.is_breakthrough ?? false,
+      markedBreakthroughAt: r.marked_breakthrough_at,
     }));
   } catch (err) {
     console.warn(
@@ -263,6 +278,10 @@ export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
       parts.push('marked still alive by the member');
     }
 
+    if (atom.isBreakthrough) {
+      parts.push('marked as a breakthrough by the member');
+    }
+
     lines.push(`- ${parts.join(' — ')}`);
 
     // Spontaneous atoms carry member-typed body content; surface verbatim
@@ -294,6 +313,7 @@ export function summarizeAtomsForLog(
 ): Record<string, unknown> {
   return {
     count: atoms.length,
+    breakthrough_count: atoms.filter((a) => a.isBreakthrough).length,
     registers: Array.from(
       new Set(atoms.flatMap((a) => a.registers.concat(a.primaryRegister ? [a.primaryRegister] : []))),
     ),
@@ -301,4 +321,15 @@ export function summarizeAtomsForLog(
     statuses: Array.from(new Set(atoms.map((a) => a.status))),
     return_preferences: Array.from(new Set(atoms.map((a) => a.returnPreference))),
   };
+}
+
+/**
+ * Whether any of the surfaced atoms is member-marked as a breakthrough.
+ *
+ * Used by the route handler to set memoryHealth.breakthrough = 'ok' | 'empty'
+ * for substrate observability. NOT a state claim about the member; only a
+ * structural observation that the breakthrough substrate carried signal this turn.
+ */
+export function hasBreakthroughSignal(atoms: MemoryAtomSnapshot[]): boolean {
+  return atoms.some((a) => a.isBreakthrough);
 }
