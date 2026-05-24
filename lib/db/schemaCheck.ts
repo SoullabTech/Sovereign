@@ -38,6 +38,7 @@ const REQUIRED_TABLES: TableCheck[] = [
   { table: 'accumulating_hypotheses',   addedBy: '20260311000001_accumulating_hypotheses.sql' },
   { table: 'interpretive_ledger',       addedBy: '20260311000002_interpretive_ledger.sql' },
   { table: 'member_spiral_state',       addedBy: '20260213200001_member_spiral_state.sql' },
+  { table: 'runtime_events',            addedBy: '20260524000001_runtime_events.sql' },
 ];
 
 // ─── Check runner ───────────────────────────────────────────────────────────

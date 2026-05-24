@@ -37,9 +37,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const recentTurns = getRecentRuntimeTurns(50);
-    const activity = getSubstrateActivity();
-    const summary = getRuntimeSummary();
+    const [recentTurns, activity, summary] = await Promise.all([
+      getRecentRuntimeTurns(50),
+      getSubstrateActivity(),
+      getRuntimeSummary(),
+    ]);
 
     const claims = CAPABILITY_CLAIMS.map((claim) => ({
       ...claim,
