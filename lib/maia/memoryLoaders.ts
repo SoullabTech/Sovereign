@@ -165,3 +165,59 @@ export async function loadRecentThemeSignals(
     return [];
   }
 }
+
+/**
+ * Conversational memory — prior exchanges from sessions OTHER than the current one.
+ *
+ * Phase 1 observability: feeds memoryHealth.conversational count only.
+ * Content is NOT injected into MAIA's prompt at this phase — the goal is to
+ * make the layer observable (substrate row flips declared-unfed → observed)
+ * before granting it interpretive power.
+ *
+ * "Related" = structural, not semantic: same member, different session, recent.
+ * No relevance scoring, no synthesis. Provenance is the session boundary plus
+ * timestamp. Phase 2 (prompt influence) will refine relatedness if/when wired.
+ *
+ * Excludes:
+ *   - the current session (covered by recentTurns / session layer)
+ *   - rows with NULL session_id (orphaned / pre-session-tracking turns)
+ *
+ * Graceful: returns [] on missing inputs or DB error.
+ */
+export type PriorExchangeSnapshot = {
+  session_id: string;
+  role: 'user' | 'assistant';
+  created_at: Date;
+};
+
+export async function loadPriorCrossSessionExchanges(
+  userId: string,
+  currentSessionId: string | null | undefined,
+  limit: number = 6,
+): Promise<PriorExchangeSnapshot[]> {
+  if (!userId) return [];
+  try {
+    const result = await query<{
+      session_id: string;
+      role: 'user' | 'assistant';
+      created_at: Date;
+    }>(
+      `SELECT session_id, role, created_at
+       FROM conversation_turns
+       WHERE user_id = $1
+         AND session_id IS NOT NULL
+         AND ($2::text IS NULL OR session_id <> $2)
+       ORDER BY created_at DESC
+       LIMIT $3`,
+      [userId, currentSessionId ?? null, limit],
+    );
+    return result.rows.map((r) => ({
+      session_id: r.session_id,
+      role: r.role,
+      created_at: r.created_at,
+    }));
+  } catch (err) {
+    console.warn('[memoryLoaders] loadPriorCrossSessionExchanges failed (non-fatal):', err);
+    return [];
+  }
+}

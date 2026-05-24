@@ -124,7 +124,7 @@ import {
   getFieldContext,
   buildFieldContextPromptBlock,
 } from '@/lib/maia/fieldContextAdapter';
-import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges } from '@/lib/maia/memoryLoaders';
 import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { buildReflectionFromConductor } from '@/lib/oracle/iching';
 import { isAiPermitted } from '@/lib/trust/service';
@@ -628,6 +628,12 @@ export async function POST(request: NextRequest) {
     // selection only — no raw transcripts or large payloads.
     const recentDevelopmentalMemories = await loadRecentDevelopmentalMemories(userId, 3);
     const recentThemeSignals = await loadRecentThemeSignals(userId, 10);
+
+    // Conversational memory — Phase 1: observability only. Prior exchanges from
+    // OTHER sessions (current session is covered by recentTurns/session layer).
+    // Count feeds memoryHealth.conversational; content is NOT injected into
+    // the prompt at this phase. See project_substrate_label_split_declared_unfed.
+    const priorCrossSessionExchanges = await loadPriorCrossSessionExchanges(userId, sessionId, 6);
 
     // CUT 1 — member_memory_atoms reader (Phase 1 of Psyche Engagement Layer surfacing).
     // Loads ONLY atoms the member has opted into ambient surfacing of
@@ -2407,9 +2413,13 @@ async function generateSpiralogicResponseWithLLM(
     breakthrough: {
       count: memberMemoryAtoms.filter((a) => a.isBreakthrough).length,
     },
-    // episodic / somatic / field / meta / conversational intentionally
-    // undefined — Cut 1 does not wire those layers; they report 'empty' until
-    // subsequent cuts populate.
+    // Conversational layer: prior exchanges from other sessions. Phase 1 —
+    // observability only; content does NOT influence the prompt yet. A non-zero
+    // count means cross-session history exists for this member, NOT that MAIA
+    // has interpreted or surfaced it.
+    conversational: { count: priorCrossSessionExchanges.length },
+    // episodic / somatic / field / meta intentionally undefined — those layers
+    // are not wired; they report 'empty' until subsequent cuts populate.
   });
   console.log('[Oracle] memoryHealth', summarizeMemoryHealthForLog(memoryHealth));
   if (isBaseChainDegraded(memoryHealth)) {
