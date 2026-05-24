@@ -23,6 +23,7 @@
  */
 
 import type { MemoryHealth } from './memoryHealth';
+import { recordRuntimeTurn } from './substrateObservability';
 
 // ─── Route Registry ──────────────────────────────────────────────────────────
 
@@ -220,6 +221,10 @@ export function buildMaiaRuntimeContext(
 
   // ── Emit canonical 8-field observability log ──────────────────────────────
   emitObservabilityLog(context);
+
+  // ── Push onto in-process ring buffer for admin substrate monitor ─────────
+  // Fire-and-forget: recordRuntimeTurn never throws. See substrateObservability.ts.
+  recordRuntimeTurn(context);
 
   return context;
 }
