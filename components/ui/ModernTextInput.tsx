@@ -365,21 +365,23 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
         )}
       </AnimatePresence>
 
-      {/* Memory Indicator — UI chrome, not chat content. Styled as status label
-          (uppercase, tracked, muted) so it cannot be visually mistaken for a
-          MAIA reply when an input submission silently clears the box. */}
+      {/* Memory Indicator — UI chrome in its own dedicated band, in normal
+          flow above the input container. Sits in a thin vertical strip so it
+          cannot visually compress into the conversation area or overlap the
+          Ask MAIA affordance / button row. Heavily opacity-reduced so the
+          eye registers it as ambient state, not as content. */}
       {hasMemory && (
         <motion.div
-          initial={{ opacity: 0, y: 5 }}
+          initial={{ opacity: 0, y: -2 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-8 left-4 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-gold-divine/50 select-none pointer-events-none"
+          className="mb-3 px-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-gold-divine/30 select-none pointer-events-none"
           aria-label="memory status indicator"
           role="status"
         >
           <Sparkles className="w-2.5 h-2.5" />
           <span>memory · continuity active</span>
           {lastConnectionTime && (
-            <span className="text-white/30 normal-case tracking-normal">
+            <span className="text-white/20 normal-case tracking-normal">
               · last turn {getTimeAgo(lastConnectionTime)} ago
             </span>
           )}
