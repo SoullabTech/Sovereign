@@ -212,3 +212,164 @@ After Kelly answers §VII and Phase 2 ships, the priority thread should be updat
 
 Kelly authors the actual update. Claude does not edit the priority thread
 without explicit instruction (per established practice).
+
+---
+
+## §IX. Wire Site Correction (post-audit addendum, 2026-05-24)
+
+This addendum was added after Phase 2 had already shipped and the post-hoc
+verification audit revealed that the original wire site is not the live path
+for real member traffic. Phase 2 is **structurally enabled on a dead code
+path** until corrected. This section records the finding, the architectural
+implications, and the corrected wiring plan.
+
+### §IX.A. Wire site error
+
+The original spec (§III, §IV) assumed `app/api/oracle/conversation/route.ts`
+was the live route. **It is not.** Post-deploy audit findings:
+
+- Container `maia-sovereign` (commit `5179b162e`, deployed 2026-05-24
+  15:19:42Z) shows **zero `[Oracle]` log markers** in 15+ minutes of uptime.
+- Meanwhile, 36 new rows written to `conversation_turns` in the same window
+  via a different route emitting `[MAIA step]` / `[MAIA/sovereign]` markers
+  and `[CONVERSATION] Stored turn pair`.
+- `grep` confirms `loadPriorCrossSessionExchanges`, `formatPriorExchangesForPrompt`,
+  and `conversationalRecallBlock` are referenced **only** from
+  `app/api/oracle/conversation/route.ts` — never from the live path.
+
+Consequence: any felt continuity observed by members in live test runs is
+attributable to **atoms / session / relational carry-forward** — not to
+conversational recall, because conversational recall code is never reached.
+
+### §IX.B. Live route identification
+
+```
+Frontend (MAIA UI in browser / Capacitor app)
+    │
+    ▼  POST /api/sovereign/app/maia/list
+─────────────────────────────────────────────
+app/api/sovereign/app/maia/list/route.ts        (1200 lines)
+    │  emits [MAIA step] / [MAIA/sovereign] markers
+    │  lines 674–746: builds memory orchestration
+    │  • loadRecentDevelopmentalMemories(userId, 3)
+    │  • loadRecentThemeSignals(userId, 10)
+    │  • loadMemberMemoryAtomsForPrompt(userId)
+    │  • buildMemoryInfluencePlan(...)
+    │  • buildMemoryHealth({...})  ← Phase 2 count input lands here
+    │  ✗ loadPriorCrossSessionExchanges       NOT CALLED
+    │  ✗ loadConversationalRecallPref         NOT CALLED
+    │  ✗ formatPriorExchangesForPrompt        NOT CALLED
+    ▼
+lib/sovereign/maiaService.ts::getMaiaResponse()   (3427 lines)
+    ▼
+MAIA response → frontend
+```
+
+### §IX.C. Sibling route: SUPERSEDED
+
+`app/api/sovereign/app/maia/route.ts` (445 lines) is officially superseded
+per its own header (lines 6, 17):
+
+```
+// SUPERSEDED BY: /api/sovereign/app/maia/list (app/api/sovereign/app/maia/list/route.ts)
+```
+
+It contains duplicate memory orchestration (lines 225–228) but is marked
+for retirement. **It does NOT receive Phase 2 wiring.** Its eventual
+deletion is the divergence-debt resolution; wiring it would extend the
+debt this work is trying to cure.
+
+### §IX.D. Path C reconsidered — not viable
+
+The earlier proposal to wire Phase 2 through `buildMaiaRuntimeContext()`
+(per [[project_recurrence_prevention_architecture]] point 1) was based
+on a misread of that function's contract.
+
+Inspection of `lib/maia/maiaRuntimeContext.ts:195` shows the docstring
+is explicit: *"Build the MAIA runtime context and emit the canonical
+per-turn observability log. ... Call this **after memoryHealth is built,
+before getMaiaResponse()**."*
+
+Its input contract is `{ routeId, member, memoryHealth, addenda }` — it
+**receives** the already-built `memoryHealth` for telemetry. It does not
+construct memory state. **Phase 2 cannot land at this seam** because
+memory orchestration has already happened by the time it is called.
+
+### §IX.E. Architectural finding (record-only, not a Phase 2 task)
+
+The anti-divergence doctrine in [[project_recurrence_prevention_architecture]]
+was implemented at the **observation** layer (`buildMaiaRuntimeContext`
+exists and runs per turn) but not at the **construction** layer (memory
+orchestration is still hand-rolled per route). This is precisely why the
+current divergence happened: there is no shared construction seam to wire
+Phase 2 into.
+
+Future architectural priority worth recording: extract memory orchestration
+from `sovereign/app/maia/list/route.ts` lines 674–746 into a shared
+construction function (e.g., `buildLiveMemoryBundle()`) that any future
+route can call. This would let later memory layers (episodic, semantic
+refinement, relational, somatic, field, meta) wire once instead of N
+times. **Not a Phase 2 task. Recorded here so the gap is named.**
+
+### §IX.F. Corrected wiring plan (Path A, single-route)
+
+Because the sibling is SUPERSEDED, what would have been "two-file
+duplication" reduces to a single-file change:
+
+1. In `app/api/sovereign/app/maia/list/route.ts`:
+   - Import `loadPriorCrossSessionExchanges`, `loadConversationalRecallPref`
+     from `@/lib/maia/memoryLoaders`.
+   - Import `formatPriorExchangesForPrompt`, `summarizePriorExchangesForLog`,
+     `computeLastPriorSessionMinutesAgo` from `@/lib/maia/conversationalRecallBlock`.
+   - At memory-loading section (lines ~674–676): load the consent pref +
+     prior exchanges alongside developmental / theme loaders.
+   - Build the conversational recall block; emit the log line.
+   - Wire the block into the prompt context passed to `getMaiaResponse()`.
+   - Pass count into `buildMemoryHealth({ ..., conversational: { count: N } })`
+     at line ~739.
+2. Do **not** modify the SUPERSEDED sibling route.
+3. Existing oracle/conversation/route.ts wiring: decision separate from
+   this addendum — remove (dead path) or leave (parallel observability,
+   no harm). Default-safe option: leave it in place; mark for removal
+   in a later cleanup pass.
+
+### §IX.G. Log marker rename
+
+The original spec (§II.D, §IV) named the verification log marker
+`[Oracle] conversational-block`. Because the emit site is now on the
+sovereign route (which uses `[MAIA step]` / `[MAIA/sovereign]` prefixes),
+the verification log marker is **renamed to `[MAIA] conversational-block`**
+on the live emit site for naming consistency.
+
+If the oracle route wiring is left in place, it continues emitting
+`[Oracle] conversational-block` from that dead path; both markers can
+coexist without confusion since traffic patterns make their origin clear.
+
+### §IX.H. Verification gate (§IV) re-aligned
+
+Original §IV pass-condition referenced `[Oracle] conversational-block
+{ emitted: true, ... }`. Updated:
+
+- Live emit site: `[MAIA] conversational-block { emitted: true, surfacedCount: N, suppressedReason: ... }` on `app/api/sovereign/app/maia/list/route.ts`.
+- Threshold unchanged: 3 distinct members in real (non-test) traffic with
+  `emitted: true` across multiple sessions.
+- 4-gate sequence still applies (mechanical → structural → relational →
+  causal) — see [[project_substrate_label_split_declared_unfed]] for
+  the discipline.
+
+### §IX.I. Authority chain
+
+This addendum operates under the same Kelly directive 2026-05-24 that
+authorized Phase 2 originally. It does not lift any additional freeze; it
+corrects a wire-site error within the already-authorized Phase 2 scope.
+
+The §I scope, §II.A consent semantics, §II.B prompt block format,
+§II.C suppression rules, §II.D observability extension, §V drift canaries,
+§VI non-goals, and §VII resolved answers all remain in force.
+
+What changes: §III implementation plan (wire site is now the live sovereign
+route, not the oracle route), §IV verification gate log marker (`[MAIA]`
+instead of `[Oracle]`).
+
+What does not change: the four invariants — consent gate, Sanctuary
+suppression, provenance-grounded surfacing, no synthesis.

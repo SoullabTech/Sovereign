@@ -103,11 +103,14 @@ import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/service
 // this filename is misleading — it serves the chat path.
 // Reference implementation: app/api/between/chat/route.ts lines 1847–1885.
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
-import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref } from '@/lib/maia/memoryLoaders';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
 import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
+// 💬 Phase 2 — Conversational recall (wire site correction per spec §IX, 2026-05-24).
+// Live route wire — replaces oracle/conversation/route.ts which receives no real traffic.
+import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
 // 🔐 De-frag step 3 — runtime contract: every getMaiaResponse() call must pass through this
 import { buildMaiaRuntimeContext, formatRuntimeContextForResponse } from '@/lib/maia/maiaRuntimeContext';
 // 🔐 De-frag step 5 — provider health guard: throws before generation, never soft-returns
@@ -668,6 +671,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     let atomsResult: MemoryAtomSnapshot[] = [];
     let atomsError = false;
     let atomsAddendum: string | undefined;
+    // 💬 Phase 2 — Conversational recall (cross-session continuity, wire site
+    // corrected per spec §IX). Block is built inside the if-block below, consumed
+    // by maiaService.ts via meta.conversationalRecallAddendum.
+    let conversationalRecallAddendum: string | undefined;
+    let priorExchangesCount = 0;
     if (allowCrossSessionMemory && userId) {
       try {
         const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
@@ -716,6 +724,35 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA/sovereign] atoms: none surfacable for this member');
         }
 
+        // 💬 Phase 2 — Conversational recall (live route wire site per spec §IX).
+        // Surfaces prior cross-session exchanges into the prompt with provenance
+        // grounding. Suppression rules (opt-out / Sanctuary / empty / session-
+        // resumption) live in the formatter; emission is logged here so production
+        // verification can confirm the layer is participating. Sanctuary path is
+        // structurally blocked above by allowCrossSessionMemory, but mode is
+        // passed explicitly as defense-in-depth.
+        try {
+          const conversationalRecallEnabled = await loadConversationalRecallPref(userId);
+          const priorCrossSessionExchanges = await loadPriorCrossSessionExchanges(userId, session.id, 6);
+          priorExchangesCount = priorCrossSessionExchanges.length;
+          const conversationalRecall = formatPriorExchangesForPrompt(priorCrossSessionExchanges, {
+            recallEnabled: conversationalRecallEnabled,
+            mode: isSanctuary ? 'Sanctuary' : null,
+            currentSessionTurnCount: session.turn_count ?? 0,
+            lastPriorSessionMinutesAgo: computeLastPriorSessionMinutesAgo(priorCrossSessionExchanges),
+          });
+          if (conversationalRecall.block) {
+            conversationalRecallAddendum = conversationalRecall.block;
+          }
+          console.log('[MAIA] conversational-block', {
+            candidateCount: priorCrossSessionExchanges.length,
+            ...summarizePriorExchangesForLog(conversationalRecall),
+            userId: userId.slice(0, 8) + '...',
+          });
+        } catch (err) {
+          console.warn('[MAIA] conversational-block error (non-fatal):', err);
+        }
+
         const readiness = detectForwardReadiness(message);
         if (readiness.ready) {
           console.log('[MAIA/sovereign] forward-readiness', {
@@ -741,6 +778,12 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       session: { present: !!session },
       relational: { present: !!(memoryBundle as any)?.recentTurns?.length || !!memoryBundle },
       semantic: { count: atomsResult.length, error: atomsError },
+      // Conversational layer (Phase 2, wire site corrected per spec §IX, 2026-05-24):
+      // count is the retriever's candidate count (does NOT distinguish emitted from
+      // suppressed — emission detail lives in the [MAIA] conversational-block log line).
+      // 'ok' here means "the substrate carried candidate material this turn." Whether
+      // that material actually reached the prompt is a separate signal.
+      conversational: { count: priorExchangesCount },
     });
     if (isBaseChainDegraded(memoryHealth)) {
       console.warn('[MAIA/sovereign] memoryHealth — base chain degraded:', summarizeMemoryHealthForLog(memoryHealth));
@@ -834,6 +877,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           memoryInfluenceAddendum,
           forwardReadinessAddendum,
           atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
+          conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
