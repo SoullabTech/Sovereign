@@ -719,6 +719,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isActivating, setIsActivating] = useState(false); // True while waiting for mic to confirm
   const [isResponding, setIsResponding] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  // Transient submit-error banner shown above ModernTextInput. Set by the
+  // error paths around the canonical /api/sovereign/app/maia/list fetch so a
+  // cleared input is never visually indistinguishable from a successful send.
+  // Cleared by next keystroke (via onClearSubmitError) or by the auto-fade
+  // timer below.
+  const [inputSubmitError, setInputSubmitError] = useState<string | null>(null);
+
+  // Auto-fade the submit-error banner after a short window so it doesn't linger.
+  useEffect(() => {
+    if (!inputSubmitError) return;
+    const t = setTimeout(() => setInputSubmitError(null), 10000);
+    return () => clearTimeout(t);
+  }, [inputSubmitError]);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isIOSAudioEnabled, setIsIOSAudioEnabled] = useState(false);
   const [needsIOSAudioPermission, setNeedsIOSAudioPermission] = useState(false);
@@ -4773,6 +4786,9 @@ I'm not sure what I'm feeling yet.`;
         // Network-level errors (CORS, network unreachable, etc.)
         // NETWORK ERROR FALLBACK: Use presence mode instead of failing
         console.log('[OracleConversation] Network error - using presence fallback:', fetchError);
+        // Surface a small banner above the input so the user isn't left with
+        // a cleared input and a presence-fallback reply that visually mimics MAIA.
+        setInputSubmitError("Network unreachable — replying in presence mode. Try again when back online.");
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
           mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
@@ -4824,6 +4840,7 @@ I'm not sure what I'm feeling yet.`;
           console.error('[fetch] 503 error details:', errData);
           if (errData?.error === 'MAINTENANCE_MODE') {
             console.log('[OracleConversation] Maintenance mode active:', errData.message);
+            setInputSubmitError("MAIA is in maintenance mode. Your message hasn't been sent.");
             const maintenanceMessage: ConversationMessage = {
               id: `maintenance-${Date.now()}`,
               role: 'oracle',
@@ -4845,6 +4862,7 @@ I'm not sure what I'm feeling yet.`;
 
         // SERVER ERROR FALLBACK: Use presence mode instead of showing error
         console.log('[OracleConversation] Server error - using presence fallback');
+        setInputSubmitError(`Server returned ${response.status}. Replying in presence mode — try again.`);
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
           mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
@@ -8469,6 +8487,8 @@ I'm not sure what I'm feeling yet.`;
                       messages.length > 5 ? 'developing' : 'new'
                     }
                     mode={listeningMode}
+                    submitError={inputSubmitError}
+                    onClearSubmitError={() => setInputSubmitError(null)}
                   />
                 </div>
               </div>

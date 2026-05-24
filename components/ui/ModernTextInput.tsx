@@ -42,6 +42,12 @@ interface ModernTextInputProps {
   relationshipDepth?: 'new' | 'developing' | 'deep' | 'profound';
   mode?: 'normal' | 'patient' | 'session'; // MAIA mode: normal=dialogue, patient=counsel, session=scribe
   externalValue?: string; // Alias for value (used by OracleConversation)
+  /** Transient submit-error banner shown above input. Parent owns the value
+   *  and clears it (typically on next keystroke or after a timeout). Surfaces
+   *  cases where a submit didn't produce a visible MAIA reply. */
+  submitError?: string | null;
+  /** Called when the user dismisses or clears the submit error (e.g. by typing). */
+  onClearSubmitError?: () => void;
 }
 
 export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputProps>(({
@@ -66,7 +72,9 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   currentPhase,
   relationshipDepth = 'new',
   mode = 'normal',
-  externalValue
+  externalValue,
+  submitError,
+  onClearSubmitError
 }, ref) => {
   // Support both value and externalValue props
   const initialValue = valueProp ?? externalValue ?? '';
@@ -195,6 +203,8 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     if (!maxLength || newValue.length <= maxLength) {
       setValue(newValue);
       onChange?.(newValue);
+      // Clear any visible submit-error banner as soon as the user begins typing again.
+      if (submitError) onClearSubmitError?.();
     }
   };
 
@@ -326,17 +336,52 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
         )}
       </AnimatePresence>
 
-      {/* Memory Indicator */}
+      {/* Submit-error banner — surfaces parent-detected submission failures
+          (network/server/maintenance) so a cleared input is not visually
+          indistinguishable from a successful send. Auto-clears on next keystroke. */}
+      <AnimatePresence>
+        {submitError && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18 }}
+            className="absolute -top-12 left-0 right-0 mx-4 flex items-center justify-between gap-2 rounded border border-rose-400/40 bg-rose-950/60 px-3 py-1.5 text-xs text-rose-100"
+            role="status"
+            aria-live="polite"
+          >
+            <span>{submitError}</span>
+            {onClearSubmitError && (
+              <button
+                type="button"
+                onClick={onClearSubmitError}
+                className="text-rose-200/70 hover:text-rose-50 text-[10px] uppercase tracking-wider"
+                aria-label="dismiss error"
+              >
+                dismiss
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Memory Indicator — UI chrome, not chat content. Styled as status label
+          (uppercase, tracked, muted) so it cannot be visually mistaken for a
+          MAIA reply when an input submission silently clears the box. */}
       {hasMemory && (
         <motion.div
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-8 left-4 flex items-center gap-2 text-xs text-gold-divine/60"
+          className="absolute -top-8 left-4 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-gold-divine/50 select-none pointer-events-none"
+          aria-label="memory status indicator"
+          role="status"
         >
-          <Sparkles className="w-3 h-3" />
-          <span>MAIA remembers our conversations</span>
+          <Sparkles className="w-2.5 h-2.5" />
+          <span>memory · continuity active</span>
           {lastConnectionTime && (
-            <span className="text-white/40">• last spoke {getTimeAgo(lastConnectionTime)} ago</span>
+            <span className="text-white/30 normal-case tracking-normal">
+              · last turn {getTimeAgo(lastConnectionTime)} ago
+            </span>
           )}
         </motion.div>
       )}
