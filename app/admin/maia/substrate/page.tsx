@@ -53,6 +53,12 @@ type SubstrateEntry = {
 
 type ImpoverishedRoute = { route: string; note: string }
 
+type ProviderMixEntry = {
+  provider: string
+  model: string | null
+  count: number
+}
+
 type SubstratePayload = {
   generatedAt: string
   runtime: {
@@ -65,6 +71,7 @@ type SubstratePayload = {
       fallbacksActive: number
       sanctuaryTurns: number
       unknownRouteTurns: number
+      providerMix: ProviderMixEntry[]
     }
     recentTurns: RecordedTurn[]
   }
@@ -205,6 +212,24 @@ function LiveRuntimeSection({ data }: { data: SubstratePayload }) {
       {summary.unknownRouteTurns > 0 && (
         <div className="text-xs text-amber-300">
           {summary.unknownRouteTurns} turn(s) used an unregistered routeId — see registry in maiaRuntimeContext.ts.
+        </div>
+      )}
+
+      {summary.providerMix.length > 0 && (
+        <div className="text-xs text-maia-ink-60 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="uppercase tracking-wider text-maia-ink-40">Provider mix</span>
+          {summary.providerMix.map((m, i) => (
+            <span key={`${m.provider}/${m.model ?? '_'}`}>
+              {i > 0 && <span className="text-maia-ink-40">·</span>}{' '}
+              <span className="font-mono">{m.provider}/{m.model ?? '—'}</span>
+              <span className="text-maia-ink-40"> ×{m.count}</span>
+            </span>
+          ))}
+          {summary.fallbacksActive > 0 && summary.totalRecorded > 0 && (
+            <span className="text-maia-ink-40">
+              (fallback {summary.fallbacksActive}/{summary.totalRecorded})
+            </span>
+          )}
         </div>
       )}
 
