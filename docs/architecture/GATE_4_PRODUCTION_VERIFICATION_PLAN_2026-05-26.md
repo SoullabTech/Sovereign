@@ -295,4 +295,27 @@ Until 72h confirmation passes, the language remains *"Phase 2 preliminary verifi
 
 ---
 
+## §13. Stage 5 verification posture — episodic claim discipline (load-bearing)
+
+*Added 2026-05-26 as a later strengthening of the verification posture, not a correction to the plan. Upstream of results because the temptation to compress claims arises at deploy time, not only when verification begins.*
+
+> *Stage 5 is not a launch state. Stage 5 is a repeated-condition confirmation.*
+
+Episodic must not be claimed live merely because it is merged, deployed, migrated, technically reachable, or because the first marked atom surfaces.
+
+Stage 5 may only be confirmed for an observed interval when all four conditions hold:
+
+1. Marked atoms surface across repeated authenticated use,
+2. Significance inflation does not appear,
+3. Members report genuine recognition rather than surveillance,
+4. MAIA continues to abstain when conditions are not met.
+
+**Stage 5 is confirmed for the observed interval, not permanently achieved.**
+
+**Why this lives in the Gate 4 plan rather than only in the episodic spec:** Gate 4 is the production verification immediately preceding episodic opening. The compression-temptation that produces *"deployed → live"* arises at deploy time. The discipline must be visible at the moment the temptation arises, not surfaced only after the inflated claim has already been made.
+
+**Authority:** `project_episodic_three_layer_decomposition` (Stage 5 four-condition conjunction) + `project_constitutional_defense_mechanisms` (bypass-by-renaming is an erosion route; "deployed = live" is exactly that rename) + `project_substrate_crossing_scaffold` (substrate crossings are confirmed by temporal stability under repeated authenticated load, NOT by architectural inference).
+
+---
+
 **This plan does not change anything in production. It memorializes the steps so that when execution begins, no decision needs to be re-derived under deploy pressure.**
