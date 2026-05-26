@@ -20,7 +20,7 @@ import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
   Link as LinkIcon, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
   Mail, Clock, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
-  Star, MapPin, Search, ExternalLink, Globe
+  Star, MapPin, Search, ExternalLink, Globe, History
 } from 'lucide-react';
 import Link from 'next/link';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
@@ -58,6 +58,7 @@ import { NostrMessagingSection } from '@/components/nostr/NostrMessagingSection'
 import ContinuityView from '@/components/consciousness/ContinuityView';
 import PatternLedger from '@/components/consciousness/PatternLedger';
 import RecurringThemesCard from '@/components/consciousness/RecurringThemesCard';
+import { MemoryConsentSection } from '@/components/settings/MemoryConsentSection';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -107,7 +108,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'connections' | 'data' | 'portals' | 'messaging' | 'scheduling';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'memory-consent' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'connections' | 'data' | 'portals' | 'messaging' | 'scheduling';
 
 interface PractitionerProject {
   id: string;
@@ -158,6 +159,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'astrology', label: 'Astrology', icon: Star },
   { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
   { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
+  { id: 'memory-consent', label: 'Memory & Consent', icon: History },
   { id: 'continuity', label: 'Continuity', icon: Sparkles },
   { id: 'patterns', label: 'Patterns', icon: BookOpen },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -2831,6 +2833,7 @@ export function AccountSettings() {
             {activeSection === 'voice' && renderVoice()}
             {activeSection === 'data-privacy' && renderDataPrivacy()}
             {activeSection === 'sovereignty' && renderSovereignty()}
+            {activeSection === 'memory-consent' && <MemoryConsentSection />}
             {activeSection === 'continuity' && (
               <div className="space-y-6">
                 <div>
