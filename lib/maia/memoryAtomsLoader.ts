@@ -200,9 +200,14 @@ export async function loadMemberMemoryAtomsForPrompt(
       markedBreakthroughAt: r.marked_breakthrough_at,
     }));
   } catch (err) {
+    // Failure-empty (distinct from legitimate-empty path in the route handler,
+    // which logs '[MAIA/sovereign] atoms: none surfacable for this member').
+    // Marker aligned with the production grep pattern so this surfaces in ops
+    // diagnostics. See memory: project_semantic_atoms_cat6_verified — silent
+    // catch swallowing schema-drift errors hid a broken substrate for weeks.
     console.warn(
-      '[memoryAtomsLoader] loadMemberMemoryAtomsForPrompt failed (non-fatal):',
-      err,
+      '[MAIA/sovereign] atoms loader failure-empty:',
+      err instanceof Error ? err.message : String(err),
     );
     return [];
   }

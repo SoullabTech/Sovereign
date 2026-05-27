@@ -345,6 +345,83 @@ Detection: ${rationale.join(', ')}`
   return scaffoldingStrategies[level] || null;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED ADDENDA INJECTION
+//
+// Used by buildMaiaWisePrompt (FAST + CORE tiers) AND buildMaiaComprehensivePrompt
+// (DEEP repair path). Single point of truth for which MaiaContext addenda reach
+// the prompt and in what order — adding a new addendum requires one edit here,
+// not edits in two places that silently diverge.
+//
+// Closes §II.B of docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md
+// (DEEP repair path joins FAST+CORE structurally). §II.C
+// (consciousnessOrchestrator primary path) remains open, tracked separately.
+//
+// ADDENDA INJECTION ORDER (stable, intentional sequence):
+// 1. Relationship/Governor    — who they are, how we relate
+// 2. Guest context            — explicit when context unavailable
+// 3. Memory/Journal/Capture   — what we know about them
+// 4. Astrology                — cosmic context
+// 5. Spiral/WuXing/Bridge     — current state computation
+// 6. Framework/Lens           — mode-specific guidance
+// 7. Epistemic/MAIA mode      — how to respond
+// 8. Studio/Knowledge/Member/Consultation/Field — multi-perspective layers
+// 9. Conversational recall    — cross-session continuity (Phase 2)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// 🛡️ SAFE ADDENDUM WRAPPER: Final guarantee against null/undefined (Track 2B)
+const safeAddendum = (v: unknown): string => {
+  if (typeof v !== 'string') return '';
+  const s = v.trim();
+  if (!s || s === 'undefined' || s === 'null') return '';
+  return s;
+};
+
+type AddendumSpec = {
+  field: keyof MaiaContext;
+  log: (value: string) => string;
+};
+
+const ADDENDA_SPECS: readonly AddendumSpec[] = [
+  { field: 'relationshipModeAddendum',        log: v => `💫 [Relationship] Mode: ${v.split('\n')[0]}` },
+  { field: 'governorAddendum',                log: () => `🌀 [Governor] Posture guidance injected` },
+  { field: 'guestContextAddendum',            log: () => `👤 [Guest] Context limitation note injected` },
+  { field: 'journalContextAddendum',          log: () => `📓 [Journal] Context injected` },
+  { field: 'captureContextAddendum',          log: () => `📸 [Capture] Context injected` },
+  { field: 'astrologicalContextAddendum',     log: () => `🌟 [Astrology] Birth data available for personalized cosmic context` },
+  { field: 'spiralSnapshotAddendum',          log: () => `🌀 [Spiral Snapshot] Applied: computed state anchor injected` },
+  { field: 'wuxingSnapshotAddendum',          log: () => `🌿 [Wu Xing Snapshot] Applied: Five Element state injected` },
+  { field: 'bridgeSnapshotAddendum',          log: () => `🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated` },
+  { field: 'therapeuticFrameworkAddendum',    log: v => `🧘 [Therapeutic Framework] Applied: ${v.split('\n')[0]}` },
+  { field: 'reflectionLensAddendum',          log: v => `🔮 [Reflection Lens] Applied: ${v.split('\n')[0]}` },
+  { field: 'epistemicPathAddendum',           log: v => `🧭 [Epistemic Path] Applied: ${v.split('\n')[0]}` },
+  { field: 'maiaModeAddendum',                log: () => `🎭 [MAIA Mode] Relational mode guidance injected` },
+  { field: 'scribeSessionDiscussionAddendum', log: () => `📝 [Scribe Discussion] Session context injected` },
+  { field: 'studioAddendum',                  log: () => `🏢 [Studio] Practitioner context injected` },
+  { field: 'knowledgeGateAddendum',           log: () => `🚪 [Knowledge Gate] Source well modulation injected` },
+  { field: 'memberWebAddendum',               log: () => `🕸️ [Member Web] Patterns+summaries+journals injected` },
+  { field: 'consultationAddendum',            log: () => `🏛️ [Consultation] Council insights injected` },
+  { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },
+  { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
+];
+
+/**
+ * Iterate every MaiaContext.*Addendum field, append non-empty ones to the
+ * prompt with their stable log markers, return the augmented prompt. Single
+ * point of truth for which addenda reach the prompt and in what order.
+ */
+export function appendAllContextAddenda(context: MaiaContext, prompt: string): string {
+  let out = prompt;
+  for (const spec of ADDENDA_SPECS) {
+    const safe = safeAddendum(context[spec.field]);
+    if (safe) {
+      out += `\n\n${safe}`;
+      console.log(spec.log(safe));
+    }
+  }
+  return out;
+}
+
 /**
  * Build MAIA's adaptive voice prompt with intelligent complexity detection.
  * Adapts voice based on input complexity while keeping consciousness systems running.
@@ -726,166 +803,12 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ADDENDA INJECTION ORDER (stable, intentional sequence)
-  // 1. Relationship/Governor (who they are, how we relate)
-  // 2. Guest context (explicit when context unavailable)
-  // 3. Memory/Journal/Capture (what we know about them)
-  // 4. Astrology (cosmic context)
-  // 5. Spiral/WuXing/Bridge (current state computation)
-  // 6. Framework/Lens (mode-specific guidance)
-  // 7. Epistemic/MAIA mode (how to respond)
+  // ADDENDA INJECTION — delegated to shared helper appendAllContextAddenda
+  // (defined above). Single point of truth for ordering + log markers; both
+  // FAST+CORE (this function) and DEEP repair path (buildMaiaComprehensivePrompt)
+  // call the same helper. See ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md §V.
   // ═══════════════════════════════════════════════════════════════════════════
-
-  // 🛡️ SAFE ADDENDUM WRAPPER: Final guarantee against null/undefined (Track 2B)
-  const safeAddendum = (v: unknown): string => {
-    if (typeof v !== 'string') return '';
-    const s = v.trim();
-    if (!s || s === 'undefined' || s === 'null') return '';
-    return s;
-  };
-
-  // 1️⃣ RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
-  const relationshipSafe = safeAddendum(context.relationshipModeAddendum);
-  if (relationshipSafe) {
-    adaptedPrompt += `\n\n${relationshipSafe}`;
-    console.log(`💫 [Relationship] Mode: ${relationshipSafe.split('\n')[0]}`);
-  }
-
-  // 2️⃣ DECISION GOVERNOR: Spiralogic posture constraints from preflight
-  const governorSafe = safeAddendum(context.governorAddendum);
-  if (governorSafe) {
-    adaptedPrompt += `\n\n${governorSafe}`;
-    console.log(`🌀 [Governor] Posture guidance injected`);
-  }
-
-  // 3️⃣ GUEST CONTEXT: Explicit messaging when user is anonymous/guest
-  const guestSafe = safeAddendum(context.guestContextAddendum);
-  if (guestSafe) {
-    adaptedPrompt += `\n\n${guestSafe}`;
-    console.log(`👤 [Guest] Context limitation note injected`);
-  }
-
-  // 4️⃣ JOURNAL CONTEXT: User's journal entries for continuity
-  const journalSafe = safeAddendum(context.journalContextAddendum);
-  if (journalSafe) {
-    adaptedPrompt += `\n\n${journalSafe}`;
-    console.log(`📓 [Journal] Context injected`);
-  }
-
-  // 5️⃣ CAPTURE CONTEXT: User's captured moments/insights
-  const captureSafe = safeAddendum(context.captureContextAddendum);
-  if (captureSafe) {
-    adaptedPrompt += `\n\n${captureSafe}`;
-    console.log(`📸 [Capture] Context injected`);
-  }
-
-  // 6️⃣ ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-  const astroSafe = safeAddendum(context.astrologicalContextAddendum);
-  if (astroSafe) {
-    adaptedPrompt += `\n\n${astroSafe}`;
-    console.log(`🌟 [Astrology] Birth data available for personalized cosmic context`);
-  }
-
-  // 7️⃣ SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 — comes BEFORE framework)
-  const spiralSafe = safeAddendum(context.spiralSnapshotAddendum);
-  if (spiralSafe) {
-    adaptedPrompt += `\n\n${spiralSafe}`;
-    console.log(`🌀 [Spiral Snapshot] Applied: computed state anchor injected`);
-  }
-
-  // 8️⃣ WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
-  const wuxingSafe = safeAddendum(context.wuxingSnapshotAddendum);
-  if (wuxingSafe) {
-    adaptedPrompt += `\n\n${wuxingSafe}`;
-    console.log(`🌿 [Wu Xing Snapshot] Applied: Five Element state injected`);
-  }
-
-  // 9️⃣ BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
-  const bridgeSafe = safeAddendum(context.bridgeSnapshotAddendum);
-  if (bridgeSafe) {
-    adaptedPrompt += `\n\n${bridgeSafe}`;
-    console.log(`🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated`);
-  }
-
-  // 🔟 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel mode
-  const therapeuticSafe = safeAddendum(context.therapeuticFrameworkAddendum);
-  if (therapeuticSafe) {
-    adaptedPrompt += `\n\n${therapeuticSafe}`;
-    console.log(`🧘 [Therapeutic Framework] Applied: ${therapeuticSafe.split('\n')[0]}`);
-  }
-
-  // 1️⃣1️⃣ REFLECTION LENS: Mode-specific lens for Scribe mode
-  const reflectionSafe = safeAddendum(context.reflectionLensAddendum);
-  if (reflectionSafe) {
-    adaptedPrompt += `\n\n${reflectionSafe}`;
-    console.log(`🔮 [Reflection Lens] Applied: ${reflectionSafe.split('\n')[0]}`);
-  }
-
-  // 1️⃣2️⃣ EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
-  const epistemicSafe = safeAddendum(context.epistemicPathAddendum);
-  if (epistemicSafe) {
-    adaptedPrompt += `\n\n${epistemicSafe}`;
-    console.log(`🧭 [Epistemic Path] Applied: ${epistemicSafe.split('\n')[0]}`);
-  }
-
-  // 1️⃣3️⃣ MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
-  const maiaModeSafe = safeAddendum(context.maiaModeAddendum);
-  if (maiaModeSafe) {
-    adaptedPrompt += `\n\n${maiaModeSafe}`;
-    console.log(`🎭 [MAIA Mode] Relational mode guidance injected`);
-  }
-
-  // 1️⃣4️⃣ SCRIBE SESSION DISCUSSION: Context for discussing a past session
-  const scribeDiscussionSafe = safeAddendum(context.scribeSessionDiscussionAddendum);
-  if (scribeDiscussionSafe) {
-    adaptedPrompt += `\n\n${scribeDiscussionSafe}`;
-    console.log(`📝 [Scribe Discussion] Session context injected`);
-  }
-
-  // 1️⃣5️⃣ STUDIO: Practitioner prompt cap when running in Soullab Studio
-  const studioSafe = safeAddendum(context.studioAddendum);
-  if (studioSafe) {
-    adaptedPrompt += `\n\n${studioSafe}`;
-    console.log(`🏢 [Studio] Practitioner context injected`);
-  }
-
-  // 1️⃣6️⃣ KNOWLEDGE GATE: AIN source well modulation
-  const knowledgeGateSafe = safeAddendum(context.knowledgeGateAddendum);
-  if (knowledgeGateSafe) {
-    adaptedPrompt += `\n\n${knowledgeGateSafe}`;
-    console.log(`🚪 [Knowledge Gate] Source well modulation injected`);
-  }
-
-  // 🕸️ MEMBER WEB: Patterns + session summaries + journals
-  const memberWebSafe = safeAddendum(context.memberWebAddendum);
-  if (memberWebSafe) {
-    adaptedPrompt += `\n\n${memberWebSafe}`;
-    console.log(`🕸️ [Member Web] Patterns+summaries+journals injected`);
-  }
-
-  // 1️⃣7️⃣ CONSULTATION: AIN council multi-perspective synthesis
-  const consultationSafe = safeAddendum(context.consultationAddendum);
-  if (consultationSafe) {
-    adaptedPrompt += `\n\n${consultationSafe}`;
-    console.log(`🏛️ [Consultation] Council insights injected`);
-  }
-
-  // 1️⃣8️⃣ FIELD WISDOM: Collective Spiralogic field intelligence
-  const fieldWisdomSafe = safeAddendum(context.fieldWisdomAddendum);
-  if (fieldWisdomSafe) {
-    adaptedPrompt += `\n\n${fieldWisdomSafe}`;
-    console.log(`🌀 [Field Wisdom] Collective intelligence injected`);
-  }
-
-  // 1️⃣9️⃣ CONVERSATIONAL RECALL: Phase 2 cross-session continuity (system-retrieved
-  // tier). Provenance-grounded, no synthesis. The block itself carries the
-  // discipline instruction; this injection makes it reachable from CORE-tier
-  // routes that go through buildMaiaWisePrompt. See spec §IX.
-  const conversationalRecallSafe = safeAddendum(context.conversationalRecallAddendum);
-  if (conversationalRecallSafe) {
-    adaptedPrompt += `\n\n${conversationalRecallSafe}`;
-    console.log(`💬 [Conversational Recall] Cross-session continuity injected (${conversationalRecallSafe.length} chars)`);
-  }
+  adaptedPrompt = appendAllContextAddenda(context, adaptedPrompt);
 
   return adaptedPrompt.trim();
 }
@@ -1007,12 +930,19 @@ Context: ${context.summary || 'New conversation beginning.'}`;
     };
   }
 
-  return buildComprehensiveVoicePrompt(
+  // DEEP repair path joins FAST+CORE addenda channel via shared helper.
+  // Closes §II.B of ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md. §II.C
+  // (consciousnessOrchestrator primary path) remains open, tracked separately.
+  const result = buildComprehensiveVoicePrompt(
     input,
     context,
     context.consciousnessInsights,
     conversationHistory
   ) as ComprehensiveVoiceAnalysis & { prompt: string };
+
+  result.prompt = appendAllContextAddenda(context, result.prompt);
+
+  return result;
 }
 
 /**

@@ -676,12 +676,31 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // by maiaService.ts via meta.conversationalRecallAddendum.
     let conversationalRecallAddendum: string | undefined;
     let priorExchangesCount = 0;
+    // 🧬 Developmental layer — declared outside the memory-orchestrator try block
+    // so the count is in scope when buildMemoryHealth() reads it below. Prior bug:
+    // loader ran every turn and orchestrator used the rows, but health input was
+    // never wired → runtime_events.memory_layers.developmental reported 'empty'
+    // despite 675 rows across 10 members in production. See DEVELOPMENTAL_LAYER_AUDIT_2026-05-26.md.
+    let developmentalCount = 0;
     if (allowCrossSessionMemory && userId) {
       try {
         const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
           loadRecentDevelopmentalMemories(userId, 3),
           loadRecentThemeSignals(userId, 10),
         ]);
+        developmentalCount = recentDevelopmentalMemories.length;
+
+        // 🧬 Developmental block — substrate discoverability marker (matches the
+        // [MAIA/sovereign] *-block ops grep pattern used by atoms / conversational).
+        // Emission ≠ prompt-influence: orchestrator usage is logged separately in
+        // the [MAIA/sovereign] memory-plan line below. This log proves the loader
+        // returned rows for this member this turn — the substrate-side of axis 2
+        // (emitted ↔ discoverable) of the substrate-crossing scaffold.
+        console.log('[MAIA/sovereign] developmental-block', {
+          count: recentDevelopmentalMemories.length,
+          userId: userId.slice(0, 8) + '...',
+        });
+
         const memoryPlan = buildMemoryInfluencePlan({
           message,
           userId,
@@ -772,18 +791,42 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       });
     }
 
+    // 🌟 Layer 10 — breakthrough: count of member-marked atoms among those
+    // surfaced. Atoms loader orders is_breakthrough DESC; a non-zero count
+    // means a member-marked breakthrough reached the prompt block this turn.
+    // Marker aligned with the production grep contract so the substrate
+    // crossing is discoverable from ops, not just emitted into the void.
+    const markedBreakthroughCount = atomsResult.filter((a) => a.isBreakthrough).length;
+    if (markedBreakthroughCount > 0) {
+      console.info('[MAIA/sovereign] breakthrough surfaced:', {
+        memberIdPrefix: userId ? userId.slice(0, 8) : null,
+        markedCount: markedBreakthroughCount,
+      });
+    }
+
     // 🔬 Layer 15 — memoryHealth: what loaded, what failed, what is unknown (canon §VII)
     const memoryHealth: MemoryHealth = buildMemoryHealth({
       recentTurns: { count: session.turn_count ?? 0 },
       session: { present: !!session },
       relational: { present: !!(memoryBundle as any)?.recentTurns?.length || !!memoryBundle },
       semantic: { count: atomsResult.length, error: atomsError },
+      // Breakthrough is a property of surfaced atoms (member-marked, never
+      // system-set). If the atoms loader errored, breakthrough state is
+      // unknown too — same dependency.
+      breakthrough: { count: markedBreakthroughCount, error: atomsError },
       // Conversational layer (Phase 2, wire site corrected per spec §IX, 2026-05-24):
       // count is the retriever's candidate count (does NOT distinguish emitted from
       // suppressed — emission detail lives in the [MAIA] conversational-block log line).
       // 'ok' here means "the substrate carried candidate material this turn." Whether
       // that material actually reached the prompt is a separate signal.
       conversational: { count: priorExchangesCount },
+      // 🧬 Developmental layer (wire site fix, 2026-05-26). loadRecentDevelopmentalMemories
+      // runs every turn (line ~682) and the orchestrator uses the rows; the binding from
+      // loader → health was missing, causing runtime_events.memory_layers.developmental to
+      // report 'empty' despite 675 rows across 10 members in production. Same call-site
+      // omission archetype as the FAST conversational fix in commit f74ab4204.
+      // See DEVELOPMENTAL_LAYER_AUDIT_2026-05-26.md §XII.
+      developmental: { count: developmentalCount },
     });
     if (isBaseChainDegraded(memoryHealth)) {
       console.warn('[MAIA/sovereign] memoryHealth — base chain degraded:', summarizeMemoryHealthForLog(memoryHealth));
