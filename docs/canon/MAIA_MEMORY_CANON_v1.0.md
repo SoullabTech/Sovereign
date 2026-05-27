@@ -168,7 +168,33 @@ Everything else in this document is scaffolding around that sentence.
 
 ---
 
-## XI. Authority and Revision
+## XI. The Reachability Boundary
+
+The Health Contract (§VII) verifies that the substrate carried material to the prompt. It does not verify that the material mattered.
+
+Every layer in the memory stack has a verifying authority — and a boundary it cannot cross.
+
+- **The DB verifies coherence.** Schema constraints make orphaned or invalid state impossible at the storage layer.
+- **The route verifies authorization.** Only the owner can mark; mismatched ownership returns `404` without leaking existence.
+- **The loader verifies retrieval.** The flag is read from storage and carried into the prompt-safe snapshot.
+- **The formatter preserves the member's framing.** *"Marked as a breakthrough by the member"* is the member's declaration — not a system inference.
+- **The health layer verifies operational surfacing.** `memoryHealth.<layer> = "ok"` means the substrate reached the prompt this turn — nothing more.
+- **Only the member verifies significance.** Meaning is conferred by the gesture, not by the system noticing it.
+
+The compression:
+
+> **Built is not live.**
+> **Surfaced is not significant.**
+> **Significant is not system-declared.**
+> **Breakthrough belongs to the member; reachability belongs to the substrate.**
+
+This applies beyond breakthrough. The substrate can verify that a layer carries data, that data reaches retrieval, that retrieval reaches the prompt, and that the prompt reached generation. It cannot verify that what it carried mattered. The boundary is the line between **reachability** — what the substrate can claim — and **significance** — what only the member can confer.
+
+Where significance is required, the gesture must be the member's. Where reachability is required, the substrate must be honest about its own state — not generous about what it has actually done.
+
+---
+
+## XII. Authority and Revision
 
 This canon is binding on all code paths that read from or write to any memory table, retrieve any memory context for prompt assembly, or generate responses on behalf of an authenticated member.
 

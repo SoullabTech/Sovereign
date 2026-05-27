@@ -424,3 +424,6 @@ exports/
 
 # voice-ecosystem watch — per-instance state, gitignored
 scripts/voice-ecosystem-watch-state.json
+
+# Node compile cache — Bun/Node build artifacts, regenerated per build
+node-compile-cache/
