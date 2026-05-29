@@ -507,6 +507,8 @@ MOBILE_EXCLUDED_DIRS=(
     "app/book-studio"
     # Team (desktop practitioner collaboration; layout.tsx uses cookies())
     "app/team"
+    # Commons (practitioner circles; apiFetch reads cookies during prerender)
+    "app/commons"
     # MAIA advanced tools (web-only)
     "app/maia/labtools"
     "app/maia/community"
