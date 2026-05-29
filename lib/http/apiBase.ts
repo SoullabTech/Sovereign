@@ -8,8 +8,16 @@
  *   NEXT_PUBLIC_API_BASE_URL=https://your-domain.com CAPACITOR_BUILD=1 npm run build
  */
 
+import { withTimeout } from '@/lib/utils/withTimeout';
+
 // Hard fallback for iOS/Capacitor - NEVER use relative /api on mobile
 const FALLBACK_API_BASE_URL = 'https://soullab.life';
+
+// Hard ceiling for native HTTP requests. Capacitor's URLSession defaults are
+// generous (60s connect / 60s data on iOS); this explicit cap ensures a
+// silently stalled native bridge surfaces a labeled timeout instead of
+// trapping the WebView in "thinking" forever.
+const NATIVE_HTTP_TIMEOUT_MS = 30_000;
 
 // Build information stamp - populated during build or defaults
 export const BUILD_STAMP = {
@@ -635,25 +643,35 @@ async function apiFetchNative(
       data,
     };
 
+    // Dispatch the verb but don't await yet — race against the timeout so
+    // every native HTTP failure names itself (e.g., "CapacitorHttp POST
+    // https://soullab.life/api/... timed out after 30000ms") instead of
+    // hanging the WebView indefinitely.
+    let nativeCall: Promise<any>;
     switch (method) {
       case 'GET':
-        nativeResponse = await CapacitorHttp.get(requestOptions);
+        nativeCall = CapacitorHttp.get(requestOptions);
         break;
       case 'POST':
-        nativeResponse = await CapacitorHttp.post(requestOptions);
+        nativeCall = CapacitorHttp.post(requestOptions);
         break;
       case 'PUT':
-        nativeResponse = await CapacitorHttp.put(requestOptions);
+        nativeCall = CapacitorHttp.put(requestOptions);
         break;
       case 'PATCH':
-        nativeResponse = await CapacitorHttp.patch(requestOptions);
+        nativeCall = CapacitorHttp.patch(requestOptions);
         break;
       case 'DELETE':
-        nativeResponse = await CapacitorHttp.delete(requestOptions);
+        nativeCall = CapacitorHttp.delete(requestOptions);
         break;
       default:
-        nativeResponse = await CapacitorHttp.request({ ...requestOptions, method });
+        nativeCall = CapacitorHttp.request({ ...requestOptions, method });
     }
+    nativeResponse = await withTimeout(
+      nativeCall,
+      NATIVE_HTTP_TIMEOUT_MS,
+      `CapacitorHttp ${method} ${url}`
+    );
 
     console.log(`[apiFetch/native] Response status: ${nativeResponse.status}`);
 
