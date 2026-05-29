@@ -105,7 +105,33 @@ export default async function StudioMarkdown({ file }: StudioMarkdownProps) {
 
   return (
     <article className="studio-prose mx-auto max-w-3xl">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // True epigraphs are paragraphs whose entire content is a single
+          // `*"…" — Author*`. CSS `:only-child` ignores text nodes, so a
+          // body paragraph ending in inline italic falsely matched the old
+          // `:has(> em:only-child)` selector. Tag at the syntax-tree layer
+          // where text vs. emphasis is unambiguous. react-markdown v9 passes
+          // HAST nodes — children with whitespace-only text are skipped so
+          // a trailing newline doesn't disqualify a true epigraph.
+          p: ({ node, children, ...props }) => {
+            type HastChild = { type?: string; tagName?: string; value?: string };
+            const kids = ((node as { children?: HastChild[] } | undefined)?.children ?? []).filter(
+              (k) => !(k.type === 'text' && (k.value ?? '').trim() === ''),
+            );
+            const isEpigraph =
+              kids.length === 1 && kids[0]?.type === 'element' && kids[0]?.tagName === 'em';
+            return (
+              <p {...props} className={isEpigraph ? 'epigraph' : undefined}>
+                {children}
+              </p>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </article>
   );
 }

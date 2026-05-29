@@ -954,11 +954,14 @@
 
 /*  Epigraph paragraphs — italic-only paragraphs (markdown `*"…" — Author*`).
     Mirrors print register: quiet pause with breath above and below, slightly
-    smaller and softer than body. Uses :has() to detect single-em paragraphs
-    automatically, so any `*…*` epigraph in the manuscript is styled without
-    manual class tagging. The body paragraph immediately after gets a tighter
-    top margin so the body resumes cleanly under the quote. */
-.studio-prose p:has(> em:only-child) {
+    smaller and softer than body. The `.epigraph` class is injected by the
+    StudioMarkdown <p> renderer when the paragraph's mdast children consist
+    of a single emphasis node and nothing else — text vs. emphasis is
+    unambiguous at the mdast layer, unlike CSS `:only-child` which ignores
+    text-node siblings and falsely matched body paragraphs ending in inline
+    italic. The body paragraph immediately after gets a tighter top margin
+    so the body resumes cleanly under the quote. */
+.studio-prose p.epigraph {
   font-size: 0.95em;
   line-height: 1.55;
   color: rgba(254, 243, 199, 0.66);
@@ -966,11 +969,11 @@
   max-width: 38em;
 }
 
-.studio-prose p:has(> em:only-child) > em {
+.studio-prose p.epigraph > em {
   color: inherit; /* override the amber em color so epigraphs read calmer */
 }
 
-.studio-prose p:has(> em:only-child) + p {
+.studio-prose p.epigraph + p {
   margin-top: 0;
 }
 
