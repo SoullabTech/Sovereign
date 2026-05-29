@@ -1,7 +1,7 @@
 // @ts-nocheck
 // Oracle Conversation - Voice-synchronized sacred dialogue
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
-// 🔖 BUILD_STAMP: 2026-01-31_pwa_voice_v2
+// 🔖 BUILD_STAMP: 2026-05-29_ios_timeout_guards
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
@@ -124,6 +124,31 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
 
   return merged.buffer;
 }
+
+/**
+ * iOS hang guard — race any awaited promise against a hard timeout so a
+ * silently-stalled native bridge (CapacitorHttp, AudioContext, etc.) can never
+ * trap the UI in "thinking" forever. Always rejects on timeout so the caller's
+ * catch/finally runs and UI state releases.
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  label = 'operation'
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`));
+    }, ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
@@ -164,7 +189,7 @@ import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type Co
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
-import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
+import { detectJournalCommand } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
 import { useDemoEventListener } from '@/hooks/useDemoEventListener';
 import { BookPlus } from 'lucide-react';
@@ -899,11 +924,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showWelcome, setShowWelcome] = useState(true);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [daysSinceLastVisit, setDaysSinceLastVisit] = useState<number>(0);
-  const [isSavingJournal, setIsSavingJournal] = useState(false);
-  const [showJournalSuggestion, setShowJournalSuggestion] = useState(false); // Permanently disabled
-  const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
-  const [breakthroughScore, setBreakthroughScore] = useState(0);
-
   // ✨ CAPTURE THE SPIRIT: Reflection Capsules
   const [showCapturePanel, setShowCapturePanel] = useState(false);
   const [showCaptureSuggestion, setShowCaptureSuggestion] = useState(false);
@@ -1706,13 +1726,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // This is CRITICAL - without it, audio won't play through speakers on iOS
       if (isCapacitor) {
         console.log('📱 [iOS] Preparing audio session for speaking...');
-        const prepared = await VoiceController.prepareForSpeaking();
-        if (!prepared) {
-          console.error('❌ [iOS] Failed to prepare audio session for speaking');
-          await VoiceController.logDiagnostics();
-          // Continue anyway - might still work
-        } else {
-          console.log('✅ [iOS] Audio session ready for speaking');
+        try {
+          const prepared = await withTimeout(
+            VoiceController.prepareForSpeaking(),
+            5000,
+            'iOS audio session prepare'
+          );
+          if (!prepared) {
+            console.error('❌ [iOS] Failed to prepare audio session for speaking');
+            try {
+              await withTimeout(VoiceController.logDiagnostics(), 2000, 'iOS audio diagnostics');
+            } catch (diagErr) {
+              console.warn('⚠️ [iOS] logDiagnostics timed out:', diagErr);
+            }
+            // Continue anyway - might still work
+          } else {
+            console.log('✅ [iOS] Audio session ready for speaking');
+          }
+        } catch (prepErr) {
+          console.warn('⚠️ [iOS] prepareForSpeaking timed out — continuing:', prepErr);
         }
       }
 
@@ -1728,21 +1760,27 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         // Dynamic import to avoid loading Capacitor on non-native platforms
         const { CapacitorHttp } = await import('@capacitor/core');
-        const nativeResponse = await CapacitorHttp.post({
-          url: ttsUrl,
-          headers: {
-            'Content-Type': 'application/json',
-            ...(memberId ? { 'x-member-id': memberId } : {}),
-          },
-          data: {
-            text: text,
-            voice: voiceSettings.voice,
-            speed: voiceSettings.speed,
-            model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
-            ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
-          },
-          responseType: 'arraybuffer',
-        });
+        // 🛡️ Hard timeout — CapacitorHttp can silently hang on iOS network
+        // wedges, trapping isResponding=true forever. Always fail closed.
+        const nativeResponse = await withTimeout(
+          CapacitorHttp.post({
+            url: ttsUrl,
+            headers: {
+              'Content-Type': 'application/json',
+              ...(memberId ? { 'x-member-id': memberId } : {}),
+            },
+            data: {
+              text: text,
+              voice: voiceSettings.voice,
+              speed: voiceSettings.speed,
+              model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
+              ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
+            },
+            responseType: 'arraybuffer',
+          }),
+          30000,
+          'iOS TTS request'
+        );
 
         // Detailed logging to diagnose what we received
         console.log('📱 [TTS] status:', nativeResponse.status);
@@ -2163,11 +2201,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     } catch (err) {
       console.error('❌ OpenAI TTS error (no fallback - OpenAI TTS only):', err);
+      // Show user-visible error for debugging
+      toast.error('Voice playback failed - check iPhone mute switch & volume', { duration: 5000 });
+    } finally {
+      // 🛡️ Guaranteed UI release — no matter what awaited leg hung, threw,
+      // or timed out above, "thinking" must not stay hostage. This is the
+      // single bottleneck through which every speak attempt must exit.
       stopAudioAnalysis();
       setIsResponding(false);
       setIsAudioPlaying(false);
-      // Show user-visible error for debugging
-      toast.error('Voice playback failed - check iPhone mute switch & volume', { duration: 5000 });
     }
   }, [startAudioAnalysis, stopAudioAnalysis, voiceSettings]);
 
@@ -2193,19 +2235,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setShowCapturePanel(true);
     },
     onShowBreakthrough: () => {
-      console.log('🎬 [Demo] Triggering Breakthrough suggestion');
-      setShowJournalSuggestion(true);
+      console.log('🎬 [Demo] Triggering Capture suggestion (breakthrough)');
+      setShowCaptureSuggestion(true);
     },
     onShowPatternOffering: (data) => {
-      console.log('🎬 [Demo] Triggering Pattern offering', data);
-      // Pattern offering would need a dedicated UI component
-      // For now, show breakthrough as proxy
-      setShowJournalSuggestion(true);
+      console.log('🎬 [Demo] Triggering Capture suggestion (pattern)', data);
+      setShowCaptureSuggestion(true);
     },
     onHideAll: () => {
       console.log('🎬 [Demo] Hiding all demo popups');
       setShowCapturePanel(false);
-      setShowJournalSuggestion(false);
       setShowCaptureSuggestion(false);
     },
     onPulseHoloflower: () => {
@@ -3215,27 +3254,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Voice amplitude is now controlled directly by OpenAI Alloy TTS in maiaSpeak()
   // and by audio level monitoring in handleAudioLevelChange()
 
-  // Detect breakthrough potential for journal suggestions
-  useEffect(() => {
-    if (messages.length < 4) return; // Need some conversation depth
-
-    const conversationMessages = messages
-      .filter(msg => msg.text || msg.content)
-      .map(msg => ({
-        role: msg.role === 'oracle' ? 'assistant' as const : 'user' as const,
-        content: msg.text ?? msg.content ?? ''
-      }));
-
-    const score = detectBreakthroughPotential(conversationMessages);
-    setBreakthroughScore(score);
-
-    // Show breakthrough indicator when score is significant (lowered threshold for spiral-relative awareness)
-    if (score >= 50 && !showJournalSuggestion && !journalSuggestionDismissed && messages.length >= 4) {
-      console.log(`⭐ [Breakthrough] Score ${score} >= 50, showing journal suggestion`);
-      setShowJournalSuggestion(true);
-    }
-  }, [messages, showJournalSuggestion, journalSuggestionDismissed]);
-
   // Detect capture trigger for "Capture the Spirit" suggestion
   useEffect(() => {
     if (messages.length < 4) return; // Need some conversation depth
@@ -3918,93 +3936,6 @@ I'm not sure what I'm feeling yet.`;
   }, []);
 
   // Save conversation as journal entry
-  const handleSaveAsJournal = useCallback(async () => {
-    console.log('📝 [Journal] handleSaveAsJournal called', { userId, messageCount: messages.length });
-
-    if (!userId) {
-      toast.error('Please sign in to save journal entries');
-      console.error('❌ [Journal] No userId provided');
-      setShowJournalSuggestion(false);
-      setJournalSuggestionDismissed(true);
-      return;
-    }
-
-    if (messages.length < 2) {
-      toast.error('Have a conversation first before journaling');
-      console.error('❌ [Journal] Not enough messages:', messages.length);
-      setShowJournalSuggestion(false);
-      setJournalSuggestionDismissed(true);
-      return;
-    }
-
-    setIsSavingJournal(true);
-
-    try {
-      // Convert messages to the format expected by the extractor
-      const conversationMessages = messages.map(msg => ({
-        role: msg.role === 'oracle' ? 'assistant' as const : 'user' as const,
-        content: msg.text,
-        timestamp: typeof msg.timestamp === 'string' ? msg.timestamp : msg.timestamp.toISOString()
-      }));
-
-      console.log('📤 [Journal] Sending request to /api/journal/save-conversation', {
-        messageCount: conversationMessages.length,
-        userId,
-        sessionId
-      });
-
-      const response = await apiFetch('/api/journal/save-conversation', {
-        method: 'POST',
-        body: JSON.stringify({
-          messages: conversationMessages,
-          userId,
-          conversationId: sessionId,
-          sessionId
-        })
-      });
-
-      console.log('📥 [Journal] Response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('❌ [Journal] API error:', errorData);
-        throw new Error(errorData.error || errorData.details || 'Failed to save journal entry');
-      }
-
-      const data = await response.json();
-      console.log('✅ [Journal] Successfully saved:', data);
-
-      toast.success(
-        <div>
-          <div className="font-semibold">{data.essence?.title || 'Journal Entry Saved'}</div>
-          <div className="text-sm text-white/70">Saved to your journal</div>
-        </div>,
-        { duration: 4000 }
-      );
-
-      // Track the journal save
-      trackEvent('journal_saved_from_conversation', {
-        userId,
-        sessionId,
-        messageCount: messages.length,
-        title: data.essence.title
-      });
-    } catch (error: any) {
-      console.error('❌ [Journal] Error saving journal entry:', error);
-      toast.error(
-        <div>
-          <div className="font-semibold">Failed to save journal entry</div>
-          <div className="text-sm text-white/70">{error.message || 'Please try again'}</div>
-        </div>,
-        { duration: 5000 }
-      );
-    } finally {
-      setIsSavingJournal(false);
-      setShowJournalSuggestion(false);
-      setJournalSuggestionDismissed(true);
-    }
-  }, [userId, messages, sessionId]);
-
   // ✨ Capture the Spirit - Create Reflection Capsule from conversation
   const handleCaptureSpirit = useCallback(async () => {
     console.log('✨ [Capsule] handleCaptureSpirit called', { userId, messageCount: messages.length });
@@ -4223,10 +4154,8 @@ I'm not sure what I'm feeling yet.`;
     // 🎯 Mark as activated when user sends a message - hides welcome screen
     setHasActivated(true);
 
-    // Check for journal command
     if (detectJournalCommand(text)) {
-      console.log('📖 Journal command detected - saving conversation');
-      await handleSaveAsJournal();
+      await handleCaptureSpirit();
       return;
     }
 
@@ -6418,10 +6347,17 @@ I'm not sure what I'm feeling yet.`;
         voiceSession.methods.stopListening();
 
         // Send via streaming voice system (includes historical context)
+        // 🛡️ Hard timeout — if the server SSE stream stalls (common on iOS
+        // WebView under flaky network), the promise never resolves and
+        // isResponding stays true forever ("stuck on thinking"). 90s allows
+        // long Kokoro TTS generation but caps the stall case.
         const conversationHistory = truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current);
-        await sendStreamingMessage(cleanedText, conversationHistory);
+        await withTimeout(
+          sendStreamingMessage(cleanedText, conversationHistory),
+          90000,
+          'streaming voice send'
+        );
 
-        setIsProcessing(false);
         const duration = Date.now() - voiceStartTime;
         trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
         console.log('✅ [StreamingVoice] Streaming voice flow completed');
@@ -6451,9 +6387,15 @@ I'm not sure what I'm feeling yet.`;
       setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
 
-      // Reset states on error
-      setIsProcessing(false);
+      // Reset states on error / timeout (was already here; preserved for clarity)
       setIsResponding(false);
+    } finally {
+      // 🛡️ Guaranteed isProcessing release. Safe to clear unconditionally —
+      // it gates the "thinking" indicator but not audio playback. isResponding
+      // is intentionally NOT cleared here on the happy path: the streaming
+      // audio queue's onComplete owns that transition so the visualizer doesn't
+      // cut out mid-speech. On throw/timeout the catch block above clears it.
+      setIsProcessing(false);
     }
   }, [handleTextMessage, isProcessing, isResponding, isAudioPlaying, messages, echoSuppressUntil, maiaReady, isMuted, sessionId, userId, oracleAgentId, onMessageAdded, maiaSpeak, stopStreamingVoice, startScribeSession, pauseScribeSession, stopScribeSession, markScribeMoment, confirmScribeConsent, setTranscriptEnabled, appendTranscriptEntry, scribeSession]);
 
@@ -8497,67 +8439,9 @@ I'm not sure what I'm feeling yet.`;
           ) : null}
 
 
-          {/* Journal Suggestion - Appears when breakthrough is detected (only after activation) */}
-          <AnimatePresence mode="wait">
-            {showJournalSuggestion && hasActivated && (
-              <div
-                key="journal-suggestion-wrapper"
-                className="fixed inset-x-0 z-50 flex justify-center px-4"
-                style={{ top: 'calc(env(safe-area-inset-top, 0px) + 6rem)' }}
-              >
-                <motion.div
-                  key="journal-suggestion"
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full max-w-sm"
-                >
-                  <div className="bg-gradient-to-br from-amber-500/20 to-gold-divine/20 backdrop-blur-xl rounded-2xl p-4 border border-amber-400/30 shadow-2xl">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-amber-400/20 rounded-full flex items-center justify-center">
-                      <BookOpen className="w-5 h-5 text-amber-300" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-amber-200 font-medium mb-1">Breakthrough Detected</h3>
-                      <p className="text-white/70 text-sm mb-3">
-                        This feels like sacred ground. Would you like to capture the essence of this conversation in your journal?
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            handleSaveAsJournal();
-                          }}
-                          disabled={isSavingJournal}
-                          className="px-4 py-2 bg-amber-500/30 hover:bg-amber-500/40 border border-amber-400/50
-                                   rounded-lg text-amber-200 text-sm font-medium transition-all active:scale-95
-                                   disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSavingJournal ? 'Saving...' : 'Save to Journal'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowJournalSuggestion(false);
-                            setJournalSuggestionDismissed(true);
-                            console.log('🚫 [Journal] User dismissed journal suggestion');
-                          }}
-                          className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/20
-                                   rounded-lg text-white/60 text-sm transition-all active:scale-95"
-                        >
-                          Not Now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-            )}
-          </AnimatePresence>
-
-          {/* ✨ Capture the Spirit Suggestion - only show after activation, and not when journal suggestion is showing */}
+          {/* ✨ Capture the Spirit Suggestion - only show after activation */}
           <CaptureSuggestionChip
-            isVisible={showCaptureSuggestion && !showCapturePanel && hasActivated && !showJournalSuggestion}
+            isVisible={showCaptureSuggestion && !showCapturePanel && hasActivated}
             onCapture={handleCaptureSpirit}
             onDismiss={() => {
               setShowCaptureSuggestion(false);
