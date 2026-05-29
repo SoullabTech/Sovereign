@@ -65,15 +65,15 @@ Chapter 4 &nbsp;&nbsp;The Elements of Wholeness
 
 ### Part Two — The Elements
 
-Chapter 5 &nbsp;&nbsp;Fire
+Chapter 5 &nbsp;&nbsp;Fire — The Element of Spirit and Energy
 
 Chapter 6 &nbsp;&nbsp;Water — The Depths of Emotional Intelligence and Transformation
 
 Chapter 7 &nbsp;&nbsp;Earth — The Element of Stability and Groundedness
 
-Chapter 8 &nbsp;&nbsp;Air
+Chapter 8 &nbsp;&nbsp;Air — The Element of the Intellect and Mind
 
-Chapter 9 &nbsp;&nbsp;Aether — The Self at Play
+Chapter 9 &nbsp;&nbsp;Aether — The Infinite Self at Play
 
 &nbsp;
 
@@ -157,7 +157,7 @@ Like my own children, I was conscious enough to ask critical questions in my you
 
 Now I can see that, as hard as my life has been at times, everything that has occurred over the years has made me a better person. As much as I'd like to go back and take away my younger self's suffering in certain challenging circumstances, if I did, I'd be denying myself the opportunity to become the more soulful, fully human person I am today. How I've worked with the challenges of earthly living, rather than wishing them away, is a blessing. I've learned that it isn't about avoiding life's challenges and its twists and turns, but about the quality of our presence, the way we show up for these experiences, and how we manage them that matters most.
 
-*"Life is a game of just five ingredients. Even a pizza requires more ingredients! But in yoga both the human body and the cosmos are based on the magic of only five elements — earth, water, fire, and ether. Such a staggeringly complex phenomenon and just five variables! Not surprisingly, those who attained self-realization have often termed life a cosmic joke. . . Every spiritual practice in the world is related in some way with organizing these five elements." – Sadhguru*
+*"Life is a game of just five ingredients. Even a pizza requires more ingredients! But in yoga both the human body and the cosmos are based on the magic of only five elements — earth, water, fire, air, and ether. Such a staggeringly complex phenomenon and just five variables! Not surprisingly, those who attained self-realization have often termed life a cosmic joke. . . Every spiritual practice in the world is related in some way with organizing these five elements." – Sadhguru*
 
 ### Reflection and Interaction
 
@@ -766,7 +766,7 @@ Having understood the elements and their role in achieving wholeness, it's time 
 
 ---
 
-# Chapter 5: Fire
+# Chapter 5: Fire — The Element of Spirit and Energy
 
 *"It is the eternal flame of becoming that animates each kaleidoscopic universe sparkling to life like fireflies winking in the infinite night." – Rumi*
 
@@ -1672,7 +1672,7 @@ With our foundations firmly in place, we ascend to the realm of Air. The next ch
 
 ---
 
-# Chapter 8: Air
+# Chapter 8: Air — The Element of the Intellect and Mind
 
 *"Thoughts become perception, perception becomes reality. Alter your thoughts, alter your reality." – William James*
 
@@ -1933,7 +1933,7 @@ Refining our ability to think well draws us closer to embracing our true self, h
 
 ---
 
-# Chapter 9: Aether — The Self at Play
+# Chapter 9: Aether — The Infinite Self at Play
 
 *"I have lived on the lip of insanity, wanting to know reasons, knocking on a door. It opens. I've been knocking from the inside." — Rumi*
 
