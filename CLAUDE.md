@@ -34,6 +34,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **Static export limits**: some Next.js routes and middleware are incompatible with `CAPACITOR_BUILD` static export → exclude via `capacitor-patch-routes.sh`.
 - **"It forgot me" symptoms**: usually indicate localStorage or cookie loss after rebuilds or WebView resets — check `beta_user`.
 - **force-dynamic routes**: any route using `export const dynamic = 'force-dynamic'` must be listed in `EXCLUDED_DYNAMIC_ROUTES` for iOS builds.
+- **LAN IP drift after power-cycle** (housekeeping check, not always user-impacting): minisforum is expected at `192.168.0.104`. After a power outage or full restart, DHCP can re-lease a different IP (seen: `.102` on 2026-05-29). If the router's port-forward rule for 80/443 is hard-coded to `.104`, external traffic will silently drop. **Verify scope before treating as causal**: if the PWA at soullab.life loads on iOS over cellular, the forward path is intact and IP drift is NOT the user-facing issue (the router may auto-track or have a different forward rule). The hairpin-NAT probe (`curl https://soullab.life from minisforum`) is misleading — most consumer routers disable hairpin by default, so HTTP 000 there does not imply external traffic is broken. Always check `ssh soullab@minisforum 'hostname -I'` after a power event for hygiene, and set a DHCP reservation pinning minisforum to `.104` to make the trap structurally impossible.
 
 ## Current priority thread (update each session)
 
@@ -161,10 +162,16 @@ curl -k https://soullab.life/api/health
   ```
 - **Verify after deploy**:
   ```bash
+  # 1. Container freshness
   ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Created}}"'
+
+  # 2. LAN IP sanity (must match router port-forward target, expected 192.168.0.104)
+  ssh soullab@minisforum 'hostname -I'
+
+  # 3. Public reachability (external path through DNS + router forward)
   curl -k https://soullab.life/api/health
   ```
-  `Created` must show a timestamp under a minute old, and `/api/health` must return fresh JSON with `uptime` near zero.
+  `Created` must show a timestamp under a minute old. `hostname -I` must show `192.168.0.104` as the LAN IP; if it shows anything else, the router's port-forward is pointing at a stale IP and external/iOS traffic will silently fail (see the LAN IP drift trap above). `/api/health` must return fresh JSON with `uptime` near zero.
 - CI deploys are disabled (self-hosted runner not yet configured).
 - **Common deploy mistake**: rebuilding on the Mac Studio instead of minisforum. The local stack will report healthy and `Created` will update, but the public soullab.life traffic continues hitting minisforum's old container. Always verify with the minisforum-side `Created` check above, not just the local one.
 
