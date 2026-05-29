@@ -1,7 +1,7 @@
 // @ts-nocheck
 // Oracle Conversation - Voice-synchronized sacred dialogue
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
-// 🔖 BUILD_STAMP: 2026-05-29_ios_timeout_guards
+// 🔖 BUILD_STAMP: 2026-05-29_ios_timeout_verification
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
