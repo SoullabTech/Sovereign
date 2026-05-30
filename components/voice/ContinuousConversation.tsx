@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Mic, MicOff, Loader2, Activity, Wifi, WifiOff, AlertCircle } from "lucide-react";
 import VoiceFeedbackPrevention from "@/lib/voice/voice-feedback-prevention";
-import { getPlatformInfo, getVoiceUnavailableMessage, isAndroidWebChrome, type PlatformInfo } from "@/lib/utils/platformDetection";
+import { getPlatformInfo, getVoiceUnavailableMessage, isAndroidWebChrome, hasSpeechRecognitionAPI, type PlatformInfo } from "@/lib/utils/platformDetection";
 import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
@@ -2076,6 +2076,88 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const info = await getPlatformInfo();
       setPlatformInfo(info);
       console.log('[voice] Platform info:', info);
+
+      // 🦊 Firefox / Zen path: these browsers ship NO Web Speech API
+      // (SpeechRecognition / webkitSpeechRecognition are absent), so the
+      // continuous-recognition path below can never start. They DO support
+      // getUserMedia + MediaRecorder, so route them to a one-shot capture →
+      // local Whisper (/api/voice/transcribe-simple), the same first-party
+      // path used for the Android native-failure fallback. Audio stays on
+      // our own maia-whisper container, never Google. One utterance per
+      // startListening call (continuation, if any, is driven by the parent's
+      // restart orchestration — same contract as the Android fallback).
+      const canRecordAudio =
+        typeof MediaRecorder !== 'undefined' &&
+        typeof navigator !== 'undefined' &&
+        !!navigator.mediaDevices?.getUserMedia;
+
+      if (!hasSpeechRecognitionAPI() && canRecordAudio) {
+        // Clear the 2s ARMING watchdog — this path records up to ~8s and
+        // would otherwise be reset to IDLE mid-utterance.
+        if (armingTimeoutRef.current) {
+          clearTimeout(armingTimeoutRef.current);
+          armingTimeoutRef.current = null;
+        }
+        console.log('🦊 [ContinuousConversation] No Web Speech API — MediaRecorder + local Whisper (one-shot)');
+        addDebug('🦊 web whisper fallback (no Web Speech API)');
+        logVoiceEvent('voice_listening_started', { path: 'web_whisper_fallback' });
+
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err: any) {
+          console.warn('🚫 [web whisper] getUserMedia failed:', err?.name);
+          setVoiceError('Microphone access failed. Please check permissions.');
+          setMicState('IDLE', 'web_whisper_mic_denied');
+          isStartingRef.current = false;
+          onRecordingStateChange?.(false);
+          throw new Error('MICROPHONE_UNAVAILABLE');
+        }
+
+        isProcessingRef.current = false;
+        setIsListening(true);
+        isListeningRef.current = true;
+        setMicState('LISTENING', 'web_whisper_fallback');
+        onRecordingStateChange?.(true);
+        setVoiceError(null);
+        addDebug('🎙️ web whisper: recording…');
+
+        try {
+          const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
+          const result = await recordAndTranscribe(stream);
+          if (result.ok && result.transcript) {
+            console.log(`✅ [web whisper] Transcript: ${result.transcript.length} chars, ${result.durationMs}ms`);
+            addDebug(`✅ web whisper: ${result.transcript.length} chars`);
+            isProcessingRef.current = true;
+            onTranscript(result.transcript);
+          } else {
+            console.warn(`❌ [web whisper] Failed: ${result.reason}`);
+            addDebug(`❌ web whisper failed: ${result.reason || 'unknown'}`);
+            onVoiceUnavailable?.({
+              reason: `web_whisper_${result.reason ?? 'unknown'}`,
+              userMessage:
+                result.reason === 'transcribe_disabled'
+                  ? 'Voice transcription is not enabled on the server right now. You can type to MAIA instead.'
+                  : 'I could not hear that clearly. Try again, or type to MAIA instead.',
+            });
+          }
+        } catch (err: any) {
+          console.error('💥 [web whisper] Threw:', err);
+          addDebug(`💥 web whisper threw: ${err?.name || 'unknown'}`);
+          onVoiceUnavailable?.({
+            reason: 'web_whisper_threw',
+            userMessage: 'Voice input ran into a problem. You can type to MAIA instead.',
+          });
+        } finally {
+          stream.getTracks().forEach((t) => t.stop());
+          setIsListening(false);
+          isListeningRef.current = false;
+          setMicState('IDLE', 'web_whisper_done');
+          onRecordingStateChange?.(false);
+          isStartingRef.current = false;
+        }
+        return;
+      }
 
       if (!info.hasVoiceSupport) {
         const errorMsg = getVoiceUnavailableMessage(info);
