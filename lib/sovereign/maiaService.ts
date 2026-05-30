@@ -834,12 +834,21 @@ ${ainKnowledgeContext}\n`
     : '';
 
   let contextPrompt: string;
+  // 🧵 LIVE THREAD: the cross-session memory bundle and the in-session recent thread are
+  // complementary, not either/or. The bundle gives depth; recentContext keeps the live
+  // thread so short referential FAST turns ("the Zen browser") don't lose what was just
+  // said. Prior bug: when a bundle existed, recentContext was discarded and FAST lost
+  // in-session continuity — CORE/DEEP inject conversationHistory directly, so only FAST
+  // was affected, which is exactly why the drop showed up on short messages.
+  const recentThreadBlock = recentContext.length > 0
+    ? `Recent conversation (this session):\n${recentContext}\n\n`
+    : '';
   if (memoryContext && memoryContext.length > 0) {
-    // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
-    contextPrompt = `${memoryContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
-    console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE for context (${memoryContext.length} chars)`);
+    // Memory bundle (relationship snapshot + ranked cross-session memories) AND live thread
+    contextPrompt = `${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE + recent thread (bundle=${memoryContext.length} chars, recent=${recentContext.length} chars)`);
   } else if (recentContext.length > 0) {
-    // Fallback to simple recent context
+    // No bundle yet — recent in-session thread carries continuity on its own
     contextPrompt = `Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using RECENT CONTEXT fallback (${recentContext.length} chars)`);
   } else {
