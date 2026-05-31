@@ -75,6 +75,7 @@ import {
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
 import { logFieldOrchestratorTelemetry } from '../field/fieldOrchestratorTelemetry';
@@ -3282,6 +3283,28 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           const elementalCount = traceResult.elementalRunIds?.length ?? 0;
           if (traceResult.integrationId) {
             console.log(`🧠 [CorpusCallosum] Traced | agents=${traceResult.atlasRunId ? 1 : 0}+${traceResult.maiaRunId ? 1 : 0}+${elementalCount}elemental | integration=${traceResult.integrationId.slice(0, 8)}...`);
+          }
+
+          // 🔬 VOICE DISTINCTION (observability-only collapse detector)
+          // Scores LEXICAL separation across the RAW pre-integration elemental voices.
+          // Strong negative gate: low separation ⇒ voices collapsing into one generic voice.
+          // This is NOT a generativity/affordance proof — the scorer's ceiling is lexical.
+          // No behavior / prompt / schema impact; isolated try so it cannot affect the trace path.
+          try {
+            const SCORABLE = ['fire', 'water', 'earth', 'air', 'aether'];
+            const signatures: Array<{ element: 'fire' | 'water' | 'earth' | 'air' | 'aether'; response: string; timestamp: number }> = [];
+            for (const a of (elementalAgents ?? [])) {
+              if (SCORABLE.includes(a?.element) && a?.status !== 'error' && a?.status !== 'skipped' && typeof a?.wisdom === 'string' && a.wisdom.trim().length > 0) {
+                signatures.push({ element: a.element, response: a.wisdom, timestamp: Date.now() });
+              }
+            }
+            if (signatures.length >= 2) {
+              const vd = VoiceDistinctionScorer.scoreFirewallIntegrity(signatures);
+              const weakest = [...vd.pairwiseSeparation].sort((p, q) => p.separationScore - q.separationScore)[0];
+              console.log(`🔬 [VoiceDistinction] collapse-detector | voices=${signatures.length} | overall=${vd.overallScore.toFixed(2)} | status=${vd.firewallStatus}(uncalibrated) | weakestPair=${weakest ? `${weakest.elementA}↔${weakest.elementB}:${weakest.separationScore.toFixed(2)}` : 'n/a'} | scope=lexical-only(not-generativity)`);
+            }
+          } catch (vdErr) {
+            console.warn('[VoiceDistinction] scoring failed (non-blocking):', vdErr);
           }
         } catch (callosumErr) {
           console.warn('[CorpusCallosum] Trace failed (non-blocking):', callosumErr);
