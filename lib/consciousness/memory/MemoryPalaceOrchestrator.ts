@@ -161,21 +161,14 @@ export class MemoryPalaceOrchestrator {
         spiralIndicators: params.spiralIndicators || {}
       }).catch(err => console.warn('⚠️ Session storage failed:', err));
 
-      // 2. Store episodic memory if significant
-      if (params.significance && params.significance >= 7) {
-        await episodicMemoryService.storeEpisode({
-          userId: params.userId,
-          title: this.generateEpisodeTitle(params.userMessage),
-          description: params.userMessage,
-          context: params.maiaResponse.substring(0, 500),
-          significance: params.significance,
-          emotionalIntensity: params.emotionalIntensity || 0.5,
-          breakthroughLevel: params.breakthroughLevel || 0,
-          spiralStage: params.spiralStage,
-          archetypalResonances: params.archetypalResonances,
-          frameworksActive: params.frameworksActive
-        }).catch(err => console.warn('⚠️ Episodic storage failed:', err));
-      }
+      // 2. Episodic memory — DISABLED (system-authored episodic storage).
+      //    The previous block authored title / significance / description /
+      //    archetypes the member never supplied — manufacturing significance
+      //    rather than preserving member-marked significance.
+      //    Episodic memory must use the member-marked verbatim path only.
+      //    See migration 20260531000001_episodic_member_marked_provenance.sql
+      //    (biconditional CHECK: verbatim_text non-empty IFF marked_by_member = TRUE).
+      //    Doctrine: if the member did not mark it, it is not an episode.
 
       // 3. Track somatic patterns if present
       if (params.bodyRegion && params.tensionLevel) {
