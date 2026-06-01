@@ -247,8 +247,7 @@ export const BYPASSED_SUBSTRATE: SubstrateEntry[] = [
   {
     module: 'lib/consciousness/memory/MorphicPatternService.ts',
     category: 'underutilized-consciousness',
-    note: 'Morphic pattern — unmapped',
-    evidenceKey: 'pattern',
+    note: 'Morphic pattern — declared service, no producer, no runtime slot (the pattern evidence slot belongs to theme_signals)',
   },
   // Legacy / test phase
   {
@@ -348,12 +347,18 @@ export const CAPABILITY_CLAIMS: CapabilityClaim[] = [
     note: 'Who this person is in context of the member.',
   },
   {
-    name: 'Pattern memory (morphic)',
+    name: 'Theme Signals',
     layer: 'pattern',
-    modules: ['lib/consciousness/memory/MorphicPatternService.ts'],
+    modules: ['lib/maia/memoryLoaders.ts'],
     consumers: [],
     evidenceKey: 'pattern',
-    note: 'Service preserved; no live consumer wired.',
+    note: 'Live producer — member_theme_signals (member-scoped; loadRecentThemeSignals runs per turn). Holds the pattern evidence slot (memoryHealth.ts: theme_signals feeds pattern). The loader count is not bound into memoryHealth, so the triplet reads 0/100/0 — watched-empty, not absent.',
+  },
+  {
+    name: 'Morphic pattern',
+    modules: ['lib/consciousness/memory/MorphicPatternService.ts'],
+    consumers: [],
+    note: 'Service preserved (MorphicPatternService, 0 callers); no producer, no runtime evidence slot — declared only, rendered as — (unwatched).',
   },
   {
     name: 'Somatic memory',
