@@ -1,7 +1,7 @@
 // @ts-nocheck
 // Oracle Conversation - Voice-synchronized sacred dialogue
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
-// 🔖 BUILD_STAMP: 2026-05-29_ios_timeout_verification
+// 🔖 BUILD_STAMP: 2026-06-02_ios_playback_watchdog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
@@ -4952,6 +4952,15 @@ I'm not sure what I'm feeling yet.`;
         // 🔥 FIX: Track pending TTS requests to prevent premature onComplete
         let pendingTTSCount = 0;
         let streamEnded = false;
+        // ⚠️ Observability-only (NOT a guard): detects a PERSISTENT finalize stall —
+        // streamEnded with pendingTTSCount frozen >0 — the residual hole the per-chunk
+        // playback watchdog cannot see (every chunk's onended fired, but
+        // markStreamingComplete is never reached). Armed on entry to the pending state,
+        // fires the overlay marker only if STILL stuck after a grace window, cleared on
+        // successful finalize / error. Lets a field session EXCLUDE this path, not just
+        // confirm the primary one. Transient pending is normal, so a raw per-call marker
+        // would false-positive on healthy turns and could never close "exclusivity".
+        let finalizeStallTimer: ReturnType<typeof setTimeout> | null = null;
         let finalizePromiseResolve: (() => void) | null = null;
         const finalizePromise = new Promise<void>(resolve => {
           finalizePromiseResolve = resolve;
@@ -4960,11 +4969,23 @@ I'm not sure what I'm feeling yet.`;
         // Helper to check if we can finalize
         const checkFinalize = () => {
           if (streamEnded && pendingTTSCount === 0 && audioQueue) {
+            if (finalizeStallTimer) { clearTimeout(finalizeStallTimer); finalizeStallTimer = null; }
             console.log('✅ [STREAM] All TTS complete - NOW marking streaming complete');
             audioQueue.markStreamingComplete();
             finalizePromiseResolve?.();
           } else if (streamEnded) {
             console.log(`⏳ [STREAM] Stream ended but ${pendingTTSCount} TTS requests still pending...`);
+            // Transient pending is normal (last chunk still generating). Only a
+            // PERSISTENT stall is the residual finalize hole — arm once on entry and
+            // emit the overlay marker if we are STILL pending after the grace window.
+            if (!finalizeStallTimer) {
+              finalizeStallTimer = setTimeout(() => {
+                finalizeStallTimer = null;
+                if (streamEnded && pendingTTSCount > 0) {
+                  pushVoiceDebug(`⚠️ finalize stall: pendingTTSCount did not reach 0 (${pendingTTSCount} pending)`);
+                }
+              }, 15000);
+            }
           }
         };
 
@@ -5138,6 +5159,7 @@ I'm not sure what I'm feeling yet.`;
         } catch (streamError) {
           console.error('❌ [STREAM] Error reading stream:', streamError);
           // Clean up audio queue on error
+          if (finalizeStallTimer) { clearTimeout(finalizeStallTimer); finalizeStallTimer = null; }
           if (audioQueue) {
             audioQueue.stop();
           }
