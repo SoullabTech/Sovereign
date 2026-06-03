@@ -2,6 +2,7 @@
 import { randomUUID } from 'crypto';
 import { incrementTurnCount, addConversationExchange, getConversationHistory } from './sessionManager';
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
+import { applyStanceReanchor, logStancePost } from './stanceReanchor';
 import { generateText, type ProviderMeta } from '../ai/modelService';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
@@ -1643,6 +1644,10 @@ The current user has not provided their name. Address them as "friend" or "there
     // Field intelligence must never break the hot path
   }
 
+  // 🪟 STANCE RE-ANCHOR (flag-gated, off by default): logs [MAIA/stance] pre on every CORE turn;
+  // appends the re-anchor ONLY when STANCE_REANCHOR_ENABLED=1 AND technical register accumulates.
+  adaptivePrompt = applyStanceReanchor(adaptivePrompt, conversationHistory);
+
   const { text: response, provider: coreProvider } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
@@ -1654,6 +1659,10 @@ The current user has not provided their name. Address them as "friend" or "there
       inputComplexity: 'moderate'
     }
   });
+
+  // 🪟 STANCE RECEIPT (always-on for CORE baseline): post-hoc classify what was generated →
+  // [MAIA/stance] post { stance_mode, captured, auth_slip, endorsement_tier }.
+  logStancePost(response);
 
   // 🔮 Log provider for sovereignty auditing (returned request-locally, not module-level)
   if (process.env.DEBUG_CONSCIOUSNESS === '1') {
