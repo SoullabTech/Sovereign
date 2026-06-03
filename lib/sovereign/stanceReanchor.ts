@@ -66,8 +66,23 @@ export function applyStanceReanchor(prompt: string, history: any[]): string {
   }
 }
 
+/**
+ * PHASE 1 (denominator, logging-only) — wired at the live chokepoint `generateWithClaude`.
+ * Doctrine: log at the live chokepoint; intervene only where history is clean (Phase 2 @ getMaiaResponse).
+ * These do NOT mutate the prompt, compute the density trigger, or inject the re-anchor.
+ */
+export function logStancePre(ctx?: { tier?: string; reason?: string }): void {
+  try {
+    console.log(`[MAIA/stance] pre ${JSON.stringify({
+      enabled: process.env.STANCE_REANCHOR_ENABLED === '1',
+      tier: ctx?.tier ?? null,
+      reason: ctx?.reason ?? null,
+    })}`);
+  } catch { /* hot path must never break */ }
+}
+
 /** Post-hoc stance classification of the generated response. Logs `[MAIA/stance] post`. Never throws. */
-export function logStancePost(responseText: string): void {
+export function logStancePost(responseText: string, ctx?: { tier?: string; reason?: string }): void {
   try {
     const text = responseText || '';
     const c = classifyStance(text);
@@ -77,6 +92,8 @@ export function logStancePost(responseText: string): void {
       captured: !c.stance_retained,
       auth_slip: aslip,
       endorsement_tier: aslip ? endorsementTier(text) : 'none',
+      tier: ctx?.tier ?? null,
+      reason: ctx?.reason ?? null,
     })}`);
   } catch {
     /* hot path must never break */
