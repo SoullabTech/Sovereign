@@ -134,7 +134,13 @@ end
 -- ---------------------------------------------------------------------------
 
 local function build_plate_block(t)
-  local src = "/book-studio/figures/" .. t.plate .. ".png"
+  -- Relative path (no leading slash) so the URL resolves against the
+  -- HTML wrapper's <base href="file://.../public/"> — see pagedPdf.ts.
+  -- Absolute paths like "/book-studio/figures/..." are resolved by
+  -- Chromium against the filesystem root in file:// context (NOT against
+  -- <base href>), which fails with net::ERR_FILE_NOT_FOUND. Relative URLs
+  -- are resolved against the base href as expected.
+  local src = "book-studio/figures/" .. t.plate .. ".png"
   local img = pandoc.Image({ pandoc.Str("") }, src, "", pandoc.Attr("", { "canonical-plate-img" }, { { "alt", t.alt } }))
   -- Wrap the image in a paragraph so center-images.lua-equivalent CSS
   -- treatment can reach it via standard p > img selectors if needed.
