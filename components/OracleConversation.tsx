@@ -23,6 +23,32 @@ import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { VoiceDebugOverlay } from './voice/VoiceDebugOverlay';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+
+// 🐛 VoiceDebugOverlay feature-flag wrapper.
+// Hidden for TestFlight testers by default. The pushVoiceDebug/addDebug
+// instrumentation stays intact regardless — re-enabling is instant.
+// Enable conditions (any of):
+//   1. NODE_ENV === 'development' — dev builds always show overlay
+//   2. NEXT_PUBLIC_VOICE_DEBUG === '1' at build time — diagnostic build
+//   3. localStorage.maia_voice_debug === '1' at runtime — set via Safari
+//      Web Inspector on a tester device, no rebuild required
+const VOICE_DEBUG_BUILD_FLAG =
+  process.env.NODE_ENV === 'development' ||
+  process.env.NEXT_PUBLIC_VOICE_DEBUG === '1';
+
+function VoiceDebugOverlayGate() {
+  const [show, setShow] = useState(VOICE_DEBUG_BUILD_FLAG);
+  useEffect(() => {
+    if (show) return;
+    if (typeof window !== 'undefined' &&
+        window.localStorage?.getItem('maia_voice_debug') === '1') {
+      setShow(true);
+    }
+  }, [show]);
+  if (!show) return null;
+  return <VoiceDebugOverlay />;
+}
+
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
@@ -7932,10 +7958,11 @@ I'm not sure what I'm feeling yet.`;
         </TransformationalPresence>
       </div>
 
-      {/* 🐛 PR 10 diagnostic overlay — auto-renders only on Capacitor native.
-          Surfaces the voice debug bus contents so a tester can screenshot
-          the trace when voice fails. Remove once Android voice is stable. */}
-      <VoiceDebugOverlay />
+      {/* 🐛 PR 10 diagnostic overlay — feature-flagged via VoiceDebugOverlayGate
+          (defined near the import above). Hidden by default for TestFlight
+          testers; the addDebug/pushVoiceDebug substrate stays intact so
+          re-enabling via env flag or localStorage is instant. */}
+      <VoiceDebugOverlayGate />
 
       {/* 🔧 PWA DEBUG STRIP - Shows state machine state on Safari PWA (remove after debugging) */}
       {isPwaVoice && (

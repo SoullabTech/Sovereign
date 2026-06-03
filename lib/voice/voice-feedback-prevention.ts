@@ -291,25 +291,20 @@ export class VoiceFeedbackPrevention {
       }
     });
 
-    // Auto-restart after Maya finishes speaking
+    // Restart authority: ContinuousConversation owns SR restart, not VFP.
+    // Previously this listener polled isMayaSpeaking every 100ms and called
+    // recognition.start() directly — racing ContinuousConversation's
+    // auto-resume effect (the "main restart guard"). The double-clock
+    // produced ~1Hz mic thrash on iOS after TTS ended (AVAudioPlayer →
+    // webkitSpeechRecognition handoff). We keep the listener for
+    // observability but do NOT restart from here. The auto-resume effect
+    // in components/voice/ContinuousConversation.tsx, with a platform-aware
+    // iOS cooldown (TTS_RESTART_COOLDOWN_MS), is now the single restart
+    // authority.
     recognition.addEventListener('end', () => {
-      if (!this.isMayaSpeaking) {
-        // Recognition ended naturally, not due to Maya speaking
-        return;
+      if (this.isMayaSpeaking) {
+        console.log('[VFP] recognition end while MAIA speaking — restart deferred to ContinuousConversation auto-resume');
       }
-
-      // Queue restart for when Maya finishes
-      const restartCheck = setInterval(() => {
-        if (!this.isMayaSpeaking) {
-          clearInterval(restartCheck);
-          try {
-            recognition.start();
-            console.log('🔄 Recognition restarted after Maya finished');
-          } catch (error) {
-            console.error('Failed to restart recognition:', error);
-          }
-        }
-      }, 100);
     });
   }
 

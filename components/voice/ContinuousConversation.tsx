@@ -13,6 +13,21 @@ import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
+// 🎙️ iOS voice handoff cooldown (post-TTS → SR restart)
+// =============================================================================
+// On native iOS the TTS→SR handoff crosses two audio subsystems:
+//   TTS:  nativePlayBase64 → AVAudioPlayer
+//   SR:   webkitSpeechRecognition (WKWebView)
+// 600ms is too short for the iOS audio session to quiesce between the two —
+// the result is a ~1Hz mic-restart thrash. Use 1800ms on native iOS, keep
+// 600ms on other platforms. This constant is also the explicit cooldown
+// gate before any restart attempt (see auto-resume effect + onend handler).
+const IS_IOS_NATIVE = typeof window !== 'undefined'
+  && Capacitor.isNativePlatform()
+  && Capacitor.getPlatform() === 'ios';
+const TTS_RESTART_COOLDOWN_MS = IS_IOS_NATIVE ? 1800 : 600;
+
+// =============================================================================
 // 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
 // =============================================================================
 // Rule: ONLY requestRestart() can move from IDLE → ARMING → LISTENING.
@@ -299,6 +314,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Auto-restart listening when Maya stops speaking, but with timeout to stop if no response
   const conversationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Track the actual maya-voice-end timestamp. VFP dispatches this when the
+  // TTS audio element fires 'ended' (or AVAudioPlayer resolves on native iOS).
+  // We use this — not the React isSpeaking prop transition — as the floor for
+  // the SR restart cooldown, because the prop change and the audio-session
+  // settling are not the same moment.
+  const lastTTSEndAtRef = useRef<number>(0);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => {
+      lastTTSEndAtRef.current = Date.now();
+      console.log(`[voice] tts:end @ ${lastTTSEndAtRef.current} (cooldown ${TTS_RESTART_COOLDOWN_MS}ms, iosNative=${IS_IOS_NATIVE})`);
+    };
+    window.addEventListener('maya-voice-end', handler);
+    return () => window.removeEventListener('maya-voice-end', handler);
+  }, []);
+
   // Auto-restart listening when Maya stops speaking (WEB path only)
   // ONLY when handsFreeActive is true - default is push-to-talk
   const prevIsSpeakingRef = useRef(isSpeaking);
@@ -313,8 +344,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return;
       }
 
-      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 600ms');
+      console.log(`🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in ${TTS_RESTART_COOLDOWN_MS}ms (iosNative=${IS_IOS_NATIVE})`);
       setTimeout(() => {
+        // Cooldown gate: even though the setTimeout duration already enforces
+        // the cooldown vs the isSpeaking prop flip, the actual maya-voice-end
+        // event may fire a moment later than the prop transition. Compute the
+        // elapsed time vs the real tts:end timestamp and refuse to restart if
+        // we are still inside the cooldown window. The auto-resume effect will
+        // not retry — the user can tap mic or another isSpeaking transition
+        // will re-trigger this path.
+        const ttsEndAt = lastTTSEndAtRef.current;
+        const elapsed = ttsEndAt > 0 ? Date.now() - ttsEndAt : Infinity;
+        if (ttsEndAt > 0 && elapsed < TTS_RESTART_COOLDOWN_MS) {
+          console.log(`[voice] restart blocked by tts cooldown (elapsed=${elapsed}ms < ${TTS_RESTART_COOLDOWN_MS}ms)`);
+          return;
+        }
         if (isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
           // 🔥 Recreate if VFP aborted — Chrome zombie objects silently fail on .start()
           if (recognitionNeedsRefreshRef.current) {
@@ -336,7 +380,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           try {
             recognitionRef.current.start();
             setIsRecording(true);
-            console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech (hands-free)');
+            console.log(`[voice] restart allowed (elapsed=${elapsed === Infinity ? 'n/a' : elapsed + 'ms'} ≥ cooldown=${TTS_RESTART_COOLDOWN_MS}ms) — mic auto-resumed after MAIA speech (hands-free)`);
           } catch (err: any) {
             if (!err?.message?.includes('already started')) {
               console.warn('⚠️ [ContinuousConversation] Error auto-resuming mic:', err);
@@ -345,7 +389,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         } else {
           console.log('⏸️ [ContinuousConversation] Auto-resume blocked - conditions changed');
         }
-      }, 600);
+      }, TTS_RESTART_COOLDOWN_MS);
     }
   }, [isSpeaking, isListening, isRecording, isProcessing]);
 
@@ -815,12 +859,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         isRestartingRef.current = true;
 
         setTimeout(() => {
+          // 🚦 TTS COOLDOWN GATE — onend can fire during the post-TTS window
+          // even though the main "just finished speaking" restart goes through
+          // the auto-resume effect. If we are still inside the iOS cooldown
+          // since the last maya-voice-end, refuse to restart here too. Single
+          // restart authority: cooldown is owed by both paths.
+          const ttsEndAt = lastTTSEndAtRef.current;
+          const elapsed = ttsEndAt > 0 ? Date.now() - ttsEndAt : Infinity;
+          if (ttsEndAt > 0 && elapsed < TTS_RESTART_COOLDOWN_MS) {
+            console.log(`[voice] restart blocked by tts cooldown (onend path; elapsed=${elapsed}ms < ${TTS_RESTART_COOLDOWN_MS}ms)`);
+            isRestartingRef.current = false;
+            return;
+          }
           // Triple-check conditions before restart to prevent race conditions
           // CRITICAL: Use refs to check current state, not stale closure values
           if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isProcessingRef.current && !isSpeakingRef.current) {
             try {
               recognitionRef.current.start();
-              console.log('✅ [onend] Recognition restarted');
+              console.log(`[voice] restart allowed (onend path; elapsed=${elapsed === Infinity ? 'n/a' : elapsed + 'ms'} ≥ cooldown=${TTS_RESTART_COOLDOWN_MS}ms) — recognition restarted`);
             } catch (err: any) {
               // If start fails, it's likely already running or in a bad state
               console.log('⚠️ [onend] Could not restart recognition:', err.message);
@@ -959,11 +1015,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return;
       }
 
-      console.log('🔄 [Native] MAIA stopped speaking - hands-free + recent speech, auto-restarting in 800ms...');
+      console.log(`🔄 [Native] MAIA stopped speaking - hands-free + recent speech, auto-restarting in ${TTS_RESTART_COOLDOWN_MS}ms (iosNative=${IS_IOS_NATIVE})...`);
+      addDebug(`🔄 post-TTS: scheduling native restart in ${TTS_RESTART_COOLDOWN_MS}ms`);
 
       const restartTimer = setTimeout(async () => {
+        // 🚦 TTS COOLDOWN GATE — Path A (canonical post-TTS restart authority).
+        // The setTimeout delay should already cover the cooldown, but the actual
+        // maya-voice-end event may fire after the isSpeaking prop transition.
+        // Measure elapsed against the real tts:end timestamp and bail if the
+        // iOS audio session hasn't quiesced yet. Path B (listeningState:stopped)
+        // also yields to this window via its own cooldown gate.
+        const ttsEndAt = lastTTSEndAtRef.current;
+        const elapsed = ttsEndAt > 0 ? Date.now() - ttsEndAt : Infinity;
+        if (ttsEndAt > 0 && elapsed < TTS_RESTART_COOLDOWN_MS) {
+          addDebug(`🚦 post-TTS restart blocked by cooldown (elapsed=${elapsed}ms < ${TTS_RESTART_COOLDOWN_MS}ms)`);
+          return;
+        }
         if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
+            addDebug(`✅ post-TTS restart allowed (elapsed=${elapsed === Infinity ? 'n/a' : elapsed + 'ms'} ≥ ${TTS_RESTART_COOLDOWN_MS}ms) — calling SR.start()`);
             console.log('🎙️ [Native] Auto-restarting after MAIA speech (hands-free)...');
             await NativeSpeechRecognition.start({
               language: 'en-US',
@@ -974,11 +1044,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             console.log('✅ [Native] Auto-restart after speech successful');
           } catch (e: any) {
             console.warn('⚠️ [Native] Auto-restart failed:', e?.message || e);
+            addDebug(`⚠️ post-TTS restart failed: ${e?.message || e}`);
           }
         } else {
           console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
+          addDebug('🚫 post-TTS restart skipped (conditions changed or already started)');
         }
-      }, 800);
+      }, TTS_RESTART_COOLDOWN_MS);
 
       return () => clearTimeout(restartTimer);
     }
@@ -1861,6 +1933,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // 🔥 FIX: Only handle restart logic if user wants continuous conversation
             if (wantsToListen) {
+              // 🚦 TTS COOLDOWN GATE — Path B yields to Path A during the post-TTS window.
+              // Without this, listeningState:'stopped' (fired when the iOS audio session is
+              // still settling from AVAudioPlayer → SFSpeechRecognizer) immediately schedules
+              // a backoff restart that races Path A (the post-TTS isSpeaking effect at
+              // line 1000). The two restart authorities then thrash at ~1Hz because each
+              // successful 'started' resets backoffStepRef and consecutiveRestartCount,
+              // so backoff never escalates and never stops.
+              //
+              // Path A (useEffect on [isSpeaking]) is the canonical post-TTS restart; here
+              // we explicitly yield to it during the cooldown window. We do NOT touch
+              // backoff/counters/authorityGuard — just return early so Path A owns the
+              // restart. Once the cooldown elapses, this branch resumes normal behavior
+              // (e.g., for stops that genuinely require Path B handling).
+              if (useNativeSpeechRef.current && Date.now() - lastTTSEndAtRef.current < TTS_RESTART_COOLDOWN_MS) {
+                addDebug('🚦 listeningState:stopped within TTS cooldown — yielding to post-TTS effect');
+                return;
+              }
+
               // 🔥 FIX: Check if this is an "idle stop" within grace period
               // iOS speech recognition stops quickly when no speech detected - don't count as failure
               const now = Date.now();

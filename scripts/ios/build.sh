@@ -9,7 +9,7 @@
 #   1. Patch dynamic routes for static export
 #   2. Build Next.js (CAPACITOR_BUILD=1)
 #   3. Validate web export (out/ directory)
-#   4. Patch root index.html → /enter redirect
+#   4. Embed maia.html → index.html (avoids /enter redirect stall)
 #   5. Revert route patches
 #   6. Capacitor sync (cap sync ios)
 #   7. CocoaPods install (if needed)
@@ -126,33 +126,76 @@ else
   ok "Web export produced: $OUT_DIR"
 fi
 
-# ── Step 3: Patch root index.html → /enter redirect ──────────────────────────
-step "Patch root index.html → /enter redirect"
+# ── Step 3: Embed maia.html → index.html (avoid /enter redirect stall) ────────
+step "Embed maia.html → index.html (avoid /enter redirect stall)"
+
+# WHY direct embed, NOT /enter redirect — per commit 542b43a2f (2026-03-04):
+#   - meta-refresh / JS-redirect navigates the WKWebView document
+#     → Safari Inspector disconnects (loses console output)
+#   - /enter's router.replace('/maia') stalls: CapacitorHttp intercepts the
+#     Next.js RSC payload fetch and the router hangs waiting for RSC JSON
+#     → user sees a white/blank screen after the splash
+#   - Direct embed: index.html IS the maia page (maia.html content + URL fixup)
+#     history.replaceState('/maia') fires synchronously before React hydrates
+#     React sees pathname=/maia and hydrates the pre-rendered HTML correctly
+#     No document navigation occurs — Safari Inspector stays connected
+# Previously this step wrote a redirect-to-/enter stub. That stub is the
+# white-screen bug; do not re-introduce it. See also scripts/build-ios.sh.
 
 ROOT_INDEX="$OUT_DIR/index.html"
-if [ ! -f "$ROOT_INDEX" ]; then
-  warn "out/index.html not found — writing minimal redirect"
+MAIA_HTML="$OUT_DIR/maia.html"
+
+if [ ! -f "$MAIA_HTML" ]; then
+  fail "out/maia.html not found — cannot embed (was the web build successful?)"
 fi
 
-# Write unconditionally so stale content is never served
-cat > "$ROOT_INDEX" << 'HTMLEOF'
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>html,body{margin:0;padding:0;background:#1A1513;}</style>
-    <script>
-      if (!window.__maiaRedirected) {
-        window.__maiaRedirected = true;
-        window.location.replace('/enter');
-      }
-    </script>
-  </head>
-  <body></body>
-</html>
-HTMLEOF
-ok "Root index.html → /enter redirect patched"
+info "Embedding maia.html → index.html with history.replaceState fixup..."
+python3 - << 'PYEOF'
+src = 'out/maia.html'
+dst = 'out/index.html'
+
+content = open(src, encoding='utf-8').read()
+
+# Synchronous URL fixup: before React hydrates, set pathname to /maia.
+# React's router then sees /maia and hydrates the static HTML correctly.
+fix = '<script>if(location.pathname==="/")history.replaceState(null,"","/maia");</script>'
+
+patched = content.replace('<head>', '<head>' + fix, 1)
+open(dst, 'w', encoding='utf-8').write(patched)
+print(f'    OK index.html <- maia.html + URL fixup ({len(patched)} bytes)')
+PYEOF
+
+# Defensive URL fixup for navigation destinations (in case .html ever
+# surfaces in the URL — direct link, stale cache, future runtime change).
+info "Adding URL fixup scripts to key navigation pages..."
+python3 - << 'PYEOF'
+import os
+
+pages = ['maia', 'begin', 'signin', 'welcome-back', 'enter', 'onboarding', 'faq']
+for page in pages:
+    path = f'out/{page}.html'
+    if not os.path.exists(path):
+        continue
+    content = open(path, encoding='utf-8').read()
+    fix = f'<script>if(location.pathname==="/{page}.html")history.replaceState(null,"",\"/{page}\");</script>'
+    if fix in content:
+        print(f'    SKIP {path} (already patched)')
+        continue
+    open(path, 'w', encoding='utf-8').write(content.replace('<head>', '<head>' + fix, 1))
+    print(f'    OK   {path} + URL fixup')
+PYEOF
+
+# Verification gate: index.html MUST be the maia.html embed, not a small redirect stub.
+# A failure here means the next builds and TestFlight uploads would silently ship
+# the white-screen regression. Block the build instead.
+INDEX_SIZE=$(wc -c < "$ROOT_INDEX" 2>/dev/null | tr -d ' ')
+if [ "${INDEX_SIZE:-0}" -lt 5000 ]; then
+  fail "out/index.html is too small (${INDEX_SIZE} bytes) — maia.html embed failed.
+       Expected: ~30,000+ bytes (maia.html embed)
+       Got: ${INDEX_SIZE} bytes (likely stale redirect stub)
+       Check that out/maia.html exists and the Python step above succeeded."
+fi
+ok "index.html embed verified (${INDEX_SIZE} bytes — maia.html embed confirmed)"
 
 # ── Step 4: Revert route patches ──────────────────────────────────────────────
 step "Revert dynamic route patches"
