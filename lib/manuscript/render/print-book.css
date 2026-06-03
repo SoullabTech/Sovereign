@@ -245,6 +245,16 @@ p:has(> em:only-child) + p {
   text-indent: 0;
 }
 
+/* Force a page break before an element. Used sparingly for
+ * editorial layout (e.g. a threshold epigraph that must open
+ * a chapter's body on its own page). !important wins over
+ * inherited orphan/widow heuristics that Paged.js otherwise
+ * uses to decide break placement. */
+.force-break-before {
+  page-break-before: always !important;
+  break-before: page !important;
+}
+
 /* ============================================================
  * BLOCKQUOTES
  * ============================================================ */
