@@ -117,6 +117,11 @@ services:
       # Faster-Whisper for sovereign voice transcription (OpenAI-compatible API)
       WHISPER_LOCAL_URL: "http://whisper:8000"
       WHISPER_URL: "http://whisper:8000"
+      # Mythic Atlas — symbolic classifier (deterministic keyword stub).
+      # Client: lib/services/mythicAtlasService.ts (getMythicAtlasContext).
+      # Reached on the internal compose network; the client fails safe with a
+      # neutral fallback if this is ever unreachable (no hang, no surfaced error).
+      MYTHIC_ATLAS_URL: "http://mythic-atlas:8088/api/mythic-atlas"
       # Session Room: enable chunked audio upload for live transcription
       ALLOW_AUDIO_UPLOADS: "true"
       # WebAuthn/Passkey configuration - must match the domain users access
@@ -577,6 +582,53 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - maia-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Mythic Atlas — Symbolic Classification Service (deterministic keyword stub)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Semantic-anchoring classifier the voice/oracle pipeline calls via
+  # lib/services/mythicAtlasService.ts (getMythicAtlasContext): returns an
+  # element/facet/archetype guess + confidence + deliberation flag, used to weight
+  # memory recall. Runs scripts/mythic-atlas-stub.mjs — the DETERMINISTIC KEYWORD
+  # STUB, not a learned model. It exists so the pipeline is reachable in prod
+  # (stops the per-turn ECONNREFUSED noise); the client fails safe if it's down.
+  #
+  # Reached as http://mythic-atlas:8088 on maia-internal (wired via MYTHIC_ATLAS_URL
+  # on the maia service). Port 8088 — NOT 8000 (whisper owns 8000).
+  #
+  # Deploy: docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d mythic-atlas
+  mythic-atlas:
+    image: node:20-alpine
+    container_name: maia-mythic-atlas
+    restart: unless-stopped
+    logging: *default_logging
+
+    # No env_file: the stub needs no secrets, and .env.production sets PORT=3005,
+    # which would otherwise hijack the listen port. Use a dedicated var instead.
+    environment:
+      MYTHIC_ATLAS_PORT: "8088"
+
+    # Single-file stub, bind-mounted read-only — single source of truth in scripts/.
+    volumes:
+      - ./scripts/mythic-atlas-stub.mjs:/app/mythic-atlas-stub.mjs:ro
+
+    command: ["node", "/app/mythic-atlas-stub.mjs"]
+
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    # Healthcheck hits GET /health — node-only (no curl), consistent with sovereign tooling.
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:8088/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
       retries: 3
       start_period: 10s
 
