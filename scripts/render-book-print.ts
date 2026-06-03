@@ -3,8 +3,12 @@
  * Render the full polished Elemental Alchemy manuscript as a
  * print-ready PDF.
  *
- * Source of truth: docs/book-studio/ELEMENTAL_ALCHEMY_MANUSCRIPT.md
- * (the canonical edited file — NOT the JSON used by render-chapter-1).
+ * Source of truth: docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md
+ * (canonical editorial source — same file rendered by /book-studio/read
+ *  via StudioMarkdown. Repointed from ELEMENTAL_ALCHEMY_MANUSCRIPT.md
+ *  after MANUSCRIPT.md fell behind editorial state and the dual-canon
+ *  drift was caught while preparing a KDP correction pass. Web Read Flow
+ *  and print pipeline now share one source.)
  *
  * Pipeline: markdown → pandoc HTML → wrap with print CSS → puppeteer
  * + Paged.js → 6×9 PDF.
@@ -25,7 +29,7 @@ import { pathToFileURL } from 'node:url';
 import { renderHtmlToPdf } from '../lib/manuscript/render/pagedPdf';
 
 const REPO_ROOT = process.cwd();
-const MD_PATH = path.join(REPO_ROOT, 'docs/book-studio/ELEMENTAL_ALCHEMY_MANUSCRIPT.md');
+const MD_PATH = path.join(REPO_ROOT, 'docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md');
 const CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/print-book.css');
 const OUT_DIR = path.join(REPO_ROOT, 'exports/elemental-alchemy');
 const VERSION = process.argv[2] ?? 'v1';
