@@ -55,7 +55,14 @@ async function main(): Promise<void> {
     // --no-highlight is supported on both Pandoc 2.x and 3.x.
     // (--syntax-highlighting=none was Pandoc 3.x only — production
     // runs Pandoc 2.17 from Debian Bookworm apt, which rejected it.)
-    `pandoc "${MD_PATH}" -t html5 --standalone --no-highlight --toc --toc-depth=3 -V toc-title="" --lua-filter "${LUA_FILTER}"`,
+    // No --toc: FROM_ORIGINAL_FULL.md carries a hand-curated prose TOC
+    // under `# Contents` (markdown lines 44-113) that gives the printed
+    // book a compact, editorial TOC matching the May 9 KDP upload.
+    // Adding pandoc's --toc on top produces a duplicate auto-TOC parked
+    // at body-top because the post-processing relocation only knew how
+    // to handle MANUSCRIPT.md's H2-Preface anchor — see git history of
+    // c32768c05 / b569f1928 for why the two manuscripts diverge here.
+    `pandoc "${MD_PATH}" -t html5 --standalone --no-highlight --lua-filter "${LUA_FILTER}"`,
     {
       maxBuffer: 256 * 1024 * 1024,
       encoding: 'utf-8',
