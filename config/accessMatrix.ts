@@ -61,6 +61,8 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Trust & Stewardship (public - builds trust during consideration)
   { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },
+  { exact: '/maia/membership', public: true, notes: 'Membership tiers & pricing — public browse; checkout action auth-gates client-side' },
+  { exact: '/membership', public: true, notes: 'Alias → /maia/membership (client redirect)' },
   { exact: '/maia/privacy', public: true, notes: 'Privacy & sovereignty' },
   { exact: '/dashboard/export', public: true, notes: 'Export preview (auth-gated action, public explanation)' },
 
@@ -95,6 +97,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/beta-welcome', public: true, notes: 'Beta welcome' },
   { exact: '/beta-onboarding', public: true, notes: 'Beta onboarding' },
   { exact: '/beta-access', public: true, notes: 'Beta access' },
+
+  // Beta Tester learning field — auth required (NOT public). Invite-only cohort
+  // (members.tester) is enforced server-side in requireCohort + the field layout,
+  // since cohort is not expressible in the tier/role model here.
+  { prefix: '/beta-testers', minTier: 'free', notes: 'Beta tester learning field — cohort-gated (members.tester) in layout + API' },
 
   // Master Fields - public by design (invitation pages, field homes)
   { prefix: '/fields/', public: true, notes: 'Master field sites are public — no auth required' },
@@ -403,6 +410,12 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Scribe API - session review, summaries
   { prefix: '/api/scribe', minTier: 'free', notes: 'Scribe API' },
+
+  // Beta Tester field API — admin routes need the admin role; cohort routes are
+  // auth-gated here and cohort-gated server-side via requireCohort (members.tester).
+  // Admin prefix MUST precede the cohort prefix (more specific first).
+  { prefix: '/api/admin/beta-testers', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Beta tester field admin API — admin role (also enforced in requireAdmin)' },
+  { prefix: '/api/beta-testers', minTier: 'free', notes: 'Beta tester field API — cohort-gated server-side (members.tester via requireCohort)' },
 
   // Stripe webhooks (system routes, validated by signature)
   { prefix: '/api/stripe/webhook', public: true, notes: 'Stripe webhooks - validated by signature' },

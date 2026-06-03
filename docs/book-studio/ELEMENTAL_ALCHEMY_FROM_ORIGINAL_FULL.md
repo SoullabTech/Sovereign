@@ -37,7 +37,7 @@ All rights reserved. No part of this book may be reproduced, distributed, or tra
 
 Copyright © 2024 by Kelly Nezat
 
-Second Edition
+First Edition
 
 ---
 
