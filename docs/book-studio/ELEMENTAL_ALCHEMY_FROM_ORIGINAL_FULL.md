@@ -38,6 +38,8 @@ First Edition
 
 ---
 
+<div class="toc-prose">
+
 # Contents
 
 &nbsp;
@@ -105,6 +107,8 @@ Appendix
 Bibliography
 
 Additional Resources
+
+</div>
 
 ---
 
