@@ -26,11 +26,6 @@ I aspire to offer guidance and support to all who seek the spiritual path and wh
 
 Take what resonates, leave what doesn't, and may your path be illuminated with joy, laughter, and profound insights.
 
-&nbsp;
-
-In gratitude for this phenomenal life,\
-Kelly Nezat
-
 ---
 
 ## Permissions
