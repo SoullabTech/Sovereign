@@ -49,6 +49,7 @@ Every Mayan **record** (and ideally every value) carries:
 
 ```
 source_type   ∈ { computed, authored, imported, verified }
+arena         ∈ { developmental, psychological, constitutional, climate, karmic_predictive }
 source        # for computed: correlation/system id (e.g. "GMT-584283", "engine-v1");
               # for authored: author/practitioner (e.g. "Mark Elmy / Three Pillars")
 verified_by   # nullable
@@ -58,6 +59,18 @@ created_at
 ```
 
 So MAIA always knows *"this came from a calculation"* vs *"this came from Mark Elmy's authored reading"* — different kinds of truth. **Computed and authored are stored as separate records; an authored reading never mutates the computed one, and vice versa.**
+
+**Arena is first-class provenance, not just source.** Beyond *where a value came from*, each record (and each system) carries its **arena of inquiry** — what *kind* of question it answers. This is the hinge to the relevance layer (Invariant 13, layer 3): MAIA isn't choosing between *astrology systems*, it's choosing between *arenas*.
+
+| System | Arena |
+|---|---|
+| Mayan (Three Pillars) | `developmental` |
+| Western | `psychological` |
+| Wu Xing / BaZi | `constitutional` |
+| Da Yun | `climate` |
+| Sidereal/Vedic | `karmic_predictive` → pairs directly with Invariant 13 **Tier 2** hard floor |
+
+Tagging arena at the data layer is what lets a future relevance layer route a *developmental* question to Mayan and a *constitutional* one to Wu Xing — and it binds the karmic/predictive arena to its hard-floor gate at the schema level, not as an afterthought. The provenance model is therefore the foundation for the translator architecture: lens routing by **arena**, governed by **claim type**, grounded in **source**.
 
 ### Layer 3 — Interpretation / surfacing
 
