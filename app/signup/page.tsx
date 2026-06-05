@@ -411,7 +411,7 @@ function SignupContent() {
           ) : (
             // ── Enter email ──
             <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Begin</h1>
+              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Welcome</h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
                 Enter your email and we’ll send a 6-digit code. No password to remember.
               </p>

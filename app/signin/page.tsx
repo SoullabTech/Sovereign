@@ -914,7 +914,7 @@ function SigninContent() {
               onClick={() => { window.location.href = '/signup'; }}
               className="text-sm font-medium text-slate-300 hover:text-slate-200 transition-colors"
             >
-              New to Soullab? Begin your journey
+              New to Soullab? Continue
             </button>
           </div>
         </div>
