@@ -233,6 +233,15 @@ function defaultSovereignResponse() {
   };
 }
 
+// Deploy 2 — governance primitive: prefaces every symbolic addendum (astrology
+// Western+Mayan, Wu Xing constitution) so the model holds them as lenses, not grounds
+// for assertion about the member. Ablation-validated (scripts/repro/deploy2-boundary-
+// ablation.ts): over-assertion index -3.63, every dimension correct direction; the
+// bounded arm still engages the lens (symbolic_framing stayed high) — bounds, not kills.
+// Da Yun keeps its own per-addendum boundary (Deploy 1).
+const SYMBOLIC_LENS_BOUNDARY = `## HOW TO HOLD EVERY SYMBOLIC FRAMEWORK BELOW (astrology, Mayan, Chinese/Wu Xing, elements, cycles, archetypes)
+These are traditional interpretive lenses — NOT facts, NOT predictions, NOT evidence about this member's actual life. Possessing a framework gives you NO grounds to assert anything about who they are, what phase they are in, or where they are heading. You still know only what they have actually told you. Do not lead with a lens or announce "you are entering / this means / your chart shows" as fact; offer one only when it genuinely illuminates what they are living or when they ask, frame it explicitly as a traditional association, and when a lens conflicts with their lived experience, their experience wins.`;
+
 export async function POST(req: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
@@ -518,7 +527,7 @@ export async function POST(req: NextRequest) {
               const moment = computeWuXingMoment(new Date(), timezone);
               const constitution = baziProfile ? computeWuXingConstitution(baziProfile) : null;
               const snapshot = buildWuXingSnapshot({ constitution, moment });
-              let addendum = generateWuXingPromptAddendum(snapshot);
+              let addendum = SYMBOLIC_LENS_BOUNDARY + '\n\n' + generateWuXingPromptAddendum(snapshot);
               const bridged: BridgedSnapshot | null = null;
 
               // Da Yun (10-year Luck Pillar) — a SEPARATE, available interpretive lens,
@@ -604,7 +613,7 @@ export async function POST(req: NextRequest) {
       const detail = astrologyContext.contextDetail.length > 3000
         ? astrologyContext.contextDetail.slice(0, 3000) + '\n...[astrology detail capped]\n'
         : astrologyContext.contextDetail;
-      astrologyAddendum = astrologyContext.contextHeader + detail;
+      astrologyAddendum = SYMBOLIC_LENS_BOUNDARY + '\n\n' + astrologyContext.contextHeader + detail;
       if (astrologyContext.hasBirthData) {
         console.log('🌟 [Astrology] Birth chart loaded:', {
           sun: astrologyContext.birthChart?.sun?.sign,
