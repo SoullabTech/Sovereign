@@ -815,7 +815,7 @@ function SigninContent() {
           </motion.button>
         </form>
 
-        {/* Biometric Option */}
+        {/* Biometric Option — friendly device language, never "passkey" */}
         {bioAvailable && (
           <motion.button
             onClick={handlePasskeySignIn}
@@ -825,10 +825,23 @@ function SigninContent() {
             className="mt-3 w-full rounded-xl border border-maia-navy-700/50 bg-maia-navy-850/40 px-4 py-3 text-center hover:bg-maia-navy-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <span className="text-sm font-medium text-slate-200">
-              Use {biometricLabel}
+              Continue with {biometricLabel}
             </span>
           </motion.button>
         )}
+
+        {/* Email a one-time code — the passwordless path back in. Always shown so
+            members who signed up with a code (and have no password) are never
+            locked out. Routes to the shared email+code surface. */}
+        <button
+          type="button"
+          onClick={() => { window.location.href = '/signup'; }}
+          className="mt-3 w-full rounded-xl border border-maia-navy-700/50 bg-maia-navy-850/40 px-4 py-3 text-center hover:bg-maia-navy-700/50 transition-all"
+        >
+          <span className="text-sm font-medium text-slate-200">
+            Email me a code
+          </span>
+        </button>
 
         {/* Divider */}
         <div className="mt-6 flex items-center gap-3">
@@ -839,15 +852,8 @@ function SigninContent() {
 
         {/* Secondary Options */}
         <div className="mt-4 flex justify-center gap-3">
-          {/* Magic Link */}
-          <button
-            type="button"
-            onClick={() => setShowMagicLink(true)}
-            title="Email me a sign-in link"
-            className="w-11 h-11 rounded-xl bg-maia-navy-850/40 hover:bg-maia-navy-700/50 border border-maia-navy-700/60 flex items-center justify-center transition-all"
-          >
-            <Mail className="w-5 h-5 text-slate-400" />
-          </button>
+          {/* Magic link intentionally hidden (2026-06-04): codes over links.
+              The magic-link backend remains for compatibility but is not surfaced. */}
 
           {/* QR Code Login (desktop only, when feature enabled) */}
           {qrLoginEnabled && !Capacitor.isNativePlatform() && (

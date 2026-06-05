@@ -1,20 +1,22 @@
 /**
- * Signup — the navy member threshold (sovereign default)
+ * Signup — the navy member threshold (sovereign default, code-primary)
  *
  * Visual language matches /signin and /welcome-back: dark navy, holoflower,
  * low stimulation. NO teal, NO induction artifacts, NO invite-passkey language.
  *
- * Auth model (sovereign default):
- *   Primary   — email magic link (passwordless). Enter email → secure link →
- *               finish with just a name. Account created via /api/members/register-email
- *               (no SOULLAB invite passkey required).
- *   Return    — Face ID / Touch ID / WebAuthn (offered right after first signup).
- *   Secondary — Google / Apple (small, below the main flow) for existing users.
- *   Fallback  — an optional password, quiet. Most people will never set one.
+ * Auth model (decided 2026-06-04 — codes over links; links never worked for us):
+ *   Primary   — email + 6-digit one-time code. Enter email → code arrives →
+ *               type it on this page → continue. No link to click, no handoff.
+ *   Return    — Face ID / Touch ID / WebAuthn (offered right after first signup;
+ *               labelled by device, never "passkey").
+ *   Secondary — Google / Apple (small, below the main flow).
+ *   Recovery  — an optional password, quiet. Most people never set one.
  *
- * Two states, chosen by the `verified` query param:
- *   A (default)            — collect email, send magic link.
- *   B (?verified=true)      — email already verified via magic link; finish signup.
+ * Account creation is passkeyless + passwordless by default via
+ * /api/members/register-email (the verified code marks the email as recently
+ * verified). Existing members who enter a code here are simply signed in.
+ *
+ * Phases: 'email' → 'code' → 'finish' (new). ?verified=true jumps to 'finish'.
  */
 'use client';
 
@@ -28,7 +30,6 @@ import { betaSession } from '@/lib/auth/betaSession';
 import { apiUrl } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 
-// Shared navy visual language (mirrors /welcome-back card + /signin inputs)
 const CARD_STYLE: React.CSSProperties = {
   background: 'linear-gradient(165deg, rgba(15, 29, 50, 0.8), rgba(10, 22, 40, 0.6))',
   backdropFilter: 'blur(20px)',
@@ -41,42 +42,37 @@ const INPUT_CLASS =
 const PRIMARY_BTN_CLASS =
   'w-full rounded-xl bg-maia-navy-700 hover:bg-maia-navy-600 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg';
 
-// Derive an internal username from the email local-part. Sign-in is by email
-// (magic link) or biometrics in the new model, so the username is just an
-// internal handle — kept tidy, made unique on collision.
 function deriveUsername(email: string): string {
-  const base = (email.split('@')[0] || 'soul')
-    .toLowerCase()
-    .replace(/[^a-z0-9_]/g, '')
-    .slice(0, 20);
+  const base = (email.split('@')[0] || 'soul').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
   return base || 'soul';
 }
-
 function randomSuffix(): string {
   const arr = new Uint8Array(2);
   crypto.getRandomValues(arr);
   return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('');
 }
-
-// Strong random password used when the member chooses to stay passwordless.
-// They return via magic link or biometrics; the hash only satisfies the column.
+// Strong random password used when the member stays passwordless; they return
+// via a fresh code or biometrics, so they never need to know it.
 function generatePassword(): string {
   const arr = new Uint8Array(24);
   crypto.getRandomValues(arr);
   return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
+type Phase = 'email' | 'code' | 'finish';
+
 function SignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const verified = searchParams?.get('verified') === 'true';
+  const preVerified = searchParams?.get('verified') === 'true';
   const emailParam = searchParams?.get('email') || '';
 
+  const [phase, setPhase] = useState<Phase>(preVerified ? 'finish' : 'email');
   const [email, setEmail] = useState(emailParam);
+  const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [showPasswordField, setShowPasswordField] = useState(false);
-  const [linkSent, setLinkSent] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
@@ -84,7 +80,6 @@ function SignupContent() {
 
   const biometricLabel = useMemo(() => biometricAuth.getBiometricName(), []);
 
-  // Biometric availability (for the post-signup "remember me" offer)
   useEffect(() => {
     (async () => {
       try {
@@ -97,14 +92,13 @@ function SignupContent() {
     })();
   }, []);
 
-  // Already signed in → straight to MAIA (but never interrupt a verified finish)
   useEffect(() => {
-    if (verified) return;
+    if (preVerified) return;
     const sessionState = betaSession.restoreSession();
     if (sessionState.isAuthenticated && sessionState.user) {
       router.replace('/maia');
     }
-  }, [router, verified]);
+  }, [router, preVerified]);
 
   function storeSession(user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean }) {
     const displayName = user.preferredName || user.name || 'Friend';
@@ -125,36 +119,84 @@ function SignupContent() {
     }
   }
 
-  // ── State A: request the magic link ──────────────────────────────────────
-  async function requestMagicLink(e: React.FormEvent) {
-    e.preventDefault();
+  // ── Phase 'email': request a code ────────────────────────────────────────
+  async function sendCode(e?: React.FormEvent) {
+    e?.preventDefault();
     setError('');
     const clean = email.toLowerCase().trim();
-    if (!clean || !clean.includes('@')) {
+    if (!clean.includes('@')) {
       setError('Please enter a valid email address.');
       return;
     }
     setIsLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/members/magic-link'), {
+      const res = await fetch(apiUrl('/api/members/email-code'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: clean }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error || 'Could not send the link. Please try again.');
+        setError(data?.error || 'Could not send the code. Please try again.');
         return;
       }
-      setLinkSent(true);
+      setCode('');
+      setPhase('code');
     } catch {
-      setError('Could not send the link. Please try again.');
+      setError('Could not send the code. Please try again.');
     } finally {
       setIsLoading(false);
     }
   }
 
-  // ── State B: finish signup after email verification ──────────────────────
+  // ── Phase 'code': verify ─────────────────────────────────────────────────
+  async function verifyCode(submitCode: string) {
+    setError('');
+    setIsLoading(true);
+    try {
+      const res = await fetch(apiUrl('/api/members/email-code/verify'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email.toLowerCase().trim(), code: submitCode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error || 'Incorrect code.');
+        setIsLoading(false);
+        return;
+      }
+      if (data.member) {
+        // Existing member — signed in.
+        storeSession({
+          id: data.member.id,
+          username: data.member.username,
+          name: data.member.name,
+          preferredName: data.member.name,
+          onboarded: !!data.member.onboarded,
+        });
+        await trustThisDevice();
+        router.push(data.redirect || (data.member.onboarded ? '/maia' : '/onboarding'));
+        return;
+      }
+      // New email verified — collect a name.
+      setPhase('finish');
+      setIsLoading(false);
+    } catch {
+      setError('Could not verify the code. Please try again.');
+      setIsLoading(false);
+    }
+  }
+
+  function onCodeChange(value: string) {
+    const digits = value.replace(/\D/g, '').slice(0, 6);
+    setCode(digits);
+    if (digits.length === 6 && !isLoading) {
+      verifyCode(digits);
+    }
+  }
+
+  // ── Phase 'finish': create the account ───────────────────────────────────
   async function completeSignup(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -166,18 +208,12 @@ function SignupContent() {
       let res: Response | null = null;
       let data: any = {};
 
-      // Up to 3 attempts to resolve a username collision transparently.
       for (let attempt = 0; attempt < 3; attempt++) {
         res = await fetch(apiUrl('/api/members/register-email'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            email: cleanEmail,
-            username,
-            password: pwd,
-            name: name.trim() || username,
-          }),
+          body: JSON.stringify({ email: cleanEmail, username, password: pwd, name: name.trim() || username }),
         });
         data = await res.json().catch(() => ({}));
         if (res.status === 409 && /username/i.test(data?.error || '')) {
@@ -200,10 +236,8 @@ function SignupContent() {
         preferredName: name || data.member.name,
         onboarded: !!data.member.onboarded,
       });
-
       await trustThisDevice();
 
-      // Offer biometrics as the effortless return path (non-blocking).
       if (bioAvailable && bioPlatformAvailable) {
         try {
           await biometricAuth.register();
@@ -219,7 +253,7 @@ function SignupContent() {
     }
   }
 
-  // ── Secondary: Google / Apple (small, for existing users) ────────────────
+  // ── Secondary: Google / Apple ────────────────────────────────────────────
   const handleGoogle = async () => {
     setError('');
     try {
@@ -297,7 +331,6 @@ function SignupContent() {
 
   return (
     <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-4 py-10">
-      {/* Holoflower */}
       <div className="mb-12">
         <div className="w-28 h-28 mx-auto">
           <Holoflower size="xl" glowIntensity="medium" animate={true} theme="dark" />
@@ -312,8 +345,8 @@ function SignupContent() {
         style={CARD_STYLE}
       >
         <AnimatePresence mode="wait">
-          {verified ? (
-            // ── State B: finish signup ──
+          {phase === 'finish' ? (
+            // ── Create the account ──
             <motion.div key="finish" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Almost there</h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
@@ -323,25 +356,10 @@ function SignupContent() {
               {errorBlock}
 
               <form onSubmit={completeSignup} className="space-y-3">
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  autoFocus
-                  className={INPUT_CLASS}
-                />
-
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={INPUT_CLASS} />
                 {showPasswordField ? (
-                  <input
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    type="password"
-                    placeholder="Password (optional)"
-                    autoComplete="new-password"
-                    className={INPUT_CLASS}
-                  />
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password (optional)" autoComplete="new-password" className={INPUT_CLASS} />
                 ) : null}
-
                 <button type="submit" disabled={isLoading} className={PRIMARY_BTN_CLASS}>
                   {isLoading ? 'Entering…' : 'Enter MAIA'}
                 </button>
@@ -349,74 +367,72 @@ function SignupContent() {
 
               <div className="mt-5 text-center">
                 {!showPasswordField && (
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordField(true)}
-                    className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-                  >
+                  <button type="button" onClick={() => setShowPasswordField(true)} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
                     Prefer a password? Set one (optional)
                   </button>
                 )}
                 <p className="mt-3 text-xs text-slate-500/80 leading-relaxed">
-                  You’ll return with your email link{bioAvailable ? ` or ${biometricLabel}` : ''} — a password is optional.
+                  You’ll return with an emailed code{bioAvailable ? ` or ${biometricLabel}` : ''} — a password is optional.
                 </p>
               </div>
             </motion.div>
-          ) : linkSent ? (
-            // ── State A (sent): check your email ──
-            <motion.div key="sent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
-              <h1 className="text-3xl font-extralight text-white/80 mb-4 tracking-[0.2em]">Check your email</h1>
-              <p className="text-base text-slate-300/80 font-light mb-8 leading-relaxed">
-                We sent a secure link to <span className="text-slate-200">{email}</span>. Open it on this device to continue — no password needed.
-              </p>
-              <button
-                type="button"
-                onClick={() => { setLinkSent(false); setError(''); }}
-                className="text-sm text-slate-400/70 hover:text-slate-300 transition-colors"
-              >
-                Use a different email
-              </button>
-            </motion.div>
-          ) : (
-            // ── State A (default): email-first ──
-            <motion.div key="begin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Begin</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
-                Enter your email and we’ll send a secure link. No password to remember.
+          ) : phase === 'code' ? (
+            // ── Enter the code ──
+            <motion.div key="code" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
+              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em]">Enter code</h1>
+              <p className="text-sm text-slate-300/80 font-light mb-6 leading-relaxed">
+                We sent a 6-digit code to <span className="text-slate-200">{email}</span>.
               </p>
 
               {errorBlock}
 
-              <form onSubmit={requestMagicLink} className="space-y-3">
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="Email address"
-                  autoComplete="email"
-                  autoFocus
-                  className={INPUT_CLASS}
-                />
+              <input
+                value={code}
+                onChange={(e) => onCodeChange(e.target.value)}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="\d{6}"
+                maxLength={6}
+                autoFocus
+                placeholder="••••••"
+                className="w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-4 text-center text-2xl tracking-[0.5em] text-white placeholder:text-slate-600 outline-none focus:border-maia-navy-600 transition-all"
+              />
+
+              <button type="button" disabled={isLoading || code.length < 6} onClick={() => verifyCode(code)} className={`${PRIMARY_BTN_CLASS} mt-4`}>
+                {isLoading ? 'Verifying…' : 'Verify'}
+              </button>
+
+              <div className="mt-5 flex items-center justify-center gap-4 text-xs text-slate-500">
+                <button type="button" onClick={() => sendCode()} disabled={isLoading} className="hover:text-slate-300 transition-colors">Resend code</button>
+                <span className="text-slate-700">·</span>
+                <button type="button" onClick={() => { setPhase('email'); setError(''); setCode(''); }} className="hover:text-slate-300 transition-colors">Change email</button>
+              </div>
+            </motion.div>
+          ) : (
+            // ── Enter email ──
+            <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Begin</h1>
+              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
+                Enter your email and we’ll send a 6-digit code. No password to remember.
+              </p>
+
+              {errorBlock}
+
+              <form onSubmit={sendCode} className="space-y-3">
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={INPUT_CLASS} />
                 <button type="submit" disabled={isLoading || !email} className={PRIMARY_BTN_CLASS}>
-                  {isLoading ? 'Sending…' : 'Continue'}
+                  {isLoading ? 'Sending…' : 'Send code'}
                 </button>
               </form>
 
-              {/* Divider */}
               <div className="mt-6 flex items-center gap-3">
                 <div className="flex-1 h-px bg-maia-navy-700/30" />
                 <span className="text-xs text-slate-500 uppercase tracking-wide">or</span>
                 <div className="flex-1 h-px bg-maia-navy-700/30" />
               </div>
 
-              {/* Secondary: Google / Apple — small */}
               <div className="mt-4 flex justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleGoogle}
-                  title="Continue with Google"
-                  className="w-11 h-11 rounded-xl bg-maia-navy-850/50 hover:bg-maia-navy-700/60 border border-maia-navy-700/60 flex items-center justify-center transition-all"
-                >
+                <button type="button" onClick={handleGoogle} title="Continue with Google" className="w-11 h-11 rounded-xl bg-maia-navy-850/50 hover:bg-maia-navy-700/60 border border-maia-navy-700/60 flex items-center justify-center transition-all">
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -424,25 +440,15 @@ function SignupContent() {
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                 </button>
-                <button
-                  type="button"
-                  onClick={handleApple}
-                  title="Continue with Apple"
-                  className="w-11 h-11 rounded-xl bg-black/50 hover:bg-black/70 border border-maia-navy-700/60 flex items-center justify-center transition-all"
-                >
+                <button type="button" onClick={handleApple} title="Continue with Apple" className="w-11 h-11 rounded-xl bg-black/50 hover:bg-black/70 border border-maia-navy-700/60 flex items-center justify-center transition-all">
                   <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                 </button>
               </div>
 
-              {/* Already a member */}
               <div className="mt-6 pt-4 border-t border-maia-navy-700/30 text-center">
-                <button
-                  type="button"
-                  onClick={() => router.push('/signin')}
-                  className="text-sm font-medium text-slate-300 hover:text-slate-200 transition-colors"
-                >
+                <button type="button" onClick={() => router.push('/signin')} className="text-sm font-medium text-slate-300 hover:text-slate-200 transition-colors">
                   Already have an account? Sign in
                 </button>
               </div>
