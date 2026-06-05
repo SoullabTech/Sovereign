@@ -145,6 +145,9 @@ function UnifiedAuthInner() {
     setError('');
     const clean = email.toLowerCase().trim();
     if (!clean.includes('@')) { setError('Please enter a valid email address.'); return; }
+    // Normalize the displayed/stored email to lowercase so the code screen and
+    // every downstream call use one canonical form (no mixed-case edge cases).
+    setEmail(clean);
     setIsLoading(true);
     try {
       const res = await fetch(apiUrl('/api/members/email-code'), {
@@ -407,7 +410,7 @@ function UnifiedAuthInner() {
           ) : (
             <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Welcome</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">Enter your email and we’ll send a 6-digit code. No password to remember.</p>
+              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">Enter your email to continue.</p>
               {errorBlock}
               <form onSubmit={sendCode} className="space-y-3">
                 <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={INPUT_CLASS} />
