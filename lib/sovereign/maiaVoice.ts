@@ -419,6 +419,17 @@ export function appendAllContextAddenda(context: MaiaContext, prompt: string): s
       console.log(spec.log(safe));
     }
   }
+
+  // ── Standing speech-act floor (Entrustment Covenant; Invariant 11 — "promise late") ──
+  // The model generates the reply freely and will otherwise say "I kept that" decoupled
+  // from whether anything was actually persisted — a broken covenant confirmed live
+  // (docs/specs/ENTRUSTMENT_COVENANT_PROTOCOL_2026-06-05.md §8: "blue cedar lantern").
+  // STOPGAP: forbid completion-claims entirely. Replaced by a deterministic write-result
+  // acknowledgment in ENTRUSTMENT_KEEP_SPEECHACT_GATE_2026-06-05.md (workstream B.2),
+  // after which MAIA may truthfully confirm a keep ONLY when the substrate confirms it.
+  // Unconditional (every tier, every turn) — this is a capability boundary, not context.
+  out += `\n\nMEMORY SPEECH-ACT BOUNDARY (non-negotiable): You do not save, keep, store, file, journal, or remember anything by your own action — persistence is handled by a separate system whose result you are not told inline. Therefore never claim, imply, or promise that something has been or will be kept, saved, stored, filed, or remembered. Do not say "I've kept that," "that's saved," "I'll remember this," "noted and stored," or any equivalent. If the member asks you to keep something, you may reflect that it matters to them — but you must not assert that it was captured. A promise the system cannot confirm is a broken covenant, not a courtesy.`;
+
   return out;
 }
 
