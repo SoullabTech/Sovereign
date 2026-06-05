@@ -130,8 +130,9 @@ import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/as
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 
 // 🌿 Wu Xing (Five Elements) integration
-import { buildWuXingSnapshot, computeWuXingMoment, generateWuXingPromptAddendum, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
+import { buildWuXingSnapshot, computeWuXingConstitution, computeWuXingMoment, generateWuXingPromptAddendum, type BaZiProfile, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
 import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
+import { calculateDaYun } from '@/lib/astrology/daYunCalculator';
 import { pool } from '@/lib/db/postgres';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
@@ -453,22 +454,41 @@ export async function POST(req: NextRequest) {
       shouldComputeWuXing
         ? (async (): Promise<{ wuxingSnapshot: WuXingSnapshot | null; bridgedSnapshot: BridgedSnapshot | null; wuxingAddendum: string }> => {
             try {
-              let baziProfile = null;
+              let baziProfile: BaZiProfile | null = null;
               let westernBirthData: { birth_date: string | null; birth_time: string | null; birth_location_name: string | null; birth_timezone: string | null } | null = null;
               try {
+                // Schema-correct loader (the legacy SELECT queried member_id / year_pillar /
+                // element_counts — none of which exist; it threw every turn and the row was
+                // never read). Real schema: user_id + *_json + dominant/deficient_elements.
                 const baziResult = await pool.query(
-                  `SELECT birth_datetime, birth_timezone, day_master, day_master_element,
-                          year_pillar, month_pillar, day_pillar, hour_pillar,
-                          element_counts, dominant_element, element_balance_score
+                  `SELECT birth_datetime_utc, birth_timezone, location_text, pillars_json,
+                          day_master, day_master_element, day_master_yinyang,
+                          wuxing_balance_json, wuxing_percentages_json,
+                          dominant_elements, deficient_elements, balance_score
                    FROM member_bazi_profile
-                   WHERE member_id = $1`,
+                   WHERE user_id = $1`,
                   [effectiveUserId]
                 );
                 if (baziResult.rows.length > 0) {
-                  baziProfile = baziResult.rows[0];
+                  const r = baziResult.rows[0];
+                  baziProfile = {
+                    userId: String(effectiveUserId),
+                    birthDatetimeUtc: new Date(r.birth_datetime_utc),
+                    birthTimezone: r.birth_timezone,
+                    locationText: r.location_text ?? undefined,
+                    pillars: r.pillars_json,
+                    dayMaster: r.day_master,
+                    dayMasterElement: r.day_master_element,
+                    dayMasterYinYang: r.day_master_yinyang,
+                    elementTally: r.wuxing_balance_json,
+                    wuxingBalancePercentages: r.wuxing_percentages_json,
+                    dominantElements: r.dominant_elements,
+                    deficientElements: r.deficient_elements,
+                    balanceScore: r.balance_score,
+                  };
                 }
               } catch (baziErr) {
-                console.log(`🌿 [WU XING] BaZi profile not found (optional enhancement)`);
+                console.log(`🌿 [WU XING] BaZi profile not loaded (optional):`, baziErr instanceof Error ? baziErr.message : 'unknown');
               }
 
               // 🌟 WESTERN BIRTH DATA + IDENTITY CONTEXT: Fetch birth data + pronouns for astrological and identity context
@@ -491,23 +511,45 @@ export async function POST(req: NextRequest) {
                 console.log(`🌟 [BIRTH] Western birth data not found (optional)`);
               }
 
-              // Moment-only Wu Xing ("today's field"). The prior code called
-              // computeWuXingSnapshot() / createBridgedSnapshot() — neither symbol exists
-              // in the current wuxingSnapshot / bridgedSnapshot modules, so it threw on
-              // every turn and the catch below swallowed it (Chinese / Wu Xing silently
-              // dark). Real builders: computeWuXingMoment + buildWuXingSnapshot +
-              // generateWuXingPromptAddendum.
-              //
-              // Constitution (BaZi Day Master) is intentionally null: member_bazi_profile
-              // has 0 rows and its real schema (user_id, pillars_json, wuxing_balance_json,
-              // dominant_elements) differs from the legacy SELECT above. Wiring the
-              // constitution path is a separate task gated on generating a profile row.
+              // Wu Xing snapshot: personal constitution (from BaZi) + today's field.
+              // When a member_bazi_profile row exists we derive the WuXingConstitution
+              // (Day Master + element balance); otherwise constitution stays null and the
+              // snapshot falls back to moment-only ("today's field").
               const moment = computeWuXingMoment(new Date(), timezone);
-              const snapshot = buildWuXingSnapshot({ constitution: null, moment });
-              const addendum = generateWuXingPromptAddendum(snapshot);
+              const constitution = baziProfile ? computeWuXingConstitution(baziProfile) : null;
+              const snapshot = buildWuXingSnapshot({ constitution, moment });
+              let addendum = generateWuXingPromptAddendum(snapshot);
               const bridged: BridgedSnapshot | null = null;
 
-              console.log(`🌿 [WU XING] Computed: moment dominant=${snapshot.moment.momentDominant.join('/')}, ${baziProfile ? 'with' : 'without'} BaZi profile`);
+              // Da Yun (10-year Luck Pillar) — a SEPARATE, available interpretive lens,
+              // only computed when a personal chart exists. Appended to the Wu Xing
+              // addendum so the whole Chinese/BaZi lens travels one channel. Framed as
+              // available-not-imposed: MAIA decides if/when it actually illuminates.
+              if (baziProfile) {
+                try {
+                  const pronouns = (meta as any)?.pronouns as string | undefined;
+                  const gender: 'male' | 'female' = /\b(she|her)\b/i.test(pronouns || '') ? 'female' : 'male';
+                  const dyFmt = new Intl.DateTimeFormat('en-US', { timeZone: baziProfile.birthTimezone, timeZoneName: 'shortOffset' });
+                  const dyTzPart = dyFmt.formatToParts(baziProfile.birthDatetimeUtc).find(p => p.type === 'timeZoneName')?.value || 'UTC';
+                  const dyTzm = dyTzPart.match(/GMT([+-])(\d+)/);
+                  const dyTzOffset = dyTzm ? (dyTzm[1] === '+' ? 1 : -1) * parseInt(dyTzm[2]) * 60 : 0;
+                  const dy = calculateDaYun(baziProfile.birthDatetimeUtc, gender, undefined, dyTzOffset);
+                  const cp = dy.currentPeriod;
+                  const progressPct = Math.round((dy.periodProgress ?? 0) * 100);
+                  addendum += `\n\n## DA YUN — Current 10-Year Luck Pillar (available lens; reference only if it illuminates the member's lived reality, never as prediction)\n`
+                    + `- Current period (ages ${cp.ageRange.start}-${cp.ageRange.end}): ${cp.element} — "${cp.lifeTheme}" (${cp.heavenlyStem} ${cp.earthlyBranch} / ${cp.zodiacAnimal})\n`
+                    + `- Harmony with Day Master (${baziProfile.dayMasterElement}): ${cp.natalHarmony}\n`
+                    + `- Now: age ${dy.currentAge}, ${progressPct}% through this period`
+                    + (dy.nextPeriod ? ` → next: ${dy.nextPeriod.element} (ages ${dy.nextPeriod.ageRange.start}-${dy.nextPeriod.ageRange.end})\n` : `\n`)
+                    + `- Opportunities: ${cp.opportunities.join('; ')}\n`
+                    + `- Themes to navigate: ${cp.challenges.join('; ')}`;
+                  console.log(`🌿 [DA YUN] Current period: ${cp.element} ages ${cp.ageRange.start}-${cp.ageRange.end}, harmony=${cp.natalHarmony}, ${progressPct}% through`);
+                } catch (dyErr) {
+                  console.warn(`🌿 [DA YUN] Computation failed (proceeding without):`, dyErr instanceof Error ? dyErr.message : 'unknown');
+                }
+              }
+
+              console.log(`🌿 [WU XING] Computed: moment dominant=${snapshot.moment.momentDominant.join('/')}, ${baziProfile ? `with BaZi profile (Day Master ${baziProfile.dayMaster}/${baziProfile.dayMasterElement}, dominant ${baziProfile.dominantElements.join('/')})` : 'without BaZi profile'}`);
               return { wuxingSnapshot: snapshot, bridgedSnapshot: bridged, wuxingAddendum: addendum };
             } catch (wuxingErr) {
               console.warn(`🌿 [WU XING] Computation failed (proceeding without):`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
