@@ -27,6 +27,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **Canon**: `docs/canon/MAIA_CANON_v1.1.md`
 - **Oath**: `docs/canon/MAIA_OATH.md` — the irreducible standard
 - **Sovereignty Invariants**: `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` — relational constitution (constraints on relational power when the system works well enough that people start relating to it)
+- **Representation & Claim Discipline**: `docs/canon/MARKETING_CLAIM_DISCIPLINE.md` — governs every outward claim (web, decks, case studies, podcasts, demos, onboarding, internal planning). Three instruments: Live/Designed/Vision · Center of Gravity · Failure Test. The line: *"We do not tell tomorrow's story as if it were today's."* Applied in `docs/pitch/CASE_STUDY_LIBRARY.md`.
 
 ## Known recurring traps (read before debugging)
 
