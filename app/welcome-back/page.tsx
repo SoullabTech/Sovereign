@@ -118,9 +118,11 @@ function WelcomeBackContent() {
   };
 
   const handleStartFresh = () => {
-    // Clear localStorage and start completely fresh
+    // Clear localStorage and start completely fresh, then route to the canonical
+    // signup/signin surface (/signin). Previously routed to the retired teal
+    // passkey induction (/test-elemental); see its deprecation note.
     localStorage.clear();
-    router.push('/test-elemental');
+    router.push('/signin');
   };
 
   // Show loading state while checking authentication

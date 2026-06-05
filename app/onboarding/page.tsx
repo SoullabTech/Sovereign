@@ -23,7 +23,7 @@ export default function OnboardingPage() {
           localStorage.removeItem('explorerId');
           localStorage.removeItem('explorerName');
           localStorage.removeItem('signup_completed');
-          router.push('/test-elemental');
+          router.push('/signin');
           return;
         }
 
@@ -77,7 +77,7 @@ export default function OnboardingPage() {
       console.error('[onboarding] Cannot complete - no valid server ID');
       alert('Session expired. Please sign in again.');
       localStorage.removeItem('beta_user');
-      router.push('/test-elemental');
+      router.push('/signin');
       return;
     }
 
