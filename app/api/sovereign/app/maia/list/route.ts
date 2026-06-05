@@ -536,13 +536,20 @@ export async function POST(req: NextRequest) {
                   const dy = calculateDaYun(baziProfile.birthDatetimeUtc, gender, undefined, dyTzOffset);
                   const cp = dy.currentPeriod;
                   const progressPct = Math.round((dy.periodProgress ?? 0) * 100);
-                  addendum += `\n\n## DA YUN — Current 10-Year Luck Pillar (available lens; reference only if it illuminates the member's lived reality, never as prediction)\n`
-                    + `- Current period (ages ${cp.ageRange.start}-${cp.ageRange.end}): ${cp.element} — "${cp.lifeTheme}" (${cp.heavenlyStem} ${cp.earthlyBranch} / ${cp.zodiacAnimal})\n`
-                    + `- Harmony with Day Master (${baziProfile.dayMasterElement}): ${cp.natalHarmony}\n`
-                    + `- Now: age ${dy.currentAge}, ${progressPct}% through this period`
-                    + (dy.nextPeriod ? ` → next: ${dy.nextPeriod.element} (ages ${dy.nextPeriod.ageRange.start}-${dy.nextPeriod.ageRange.end})\n` : `\n`)
-                    + `- Opportunities: ${cp.opportunities.join('; ')}\n`
-                    + `- Themes to navigate: ${cp.challenges.join('; ')}`;
+                  // Reframed framing (epistemic boundaries) — ablation-proven to remove the
+                  // over-assertion the original framing caused: on general prompts the lens
+                  // stays holstered; on explicit Chinese-cycle requests it engages but
+                  // calibrated ("traditional associations, not a window into your actual life").
+                  // See scripts/repro/dayun-ablation.ts. Deliberately omits the age/progress
+                  // anchor the original arm latched onto as a personal-fact cue.
+                  addendum += `\n\n## DA YUN — traditional 10-year-cycle REFERENCE DATA (not a reading, not evidence)\n`
+                    + `EPISTEMIC BOUNDARIES (read before using):\n`
+                    + `- The lines below are traditional symbolic associations for this cycle TYPE. They are NOT predictions, NOT facts about this member, NOT evidence about their current situation.\n`
+                    + `- Possessing this framework gives you NO grounds to assert anything about the member's life. You still know only what they have actually told you. If you lack their story, say so — do not let the framework substitute for it.\n`
+                    + `- Use ONLY if the member explicitly asks about their Chinese astrology or cycle. Do not volunteer it; do not reach for it on general life questions.\n`
+                    + `- If an association conflicts with the member's lived experience, the lived experience wins.\n`
+                    + `Reference (cycle type, ages ${cp.ageRange.start}-${cp.ageRange.end}): ${cp.element}, traditionally themed "${cp.lifeTheme}"; relation to Day Master ${baziProfile.dayMasterElement}: ${cp.natalHarmony}.\n`
+                    + `Traditional associations for this cycle type (NOT claims about the member): ${cp.opportunities.join('; ')}. Frictions traditionally noted: ${cp.challenges.join('; ')}.`;
                   console.log(`🌿 [DA YUN] Current period: ${cp.element} ages ${cp.ageRange.start}-${cp.ageRange.end}, harmony=${cp.natalHarmony}, ${progressPct}% through`);
                 } catch (dyErr) {
                   console.warn(`🌿 [DA YUN] Computation failed (proceeding without):`, dyErr instanceof Error ? dyErr.message : 'unknown');
