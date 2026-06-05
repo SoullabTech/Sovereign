@@ -1452,6 +1452,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const isProcessingRef = useRef(false);
   const isRespondingRef = useRef(false);
   const isAudioPlayingRef = useRef(false);
+  // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): modality of the last sent turn.
+  // Voice turn → the mic may re-arm after the response; typed turn → it must NOT
+  // (typed input is not microphone re-consent). Ref, not state — the mic-restart paths
+  // run in setTimeout/requestAnimationFrame where a state value would be a stale
+  // closure (see the note at ~line 2558).
+  const lastSendWasVoiceRef = useRef(true);
   const isMicrophonePausedRef = useRef(false);
   const lastVoiceErrorRef = useRef<number>(0);
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
@@ -2400,7 +2406,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           if (voiceSession.state.capabilities.canStartListening) {
             console.log('🎤 [StreamingVoice] Resuming mic after TTS failure');
             setIsMuted(false);
-            voiceSession.methods.startListening('stream_failure_recovery');
+            if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('stream_failure_recovery');
           }
         }, 500);
         return;
@@ -2503,7 +2509,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         if (voiceSession.state.capabilities.canStartListening && streamingVoiceMode && isHandsFree) {
           console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
           setIsMuted(false);
-          voiceSession.methods.startListening('streaming_force_recovery');
+          if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('streaming_force_recovery');
         }
       }, 500);
     }
@@ -2572,7 +2578,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           if (streamingVoiceMode) {
             setIsMuted(false);
             console.log('🎤 [StreamingVoice] Calling startListening after 300ms');
-            voiceSession.methods.startListening('streaming_response_complete');
+            if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('streaming_response_complete');
           }
         }, 300);
       }
@@ -2720,7 +2726,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Actually restart the mic
       if (voiceSession.state.capabilities.canStartListening) {
         console.log(`🐕 [WATCHDOG] Force-restarting microphone (${reason})...`);
-        voiceSession.methods.startListening('watchdog_recovery');
+        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('watchdog_recovery');
       }
 
       toast('⚠️ Voice recovered', { duration: 2000 });
@@ -4154,6 +4160,10 @@ I'm not sure what I'm feeling yet.`;
     // 🎯 Mark as activated when user sends a message - hides welcome screen
     setHasActivated(true);
 
+    // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): typed turn — the mic must NOT
+    // auto-re-arm after MAIA's response. Typed input is not voice re-consent.
+    lastSendWasVoiceRef.current = false;
+
     if (detectJournalCommand(text)) {
       await handleCaptureSpirit();
       return;
@@ -4925,7 +4935,7 @@ I'm not sure what I'm feeling yet.`;
                     if (!isProcessingRef.current && !isRespondingRef.current && !isAudioPlayingRef.current && !isMicrophonePausedRef.current) {
                       setIsMuted(false);
                       console.log('🎤 [STREAM] Hands-free: requesting mic restart');
-                      voiceSession.methods.startListening('hands_free_stream_restart');
+                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('hands_free_stream_restart');
                     }
                   });
                 } else {
@@ -5614,7 +5624,7 @@ I'm not sure what I'm feeling yet.`;
                       if (voiceSession.state.capabilities.canStartListening) {
                         console.log('🎤 [NON-STREAM] Final attempt after state reset...');
                         setIsMuted(false);
-                        voiceSession.methods.startListening('non_stream_final_reset');
+                        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_final_reset');
                       }
                     }, 500);
                     return;
@@ -5631,7 +5641,7 @@ I'm not sure what I'm feeling yet.`;
 
                     if (canRestart) {
                       console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      voiceSession.methods.startListening('non_stream_restart_attempt');
+                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_restart_attempt');
                       // Verify mic actually started after a brief delay
                       setTimeout(() => {
                         if (voiceSession.state.phase === 'listening') {
@@ -5813,6 +5823,11 @@ I'm not sure what I'm feeling yet.`;
 
     // Mark this transcript as processed
     lastProcessedTranscriptRef.current = { text: t, timestamp: now };
+
+    // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): accepted voice turn — the mic
+    // may re-arm after the response. Set AFTER the feedback/duplicate guards so a
+    // transcript rejected during a typed turn cannot flip this back to voice.
+    lastSendWasVoiceRef.current = true;
 
     // 🌊 LIQUID AI - Track speech end with transcript for rhythm analysis
     rhythmTrackerRef.current?.onSpeechEnd(t);
