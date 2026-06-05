@@ -252,6 +252,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
   const isCallingProcessRef = useRef(false); // CRITICAL: Prevent concurrent processAccumulatedTranscript calls
   const isRestartingRef = useRef(false);
+  // True only while an onend auto-restart is *continuing the same utterance*.
+  // iOS Safari effectively ignores `recognition.continuous`, so it fires onend
+  // after each phrase; we auto-restart mid-sentence. Without this flag, the
+  // restart's onstart wipes accumulatedTranscript and the user is "only heard
+  // half" (PWA Safari bug, Andrea 2026-06-05). Consumed (reset) by the next
+  // onstart; processAccumulatedTranscript owns the real clear after a turn.
+  const continuationRestartRef = useRef(false);
   const networkErrorCount = useRef<number>(0);
   const lastNetworkErrorTime = useRef<number>(0);
   const consecutiveRestartCount = useRef<number>(0);
@@ -417,7 +424,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           armingTimeoutRef.current = null;
         }
       }
-      accumulatedTranscript.current = "";
+      // Only clear on a genuinely new turn. On iOS Safari `continuous` is
+      // effectively ignored, so recognition fires onend after each phrase and
+      // we auto-restart mid-utterance — clearing here would discard the first
+      // half of what the user said. The onend auto-restart path sets
+      // continuationRestartRef so this start preserves the accumulated buffer;
+      // processAccumulatedTranscript() owns the real clear once a turn is sent.
+      if (continuationRestartRef.current) {
+        continuationRestartRef.current = false;
+        console.log('🔗 [onstart] Continuation restart — preserving accumulated transcript:', accumulatedTranscript.current);
+      } else {
+        accumulatedTranscript.current = "";
+      }
 
       // Clear conversation timeout when user starts speaking
       if (conversationTimeoutRef.current) {
@@ -819,9 +837,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // CRITICAL: Use refs to check current state, not stale closure values
           if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isProcessingRef.current && !isSpeakingRef.current) {
             try {
+              // Mark this as a continuation so the upcoming onstart preserves
+              // (does not wipe) the accumulated transcript. iOS Safari fires
+              // onend mid-utterance; this restart is the *same* user turn.
+              continuationRestartRef.current = true;
               recognitionRef.current.start();
-              console.log('✅ [onend] Recognition restarted');
+              console.log('✅ [onend] Recognition restarted (continuation — transcript preserved)');
             } catch (err: any) {
+              // start failed — no onstart will fire, so don't leave the flag set
+              continuationRestartRef.current = false;
               // If start fails, it's likely already running or in a bad state
               console.log('⚠️ [onend] Could not restart recognition:', err.message);
               // Don't retry to avoid infinite loop
@@ -1084,6 +1108,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // CRITICAL: Clear accumulated transcript IMMEDIATELY to prevent double-send
     accumulatedTranscript.current = "";
+    continuationRestartRef.current = false; // turn submitted — next start is a fresh turn
 
     // Stop recognition while processing
     if (recognitionRef.current) {
@@ -2284,6 +2309,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
       accumulatedTranscript.current = '';
     }
+    continuationRestartRef.current = false; // manual stop ends any continuation
 
     setIsListening(false);
     isListeningRef.current = false; // Update ref immediately
