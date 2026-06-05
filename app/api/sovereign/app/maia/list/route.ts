@@ -94,6 +94,9 @@ import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEsse
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
 import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
+// Conversational Keep — explicit member-instruction filing only (no salience offers).
+// Mirrors the high-confidence filing path in app/api/oracle/conversation/route.ts.
+import { parseFilingInstruction, applyConversationalKeepResult, type FilingInstruction } from '@/lib/psyche/conversational-keep';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here because THIS is the live
 // sovereign-MAIA route the UI actually hits (not /api/sovereign/app/maia/route.ts,
@@ -1181,6 +1184,53 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         }
       } catch (sigErr) {
         console.warn('[relationalSignals] detect error (non-blocking):', sigErr);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Conversational Keep — explicit entrustment on the live route.
+    // Detects ONLY member-directed filing instructions ("keep this",
+    // "save this as an idea") via parseFilingInstruction — the member's own
+    // words. Does NOT solicit keeps from salience (evaluateKeepOffer is
+    // deliberately NOT ported): entrustment is declared by the member, never
+    // inferred by the system. High-confidence filings are executed now (atom
+    // written to member_memory_atoms — the SAME registry this route loads for
+    // recall above), so an entrusted item becomes durable and visible to a
+    // later session. Low-confidence filings are surfaced for confirmation.
+    // Non-blocking and feature-flagged: any failure leaves keepIntent unset
+    // and the conversational reply stands.
+    // ═══════════════════════════════════════════════════════════════════
+    if (userId && message && process.env.CONVERSATIONAL_KEEP_ENABLED === 'true') {
+      try {
+        const filing: FilingInstruction | null = parseFilingInstruction({ utterance: message });
+        if (filing) {
+          if (filing.confidence === 'high') {
+            const atom = await applyConversationalKeepResult(userId, {
+              kind: 'filing',
+              instruction: filing,
+              context: { sessionId },
+            });
+            responseData.keepIntent = {
+              kind: 'filed',
+              atomTitle: atom.title,
+              destination: filing.destination,
+            };
+            console.log('[MAIA/sovereign] keep filed:', {
+              userId: userId.slice(0, 8) + '...',
+              destination: filing.destination,
+              atomId: atom.id,
+            });
+          } else {
+            responseData.keepIntent = { kind: 'filing_confirmation', instruction: filing };
+            console.log('[MAIA/sovereign] keep awaiting-confirm:', {
+              userId: userId.slice(0, 8) + '...',
+              destination: filing.destination,
+            });
+          }
+        }
+      } catch (keepErr) {
+        // Non-fatal: the conversational reply is never blocked by a keep failure.
+        console.error('[MAIA/sovereign] keep sidecar error (non-fatal):', keepErr);
       }
     }
 
