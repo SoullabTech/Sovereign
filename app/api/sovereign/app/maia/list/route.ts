@@ -127,8 +127,8 @@ import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/as
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 
 // 🌿 Wu Xing (Five Elements) integration
-import { computeWuXingSnapshot, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
-import { createBridgedSnapshot, type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
+import { buildWuXingSnapshot, computeWuXingMoment, generateWuXingPromptAddendum, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
+import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
 import { pool } from '@/lib/db/postgres';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
@@ -488,43 +488,23 @@ export async function POST(req: NextRequest) {
                 console.log(`🌟 [BIRTH] Western birth data not found (optional)`);
               }
 
-              const snapshot = computeWuXingSnapshot({
-                constitution: baziProfile ? {
-                  dayMasterElement: baziProfile.day_master_element,
-                  elementCounts: baziProfile.element_counts,
-                  dominantElement: baziProfile.dominant_element,
-                } : undefined,
-                currentMoment: new Date(),
-                timezone: timezone,
-              });
+              // Moment-only Wu Xing ("today's field"). The prior code called
+              // computeWuXingSnapshot() / createBridgedSnapshot() — neither symbol exists
+              // in the current wuxingSnapshot / bridgedSnapshot modules, so it threw on
+              // every turn and the catch below swallowed it (Chinese / Wu Xing silently
+              // dark). Real builders: computeWuXingMoment + buildWuXingSnapshot +
+              // generateWuXingPromptAddendum.
+              //
+              // Constitution (BaZi Day Master) is intentionally null: member_bazi_profile
+              // has 0 rows and its real schema (user_id, pillars_json, wuxing_balance_json,
+              // dominant_elements) differs from the legacy SELECT above. Wiring the
+              // constitution path is a separate task gated on generating a profile row.
+              const moment = computeWuXingMoment(new Date(), timezone);
+              const snapshot = buildWuXingSnapshot({ constitution: null, moment });
+              const addendum = generateWuXingPromptAddendum(snapshot);
+              const bridged: BridgedSnapshot | null = null;
 
-              let bridged: BridgedSnapshot | null = null;
-              let addendum = '';
-              const spiralSnapshot = (meta as any)?.spiralSnapshot;
-              if (spiralSnapshot || snapshot) {
-                bridged = createBridgedSnapshot(spiralSnapshot || null, snapshot, baziProfile);
-                if (bridged) {
-                  const wx = bridged.wuxing;
-                  const alignment = bridged.crossSystemInsights?.elementAlignment || 'unknown';
-                  const westernBirthBlock = westernBirthData
-                    ? `- Western birth data: ${westernBirthData.birth_date}${westernBirthData.birth_time ? ` at ${westernBirthData.birth_time}` : ''}${westernBirthData.birth_location_name ? `, ${westernBirthData.birth_location_name}` : ''}${westernBirthData.birth_timezone ? ` (${westernBirthData.birth_timezone})` : ''}`
-                    : '';
-                  addendum = `
-🌿 WU XING AWARENESS (Five Elements):
-- Dominant moment energy: ${wx?.momentElement || 'Earth'} (${wx?.momentPhase || 'stable'})
-${baziProfile ? `- Constitutional element: ${baziProfile.day_master_element} (Day Master)` : '- No BaZi profile on file'}
-${westernBirthBlock}
-- Element alignment: ${alignment}
-${bridged.crossSystemInsights?.practicalGuidance ? `- Guidance: ${bridged.crossSystemInsights.practicalGuidance}` : ''}
-
-Use this awareness to attune your tone and suggestions to the current elemental qualities.
-Wood = growth, vision, initiative | Fire = clarity, passion, connection
-Earth = stability, nourishment, integration | Metal = precision, release, boundaries
-Water = depth, reflection, wisdom`;
-                }
-              }
-
-              console.log(`🌿 [WU XING] Computed: ${snapshot?.momentElement || 'none'} moment, ${baziProfile ? 'with' : 'without'} BaZi profile`);
+              console.log(`🌿 [WU XING] Computed: moment dominant=${snapshot.moment.momentDominant.join('/')}, ${baziProfile ? 'with' : 'without'} BaZi profile`);
               return { wuxingSnapshot: snapshot, bridgedSnapshot: bridged, wuxingAddendum: addendum };
             } catch (wuxingErr) {
               console.warn(`🌿 [WU XING] Computation failed (proceeding without):`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
@@ -1031,8 +1011,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
               { role: 'assistant', content: orchestratorResult.text },
             ],
             spiralDynamics: {
-              currentStage: wuxingSnapshot?.momentElement || null,
-              dynamics: wuxingSnapshot ? `${wuxingSnapshot.momentElement} moment` : 'Listening for patterns',
+              currentStage: wuxingSnapshot?.moment?.momentDominant?.[0] || null,
+              dynamics: wuxingSnapshot ? `${wuxingSnapshot.moment.momentDominant.join('/')} moment` : 'Listening for patterns',
               humanExperience: '',
             },
             sessionThread: { emergingAwareness: [] },
