@@ -8,6 +8,10 @@ const KIND_BADGE: Record<Exclude<MessageKind, 'build'>, { label: string; classNa
     label: '? Question',
     className: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
   },
+  request: {
+    label: '→ Request',
+    className: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+  },
   decision: {
     label: '\u2713 Decision',
     className: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
@@ -138,6 +142,29 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
                 <span>{r.count}</span>
               </button>
             ))}
+          </div>
+        )}
+        {/* Sender-side attention receipts (own messages): Sent / Opened / Resolved / Declined.
+            "Opened" = receipt that it reached them — never agreement or completion (D2). */}
+        {isOwn && message.attentionStates && message.attentionStates.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {message.attentionStates.map((s, i) => {
+              const label =
+                s.status === 'resolved' ? 'Resolved'
+                : s.status === 'declined' ? 'Declined'
+                : s.opened ? 'Opened'
+                : 'Sent';
+              const cls =
+                s.status === 'resolved' ? 'text-emerald-300/80'
+                : s.status === 'declined' ? 'text-white/40'
+                : s.opened ? 'text-sky-300/80'
+                : 'text-white/35';
+              return (
+                <span key={i} className={`text-[10px] ${cls}`}>
+                  {s.recipientName}: {label}
+                </span>
+              );
+            })}
           </div>
         )}
       </div>

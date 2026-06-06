@@ -41,6 +41,14 @@ export interface TeamMessage {
   // Computed
   reactions: MessageReaction[];
   replyCount?: number;
+  // Sender-side attention receipts for the sender's OWN messages (Sent / Opened / Resolved / Declined).
+  // "opened" is receipt that it reached the recipient — never agreement/consent (D2).
+  attentionStates?: {
+    recipientName: string;
+    kind: string;
+    status: 'open' | 'resolved' | 'declined';
+    opened: boolean;
+  }[];
 }
 
 export interface MessageReaction {
@@ -57,7 +65,7 @@ export interface TeamMemberPresence {
   lastSeenAt: string;
 }
 
-export type MessageKind = 'build' | 'question' | 'decision' | 'insight';
+export type MessageKind = 'build' | 'question' | 'decision' | 'insight' | 'request';
 
 export interface SendMessageBody {
   body: string;

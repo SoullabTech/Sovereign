@@ -6,6 +6,7 @@ import type { PromptScaffoldField, MessageKind } from '@/lib/team/types';
 const KIND_OPTIONS: { value: MessageKind; label: string }[] = [
   { value: 'build',    label: 'Build' },
   { value: 'question', label: 'Question' },
+  { value: 'request',  label: 'Request' },
   { value: 'decision', label: 'Decision' },
   { value: 'insight',  label: 'Insight' },
 ];

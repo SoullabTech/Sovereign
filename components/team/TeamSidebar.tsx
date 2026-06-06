@@ -22,6 +22,41 @@ function PresenceDot({ status }: { status: 'online' | 'away' | 'offline' }) {
   );
 }
 
+// For You — directed attention loops addressed to me. Self-contained (own fetch +
+// poll + badge) so it adds no state to TeamSidebar. Mirrors the Decisions link.
+function ForYouLink() {
+  const pathname = usePathname();
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      fetch('/api/team/attention')
+        .then(r => (r.ok ? r.json() : { openCount: 0 }))
+        .then(d => { if (alive) setCount(d.openCount ?? 0); })
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 10000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+  const active = pathname === '/team/for-you';
+  return (
+    <Link
+      href="/team/for-you"
+      className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md mx-1 transition-colors ${
+        active ? 'bg-rose-500/15 text-white/90' : 'text-white/45 hover:text-white/70 hover:bg-white/5'
+      }`}
+    >
+      <span className="text-rose-400/70 text-xs">→</span>
+      <span className="flex-1">For You</span>
+      {count > 0 && (
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-500/80 text-white min-w-[18px] text-center">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
   onClose: () => void;
   onCreated: (slug: string) => void;
@@ -247,7 +282,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
 export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const currentSlug = pathname.replace(/^\/team\/?/, '').split('/')[0] || 'general';
+  const currentSlug = (pathname ?? '').replace(/^\/team\/?/, '').split('/')[0] || 'general';
   const [channels, setChannels] = useState<TeamChannel[]>([]);
   const [presence, setPresence] = useState<TeamMemberPresence[]>([]);
   const [dmThreads, setDMThreads] = useState<DMThread[]>([]);
@@ -371,8 +406,9 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
 
         {/* Channels */}
         <div className="flex-1 overflow-y-auto scrollbar-hide py-3">
-          {/* Team Decisions — the "what did we decide?" surface */}
-          <div className="px-1 pb-2 mb-1 border-b border-white/5">
+          {/* Attention surfaces — what's addressed to me, and what we decided */}
+          <div className="px-1 pb-2 mb-1 border-b border-white/5 space-y-0.5">
+            <ForYouLink />
             <Link
               href="/team/decisions"
               className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md mx-1 transition-colors ${
