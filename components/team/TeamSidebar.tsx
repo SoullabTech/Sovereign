@@ -371,6 +371,21 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
 
         {/* Channels */}
         <div className="flex-1 overflow-y-auto scrollbar-hide py-3">
+          {/* Team Decisions — the "what did we decide?" surface */}
+          <div className="px-1 pb-2 mb-1 border-b border-white/5">
+            <Link
+              href="/team/decisions"
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md mx-1 transition-colors ${
+                pathname === '/team/decisions'
+                  ? 'bg-emerald-500/15 text-white/90'
+                  : 'text-white/45 hover:text-white/70 hover:bg-white/5'
+              }`}
+            >
+              <span className="text-emerald-400/70 text-xs">✓</span>
+              <span className="flex-1">Decisions</span>
+            </Link>
+          </div>
+
           {/* Announcements */}
           {announcements.length > 0 && (
             <ChannelGroup label="Announcements">
