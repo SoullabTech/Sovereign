@@ -336,7 +336,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
         />
       )}
 
-      <aside className="w-56 flex-shrink-0 bg-[#16162a] border-r border-white/8 flex flex-col h-full">
+      <aside className="w-full md:w-56 flex-shrink-0 bg-[#16162a] border-r border-white/8 flex flex-col h-full">
         {/* Workspace header */}
         <div className="px-4 py-3 border-b border-white/8">
           <div className="flex items-center gap-2.5">

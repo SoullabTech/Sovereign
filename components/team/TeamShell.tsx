@@ -36,8 +36,8 @@ export function TeamShell({
     <div className="flex h-screen bg-[#1a1a2e] overflow-hidden">
       {/* Sidebar: static column on desktop; slide-in drawer on mobile */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 h-full flex-shrink-0 transition-transform duration-200 ease-out
-          md:static md:z-auto md:translate-x-0
+        className={`fixed inset-y-0 left-0 z-40 h-full w-[85vw] max-w-xs flex-shrink-0 transition-transform duration-200 ease-out
+          md:static md:z-auto md:w-auto md:max-w-none md:translate-x-0
           ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <TeamSidebar currentMemberId={currentMemberId} />
