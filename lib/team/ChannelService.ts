@@ -4,6 +4,7 @@
 import { query, transaction } from '@/lib/db/postgres';
 import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember, MessageKind } from './types';
 import { notifyChannelMentions, notifyThreadReply } from '@/lib/team/notifications';
+import { createAttentionItemsForMessage } from '@/lib/team/attention';
 import { getActiveParticipants } from '@/lib/team/getActiveParticipants';
 
 // System channels that can never be made private (or made public).
@@ -401,6 +402,16 @@ export async function sendMessage(
   );
 
   const row = result.rows[0];
+
+  // Create per-recipient attention items for @mentions (the For-You loop).
+  // Awaited (not fire-and-forget): the attention record is the durable part. Safe — never throws.
+  await createAttentionItemsForMessage({
+    messageId: row.id,
+    channelId,
+    senderId,
+    body: trimmed,
+    messageKind: kind,
+  });
 
   // Fire-and-forget email notifications for @mentions
   notifyChannelMentions(channelId, senderId, trimmed).catch(() => {});
