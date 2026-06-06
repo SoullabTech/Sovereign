@@ -34,6 +34,8 @@ interface MessageBubbleProps {
   onReact: (messageId: string, emoji: string) => void;
   onOpenThread?: (message: TeamMessage) => void;
   onReflect?: (messageId: string, mode: string) => void;
+  onCaptureDecision?: (messageId: string) => void;
+  captured?: boolean;
 }
 
 function formatTime(iso: string): string {
@@ -52,7 +54,7 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect }: MessageBubbleProps) {
+export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, captured }: MessageBubbleProps) {
   const [showReactions, setShowReactions] = useState(false);
   const [showReflectMenu, setShowReflectMenu] = useState(false);
   const isOwn = message.senderId === currentMemberId;
@@ -107,6 +109,11 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
               {KIND_BADGE[message.messageKind].label}
             </span>
           )}
+          {captured && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full border bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
+              ✓ Captured
+            </span>
+          )}
         </div>
 
         <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
@@ -159,6 +166,19 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
               </svg>
             </button>
           )}
+          {/* Capture as Team Decision */}
+          {onCaptureDecision && !captured && (
+            <button
+              onClick={() => onCaptureDecision(message.id)}
+              className="w-7 h-7 flex items-center justify-center text-emerald-400/50 hover:text-emerald-400/90 hover:bg-white/10 rounded transition-colors ml-0.5"
+              title="Capture as Team Decision"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          )}
+
           {/* MAIA Reflect button */}
           {onReflect && (
             <div className="relative ml-0.5">

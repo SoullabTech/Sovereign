@@ -29,6 +29,7 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
   const [memberCount, setMemberCount] = useState<number | undefined>(undefined);
   const [accessRevoked, setAccessRevoked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [capturedIds, setCapturedIds] = useState<Set<string>>(new Set());
 
   // Pick up redirect toast (e.g. set when access was revoked from another channel)
   useEffect(() => {
@@ -210,6 +211,29 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     // The response will arrive via SSE — no need to manually add it
   };
 
+  // Capture a channel message as an operational Team Decision (studio_decisions).
+  // "A decision becomes operational when it is captured into Studio Decisions."
+  const handleCaptureDecision = async (messageId: string) => {
+    const showToast = (msg: string) => {
+      setToast(msg);
+      setTimeout(() => setToast(null), 4000);
+    };
+    try {
+      const res = await fetch(`/api/team/channels/${channel.id}/decisions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId }),
+      });
+      if (res.status === 403) { handleAccessRevoked(); return; }
+      if (!res.ok) { showToast('Could not capture decision. Try again.'); return; }
+      const data = await res.json().catch(() => ({}));
+      setCapturedIds(prev => new Set(prev).add(messageId));
+      showToast(data.alreadyCaptured ? 'Already in Team Decisions.' : 'Captured to Team Decisions.');
+    } catch {
+      showToast('Could not capture decision. Try again.');
+    }
+  };
+
   if (accessRevoked) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
@@ -282,6 +306,8 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
                 onReact={handleReact}
                 onOpenThread={setThreadMessage}
                 onReflect={handleReflect}
+                onCaptureDecision={handleCaptureDecision}
+                captured={capturedIds.has(msg.id)}
               />
             </div>
           );
