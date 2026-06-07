@@ -11,9 +11,9 @@ import {
   Menu,
   X,
   MessageSquare,
-  Briefcase,
-  CheckSquare,
-  CalendarDays,
+  LayoutGrid,
+  Users,
+  Calendar,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -31,6 +31,7 @@ import {
   type PortalType,
   type ModuleSlug,
   type ModuleDefinition,
+  type ModuleCategory,
 } from '@/lib/studio/moduleDefinitions';
 import type { StudioMode } from '@/hooks/useStudioData';
 import { useTeamContext } from '@/hooks/useStudioData';
@@ -53,12 +54,12 @@ function StudioModeWatcher({
   return null;
 }
 
-// Bottom tab bar items (highest-frequency mobile actions)
+// Bottom tab bar — the practitioner's day-one working set: orient, coordinate, people, sessions.
 const MOBILE_TABS = [
-  { slug: 'comms', label: 'Comms', icon: MessageSquare, href: '/studio/comms' },
-  { slug: 'caseload', label: 'Caseload', icon: Briefcase, href: '/studio/caseload' },
-  { slug: 'tasks', label: 'Tasks', icon: CheckSquare, href: '/studio/tasks' },
-  { slug: 'calendar', label: 'Calendar', icon: CalendarDays, href: '/studio/calendar' },
+  { slug: 'command_center', label: 'Home', icon: LayoutGrid, href: '/studio' },
+  { slug: 'teams', label: 'Co-lab', icon: MessageSquare, href: '/team' },
+  { slug: 'clients', label: 'Clients', icon: Users, href: '/studio/clients' },
+  { slug: 'sessions', label: 'Sessions', icon: Calendar, href: '/studio/sessions' },
 ] as const;
 
 export default function StudioLayout({
@@ -184,7 +185,7 @@ export default function StudioLayout({
   // Show loading while checking practitioner status
   if (checkingPractitioner && !isCreatePage) {
     return (
-      <MaiaBoundaryLayout boundary="studio">
+      <MaiaBoundaryLayout boundary="studio" railRecede>
       <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
@@ -198,7 +199,7 @@ export default function StudioLayout({
   // Create page gets minimal layout (no sidebar)
   if (isCreatePage) {
     return (
-      <MaiaBoundaryLayout boundary="studio">
+      <MaiaBoundaryLayout boundary="studio" railRecede>
       <div className="min-h-screen bg-[#1a1a2e]">
         {children}
       </div>
@@ -207,7 +208,7 @@ export default function StudioLayout({
   }
 
   // ─── Nav link renderer (shared by sidebar and drawer) ─────
-  const renderNavLink = (mod: ModuleDefinition, onClick?: () => void) => {
+  const renderNavLink = (mod: ModuleDefinition, onClick?: () => void, collapsed = false) => {
     const isActive = pathname === mod.href ||
       (mod.href !== '/studio' && pathname?.startsWith(mod.href));
 
@@ -216,6 +217,7 @@ export default function StudioLayout({
         key={mod.href}
         href={mod.href}
         onClick={onClick}
+        title={collapsed ? mod.label : undefined}
         className={`
           flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
           ${isActive
@@ -224,15 +226,54 @@ export default function StudioLayout({
         `}
       >
         <mod.icon className="w-4 h-4 flex-shrink-0" />
-        <span>{mod.label}</span>
+        {!collapsed && <span className="truncate">{mod.label}</span>}
       </Link>
+    );
+  };
+
+  // ─── Grouped nav — surface the category metadata that already exists in
+  //     moduleDefinitions instead of a flat list. Co-lab (collaboration) sits
+  //     near the top; Settings is pinned to the bottom. ───────────────────────
+  const NAV_GROUPS: { cat: ModuleCategory; label: string }[] = [
+    { cat: 'core', label: '' },                       // Command Center, MAIA — no header
+    { cat: 'collaboration', label: 'Collaboration' }, // Co-lab — promoted near the top
+    { cat: 'clients', label: 'Clients' },
+    { cat: 'operations', label: 'Operations' },
+    { cat: 'tools', label: 'Tools' },
+  ];
+  const renderGroupedNav = (collapsed: boolean, onNavigate?: () => void) => {
+    const settings = visibleModules.find((m) => m.slug === 'settings');
+    return (
+      <>
+        {NAV_GROUPS.map(({ cat, label }) => {
+          const mods = visibleModules.filter((m) => m.category === cat && m.slug !== 'settings');
+          if (mods.length === 0) return null;
+          return (
+            <div key={cat} className="mb-1">
+              {!collapsed && label && (
+                <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+                  {label}
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {mods.map((m) => renderNavLink(m, onNavigate, collapsed))}
+              </div>
+            </div>
+          );
+        })}
+        {settings && (
+          <div className="mt-2 pt-2 border-t border-slate-800/50 space-y-0.5">
+            {renderNavLink(settings, onNavigate, collapsed)}
+          </div>
+        )}
+      </>
     );
   };
 
   // ─── MOBILE LAYOUT ────────────────────────────────────────
   if (isMobile) {
     return (
-      <MaiaBoundaryLayout boundary="studio">
+      <MaiaBoundaryLayout boundary="studio" railRecede>
       <TeamContextProvider initialStudioMode={initialStudioMode}>
       <StudioModeWatcher onModeChange={handleModeChange} />
       <RecordingContextProvider>
@@ -317,9 +358,9 @@ export default function StudioLayout({
                   <TeamSwitcher collapsed={false} />
                 </div>
 
-                {/* Nav */}
-                <nav className="flex-1 min-h-0 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
-                  {visibleModules.map((mod) => renderNavLink(mod, () => setDrawerOpen(false)))}
+                {/* Nav — grouped by category */}
+                <nav className="flex-1 min-h-0 px-2 py-2 overflow-y-auto scrollbar-hide">
+                  {renderGroupedNav(false, () => setDrawerOpen(false))}
                 </nav>
 
               </motion.div>
@@ -365,7 +406,7 @@ export default function StudioLayout({
 
   // ─── DESKTOP LAYOUT ───────────────────────────────────────
   return (
-    <MaiaBoundaryLayout boundary="studio">
+    <MaiaBoundaryLayout boundary="studio" railRecede>
     <TeamContextProvider initialStudioMode={initialStudioMode}>
     <StudioModeWatcher onModeChange={handleModeChange} />
     <RecordingContextProvider>
@@ -413,28 +454,9 @@ export default function StudioLayout({
           <TeamSwitcher collapsed={collapsed} />
         </div>
 
-        {/* Nav Items - dynamically rendered from enabled modules */}
-        <nav className="flex-1 min-h-0 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
-          {visibleModules.map((mod) => {
-            const isActive = pathname === mod.href ||
-              (mod.href !== '/studio' && pathname?.startsWith(mod.href));
-
-            return (
-              <Link
-                key={mod.href}
-                href={mod.href}
-                className={`
-                  flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
-                  ${isActive
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'}
-                `}
-              >
-                <mod.icon className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span>{mod.label}</span>}
-              </Link>
-            );
-          })}
+        {/* Nav Items — grouped by category */}
+        <nav className="flex-1 min-h-0 px-2 py-2 overflow-y-auto scrollbar-hide">
+          {renderGroupedNav(collapsed)}
         </nav>
 
 
