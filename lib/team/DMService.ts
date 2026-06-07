@@ -311,6 +311,25 @@ export async function markDMRead(dmThreadId: string, memberId: string): Promise<
   );
 }
 
+/**
+ * Total unread DM messages across all of a member's threads — the DM half of the
+ * Co-lab rail badge. Matches listDMThreads' per-thread unread logic exactly (so the
+ * rail total equals the sum of the sidebar's DM unread badges): a message counts if
+ * it is newer than the member's last_read_at for that thread and not deleted.
+ */
+export async function countUnreadDMs(memberId: string): Promise<number> {
+  const res = await query<{ n: number }>(
+    `SELECT count(*)::int AS n
+       FROM team_dm_members tdm
+       JOIN team_dm_messages dm ON dm.dm_thread_id = tdm.dm_thread_id
+      WHERE tdm.member_id = $1
+        AND dm.created_at > COALESCE(tdm.last_read_at, '1970-01-01')
+        AND dm.deleted_at IS NULL`,
+    [memberId]
+  );
+  return res.rows[0]?.n ?? 0;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TEAM MEMBERS (for DM target selection)
 // ─────────────────────────────────────────────────────────────────────────────
