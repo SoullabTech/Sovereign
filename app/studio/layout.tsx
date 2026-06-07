@@ -280,7 +280,8 @@ export default function StudioLayout({
                 animate={{ x: 0 }}
                 exit={{ x: -280 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="absolute left-0 top-0 h-full w-[280px] bg-[#16162a] border-r border-slate-800/50 flex flex-col"
+                className="absolute top-0 h-full w-[280px] bg-[#16162a] border-r border-slate-800/50 flex flex-col"
+                style={{ left: RAIL_WIDTH_PX, maxWidth: `calc(100vw - ${RAIL_WIDTH_PX}px - 8px)` }}
               >
                 {/* Drawer header */}
                 <div className="p-4 border-b border-slate-800/50">
