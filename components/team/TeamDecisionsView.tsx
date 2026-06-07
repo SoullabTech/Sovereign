@@ -7,6 +7,29 @@ import Link from 'next/link';
 // Reads GET /api/team/decisions (channel-access scoped). Accessible to every member,
 // including non-practitioners (the engineer), unlike the private Council at /studio/decisions.
 
+// Source message kind → typed-object label for the ledger. Keeps the permissive
+// capture model honest: a captured question reads as "question · captured", never
+// pretending to be a decision. Colors mirror the in-channel KIND_BADGE
+// (components/team/MessageBubble.tsx); 'build' (the default/untagged kind) shows
+// muted — "a regular message someone captured".
+const KIND_META: Record<string, { label: string; cls: string }> = {
+  decision: { label: 'decision', cls: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
+  question: { label: 'question', cls: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' },
+  insight:  { label: 'insight',  cls: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
+  request:  { label: 'request',  cls: 'bg-rose-500/20 text-rose-300 border-rose-500/30' },
+  build:    { label: 'build',    cls: 'bg-white/8 text-white/45 border-white/15' },
+};
+
+function KindChip({ kind }: { kind: string | null }) {
+  const meta = kind ? KIND_META[kind] : null;
+  if (!meta) return null;
+  return (
+    <span className={`flex-shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${meta.cls}`}>
+      {meta.label} · captured
+    </span>
+  );
+}
+
 interface TeamDecision {
   id: string;
   title: string;
@@ -18,6 +41,7 @@ interface TeamDecision {
   channelSlug: string | null;
   channelName: string | null;
   capturedByName: string | null;
+  sourceKind: string | null;
   taskCount: number;
 }
 
@@ -133,6 +157,7 @@ export function TeamDecisionsView() {
                   ) : null}
                 </div>
                 <div className="flex items-center gap-2 mt-1.5 text-xs text-white/35 flex-wrap">
+                  <KindChip kind={d.sourceKind} />
                   {d.channelSlug && (
                     <Link
                       href={`/team/${d.channelSlug}`}
