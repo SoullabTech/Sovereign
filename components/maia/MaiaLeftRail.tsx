@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bookmark, BookMarked, ChevronDown, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen } from 'lucide-react';
+import { Bookmark, BookMarked, ChevronDown, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen, Users } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { MAIA_WORLDS, MAIA_UTILITIES, getBoundaryFromPathname, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
@@ -46,6 +46,66 @@ interface MaiaLeftRailProps {
   /** Ask MAIA — orientation + Knowledge Field stance */
   askMode?: boolean;
   onAskModeChange?: (active: boolean) => void;
+}
+
+/**
+ * Co-lab — top-level coordination surface on the MAIA field. The count is DIRECTED
+ * attention only (open For-You loops + unread DMs); ambient channel activity is
+ * excluded server-side by /api/team/colab-badge. Self-contained (own fetch + poll),
+ * so it adds no state to the rail. Coordination presence, NOT a MAIA engagement bell:
+ * no manufactured urgency — the number reflects real obligations and returns to zero
+ * when handled. Shown when the member can act on Co-lab (founder/practitioner) OR has
+ * a pending count, so pure seekers never see an empty coordination badge.
+ */
+function ColabRailButton({ alwaysShow }: { alwaysShow: boolean }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      fetch('/api/team/colab-badge')
+        .then(r => (r.ok ? r.json() : { total: 0 }))
+        .then(d => { if (alive) setCount(d.total ?? 0); })
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 20000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  if (!alwaysShow && count === 0) return null;
+
+  const isActive = pathname?.startsWith('/team') ?? false;
+  const label = count > 0 ? `Co-lab · ${count > 99 ? '99+' : count}` : 'Co-lab';
+
+  return (
+    <button
+      onClick={() => router.push('/team/for-you')}
+      className={`
+        group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+        ${isActive
+          ? 'bg-[#D4B896]/15 text-[#D4B896]'
+          : 'text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5'
+        }
+      `}
+      title={label}
+      aria-label={count > 0 ? `Co-lab, ${count} waiting` : 'Co-lab'}
+    >
+      <Users className="w-5 h-5" />
+      {count > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-semibold rounded-full bg-rose-500/85 text-white">
+          {count > 9 ? '9+' : count}
+        </span>
+      )}
+      {isActive && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#D4B896] rounded-r-full" />
+      )}
+      <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+        {label}
+      </span>
+    </button>
+  );
 }
 
 export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, activeBoundary, onWorldChange, onOpenAccount, onCaptureSpirit, activeMode = 'normal', onModeChange, isVoiceInput = true, onToggleInputMode, askMode = false, onAskModeChange }: MaiaLeftRailProps) {
@@ -287,6 +347,10 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
             </button>
           );
         })()}
+
+        {/* Co-lab — top-level coordination (directed attention + unread DMs). Count
+            excludes ambient channel activity; one tap → For You. */}
+        <ColabRailButton alwaysShow={isFounder} />
 
         {/* Chevron — quiet doorway to the rest of the ecosystem */}
         <button
