@@ -11,8 +11,15 @@ const LOCAL_PROVIDER: LocalProvider =
 const OLLAMA_BASE_URL =
   process.env.OLLAMA_BASE_URL || process.env.DEEPSEEK_BASE_URL || 'http://localhost:11434';
 
+// Member-facing local default. deepseek-r1:* are REASONING models — they emit <think> traces and can burn
+// the whole token budget "thinking" with no usable reply (deepseek-r1:latest did exactly this in the
+// 2026-06-08 sovereignty-receipt test: 220 tokens, zero member-facing output). A reasoning model is the
+// wrong member-facing default. Default is therefore a small *instruct* model; set OLLAMA_MODEL per-host to
+// whatever conversational model is actually pulled there. If the configured model is not installed,
+// assertProviderAvailable() FAILS CLOSED with an actionable pull instruction rather than silently serving a
+// non-reply — honest failure over broken continuity. (Prod: pull llama3.1:8b OR set OLLAMA_MODEL explicitly.)
 const OLLAMA_MODEL =
-  process.env.OLLAMA_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-r1:latest';
+  process.env.OLLAMA_MODEL || process.env.DEEPSEEK_MODEL || 'llama3.1:8b';
 
 export interface LocalChatParams {
   systemPrompt: string;

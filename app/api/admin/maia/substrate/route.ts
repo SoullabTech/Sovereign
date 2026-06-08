@@ -27,6 +27,7 @@ import {
   getRuntimeSummary,
   type LayerObservation,
 } from '@/lib/maia/substrateObservability';
+import { buildProviderCognition } from '@/lib/maia/providerCognition';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,9 @@ export async function GET(request: NextRequest) {
         summary,
         recentTurns,
       },
+      // Cognition routing evidence — surfaced as its own lane, deliberately NOT a
+      // memory-substrate claim. Provider fallback is not a memory-layer capability.
+      providerCognition: buildProviderCognition(recentTurns, summary),
       activity,
       consumption: {
         active: ACTIVE_SUBSTRATE,
