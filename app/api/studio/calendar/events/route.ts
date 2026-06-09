@@ -176,6 +176,89 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// ── PATCH — update an existing studio event ─────────────────────────────────
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id, title, start, end, allDay, description, location } = body;
+
+    if (!id || !title || !start || !end) {
+      return NextResponse.json(
+        { error: 'id, title, start, and end are required' },
+        { status: 400 }
+      );
+    }
+
+    // Strip 'studio-' prefix if present
+    const dbId = String(id).startsWith('studio-') ? String(id).slice(7) : String(id);
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date format. Use ISO 8601.' },
+        { status: 400 }
+      );
+    }
+
+    if (!allDay && endDate <= startDate) {
+      return NextResponse.json(
+        { error: 'End time must be after start time.' },
+        { status: 400 }
+      );
+    }
+
+    const result = await db.query(
+      `UPDATE calendar_events
+       SET title = $3, description = $4, start_time = $5, end_time = $6,
+           all_day = $7, location = $8, updated_at = NOW()
+       WHERE id = $1 AND member_id = $2 AND deleted_at IS NULL
+       RETURNING id, title, description, start_time, end_time, all_day, location`,
+      [dbId, memberId, title, description || null, startDate.toISOString(), endDate.toISOString(), allDay || false, location || null]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    const row = result.rows[0];
+    const event: CalendarEvent = {
+      id: `studio-${row.id}`,
+      title: row.title,
+      start: row.start_time,
+      end: row.end_time,
+      source: 'studio',
+      allDay: row.all_day,
+      description: row.description,
+      location: row.location,
+    };
+
+    // Fire-and-forget CalDAV re-sync — remove the stale external copy, then
+    // recreate it with the updated details (the CalDAV layer has no in-place
+    // update path). Chained so they don't race.
+    deleteEventFromCalDAV(memberId, dbId)
+      .then(() => syncEventToCalDAV(memberId, dbId))
+      .catch(err =>
+        console.error('[Calendar Sync] CalDAV update failed:', err.message)
+      );
+
+    return NextResponse.json({ event });
+  } catch (error) {
+    console.error('[Studio Calendar Events] Update error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update event' },
+      { status: 500 }
+    );
+  }
+}
+
 // ── DELETE — soft-delete a studio event ─────────────────────────────────────
 
 export async function DELETE(request: NextRequest) {

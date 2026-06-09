@@ -16,6 +16,7 @@ import {
   Check,
   Plus,
   Trash2,
+  Pencil,
   FileText,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -137,6 +138,7 @@ export default function CalendarPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createDefaultDate, setCreateDefaultDate] = useState<Date | null>(null);
   const [createDefaultHour, setCreateDefaultHour] = useState<number | null>(null);
+  const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
 
   // Calculate date range based on view
   const { from, to } = useMemo(() => {
@@ -638,6 +640,14 @@ export default function CalendarPage() {
           <EventDetailModal
             event={selectedEvent}
             onClose={() => setSelectedEvent(null)}
+            onEdit={
+              selectedEvent.source === 'studio'
+                ? () => {
+                    setEditEvent(selectedEvent);
+                    setSelectedEvent(null);
+                  }
+                : undefined
+            }
             onDelete={selectedEvent.source === 'studio' ? handleDeleteEvent : undefined}
           />
         )}
@@ -658,6 +668,22 @@ export default function CalendarPage() {
               setShowCreateModal(false);
               setCreateDefaultDate(null);
               setCreateDefaultHour(null);
+              refetch();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Edit Event Modal */}
+      <AnimatePresence>
+        {editEvent && (
+          <CreateEventModal
+            editEvent={editEvent}
+            defaultDate={new Date(editEvent.start)}
+            defaultHour={null}
+            onClose={() => setEditEvent(null)}
+            onCreated={() => {
+              setEditEvent(null);
               refetch();
             }}
           />
@@ -1147,10 +1173,12 @@ function EventChip({
 function EventDetailModal({
   event,
   onClose,
+  onEdit,
   onDelete,
 }: {
   event: CalendarEvent;
   onClose: () => void;
+  onEdit?: () => void;
   onDelete?: (id: string) => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1263,11 +1291,11 @@ function EventDetailModal({
             >
               View in Sessions
             </a>
-          ) : event.source === 'studio' && onDelete ? (
+          ) : event.source === 'studio' && (onEdit || onDelete) ? (
             confirmDelete ? (
               <div className="flex-1 flex gap-2">
                 <button
-                  onClick={() => onDelete(event.id)}
+                  onClick={() => onDelete?.(event.id)}
                   className="flex-1 py-2 text-center text-sm font-medium bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
                 >
                   Confirm Delete
@@ -1280,13 +1308,26 @@ function EventDetailModal({
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="flex-1 py-2 text-center text-sm font-medium bg-slate-700/50 text-slate-300 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center justify-center gap-1.5"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete Event
-              </button>
+              <div className="flex-1 flex gap-2">
+                {onEdit && (
+                  <button
+                    onClick={onEdit}
+                    className="flex-1 py-2 text-center text-sm font-medium bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="flex-1 py-2 text-center text-sm font-medium bg-slate-700/50 text-slate-300 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
+                )}
+              </div>
             )
           ) : (
             <a
@@ -1315,29 +1356,43 @@ function EventDetailModal({
 function CreateEventModal({
   defaultDate,
   defaultHour,
+  editEvent,
   onClose,
   onCreated,
 }: {
   defaultDate: Date;
   defaultHour: number | null;
+  editEvent?: CalendarEvent | null;
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const dateStr = format(defaultDate, 'yyyy-MM-dd');
+  const isEdit = !!editEvent;
   const startHour = defaultHour ?? 9;
+  // When editing, pre-fill from the event's instant rendered in local time —
+  // date-fns `format` uses the viewer's timezone, matching the calendar.
+  const dateStr = format(
+    editEvent ? new Date(editEvent.start) : defaultDate,
+    'yyyy-MM-dd'
+  );
 
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(editEvent?.title ?? '');
   const [date, setDate] = useState(dateStr);
   const [startTime, setStartTime] = useState(
-    `${String(startHour).padStart(2, '0')}:00`
+    editEvent
+      ? format(new Date(editEvent.start), 'HH:mm')
+      : `${String(startHour).padStart(2, '0')}:00`
   );
   const [endTime, setEndTime] = useState(
-    `${String(Math.min(startHour + 1, 23)).padStart(2, '0')}:00`
+    editEvent
+      ? format(new Date(editEvent.end), 'HH:mm')
+      : `${String(Math.min(startHour + 1, 23)).padStart(2, '0')}:00`
   );
-  const [allDay, setAllDay] = useState(false);
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [showMore, setShowMore] = useState(false);
+  const [allDay, setAllDay] = useState(editEvent?.allDay ?? false);
+  const [description, setDescription] = useState(editEvent?.description ?? '');
+  const [location, setLocation] = useState(editEvent?.location ?? '');
+  const [showMore, setShowMore] = useState(
+    !!(editEvent?.description || editEvent?.location)
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -1355,21 +1410,28 @@ function CreateEventModal({
       let start: string;
       let end: string;
 
+      // Build instants from the user's local wall-clock components so their
+      // timezone is captured here, at input time. Sending a naive string
+      // (e.g. "2026-06-09T09:00:00") let the UTC server parse it as 09:00 UTC,
+      // which then rendered back 4h earlier (9am → 5am) for EDT viewers.
+      const [y, mo, d] = date.split('-').map(Number);
       if (allDay) {
-        start = `${date}T00:00:00`;
-        // All-day end is next day midnight
-        const nextDay = new Date(date);
-        nextDay.setDate(nextDay.getDate() + 1);
-        end = `${format(nextDay, 'yyyy-MM-dd')}T00:00:00`;
+        // All-day spans local midnight → next local midnight. day+1 rolls
+        // month/year boundaries correctly via the Date constructor.
+        start = new Date(y, mo - 1, d, 0, 0, 0, 0).toISOString();
+        end = new Date(y, mo - 1, d + 1, 0, 0, 0, 0).toISOString();
       } else {
-        start = `${date}T${startTime}:00`;
-        end = `${date}T${endTime}:00`;
+        const [sh, sm] = startTime.split(':').map(Number);
+        const [eh, em] = endTime.split(':').map(Number);
+        start = new Date(y, mo - 1, d, sh, sm, 0, 0).toISOString();
+        end = new Date(y, mo - 1, d, eh, em, 0, 0).toISOString();
       }
 
       const res = await apiFetch('/api/studio/calendar/events', {
-        method: 'POST',
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...(isEdit ? { id: editEvent!.id } : {}),
           title: title.trim(),
           start,
           end,
@@ -1409,7 +1471,7 @@ function CreateEventModal({
         className="bg-[#1e1e38] rounded-xl border border-slate-700/50 p-6 max-w-md w-full shadow-2xl"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-white">New Event</h2>
+          <h2 className="text-lg font-semibold text-white">{isEdit ? 'Edit Event' : 'New Event'}</h2>
           <button
             onClick={onClose}
             className="p-1 text-slate-500 hover:text-white transition-colors"
@@ -1516,7 +1578,7 @@ function CreateEventModal({
               disabled={saving}
               className="flex-1 py-2.5 text-sm font-medium bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors disabled:opacity-50"
             >
-              {saving ? 'Creating...' : 'Create Event'}
+              {saving ? (isEdit ? 'Saving...' : 'Creating...') : (isEdit ? 'Save Changes' : 'Create Event')}
             </button>
             <button
               type="button"
