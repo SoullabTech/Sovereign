@@ -241,6 +241,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
       className={`
         fixed left-0 top-0 bottom-0 w-14 bg-[#0f0d0b]/95 backdrop-blur-xl border-r border-[#3a2a1f]/40 z-[80]
         flex flex-col items-center py-4
+        overflow-y-auto overflow-x-hidden scrollbar-hide overscroll-y-contain
         transition-opacity duration-500 ease-out
         ${calmMode ? (calmCeiling ? 'opacity-40' : 'opacity-15') : 'opacity-100'}
         hover:opacity-100 hover:transition-opacity hover:duration-200
