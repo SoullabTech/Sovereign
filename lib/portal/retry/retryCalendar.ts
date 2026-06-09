@@ -144,9 +144,9 @@ export async function retryCalendar(input: RetryCalendarInput): Promise<Calendar
     const disclosureResult = await db.query(
       `SELECT s.calendar_disclosure, ss.value as default_disclosure
        FROM sessions s
-       LEFT JOIN studio_settings ss ON ss.key = 'calendar_disclosure_default' AND ss.member_id = $2
+       LEFT JOIN studio_settings ss ON ss.key = 'calendar_disclosure_default'
        WHERE s.id = $1`,
-      [session.session_id, memberId]
+      [session.session_id]
     );
     const disclosureRow = disclosureResult.rows[0];
     const disclosure: CalendarDisclosure =
