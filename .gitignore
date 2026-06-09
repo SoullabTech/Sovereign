@@ -350,6 +350,7 @@ backups/
 !docker-compose.production.yml
 !docker-compose.staging.yml
 !docker-compose.local-voice.yml
+!docker-compose.bluegreen.yml
 !Caddyfile
 !Caddyfile.staging
 

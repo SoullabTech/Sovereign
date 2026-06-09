@@ -1,0 +1,42 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA floating upstream — zero-downtime deploy pointer
+# ═══════════════════════════════════════════════════════════════════════════════
+# Imported by the main Caddyfile (sibling file → `import upstream-maia.caddy`).
+# Defines the snippets every maia-sovereign reverse_proxy block uses. The UPSTREAM
+# ADDRESS below is the only thing that changes during a zero-downtime deploy:
+#
+#   • steady state .............. maia-sovereign:3000          (the canonical container)
+#   • mid-deploy cutover window .. maia-sovereign-standby:3000 (the transient standby)
+#
+# scripts/deploy-zero-downtime.sh rewrites the address in BOTH snippets and runs
+# `caddy reload` (graceful — in-flight requests are drained, never dropped). Caddy
+# resolves these names via Docker's embedded DNS; no network-alias surgery needed.
+#
+# DO NOT hand-edit the address while a deploy is in flight. To see the current
+# target:  grep reverse_proxy upstream-maia.caddy
+#
+# Manual revert to the canonical container (if a deploy died mid-cutover):
+#   sed -i 's/maia-sovereign-standby:3000/maia-sovereign:3000/g' upstream-maia.caddy
+#   docker exec maia-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Standard maia upstream (non-streaming).
+(maia_app) {
+	reverse_proxy maia-sovereign:3000 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# Streaming/SSE maia upstream — buffering disabled (flush_interval -1).
+(maia_app_stream) {
+	reverse_proxy maia-sovereign:3000 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		flush_interval -1
+	}
+}

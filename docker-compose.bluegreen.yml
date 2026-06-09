@@ -1,0 +1,35 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign — Zero-Downtime Deploy Override (blue/green standby)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Adds a TRANSIENT standby app container used only during a zero-downtime deploy.
+# It is identical to the canonical `maia` service (same image, env, volumes,
+# healthcheck, networks) but:
+#   • named `maia-sovereign-standby` (so the canonical `maia-sovereign` name is
+#     never disturbed — every admin script that does `docker exec maia-sovereign`
+#     keeps working in steady state)
+#   • gated behind the `bluegreen` profile, so a normal
+#       docker compose -f docker-compose.production.yml up -d
+#     NEVER starts a second app container. Only scripts/deploy-zero-downtime.sh
+#     (which passes --profile bluegreen and targets the service explicitly) uses it.
+#
+# This file is layered ON TOP of docker-compose.production.yml:
+#   docker compose -p maia-sovereign \
+#     -f docker-compose.production.yml -f docker-compose.bluegreen.yml \
+#     --env-file .env.production --profile bluegreen <cmd>
+#
+# Do not run a bare `up` with this file expecting one app container — use the
+# deploy script. See docs/ops/ZERO_DOWNTIME_DEPLOY_2026-06-09.md.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  maia-standby:
+    # Inherit the full canonical app definition (image, build, env, volumes,
+    # healthcheck, networks) so the standby is byte-identical to production.
+    extends:
+      file: docker-compose.production.yml
+      service: maia
+    container_name: maia-sovereign-standby
+    profiles: ["bluegreen"]
+    # `extends` intentionally drops depends_on; the standby is only ever started
+    # by the deploy script against an already-running stack (postgres/whisper up),
+    # with --no-deps, so explicit ordering is unnecessary.

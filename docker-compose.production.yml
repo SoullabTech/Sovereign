@@ -47,6 +47,11 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Zero-downtime deploy: floating upstream pointer imported by Caddyfile.
+      # scripts/deploy-zero-downtime.sh rewrites this file + `caddy reload` to cut
+      # traffic between the canonical container and a transient standby with no
+      # 502 window. See docs/ops/ZERO_DOWNTIME_DEPLOY_2026-06-09.md.
+      - ./upstream-maia.caddy:/etc/caddy/upstream-maia.caddy:ro
       # Beta tester APK serve — read-only bind mount.
       # Files in ./beta on the host are exposed at /srv/beta inside the
       # container, served by the @beta_apk handler in Caddyfile with the

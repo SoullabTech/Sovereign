@@ -5,6 +5,12 @@
 # Replace {$DOMAIN} with your actual domain, or set DOMAIN env var
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# Zero-downtime deploy: floating maia upstream snippets (maia_app / maia_app_stream).
+# scripts/deploy-zero-downtime.sh rewrites upstream-maia.caddy + `caddy reload` to cut
+# traffic to a health-checked standby with no 502 window during container replacement.
+# See docs/ops/ZERO_DOWNTIME_DEPLOY_2026-06-09.md.
+import upstream-maia.caddy
+
 # Local development - no TLS
 :80 {
     @streaming {
@@ -42,7 +48,7 @@ www.soullab.life {
 
 # MAIA application
 maia.soullab.life {
-    reverse_proxy maia-sovereign:3000
+    import maia_app
 }
 
 soullab.life {
@@ -157,14 +163,7 @@ soullab.life {
         path /api/*/stream*
     }
     handle @streaming {
-        reverse_proxy maia-sovereign:3000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
-            # Disable buffering for streaming responses
-            flush_interval -1
-        }
+        import maia_app_stream
     }
 
     # API requests (non-streaming)
@@ -173,12 +172,7 @@ soullab.life {
         path /api/*
     }
     handle @api {
-        reverse_proxy maia-sovereign:3000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
-        }
+        import maia_app
         # Add CORS headers to responses for mobile origins
         @api_capacitor {
             header Origin capacitor://localhost
@@ -209,12 +203,7 @@ soullab.life {
     }
     handle @static_hashed {
         header Cache-Control "public, max-age=31536000, immutable"
-        reverse_proxy maia-sovereign:3000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
-        }
+        import maia_app
     }
 
     # HTML pages — never cache, always get fresh chunk references
@@ -223,27 +212,14 @@ soullab.life {
     }
     handle @html_pages {
         header Cache-Control "no-cache, no-store, must-revalidate"
-        reverse_proxy maia-sovereign:3000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
-        }
+        import maia_app
     }
 
     # Regular reverse proxy for remaining requests (favicon, etc.)
-    reverse_proxy maia-sovereign:3000 {
-        # Health checks
-        health_uri /api/consciousness/health
-        health_interval 30s
-        health_timeout 5s
-
-        # Headers
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
+    # Active health checks dropped here: with a single upstream they only convert
+    # "connection refused" into "no healthy upstream" (still 502). Availability
+    # during deploys is handled by the standby cutover, not passive health checks.
+    import maia_app
 
     # Security headers + origin marker
     header {
