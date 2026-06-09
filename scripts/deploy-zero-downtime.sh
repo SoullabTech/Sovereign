@@ -87,9 +87,32 @@ preflight() {
 	if ! docker ps --format '{{.Names}}' | grep -qx "$CADDY"; then
 		err "$CADDY container is not running — refusing to deploy (cutover needs Caddy)"; exit 1
 	fi
-	# Confirm Caddy can actually see the upstream pointer (mount + import wired).
 	if ! docker exec "$CADDY" test -f "$CADDY_CONF"; then
 		err "$CADDY has no $CADDY_CONF — Caddy not configured as expected"; exit 1
+	fi
+	# ADOPTION GATE — the #1 staging false-negative. Without BOTH the import in the
+	# live Caddyfile AND the upstream-maia.caddy mount, point_caddy rewrites a file
+	# the running Caddy does not read: the cutover reload is a silent no-op and the
+	# canonical recreate would still expose a 502, making a correct design look broken.
+	local adopted=1
+	docker exec "$CADDY" test -f /etc/caddy/upstream-maia.caddy >/dev/null 2>&1 || adopted=0
+	docker exec "$CADDY" grep -q 'import maia_app' "$CADDY_CONF" >/dev/null 2>&1 || adopted=0
+	if [[ "$adopted" != "1" ]]; then
+		local adopt_cmd="docker compose -p ${PROJECT} -f ${COMPOSE_BASE} --env-file ${ENV_FILE} up -d caddy"
+		if [[ "$DRY_RUN" == "1" ]]; then
+			warn "Caddy has NOT adopted this config (missing import and/or upstream-maia.caddy mount)."
+			warn "A REAL deploy would ABORT here. One-time adoption, from this worktree:"
+			warn "  ${adopt_cmd}"
+			warn "(dry-run: previewing the plan anyway)"
+		else
+			err "Caddy has NOT adopted this config — refusing to deploy."
+			err "The cutover would be a SILENT no-op and the canonical recreate would still 502."
+			err "One-time adoption (recreates caddy from this worktree's Caddyfile + mount):"
+			err "  ${adopt_cmd}"
+			err "Then verify:  docker exec ${CADDY} grep -c 'import maia_app' ${CADDY_CONF}   # >0"
+			err "              docker exec ${CADDY} test -f /etc/caddy/upstream-maia.caddy"
+			exit 1
+		fi
 	fi
 }
 

@@ -139,6 +139,23 @@ ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
 
 The legacy `up -d --build maia` still works as a fallback (with the old 502 window).
 
+### Pre-deploy gates (enforced by `preflight`)
+
+A faithful run requires **both** the app stack healthy **and** Caddy adopted onto this config.
+Missing the adoption gate is the #1 false-negative: the script would rewrite a file the running
+Caddy doesn't read, the cutover reload would be a **silent no-op**, and the canonical recreate
+would **still expose a 502** — making a correct design look broken.
+
+1. `postgres` / `whisper` / `maia` are **Up + healthy** — *enforced by the standby/canonical health gates (they time out and abort safely, canonical untouched, if not).*
+2. `maia-caddy` has been **recreated from the deploy worktree/host** (the adoption `up -d caddy` above) — *enforced.*
+3. live Caddyfile **imports `maia_app`**: `docker exec maia-caddy grep -c 'import maia_app' /etc/caddy/Caddyfile` → `>0` — *enforced.*
+4. **`/etc/caddy/upstream-maia.caddy` exists in the container**: `docker exec maia-caddy test -f /etc/caddy/upstream-maia.caddy` — *enforced.*
+5. **only then** `./scripts/deploy-zero-downtime.sh deploy`.
+
+Gates 2–4 are now hard-checked by the script's `preflight`: a real `deploy` aborts with the
+adoption command if Caddy hasn't adopted this config; `--dry-run` downgrades it to a warning so
+the plan can still be previewed against an unadopted Caddy.
+
 ---
 
 ## 6. Rollback
