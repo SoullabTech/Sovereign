@@ -144,6 +144,7 @@ export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
     FROM studio_team_members tm
     JOIN members m ON tm.member_id = m.id
     WHERE tm.team_id = $1
+      AND m.status <> 'archived'
     ORDER BY
       CASE tm.role
         WHEN 'owner' THEN 1
