@@ -6,26 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 export const dynamic = 'force-dynamic';
 
 const isDev = process.env.NODE_ENV === 'development';
-
-// Lazy-load Resend client
-let resendClient: Resend | null = null;
-
-function getResend(): Resend | null {
-  if (!resendClient) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn('[Email Notifications] RESEND_API_KEY not configured');
-      return null;
-    }
-    resendClient = new Resend(apiKey);
-  }
-  return resendClient;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,15 +37,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const resend = getResend();
-    if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
       return NextResponse.json(
         { error: 'Email service not configured' },
         { status: 503 }
       );
     }
 
-    const result = await resend.emails.send({
+    const r = await sendEmail({
       from: 'Session Reminder <reminders@soullab.life>',
       to,
       subject,
@@ -70,13 +54,21 @@ export async function POST(request: NextRequest) {
         { name: 'type', value: 'session-reminder' },
         { name: 'practitioner', value: practitionerId || 'unknown' },
       ],
+      context: 'session-reminder',
     });
+
+    if (!r.ok) {
+      return NextResponse.json(
+        { error: r.error ?? 'Failed to send email' },
+        { status: 500 }
+      );
+    }
 
     console.log(`[Email Notifications] Reminder sent to ${to}`);
 
     return NextResponse.json({
       success: true,
-      id: result.data?.id,
+      id: r.id,
     });
   } catch (error) {
     console.error('[Email Notifications] Error:', error);

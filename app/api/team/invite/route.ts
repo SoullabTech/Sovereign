@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
 import { resolveTeamIdForInviter, addMemberToTeam } from '@/lib/team/teamMembership';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 export const dynamic = 'force-dynamic';
 
 const FROM = 'Soullab <noreply@soullab.life>';
-
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
 
 export async function POST(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
@@ -54,8 +50,8 @@ export async function POST(request: NextRequest) {
     const addedToTeam = teamId ? await addMemberToTeam(teamId, existingMemberId) : false;
 
     const signinUrl = `${appUrl}/signin`;
-    try {
-      await getResend().emails.send({
+    {
+      const r = await sendEmail({
         from: FROM,
         to: normalizedEmail,
         subject: `${inviterName} added you to the Soullab Co-lab`,
@@ -71,10 +67,10 @@ export async function POST(request: NextRequest) {
             </a>
           </div>
         `,
+        context: 'invite',
       });
-    } catch (emailErr) {
-      console.error('[team/invite] Failed to send existing-member email:', emailErr);
       // Non-fatal — the member was still added to the workspace.
+      if (!r.ok) console.warn('[team/invite] Failed to send existing-member email:', r.error);
     }
 
     return NextResponse.json({ ok: true, alreadyMember: true, addedToTeam });
@@ -114,8 +110,8 @@ export async function POST(request: NextRequest) {
 
   const acceptUrl = `${appUrl}/team/invite/${token}`;
 
-  try {
-    await getResend().emails.send({
+  {
+    const r = await sendEmail({
       from: FROM,
       to: normalizedEmail,
       subject: `${inviterName} invited you to Soullab`,
@@ -131,10 +127,10 @@ export async function POST(request: NextRequest) {
           <p style="color:#999;font-size:12px;margin-top:24px;">Link expires in 7 days.</p>
         </div>
       `,
+      context: 'invite',
     });
-  } catch (emailErr) {
-    console.error('[team/invite] Failed to send invite email:', emailErr);
     // Don't fail the request — invite is created, email just didn't send
+    if (!r.ok) console.warn('[team/invite] Failed to send invite email:', r.error);
   }
 
   return NextResponse.json({ ok: true, inviteId });

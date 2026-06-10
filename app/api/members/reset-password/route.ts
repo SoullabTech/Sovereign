@@ -11,24 +11,15 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
-import { Resend } from 'resend';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
   checkRateLimit,
   getClientIP,
   buildRateLimitHeaders
 } from '@/lib/auth/rateLimiter';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 const ENDPOINT = '/api/members/reset-password';
-
-// Lazy init Resend
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 // Generate secure token
 function generateToken(): string {
@@ -99,12 +90,11 @@ export async function POST(request: NextRequest) {
     const resetLink = `https://soullab.life/reset-password?token=${token}`;
 
     // Send reset email
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
-        to: email,
-        subject: 'Reset Your Soullab Password',
-        html: `
+    const r = await sendEmail({
+      from: 'Soullab <noreply@soullab.life>',
+      to: email,
+      subject: 'Reset Your Soullab Password',
+      html: `
           <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 32px;">
               <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="150" style="max-width: 150px;" />
@@ -145,7 +135,7 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-        text: `
+      text: `
 Reset Your Soullab Password
 
 Hello ${member.name || 'Beautiful Soul'},
@@ -158,17 +148,18 @@ This link expires in 1 hour. If you didn't request this, you can safely ignore t
 
 With presence,
 The Soullab Team
-        `.trim()
-      });
+        `.trim(),
+      context: 'reset-password',
+    });
 
-      console.log('[MEMBERS] Password reset email sent to:', email);
-    } catch (emailError) {
-      console.error('[MEMBERS] Failed to send reset email:', emailError);
+    if (!r.ok) {
       return NextResponse.json(
         { error: 'Failed to send reset email' },
         { status: 500 }
       );
     }
+
+    console.log('[MEMBERS] Password reset email sent to:', email);
 
     return NextResponse.json({
       success: true,

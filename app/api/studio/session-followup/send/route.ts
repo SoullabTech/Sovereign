@@ -16,6 +16,7 @@ import { SendFollowupRequestSchema, type SendFollowupRequest } from '@/lib/studi
 import { loadSessionData } from '@/lib/studio/followups/sessionDataLoader';
 import { generateParentUpdateHtml } from '@/lib/studio/followups/emailTemplate';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 export const runtime = 'nodejs';
 
@@ -96,23 +97,20 @@ export async function POST(req: NextRequest) {
         sessionDate,
       });
 
-      try {
-        // Lazy-load Resend (same pattern as notifications/email route)
-        const { Resend } = await import('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
+      const emailResult = await sendEmail({
+        from: `${input.practitionerName} via SoulLab <updates@soullab.life>`,
+        to: input.recipientEmail,
+        subject: `Session update for ${input.clientName}`,
+        html,
+        context: 'session-followup',
+      });
 
-        const emailResult = await resend.emails.send({
-          from: `${input.practitionerName} via SoulLab <updates@soullab.life>`,
-          to: input.recipientEmail,
-          subject: `Session update for ${input.clientName}`,
-          html,
-        });
-
-        messageId = emailResult.data?.id ?? null;
-      } catch (emailError) {
-        console.error('[session-followup/send] Email delivery failed:', emailError);
+      if (!emailResult.ok) {
+        console.error('[session-followup/send] Email delivery failed:', emailResult.error);
         return json(502, { error: 'Email delivery failed. Draft is saved — you can retry.' });
       }
+
+      messageId = emailResult.id ?? null;
     }
 
     // Update artifact with sent state
