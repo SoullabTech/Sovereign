@@ -11,6 +11,7 @@ import { CapacitorBoot } from "@/components/CapacitorBoot";
 import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { BetaBanner } from "@/components/BetaBanner";
+import BugReportButton from "@/components/bugs/BugReportButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -192,6 +193,8 @@ export default function RootLayout({
         <CapacitorBoot />
         <FlagsDebug />
         <AppErrorBoundary>
+        {/* Global "Report a bug" affordance — self-renders only for signed-in members */}
+        <BugReportButton />
         <SubscriptionProvider>
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
