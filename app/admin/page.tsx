@@ -184,6 +184,7 @@ export default function AdminPage() {
                 { label: 'Security', href: '/admin/security' },
                 { label: 'Content Pipeline', href: '/admin/content-pipeline' },
                 { label: 'Agent Monitor', href: '/admin/agent-monitor' },
+                { label: 'Ops Monitors', href: '/admin/ops' },
               ].map(({ label, href }) => (
                 <button
                   key={href}
