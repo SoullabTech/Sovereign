@@ -4,6 +4,7 @@ export const revalidate = false;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { buildFieldContext } from '@/lib/field/fieldOrchestrator';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 type ActionType = 'smoke_test' | 'field_verify' | 'health_check';
 
@@ -13,7 +14,7 @@ interface CheckResult {
   detail: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({
@@ -21,6 +22,10 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       results: { passed: false, checks: [] },
     });
+  }
+
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   return NextResponse.json(
@@ -37,6 +42,10 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
       results: { passed: false, checks: [] },
     });
+  }
+
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

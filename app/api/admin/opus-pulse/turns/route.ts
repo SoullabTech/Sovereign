@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;
 import { getPool } from '@/lib/database/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 // Skip during static export (Capacitor builds)
 
@@ -13,6 +14,11 @@ export async function GET(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
+
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // Handle static generation gracefully
   let searchParams: URLSearchParams;
   try {
