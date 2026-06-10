@@ -89,7 +89,7 @@ import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { resolveMemberIdentity } from './resolveIdentity';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
 import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
@@ -278,16 +278,23 @@ export async function POST(req: NextRequest) {
       [key: string]: unknown;
     };
 
-    // 🔐 AUTH-DERIVED USER ID: Prefer cookie/header-based auth over body
-    // This fixes iOS memory loss after app resume (body state can be lost, cookies persist)
-    const memberIdFromAuth = await getMemberIdFromRequest(req);
-    const userId = memberIdFromAuth ||
-      (typeof bodyUserId === 'string' && bodyUserId.length > 0 ? bodyUserId : null);
+    // 🔐 IDENTITY (security): resolve the member ONLY from a verified session
+    // credential (maia_session cookie / x-session-token header, validated against
+    // auth_sessions). A request-body `userId` is NEVER trusted for identity —
+    // member UUIDs are client-exposed, so honoring a body id would let a caller
+    // read/write another member's memory (impersonation). The legacy
+    // `|| bodyUserId` fallback was removed once apiFetch shipped x-session-token
+    // on every native path. See ./resolveIdentity.ts.
+    const userId = await resolveMemberIdentity(req);
 
-    // 🔍 IDENTITY DEBUG: Log userId resolution for debugging memory issues
+    // 🔍 IDENTITY DEBUG: observe resolution + flag a body id that was ignored
+    // (stale client or spoof attempt) so it's visible without being trusted.
     console.log('[MAIA] userId resolved:', {
-      memberIdFromAuth: memberIdFromAuth ? 'present' : 'null',
-      bodyUserId: typeof bodyUserId === 'string' ? 'present' : 'null',
+      fromSession: userId ? 'present' : 'null',
+      bodyUserId:
+        typeof bodyUserId === 'string' && bodyUserId.length > 0
+          ? (bodyUserId === userId ? 'matches-session' : 'ignored')
+          : 'absent',
       finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
     });
 
