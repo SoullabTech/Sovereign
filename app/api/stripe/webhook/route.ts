@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
 import { query } from '@/lib/db/postgres';
 import type Stripe from 'stripe';
+import { isPaidActivation, sendMembershipConfirmation } from '@/lib/email/membershipConfirmation';
 
 export const dynamic = 'force-dynamic';
 
@@ -151,6 +152,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       expiresAt.setMonth(expiresAt.getMonth() + 1);
     }
 
+    // Read prior state BEFORE the update — gives the recipient details and the tier
+    // TRANSITION that gates the confirmation email (idempotent on Stripe retries).
+    const priorRows = await query<{ tier: string | null; email: string | null; name: string | null; username: string | null }>(
+      `SELECT tier, email, name, username FROM members WHERE id = $1`,
+      [memberId]
+    );
+    const prior = priorRows.rows[0];
+    const priorTier = prior?.tier ?? null;
+
     // Update member tier in database
     await query(
       `UPDATE members SET
@@ -171,6 +181,27 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     );
 
     console.log(`[Stripe Webhook] Updated member ${memberId} to tier: ${tier}`);
+
+    // Customer-facing confirmation — only on a REAL activation (tier transition into a
+    // paid tier). A Stripe retry sees the tier already set -> no transition -> no double-send.
+    // Email failure must NOT fail the webhook (that would make Stripe retry the whole event).
+    if (isPaidActivation(priorTier, tier)) {
+      if (prior?.email) {
+        const r = await sendMembershipConfirmation({
+          to: prior.email,
+          name: prior.name || prior.username || undefined,
+          tier,
+          interval: isAnnual ? 'year' : 'month',
+          amountCents: session.amount_total ?? null,
+          currency: session.currency ?? 'usd',
+        });
+        if (!r.ok) {
+          console.warn(`[Stripe Webhook] membership confirmation email failed for ${memberId}: ${r.error}`);
+        }
+      } else {
+        console.warn(`[Stripe Webhook] member ${memberId} has no email — skipping confirmation`);
+      }
+    }
   } catch (error) {
     console.error('[Stripe Webhook] Error updating member tier:', error);
   }
