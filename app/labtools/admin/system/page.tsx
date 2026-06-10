@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { adminFetch } from '@/lib/admin/adminFetch';
+import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -98,6 +98,10 @@ export default function SystemAdminPage() {
 
       if (res.ok && data.success) {
         sessionStorage.setItem('maia_admin_token', data.token);
+        // Persist the validated admin password so adminFetch() can authorize this
+        // page's /api/admin/* calls — isAdminRequest expects the x-admin-password
+        // header, and /api/admin/auth validates the same LABTOOLS_ADMIN_PASSWORD.
+        storeAdminPassword(password);
         setAuthenticated(true);
       } else {
         setPasswordError(data.error || 'Authentication failed');
