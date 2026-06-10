@@ -515,6 +515,16 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-white/8 flex flex-col gap-1.5">
+          <Link
+            href="/team/notifications"
+            className={`text-xs transition-colors ${
+              pathname === '/team/notifications'
+                ? 'text-white/80'
+                : 'text-white/25 hover:text-white/50'
+            }`}
+          >
+            🔔 Notifications
+          </Link>
           {isAdmin && (
             <Link
               href="/team/admin"
