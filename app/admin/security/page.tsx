@@ -17,6 +17,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { betaSession } from '@/lib/auth/betaSession';
+import { adminFetch } from '@/lib/admin/adminFetch';
 import {
   ArrowLeft,
   Shield,
@@ -172,7 +173,7 @@ export default function SecurityMonitorPage() {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/security/alerts');
+      const res = await adminFetch('/api/admin/security/alerts');
       if (!res.ok) return;
       const json = await res.json();
       setAlerts(json.alerts ?? []);
@@ -182,7 +183,7 @@ export default function SecurityMonitorPage() {
   const runCheck = useCallback(async () => {
     setCheckingNow(true);
     try {
-      await fetch('/api/admin/security/alerts', {
+      await adminFetch('/api/admin/security/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'check' }),
@@ -194,7 +195,7 @@ export default function SecurityMonitorPage() {
   }, [fetchAlerts]);
 
   const ackAlert = useCallback(async (alertId: string) => {
-    await fetch('/api/admin/security/alerts', {
+    await adminFetch('/api/admin/security/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'ack', alertId }),
@@ -206,7 +207,7 @@ export default function SecurityMonitorPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/security');
+      const res = await adminFetch('/api/admin/security');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setData(json);
@@ -222,7 +223,7 @@ export default function SecurityMonitorPage() {
     setRevokingSession(sessionId);
     setRevokeMessage(null);
     try {
-      const res = await fetch('/api/admin/security/sessions', {
+      const res = await adminFetch('/api/admin/security/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, action: 'revoke' }),

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/admin/adminFetch';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -114,7 +115,7 @@ export default function SystemAdminPage() {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/settings');
+      const res = await adminFetch('/api/admin/settings');
       if (res.ok) {
         const data = await res.json();
         setSettings(data.settings || []);
@@ -141,7 +142,7 @@ export default function SystemAdminPage() {
   const updateSetting = async (key: string, value: any) => {
     setSaving(key);
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await adminFetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key, value, updatedBy: 'admin' }),

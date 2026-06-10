@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { apiFetch } from '@/lib/http/apiBase'
+import { adminFetch } from '@/lib/admin/adminFetch'
 import AgentMonitorTable from '@/components/admin/AgentMonitorTable'
 
 export default function AgentMonitorPage() {
@@ -12,7 +12,7 @@ export default function AgentMonitorPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await apiFetch('/api/admin/agent-monitor')
+        const res = await adminFetch('/api/admin/agent-monitor')
         if (res.ok) {
           const data = await res.json()
           setRuns(data.runs || [])

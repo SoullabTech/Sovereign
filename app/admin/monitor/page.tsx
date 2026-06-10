@@ -8,6 +8,7 @@
 // password contract as the rest of /admin (LABTOOLS_ADMIN_PASSWORD).
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 
 type BugSource = 'member' | 'claude' | 'system';
 type BugSeverity = 'low' | 'normal' | 'high' | 'critical';
@@ -100,9 +101,7 @@ export default function MonitorFieldPage() {
       const params = new URLSearchParams();
       if (status) params.set('status', status);
       if (q.trim()) params.set('q', q.trim());
-      const res = await fetch(`/api/admin/monitor/bugs?${params.toString()}`, {
-        headers: { 'x-admin-password': pwd },
-      });
+      const res = await adminFetch(`/api/admin/monitor/bugs?${params.toString()}`);
       if (res.status === 401) return false;
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       const data = await res.json();
@@ -138,6 +137,7 @@ export default function MonitorFieldPage() {
     e.preventDefault();
     setAuthError(null);
     setAdminPassword(passwordInput);
+    storeAdminPassword(passwordInput);
     load(passwordInput, statusFilter, search);
   }
 
@@ -148,9 +148,9 @@ export default function MonitorFieldPage() {
   }, [statusFilter]);
 
   async function patchBug(id: string, patch: Record<string, unknown>) {
-    const res = await fetch(`/api/admin/monitor/bugs/${id}`, {
+    const res = await adminFetch(`/api/admin/monitor/bugs/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(patch),
     });
     if (res.ok) {
