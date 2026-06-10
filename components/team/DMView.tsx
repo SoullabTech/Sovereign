@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { DMMessage, DMThread } from '@/lib/team/DMService';
 import { MessageInput } from './MessageInput';
 import { MessageText } from './MessageText';
+import { MessageEditor } from './MessageEditor';
 import { useChannelStream } from './useChannelStream';
 import { DMProfileCard } from './DMProfileCard';
 
@@ -26,6 +27,7 @@ function stringToColor(str: string): string {
 export function DMView({ dmThread, currentMemberId }: DMViewProps) {
   const [messages, setMessages] = useState<DMMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
 
@@ -85,6 +87,19 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
     const { message } = await res.json();
     setMessages(prev => prev.some(m => m.id === message.id) ? prev : [...prev, message]);
     requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }));
+  };
+
+  const handleEdit = async (messageId: string, newBody: string) => {
+    const res = await fetch(`/api/team/dm/${dmThread.id}/messages`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId, body: newBody }),
+    });
+    if (!res.ok) throw new Error('Failed to edit');
+    const { message } = await res.json();
+    setMessages(prev => prev.map(m =>
+      m.id === messageId ? { ...m, body: message.body, editedAt: message.editedAt } : m
+    ));
   };
 
   return (
@@ -152,8 +167,9 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
         {messages.map(msg => {
           const isOwn = msg.senderId === currentMemberId;
           const initials = msg.senderName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+          const isEditing = editingId === msg.id;
           return (
-            <div key={msg.id} className="flex gap-3 px-4 py-1.5 hover:bg-white/[0.03] rounded-lg transition-colors">
+            <div key={msg.id} className="group relative flex gap-3 px-4 py-1.5 hover:bg-white/[0.03] rounded-lg transition-colors">
               <div
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold mt-0.5"
                 style={{ background: stringToColor(msg.senderId) }}
@@ -167,11 +183,31 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
                     {isOwn && <span className="text-xs text-white/30 font-normal ml-1">(you)</span>}
                   </span>
                   <span className="text-xs text-white/30">{formatTime(msg.createdAt)}</span>
+                  {msg.editedAt && <span className="text-xs text-white/25 italic">edited</span>}
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-                  <MessageText body={msg.body} />
-                </p>
+                {isEditing ? (
+                  <MessageEditor
+                    initialBody={msg.body}
+                    onSave={async (newBody) => { await handleEdit(msg.id, newBody); setEditingId(null); }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                ) : (
+                  <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
+                    <MessageText body={msg.body} />
+                  </p>
+                )}
               </div>
+              {isOwn && !isEditing && (
+                <button
+                  onClick={() => setEditingId(msg.id)}
+                  className="absolute right-3 top-1.5 opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 rounded transition-all"
+                  title="Edit message"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              )}
             </div>
           );
         })}

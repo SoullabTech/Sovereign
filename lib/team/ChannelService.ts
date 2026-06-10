@@ -442,6 +442,74 @@ export async function sendMessage(
   };
 }
 
+/**
+ * Edit a message's text body. Ownership is enforced in SQL — the UPDATE only
+ * matches when sender_id = editorId (and the message isn't deleted), scoped to the
+ * channel so a foreign message id can't be touched even with channel access. Sets
+ * edited_at so the UI can surface an "edited" marker. Throws if no row matched
+ * (not the author / not found / deleted).
+ */
+export async function editMessage(
+  channelId: string,
+  messageId: string,
+  editorId: string,
+  newBody: string
+): Promise<TeamMessage> {
+  const trimmed = newBody.trim();
+  if (!trimmed) throw new Error('Message body cannot be empty');
+  if (trimmed.length > 8000) throw new Error('Message too long (max 8000 chars)');
+
+  const result = await query<{
+    id: string;
+    channel_id: string;
+    sender_id: string;
+    body: string;
+    parent_id: string | null;
+    edited_at: string | null;
+    deleted_at: string | null;
+    created_at: string;
+    message_kind: string;
+  }>(
+    `UPDATE team_messages
+        SET body = $1, edited_at = NOW()
+      WHERE id = $2
+        AND channel_id = $3
+        AND sender_id = $4
+        AND deleted_at IS NULL
+      RETURNING *`,
+    [trimmed, messageId, channelId, editorId]
+  );
+
+  const row = result.rows[0];
+  if (!row) throw new Error('Message not found or not editable');
+
+  const nameResult = await query<{ name: string | null; username: string }>(
+    `SELECT name, username FROM members WHERE id = $1`,
+    [editorId]
+  );
+  const sender = nameResult.rows[0];
+
+  const replyResult = await query<{ reply_count: string }>(
+    `SELECT COUNT(*) AS reply_count FROM team_messages WHERE parent_id = $1 AND deleted_at IS NULL`,
+    [messageId]
+  );
+
+  return {
+    id: row.id,
+    channelId: row.channel_id,
+    senderId: row.sender_id,
+    senderName: sender?.name || sender?.username || 'Unknown',
+    body: row.body,
+    parentId: row.parent_id,
+    editedAt: row.edited_at,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at,
+    messageKind: (row.message_kind as MessageKind) ?? 'build',
+    reactions: [],
+    replyCount: parseInt(replyResult.rows[0]?.reply_count ?? '0', 10) || 0,
+  };
+}
+
 export async function markChannelRead(channelId: string, memberId: string): Promise<void> {
   await query(
     `INSERT INTO team_channel_reads (channel_id, member_id, last_read_at)

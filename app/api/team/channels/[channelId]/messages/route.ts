@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { getMessages, getReplies, sendMessage, markChannelRead } from '@/lib/team/ChannelService';
+import { getMessages, getReplies, sendMessage, editMessage, markChannelRead } from '@/lib/team/ChannelService';
 import { getSenderAttentionStates, COLAB_MESSAGE } from '@/lib/team/attention';
 import { requireChannelAccess } from '@/lib/team/permissions';
 
@@ -110,4 +110,37 @@ export async function POST(
   await markChannelRead(channelId, memberId);
 
   return NextResponse.json({ message }, { status: 201 });
+}
+
+// Edit a message's text body. Only the original author may edit (enforced in SQL
+// by editMessage). The message id is in the body; channel access is checked first.
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ channelId: string }> }
+) {
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { channelId } = await params;
+
+  const access = await requireChannelAccess(channelId, memberId);
+  if (!access.allowed) {
+    const status = access.reason === 'not_found' ? 404 : 403;
+    return NextResponse.json({ error: access.reason ?? 'Forbidden' }, { status });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const messageId = typeof body.messageId === 'string' ? body.messageId : '';
+  const newBody = typeof body.body === 'string' ? body.body : '';
+  if (!messageId) return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+  if (!newBody.trim()) return NextResponse.json({ error: 'body is required' }, { status: 400 });
+
+  try {
+    const message = await editMessage(channelId, messageId, memberId, newBody);
+    return NextResponse.json({ message });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error';
+    const status = msg.includes('not found') || msg.includes('not editable') ? 404 : 400;
+    return NextResponse.json({ error: msg }, { status });
+  }
 }

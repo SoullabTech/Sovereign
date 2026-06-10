@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { TeamMessage, MessageKind } from '@/lib/team/types';
 import { MessageText } from './MessageText';
+import { MessageEditor } from './MessageEditor';
 
 const KIND_BADGE: Record<Exclude<MessageKind, 'build'>, { label: string; className: string }> = {
   question: {
@@ -40,6 +41,8 @@ interface MessageBubbleProps {
   onOpenThread?: (message: TeamMessage) => void;
   onReflect?: (messageId: string, mode: string) => void;
   onCaptureDecision?: (messageId: string) => void;
+  /** Persist a text edit. When provided, own messages show an edit affordance. */
+  onEdit?: (messageId: string, newBody: string) => Promise<void>;
   captured?: boolean;
 }
 
@@ -59,11 +62,13 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, captured }: MessageBubbleProps) {
+export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, onEdit, captured }: MessageBubbleProps) {
   const [showReactions, setShowReactions] = useState(false);
   const [showReflectMenu, setShowReflectMenu] = useState(false);
+  const [editing, setEditing] = useState(false);
   const isOwn = message.senderId === currentMemberId;
   const isMaia = message.senderType === 'maia';
+  const canEdit = isOwn && !isMaia && !!onEdit;
 
   const initials = isMaia
     ? 'M'
@@ -121,9 +126,17 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           )}
         </div>
 
-        <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-          <MessageText body={message.body} />
-        </p>
+        {editing && onEdit ? (
+          <MessageEditor
+            initialBody={message.body}
+            onSave={async (newBody) => { await onEdit(message.id, newBody); setEditing(false); }}
+            onCancel={() => setEditing(false)}
+          />
+        ) : (
+          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
+            <MessageText body={message.body} />
+          </p>
+        )}
 
         {/* Reactions */}
         {message.reactions.length > 0 && (
@@ -170,8 +183,8 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
         )}
       </div>
 
-      {/* Quick reaction toolbar (hover) — not shown for MAIA messages */}
-      {showReactions && !isMaia && (
+      {/* Quick reaction toolbar (hover) — not shown for MAIA messages or while editing */}
+      {showReactions && !isMaia && !editing && (
         <div className="absolute right-4 -top-4 flex gap-0.5 bg-zinc-800 border border-white/10 rounded-lg p-1 shadow-xl z-10">
           {QUICK_REACTIONS.map(emoji => (
             <button
@@ -183,6 +196,17 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
               {emoji}
             </button>
           ))}
+          {canEdit && (
+            <button
+              onClick={() => { setEditing(true); setShowReactions(false); setShowReflectMenu(false); }}
+              className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 rounded transition-colors ml-0.5"
+              title="Edit message"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          )}
           {onOpenThread && !message.parentId && (
             <button
               onClick={() => onOpenThread(message)}

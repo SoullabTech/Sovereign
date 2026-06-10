@@ -202,6 +202,20 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     }));
   };
 
+  const handleEdit = async (messageId: string, newBody: string) => {
+    const res = await fetch(`/api/team/channels/${channel.id}/messages`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId, body: newBody }),
+    });
+    if (res.status === 403) { handleAccessRevoked(); throw new Error('Access revoked'); }
+    if (!res.ok) throw new Error('Failed to edit');
+    const { message } = await res.json();
+    setMessages(prev => prev.map(m =>
+      m.id === messageId ? { ...m, body: message.body, editedAt: message.editedAt } : m
+    ));
+  };
+
   const handleReflect = async (messageId: string, mode: string) => {
     const msg = messages.find(m => m.id === messageId);
     if (!msg) return;
@@ -409,6 +423,7 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
                 onOpenThread={setThreadMessage}
                 onReflect={handleReflect}
                 onCaptureDecision={handleCaptureDecision}
+                onEdit={handleEdit}
                 captured={capturedIds.has(msg.id)}
               />
             </div>
