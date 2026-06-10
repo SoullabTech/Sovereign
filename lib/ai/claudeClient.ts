@@ -5,7 +5,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { logStancePre, logStancePost } from '../sovereign/stanceReanchor';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
-import type { TextResult, ProviderMeta } from './types';
+import { recordUsageEvent } from '../stewardship/usageLedger';
+import type { TextResult, ProviderMeta, TokenUsage } from './types';
 
 // Model configuration
 // ARCHITECTURE: MAIA's mind is the consciousness system (Spiralogic, AIN, prompts)
@@ -185,6 +186,33 @@ export async function generateWithClaude(
       latencyMs
     }).catch(() => { /* telemetry failures should never block */ });
 
+    // 📒 STEWARDSHIP LEDGER: capture what this Claude call cost the system to provide.
+    // The Anthropic response already carries token usage (previously read only for logs,
+    // then discarded). Metric-only, never content. Sanctuary sessions are recorded
+    // aggregate-anonymous inside recordUsageEvent. Fire-and-forget — never blocks the voice.
+    const apiUsage = (message as { usage?: { input_tokens?: number; output_tokens?: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } }).usage;
+    const usage: TokenUsage = {
+      inputTokens: apiUsage?.input_tokens,
+      outputTokens: apiUsage?.output_tokens,
+      input_tokens: apiUsage?.input_tokens,
+      output_tokens: apiUsage?.output_tokens,
+      totalTokens:
+        apiUsage?.input_tokens != null || apiUsage?.output_tokens != null
+          ? (apiUsage?.input_tokens ?? 0) + (apiUsage?.output_tokens ?? 0)
+          : undefined,
+      cacheCreationInputTokens: apiUsage?.cache_creation_input_tokens,
+      cacheReadInputTokens: apiUsage?.cache_read_input_tokens,
+    };
+    recordUsageEvent({
+      kind: 'llm',
+      provider: 'anthropic',
+      model: selection.model,
+      usage,
+      meta,
+      latencyMs,
+      routeTag: 'claudeClient.generateWithClaude',
+    });
+
     return {
       text,
       provider: {
@@ -194,6 +222,7 @@ export async function generateWithClaude(
         latencyMs,
         tier: selection.tier,
         reason: selection.reason,
+        usage,
       } as ProviderMeta,
     };
   } catch (error) {

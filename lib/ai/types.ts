@@ -29,6 +29,12 @@ export type TokenUsage = {
   input_tokens?: number;
   output_tokens?: number;
   total_tokens?: number;
+  // Claude prompt-cache tokens (cache write ~1.25x input, cache read ~0.1x input).
+  // Both cases accepted so a raw Anthropic usage object (snake_case) passes straight through.
+  cacheCreationInputTokens?: number;
+  cacheReadInputTokens?: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
   // Keep room for provider-specific payloads without typing wars
   raw?: unknown;
 };
