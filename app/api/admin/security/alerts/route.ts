@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  *   body: { action: 'check' }               — run thresholds, send emails if needed
  *   body: { action: 'ack', alertId: string } — mark acknowledged
  *
- * Secured by middleware (admin role required via accessMatrix).
+ * Secured by route-level isAdminRequest (LABTOOLS_ADMIN_PASSWORD); cron via x-internal-token.
  * Also accepts x-internal-token header for cron calls.
  */
 
@@ -18,9 +18,14 @@ import {
   listRecentAlerts,
   acknowledgeAlert,
 } from '@/lib/security/alertEngine';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) return NextResponse.json({ alerts: [] });
+
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const alerts = await listRecentAlerts(50);
   return NextResponse.json({ alerts });
@@ -36,8 +41,11 @@ export async function POST(request: NextRequest) {
     process.env.INTERNAL_ALERT_TOKEN &&
     internalToken === process.env.INTERNAL_ALERT_TOKEN;
 
-  // (Middleware handles admin-role auth for browser requests;
-  //  cron calls come in with the internal token.)
+  // Route-level guard: a valid admin secret OR the internal cron token.
+  // (No middleware reliance — /api/admin/* is not matched by the access matrix.)
+  if (!isAdminRequest(request) && !isInternalCron) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const body = await request.json().catch(() => ({}));
