@@ -2,14 +2,8 @@
 // All sends are fire-and-forget. Never throws. Never blocks message delivery.
 
 import { query } from '@/lib/db/postgres';
-import Resend from 'resend';
 import { resolveNotificationPreference } from '@/lib/team/notificationPreferences';
-
-function getResendClient(): Resend {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error('RESEND_API_KEY not set');
-  return new Resend(key);
-}
+import { sendEmail } from '@/lib/email/sendEmail';
 
 // soullab.life is the verified Resend domain (reminders@soullab.life ships today).
 // The previous onboarding@resend.dev sandbox sender only delivers to the Resend
@@ -69,8 +63,7 @@ export async function notifyDMRecipient(
     const senderName = sender?.name || sender?.username || 'Someone';
     const recipientName = recipient.name || recipient.username;
 
-    const resend = getResendClient();
-    await resend.emails.send({
+    const r = await sendEmail({
       from: FROM,
       to: recipient.email,
       subject: `New message from ${senderName} on SoulComms`,
@@ -82,7 +75,9 @@ export async function notifyDMRecipient(
         ${manageFooterHtml()}
       `,
       text: `Hi ${recipientName},\n\n${senderName} sent you a message on SoulComms.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
+      context: 'team-dm',
     });
+    if (!r.ok) console.warn('[team/notify] dm send failed:', r.error);
   } catch {
     // Silent — never surface notification errors to callers
   }
@@ -139,8 +134,7 @@ export async function notifyThreadReply(
     const channelName = channelData.rows[0]?.name ?? 'unknown';
 
     const recipientName = recipient.name || recipient.username;
-    const resend = getResendClient();
-    await resend.emails.send({
+    const r = await sendEmail({
       from: FROM,
       to: recipient.email,
       subject: `${senderName} replied to your message in #${channelName}`,
@@ -152,7 +146,9 @@ export async function notifyThreadReply(
         ${manageFooterHtml()}
       `,
       text: `Hi ${recipientName},\n\n${senderName} replied to your message in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
+      context: 'team-thread',
     });
+    if (!r.ok) console.warn('[team/notify] thread-reply send failed:', r.error);
   } catch {
     // Silent — never surface notification errors to callers
   }
@@ -196,8 +192,6 @@ export async function notifyChannelMentions(
     const sender = senderData.rows[0];
     const senderName = sender?.name || sender?.username || 'Someone';
 
-    const resend = getResendClient();
-
     for (const username of usernames) {
       try {
         const memberData = await query<{ id: string; email: string | null; name: string | null; username: string }>(
@@ -214,7 +208,7 @@ export async function notifyChannelMentions(
 
         const recipientName = member.name || member.username;
 
-        await resend.emails.send({
+        const r = await sendEmail({
           from: FROM,
           to: member.email,
           subject: `${senderName} mentioned you in #${channelName}`,
@@ -226,7 +220,9 @@ export async function notifyChannelMentions(
             ${manageFooterHtml()}
           `,
           text: `Hi ${recipientName},\n\n${senderName} mentioned you in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
+          context: 'team-mention',
         });
+        if (!r.ok) console.warn('[team/notify] mention send failed:', r.error);
       } catch {
         // Per-mention failure is silent — continue to next mention
       }

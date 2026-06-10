@@ -9,20 +9,9 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 export const revalidate = false;
-
-// Skip during static export (Capacitor builds)
-
-// Lazy init to avoid build-time errors
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 export async function POST(request: NextRequest) {
   // During static export, return placeholder response
@@ -57,12 +46,11 @@ export async function POST(request: NextRequest) {
     const member = result.rows[0];
 
     // Send recovery email
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
-        to: email,
-        subject: 'Your Soullab Passkey',
-        html: `
+    const r = await sendEmail({
+      from: 'Soullab <noreply@soullab.life>',
+      to: email,
+      subject: 'Your Soullab Passkey',
+      html: `
           <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 32px;">
               <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="150" style="max-width: 150px;" />
@@ -105,7 +93,7 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-        text: `
+      text: `
 Your Soullab Passkey Recovery
 
 Hello ${member.name || 'Beautiful Soul'},
@@ -119,17 +107,18 @@ Return to https://soullab.life/signin to continue your journey.
 
 With presence,
 The Soullab Team
-        `.trim()
-      });
+        `.trim(),
+      context: 'recover',
+    });
 
-      console.log('[MEMBERS] Recovery email sent to:', email);
-    } catch (emailError) {
-      console.error('[MEMBERS] Failed to send recovery email:', emailError);
+    if (!r.ok) {
       return NextResponse.json(
         { error: 'Failed to send recovery email' },
         { status: 500 }
       );
     }
+
+    console.log('[MEMBERS] Recovery email sent to:', email);
 
     return NextResponse.json({
       success: true,

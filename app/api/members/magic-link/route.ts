@@ -17,7 +17,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
-import { Resend } from 'resend';
 import {
   checkRateLimit,
   getClientIP,
@@ -26,17 +25,9 @@ import {
 import { createSession } from '@/lib/auth/serverSessions';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 const ENDPOINT = '/api/members/magic-link';
-
-// Lazy init Resend
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 // Generate secure token
 function generateToken(): string {
@@ -158,12 +149,11 @@ export async function POST(request: NextRequest) {
     const buttonText = isExistingMember ? 'Sign In' : 'Continue Signup';
 
     // Send magic link email
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
-        to: normalizedEmail,
-        subject,
-        html: `
+    const r = await sendEmail({
+      from: 'Soullab <noreply@soullab.life>',
+      to: normalizedEmail,
+      subject,
+      html: `
           <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 32px;">
               <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="150" style="max-width: 150px;" />
@@ -204,7 +194,7 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-        text: `
+      text: `
 ${heading}
 
 Hello ${memberName},
@@ -217,17 +207,18 @@ This link expires in 1 hour. If you didn't request this, you can safely ignore t
 
 With presence,
 The Soullab Team
-        `.trim()
-      });
+        `.trim(),
+      context: 'magic-link',
+    });
 
-      console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember})`);
-    } catch (emailError) {
-      console.error('[MAGIC-LINK] Failed to send email:', emailError);
+    if (!r.ok) {
       return NextResponse.json(
         { error: 'Failed to send magic link email. Please try again.' },
         { status: 500 }
       );
     }
+
+    console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember})`);
 
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/magic-link', metadata: { isExistingMember } });
 

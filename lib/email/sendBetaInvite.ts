@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import fs from 'fs';
 import path from 'path';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 function getResendClient() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -46,8 +47,7 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
           .replace(/\{\{BetaCode\}\}/g, invite.betaCode || '')
       : '';
 
-    const resend = getResendClient();
-    const result = await resend.emails.send({
+    const r = await sendEmail({
       from: 'Kelly @ Soullab <kelly@soullab.org>',
       to: invite.email,
       subject: config.subject,
@@ -56,15 +56,20 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
       tags: [
         { name: 'campaign', value: 'beta-launch' },
         { name: 'type', value: config.tag }
-      ]
+      ],
+      context: 'beta-invite',
     });
 
-    console.log(`✅ Sent to ${invite.name} (${invite.email}):`, result.id);
-    return { success: true, id: result.id };
+    if (!r.ok) {
+      return { success: false, error: r.error };
+    }
+    console.log(`Sent to ${invite.name} (${invite.email}):`, r.id);
+    return { success: true, id: r.id };
 
-  } catch (error: any) {
-    console.error(`❌ Failed to send to ${invite.email}:`, error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to send to ${invite.email}:`, message);
+    return { success: false, error: message };
   }
 }
 

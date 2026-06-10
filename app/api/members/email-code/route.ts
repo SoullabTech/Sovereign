@@ -23,23 +23,15 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes, randomInt } from 'crypto';
-import { Resend } from 'resend';
 import {
   checkRateLimit,
   getClientIP,
   buildRateLimitHeaders,
 } from '@/lib/auth/rateLimiter';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 const ENDPOINT = '/api/members/email-code';
-
-let resendClient: InstanceType<typeof Resend> | null = null;
-function getResend(): InstanceType<typeof Resend> {
-  if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resendClient;
-}
 
 function generateToken(): string {
   return randomBytes(32).toString('hex');
@@ -140,12 +132,11 @@ export async function POST(request: NextRequest) {
     );
 
     // Send the code by email.
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
-        to: normalizedEmail,
-        subject: `Your Soullab code: ${code}`,
-        html: `
+    const r = await sendEmail({
+      from: 'Soullab <noreply@soullab.life>',
+      to: normalizedEmail,
+      subject: `Your Soullab code: ${code}`,
+      html: `
           <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 28px;">
               <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="140" style="max-width: 140px;" />
@@ -167,10 +158,11 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-        text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
-      });
-    } catch (emailError) {
-      console.error('[EMAIL-CODE] Failed to send email:', emailError);
+      text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
+      context: 'email-code',
+    });
+
+    if (!r.ok) {
       return NextResponse.json(
         { error: 'Could not send the code. Please try again.' },
         { status: 500 }

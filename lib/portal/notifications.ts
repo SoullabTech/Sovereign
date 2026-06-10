@@ -7,22 +7,7 @@
  * - Booking notifications to practitioners
  */
 
-import { Resend } from 'resend';
-
-// Lazy-load Resend client
-let resendClient: Resend | null = null;
-
-function getResend(): Resend | null {
-  if (!resendClient) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn('[Portal Notifications] RESEND_API_KEY not configured');
-      return null;
-    }
-    resendClient = new Resend(apiKey);
-  }
-  return resendClient;
-}
+import { sendEmail } from '@/lib/email/sendEmail';
 
 // ============================================================================
 // Types
@@ -65,35 +50,28 @@ export async function sendBookingConfirmation(
   booking: BookingDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
-  try {
-    const result = await resend.emails.send({
-      from: `${practitionerDisplay} <bookings@soullab.life>`,
-      replyTo: practitioner.email,
-      to: booking.clientEmail,
-      subject: `Booking Confirmed: ${booking.sessionType} with ${practitioner.name}`,
-      html: generateBookingConfirmationHtml(booking, practitioner, formattedDate),
-      text: generateBookingConfirmationText(booking, practitioner, formattedDate),
-      tags: [
-        { name: 'type', value: 'booking-confirmation' },
-        { name: 'portal', value: practitioner.portalSlug },
-      ],
-    });
+  const r = await sendEmail({
+    from: `${practitionerDisplay} <bookings@soullab.life>`,
+    to: booking.clientEmail,
+    subject: `Booking Confirmed: ${booking.sessionType} with ${practitioner.name}`,
+    html: generateBookingConfirmationHtml(booking, practitioner, formattedDate),
+    text: generateBookingConfirmationText(booking, practitioner, formattedDate),
+    tags: [
+      { name: 'type', value: 'booking-confirmation' },
+      { name: 'portal', value: practitioner.portalSlug },
+    ],
+    context: 'booking-confirm',
+  });
 
-    console.log(`[Portal Notifications] Booking confirmation sent to ${booking.clientEmail}`);
-    return { success: true, id: result.data?.id };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Portal Notifications] Failed to send booking confirmation:', message);
-    return { success: false, error: message };
+  if (!r.ok) {
+    console.error('[Portal Notifications] Failed to send booking confirmation:', r.error);
+    return { success: false, error: r.error };
   }
+  console.log(`[Portal Notifications] Booking confirmation sent to ${booking.clientEmail}`);
+  return { success: true, id: r.id };
 }
 
 function generateBookingConfirmationHtml(
@@ -234,33 +212,27 @@ export async function sendBookingNotificationToPractitioner(
   booking: BookingDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
 
-  try {
-    const result = await resend.emails.send({
-      from: 'Soullab Bookings <bookings@soullab.life>',
-      to: practitioner.email,
-      subject: `New Booking: ${booking.clientName} - ${booking.sessionType}`,
-      html: generatePractitionerBookingHtml(booking, formattedDate),
-      text: generatePractitionerBookingText(booking, formattedDate),
-      tags: [
-        { name: 'type', value: 'booking-notification' },
-        { name: 'portal', value: practitioner.portalSlug },
-      ],
-    });
+  const r = await sendEmail({
+    from: 'Soullab Bookings <bookings@soullab.life>',
+    to: practitioner.email,
+    subject: `New Booking: ${booking.clientName} - ${booking.sessionType}`,
+    html: generatePractitionerBookingHtml(booking, formattedDate),
+    text: generatePractitionerBookingText(booking, formattedDate),
+    tags: [
+      { name: 'type', value: 'booking-notification' },
+      { name: 'portal', value: practitioner.portalSlug },
+    ],
+    context: 'booking-notify',
+  });
 
-    console.log(`[Portal Notifications] Booking notification sent to practitioner ${practitioner.email}`);
-    return { success: true, id: result.data?.id };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Portal Notifications] Failed to send practitioner notification:', message);
-    return { success: false, error: message };
+  if (!r.ok) {
+    console.error('[Portal Notifications] Failed to send practitioner notification:', r.error);
+    return { success: false, error: r.error };
   }
+  console.log(`[Portal Notifications] Booking notification sent to practitioner ${practitioner.email}`);
+  return { success: true, id: r.id };
 }
 
 function generatePractitionerBookingHtml(booking: BookingDetails, formattedDate: string): string {
@@ -336,35 +308,28 @@ export async function sendInquiryNotification(
   inquiry: InquiryDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const sourceLabel = inquiry.source === 'portal_chat' ? 'Chat Inquiry' : 'Contact Form';
 
-  try {
-    const result = await resend.emails.send({
-      from: 'Soullab Portal <portal@soullab.life>',
-      to: practitioner.email,
-      replyTo: inquiry.email || undefined,
-      subject: `New ${sourceLabel}: ${inquiry.name || 'Anonymous'} - ${inquiry.topic || 'General'}`,
-      html: generateInquiryNotificationHtml(inquiry, sourceLabel),
-      text: generateInquiryNotificationText(inquiry, sourceLabel),
-      tags: [
-        { name: 'type', value: 'inquiry-notification' },
-        { name: 'portal', value: practitioner.portalSlug },
-        { name: 'source', value: inquiry.source },
-      ],
-    });
+  const r = await sendEmail({
+    from: 'Soullab Portal <portal@soullab.life>',
+    to: practitioner.email,
+    subject: `New ${sourceLabel}: ${inquiry.name || 'Anonymous'} - ${inquiry.topic || 'General'}`,
+    html: generateInquiryNotificationHtml(inquiry, sourceLabel),
+    text: generateInquiryNotificationText(inquiry, sourceLabel),
+    tags: [
+      { name: 'type', value: 'inquiry-notification' },
+      { name: 'portal', value: practitioner.portalSlug },
+      { name: 'source', value: inquiry.source },
+    ],
+    context: 'inquiry-notify',
+  });
 
-    console.log(`[Portal Notifications] Inquiry notification sent to ${practitioner.email}`);
-    return { success: true, id: result.data?.id };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Portal Notifications] Failed to send inquiry notification:', message);
-    return { success: false, error: message };
+  if (!r.ok) {
+    console.error('[Portal Notifications] Failed to send inquiry notification:', r.error);
+    return { success: false, error: r.error };
   }
+  console.log(`[Portal Notifications] Inquiry notification sent to ${practitioner.email}`);
+  return { success: true, id: r.id };
 }
 
 function generateInquiryNotificationHtml(inquiry: InquiryDetails, sourceLabel: string): string {
@@ -450,34 +415,27 @@ export async function sendPortalClaimEmail(
   invite: ClaimInviteDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
-  try {
-    const result = await resend.emails.send({
-      from: `${practitionerDisplay} <bookings@soullab.life>`,
-      replyTo: practitioner.email,
-      to: invite.clientEmail,
-      subject: `Set up your client portal access — ${practitionerDisplay}`,
-      html: generateClaimInviteHtml(invite, practitioner),
-      text: generateClaimInviteText(invite, practitioner),
-      tags: [
-        { name: 'type', value: 'portal-claim-invite' },
-        { name: 'portal', value: practitioner.portalSlug },
-      ],
-    });
+  const r = await sendEmail({
+    from: `${practitionerDisplay} <bookings@soullab.life>`,
+    to: invite.clientEmail,
+    subject: `Set up your client portal access — ${practitionerDisplay}`,
+    html: generateClaimInviteHtml(invite, practitioner),
+    text: generateClaimInviteText(invite, practitioner),
+    tags: [
+      { name: 'type', value: 'portal-claim-invite' },
+      { name: 'portal', value: practitioner.portalSlug },
+    ],
+    context: 'portal-claim-invite',
+  });
 
-    console.log(`[Portal Notifications] Claim invite sent to ${invite.clientEmail}`);
-    return { success: true, id: result.data?.id };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Portal Notifications] Failed to send claim invite:', message);
-    return { success: false, error: message };
+  if (!r.ok) {
+    console.error('[Portal Notifications] Failed to send claim invite:', r.error);
+    return { success: false, error: r.error };
   }
+  console.log(`[Portal Notifications] Claim invite sent to ${invite.clientEmail}`);
+  return { success: true, id: r.id };
 }
 
 function generateClaimInviteHtml(
