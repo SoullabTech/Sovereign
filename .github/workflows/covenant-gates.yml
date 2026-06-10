@@ -23,7 +23,11 @@ jobs:
             // GOVERNANCE CONFIGURATION
             // ═══════════════════════════════════════════════════════════════
 
-            const FOUNDERS = ['kelly-nezat'];
+            // FOUNDERS: GitHub login of the founder-steward.
+            // 'Soullab' is the active operator account; 'kelly-nezat' is preserved
+            // as the originally-recorded founder identity. Either approval satisfies
+            // founderRequired / founderOrReleaseRequired.
+            const FOUNDERS = ['Soullab', 'kelly-nezat'];
             const GUARDIAN_CIRCLE = []; // Add council usernames when appointed
             const MENTORS = [];          // Add mentor usernames when appointed
 
