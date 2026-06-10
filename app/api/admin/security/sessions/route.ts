@@ -12,10 +12,17 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
+  }
+
+  // Route-level admin guard (LABTOOLS_ADMIN_PASSWORD via x-admin-password).
+  // Fail-closed: no middleware reliance, no x-member-id.
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
