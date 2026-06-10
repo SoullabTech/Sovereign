@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { createSession } from '@/lib/auth/serverSessions';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
   checkRateLimit,
@@ -248,18 +249,50 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      member: {
-        id: member.id,
-        username: member.username,
-        name: member.name,
-        onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step,
-        developmentalTier: member.developmental_tier || null,
-        guardianRequired: member.guardian_required || false,
-      }
-    }, { headers: corsHeaders });
+    // Mint a real server session immediately — the member is authenticated on
+    // registration, never reliant on localStorage beta_user or a forgeable
+    // x-member-id (closes the sessionless-onboarding generator). Pattern mirrors
+    // /api/members/register-email. Non-fatal: the member row already exists, so a
+    // session failure degrades to "no session" rather than failing registration.
+    const memberPayload = {
+      id: member.id,
+      username: member.username,
+      name: member.name,
+      onboarded: member.onboarded,
+      onboardingStep: member.onboarding_step,
+      developmentalTier: member.developmental_tier || null,
+      guardianRequired: member.guardian_required || false,
+    };
+
+    try {
+      const userAgent = request.headers.get('user-agent') || '';
+      const session = await createSession({ memberId: String(member.id), ipAddress: clientIP, userAgent });
+      const response = NextResponse.json({
+        success: true,
+        member: memberPayload,
+        // Token in the body for the Capacitor/iOS x-session-token path: this route
+        // is CORS-open to capacitor://localhost, and native clients can't read the
+        // httpOnly maia_session cookie cross-origin.
+        session: { token: session.sessionToken, expiresAt: session.expiresAt.toISOString() },
+      }, { headers: corsHeaders });
+      const cookieOpts = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        path: '/',
+        expires: session.expiresAt,
+      };
+      response.cookies.set('maia_session', session.sessionToken, cookieOpts); // REAL token — never 'active'
+      response.cookies.set('maia_member_id', String(member.id), cookieOpts);
+      response.cookies.set('maia_tier', 'free', cookieOpts);
+      response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
+      return response;
+    } catch (sessionErr) {
+      // Degrade gracefully: member is created; respond without a session. The
+      // member can obtain one by signing in. (Rare — createSession only needs the DB.)
+      console.error('[MEMBERS] Session creation failed (non-fatal):', sessionErr);
+      return NextResponse.json({ success: true, member: memberPayload }, { headers: corsHeaders });
+    }
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
