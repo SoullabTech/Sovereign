@@ -3,46 +3,100 @@ import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 
 /**
- * Extract member ID from a request.
- * Checks in order:
- * 1. x-member-id header (for Capacitor/iOS apps where cookies don't work cross-origin)
- * 2. memberId cookie (for web apps)
+ * Resolve the member ID for a request from a VERIFIED credential only.
  *
- * Returns the member ID if found and valid, null otherwise.
+ * Identity is derived from an `auth_sessions`-backed session token — never from
+ * a bare identity assertion. The `x-member-id` header and the `maia_member_id`
+ * cookie are treated as unverified *claims*: they are honored only when they
+ * match the member resolved from the session, and a mismatch is rejected as a
+ * possible impersonation attempt.
+ *
+ * Credential sources (in priority order):
+ * 1. `maia_session` cookie    → auth_sessions lookup (web)
+ * 2. `x-session-token` header  → auth_sessions lookup (Safari/iOS, cookies
+ *    blocked by ITP — set by apiFetch from localStorage `maia_session_token`)
+ *
+ * SECURITY: A previous version trusted `x-member-id` / `maia_member_id` after a
+ * mere existence check (`SELECT id FROM members WHERE id = $1`). Because member
+ * UUIDs are exposed to clients (e.g. as `senderId`), any caller could set the
+ * header to a known member id and impersonate that member — reading and writing
+ * their team channels, DMs, and other member-scoped data. That vector is
+ * removed here. This mirrors the hardening already applied to
+ * `requireMemberId` in `lib/auth/session.ts` and the pattern used by
+ * `lib/scribe/scribeAuth.ts`.
+ *
+ * Returns the verified member ID, or `null` if there is no valid session.
  */
 export async function getMemberIdFromRequest(request: NextRequest): Promise<string | null> {
-  // 1. Check x-member-id header (Capacitor/iOS apps)
-  const headerMemberId = request.headers.get('x-member-id');
-  if (headerMemberId) {
-    // Validate the member exists
-    const result = await query('SELECT id FROM members WHERE id = $1', [headerMemberId]);
-    if (result.rows.length > 0) {
-      return headerMemberId;
-    }
-  }
-
-  // 2. Check maia_member_id cookie (web apps — set by setAccessCookies)
   const cookieStore = await cookies();
-  const cookieMemberId = cookieStore.get('maia_member_id')?.value;
-  if (cookieMemberId) {
-    // Validate the member exists
-    const result = await query('SELECT id FROM members WHERE id = $1', [cookieMemberId]);
-    if (result.rows.length > 0) {
-      return cookieMemberId;
+
+  // 1. Resolve the authenticated identity from a real session credential.
+  let verifiedMemberId: string | null = null;
+
+  // 1a. maia_session cookie (web — sent automatically, incl. by EventSource).
+  const sessionCookie = cookieStore.get('maia_session')?.value;
+  if (sessionCookie) {
+    verifiedMemberId = await memberIdForSessionToken(sessionCookie);
+  }
+
+  // 1b. x-session-token header (Safari/iOS fallback when cookies are blocked).
+  if (!verifiedMemberId) {
+    const headerToken = request.headers.get('x-session-token');
+    if (headerToken) {
+      verifiedMemberId = await memberIdForSessionToken(headerToken);
     }
   }
 
-  // 3. Fall back to maia_session cookie → look up member from session table
-  const sessionToken = cookieStore.get('maia_session')?.value;
-  if (sessionToken) {
-    const result = await query(
-      `SELECT member_id FROM auth_sessions WHERE session_token = $1 AND expires_at > NOW() AND revoked = FALSE`,
-      [sessionToken]
+  // No verified session → do NOT trust a bare x-member-id / maia_member_id.
+  if (!verifiedMemberId) {
+    return null;
+  }
+
+  // 2. If an identity claim is present, it must match the authenticated member.
+  //    A mismatch is an impersonation attempt — reject rather than silently
+  //    preferring either side.
+  const claimedMemberId =
+    request.headers.get('x-member-id') ||
+    cookieStore.get('maia_member_id')?.value ||
+    null;
+
+  if (claimedMemberId && claimedMemberId !== verifiedMemberId) {
+    console.warn(
+      '[auth] x-member-id/maia_member_id claim does not match authenticated session — rejecting (possible impersonation attempt)'
     );
-    if (result.rows.length > 0) {
-      return result.rows[0].member_id;
-    }
+    return null;
   }
 
-  return null;
+  return verifiedMemberId;
+}
+
+/**
+ * Resolve the member ID backing a session token, for transports that cannot
+ * send headers or cookies (e.g. EventSource/SSE passing `?_t=<token>`).
+ *
+ * Validates against `auth_sessions` exactly like the cookie/header paths above,
+ * so a query-param token is no weaker than a header token. Returns `null` for a
+ * missing, empty, or invalid token.
+ */
+export async function getMemberIdFromSessionToken(token: string | null | undefined): Promise<string | null> {
+  if (!token) return null;
+  return memberIdForSessionToken(token);
+}
+
+/**
+ * Look up the member ID for a session token.
+ * Read-only (does not bump last_active_at). Identical predicate to
+ * `validateSessionToken` in `lib/auth/session.ts`.
+ */
+async function memberIdForSessionToken(token: string): Promise<string | null> {
+  const result = await query<{ member_id: string }>(
+    `SELECT member_id
+       FROM auth_sessions
+      WHERE session_token = $1
+        AND revoked = FALSE
+        AND expires_at > NOW()
+      LIMIT 1`,
+    [token]
+  );
+  return result.rows[0]?.member_id ?? null;
 }

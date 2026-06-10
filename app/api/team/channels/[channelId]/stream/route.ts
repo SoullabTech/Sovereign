@@ -3,7 +3,7 @@
 // Clients use Last-Event-ID for transparent reconnect.
 
 import { NextRequest } from 'next/server';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getMemberIdFromRequest, getMemberIdFromSessionToken } from '@/lib/auth/getMemberFromRequest';
 import { getMessagesSince } from '@/lib/team/ChannelService';
 import { requireChannelAccess } from '@/lib/team/permissions';
 
@@ -20,9 +20,13 @@ export async function GET(
     return new Response('SSE not available in static export', { status: 200 });
   }
 
-  // Auth — SSE can't send headers, so also accept _m query param
+  // Auth — EventSource can't send custom headers. Web relies on the maia_session
+  // cookie; iOS/native may pass a *validated* session token as the `_t` query
+  // param. The old `_m` (raw member id) fallback was forgeable and is removed.
   const url = new URL(req.url);
-  const memberId = await getMemberIdFromRequest(req) ?? url.searchParams.get('_m');
+  const memberId =
+    (await getMemberIdFromRequest(req)) ??
+    (await getMemberIdFromSessionToken(url.searchParams.get('_t')));
   if (!memberId) return new Response('Unauthorized', { status: 401 });
 
   const { channelId } = await params;
