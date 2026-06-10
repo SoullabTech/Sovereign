@@ -59,9 +59,11 @@ export async function requireMemberId(): Promise<string> {
 }
 
 /**
- * Validate a session token and return the member ID if valid
+ * Validate a session token and return the member ID if valid.
+ * Exported so the canonical request resolver (getMemberIdFromRequest) shares
+ * exactly one validation path against auth_sessions.
  */
-async function validateSessionToken(token: string): Promise<string | null> {
+export async function validateSessionToken(token: string): Promise<string | null> {
   const res = await query<{ member_id: string }>(
     `SELECT member_id
      FROM auth_sessions
