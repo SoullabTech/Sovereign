@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { query } from '@/lib/db/postgres';
+import { isSmsConfigured } from '@/lib/sms/config';
+import { maskPhone } from '@/lib/sms/phoneNumber';
 import {
   getResolvedPreferences,
   setNotificationPreference,
@@ -11,14 +14,36 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+// Phone verification status for the SMS column. Fails safe to "unverified".
+async function getPhoneStatus(memberId: string): Promise<{ verified: boolean; masked: string | null }> {
+  try {
+    const res = await query<{ phone: string | null; phone_verified: boolean | null }>(
+      `SELECT phone, phone_verified FROM members WHERE id = $1`,
+      [memberId]
+    );
+    const row = res.rows[0];
+    const verified = row?.phone_verified === true;
+    return { verified, masked: verified ? maskPhone(row?.phone ?? null) : null };
+  } catch {
+    return { verified: false, masked: null };
+  }
+}
+
 // GET — the authenticated member's full resolved preference matrix (defaults
-// merged with their explicit overrides). Powers the Co-lab Notifications panel.
+// merged with their explicit overrides), plus SMS availability + phone status.
+// Powers the Co-lab Notifications panel.
 export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const preferences = await getResolvedPreferences(memberId);
-  return NextResponse.json({ preferences });
+  const available = isSmsConfigured();
+  const phone = available ? await getPhoneStatus(memberId) : { verified: false, masked: null };
+
+  return NextResponse.json({
+    preferences,
+    sms: { available, phoneVerified: phone.verified, phoneMasked: phone.masked },
+  });
 }
 
 // PUT — set one explicit override { event_type, channel, enabled }.
@@ -42,13 +67,21 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  // v1 delivers in-app (the always-on badge) + email. SMS is defined in the schema
-  // but not delivered until phase 3 — reject writes so there are no dead toggles.
+  // SMS stays dormant until the flag + Twilio creds are present, and can only be
+  // enabled once the member has a VERIFIED number to send to — no dead toggles.
   if (channel === 'sms') {
-    return NextResponse.json(
-      { error: 'SMS notifications are not available yet' },
-      { status: 400 }
-    );
+    if (!isSmsConfigured()) {
+      return NextResponse.json({ error: 'SMS notifications are not available yet' }, { status: 400 });
+    }
+    if (enabled) {
+      const phone = await getPhoneStatus(memberId);
+      if (!phone.verified) {
+        return NextResponse.json(
+          { error: 'Verify a phone number before enabling SMS notifications', code: 'phone_unverified' },
+          { status: 400 }
+        );
+      }
+    }
   }
 
   try {
