@@ -10,6 +10,7 @@ import FlagsDebug from "@/components/FlagsDebug";
 import { CapacitorBoot } from "@/components/CapacitorBoot";
 import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
+import { BetaBanner } from "@/components/BetaBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -187,6 +188,7 @@ export default function RootLayout({
         `}} />
       </head>
       <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
+        <BetaBanner />
         <CapacitorBoot />
         <FlagsDebug />
         <AppErrorBoundary>

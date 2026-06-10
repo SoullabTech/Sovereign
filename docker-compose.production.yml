@@ -19,6 +19,7 @@ x-maia-build: &maia_build
   dockerfile: Dockerfile
   args:
     GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    NEXT_PUBLIC_SHOW_BETA_BADGE: ${NEXT_PUBLIC_SHOW_BETA_BADGE:-false}
 
 x-maia-image: &maia_image maia-sovereign:prod
 
