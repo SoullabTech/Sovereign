@@ -3,6 +3,7 @@ export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 function confidence(samples: number): 'low' | 'medium' | 'high' {
   if (samples < 10) return 'low';
@@ -13,6 +14,10 @@ function confidence(samples: number): 'low' | 'medium' | 'high' {
 export async function POST(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
+  }
+
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

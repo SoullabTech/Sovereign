@@ -13,8 +13,9 @@ export const dynamic = 'force-dynamic';
  *   - Sanctuary boundary status
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 // ─── Container Security Posture ───────────────────────────────────────────────
 // Static config reflecting docker-compose.production.yml hardening.
@@ -116,9 +117,13 @@ const CONTAINER_POSTURE = [
 
 // ─── Route Handler ─────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
+  }
+
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const generatedAt = new Date().toISOString();

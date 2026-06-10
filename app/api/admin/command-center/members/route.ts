@@ -3,8 +3,9 @@ export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({
@@ -12,6 +13,10 @@ export async function GET() {
       onboardedMembers: 0,
       spiralState: {},
     });
+  }
+
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -99,6 +104,10 @@ export async function POST(req: NextRequest) {
       onboardedMembers: 0,
       spiralState: {},
     });
+  }
+
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

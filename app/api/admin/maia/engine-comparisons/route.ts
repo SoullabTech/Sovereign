@@ -11,19 +11,19 @@
  *   ?status=unreviewed|reviewed|all  (default: unreviewed)
  *   ?limit=N                          (default: 50, clamped 1..200)
  *
- * Auth: x-member-id header (matches /admin/maia/substrate convention).
+ * Auth: isAdminRequest (LABTOOLS_ADMIN_PASSWORD via x-admin-password).
  * Read-only.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const url = new URL(request.url);
