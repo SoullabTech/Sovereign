@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { TeamMessage, MessageKind } from '@/lib/team/types';
+import { MessageText } from './MessageText';
 
 const KIND_BADGE: Record<Exclude<MessageKind, 'build'>, { label: string; className: string }> = {
   question: {
@@ -121,7 +122,7 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
         </div>
 
         <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-          {message.body}
+          <MessageText body={message.body} />
         </p>
 
         {/* Reactions */}
