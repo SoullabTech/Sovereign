@@ -5,6 +5,7 @@ import type { DMMessage, DMThread } from '@/lib/team/DMService';
 import { MessageInput } from './MessageInput';
 import { MessageText } from './MessageText';
 import { MessageEditor } from './MessageEditor';
+import { MessageDeleteConfirm } from './MessageDeleteConfirm';
 import { useChannelStream } from './useChannelStream';
 import { DMProfileCard } from './DMProfileCard';
 
@@ -28,6 +29,7 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
   const [messages, setMessages] = useState<DMMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
 
@@ -102,6 +104,16 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
     ));
   };
 
+  const handleDelete = async (messageId: string) => {
+    const res = await fetch(`/api/team/dm/${dmThread.id}/messages`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId }),
+    });
+    if (!res.ok) throw new Error('Failed to delete');
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -168,6 +180,7 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
           const isOwn = msg.senderId === currentMemberId;
           const initials = msg.senderName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
           const isEditing = editingId === msg.id;
+          const isConfirmingDelete = confirmingDeleteId === msg.id;
           return (
             <div key={msg.id} className="group relative flex gap-3 px-4 py-1.5 hover:bg-white/[0.03] rounded-lg transition-colors">
               <div
@@ -196,17 +209,34 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
                     <MessageText body={msg.body} />
                   </p>
                 )}
+                {isConfirmingDelete && (
+                  <MessageDeleteConfirm
+                    onConfirm={() => handleDelete(msg.id)}
+                    onCancel={() => setConfirmingDeleteId(null)}
+                  />
+                )}
               </div>
-              {isOwn && !isEditing && (
-                <button
-                  onClick={() => setEditingId(msg.id)}
-                  className="absolute right-3 top-1.5 opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 rounded transition-all"
-                  title="Edit message"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
+              {isOwn && !isEditing && !isConfirmingDelete && (
+                <div className="absolute right-3 top-1.5 opacity-0 group-hover:opacity-100 flex gap-0.5 transition-all">
+                  <button
+                    onClick={() => setEditingId(msg.id)}
+                    className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 rounded transition-colors"
+                    title="Edit message"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDeleteId(msg.id)}
+                    className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-white/10 rounded transition-colors"
+                    title="Delete message"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               )}
             </div>
           );

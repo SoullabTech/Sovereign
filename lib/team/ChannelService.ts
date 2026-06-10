@@ -510,6 +510,32 @@ export async function editMessage(
   };
 }
 
+/**
+ * Soft-delete a message. Ownership is enforced in SQL — the UPDATE only matches
+ * when sender_id = deleterId (and the message isn't already deleted), scoped to the
+ * channel. Sets deleted_at AND clears the body so the content is genuinely removed,
+ * not just hidden (all read paths already filter deleted_at IS NULL). The row is
+ * kept (not hard-deleted) so thread replies that FK-reference it stay valid.
+ * Returns true if a row was deleted.
+ */
+export async function deleteMessage(
+  channelId: string,
+  messageId: string,
+  deleterId: string
+): Promise<boolean> {
+  const result = await query<{ id: string }>(
+    `UPDATE team_messages
+        SET deleted_at = NOW(), body = ''
+      WHERE id = $1
+        AND channel_id = $2
+        AND sender_id = $3
+        AND deleted_at IS NULL
+      RETURNING id`,
+    [messageId, channelId, deleterId]
+  );
+  return result.rows.length > 0;
+}
+
 export async function markChannelRead(channelId: string, memberId: string): Promise<void> {
   await query(
     `INSERT INTO team_channel_reads (channel_id, member_id, last_read_at)

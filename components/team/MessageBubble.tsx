@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { TeamMessage, MessageKind } from '@/lib/team/types';
 import { MessageText } from './MessageText';
 import { MessageEditor } from './MessageEditor';
+import { MessageDeleteConfirm } from './MessageDeleteConfirm';
 
 const KIND_BADGE: Record<Exclude<MessageKind, 'build'>, { label: string; className: string }> = {
   question: {
@@ -43,6 +44,8 @@ interface MessageBubbleProps {
   onCaptureDecision?: (messageId: string) => void;
   /** Persist a text edit. When provided, own messages show an edit affordance. */
   onEdit?: (messageId: string, newBody: string) => Promise<void>;
+  /** Delete the message. When provided, own messages show a delete affordance. */
+  onDelete?: (messageId: string) => Promise<void>;
   captured?: boolean;
 }
 
@@ -62,13 +65,15 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, onEdit, captured }: MessageBubbleProps) {
+export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, onEdit, onDelete, captured }: MessageBubbleProps) {
   const [showReactions, setShowReactions] = useState(false);
   const [showReflectMenu, setShowReflectMenu] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const isOwn = message.senderId === currentMemberId;
   const isMaia = message.senderType === 'maia';
   const canEdit = isOwn && !isMaia && !!onEdit;
+  const canDelete = isOwn && !isMaia && !!onDelete;
 
   const initials = isMaia
     ? 'M'
@@ -138,6 +143,13 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           </p>
         )}
 
+        {confirmingDelete && onDelete && !editing && (
+          <MessageDeleteConfirm
+            onConfirm={() => onDelete(message.id)}
+            onCancel={() => setConfirmingDelete(false)}
+          />
+        )}
+
         {/* Reactions */}
         {message.reactions.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
@@ -183,8 +195,8 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
         )}
       </div>
 
-      {/* Quick reaction toolbar (hover) — not shown for MAIA messages or while editing */}
-      {showReactions && !isMaia && !editing && (
+      {/* Quick reaction toolbar (hover) — not shown for MAIA messages or while editing/deleting */}
+      {showReactions && !isMaia && !editing && !confirmingDelete && (
         <div className="absolute right-4 -top-4 flex gap-0.5 bg-zinc-800 border border-white/10 rounded-lg p-1 shadow-xl z-10">
           {QUICK_REACTIONS.map(emoji => (
             <button
@@ -204,6 +216,17 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => { setConfirmingDelete(true); setShowReactions(false); setShowReflectMenu(false); }}
+              className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-white/10 rounded transition-colors ml-0.5"
+              title="Delete message"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
           )}

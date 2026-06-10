@@ -216,6 +216,17 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     ));
   };
 
+  const handleDelete = async (messageId: string) => {
+    const res = await fetch(`/api/team/channels/${channel.id}/messages`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId }),
+    });
+    if (res.status === 403) { handleAccessRevoked(); throw new Error('Access revoked'); }
+    if (!res.ok) throw new Error('Failed to delete');
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  };
+
   const handleReflect = async (messageId: string, mode: string) => {
     const msg = messages.find(m => m.id === messageId);
     if (!msg) return;
@@ -424,6 +435,7 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
                 onReflect={handleReflect}
                 onCaptureDecision={handleCaptureDecision}
                 onEdit={handleEdit}
+                onDelete={handleDelete}
                 captured={capturedIds.has(msg.id)}
               />
             </div>

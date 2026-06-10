@@ -361,6 +361,31 @@ export async function editDMMessage(
   };
 }
 
+/**
+ * Soft-delete a DM message. Ownership is enforced in SQL — the UPDATE only matches
+ * when sender_id = deleterId (and the message isn't already deleted), scoped to the
+ * thread. Sets deleted_at AND clears the body so the content is genuinely removed,
+ * not just hidden (all read paths filter deleted_at IS NULL). Returns true if a row
+ * was deleted.
+ */
+export async function deleteDMMessage(
+  dmThreadId: string,
+  messageId: string,
+  deleterId: string
+): Promise<boolean> {
+  const result = await query<{ id: string }>(
+    `UPDATE team_dm_messages
+        SET deleted_at = NOW(), body = ''
+      WHERE id = $1
+        AND dm_thread_id = $2
+        AND sender_id = $3
+        AND deleted_at IS NULL
+      RETURNING id`,
+    [messageId, dmThreadId, deleterId]
+  );
+  return result.rows.length > 0;
+}
+
 export async function markDMRead(dmThreadId: string, memberId: string): Promise<void> {
   await query(
     `UPDATE team_dm_members SET last_read_at = NOW()

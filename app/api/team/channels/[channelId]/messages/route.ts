@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { getMessages, getReplies, sendMessage, editMessage, markChannelRead } from '@/lib/team/ChannelService';
+import { getMessages, getReplies, sendMessage, editMessage, deleteMessage, markChannelRead } from '@/lib/team/ChannelService';
 import { getSenderAttentionStates, COLAB_MESSAGE } from '@/lib/team/attention';
 import { requireChannelAccess } from '@/lib/team/permissions';
 
@@ -143,4 +143,30 @@ export async function PATCH(
     const status = msg.includes('not found') || msg.includes('not editable') ? 404 : 400;
     return NextResponse.json({ error: msg }, { status });
   }
+}
+
+// Soft-delete a message. Only the original author may delete (enforced in SQL by
+// deleteMessage). The message id is in the body; channel access is checked first.
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ channelId: string }> }
+) {
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { channelId } = await params;
+
+  const access = await requireChannelAccess(channelId, memberId);
+  if (!access.allowed) {
+    const status = access.reason === 'not_found' ? 404 : 403;
+    return NextResponse.json({ error: access.reason ?? 'Forbidden' }, { status });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const messageId = typeof body.messageId === 'string' ? body.messageId : '';
+  if (!messageId) return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+
+  const deleted = await deleteMessage(channelId, messageId, memberId);
+  if (!deleted) return NextResponse.json({ error: 'Message not found or not deletable' }, { status: 404 });
+  return NextResponse.json({ ok: true });
 }
