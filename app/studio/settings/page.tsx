@@ -308,9 +308,9 @@ function SettingsContent() {
   };
 
   const [settings, setSettings] = useState({
-    // Profile
-    displayName: 'Operator',
-    email: 'operator@soullab.life',
+    // Profile (loaded from /api/studio/profile on mount)
+    displayName: '',
+    email: '',
 
     // Notifications
     notifyOnAgentComplete: true,
@@ -340,6 +340,71 @@ function SettingsContent() {
   const updateSetting = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
+
+  // ─── Profile ──────────────────────────────────────────────
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await apiFetch('/api/studio/profile');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.profile) {
+            setSettings(prev => ({
+              ...prev,
+              displayName: data.profile.name ?? '',
+              email: data.profile.email ?? '',
+            }));
+          }
+        } else {
+          console.error('[Settings] Profile load failed:', res.status);
+        }
+      } catch (error) {
+        console.error('[Settings] Profile load error:', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
+
+  async function saveProfile() {
+    const name = settings.displayName.trim();
+    if (!name) {
+      setProfileError('Display name cannot be empty');
+      return;
+    }
+    setProfileSaving(true);
+    setProfileSaved(false);
+    setProfileError(null);
+    try {
+      const res = await apiFetch('/api/studio/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setProfileError(data.error || 'Failed to save profile');
+        return;
+      }
+      const data = await res.json();
+      if (data.profile?.name) {
+        setSettings(prev => ({ ...prev, displayName: data.profile.name }));
+      }
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2500);
+    } catch (error) {
+      console.error('[Settings] Profile save error:', error);
+      setProfileError('Failed to save profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   // ─── Studio Mode ──────────────────────────────────────────
   const [studioMode, setStudioMode] = useState<'personal' | 'practice'>('practice');
@@ -560,27 +625,62 @@ function SettingsContent() {
               <p className="text-sm text-slate-400">Manage your account settings</p>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Display Name</label>
-                <input
-                  type="text"
-                  value={settings.displayName}
-                  onChange={(e) => updateSetting('displayName', e.target.value)}
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
-                />
+            {profileLoading ? (
+              <div className="flex items-center gap-3 p-8 justify-center">
+                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                <span className="text-slate-400">Loading profile...</span>
               </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Display Name</label>
+                  <input
+                    type="text"
+                    value={settings.displayName}
+                    onChange={(e) => {
+                      updateSetting('displayName', e.target.value);
+                      setProfileSaved(false);
+                      setProfileError(null);
+                    }}
+                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={settings.email}
-                  onChange={(e) => updateSetting('email', e.target.value)}
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
-                />
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={settings.email}
+                    readOnly
+                    className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-slate-400 cursor-not-allowed focus:outline-none"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Email is tied to your account and can&apos;t be changed here.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    onClick={saveProfile}
+                    disabled={profileSaving}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors disabled:opacity-50"
+                  >
+                    {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save Changes
+                  </button>
+                  {profileSaved && (
+                    <span className="flex items-center gap-1.5 text-sm text-teal-400">
+                      <CheckCircle2 className="w-4 h-4" /> Saved
+                    </span>
+                  )}
+                  {profileError && (
+                    <span className="flex items-center gap-1.5 text-sm text-red-400">
+                      <AlertCircle className="w-4 h-4" /> {profileError}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -1499,13 +1599,15 @@ function SettingsContent() {
           </div>
         )}
 
-        {/* Save Button */}
-        <div className="mt-8 pt-6 border-t border-slate-800">
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors">
-            <Save className="w-4 h-4" />
-            Save Changes
-          </button>
-        </div>
+        {/* Save Button — Profile and Modules have their own working save buttons */}
+        {activeSection !== 'profile' && activeSection !== 'modules' && (
+          <div className="mt-8 pt-6 border-t border-slate-800">
+            <button className="flex items-center gap-2 px-6 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors">
+              <Save className="w-4 h-4" />
+              Save Changes
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

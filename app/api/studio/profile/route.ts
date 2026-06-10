@@ -22,6 +22,7 @@ import { updatePractitioner } from '@/lib/practitioner/practitionerService';
 interface ProfileWire {
   id: string;
   name: string;
+  email: string | null;
   business_name: string | null;
   tagline: string | null;
   bio: string | null;
@@ -31,7 +32,7 @@ interface ProfileWire {
 
 async function loadProfile(practitionerId: string): Promise<ProfileWire | null> {
   const result = await db.query(
-    `SELECT id, name, business_name, tagline, bio, slug, updated_at
+    `SELECT id, name, email, business_name, tagline, bio, slug, updated_at
      FROM practitioners
      WHERE id = $1`,
     [practitionerId]
@@ -41,6 +42,7 @@ async function loadProfile(practitionerId: string): Promise<ProfileWire | null> 
   return {
     id: row.id,
     name: row.name,
+    email: row.email,
     business_name: row.business_name,
     tagline: row.tagline,
     bio: row.bio,
