@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { Resend } from 'resend';
+import { resolveTeamIdForInviter, addMemberToTeam } from '@/lib/team/teamMembership';
 
 export const dynamic = 'force-dynamic';
+
+const FROM = 'Soullab <noreply@soullab.life>';
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -28,19 +31,57 @@ export async function POST(request: NextRequest) {
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  // Check if this email is already a member
+  // Inviter display name — used in both the new-invite and existing-member emails.
+  const inviterRes = await query<{ name: string | null; username: string }>(
+    `SELECT name, username FROM members WHERE id = $1`,
+    [memberId]
+  );
+  const inviter = inviterRes.rows[0];
+  const inviterName = inviter?.name || inviter?.username || 'A Soullab member';
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://soullab.life';
+
+  // ── Existing member ────────────────────────────────────────────────
+  // They already have a Soullab account. Don't dead-end: add them to the
+  // inviter's workspace and point them at sign-in (no invite token needed).
   const existing = await query<{ id: string }>(
     `SELECT id FROM members WHERE LOWER(email) = $1`,
     [normalizedEmail]
   );
   if (existing.rows.length > 0) {
-    return NextResponse.json({
-      alreadyMember: true,
-      message: 'This person already has a Soullab account',
-    });
+    const existingMemberId = existing.rows[0].id;
+    const teamId = await resolveTeamIdForInviter(memberId);
+    const addedToTeam = teamId ? await addMemberToTeam(teamId, existingMemberId) : false;
+
+    const signinUrl = `${appUrl}/signin`;
+    try {
+      await getResend().emails.send({
+        from: FROM,
+        to: normalizedEmail,
+        subject: `${inviterName} added you to the Soullab Co-lab`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
+            <h2 style="color:#d4b896;">You're in the Soullab Co-lab</h2>
+            <p>${inviterName} added you to the Soullab team workspace.</p>
+            ${message ? `<p style="color:#666;font-style:italic;">"${message}"</p>` : ''}
+            <p>You already have a Soullab account — just sign in to join the conversation.</p>
+            <a href="${signinUrl}"
+               style="display:inline-block;margin-top:16px;padding:12px 24px;background:#f59e0b;color:#000;text-decoration:none;border-radius:8px;font-weight:600;">
+              Sign in to Soullab
+            </a>
+          </div>
+        `,
+      });
+    } catch (emailErr) {
+      console.error('[team/invite] Failed to send existing-member email:', emailErr);
+      // Non-fatal — the member was still added to the workspace.
+    }
+
+    return NextResponse.json({ ok: true, alreadyMember: true, addedToTeam });
   }
 
-  // Check for pending invite for this email
+  // ── New person ─────────────────────────────────────────────────────
+  // Check for an existing pending invite for this email.
   const pendingInvite = await query<{ id: string; token: string }>(
     `SELECT id, token FROM team_invites
      WHERE LOWER(email) = $1 AND accepted_at IS NULL AND expires_at > NOW()
@@ -71,21 +112,11 @@ export async function POST(request: NextRequest) {
     token = insert.rows[0].token;
   }
 
-  // Fetch inviter name
-  const inviterRes = await query<{ name: string | null; username: string }>(
-    `SELECT name, username FROM members WHERE id = $1`,
-    [memberId]
-  );
-  const inviter = inviterRes.rows[0];
-  const inviterName = inviter?.name || inviter?.username || 'A Soullab member';
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://soullab.life';
   const acceptUrl = `${appUrl}/team/invite/${token}`;
 
   try {
-    const resend = getResend();
-    await resend.emails.send({
-      from: 'Soullab <noreply@soullab.life>',
+    await getResend().emails.send({
+      from: FROM,
       to: normalizedEmail,
       subject: `${inviterName} invited you to Soullab`,
       html: `

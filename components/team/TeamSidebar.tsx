@@ -181,6 +181,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [existing, setExisting] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,12 +195,9 @@ function InviteModal({ onClose }: { onClose: () => void }) {
       });
       if (res.ok) {
         const d = await res.json();
-        if (d.alreadyMember) {
-          setErrorMsg('This person already has a Soullab account — they can sign in at soullab.life/signin');
-          setStatus('error');
-        } else {
-          setStatus('sent');
-        }
+        // Existing accounts are added to the workspace directly; new people get an invite link.
+        setExisting(Boolean(d.alreadyMember));
+        setStatus('sent');
       } else {
         const d = await res.json().catch(() => ({}));
         setErrorMsg(d.error ?? 'Failed to send invite');
@@ -220,8 +218,14 @@ function InviteModal({ onClose }: { onClose: () => void }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-white/90">Invite sent to {email}</p>
-          <p className="text-xs text-white/40">They'll receive an email with a link to join.</p>
+          <p className="text-sm font-semibold text-white/90">
+            {existing ? `${email} added to the Co-lab` : `Invite sent to ${email}`}
+          </p>
+          <p className="text-xs text-white/40">
+            {existing
+              ? 'They already have a Soullab account — we emailed them a sign-in link.'
+              : "They'll receive an email with a link to join."}
+          </p>
           <button onClick={onClose} className="text-xs text-white/30 hover:text-white/60 transition-colors">Close</button>
         </div>
       </div>
