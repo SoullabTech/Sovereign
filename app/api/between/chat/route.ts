@@ -376,17 +376,13 @@ if (!IS_PROD && process.env.MAIA_MEMORY_SIM_HEADERS === '1') {
   console.warn('[Boot] ⚠️ MAIA_MEMORY_SIM_HEADERS=1 — simulation headers are ENABLED');
 }
 
-// 🚨 LOUD WARNING: Body ID trust is enabled in production
-// This allows clients to spoof userId - only for local Docker testing!
+// MAIA_TRUST_BODY_ID_IN_PROD is permanently disabled — it used to let a client
+// spoof userId via a body field in production (impersonation footgun). Warn
+// loudly if the stale env var is still set so it gets removed.
 if (IS_PROD && process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1') {
-  console.error('');
-  console.error('╔══════════════════════════════════════════════════════════════╗');
-  console.error('║  🚨 SECURITY WARNING: MAIA_TRUST_BODY_ID_IN_PROD=1           ║');
-  console.error('║  Client-supplied userId will be TRUSTED in production.       ║');
-  console.error('║  This enables userId spoofing — use ONLY for local testing!  ║');
-  console.error('║  If this is real production, REMOVE this env var immediately.║');
-  console.error('╚══════════════════════════════════════════════════════════════╝');
-  console.error('');
+  console.warn(
+    '[Boot] MAIA_TRUST_BODY_ID_IN_PROD is set but IGNORED — body-id trust is permanently disabled in production. Remove this env var.'
+  );
 }
 
 // Audit fingerprint secret - must be set in production for secure correlation
@@ -903,11 +899,11 @@ export async function POST(req: NextRequest) {
     // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
     const explorerId = meta?.explorerId;
 
-    // 🔐 TWO-KEY SAFETY: Trust body ID requires explicit opt-in
-    // In production, BOTH flags must be set to allow body ID trust (prevents accidental exposure)
+    // 🔐 DEV-ONLY: Trust body ID is a local-testing convenience and can NEVER
+    // apply in production. The MAIA_TRUST_BODY_ID_IN_PROD prod escape hatch was
+    // removed — it let a client spoof identity via a body field (impersonation).
     const TRUST_BODY_ID =
-      process.env.MAIA_DEV_TRUST_BODY_ID === '1' &&
-      (!IS_PROD || process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1');
+      process.env.MAIA_DEV_TRUST_BODY_ID === '1' && !IS_PROD;
 
     // =========================================================================
     // SERVER-SIDE IDENTITY: Validate session and derive identity server-side
