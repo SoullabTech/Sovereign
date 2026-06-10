@@ -74,6 +74,12 @@ export async function POST(request: NextRequest) {
         ]
       );
 
+      // Keep members.is_practitioner in sync with the authoritative practitioners row.
+      await client.query(
+        `UPDATE members SET is_practitioner = true, updated_at = NOW() WHERE id = $1`,
+        [memberId]
+      );
+
       // Create default theme record
       const themeId = uuid();
       const defaultTheme = {

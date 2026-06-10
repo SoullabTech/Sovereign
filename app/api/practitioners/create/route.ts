@@ -153,6 +153,15 @@ export async function POST(request: NextRequest) {
         ]
       );
 
+      // Keep members.is_practitioner in sync with the authoritative practitioners
+      // row. The Studio gate (getCurrentPractitioner) reads the practitioners table
+      // directly, but auth whoami, Nostr practitioner gating, caseload, and the team
+      // practitioner badge all read this flag — so it must be set on creation.
+      await client.query(
+        `UPDATE members SET is_practitioner = true, updated_at = NOW() WHERE id = $1`,
+        [memberId]
+      );
+
       // Create initial practitioner_themes record with defaults
       const themeId = uuid();
       const defaultTheme = {

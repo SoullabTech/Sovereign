@@ -192,8 +192,7 @@ export async function POST(request: NextRequest) {
     if (!effectiveDisclosure) {
       try {
         const settingsResult = await db.query(
-          `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default' AND member_id = $1`,
-          [memberId]
+          `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default'`
         );
         effectiveDisclosure = settingsResult.rows[0]?.value || 'generic';
       } catch {

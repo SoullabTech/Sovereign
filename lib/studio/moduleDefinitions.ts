@@ -95,6 +95,12 @@ export interface ModuleDefinition {
   alwaysOn: boolean;
   /** Which mode this module appears in. Defaults to 'both' if omitted. */
   mode: ModuleMode;
+  /**
+   * When true, the module is hidden from nav (getVisibleModules filters it out)
+   * regardless of presets or enabled_modules. Use for surfaces with no working
+   * backend yet — avoids shipping a broken door. Reversible: remove the flag.
+   */
+  comingSoon?: boolean;
 }
 
 // ─── All Modules (ordered as they appear in nav) ────────
@@ -276,6 +282,10 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Secure document and note storage',
     alwaysOn: false,
     mode: 'both',
+    // No backend yet: /api/vault/files and the vault_files table do not exist, so
+    // the page 404s on load. Hidden until the storage backend is built/validated.
+    // See docs/architecture/PRACTITIONER_STUDIO_INVENTORY_2026-06-06.md
+    comingSoon: true,
   },
   {
     slug: 'media',
@@ -397,6 +407,9 @@ export function getVisibleModules(
   const all = new Set([...alwaysOn, ...slugs]);
 
   let modules = MODULE_DEFINITIONS.filter(m => all.has(m.slug));
+
+  // Hide modules with no working backend yet (e.g. Vault) regardless of source.
+  modules = modules.filter(m => !m.comingSoon);
 
   // Filter by studio mode if provided
   if (studioMode === 'personal') {
