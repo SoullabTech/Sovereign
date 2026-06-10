@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { DMMessage, DMThread } from '@/lib/team/DMService';
 import { MessageInput } from './MessageInput';
+import { MessageText } from './MessageText';
 import { useChannelStream } from './useChannelStream';
 import { DMProfileCard } from './DMProfileCard';
 
@@ -168,7 +169,7 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
                   <span className="text-xs text-white/30">{formatTime(msg.createdAt)}</span>
                 </div>
                 <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-                  {msg.body}
+                  <MessageText body={msg.body} />
                 </p>
               </div>
             </div>

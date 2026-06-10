@@ -24,7 +24,11 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
   const [structured, setStructured] = useState(false);
   const [scaffoldValues, setScaffoldValues] = useState<Record<string, string>>({});
   const [selectedKind, setSelectedKind] = useState<MessageKind>('build');
+  const [showLinkForm, setShowLinkForm] = useState(false);
+  const [linkText, setLinkText] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const selectionRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
 
   const hasScaffold = promptScaffold && promptScaffold.length > 0;
 
@@ -34,6 +38,58 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 160) + 'px';
   }, []);
+
+  // Open the "insert link" popover, remembering the caret/selection so we can
+  // splice the link back in at the right spot. Any selected text pre-fills the label.
+  const openLinkForm = useCallback(() => {
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? value.length;
+    const end = el?.selectionEnd ?? value.length;
+    selectionRef.current = { start, end };
+    setLinkText(value.slice(start, end));
+    setLinkUrl('');
+    setShowLinkForm(true);
+  }, [value]);
+
+  const insertLink = useCallback(() => {
+    let url = linkUrl.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    const label = linkText.trim();
+    const snippet = label ? `[${label}](${url})` : url;
+    const { start, end } = selectionRef.current;
+    setValue(value.slice(0, start) + snippet + value.slice(end));
+    setShowLinkForm(false);
+    setLinkText('');
+    setLinkUrl('');
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const pos = start + snippet.length;
+      el.focus();
+      el.setSelectionRange(pos, pos);
+      autoResize();
+    });
+  }, [linkUrl, linkText, value, autoResize]);
+
+  // Select text, then paste a URL → wrap it as a named link (Slack/iMessage behavior).
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const pasted = e.clipboardData.getData('text').trim();
+    const { selectionStart: start, selectionEnd: end } = el;
+    if (start !== end && /^https?:\/\/\S+$/i.test(pasted)) {
+      e.preventDefault();
+      const snippet = `[${value.slice(start, end)}](${pasted})`;
+      setValue(value.slice(0, start) + snippet + value.slice(end));
+      requestAnimationFrame(() => {
+        const pos = start + snippet.length;
+        el.focus();
+        el.setSelectionRange(pos, pos);
+        autoResize();
+      });
+    }
+  }, [value, autoResize]);
 
   const serializeScaffold = (): string => {
     if (!promptScaffold) return '';
@@ -141,18 +197,76 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
         </div>
       ) : (
         /* Freeform mode: original textarea */
-        <div className="flex items-end gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus-within:border-amber-500/40 transition-colors">
+        <div className="relative flex items-end gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus-within:border-amber-500/40 transition-colors">
+          {/* Insert-link popover */}
+          {showLinkForm && (
+            <div className="absolute bottom-full left-0 mb-2 w-72 bg-zinc-800 border border-white/12 rounded-xl p-3 shadow-xl z-30">
+              <p className="text-xs font-medium text-white/50 mb-2">Insert link</p>
+              <input
+                autoFocus
+                value={linkText}
+                onChange={e => setLinkText(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { e.preventDefault(); insertLink(); }
+                  if (e.key === 'Escape') setShowLinkForm(false);
+                }}
+                placeholder="Text to show (optional)"
+                className="w-full mb-2 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-sm text-white/90 placeholder-white/25 outline-none focus:border-amber-500/40 transition-colors"
+              />
+              <input
+                value={linkUrl}
+                onChange={e => setLinkUrl(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { e.preventDefault(); insertLink(); }
+                  if (e.key === 'Escape') setShowLinkForm(false);
+                }}
+                placeholder="Paste URL — e.g. https://…"
+                className="w-full mb-3 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-sm text-white/90 placeholder-white/25 outline-none focus:border-amber-500/40 transition-colors"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowLinkForm(false)}
+                  className="text-xs px-3 py-1.5 rounded-lg text-white/40 hover:text-white/70 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={insertLink}
+                  disabled={!linkUrl.trim()}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/80 text-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-amber-400 transition-colors font-medium"
+                >
+                  Insert
+                </button>
+              </div>
+            </div>
+          )}
           <textarea
             ref={textareaRef}
             value={value}
             onChange={e => { setValue(e.target.value); autoResize(); }}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder={`Message #${channelName}`}
             disabled={disabled || sending}
             rows={1}
             className="flex-1 bg-transparent text-sm text-white/90 placeholder-white/25 resize-none outline-none leading-relaxed py-1"
             style={{ minHeight: '24px', maxHeight: '160px' }}
           />
+          {/* Insert link */}
+          <button
+            type="button"
+            onClick={() => (showLinkForm ? setShowLinkForm(false) : openLinkForm())}
+            disabled={disabled || sending}
+            className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/35 hover:text-amber-300 hover:bg-white/10 transition-colors mb-0.5 disabled:opacity-30"
+            title="Insert link"
+            aria-label="Insert link"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5M10.172 13.828a4 4 0 010-5.656l3-3a4 4 0 015.656 5.656l-1.5 1.5" />
+            </svg>
+          </button>
           {/* Kind selector — secondary, minimal */}
           <select
             value={selectedKind}
@@ -183,7 +297,7 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
 
       {!structured && (
         <p className="text-xs text-white/20 mt-1.5 pl-1">
-          Enter to send · Shift+Enter for new line
+          Enter to send · Shift+Enter for new line · 🔗 or select text then paste a URL to name a link
         </p>
       )}
     </div>
