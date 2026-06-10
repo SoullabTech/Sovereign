@@ -166,7 +166,7 @@ export async function DELETE(
   const messageId = typeof body.messageId === 'string' ? body.messageId : '';
   if (!messageId) return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
 
-  const deleted = await deleteMessage(channelId, messageId, memberId);
+  const { deleted, tombstoned } = await deleteMessage(channelId, messageId, memberId);
   if (!deleted) return NextResponse.json({ error: 'Message not found or not deletable' }, { status: 404 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, tombstoned });
 }

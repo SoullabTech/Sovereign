@@ -185,7 +185,16 @@ export async function getMessages(
      LEFT JOIN team_messages replies ON replies.parent_id = tm.id AND replies.deleted_at IS NULL
      WHERE tm.channel_id = $1
        AND tm.parent_id IS NULL
-       AND tm.deleted_at IS NULL
+       AND (
+         tm.deleted_at IS NULL
+         -- A deleted parent that still has live replies stays visible as a
+         -- "[deleted]" tombstone, so the thread (and its replies) remains reachable
+         -- and nothing downstream trips over orphaned replies under a hidden parent.
+         OR EXISTS (
+           SELECT 1 FROM team_messages r
+           WHERE r.parent_id = tm.id AND r.deleted_at IS NULL
+         )
+       )
        ${beforeClause}
      GROUP BY tm.id, m.name, m.username
      ORDER BY tm.created_at ASC
@@ -516,24 +525,39 @@ export async function editMessage(
  * channel. Sets deleted_at AND clears the body so the content is genuinely removed,
  * not just hidden (all read paths already filter deleted_at IS NULL). The row is
  * kept (not hard-deleted) so thread replies that FK-reference it stay valid.
- * Returns true if a row was deleted.
+ *
+ * Returns { deleted, tombstoned }. `tombstoned` is true when the deleted message is
+ * a top-level message that still has live replies — getMessages keeps surfacing it
+ * as a "[deleted]" placeholder so the thread stays reachable. A childless message
+ * (or any reply) is fully hidden instead.
  */
 export async function deleteMessage(
   channelId: string,
   messageId: string,
   deleterId: string
-): Promise<boolean> {
-  const result = await query<{ id: string }>(
+): Promise<{ deleted: boolean; tombstoned: boolean }> {
+  const result = await query<{ id: string; parent_id: string | null }>(
     `UPDATE team_messages
         SET deleted_at = NOW(), body = ''
       WHERE id = $1
         AND channel_id = $2
         AND sender_id = $3
         AND deleted_at IS NULL
-      RETURNING id`,
+      RETURNING id, parent_id`,
     [messageId, channelId, deleterId]
   );
-  return result.rows.length > 0;
+  const row = result.rows[0];
+  if (!row) return { deleted: false, tombstoned: false };
+
+  let tombstoned = false;
+  if (row.parent_id === null) {
+    const replies = await query(
+      `SELECT 1 FROM team_messages WHERE parent_id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [messageId]
+    );
+    tombstoned = replies.rows.length > 0;
+  }
+  return { deleted: true, tombstoned };
 }
 
 export async function markChannelRead(channelId: string, memberId: string): Promise<void> {

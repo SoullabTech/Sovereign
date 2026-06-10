@@ -224,7 +224,15 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     });
     if (res.status === 403) { handleAccessRevoked(); throw new Error('Access revoked'); }
     if (!res.ok) throw new Error('Failed to delete');
-    setMessages(prev => prev.filter(m => m.id !== messageId));
+    const { tombstoned } = await res.json().catch(() => ({ tombstoned: false }));
+    setMessages(prev =>
+      tombstoned
+        // Parent with live replies: keep it as a "[deleted]" tombstone so the thread stays reachable.
+        ? prev.map(m => m.id === messageId
+            ? { ...m, body: '', deletedAt: new Date().toISOString(), reactions: [] }
+            : m)
+        : prev.filter(m => m.id !== messageId)
+    );
   };
 
   const handleReflect = async (messageId: string, mode: string) => {
