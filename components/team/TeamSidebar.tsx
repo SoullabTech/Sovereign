@@ -70,9 +70,39 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
   const [error, setError] = useState('');
   const nameRef = useRef<HTMLInputElement>(null);
 
+  // Roster picker (private channels only). Lazy-loaded the first time the
+  // channel is marked private so public-channel creation makes no extra fetch.
+  const [allMembers, setAllMembers] = useState<{ memberId: string; name: string }[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [memberSearch, setMemberSearch] = useState('');
+
   useEffect(() => { nameRef.current?.focus(); }, []);
 
+  useEffect(() => {
+    if (!isPrivate || allMembers.length > 0) return;
+    let cancelled = false;
+    fetch('/api/team/members')
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => { if (!cancelled) setAllMembers(d.members ?? []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isPrivate, allMembers.length]);
+
+  const toggleMember = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  const searchLower = memberSearch.toLowerCase();
+  const pickable = allMembers.filter(m =>
+    m.memberId !== currentMemberId &&
+    (searchLower === '' || m.name.toLowerCase().includes(searchLower))
+  );
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +113,7 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
       const res = await fetch('/api/team/channels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type, isPrivate }),
+        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type, isPrivate, memberIds: isPrivate ? Array.from(selectedIds) : [] }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -151,15 +181,86 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-xs text-white/50 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={isPrivate}
-              onChange={e => setIsPrivate(e.target.checked)}
-              className="accent-amber-500"
-            />
-            Private — only invited members can see this channel
-          </label>
+          <div>
+            <label className="block text-xs text-white/40 mb-1">Visibility</label>
+            <div className="space-y-1">
+              <label className="flex items-start gap-2 text-xs cursor-pointer select-none py-0.5">
+                <input
+                  type="radio"
+                  name="channel-visibility"
+                  checked={!isPrivate}
+                  onChange={() => setIsPrivate(false)}
+                  className="accent-amber-500 mt-0.5"
+                />
+                <span>
+                  <span className="text-white/80">Public</span>
+                  <span className="block text-white/30">Everyone in Co-lab can see and join</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-xs cursor-pointer select-none py-0.5">
+                <input
+                  type="radio"
+                  name="channel-visibility"
+                  checked={isPrivate}
+                  onChange={() => setIsPrivate(true)}
+                  className="accent-amber-500 mt-0.5"
+                />
+                <span>
+                  <span className="text-white/80">Private</span>
+                  <span className="block text-white/30">Only invited members can see this channel</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {isPrivate && (
+            <div className="rounded-lg border border-white/10 bg-[#1a1a2e] p-2.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/40">
+                  Members{selectedIds.size > 0 ? ` · ${selectedIds.size} selected` : ''}
+                </span>
+                <span className="text-xs text-white/25">You're added as owner</span>
+              </div>
+              <input
+                value={memberSearch}
+                onChange={e => setMemberSearch(e.target.value)}
+                placeholder="Search people…"
+                className="w-full bg-zinc-800 border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
+              />
+              <div className="max-h-40 overflow-y-auto scrollbar-hide">
+                {pickable.length === 0 && (
+                  <p className="px-1 py-2 text-xs text-white/25">
+                    {allMembers.length === 0 ? 'Loading…' : 'No matches'}
+                  </p>
+                )}
+                {pickable.map(m => {
+                  const checked = selectedIds.has(m.memberId);
+                  return (
+                    <button
+                      key={m.memberId}
+                      type="button"
+                      onClick={() => toggleMember(m.memberId)}
+                      className="w-full flex items-center gap-2 px-1.5 py-1.5 rounded-md hover:bg-white/5 transition-colors text-left"
+                    >
+                      <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 ${
+                        checked ? 'bg-amber-500 border-amber-500' : 'border-white/20'
+                      }`}>
+                        {checked && (
+                          <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                      <span className="text-xs text-white/75 truncate">{m.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-white/25 leading-relaxed">
+                Only you and the people you add can see or read this channel.
+              </p>
+            </div>
+          )}
 
           {error && <p className="text-xs text-red-400">{error}</p>}
 
