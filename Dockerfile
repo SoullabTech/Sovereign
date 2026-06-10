@@ -28,6 +28,8 @@ ENV MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder
 # Feature flags (NEXT_PUBLIC_* must be set at build time for Next.js inlining)
 ARG NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=true
 ENV NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=${NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS}
+ARG NEXT_PUBLIC_SHOW_BETA_BADGE=false
+ENV NEXT_PUBLIC_SHOW_BETA_BADGE=${NEXT_PUBLIC_SHOW_BETA_BADGE}
 
 # Install psql for SQL migrations (used by migrate service)
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
