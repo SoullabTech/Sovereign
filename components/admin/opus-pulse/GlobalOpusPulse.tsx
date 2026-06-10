@@ -3,6 +3,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { adminFetch } from '@/lib/admin/adminFetch';
 
 interface GlobalPulseStats {
   goldPercent: number;
@@ -17,7 +18,7 @@ export default function GlobalOpusPulse() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/admin/opus-pulse/summary');
+        const res = await adminFetch('/api/admin/opus-pulse/summary');
         if (!res.ok) return;
         const data = await res.json();
 

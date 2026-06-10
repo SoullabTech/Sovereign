@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { apiFetch } from '@/lib/http/apiBase'
+import { adminFetch } from '@/lib/admin/adminFetch'
 
 type CapabilityStatus =
   | 'not-built'
@@ -133,7 +133,7 @@ export default function AdminSubstratePage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await apiFetch('/api/admin/maia/substrate')
+      const res = await adminFetch('/api/admin/maia/substrate')
       if (!res.ok) {
         setError(`Request failed: ${res.status}`)
         return

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -97,6 +98,10 @@ export default function SystemAdminPage() {
 
       if (res.ok && data.success) {
         sessionStorage.setItem('maia_admin_token', data.token);
+        // Persist the validated admin password so adminFetch() can authorize this
+        // page's /api/admin/* calls — isAdminRequest expects the x-admin-password
+        // header, and /api/admin/auth validates the same LABTOOLS_ADMIN_PASSWORD.
+        storeAdminPassword(password);
         setAuthenticated(true);
       } else {
         setPasswordError(data.error || 'Authentication failed');
@@ -114,7 +119,7 @@ export default function SystemAdminPage() {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/settings');
+      const res = await adminFetch('/api/admin/settings');
       if (res.ok) {
         const data = await res.json();
         setSettings(data.settings || []);
@@ -141,7 +146,7 @@ export default function SystemAdminPage() {
   const updateSetting = async (key: string, value: any) => {
     setSaving(key);
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await adminFetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key, value, updatedBy: 'admin' }),

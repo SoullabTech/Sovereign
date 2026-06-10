@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { betaSession } from '@/lib/auth/betaSession';
+import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { SystemQualityPanel, LedgerRow } from '@/components/admin/research/SystemQualityPanel';
 import { PopulationPatternsPanel } from '@/components/admin/research/PopulationPatternsPanel';
@@ -55,9 +56,7 @@ export default function SystemIntelligencePage() {
   // ---------------------------------------------------------------------------
 
   const fetchOverview = useCallback(async (pwd: string): Promise<boolean> => {
-    const res = await fetch('/api/admin/research/overview?days=30', {
-      headers: { 'x-admin-password': pwd },
-    });
+    const res = await adminFetch('/api/admin/research/overview?days=30');
     if (res.status === 401) return false;
     if (!res.ok) throw new Error(`Overview API error: ${res.status}`);
     const data = await res.json();
@@ -66,9 +65,7 @@ export default function SystemIntelligencePage() {
   }, []);
 
   const fetchDirectives = useCallback(async (pwd: string) => {
-    const res = await fetch('/api/admin/research/directives', {
-      headers: { 'x-admin-password': pwd },
-    });
+    const res = await adminFetch('/api/admin/research/directives');
     if (!res.ok) throw new Error(`Directives API error: ${res.status}`);
     const data = await res.json();
     setDirectivesData(data);
@@ -102,6 +99,7 @@ export default function SystemIntelligencePage() {
     e.preventDefault();
     setAuthError(null);
     setAdminPassword(passwordInput);
+    storeAdminPassword(passwordInput);
     loadAll(passwordInput);
   }
 
@@ -110,12 +108,9 @@ export default function SystemIntelligencePage() {
   // ---------------------------------------------------------------------------
 
   async function patchDirective(body: Record<string, unknown>) {
-    const res = await fetch('/api/admin/research/directives', {
+    const res = await adminFetch('/api/admin/research/directives', {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-admin-password': adminPassword,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!res.ok) {
