@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
+import { resolveTeamIdForInviter, addMemberToTeam } from '@/lib/team/teamMembership';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,10 +32,11 @@ export async function POST(
   const inviteResult = await query<{
     id: string;
     email: string;
+    invited_by: string | null;
     accepted_at: string | null;
     expires_at: string;
   }>(
-    `SELECT id, email, accepted_at, expires_at FROM team_invites WHERE token = $1`,
+    `SELECT id, email, invited_by, accepted_at, expires_at FROM team_invites WHERE token = $1`,
     [token]
   );
 
@@ -67,6 +69,10 @@ export async function POST(
     `UPDATE team_invites SET accepted_at = NOW(), accepted_by = $1 WHERE id = $2`,
     [memberId, invite.id]
   );
+
+  // Add the new member to the inviter's team workspace (best-effort, non-fatal)
+  const teamId = await resolveTeamIdForInviter(invite.invited_by);
+  if (teamId) await addMemberToTeam(teamId, memberId);
 
   // Create session
   const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
