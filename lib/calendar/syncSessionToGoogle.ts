@@ -175,10 +175,11 @@ export async function syncAllPendingSessions(memberId: string): Promise<{
     return { synced: 0, failed: 0, skipped: 0 };
   }
 
-  // Load practitioner's disclosure default
+  // Load practitioner's disclosure default.
+  // studio_settings is a global key-value store (key is the PRIMARY KEY,
+  // no member_id column) — see migration 20260407000003_scheduling_disclosure.sql.
   const settingsResult = await query(
-    `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default' AND member_id = $1`,
-    [memberId]
+    `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default'`
   );
   const practitionerDefault: CalendarDisclosure =
     (settingsResult.rows[0]?.value as CalendarDisclosure) || 'generic';

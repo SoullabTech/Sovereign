@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="absolute bottom-24 left-32 w-1.5 h-1.5 bg-jade-forest/20 rounded-full animate-pulse delay-1000" />
 
       {/* Sacred Jade Navigation Sanctum */}
-      <aside className="relative w-80 border-r border-jade-forest/50 backdrop-blur-xl">
+      <aside className="relative w-80 border-r border-jade-forest/50 backdrop-blur-xl flex flex-col">
         {/* Multi-layered Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-jade-shadow/80 via-jade-night/60 to-jade-dusk/40" />
         <div className="absolute inset-0 bg-gradient-to-r from-jade-bronze/10 to-transparent" />
@@ -57,7 +57,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="absolute bottom-6 left-6 w-3 h-8 border-l border-t border-jade-bronze/50" />
         <div className="absolute bottom-6 right-6 w-3 h-8 border-r border-t border-jade-silver/50" />
 
-        <div className="relative z-10 p-8">
+        <div className="relative z-10 p-8 flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide">
           {/* Jade Neural Command Header */}
           <div className="mb-12">
             <div className="flex items-center gap-4 mb-6">

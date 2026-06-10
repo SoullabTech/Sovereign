@@ -59,6 +59,22 @@ type ProviderMixEntry = {
   count: number
 }
 
+type ProviderCognition = {
+  note: string
+  warning: string
+  currentProvider: string | null
+  currentModel: string | null
+  configuredProvider: string
+  fallbackActive: boolean | null
+  degraded: boolean
+  window: { turns: number; cap: number }
+  providerMix: ProviderMixEntry[]
+  localTurns: { count: number; percent: number }
+  claudeTurns: { count: number; percent: number }
+  fallbacksInWindow: number
+  lastObserved: string | null
+}
+
 type SubstratePayload = {
   generatedAt: string
   runtime: {
@@ -82,6 +98,7 @@ type SubstratePayload = {
     impoverishedRoutes: ImpoverishedRoute[]
   }
   claims: Claim[]
+  providerCognition?: ProviderCognition
 }
 
 const STATUS_COLOR: Record<CapabilityStatus, string> = {
@@ -174,6 +191,7 @@ export default function AdminSubstratePage() {
         {data && (
           <>
             <LiveRuntimeSection data={data} />
+            <ProviderCognitionSection pc={data.providerCognition} />
             <CapabilityClaimsSection claims={data.claims} />
             <ConsumptionMapSection
               active={data.consumption.active}
@@ -298,6 +316,69 @@ function LiveRuntimeSection({ data }: { data: SubstratePayload }) {
           </div>
         </details>
       )}
+    </section>
+  )
+}
+
+// ─── 1b. Provider / Sovereign Cognition ──────────────────────────────────────
+//
+// Cognition routing evidence — surfaced separately from memory-substrate health so
+// the monitor never conflates "does memory load?" with "which model answered?".
+
+function ProviderCognitionSection({ pc }: { pc?: ProviderCognition }) {
+  if (!pc) return null
+  return (
+    <section className="space-y-3">
+      <SectionHeader title="1b. Provider / Sovereign Cognition" subtitle={pc.note} />
+      <p className="border-l-2 border-sky-400/40 pl-4 italic text-sm text-maia-ink-100">
+        {pc.warning}
+      </p>
+      <div
+        className={`rounded border p-4 space-y-3 ${
+          pc.degraded ? 'border-amber-400/40 bg-amber-950/10' : 'border-sky-400/20 bg-maia-navy-900/40'
+        }`}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat label="Current provider" value={pc.currentProvider ?? '—'} accent={pc.degraded ? 'warn' : undefined} />
+          <Stat label="Current model" value={pc.currentModel ?? 'unset'} />
+          <Stat label="Configured provider" value={pc.configuredProvider} />
+          <Stat label="Degraded" value={pc.degraded ? 'YES' : 'no'} accent={pc.degraded ? 'warn' : undefined} />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat
+            label="Fallback active (now)"
+            value={pc.fallbackActive == null ? '—' : pc.fallbackActive ? 'yes' : 'no'}
+            accent={pc.fallbackActive ? 'warn' : undefined}
+          />
+          <Stat label={`Local turns (of ${pc.window.turns})`} value={`${pc.localTurns.count} · ${pc.localTurns.percent}%`} />
+          <Stat label={`Claude turns (of ${pc.window.turns})`} value={`${pc.claudeTurns.count} · ${pc.claudeTurns.percent}%`} />
+          <Stat label="Last observed" value={pc.lastObserved ? formatTime(pc.lastObserved) : '—'} />
+        </div>
+        {pc.providerMix.length > 0 ? (
+          <div className="pt-2 border-t border-maia-ink-40/10">
+            <div className="text-xs text-maia-ink-40 uppercase tracking-wider mb-2">
+              Provider mix · last {pc.window.turns} turns (cap {pc.window.cap})
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {pc.providerMix.map((m) => (
+                <span
+                  key={`${m.provider}/${m.model ?? '_'}`}
+                  className="px-2 py-0.5 rounded border border-maia-ink-40/20 font-mono text-maia-ink-100"
+                >
+                  {m.provider}/{m.model ?? '—'} <span className="text-maia-ink-40">×{m.count}</span>
+                </span>
+              ))}
+              {pc.fallbacksInWindow > 0 && (
+                <span className="px-2 py-0.5 rounded border border-amber-400/30 text-amber-300">
+                  fallbacks ×{pc.fallbacksInWindow}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-maia-ink-40">No provider turns observed yet on this process.</div>
+        )}
+      </div>
     </section>
   )
 }
