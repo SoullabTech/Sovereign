@@ -1,10 +1,11 @@
 'use client'
 
+import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
+import { adminFetch } from '@/lib/admin/adminFetch';
 import { useState, useEffect } from 'react'
-import { apiFetch } from '@/lib/http/apiBase'
 import AgentMonitorTable from '@/components/admin/AgentMonitorTable'
 
-export default function AgentMonitorPage() {
+function AgentMonitorPage() {
   const [runs, setRuns] = useState([])
   const [counts, setCounts] = useState({ total: 0, flagged: 0, failed: 0, pending_review: 0 })
   const [loading, setLoading] = useState(true)
@@ -12,7 +13,7 @@ export default function AgentMonitorPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await apiFetch('/api/admin/agent-monitor')
+        const res = await adminFetch('/api/admin/agent-monitor')
         if (res.ok) {
           const data = await res.json()
           setRuns(data.runs || [])
@@ -45,4 +46,12 @@ export default function AgentMonitorPage() {
       </div>
     </div>
   )
+}
+
+export default function AgentMonitorPageGated() {
+  return (
+    <AdminAuthGate>
+      <AgentMonitorPage />
+    </AdminAuthGate>
+  );
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
+import { adminFetch } from '@/lib/admin/adminFetch';
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -44,7 +46,7 @@ type ReviewPatch = Partial<
   Pick<Row, 'reviewer_label' | 'attunement_score' | 'reviewer_note'>
 >;
 
-export default function EngineComparisonsPage() {
+function EngineComparisonsPage() {
   const [filter, setFilter] = useState<Filter>('unreviewed');
   const [payload, setPayload] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function EngineComparisonsPage() {
     async (id: number, patch: ReviewPatch) => {
       setSavingId(id);
       try {
-        const res = await apiFetch(`/api/admin/maia/engine-comparisons/${id}`, {
+        const res = await adminFetch(`/api/admin/maia/engine-comparisons/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(patch),
@@ -312,5 +314,13 @@ function ComparisonCard({
         className="w-full bg-maia-navy-950 border border-maia-ink-40/20 rounded p-2 text-sm text-maia-ink-100 placeholder:text-maia-ink-40"
       />
     </div>
+  );
+}
+
+export default function EngineComparisonsPageGated() {
+  return (
+    <AdminAuthGate>
+      <EngineComparisonsPage />
+    </AdminAuthGate>
   );
 }

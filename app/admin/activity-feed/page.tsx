@@ -1,4 +1,6 @@
 'use client';
+import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
+import { adminFetch } from '@/lib/admin/adminFetch';
 
 /**
  * Platform Pulse — Anonymized developmental telemetry.
@@ -124,7 +126,7 @@ function msToLabel(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-export default function PlatformPulsePage() {
+function PlatformPulsePage() {
   const [hours, setHours] = useState(168); // default 7 days
   const [data, setData] = useState<PulseData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,7 +134,7 @@ export default function PlatformPulsePage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiFetch('/api/admin/activity-feed', {
+      const res = await adminFetch('/api/admin/activity-feed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hours }),
@@ -327,5 +329,13 @@ export default function PlatformPulsePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PlatformPulsePageGated() {
+  return (
+    <AdminAuthGate>
+      <PlatformPulsePage />
+    </AdminAuthGate>
   );
 }

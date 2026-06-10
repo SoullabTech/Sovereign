@@ -1,7 +1,7 @@
 'use client'
 
+import { adminFetch } from '@/lib/admin/adminFetch';
 import { useState, useCallback } from 'react'
-import { apiFetch } from '@/lib/http/apiBase'
 
 interface AgentRun {
   id: string
@@ -76,7 +76,7 @@ export default function AgentMonitorTable({ initialRuns, initialCounts }: Props)
     if (filterFlagged) params.set('flaggedOnly', 'true')
     if (filterReview) params.set('humanReviewStatus', filterReview)
 
-    const res = await apiFetch(`/api/admin/agent-monitor?${params}`)
+    const res = await adminFetch(`/api/admin/agent-monitor?${params}`)
     if (res.ok) {
       const data = await res.json()
       setRuns(data.runs)
@@ -88,7 +88,7 @@ export default function AgentMonitorTable({ initialRuns, initialCounts }: Props)
     setSelectedRun(run)
     setLoadingDetail(true)
     try {
-      const res = await apiFetch(`/api/admin/agent-monitor?id=${run.id}`)
+      const res = await adminFetch(`/api/admin/agent-monitor?id=${run.id}`)
       if (res.ok) {
         const data = await res.json()
         setEvents(data.events || [])
@@ -102,7 +102,7 @@ export default function AgentMonitorTable({ initialRuns, initialCounts }: Props)
     if (!selectedRun) return
     setReviewSaving(true)
     try {
-      const res = await apiFetch('/api/admin/agent-monitor', {
+      const res = await adminFetch('/api/admin/agent-monitor', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,3 +1,4 @@
+import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 // frontend: app/admin/opus-pulse/page.tsx
 
 import GlobalOpusPulse from '@/components/admin/opus-pulse/GlobalOpusPulse';
@@ -5,7 +6,7 @@ import AxiomHeatmap from '@/components/admin/opus-pulse/AxiomHeatmap';
 import FacetElementGrid from '@/components/admin/opus-pulse/FacetElementGrid';
 import OpusTimeline from '@/components/admin/opus-pulse/OpusTimeline';
 
-export default function OpusPulsePage() {
+function OpusPulsePage() {
   return (
     <div className="p-6 space-y-6">
       <header className="space-y-2">
@@ -28,5 +29,13 @@ export default function OpusPulsePage() {
         <OpusTimeline />
       </section>
     </div>
+  );
+}
+
+export default function OpusPulsePageGated() {
+  return (
+    <AdminAuthGate>
+      <OpusPulsePage />
+    </AdminAuthGate>
   );
 }

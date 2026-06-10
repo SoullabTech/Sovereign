@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/admin/adminFetch';
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -169,7 +170,7 @@ export default function ConversationsDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/command-center/conversations', {
+      const res = await adminFetch('/api/admin/command-center/conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ days }),

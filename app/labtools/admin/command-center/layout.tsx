@@ -3,6 +3,7 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getAdminPassword, setAdminPassword } from '@/lib/admin/adminFetch';
 import {
   BarChart3,
   Activity,
@@ -66,8 +67,9 @@ function AuthGate({ onAuth }: { onAuth: () => void }) {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        const data = await res.json();
-        sessionStorage.setItem('maia_admin_token', data.token || 'authenticated');
+        // Single admin client path: store the password (validated above) for
+        // adminFetch() to inject as x-admin-password. Retires maia_admin_token.
+        setAdminPassword(password);
         onAuth();
       } else {
         setError('Invalid password');
@@ -129,8 +131,7 @@ export default function CommandCenterLayout({
 
   // Check existing auth
   useEffect(() => {
-    const token = sessionStorage.getItem('maia_admin_token');
-    if (token) setAuthenticated(true);
+    if (getAdminPassword()) setAuthenticated(true);
     setCheckingAuth(false);
   }, []);
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/admin/adminFetch';
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -151,7 +152,7 @@ export default function FieldEnginesDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/command-center/field-engines', {
+      const res = await adminFetch('/api/admin/command-center/field-engines', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ days }),

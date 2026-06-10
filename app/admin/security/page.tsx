@@ -1,5 +1,7 @@
 'use client';
+import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
 
+import { adminFetch } from '@/lib/admin/adminFetch';
 /**
  * Security Monitor
  *
@@ -149,7 +151,7 @@ function SectionCard({
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function SecurityMonitorPage() {
+function SecurityMonitorPage() {
   const router = useRouter();
   const [data, setData] = useState<SecurityData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,7 @@ export default function SecurityMonitorPage() {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/security/alerts');
+      const res = await adminFetch('/api/admin/security/alerts');
       if (!res.ok) return;
       const json = await res.json();
       setAlerts(json.alerts ?? []);
@@ -182,7 +184,7 @@ export default function SecurityMonitorPage() {
   const runCheck = useCallback(async () => {
     setCheckingNow(true);
     try {
-      await fetch('/api/admin/security/alerts', {
+      await adminFetch('/api/admin/security/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'check' }),
@@ -194,7 +196,7 @@ export default function SecurityMonitorPage() {
   }, [fetchAlerts]);
 
   const ackAlert = useCallback(async (alertId: string) => {
-    await fetch('/api/admin/security/alerts', {
+    await adminFetch('/api/admin/security/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'ack', alertId }),
@@ -206,7 +208,7 @@ export default function SecurityMonitorPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/security');
+      const res = await adminFetch('/api/admin/security');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setData(json);
@@ -222,7 +224,7 @@ export default function SecurityMonitorPage() {
     setRevokingSession(sessionId);
     setRevokeMessage(null);
     try {
-      const res = await fetch('/api/admin/security/sessions', {
+      const res = await adminFetch('/api/admin/security/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, action: 'revoke' }),
@@ -788,3 +790,11 @@ export default function SecurityMonitorPage() {
 
 // Fallback for when API hasn't loaded yet (matches API data shape)
 const CONTAINER_POSTURE_FALLBACK: ContainerEntry[] = [];
+
+export default function SecurityMonitorPageGated() {
+  return (
+    <AdminAuthGate>
+      <SecurityMonitorPage />
+    </AdminAuthGate>
+  );
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/admin/adminFetch';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -148,7 +149,7 @@ export default function ActionsPage() {
     try {
       setRunning(action);
       setError(null);
-      const res = await fetch('/api/admin/command-center/actions', {
+      const res = await adminFetch('/api/admin/command-center/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),

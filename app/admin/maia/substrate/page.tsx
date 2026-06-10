@@ -1,7 +1,8 @@
 'use client'
 
+import { AdminAuthGate } from '@/components/admin/AdminAuthGate';
+import { adminFetch } from '@/lib/admin/adminFetch';
 import { useEffect, useState } from 'react'
-import { apiFetch } from '@/lib/http/apiBase'
 
 type CapabilityStatus =
   | 'not-built'
@@ -123,7 +124,7 @@ const LAYER_COLOR: Record<LayerStatus, string> = {
   error: 'text-rose-300',
 }
 
-export default function AdminSubstratePage() {
+function AdminSubstratePage() {
   const [data, setData] = useState<SubstratePayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -133,7 +134,7 @@ export default function AdminSubstratePage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await apiFetch('/api/admin/maia/substrate')
+      const res = await adminFetch('/api/admin/maia/substrate')
       if (!res.ok) {
         setError(`Request failed: ${res.status}`)
         return
@@ -589,4 +590,12 @@ function groupBy<T>(items: T[], keyFn: (t: T) => string): Record<string, T[]> {
     out[k].push(item)
   }
   return out
+}
+
+export default function AdminSubstratePageGated() {
+  return (
+    <AdminAuthGate>
+      <AdminSubstratePage />
+    </AdminAuthGate>
+  );
 }
