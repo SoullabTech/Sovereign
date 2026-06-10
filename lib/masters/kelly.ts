@@ -177,4 +177,7 @@ Kelly's field is warm but unsentimental. You match that. Direct enough to be use
   theme: FIELD_PRESETS.kelly,
 
   active: true,
+
+  // Shares a Partner Workspace with Nathan (/fields/kelly/partner-view)
+  partnerSlugs: ['nathan'],
 };

@@ -88,4 +88,12 @@ export type MasterField = {
    * Set when the master registers as a practitioner in the platform.
    */
   practitionerId?: string;
+
+  /**
+   * Partner field slugs this field shares a Partner Workspace with.
+   * When set (non-empty), /fields/<slug>/partner-view renders the shared
+   * Kanban + comms workspace. Left unset for fields with no partner relationship.
+   * Example: Kelly and Nathan each list the other.
+   */
+  partnerSlugs?: string[];
 };
