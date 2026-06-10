@@ -332,6 +332,13 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
       // Store member info locally for session (including tier if returned)
       setServerMember(data.member);
 
+      // Persist the real session token for the native (Capacitor/iOS)
+      // x-session-token auth path — web is covered by the httpOnly maia_session
+      // cookie that /api/members/register now sets.
+      if (data?.session?.token) {
+        localStorage.setItem('maia_session_token', data.session.token);
+      }
+
       // Store birth date + tier in localStorage for client-side awareness
       if (birthDate) {
         const betaUser = JSON.parse(localStorage.getItem('beta_user') || '{}');
@@ -398,6 +405,9 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
         }
 
         setServerMember(data.member);
+        if (data?.session?.token) {
+          localStorage.setItem('maia_session_token', data.session.token);
+        }
       } catch (err) {
         console.error('[SacredSoulInduction] Registration error:', err);
         // Continue anyway for graceful degradation

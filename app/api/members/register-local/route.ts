@@ -17,6 +17,7 @@ import { query } from '@/lib/db/postgres';
 import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
 import { hashPassword } from '@/lib/auth/passwordUtils';
+import { createSession } from '@/lib/auth/serverSessions';
 
 export async function POST(request: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -127,19 +128,44 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      member: {
-        id: memberId,
-        username: normalizedUsername,
-        name: name || username,
-        email: email || null,
-        passkey,
-        onboarded: true,
-        emailVerificationRequired: betaConfig.requireEmailVerification,
-        emailVerificationSent: verificationSent,
-      },
-    });
+    // Mint a real server session immediately (same guarantee as /api/members/register
+    // and /register-email): the new member is authenticated, never reliant on a
+    // forgeable x-member-id. Non-fatal: the member row already exists.
+    const memberPayload = {
+      id: memberId,
+      username: normalizedUsername,
+      name: name || username,
+      email: email || null,
+      passkey,
+      onboarded: true,
+      emailVerificationRequired: betaConfig.requireEmailVerification,
+      emailVerificationSent: verificationSent,
+    };
+
+    try {
+      const userAgent = request.headers.get('user-agent') || '';
+      const session = await createSession({ memberId, userAgent });
+      const response = NextResponse.json({
+        success: true,
+        member: memberPayload,
+        session: { token: session.sessionToken, expiresAt: session.expiresAt.toISOString() },
+      });
+      const cookieOpts = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        path: '/',
+        expires: session.expiresAt,
+      };
+      response.cookies.set('maia_session', session.sessionToken, cookieOpts); // REAL token — never 'active'
+      response.cookies.set('maia_member_id', memberId, cookieOpts);
+      response.cookies.set('maia_tier', 'free', cookieOpts);
+      response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
+      return response;
+    } catch (sessionErr) {
+      console.error('[RegisterLocal] Session creation failed (non-fatal):', sessionErr);
+      return NextResponse.json({ success: true, member: memberPayload });
+    }
 
   } catch (error) {
     console.error('[RegisterLocal] Error:', error);
