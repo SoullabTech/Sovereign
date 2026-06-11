@@ -1,24 +1,18 @@
 'use client';
 
-import { useMemo } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { mockMessages } from '@/lib/studio/mockMessages';
-import { CommsMessageDetail } from '@/components/studio/CommsMessageDetail';
 
+/**
+ * Studio → Comms → message detail.
+ *
+ * There is no message store wired to this surface yet (see ../page.tsx), so any
+ * direct message URL resolves to a truthful "not found" rather than fabricated
+ * content. Restored when a real inbox is connected.
+ */
 export default function CommsMessageDetailPage() {
-  const params = useParams<{ messageId: string }>();
-  const messageId = params?.messageId;
-
-  const message = useMemo(
-    () => mockMessages.find((m) => m.id === messageId),
-    [messageId],
-  );
-
   return (
     <div className="min-h-screen bg-slate-950">
-      {/* Back nav */}
       <div className="border-b border-slate-800 p-3">
         <Link
           href="/studio/comms"
@@ -29,15 +23,8 @@ export default function CommsMessageDetailPage() {
         </Link>
       </div>
 
-      {/* Detail */}
-      <div className="h-[calc(100vh-49px)]">
-        {message ? (
-          <CommsMessageDetail message={message} />
-        ) : (
-          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
-            Message not found.
-          </div>
-        )}
+      <div className="flex items-center justify-center h-[calc(100vh-49px)] text-slate-500 text-sm">
+        Message not found.
       </div>
     </div>
   );
