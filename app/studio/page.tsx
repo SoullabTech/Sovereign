@@ -5,8 +5,11 @@
  *
  * Replaces the developer cockpit (moved to /studio/command) with a threshold built
  * around people, sessions, continuity, and community. Presentation over endpoints
- * that already exist — no new backend. Empty states are first-class: with no clients
- * yet, the empty state IS the experience, and it should feel like a beginning.
+ * that already exist — no new backend.
+ *
+ * The ZERO-STATE is first-class. A practitioner with no clients yet should feel a
+ * warm entrance that guides ONE concrete action — not an empty dashboard. Only once
+ * there is something to hold do the cards appear.
  *
  * Governing test: does this help a practitioner care for someone?
  * See docs/specs/STUDIO_HOME_REVEAL_SPEC_2026-06-10.md
@@ -63,6 +66,41 @@ function formatLastSeen(iso: string): string {
 
 const CARD = 'bg-[#1e1e38] border border-slate-800/50 rounded-xl p-5';
 
+/**
+ * First entrance — the zero-state. One warm invitation, one concrete action.
+ * Shown only when a practitioner has no people and no sessions yet.
+ */
+function FirstEntrance({ hasCommunities }: { hasCommunities: boolean }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className="bg-[#1e1e38] border border-amber-500/20 rounded-2xl p-8 md:p-12 text-center"
+    >
+      <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-5">
+        <Users className="w-6 h-6 text-amber-400" />
+      </div>
+      <h2 className="text-xl font-semibold text-white mb-3">Your practice begins with one person.</h2>
+      <p className="text-slate-400 max-w-md mx-auto mb-7 leading-relaxed">
+        Add someone you care for — then Studio can help you prepare for them,
+        remember what matters, and follow the thread between sessions.
+      </p>
+      <Link
+        href="/studio/clients"
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-[#1a1a2e] font-medium hover:bg-amber-400 transition-colors"
+      >
+        <Plus className="w-4 h-4" /> Add your first person
+      </Link>
+      {hasCommunities && (
+        <div className="mt-6">
+          <Link href="/team" className="text-xs text-slate-500 hover:text-slate-300 inline-flex items-center gap-1.5">
+            Or step into the commons <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function StudioHome() {
   const [loading, setLoading] = useState(true);
   const [identity, setIdentity] = useState<Identity | null>(null);
@@ -108,6 +146,9 @@ export default function StudioHome() {
   const clientCount = clients.length;
   const upcomingCount = upcoming.length;
 
+  // True zero-state: no people AND no sessions. The first entrance, not a dashboard.
+  const isEmptyPractice = clientCount === 0 && upcomingCount === 0;
+
   const recentPeople = clients
     .filter(c => c.lastSessionAt)
     .sort((a, b) => new Date(b.lastSessionAt!).getTime() - new Date(a.lastSessionAt!).getTime())
@@ -120,7 +161,7 @@ export default function StudioHome() {
   if (clientCount > 0) parts.push(`${clientCount} ${clientCount === 1 ? 'person' : 'people'} in your care`);
   const subline = parts.length
     ? `You have ${parts.join(' and ')}.`
-    : 'Your practice is quiet today. When you’re ready, this is where it gathers.';
+    : 'The room is quiet, and ready for you.';
 
   return (
     <div className="min-h-screen bg-[#1a1a2e] p-6">
@@ -142,148 +183,155 @@ export default function StudioHome() {
           </div>
         </div>
 
-        {/* ── Prepare Me — the crown jewel, impossible to miss ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-[#1e1e38] border border-amber-500/20 rounded-xl p-5"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <h2 className="text-base font-semibold text-white">Prepare Me</h2>
-          </div>
+        {isEmptyPractice ? (
+          /* ── The first entrance — one warm invitation, one concrete action ── */
+          <FirstEntrance hasCommunities={communities.length > 0} />
+        ) : (
+          <>
+            {/* ── Prepare Me — the crown jewel, impossible to miss ── */}
+            <motion.section
+              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-[#1e1e38] border border-amber-500/20 rounded-xl p-5"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+                <h2 className="text-base font-semibold text-white">Prepare Me</h2>
+              </div>
 
-          {nextBooking ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <CalendarClock className="w-4 h-4 text-slate-500 shrink-0" />
-                  <div className="min-w-0">
-                    <div className="text-white font-medium truncate">
-                      {nextBooking.clientName || 'Upcoming session'}
+              {nextBooking ? (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <CalendarClock className="w-4 h-4 text-slate-500 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-white font-medium truncate">
+                          {nextBooking.clientName || 'Upcoming session'}
+                        </div>
+                        <div className="text-sm text-slate-400 truncate">
+                          {formatWhen(nextBooking.startAt)}
+                          {nextBooking.serviceName ? ` · ${nextBooking.serviceName}` : ''}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-slate-400 truncate">
-                      {formatWhen(nextBooking.startAt)}
-                      {nextBooking.serviceName ? ` · ${nextBooking.serviceName}` : ''}
-                    </div>
+                    <Link
+                      href="/studio/session-room"
+                      className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/25 hover:bg-amber-500/25 transition-colors"
+                    >
+                      <DoorOpen className="w-4 h-4" /> Enter Session Room
+                    </Link>
                   </div>
+                  {/* The prep itself, surfaced inline — the existing engine, finally on the threshold */}
+                  <SessionBriefingCard sessionId={nextBooking.id} />
                 </div>
-                <Link
-                  href="/studio/session-room"
-                  className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/25 hover:bg-amber-500/25 transition-colors"
-                >
-                  <DoorOpen className="w-4 h-4" /> Enter Session Room
-                </Link>
-              </div>
-              {/* The prep itself, surfaced inline — the existing engine, finally on the threshold */}
-              <SessionBriefingCard sessionId={nextBooking.id} />
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400">
-              When you have a session coming up, you’ll prepare for it here — what matters,
-              what’s unresolved, what to remember — in one breath.
-            </p>
-          )}
-        </motion.section>
+              ) : (
+                <p className="text-sm text-slate-400">
+                  When you have a session coming up, you’ll prepare for it here — what matters,
+                  what’s unresolved, what to remember — in one breath.
+                </p>
+              )}
+            </motion.section>
 
-        {/* ── People · Threads · Communities ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* ── People · Threads · Communities ── */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          {/* My People */}
-          <div className={CARD}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-medium text-white">My People</h3>
-              </div>
-              <Link href="/studio/clients" className="text-slate-600 hover:text-slate-400">
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            {clientCount > 0 ? (
-              <>
-                <div className="text-2xl font-bold text-white">{clientCount}</div>
-                <div className="text-sm text-slate-400 mb-3">
-                  {clientCount === 1 ? 'person' : 'people'} in your care
+              {/* My People */}
+              <div className={CARD}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-sm font-medium text-white">My People</h3>
+                  </div>
+                  <Link href="/studio/clients" className="text-slate-600 hover:text-slate-400">
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
                 </div>
-                <Link href="/studio/clients" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
-                  Open your people <ArrowRight className="w-3 h-3" />
-                </Link>
-              </>
-            ) : (
-              <div className="py-2">
-                <p className="text-sm text-slate-400 mb-3">No people yet. This is where they’ll live.</p>
-                <Link href="/studio/clients" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
-                  <Plus className="w-3 h-3" /> Add your first person
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* My Threads — v1: where you left off (real last-session data; not yet the full primitive) */}
-          <div className={CARD}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-medium text-white">My Threads</h3>
-              </div>
-              <span className="text-[10px] uppercase tracking-wide text-slate-600">Where you left off</span>
-            </div>
-            {recentPeople.length > 0 ? (
-              <ul className="space-y-2">
-                {recentPeople.map(p => (
-                  <li key={p.id}>
-                    <Link href={`/studio/clients/${p.id}`} className="flex items-center justify-between group">
-                      <span className="text-sm text-slate-200 truncate group-hover:text-white">{p.name}</span>
-                      <span className="text-xs text-slate-500 shrink-0 ml-2">
-                        {p.lastSessionAt ? formatLastSeen(p.lastSessionAt) : ''}
-                      </span>
+                {clientCount > 0 ? (
+                  <>
+                    <div className="text-2xl font-bold text-white">{clientCount}</div>
+                    <div className="text-sm text-slate-400 mb-3">
+                      {clientCount === 1 ? 'person' : 'people'} in your care
+                    </div>
+                    <Link href="/studio/clients" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
+                      Open your people <ArrowRight className="w-3 h-3" />
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-400 py-2">
-                Your relationships will gather here — every thread, held in one place.
-              </p>
-            )}
-          </div>
-
-          {/* My Communities */}
-          <div className={CARD}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Users2 className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-medium text-white">My Communities</h3>
-              </div>
-              <Link href="/team" className="text-slate-600 hover:text-slate-400">
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            {communities.length > 0 ? (
-              <ul className="space-y-2">
-                {communities.map(c => (
-                  <li key={c.id}>
-                    <Link href="/team" className="flex items-center justify-between group">
-                      <span className="text-sm text-slate-200 truncate group-hover:text-white">{c.name}</span>
-                      {(c.unreadCount || 0) > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 shrink-0 ml-2">
-                          {c.unreadCount}
-                        </span>
-                      )}
+                  </>
+                ) : (
+                  <div className="py-2">
+                    <p className="text-sm text-slate-400 mb-3">No people yet. This is where they’ll live.</p>
+                    <Link href="/studio/clients" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
+                      <Plus className="w-3 h-3" /> Add your first person
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="py-2">
-                <p className="text-sm text-slate-400 mb-3">The first circles are forming.</p>
-                <Link href="/team" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
-                  Enter the commons <ArrowRight className="w-3 h-3" />
-                </Link>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+
+              {/* My Threads — v1: where you left off (real last-session data; not yet the full primitive) */}
+              <div className={CARD}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <History className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-sm font-medium text-white">My Threads</h3>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wide text-slate-600">Where you left off</span>
+                </div>
+                {recentPeople.length > 0 ? (
+                  <ul className="space-y-2">
+                    {recentPeople.map(p => (
+                      <li key={p.id}>
+                        <Link href={`/studio/clients/${p.id}`} className="flex items-center justify-between group">
+                          <span className="text-sm text-slate-200 truncate group-hover:text-white">{p.name}</span>
+                          <span className="text-xs text-slate-500 shrink-0 ml-2">
+                            {p.lastSessionAt ? formatLastSeen(p.lastSessionAt) : ''}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-400 py-2">
+                    Your relationships will gather here — every thread, held in one place.
+                  </p>
+                )}
+              </div>
+
+              {/* My Communities */}
+              <div className={CARD}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Users2 className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-sm font-medium text-white">My Communities</h3>
+                  </div>
+                  <Link href="/team" className="text-slate-600 hover:text-slate-400">
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+                {communities.length > 0 ? (
+                  <ul className="space-y-2">
+                    {communities.map(c => (
+                      <li key={c.id}>
+                        <Link href="/team" className="flex items-center justify-between group">
+                          <span className="text-sm text-slate-200 truncate group-hover:text-white">{c.name}</span>
+                          {(c.unreadCount || 0) > 0 && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 shrink-0 ml-2">
+                              {c.unreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="py-2">
+                    <p className="text-sm text-slate-400 mb-3">The first circles are forming.</p>
+                    <Link href="/team" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
+                      Enter the commons <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
       </div>
     </div>
