@@ -65,4 +65,22 @@ describe('TwilioProvider.send — error transparency', () => {
     expect(res.success).toBe(true);
     expect(res.errorMessage).toBeUndefined();
   });
+
+  // Bug C: Messaging Service / A2P sends return "accepted" synchronously. That is
+  // a successful handoff, not a failure — the previous queued/sending/sent-only
+  // whitelist mislabeled every such send as "Failed to send SMS".
+  it('treats Twilio "accepted" status as a successful handoff (Messaging Service / A2P)', async () => {
+    mockFetch(201, { sid: 'SMx', status: 'accepted' });
+    const res = await provider.send(payload, creds);
+    expect(res.success).toBe(true);
+    expect(res.externalId).toBe('SMx');
+    expect(res.errorMessage).toBeUndefined();
+  });
+
+  it('treats Twilio "scheduled" status as success', async () => {
+    mockFetch(201, { sid: 'SMx', status: 'scheduled' });
+    const res = await provider.send(payload, creds);
+    expect(res.success).toBe(true);
+    expect(res.errorMessage).toBeUndefined();
+  });
 });
