@@ -6,6 +6,7 @@
 // arrives with context. Posts to /api/bugs, which persists + mirrors to #bugs.
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Bug, X } from 'lucide-react';
 import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 import { BUG_SEVERITIES, type BugSeverity } from '@/lib/bugs/types';
@@ -18,6 +19,17 @@ export default function BugReportButton() {
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState<BugSeverity>('normal');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const pathname = usePathname();
+
+  // The Studio shell renders a sticky bottom tab bar on mobile (< md). Lift the
+  // launcher above it there so it never covers the rightmost "Sessions" tab.
+  // Other routes keep the default bottom-right corner; desktop (md+) has no
+  // bottom bar, so it resets. (Left placement isn't viable — the always-on 56px
+  // left rail sits at z-80 and would hide the z-60 button behind it.)
+  const studioMobileBottomNav = pathname?.startsWith('/studio') ?? false;
+  const fabPosition = studioMobileBottomNav
+    ? 'fixed right-4 bottom-20 z-[60] md:bottom-4'
+    : 'fixed bottom-4 right-4 z-[60]';
 
   // Only show for signed-in members. Checked on mount (client-only).
   useEffect(() => {
@@ -74,7 +86,7 @@ export default function BugReportButton() {
           onClick={() => setPhase('open')}
           aria-label="Report a bug"
           title="Report a bug"
-          className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 rounded-full border border-white/15 bg-[#1A1513]/90 px-3 py-2 text-xs text-white/70 shadow-lg backdrop-blur transition hover:text-white hover:border-white/30"
+          className={`${fabPosition} flex items-center gap-2 rounded-full border border-white/15 bg-[#1A1513]/90 px-3 py-2 text-xs text-white/70 shadow-lg backdrop-blur transition hover:text-white hover:border-white/30`}
         >
           {phase === 'sent' ? (
             <span className="text-emerald-300">✓ Reported</span>
@@ -89,7 +101,7 @@ export default function BugReportButton() {
 
       {/* Composer */}
       {(phase === 'open' || phase === 'sending' || phase === 'error') && (
-        <div className="fixed bottom-4 right-4 z-[60] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-white/15 bg-[#1A1513] p-4 text-white shadow-2xl">
+        <div className={`${fabPosition} w-[min(360px,calc(100vw-2rem))] rounded-xl border border-white/15 bg-[#1A1513] p-4 text-white shadow-2xl`}>
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-light tracking-wide">
               <Bug className="h-4 w-4 text-amber-300" />
