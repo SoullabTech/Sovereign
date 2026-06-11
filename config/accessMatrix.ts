@@ -388,6 +388,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/api/practitioner/sessions', minTier: 'pro', rolesAnyOf: ['practitioner', 'admin'], notes: 'Session management' },
   { prefix: '/api/practitioner/containers', minTier: 'pro', rolesAnyOf: ['practitioner', 'admin'], notes: 'Container management' },
   { prefix: '/api/stellium', minTier: 'pro', rolesAnyOf: ['practitioner', 'admin'], notes: 'Stellium API' },
+  // Public exception (exact match is checked before the prefix below): Twilio
+  // POSTs SMS delivery status here with no MAIA session; authenticated instead
+  // by the X-Twilio-Signature header inside the route.
+  { exact: '/api/notifications/sms/status', public: true, notes: 'Twilio SMS StatusCallback webhook — public, validated by X-Twilio-Signature' },
   { prefix: '/api/notifications', minTier: 'pro', rolesAnyOf: ['practitioner', 'admin'], notes: 'Notification APIs (SMS/Email)' },
   { exact: '/api/commons/contributions/review-queue', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
   { regex: /^\/api\/commons\/contributions\/[^/]+\/review$/, minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review action' },

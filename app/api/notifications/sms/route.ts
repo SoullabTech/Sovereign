@@ -129,6 +129,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Record the initial delivery state so the async StatusCallback has a row to
+    // update. "accepted" = Twilio received it; delivered/failed arrive later.
+    // Best-effort: never fail the send response on a bookkeeping error.
+    if (result.externalId) {
+      try {
+        const initialStatus =
+          (result.rawResponse as { status?: string } | undefined)?.status || 'accepted';
+        await query(
+          `INSERT INTO sms_delivery_status (message_sid, status)
+           VALUES ($1, $2)
+           ON CONFLICT (message_sid) DO NOTHING`,
+          [result.externalId, initialStatus],
+        );
+      } catch (e) {
+        console.warn(
+          '[SMS Notifications] sms_delivery_status insert failed:',
+          e instanceof Error ? e.message : e,
+        );
+      }
+    }
+
     console.log(`[SMS Notifications] Reminder sent to ${to}`);
 
     return NextResponse.json({
