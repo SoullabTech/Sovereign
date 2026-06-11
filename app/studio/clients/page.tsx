@@ -172,8 +172,8 @@ export default function ClientsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 mb-6">
+        <div className="relative w-full sm:flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
@@ -184,12 +184,12 @@ export default function ClientsPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {['all', 'active', 'invited', 'paused', 'archived'].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 statusFilter === status
                   ? 'bg-maia-navy-700/20 text-maia-gold'
                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
