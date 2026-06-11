@@ -6,10 +6,11 @@
  * - Appointment reminders (24h, 1h before)
  * - Cancellations/reschedules
  *
- * Channels: WhatsApp + SMS (dual delivery for US clients)
+ * Channels: Email (always, if address exists) + WhatsApp + SMS (if phone exists)
  */
 
 import { query } from '@/lib/db/postgres';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 
 // Twilio WhatsApp Content Template for appointments
 const TWILIO_APPOINTMENT_TEMPLATE_SID = 'HXb5b62575e6e4ff6129ad7c8efe1f983e';
@@ -36,6 +37,17 @@ interface NotificationResult {
 }
 
 /**
+ * Multi-channel outcome for booking confirmations and reminders.
+ * Each channel is optional — only present if a send was attempted.
+ */
+export interface BookingNotificationResults {
+  email?: NotificationResult;
+  whatsapp?: NotificationResult;
+  sms?: NotificationResult;
+  anySuccess: boolean;
+}
+
+/**
  * Format date for Twilio template (e.g., "2/15" or "Feb 15")
  */
 function formatDateForTemplate(date: Date): string {
@@ -55,6 +67,208 @@ function formatTimeForTemplate(date: Date): string {
     return `${hour12}${ampm}`;
   }
   return `${hour12}:${minutes.toString().padStart(2, '0')}${ampm}`;
+}
+
+/**
+ * Format duration between two dates for human-readable display
+ */
+function formatDuration(start: Date, end: Date): string {
+  const mins = Math.round((end.getTime() - start.getTime()) / 60000);
+  if (mins < 60) return `${mins} minutes`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (m === 0) return h === 1 ? '1 hour' : `${h} hours`;
+  return `${h}h ${m}m`;
+}
+
+/**
+ * Format location type + details for display
+ */
+function formatLocation(locationType: string, locationDetails?: string): string {
+  const labels: Record<string, string> = {
+    video: 'Video call',
+    phone: 'Phone call',
+    in_person: 'In person',
+    async: 'Async',
+  };
+  const label = labels[locationType] ?? locationType;
+  // For non-video types, append details inline; for video, show label only (link handled separately)
+  if (locationDetails && locationType !== 'video') return `${label}: ${locationDetails}`;
+  return label;
+}
+
+/**
+ * Build plain-text and HTML body for the booking confirmation email.
+ * Never logs or stores content — body lives only in the outbound Resend call.
+ */
+function buildConfirmationEmailBody(session: SessionDetails): { html: string; text: string } {
+  const {
+    clientName,
+    practitionerName,
+    serviceName,
+    scheduledStart,
+    scheduledEnd,
+    locationType,
+    locationDetails,
+  } = session;
+
+  const dateStr = scheduledStart.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const timeStr = scheduledStart.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  const duration = formatDuration(scheduledStart, scheduledEnd);
+  const locationLabel = formatLocation(locationType, locationDetails);
+  const isVideo = locationType === 'video' && locationDetails;
+
+  // Plain-text version
+  const textLines = [
+    `Hi ${clientName},`,
+    '',
+    'Your session has been scheduled.',
+    '',
+    `Service:  ${serviceName}`,
+    `Date:     ${dateStr}`,
+    `Time:     ${timeStr}`,
+    `Duration: ${duration}`,
+    `Location: ${locationLabel}`,
+    ...(isVideo ? ['', `Join: ${locationDetails}`] : []),
+    '',
+    `To reschedule or cancel, please contact ${practitionerName}.`,
+    '',
+    practitionerName,
+    'Soullab',
+  ];
+  const text = textLines.join('\n');
+
+  // HTML version
+  const rows: [string, string][] = [
+    ['Service', serviceName],
+    ['Date', dateStr],
+    ['Time', timeStr],
+    ['Duration', duration],
+    ['Location', locationLabel],
+  ];
+  const tableRows = rows
+    .map(
+      ([label, val]) =>
+        `<tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;vertical-align:top">${label}</td>` +
+        `<td style="padding:4px 0">${val}</td></tr>`
+    )
+    .join('\n');
+
+  const meetingLinkBlock = isVideo
+    ? `<p style="margin:20px 0"><a href="${locationDetails}" style="display:inline-block;padding:10px 20px;background:#6b5cf6;color:#fff;text-decoration:none;border-radius:6px;font-weight:500">Join video call →</a></p>`
+    : '';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:24px 16px;color:#111827;line-height:1.5">
+  <p>Hi ${clientName},</p>
+  <p>Your session has been scheduled.</p>
+  <table style="border-collapse:collapse;margin:20px 0">
+    ${tableRows}
+  </table>
+  ${meetingLinkBlock}
+  <p>To reschedule or cancel, please contact ${practitionerName}.</p>
+  <p style="margin-top:28px;color:#374151">${practitionerName}<br>Soullab</p>
+</body>
+</html>`;
+
+  return { html, text };
+}
+
+/**
+ * Send the booking confirmation email channel.
+ * Returns a NotificationResult so it composes cleanly with phone channels.
+ */
+async function sendBookingConfirmationEmail(session: SessionDetails): Promise<NotificationResult> {
+  if (!session.clientEmail) {
+    return { success: false, channel: 'email', error: 'No client email' };
+  }
+
+  const { html, text } = buildConfirmationEmailBody(session);
+
+  const result = await sendEmail({
+    purpose: 'booking:confirmation',
+    from: SENDERS.noreply,
+    to: session.clientEmail,
+    subject: `Session Confirmed — ${session.serviceName}`,
+    html,
+    text,
+  });
+
+  return {
+    success: result.success,
+    channel: 'email',
+    messageId: result.id,
+    error: result.error,
+  };
+}
+
+/**
+ * Core multi-channel send: email first (always, if address exists), then
+ * WhatsApp → SMS (if phone exists). Logs each channel with the given type prefix.
+ */
+async function sendMultiChannelNotification(
+  session: SessionDetails,
+  notifTypePrefix: string,
+  practitionerId?: string
+): Promise<BookingNotificationResults> {
+  const results: BookingNotificationResults = { anySuccess: false };
+
+  // 1. Email — independent of Twilio; always attempt if address present
+  if (session.clientEmail) {
+    const emailResult = await sendBookingConfirmationEmail(session);
+    results.email = emailResult;
+    if (emailResult.success) {
+      await logNotification(session.id, `${notifTypePrefix}_email`, 'email', emailResult.messageId);
+      results.anySuccess = true;
+    } else {
+      console.warn(`[SessionNotifications] Email ${notifTypePrefix} failed for session ${session.id}:`, emailResult.error);
+    }
+  }
+
+  // 2. Phone channels — WhatsApp first, SMS fallback — only if phone present
+  if (session.clientPhone) {
+    const credentials = await getTwilioCredentials(practitionerId);
+    if (credentials) {
+      const date = formatDateForTemplate(session.scheduledStart);
+      const time = formatTimeForTemplate(session.scheduledStart);
+
+      const whatsappResult = await sendWhatsAppReminder(session.clientPhone, date, time, credentials);
+      if (whatsappResult.success) {
+        results.whatsapp = { success: true, channel: 'whatsapp', messageId: whatsappResult.messageId };
+        await logNotification(session.id, `${notifTypePrefix}_whatsapp`, 'whatsapp', whatsappResult.messageId);
+        results.anySuccess = true;
+      } else {
+        results.whatsapp = { success: false, channel: 'whatsapp', error: whatsappResult.error };
+
+        // SMS fallback
+        const smsMessage = `Your session has been scheduled for ${date} at ${time}. Contact ${session.practitionerName} to reschedule.`;
+        const smsResult = await sendSMSReminder(session.clientPhone, smsMessage, credentials);
+        if (smsResult.success) {
+          results.sms = { success: true, channel: 'sms', messageId: smsResult.messageId };
+          await logNotification(session.id, `${notifTypePrefix}_sms`, 'sms', smsResult.messageId);
+          results.anySuccess = true;
+        } else {
+          results.sms = { success: false, channel: 'sms', error: smsResult.error };
+        }
+      }
+    } else {
+      console.warn('[SessionNotifications] No Twilio credentials; phone channels skipped');
+      results.whatsapp = { success: false, channel: 'whatsapp', error: 'No Twilio credentials' };
+    }
+  }
+
+  return results;
 }
 
 /**
@@ -303,73 +517,28 @@ export async function sendDualChannelNotification(
 }
 
 /**
- * Send session booking confirmation to client
- * Uses WhatsApp template if phone available, falls back to SMS, then email
+ * Send booking confirmation to client across all available channels.
+ * Email is always attempted first (if address exists).
+ * WhatsApp → SMS follows if phone is present.
+ * Booking succeeds regardless of notification outcome.
  */
 export async function sendBookingConfirmation(
   session: SessionDetails,
   practitionerId?: string
-): Promise<NotificationResult> {
-  const credentials = await getTwilioCredentials(practitionerId);
-
-  if (!credentials) {
-    console.warn('[SessionNotifications] No Twilio credentials configured');
-    return { success: false, channel: 'none', error: 'No messaging credentials configured' };
-  }
-
-  const date = formatDateForTemplate(session.scheduledStart);
-  const time = formatTimeForTemplate(session.scheduledStart);
-
-  // Try WhatsApp first (if phone available)
-  if (session.clientPhone) {
-    const whatsappResult = await sendWhatsAppReminder(
-      session.clientPhone,
-      date,
-      time,
-      credentials
-    );
-
-    if (whatsappResult.success) {
-      // Log the notification
-      await logNotification(session.id, 'booking_confirmation', 'whatsapp', whatsappResult.messageId);
-      return { success: true, channel: 'whatsapp', messageId: whatsappResult.messageId };
-    }
-
-    // Fall back to SMS
-    const smsMessage = `Your appointment is coming up on ${date} at ${time}. If you need to change it, please reply back and let us know.`;
-    const smsResult = await sendSMSReminder(session.clientPhone, smsMessage, credentials);
-
-    if (smsResult.success) {
-      await logNotification(session.id, 'booking_confirmation', 'sms', smsResult.messageId);
-      return { success: true, channel: 'sms', messageId: smsResult.messageId };
-    }
-  }
-
-  // TODO: Fall back to email if no phone or SMS failed
-  // For now, return failure
-  return {
-    success: false,
-    channel: 'none',
-    error: 'No valid phone number for client'
-  };
+): Promise<BookingNotificationResults> {
+  return sendMultiChannelNotification(session, 'booking_confirmation', practitionerId);
 }
 
 /**
- * Send appointment reminder (called by scheduled job)
+ * Send appointment reminder (called by scheduled job).
+ * Uses same multi-channel logic as booking confirmation.
  */
 export async function sendAppointmentReminder(
   session: SessionDetails,
   reminderType: '24h' | '1h',
   practitionerId?: string
-): Promise<NotificationResult> {
-  // Same logic as booking confirmation but with different logging
-  const result = await sendBookingConfirmation(session, practitionerId);
-
-  if (result.success) {
-    await logNotification(session.id, `reminder_${reminderType}`, result.channel, result.messageId);
-  }
-
-  return result;
+): Promise<BookingNotificationResults> {
+  return sendMultiChannelNotification(session, `reminder_${reminderType}`, practitionerId);
 }
 
 /**
