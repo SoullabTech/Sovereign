@@ -171,7 +171,9 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
           role: 'assistant',
           content: data.success
             ? data.response
-            : `I wasn't able to load the session data. ${data.error ? `(${data.error})` : 'Please try again.'}`,
+            : data.phase === 'generation'
+              ? `I couldn't generate the overview just now — the language model was briefly unavailable. Your session is safe; please try again in a moment.${data.error ? ` (${data.error})` : ''}`
+              : `I wasn't able to load the session data.${data.error ? ` (${data.error})` : ' Please try again.'}`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, assistantMessage]);
