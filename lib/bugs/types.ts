@@ -4,14 +4,18 @@
 
 export type BugSource = 'member' | 'claude' | 'system';
 export type BugSeverity = 'low' | 'normal' | 'high' | 'critical';
-export type BugStatus = 'new' | 'seen' | 'resolved' | 'wont_fix';
+export type BugStatus = 'new' | 'seen' | 'in_progress' | 'resolved' | 'released' | 'wont_fix';
 
 export const BUG_SEVERITIES: BugSeverity[] = ['low', 'normal', 'high', 'critical'];
-export const BUG_STATUSES: BugStatus[] = ['new', 'seen', 'resolved', 'wont_fix'];
+export const BUG_STATUSES: BugStatus[] = ['new', 'seen', 'in_progress', 'resolved', 'released', 'wont_fix'];
 
 // The Co-lab channel the attention-mirror posts into. Seeded by
 // 20260610000001_bug_reports.sql.
 export const BUG_MIRROR_CHANNEL_SLUG = 'bugs';
+
+// Immutable audit trail channel. Every status transition and new report is
+// echoed here so that #bug-log is a permanent, chronological record.
+export const BUG_LOG_CHANNEL_SLUG = 'bug-log';
 
 // Screenshot evidence attached to a bug report. Two shapes, deliberately split:
 //   • StoredBugAttachment — what's persisted in the bug_reports.attachments JSONB.
@@ -60,6 +64,10 @@ export interface BugReport {
   mirrorChannelSlug: string | null;
   mirroredMessageId: string | null;
   attachments: BugAttachment[];
+  ownerId: string | null;
+  ownerName: string | null;
+  linkedPr: string | null;
+  releasedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -80,7 +88,9 @@ export interface CreateBugInput {
 export interface BugStatusCounts {
   new: number;
   seen: number;
+  in_progress: number;
   resolved: number;
+  released: number;
   wont_fix: number;
   total: number;
 }
