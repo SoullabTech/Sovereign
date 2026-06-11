@@ -8,6 +8,17 @@
 
 The dormancy gate is one function — `isSmsConfigured()` in `lib/sms/config.ts` — which is `isSmsSendConfigured() && isSmsVerifyConfigured()`. Until it returns true: the send path is a no-op, the prefs API rejects `sms` writes, the verify route returns 503, and the UI renders the email-only panel. Everything below exists to make that function return true, safely.
 
+## Provider — decision pending (read first)
+
+The carrier/gateway is **not chosen yet** — price **Twilio vs Telnyx vs Plivo** before activating (Vonage / SignalWire also viable). Each needs its own account + **US A2P 10DLC registration** (brand + campaign; fees and ~1–2 week carrier review differ by provider). **SMS cannot be self-hosted for free** — every text routes through a carrier gateway, whichever one you pick.
+
+Twilio is the **current reference adapter** (implemented), *not* a canonical choice. The architecture is **provider-swappable**: choosing Telnyx or Plivo means swapping only the transport adapter —
+
+- `lib/sms/twilioClient.ts`, `lib/sms/verifyPhone.ts`, `lib/sms/sendSMS.ts`
+- the `TWILIO_*` env-var names in `lib/sms/config.ts`
+
+— while the notify wiring, prefs API, consent model, migration, E.164 normalize, and UI are provider-agnostic and stay as-is (they name Twilio only in comments). **Do not generalize the code into an `SMS_PROVIDER` abstraction yet** — shape the adapter to the carrier once one is chosen. The Twilio-named env vars in §5 are the reference set; substitute the chosen provider's equivalents.
+
 ---
 
 ## 1. Deploy the branch (code first — gated)
