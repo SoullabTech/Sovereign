@@ -59,6 +59,7 @@ Three stages: **Attach → Curate → Recall.**
 | 2 | Unit of continuity — client or case? | **Client-first, implicit active case.** Attach to `client_id`; auto-ensure an active/default `case_id` behind the scenes. Do **not** make practitioners manage cases in v1. |
 | 3 | Provenance — auto-extracted or curated? | **Curated, practitioner-confirmed, system-suggested.** MAIA may *propose* memory; the practitioner *places* it. No silent writing of a person's durable record. |
 | 4 | When to build? | Spec now (preparatory). Build is the next major Studio build; #403/#405 "settle" = shipped + verified (already met). |
+| 5 | Continuity vs dependence (the sovereignty test) | **The practitioner owns the thread.** Relationship memory must remain **portable**; if Studio vanished, the practitioner may lose convenience/automation/synthesis but **never the relationship memory itself.** Invariant, not feature (see §8). |
 
 **Load-bearing principle (canon):** *"This encounter happened with this person" is operational provenance. "What it meant" is memory. Sanctuary forbids the second, not necessarily the first* — and the practitioner may forbid the first too.
 
@@ -121,8 +122,8 @@ No other schema change. `practitioner_clients`, `practitioner_cases`, `case_memo
 
 ### Phase 3 — Recall (Prepare Me reads through the relationship)
 **Goal:** before the next session, the practitioner arrives already inside the relationship.
-- Prepare Me, given a `client_id`/`case_id`, reads: recent linked sessions (scribe/supervision), `case_memories` (**scoped `case_id` AND `practitioner_id`**), last `essence_summary`, and active-thread signals **iff** that telemetry is per-relationship (open Q §8).
-- **Reconcile** with the existing Prepare Me source: today `/api/stellium/maia/prepare` reads stellium `client_history`. v1 extends/redirects it to read `case_memories`; decide unify vs augment (§8).
+- Prepare Me, given a `client_id`/`case_id`, reads: recent linked sessions (scribe/supervision), `case_memories` (**scoped `case_id` AND `practitioner_id`**), last `essence_summary`, and active-thread signals **iff** that telemetry is per-relationship (open Q §9).
+- **Reconcile** with the existing Prepare Me source: today `/api/stellium/maia/prepare` reads stellium `client_history`. v1 extends/redirects it to read `case_memories`; decide unify vs augment (§9).
 - Recall **structurally excludes** sealed-session material — sealed never wrote `case_memories`, so exclusion is by construction, not by filter.
 
 ---
@@ -138,7 +139,40 @@ No other schema change. `practitioner_clients`, `practitioner_cases`, `case_memo
 
 ---
 
-## 8. Open questions / dependencies (resolve during build)
+## 8. Sovereignty invariant — the practitioner owns the thread
+
+This is not a feature. It is the third leg of the stool — the one that makes Relationship Memory survive the sovereignty test: *if Studio disappeared tomorrow, would the practitioner lose continuity, or merely lose convenience?* A system can be consent-respecting, encrypted, and practitioner-mediated and still become **structurally extractive** if the continuity thread cannot leave.
+
+**Two mechanisms of extraction, one dependency:**
+- *"We took your data."* — addressed by consent + the sanctuary matrix + encryption.
+- *"We became the only place your continuity exists."* — addressed **only** by portability.
+
+The boundary is easy to reason about:
+
+| If Studio vanished, you lose… | Acceptable? |
+|---|---|
+| convenience | Yes |
+| automation | Yes |
+| synthesis / tooling / workflow | Yes |
+| **the relationship memory itself** | **No** |
+
+**The invariant (canon-level):**
+> The practitioner owns the thread. The continuity relationship must remain portable.
+
+"Owns the thread" is the deeper claim — *not* "owns the database," "owns the infrastructure," or "owns the encryption key." Those are implementation choices. The invariant is that the relationship memory can leave **with the practitioner**.
+
+**Corollary to the category claim** (*"stores transcripts" is a feature; "remembers my people" is a category*):
+> "Remembers my people" cannot mean "only here" — or the category itself becomes captive.
+
+**Architectural, not reactive.** Stated now, this stays a principle: *relationship memory must strengthen care without creating dependence.* Deferred to a roadmap line, it collapses into implementation arguments (CSV? JSON? API? self-host?). Those are downstream answers to the same principle; the spec asserts the principle and leaves the form open.
+
+**What the build must satisfy (v1, minimal):** a practitioner's `case_memories` for their own cases must be **exportable in a durable, human-readable, re-importable form, independent of Studio's continued operation.** Mechanism is downstream (file export first, API later, self-host always available); the invariant is non-negotiable. Sealed sessions, having formed no memory, have nothing to export — sanctuary is preserved here too.
+
+This completes the triangle the rest of the spec already takes seriously: **boundary clarity** (§4), **no silent authorship** (§7, safeguard 2), **continuity without dependence** (this section).
+
+---
+
+## 9. Open questions / dependencies (resolve during build)
 
 - **active_thread telemetry scope:** is `active_thread_present` per-relationship or per-conversation? Verify before Prepare Me reads it; if per-conversation, do not surface it as relationship continuity.
 - **Prepare Me source reconciliation:** unify or augment `stellium client_history` vs `case_memories`. (`project_practitioner_adoption_roadmap`: Prepare Me API exists, no UI.)
@@ -149,7 +183,7 @@ No other schema change. `practitioner_clients`, `practitioner_cases`, `case_memo
 
 ---
 
-## 9. Verification gates (observability-first, per phase)
+## 10. Verification gates (observability-first, per phase)
 
 **Phase 1:** attach logs show `linkStored: true` for linked sessions; the list renders the client name for a linked session and the container type for an unlinked one; a stricter-sanctuary session stores no link; a query proves no `client_id` resolves to another practitioner's client.
 
@@ -161,7 +195,7 @@ Discipline reminder: *declaration is not liveness; built ≠ wired; wired ≠ su
 
 ---
 
-## 10. What this v1 does NOT do
+## 11. What this v1 does NOT do
 
 - No auto-memory; no LLM silently authoring a person's record.
 - No cross-client or cross-practitioner retrieval.
@@ -172,6 +206,6 @@ Discipline reminder: *declaration is not liveness; built ≠ wired; wired ≠ su
 
 ---
 
-## 11. One-line summary
+## 12. One-line summary
 
 Attach Session Room to the person/case graph that already exists, let the practitioner place what mattered, and let Prepare Me remember through that relationship — with sanctuary preserved at every step. The first version of Relationship Memory that behavior has already justified.
