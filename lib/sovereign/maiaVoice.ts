@@ -405,10 +405,34 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
 ];
 
+// ═══════════════════════════════════════════════════════════════════════════
+// INTERFACE HUMILITY — standing epistemic discipline (always-on)
+//
+// Canon: docs/canon/INTERFACE_HUMILITY.md. Names and consolidates a posture
+// already distributed across canon (MAIA_FOUNDATIONAL_CONTEXT "Evidence before
+// synthesis", CHANGES_SECTION_EPISTEMIC_DISCIPLINE, DISCIPLINED_NON_COLLAPSE,
+// RIGHT_TO_REMAIN_UNPOSSESSED) and extends it to name signal types explicitly.
+//
+// Unlike the ADDENDA_SPECS fields, this is NOT per-turn context — it is a
+// constant discipline appended last (so it governs how MAIA holds every signal
+// injected above it). It carries no metaphysics; it is purely the operational
+// rule "a signal is a question, never a verdict."
+// ═══════════════════════════════════════════════════════════════════════════
+const INTERFACE_HUMILITY_GUARDRAIL = `🪟 INTERFACE HUMILITY — standing discipline
+
+Whatever signals inform this response — symbols, archetypes, elemental or spiral state, astrology, somatic or HRV readings, emotional tone, dreams — are INTERFACE: orienting data, not verified truth about this person. A signal is a question, never a verdict.
+
+- Hold every interpretation as provisional and correctable; confidence names how much is still uncertain.
+- Do not collapse a signal into a conclusion without checking it with the member first.
+- Prefer "I notice…", "I wonder…", "one way to read this…", "does this fit?" over "this means", "you are", "this clearly shows".
+- The member is the final authority on what their experience means. You offer a reading; they author the meaning.
+- When a signal is absent, thin, or unconfirmed, name that — do not synthesize over the gap.`;
+
 /**
  * Iterate every MaiaContext.*Addendum field, append non-empty ones to the
- * prompt with their stable log markers, return the augmented prompt. Single
- * point of truth for which addenda reach the prompt and in what order.
+ * prompt with their stable log markers, then append the standing Interface
+ * Humility guardrail last. Single point of truth for which addenda reach the
+ * prompt and in what order.
  */
 export function appendAllContextAddenda(context: MaiaContext, prompt: string): string {
   let out = prompt;
@@ -430,6 +454,9 @@ export function appendAllContextAddenda(context: MaiaContext, prompt: string): s
   // Unconditional (every tier, every turn) — this is a capability boundary, not context.
   out += `\n\nMEMORY SPEECH-ACT BOUNDARY (non-negotiable): You do not save, keep, store, file, journal, or remember anything by your own action — persistence is handled by a separate system whose result you are not told inline. Therefore never claim, imply, or promise that something has been or will be kept, saved, stored, filed, or remembered. Do not say "I've kept that," "that's saved," "I'll remember this," "noted and stored," or any equivalent. If the member asks you to keep something, you may reflect that it matters to them — but you must not assert that it was captured. A promise the system cannot confirm is a broken covenant, not a courtesy.`;
 
+  // Standing discipline, appended last so it governs how MAIA holds every signal above.
+  out += `\n\n${INTERFACE_HUMILITY_GUARDRAIL}`;
+  console.log('🪟 [Interface Humility] standing guardrail applied');
   return out;
 }
 

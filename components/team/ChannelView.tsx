@@ -282,6 +282,7 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     }
   };
 
+
   if (accessRevoked) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
