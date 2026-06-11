@@ -52,21 +52,29 @@ export async function POST(request: NextRequest) {
     const errorCode = params.ErrorCode || null;
     const errorMessage = params.ErrorMessage || null;
 
-    // Upsert by SID — the callback may arrive before or independently of the
-    // send-path insert, so this is self-sufficient.
-    await query(
+    // Monotonic upsert by SID. Status may advance through the lifecycle but must
+    // never regress: Twilio callbacks can arrive out of order (a late "queued"
+    // after "delivered"), so the WHERE guard keeps the more-advanced state.
+    // sms_status_rank (migration 20260611000002) makes this an atomic, race-safe
+    // comparison. Self-sufficient — the callback may arrive before/without the
+    // send-path insert.
+    const upsert = await query(
       `INSERT INTO sms_delivery_status (message_sid, status, error_code, error_message, updated_at)
        VALUES ($1, $2, $3, $4, NOW())
        ON CONFLICT (message_sid)
        DO UPDATE SET status = EXCLUDED.status,
                      error_code = EXCLUDED.error_code,
                      error_message = EXCLUDED.error_message,
-                     updated_at = NOW()`,
+                     updated_at = NOW()
+       WHERE sms_status_rank(EXCLUDED.status) >= sms_status_rank(sms_delivery_status.status)`,
       [sid, status, errorCode, errorMessage],
     );
 
-    // Distinct delivered / failed logging — the point of this endpoint.
-    if (status === 'delivered') {
+    // rowCount === 0 on an existing SID means the monotonic guard rejected a
+    // non-advancing (out-of-order) callback — the more-advanced state is kept.
+    if ((upsert.rowCount ?? 0) === 0) {
+      console.log(`[SMS Status] ignored non-advancing sid=${sid} status=${status} (kept current)`);
+    } else if (status === 'delivered') {
       console.log(`[SMS Status] delivered sid=${sid}`);
     } else if (status === 'failed' || status === 'undelivered') {
       console.error(
