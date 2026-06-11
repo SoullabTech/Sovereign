@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { TeamShell } from '@/components/team/TeamShell';
 
 async function getSessionMemberId(): Promise<string | null> {
@@ -33,5 +34,15 @@ export default async function TeamLayout({
   const memberId = await getSessionMemberId();
   if (!memberId) redirect('/signin?next=/team/general');
 
-  return <TeamShell currentMemberId={memberId}>{children}</TeamShell>;
+  const cookieStore = await cookies();
+  const currentTeamId = await resolveCurrentTeamId(
+    memberId,
+    cookieStore.get(COLAB_TEAM_COOKIE)?.value ?? null
+  );
+
+  return (
+    <TeamShell currentMemberId={memberId} currentTeamId={currentTeamId}>
+      {children}
+    </TeamShell>
+  );
 }

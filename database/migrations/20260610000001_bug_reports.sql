@@ -53,20 +53,35 @@ COMMENT ON TABLE bug_reports IS
 -- so we don't rely on a constraint being present. No-op if there are no
 -- members yet (fresh DB) or if the channel already exists.
 -- ============================================
--- team_id: later migrations made team_channels.team_id NOT NULL (FK→studio_teams).
--- Borrow the team of an existing channel so #bugs lands in the same team. Skipped
--- if no team-bearing channel exists yet (the mirror then gracefully no-ops until
--- the channel is created). By migration order (20260322 < 20260610) the column
--- is always present here.
-INSERT INTO team_channels (id, slug, name, description, channel_type, created_by, team_id)
-SELECT
-    gen_random_uuid(),
-    'bugs',
-    'Bugs',
-    'Incoming bug reports (member + system). Mirrored from the monitor field; the table at /admin/monitor owns status.',
-    'text',
-    (SELECT id FROM members ORDER BY created_at ASC LIMIT 1),
-    (SELECT team_id FROM team_channels WHERE team_id IS NOT NULL ORDER BY created_at ASC LIMIT 1)
-WHERE EXISTS (SELECT 1 FROM members LIMIT 1)
-  AND EXISTS (SELECT 1 FROM team_channels WHERE team_id IS NOT NULL)
-  AND NOT EXISTS (SELECT 1 FROM team_channels WHERE slug = 'bugs');
+-- team_id: a LATER migration (20260611000001_colab_channels_team_scope) adds
+-- team_channels.team_id (FK→studio_teams). This migration is ordered BEFORE it
+-- (0610 < 0611), so on a clean database the column does not exist yet — and a
+-- plain INSERT that names team_id fails at PARSE time (the earlier "20260322"
+-- assumption in this file's history was wrong). Guard the seed behind a
+-- column-existence check and run it via dynamic SQL, so this migration is safe
+-- whether team_id exists yet or not. When the column is absent we skip; the
+-- Co-Lab migration later backfills the (already-present) #bugs channel into the
+-- default team, and the bug mirror no-ops gracefully until then.
+DO $guard$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'team_channels' AND column_name = 'team_id'
+  ) THEN
+    EXECUTE $seed$
+      INSERT INTO team_channels (id, slug, name, description, channel_type, created_by, team_id)
+      SELECT
+          gen_random_uuid(),
+          'bugs',
+          'Bugs',
+          'Incoming bug reports (member + system). Mirrored from the monitor field; the table at /admin/monitor owns status.',
+          'text',
+          (SELECT id FROM members ORDER BY created_at ASC LIMIT 1),
+          (SELECT team_id FROM team_channels WHERE team_id IS NOT NULL ORDER BY created_at ASC LIMIT 1)
+      WHERE EXISTS (SELECT 1 FROM members LIMIT 1)
+        AND EXISTS (SELECT 1 FROM team_channels WHERE team_id IS NOT NULL)
+        AND NOT EXISTS (SELECT 1 FROM team_channels WHERE slug = 'bugs');
+    $seed$;
+  END IF;
+END
+$guard$;

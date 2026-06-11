@@ -19,9 +19,11 @@ import { TeamSidebar } from './TeamSidebar';
 
 export function TeamShell({
   currentMemberId,
+  currentTeamId,
   children,
 }: {
   currentMemberId: string;
+  currentTeamId: string | null;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -40,7 +42,7 @@ export function TeamShell({
           md:static md:z-auto md:w-auto md:max-w-none md:translate-x-0
           ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <TeamSidebar currentMemberId={currentMemberId} />
+        <TeamSidebar currentMemberId={currentMemberId} currentTeamId={currentTeamId} />
       </div>
 
       {/* Backdrop (mobile only, when drawer open) */}
