@@ -13,7 +13,11 @@ import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { randomUUID } from 'crypto';
 
-const VALID_STATUSES = ['active', 'inactive', 'archived', 'waitlist'] as const;
+// Must mirror the practitioner_clients.status CHECK constraint and the
+// /studio/clients UI vocabulary. Stale values here silently break BOTH the
+// create path (POST rejects a valid status) AND the GET status filter
+// (an unrecognized status drops the WHERE clause and returns every client).
+const VALID_STATUSES = ['invited', 'active', 'paused', 'completed', 'archived'] as const;
 type ClientStatus = typeof VALID_STATUSES[number];
 
 function isValidStatus(s: string): s is ClientStatus {
