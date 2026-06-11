@@ -12,7 +12,7 @@ import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 
 type BugSource = 'member' | 'claude' | 'system';
 type BugSeverity = 'low' | 'normal' | 'high' | 'critical';
-type BugStatus = 'new' | 'seen' | 'resolved' | 'wont_fix';
+type BugStatus = 'new' | 'seen' | 'reviewing' | 'fixed' | 'released' | 'resolved' | 'wont_fix';
 
 interface BugAttachment {
   id: string;
@@ -41,6 +41,9 @@ interface BugReport {
   adminNote: string | null;
   mirrorChannelSlug: string | null;
   attachments?: BugAttachment[];
+  ownerName: string | null;
+  linkedPr: string | null;
+  releasedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,6 +51,9 @@ interface BugReport {
 interface BugStatusCounts {
   new: number;
   seen: number;
+  reviewing: number;
+  fixed: number;
+  released: number;
   resolved: number;
   wont_fix: number;
   total: number;
@@ -63,6 +69,9 @@ const SEVERITY_DOT: Record<BugSeverity, string> = {
 const STATUS_BADGE: Record<BugStatus, string> = {
   new: 'text-amber-200 border-amber-400/40',
   seen: 'text-sky-200 border-sky-400/40',
+  reviewing: 'text-sky-200 border-sky-400/40',
+  fixed: 'text-emerald-200 border-emerald-400/40',
+  released: 'text-violet-200 border-violet-400/40',
   resolved: 'text-emerald-200 border-emerald-400/40',
   wont_fix: 'text-maia-ink-40 border-maia-ink-40/30',
 };
@@ -70,6 +79,9 @@ const STATUS_BADGE: Record<BugStatus, string> = {
 const STATUS_LABEL: Record<BugStatus, string> = {
   new: 'New',
   seen: 'Seen',
+  reviewing: 'Reviewing',
+  fixed: 'Fixed',
+  released: 'Released',
   resolved: 'Resolved',
   wont_fix: "Won't fix",
 };
@@ -80,7 +92,7 @@ const SOURCE_LABEL: Record<BugSource, string> = {
   system: 'system',
 };
 
-const STATUSES: BugStatus[] = ['new', 'seen', 'resolved', 'wont_fix'];
+const STATUSES: BugStatus[] = ['new', 'seen', 'reviewing', 'fixed', 'released', 'resolved', 'wont_fix'];
 const SEVERITIES: BugSeverity[] = ['low', 'normal', 'high', 'critical'];
 
 type Tab = 'bugs' | 'feedback' | 'requests' | 'alerts';
@@ -354,6 +366,7 @@ function BugRow({
   patchBug: (id: string, patch: Record<string, unknown>) => void;
 }) {
   const [note, setNote] = useState(bug.adminNote ?? '');
+  const [prInput, setPrInput] = useState(bug.linkedPr ?? '');
 
   return (
     <div className={`rounded border bg-maia-navy-900/40 ${expanded ? 'border-amber-300/30' : 'border-maia-ink-40/20'}`}>
@@ -448,6 +461,38 @@ function BugRow({
               Save note
             </button>
           </div>
+
+          {/* PR link */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider text-maia-ink-40 shrink-0">PR</span>
+            <input
+              type="text"
+              value={prInput}
+              onChange={(e) => setPrInput(e.target.value)}
+              onBlur={() => {
+                const val = prInput.trim() || null;
+                if (val !== (bug.linkedPr ?? null)) patchBug(bug.id, { linkedPr: val });
+              }}
+              placeholder="e.g. #425 or PR URL"
+              className="flex-1 rounded border border-maia-ink-40/20 bg-maia-navy-900/60 px-2 py-1 text-[12px] text-maia-ink-100 placeholder:text-maia-ink-40/60 focus:border-amber-300/40 focus:outline-none"
+            />
+          </div>
+
+          {/* Owner (read-only — set via API or future admin picker) */}
+          {bug.ownerName && (
+            <div className="text-[11px] text-maia-ink-60">
+              <span className="uppercase tracking-wider text-maia-ink-40">Owner: </span>
+              {bug.ownerName}
+            </div>
+          )}
+
+          {/* Released at */}
+          {bug.releasedAt && (
+            <div className="text-[11px] text-violet-300">
+              <span className="uppercase tracking-wider text-maia-ink-40">Released: </span>
+              {formatTime(bug.releasedAt)}
+            </div>
+          )}
         </div>
       )}
     </div>

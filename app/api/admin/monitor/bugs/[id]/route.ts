@@ -2,8 +2,16 @@
  * PATCH /api/admin/monitor/bugs/[id] — triage a bug report.
  * Admin-gated (LABTOOLS_ADMIN_PASSWORD via x-admin-password).
  *
- * Accepts any of: status (new|seen|resolved|wont_fix), severity, adminNote.
- * Transitioning to a terminal status stamps resolved_at; reopening clears it.
+ * Accepts any of:
+ *   status     — new | seen | reviewing | fixed | released | resolved | wont_fix
+ *   severity   — low | normal | high | critical
+ *   adminNote  — string (max 2000 chars)
+ *   ownerId    — UUID string or null
+ *   linkedPr   — string (max 200 chars) or null
+ *
+ * Transitioning to a terminal status stamps resolved_at/released_at once;
+ * reopening to a non-terminal status clears those timestamps.
+ * Every status transition emits an audit entry to the #bug-log channel.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -39,6 +47,17 @@ export async function PATCH(
   }
   if (typeof body?.adminNote === 'string') {
     patch.adminNote = body.adminNote.slice(0, 2000);
+  }
+  if ('ownerId' in body) {
+    patch.ownerId =
+      typeof body.ownerId === 'string' && /^[0-9a-f-]{36}$/i.test(body.ownerId)
+        ? body.ownerId
+        : null;
+  }
+  if (typeof body?.linkedPr === 'string') {
+    patch.linkedPr = body.linkedPr.slice(0, 200) || null;
+  } else if (body?.linkedPr === null) {
+    patch.linkedPr = null;
   }
 
   if (Object.keys(patch).length === 0) {
