@@ -16,10 +16,15 @@ export { COLAB_TEAM_COOKIE } from './colabConstants';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** The default Co-Lab workspace id (earliest-created team), or null if no teams exist. */
+/**
+ * The default Co-Lab workspace id (earliest-created team), or null if no teams
+ * exist. The `id` tiebreak keeps this deterministic when two teams share a
+ * created_at (e.g. seeded in one transaction) — without it the default could
+ * flip between an empty team and the populated one across requests.
+ */
 export async function getDefaultTeamId(): Promise<string | null> {
   const r = await query<{ id: string }>(
-    `SELECT id FROM studio_teams ORDER BY created_at ASC LIMIT 1`
+    `SELECT id FROM studio_teams ORDER BY created_at ASC, id ASC LIMIT 1`
   );
   return r.rows[0]?.id ?? null;
 }
