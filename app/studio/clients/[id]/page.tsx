@@ -295,10 +295,13 @@ export default function ClientDetailPage() {
                 <Mic className="w-4 h-4" />
                 Start Session
               </Link>
-              <button className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 transition-colors font-medium">
+              <Link
+                href={`/studio/sessions/new?clientId=${client.id}`}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 transition-colors font-medium"
+              >
                 <Plus className="w-4 h-4" />
                 Schedule Session
-              </button>
+              </Link>
               <button
                 onClick={() => router.push(`/caseload/${client.id}/notes/new`)}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors"
@@ -306,10 +309,13 @@ export default function ClientDetailPage() {
                 <FileText className="w-4 h-4" />
                 Add Note
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors">
+              <a
+                href={`mailto:${client.email}`}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors"
+              >
                 <MessageSquare className="w-4 h-4" />
                 Message
-              </button>
+              </a>
             </div>
 
             {/* Case Memory Timeline */}
