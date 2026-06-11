@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { ParentUpdateDrawer } from '@/components/studio/ParentUpdateDrawer';
+import { COUNCIL_FUNCTIONS, COUNCIL_FULL_PROMPT } from '@/lib/council/councilQuestions';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,7 +40,7 @@ interface ReviewMessage {
   timestamp: Date;
 }
 
-type ReviewLens = 'core' | 'spiralogic' | 'mentor';
+type ReviewLens = 'core' | 'spiralogic' | 'mentor' | 'council';
 
 interface SessionReviewChatProps {
   reviewedSessionId: string;
@@ -73,10 +74,20 @@ const MENTOR_PROMPTS = [
   { label: 'Training note', prompt: 'Write a reflective training note I could use for CPD.' },
 ];
 
+// Council lens — surfaces the latent "Council Report (one voice per element)"
+// primitive as a first-class lens, organised around the six elder-functions.
+// Single source of truth: lib/council/councilQuestions.ts. MAIA convenes the
+// council function; she does not become the elder (see councilPreamble.ts).
+const COUNCIL_PROMPTS = [
+  { label: 'Full council', prompt: COUNCIL_FULL_PROMPT },
+  ...COUNCIL_FUNCTIONS.map(fn => ({ label: fn.label, prompt: fn.question })),
+];
+
 const LENS_PROMPTS: Record<ReviewLens, typeof CORE_PROMPTS> = {
   core: CORE_PROMPTS,
   spiralogic: SPIRALOGIC_PROMPTS,
   mentor: MENTOR_PROMPTS,
+  council: COUNCIL_PROMPTS,
 };
 
 // ---------------------------------------------------------------------------
@@ -287,7 +298,7 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
           )}
         </div>
         <div className="flex items-center gap-1">
-          {(['core', 'spiralogic', 'mentor'] as ReviewLens[]).map(lens => (
+          {(['core', 'spiralogic', 'mentor', 'council'] as ReviewLens[]).map(lens => (
             <button
               key={lens}
               onClick={() => setActiveLens(lens)}
