@@ -12,7 +12,7 @@ import { adminFetch, storeAdminPassword } from '@/lib/admin/adminFetch';
 
 type BugSource = 'member' | 'claude' | 'system';
 type BugSeverity = 'low' | 'normal' | 'high' | 'critical';
-type BugStatus = 'new' | 'seen' | 'reviewing' | 'fixed' | 'released' | 'resolved' | 'wont_fix';
+type BugStatus = 'new' | 'seen' | 'in_progress' | 'resolved' | 'released' | 'wont_fix';
 
 interface BugAttachment {
   id: string;
@@ -51,10 +51,9 @@ interface BugReport {
 interface BugStatusCounts {
   new: number;
   seen: number;
-  reviewing: number;
-  fixed: number;
-  released: number;
+  in_progress: number;
   resolved: number;
+  released: number;
   wont_fix: number;
   total: number;
 }
@@ -69,21 +68,19 @@ const SEVERITY_DOT: Record<BugSeverity, string> = {
 const STATUS_BADGE: Record<BugStatus, string> = {
   new: 'text-amber-200 border-amber-400/40',
   seen: 'text-sky-200 border-sky-400/40',
-  reviewing: 'text-sky-200 border-sky-400/40',
-  fixed: 'text-emerald-200 border-emerald-400/40',
-  released: 'text-violet-200 border-violet-400/40',
+  in_progress: 'text-blue-200 border-blue-400/40',
   resolved: 'text-emerald-200 border-emerald-400/40',
+  released: 'text-violet-200 border-violet-400/40',
   wont_fix: 'text-maia-ink-40 border-maia-ink-40/30',
 };
 
 const STATUS_LABEL: Record<BugStatus, string> = {
   new: 'New',
   seen: 'Seen',
-  reviewing: 'Reviewing',
-  fixed: 'Fixed',
-  released: 'Released',
+  in_progress: 'In Progress',
   resolved: 'Resolved',
-  wont_fix: "Won't fix",
+  released: 'Released',
+  wont_fix: "Won't Fix",
 };
 
 const SOURCE_LABEL: Record<BugSource, string> = {
@@ -92,7 +89,7 @@ const SOURCE_LABEL: Record<BugSource, string> = {
   system: 'system',
 };
 
-const STATUSES: BugStatus[] = ['new', 'seen', 'reviewing', 'fixed', 'released', 'resolved', 'wont_fix'];
+const STATUSES: BugStatus[] = ['new', 'seen', 'in_progress', 'resolved', 'released', 'wont_fix'];
 const SEVERITIES: BugSeverity[] = ['low', 'normal', 'high', 'critical'];
 
 type Tab = 'bugs' | 'feedback' | 'requests' | 'alerts';

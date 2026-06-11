@@ -3,7 +3,7 @@
  * Admin-gated (LABTOOLS_ADMIN_PASSWORD via x-admin-password).
  *
  * Accepts any of:
- *   status     — new | seen | reviewing | fixed | released | resolved | wont_fix
+ *   status     — new | seen | in_progress | resolved | released | wont_fix
  *   severity   — low | normal | high | critical
  *   adminNote  — string (max 2000 chars)
  *   ownerId    — UUID string or null

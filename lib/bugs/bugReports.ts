@@ -9,7 +9,7 @@
 // durable part; a missed chat notice is recoverable. The table owns status; the
 // channel owns visibility.
 //
-// Phase 2 adds: lifecycle states (reviewing/fixed/released), owner_id, linked_pr,
+// Phase 2 adds: lifecycle states (in_progress/resolved/released), owner_id, linked_pr,
 // released_at, and an immutable audit trail echoed to #bug-log on every status
 // transition and on every new report.
 
@@ -187,7 +187,7 @@ async function logTransitionToBugLog(
       `Bug: ${excerpt}`,
       `→ /admin/monitor?bug=${bug.id}`,
     ];
-    if (to === 'fixed' && linkedPr) lines.push(`🔗 PR: ${linkedPr}`);
+    if (to === 'resolved' && linkedPr) lines.push(`🔗 PR: ${linkedPr}`);
 
     await sendMessage(channel.id, senderId, lines.join('\n'));
   } catch (err) {
@@ -343,7 +343,7 @@ export async function listBugReports(
   const countRows = await query<{ status: string; n: number }>(
     `SELECT status, COUNT(*)::int AS n FROM bug_reports GROUP BY status`,
   );
-  const counts: BugStatusCounts = { new: 0, seen: 0, reviewing: 0, fixed: 0, released: 0, resolved: 0, wont_fix: 0, total: 0 };
+  const counts: BugStatusCounts = { new: 0, seen: 0, in_progress: 0, resolved: 0, released: 0, wont_fix: 0, total: 0 };
   for (const r of countRows.rows) {
     if (r.status in counts) (counts as any)[r.status] = r.n;
     counts.total += r.n;
@@ -389,7 +389,7 @@ export async function updateBugReport(id: string, patch: BugPatch): Promise<BugR
       sets.push(`resolved_at = NULL`);
       sets.push(`resolved_by = NULL`);
     } else {
-      // new, seen, reviewing, fixed — not terminal; clear both timestamps.
+      // new, seen, in_progress — not terminal; clear both timestamps.
       sets.push(`resolved_at = NULL`);
       sets.push(`released_at = NULL`);
       sets.push(`resolved_by = NULL`);

@@ -4,10 +4,10 @@
 
 export type BugSource = 'member' | 'claude' | 'system';
 export type BugSeverity = 'low' | 'normal' | 'high' | 'critical';
-export type BugStatus = 'new' | 'seen' | 'reviewing' | 'fixed' | 'released' | 'resolved' | 'wont_fix';
+export type BugStatus = 'new' | 'seen' | 'in_progress' | 'resolved' | 'released' | 'wont_fix';
 
 export const BUG_SEVERITIES: BugSeverity[] = ['low', 'normal', 'high', 'critical'];
-export const BUG_STATUSES: BugStatus[] = ['new', 'seen', 'reviewing', 'fixed', 'released', 'resolved', 'wont_fix'];
+export const BUG_STATUSES: BugStatus[] = ['new', 'seen', 'in_progress', 'resolved', 'released', 'wont_fix'];
 
 // The Co-lab channel the attention-mirror posts into. Seeded by
 // 20260610000001_bug_reports.sql.
@@ -88,10 +88,9 @@ export interface CreateBugInput {
 export interface BugStatusCounts {
   new: number;
   seen: number;
-  reviewing: number;
-  fixed: number;
-  released: number;
+  in_progress: number;
   resolved: number;
+  released: number;
   wont_fix: number;
   total: number;
 }

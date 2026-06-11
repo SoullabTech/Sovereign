@@ -9,4 +9,4 @@ ALTER TABLE bug_reports
 -- constraint name is deterministic, and IF NOT EXISTS guards the ADD.
 ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS bug_reports_status_check;
 ALTER TABLE bug_reports ADD CONSTRAINT bug_reports_status_check
-  CHECK (status IN ('new', 'seen', 'reviewing', 'fixed', 'released', 'resolved', 'wont_fix'));
+  CHECK (status IN ('new', 'seen', 'in_progress', 'resolved', 'released', 'wont_fix'));
