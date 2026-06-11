@@ -6,7 +6,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { betaSession } from '@/lib/auth/betaSession';
 
 interface Attachment {
   id: string;
@@ -107,14 +106,12 @@ export default function FeedbackInboxPage() {
     }
   }, []);
 
+  // Admin auth is enforced server-side (requireAdminMember: session cookie + 'admin' role).
+  // Plain fetch carries the session cookie — and so do <img> requests for the screenshots —
+  // so access authorizes uniformly. A 401/403 surfaces as the "Admin access required" message.
   useEffect(() => {
-    const user = betaSession.getUser();
-    if (!user) {
-      router.push('/signin');
-      return;
-    }
     load();
-  }, [router, load]);
+  }, [load]);
 
   const patch = useCallback(
     async (id: number, body: Record<string, unknown>) => {

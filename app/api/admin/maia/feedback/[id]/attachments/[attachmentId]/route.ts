@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { requireAdmin, isGateResponse } from '@/lib/beta-testers/requireAdmin';
+import { requireAdminMember, isAdminGateResponse } from '@/lib/admin/requireAdminMember';
 import { readVaultBytes } from '@/lib/storage/fileVault';
 import { parseStoredAttachments } from '@/lib/team/attachments';
 
@@ -14,8 +14,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; attachmentId: string }> }
 ) {
-  const gate = await requireAdmin(request);
-  if (isGateResponse(gate)) return gate;
+  const gate = await requireAdminMember(request);
+  if (isAdminGateResponse(gate)) return gate;
 
   const { id, attachmentId } = await params;
   const fid = Number(id);

@@ -9,14 +9,14 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { requireAdmin, isGateResponse } from '@/lib/beta-testers/requireAdmin';
+import { requireAdminMember, isAdminGateResponse } from '@/lib/admin/requireAdminMember';
 import { parseStoredAttachments, toClientAttachments } from '@/lib/team/attachments';
 
 const LIFECYCLE = ['new', 'triaged', 'planned', 'active', 'fixed', 'verified', 'closed'] as const;
 
 export async function GET(request: NextRequest) {
-  const gate = await requireAdmin(request);
-  if (isGateResponse(gate)) return gate;
+  const gate = await requireAdminMember(request);
+  if (isAdminGateResponse(gate)) return gate;
 
   try {
     const r = await query(
