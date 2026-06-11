@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       account_sid: string;
       auth_token: string;
       from_number: string;
+      messaging_service_sid?: string;
     } | null = null;
 
     if (practitionerId) {
@@ -107,9 +108,23 @@ export async function POST(request: NextRequest) {
     );
 
     if (!result.success) {
-      console.error('[SMS Notifications] Failed to send:', result.errorMessage);
+      // Surface the real Twilio reason (code + message + status) in the log and the
+      // API response so failures are truthful instead of a generic "Failed to send SMS".
+      // Do NOT log result.rawResponse — for a message resource it can contain the
+      // recipient number and message body. The code/message/status are content-free.
+      console.error('[SMS Notifications] Failed to send:', {
+        errorCode: result.errorCode,
+        errorMessage: result.errorMessage,
+        status: result.status,
+      });
       return NextResponse.json(
-        { error: result.errorMessage || 'Failed to send SMS' },
+        {
+          error:
+            result.errorMessage ||
+            `SMS send failed (${result.errorCode || result.status || 'unknown error'})`,
+          errorCode: result.errorCode ?? null,
+          status: result.status ?? null,
+        },
         { status: 500 }
       );
     }

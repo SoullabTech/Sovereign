@@ -168,7 +168,7 @@ export class TwilioProvider implements CommsProvider {
           status: 'failed',
           externalId: sent.sid,
           errorCode: String(sent.error_code),
-          errorMessage: sent.error_message,
+          errorMessage: sent.error_message || `Twilio rejected the message (error ${sent.error_code})`,
           rawResponse: result,
         };
       }
@@ -180,6 +180,18 @@ export class TwilioProvider implements CommsProvider {
         success: isQueued,
         status: isQueued ? 'queued' : 'failed',
         externalId: sent.sid,
+        // When Twilio accepts the request (HTTP 2xx) but the message is not in a
+        // queued/sending/sent state, surface a truthful reason. Previously this
+        // branch left errorMessage undefined, which collapsed to a generic
+        // "Failed to send SMS" with no diagnostic value.
+        ...(isQueued
+          ? {}
+          : {
+              errorCode: sent.error_code ? String(sent.error_code) : 'TWILIO_NOT_QUEUED',
+              errorMessage:
+                sent.error_message ||
+                `Twilio returned status "${sent.status || 'unknown'}" instead of queued${sent.error_code ? ` (error ${sent.error_code})` : ''}`,
+            }),
         rawResponse: result,
       };
     } catch (error) {
