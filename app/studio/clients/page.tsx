@@ -142,7 +142,7 @@ export default function ClientsPage() {
   return (
     <div className="min-h-screen bg-slate-950 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <Users className="w-7 h-7 text-purple-400" />
@@ -424,17 +424,17 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
       onClick={onClose}
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-lg max-h-[90dvh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-800 sticky top-0 bg-slate-900">
+        <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900 shrink-0">
           <h2 className="text-lg font-semibold text-white">Add Client</h2>
           <button
             onClick={onClose}
@@ -444,7 +444,8 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm text-slate-400 mb-1">Name *</label>
@@ -545,8 +546,13 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-2">
+          </div>
+
+          {/* Actions — pinned footer, always reachable above the bottom nav + safe area */}
+          <div
+            className="flex justify-end gap-3 p-4 border-t border-slate-800 bg-slate-900 shrink-0"
+            style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+          >
             <button
               type="button"
               onClick={onClose}
