@@ -309,10 +309,25 @@ export function TeamSidebar({ currentMemberId, currentTeamId: initialTeamId }: T
   // router.refresh() following a switch), then re-fetch that team's channels.
   useEffect(() => { setTeamId(initialTeamId); }, [initialTeamId]);
 
-  const switchTeam = useCallback((nextTeamId: string) => {
+  const switchTeam = useCallback(async (nextTeamId: string) => {
     document.cookie = `${COLAB_TEAM_COOKIE}=${nextTeamId}; path=/; max-age=31536000; samesite=lax`;
     setTeamId(nextTeamId);
-    router.push('/team/general');
+    // Land on a real channel in the target team — prefer #general, else the first
+    // channel — so a team without #general doesn't drop onto a "not found" page.
+    let landing = 'general';
+    try {
+      const res = await fetch(`/api/team/channels?teamId=${encodeURIComponent(nextTeamId)}`);
+      if (res.ok) {
+        const { channels = [] } = await res.json();
+        landing =
+          channels.find((c: TeamChannel) => c.slug === 'general')?.slug ??
+          channels[0]?.slug ??
+          'general';
+      }
+    } catch {
+      /* fall back to #general (shows the empty state for a channel-less team) */
+    }
+    router.push(`/team/${landing}`);
     router.refresh();
   }, [router]);
 
