@@ -77,6 +77,8 @@ interface PastSession {
   id: string;
   container: string;
   title: string | null;
+  client_id: string | null;
+  client_name: string | null;
   started_at: string;
   ended_at: string | null;
   memory_policy: string;
@@ -90,6 +92,7 @@ interface PastSession {
 
 interface BookingOption {
   id: string;
+  clientId: string | null;
   clientName: string;
   serviceName: string | null;
   startAt: string;
@@ -208,6 +211,8 @@ export default function SessionRoomPage() {
   const [bookings, setBookings] = useState<BookingOption[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  // Relationship Memory v1 — Phase 1: stricter-sanctuary opt-out (store no client link).
+  const [keepLinkPrivate, setKeepLinkPrivate] = useState(false);
 
   // Interactive rail
   const [activeTab, setActiveTab] = useState<RailTab>('markers');
@@ -301,6 +306,7 @@ export default function SessionRoomPage() {
               .filter((b: any) => b.status !== 'cancelled' && b.status !== 'completed')
               .map((b: any) => ({
                 id: b.id,
+                clientId: b.clientId ?? null,
                 clientName: b.clientName || 'Unknown Client',
                 serviceName: b.serviceName,
                 startAt: b.startAt,
@@ -345,6 +351,7 @@ export default function SessionRoomPage() {
       }
     }
 
+    const selectedBooking = bookings.find(b => b.id === selectedBookingId);
     await ctx.startSession({
       container: localContainer,
       memoryPolicy: localMemoryPolicy,
@@ -353,6 +360,11 @@ export default function SessionRoomPage() {
       ...(localContainer === 'practitioner' && selectedBookingId
         ? { bookingId: selectedBookingId }
         : {}),
+      // Attach the durable person the booking already references (spec §6 Phase 1).
+      ...(localContainer === 'practitioner' && selectedBooking?.clientId
+        ? { clientId: selectedBooking.clientId }
+        : {}),
+      ...(keepLinkPrivate ? { keepLinkPrivate: true } : {}),
     });
   };
 
@@ -827,6 +839,26 @@ ${insightsSection}
               </p>
             </div>
 
+            {/* Relationship Memory (Phase 1): client link + stricter-sanctuary opt-out */}
+            {localContainer === 'practitioner' && selectedBookingId && (
+              <div className="mb-6">
+                <p className="text-[10px] text-slate-600 mb-2 leading-relaxed">
+                  {localMemoryPolicy === 'sealed'
+                    ? 'Sealed: this session can remain attached to the client record for continuity of care, but its content will not be remembered or used in future preparation.'
+                    : 'This session will be linked to the client record for continuity.'}
+                </p>
+                <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={keepLinkPrivate}
+                    onChange={(e) => setKeepLinkPrivate(e.target.checked)}
+                    className="rounded border-slate-700 bg-[#1e1e38] accent-amber-500"
+                  />
+                  Keep even the client link private for this session
+                </label>
+              </div>
+            )}
+
             {/* Start button */}
             <button
               onClick={handleStartSession}
@@ -917,7 +949,7 @@ ${insightsSection}
                           const startDate = new Date(s.started_at);
                           const durMin = Math.floor(s.duration_seconds / 60);
                           const durSec = s.duration_seconds % 60;
-                          const label = s.title || `${s.container.charAt(0).toUpperCase() + s.container.slice(1)} session`;
+                          const label = s.client_name || s.title || `${s.container.charAt(0).toUpperCase() + s.container.slice(1)} session`;
                           const eligibility = getReviewEligibility(s);
                           const statusBadge = getSessionStatusBadge(s);
                           return (

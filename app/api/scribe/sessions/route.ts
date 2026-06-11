@@ -20,6 +20,8 @@ export async function GET(req: NextRequest) {
         s.ended_at,
         s.memory_policy,
         s.transcript_enabled,
+        s.client_id,
+        pc.name AS client_name,
         EXTRACT(EPOCH FROM (COALESCE(s.ended_at, s.started_at) - s.started_at))::int AS duration_seconds,
         COUNT(DISTINCT t.id)::int                                              AS segment_count,
         COUNT(DISTINCT m.id)::int                                              AS marker_count,
@@ -36,8 +38,9 @@ export async function GET(req: NextRequest) {
          JOIN supervision_assembled_turns sat ON sat.session_id = sv.id
          GROUP BY sv.metadata->>'scribeSessionId'
        ) sat_counts ON sat_counts.scribe_id = s.id::text
+       LEFT JOIN practitioner_clients pc ON pc.id = s.client_id AND pc.practitioner_id = s.member_id
        WHERE s.member_id = $1 AND s.is_active = false
-       GROUP BY s.id, sat_counts.assembled_turns
+       GROUP BY s.id, pc.name, sat_counts.assembled_turns
        ORDER BY s.started_at DESC
        LIMIT 30`,
       [memberId]
