@@ -173,24 +173,28 @@ export class TwilioProvider implements CommsProvider {
         };
       }
 
-      // Twilio statuses: queued, sending, sent, delivered, failed
-      const isQueued = ['queued', 'sending', 'sent'].includes(sent.status);
+      // Statuses that mean Twilio has accepted the message for delivery.
+      // For Messaging Service / A2P sends the synchronous status is typically
+      // "accepted" (Twilio has taken the message and will select a sender and
+      // route it); "scheduled" applies to scheduled sends. Treat all of these as a
+      // successful handoff — final delivery is confirmed asynchronously via the
+      // StatusCallback webhook, not in this synchronous response.
+      const isAcceptedByProvider = ['accepted', 'scheduled', 'queued', 'sending', 'sent', 'delivered'].includes(sent.status);
 
       return {
-        success: isQueued,
-        status: isQueued ? 'queued' : 'failed',
+        success: isAcceptedByProvider,
+        status: isAcceptedByProvider ? 'queued' : 'failed',
         externalId: sent.sid,
-        // When Twilio accepts the request (HTTP 2xx) but the message is not in a
-        // queued/sending/sent state, surface a truthful reason. Previously this
-        // branch left errorMessage undefined, which collapsed to a generic
-        // "Failed to send SMS" with no diagnostic value.
-        ...(isQueued
+        // If Twilio accepted the request (HTTP 2xx) but returned a non-acceptance
+        // status (e.g. failed/undelivered), surface a truthful reason instead of
+        // leaving errorMessage undefined (which collapsed to a generic error).
+        ...(isAcceptedByProvider
           ? {}
           : {
               errorCode: sent.error_code ? String(sent.error_code) : 'TWILIO_NOT_QUEUED',
               errorMessage:
                 sent.error_message ||
-                `Twilio returned status "${sent.status || 'unknown'}" instead of queued${sent.error_code ? ` (error ${sent.error_code})` : ''}`,
+                `Twilio returned status "${sent.status || 'unknown'}" instead of an accepted status${sent.error_code ? ` (error ${sent.error_code})` : ''}`,
             }),
         rawResponse: result,
       };
