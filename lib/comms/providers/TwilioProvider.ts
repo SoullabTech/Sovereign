@@ -131,8 +131,14 @@ export class TwilioProvider implements CommsProvider {
         body.append('From', from_number);
       }
 
-      // Optional: Add status callback URL
-      // body.append('StatusCallback', `${process.env.BASE_URL}/api/webhooks/twilio`);
+      // Status callbacks: Twilio POSTs delivery updates (sent/delivered/failed)
+      // to this endpoint so the async outcome is recorded, not just acceptance.
+      const statusCallback =
+        process.env.TWILIO_STATUS_CALLBACK_URL ||
+        'https://soullab.life/api/notifications/sms/status';
+      if (statusCallback) {
+        body.append('StatusCallback', statusCallback);
+      }
 
       const response = await fetch(
         `${this.apiUrl}/Accounts/${account_sid}/Messages.json`,
