@@ -12,8 +12,10 @@ export const dynamic = 'force-dynamic';
  * /api/team/admin/* routes: cookie-based member session + team_admin / admin role.
  * No LABTOOLS_ADMIN_PASSWORD required — Co-lab admin session is sufficient.
  *
- * Returns a simplified list suitable for the read-only Bug Reports tab.
- * Full detail and workflow actions live in /admin/monitor.
+ * VISIBILITY ONLY — this route serves the Bug Reports tab in Co-lab Admin,
+ * which is an awareness surface (see docs/architecture/BUG_REPORT_SURFACES_2026-06-11.md).
+ * Workflow mutations (status, notes, ownership, resolution) belong in Monitor Field
+ * (/admin/monitor). Do not add write endpoints here.
  */
 export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
