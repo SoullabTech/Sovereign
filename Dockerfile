@@ -99,6 +99,13 @@ COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 # Create media storage directory owned by node (volume mounts inherit this)
 RUN mkdir -p /app/data/media && chown -R node:node /app/data/media
 
+# Create vault storage directory with world-writable permissions.
+# 0777 (not chown node) because userns-remapped Docker maps the container's uid=1000
+# to a DIFFERENT host uid than 1000, so ownership is unpredictable across hosts.
+# world-writable ensures any UID mapping can write. This also seeds the permissions
+# for NEW named volumes (Docker copies image dir perms on first mount).
+RUN mkdir -p /app/data/vault && chmod 0777 /app/data/vault
+
 USER node
 EXPOSE 3000
 
