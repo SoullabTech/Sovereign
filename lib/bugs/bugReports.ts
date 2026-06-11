@@ -116,7 +116,8 @@ function buildMirrorBody(bug: BugReport): string {
   const body = bug.message.length > 600 ? `${bug.message.slice(0, 600)}…` : bug.message;
   lines.push(`"${body}"`);
   lines.push('');
-  lines.push(`→ /admin/monitor?bug=${bug.id}`);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? 'https://soullab.life';
+  lines.push(`→ ${baseUrl}/admin/monitor?bug=${bug.id}`);
   return lines.join('\n');
 }
 
