@@ -23,6 +23,12 @@ const SURFACES: Array<{ title: string; href: string; description: string }> = [
     description:
       'Evaluation workstation. Shadow vs primary responses joined on turn_id. Reviewer labels feed Loop C learning analytics.',
   },
+  {
+    title: 'Feedback Inbox',
+    href: '/admin/maia/feedback',
+    description:
+      'Triage workflow for human-submitted reports — a board moving each report New → Triaged → Planned → Active → Fixed → Verified → Closed, with screenshot, reporter, owner, and linked PR. A workflow board, not a capability monitor: it triages what people report; it does not adjudicate substrate.',
+  },
 ];
 
 export default function MaiaAdminHubPage() {
