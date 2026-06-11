@@ -8,25 +8,78 @@
  *
  * Writes to the bug_reports table (source of truth) and mirrors a lightweight
  * notice into the #bugs Co-lab channel (handled in the service).
+ *
+ * Accepts JSON (text-only) or multipart/form-data when the report carries pasted /
+ * attached screenshots. Screenshots are evidence ON this one report — they ride the
+ * same submission, never a separate intake.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { createBugReport } from '@/lib/bugs/bugReports';
+import { processUploadedBugImages, AttachmentValidationError } from '@/lib/bugs/attachments';
 import { BUG_SEVERITIES, type BugSeverity } from '@/lib/bugs/types';
+import type { StoredBugAttachment } from '@/lib/bugs/types';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  let body: any;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  // Accept JSON (text-only) or multipart/form-data (with pasted / attached screenshots).
+  let body: any = {};
+  let attachments: StoredBugAttachment[] = [];
+  const contentType = request.headers.get('content-type') || '';
+
+  if (contentType.includes('multipart/form-data')) {
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    }
+    const str = (k: string) => {
+      const v = form.get(k);
+      return typeof v === 'string' && v.length > 0 ? v : undefined;
+    };
+    let context: Record<string, unknown> = {};
+    const rawContext = str('context');
+    if (rawContext) {
+      try {
+        const parsed = JSON.parse(rawContext);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) context = parsed;
+      } catch {
+        /* ignore malformed context */
+      }
+    }
+    body = {
+      message: str('message'),
+      title: str('title'),
+      severity: str('severity'),
+      url: str('url'),
+      userAgent: str('userAgent'),
+      context,
+    };
+    const files = form.getAll('images').filter((f): f is File => f instanceof File);
+    if (files.length > 0) {
+      try {
+        attachments = await processUploadedBugImages(files);
+      } catch (e) {
+        if (e instanceof AttachmentValidationError) {
+          return NextResponse.json({ error: e.message }, { status: 400 });
+        }
+        throw e;
+      }
+    }
+  } else {
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
   }
 
   const message = typeof body?.message === 'string' ? body.message.trim() : '';
-  if (!message) {
+  // A report needs words OR a screenshot (image-only is valid: "here's the broken screen").
+  if (!message && attachments.length === 0) {
     return NextResponse.json({ error: 'message is required' }, { status: 400 });
   }
   if (message.length > 5000) {
@@ -59,6 +112,7 @@ export async function POST(request: NextRequest) {
       userAgent,
       severity,
       context,
+      attachments,
     });
     return NextResponse.json(
       { ok: true, id: bug.id, status: bug.status, mirrored: Boolean(bug.mirroredMessageId) },

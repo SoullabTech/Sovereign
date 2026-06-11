@@ -11,6 +11,7 @@
 
 import { query, queryOne } from '@/lib/db/postgres';
 import { getChannelBySlug, sendMessage } from '@/lib/team/ChannelService';
+import { parseStoredBugAttachments, toClientBugAttachments } from './attachments';
 import {
   BUG_MIRROR_CHANNEL_SLUG,
   type BugReport,
@@ -18,6 +19,7 @@ import {
   type BugSeverity,
   type BugStatusCounts,
   type CreateBugInput,
+  type StoredBugAttachment,
 } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,6 +48,9 @@ function rowToBugReport(row: Record<string, any>): BugReport {
     adminNote: row.admin_note ?? null,
     mirrorChannelSlug: row.mirror_channel_slug ?? null,
     mirroredMessageId: row.mirrored_message_id ?? null,
+    // Stored attachments (with vault storagePath) → client-facing (admin-gated serve URL).
+    // storagePath never leaves this mapping, so it never reaches a client.
+    attachments: toClientBugAttachments(row.id, parseStoredBugAttachments(row.attachments)),
     createdAt: iso(row.created_at) ?? '',
     updatedAt: iso(row.updated_at) ?? '',
   };
@@ -92,6 +97,11 @@ function buildMirrorBody(bug: BugReport): string {
   lines.push(`Route: ${bug.url || '—'}`);
   const ua = summarizeUserAgent(bug.userAgent);
   if (ua) lines.push(`Browser: ${ua}`);
+  // Flag the screenshot count only — the bytes are admin-gated evidence, not posted
+  // into the channel (a shot can contain whatever was on the reporter's screen).
+  if (bug.attachments.length) {
+    lines.push(`📎 ${bug.attachments.length} screenshot${bug.attachments.length === 1 ? '' : 's'} attached`);
+  }
   lines.push('');
   const body = bug.message.length > 600 ? `${bug.message.slice(0, 600)}…` : bug.message;
   lines.push(`"${body}"`);
@@ -141,8 +151,8 @@ export async function createBugReport(input: CreateBugInput): Promise<BugReport>
 
   const result = await query<Record<string, any>>(
     `INSERT INTO bug_reports
-       (title, message, source, member_id, reporter_name, url, user_agent, context, severity)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
+       (title, message, source, member_id, reporter_name, url, user_agent, context, severity, attachments)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)
      RETURNING *`,
     [
       input.title ?? null,
@@ -154,6 +164,7 @@ export async function createBugReport(input: CreateBugInput): Promise<BugReport>
       input.userAgent ?? null,
       JSON.stringify(input.context ?? {}),
       severity,
+      JSON.stringify(input.attachments ?? []),
     ],
   );
 
@@ -185,6 +196,23 @@ const SELECT_WITH_RESOLVER = `
 export async function getBugReport(id: string): Promise<BugReport | null> {
   const row = await queryOne<Record<string, any>>(`${SELECT_WITH_RESOLVER} WHERE b.id = $1`, [id]);
   return row ? rowToBugReport(row) : null;
+}
+
+/**
+ * Server-only: resolve one stored attachment (including its vault storagePath) for
+ * a bug, for the admin-gated serve route. The storagePath never leaves the server —
+ * it is read here, used to stream bytes, and discarded.
+ */
+export async function getBugAttachmentStored(
+  bugId: string,
+  attachmentId: string,
+): Promise<StoredBugAttachment | null> {
+  const row = await queryOne<{ attachments: unknown }>(
+    `SELECT attachments FROM bug_reports WHERE id = $1`,
+    [bugId],
+  );
+  if (!row) return null;
+  return parseStoredBugAttachments(row.attachments).find((a) => a.id === attachmentId) ?? null;
 }
 
 export interface ListBugFilter {

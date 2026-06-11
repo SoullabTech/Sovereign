@@ -14,6 +14,17 @@ type BugSource = 'member' | 'claude' | 'system';
 type BugSeverity = 'low' | 'normal' | 'high' | 'critical';
 type BugStatus = 'new' | 'seen' | 'resolved' | 'wont_fix';
 
+interface BugAttachment {
+  id: string;
+  kind: 'image';
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  url: string; // admin-gated serve URL (fetched with the admin header, then shown as a blob)
+}
+
 interface BugReport {
   id: string;
   title: string | null;
@@ -29,6 +40,7 @@ interface BugReport {
   resolvedAt: string | null;
   adminNote: string | null;
   mirrorChannelSlug: string | null;
+  attachments?: BugAttachment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -365,6 +377,20 @@ function BugRow({
         <div className="border-t border-maia-ink-40/10 px-4 py-3 space-y-3">
           <p className="whitespace-pre-wrap text-sm text-maia-ink-100">{bug.message}</p>
 
+          {/* Screenshot evidence — bytes fetched with the admin header, shown as blobs. */}
+          {bug.attachments && bug.attachments.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="text-[10px] uppercase tracking-wider text-maia-ink-40">
+                Screenshots ({bug.attachments.length})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {bug.attachments.map((a) => (
+                  <AdminAttachmentThumb key={a.id} attachment={a} />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-[11px] text-maia-ink-60">
             <Meta label="Route" value={bug.url ?? '—'} mono />
             <Meta label="Browser" value={bug.userAgent ? bug.userAgent.slice(0, 60) : '—'} />
@@ -429,6 +455,59 @@ function BugRow({
 }
 
 // ── Primitives ────────────────────────────────────────────────────────────────
+
+// A screenshot thumbnail. The serve route is admin-gated by the x-admin-password
+// header, which a plain <img src> cannot send — so fetch the bytes via adminFetch
+// and render the resulting blob. Clicking opens the full image in a new tab.
+function AdminAttachmentThumb({ attachment }: { attachment: BugAttachment }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    (async () => {
+      try {
+        const res = await adminFetch(attachment.url);
+        if (!res.ok) throw new Error(String(res.status));
+        const blob = await res.blob();
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSrc(objectUrl);
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [attachment.url]);
+
+  if (failed) {
+    return (
+      <div
+        className="flex h-16 w-16 items-center justify-center rounded border border-rose-400/30 bg-rose-950/20 text-[9px] text-rose-300"
+        title={attachment.filename}
+      >
+        failed
+      </div>
+    );
+  }
+  if (!src) {
+    return <div className="h-16 w-16 animate-pulse rounded border border-maia-ink-40/20 bg-maia-navy-900/60" />;
+  }
+  return (
+    <a href={src} target="_blank" rel="noopener noreferrer" title={`${attachment.filename} — open full size`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={attachment.filename}
+        className="h-16 w-16 rounded border border-maia-ink-40/30 object-cover transition hover:border-amber-300/50"
+      />
+    </a>
+  );
+}
 
 function TabButton({ label, active, onClick, badge, muted }: { label: string; active: boolean; onClick: () => void; badge?: number; muted?: boolean }) {
   return (

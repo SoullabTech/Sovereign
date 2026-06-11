@@ -13,6 +13,34 @@ export const BUG_STATUSES: BugStatus[] = ['new', 'seen', 'resolved', 'wont_fix']
 // 20260610000001_bug_reports.sql.
 export const BUG_MIRROR_CHANNEL_SLUG = 'bugs';
 
+// Screenshot evidence attached to a bug report. Two shapes, deliberately split:
+//   • StoredBugAttachment — what's persisted in the bug_reports.attachments JSONB.
+//     Carries `storagePath` (vault-relative) and is SERVER-ONLY: never serialize it
+//     to a client.
+//   • BugAttachment — the client-facing shape: storagePath dropped, an admin-gated
+//     serve `url` added. This is what rides on BugReport.attachments.
+export interface StoredBugAttachment {
+  id: string;
+  kind: 'image';
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  storagePath: string; // vault-relative; SERVER-ONLY — never sent to clients
+}
+
+export interface BugAttachment {
+  id: string;
+  kind: 'image';
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  url: string; // admin-gated serve URL; the vault storagePath is never exposed
+}
+
 export interface BugReport {
   id: string;
   title: string | null;
@@ -31,6 +59,7 @@ export interface BugReport {
   adminNote: string | null;
   mirrorChannelSlug: string | null;
   mirroredMessageId: string | null;
+  attachments: BugAttachment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +74,7 @@ export interface CreateBugInput {
   userAgent?: string | null;
   context?: Record<string, unknown>;
   severity?: BugSeverity;
+  attachments?: StoredBugAttachment[];
 }
 
 export interface BugStatusCounts {
