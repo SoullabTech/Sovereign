@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 import { getChannelBySlug } from '@/lib/team/ChannelService';
+import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { ChannelView } from '@/components/team/ChannelView';
 
 async function getSessionMemberId(): Promise<string | null> {
@@ -36,7 +37,13 @@ export default async function ChannelPage({
   const memberId = await getSessionMemberId();
   if (!memberId) redirect(`/signin?next=/team/${channelSlug}`);
 
-  const channel = await getChannelBySlug(channelSlug).catch(() => null);
+  // Channels are team-scoped; resolve the slug within the member's current team.
+  const cookieStore = await cookies();
+  const teamId = await resolveCurrentTeamId(
+    memberId,
+    cookieStore.get(COLAB_TEAM_COOKIE)?.value ?? null
+  );
+  const channel = await getChannelBySlug(channelSlug, teamId).catch(() => null);
 
   if (!channel) {
     return (

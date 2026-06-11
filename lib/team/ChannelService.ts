@@ -20,7 +20,10 @@ export type SetVisibilityErrorCode =
 // CHANNELS
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function listChannels(memberId: string): Promise<TeamChannel[]> {
+export async function listChannels(memberId: string, teamId: string | null): Promise<TeamChannel[]> {
+  // Channels are team-scoped. No team in view (e.g. an env with no teams) => no channels.
+  if (!teamId) return [];
+
   const result = await query<{
     id: string;
     slug: string;
@@ -47,6 +50,7 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
      LEFT JOIN team_messages tm ON tm.channel_id = tc.id
      LEFT JOIN team_channel_reads tcr ON tcr.channel_id = tc.id AND tcr.member_id = $1
      WHERE tc.archived_at IS NULL
+       AND tc.team_id = $2
        AND (
          tc.is_private = FALSE
          OR EXISTS (
@@ -56,7 +60,7 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
        )
      GROUP BY tc.id, tcr.last_read_at
      ORDER BY tc.channel_type DESC, tc.name ASC`,
-    [memberId]
+    [memberId, teamId]
   );
 
   return result.rows.map(row => ({
@@ -78,7 +82,10 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
   }));
 }
 
-export async function getChannelBySlug(slug: string): Promise<TeamChannel | null> {
+export async function getChannelBySlug(slug: string, teamId: string | null): Promise<TeamChannel | null> {
+  // Slugs are unique per team, not globally — a team must be in view to resolve one.
+  if (!teamId) return null;
+
   const result = await query<{
     id: string;
     slug: string;
@@ -95,8 +102,8 @@ export async function getChannelBySlug(slug: string): Promise<TeamChannel | null
     prompt_scaffold: PromptScaffoldField[] | null;
     response_mode: string | null;
   }>(
-    `SELECT * FROM team_channels WHERE slug = $1 AND archived_at IS NULL`,
-    [slug]
+    `SELECT * FROM team_channels WHERE slug = $1 AND team_id = $2 AND archived_at IS NULL`,
+    [slug, teamId]
   );
 
   if (!result.rows[0]) return null;
