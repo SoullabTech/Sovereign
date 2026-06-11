@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { DMMessage, DMThread } from '@/lib/team/DMService';
+import type { MessageKind } from '@/lib/team/types';
 import { MessageInput } from './MessageInput';
 import { MessageText } from './MessageText';
+import { MessageAttachments } from './MessageAttachments';
 import { useChannelStream } from './useChannelStream';
 import { DMProfileCard } from './DMProfileCard';
 
@@ -75,12 +77,22 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dmThread.id, loading]);
 
-  const sendMessage = async (body: string) => {
-    const res = await fetch(`/api/team/dm/${dmThread.id}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body }),
-    });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const sendMessage = async (body: string, _kind: MessageKind, images: File[] = []) => {
+    // Images → multipart (browser sets the boundary); text-only → JSON, as before.
+    let res: Response;
+    if (images.length > 0) {
+      const form = new FormData();
+      form.append('body', body);
+      images.forEach(img => form.append('images', img));
+      res = await fetch(`/api/team/dm/${dmThread.id}/messages`, { method: 'POST', body: form });
+    } else {
+      res = await fetch(`/api/team/dm/${dmThread.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body }),
+      });
+    }
     if (!res.ok) throw new Error('Failed to send');
     const { message } = await res.json();
     setMessages(prev => prev.some(m => m.id === message.id) ? prev : [...prev, message]);
@@ -168,9 +180,12 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
                   </span>
                   <span className="text-xs text-white/30">{formatTime(msg.createdAt)}</span>
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-                  <MessageText body={msg.body} />
-                </p>
+                {msg.body.trim() && (
+                  <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
+                    <MessageText body={msg.body} />
+                  </p>
+                )}
+                <MessageAttachments attachments={msg.attachments} />
               </div>
             </div>
           );

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { TeamMessage, MessageKind } from '@/lib/team/types';
 import { MessageText } from './MessageText';
+import { MessageAttachments } from './MessageAttachments';
 
 const KIND_BADGE: Record<Exclude<MessageKind, 'build'>, { label: string; className: string }> = {
   question: {
@@ -121,9 +122,12 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           )}
         </div>
 
-        <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-          <MessageText body={message.body} />
-        </p>
+        {message.body.trim() && (
+          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
+            <MessageText body={message.body} />
+          </p>
+        )}
+        <MessageAttachments attachments={message.attachments} />
 
         {/* Reactions */}
         {message.reactions.length > 0 && (
