@@ -11,6 +11,7 @@
 
 import { query, queryOne } from '@/lib/db/postgres';
 import { getChannelBySlug, sendMessage } from '@/lib/team/ChannelService';
+import { getDefaultTeamId } from '@/lib/team/colabTeams';
 import {
   BUG_MIRROR_CHANNEL_SLUG,
   type BugReport,
@@ -113,7 +114,8 @@ async function mirrorBugToChannel(
   bug: BugReport,
 ): Promise<{ channelSlug: string; messageId: string } | null> {
   try {
-    const channel = await getChannelBySlug(BUG_MIRROR_CHANNEL_SLUG);
+    // #bugs is a system channel that lives in the default Co-Lab workspace.
+    const channel = await getChannelBySlug(BUG_MIRROR_CHANNEL_SLUG, await getDefaultTeamId());
     if (!channel) return null;
     const senderId = bug.memberId || channel.createdBy;
     if (!senderId) return null;

@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { TeamChannel, TeamMemberPresence } from '@/lib/team/types';
 import type { DMThread } from '@/lib/team/DMService';
+import { CoLabTeamSwitcher } from './CoLabTeamSwitcher';
+import { COLAB_TEAM_COOKIE } from '@/lib/team/colabConstants';
 
 interface TeamSidebarProps {
   currentMemberId: string;
+  currentTeamId: string | null;
 }
 
 function PresenceDot({ status }: { status: 'online' | 'away' | 'offline' }) {
@@ -57,10 +60,11 @@ function ForYouLink() {
   );
 }
 
-function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
+function CreateChannelModal({ onClose, onCreated, currentMemberId, teamId }: {
   onClose: () => void;
   onCreated: (slug: string) => void;
   currentMemberId: string;
+  teamId: string | null;
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -83,7 +87,7 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
       const res = await fetch('/api/team/channels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type, isPrivate }),
+        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type, isPrivate, teamId }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -283,10 +287,11 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
+export function TeamSidebar({ currentMemberId, currentTeamId: initialTeamId }: TeamSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const currentSlug = (pathname ?? '').replace(/^\/team\/?/, '').split('/')[0] || 'general';
+  const [teamId, setTeamId] = useState<string | null>(initialTeamId);
   const [channels, setChannels] = useState<TeamChannel[]>([]);
   const [presence, setPresence] = useState<TeamMemberPresence[]>([]);
   const [dmThreads, setDMThreads] = useState<DMThread[]>([]);
@@ -300,10 +305,37 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
     setIsAdmin(res.ok);
   }, []);
 
+  // Keep the local team in sync if the server re-resolves it (e.g. after a
+  // router.refresh() following a switch), then re-fetch that team's channels.
+  useEffect(() => { setTeamId(initialTeamId); }, [initialTeamId]);
+
+  const switchTeam = useCallback(async (nextTeamId: string) => {
+    document.cookie = `${COLAB_TEAM_COOKIE}=${nextTeamId}; path=/; max-age=31536000; samesite=lax`;
+    setTeamId(nextTeamId);
+    // Land on a real channel in the target team — prefer #general, else the first
+    // channel — so a team without #general doesn't drop onto a "not found" page.
+    let landing = 'general';
+    try {
+      const res = await fetch(`/api/team/channels?teamId=${encodeURIComponent(nextTeamId)}`);
+      if (res.ok) {
+        const { channels = [] } = await res.json();
+        landing =
+          channels.find((c: TeamChannel) => c.slug === 'general')?.slug ??
+          channels[0]?.slug ??
+          'general';
+      }
+    } catch {
+      /* fall back to #general (shows the empty state for a channel-less team) */
+    }
+    router.push(`/team/${landing}`);
+    router.refresh();
+  }, [router]);
+
   const loadChannels = useCallback(async () => {
-    const res = await fetch('/api/team/channels');
+    const qs = teamId ? `?teamId=${encodeURIComponent(teamId)}` : '';
+    const res = await fetch(`/api/team/channels${qs}`);
     if (res.ok) { const d = await res.json(); setChannels(d.channels ?? []); }
-  }, []);
+  }, [teamId]);
 
   const loadDMs = useCallback(async () => {
     const res = await fetch('/api/team/dm');
@@ -367,6 +399,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
         <CreateChannelModal
           onClose={() => setShowCreateChannel(false)}
           currentMemberId={currentMemberId}
+          teamId={teamId}
           onCreated={async (slug) => {
             setShowCreateChannel(false);
             await loadChannels();
@@ -376,36 +409,9 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
       )}
 
       <aside className="w-full md:w-56 flex-shrink-0 bg-[#16162a] border-r border-white/8 flex flex-col h-full">
-        {/* Workspace header */}
+        {/* Workspace header — switch / create workspaces */}
         <div className="px-4 py-3 border-b border-white/8">
-          <div className="flex items-center gap-2.5">
-            {/* Holoflower with warm glow */}
-            <div className="relative flex-shrink-0 w-7 h-7 flex items-center justify-center">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, rgba(212,184,150,0.4) 0%, transparent 70%)',
-                  filter: 'blur(6px)',
-                }}
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/holoflower.svg"
-                alt="Soullab"
-                width={24}
-                height={24}
-                className="relative z-10 w-6 h-6 object-contain"
-                style={{ filter: 'drop-shadow(0 0 6px rgba(212,184,150,0.5))' }}
-              />
-            </div>
-            {/* Wordmark */}
-            <span
-              className="text-xs font-semibold tracking-[0.18em] text-white/70 uppercase"
-              style={{ fontFamily: 'var(--font-sans, inherit)', letterSpacing: '0.18em' }}
-            >
-              Soullab
-            </span>
-          </div>
+          <CoLabTeamSwitcher currentTeamId={teamId} onSwitch={switchTeam} />
         </div>
 
         {/* Channels */}

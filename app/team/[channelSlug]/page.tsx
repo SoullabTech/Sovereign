@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
-import { getChannelBySlug } from '@/lib/team/ChannelService';
+import { getChannelBySlug, listChannels } from '@/lib/team/ChannelService';
+import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { ChannelView } from '@/components/team/ChannelView';
 
 async function getSessionMemberId(): Promise<string | null> {
@@ -36,18 +37,38 @@ export default async function ChannelPage({
   const memberId = await getSessionMemberId();
   if (!memberId) redirect(`/signin?next=/team/${channelSlug}`);
 
-  const channel = await getChannelBySlug(channelSlug).catch(() => null);
+  // Channels are team-scoped; resolve the slug within the member's current team.
+  const cookieStore = await cookies();
+  const teamId = await resolveCurrentTeamId(
+    memberId,
+    cookieStore.get(COLAB_TEAM_COOKIE)?.value ?? null
+  );
+  const channel = await getChannelBySlug(channelSlug, teamId).catch(() => null);
 
   if (!channel) {
+    // Distinguish an empty workspace (no channels yet) from a genuinely missing
+    // channel, so a channel-less team gets a true empty state — not a false
+    // "#general not found".
+    const channels = teamId ? await listChannels(memberId, teamId).catch(() => []) : [];
+    const emptyWorkspace = channels.length === 0;
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
         <span className="text-5xl opacity-20">#</span>
-        <p className="text-white/40 text-sm">
-          Channel <span className="text-white/60 font-medium">#{channelSlug}</span> not found.
-        </p>
-        <p className="text-white/20 text-xs">
-          Apply the team messaging migration to get started.
-        </p>
+        {emptyWorkspace ? (
+          <>
+            <p className="text-white/40 text-sm">This workspace has no channels yet.</p>
+            <p className="text-white/20 text-xs">
+              Use the + next to “Channels” in the sidebar to create the first one.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-white/40 text-sm">
+              Channel <span className="text-white/60 font-medium">#{channelSlug}</span> not found.
+            </p>
+            <p className="text-white/20 text-xs">Pick a channel from the sidebar.</p>
+          </>
+        )}
       </div>
     );
   }
