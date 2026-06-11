@@ -20,7 +20,7 @@ export type SetVisibilityErrorCode =
 // CHANNELS
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function listChannels(memberId: string): Promise<TeamChannel[]> {
+export async function listChannels(memberId: string, teamId: string): Promise<TeamChannel[]> {
   const result = await query<{
     id: string;
     slug: string;
@@ -29,6 +29,7 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
     channel_type: string;
     is_private: boolean;
     created_by: string;
+    team_id: string;
     archived_at: string | null;
     created_at: string;
     updated_at: string;
@@ -47,6 +48,7 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
      LEFT JOIN team_messages tm ON tm.channel_id = tc.id
      LEFT JOIN team_channel_reads tcr ON tcr.channel_id = tc.id AND tcr.member_id = $1
      WHERE tc.archived_at IS NULL
+       AND tc.team_id = $2
        AND (
          tc.is_private = FALSE
          OR EXISTS (
@@ -56,7 +58,7 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
        )
      GROUP BY tc.id, tcr.last_read_at
      ORDER BY tc.channel_type DESC, tc.name ASC`,
-    [memberId]
+    [memberId, teamId]
   );
 
   return result.rows.map(row => ({
@@ -67,6 +69,7 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
     channelType: row.channel_type as 'text' | 'announcement',
     isPrivate: row.is_private,
     createdBy: row.created_by,
+    teamId: row.team_id,
     archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

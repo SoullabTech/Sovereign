@@ -334,9 +334,10 @@ export async function countUnreadDMs(memberId: string): Promise<number> {
 // TEAM MEMBERS (for DM target selection)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function listTeamMembers(): Promise<Array<{
+export async function listTeamMembers(teamId: string): Promise<Array<{
   memberId: string;
   name: string;
+  username: string;
   status: 'online' | 'away' | 'offline';
 }>> {
   const result = await query<{
@@ -346,14 +347,18 @@ export async function listTeamMembers(): Promise<Array<{
     status: string | null;
   }>(
     `SELECT m.id, m.name, m.username, tp.status
-     FROM members m
+     FROM studio_team_members stm
+     JOIN members m ON m.id = stm.member_id
      LEFT JOIN team_presence tp ON tp.member_id = m.id
-     ORDER BY tp.last_seen_at DESC NULLS LAST, m.name ASC`
+     WHERE stm.team_id = $1
+     ORDER BY tp.last_seen_at DESC NULLS LAST, m.name ASC`,
+    [teamId]
   );
 
   return result.rows.map(row => ({
     memberId: row.id,
     name: row.name || row.username,
+    username: row.username,
     status: (row.status as 'online' | 'away' | 'offline') || 'offline',
   }));
 }

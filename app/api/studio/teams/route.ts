@@ -1,8 +1,8 @@
 /**
  * STUDIO TEAMS API
  *
- * GET: List user's teams
- * POST: Create new team
+ * GET: List user's teams (includes isAdmin flag for the caller)
+ * POST: Create new team — admin-only (roles contains 'admin' or 'team_admin')
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,6 +11,15 @@ import { query } from '@/lib/db/postgres';
 import { getMemberTeams } from '@/lib/auth/teamPermissions';
 import crypto from 'crypto';
 
+/** Reusable admin check — mirrors app/api/team/admin/channels/route.ts */
+async function requireAdmin(memberId: string): Promise<boolean> {
+  const r = await query(
+    `SELECT id FROM members WHERE id = $1 AND ('team_admin' = ANY(roles) OR 'admin' = ANY(roles))`,
+    [memberId]
+  );
+  return r.rows.length > 0;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const memberId = await getMemberIdFromRequest(request);
@@ -18,9 +27,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const teams = await getMemberTeams(memberId);
+    const [teams, isAdmin] = await Promise.all([
+      getMemberTeams(memberId),
+      requireAdmin(memberId),
+    ]);
 
-    return NextResponse.json({ teams });
+    return NextResponse.json({ teams, isAdmin });
   } catch (error) {
     console.error('[Teams API] GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -32,6 +44,12 @@ export async function POST(request: NextRequest) {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Admin gate — only team_admin or admin can create teams
+    const admin = await requireAdmin(memberId);
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden: admin role required to create a team' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -55,6 +73,15 @@ export async function POST(request: NextRequest) {
       `INSERT INTO studio_team_members (team_id, member_id, role)
        VALUES ($1, $2, 'owner')`,
       [teamId, memberId]
+    );
+
+    // Seed a #general starter channel for the new team (idempotent)
+    const generalId = crypto.randomUUID();
+    await query(
+      `INSERT INTO team_channels (id, slug, name, description, channel_type, is_private, created_by, team_id)
+       VALUES ($1, 'general', 'general', 'General conversation', 'text', FALSE, $2, $3)
+       ON CONFLICT (team_id, slug) DO NOTHING`,
+      [generalId, memberId, teamId]
     );
 
     // Fetch the created team

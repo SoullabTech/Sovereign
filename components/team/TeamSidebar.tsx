@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { TeamChannel, TeamMemberPresence } from '@/lib/team/types';
 import type { DMThread } from '@/lib/team/DMService';
+import { useTeamContext, useTeams } from '@/hooks/useStudioData';
 
 interface TeamSidebarProps {
   currentMemberId: string;
@@ -57,10 +58,11 @@ function ForYouLink() {
   );
 }
 
-function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
+function CreateChannelModal({ onClose, onCreated, currentMemberId, teamId }: {
   onClose: () => void;
   onCreated: (slug: string) => void;
   currentMemberId: string;
+  teamId: string | null;
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -83,7 +85,7 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
       const res = await fetch('/api/team/channels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type, isPrivate }),
+        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type, isPrivate, teamId }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -283,10 +285,109 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Minimal Co-Lab team switcher — lists teams, switches active team, shows admin-only "Create team"
+function CoLabTeamSwitcher({ isAdmin }: { isAdmin: boolean }) {
+  const { teams, loading, createTeam } = useTeams();
+  const { currentTeamId, setCurrentTeamId } = useTeamContext();
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [createErr, setCreateErr] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, []);
+
+  const currentTeam = teams.find(t => t.id === currentTeamId) ?? teams[0];
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTeamName.trim()) return;
+    setCreateErr('');
+    try {
+      const team = await createTeam({ name: newTeamName.trim() });
+      if (team) setCurrentTeamId(team.id);
+      setCreating(false);
+      setNewTeamName('');
+      setOpen(false);
+    } catch {
+      setCreateErr('Failed to create team');
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative px-2 pb-2">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md bg-white/5 hover:bg-white/8 text-white/60 text-xs transition-colors"
+      >
+        <span className="flex-1 text-left truncate">{loading ? 'Loading...' : (currentTeam?.name ?? 'Co-Lab')}</span>
+        <svg className={`w-3 h-3 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+          {teams.map(team => (
+            <button
+              key={team.id}
+              onClick={() => { setCurrentTeamId(team.id); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
+                (currentTeamId ?? teams[0]?.id) === team.id
+                  ? 'bg-amber-500/15 text-white/90'
+                  : 'text-white/50 hover:bg-white/5 hover:text-white/70'
+              }`}
+            >
+              <span className="flex-1 text-left truncate">{team.name}</span>
+              <span className="text-white/20">{team.member_count}</span>
+            </button>
+          ))}
+
+          {isAdmin && !creating && (
+            <button
+              onClick={() => setCreating(true)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors border-t border-white/8"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create team
+            </button>
+          )}
+
+          {isAdmin && creating && (
+            <form onSubmit={handleCreate} className="px-3 py-2 border-t border-white/8 space-y-1.5">
+              <input
+                autoFocus
+                value={newTeamName}
+                onChange={e => setNewTeamName(e.target.value)}
+                placeholder="Team name"
+                className="w-full bg-[#0f0f1e] border border-white/10 rounded px-2 py-1 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
+              />
+              {createErr && <p className="text-xs text-red-400">{createErr}</p>}
+              <div className="flex gap-1">
+                <button type="submit" disabled={!newTeamName.trim()} className="flex-1 py-1 rounded bg-amber-500 text-black text-xs font-medium disabled:opacity-40">Create</button>
+                <button type="button" onClick={() => { setCreating(false); setNewTeamName(''); }} className="flex-1 py-1 rounded bg-white/8 text-white/50 text-xs">Cancel</button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const currentSlug = (pathname ?? '').replace(/^\/team\/?/, '').split('/')[0] || 'general';
+  const { currentTeamId, setCurrentTeamId } = useTeamContext();
   const [channels, setChannels] = useState<TeamChannel[]>([]);
   const [presence, setPresence] = useState<TeamMemberPresence[]>([]);
   const [dmThreads, setDMThreads] = useState<DMThread[]>([]);
@@ -301,9 +402,15 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
   }, []);
 
   const loadChannels = useCallback(async () => {
-    const res = await fetch('/api/team/channels');
-    if (res.ok) { const d = await res.json(); setChannels(d.channels ?? []); }
-  }, []);
+    const teamParam = currentTeamId ? `?teamId=${currentTeamId}` : '';
+    const res = await fetch(`/api/team/channels${teamParam}`);
+    if (res.ok) {
+      const d = await res.json();
+      setChannels(d.channels ?? []);
+      // If server resolved a different teamId (default fallback), sync context
+      if (d.teamId && !currentTeamId) setCurrentTeamId(d.teamId);
+    }
+  }, [currentTeamId, setCurrentTeamId]);
 
   const loadDMs = useCallback(async () => {
     const res = await fetch('/api/team/dm');
@@ -311,9 +418,10 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
   }, []);
 
   const loadMembers = useCallback(async () => {
-    const res = await fetch('/api/team/members');
+    const teamParam = currentTeamId ? `?teamId=${currentTeamId}` : '';
+    const res = await fetch(`/api/team/members${teamParam}`);
     if (res.ok) { const d = await res.json(); setAllMembers(d.members ?? []); }
-  }, []);
+  }, [currentTeamId]);
 
   const loadPresence = useCallback(async () => {
     const res = await fetch('/api/team/presence');
@@ -337,10 +445,14 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
     }
   }, [loadDMs, router]);
 
+  // Reload channels + members when team changes
   useEffect(() => {
     loadChannels();
-    loadDMs();
     loadMembers();
+  }, [loadChannels, loadMembers]);
+
+  useEffect(() => {
+    loadDMs();
     loadPresence();
     sendHeartbeat();
     checkAdmin();
@@ -352,7 +464,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
     }, 25000);
 
     return () => clearInterval(presenceInterval);
-  }, [loadChannels, loadDMs, loadMembers, loadPresence, sendHeartbeat, checkAdmin]);
+  }, [loadDMs, loadPresence, sendHeartbeat, checkAdmin]);
 
   const announcements = channels.filter(c => c.channelType === 'announcement');
   const regular = channels.filter(c => c.channelType === 'text');
@@ -367,6 +479,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
         <CreateChannelModal
           onClose={() => setShowCreateChannel(false)}
           currentMemberId={currentMemberId}
+          teamId={currentTeamId}
           onCreated={async (slug) => {
             setShowCreateChannel(false);
             await loadChannels();
@@ -376,6 +489,11 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
       )}
 
       <aside className="w-full md:w-56 flex-shrink-0 bg-[#16162a] border-r border-white/8 flex flex-col h-full">
+        {/* Team switcher */}
+        <div className="pt-2 border-b border-white/8 pb-0">
+          <CoLabTeamSwitcher isAdmin={isAdmin} />
+        </div>
+
         {/* Workspace header */}
         <div className="px-4 py-3 border-b border-white/8">
           <div className="flex items-center gap-2.5">
