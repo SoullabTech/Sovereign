@@ -16,6 +16,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { TeamSidebar } from './TeamSidebar';
+import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 
 export function TeamShell({
   currentMemberId,
@@ -33,6 +34,7 @@ export function TeamShell({
   }, [pathname]);
 
   return (
+    <TeamContextProvider>
     <div className="flex h-screen bg-[#1a1a2e] overflow-hidden">
       {/* Sidebar: static column on desktop; slide-in drawer on mobile */}
       <div
@@ -71,5 +73,6 @@ export function TeamShell({
         {children}
       </main>
     </div>
+    </TeamContextProvider>
   );
 }

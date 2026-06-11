@@ -14,6 +14,7 @@ export interface TeamChannel {
   channelType: 'text' | 'announcement';
   isPrivate: boolean;
   createdBy: string;
+  teamId: string;
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
