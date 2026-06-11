@@ -341,14 +341,20 @@ export default function ClientsPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 pt-4 border-t border-slate-800">
-                      <button className="flex-1 flex items-center justify-center gap-2 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors text-sm">
+                      <a
+                        href={`mailto:${client.email}`}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors text-sm"
+                      >
                         <MessageSquare className="w-4 h-4" />
                         Message
-                      </button>
-                      <button className="flex-1 flex items-center justify-center gap-2 py-2 bg-maia-navy-700/20 text-maia-gold rounded-lg hover:bg-maia-navy-700/30 transition-colors text-sm">
+                      </a>
+                      <Link
+                        href={`/studio/sessions/new?clientId=${client.id}`}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-maia-navy-700/20 text-maia-gold rounded-lg hover:bg-maia-navy-700/30 transition-colors text-sm"
+                      >
                         <Calendar className="w-4 h-4" />
                         Schedule
-                      </button>
+                      </Link>
                     </div>
                   </motion.div>
                 );
