@@ -3,6 +3,8 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getDMMessages, sendDMMessage, markDMRead } from '@/lib/team/DMService';
 import { sendPartnerNotification } from '@/lib/masters/partnerNotifications';
 import { logFieldActivity } from '@/lib/masters/fieldActivityLog';
+import { processUploadedImages, AttachmentValidationError } from '@/lib/team/attachments';
+import type { StoredMessageAttachment } from '@/lib/team/types';
 
 // Slugs corresponding to the Kelly/Nathan partner relationship
 const PARTNER_FIELD_SLUG = 'kelly';
@@ -39,26 +41,51 @@ export async function POST(
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { dmId } = await params;
-  const body = await request.json();
-  const { body: msgBody, message_type } = body;
 
-  if (!msgBody || typeof msgBody !== 'string') {
-    return NextResponse.json({ error: 'body is required' }, { status: 400 });
+  // Body arrives as JSON (text-only — unchanged) or multipart/form-data (with images).
+  let msgBody = '';
+  let message_type: unknown;
+  let attachments: StoredMessageAttachment[] = [];
+
+  const contentType = request.headers.get('content-type') || '';
+  if (contentType.includes('multipart/form-data')) {
+    const form = await request.formData();
+    const rawBody = form.get('body');
+    msgBody = typeof rawBody === 'string' ? rawBody : '';
+    message_type = form.get('message_type') ?? undefined;
+    const files = form.getAll('images').filter((f): f is File => f instanceof File);
+    try {
+      attachments = await processUploadedImages(files);
+    } catch (err) {
+      if (err instanceof AttachmentValidationError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      throw err;
+    }
+  } else {
+    const body = await request.json();
+    msgBody = typeof body.body === 'string' ? body.body : '';
+    message_type = body.message_type;
+  }
+
+  // Require text OR at least one image.
+  if (!msgBody.trim() && attachments.length === 0) {
+    return NextResponse.json({ error: 'body or image is required' }, { status: 400 });
   }
 
   const validTypes = ['build', 'decision', 'insight', 'question'] as const;
   type MsgType = typeof validTypes[number];
-  const safeType: MsgType = validTypes.includes(message_type) ? (message_type as MsgType) : 'build';
+  const safeType: MsgType = validTypes.includes(message_type as MsgType) ? (message_type as MsgType) : 'build';
 
   try {
-    const message = await sendDMMessage(dmId, memberId, msgBody, safeType);
+    const message = await sendDMMessage(dmId, memberId, msgBody, safeType, attachments);
 
     // Fire-and-forget: partner notification + activity log
     void sendPartnerNotification({
       event: 'dm_sent',
       actorId: memberId,
       fieldSlug: PARTNER_FIELD_SLUG,
-      messagePreview: msgBody.slice(0, 120),
+      messagePreview: msgBody.slice(0, 120) || '📷 Image',
     });
     void logFieldActivity({
       fieldSlug: PARTNER_FIELD_SLUG,

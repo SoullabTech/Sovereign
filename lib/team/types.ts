@@ -26,6 +26,39 @@ export interface TeamChannel {
   unreadCount?: number;
 }
 
+export type MessageAttachmentKind = 'image';
+
+/**
+ * Client-facing attachment metadata on a message. `url` is a conversation-scoped
+ * serve endpoint; the underlying vault `storagePath` is server-only and never sent.
+ */
+export interface MessageAttachment {
+  id: string;
+  kind: MessageAttachmentKind;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  width?: number | null;
+  height?: number | null;
+  url: string;
+}
+
+/**
+ * Persisted shape inside a message row's `attachments` JSONB (server-only). Carries
+ * the vault `storagePath` instead of a serve URL — converted to MessageAttachment
+ * before leaving the server.
+ */
+export interface StoredMessageAttachment {
+  id: string;
+  kind: MessageAttachmentKind;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  width?: number | null;
+  height?: number | null;
+  storagePath: string;
+}
+
 export interface TeamMessage {
   id: string;
   channelId: string;
@@ -41,6 +74,7 @@ export interface TeamMessage {
   // Computed
   reactions: MessageReaction[];
   replyCount?: number;
+  attachments?: MessageAttachment[];
   // Sender-side attention receipts for the sender's OWN messages (Sent / Opened / Resolved / Declined).
   // "opened" is receipt that it reached the recipient — never agreement/consent (D2).
   attentionStates?: {
