@@ -1,122 +1,94 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+/**
+ * STUDIO HOME — "Reveal the practitioner's world."
+ *
+ * Replaces the developer cockpit (moved to /studio/command) with a threshold built
+ * around people, sessions, continuity, and community. Presentation over endpoints
+ * that already exist — no new backend. Empty states are first-class: with no clients
+ * yet, the empty state IS the experience, and it should feel like a beginning.
+ *
+ * Governing test: does this help a practitioner care for someone?
+ * See docs/specs/STUDIO_HOME_REVEAL_SPEC_2026-06-10.md
+ */
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  Inbox,
-  GitBranch,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-  ChevronRight,
-  Sparkles,
-  Play,
-  Pause,
-  Target,
-  Flame,
-  Package,
-  Loader2,
+  Sunrise, Sun, Moon, Sparkles, Users, History, Users2,
+  ChevronRight, ArrowRight, Plus, Loader2, CalendarClock, DoorOpen,
 } from 'lucide-react';
-import {
-  useTriageItems,
-  useAgentTasks,
-  useDailyLog,
-} from '@/hooks/useStudioData';
+import { apiFetch } from '@/lib/http/apiBase';
+import { SessionBriefingCard } from '@/components/studio/SessionBriefingCard';
 
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
+// ─── Shapes (subset of the endpoints we read) ───
+interface Identity { name?: string | null; portalType?: string | null }
+interface ClientRow {
+  id: string; name: string; status?: string;
+  lastSessionAt?: string | null; nextSessionAt?: string | null; totalSessions?: number;
+}
+interface Booking {
+  id: string; startAt: string; status?: string;
+  serviceName?: string | null; clientName?: string | null;
+}
+interface Channel { id: string; slug: string; name: string; unreadCount?: number }
 
-  if (diffMins < 60) return `${diffMins} min ago`;
-  if (diffHours < 24) return `${diffHours} hr ago`;
-  return `${diffDays} days ago`;
+// ─── Helpers ───
+function greeting(hour: number): { word: string; Icon: typeof Sun } {
+  if (hour < 12) return { word: 'Good morning', Icon: Sunrise };
+  if (hour < 18) return { word: 'Good afternoon', Icon: Sun };
+  return { word: 'Good evening', Icon: Moon };
 }
 
-export default function StudioCommandCenter() {
-  const [isTracking, setIsTracking] = useState(true);
-  const [delegateText, setDelegateText] = useState('');
-  const [delegateAgent, setDelegateAgent] = useState('maia-dev');
+function formatWhen(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const sameDay = d.toDateString() === now.toDateString();
+  const tom = new Date(now); tom.setDate(now.getDate() + 1);
+  if (sameDay) return `Today at ${time}`;
+  if (d.toDateString() === tom.toDateString()) return `Tomorrow at ${time}`;
+  return `${d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })} at ${time}`;
+}
 
-  const { items: triageItems, loading: triageLoading } = useTriageItems();
-  const { tasks: agentTasks, loading: tasksLoading, createTask } = useAgentTasks();
-  const { todayLog, loading: logLoading, incrementCounter } = useDailyLog();
+function formatLastSeen(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) { const w = Math.floor(days / 7); return w === 1 ? 'a week ago' : `${w} weeks ago`; }
+  const m = Math.floor(days / 30); return m === 1 ? 'a month ago' : `${m} months ago`;
+}
 
-  const loading = triageLoading || tasksLoading || logLoading;
+const CARD = 'bg-[#1e1e38] border border-slate-800/50 rounded-xl p-5';
 
-  // Compute stats from real data
-  const triageStats = {
-    urgent: triageItems.filter(i => i.priority === 'urgent').length,
-    today: triageItems.filter(i => i.priority === 'today').length,
-    unset: triageItems.filter(i => i.priority === 'unset').length,
-    total: triageItems.filter(i => i.status === 'pending').length,
-  };
+export default function StudioHome() {
+  const [loading, setLoading] = useState(true);
+  const [identity, setIdentity] = useState<Identity | null>(null);
+  const [clients, setClients] = useState<ClientRow[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
 
-  const agentStats = {
-    running: agentTasks.filter(t => t.status === 'running').length,
-    completed: agentTasks.filter(t => t.status === 'completed').length,
-    pendingReview: agentTasks.filter(t => t.review_status === 'pending_review').length,
-  };
-
-  const todayStats = {
-    hoursLogged: todayLog?.hours_at_computer || 0,
-    firesFought: todayLog?.fires_fought || 0,
-    delegated: todayLog?.tasks_delegated || 0,
-    shipped: todayLog?.shipments || 0,
-  };
-
-  // Build recent activity from real data
-  const recentActivity: Array<{
-    id: string;
-    type: 'delegated' | 'review_ready' | 'shipped' | 'triage';
-    title: string;
-    agent?: string;
-    priority?: string;
-    time: string;
-  }> = [];
-
-  // Add recent triage items
-  triageItems.slice(0, 3).forEach(item => {
-    recentActivity.push({
-      id: `triage-${item.id}`,
-      type: 'triage',
-      title: item.title,
-      priority: item.priority,
-      time: formatRelativeTime(item.created_at),
-    });
-  });
-
-  // Add recent agent tasks
-  agentTasks.slice(0, 3).forEach(task => {
-    recentActivity.push({
-      id: `task-${task.id}`,
-      type: task.review_status === 'pending_review' ? 'review_ready' : 'delegated',
-      title: task.title,
-      agent: task.agent_type,
-      time: formatRelativeTime(task.created_at),
-    });
-  });
-
-  // Sort by time (most recent first) and limit
-  recentActivity.sort((a, b) => a.time.localeCompare(b.time));
-  const displayActivity = recentActivity.slice(0, 5);
-
-  // Quick delegate handler
-  const handleQuickDelegate = async () => {
-    if (!delegateText.trim()) return;
-    await createTask({
-      title: delegateText.split('\n')[0].slice(0, 100),
-      prompt: delegateText,
-      agent_type: delegateAgent,
-    });
-    setDelegateText('');
-    await incrementCounter('delegated');
-  };
+  useEffect(() => {
+    const safeJson = async (path: string) => {
+      try { const r = await apiFetch(path); if (!r.ok) return null; return await r.json(); }
+      catch { return null; }
+    };
+    (async () => {
+      const [w, c, b, ch] = await Promise.all([
+        safeJson('/api/studio/whoami'),
+        safeJson('/api/studio/clients'),
+        safeJson('/api/studio/bookings?limit=20'),
+        safeJson('/api/team/channels'),
+      ]);
+      if (w?.identity) setIdentity(w.identity);
+      setClients(Array.isArray(c?.clients) ? c.clients : []);
+      setBookings(Array.isArray(b?.bookings) ? b.bookings : []);
+      setChannels(Array.isArray(ch?.channels) ? ch.channels : []);
+      setLoading(false);
+    })();
+  }, []);
 
   if (loading) {
     return (
@@ -126,313 +98,193 @@ export default function StudioCommandCenter() {
     );
   }
 
+  const firstName = (identity?.name || '').trim().split(/\s+/)[0] || 'there';
+  const { word, Icon } = greeting(new Date().getHours());
+
+  const upcoming = [...bookings]
+    .filter(b => b.startAt)
+    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  const nextBooking = upcoming[0] || null;
+  const clientCount = clients.length;
+  const upcomingCount = upcoming.length;
+
+  const recentPeople = clients
+    .filter(c => c.lastSessionAt)
+    .sort((a, b) => new Date(b.lastSessionAt!).getTime() - new Date(a.lastSessionAt!).getTime())
+    .slice(0, 4);
+
+  const communities = channels.slice(0, 5);
+
+  const parts: string[] = [];
+  if (upcomingCount > 0) parts.push(`${upcomingCount} upcoming session${upcomingCount === 1 ? '' : 's'}`);
+  if (clientCount > 0) parts.push(`${clientCount} ${clientCount === 1 ? 'person' : 'people'} in your care`);
+  const subline = parts.length
+    ? `You have ${parts.join(' and ')}.`
+    : 'Your practice is quiet today. When you’re ready, this is where it gathers.';
+
   return (
     <div className="min-h-screen bg-[#1a1a2e] p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Command Center</h1>
-          <p className="text-slate-500 mt-1">Operator Dashboard</p>
+      <div className="max-w-6xl mx-auto space-y-6">
+
+        {/* ── MAIA greeting — a presence, not a chat icon ── */}
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+            <Icon className="w-5 h-5 text-amber-400" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold text-white">{word}, {firstName}.</h1>
+            <p className="text-slate-400 mt-1">{subline}</p>
+            {nextBooking && (
+              <p className="text-sm text-slate-500 mt-1">
+                Next: {nextBooking.clientName || 'a session'} · {formatWhen(nextBooking.startAt)}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Time Tracking Toggle */}
-        <button
-          onClick={() => setIsTracking(!isTracking)}
-          className={`
-            flex items-center gap-2 px-4 py-2 rounded-lg transition-all
-            ${isTracking
-              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-              : 'bg-slate-800 text-slate-400 border border-slate-700'}
-          `}
+        {/* ── Prepare Me — the crown jewel, impossible to miss ── */}
+        <motion.section
+          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-[#1e1e38] border border-amber-500/20 rounded-xl p-5"
         >
-          {isTracking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          <span>{isTracking ? 'Tracking' : 'Paused'}</span>
-          <span className="font-mono">{todayStats.hoursLogged}h</span>
-        </button>
-      </div>
-
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        {/* Triage Queue */}
-        <Link href="/studio/triage">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4 hover:border-slate-700/50 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <Inbox className="w-5 h-5 text-amber-400" />
-              <ChevronRight className="w-4 h-4 text-slate-600" />
-            </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {triageStats.total}
-            </div>
-            <div className="text-sm text-slate-400">In Triage</div>
-            {triageStats.urgent > 0 && (
-              <div className="mt-2 flex items-center gap-1 text-xs text-red-400">
-                <AlertTriangle className="w-3 h-3" />
-                {triageStats.urgent} urgent
-              </div>
-            )}
-            {triageStats.unset > 0 && triageStats.urgent === 0 && (
-              <div className="mt-2 flex items-center gap-1 text-xs text-amber-400">
-                <Inbox className="w-3 h-3" />
-                {triageStats.unset} untriaged
-              </div>
-            )}
-          </motion.div>
-        </Link>
-
-        {/* Agent Work */}
-        <Link href="/studio/code">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4 hover:border-slate-700/50 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <GitBranch className="w-5 h-5 text-blue-400" />
-              <ChevronRight className="w-4 h-4 text-slate-600" />
-            </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {agentStats.running}
-            </div>
-            <div className="text-sm text-slate-400">Agents Running</div>
-            <div className="mt-2 text-xs text-slate-500">
-              {agentStats.completed} completed
-            </div>
-          </motion.div>
-        </Link>
-
-        {/* Pending Review */}
-        <Link href="/studio/code">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4 hover:border-slate-700/50 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <CheckCircle2 className="w-5 h-5 text-amber-400" />
-              <ChevronRight className="w-4 h-4 text-slate-600" />
-            </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {agentStats.pendingReview}
-            </div>
-            <div className="text-sm text-slate-400">Ready for Review</div>
-            {agentStats.pendingReview > 0 && (
-              <div className="mt-2 text-xs text-amber-400">
-                Your decision needed
-              </div>
-            )}
-          </motion.div>
-        </Link>
-
-        {/* Today's Progress */}
-        <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <Target className="w-5 h-5 text-amber-400" />
-            <span className="text-xs text-slate-500">Target: &lt;8h</span>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-5 h-5 text-amber-400" />
+            <h2 className="text-base font-semibold text-white">Prepare Me</h2>
           </div>
-          <div className="text-2xl font-bold text-white mb-1">
-            {todayStats.hoursLogged}h
-          </div>
-          <div className="text-sm text-slate-400">Today</div>
-          <div className="mt-2 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all"
-              style={{ width: `${Math.min(100, (todayStats.hoursLogged / 8) * 100)}%` }}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-3 gap-6">
-        {/* Today's Flow - Left Column */}
-        <div className="col-span-2 space-y-6">
-          {/* Operator Gates Summary */}
-          <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-              Decisions Needed
-            </h2>
-
-            {(agentStats.pendingReview > 0 || triageStats.unset > 0) ? (
-              <div className="space-y-3">
-                {/* Pending reviews from agent tasks */}
-                {agentTasks
-                  .filter(t => t.review_status === 'pending_review')
-                  .slice(0, 3)
-                  .map(task => (
-                    <div key={task.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-amber-400" />
-                        <div>
-                          <div className="text-sm text-white font-medium">{task.title}</div>
-                          <div className="text-xs text-slate-400">{task.agent_type} completed • Taste + Risk gate</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Link href="/studio/code" className="px-3 py-1.5 text-xs bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors">
-                          Review
-                        </Link>
-                      </div>
+          {nextBooking ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <CalendarClock className="w-4 h-4 text-slate-500 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-white font-medium truncate">
+                      {nextBooking.clientName || 'Upcoming session'}
                     </div>
-                  ))}
-
-                {/* Untriaged items */}
-                {triageItems
-                  .filter(i => i.priority === 'unset')
-                  .slice(0, 2)
-                  .map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-slate-400" />
-                        <div>
-                          <div className="text-sm text-white font-medium">{item.title}</div>
-                          <div className="text-xs text-slate-400">Untriaged • Priority gate</div>
-                        </div>
-                      </div>
-                      <Link href="/studio/triage" className="px-3 py-1.5 text-xs bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors">
-                        Triage
-                      </Link>
-                    </div>
-                  ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-500">
-                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <div>No decisions pending</div>
-              </div>
-            )}
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
-            {displayActivity.length > 0 ? (
-              <div className="space-y-3">
-                {displayActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg"
-                  >
-                    {activity.type === 'delegated' && (
-                      <GitBranch className="w-4 h-4 text-blue-400" />
-                    )}
-                    {activity.type === 'review_ready' && (
-                      <CheckCircle2 className="w-4 h-4 text-amber-400" />
-                    )}
-                    {activity.type === 'shipped' && (
-                      <Package className="w-4 h-4 text-emerald-400" />
-                    )}
-                    {activity.type === 'triage' && (
-                      <Inbox className="w-4 h-4 text-amber-400" />
-                    )}
-                    <div className="flex-1">
-                      <div className="text-sm text-white">{activity.title}</div>
-                      <div className="text-xs text-slate-500">
-                        {activity.agent && <span className="text-slate-400">{activity.agent} • </span>}
-                        {activity.time}
-                      </div>
+                    <div className="text-sm text-slate-400 truncate">
+                      {formatWhen(nextBooking.startAt)}
+                      {nextBooking.serviceName ? ` · ${nextBooking.serviceName}` : ''}
                     </div>
                   </div>
-                ))}
+                </div>
+                <Link
+                  href="/studio/session-room"
+                  className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/25 hover:bg-amber-500/25 transition-colors"
+                >
+                  <DoorOpen className="w-4 h-4" /> Enter Session Room
+                </Link>
               </div>
+              {/* The prep itself, surfaced inline — the existing engine, finally on the threshold */}
+              <SessionBriefingCard sessionId={nextBooking.id} />
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">
+              When you have a session coming up, you’ll prepare for it here — what matters,
+              what’s unresolved, what to remember — in one breath.
+            </p>
+          )}
+        </motion.section>
+
+        {/* ── People · Threads · Communities ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* My People */}
+          <div className={CARD}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-400" />
+                <h3 className="text-sm font-medium text-white">My People</h3>
+              </div>
+              <Link href="/studio/clients" className="text-slate-600 hover:text-slate-400">
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {clientCount > 0 ? (
+              <>
+                <div className="text-2xl font-bold text-white">{clientCount}</div>
+                <div className="text-sm text-slate-400 mb-3">
+                  {clientCount === 1 ? 'person' : 'people'} in your care
+                </div>
+                <Link href="/studio/clients" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
+                  Open your people <ArrowRight className="w-3 h-3" />
+                </Link>
+              </>
             ) : (
-              <div className="text-center py-8 text-slate-500">
-                <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <div>No recent activity</div>
+              <div className="py-2">
+                <p className="text-sm text-slate-400 mb-3">No people yet. This is where they’ll live.</p>
+                <Link href="/studio/clients" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
+                  <Plus className="w-3 h-3" /> Add your first person
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* My Threads — v1: where you left off (real last-session data; not yet the full primitive) */}
+          <div className={CARD}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <History className="w-5 h-5 text-amber-400" />
+                <h3 className="text-sm font-medium text-white">My Threads</h3>
+              </div>
+              <span className="text-[10px] uppercase tracking-wide text-slate-600">Where you left off</span>
+            </div>
+            {recentPeople.length > 0 ? (
+              <ul className="space-y-2">
+                {recentPeople.map(p => (
+                  <li key={p.id}>
+                    <Link href={`/studio/clients/${p.id}`} className="flex items-center justify-between group">
+                      <span className="text-sm text-slate-200 truncate group-hover:text-white">{p.name}</span>
+                      <span className="text-xs text-slate-500 shrink-0 ml-2">
+                        {p.lastSessionAt ? formatLastSeen(p.lastSessionAt) : ''}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-400 py-2">
+                Your relationships will gather here — every thread, held in one place.
+              </p>
+            )}
+          </div>
+
+          {/* My Communities */}
+          <div className={CARD}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Users2 className="w-5 h-5 text-amber-400" />
+                <h3 className="text-sm font-medium text-white">My Communities</h3>
+              </div>
+              <Link href="/team" className="text-slate-600 hover:text-slate-400">
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {communities.length > 0 ? (
+              <ul className="space-y-2">
+                {communities.map(c => (
+                  <li key={c.id}>
+                    <Link href="/team" className="flex items-center justify-between group">
+                      <span className="text-sm text-slate-200 truncate group-hover:text-white">{c.name}</span>
+                      {(c.unreadCount || 0) > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 shrink-0 ml-2">
+                          {c.unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="py-2">
+                <p className="text-sm text-slate-400 mb-3">The first circles are forming.</p>
+                <Link href="/team" className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1">
+                  Enter the commons <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column - Metrics & Quick Actions */}
-        <div className="space-y-6">
-          {/* Today's Proof Signals */}
-          <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-amber-400" />
-              Today's Signals
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Flame className="w-4 h-4" />
-                  <span className="text-sm">Fires fought</span>
-                </div>
-                <span className="text-white font-medium">{todayStats.firesFought}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <GitBranch className="w-4 h-4" />
-                  <span className="text-sm">Delegated</span>
-                </div>
-                <span className="text-white font-medium">{todayStats.delegated}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Package className="w-4 h-4" />
-                  <span className="text-sm">Shipped</span>
-                </div>
-                <span className="text-white font-medium">{todayStats.shipped}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">Hours</span>
-                </div>
-                <span className={`font-medium ${todayStats.hoursLogged < 8 ? 'text-amber-400' : 'text-red-400'}`}>
-                  {todayStats.hoursLogged}h / 8h
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Delegate */}
-          <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-4">Quick Delegate</h2>
-            <textarea
-              value={delegateText}
-              onChange={(e) => setDelegateText(e.target.value)}
-              placeholder="Describe the task to delegate..."
-              className="w-full h-24 bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-sm text-white placeholder-slate-500 resize-none focus:outline-none focus:border-amber-500/50"
-            />
-            <div className="mt-3 flex items-center gap-2">
-              <select
-                value={delegateAgent}
-                onChange={(e) => setDelegateAgent(e.target.value)}
-                className="flex-1 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
-              >
-                <option value="maia-dev">maia-dev</option>
-                <option value="explore">explore</option>
-                <option value="maia-ops">maia-ops</option>
-                <option value="ain-architect">ain-architect</option>
-              </select>
-              <button
-                onClick={handleQuickDelegate}
-                disabled={!delegateText.trim()}
-                className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Delegate
-              </button>
-            </div>
-          </div>
-
-          {/* MAIA Quick Consult */}
-          <Link href="/studio/maia">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-gradient-to-br from-amber-500/20 to-amber-600/20 border border-amber-500/30 rounded-xl p-5 cursor-pointer"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-                <h2 className="text-lg font-semibold text-white">Consult MAIA</h2>
-              </div>
-              <p className="text-sm text-slate-300">
-                Strategic decisions, Clarity Gate, or just thinking out loud.
-              </p>
-            </motion.div>
-          </Link>
-        </div>
       </div>
     </div>
   );

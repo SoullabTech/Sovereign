@@ -109,11 +109,11 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   // ── Core (both modes) ──
   {
     slug: 'command_center',
-    label: 'Command Center',
+    label: 'Home',
     icon: LayoutGrid,
     href: '/studio',
     category: 'core',
-    description: 'Your daily dashboard and triage queue',
+    description: 'Your practice at a glance',
     alwaysOn: true,
     mode: 'practice',
   },
@@ -248,6 +248,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Outreach, campaigns, and content',
     alwaysOn: false,
     mode: 'practice',
+    // Showroom only (mockStats, no backend) — hidden from the practitioner
+    // threshold until a real campaigns backend exists. Reversible.
+    comingSoon: true,
   },
 
   // ── Field modules (personal orientation) ──
@@ -306,6 +309,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Live video and streaming tools',
     alwaysOn: false,
     mode: 'both',
+    // Showroom only (browser-only, no backend) — hidden from the practitioner
+    // threshold until real streaming tooling exists. Reversible.
+    comingSoon: true,
   },
   {
     slug: 'code',
@@ -358,6 +364,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Integrations and utilities',
     alwaysOn: false,
     mode: 'both',
+    // Showroom only (no backend) — hidden from the practitioner threshold
+    // until real integrations exist. Reversible.
+    comingSoon: true,
   },
   {
     slug: 'settings',
