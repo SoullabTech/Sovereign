@@ -58,6 +58,11 @@ export async function POST(req: NextRequest) {
     try {
       const llmResponse = await getLLMProvider().generateSimple({
         tier: 'core',
+        // Session Review is a long-context clinical/practitioner synthesis (often
+        // hundreds of turns). The local core model is too slow (~197s on a 373-turn
+        // review) and too shallow for this surface, so this route opts out of
+        // LOCAL_TIER_ENABLED and uses Claude. Ordinary core/fast routes stay local-first.
+        forceClaude: true,
         systemPrompt: '', // prompt is self-contained
         messages: [{ role: 'user', content: prompt }],
         maxTokens: 3000,
