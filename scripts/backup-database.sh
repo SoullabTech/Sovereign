@@ -4,6 +4,23 @@
 
 set -e
 
+# === QUARANTINED — NOT the canonical database backup ======================
+# Canonical DB backup: scripts/backup-postgres.sh (full pg_dump -> gzip ->
+# ~/MAIA-SOVEREIGN/database/backups/; cron-scheduled and restore-verified —
+# see docs/ops/CONTINUITY_RECOVERY_RUNBOOK.md).
+# This script is a PARTIAL export (only the 12 tables listed below, not the
+# whole database), its BACKUP_DIR defaults to a macOS path that does not exist
+# on the production host, and it prints "Backup complete!" regardless — a
+# false-confidence footgun. Retained for reference; refuses to run unless
+# invoked explicitly with --force-legacy.
+if [ "${1:-}" != "--force-legacy" ]; then
+  echo "DEPRECATED/QUARANTINED: use scripts/backup-postgres.sh for database backups." >&2
+  echo "  (This backs up only 12 tables to a possibly-nonexistent path; it is NOT the canonical backup.)" >&2
+  echo "  Re-run with --force-legacy only if you specifically need this legacy partial export." >&2
+  exit 2
+fi
+shift
+
 BACKUP_DIR="${BACKUP_DIR:-/Users/soullab/maia-backups}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/maia_backup_$TIMESTAMP.sql"
