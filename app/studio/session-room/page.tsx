@@ -48,6 +48,7 @@ import {
   History,
   ArrowLeft,
   AlertCircle,
+  Video,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
@@ -196,6 +197,7 @@ export default function SessionRoomPage() {
   const [localSessionTitle, setLocalSessionTitle] = useState('');
   const [captureTabAudio, setCaptureTabAudio] = useState(false);
   const [blockedFeedbackSent, setBlockedFeedbackSent] = useState(false);
+  const [videoRoomUrl, setVideoRoomUrl] = useState<string | null>(null);
 
   // Past sessions / history review
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
@@ -318,6 +320,20 @@ export default function SessionRoomPage() {
     fetchBookings();
     return () => { cancelled = true; };
   }, [localContainer, phase]);
+
+  // Fetch practitioner's configured video room URL (non-critical — silently ignored if absent)
+  useEffect(() => {
+    const fetchVideoRoomUrl = async () => {
+      try {
+        const res = await apiFetch('/api/studio/settings?key=video_room_url');
+        const data = await res.json();
+        if (data?.value) setVideoRoomUrl(data.value);
+      } catch {
+        // non-critical — Session Room works without it
+      }
+    };
+    fetchVideoRoomUrl();
+  }, []);
 
   // Auto-scroll transcript
   useEffect(() => {
@@ -826,6 +842,19 @@ ${insightsSection}
                   : 'Session contributes to your longitudinal patterns and growth tracking'}
               </p>
             </div>
+
+            {/* Open video call — shown when a video room URL is configured in Settings → Integrations */}
+            {videoRoomUrl && (
+              <a
+                href={videoRoomUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/40 text-slate-300 hover:border-slate-600 hover:text-white transition-all text-sm"
+              >
+                <Video className="w-4 h-4" />
+                Open Video Call
+              </a>
+            )}
 
             {/* Start button */}
             <button
