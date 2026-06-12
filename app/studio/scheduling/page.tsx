@@ -25,9 +25,9 @@ interface AvailabilityOverride {
 interface Service {
   id: string;
   name: string;
-  duration_minutes: number;
-  price_cents: number;
-  is_active: boolean;
+  durationMinutes: number;
+  priceCents: number;
+  isActive: boolean;
 }
 
 export default function SchedulingPage() {
@@ -393,16 +393,16 @@ export default function SchedulingPage() {
                 <div>
                   <p className="text-sm font-medium text-neutral-200">{s.name}</p>
                   <p className="text-xs text-neutral-400">
-                    {s.duration_minutes} min
-                    {s.price_cents > 0 && ` · $${(s.price_cents / 100).toFixed(0)}`}
+                    {s.durationMinutes} min
+                    {s.priceCents > 0 && ` · $${(s.priceCents / 100).toFixed(0)}`}
                   </p>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  s.is_active
+                  s.isActive
                     ? 'bg-green-900/30 text-green-400'
                     : 'bg-neutral-800 text-neutral-400'
                 }`}>
-                  {s.is_active ? 'Active' : 'Inactive'}
+                  {s.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
             ))}
