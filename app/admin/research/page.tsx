@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { betaSession } from '@/lib/auth/betaSession';
+import { apiFetch } from '@/lib/http/apiBase';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { SystemQualityPanel, LedgerRow } from '@/components/admin/research/SystemQualityPanel';
 import { PopulationPatternsPanel } from '@/components/admin/research/PopulationPatternsPanel';
@@ -50,13 +51,32 @@ export default function SystemIntelligencePage() {
     }
   }, [router]);
 
+  // Auto-detect member admin access — skip password gate if member has is_admin = TRUE
+  useEffect(() => {
+    if (authed) return;
+    apiFetch('/api/admin/auth')
+      .then((res) => res.json())
+      .then((data: { isAdmin?: boolean }) => {
+        if (data.isAdmin) {
+          // Member session is admin — load data without a password
+          loadAll('');
+        }
+      })
+      .catch(() => {
+        // Ignore — fall through to password gate
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ---------------------------------------------------------------------------
   // Fetchers
   // ---------------------------------------------------------------------------
 
   const fetchOverview = useCallback(async (pwd: string): Promise<boolean> => {
-    const res = await fetch('/api/admin/research/overview?days=30', {
-      headers: { 'x-admin-password': pwd },
+    // apiFetch automatically adds x-member-id / x-session-token for member-session auth;
+    // we still pass x-admin-password for the shared-password fallback path.
+    const res = await apiFetch('/api/admin/research/overview?days=30', {
+      headers: pwd ? { 'x-admin-password': pwd } : {},
     });
     if (res.status === 401) return false;
     if (!res.ok) throw new Error(`Overview API error: ${res.status}`);
@@ -66,8 +86,8 @@ export default function SystemIntelligencePage() {
   }, []);
 
   const fetchDirectives = useCallback(async (pwd: string) => {
-    const res = await fetch('/api/admin/research/directives', {
-      headers: { 'x-admin-password': pwd },
+    const res = await apiFetch('/api/admin/research/directives', {
+      headers: pwd ? { 'x-admin-password': pwd } : {},
     });
     if (!res.ok) throw new Error(`Directives API error: ${res.status}`);
     const data = await res.json();
@@ -110,12 +130,11 @@ export default function SystemIntelligencePage() {
   // ---------------------------------------------------------------------------
 
   async function patchDirective(body: Record<string, unknown>) {
-    const res = await fetch('/api/admin/research/directives', {
+    const extraHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminPassword) extraHeaders['x-admin-password'] = adminPassword;
+    const res = await apiFetch('/api/admin/research/directives', {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-admin-password': adminPassword,
-      },
+      headers: extraHeaders,
       body: JSON.stringify(body),
     });
     if (!res.ok) {

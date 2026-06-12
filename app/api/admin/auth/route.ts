@@ -1,12 +1,14 @@
 /**
  * Admin Authentication API
  *
- * POST - Validate admin password
+ * GET  - Check if current member session has admin access (used by client pages to skip password gate)
+ * POST - Validate admin password (shared password fallback)
  *
  * Password stored in LABTOOLS_ADMIN_PASSWORD env var
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { checkAdminAuth } from '@/lib/admin/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +48,15 @@ function recordFailedAttempt(ip: string): void {
 
 function clearFailedAttempts(ip: string): void {
   failedAttempts.delete(ip);
+}
+
+export async function GET(req: NextRequest) {
+  const result = await checkAdminAuth(req);
+  if (!result.authed) {
+    // 200 not 401 — client just checks the boolean
+    return NextResponse.json({ isAdmin: false });
+  }
+  return NextResponse.json({ isAdmin: true, via: result.via, role: result.role });
 }
 
 export async function POST(req: NextRequest) {
