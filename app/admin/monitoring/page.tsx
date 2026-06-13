@@ -5,6 +5,16 @@ import { apiFetch } from '@/lib/http/apiBase'
 
 type CheckStatus = 'up' | 'down' | 'degraded'
 
+interface SystemMetrics {
+  memory: { used_mb: number; total_mb: number; pct: number }
+  cpu: { load1: number; load5: number; load15: number }
+  disk: { used_gb: number; total_gb: number; pct: number; available_gb: number } | null
+  containers: Array<{ name: string; status: string; healthy: boolean }>
+  deploy_age_hours: number | null
+  ollama: { available: boolean; models?: string[] } | null
+  collected_at: string
+}
+
 interface ServiceWithStatus {
   id: string
   name: string
@@ -135,11 +145,117 @@ function SkeletonCard() {
   )
 }
 
+function ProgressBar({ pct, colorClass }: { pct: number; colorClass: string }) {
+  return (
+    <div className="w-full bg-zinc-800 rounded-full h-2">
+      <div
+        className={`h-2 rounded-full transition-all ${colorClass}`}
+        style={{ width: `${Math.min(pct, 100)}%` }}
+      />
+    </div>
+  )
+}
+
+function cpuColor(load: number): string {
+  if (load < 2) return 'text-green-400'
+  if (load < 4) return 'text-yellow-400'
+  return 'text-red-400'
+}
+
+function SystemHealthSection({ metrics }: { metrics: SystemMetrics }) {
+  return (
+    <div className="space-y-3">
+      <h2 className="text-lg font-medium text-zinc-200">System Health</h2>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 space-y-5">
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs text-zinc-400">
+            <span>Memory</span>
+            <span>{metrics.memory.used_mb} / {metrics.memory.total_mb} MB — {metrics.memory.pct}%</span>
+          </div>
+          <ProgressBar
+            pct={metrics.memory.pct}
+            colorClass={metrics.memory.pct > 90 ? 'bg-red-500' : metrics.memory.pct > 75 ? 'bg-yellow-400' : 'bg-green-500'}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <div className="text-xs text-zinc-400 mb-1">CPU Load</div>
+          <div className="flex gap-4 text-sm font-mono">
+            <span>
+              <span className="text-zinc-500 text-xs mr-1">1m</span>
+              <span className={cpuColor(metrics.cpu.load1)}>{metrics.cpu.load1.toFixed(2)}</span>
+            </span>
+            <span>
+              <span className="text-zinc-500 text-xs mr-1">5m</span>
+              <span className={cpuColor(metrics.cpu.load5)}>{metrics.cpu.load5.toFixed(2)}</span>
+            </span>
+            <span>
+              <span className="text-zinc-500 text-xs mr-1">15m</span>
+              <span className={cpuColor(metrics.cpu.load15)}>{metrics.cpu.load15.toFixed(2)}</span>
+            </span>
+          </div>
+        </div>
+
+        {metrics.disk && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-zinc-400">
+              <span>Disk</span>
+              <span>{metrics.disk.used_gb} / {metrics.disk.total_gb} GB — {metrics.disk.pct}%</span>
+            </div>
+            <ProgressBar
+              pct={metrics.disk.pct}
+              colorClass={metrics.disk.pct > 90 ? 'bg-red-500' : metrics.disk.pct > 75 ? 'bg-yellow-400' : 'bg-green-500'}
+            />
+          </div>
+        )}
+
+        {metrics.containers.length > 0 && (
+          <div className="space-y-1">
+            <div className="text-xs text-zinc-400 mb-2">Containers</div>
+            <div className="flex flex-col gap-1.5">
+              {metrics.containers.map((c) => (
+                <div key={c.name} className="flex items-center gap-2 text-sm">
+                  <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${c.healthy ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="font-mono text-zinc-300 text-xs">{c.name}</span>
+                  <span className="text-zinc-500 text-xs truncate">{c.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-6 text-sm">
+          <div>
+            <span className="text-zinc-500 text-xs block mb-0.5">Last Deploy</span>
+            <span className="text-zinc-300">
+              {metrics.deploy_age_hours !== null ? `${metrics.deploy_age_hours}h ago` : 'unknown'}
+            </span>
+          </div>
+          <div>
+            <span className="text-zinc-500 text-xs block mb-0.5">Ollama</span>
+            {metrics.ollama?.available ? (
+              <span className="text-green-400">
+                available ({metrics.ollama.models?.length ?? 0} model{metrics.ollama.models?.length !== 1 ? 's' : ''})
+              </span>
+            ) : (
+              <span className="text-red-400">unavailable</span>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 export default function MonitoringPage() {
   const [data, setData] = useState<MonitoringPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [sysMetrics, setSysMetrics] = useState<SystemMetrics | null>(null)
+  const [sysLoading, setSysLoading] = useState(true)
 
   const load = useCallback(async () => {
     try {
@@ -155,11 +271,25 @@ export default function MonitoringPage() {
     }
   }, [])
 
+  const loadSystem = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/admin/monitoring/system')
+      if (!res.ok) return
+      const json = await res.json()
+      setSysMetrics(json)
+    } catch {
+      // non-fatal
+    } finally {
+      setSysLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     load()
-    const interval = setInterval(load, 60_000)
+    loadSystem()
+    const interval = setInterval(() => { load(); loadSystem() }, 60_000)
     return () => clearInterval(interval)
-  }, [load])
+  }, [load, loadSystem])
 
   async function handleRunChecks() {
     setRunning(true)
@@ -265,6 +395,17 @@ export default function MonitoringPage() {
               </table>
             </div>
           </div>
+        )}
+
+        {sysLoading && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 animate-pulse space-y-3">
+            <div className="h-4 bg-zinc-700 rounded w-32" />
+            <div className="h-2 bg-zinc-700 rounded w-full" />
+            <div className="h-2 bg-zinc-700 rounded w-3/4" />
+          </div>
+        )}
+        {!sysLoading && sysMetrics && (
+          <SystemHealthSection metrics={sysMetrics} />
         )}
       </div>
     </div>

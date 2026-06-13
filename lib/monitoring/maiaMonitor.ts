@@ -8,7 +8,7 @@ interface MonitoringService {
   display_name: string;
   category: string;
   check_url: string | null;
-  check_type: 'http' | 'postgres';
+  check_type: 'http' | 'postgres' | 'ollama';
   expected_status: number;
   timeout_ms: number;
   is_active: boolean;
@@ -145,6 +145,33 @@ async function getOpenIncident(serviceId: string): Promise<{ id: string } | null
   return res.rows[0] ?? null;
 }
 
+async function runOllamaCheck(service: MonitoringService): Promise<CheckResult> {
+  const start = Date.now();
+  let status: CheckStatus = 'down';
+  let error: string | null = null;
+
+  try {
+    const res = await fetch('http://localhost:11434/api/tags', {
+      signal: AbortSignal.timeout(3000),
+    });
+    status = res.ok ? 'up' : 'down';
+    if (!res.ok) error = `HTTP ${res.status}`;
+  } catch (err: unknown) {
+    error = err instanceof Error ? err.message : String(err);
+    status = 'down';
+  }
+
+  return {
+    service_id: service.id,
+    service_name: service.name,
+    display_name: service.display_name,
+    status,
+    response_ms: Date.now() - start,
+    http_status: null,
+    error,
+  };
+}
+
 export async function runAllChecks(): Promise<CheckResult[]> {
   const servicesRes = await query<MonitoringService>(
     `SELECT * FROM monitoring_services WHERE is_active = TRUE ORDER BY sort_order`,
@@ -152,9 +179,11 @@ export async function runAllChecks(): Promise<CheckResult[]> {
   const services = servicesRes.rows;
 
   const results = await Promise.all(
-    services.map((svc) =>
-      svc.check_type === 'postgres' ? runPostgresCheck(svc) : runHttpCheck(svc),
-    ),
+    services.map((svc) => {
+      if (svc.check_type === 'postgres') return runPostgresCheck(svc);
+      if (svc.check_type === 'ollama') return runOllamaCheck(svc);
+      return runHttpCheck(svc);
+    }),
   );
 
   for (const result of results) {
