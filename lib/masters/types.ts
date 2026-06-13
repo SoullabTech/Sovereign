@@ -81,6 +81,9 @@ export type MasterField = {
 
   active: boolean;
 
+  /** Slugs of partner fields that can access the /partner-view workspace */
+  partnerSlugs?: string[];
+
   /**
    * Practitioner ID in the Stellium system.
    * When set, oracle checks practitioner_personas for a trained Virtual Self
