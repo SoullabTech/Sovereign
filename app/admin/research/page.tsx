@@ -51,6 +51,23 @@ export default function SystemIntelligencePage() {
     }
   }, [router]);
 
+  // Auto-detect member admin access — skip password gate if member has is_admin = TRUE
+  useEffect(() => {
+    if (authed) return;
+    apiFetch('/api/admin/auth')
+      .then((res) => res.json())
+      .then((data: { isAdmin?: boolean }) => {
+        if (data.isAdmin) {
+          // Member session is admin — load data without a password
+          loadAll('');
+        }
+      })
+      .catch(() => {
+        // Ignore — fall through to password gate
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ---------------------------------------------------------------------------
   // Fetchers
   // ---------------------------------------------------------------------------

@@ -104,6 +104,11 @@ function SettingsContent() {
   const [telegramStatus, setTelegramStatus] = useState<MessagingStatus | null>(null);
   const [telegramLoading, setTelegramLoading] = useState(true);
 
+  // Video room URL (used in Session Room)
+  const [videoRoomUrl, setVideoRoomUrl] = useState('');
+  const [videoRoomUrlSaving, setVideoRoomUrlSaving] = useState(false);
+  const [videoRoomUrlSaved, setVideoRoomUrlSaved] = useState(false);
+
   // Fetch Calendar statuses on mount
   useEffect(() => {
     const fetchGoogleStatus = async () => {
@@ -201,6 +206,36 @@ function SettingsContent() {
     checkMessagingStatus();
   }, []);
 
+  // Fetch video room URL
+  useEffect(() => {
+    const fetchVideoRoomUrl = async () => {
+      try {
+        const res = await apiFetch('/api/studio/settings?key=video_room_url');
+        const data = await res.json();
+        if (data?.value) setVideoRoomUrl(data.value);
+      } catch {
+        // non-critical
+      }
+    };
+    fetchVideoRoomUrl();
+  }, []);
+
+  const handleSaveVideoRoomUrl = async () => {
+    setVideoRoomUrlSaving(true);
+    try {
+      await apiFetch('/api/studio/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'video_room_url', value: videoRoomUrl.trim() || null }),
+      });
+      setVideoRoomUrlSaved(true);
+      setTimeout(() => setVideoRoomUrlSaved(false), 2500);
+    } catch (error) {
+      console.error('[Settings] Failed to save video room URL:', error);
+    } finally {
+      setVideoRoomUrlSaving(false);
+    }
+  };
 
   const handleGoogleConnect = async () => {
     try {
@@ -1359,6 +1394,45 @@ function SettingsContent() {
               <p className="text-xs text-slate-500 mt-3">
                 Sync bookings to your Outlook or Microsoft 365 Calendar. Works alongside Google Calendar.
               </p>
+            </div>
+
+            {/* Video Room URL */}
+            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-sky-500/20 flex items-center justify-center flex-shrink-0">
+                  <Video className="w-5 h-5 text-sky-400" />
+                </div>
+                <div>
+                  <div className="text-white font-medium">Video Room</div>
+                  <div className="text-sm text-slate-400">Your preferred video call link</div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 mb-3">
+                Use your preferred video room. Session Room will stay alongside it for notes, transcript, and preparation.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={videoRoomUrl}
+                  onChange={(e) => setVideoRoomUrl(e.target.value)}
+                  placeholder="https://meet.google.com/xxx  or  https://zoom.us/j/..."
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50"
+                />
+                <button
+                  onClick={handleSaveVideoRoomUrl}
+                  disabled={videoRoomUrlSaving}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-sky-500/20 border border-sky-500/30 text-sky-400 rounded-lg hover:bg-sky-500/30 transition-colors text-sm disabled:opacity-50"
+                >
+                  {videoRoomUrlSaving ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : videoRoomUrlSaved ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}
+                  {videoRoomUrlSaved ? 'Saved' : 'Save'}
+                </button>
+              </div>
             </div>
 
             {/* Descript Integration */}
