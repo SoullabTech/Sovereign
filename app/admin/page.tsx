@@ -182,7 +182,6 @@ export default function AdminPage() {
                 { label: 'Videos', href: '/admin/library/videos' },
                 { label: 'Command Center', href: '/labtools/admin/command-center' },
                 { label: 'Platform Overview', href: '/admin/platform-overview' },
-                { label: 'Feedback Inbox', href: '/admin/feedback-inbox' },
                 { label: 'Security', href: '/admin/security' },
                 { label: 'Content Pipeline', href: '/admin/content-pipeline' },
                 { label: 'Agent Monitor', href: '/admin/agent-monitor' },
