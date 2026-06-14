@@ -23,6 +23,17 @@ export interface VoiceRecognitionCallbacks {
   onAutoStop?: (finalTranscript: string) => void;
 }
 
+/**
+ * Default recognition locale. The Web Speech API cannot auto-detect language —
+ * it must be told up front — so seed from the device/browser locale. Whisper
+ * (server fallback) is the true auto-detect path.
+ * See docs/specs/CONVERSATIONAL_MULTILINGUAL_UNLOCK_2026-06-14.md.
+ */
+function defaultRecognitionLang(): string {
+  if (typeof navigator !== 'undefined' && navigator.language) return navigator.language;
+  return 'en-US';
+}
+
 export class OptimizedVoiceRecognition {
   private recognition: any = null;
   private isInitializing = false;
@@ -47,7 +58,7 @@ export class OptimizedVoiceRecognition {
     this.config = {
       continuous: config.continuous ?? true,
       interimResults: config.interimResults ?? true,
-      language: config.language ?? 'en-US',
+      language: config.language ?? defaultRecognitionLang(),
       silenceTimeoutMs: config.silenceTimeoutMs ?? 1500,
       maxAlternatives: config.maxAlternatives ?? 1,
     };
@@ -169,7 +180,7 @@ export class OptimizedVoiceRecognition {
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
-      this.recognition.lang = 'en-US';
+      this.recognition.lang = this.config.language ?? 'en-US';
       this.recognition.maxAlternatives = 1;
 
       this.setupEventHandlers();

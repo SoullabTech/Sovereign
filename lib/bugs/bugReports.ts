@@ -8,6 +8,10 @@
 // is best-effort and never throws back into the caller: a saved report is the
 // durable part; a missed chat notice is recoverable. The table owns status; the
 // channel owns visibility.
+//
+// Phase 2 adds: lifecycle states (in_progress/resolved/released), owner_id, linked_pr,
+// released_at, and an immutable audit trail echoed to #bug-log on every status
+// transition and on every new report.
 
 import { query, queryOne } from '@/lib/db/postgres';
 import { getChannelBySlug, sendMessage } from '@/lib/team/ChannelService';
@@ -15,6 +19,7 @@ import { parseStoredBugAttachments, toClientBugAttachments } from './attachments
 import { getDefaultTeamId } from '@/lib/team/colabTeams';
 import {
   BUG_MIRROR_CHANNEL_SLUG,
+  BUG_LOG_CHANNEL_SLUG,
   type BugReport,
   type BugStatus,
   type BugSeverity,
@@ -52,6 +57,10 @@ function rowToBugReport(row: Record<string, any>): BugReport {
     // Stored attachments (with vault storagePath) → client-facing (admin-gated serve URL).
     // storagePath never leaves this mapping, so it never reaches a client.
     attachments: toClientBugAttachments(row.id, parseStoredBugAttachments(row.attachments)),
+    ownerId: row.owner_id ?? null,
+    ownerName: row.owner_name || row.owner_username || null,
+    linkedPr: row.linked_pr ?? null,
+    releasedAt: iso(row.released_at),
     createdAt: iso(row.created_at) ?? '',
     updatedAt: iso(row.updated_at) ?? '',
   };
@@ -107,7 +116,8 @@ function buildMirrorBody(bug: BugReport): string {
   const body = bug.message.length > 600 ? `${bug.message.slice(0, 600)}…` : bug.message;
   lines.push(`"${body}"`);
   lines.push('');
-  lines.push(`→ /admin/monitor?bug=${bug.id}`);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? 'https://soullab.life';
+  lines.push(`→ ${baseUrl}/admin/monitor?bug=${bug.id}`);
   return lines.join('\n');
 }
 
@@ -134,6 +144,75 @@ async function mirrorBugToChannel(
   } catch (err) {
     console.error('[bugReports] mirror to #bugs failed (non-fatal):', err);
     return null;
+  }
+}
+
+/**
+ * Best-effort post of the initial new-report message into #bug-log.
+ * This seeds the immutable audit trail. Does NOT update mirror_channel_slug
+ * (that back-reference belongs to #bugs). NEVER propagates an error.
+ */
+async function logNewBugToAuditChannel(bug: BugReport): Promise<void> {
+  try {
+    const teamId = await getDefaultTeamId();
+    const channel = await getChannelBySlug(BUG_LOG_CHANNEL_SLUG, teamId);
+    if (!channel) return;
+    const senderId = bug.memberId || channel.createdBy;
+    if (!senderId) return;
+    await sendMessage(channel.id, senderId, buildMirrorBody(bug));
+  } catch (err) {
+    console.error('[bugReports] audit-log echo to #bug-log failed (non-fatal):', err);
+  }
+}
+
+/**
+ * Post a status-transition entry to #bug-log. Best-effort, never throws.
+ */
+async function logTransitionToBugLog(
+  bug: BugReport,
+  from: string | undefined,
+  to: BugStatus,
+  linkedPr?: string | null,
+): Promise<void> {
+  try {
+    const teamId = await getDefaultTeamId();
+    const channel = await getChannelBySlug(BUG_LOG_CHANNEL_SLUG, teamId);
+    if (!channel) return;
+    const senderId = bug.memberId || channel.createdBy;
+    if (!senderId) return;
+
+    const prefix = to === 'released' ? '🚀 Released' : `🔄 Status: ${from ?? '?'} → ${to}`;
+    const excerpt = bug.message.slice(0, 80) || '(screenshot only)';
+    const lines = [
+      prefix,
+      `Bug: ${excerpt}`,
+      `→ /admin/monitor?bug=${bug.id}`,
+    ];
+    if (to === 'resolved' && linkedPr) lines.push(`🔗 PR: ${linkedPr}`);
+
+    await sendMessage(channel.id, senderId, lines.join('\n'));
+  } catch (err) {
+    console.error('[bugReports] transition log to #bug-log failed (non-fatal):', err);
+  }
+}
+
+/**
+ * Post a PR-linked entry to #bug-log when a PR is attached without a status change.
+ * Best-effort, never throws.
+ */
+async function logPrLinkedToBugLog(bug: BugReport, pr: string): Promise<void> {
+  try {
+    const teamId = await getDefaultTeamId();
+    const channel = await getChannelBySlug(BUG_LOG_CHANNEL_SLUG, teamId);
+    if (!channel) return;
+    const senderId = bug.memberId || channel.createdBy;
+    if (!senderId) return;
+
+    const excerpt = bug.message.slice(0, 80) || '(screenshot only)';
+    const body = `🔗 PR linked: ${pr}\nBug: ${excerpt}\n→ /admin/monitor?bug=${bug.id}`;
+    await sendMessage(channel.id, senderId, body);
+  } catch (err) {
+    console.error('[bugReports] PR-link log to #bug-log failed (non-fatal):', err);
   }
 }
 
@@ -183,6 +262,9 @@ export async function createBugReport(input: CreateBugInput): Promise<BugReport>
     bug.mirroredMessageId = mirror.messageId;
   }
 
+  // Audit trail — same initial message to #bug-log (fire-and-forget).
+  logNewBugToAuditChannel(bug).catch(() => {});
+
   return bug;
 }
 
@@ -191,9 +273,12 @@ export async function createBugReport(input: CreateBugInput): Promise<BugReport>
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SELECT_WITH_RESOLVER = `
-  SELECT b.*, rm.name AS resolver_name, rm.username AS resolver_username
+  SELECT b.*,
+    rm.name AS resolver_name, rm.username AS resolver_username,
+    om.name AS owner_name, om.username AS owner_username
     FROM bug_reports b
-    LEFT JOIN members rm ON rm.id = b.resolved_by`;
+    LEFT JOIN members rm ON rm.id = b.resolved_by
+    LEFT JOIN members om ON om.id = b.owner_id`;
 
 export async function getBugReport(id: string): Promise<BugReport | null> {
   const row = await queryOne<Record<string, any>>(`${SELECT_WITH_RESOLVER} WHERE b.id = $1`, [id]);
@@ -259,7 +344,7 @@ export async function listBugReports(
   const countRows = await query<{ status: string; n: number }>(
     `SELECT status, COUNT(*)::int AS n FROM bug_reports GROUP BY status`,
   );
-  const counts: BugStatusCounts = { new: 0, seen: 0, resolved: 0, wont_fix: 0, total: 0 };
+  const counts: BugStatusCounts = { new: 0, seen: 0, in_progress: 0, resolved: 0, released: 0, wont_fix: 0, total: 0 };
   for (const r of countRows.rows) {
     if (r.status in counts) (counts as any)[r.status] = r.n;
     counts.total += r.n;
@@ -277,6 +362,8 @@ export interface BugPatch {
   severity?: BugSeverity;
   adminNote?: string;
   resolvedBy?: string | null;
+  ownerId?: string | null;
+  linkedPr?: string | null;
 }
 
 export async function updateBugReport(id: string, patch: BugPatch): Promise<BugReport | null> {
@@ -284,14 +371,28 @@ export async function updateBugReport(id: string, patch: BugPatch): Promise<BugR
   const params: any[] = [];
   let i = 1;
 
+  // Capture prior state before mutating, so we can emit audit entries after.
+  let fromStatus: string | undefined;
   if (patch.status !== undefined) {
+    const prev = await queryOne<{ status: string; owner_id: string | null }>(
+      'SELECT status, owner_id FROM bug_reports WHERE id = $1',
+      [id],
+    );
+    fromStatus = prev?.status;
+
     sets.push(`status = $${i++}`);
     params.push(patch.status);
-    // A terminal status stamps resolved_at once; reopening clears it.
+    // Terminal statuses stamp resolved_at/released_at once; non-terminal clears them.
     if (patch.status === 'resolved' || patch.status === 'wont_fix') {
       sets.push(`resolved_at = COALESCE(resolved_at, now())`);
-    } else {
+    } else if (patch.status === 'released') {
+      sets.push(`released_at = COALESCE(released_at, now())`);
       sets.push(`resolved_at = NULL`);
+      sets.push(`resolved_by = NULL`);
+    } else {
+      // new, seen, in_progress — not terminal; clear both timestamps.
+      sets.push(`resolved_at = NULL`);
+      sets.push(`released_at = NULL`);
       sets.push(`resolved_by = NULL`);
     }
   }
@@ -307,6 +408,14 @@ export async function updateBugReport(id: string, patch: BugPatch): Promise<BugR
     sets.push(`resolved_by = $${i++}`);
     params.push(patch.resolvedBy);
   }
+  if (patch.ownerId !== undefined) {
+    sets.push(`owner_id = $${i++}`);
+    params.push(patch.ownerId);
+  }
+  if (patch.linkedPr !== undefined) {
+    sets.push(`linked_pr = $${i++}`);
+    params.push(patch.linkedPr);
+  }
 
   if (sets.length === 0) return getBugReport(id);
 
@@ -319,6 +428,18 @@ export async function updateBugReport(id: string, patch: BugPatch): Promise<BugR
   );
   if (updated.rowCount === 0) return null;
 
-  // Re-read with the resolver join so the caller gets the resolver's name.
-  return getBugReport(id);
+  // Re-read with the resolver/owner join so the caller gets resolved names.
+  const bug = await getBugReport(id);
+  if (!bug) return null;
+
+  // Audit trail — fire-and-forget, never blocks the caller.
+  const statusChanged = patch.status !== undefined && patch.status !== fromStatus;
+  if (statusChanged) {
+    logTransitionToBugLog(bug, fromStatus, patch.status!, patch.linkedPr).catch(() => {});
+  } else if (patch.linkedPr != null && patch.linkedPr !== '') {
+    // PR linked without a status change → standalone audit entry.
+    logPrLinkedToBugLog(bug, patch.linkedPr).catch(() => {});
+  }
+
+  return bug;
 }

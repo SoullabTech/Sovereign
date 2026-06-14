@@ -40,6 +40,14 @@ export default function BugReportButton() {
     setHasMember(getValidMemberId() !== null);
   }, []);
 
+  // Other surfaces (e.g. the Beta Hub "Report a Bug" tile) open the ONE canonical bug flow
+  // via a lightweight event — decoupled, no shared ownership between components.
+  useEffect(() => {
+    const open = () => setPhase('open');
+    window.addEventListener('soullab:open-bug-report', open);
+    return () => window.removeEventListener('soullab:open-bug-report', open);
+  }, []);
+
   if (!hasMember) return null;
 
   const addFiles = (files: File[]) => {

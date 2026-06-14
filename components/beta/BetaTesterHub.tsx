@@ -137,7 +137,16 @@ export function BetaTesterHub({ userName, userId }: BetaTesterHubProps) {
                   {FEEDBACK_TYPES.map(({ type, icon: Icon, label, color }) => (
                     <button
                       key={type}
-                      onClick={() => setSelectedType(type)}
+                      onClick={() => {
+                        // Bugs go to the ONE canonical flow — open it and close the hub.
+                        // The tile stays for discoverability: a doorway, not a second system.
+                        if (type === 'bug') {
+                          window.dispatchEvent(new CustomEvent('soullab:open-bug-report'));
+                          setIsOpen(false);
+                          return;
+                        }
+                        setSelectedType(type);
+                      }}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-all hover:scale-[1.01] ${color}`}
                     >
                       <Icon className="w-5 h-5" />

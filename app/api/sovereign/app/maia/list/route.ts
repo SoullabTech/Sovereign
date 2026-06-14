@@ -1230,7 +1230,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     });
 
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
-    if (userId && message && orchestratorResult.text) {
+    // 🔒 SANCTUARY MODE: a sanctuary turn must never feed relational observation or signal
+    // persistence — its content must not become available to Relationship Field retrieval.
+    if (userId && message && orchestratorResult.text && !isSanctuary) {
       observeRelationalContent(userId, message, orchestratorResult.text);
 
       // 🌊 RELATIONAL FIELD CARD: Phase 4 detection (fire-and-forget).

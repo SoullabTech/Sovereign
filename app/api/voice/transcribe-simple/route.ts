@@ -116,7 +116,10 @@ export async function POST(req: NextRequest) {
     // Forward audio file to local Faster-Whisper server (OpenAI-compatible API)
     const whisperFormData = new FormData();
     whisperFormData.append('file', fixedFile, fixedFile.name);
-    whisperFormData.append('model', 'base.en');
+    // Multilingual: 'base' (Systran/faster-whisper-base) lets Whisper auto-detect
+    // the spoken language. No `language` field is sent, so detection is automatic.
+    // English-only was 'base.en'. See docs/specs/CONVERSATIONAL_MULTILINGUAL_UNLOCK_2026-06-14.md.
+    whisperFormData.append('model', 'base');
 
     console.log("🎤 [TRANSCRIBE-SIMPLE] Forwarding to Whisper:", WHISPER_LOCAL_URL);
 
