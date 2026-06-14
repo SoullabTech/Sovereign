@@ -35,7 +35,7 @@ const CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(30, 58, 95, 0.3)',
 };
 const INPUT_CLASS =
-  'w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-3 text-base text-white placeholder:text-slate-500 outline-none focus:border-maia-navy-600 transition-all';
+  'w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-3 text-base text-white caret-white placeholder:text-slate-500 outline-none focus:border-maia-navy-600 transition-all';
 const PRIMARY_BTN =
   'w-full rounded-xl bg-maia-navy-700 hover:bg-maia-navy-600 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg';
 const OUTLINE_BTN =
@@ -372,7 +372,7 @@ function UnifiedAuthInner() {
               <form onSubmit={signInWithPassword} className="space-y-3">
                 <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoComplete="username" className={INPUT_CLASS} />
                 <div className="relative">
-                  <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPasswordText ? 'text' : 'password'} placeholder="Password" autoComplete="current-password" className={INPUT_CLASS} />
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPasswordText ? 'text' : 'password'} placeholder="Password" autoComplete="current-password" className={`${INPUT_CLASS} pr-12`} />
                   <button type="button" onClick={() => setShowPasswordText(!showPasswordText)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300" tabIndex={-1}>{showPasswordText ? 'Hide' : 'Show'}</button>
                 </div>
                 <button type="submit" disabled={isLoading || !username || !password} className={PRIMARY_BTN}>{isLoading ? 'Signing in…' : 'Sign in'}</button>

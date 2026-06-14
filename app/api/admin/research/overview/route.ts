@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { checkAdminAuth, adminUnauthorized } from '@/lib/admin/adminAuth';
 
 export const dynamic = 'force-dynamic';
-
-function checkAdminAuth(req: NextRequest): boolean {
-  const adminPassword = process.env.LABTOOLS_ADMIN_PASSWORD;
-  if (!adminPassword) return false;
-  const authHeader = req.headers.get('x-admin-password') ?? req.headers.get('authorization');
-  if (!authHeader) return false;
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-  return token === adminPassword;
-}
 
 interface LedgerRow {
   metric_key: string;
@@ -24,9 +16,8 @@ interface LedgerRow {
 }
 
 export async function GET(req: NextRequest) {
-  if (!checkAdminAuth(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = await checkAdminAuth(req);
+  if (!auth.authed) return adminUnauthorized();
 
   try {
     const days = parseInt(req.nextUrl.searchParams.get('days') ?? '30', 10);
