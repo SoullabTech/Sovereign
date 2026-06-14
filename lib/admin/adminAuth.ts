@@ -2,7 +2,9 @@
  * Shared admin authentication utility.
  *
  * Two paths (in priority order):
- *   1. Member session — x-member-id or x-session-token header; member must have admin_role set
+ *   1. Verified member session — x-session-token header OR maia_session cookie, validated against
+ *      auth_sessions (unexpired, not revoked); member must have admin_role. A bare x-member-id
+ *      header is NEVER trusted for admin (no session proof = privilege-escalation risk).
  *   2. Shared password fallback — x-admin-password or Authorization: Bearer header (grants founder)
  *
  * All access attempts (including denials) are written to admin_access_log.
@@ -54,46 +56,39 @@ export async function checkAdminAuth(
     'unknown';
   const route = routeOverride ?? req.nextUrl.pathname;
 
-  // --- Path 1: member session ---
-  const memberId = req.headers.get('x-member-id');
-  const sessionToken = req.headers.get('x-session-token');
+  // --- Path 1: VERIFIED member session ---
+  // SECURITY: admin access requires PROOF of an authenticated session. The session token is taken
+  // from the x-session-token header (Safari/iOS) or the maia_session cookie (web), and validated
+  // against auth_sessions (unexpired, not revoked) before the member's admin_role is checked.
+  // A bare x-member-id header is NEVER trusted here: it carries no session proof, so trusting it
+  // would let anyone who knows an admin member's UUID escalate to admin. (Member-identity flows
+  // elsewhere may use x-member-id; admin authority must not.)
+  const sessionToken =
+    req.headers.get('x-session-token') ??
+    req.cookies.get('maia_session')?.value ??
+    null;
 
-  if (memberId || sessionToken) {
+  if (sessionToken) {
     try {
-      let rows: Array<{ id: string; admin_role: AdminRole }> = [];
-
-      if (memberId) {
-        const r = await query<{ id: string; admin_role: AdminRole }>(
-          `SELECT id, admin_role FROM members
-           WHERE id = $1 AND admin_role IS NOT NULL LIMIT 1`,
-          [memberId],
-        );
-        rows = r.rows;
-      }
-
-      if (!rows.length && sessionToken) {
-        const r = await query<{ id: string; admin_role: AdminRole }>(
-          `SELECT m.id, m.admin_role FROM members m
-           JOIN auth_sessions s ON s.member_id = m.id
-           WHERE s.session_token = $1
-             AND m.admin_role IS NOT NULL
-             AND s.expires_at > NOW()
-             AND s.revoked = FALSE
-           LIMIT 1`,
-          [sessionToken],
-        );
-        rows = r.rows;
-      }
-
-      if (rows.length) {
-        const { id, admin_role } = rows[0];
+      const r = await query<{ id: string; admin_role: AdminRole }>(
+        `SELECT m.id, m.admin_role FROM members m
+         JOIN auth_sessions s ON s.member_id = m.id
+         WHERE s.session_token = $1
+           AND m.admin_role IS NOT NULL
+           AND s.expires_at > NOW()
+           AND s.revoked = FALSE
+         LIMIT 1`,
+        [sessionToken],
+      );
+      if (r.rows.length) {
+        const { id, admin_role } = r.rows[0];
         if (allowedRoles.includes(admin_role)) {
           await auditLog('member', route, ip, id, admin_role);
           return { authed: true, via: 'member', role: admin_role, memberId: id };
         }
       }
     } catch (err) {
-      console.error('[admin/auth] Member lookup error:', err);
+      console.error('[admin/auth] Member session lookup error:', err);
     }
   }
 
