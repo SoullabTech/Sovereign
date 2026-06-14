@@ -316,6 +316,7 @@ They are enforceable at:
 - The Socratic Validator (existing infrastructure)
 - The Opus Axioms evaluation (existing infrastructure)
 - Feature review (Invariants 9 and 10)
+- The design-review gate — the Sovereignty Invariant Check in `CLAUDE.md` § "Before Making Changes" (Invariant 14: imposed framework / translated meaning / universalized "self / growth / healing / family / spirit")
 - System telemetry (Invariant 3)
 
 Any feature, prompt, or architectural change that violates these invariants is invalid, regardless of technical merit or user demand.
