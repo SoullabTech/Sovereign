@@ -42,6 +42,8 @@ jobs:
               'lib/safety/',
               'lib/memory/',
               'lib/consciousness/',
+              'lib/session/',
+              'app/api/session/',
               'docs/policy/',
               'docs/GOVERNANCE'
             ];

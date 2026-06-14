@@ -23,7 +23,7 @@ jobs:
             // GOVERNANCE CONFIGURATION
             // ═══════════════════════════════════════════════════════════════
 
-            const FOUNDERS = ['kelly-nezat'];
+            const FOUNDERS = ['Soullab']; // #448: corrected from non-existent 'kelly-nezat' so a founder approval can register
             const GUARDIAN_CIRCLE = []; // Add council usernames when appointed
             const MENTORS = [];          // Add mentor usernames when appointed
 
@@ -212,6 +212,8 @@ jobs:
               'lib/safety/',
               'lib/memory/',
               'lib/consciousness/',
+              'lib/session/',
+              'app/api/session/',
               'docs/policy/',
               'docs/GOVERNANCE'
             ];
