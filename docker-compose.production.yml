@@ -544,8 +544,17 @@ services:
     logging: *default_logging
 
     environment:
-      WHISPER__MODEL: base.en
+      # Multilingual model (was base.en, English-only). Server auto-pulls
+      # Systran/faster-whisper-base from HuggingFace; Whisper auto-detects language.
+      # Hold escalation to 'small' until CPU/accuracy measured.
+      WHISPER__MODEL: base
       WHISPER__INFERENCE_DEVICE: cpu
+
+    volumes:
+      # Persist the HuggingFace model cache so the multilingual CTranslate2 model
+      # survives container recreate (otherwise re-downloaded from HF every rebuild).
+      # See docs/specs/CONVERSATIONAL_MULTILINGUAL_UNLOCK_2026-06-14.md.
+      - whisper-hf-cache:/root/.cache/huggingface
 
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
@@ -858,6 +867,8 @@ volumes:
   caddy_config:
     driver: local
   whisper_models:
+    driver: local
+  whisper-hf-cache:
     driver: local
   vault_data:
     driver: local
