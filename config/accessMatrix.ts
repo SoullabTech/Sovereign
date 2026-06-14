@@ -179,6 +179,15 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/relationships', minTier: 'free', notes: 'Relational Field — outer/inner/transpersonal, CRUD. Moved out of /dashboard/* 2026-04-08 so it no longer inherits the Jade Neural Command shell.' },
   { exact: '/ask-maia', minTier: 'free', notes: 'Ask MAIA — depth, capacity-governed' },
 
+  // Personal Portal — member daily threshold (Track A prototype, 2026-06-14)
+  // Mounted at /threshold (NOT /portal — that prefix is the public practitioner
+  // client-portals, line ~110). Architecture name per design: "Members need a Threshold."
+  // PROTOTYPE: public so it is previewable without a session and honors the floor-state
+  // principle ("valuable before knowing anything"). Flip to minTier:'free' + member/Sanctuary
+  // gate in Track B (role-auth → reconciliation → Sanctuary deploy).
+  { exact: '/threshold', public: true, notes: 'Personal Portal home — daily threshold (prototype; gate to free in Track B)' },
+  { prefix: '/threshold/', public: true, notes: 'Personal Portal sub-surfaces (prototype)' },
+
   // Community — contribution is participation, not a perk
   { exact: '/maia/community/contribute', minTier: 'free', notes: 'Contribute to commons — participation is open' },
   { exact: '/maia/community/commons/my-offerings', minTier: 'free', notes: 'My offerings' },
