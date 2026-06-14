@@ -436,6 +436,12 @@ services:
     image: pgvector/pgvector:pg16
     container_name: maia-postgres
     restart: unless-stopped
+    # Tailscale-bound Postgres port for the Hetzner standby's streaming replication.
+    # The bind IP comes from POSTGRES_BIND in .env.production (server-only); it defaults to
+    # 127.0.0.1 so a missing value never exposes Postgres beyond localhost.
+    # Set POSTGRES_BIND=100.119.226.84 (minisforum's Tailscale IP) on prod. (Reconciled 2026-06-14.)
+    ports:
+      - "${POSTGRES_BIND:-127.0.0.1}:5432:5432"
     logging: *default_logging
 
     env_file:

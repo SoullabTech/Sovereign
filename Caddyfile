@@ -584,12 +584,8 @@ demo.soullab.life {
 # jlmasterhandyman.com is canonical; jeremy.soullab.life redirects to it
 # ═══════════════════════════════════════════════════════════════════════════════
 jlmasterhandyman.com, www.jlmasterhandyman.com {
-    redir https://jeremy.soullab.life{uri} permanent
-}
-
-jeremy.soullab.life {
-    # Reverse proxy to Palisades Handyman container
-    reverse_proxy palisades:4321 {
+    # Canonical: reverse-proxy the Palisades Handyman container.
+    reverse_proxy palisades-handyman:4321 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -614,6 +610,10 @@ jeremy.soullab.life {
             roll_keep 5
         }
     }
+}
+
+jeremy.soullab.life {
+    redir https://jlmasterhandyman.com{uri} permanent
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
