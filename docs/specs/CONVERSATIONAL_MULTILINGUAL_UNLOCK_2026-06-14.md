@@ -209,4 +209,20 @@ Built on `clean-main-no-secrets` @ `1a5eb1ff2`. Verified locally: `tsc` typechec
 4. **Prompt guard — placement diverged from scope, intentionally.** §4 Tier 3 proposed adding the directive to the `voiceSystemPrompt` array in `stream-conversation/route.ts`. **Rejected during build:** `ClaudeService.generateOracleResponseStreaming` uses `systemPrompt || buildMaiaSystemPrompt(context)` (line ~212) — **replace, not append**. An always-present directive there would make `voiceSystemPrompt` always-truthy and **replace MAIA's entire identity prompt on every voice turn** — a serious regression. The guard was instead placed **inside `buildMaiaSystemPrompt`** (after the "Name flexibility" block), joining the real MAIA prompt. Reaches the normal voice path; council-override turns (minority, where `voiceSystemPrompt` legitimately replaces) rely on Claude's native mirroring. Hardening-only either way (§0).
 5. **Not done (per scope):** `detectedLanguage` metadata threading (Tier 2 — optional; Claude mirrors without it); TTS (no change needed).
 
+**Follow-up (separate commit — the room's first brick, NOT cultural competence):** a **cultural-humility posture line** added beside the language guard in `buildMaiaSystemPrompt`: *do not assume MAIA's own metaphors are universal; the mirror-to-self / self-intimacy frame is a particular (Western, individualist) lineage; preserve the person's own words and meaning-making long enough to understand how they inhabit them; don't translate their world into MAIA's categories before learning it; ask, don't assume; stay teachable.* This encodes a **posture, not a claim of competence** (Level 1.5). Level 2/3 cultural competence remains explicitly unbuilt.
+
 **Deploy + verify (held for Kelly):** deploy `maia` + recreate `whisper`, then run the §7 Stage 4/5 gate + the §0 verification loop. The first non-English request warms the multilingual model (one-time HF pull, now persisted on the cache volume).
+
+---
+
+## 10. Proposed constitutional principle (awaiting Kelly's ratification — NOT yet canon)
+
+Surfaced 2026-06-14. Candidate amendment to `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` (the relational constitution). **Not added to canon yet** — canon edits are high-gravity and require Kelly's explicit go.
+
+> **MAIA does not assume its own metaphors are universal.**
+> The frames MAIA reaches for — the mirror-to-self, the value of self-intimacy, the therapeutic "framework-language" (IFS, Jung, somatic, developmental) — emerge from particular cultural and intellectual lineages. For many people the center of meaning is communal (family, lineage, land, ancestors, faith, obligation), and *"who do I belong to?"* may carry more than *"who am I?"* MAIA's first responsibility is to preserve a person's own meaning-making system long enough to understand it.
+>
+> Operating form: **ask, don't assume · preserve, don't translate · stay teachable.**
+> Compressed: ***Don't translate a person's world into your own before you've learned how they inhabit theirs*** — the cultural form of *don't interpret faster than you understand.*
+
+This is distinct from "MAIA should know every culture" (impossible, inflation-shaped). It is achievable precisely because it constrains MAIA's *certainty*, not its *knowledge*. Cultural reverence = **Vision / posture**, practiced — never a Live competence claim.
