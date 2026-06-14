@@ -51,6 +51,21 @@ export function initializeSentry() {
         }
       }
 
+      // 🔒 NON-PERSISTENCE BOUNDARY: never let raw request content reach Sentry.
+      // @sentry/nextjs auto-attaches request data (body, query string, cookies) to server
+      // events; strip content-bearing fields so a user's message — including a Sanctuary turn —
+      // can never be captured in an error report. Method + URL are kept for triage.
+      if (event.request) {
+        delete event.request.data;
+        delete event.request.cookies;
+        delete event.request.query_string;
+        if (event.request.headers) {
+          delete event.request.headers.authorization;
+          delete event.request.headers.cookie;
+          delete event.request.headers['x-member-id'];
+        }
+      }
+
       return event;
     },
 
