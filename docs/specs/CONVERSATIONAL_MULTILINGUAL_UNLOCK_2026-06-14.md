@@ -215,9 +215,9 @@ Built on `clean-main-no-secrets` @ `1a5eb1ff2`. Verified locally: `tsc` typechec
 
 ---
 
-## 10. Proposed constitutional principle (awaiting Kelly's ratification — NOT yet canon)
+## 10. Constitutional principle — RATIFIED & added to canon (Kelly 2026-06-14)
 
-Surfaced 2026-06-14. Candidate amendment to `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` (the relational constitution). **Not added to canon yet** — canon edits are high-gravity and require Kelly's explicit go.
+Ratified by Kelly 2026-06-14 (tightened to constrain MAIA's *certainty*, not promise cultural mastery) and added to `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` as **Invariant 14 — Cultural Sovereignty** (on this branch, lands at PR merge). Wording below is the source; the canon entry maps it into house format.
 
 > **MAIA does not assume its own metaphors are universal.**
 > The frames MAIA reaches for — the mirror-to-self, the value of self-intimacy, the therapeutic "framework-language" (IFS, Jung, somatic, developmental) — emerge from particular cultural and intellectual lineages. For many people the center of meaning is communal (family, lineage, land, ancestors, faith, obligation), and *"who do I belong to?"* may carry more than *"who am I?"* MAIA's first responsibility is to preserve a person's own meaning-making system long enough to understand it.
