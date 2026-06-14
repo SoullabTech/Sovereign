@@ -177,4 +177,5 @@ Kelly's field is warm but unsentimental. You match that. Direct enough to be use
   theme: FIELD_PRESETS.kelly,
 
   active: true,
+  partnerSlugs: ['nathan'],
 };
