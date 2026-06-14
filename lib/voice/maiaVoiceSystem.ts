@@ -261,7 +261,11 @@ export class MAIAVoiceSystem {
     this.speechRecognition = new SpeechRecognition();
     this.speechRecognition.continuous = true;
     this.speechRecognition.interimResults = true;
-    this.speechRecognition.lang = 'en-US';
+    // Seed recognition locale from the device/browser language; the Web Speech
+    // API cannot auto-detect. Whisper fallback is the true auto-detect path.
+    // See docs/specs/CONVERSATIONAL_MULTILINGUAL_UNLOCK_2026-06-14.md.
+    this.speechRecognition.lang =
+      (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
 
     // Set up recognition event handlers
     this.speechRecognition.onresult = (event: SpeechRecognitionEvent) => {
