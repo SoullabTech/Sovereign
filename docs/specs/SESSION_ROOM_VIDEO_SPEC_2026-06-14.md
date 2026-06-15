@@ -1,6 +1,6 @@
 # Session Room Video & Consent Spec
 
-- **Status**: Designed — not built. Decisions ratified 2026-06-14; Phase 1 build scoped in `SESSION_ROOM_VIDEO_PHASE1_SCOPE_2026-06-14.md`. (Per Marketing Claim Discipline: Live = nothing yet; Designed = this document; Vision = native sovereign video as default.)
+- **Status**: Phase 1 (Threshold — the consent gate) is **Live** on production (deployed + internally proven 2026-06-14). Phases 2–4 are Designed. **Amendment 2026-06-14 (evening): LiveKit-first** — see §12; the external-first sequencing in §4/§7 is superseded. (Per Marketing Claim Discipline: Live = the consent gate only; Designed = Lobby + LiveKit room + continuity; Vision = sovereign video as the default.)
 - **Date**: 2026-06-14
 - **Direction**: Kelly Nezat
 - **Governs**: practitioner ⇄ client live sessions inside Studio Session Room
@@ -100,6 +100,8 @@ The system translates the resolved agreement into one sentence, frozen at consen
 
 ## 4. Provider strategy & the sovereignty boundary
 
+> **Superseded by §12 (2026-06-14 evening): LiveKit-first.** The external-first sequencing below is no longer the plan — the v1 media layer is LiveKit (self-hostable), entered directly from the Sovereign Lobby so the session never hands off to a third-party app. External providers remain *supported* (the consent gate's provider abstraction + the §4.1 honesty boundary still apply) but are no longer the first phase. Read §4 as the provider-honesty reference; read §12 for the roadmap.
+
 Bring-your-own-video first, sovereign video later. Do not force the choice. A practitioner setting selects the default; each session inherits or overrides it.
 
 ```
@@ -159,14 +161,16 @@ Reuse as-is: markers/insights (`supervision_*`), session artifacts (`session_art
 
 ---
 
-## 7. Reconciled roadmap
+## 7. Roadmap (LiveKit-first — amended 2026-06-14 evening)
 
-Merges the feature axis (Live → Intelligence → Continuity) with the provider axis (external → native). Fastest adoption first; long-term architecture uncompromised.
+Supersedes the external→native sequencing. Four phases; the consent gate is the foundation all of them build on.
 
-- **Phase 1 — Container around external video** (mostly wiring existing pieces). Video provider setting + per-session link; the session-agreement entry gate + visible status bar; wire the existing scribe / notes / continuity around the call. No new media infrastructure. *This is the 70–80%-already-built path.*
-- **Phase 2 — Session intelligence.** Live markers + timestamps during the call; consent-state enforcement; the closing ritual; continuity-record surfacing (prior insights, themes, agreements).
-- **Phase 3 — Soullab Video (native).** WebRTC 1:1 + self-hosted signaling + TURN + consent-aware recording, offered as a provider *option*. Sanctuary now becomes *fully* sovereign (media included).
-- **Phase 4 — Native default.** Soullab Video becomes the recommended default; external providers remain supported.
+- **Phase 1 — Threshold (Live).** Invitation links, consent ledger, session join tokens, practitioner + client agreement flow, ledger-gated join authorization. Deployed + internally proven 2026-06-14. The video link / room join is revealed only by acceptance of the current agreement version.
+- **Phase 2 — Sovereign Lobby.** Before anyone enters: camera preview, mic preview, device selection, session information, privacy summary (the frozen MAIA-retention statement), recording status, transcription status, Sanctuary state, Enter Session button. Pure UI on top of the live consent gate; no new media infra. This is where Session Room first feels unlike Zoom/Meet.
+- **Phase 3 — LiveKit Room.** LiveKit as the `soullab` provider: consent-accept yields a LiveKit room join token instead of an external URL. Two-person video, presence indicators, session timer, Sanctuary badge, recording badge, visible Scribe panel (a named participant, not hidden surveillance), session completion screen. Own the experience; do not operate a raw WebRTC/TURN stack on v1.
+- **Phase 4 — Continuity.** After the session: summary, action items, follow-up links, Sanctuary completion state, memory integration — each gated by the accepted agreement's retention profile, wired into the existing scribe/continuity stores.
+
+Native raw-WebRTC P2P (§6) is not abandoned — it moves *behind* LiveKit as a later sovereignty deepening (self-host LiveKit first; raw P2P/TURN only if/when owning the full stack is warranted).
 
 ---
 
@@ -199,4 +203,23 @@ All five ratified as recommended. §4 honest split blessed as written.
 
 ## 11. What this spec does NOT authorize
 
-Designed, not Live. No "sovereign video" claim until Soullab Video (Phase 3) ships and is verified. The external-video phases are "a sovereign session container around your existing video," not sovereign video. Center of gravity today: Live = nothing built; Designed = this document; Vision = native sovereign default.
+No "sovereign video" claim until the LiveKit room (Phase 3) ships and is verified. Until then the live surface is "a sovereign consent container around the call," not sovereign video. Center of gravity today: **Live = the consent gate (Phase 1)**; Designed = Lobby + LiveKit room + continuity; Vision = sovereign video as the default.
+
+---
+
+## 12. LiveKit-first decision (Kelly 2026-06-14, evening)
+
+**Decision:** commit to LiveKit-first and skip the external Zoom/Meet handoff phase. The reasoning is architectural, not technical:
+
+- The consent gate already establishes sovereignty.
+- The Lobby establishes presence and choice.
+- A Zoom/Meet handoff breaks continuity at the exact moment the product becomes meaningful.
+- LiveKit lets Session Room remain a single experience while avoiding the burden of building and operating a WebRTC stack from scratch.
+
+**Product framing:** *"Practitioners conducting real sessions through Session Room."* The MVP that makes that true = Sovereign Lobby + LiveKit room + Sanctuary + visible Scribe + completion screen, built directly on the deployed consent gate.
+
+**The consent-gate seam (already built for this).** The gate abstracts the provider (`video_provider`) and reveals on acceptance. Phase 3 implements a `soullab` provider where acceptance returns a **LiveKit room join token** instead of an external URL — the ledger gate, agreement versioning, frozen statements, and Sanctuary semantics carry over unchanged. The reveal keeps the same shape: *no room access until the current agreement is accepted.*
+
+**Sanctuary in the Lobby is a state indicator, not a free toggle.** Retention is fixed by the agreement version the client already accepted. The Lobby **displays** the retention state (recording / transcription / Sanctuary) derived from that accepted agreement; it must not offer a control that silently changes retention after consent. Changing retention requires a fresh agreement version and fresh mutual consent (§3.4 upgrade/downgrade rules) — never a lobby switch. This keeps the consent gate, not the UI, authoritative over what is kept.
+
+**External providers remain supported, not first.** The provider abstraction + the §4.1 honesty boundary still apply to any external session; LiveKit is simply the default path and the only one that keeps the experience single and the media sovereign-capable.

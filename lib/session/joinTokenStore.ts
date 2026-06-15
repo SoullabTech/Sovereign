@@ -27,6 +27,8 @@ export interface JoinTokenContext {
   videoProvider: string | null;
   agreementText: string | null;
   providerNotice: string | null;
+  agreementMode: string | null;
+  consentFlags: Record<string, unknown> | null;
 }
 
 /** Look up a token by its raw value and join the session context. null = not found. */
@@ -36,7 +38,8 @@ export async function loadJoinTokenContext(rawToken: string): Promise<JoinTokenC
   const row = await queryOne<any>(
     `SELECT t.session_id, t.client_id, t.agreement_version AS token_version, t.status, t.expires_at,
             s.agreement_version AS current_version, s.room_state, s.video_link, s.video_provider,
-            s.agreement_text_snapshot, s.external_provider_notice_snapshot
+            s.agreement_text_snapshot, s.external_provider_notice_snapshot,
+            s.agreement_mode, s.consent_flags
        FROM session_join_tokens t
        JOIN scribe_sessions s ON s.id = t.session_id
       WHERE t.token_hash = $1`,
@@ -57,6 +60,8 @@ export async function loadJoinTokenContext(rawToken: string): Promise<JoinTokenC
     videoProvider: row.video_provider,
     agreementText: row.agreement_text_snapshot,
     providerNotice: row.external_provider_notice_snapshot,
+    agreementMode: row.agreement_mode ?? null,
+    consentFlags: (row.consent_flags ?? null) as Record<string, unknown> | null,
   };
 }
 
