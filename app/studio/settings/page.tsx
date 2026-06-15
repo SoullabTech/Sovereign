@@ -556,7 +556,20 @@ function SettingsContent() {
     setEnabledModules(new Set(defaults));
   }
 
-  const settingsModulesByCategory = getModulesByCategory();
+  // Cut B-lite: Settings → Modules reflects the active mode, matching the sidebar's
+  // getVisibleModules. Personal Field offers field+both modules; Practice Portal offers
+  // practice+both. Display filter only — enabledModules stays one set (no mode-scoped schema).
+  const settingsModulesByCategory = Object.fromEntries(
+    (Object.entries(getModulesByCategory()) as [ModuleCategory, typeof MODULE_DEFINITIONS][])
+      .map(([category, modules]) => [
+        category,
+        modules.filter(m =>
+          studioMode === 'personal'
+            ? m.mode === 'field' || m.mode === 'both'
+            : m.mode === 'practice' || m.mode === 'both'
+        ),
+      ])
+  ) as Record<ModuleCategory, typeof MODULE_DEFINITIONS>;
 
   return (
     <div className="min-h-screen bg-slate-950 flex">
