@@ -5,6 +5,7 @@ import {
   generateAgreementStatements,
   keptAndNotKept,
   resolveRetentionProfile,
+  validateVideoLink,
 } from '../SessionAgreements';
 
 describe('SessionAgreements — ratified defaults', () => {
@@ -121,5 +122,53 @@ describe('keptAndNotKept — closing ritual lists', () => {
     expect(r.kept).toContain('notes, markers, follow-ups');
     expect(r.notKept).toContain('video');
     expect(r.notKept).toContain('raw transcript');
+  });
+});
+
+describe('validateVideoLink — write-time https allowlist', () => {
+  it('accepts a valid https URL and preserves it for persistence (reveal unchanged)', () => {
+    const r = validateVideoLink('zoom', 'https://zoom.us/j/123');
+    expect(r.ok).toBe(true);
+    expect(r.videoLink).toBe('https://zoom.us/j/123');
+  });
+
+  it('rejects a javascript: link', () => {
+    const r = validateVideoLink('zoom', 'javascript:alert(1)');
+    expect(r.ok).toBe(false);
+    expect(r.videoLink).toBeNull();
+    expect(r.error).toBeDefined();
+  });
+
+  it('rejects a data: link', () => {
+    expect(validateVideoLink('zoom', 'data:text/html,<script>x</script>').ok).toBe(false);
+  });
+
+  it('rejects a non-https (http:) link', () => {
+    const r = validateVideoLink('meet', 'http://meet.example/abc');
+    expect(r.ok).toBe(false);
+    expect(r.videoLink).toBeNull();
+  });
+
+  it('rejects a malformed / empty-host URL', () => {
+    expect(validateVideoLink('zoom', 'not a url').ok).toBe(false);
+    expect(validateVideoLink('zoom', 'https://').ok).toBe(false);
+  });
+
+  it('rejects a blank / whitespace / null external link', () => {
+    expect(validateVideoLink('zoom', '').ok).toBe(false);
+    expect(validateVideoLink('zoom', '   ').ok).toBe(false);
+    expect(validateVideoLink('zoom', null).ok).toBe(false);
+  });
+
+  it('trims surrounding whitespace before validating', () => {
+    const r = validateVideoLink('zoom', '  https://zoom.us/j/9  ');
+    expect(r.ok).toBe(true);
+    expect(r.videoLink).toBe('https://zoom.us/j/9');
+  });
+
+  it('preserves soullab behavior — no external URL required or persisted', () => {
+    expect(validateVideoLink('soullab', null)).toEqual({ ok: true, videoLink: null });
+    // even if a stray link is passed, soullab persists none (native room)
+    expect(validateVideoLink('soullab', 'https://example.com')).toEqual({ ok: true, videoLink: null });
   });
 });

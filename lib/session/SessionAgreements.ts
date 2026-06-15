@@ -155,3 +155,35 @@ export function generateAgreementStatements(input: {
 
   return { maiaRetention, providerNotice, version };
 }
+
+export interface VideoLinkValidation {
+  ok: boolean;
+  /** The link to persist — null for providers that supply their own room (soullab). */
+  videoLink: string | null;
+  error?: string;
+}
+
+/**
+ * Validate a practitioner-set video link at the WRITE point (spec §4). External providers must
+ * supply a secure https:// URL; an invalid, non-https, or missing external link is rejected and
+ * never persisted. Soullab (native, Phase 3) supplies its own room, so no external URL is stored.
+ * Defense-in-depth alongside the client-side https allowlist in SovereignLobby.
+ */
+export function validateVideoLink(provider: VideoProvider, rawLink: string | null): VideoLinkValidation {
+  // Native/internal provider supplies its own room — never persist an external URL for it.
+  if (provider === 'soullab') return { ok: true, videoLink: null };
+
+  const link = typeof rawLink === 'string' ? rawLink.trim() : '';
+  if (!link) return { ok: false, videoLink: null, error: 'videoLink required for external providers' };
+
+  let parsed: URL;
+  try {
+    parsed = new URL(link);
+  } catch {
+    return { ok: false, videoLink: null, error: 'external videoLink must be a valid https:// URL' };
+  }
+  if (parsed.protocol !== 'https:') {
+    return { ok: false, videoLink: null, error: 'external videoLink must use https://' };
+  }
+  return { ok: true, videoLink: link };
+}
