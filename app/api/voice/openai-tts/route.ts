@@ -9,6 +9,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
+import * as kokoroProvider from '@/lib/tts/providers/kokoro';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
@@ -32,6 +33,67 @@ function jsonError(message: string, status = 500, extra?: Record<string, unknown
   return new Response(JSON.stringify({ error: message, ...extra }), {
     status,
     headers: { "Content-Type": "application/json" },
+  });
+}
+
+// ─── OpenAI-primary policy: Kokoro is the graceful fallback ───────────────────
+// Invoked when OpenAI TTS throws, or when the caller requests local-only
+// (x-voice-local-only). Calls the Kokoro provider DIRECTLY — not ttsRouter,
+// which honors MAIA_TTS_PROVIDER=openai and would just bounce back to OpenAI.
+// Neutral sovereign voice (af_heart); identity-specific Kokoro voices remain a
+// future selectable-voice feature.
+async function kokoroFallbackResponse(opts: {
+  text: string;
+  format: string;
+  speed: number;
+  requestId: string;
+  effectiveArchetype: string;
+  reason: string;
+  usage?: { memberId?: string; anonId?: string; tier: MemberTier; estimatedSeconds: number };
+}): Promise<Response> {
+  const t0 = Date.now();
+  const kokoroFormat: 'mp3' | 'wav' | 'opus' =
+    opts.format === 'wav' ? 'wav' : opts.format === 'opus' ? 'opus' : 'mp3';
+  const result = await kokoroProvider.synthesize({
+    text: opts.text,
+    voice: 'af_heart',
+    format: kokoroFormat,
+    speed: opts.speed,
+  });
+  const ms = Date.now() - t0;
+
+  console.warn(JSON.stringify({
+    tag: 'tts.kokoro_fallback',
+    requestId: opts.requestId,
+    reason: opts.reason,
+    provider: result.provider,
+    archetype: opts.effectiveArchetype,
+    bytes: result.audioBuffer.length,
+    ms,
+  }));
+
+  if (opts.usage) {
+    const actualSeconds = Math.ceil(ms / 1000) || opts.usage.estimatedSeconds;
+    LimitsEnforcer.recordUsage({
+      memberId: opts.usage.memberId,
+      anonId: opts.usage.anonId,
+      tier: opts.usage.tier,
+      resource: 'voice_tts',
+      amount: actualSeconds,
+    }).catch(err => console.error(`[openai-tts:${opts.requestId}] Usage recording failed:`, err));
+  }
+
+  return new Response(new Uint8Array(result.audioBuffer), {
+    status: 200,
+    headers: {
+      "Content-Type": result.contentType,
+      "Content-Length": result.audioBuffer.length.toString(),
+      "Cache-Control": "no-store",
+      "X-Request-Id": opts.requestId,
+      "X-TTS-Provider": result.provider,
+      "X-TTS-Fallback": "1",
+      "X-Voice-Archetype": opts.effectiveArchetype,
+    },
   });
 }
 
@@ -127,6 +189,24 @@ export async function POST(req: NextRequest) {
     const effectiveArchetype = memberArchetype || 'maia_core';
     const archetypeResolution = resolveArchetypeVoice(effectiveArchetype);
 
+    // ── Local-only requested → Kokoro directly, never cloud ──
+    // Honors the member's explicit local-only intent; no OpenAI, even as fallback.
+    if (req.headers.get('x-voice-local-only') === '1') {
+      try {
+        return await kokoroFallbackResponse({
+          text, format, speed, requestId, effectiveArchetype,
+          reason: 'local_only_requested',
+          usage: { memberId: memberId || undefined, anonId, tier: memberTier, estimatedSeconds },
+        });
+      } catch (localErr: any) {
+        console.warn(`[openai-tts:${requestId}] Local-only requested but Kokoro unavailable: ${localErr?.message}`);
+        return jsonError('Local-only voice requested but local TTS is unavailable', 503, {
+          requestId,
+          policy: 'local-only',
+        });
+      }
+    }
+
     // If archetype routes to OpenAI (MAIA feminine voices), skip Kokoro entirely
     if (archetypeResolution.provider === 'openai') {
       const voice = archetypeResolution.voice;
@@ -147,9 +227,18 @@ export async function POST(req: NextRequest) {
         speed,
         ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
       };
-      const speech = await getOpenAI().audio.speech.create(speechParams);
-
-      const audioBuffer = Buffer.from(await speech.arrayBuffer());
+      let audioBuffer: Buffer;
+      try {
+        const speech = await getOpenAI().audio.speech.create(speechParams);
+        audioBuffer = Buffer.from(await speech.arrayBuffer());
+      } catch (openaiErr: any) {
+        console.warn(`[openai-tts:${requestId}] OpenAI TTS failed (archetype path): ${openaiErr?.message} — falling back to Kokoro`);
+        return await kokoroFallbackResponse({
+          text, format, speed, requestId, effectiveArchetype,
+          reason: 'openai_failed_archetype',
+          usage: { memberId: memberId || undefined, anonId, tier: memberTier, estimatedSeconds },
+        });
+      }
       const ms = Date.now() - t0;
 
       console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} bytes=${audioBuffer.length} ms=${ms}`);
@@ -315,9 +404,18 @@ export async function POST(req: NextRequest) {
       speed,
       ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
     };
-    const speech = await getOpenAI().audio.speech.create(fallbackSpeechParams);
-
-    const audioBuffer = Buffer.from(await speech.arrayBuffer());
+    let audioBuffer: Buffer;
+    try {
+      const speech = await getOpenAI().audio.speech.create(fallbackSpeechParams);
+      audioBuffer = Buffer.from(await speech.arrayBuffer());
+    } catch (openaiErr: any) {
+      console.warn(`[openai-tts:${requestId}] OpenAI TTS failed (primary path): ${openaiErr?.message} — falling back to Kokoro`);
+      return await kokoroFallbackResponse({
+        text, format, speed, requestId, effectiveArchetype,
+        reason: 'openai_failed_primary',
+        usage: { memberId: memberId || undefined, anonId, tier: memberTier, estimatedSeconds },
+      });
+    }
     const ms = Date.now() - t0;
 
     console.log(`[openai-tts:${requestId}] ok model=${fallbackModel} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
