@@ -27,15 +27,14 @@ turn:
   # external_tls left off: plain TURN on 3478 (not TURNS/443). v1 reliability tradeoff documented
   # in SESSION_ROOM_PHASE3_PR2_NOTES; clients on 443-only networks are the known gap (revisit l4).
 
-webhook:
-  # DEPLOY: set api_key to the provisioned public LIVEKIT_API_KEY value (the key id — NOT the
-  # secret, so it may live in the rendered config). LiveKit does NOT substitute ${} in YAML, so
-  # either set it literally here at deploy or render via envsubst in an entrypoint. The webhook
-  # RECEIVER (app/api/session/livekit-webhook) verifies the signature regardless. Validate that
-  # webhooks fire in the room-proof rung.
-  api_key: ""
-  urls:
-    - https://soullab.life/api/session/livekit-webhook
+# webhook: DEFERRED to PR5. LiveKit is intentionally NOT configured to send webhooks yet — wiring
+# webhook.api_key + urls happens in PR5, where room lifecycle events are actually acted on. This
+# avoids shipping an empty webhook.api_key (which risks unsigned/failed webhooks or a startup
+# warning). The verified receiver already exists at app/api/session/livekit-webhook.
+#   webhook:
+#     api_key: <PR5: the provisioned public LIVEKIT_API_KEY id — not the secret>
+#     urls:
+#       - https://soullab.life/api/session/livekit-webhook
 
 logging:
   level: info
