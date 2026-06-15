@@ -862,6 +862,51 @@ services:
       - maia-internal   # write policy calls maia-sovereign:3000
       - maia-public     # Caddy proxies wss://nostr.soullab.life → :7777
 
+  # ═════════════════════════════════════════════════════════════════════════════
+  # LiveKit — Session Room Phase 3 media SFU (self-hosted)   [PR2 — NOT deployed]
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Self-hosted LiveKit SFU. Media is sovereign (our own server), relayed ephemerally and never
+  # recorded unless the agreement permits (Sanctuary = no egress). Decision #1 (Kelly 2026-06-15):
+  # a dedicated TURN listener on 3478 is the ONLY externally-published port (router-forward 3478
+  # TCP+UDP -> 192.168.0.104). Signaling/API (7880) is deliberately NOT host-published — internal
+  # Docker networks only; Caddy proxies the signaling WS, the maia app reaches the room-mgmt API
+  # over maia-internal. SECRETS via LIVEKIT_KEYS env (from .env.production), never in any file/log.
+  # Review only — needs the security-auditor pass + secret provisioning + the deploy/proof rungs.
+  livekit:
+    image: livekit/livekit-server:v1.8   # DEPLOY: pin to an immutable digest (…@sha256:…), verify current stable
+    container_name: maia-livekit
+    restart: unless-stopped
+    logging: *default_logging
+
+    command: ["--config", "/etc/livekit.yaml"]
+
+    # Non-secret config, read-only. Keys come from LIVEKIT_KEYS below, NOT from this file.
+    volumes:
+      - ./config/livekit.yaml:/etc/livekit.yaml:ro
+
+    environment:
+      # "<api_key>: <api_secret>" — provisioned in .env.production (server-only). Never logged.
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+
+    # The ONLY externally-published port: the dedicated TURN listener (Decision #1).
+    # 7880 (signaling+API) and the RTC ports (7881/7882) are intentionally NOT published —
+    # RTC media is reached via the embedded TURN relay, so one forward suffices.
+    ports:
+      - "3478:3478/udp"   # TURN relay (UDP)  — router-forward 3478 TCP+UDP -> 192.168.0.104
+      - "3478:3478/tcp"   # TURN relay (TCP fallback)
+
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL   # the livekit-server Go binary needs no elevated caps (security review 2026-06-15)
+
+    # No healthcheck declared: the livekit-server image's shell/tooling is unconfirmed — add a
+    # verified healthcheck at deploy. Nothing depends_on livekit being healthy for v1.
+
+    networks:
+      - maia-internal   # maia app -> livekit:7880 (room-mgmt API; PR5 RemoveParticipant)
+      - maia-public     # Caddy -> livekit:7880 (signaling WS only)
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Persistent Volumes
 # ═══════════════════════════════════════════════════════════════════════════════
