@@ -96,6 +96,10 @@ export default function NewChangePage() {
     }
 
     try {
+      // Scope new changes to the active co-lab (Cut A). Source = TeamContextProvider's
+      // 'studio_team_context' localStorage key; null = personal scope.
+      let teamId: string | null = null;
+      try { teamId = JSON.parse(localStorage.getItem('studio_team_context') || '{}')?.teamId ?? null; } catch {}
       const createRes = await apiFetch('/api/studio/changes', {
         method: 'POST',
         body: JSON.stringify({
@@ -103,6 +107,7 @@ export default function NewChangePage() {
           description: description.trim(),
           changeType,
           clientId: clientId || null,
+          teamId,
           urgency: urgency !== 'none' ? urgency : null,
           emotionalState: emotionalState.trim() || null,
           hexagramNumber: hexagramNumber || null,

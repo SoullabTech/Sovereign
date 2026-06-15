@@ -159,31 +159,47 @@ export async function GET(request: NextRequest) {
 
     const { practitionerId, memberId } = identity;
 
+    // ── Scope filter (Cut A: field shifts by team/co-lab) ──────────────────
+    // Personal scope            → team_id IS NULL
+    // Co-lab scope              → team_id = <teamId>
+    // Co-lab + includePersonal  → team_id = <teamId> OR team_id IS NULL
+    // Only studio_changes / studio_decisions are team-scoped here; threshold_events
+    // and state_vectors stay member-scoped (a co-lab has no threshold/state of its own).
+    const teamId = request.nextUrl.searchParams.get('teamId') || null;
+    const includePersonal = request.nextUrl.searchParams.get('includePersonal') !== 'false'; // default true
+    const teamScope: { clause: string; params: string[] } = !teamId
+      ? { clause: 'AND team_id IS NULL', params: [] }
+      : includePersonal
+        ? { clause: 'AND (team_id = $2 OR team_id IS NULL)', params: [teamId] }
+        : { clause: 'AND team_id = $2', params: [teamId] };
+
     // Parallel queries — all from existing tables
     const [changesResult, decisionsResult, thresholdsResult, kairosResult] =
       await Promise.all([
-        // Active changes with questions
+        // Active changes with questions (team-scoped)
         db.query(
           `SELECT id, title, description, questions, follow_up_intention,
                   urgency, status, created_at
            FROM studio_changes
            WHERE practitioner_id = $1
+             ${teamScope.clause}
              AND status IN ('naming', 'casting', 'consulting', 'active')
            ORDER BY created_at DESC
            LIMIT 50`,
-          [practitionerId],
+          [practitionerId, ...teamScope.params],
         ),
 
-        // Active decisions with questions
+        // Active decisions with questions (team-scoped)
         db.query(
           `SELECT id, title, context, questions_for_leader,
                   time_pressure, status, created_at
            FROM studio_decisions
            WHERE practitioner_id = $1
+             ${teamScope.clause}
              AND status IN ('draft', 'consulting', 'active')
            ORDER BY created_at DESC
            LIMIT 50`,
-          [practitionerId],
+          [practitionerId, ...teamScope.params],
         ),
 
         // Recent threshold events (last 30 days)

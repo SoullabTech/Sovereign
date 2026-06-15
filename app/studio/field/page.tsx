@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
+import { useTeamContext } from '@/hooks/useStudioData';
 import { NameActionModal } from '@/components/studio/NameActionModal';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ export default function FieldPage() {
   const [selectedEdge, setSelectedEdge] = useState<EdgeItem | null>(null);
   const [serviceCreatedName, setServiceCreatedName] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const { currentTeamId, includePersonal } = useTeamContext();
 
   const fetchPulse = useCallback(async (isRefresh = false) => {
     // Abort any in-flight request
@@ -77,7 +79,10 @@ export default function FieldPage() {
     if (isRefresh) setRefreshing(true);
 
     try {
-      const res = await apiFetch('/api/studio/field/pulse', {
+      const params = new URLSearchParams();
+      if (currentTeamId) params.set('teamId', currentTeamId);
+      params.set('includePersonal', String(includePersonal));
+      const res = await apiFetch(`/api/studio/field/pulse?${params.toString()}`, {
         signal: controller.signal,
       });
       if (res.ok && !controller.signal.aborted) {
@@ -93,7 +98,7 @@ export default function FieldPage() {
         setRefreshing(false);
       }
     }
-  }, []);
+  }, [currentTeamId, includePersonal]);
 
   useEffect(() => {
     fetchPulse();
