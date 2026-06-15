@@ -364,6 +364,12 @@ web/
 # Templates in docs/stewardship/ are tracked; lived intake stream is private.
 docs/stewardship/intake/
 
+# Human-subject pilot evidence — raw transcripts, debriefs, capture sheets.
+# Repo holds the experiment (protocol, worksheet, methodology); the evidence
+# store holds the observations. Keeps consent, redaction, and deletion simple.
+# Spec: docs/specs/RAPPORT_SESSION_1_RUNSHEET_2026-06-15.md
+evidence/
+
 .aetheric-consciousness-verification.json
 scripts/test-selflet-load.ts
 
