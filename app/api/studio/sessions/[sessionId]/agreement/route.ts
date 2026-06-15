@@ -12,6 +12,7 @@ import {
   type CustomFlags,
   generateAgreementStatements,
   resolveRetentionProfile,
+  validateVideoLink,
 } from '@/lib/session/SessionAgreements';
 import { generateRawToken, hashToken } from '@/lib/session/joinTokenStore';
 
@@ -79,7 +80,6 @@ export async function POST(
   const mode = body?.agreementMode as AgreementMode;
   const provider = body?.videoProvider as VideoProvider;
   const customFlags = body?.customFlags as CustomFlags | undefined;
-  const videoLink = typeof body?.videoLink === 'string' ? body.videoLink.trim() : null;
 
   if (!AGREEMENT_MODES.includes(mode)) {
     return NextResponse.json({ error: 'invalid agreementMode' }, { status: 400 });
@@ -87,10 +87,14 @@ export async function POST(
   if (!VIDEO_PROVIDERS.includes(provider)) {
     return NextResponse.json({ error: 'invalid videoProvider' }, { status: 400 });
   }
-  // External providers need a link; Soullab Video (native, Phase 3) supplies its own room.
-  if (provider !== 'soullab' && !videoLink) {
-    return NextResponse.json({ error: 'videoLink required for external providers' }, { status: 400 });
+  // Validate the external video link at the write point — only https is accepted; an invalid,
+  // non-https, or missing external link is rejected here and never persisted (defense-in-depth
+  // with the client-side allowlist in SovereignLobby). Soullab supplies its own room (no URL).
+  const linkValidation = validateVideoLink(provider, typeof body?.videoLink === 'string' ? body.videoLink : null);
+  if (!linkValidation.ok) {
+    return NextResponse.json({ error: linkValidation.error }, { status: 400 });
   }
+  const videoLink = linkValidation.videoLink;
 
   // Per-set agreement version (template prefix + unique suffix) so each set/revise is a distinct
   // version — old tokens go stale by version mismatch, not only by revocation.
