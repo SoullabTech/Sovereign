@@ -49,10 +49,16 @@ export type TokenCheck = { ok: true } | { ok: false; reason: TokenInvalidReason 
 /**
  * Validate the token for a purpose.
  *  - 'decide' (accept/refuse): must be active and the session still in 'pre' (decide before start).
- *  - 'reveal' (fetch the link): a 'used' token still reveals (client returns to join); 'pre' or 'active' ok.
- * Both purposes reject expired, cancelled, and stale-version tokens (new version => new token).
+ *  - 'reveal' (fetch the link/state): a 'used' token still reveals (client returns); 'pre'/'active' ok.
+ *  - 'join'   (mint a live-room credential, Phase 3): same token-level rules as reveal — a 'used'
+ *     token may rejoin, refused/revoked are terminal, the room must be 'pre' or 'active' — but join
+ *     is a DISTINCT security object from reveal. A room credential and a reveal credential have
+ *     different lifetimes and downstream blast radius, so the room-mint path MUST pass 'join' (never
+ *     'reveal'); and join authority is *completed* by the ledger gate in authorizeClientRoomJoin
+ *     (which denies on any later refuse/revoke), not by token status alone.
+ * All purposes reject expired, cancelled, and stale-version tokens (new version => new token).
  */
-export function validateJoinToken(t: JoinTokenState, now: number, purpose: 'decide' | 'reveal'): TokenCheck {
+export function validateJoinToken(t: JoinTokenState, now: number, purpose: 'decide' | 'reveal' | 'join'): TokenCheck {
   if (t.sessionCancelled) return { ok: false, reason: 'cancelled' };
   if (now >= t.expiresAt) return { ok: false, reason: 'expired' };
   if (t.agreementVersion !== t.currentAgreementVersion) return { ok: false, reason: 'stale_version' };
@@ -61,6 +67,7 @@ export function validateJoinToken(t: JoinTokenState, now: number, purpose: 'deci
     if (t.status !== 'active') return { ok: false, reason: 'terminal' };
     if (t.roomState !== 'pre') return { ok: false, reason: 'session_started' };
   } else {
+    // 'reveal' | 'join': accepted ('used') tokens still work (return / rejoin); refused/revoked terminal.
     if (t.status === 'refused' || t.status === 'revoked') return { ok: false, reason: 'terminal' };
     if (t.roomState !== 'pre' && t.roomState !== 'active') return { ok: false, reason: 'session_started' };
   }
@@ -95,4 +102,55 @@ export function evaluateDecision(token: JoinTokenState | null, now: number): { s
   const check = validateJoinToken(token, now, 'decide');
   if (!check.ok) return { status: 403, reason: check.reason };
   return { status: 200 };
+}
+
+// --- Phase 3: room authorization (consent ledger -> live-room credential) ---------------------
+// The hardest Phase 3 boundary. authorizeClientRoomJoin is the single decision point for
+// "may this client be minted a live-room credential, and as what identity/role?" — the analog of
+// evaluateLinkReveal, but for entering live media instead of revealing a link. PURE: the (future)
+// LiveKit signing layer turns an allow into a short-TTL room JWT (PR3); grants/Sanctuary specifics
+// are applied at signing, not here. The participant identity is CONSTRUCTED server-side from the
+// authenticated clientId — never taken from the request body (prevents identity spoofing).
+
+export type RoomRole = 'client' | 'practitioner' | 'scribe';
+
+export interface RoomAuthorization {
+  room: string; // LiveKit room name = session id
+  identity: string; // server-derived participant identity (never client-supplied)
+  role: RoomRole;
+}
+
+export type RoomAuthzResult =
+  | { status: 200; authorization: RoomAuthorization }
+  | { status: 401 | 403; reason: string };
+
+/**
+ * Client room-join authorization. Reuses the same gate as the reveal path — the token `'join'`
+ * check plus the ledger consent gate — and on success returns the server-derived identity + role
+ * to sign into a room credential. The ledger gate (isClientConsentActive) is the authority: it
+ * denies on no-accept and on ANY later refuse/revoke for the current version, so a client who
+ * accepted then revoked gets no new credential. (Killing an already-live connection mid-session is
+ * a separate, runtime server-side action — RemoveParticipant — not modeled here; see plan PR5.)
+ */
+export function authorizeClientRoomJoin(args: {
+  token: JoinTokenState | null;
+  ledger: LedgerEvent[];
+  now: number;
+  sessionId: string;
+  clientId: string;
+}): RoomAuthzResult {
+  const { token, ledger, now, sessionId, clientId } = args;
+  if (!token) return { status: 401, reason: 'no_token' };
+
+  const check = validateJoinToken(token, now, 'join');
+  if (!check.ok) return { status: 403, reason: check.reason };
+
+  if (!isClientConsentActive(ledger, token.currentAgreementVersion)) {
+    return { status: 403, reason: 'no_consent' };
+  }
+
+  return {
+    status: 200,
+    authorization: { room: sessionId, identity: `client:${clientId}`, role: 'client' },
+  };
 }
