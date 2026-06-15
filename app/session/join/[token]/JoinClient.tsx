@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import SovereignLobby, { type LobbyRetention } from '@/components/session/SovereignLobby';
 
 interface AgreementData {
   version: string;
@@ -12,6 +13,7 @@ interface AgreementData {
 interface JoinData {
   ok: boolean;
   agreement: AgreementData;
+  retention: LobbyRetention | null;
   state: 'pending' | 'accepted' | 'refused';
   canDecide: boolean;
   decideReason: string | null;
@@ -20,15 +22,6 @@ interface JoinData {
 }
 
 type View = 'loading' | 'invalid' | 'version_changed' | 'pending' | 'accepted' | 'refused';
-
-const PROVIDER_LABEL: Record<string, string> = {
-  zoom: 'Zoom',
-  meet: 'Google Meet',
-  doxy: 'Doxy.me',
-  simplepractice: 'SimplePractice',
-  custom: 'your video provider',
-  soullab: 'Soullab Video',
-};
 
 export default function JoinClient({ token }: { token: string }) {
   const [data, setData] = useState<JoinData | null>(null);
@@ -94,9 +87,9 @@ export default function JoinClient({ token }: { token: string }) {
     [token, load]
   );
 
-  const providerLabel = data?.agreement.provider
-    ? PROVIDER_LABEL[data.agreement.provider] ?? 'your video provider'
-    : 'your video provider';
+  if (view === 'accepted' && data) {
+    return <SovereignLobby agreement={data.agreement} retention={data.retention} videoLink={videoLink} />;
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-stone-50 px-4 py-10">
@@ -126,30 +119,6 @@ export default function JoinClient({ token }: { token: string }) {
             <p className="mt-2 text-sm text-stone-500">
               The session link was not opened. If this was a mistake, your practitioner can send a new invitation.
             </p>
-          </div>
-        )}
-
-        {view === 'accepted' && (
-          <div className="text-center">
-            <h1 className="text-lg font-medium text-stone-800">You’re in</h1>
-            <p className="mt-2 text-sm text-stone-500">Thank you for reviewing the agreement.</p>
-            {videoLink ? (
-              <>
-                <a
-                  href={videoLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-5 inline-block w-full rounded-xl bg-emerald-600 px-5 py-3 text-center font-medium text-white hover:bg-emerald-500"
-                >
-                  Open session
-                </a>
-                <p className="mt-2 text-xs text-stone-400">Opens in {providerLabel}, in a new tab.</p>
-              </>
-            ) : (
-              <p className="mt-4 text-sm text-stone-500">
-                The session link isn’t available yet. Please refresh, or ask your practitioner.
-              </p>
-            )}
           </div>
         )}
 
