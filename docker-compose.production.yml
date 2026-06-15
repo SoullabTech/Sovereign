@@ -573,6 +573,38 @@ services:
       - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Kokoro TTS — Local Text-to-Speech (sovereign, OpenAI-compatible API)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # 82M-param model, CPU-only, real-time capable. MAIA's sovereign voice engine —
+  # speaks without phoning home. Exposes OpenAI-compatible /v1/audio/speech on
+  # :8880. Reached by maia at http://kokoro-tts:8880 (KOKORO_TTS_URL).
+  # Internal-only: no published port, not proxied by Caddy.
+  #
+  # Voice identity (af_kore) is chosen by the router at request time, NOT here.
+  # KOKORO_DEFAULT_VOICE + healthcheck use af_heart purely as a liveness probe.
+  kokoro-tts:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
+    container_name: maia-kokoro-tts
+    restart: unless-stopped
+    logging: *default_logging
+
+    environment:
+      KOKORO_DEFAULT_VOICE: "af_heart"
+
+    security_opt:
+      - no-new-privileges:true
+
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request,json; d=json.dumps({'input':'ok','voice':'af_heart','model':'kokoro'}).encode(); urllib.request.urlopen(urllib.request.Request('http://localhost:8880/v1/audio/speech',data=d,headers={'Content-Type':'application/json'}),timeout=10)\" || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - maia-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # RLM - Recursive Language Models Service
   # ═════════════════════════════════════════════════════════════════════════════
   # MIT OASYS paradigm: corpus-as-environment for scalable context handling.
