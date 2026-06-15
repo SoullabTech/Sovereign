@@ -5,7 +5,7 @@
 # so it can live in source control (design §6.1 C2a).
 #
 # Transport: Decision #1 (Kelly 2026-06-15) — dedicated TURN listener on 3478 (the single
-# router-forwarded port, TCP+UDP). TURNS/TLS over 443 is intentionally NOT used (Caddy owns 443;
+# router-forwarded port, UDP). TURNS/TLS over 443 is intentionally NOT used (Caddy owns 443;
 # revisit via caddy-l4 later if real usage warrants). RTC media ports stay internal and are
 # reached via the embedded TURN relay, so only 3478 needs a router forward.
 
@@ -22,10 +22,11 @@ rtc:
 
 turn:
   enabled: true     # dedicated TURN listener (Decision #1)
-  udp_port: 3478    # the ONE router forward: 3478 TCP+UDP -> 192.168.0.104
-  tcp_port: 3478
-  # external_tls left off: plain TURN on 3478 (not TURNS/443). v1 reliability tradeoff documented
-  # in SESSION_ROOM_PHASE3_PR2_NOTES; clients on 443-only networks are the known gap (revisit l4).
+  udp_port: 3478    # UDP TURN — router-forward 3478/UDP -> 192.168.0.104
+  # LiveKit's embedded TURN has no plain-TCP port (only udp_port + a TLS tls_port). TURNS (tls_port)
+  # needs a cert+domain and is deferred (TURNS/443 was rejected; revisit via caddy-l4). So v1 TURN is
+  # UDP-only; the 3478/TCP router forward is unused for now. 443-only-network clients remain the known
+  # gap (SESSION_ROOM_PHASE3_PR2_NOTES).
 
 # webhook: DEFERRED to PR5. LiveKit is intentionally NOT configured to send webhooks yet — wiring
 # webhook.api_key + urls happens in PR5, where room lifecycle events are actually acted on. This
