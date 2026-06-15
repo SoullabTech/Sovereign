@@ -60,6 +60,20 @@ function transcriptStatus(t: LobbyRetention['transcript']): string {
   return 'No transcript';
 }
 
+/**
+ * Allowlist for openable video links: only secure https URLs. Returns the link if it is a
+ * valid https URL, otherwise null. Blocks javascript:/data:/http: and malformed values so a
+ * link stored upstream can never be handed to window.open or an <a href> unvalidated.
+ */
+function safeHttpsLink(link: string | null): string | null {
+  if (!link) return null;
+  try {
+    return new URL(link).protocol === 'https:' ? link : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function SovereignLobby({
   agreement,
   retention,
@@ -88,7 +102,12 @@ export default function SovereignLobby({
 
   const provider = agreement.provider || 'soullab';
   const providerLabel = PROVIDER_LABEL[provider] ?? 'your video provider';
-  const isExternal = provider !== 'soullab' && !!videoLink;
+  const isExternalProvider = provider !== 'soullab';
+  // Only an https link may be opened (guards against javascript:/data:/http: links from upstream).
+  const safeLink = safeHttpsLink(videoLink);
+  const externalLinkUsable = isExternalProvider && !!safeLink;
+  // External session whose link is missing or not https — show a safe error, never open it.
+  const externalLinkInvalid = isExternalProvider && !safeLink;
 
   const stopStream = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -201,9 +220,10 @@ export default function SovereignLobby({
   };
 
   const enter = () => {
+    if (externalLinkInvalid) return; // never open an unvalidated link
     stopStream();
-    if (isExternal && videoLink) {
-      window.open(videoLink, '_blank', 'noopener,noreferrer');
+    if (externalLinkUsable && safeLink) {
+      window.open(safeLink, '_blank', 'noopener,noreferrer');
     }
     setEntered(true);
   };
@@ -213,15 +233,15 @@ export default function SovereignLobby({
     return (
       <main className="min-h-screen flex items-center justify-center bg-stone-50 px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-7 text-center shadow-sm">
-          {isExternal ? (
+          {externalLinkUsable ? (
             <>
               <h1 className="text-lg font-medium text-stone-800">Your session opened in {providerLabel}</h1>
               <p className="mt-2 text-sm text-stone-500">
                 If the tab didn’t open, use the button below. MAIA keeps only what your agreement allows.
               </p>
-              {videoLink && (
+              {safeLink && (
                 <a
-                  href={videoLink}
+                  href={safeLink}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-5 inline-block w-full rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-500"
@@ -401,15 +421,26 @@ export default function SovereignLobby({
         </div>
 
         <div className="mt-6">
-          <button
-            onClick={enter}
-            className="w-full rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-500"
-          >
-            Enter session{isExternal ? ` in ${providerLabel}` : ''}
-          </button>
-          <p className="mt-2 text-center text-xs text-stone-400">
-            You can enter with your camera or mic off — you’re in control of what’s shared.
-          </p>
+          {externalLinkInvalid ? (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-center">
+              <p className="text-sm font-medium text-rose-700">This session can’t be opened yet</p>
+              <p className="mt-1 text-xs text-rose-600">
+                The video link is missing or isn’t a secure (https) link. Please ask your practitioner for a new link.
+              </p>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={enter}
+                className="w-full rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-500"
+              >
+                Enter session{externalLinkUsable ? ` in ${providerLabel}` : ''}
+              </button>
+              <p className="mt-2 text-center text-xs text-stone-400">
+                You can enter with your camera or mic off — you’re in control of what’s shared.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </main>
