@@ -873,7 +873,7 @@ services:
   # over maia-internal. SECRETS via LIVEKIT_KEYS env (from .env.production), never in any file/log.
   # Review only — needs the security-auditor pass + secret provisioning + the deploy/proof rungs.
   livekit:
-    image: livekit/livekit-server:v1.8   # DEPLOY: pin to an immutable digest (…@sha256:…), verify current stable
+    image: livekit/livekit-server:v1.8@sha256:621fd87bd64a0c83e1f2418ee0323eb920d00acdd73e5f79b303c64f6cc532af   # pinned to the v1.8 manifest digest (immutable)
     container_name: maia-livekit
     restart: unless-stopped
     logging: *default_logging
