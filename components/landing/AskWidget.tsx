@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 
 export function AskWidget() {
@@ -17,8 +17,8 @@ export function AskWidget() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAsk = async () => {
-    const msg = question.trim();
+  const submitQuestion = async (raw: string) => {
+    const msg = raw.trim();
     if (!msg || loading) return;
 
     setLoading(true);
@@ -43,6 +43,27 @@ export function AskWidget() {
       setLoading(false);
     }
   };
+
+  const handleAsk = () => submitQuestion(question);
+
+  // Let other parts of the page (e.g. the AIN & MAIA section) open this
+  // widget pre-filled with a question — and optionally auto-ask it.
+  const submitRef = useRef(submitQuestion);
+  submitRef.current = submitQuestion;
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const q = String(detail.question || '');
+      setVisible(true);
+      setOpen(true);
+      setQuestion(q);
+      setAnswer('');
+      setError('');
+      if (detail.autosubmit && q.trim()) submitRef.current(q);
+    };
+    window.addEventListener('soullab:ask', onAsk as EventListener);
+    return () => window.removeEventListener('soullab:ask', onAsk as EventListener);
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
