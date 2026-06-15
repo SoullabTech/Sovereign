@@ -48,10 +48,14 @@ export async function mintRoomToken(input: RoomTokenInput): Promise<string> {
     video: {
       room: input.room,
       roomJoin: true,
+      // Sanctuary participants still publish a LIVE A/V conversation — Sanctuary means nothing is
+      // *kept* (no recording / transcript / scribe), not that the call is muted. The Sanctuary
+      // restriction is applied via canPublishSources (no screen-share) + the server's no-egress policy.
       canPublish: true,
       canSubscribe: true,
-      canPublishData: true,
+      canPublishData: false, // no designed data-channel use yet — least privilege (security review)
       canPublishSources: publishSources(input.sanctuary),
+      // (No roomAdmin / roomCreate / roomList — clients never get room-management privileges.)
     },
   };
   const signingInput = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;

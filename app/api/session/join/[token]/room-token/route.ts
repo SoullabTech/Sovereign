@@ -24,6 +24,13 @@ const RATE_MAX = 5;
 const RATE_WINDOW_MS = 60_000;
 const mintHits = new Map<string, number[]>();
 function rateLimited(key: string, now: number): boolean {
+  // Opportunistic prune so the map can't grow unbounded with stale keys (bounds memory; the sweep
+  // only runs once the map is non-trivially large). Single-instance / in-memory by design.
+  if (mintHits.size > 256) {
+    for (const [k, v] of mintHits) {
+      if (v.every((t) => now - t >= RATE_WINDOW_MS)) mintHits.delete(k);
+    }
+  }
   const recent = (mintHits.get(key) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
   if (recent.length >= RATE_MAX) {
     mintHits.set(key, recent);
@@ -39,7 +46,10 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
 
   const apiKey = process.env.LIVEKIT_API_KEY;
   const apiSecret = process.env.LIVEKIT_API_SECRET;
-  if (!apiKey || !apiSecret) {
+  const wsUrl = process.env.LIVEKIT_WS_URL;
+  // Fail closed if LiveKit is not fully configured — never fall back to a hardcoded prod URL (a
+  // misconfigured staging env must not silently point clients at the production SFU).
+  if (!apiKey || !apiSecret || !wsUrl) {
     return NextResponse.json({ error: 'livekit not configured' }, { status: 503 });
   }
 
@@ -71,6 +81,9 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     apiSecret,
     room: authz.authorization.room,
     identity: authz.authorization.identity,
+    // agreementMode is frozen per agreement_version: changing the agreement mints a new version
+    // (and token), and authorizeClientRoomJoin above rejects a stale-version token — so the mode
+    // read here always matches the accepted, current agreement.
     sanctuary: ctx.agreementMode === 'sanctuary',
     ttlSeconds,
   });
@@ -80,7 +93,7 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     roomToken,
     room: authz.authorization.room,
     identity: authz.authorization.identity,
-    url: process.env.LIVEKIT_WS_URL ?? 'wss://livekit.soullab.life',
+    url: wsUrl,
     expiresInSeconds: ttlSeconds,
   });
 }

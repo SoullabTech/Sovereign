@@ -34,6 +34,11 @@ describe('mintRoomToken — LiveKit access-token claims', () => {
     expect(payload.video.roomJoin).toBe(true);
     expect(payload.video.canSubscribe).toBe(true);
     expect(payload.video.canPublishSources).toContain('screen_share');
+    expect(payload.video.canPublishData).toBe(false); // least privilege — no data channel
+    // The grant must never carry room-management privileges.
+    expect(payload.video.roomAdmin).toBeUndefined();
+    expect(payload.video.roomCreate).toBeUndefined();
+    expect(payload.video.roomList).toBeUndefined();
     expect(typeof payload.exp).toBe('number');
   });
 
