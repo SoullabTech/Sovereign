@@ -42,10 +42,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'invalid signature' }, { status: 401 });
   }
 
-  // Issuer must be our API key; the body hash must match (blocks tampered/replayed bodies).
-  if (payload.iss !== apiKey) {
+  // Issuer must be our API key. Reject empty/missing issuer explicitly (defense in depth — never
+  // accept an event signed with an empty/absent key, even from a misconfigured server) before the
+  // exact match.
+  if (typeof payload.iss !== 'string' || payload.iss.length === 0 || payload.iss !== apiKey) {
     return NextResponse.json({ error: 'bad issuer' }, { status: 401 });
   }
+  // (Replay note: jose enforces `exp` when present, and LiveKit webhook JWTs carry it; the body
+  // hash binds the payload. Per-event idempotency on (event, room) is required when PR5 starts
+  // acting on lifecycle events — see the implementation plan.)
   const bodyHash = crypto.createHash('sha256').update(raw).digest('base64');
   if (typeof payload.sha256 !== 'string' || payload.sha256 !== bodyHash) {
     return NextResponse.json({ error: 'body hash mismatch' }, { status: 401 });

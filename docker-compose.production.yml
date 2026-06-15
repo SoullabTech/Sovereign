@@ -873,7 +873,7 @@ services:
   # over maia-internal. SECRETS via LIVEKIT_KEYS env (from .env.production), never in any file/log.
   # Review only — needs the security-auditor pass + secret provisioning + the deploy/proof rungs.
   livekit:
-    image: livekit/livekit-server:v1.8   # DEPLOY: pin to a verified exact tag (check current stable)
+    image: livekit/livekit-server:v1.8   # DEPLOY: pin to an immutable digest (…@sha256:…), verify current stable
     container_name: maia-livekit
     restart: unless-stopped
     logging: *default_logging
@@ -897,6 +897,8 @@ services:
 
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL   # the livekit-server Go binary needs no elevated caps (security review 2026-06-15)
 
     # No healthcheck declared: the livekit-server image's shell/tooling is unconfirmed — add a
     # verified healthcheck at deploy. Nothing depends_on livekit being healthy for v1.

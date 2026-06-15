@@ -45,6 +45,20 @@ A second process (LiveKit's embedded TURN) **cannot also bind host :443**, and s
 - **DNS**: add **`livekit.soullab.life`** → the public IP (Caddy auto-obtains the TLS cert on first request).
 - **`livekit.yaml` `webhook.api_key`**: set to the provisioned public key id at deploy (not a secret; LiveKit does not env-substitute YAML).
 
+## Security review (security-auditor, 2026-06-15) — findings folded in
+
+Verdict: sound for an infra-only PR. **Fixed in PR2:**
+- **Caddy allowlist inversion (HIGH)** — the block previously denied only `/twirp/*` and *proxied everything else*, leaking `/rtc/validate` and other 7880 paths publicly. Now: only the `@ws` signaling upgrade is proxied; **default-deny `403`** for all else.
+- **Webhook issuer hardening** — explicitly reject empty/missing `iss` before the exact match (never trust an event signed with an empty/absent key).
+- **`cap_drop: [ALL]`** added to the `livekit` service (the Go binary needs no elevated caps).
+- Image-pin comment → **immutable digest** at deploy.
+
+**Deploy-gate items (verify before/at deploy — not PR2 code):**
+- **`webhook.api_key` must not ship empty** — set it to the provisioned key id (or `envsubst` it at container start); confirm webhooks are accepted in the room-proof.
+- **`LIVEKIT_KEYS` preflight** — assert both `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` are set (empty → malformed key spec), alongside the `POSTGRES_BIND` preflight.
+- **Webhook idempotency** on `(event, room)` — required when **PR5** acts on lifecycle events (not before).
+- **Plain TURN (3478) carries relay credentials in the clear** — accepted v1 tradeoff; note in the runbook for clients on untrusted networks.
+
 ## Deferred to a separate gate (per plan)
 
-Deploy of the LiveKit service + a `security-auditor` pass on the assembled PR2 + the room/integration proofs — none happen in this PR.
+Deploy of the LiveKit service + the room / multi-device / cellular proofs — none happen in this PR.

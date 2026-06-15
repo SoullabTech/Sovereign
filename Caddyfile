@@ -766,12 +766,11 @@ nostr.soullab.life {
 # publicly here — it is reachable only from the internal Docker network (the maia app), never the
 # public internet (defense in depth; design §6.1 C2b). DNS: add livekit.soullab.life -> public IP.
 livekit.soullab.life {
-    # Never expose the management API publicly (it is JWT-gated, but must not be reachable at all).
-    @api path /twirp/*
-    handle @api {
-        respond 403
-    }
-
+    # ALLOWLIST (default-deny): only the WebSocket signaling upgrade is proxied. Everything else on
+    # 7880 — the Twirp management API, /rtc/validate, etc. — is blocked publicly (the room-mgmt API
+    # is reachable only from the internal Docker network, by the maia app). Media never flows
+    # through Caddy; it uses the dedicated TURN listener (3478). If the client SDK turns out to need
+    # a narrow HTTP preflight (e.g. /rtc/validate), add THAT path explicitly at the room-proof gate.
     @ws {
         header Connection *Upgrade*
         header Upgrade        websocket
@@ -783,12 +782,9 @@ livekit.soullab.life {
             flush_interval -1   # no buffering for the persistent signaling WebSocket
         }
     }
-    # HTTP fallback (LiveKit validation/health on the signaling port).
+    # Default-deny everything that is not the signaling WebSocket.
     handle {
-        reverse_proxy livekit:7880 {
-            header_up Host      {host}
-            header_up X-Real-IP {remote_host}
-        }
+        respond 403
     }
 
     header {
