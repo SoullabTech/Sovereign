@@ -39,6 +39,44 @@ export interface CloudConsentResult {
   reason: 'member_consent' | 'global_disabled' | 'no_setting' | 'default';
 }
 
+export interface OpenAiTtsGate {
+  allowed: boolean;
+  reason: 'allowed' | 'allow_flag_off' | 'openai_disabled';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 0. OpenAI TTS Master Gate (env-level, fail-closed)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Hard environment-level gate for OpenAI (cloud) TTS.
+ *
+ * This is the sovereignty MASTER SWITCH — distinct from, and stricter than,
+ * checkCloudConsent() (the soft per-member / per-request consent layer). When
+ * this returns { allowed: false }, NO OpenAI TTS call may be made — regardless
+ * of member consent, archetype, or local-failure fallback state.
+ *
+ * Fail-closed: OpenAI TTS is permitted ONLY when ALLOW_OPENAI_TTS === 'true'.
+ * Unset or any non-'true' value denies, so every environment must opt in
+ * explicitly. The broader DISABLE_OPENAI_COMPLETELY kill-switch also denies.
+ *
+ * Canon (CLAUDE.md): "Voice: Local TTS/STT or browser APIs only." Cloud TTS is
+ * an explicitly-authorized exception, never a silent default.
+ *
+ * Single source of truth: call this everywhere OpenAI TTS could be invoked
+ * (openai-tts, local-tts, stream-conversation, preview, and lib synth paths)
+ * rather than re-reading the env per-route.
+ */
+export function isOpenAiTtsAllowed(): OpenAiTtsGate {
+  if (process.env.DISABLE_OPENAI_COMPLETELY === 'true') {
+    return { allowed: false, reason: 'openai_disabled' };
+  }
+  if (process.env.ALLOW_OPENAI_TTS !== 'true') {
+    return { allowed: false, reason: 'allow_flag_off' };
+  }
+  return { allowed: true, reason: 'allowed' };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 1. Fallback Audit Logging
 // ═══════════════════════════════════════════════════════════════

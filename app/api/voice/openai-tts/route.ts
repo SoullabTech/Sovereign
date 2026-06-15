@@ -10,7 +10,7 @@ import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/Lim
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
-import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
+import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy, isOpenAiTtsAllowed } from '@/lib/tts/voiceSovereignty';
 import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 import { getMemberVoicePreferences } from '@/lib/voice/voiceControlsService';
 
@@ -129,6 +129,28 @@ export async function POST(req: NextRequest) {
 
     // If archetype routes to OpenAI (MAIA feminine voices), skip Kokoro entirely
     if (archetypeResolution.provider === 'openai') {
+      // ═══ SOVEREIGNTY MASTER GATE ═══
+      // maia_* archetypes are *defined* as OpenAI voices and bypass Kokoro by
+      // design. If cloud TTS is not explicitly authorized, refuse rather than
+      // leak — even for the default voice. Fail-closed (ALLOW_OPENAI_TTS=true).
+      const gate = isOpenAiTtsAllowed();
+      if (!gate.allowed) {
+        console.warn(JSON.stringify({
+          tag: 'sovereignty.openai_tts_blocked',
+          requestId,
+          memberId: memberId ?? 'anon',
+          archetype: effectiveArchetype,
+          path: 'archetype',
+          reason: gate.reason,
+        }));
+        return jsonError('OpenAI TTS disabled by sovereignty policy', 503, {
+          requestId,
+          policy: 'ALLOW_OPENAI_TTS!=true',
+          reason: gate.reason,
+          provider: process.env.MAIA_TTS_PROVIDER || null,
+        });
+      }
+
       const voice = archetypeResolution.voice;
       const t0 = Date.now();
       console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → OpenAI ${voice} (skipping Kokoro)`);
@@ -298,6 +320,28 @@ export async function POST(req: NextRequest) {
     // ═══════════════════════════════════════════════════════════════════
     // OPENAI TTS (original path, or fallback from local)
     // ═══════════════════════════════════════════════════════════════════
+    // ═══ SOVEREIGNTY MASTER GATE ═══
+    // Reached as the 'auto'/'openai' direct path OR after a local (Kokoro)
+    // failure. Refuse cloud TTS unless explicitly authorized — this is the
+    // hard ceiling above the softer checkCloudConsent() layer above.
+    const fallbackGate = isOpenAiTtsAllowed();
+    if (!fallbackGate.allowed) {
+      console.warn(JSON.stringify({
+        tag: 'sovereignty.openai_tts_blocked',
+        requestId,
+        memberId: memberId ?? 'anon',
+        archetype: effectiveArchetype,
+        path: 'fallback',
+        reason: fallbackGate.reason,
+      }));
+      return jsonError('Local TTS unavailable and OpenAI TTS disabled by sovereignty policy', 503, {
+        requestId,
+        policy: 'local-only',
+        reason: fallbackGate.reason,
+        provider: process.env.MAIA_TTS_PROVIDER || null,
+      });
+    }
+
     if (!process.env.OPENAI_API_KEY) {
       return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
     }
