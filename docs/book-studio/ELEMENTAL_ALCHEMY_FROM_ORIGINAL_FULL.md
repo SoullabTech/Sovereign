@@ -2446,7 +2446,7 @@ And once seen, it does not disappear.
 
 &nbsp;
 
-[soullab.life](http://soullab.life)
+soullab.life
 
 ---
 
@@ -2879,6 +2879,6 @@ A working bibliography organized by chapter. Where the same source informs multi
 
 To further enhance your journey, a companion collection of worksheets, practices, case studies, meditations, visualizations, and links to current resources is available at:
 
-**[soullab.life](http://soullab.life)**
+**soullab.life**
 
 This page is updated continuously to reflect new tools and resources supporting the elemental alchemy journey.
