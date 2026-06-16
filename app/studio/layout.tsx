@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
 import {
   ChevronLeft,
   Loader2,
@@ -14,6 +14,7 @@ import {
   LayoutGrid,
   Users,
   Calendar,
+  GripVertical,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -62,6 +63,60 @@ const MOBILE_TABS = [
   { slug: 'sessions', label: 'Sessions', icon: Calendar, href: '/studio/sessions' },
 ] as const;
 
+// Draggable nav row for the Personal Field sidebar. The Link stays fully
+// clickable (navigation must never break); only the grip handle starts a drag
+// (dragListener=false + dragControls). Order is local/per-device.
+// Default order for the movable region of the Personal sidebar, used until the
+// person reorders. Frequently-entered surfaces near the top — MAIA is a primary
+// interaction surface, not just a tool — then fully reorderable. Slugs not
+// listed fall back to module-definition order at the end. (If the default order
+// is the layout a non-reordering user keeps, it should be intentional, not
+// inherited from MODULE_DEFINITIONS order.)
+const DEFAULT_PERSONAL_NAV_ORDER = ['maia', 'decisions', 'changes', 'media', 'scribe'];
+
+function DraggableNavItem({
+  mod,
+  isActive,
+  onNavigate,
+}: {
+  mod: ModuleDefinition;
+  isActive: boolean;
+  onNavigate?: () => void;
+}) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      value={mod}
+      dragListener={false}
+      dragControls={controls}
+      as="div"
+      className="group relative flex items-center"
+    >
+      <Link
+        href={mod.href}
+        onClick={onNavigate}
+        className={`
+          flex-1 flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
+          ${isActive
+            ? 'bg-amber-500/20 text-amber-400'
+            : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'}
+        `}
+      >
+        <mod.icon className="w-4 h-4 flex-shrink-0" />
+        <span className="truncate">{mod.label}</span>
+      </Link>
+      <button
+        type="button"
+        aria-label={`Reorder ${mod.label}`}
+        onPointerDown={(e) => controls.start(e)}
+        className="px-1 py-2 text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing opacity-50 group-hover:opacity-100 transition-opacity touch-none"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </button>
+    </Reorder.Item>
+  );
+}
+
 export default function StudioLayout({
   children,
 }: {
@@ -81,6 +136,9 @@ export default function StudioLayout({
   const [portalTypeRef, setPortalTypeRef] = useState<PortalType>('generalist');
   const [enabledModulesRef, setEnabledModulesRef] = useState<ModuleSlug[] | null>(null);
   const studioModeRef = useRef<StudioMode>('practice');
+  const [currentMode, setCurrentMode] = useState<StudioMode>('practice');
+  // Personal Field sidebar order — local, per-device navigation comfort only.
+  const [personalOrder, setPersonalOrder] = useState<string[]>([]);
 
   // Skip practitioner check on /studio/create page
   const isCreatePage = pathname === '/studio/create';
@@ -115,6 +173,7 @@ export default function StudioLayout({
           setEnabledModulesRef(enabledModules);
           setInitialStudioMode(serverMode);
           studioModeRef.current = serverMode;
+          setCurrentMode(serverMode);
           setVisibleModules(getVisibleModules(enabledModules, portalType, serverMode));
 
           // Personal-mode users who land on /studio go to /studio/field
@@ -140,6 +199,7 @@ export default function StudioLayout({
   // Callback for StudioModeWatcher — re-filters nav when mode changes
   const handleModeChange = useCallback((mode: StudioMode) => {
     studioModeRef.current = mode;
+    setCurrentMode(mode);
     if (isPractitioner) {
       setVisibleModules(getVisibleModules(enabledModulesRef, portalTypeRef, mode));
     }
@@ -181,6 +241,44 @@ export default function StudioLayout({
     );
     return match?.label ?? 'Studio';
   }, [visibleModules, pathname]);
+
+  // ── Personal Field nav order — local, per-device "navigation comfort" only.
+  //    Field stays pinned at top; the tools below it are drag-reorderable.
+  //    localStorage only: no schema, no API, no cross-device assumptions.
+  useEffect(() => {
+    if (currentMode !== 'personal') return;
+    try {
+      const raw = localStorage.getItem(`studio:fieldNavOrder:${getLocalMemberId() ?? 'anon'}`);
+      const saved = raw ? JSON.parse(raw) : [];
+      setPersonalOrder(Array.isArray(saved) ? saved.filter((s) => typeof s === 'string') : []);
+    } catch {
+      setPersonalOrder([]);
+    }
+  }, [currentMode]);
+
+  // Reorderable middle = the Personal sidebar minus the pinned Field (top) and
+  // Settings (bottom), sorted by the saved local order (unknown slugs append).
+  const personalMiddle = useMemo(() => {
+    const middle = visibleModules.filter((m) => m.slug !== 'field' && m.slug !== 'settings');
+    // Saved order if the person has reordered; otherwise a sensible default
+    // (frequently-entered surfaces near the top), not raw definition order.
+    const order = personalOrder.length > 0 ? personalOrder : DEFAULT_PERSONAL_NAV_ORDER;
+    const rank = (slug: string) => {
+      const i = order.indexOf(slug);
+      return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+    };
+    return [...middle].sort((a, b) => rank(a.slug) - rank(b.slug));
+  }, [visibleModules, personalOrder]);
+
+  const handlePersonalReorder = (newOrder: ModuleDefinition[]) => {
+    const slugs = newOrder.map((m) => m.slug);
+    setPersonalOrder(slugs);
+    try {
+      localStorage.setItem(`studio:fieldNavOrder:${getLocalMemberId() ?? 'anon'}`, JSON.stringify(slugs));
+    } catch {
+      /* navigation comfort is best-effort; ignore storage failures */
+    }
+  };
 
   // Show loading while checking practitioner status
   if (checkingPractitioner && !isCreatePage) {
@@ -243,6 +341,45 @@ export default function StudioLayout({
   ];
   const renderGroupedNav = (collapsed: boolean, onNavigate?: () => void) => {
     const settings = visibleModules.find((m) => m.slug === 'settings');
+
+    // ── Personal Field: flat + reorderable. Field pinned at top (the return
+    //    floor, non-draggable), Settings pinned at bottom, everything between
+    //    drag-reorderable (local per-device order). Practice keeps the grouped
+    //    nav below. The floor, the four questions, and the experiment are
+    //    untouched — this is navigation comfort, not field composition.
+    if (currentMode === 'personal') {
+      const field = visibleModules.find((m) => m.slug === 'field');
+      const isActive = (mod: ModuleDefinition) =>
+        pathname === mod.href || (mod.href !== '/studio' && (pathname?.startsWith(mod.href) ?? false));
+      return (
+        <>
+          {field && renderNavLink(field, onNavigate, collapsed)}
+          {collapsed ? (
+            <div className="space-y-0.5 mt-0.5">
+              {personalMiddle.map((m) => renderNavLink(m, onNavigate, true))}
+            </div>
+          ) : (
+            <Reorder.Group
+              axis="y"
+              values={personalMiddle}
+              onReorder={handlePersonalReorder}
+              as="div"
+              className="space-y-0.5 mt-0.5"
+            >
+              {personalMiddle.map((m) => (
+                <DraggableNavItem key={m.slug} mod={m} isActive={isActive(m)} onNavigate={onNavigate} />
+              ))}
+            </Reorder.Group>
+          )}
+          {settings && (
+            <div className="mt-2 pt-2 border-t border-slate-800/50 space-y-0.5">
+              {renderNavLink(settings, onNavigate, collapsed)}
+            </div>
+          )}
+        </>
+      );
+    }
+
     return (
       <>
         {NAV_GROUPS.map(({ cat, label }) => {

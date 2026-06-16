@@ -29,6 +29,7 @@ import {
   Scale,
   Wind,
   Globe,
+  Compass,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -46,6 +47,7 @@ export type PortalType =
 
 export type ModuleSlug =
   | 'command_center'
+  | 'field'
   | 'threshold'
   | 'clients'
   | 'groups'
@@ -118,6 +120,19 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     mode: 'practice',
   },
   {
+    // Personal Field home — the orientation floor. Symmetric to command_center
+    // ("Home") in Practice mode: always-on, leads the sidebar, the place you
+    // return to. mode 'field' → shows in Personal Field, hidden in Practice.
+    slug: 'field',
+    label: 'Field',
+    icon: Compass,
+    href: '/studio/field',
+    category: 'core',
+    description: 'Your orientation space — what is alive right now',
+    alwaysOn: true,
+    mode: 'field',
+  },
+  {
     slug: 'threshold',
     label: 'Threshold',
     icon: DoorOpen,
@@ -125,7 +140,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Six-week passage for practitioners',
     alwaysOn: false,
-    mode: 'both',
+    // Practitioner passage — does not belong in Personal Field. Shows in Practice Portal only.
+    mode: 'practice',
   },
 
   // ── Practice modules (client-facing, operational) ──

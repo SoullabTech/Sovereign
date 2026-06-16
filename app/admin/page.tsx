@@ -185,6 +185,8 @@ export default function AdminPage() {
                 { label: 'Security', href: '/admin/security' },
                 { label: 'Content Pipeline', href: '/admin/content-pipeline' },
                 { label: 'Agent Monitor', href: '/admin/agent-monitor' },
+                { label: 'System Monitor', href: '/admin/monitoring' },
+                { label: 'Operations', href: '/admin/ops' },
               ].map(({ label, href }) => (
                 <button
                   key={href}
@@ -194,6 +196,8 @@ export default function AdminPage() {
                       ? 'bg-teal-500/15 text-teal-300 hover:bg-teal-500/25 border border-teal-500/20'
                       : href === '/admin/platform-overview'
                       ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                      : href === '/admin/feedback-inbox'
+                      ? 'bg-green-500/10 text-green-300 hover:bg-green-500/20 border border-green-500/20'
                       : href === '/admin/security'
                       ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
                       : 'text-white/50 hover:text-white/80 hover:bg-white/10'

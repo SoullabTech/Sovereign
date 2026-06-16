@@ -2,153 +2,62 @@ export const dynamic = 'force-dynamic';
 export async function generateStaticParams() { return []; }
 
 /**
- * FIELD PULSE — "What is alive right now?"
+ * FIELD PULSE — the Orientation Floor (Slice 1)
  *
- * Product principle: Field surfaces what matters; it never creates pressure to act.
+ * The Personal Field as an orientation space, not a portal to tools.
+ * See docs/specs/PERSONAL_FIELD_REDESIGN_2026-06-15.md §0.5.
  *
- * Aggregates questions and next-edge candidates from:
- * - Active changes (questions[], follow_up_intention)
- * - Active decisions (questions_for_leader[])
- * - Recent threshold events
- * - Current kairos state
+ * The floor surfaces the person's OWN authored content through four questions.
+ * It never computes significance: no priority score, no ranking, no "top" item.
+ *   alive    → your open questions
+ *   asking   → items YOU flagged high-urgency (person-set), shown with the date as a fact
+ *   emerging → what you've recently begun (naming / casting / draft)
+ *   tending  → what you're actively working (consulting / active)
  *
- * No new tables. Pure derivation from existing data.
+ * Ordering is transparent (the urgency you set, then recency). Every item is
+ * traceable to something you authored, so the four-question review holds:
+ *   why shown?                → it is your content, matching this question
+ *   why NOT shown?            → you haven't authored it, or it doesn't match the question
+ *   how ordered?              → the urgency you set, then recency
+ *   who decided significance? → you did
+ *
+ * Intentionally NOT surfaced in v1: system-inferred state (kairos / state_vectors)
+ * and detected events (threshold_events). The floor holds room for the person's
+ * own attention; it does not contribute the system's inferences. (Deep-responsive
+ * — remembering revealed attention over time — is a later slice, gated on continuity.)
+ *
+ * No new tables. Pure derivation from studio_changes + studio_decisions.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
+type Source = 'change' | 'decision';
 
-interface Question {
+interface FloorItem {
   id: string;
-  source: 'change' | 'decision' | 'threshold';
+  source: Source;
   sourceId: string;
-  sourceTitle: string;
-  text: string;
-  urgency?: string;
-  status: string;
+  title: string;     // the surfaced text — a question, or the item's own title
+  context?: string;  // transparent attribution only — never a significance claim
+  href: string;
   createdAt: string;
 }
 
-interface EdgeCandidate {
-  id: string;
-  type: 'change' | 'decision';
-  title: string;
-  description: string;
-  reason: string;
-  urgency?: string;
-  status: string;
-  createdAt: string;
-  priority: number;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Priority scoring — governance constants
-//
-// GOVERNANCE ARTIFACT — not just tuning knobs.
-// Each constant protects a specific aspect of Field's posture.
-// Change values here; read the worldview comment before changing logic.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const IDENTITY_BONUS       = 100;  // naming / draft — identity not yet formed
-const STALENESS_BONUS      =  50;  // naming / draft stuck > STALENESS_DAYS
-const STALENESS_DAYS       =   3;  // when "stuck" begins for naming/draft
-
-const PARKED_CASTING_BONUS =  25;  // casting forgotten > PARKED_CASTING_DAYS
-const PARKED_CASTING_DAYS  =   7;  // when "parked" begins for casting
-
-const HEALTH_WINDOW_DAYS   =  14;  // rolling window for all post-launch metrics
-
-const URGENCY_SCORES: Record<string, number> = {
-  acute: 80,
-  urgent: 80,
-  high: 60,
-  medium: 40,
-  low: 20,
-  none: 0,
+// Person-set urgency → a rank for TRANSPARENT ORDERING ONLY. These labels are
+// assigned by the person; the system never invents or weights significance.
+const URGENCY_RANK: Record<string, number> = {
+  acute: 5, urgent: 5, high: 4, medium: 3, low: 2, none: 1,
 };
+const rank = (u: string | null | undefined) => URGENCY_RANK[u || 'none'] || 1;
 
-// Minimum urgency score for the parked-casting nudge to fire.
-// If urgency is undeclared, the system treats it as non-signal —
-// Field does not manufacture importance.
-const PARKED_CASTING_MIN_URGENCY = URGENCY_SCORES.medium; // 40
+// "Asking" = items the person THEMSELVES marked high-urgency or above.
+const ASKING_MIN_RANK = URGENCY_RANK.high; // 4
 
-/**
- * NEXT EDGE SCORING — worldview decision, not optimisation target.
- *
- * Field is a living instrument, not an engagement engine.
- * Next Edge surfaces what is genuinely stuck or unattended,
- * never what is merely recent or numerous.
- *
- * Scoring posture:
- *   naming / draft  → +IDENTITY_BONUS  (identity not yet formed — push it)
- *   casting         → +0 normally; +PARKED_CASTING_BONUS only if parked AND urgent
- *   consulting+     → not in candidate pool (already in motion)
- *
- * Key property: no casting item can outrank a naming/draft item at equal urgency.
- * This is structural, not accidental — do not "optimise" it away.
- *
- * Status enums (source of truth — from migrations):
- *   Changes:   naming → casting → consulting → active → integrating → complete → archived
- *   Decisions: draft → consulting → active → complete → archived
- *
- * Post-launch health metrics (rolling HEALTH_WINDOW_DAYS per practitioner):
- *   1. Casting follow-through: % reaching consulting within PARKED_CASTING_DAYS.
- *      If <70%, urgency defaults or ritual UX needs attention.
- *   2. Next Edge churn: how often the top item changes between refreshes per user/day.
- *      If high, ranking is unstable — check tie-breakers or data volatility.
- *   3. Edge starvation: nextEdge === null while stillAlive.length > 0.
- *      If frequent, candidate pool rules are too strict or urgency defaults are missing.
- *   4. Null-urgency rate at creation: % of changes/decisions created without urgency.
- *      If high, Field appears calm even when work is accumulating — a data-hygiene signal.
- */
-function calculatePriority(
-  status: string,
-  urgency: string | null,
-  createdAt: string,
-): number {
-  let score = 0;
-  const urgencyScore = URGENCY_SCORES[urgency || 'none'] || 0;
-
-  // Items still being named/drafted need the most attention
-  if (status === 'naming' || status === 'draft') score += IDENTITY_BONUS;
-
-  // Urgency weight
-  score += urgencyScore;
-
-  const daysSince =
-    (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
-
-  // Staleness: items in naming/draft for >STALENESS_DAYS get a nudge
-  if ((status === 'naming' || status === 'draft') && daysSince > STALENESS_DAYS) {
-    score += STALENESS_BONUS;
-  }
-
-  // Parked ritual nudge: casting items stale >PARKED_CASTING_DAYS surface gently,
-  // but ONLY if urgency ≥ medium. This prevents forgotten low-signal casts
-  // from cluttering a quiet field. Keeps casting below naming/draft at all times.
-  if (
-    status === 'casting' &&
-    daysSince > PARKED_CASTING_DAYS &&
-    urgencyScore >= PARKED_CASTING_MIN_URGENCY
-  ) {
-    score += PARKED_CASTING_BONUS;
-  }
-
-  return score;
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
 }
-
-function urgencyRank(urgency: string | null): number {
-  return URGENCY_SCORES[urgency || 'none'] || 0;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Handler
-// ─────────────────────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
@@ -156,229 +65,119 @@ export async function GET(request: NextRequest) {
     if (!identity) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const { practitionerId } = identity;
 
-    const { practitionerId, memberId } = identity;
+    // ── Scope (Cut A): personal = team_id IS NULL; co-lab = team_id = $2 ──
+    const teamId = request.nextUrl.searchParams.get('teamId') || null;
+    const includePersonal =
+      request.nextUrl.searchParams.get('includePersonal') !== 'false'; // default true
+    const teamScope: { clause: string; params: string[] } = !teamId
+      ? { clause: 'AND team_id IS NULL', params: [] }
+      : includePersonal
+        ? { clause: 'AND (team_id = $2 OR team_id IS NULL)', params: [teamId] }
+        : { clause: 'AND team_id = $2', params: [teamId] };
 
-    // Parallel queries — all from existing tables
-    const [changesResult, decisionsResult, thresholdsResult, kairosResult] =
-      await Promise.all([
-        // Active changes with questions
-        db.query(
-          `SELECT id, title, description, questions, follow_up_intention,
-                  urgency, status, created_at
+    const [changesResult, decisionsResult] = await Promise.all([
+      db.query(
+        `SELECT id, title, questions, follow_up_intention, urgency, status, created_at
            FROM studio_changes
-           WHERE practitioner_id = $1
-             AND status IN ('naming', 'casting', 'consulting', 'active')
-           ORDER BY created_at DESC
-           LIMIT 50`,
-          [practitionerId],
-        ),
-
-        // Active decisions with questions
-        db.query(
-          `SELECT id, title, context, questions_for_leader,
-                  time_pressure, status, created_at
+          WHERE practitioner_id = $1 ${teamScope.clause}
+            AND status IN ('naming','casting','consulting','active')
+          ORDER BY created_at DESC
+          LIMIT 50`,
+        [practitionerId, ...teamScope.params],
+      ),
+      db.query(
+        `SELECT id, title, questions_for_leader, time_pressure, status, created_at
            FROM studio_decisions
-           WHERE practitioner_id = $1
-             AND status IN ('draft', 'consulting', 'active')
-           ORDER BY created_at DESC
-           LIMIT 50`,
-          [practitionerId],
-        ),
+          WHERE practitioner_id = $1 ${teamScope.clause}
+            AND status IN ('draft','consulting','active')
+          ORDER BY created_at DESC
+          LIMIT 50`,
+        [practitionerId, ...teamScope.params],
+      ),
+    ]);
 
-        // Recent threshold events (last 30 days)
-        db.query(
-          `SELECT id, event_type, summary, intensity, created_at
-           FROM threshold_events
-           WHERE member_id = $1
-             AND created_at >= NOW() - INTERVAL '30 days'
-           ORDER BY created_at DESC
-           LIMIT 10`,
-          [memberId],
-        ),
+    const changes = changesResult.rows;
+    const decisions = decisionsResult.rows;
 
-        // Latest kairos reading
-        db.query(
-          `SELECT kairos_assessment, kairos_description, created_at
-           FROM state_vectors
-           WHERE member_id = $1
-           ORDER BY created_at DESC
-           LIMIT 1`,
-          [memberId],
-        ),
-      ]);
+    const byRecency = (a: FloorItem, b: FloorItem) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 
-    // ─── Extract questions ──────────────────────────────────────────────
-
-    const questions: Question[] = [];
-
-    // From active changes
-    for (const change of changesResult.rows) {
-      const changeQuestions: string[] = change.questions || [];
-      for (let i = 0; i < changeQuestions.length; i++) {
-        if (changeQuestions[i]?.trim()) {
-          questions.push({
-            id: `change-${change.id}-${i}`,
-            source: 'change',
-            sourceId: change.id,
-            sourceTitle: change.title,
-            text: changeQuestions[i].trim(),
-            urgency: change.urgency,
-            status: change.status,
-            createdAt: change.created_at,
-          });
-        }
+    // ── alive: your open questions (person-authored text) ──────────────
+    // carries person-set urgency for transparent ordering; stripped before response
+    const aliveRaw: (FloorItem & { urgency: string | null })[] = [];
+    for (const c of changes) {
+      const qs: string[] = c.questions || [];
+      for (let i = 0; i < qs.length; i++) {
+        const t = qs[i]?.trim();
+        if (t) aliveRaw.push({ id: `change-${c.id}-q${i}`, source: 'change', sourceId: c.id, title: t, context: c.title, href: '/studio/changes', createdAt: c.created_at, urgency: c.urgency });
       }
-      if (change.follow_up_intention?.trim()) {
-        questions.push({
-          id: `change-${change.id}-followup`,
-          source: 'change',
-          sourceId: change.id,
-          sourceTitle: change.title,
-          text: change.follow_up_intention.trim(),
-          urgency: change.urgency,
-          status: change.status,
-          createdAt: change.created_at,
-        });
+      if (c.follow_up_intention?.trim()) {
+        aliveRaw.push({ id: `change-${c.id}-followup`, source: 'change', sourceId: c.id, title: c.follow_up_intention.trim(), context: c.title, href: '/studio/changes', createdAt: c.created_at, urgency: c.urgency });
       }
     }
-
-    // From active decisions
-    for (const decision of decisionsResult.rows) {
-      const decisionQuestions: string[] = decision.questions_for_leader || [];
-      for (let i = 0; i < decisionQuestions.length; i++) {
-        if (decisionQuestions[i]?.trim()) {
-          questions.push({
-            id: `decision-${decision.id}-${i}`,
-            source: 'decision',
-            sourceId: decision.id,
-            sourceTitle: decision.title,
-            text: decisionQuestions[i].trim(),
-            urgency: decision.time_pressure,
-            status: decision.status,
-            createdAt: decision.created_at,
-          });
-        }
+    for (const d of decisions) {
+      const qs: string[] = d.questions_for_leader || [];
+      for (let i = 0; i < qs.length; i++) {
+        const t = qs[i]?.trim();
+        if (t) aliveRaw.push({ id: `decision-${d.id}-q${i}`, source: 'decision', sourceId: d.id, title: t, context: d.title, href: '/studio/decisions', createdAt: d.created_at, urgency: d.time_pressure });
       }
     }
-
-    // From kairos — if at threshold or collapse-risk, that itself is a question
-    const latestKairos = kairosResult.rows[0];
-    if (
-      latestKairos &&
-      (latestKairos.kairos_assessment === 'threshold' ||
-        latestKairos.kairos_assessment === 'collapse-risk')
-    ) {
-      questions.push({
-        id: 'kairos-current',
-        source: 'threshold',
-        sourceId: 'current-state',
-        sourceTitle: 'Current State',
-        text:
-          latestKairos.kairos_description || 'Something is crossing. What is it?',
-        status: latestKairos.kairos_assessment,
-        createdAt: latestKairos.created_at,
-      });
-    }
-
-    // Sort questions: urgency desc, then recency
-    questions.sort((a, b) => {
-      const urgDiff = urgencyRank(b.urgency || null) - urgencyRank(a.urgency || null);
-      if (urgDiff !== 0) return urgDiff;
+    aliveRaw.sort((a, b) => {
+      const diff = rank(b.urgency) - rank(a.urgency); // the urgency YOU set
+      if (diff !== 0) return diff;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+    const alive: FloorItem[] = aliveRaw.map(({ urgency: _urgency, ...rest }) => rest);
 
-    // ─── Compute Next Edge ──────────────────────────────────────────────
-
-    const candidates: EdgeCandidate[] = [];
-
-    // Changes in early status
-    for (const change of changesResult.rows) {
-      if (change.status === 'naming' || change.status === 'casting') {
-        const daysSince =
-          (Date.now() - new Date(change.created_at).getTime()) / (1000 * 60 * 60 * 24);
-        candidates.push({
-          id: change.id,
-          type: 'change',
-          title: change.title,
-          description: change.description,
-          reason:
-            change.status === 'naming'
-              ? daysSince > 3
-                ? `In naming phase for ${Math.floor(daysSince)} days — needs attention`
-                : 'Still being named'
-              : 'Ready for casting',
-          urgency: change.urgency,
-          status: change.status,
-          createdAt: change.created_at,
-          priority: calculatePriority(change.status, change.urgency, change.created_at),
-        });
+    // ── asking: items YOU marked high-urgency or above (person-set) ────
+    const asking: FloorItem[] = [];
+    for (const c of changes) {
+      if (rank(c.urgency) >= ASKING_MIN_RANK) {
+        const ds = daysSince(c.created_at);
+        asking.push({ id: `asking-change-${c.id}`, source: 'change', sourceId: c.id, title: c.title, context: ds > 0 ? `you marked this ${c.urgency} · ${ds}d ago` : `you marked this ${c.urgency}`, href: '/studio/changes', createdAt: c.created_at });
       }
     }
-
-    // Decisions in draft
-    for (const decision of decisionsResult.rows) {
-      if (decision.status === 'draft') {
-        const daysSince =
-          (Date.now() - new Date(decision.created_at).getTime()) / (1000 * 60 * 60 * 24);
-        candidates.push({
-          id: decision.id,
-          type: 'decision',
-          title: decision.title,
-          description: decision.context || '',
-          reason:
-            daysSince > 3
-              ? `In draft for ${Math.floor(daysSince)} days — needs attention`
-              : 'Waiting for consultation',
-          urgency: decision.time_pressure,
-          status: decision.status,
-          createdAt: decision.created_at,
-          priority: calculatePriority(decision.status, decision.time_pressure, decision.created_at),
-        });
+    for (const d of decisions) {
+      if (rank(d.time_pressure) >= ASKING_MIN_RANK) {
+        const ds = daysSince(d.created_at);
+        asking.push({ id: `asking-decision-${d.id}`, source: 'decision', sourceId: d.id, title: d.title, context: ds > 0 ? `you marked this ${d.time_pressure} · ${ds}d ago` : `you marked this ${d.time_pressure}`, href: '/studio/decisions', createdAt: d.created_at });
       }
     }
+    asking.sort(byRecency);
 
-    // Sort by priority descending, with deterministic tie-breakers
-    // (recency then id) to prevent shimmer between equal-scored items
-    candidates.sort((a, b) => {
-      const priDiff = b.priority - a.priority;
-      if (priDiff !== 0) return priDiff;
-      const timeDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      if (timeDiff !== 0) return timeDiff;
-      return b.id > a.id ? 1 : b.id < a.id ? -1 : 0;
-    });
+    // ── emerging: what you've recently begun (naming / casting / draft) ─
+    const emerging: FloorItem[] = [];
+    for (const c of changes) {
+      if (c.status === 'naming' || c.status === 'casting') {
+        emerging.push({ id: `emerging-change-${c.id}`, source: 'change', sourceId: c.id, title: c.title, context: c.status === 'naming' ? 'still being named' : 'casting', href: '/studio/changes', createdAt: c.created_at });
+      }
+    }
+    for (const d of decisions) {
+      if (d.status === 'draft') {
+        emerging.push({ id: `emerging-decision-${d.id}`, source: 'decision', sourceId: d.id, title: d.title, context: 'in draft', href: '/studio/decisions', createdAt: d.created_at });
+      }
+    }
+    emerging.sort(byRecency);
 
-    const topEdge = candidates[0] || null;
-    const alternatives = candidates.slice(1, 4);
+    // ── tending: what you're actively working (consulting / active) ────
+    const tending: FloorItem[] = [];
+    for (const c of changes) {
+      if (c.status === 'consulting' || c.status === 'active') {
+        tending.push({ id: `tending-change-${c.id}`, source: 'change', sourceId: c.id, title: c.title, context: c.status, href: '/studio/changes', createdAt: c.created_at });
+      }
+    }
+    for (const d of decisions) {
+      if (d.status === 'consulting' || d.status === 'active') {
+        tending.push({ id: `tending-decision-${d.id}`, source: 'decision', sourceId: d.id, title: d.title, context: d.status, href: '/studio/decisions', createdAt: d.created_at });
+      }
+    }
+    tending.sort(byRecency);
 
-    // Strip priority from response (internal scoring detail)
-    const cleanEdge = topEdge
-      ? {
-          id: topEdge.id,
-          type: topEdge.type,
-          title: topEdge.title,
-          description: topEdge.description,
-          reason: topEdge.reason,
-          urgency: topEdge.urgency,
-          status: topEdge.status,
-          createdAt: topEdge.createdAt,
-        }
-      : null;
-
-    const cleanAlternatives = alternatives.map(({ priority: _p, ...rest }) => rest);
-
-    return NextResponse.json({
-      stillAlive: { questions },
-      nextEdge: {
-        item: cleanEdge,
-        alternatives: cleanAlternatives,
-      },
-    });
+    return NextResponse.json({ alive, asking, emerging, tending });
   } catch (error) {
-    console.error('[Field Pulse] GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to load field pulse' },
-      { status: 500 },
-    );
+    console.error('[Field Floor] GET error:', error);
+    return NextResponse.json({ error: 'Failed to load field' }, { status: 500 });
   }
 }

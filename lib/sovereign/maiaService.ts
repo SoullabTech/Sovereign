@@ -3091,24 +3091,32 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     // 🧠 SOVEREIGN LEARNING INTEGRATION: Log conversation turn
     try {
-      // Direct call to training service (avoid server-side fetch with relative URL)
-      const { logMaiaTurn } = await import('../learning/maiaTrainingDataService');
+      // 🔒 SANCTUARY MODE: No learning capture. turnId stays 0, which skips the entire
+      // turnId-gated cascade below (shadow mode, engine comparison, decision persistence,
+      // expansion events, corpus callosum). Sanctuary content must never enter maia_turns
+      // (a training-data store) or any downstream learning sink. (Canon: "Sanctuary content
+      // never enters any model training pipeline.")
+      let turnId = 0;
+      if (!isSanctuary) {
+        // Direct call to training service (avoid server-side fetch with relative URL)
+        const { logMaiaTurn } = await import('../learning/maiaTrainingDataService');
 
-      const turnId = await logMaiaTurn(
-        sessionId,
-        turnCount - 1, // Turn index is 0-based
-        input,
-        text,
-        processingProfile,
-        {
-          primaryEngine: meta.engine as string || 'deepseek-r1',
-          latencyMs: processingTimeMs,
-          element: meta.element as string,
-          consciousnessData: consciousnessData,
-          usedClaudeConsult: consciousnessData?.claudeConsultation ? true : false,
-          // NOTE: cognition/bloomMeta not in logMaiaTurn interface - stored separately
-        }
-      );
+        turnId = await logMaiaTurn(
+          sessionId,
+          turnCount - 1, // Turn index is 0-based
+          input,
+          text,
+          processingProfile,
+          {
+            primaryEngine: meta.engine as string || 'deepseek-r1',
+            latencyMs: processingTimeMs,
+            element: meta.element as string,
+            consciousnessData: consciousnessData,
+            usedClaudeConsult: consciousnessData?.claudeConsultation ? true : false,
+            // NOTE: cognition/bloomMeta not in logMaiaTurn interface - stored separately
+          }
+        );
+      }
 
       // Store turnId in response metadata for feedback widget
       meta.turnId = turnId;
@@ -3211,7 +3219,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Detects growth moments in user text for longitudinal analysis
       const EXPANSION_EVENTS_ENABLED = process.env.EXPANSION_EVENTS_ENABLED === '1';
       console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', effectiveUserId);
-      if (EXPANSION_EVENTS_ENABLED && turnId) {
+      // 🔒 SANCTUARY: never store user text in expansion_events (defense-in-depth; turnId is 0 in sanctuary)
+      if (!isSanctuary && EXPANSION_EVENTS_ENABLED && turnId) {
         try {
           const memoryBundle = (meta as any)?.memoryBundle;
           const expansionId = await detectAndPersistExpansion({

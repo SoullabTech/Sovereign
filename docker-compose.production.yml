@@ -436,6 +436,12 @@ services:
     image: pgvector/pgvector:pg16
     container_name: maia-postgres
     restart: unless-stopped
+    # Tailscale-bound Postgres port for the Hetzner standby's streaming replication.
+    # The bind IP comes from POSTGRES_BIND in .env.production (server-only); it defaults to
+    # 127.0.0.1 so a missing value never exposes Postgres beyond localhost.
+    # Set POSTGRES_BIND=100.119.226.84 (minisforum's Tailscale IP) on prod. (Reconciled 2026-06-14.)
+    ports:
+      - "${POSTGRES_BIND:-127.0.0.1}:5432:5432"
     logging: *default_logging
 
     env_file:
@@ -544,8 +550,17 @@ services:
     logging: *default_logging
 
     environment:
-      WHISPER__MODEL: base.en
+      # Multilingual model (was base.en, English-only). Server auto-pulls
+      # Systran/faster-whisper-base from HuggingFace; Whisper auto-detects language.
+      # Hold escalation to 'small' until CPU/accuracy measured.
+      WHISPER__MODEL: base
       WHISPER__INFERENCE_DEVICE: cpu
+
+    volumes:
+      # Persist the HuggingFace model cache so the multilingual CTranslate2 model
+      # survives container recreate (otherwise re-downloaded from HF every rebuild).
+      # See docs/specs/CONVERSATIONAL_MULTILINGUAL_UNLOCK_2026-06-14.md.
+      - whisper-hf-cache:/root/.cache/huggingface
 
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
@@ -553,6 +568,38 @@ services:
       timeout: 10s
       retries: 5
       start_period: 120s
+
+    networks:
+      - maia-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Kokoro TTS — Local Text-to-Speech (sovereign, OpenAI-compatible API)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # 82M-param model, CPU-only, real-time capable. MAIA's sovereign voice engine —
+  # speaks without phoning home. Exposes OpenAI-compatible /v1/audio/speech on
+  # :8880. Reached by maia at http://kokoro-tts:8880 (KOKORO_TTS_URL).
+  # Internal-only: no published port, not proxied by Caddy.
+  #
+  # Voice identity (af_kore) is chosen by the router at request time, NOT here.
+  # KOKORO_DEFAULT_VOICE + healthcheck use af_heart purely as a liveness probe.
+  kokoro-tts:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
+    container_name: maia-kokoro-tts
+    restart: unless-stopped
+    logging: *default_logging
+
+    environment:
+      KOKORO_DEFAULT_VOICE: "af_heart"
+
+    security_opt:
+      - no-new-privileges:true
+
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request,json; d=json.dumps({'input':'ok','voice':'af_heart','model':'kokoro'}).encode(); urllib.request.urlopen(urllib.request.Request('http://localhost:8880/v1/audio/speech',data=d,headers={'Content-Type':'application/json'}),timeout=10)\" || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
 
     networks:
       - maia-internal
@@ -847,6 +894,51 @@ services:
       - maia-internal   # write policy calls maia-sovereign:3000
       - maia-public     # Caddy proxies wss://nostr.soullab.life → :7777
 
+  # ═════════════════════════════════════════════════════════════════════════════
+  # LiveKit — Session Room Phase 3 media SFU (self-hosted)   [PR2 — NOT deployed]
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Self-hosted LiveKit SFU. Media is sovereign (our own server), relayed ephemerally and never
+  # recorded unless the agreement permits (Sanctuary = no egress). Decision #1 (Kelly 2026-06-15):
+  # a dedicated TURN listener on 3478 is the ONLY externally-published port (router-forward 3478
+  # TCP+UDP -> 192.168.0.104). Signaling/API (7880) is deliberately NOT host-published — internal
+  # Docker networks only; Caddy proxies the signaling WS, the maia app reaches the room-mgmt API
+  # over maia-internal. SECRETS via LIVEKIT_KEYS env (from .env.production), never in any file/log.
+  # Review only — needs the security-auditor pass + secret provisioning + the deploy/proof rungs.
+  livekit:
+    image: livekit/livekit-server:v1.8@sha256:621fd87bd64a0c83e1f2418ee0323eb920d00acdd73e5f79b303c64f6cc532af   # pinned to the v1.8 manifest digest (immutable)
+    container_name: maia-livekit
+    restart: unless-stopped
+    logging: *default_logging
+
+    command: ["--config", "/etc/livekit.yaml"]
+
+    # Non-secret config, read-only. Keys come from LIVEKIT_KEYS below, NOT from this file.
+    volumes:
+      - ./config/livekit.yaml:/etc/livekit.yaml:ro
+
+    environment:
+      # "<api_key>: <api_secret>" — provisioned in .env.production (server-only). Never logged.
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+
+    # The ONLY externally-published port: the dedicated TURN listener (Decision #1).
+    # 7880 (signaling+API) and the RTC ports (7881/7882) are intentionally NOT published —
+    # RTC media is reached via the embedded TURN relay, so one forward suffices.
+    ports:
+      - "3478:3478/udp"   # TURN relay (UDP)  — router-forward 3478 TCP+UDP -> 192.168.0.104
+      - "3478:3478/tcp"   # TURN relay (TCP fallback)
+
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL   # the livekit-server Go binary needs no elevated caps (security review 2026-06-15)
+
+    # No healthcheck declared: the livekit-server image's shell/tooling is unconfirmed — add a
+    # verified healthcheck at deploy. Nothing depends_on livekit being healthy for v1.
+
+    networks:
+      - maia-internal   # maia app -> livekit:7880 (room-mgmt API; PR5 RemoveParticipant)
+      - maia-public     # Caddy -> livekit:7880 (signaling WS only)
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Persistent Volumes
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -858,6 +950,8 @@ volumes:
   caddy_config:
     driver: local
   whisper_models:
+    driver: local
+  whisper-hf-cache:
     driver: local
   vault_data:
     driver: local

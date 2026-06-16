@@ -1,0 +1,42 @@
+# LiveKit server — Session Room Phase 3 (PR2). Self-hosted, single-node SFU.
+#
+# SECRETS ARE NOT IN THIS FILE. The API key/secret come from the LIVEKIT_KEYS env var
+# (set from .env.production: LIVEKIT_KEYS="<key>: <secret>"). Keep this file secret-free
+# so it can live in source control (design §6.1 C2a).
+#
+# Transport: Decision #1 (Kelly 2026-06-15) — dedicated TURN listener on 3478 (the single
+# router-forwarded port, UDP). TURNS/TLS over 443 is intentionally NOT used (Caddy owns 443;
+# revisit via caddy-l4 later if real usage warrants). RTC media ports stay internal and are
+# reached via the embedded TURN relay, so only 3478 needs a router forward.
+
+# Signaling (WS) + Twirp management API. INTERNAL ONLY — compose publishes no 7880 to the host.
+# Caddy proxies the signaling WS; the maia app reaches the management API over the Docker network.
+port: 7880
+bind_addresses:
+  - ""              # all container interfaces (Docker networks); host exposure is set in compose
+
+rtc:
+  tcp_port: 7881    # RTC/TCP — internal; reached via the embedded TURN relay (not host-published)
+  udp_port: 7882    # RTC/UDP mux — internal; reached via the embedded TURN relay
+  use_external_ip: true   # discover the public IP for ICE/relay candidates
+
+turn:
+  enabled: true     # dedicated TURN listener (Decision #1)
+  udp_port: 3478    # UDP TURN — router-forward 3478/UDP -> 192.168.0.104
+  # LiveKit's embedded TURN has no plain-TCP port (only udp_port + a TLS tls_port). TURNS (tls_port)
+  # needs a cert+domain and is deferred (TURNS/443 was rejected; revisit via caddy-l4). So v1 TURN is
+  # UDP-only; the 3478/TCP router forward is unused for now. 443-only-network clients remain the known
+  # gap (SESSION_ROOM_PHASE3_PR2_NOTES).
+
+# webhook: DEFERRED to PR5. LiveKit is intentionally NOT configured to send webhooks yet — wiring
+# webhook.api_key + urls happens in PR5, where room lifecycle events are actually acted on. This
+# avoids shipping an empty webhook.api_key (which risks unsigned/failed webhooks or a startup
+# warning). The verified receiver already exists at app/api/session/livekit-webhook.
+#   webhook:
+#     api_key: <PR5: the provisioned public LIVEKIT_API_KEY id — not the secret>
+#     urls:
+#       - https://soullab.life/api/session/livekit-webhook
+
+logging:
+  level: info
+  json: true

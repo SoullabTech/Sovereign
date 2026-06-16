@@ -32,7 +32,7 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 
 All rights reserved. No part of this book may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law. For permission requests, write to the publisher at the address below.
 
-Copyright © 2024 by Kelly Nezat
+Copyright © 2026 by Kelly Nezat
 
 First Edition
 
@@ -2446,7 +2446,7 @@ And once seen, it does not disappear.
 
 &nbsp;
 
-[soullab.life](http://soullab.life)
+soullab.life
 
 ---
 
@@ -2879,6 +2879,6 @@ A working bibliography organized by chapter. Where the same source informs multi
 
 To further enhance your journey, a companion collection of worksheets, practices, case studies, meditations, visualizations, and links to current resources is available at:
 
-**[soullab.life](http://soullab.life)**
+**soullab.life**
 
 This page is updated continuously to reflect new tools and resources supporting the elemental alchemy journey.

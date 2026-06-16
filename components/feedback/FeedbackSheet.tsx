@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   X,
   MessageCircle,
-  Bug,
   Heart,
   Lightbulb,
   HelpCircle,
@@ -14,8 +13,9 @@ import {
   CheckCircle
 } from 'lucide-react';
 
+// 'problem'/bug reports go to the canonical bug flow (BugReportButton → /api/bugs → Monitor),
+// not here. FeedbackSheet carries only non-bug intentions.
 type FeedbackCategory =
-  | 'problem'      // Reporting problems/bugs
   | 'challenge'    // Challenges encountered
   | 'strength'     // Things they love
   | 'feature'      // Feature requests
@@ -31,14 +31,6 @@ interface FeedbackOption {
 }
 
 const feedbackOptions: FeedbackOption[] = [
-  {
-    id: 'problem',
-    icon: Bug,
-    label: 'Report a Problem',
-    description: 'Something isn\'t working right',
-    placeholder: 'Describe what happened and what you expected...',
-    color: 'red'
-  },
   {
     id: 'challenge',
     icon: AlertTriangle,

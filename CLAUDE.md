@@ -388,6 +388,7 @@ See: `docs/bridge-d-verification.md` for full verification guide.
    - Does this increase user agency?
    - Does this push life outward into the world?
    - Does this reduce the system's psychological centrality over time?
+   - **Cultural sovereignty / Invariant 14:** Are we imposing a framework, translating the member's meaning into our vocabulary, or assuming "self," "growth," "healing," "family," or "spirit" mean the same everywhere? If uncertain, ask more, preserve the member's language, or gate the feature behind member-initiated use.
    - If the honest answer to any is no, the feature does not ship. (See `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md`)
 
 ## Setup (New Clones)

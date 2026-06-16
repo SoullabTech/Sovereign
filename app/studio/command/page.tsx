@@ -132,7 +132,8 @@ export default function StudioCommandCenter() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Command Center</h1>
-          <p className="text-slate-500 mt-1">Operator Dashboard</p>
+          <p className="text-slate-500 mt-0.5">Operator Dashboard</p>
+          <p className="text-slate-600 text-sm mt-1">Review work, monitor delegation, and keep momentum moving.</p>
         </div>
 
         {/* Time Tracking Toggle */}
@@ -299,7 +300,8 @@ export default function StudioCommandCenter() {
             ) : (
               <div className="text-center py-8 text-slate-500">
                 <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <div>No decisions pending</div>
+                <div className="text-slate-400">Your desk is clear.</div>
+                <div className="text-sm mt-1">New requests and delegated work will appear here.</div>
               </div>
             )}
           </div>
@@ -339,7 +341,8 @@ export default function StudioCommandCenter() {
             ) : (
               <div className="text-center py-8 text-slate-500">
                 <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <div>No recent activity</div>
+                <div className="text-slate-400">Quiet for now.</div>
+                <div className="text-sm mt-1">Today's work will accumulate here as it unfolds.</div>
               </div>
             )}
           </div>

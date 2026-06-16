@@ -117,12 +117,17 @@ export default function NewDecisionPage() {
     }
 
     try {
+      // Scope new decisions to the active co-lab (Cut A). Source = TeamContextProvider's
+      // 'studio_team_context' localStorage key; null = personal scope.
+      let teamId: string | null = null;
+      try { teamId = JSON.parse(localStorage.getItem('studio_team_context') || '{}')?.teamId ?? null; } catch {}
       const createRes = await apiFetch('/api/studio/decisions', {
         method: 'POST',
         body: JSON.stringify({
           title: title.trim(),
           context: context.trim(),
           clientId: clientId || null,
+          teamId,
           stakes: stakes.trim() || null,
           timePressure,
           emotionalState: emotionalState.trim() || null,
