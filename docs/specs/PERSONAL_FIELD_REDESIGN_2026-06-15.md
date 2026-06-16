@@ -59,9 +59,49 @@ Same nouns, different stance. A design principle, not just a feature decision �
 
 **5. Meaning lives in behavior.** If the interface literally says "Relationship with Time," the design has probably failed. If the person *feels* a different relationship with time because the experience reconnects threads, the design is succeeding. Meaning should emerge from interaction, not from spiritual vocabulary.
 
-### Guard on the chosen axis
+### Guard on the chosen axis — the deepest constraint
 
-"Attention-centered" must mean *the person's* attention, self-directed. The field surfaces what *might* be alive; it never assigns what is worth attending to. The moment the system ranks salience on the person's behalf, "attention-centered" inverts into "system-directed attention" — against Meaning Sovereignty (the person authors what their life means). See `docs/canon/MAIA_ATTENTION_DOCTRINE.md` and `MAIA_SOVEREIGNTY_INVARIANTS.md`.
+"Attention-centered" must mean *the person's* attention, self-directed. The field surfaces what *might* be alive; it never assigns what is worth attending to. The shallow failure is reverting to tool-centered. The **deeper, subtler failure is the field becoming *system-centered while appearing attention-centered*** — looking like it serves the person's attention while the system quietly determines salience. The line, concretely:
+
+> ✅ "Here are some threads you may wish to explore." — preserves sovereignty
+> ❌ "These are the important things in your life." — quietly appropriates it
+
+**MAIA may / may not** (the field reveals; it does not decide):
+
+| MAIA may | MAIA may not |
+|---|---|
+| Surface patterns | Declare meanings |
+| Offer observations | Assign significance |
+| Recall continuity | Define priorities |
+| Present possibilities | Determine what matters |
+| Ask questions | Supply conclusions about the person's life |
+
+Two formulations to preserve:
+
+> **The field supports attention; it does not direct it.**
+> **The field reveals; it does not decide.**
+
+The five movements are chosen so that **none require interpretation by MAIA** — ownership stays with the person at every stage:
+
+- **Attend** — notice what is present.
+- **Remember** — reconnect threads across time.
+- **Reflect** — consider perspectives.
+- **Align** — discover coherence or tension.
+- **Participate** — choose action.
+
+This is continuous with Meaning Sovereignty (the person authors what their life means) and with MAIA's existing discipline — member-marked vs system-inferred, provenance-grounded, no synthesis. See `docs/canon/MAIA_ATTENTION_DOCTRINE.md` and `MAIA_SOVEREIGNTY_INVARIANTS.md`.
+
+### The coherent guard set
+
+Together these keep the orientation space from becoming either a productivity dashboard or a subtle authority structure:
+
+1. **Attention-centered, not tool-centered** — modules serve the field.
+2. **Continuity before orientation** — the field needs something coherent to orient around.
+3. **Perception-first, never perception-required** — invites attention, never demands it.
+4. **Meaning in behavior, not labels** — no spiritual vocabulary in the UI.
+5. **The field reveals; it does not decide** — MAIA illuminates patterns; the person determines their significance.
+
+The field can illuminate patterns. The person determines their significance. That is the line that preserves Meaning Sovereignty while still letting continuity, memory, and reflection become genuinely useful.
 
 ### Arrival questions — evolved from management to orientation
 
