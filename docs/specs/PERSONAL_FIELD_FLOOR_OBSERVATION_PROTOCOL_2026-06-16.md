@@ -38,6 +38,26 @@ This is the single discriminating signal. Note it is **observational** ("what di
   - What felt useful? What felt unnecessary?
   - When you left it, did you feel more **seen** — or more **steered**?
 
+## What to watch — the first 30–60 seconds
+The stronger question is not "do people like it?" but **what the experience elicits in the first 30–60 seconds** (the Ganesha ~15-second orientation target). Watch behavior, not opinion.
+
+**Signals it may be working** — the floor acts like a threshold:
+- They pause. They read. They look around.
+- They click into something they already cared about.
+- They report orientation, recognition, or settling.
+
+**Signals it may not be:**
+- They immediately hunt for the old Next Edge → not merely "floor failing" but **prioritization-shaped demand surfacing**; bring the explicit "what's next?" re-home (follow-up #1) forward.
+- They ask what they're supposed to do; they feel stranded.
+- They skip past the questions without noticing them.
+- They experience the page as **empty rather than spacious.**
+
+### Empty vs spacious — the load-bearing observation
+This distinction may be the most important in the whole experiment. Empty reads as *broken*; spacious reads as *intentional and held*. The build bets on spacious: the four questions persist as a fixed frame even when every bucket is empty, with calm lines instead of blankness. Only the field study can tell us whether the bet landed.
+
+### Two gates, not one
+The four-question test (constitution) and empty-vs-spacious (experience) are **different gates**. The first guarantees sovereignty; only the second guarantees *inhabitability*. **A constitutional success can still be an experiential failure** — a perfectly sovereign floor nobody can meaningfully inhabit has also taught us something real. This is why the measurement stays out of the app: it tests what reasoning cannot reach.
+
 ## Failure signals — each falsifies a specific link (failure is diagnostic)
 - **directive / steered / managed** → it authored attention instead of holding room (the core failure).
 - **overwhelming** → it stopped reducing load.
