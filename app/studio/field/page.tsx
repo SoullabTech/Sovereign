@@ -3,57 +3,58 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Wind, Scale, BookOpen, Calendar, CheckSquare, Mic,
-  ArrowRight, Sparkles, ChevronRight, RefreshCw,
+  ChevronRight, RefreshCw, Flame, Compass, Sprout, Heart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useTeamContext } from '@/hooks/useStudioData';
-import { NameActionModal } from '@/components/studio/NameActionModal';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Types
+// Types — the orientation floor (four questions over the person's own content)
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface PulseQuestion {
+interface FloorItem {
   id: string;
-  source: 'change' | 'decision' | 'threshold';
+  source: 'change' | 'decision';
   sourceId: string;
-  sourceTitle: string;
-  text: string;
-  urgency?: string;
-  status: string;
-  createdAt: string;
-}
-
-interface EdgeItem {
-  id: string;
-  type: 'change' | 'decision';
   title: string;
-  description: string;
-  reason: string;
-  urgency?: string;
-  status: string;
+  context?: string;
+  href: string;
   createdAt: string;
 }
 
-interface FieldPulse {
-  stillAlive: {
-    questions: PulseQuestion[];
-  };
-  nextEdge: {
-    item: EdgeItem | null;
-    alternatives: EdgeItem[];
-  };
+interface FieldFloor {
+  alive: FloorItem[];
+  asking: FloorItem[];
+  emerging: FloorItem[];
+  tending: FloorItem[];
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Source badge styles
-// ─────────────────────────────────────────────────────────────────────────────
+type FloorKey = keyof FieldFloor;
 
-const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
-  change:    { label: 'Change',    cls: 'bg-amber-500/10 text-amber-400/80 border-amber-500/20' },
-  decision:  { label: 'Decision',  cls: 'bg-blue-500/10 text-blue-400/80 border-blue-500/20' },
-  threshold: { label: 'Threshold', cls: 'bg-purple-500/10 text-purple-400/80 border-purple-500/20' },
+interface FloorQuestion {
+  key: FloorKey;
+  question: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accent: 'amber' | 'blue' | 'emerald' | 'purple';
+  empty: string;
+}
+
+// The fixed floor. These four questions are the stable frame — they remain
+// present even when a bucket is empty (the recognizable point of return).
+// The floor holds room; it never tells the person what matters most.
+const FLOOR: FloorQuestion[] = [
+  { key: 'alive',    question: 'What is alive?',                icon: Flame,   accent: 'amber',   empty: 'Quiet here.' },
+  { key: 'asking',   question: 'What is asking for attention?', icon: Compass, accent: 'blue',    empty: 'Nothing you’ve marked.' },
+  { key: 'emerging', question: 'What is emerging?',             icon: Sprout,  accent: 'emerald', empty: 'Nothing new taking shape.' },
+  { key: 'tending',  question: 'What are you tending?',         icon: Heart,   accent: 'purple',  empty: 'Nothing in motion.' },
+];
+
+const ACCENT_TEXT: Record<string, string> = {
+  amber: 'text-amber-400', blue: 'text-blue-400', emerald: 'text-emerald-400', purple: 'text-purple-400',
+};
+const ACCENT_BORDER: Record<string, string> = {
+  amber: 'border-l-amber-500/40', blue: 'border-l-blue-500/40', emerald: 'border-l-emerald-500/40', purple: 'border-l-purple-500/40',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -61,23 +62,17 @@ const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function FieldPage() {
-  const [pulse, setPulse] = useState<FieldPulse | null>(null);
+  const [floor, setFloor] = useState<FieldFloor | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [nameModalOpen, setNameModalOpen] = useState(false);
-  const [selectedEdge, setSelectedEdge] = useState<EdgeItem | null>(null);
-  const [serviceCreatedName, setServiceCreatedName] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const { currentTeamId, includePersonal } = useTeamContext();
 
-  const fetchPulse = useCallback(async (isRefresh = false) => {
-    // Abort any in-flight request
+  const fetchFloor = useCallback(async (isRefresh = false) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-
     if (isRefresh) setRefreshing(true);
-
     try {
       const params = new URLSearchParams();
       if (currentTeamId) params.set('teamId', currentTeamId);
@@ -86,11 +81,10 @@ export default function FieldPage() {
         signal: controller.signal,
       });
       if (res.ok && !controller.signal.aborted) {
-        const data = await res.json();
-        setPulse(data);
+        setFloor(await res.json());
       }
     } catch (err) {
-      // Ignore aborts; silently fail others (orientation, not critical)
+      // Orientation is not critical — ignore aborts, fail quiet on the rest.
       if (err instanceof DOMException && err.name === 'AbortError') return;
     } finally {
       if (!controller.signal.aborted) {
@@ -101,50 +95,35 @@ export default function FieldPage() {
   }, [currentTeamId, includePersonal]);
 
   useEffect(() => {
-    fetchPulse();
+    fetchFloor();
     return () => { abortRef.current?.abort(); };
-  }, [fetchPulse]);
-
-  function handleNameAction(item: EdgeItem) {
-    setSelectedEdge(item);
-    setNameModalOpen(true);
-  }
-
-  function handleServiceCreated() {
-    const createdName = selectedEdge?.title || 'Service';
-    setNameModalOpen(false);
-    setSelectedEdge(null);
-    setServiceCreatedName(createdName);
-    // Auto-dismiss toast after 4s
-    setTimeout(() => setServiceCreatedName(null), 4000);
-    // Refresh pulse — the edge may no longer qualify
-    fetchPulse(true);
-  }
+  }, [fetchFloor]);
 
   const greeting = getGreeting();
-  const hasQuestions = (pulse?.stillAlive.questions.length ?? 0) > 0;
-  const hasEdge = pulse?.nextEdge.item !== null;
-  const hasContent = hasQuestions || hasEdge;
+  const total = floor
+    ? floor.alive.length + floor.asking.length + floor.emerging.length + floor.tending.length
+    : 0;
+  const allQuiet = !loading && total === 0;
 
   return (
     <div className="min-h-screen bg-[#1a1a2e] p-8">
       <div className="max-w-2xl mx-auto">
-        {/* Greeting + Refresh */}
+        {/* Greeting */}
         <div className="mb-12">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-slate-500 text-sm tracking-wider uppercase mb-2">{greeting.label}</p>
               <h1 className="text-3xl font-light text-white mb-2">Field</h1>
               <p className="text-slate-400">
-                {hasContent ? 'What is alive right now.' : 'Your personal orientation space. What wants attention?'}
+                {allQuiet ? 'Room for whatever’s here.' : 'What is alive right now.'}
               </p>
             </div>
             {!loading && (
               <button
-                onClick={() => fetchPulse(true)}
+                onClick={() => fetchFloor(true)}
                 disabled={refreshing}
                 className="p-2 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-white/5 transition disabled:opacity-50"
-                title="Refresh pulse"
+                title="Refresh"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
@@ -152,80 +131,20 @@ export default function FieldPage() {
           </div>
         </div>
 
-        {/* Service created toast */}
-        {serviceCreatedName && (
-          <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-sm">
-            <span className="text-emerald-400">Service created</span>
-            <span className="text-slate-500">&middot;</span>
-            <span className="text-white/80 truncate">{serviceCreatedName}</span>
-            <Link
-              href="/studio/services"
-              className="ml-auto text-emerald-400/80 hover:text-emerald-300 text-xs whitespace-nowrap transition"
-            >
-              View Services
-            </Link>
-          </div>
-        )}
-
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
           </div>
         ) : (
           <>
-            {/* ── Still Alive ──────────────────────────────────────── */}
-            {hasQuestions && (
-              <section className="mb-12">
-                <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  Still Alive
-                </h2>
-                <div className="space-y-2">
-                  {pulse!.stillAlive.questions.slice(0, 5).map((q) => (
-                    <QuestionCard key={q.id} question={q} />
-                  ))}
-                </div>
-                {pulse!.stillAlive.questions.length > 5 && (
-                  <p className="text-xs text-slate-600 mt-3 pl-1">
-                    +{pulse!.stillAlive.questions.length - 5} more questions alive
-                  </p>
-                )}
-              </section>
-            )}
+            {/* The fixed orientation floor — four questions, always present */}
+            {FLOOR.map((q) => (
+              <FloorSection key={q.key} question={q} items={floor?.[q.key] ?? []} />
+            ))}
 
-            {/* ── Next Edge ────────────────────────────────────────── */}
-            {hasEdge && pulse?.nextEdge.item && (
-              <section className="mb-12">
-                <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <ArrowRight className="w-4 h-4 text-blue-400" />
-                  Next Edge
-                </h2>
-                <NextEdgeCard
-                  item={pulse.nextEdge.item}
-                  onNameAction={handleNameAction}
-                />
-                {pulse.nextEdge.alternatives.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {pulse.nextEdge.alternatives.map((alt) => (
-                      <Link
-                        key={alt.id}
-                        href={alt.type === 'change' ? `/studio/changes` : `/studio/decisions`}
-                        className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/5 transition text-sm"
-                      >
-                        <span className="text-slate-400 truncate flex-1">{alt.title}</span>
-                        <span className="text-[10px] text-slate-600 uppercase">{alt.type}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* ── Navigate ─────────────────────────────────────────── */}
-            <section>
-              <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-3">
-                Navigate
-              </h2>
+            {/* Navigate — demoted, person-initiated; never injected into the field */}
+            <section className="mt-2">
+              <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-3">Navigate</h2>
               <div className="space-y-2">
                 <FieldCard href="/studio/changes" icon={Wind} title="Changes" subtitle="Navigate what is shifting" accent="amber" />
                 <FieldCard href="/studio/decisions" icon={Scale} title="Decisions" subtitle="Clarify what needs choosing" accent="blue" />
@@ -238,120 +157,59 @@ export default function FieldPage() {
           </>
         )}
       </div>
-
-      {/* Name Action Modal */}
-      {nameModalOpen && selectedEdge && (
-        <NameActionModal
-          isOpen={nameModalOpen}
-          onClose={() => {
-            setNameModalOpen(false);
-            setSelectedEdge(null);
-          }}
-          edgeItem={selectedEdge}
-          onSuccess={handleServiceCreated}
-        />
-      )}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Question Card
+// Floor section — one question + its items, or quiet room
 // ─────────────────────────────────────────────────────────────────────────────
 
-function QuestionCard({ question }: { question: PulseQuestion }) {
-  const sourceStyles: Record<string, string> = {
-    change: 'border-l-amber-500/40',
-    decision: 'border-l-blue-500/40',
-    threshold: 'border-l-purple-500/40',
-  };
-
-  const sourceHref =
-    question.source === 'change' ? '/studio/changes'
-    : question.source === 'decision' ? '/studio/decisions'
-    : null;
-
-  const badge = SOURCE_BADGE[question.source];
-
+function FloorSection({ question, items }: { question: FloorQuestion; items: FloorItem[] }) {
+  const Icon = question.icon;
+  const isEmpty = items.length === 0;
   return (
-    <div
-      className={`pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${sourceStyles[question.source] || ''}`}
-    >
-      <p className="text-white/90 text-sm leading-relaxed mb-1.5">{question.text}</p>
-      <div className="flex items-center gap-2 text-[11px] text-slate-500">
-        {badge && (
-          <span className={`px-1.5 py-0.5 rounded text-[10px] border ${badge.cls}`}>
-            {badge.label}
-          </span>
-        )}
-        <span className="text-slate-700">&middot;</span>
-        {sourceHref ? (
-          <Link href={sourceHref} className="hover:text-slate-300 transition truncate">
-            {question.sourceTitle}
-          </Link>
-        ) : (
-          <span className="truncate">{question.sourceTitle}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Next Edge Card
-// ─────────────────────────────────────────────────────────────────────────────
-
-function NextEdgeCard({
-  item,
-  onNameAction,
-}: {
-  item: EdgeItem;
-  onNameAction: (item: EdgeItem) => void;
-}) {
-  const typeHref = item.type === 'change' ? '/studio/changes' : '/studio/decisions';
-
-  return (
-    <div className="rounded-xl bg-gradient-to-br from-blue-500/[0.07] to-purple-500/[0.07] border border-blue-500/20 p-5">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="min-w-0">
-          <Link
-            href={typeHref}
-            className="text-white font-medium hover:text-blue-300 transition"
-          >
-            {item.title}
-          </Link>
-          {item.description && (
-            <p className="text-sm text-slate-400 mt-1 line-clamp-2">{item.description}</p>
+    <section className="mb-10">
+      <h2 className={`text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${isEmpty ? 'text-slate-600' : 'text-slate-500'}`}>
+        <Icon className={`w-4 h-4 ${isEmpty ? 'text-slate-600' : ACCENT_TEXT[question.accent]}`} />
+        {question.question}
+      </h2>
+      {isEmpty ? (
+        <p className="text-sm text-slate-600 pl-1">{question.empty}</p>
+      ) : (
+        <div className="space-y-2">
+          {items.slice(0, 6).map((item) => (
+            <FloorItemCard key={item.id} item={item} accent={question.accent} />
+          ))}
+          {items.length > 6 && (
+            <p className="text-xs text-slate-600 mt-2 pl-1">+{items.length - 6} more</p>
           )}
         </div>
-        <span className="text-[10px] text-blue-400/70 uppercase tracking-wider flex-shrink-0">
-          {item.type}
-        </span>
-      </div>
+      )}
+    </section>
+  );
+}
 
-      <p className="text-xs text-blue-300/60 italic mb-4">{item.reason}</p>
-
-      <button
-        onClick={() => onNameAction(item)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded-lg text-sm text-white/80 hover:text-white transition"
-      >
-        <Sparkles className="w-4 h-4 text-amber-400" />
-        Name this as a service
-      </button>
-    </div>
+function FloorItemCard({ item, accent }: { item: FloorItem; accent: string }) {
+  return (
+    <Link
+      href={item.href}
+      className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''} hover:bg-white/5 transition`}
+    >
+      <p className="text-white/90 text-sm leading-relaxed">{item.title}</p>
+      {item.context && (
+        <p className="text-[11px] text-slate-500 mt-1 truncate">{item.context}</p>
+      )}
+    </Link>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Navigation Card (demoted, simplified)
+// Navigation card (demoted)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function FieldCard({
-  href,
-  icon: Icon,
-  title,
-  subtitle,
-  accent = 'slate',
+  href, icon: Icon, title, subtitle, accent = 'slate',
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -360,13 +218,9 @@ function FieldCard({
   accent?: string;
 }) {
   const accentColors: Record<string, string> = {
-    amber: 'text-amber-400',
-    blue: 'text-blue-400',
-    emerald: 'text-emerald-400',
-    purple: 'text-purple-400',
-    slate: 'text-slate-400',
+    amber: 'text-amber-400', blue: 'text-blue-400', emerald: 'text-emerald-400',
+    purple: 'text-purple-400', slate: 'text-slate-400',
   };
-
   return (
     <Link
       href={href}
