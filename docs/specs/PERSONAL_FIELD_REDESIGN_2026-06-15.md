@@ -26,6 +26,57 @@ The design principle beneath it: **executive function should be externalized.** 
 
 ---
 
+## 0.5 Field as Orientation Space — the foundational frame (2026-06-15, evening)
+
+> **The Personal Field is not a portal to tools. It is an orientation space that supports attention, continuity, and relationship with one's life. Tools remain accessible, but are nested within a larger function: helping a person perceive what is present, emerging, recurring, and meaningful in the unfolding pattern of their life.**
+
+This section emerged from design review *after* §1–§12 were written, and is the keystone of this cycle. The distinction it names is not *old dashboard vs new dashboard* — it is **portal vs orientation space**. A portal implies navigation to tools; a field implies a way of perceiving. It recontextualizes the sections below: the arrival home (§4), the case studies (§2), and the field objects (§3) are now read as *candidates within an attention-centered field*, not a settled layout. **Documented as principle; the build gate (§7–§8) stays exactly where it is.**
+
+The earlier "object axis vs stance axis" question is superseded by the real one:
+
+```
+Tool-centered   vs   Attention-centered
+```
+
+In a tool-centered portal, Calendar / Contacts / Notes / Projects are the primary objects. In an attention-centered field, those same modules become secondary expressions of a deeper process (Attend · Remember · Reflect · Align · Participate). **The modules serve the field, not the field the modules.**
+
+### Five points to preserve
+
+**1. The field is not another module.** Modules answer *"What can I do?"* The field answers *"What am I relating to?"* That is a fundamentally different layer of architecture — the field sits *above* the modules.
+
+**2. Personal primitives are relational, not operational.** This is the breakthrough that resolved Calendar and Contacts:
+
+| | Practice side | Personal side |
+|---|---|---|
+| **Calendar** | bookings, availability, scheduling | relationship with time |
+| **Contacts** | clients, caseload, relationships to manage | relationship with people |
+
+Same nouns, different stance. A design principle, not just a feature decision — and the reason practitioner modules cannot be recycled into the personal field.
+
+**3. Continuity is a prerequisite, not an enhancement.** The field is not a decorative layer laid on top of memory; it *depends upon* continuity. If the purpose is helping someone perceive patterns, threads, recurrences, and emerging directions in their life, the memory substrate is part of the foundation. The gate is therefore not merely *"wait until we have more evidence"* — it is also *"the field cannot fully exist until there is something coherent to orient around."* A stronger rationale than caution alone. (The field is the felt surface of the episodic / semantic continuity substrate.)
+
+**4. Perception-first, never perception-required.** A field that forces reflection becomes another obstacle. Someone must always be able to pay the bill, make the call, check the appointment, capture the note — without passing through a contemplative ritual. The field *invites* attention; it does not *demand* it.
+
+**5. Meaning lives in behavior.** If the interface literally says "Relationship with Time," the design has probably failed. If the person *feels* a different relationship with time because the experience reconnects threads, the design is succeeding. Meaning should emerge from interaction, not from spiritual vocabulary.
+
+### Guard on the chosen axis
+
+"Attention-centered" must mean *the person's* attention, self-directed. The field surfaces what *might* be alive; it never assigns what is worth attending to. The moment the system ranks salience on the person's behalf, "attention-centered" inverts into "system-directed attention" — against Meaning Sovereignty (the person authors what their life means). See `docs/canon/MAIA_ATTENTION_DOCTRINE.md` and `MAIA_SOVEREIGNTY_INVARIANTS.md`.
+
+### Arrival questions — evolved from management to orientation
+
+*"What's slipped?"* assumes reality is measured against a plan. *"What's asking for attention?"* assumes reality itself is the thing being listened to. For a Ganesha field, the latter. The §4 arrival moments evolve from management checkpoints into orientation checkpoints — none require success, failure, completion, or productivity:
+
+| Morning | Midday | Evening |
+|---|---|---|
+| What is calling you today? | What is present now? | What remains alive? |
+| What wants your attention? | What has emerged since morning? | What is asking to be carried forward? |
+| What are you bringing into the day? | Where are you now? | What can be honored and released? |
+
+(See `PERSONAL_FIELD_ARRIVAL_MOCKUP_2026-06-15.html`, evolved to these questions.)
+
+---
+
 ## 1. Design principles
 
 1. **Encounter your life, not your program.** The page shows the living field, not a curriculum position.
