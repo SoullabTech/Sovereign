@@ -241,9 +241,12 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     icon: CheckSquare,
     href: '/studio/tasks',
     category: 'operations',
-    description: 'Task delegation and tracking',
+    description: 'Track what needs doing',
     alwaysOn: false,
-    mode: 'practice',
+    // Person-centric — a task is a task whether you're a practitioner, founder,
+    // or member. Available in both modes so Personal has a home for intentions
+    // (keeps the Field contemplative instead of a disguised task list).
+    mode: 'both',
   },
   {
     slug: 'comms',
@@ -406,7 +409,7 @@ const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
   bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'services'],
   groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
   consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
-  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
+  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools', 'tasks'],
 };
 
 // ─── Helpers ────────────────────────────────────────────

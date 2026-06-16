@@ -72,7 +72,7 @@ const MOBILE_TABS = [
 // listed fall back to module-definition order at the end. (If the default order
 // is the layout a non-reordering user keeps, it should be intentional, not
 // inherited from MODULE_DEFINITIONS order.)
-const DEFAULT_PERSONAL_NAV_ORDER = ['maia', 'decisions', 'changes', 'media', 'scribe'];
+const DEFAULT_PERSONAL_NAV_ORDER = ['maia', 'decisions', 'changes', 'tasks', 'media', 'scribe'];
 
 function DraggableNavItem({
   mod,
