@@ -153,14 +153,16 @@ curl -k https://soullab.life/api/health
 - Host: **minisforum** (SSH from Mac Studio: `ssh soullab@minisforum`)
 - Stack: Docker + Caddy
 - Compose file: `docker-compose.production.yml`
-- **Deploy command** (run from Mac Studio, executes on minisforum):
+- **Deploy command — quick `maia`-only rebuild** (run from Mac Studio, executes on minisforum). **Prefix `GIT_COMMIT`** so the image is commit-bound: the compose build-arg is `${GIT_COMMIT:-unknown}`, so the bare command (without the prefix) bakes `GIT_COMMIT=unknown` into the image. The wiring is already present (Dockerfile `ENV GIT_COMMIT` ← compose `build.args`); the bare command just bypasses it.
   ```bash
   ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
     && git fetch origin clean-main-no-secrets \
     && git checkout clean-main-no-secrets \
     && git pull \
-    && docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d --build maia'
+    && GIT_COMMIT=$(git rev-parse --short HEAD) docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d --build maia'
   ```
+  Fast, but rebuilds **only** the `maia` service — it does **not** run migrations, tag images for rollback, or touch other services.
+- **Full deploy — canonical path**: `scripts/deploy-production.sh`. The complete all-services deploy: it exports `GIT_COMMIT`/`APP_VERSION`/`BUILD_DATE`, builds with the provenance build-args, tags images per-commit for rollback, brings the stack up, and runs DB migrations. Use it for schema changes, multi-service changes, or whenever you want a rollback point — i.e. anything beyond a quick `maia`-only code rebuild.
 - **Verify after deploy**:
   ```bash
   # 1. Container freshness
@@ -171,8 +173,13 @@ curl -k https://soullab.life/api/health
 
   # 3. Public reachability (external path through DNS + router forward)
   curl -k https://soullab.life/api/health
+
+  # 4. Provenance — what commit is actually live (must be the SHA you deployed, NOT "unknown")
+  ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
   ```
-  `Created` must show a timestamp under a minute old. `hostname -I` must show `192.168.0.104` as the LAN IP; if it shows anything else, the router's port-forward is pointing at a stale IP and external/iOS traffic will silently fail (see the LAN IP drift trap above). `/api/health` must return fresh JSON with `uptime` near zero.
+  `Created` must show a timestamp under a minute old. `hostname -I` must show `192.168.0.104` as the LAN IP; if it shows anything else, the router's port-forward is pointing at a stale IP and external/iOS traffic will silently fail (see the LAN IP drift trap above). `/api/health` must return fresh JSON with `uptime` near zero. `printenv GIT_COMMIT` must return the short SHA you deployed.
+
+  **Diagnostic — `GIT_COMMIT=unknown` does NOT imply missing provenance wiring.** The chain is already complete: Dockerfile (`ENV GIT_COMMIT=${GIT_COMMIT}`) ← compose (`build.args.GIT_COMMIT`) ← deploy (`scripts/deploy-production.sh` exports it; the quick command must prefix it). `unknown` means the deploy route *bypassed* that chain — almost always the quick command run **without** the `GIT_COMMIT=$(git rev-parse --short HEAD)` prefix. So if you see `unknown`, first verify **which deploy path was used** before suspecting the build-arg wiring.
 - CI deploys are disabled (self-hosted runner not yet configured).
 - **Common deploy mistake**: rebuilding on the Mac Studio instead of minisforum. The local stack will report healthy and `Created` will update, but the public soullab.life traffic continues hitting minisforum's old container. Always verify with the minisforum-side `Created` check above, not just the local one.
 
