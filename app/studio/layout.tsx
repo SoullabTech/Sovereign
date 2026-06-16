@@ -66,6 +66,14 @@ const MOBILE_TABS = [
 // Draggable nav row for the Personal Field sidebar. The Link stays fully
 // clickable (navigation must never break); only the grip handle starts a drag
 // (dragListener=false + dragControls). Order is local/per-device.
+// Default order for the movable region of the Personal sidebar, used until the
+// person reorders. Frequently-entered surfaces near the top — MAIA is a primary
+// interaction surface, not just a tool — then fully reorderable. Slugs not
+// listed fall back to module-definition order at the end. (If the default order
+// is the layout a non-reordering user keeps, it should be intentional, not
+// inherited from MODULE_DEFINITIONS order.)
+const DEFAULT_PERSONAL_NAV_ORDER = ['maia', 'decisions', 'changes', 'media', 'scribe'];
+
 function DraggableNavItem({
   mod,
   isActive,
@@ -252,8 +260,11 @@ export default function StudioLayout({
   // Settings (bottom), sorted by the saved local order (unknown slugs append).
   const personalMiddle = useMemo(() => {
     const middle = visibleModules.filter((m) => m.slug !== 'field' && m.slug !== 'settings');
+    // Saved order if the person has reordered; otherwise a sensible default
+    // (frequently-entered surfaces near the top), not raw definition order.
+    const order = personalOrder.length > 0 ? personalOrder : DEFAULT_PERSONAL_NAV_ORDER;
     const rank = (slug: string) => {
-      const i = personalOrder.indexOf(slug);
+      const i = order.indexOf(slug);
       return i === -1 ? Number.MAX_SAFE_INTEGER : i;
     };
     return [...middle].sort((a, b) => rank(a.slug) - rank(b.slug));
