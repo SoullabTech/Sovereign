@@ -100,8 +100,36 @@ Together these keep the orientation space from becoming either a productivity da
 3. **Perception-first, never perception-required** — invites attention, never demands it.
 4. **Meaning in behavior, not labels** — no spiritual vocabulary in the UI.
 5. **The field reveals; it does not decide** — MAIA illuminates patterns; the person determines their significance.
+6. **Selection is itself salience** — what the field chooses to place in front of someone is already a claim about importance; surfacing must run on transparent, person-controllable criteria, never an opaque significance score.
 
 The field can illuminate patterns. The person determines their significance. That is the line that preserves Meaning Sovereignty while still letting continuity, memory, and reflection become genuinely useful.
+
+### Selection is itself salience — the operational test
+
+It is easy to think sovereignty is preserved because the system never says "this is important." But the moment a system chooses *what to place in front of someone*, it is already expressing a theory of importance. This is where reflective systems drift without noticing. The concrete test:
+
+| Acceptable surfacing — the person can understand *why* it appeared | Dangerous surfacing — the system has crossed into directing attention |
+|---|---|
+| Things the person explicitly marked | "Most meaningful" / "Most important" / "Highest significance" |
+| Things the person searched for | Hidden relevance scores |
+| Things the person asked to revisit | Proprietary salience rankings |
+| Transparent recency / chronology | Importance computed by the system |
+| User-controlled filters | — |
+
+Even if a system ranking is *accurate*, computing it has already crossed from supporting attention to directing it.
+
+This is not a new principle — it is the one already load-bearing across MAIA, extended into the field:
+
+```
+Interpretation ≠ reality
+Declaration    ≠ liveness
+Observation    ≠ conclusion
+Surfacing      ≠ significance   ← the field version
+```
+
+The system may help a person *see*. The person determines what *matters*. Authorship stays with them through every movement — Attend (what do I notice?) → Remember (what threads are available?) → Reflect (what do I make of them?) → Align (where do I find coherence?) → Participate (what do I choose?).
+
+> These constraints are **a constitution, not a design**: attention-centered not tool-centered · perception-first never perception-required · the field reveals (it does not decide) · meaning sovereignty · selection is itself salience. They are worth settling *before* the feature exists, because they are far harder to retrofit afterward.
 
 ### Arrival questions — evolved from management to orientation
 
