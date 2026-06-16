@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Wind, Scale, BookOpen, Calendar, CheckSquare, Mic,
-  ChevronRight, RefreshCw, Flame, Compass, Sprout, Heart,
+  ChevronRight, RefreshCw, Flame, Compass, Sprout, Heart, Plus, X, Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -15,11 +15,11 @@ import { useTeamContext } from '@/hooks/useStudioData';
 
 interface FloorItem {
   id: string;
-  source: 'change' | 'decision';
+  source: 'change' | 'decision' | 'note';
   sourceId: string;
   title: string;
   context?: string;
-  href: string;
+  href?: string;       // omitted for authored notes (they live in the field, not behind a door)
   createdAt: string;
 }
 
@@ -38,16 +38,17 @@ interface FloorQuestion {
   icon: React.ComponentType<{ className?: string }>;
   accent: 'amber' | 'blue' | 'emerald' | 'purple';
   empty: string;
+  placeholder: string;   // human invitation to place a note here — never "+ New task"
 }
 
 // The fixed floor. These four questions are the stable frame — they remain
 // present even when a bucket is empty (the recognizable point of return).
 // The floor holds room; it never tells the person what matters most.
 const FLOOR: FloorQuestion[] = [
-  { key: 'alive',    question: 'What is alive?',                icon: Flame,   accent: 'amber',   empty: 'Quiet here.' },
-  { key: 'asking',   question: 'What is asking for attention?', icon: Compass, accent: 'blue',    empty: 'Nothing you’ve marked.' },
-  { key: 'emerging', question: 'What is emerging?',             icon: Sprout,  accent: 'emerald', empty: 'Nothing new taking shape.' },
-  { key: 'tending',  question: 'What are you tending?',         icon: Heart,   accent: 'purple',  empty: 'Nothing in motion.' },
+  { key: 'alive',    question: 'What is alive?',                icon: Flame,   accent: 'amber',   empty: 'Quiet here.',               placeholder: 'Name what’s alive…' },
+  { key: 'asking',   question: 'What is asking for attention?', icon: Compass, accent: 'blue',    empty: 'Nothing you’ve marked.',    placeholder: 'What’s asking for your attention?' },
+  { key: 'emerging', question: 'What is emerging?',             icon: Sprout,  accent: 'emerald', empty: 'Nothing new taking shape.', placeholder: 'What’s taking shape?' },
+  { key: 'tending',  question: 'What are you tending?',         icon: Heart,   accent: 'purple',  empty: 'Nothing in motion.',        placeholder: 'What are you tending?' },
 ];
 
 const ACCENT_TEXT: Record<string, string> = {
@@ -99,6 +100,37 @@ export default function FieldPage() {
     return () => { abortRef.current?.abort(); };
   }, [fetchFloor]);
 
+  // Authoring: place a note into a question, or take one back out. Best-effort —
+  // a failed write should never throw into the orientation surface.
+  const addNote = useCallback(async (section: FloorKey, body: string) => {
+    try {
+      await apiFetch('/api/studio/field/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section, body, teamId: currentTeamId ?? undefined }),
+      });
+    } catch { /* best effort */ }
+    await fetchFloor(true);
+  }, [currentTeamId, fetchFloor]);
+
+  const removeNote = useCallback(async (noteId: string) => {
+    try {
+      await apiFetch(`/api/studio/field/notes/${noteId}`, { method: 'DELETE' });
+    } catch { /* best effort */ }
+    await fetchFloor(true);
+  }, [fetchFloor]);
+
+  const editNote = useCallback(async (noteId: string, body: string) => {
+    try {
+      await apiFetch(`/api/studio/field/notes/${noteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body }),
+      });
+    } catch { /* best effort */ }
+    await fetchFloor(true);
+  }, [fetchFloor]);
+
   const greeting = getGreeting();
   const total = floor
     ? floor.alive.length + floor.asking.length + floor.emerging.length + floor.tending.length
@@ -139,7 +171,14 @@ export default function FieldPage() {
           <>
             {/* The fixed orientation floor — four questions, always present */}
             {FLOOR.map((q) => (
-              <FloorSection key={q.key} question={q} items={floor?.[q.key] ?? []} />
+              <FloorSection
+                key={q.key}
+                question={q}
+                items={floor?.[q.key] ?? []}
+                onAdd={addNote}
+                onRemove={removeNote}
+                onEdit={editNote}
+              />
             ))}
 
             {/* Navigate — demoted, person-initiated; never injected into the field */}
@@ -162,10 +201,18 @@ export default function FieldPage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Floor section — one question + its items, or quiet room
+// Floor section — one question + its items + a quiet invitation to place a note
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FloorSection({ question, items }: { question: FloorQuestion; items: FloorItem[] }) {
+function FloorSection({
+  question, items, onAdd, onRemove, onEdit,
+}: {
+  question: FloorQuestion;
+  items: FloorItem[];
+  onAdd: (section: FloorKey, body: string) => Promise<void>;
+  onRemove: (id: string) => void;
+  onEdit: (id: string, body: string) => Promise<void>;
+}) {
   const Icon = question.icon;
   const isEmpty = items.length === 0;
   return (
@@ -179,21 +226,106 @@ function FloorSection({ question, items }: { question: FloorQuestion; items: Flo
       ) : (
         <div className="space-y-2">
           {items.slice(0, 6).map((item) => (
-            <FloorItemCard key={item.id} item={item} accent={question.accent} />
+            <FloorItemCard key={item.id} item={item} accent={question.accent} onRemove={onRemove} onEdit={onEdit} />
           ))}
           {items.length > 6 && (
             <p className="text-xs text-slate-600 mt-2 pl-1">+{items.length - 6} more</p>
           )}
         </div>
       )}
+      <AddNote section={question.key} placeholder={question.placeholder} accent={question.accent} onAdd={onAdd} />
     </section>
   );
 }
 
-function FloorItemCard({ item, accent }: { item: FloorItem; accent: string }) {
+function FloorItemCard({
+  item, accent, onRemove, onEdit,
+}: {
+  item: FloorItem;
+  accent: string;
+  onRemove?: (id: string) => void;
+  onEdit?: (id: string, body: string) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(item.title);
+  const [saving, setSaving] = useState(false);
+
+  // Authored note — not a door to a tool; render it in place. The author keeps
+  // stewardship of what they wrote (body-only edit), with a quiet remove.
+  if (item.source === 'note') {
+    if (editing && onEdit) {
+      const save = async () => {
+        const b = draft.trim();
+        if (!b || saving) return;
+        setSaving(true);
+        try { await onEdit(item.sourceId, b); setEditing(false); } finally { setSaving(false); }
+      };
+      return (
+        <div className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.04] border border-white/10 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
+          <textarea
+            autoFocus
+            rows={2}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
+              if (e.key === 'Escape') { setDraft(item.title); setEditing(false); }
+            }}
+            className="w-full bg-transparent text-white/90 text-sm leading-relaxed focus:outline-none resize-none"
+          />
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={save}
+              disabled={saving || !draft.trim()}
+              className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              onClick={() => { setDraft(item.title); setEditing(false); }}
+              className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className={`group relative block pl-4 pr-16 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
+        <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">{item.title}</p>
+        {item.context && (
+          <p className="text-[11px] text-slate-500 mt-1">{item.context}</p>
+        )}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+          {onEdit && (
+            <button
+              onClick={() => { setDraft(item.title); setEditing(true); }}
+              className="p-1 rounded text-slate-600 hover:text-slate-300 transition"
+              title="Edit this note"
+              aria-label="Edit this note"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onRemove && (
+            <button
+              onClick={() => onRemove(item.sourceId)}
+              className="p-1 rounded text-slate-600 hover:text-slate-300 transition"
+              title="Remove this note"
+              aria-label="Remove this note"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+  // Derived item — a link back to the change/decision it came from.
   return (
     <Link
-      href={item.href}
+      href={item.href ?? '#'}
       className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''} hover:bg-white/5 transition`}
     >
       <p className="text-white/90 text-sm leading-relaxed">{item.title}</p>
@@ -201,6 +333,80 @@ function FloorItemCard({ item, accent }: { item: FloorItem; accent: string }) {
         <p className="text-[11px] text-slate-500 mt-1 truncate">{item.context}</p>
       )}
     </Link>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Add note — a small authored attention placed into this question
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AddNote({
+  section, placeholder, accent, onAdd,
+}: {
+  section: FloorKey;
+  placeholder: string;
+  accent: string;
+  onAdd: (section: FloorKey, body: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const close = () => { setText(''); setOpen(false); };
+  const submit = async () => {
+    const body = text.trim();
+    if (!body || saving) return;
+    setSaving(true);
+    try {
+      await onAdd(section, body);
+      close();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition"
+      >
+        <Plus className="w-3.5 h-3.5" />
+        <span>{placeholder}</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3">
+      <textarea
+        autoFocus
+        rows={2}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+          if (e.key === 'Escape') { close(); }
+        }}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20 resize-none"
+      />
+      <div className="flex items-center gap-2 mt-2">
+        <button
+          onClick={submit}
+          disabled={saving || !text.trim()}
+          className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}
+        >
+          {saving ? 'Placing…' : 'Place'}
+        </button>
+        <button
+          onClick={close}
+          className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
 
