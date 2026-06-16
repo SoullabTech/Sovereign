@@ -143,6 +143,29 @@ The system may help a person *see*. The person determines what *matters*. Author
 
 (See `PERSONAL_FIELD_ARRIVAL_MOCKUP_2026-06-15.html`, evolved to these questions.)
 
+### Testing against the constitution — three layers, four questions
+
+The guards resolve into three distinct layers, each with its own sovereignty risk:
+
+| Layer | Question | Sovereignty risk | Constitutional guard |
+|---|---|---|---|
+| **Selection** | What enters the set? | Omission | person-controlled or exhaustive |
+| **Ordering** | In what sequence? | Ranking | transparent criteria |
+| **Interpretation** | What does it mean? | Meaning assignment | authored by the person |
+
+This does **not** prohibit assistance. The system may still **remember · retrieve · organize · surface · connect · visualize**. What it may not do is quietly cross into **deciding · prioritizing meaning · assigning significance · authoring attention**. The constraint is anti-*authorship*, not anti-*capability*.
+
+Because it is operationalizable, any future field surface can be tested with four questions:
+
+1. **Why was this shown?**
+2. **Why was this *not* shown?**
+3. **How was this ordered?**
+4. **Who determined its significance?**
+
+If the answer to #4 is ever *"the model did,"* the implementation has drifted from the constitution.
+
+This is the most useful outcome of the cycle: not a page design, but a set of questions future designs can be tested against.
+
 ---
 
 ## 1. Design principles
