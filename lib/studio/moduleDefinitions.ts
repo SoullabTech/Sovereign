@@ -125,7 +125,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Six-week passage for practitioners',
     alwaysOn: false,
-    mode: 'both',
+    // Practitioner passage — does not belong in Personal Field. Shows in Practice Portal only.
+    mode: 'practice',
   },
 
   // ── Practice modules (client-facing, operational) ──
