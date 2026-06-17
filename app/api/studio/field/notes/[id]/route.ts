@@ -15,14 +15,20 @@ import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BODY = 2000;
+const SECTIONS = new Set(['alive', 'asking', 'emerging', 'tending']);
 
 /**
- * PATCH — edit a note's BODY only (the author keeps stewardship of what they wrote).
+ * PATCH — edit a note's BODY and/or move it between QUESTIONS (section).
  *
- * Body-only by design: section / scope / created_at never change, and there is
- * deliberately NO updated_at / version / audit trail — a Field Note is an
- * authored observation the author may correct, not a work object with revision
- * history. Overwrite, not append. Fail-closed to the author.
+ * The two minimum affordances for authored attention over time: correct what you
+ * wrote (body) and re-place where it lives (section). Section is STATE, not shape —
+ * moving Emerging→Alive doesn't change the primitive (still a Field Note), only its
+ * relationship to attention. Identity + created_at persist, so a move preserves the
+ * note's age / continuity / trajectory (unlike delete + recreate).
+ *
+ * Move-only / edit-only: body and section are the ONLY mutable fields. NO status,
+ * owner, due date, completion, updated_at, version, or audit trail — a note stays a
+ * note; it just lives in a different question. Overwrite, not append. Fail-closed.
  */
 export async function PATCH(
   request: NextRequest,
@@ -41,19 +47,37 @@ export async function PATCH(
     }
 
     const payload = await request.json().catch(() => null);
-    const body = typeof payload?.body === 'string' ? payload.body.trim() : '';
-    if (!body) {
-      return NextResponse.json({ error: 'Note is empty' }, { status: 400 });
+    const hasBody = typeof payload?.body === 'string';
+    const hasSection = typeof payload?.section === 'string';
+    const body = hasBody ? payload.body.trim() : null;
+    const section = hasSection ? payload.section : null;
+
+    // Build the mutation from whichever of the two mutable fields were provided.
+    const sets: string[] = [];
+    const values: unknown[] = [];
+    let n = 1;
+    if (hasBody) {
+      if (!body) return NextResponse.json({ error: 'Note is empty' }, { status: 400 });
+      if (body.length > MAX_BODY) return NextResponse.json({ error: 'Note is too long' }, { status: 400 });
+      sets.push(`body = $${n++}`);
+      values.push(body);
     }
-    if (body.length > MAX_BODY) {
-      return NextResponse.json({ error: 'Note is too long' }, { status: 400 });
+    if (hasSection) {
+      if (!SECTIONS.has(section as string)) return NextResponse.json({ error: 'Invalid section' }, { status: 400 });
+      sets.push(`section = $${n++}`);
+      values.push(section);
+    }
+    if (sets.length === 0) {
+      return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
     }
 
-    // Body-only, author-scoped. section / team_id / created_at are untouched.
+    // Only body/section mutate; created_at (age) and team_id (scope) are untouched.
+    values.push(id, practitionerId);
     const result = await db.query(
-      `UPDATE field_notes SET body = $1 WHERE id = $2 AND practitioner_id = $3
+      `UPDATE field_notes SET ${sets.join(', ')}
+        WHERE id = $${n++} AND practitioner_id = $${n}
        RETURNING id, section, body, created_at`,
-      [body, id, practitionerId],
+      values,
     );
     if (result.rowCount === 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -62,7 +86,7 @@ export async function PATCH(
     return NextResponse.json({ id: row.id, section: row.section, body: row.body, createdAt: row.created_at });
   } catch (error) {
     console.error('[Field Notes] PATCH error:', error);
-    return NextResponse.json({ error: 'Failed to edit note' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update note' }, { status: 500 });
   }
 }
 
