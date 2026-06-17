@@ -36,12 +36,23 @@ export function ThreadPanel({
     if (!loading) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [loading, replies.length]);
 
-  const sendReply = async (body: string, messageKind: MessageKind = 'build') => {
-    const res = await fetch(`/api/team/channels/${channelId}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body, parentId: parentMessage.id, messageKind }),
-    });
+  const sendReply = async (body: string, messageKind: MessageKind = 'build', images: File[] = []) => {
+    // Images → multipart (with the thread's parentId); text-only → JSON, as before.
+    let res: Response;
+    if (images.length > 0) {
+      const form = new FormData();
+      form.append('body', body);
+      form.append('messageKind', messageKind);
+      form.append('parentId', parentMessage.id);
+      images.forEach(img => form.append('images', img));
+      res = await fetch(`/api/team/channels/${channelId}/messages`, { method: 'POST', body: form });
+    } else {
+      res = await fetch(`/api/team/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body, parentId: parentMessage.id, messageKind }),
+      });
+    }
     if (!res.ok) throw new Error('Failed to send reply');
     const { message } = await res.json();
     setReplies(prev => prev.some(m => m.id === message.id) ? prev : [...prev, message]);

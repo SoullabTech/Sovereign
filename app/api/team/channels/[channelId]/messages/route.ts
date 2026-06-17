@@ -3,6 +3,8 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getMessages, getReplies, sendMessage, markChannelRead } from '@/lib/team/ChannelService';
 import { getSenderAttentionStates, COLAB_MESSAGE } from '@/lib/team/attention';
 import { requireChannelAccess } from '@/lib/team/permissions';
+import { processUploadedImages, AttachmentValidationError } from '@/lib/team/attachments';
+import type { StoredMessageAttachment } from '@/lib/team/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,11 +92,39 @@ export async function POST(
     return NextResponse.json({ error: access.reason ?? 'Forbidden' }, { status });
   }
 
-  const body = await request.json();
-  const { body: msgBody, parentId, messageKind } = body;
+  // Body arrives as JSON (text-only — unchanged) or multipart/form-data (with images).
+  let msgBody = '';
+  let parentId: string | undefined;
+  let messageKind: unknown;
+  let attachments: StoredMessageAttachment[] = [];
 
-  if (!msgBody || typeof msgBody !== 'string') {
-    return NextResponse.json({ error: 'body is required' }, { status: 400 });
+  const contentType = request.headers.get('content-type') || '';
+  if (contentType.includes('multipart/form-data')) {
+    const form = await request.formData();
+    const rawBody = form.get('body');
+    msgBody = typeof rawBody === 'string' ? rawBody : '';
+    const rawParent = form.get('parentId');
+    parentId = typeof rawParent === 'string' && rawParent ? rawParent : undefined;
+    messageKind = form.get('messageKind') ?? undefined;
+    const files = form.getAll('images').filter((f): f is File => f instanceof File);
+    try {
+      attachments = await processUploadedImages(files);
+    } catch (err) {
+      if (err instanceof AttachmentValidationError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      throw err;
+    }
+  } else {
+    const body = await request.json();
+    msgBody = typeof body.body === 'string' ? body.body : '';
+    parentId = typeof body.parentId === 'string' ? body.parentId : undefined;
+    messageKind = body.messageKind;
+  }
+
+  // Require text OR at least one image.
+  if (!msgBody.trim() && attachments.length === 0) {
+    return NextResponse.json({ error: 'body or image is required' }, { status: 400 });
   }
 
   const VALID_KINDS = ['build', 'question', 'decision', 'insight', 'request'] as const;
@@ -104,7 +134,7 @@ export async function POST(
       ? (messageKind as MessageKind)
       : 'build';
 
-  const message = await sendMessage(channelId, memberId, msgBody, parentId, validatedKind);
+  const message = await sendMessage(channelId, memberId, msgBody, parentId, validatedKind, attachments);
 
   // Mark read on send
   await markChannelRead(channelId, memberId);

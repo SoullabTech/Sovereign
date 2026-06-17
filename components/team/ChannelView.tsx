@@ -139,12 +139,23 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     enabled: !loading,
   });
 
-  const sendMessage = async (body: string, messageKind: MessageKind = 'build') => {
-    const res = await fetch(`/api/team/channels/${channel.id}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body, messageKind }),
-    });
+  const sendMessage = async (body: string, messageKind: MessageKind = 'build', images: File[] = []) => {
+    // Images → multipart (the browser sets the multipart boundary; don't set
+    // Content-Type). Text-only → JSON, exactly as before.
+    let res: Response;
+    if (images.length > 0) {
+      const form = new FormData();
+      form.append('body', body);
+      form.append('messageKind', messageKind);
+      images.forEach(img => form.append('images', img));
+      res = await fetch(`/api/team/channels/${channel.id}/messages`, { method: 'POST', body: form });
+    } else {
+      res = await fetch(`/api/team/channels/${channel.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body, messageKind }),
+      });
+    }
     if (res.status === 403) {
       handleAccessRevoked();
       throw new Error('Access revoked');
@@ -281,7 +292,6 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
       setTaskBusy(false);
     }
   };
-
 
   if (accessRevoked) {
     return (

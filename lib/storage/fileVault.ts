@@ -2,10 +2,10 @@
 //
 // This is the single low-level mechanism for persisting uploaded bytes to the
 // self-hosted file vault. The studio file vault (app/api/studio/files) writes the
-// same filesystem root; bug-report screenshot evidence (lib/bugs/attachments) reuses
-// this helper so bug reports do NOT become a separate file system — bytes co-locate
-// under FILE_STORAGE_PATH, with each caller owning its own metadata registry
-// (studio: practitioner_files; bugs: the bug_reports row's `attachments` JSONB).
+// same filesystem root; Co-Lab image attachments and bug-report screenshot evidence both
+// reuse this helper so neither becomes a separate file system — bytes co-locate under
+// FILE_STORAGE_PATH, with each caller owning its own metadata registry (studio:
+// practitioner_files; chat: message `attachments` JSONB; bugs: bug_reports `attachments` JSONB).
 //
 // Default root matches the studio vault: /app/data/vault (override via FILE_STORAGE_PATH).
 
@@ -42,7 +42,7 @@ export function imageExtFromMime(mime: string): string | null {
 
 /**
  * Persist bytes at {root}/{namespace}/{fileId}.{ext}. Returns the storagePath
- * RELATIVE to the vault root (e.g. "bugs/<uuid>.png") for later retrieval.
+ * RELATIVE to the vault root (e.g. "team-chat/<uuid>.png" or "bugs/<uuid>.png") for later retrieval.
  */
 export async function writeVaultBytes(
   namespace: string,
