@@ -29,6 +29,8 @@ const REQUIRED_COLUMNS: ColumnCheck[] = [
   { table: 'members', column: 'nostr_registered_at',  addedBy: '20260310000001_member_nostr.sql' },
   { table: 'members', column: 'astrology_consent',    addedBy: '20260301000001_member_astrology_consent.sql' },
   { table: 'conversation_turns', column: 'exchange_id', addedBy: '20260301000001_conversation_turns_exchange_seq.sql' },
+  // team_messages — delete path writes this; missing column 500s every deletion
+  { table: 'team_messages', column: 'deleted_by', addedBy: '20260617000001_team_message_deletion_audit.sql' },
 ];
 
 const REQUIRED_TABLES: TableCheck[] = [
