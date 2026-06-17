@@ -66,6 +66,9 @@ export interface TextRequest {
   systemPrompt: string;
   userInput: string;
   meta?: Record<string, unknown>;
+  // Optional Anthropic tool definitions, threaded to the Claude path only.
+  // Proposal pipeline (MAIA_CONSENT_GATES): tools PROPOSE, never execute.
+  tools?: any[];
 }
 
 /**
@@ -159,6 +162,7 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
         systemPrompt: req.systemPrompt,
         userInput: req.userInput,
         meta: req.meta,
+        tools: req.tools,
       });
       logTokenUsageLine({ provider: 'anthropic', model: claudeResult.provider?.model, t0, usage: claudeResult.provider?.usage, routeTag: 'modelService.generateText' });
       return claudeResult;

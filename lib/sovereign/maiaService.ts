@@ -19,6 +19,9 @@ import {
 } from '../consciousness/bloomCognition';
 import { buildKnowledgeFieldBlock, hasKnowledgeDomainSignal } from '../maia/prompts/knowledgeFieldBlock';
 import { buildMaiaContext } from '../maia/context/buildMaiaContext';
+// 🗓️ Proposal pipeline (docs/canon/MAIA_CONSENT_GATES.md) — FAST/CORE only; tools PROPOSE, never execute.
+import { MAIA_PROPOSAL_TOOLS, extractCalendarProposal } from '../maia/proposals/tools';
+import type { Proposal } from '../maia/proposals/types';
 import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
@@ -508,6 +511,7 @@ export type MaiaResponse = {
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
   stateVector?: StateVector;                  // 🌀 State vector reading from this turn
   practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
+  proposal?: Proposal;  // 🗓️ Pending action proposal (calendar) awaiting member confirm — MAIA_CONSENT_GATES Art. 2
   metadata?: {
     patterns?: PatternMeta[];
     turnId?: number;          // 🔄 For feedback linkage
@@ -639,7 +643,7 @@ async function fastPathResponse(
   conversationHistory: any[],
   meta: Record<string, unknown>,
   mindContext?: MindContext
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; proposal?: Proposal }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
@@ -1279,7 +1283,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // Use single model call with complete MAIA intelligence stack
-  const { text: response, provider } = await generateText({
+  const { text: response, provider, toolUses } = await generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
@@ -1288,8 +1292,18 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
       fastProcessing: true,
       engine: 'deepseek-r1', // Single reliable engine
       responseTarget: 'conversational'
-    }
+    },
+    // 🗓️ Proposal pipeline (FAST): model may PROPOSE a calendar event for the member
+    // to confirm. A tool_use is never executed here (MAIA_CONSENT_GATES Art. 2).
+    tools: MAIA_PROPOSAL_TOOLS,
   });
+
+  // Build a Proposal from any propose_calendar_event tool_use (source = member's message).
+  const proposal = extractCalendarProposal(toolUses, input);
+  let responseText = response;
+  if (proposal && !responseText.trim()) {
+    responseText = "Here's a draft — take a look, edit anything that's off, and confirm when it's right.";
+  }
 
   // 🔮 Log provider for sovereignty auditing
   if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -1300,7 +1314,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   let { response: validatedResponse } = await validateAndRepairResponse(
     sessionId,
     input,
-    response,
+    responseText,
     meta,
     'FAST'
     // No regeneration function - FAST path prioritizes speed
@@ -1312,7 +1326,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider };
+  return { response: validatedResponse, provider, proposal };
 }
 
 /**
@@ -1325,7 +1339,7 @@ async function corePathResponse(
   conversationHistory: any[],
   meta: Record<string, unknown>,
   mindContext?: MindContext
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; proposal?: Proposal }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
 
@@ -1643,7 +1657,7 @@ The current user has not provided their name. Address them as "friend" or "there
     // Field intelligence must never break the hot path
   }
 
-  const { text: response, provider: coreProvider } = await generateText({
+  const { text: response, provider: coreProvider, toolUses } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
@@ -1652,8 +1666,17 @@ The current user has not provided their name. Address them as "friend" or "there
       coreProcessing: true,
       conversationProfile: conversationContext.profile,
       inputComplexity: 'moderate'
-    }
+    },
+    // 🗓️ Proposal pipeline (CORE): model may PROPOSE a calendar event for confirm.
+    tools: MAIA_PROPOSAL_TOOLS,
   });
+
+  // Build a Proposal from any propose_calendar_event tool_use (source = member's message).
+  const proposal = extractCalendarProposal(toolUses, input);
+  let responseText = response;
+  if (proposal && !responseText.trim()) {
+    responseText = "Here's a draft — take a look, edit anything that's off, and confirm when it's right.";
+  }
 
   // 🔮 Log provider for sovereignty auditing (returned request-locally, not module-level)
   if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -1664,7 +1687,7 @@ The current user has not provided their name. Address them as "friend" or "there
   let { response: validatedResponse } = await validateAndRepairResponse(
     sessionId,
     input,
-    response,
+    responseText,
     meta,
     'CORE',
     // Regeneration function for CORE path
@@ -1704,7 +1727,7 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider: coreProvider };
+  return { response: validatedResponse, provider: coreProvider, proposal };
 }
 
 /**
@@ -2633,6 +2656,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let consciousnessData: any = null;
     // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
     let provider: ProviderMeta | undefined;
+    let proposal: Proposal | undefined = undefined;  // 🗓️ pending calendar proposal (FAST/CORE) — MAIA_CONSENT_GATES Art. 2
     // 🧬 RCN tracking
     let rcnResult: MaiaRcnResult | null = null;
 
@@ -2698,6 +2722,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
+        proposal = fastResult.proposal;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
@@ -2709,6 +2734,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
+        proposal = coreResult.proposal;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'CORE');
@@ -2733,6 +2759,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
+        proposal = fallbackResult.proposal;
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
         }
@@ -3469,6 +3496,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
       stateVector: parsedStateVector || undefined,
       practiceRecommendation: practiceRec || undefined,
+      proposal,  // 🗓️ pending calendar proposal (FAST/CORE) awaiting member confirm
       metadata: hasMetadata ? responseMetadata : undefined
     };
 
