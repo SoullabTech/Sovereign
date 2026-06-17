@@ -211,9 +211,11 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     icon: CalendarDays,
     href: '/studio/calendar',
     category: 'operations',
-    description: 'Availability and booking calendar',
+    description: 'Your schedule and what is coming',
     alwaysOn: false,
-    mode: 'practice',
+    // On the Personal sidebar too (Kelly directive). Today's day-calendar lives
+    // in the Field home (field_events); this links to the fuller calendar view.
+    mode: 'both',
   },
   {
     slug: 'scheduling',
@@ -409,7 +411,7 @@ const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
   bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'services'],
   groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
   consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
-  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools', 'tasks'],
+  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools', 'tasks', 'calendar'],
 };
 
 // ─── Helpers ────────────────────────────────────────────
