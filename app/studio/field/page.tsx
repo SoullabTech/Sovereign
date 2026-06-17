@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Wind, Scale, BookOpen, Calendar, CheckSquare, Mic,
-  ChevronRight, RefreshCw, Flame, Compass, Sprout, Heart, Plus, X, Pencil,
+  ChevronRight, RefreshCw, Flame, Compass, Sprout, Heart, Plus, X, Pencil, ArrowRightLeft,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -131,6 +131,19 @@ export default function FieldPage() {
     await fetchFloor(true);
   }, [fetchFloor]);
 
+  // Migration: move a note to a different question. Section is state, not shape —
+  // identity + created_at persist (we observe the move out-of-band; no audit trail).
+  const moveNote = useCallback(async (noteId: string, section: FloorKey) => {
+    try {
+      await apiFetch(`/api/studio/field/notes/${noteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section }),
+      });
+    } catch { /* best effort */ }
+    await fetchFloor(true);
+  }, [fetchFloor]);
+
   const greeting = getGreeting();
   const total = floor
     ? floor.alive.length + floor.asking.length + floor.emerging.length + floor.tending.length
@@ -178,6 +191,7 @@ export default function FieldPage() {
                 onAdd={addNote}
                 onRemove={removeNote}
                 onEdit={editNote}
+                onMove={moveNote}
               />
             ))}
 
@@ -205,13 +219,14 @@ export default function FieldPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function FloorSection({
-  question, items, onAdd, onRemove, onEdit,
+  question, items, onAdd, onRemove, onEdit, onMove,
 }: {
   question: FloorQuestion;
   items: FloorItem[];
   onAdd: (section: FloorKey, body: string) => Promise<void>;
   onRemove: (id: string) => void;
   onEdit: (id: string, body: string) => Promise<void>;
+  onMove: (id: string, section: FloorKey) => Promise<void>;
 }) {
   const Icon = question.icon;
   const isEmpty = items.length === 0;
@@ -226,7 +241,7 @@ function FloorSection({
       ) : (
         <div className="space-y-2">
           {items.slice(0, 6).map((item) => (
-            <FloorItemCard key={item.id} item={item} accent={question.accent} onRemove={onRemove} onEdit={onEdit} />
+            <FloorItemCard key={item.id} item={item} accent={question.accent} currentSection={question.key} onRemove={onRemove} onEdit={onEdit} onMove={onMove} />
           ))}
           {items.length > 6 && (
             <p className="text-xs text-slate-600 mt-2 pl-1">+{items.length - 6} more</p>
@@ -239,16 +254,20 @@ function FloorSection({
 }
 
 function FloorItemCard({
-  item, accent, onRemove, onEdit,
+  item, accent, currentSection, onRemove, onEdit, onMove,
 }: {
   item: FloorItem;
   accent: string;
+  currentSection?: FloorKey;
   onRemove?: (id: string) => void;
   onEdit?: (id: string, body: string) => Promise<void>;
+  onMove?: (id: string, section: FloorKey) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.title);
   const [saving, setSaving] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const [moveSaving, setMoveSaving] = useState(false);
 
   // Authored note — not a door to a tool; render it in place. The author keeps
   // stewardship of what they wrote (body-only edit), with a quiet remove.
@@ -291,8 +310,39 @@ function FloorItemCard({
         </div>
       );
     }
+    if (moving && onMove) {
+      const others = FLOOR.filter((q) => q.key !== currentSection);
+      return (
+        <div className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.04] border border-white/10 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
+          <p className="text-white/70 text-sm leading-relaxed line-clamp-2">{item.title}</p>
+          <p className="text-[11px] text-slate-500 mt-2 mb-1.5">Move to…</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {others.map((q) => (
+              <button
+                key={q.key}
+                onClick={async () => {
+                  if (moveSaving) return;
+                  setMoveSaving(true);
+                  try { await onMove(item.sourceId, q.key); } finally { setMoveSaving(false); setMoving(false); }
+                }}
+                disabled={moveSaving}
+                className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[q.accent]} hover:bg-white/15 transition disabled:opacity-40`}
+              >
+                {q.key.charAt(0).toUpperCase() + q.key.slice(1)}
+              </button>
+            ))}
+            <button
+              onClick={() => setMoving(false)}
+              className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
-      <div className={`group relative block pl-4 pr-16 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
+      <div className={`group relative block pl-4 pr-20 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
         <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">{item.title}</p>
         {item.context && (
           <p className="text-[11px] text-slate-500 mt-1">{item.context}</p>
@@ -306,6 +356,16 @@ function FloorItemCard({
               aria-label="Edit this note"
             >
               <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onMove && (
+            <button
+              onClick={() => setMoving(true)}
+              className="p-1 rounded text-slate-600 hover:text-slate-300 transition"
+              title="Move to another question"
+              aria-label="Move to another question"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
             </button>
           )}
           {onRemove && (
