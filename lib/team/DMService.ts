@@ -303,6 +303,89 @@ export async function sendDMMessage(
   };
 }
 
+/**
+ * Edit a DM message's text body. Ownership is enforced in SQL — the UPDATE only
+ * matches when sender_id = editorId (and the message isn't deleted), scoped to the
+ * thread so a foreign message id can't be touched. Sets edited_at for the "edited"
+ * marker. Throws if no row matched (not the author / not found / deleted).
+ */
+export async function editDMMessage(
+  dmThreadId: string,
+  messageId: string,
+  editorId: string,
+  newBody: string
+): Promise<DMMessage> {
+  const trimmed = newBody.trim();
+  if (!trimmed) throw new Error('Message body cannot be empty');
+  if (trimmed.length > 8000) throw new Error('Message too long (max 8000 chars)');
+
+  const result = await query<{
+    id: string;
+    dm_thread_id: string;
+    sender_id: string;
+    body: string;
+    message_type: string;
+    edited_at: string | null;
+    deleted_at: string | null;
+    created_at: string;
+  }>(
+    `UPDATE team_dm_messages
+        SET body = $1, edited_at = NOW()
+      WHERE id = $2
+        AND dm_thread_id = $3
+        AND sender_id = $4
+        AND deleted_at IS NULL
+      RETURNING *`,
+    [trimmed, messageId, dmThreadId, editorId]
+  );
+
+  const row = result.rows[0];
+  if (!row) throw new Error('Message not found or not editable');
+
+  const nameRes = await query<{ name: string | null; username: string }>(
+    `SELECT name, username FROM members WHERE id = $1`,
+    [editorId]
+  );
+  const sender = nameRes.rows[0];
+
+  return {
+    id: row.id,
+    dmThreadId: row.dm_thread_id,
+    senderId: row.sender_id,
+    senderName: sender?.name || sender?.username || 'Unknown',
+    body: row.body,
+    messageType: (row.message_type ?? 'build') as MessageType,
+    editedAt: row.edited_at,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * Soft-delete a DM message. Ownership is enforced in SQL — the UPDATE only matches
+ * when sender_id = deleterId (and the message isn't already deleted), scoped to the
+ * thread. Sets deleted_at AND clears the body so the content is genuinely removed,
+ * not just hidden (all read paths filter deleted_at IS NULL). Returns true if a row
+ * was deleted.
+ */
+export async function deleteDMMessage(
+  dmThreadId: string,
+  messageId: string,
+  deleterId: string
+): Promise<boolean> {
+  const result = await query<{ id: string }>(
+    `UPDATE team_dm_messages
+        SET deleted_at = NOW(), body = ''
+      WHERE id = $1
+        AND dm_thread_id = $2
+        AND sender_id = $3
+        AND deleted_at IS NULL
+      RETURNING id`,
+    [messageId, dmThreadId, deleterId]
+  );
+  return result.rows.length > 0;
+}
+
 export async function markDMRead(dmThreadId: string, memberId: string): Promise<void> {
   await query(
     `UPDATE team_dm_members SET last_read_at = NOW()

@@ -48,6 +48,29 @@ export function ThreadPanel({
     requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }));
   };
 
+  const editReply = async (messageId: string, newBody: string) => {
+    const res = await fetch(`/api/team/channels/${channelId}/messages`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId, body: newBody }),
+    });
+    if (!res.ok) throw new Error('Failed to edit reply');
+    const { message } = await res.json();
+    setReplies(prev => prev.map(m =>
+      m.id === messageId ? { ...m, body: message.body, editedAt: message.editedAt } : m
+    ));
+  };
+
+  const deleteReply = async (messageId: string) => {
+    const res = await fetch(`/api/team/channels/${channelId}/messages`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId }),
+    });
+    if (!res.ok) throw new Error('Failed to delete reply');
+    setReplies(prev => prev.filter(m => m.id !== messageId));
+  };
+
   return (
     <div className="w-80 flex-shrink-0 border-l border-white/8 bg-zinc-900/60 flex flex-col h-full">
       {/* Header */}
@@ -96,6 +119,8 @@ export function ThreadPanel({
             message={msg}
             currentMemberId={currentMemberId}
             onReact={onReact}
+            onEdit={editReply}
+            onDelete={deleteReply}
           />
         ))}
         <div ref={bottomRef} />

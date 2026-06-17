@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { getDMMessages, sendDMMessage, markDMRead } from '@/lib/team/DMService';
+import { getDMMessages, sendDMMessage, editDMMessage, deleteDMMessage, markDMRead } from '@/lib/team/DMService';
 import { sendPartnerNotification } from '@/lib/masters/partnerNotifications';
 import { logFieldActivity } from '@/lib/masters/fieldActivityLog';
 
@@ -68,6 +68,58 @@ export async function POST(
     });
 
     return NextResponse.json({ message }, { status: 201 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error';
+    return NextResponse.json({ error: msg }, { status: 403 });
+  }
+}
+
+// Edit a DM message's text body. Only the original author may edit (enforced in SQL
+// by editDMMessage, which also re-checks thread membership). Message id is in the body.
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ dmId: string }> }
+) {
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { dmId } = await params;
+
+  const body = await request.json().catch(() => ({}));
+  const messageId = typeof body.messageId === 'string' ? body.messageId : '';
+  const newBody = typeof body.body === 'string' ? body.body : '';
+  if (!messageId) return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+  if (!newBody.trim()) return NextResponse.json({ error: 'body is required' }, { status: 400 });
+
+  try {
+    const message = await editDMMessage(dmId, messageId, memberId, newBody);
+    return NextResponse.json({ message });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error';
+    const status = msg.includes('not found') || msg.includes('not editable') ? 404 : 403;
+    return NextResponse.json({ error: msg }, { status });
+  }
+}
+
+// Soft-delete a DM message. Only the original author may delete (enforced in SQL by
+// deleteDMMessage). Message id is in the body.
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ dmId: string }> }
+) {
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { dmId } = await params;
+
+  const body = await request.json().catch(() => ({}));
+  const messageId = typeof body.messageId === 'string' ? body.messageId : '';
+  if (!messageId) return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+
+  try {
+    const deleted = await deleteDMMessage(dmId, messageId, memberId);
+    if (!deleted) return NextResponse.json({ error: 'Message not found or not deletable' }, { status: 404 });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error';
     return NextResponse.json({ error: msg }, { status: 403 });

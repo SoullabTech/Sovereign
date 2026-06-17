@@ -202,6 +202,39 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     }));
   };
 
+  const handleEdit = async (messageId: string, newBody: string) => {
+    const res = await fetch(`/api/team/channels/${channel.id}/messages`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId, body: newBody }),
+    });
+    if (res.status === 403) { handleAccessRevoked(); throw new Error('Access revoked'); }
+    if (!res.ok) throw new Error('Failed to edit');
+    const { message } = await res.json();
+    setMessages(prev => prev.map(m =>
+      m.id === messageId ? { ...m, body: message.body, editedAt: message.editedAt } : m
+    ));
+  };
+
+  const handleDelete = async (messageId: string) => {
+    const res = await fetch(`/api/team/channels/${channel.id}/messages`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId }),
+    });
+    if (res.status === 403) { handleAccessRevoked(); throw new Error('Access revoked'); }
+    if (!res.ok) throw new Error('Failed to delete');
+    const { tombstoned } = await res.json().catch(() => ({ tombstoned: false }));
+    setMessages(prev =>
+      tombstoned
+        // Parent with live replies: keep it as a "[deleted]" tombstone so the thread stays reachable.
+        ? prev.map(m => m.id === messageId
+            ? { ...m, body: '', deletedAt: new Date().toISOString(), reactions: [] }
+            : m)
+        : prev.filter(m => m.id !== messageId)
+    );
+  };
+
   const handleReflect = async (messageId: string, mode: string) => {
     const msg = messages.find(m => m.id === messageId);
     if (!msg) return;
@@ -410,6 +443,8 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
                 onOpenThread={setThreadMessage}
                 onReflect={handleReflect}
                 onCaptureDecision={handleCaptureDecision}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
                 captured={capturedIds.has(msg.id)}
               />
             </div>

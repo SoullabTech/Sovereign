@@ -192,7 +192,16 @@ export async function getMessages(
      LEFT JOIN team_messages replies ON replies.parent_id = tm.id AND replies.deleted_at IS NULL
      WHERE tm.channel_id = $1
        AND tm.parent_id IS NULL
-       AND tm.deleted_at IS NULL
+       AND (
+         tm.deleted_at IS NULL
+         -- A deleted parent that still has live replies stays visible as a
+         -- "[deleted]" tombstone, so the thread (and its replies) remains reachable
+         -- and nothing downstream trips over orphaned replies under a hidden parent.
+         OR EXISTS (
+           SELECT 1 FROM team_messages r
+           WHERE r.parent_id = tm.id AND r.deleted_at IS NULL
+         )
+       )
        ${beforeClause}
      GROUP BY tm.id, m.name, m.username
      ORDER BY tm.created_at ASC
@@ -447,6 +456,115 @@ export async function sendMessage(
     messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [],
   };
+}
+
+/**
+ * Edit a message's text body. Ownership is enforced in SQL — the UPDATE only
+ * matches when sender_id = editorId (and the message isn't deleted), scoped to the
+ * channel so a foreign message id can't be touched even with channel access. Sets
+ * edited_at so the UI can surface an "edited" marker. Throws if no row matched
+ * (not the author / not found / deleted).
+ */
+export async function editMessage(
+  channelId: string,
+  messageId: string,
+  editorId: string,
+  newBody: string
+): Promise<TeamMessage> {
+  const trimmed = newBody.trim();
+  if (!trimmed) throw new Error('Message body cannot be empty');
+  if (trimmed.length > 8000) throw new Error('Message too long (max 8000 chars)');
+
+  const result = await query<{
+    id: string;
+    channel_id: string;
+    sender_id: string;
+    body: string;
+    parent_id: string | null;
+    edited_at: string | null;
+    deleted_at: string | null;
+    created_at: string;
+    message_kind: string;
+  }>(
+    `UPDATE team_messages
+        SET body = $1, edited_at = NOW()
+      WHERE id = $2
+        AND channel_id = $3
+        AND sender_id = $4
+        AND deleted_at IS NULL
+      RETURNING *`,
+    [trimmed, messageId, channelId, editorId]
+  );
+
+  const row = result.rows[0];
+  if (!row) throw new Error('Message not found or not editable');
+
+  const nameResult = await query<{ name: string | null; username: string }>(
+    `SELECT name, username FROM members WHERE id = $1`,
+    [editorId]
+  );
+  const sender = nameResult.rows[0];
+
+  const replyResult = await query<{ reply_count: string }>(
+    `SELECT COUNT(*) AS reply_count FROM team_messages WHERE parent_id = $1 AND deleted_at IS NULL`,
+    [messageId]
+  );
+
+  return {
+    id: row.id,
+    channelId: row.channel_id,
+    senderId: row.sender_id,
+    senderName: sender?.name || sender?.username || 'Unknown',
+    body: row.body,
+    parentId: row.parent_id,
+    editedAt: row.edited_at,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at,
+    messageKind: (row.message_kind as MessageKind) ?? 'build',
+    reactions: [],
+    replyCount: parseInt(replyResult.rows[0]?.reply_count ?? '0', 10) || 0,
+  };
+}
+
+/**
+ * Soft-delete a message. Ownership is enforced in SQL — the UPDATE only matches
+ * when sender_id = deleterId (and the message isn't already deleted), scoped to the
+ * channel. Sets deleted_at AND clears the body so the content is genuinely removed,
+ * not just hidden (all read paths already filter deleted_at IS NULL). The row is
+ * kept (not hard-deleted) so thread replies that FK-reference it stay valid.
+ *
+ * Returns { deleted, tombstoned }. `tombstoned` is true when the deleted message is
+ * a top-level message that still has live replies — getMessages keeps surfacing it
+ * as a "[deleted]" placeholder so the thread stays reachable. A childless message
+ * (or any reply) is fully hidden instead.
+ */
+export async function deleteMessage(
+  channelId: string,
+  messageId: string,
+  deleterId: string
+): Promise<{ deleted: boolean; tombstoned: boolean }> {
+  const result = await query<{ id: string; parent_id: string | null }>(
+    `UPDATE team_messages
+        SET deleted_at = NOW(), body = ''
+      WHERE id = $1
+        AND channel_id = $2
+        AND sender_id = $3
+        AND deleted_at IS NULL
+      RETURNING id, parent_id`,
+    [messageId, channelId, deleterId]
+  );
+  const row = result.rows[0];
+  if (!row) return { deleted: false, tombstoned: false };
+
+  let tombstoned = false;
+  if (row.parent_id === null) {
+    const replies = await query(
+      `SELECT 1 FROM team_messages WHERE parent_id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [messageId]
+    );
+    tombstoned = replies.rows.length > 0;
+  }
+  return { deleted: true, tombstoned };
 }
 
 export async function markChannelRead(channelId: string, memberId: string): Promise<void> {
