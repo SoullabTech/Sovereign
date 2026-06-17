@@ -111,7 +111,12 @@ export async function getInbox(
       WHERE t.practitioner_id = $1
         AND t.status = 'active'
         ${domainFilter}
-      GROUP BY t.id
+      -- Explicit GROUP BY of every non-aggregated t.* column. With a PRIMARY KEY
+      -- on comms_threads.id (added in migration 20260617000002) PG can infer the
+      -- functional dependency from t.id alone, but the explicit list also works on
+      -- any environment where that migration has not yet run, so we keep it for
+      -- portability rather than relying on the inference.
+      GROUP BY t.id, t.domain, t.thread_type, t.client_id, t.last_message_at
     )
     SELECT
       ts.thread_id,
