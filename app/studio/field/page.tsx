@@ -2,104 +2,152 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Wind, Scale, BookOpen, Calendar, CheckSquare, Mic,
-  ChevronRight, RefreshCw, Flame, Compass, Sprout, Heart, Plus, X, Pencil, ArrowRightLeft,
-  Sparkles, Users, ArrowRight, CalendarDays,
+  Flame, AlertCircle, Sprout, Plus, X, GripVertical, RefreshCw, Sparkles, ArrowRight,
+  CalendarDays, Users, Wind, Scale, FileText, Shuffle, CloudSun, Lightbulb, Pencil,
+  ArrowRightLeft, Maximize2, Minimize2, ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useTeamContext } from '@/hooks/useStudioData';
+import { FIELD_QUOTES, dailyIndex, type Mood } from '@/lib/studio/fieldQuotes';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXPLORATORY LANDSCAPE — the Personal Studio home (Approach B)
+// PERSONAL FIELD — a workspace you work IN, not a directory that links away.
 //
-// The full home for the team to explore: greeting + person-set inner weather +
-// a Reflect-with-MAIA entry + the four-question floor as vivid cards (with Field
-// Notes: place / move / edit / remove) + honest placeholders for the imagined
-// panels (Today, People) + a Navigate strip.
+// Worked here, not elsewhere: a thin state strip (inner weather · quote · what
+// inspires you) you set, Today + People at the top, and three CURATED fields you
+// fill yourself — Important · Needs attention · Emerging — pulling in your Changes,
+// Decisions, and free notes, with in-place add / subtract / move and drag-to-reorder.
 //
-// Oath guard: the person authors; MAIA never infers or decides their attention.
-// Inner weather is person-TAPPED (persisted locally), never inferred. Placeholder
-// panels are clearly imagined, not faked data.
+// Oath guard: the person authors; MAIA never infers, ranks, or decides. Weather is
+// person-tapped. The quote is OFFERED (you choose). Placement is CURATION — "Important"
+// is your label, not a computed score. Nothing here is faked or system-significance.
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface FloorItem {
+type FieldKey = 'important' | 'attention' | 'emerging';
+
+interface AttentionItem {
   id: string;
-  source: 'change' | 'decision' | 'note';
-  sourceId: string;
-  title: string;
-  context?: string;
-  href?: string;       // omitted for authored notes (they live in the field, not behind a door)
+  kind: 'change' | 'decision' | 'note';
+  refId: string | null;
+  label: string;
+  href?: string;
+  position: number;
+  gone: boolean;
   createdAt: string;
 }
+type AttentionFields = Record<FieldKey, AttentionItem[]>;
 
-interface FieldFloor {
-  alive: FloorItem[];
-  asking: FloorItem[];
-  emerging: FloorItem[];
-  tending: FloorItem[];
-}
+interface PickOption { id: string; title: string; status: string }
+interface Options { changes: PickOption[]; decisions: PickOption[] }
 
-type FloorKey = keyof FieldFloor;
-
-interface FloorQuestion {
-  key: FloorKey;
-  question: string;
+interface FieldDef {
+  key: FieldKey;
+  label: string;
   icon: React.ComponentType<{ className?: string }>;
-  accent: 'amber' | 'blue' | 'emerald' | 'purple';
+  grad: string;     // header gradient
+  ring: string;     // accent ring/border
+  text: string;     // accent text
   empty: string;
-  placeholder: string;   // human invitation to place a note here — never "+ New task"
 }
 
-const FLOOR: FloorQuestion[] = [
-  { key: 'alive',    question: 'What is alive?',                icon: Flame,   accent: 'amber',   empty: 'Quiet here.',               placeholder: 'Name what’s alive…' },
-  { key: 'asking',   question: 'What is asking for attention?', icon: Compass, accent: 'blue',    empty: 'Nothing you’ve marked.',    placeholder: 'What’s asking for your attention?' },
-  { key: 'emerging', question: 'What is emerging?',             icon: Sprout,  accent: 'emerald', empty: 'Nothing new taking shape.', placeholder: 'What’s taking shape?' },
-  { key: 'tending',  question: 'What are you tending?',         icon: Heart,   accent: 'purple',  empty: 'Nothing in motion.',        placeholder: 'What are you tending?' },
-];
+const FIELD_DEFS: Record<FieldKey, FieldDef> = {
+  important: { key: 'important', label: 'Important', icon: Flame, grad: 'from-amber-500/25 via-orange-500/10 to-transparent', ring: 'border-amber-500/30', text: 'text-amber-300', empty: 'What matters most right now? Place it here.' },
+  attention: { key: 'attention', label: 'Needs attention', icon: AlertCircle, grad: 'from-rose-500/25 via-pink-500/10 to-transparent', ring: 'border-rose-500/30', text: 'text-rose-300', empty: 'What can’t wait? Pull it in.' },
+  emerging:  { key: 'emerging',  label: 'Emerging', icon: Sprout, grad: 'from-emerald-500/25 via-teal-500/10 to-transparent', ring: 'border-emerald-500/30', text: 'text-emerald-300', empty: 'What’s taking shape? Name it here.' },
+};
+const FIELD_ORDER: FieldKey[] = ['important', 'attention', 'emerging'];
 
-// Inner weather — person-TAPPED only. The system never infers it.
 const WEATHER = ['Grounded', 'Restless', 'Stretched', 'Curious', 'Tender', 'Open'];
 
-const ACCENT_TEXT: Record<string, string> = {
-  amber: 'text-amber-400', blue: 'text-blue-400', emerald: 'text-emerald-400', purple: 'text-purple-400',
+const KIND_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+  change: Wind, decision: Scale, note: FileText,
 };
-const ACCENT_BORDER: Record<string, string> = {
-  amber: 'border-l-amber-500/40', blue: 'border-l-blue-500/40', emerald: 'border-l-emerald-500/40', purple: 'border-l-purple-500/40',
-};
+const KIND_LABEL: Record<string, string> = { change: 'Change', decision: 'Decision', note: 'Note' };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Drag-to-reorder — persisted per device (movable boxes, not static)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function useReorder(storageKey: string, initial: string[]) {
+  const [order, setOrder] = useState<string[]>(initial);
+  const dragKey = useRef<string | null>(null);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const arr = JSON.parse(saved);
+        if (Array.isArray(arr)) {
+          const known = arr.filter((k: string) => initial.includes(k));
+          const missing = initial.filter((k) => !known.includes(k));
+          if (known.length) setOrder([...known, ...missing]);
+        }
+      }
+    } catch { /* best effort */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+  const persist = (next: string[]) => {
+    setOrder(next);
+    try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* best effort */ }
+  };
+  const onDragStart = (k: string) => { dragKey.current = k; };
+  const onDrop = (target: string) => {
+    const from = dragKey.current; dragKey.current = null;
+    if (!from || from === target) return;
+    const next = [...order];
+    const fi = next.indexOf(from); const ti = next.indexOf(target);
+    if (fi < 0 || ti < 0) return;
+    next.splice(fi, 1); next.splice(ti, 0, from);
+    persist(next);
+  };
+  return { order, onDragStart, onDrop };
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function FieldPage() {
-  const [floor, setFloor] = useState<FieldFloor | null>(null);
+  const [fields, setFields] = useState<AttentionFields>({ important: [], attention: [], emerging: [] });
+  const [options, setOptions] = useState<Options>({ changes: [], decisions: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [name, setName] = useState('');
   const [dayLabel, setDayLabel] = useState('');
+  const [weather, setWeather] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const { currentTeamId, includePersonal } = useTeamContext();
+
+  const fieldOrder = useReorder('studio:fieldOrder', FIELD_ORDER);
+  const topOrder = useReorder('studio:topOrder', ['today', 'people']);
 
   useEffect(() => {
     setName(getDisplayName());
     try {
       const d = new Date();
       setDayLabel(`${d.toLocaleDateString(undefined, { weekday: 'long' }).toUpperCase()} · ${d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`);
+      setWeather(localStorage.getItem('studio:fieldWeather'));
     } catch { /* best effort */ }
   }, []);
 
-  const fetchFloor = useCallback(async (isRefresh = false) => {
+  const load = useCallback(async (isRefresh = false) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     if (isRefresh) setRefreshing(true);
     try {
-      const params = new URLSearchParams();
-      if (currentTeamId) params.set('teamId', currentTeamId);
-      params.set('includePersonal', String(includePersonal));
-      const res = await apiFetch(`/api/studio/field/pulse?${params.toString()}`, { signal: controller.signal });
-      if (res.ok && !controller.signal.aborted) setFloor(await res.json());
+      const p = new URLSearchParams();
+      if (currentTeamId) p.set('teamId', currentTeamId);
+      p.set('includePersonal', String(includePersonal));
+      const qs = p.toString();
+      const [aRes, oRes] = await Promise.all([
+        apiFetch(`/api/studio/field/attention?${qs}`, { signal: controller.signal }),
+        apiFetch(`/api/studio/field/attention/options?${qs}`, { signal: controller.signal }),
+      ]);
+      if (!controller.signal.aborted) {
+        if (aRes.ok) setFields(await aRes.json());
+        if (oRes.ok) setOptions(await oRes.json());
+      }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
     } finally {
@@ -107,117 +155,113 @@ export default function FieldPage() {
     }
   }, [currentTeamId, includePersonal]);
 
-  useEffect(() => {
-    fetchFloor();
-    return () => { abortRef.current?.abort(); };
-  }, [fetchFloor]);
+  useEffect(() => { load(); return () => abortRef.current?.abort(); }, [load]);
 
-  const addNote = useCallback(async (section: FloorKey, body: string) => {
+  const place = useCallback(async (field: FieldKey, kind: AttentionItem['kind'], label: string, refId?: string) => {
     try {
-      await apiFetch('/api/studio/field/notes', {
+      await apiFetch('/api/studio/field/attention', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section, body, teamId: currentTeamId ?? undefined }),
+        body: JSON.stringify({ field, kind, label, refId, teamId: currentTeamId ?? undefined }),
       });
     } catch { /* best effort */ }
-    await fetchFloor(true);
-  }, [currentTeamId, fetchFloor]);
+    await load(true);
+  }, [currentTeamId, load]);
 
-  const removeNote = useCallback(async (noteId: string) => {
-    try { await apiFetch(`/api/studio/field/notes/${noteId}`, { method: 'DELETE' }); } catch { /* best effort */ }
-    await fetchFloor(true);
-  }, [fetchFloor]);
+  const remove = useCallback(async (id: string) => {
+    try { await apiFetch(`/api/studio/field/attention/${id}`, { method: 'DELETE' }); } catch { /* */ }
+    await load(true);
+  }, [load]);
 
-  const editNote = useCallback(async (noteId: string, body: string) => {
+  const move = useCallback(async (id: string, field: FieldKey) => {
     try {
-      await apiFetch(`/api/studio/field/notes/${noteId}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body }),
+      await apiFetch(`/api/studio/field/attention/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field }),
       });
-    } catch { /* best effort */ }
-    await fetchFloor(true);
-  }, [fetchFloor]);
+    } catch { /* */ }
+    await load(true);
+  }, [load]);
 
-  // Migration: section is state, not shape — identity + created_at persist.
-  const moveNote = useCallback(async (noteId: string, section: FloorKey) => {
+  const setWeatherPersist = useCallback((w: string | null) => {
+    setWeather(w);
     try {
-      await apiFetch(`/api/studio/field/notes/${noteId}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section }),
-      });
+      if (w) localStorage.setItem('studio:fieldWeather', w);
+      else localStorage.removeItem('studio:fieldWeather');
     } catch { /* best effort */ }
-    await fetchFloor(true);
-  }, [fetchFloor]);
+  }, []);
 
   const greet = getGreetWord();
 
+  const topPanels: Record<string, React.ReactNode> = {
+    today: <TodayPanel teamId={currentTeamId} includePersonal={includePersonal} />,
+    people: <PeoplePanel teamId={currentTeamId} includePersonal={includePersonal} />,
+  };
+
   return (
-    <div className="min-h-screen bg-[#1a1a2e] p-6 sm:p-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-[#1a1a2e] p-5 sm:p-8">
+      <div className="max-w-6xl mx-auto">
         {/* Greeting */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              {dayLabel && <p className="text-slate-500 text-xs tracking-wider uppercase mb-2">{dayLabel}</p>}
-              <h1 className="text-3xl font-light text-white mb-1">Good {greet}{name ? `, ${name}` : ''}</h1>
-              <p className="text-slate-400">What is alive in your field.</p>
-            </div>
-            {!loading && (
-              <button
-                onClick={() => fetchFloor(true)}
-                disabled={refreshing}
-                className="p-2 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-white/5 transition disabled:opacity-50"
-                title="Refresh"
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
-            )}
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            {dayLabel && <p className="text-slate-500 text-xs tracking-wider uppercase mb-2">{dayLabel}</p>}
+            <h1 className="text-3xl font-light text-white mb-1">Good {greet}{name ? `, ${name}` : ''}</h1>
+            <p className="text-slate-400">Your field — tend it here.</p>
           </div>
+          {!loading && (
+            <button onClick={() => load(true)} disabled={refreshing} title="Refresh"
+              className="p-2 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-white/5 transition disabled:opacity-50">
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+          )}
         </div>
 
-        {/* Inner weather — person-set */}
-        <WeatherStrip />
+        {/* State strip — three states in a row, all else around them */}
+        <div className="grid gap-3 md:grid-cols-3 mb-6">
+          <WeatherCell weather={weather} onPick={setWeatherPersist} />
+          <QuoteCell weather={weather} />
+          <InspiresCell />
+        </div>
 
-        {/* Reflect with MAIA — entry into the companion */}
+        {/* Reflect with MAIA — entry into the companion (still in-page) */}
         <MaiaReflect />
 
+        {/* Today + People — at the top, movable */}
+        <div className="grid gap-4 md:grid-cols-2 mb-8">
+          {topOrder.order.map((k) => (
+            <div key={k}
+              draggable
+              onDragStart={() => topOrder.onDragStart(k)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => topOrder.onDrop(k)}>
+              {topPanels[k]}
+            </div>
+          ))}
+        </div>
+
+        {/* Three curated fields — the workspace centerpiece */}
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
           </div>
         ) : (
-          <>
-            {/* The four questions — vivid cards, with Field Notes */}
-            <div className="grid sm:grid-cols-2 gap-4 mb-10">
-              {FLOOR.map((q) => (
-                <FloorCard
-                  key={q.key}
-                  question={q}
-                  items={floor?.[q.key] ?? []}
-                  onAdd={addNote}
-                  onRemove={removeNote}
-                  onEdit={editNote}
-                  onMove={moveNote}
+          <div className="grid gap-4 lg:grid-cols-3 items-start">
+            {fieldOrder.order.map((k) => {
+              const def = FIELD_DEFS[k as FieldKey];
+              return (
+                <AttentionFieldCard
+                  key={k}
+                  def={def}
+                  items={fields[k as FieldKey] ?? []}
+                  options={options}
+                  onPlace={place}
+                  onRemove={remove}
+                  onMove={move}
+                  onDragStart={() => fieldOrder.onDragStart(k)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => fieldOrder.onDrop(k)}
                 />
-              ))}
-            </div>
-
-            {/* Today (day calendar) + People — person-authored, real */}
-            <div className="grid sm:grid-cols-2 gap-4 mb-10">
-              <TodayPanel teamId={currentTeamId} includePersonal={includePersonal} />
-              <PeoplePanel teamId={currentTeamId} includePersonal={includePersonal} />
-            </div>
-
-            {/* Navigate — person-initiated; never injected into the field */}
-            <section>
-              <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-3">Navigate</h2>
-              <div className="flex flex-wrap gap-2">
-                <NavChip href="/studio/changes" icon={Wind} label="Changes" />
-                <NavChip href="/studio/decisions" icon={Scale} label="Decisions" />
-                <NavChip href="/studio/scribe" icon={Mic} label="Scribe" />
-                <NavChip href="/studio/calendar" icon={Calendar} label="Calendar" />
-                <NavChip href="/studio/tasks" icon={CheckSquare} label="Tasks" />
-                <NavChip href="/studio/vault" icon={BookOpen} label="Vault" />
-              </div>
-            </section>
-          </>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
@@ -225,263 +269,350 @@ export default function FieldPage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inner weather — person-tapped (never inferred); persisted per device
+// State strip cells
 // ─────────────────────────────────────────────────────────────────────────────
 
-function WeatherStrip() {
-  const [weather, setWeather] = useState<string | null>(null);
-  useEffect(() => {
-    try { setWeather(localStorage.getItem('studio:fieldWeather')); } catch { /* best effort */ }
-  }, []);
-  const pick = (w: string) => {
-    const next = weather === w ? null : w; // tap again to clear
-    setWeather(next);
-    try {
-      if (next) localStorage.setItem('studio:fieldWeather', next);
-      else localStorage.removeItem('studio:fieldWeather');
-    } catch { /* best effort */ }
-  };
+function StateShell({ icon: Icon, title, children }: { icon: React.ComponentType<{ className?: string }>; title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-8">
-      <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2">Inner weather</p>
-      <div className="flex flex-wrap gap-2">
-        {WEATHER.map((w) => (
-          <button
-            key={w}
-            onClick={() => pick(w)}
-            className={`px-3 py-1.5 rounded-full text-sm border transition ${
-              weather === w
-                ? 'bg-white/15 border-white/30 text-white'
-                : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20'
-            }`}
-          >
-            {w}
-          </button>
-        ))}
-      </div>
+    <div className="rounded-xl bg-white/[0.02] border border-white/5 p-3.5 flex flex-col min-h-[112px]">
+      <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+        <Icon className="w-3.5 h-3.5" /> {title}
+      </p>
+      {children}
     </div>
   );
 }
 
+function WeatherCell({ weather, onPick }: { weather: string | null; onPick: (w: string | null) => void }) {
+  const [customs, setCustoms] = useState<string[]>([]);
+  const [naming, setNaming] = useState(false);
+  const [draft, setDraft] = useState('');
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('studio:fieldWeatherCustom');
+      if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) setCustoms(a.filter((x) => typeof x === 'string')); }
+    } catch { /* best effort */ }
+  }, []);
+  const saveCustom = () => {
+    const v = draft.trim();
+    if (!v) { setNaming(false); return; }
+    const next = Array.from(new Set([...customs, v])).slice(-6);
+    setCustoms(next);
+    try { localStorage.setItem('studio:fieldWeatherCustom', JSON.stringify(next)); } catch { /* */ }
+    onPick(v); setDraft(''); setNaming(false);
+  };
+  const pick = (w: string) => onPick(weather === w ? null : w);
+  const all = [...WEATHER, ...customs.filter((c) => !WEATHER.includes(c))];
+  return (
+    <StateShell icon={CloudSun} title="Inner weather">
+      <div className="flex flex-wrap gap-1.5">
+        {all.map((w) => (
+          <button key={w} onClick={() => pick(w)}
+            className={`px-2.5 py-1 rounded-full text-xs border transition ${
+              weather === w ? 'bg-white/15 border-white/30 text-white' : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20'
+            }`}>
+            {w}
+          </button>
+        ))}
+        {naming ? (
+          <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') saveCustom(); if (e.key === 'Escape') { setDraft(''); setNaming(false); } }}
+            onBlur={saveCustom} placeholder="name it…"
+            className="px-2.5 py-1 rounded-full text-xs bg-white/[0.04] border border-white/20 text-white/90 placeholder-slate-600 focus:outline-none w-24" />
+        ) : (
+          <button onClick={() => setNaming(true)}
+            className="px-2.5 py-1 rounded-full text-xs border border-dashed border-white/15 text-slate-500 hover:text-slate-300 hover:border-white/30 transition flex items-center gap-1">
+            <Plus className="w-3 h-3" /> Other
+          </button>
+        )}
+      </div>
+    </StateShell>
+  );
+}
+
+function QuoteCell({ weather }: { weather: string | null }) {
+  const [idx, setIdx] = useState<number | null>(null);
+  const daySeed = (() => { try { return new Date().toISOString().slice(0, 10); } catch { return 'seed'; } })();
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`studio:fieldQuote:${daySeed}`);
+      if (saved !== null) { const n = Number(saved); if (Number.isFinite(n) && n >= 0 && n < FIELD_QUOTES.length) { setIdx(n); return; } }
+    } catch { /* */ }
+    setIdx(dailyIndex(daySeed, FIELD_QUOTES.length));
+  }, [daySeed]);
+  const set = (n: number) => {
+    setIdx(n);
+    try { localStorage.setItem(`studio:fieldQuote:${daySeed}`, String(n)); } catch { /* */ }
+  };
+  const surprise = () => { if (FIELD_QUOTES.length) set(Math.floor(Math.random() * FIELD_QUOTES.length)); };
+  const forWeather = () => {
+    if (!weather) return;
+    const matches = FIELD_QUOTES.map((q, i) => ({ q, i })).filter(({ q }) => q.moods.includes(weather as Mood) || q.moods.includes('any'));
+    if (matches.length) set(matches[Math.floor(Math.random() * matches.length)].i);
+  };
+  const q = idx !== null ? FIELD_QUOTES[idx] : null;
+  return (
+    <StateShell icon={Sparkles} title="Quote of the day">
+      <div className="flex-1 flex flex-col justify-between gap-2">
+        {q ? (
+          <p className="text-sm text-white/85 leading-snug">
+            “{q.text}”{q.by && <span className="text-slate-500 text-xs"> — {q.by}</span>}
+          </p>
+        ) : <p className="text-sm text-slate-600">…</p>}
+        <div className="flex items-center gap-2">
+          <button onClick={surprise} title="Surprise me" className="text-[11px] text-slate-500 hover:text-slate-300 transition flex items-center gap-1">
+            <Shuffle className="w-3 h-3" /> Surprise
+          </button>
+          {weather && (
+            <button onClick={forWeather} title={`For feeling ${weather}`} className="text-[11px] text-slate-500 hover:text-slate-300 transition flex items-center gap-1">
+              <CloudSun className="w-3 h-3" /> For your weather
+            </button>
+          )}
+        </div>
+      </div>
+    </StateShell>
+  );
+}
+
+function InspiresCell() {
+  const daySeed = (() => { try { return new Date().toISOString().slice(0, 10); } catch { return 'seed'; } })();
+  const key = `studio:inspires:${daySeed}`;
+  const [text, setText] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  useEffect(() => {
+    try { setText(localStorage.getItem(key) || ''); } catch { /* */ }
+  }, [key]);
+  const save = () => {
+    const v = draft.trim();
+    setText(v);
+    try { if (v) localStorage.setItem(key, v); else localStorage.removeItem(key); } catch { /* */ }
+    setEditing(false);
+  };
+  return (
+    <StateShell icon={Lightbulb} title="What inspires you today">
+      {editing ? (
+        <div className="flex-1 flex flex-col gap-2">
+          <textarea autoFocus rows={2} value={draft} onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); } if (e.key === 'Escape') setEditing(false); }}
+            placeholder="A person, an idea, a line…"
+            className="w-full bg-white/[0.04] border border-white/15 rounded-lg px-2.5 py-1.5 text-sm text-white/90 placeholder-slate-600 focus:outline-none resize-none" />
+          <div className="flex gap-2">
+            <button onClick={save} className="text-[11px] text-amber-300 hover:text-amber-200">Save</button>
+            <button onClick={() => setEditing(false)} className="text-[11px] text-slate-500 hover:text-slate-300">Cancel</button>
+          </div>
+        </div>
+      ) : text ? (
+        <button onClick={() => { setDraft(text); setEditing(true); }} className="text-left group flex-1">
+          <p className="text-sm text-white/85 leading-snug group-hover:text-white transition">{text}</p>
+          <span className="text-[11px] text-slate-600 group-hover:text-slate-400 transition">edit</span>
+        </button>
+      ) : (
+        <button onClick={() => { setDraft(''); setEditing(true); }}
+          className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-400 transition">
+          <Plus className="w-3.5 h-3.5" /> Name it
+        </button>
+      )}
+    </StateShell>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Reflect with MAIA — the entry into the companion
+// Reflect with MAIA
 // ─────────────────────────────────────────────────────────────────────────────
 
 function MaiaReflect() {
   return (
-    <Link
-      href="/studio/maia"
-      className="group block mb-10 rounded-xl bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 border border-white/10 hover:border-white/20 transition p-4"
-    >
-      <div className="flex items-center gap-3">
-        <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <div className="text-white/90 text-sm font-medium">What’s most alive today?</div>
-          <div className="text-slate-400 text-xs">Reflect with MAIA</div>
-        </div>
-        <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition shrink-0" />
+    <Link href="/studio/maia"
+      className="group flex items-center gap-3 mb-8 rounded-xl bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 border border-white/10 hover:border-white/20 transition p-3.5">
+      <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="text-white/90 text-sm font-medium">What’s most alive today?</div>
+        <div className="text-slate-400 text-xs">Reflect with MAIA</div>
       </div>
+      <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition shrink-0" />
     </Link>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Floor card — one question as a card + its items + a quiet invitation to place
+// Curated field card — vivid header, scrollable/expandable body, in-place add/subtract
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FloorCard({
-  question, items, onAdd, onRemove, onEdit, onMove,
+function AttentionFieldCard({
+  def, items, options, onPlace, onRemove, onMove, onDragStart, onDragOver, onDrop,
 }: {
-  question: FloorQuestion;
-  items: FloorItem[];
-  onAdd: (section: FloorKey, body: string) => Promise<void>;
+  def: FieldDef;
+  items: AttentionItem[];
+  options: Options;
+  onPlace: (field: FieldKey, kind: AttentionItem['kind'], label: string, refId?: string) => Promise<void>;
   onRemove: (id: string) => void;
-  onEdit: (id: string, body: string) => Promise<void>;
-  onMove: (id: string, section: FloorKey) => Promise<void>;
+  onMove: (id: string, field: FieldKey) => void;
+  onDragStart: () => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: () => void;
 }) {
-  const Icon = question.icon;
-  const isEmpty = items.length === 0;
+  const Icon = def.icon;
+  const [expanded, setExpanded] = useState(false);
+  const [mode, setMode] = useState<null | 'note' | 'pick'>(null);
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const placedRefIds = new Set(items.filter((i) => i.refId).map((i) => i.refId));
+  const pickable = [
+    ...options.changes.map((c) => ({ kind: 'change' as const, id: c.id, title: c.title })),
+    ...options.decisions.map((d) => ({ kind: 'decision' as const, id: d.id, title: d.title })),
+  ].filter((o) => !placedRefIds.has(o.id));
+
+  const submitNote = async () => {
+    const v = note.trim();
+    if (!v || saving) return;
+    setSaving(true);
+    try { await onPlace(def.key, 'note', v); setNote(''); setMode(null); } finally { setSaving(false); }
+  };
+  const pick = async (o: { kind: 'change' | 'decision'; id: string; title: string }) => {
+    if (saving) return;
+    setSaving(true);
+    try { await onPlace(def.key, o.kind, o.title, o.id); setMode(null); } finally { setSaving(false); }
+  };
+
   return (
-    <section className="rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
-      <h2 className={`text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${isEmpty ? 'text-slate-600' : 'text-slate-400'}`}>
-        <Icon className={`w-4 h-4 ${isEmpty ? 'text-slate-600' : ACCENT_TEXT[question.accent]}`} />
-        {question.question}
-      </h2>
-      {isEmpty ? (
-        <p className="text-sm text-slate-600 pl-1">{question.empty}</p>
-      ) : (
-        <div className="space-y-2">
-          {items.slice(0, 5).map((item) => (
-            <FloorItemCard key={item.id} item={item} accent={question.accent} currentSection={question.key} onRemove={onRemove} onEdit={onEdit} onMove={onMove} />
-          ))}
-          {items.length > 5 && (
-            <p className="text-xs text-slate-600 mt-2 pl-1">+{items.length - 5} more</p>
-          )}
-        </div>
-      )}
-      <AddNote section={question.key} placeholder={question.placeholder} accent={question.accent} onAdd={onAdd} />
+    <section
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className={`rounded-2xl bg-white/[0.02] border ${def.ring} overflow-hidden flex flex-col`}>
+      {/* Vivid header */}
+      <header className={`bg-gradient-to-br ${def.grad} px-4 py-3 flex items-center gap-2.5`}>
+        <button
+          draggable
+          onDragStart={onDragStart}
+          title="Drag to reorder"
+          className="cursor-grab active:cursor-grabbing text-white/40 hover:text-white/70 transition shrink-0">
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <Icon className={`w-5 h-5 ${def.text} shrink-0`} />
+        <h2 className="text-white font-medium flex-1 min-w-0">{def.label}</h2>
+        <span className="text-xs text-white/50 tabular-nums">{items.length}</span>
+        {items.length > 3 && (
+          <button onClick={() => setExpanded((v) => !v)} title={expanded ? 'Collapse' : 'Expand'}
+            className="text-white/40 hover:text-white/70 transition">
+            {expanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+          </button>
+        )}
+      </header>
+
+      {/* Body — scrollable; expand to grow the box */}
+      <div className={`px-3 py-3 ${expanded ? '' : 'max-h-72 overflow-y-auto'}`}>
+        {items.length === 0 ? (
+          <p className="text-sm text-slate-600 px-1 py-2">{def.empty}</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((it) => (
+              <AttentionRow key={it.id} item={it} def={def} onRemove={onRemove} onMove={onMove} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer — add in place (note or pull in) */}
+      <div className="px-3 pb-3 mt-auto border-t border-white/5 pt-3">
+        {mode === 'note' ? (
+          <div className="space-y-2">
+            <textarea autoFocus rows={2} value={note} onChange={(e) => setNote(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitNote(); } if (e.key === 'Escape') { setNote(''); setMode(null); } }}
+              placeholder="Name what belongs here…"
+              className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20 resize-none" />
+            <div className="flex items-center gap-2">
+              <button onClick={submitNote} disabled={saving || !note.trim()} className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${def.text} hover:bg-white/15 transition disabled:opacity-40`}>{saving ? 'Placing…' : 'Place'}</button>
+              <button onClick={() => { setNote(''); setMode(null); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+            </div>
+          </div>
+        ) : mode === 'pick' ? (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[11px] text-slate-500 uppercase tracking-wider">Pull in</p>
+              <button onClick={() => setMode(null)} className="text-slate-600 hover:text-slate-300 transition"><X className="w-3.5 h-3.5" /></button>
+            </div>
+            {pickable.length === 0 ? (
+              <p className="text-xs text-slate-600 py-1">Nothing open to pull in. Write a note instead.</p>
+            ) : (
+              <div className="max-h-44 overflow-y-auto space-y-1">
+                {pickable.map((o) => {
+                  const KIcon = KIND_ICON[o.kind];
+                  return (
+                    <button key={`${o.kind}-${o.id}`} onClick={() => pick(o)} disabled={saving}
+                      className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition disabled:opacity-40">
+                      <KIcon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <span className="text-sm text-white/85 truncate flex-1">{o.title}</span>
+                      <span className="text-[10px] text-slate-600 uppercase">{KIND_LABEL[o.kind]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMode('note')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition">
+              <Plus className="w-3.5 h-3.5" /> Note
+            </button>
+            <button onClick={() => setMode('pick')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition">
+              <ChevronRight className="w-3.5 h-3.5" /> Pull in
+            </button>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
 
-function FloorItemCard({
-  item, accent, currentSection, onRemove, onEdit, onMove,
+function AttentionRow({
+  item, def, onRemove, onMove,
 }: {
-  item: FloorItem;
-  accent: string;
-  currentSection?: FloorKey;
-  onRemove?: (id: string) => void;
-  onEdit?: (id: string, body: string) => Promise<void>;
-  onMove?: (id: string, section: FloorKey) => Promise<void>;
+  item: AttentionItem;
+  def: FieldDef;
+  onRemove: (id: string) => void;
+  onMove: (id: string, field: FieldKey) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(item.title);
-  const [saving, setSaving] = useState(false);
   const [moving, setMoving] = useState(false);
-  const [moveSaving, setMoveSaving] = useState(false);
-
-  if (item.source === 'note') {
-    if (editing && onEdit) {
-      const save = async () => {
-        const b = draft.trim();
-        if (!b || saving) return;
-        setSaving(true);
-        try { await onEdit(item.sourceId, b); setEditing(false); } finally { setSaving(false); }
-      };
-      return (
-        <div className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.04] border border-white/10 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
-          <textarea
-            autoFocus
-            rows={2}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
-              if (e.key === 'Escape') { setDraft(item.title); setEditing(false); }
-            }}
-            className="w-full bg-transparent text-white/90 text-sm leading-relaxed focus:outline-none resize-none"
-          />
-          <div className="flex items-center gap-2 mt-2">
-            <button onClick={save} disabled={saving || !draft.trim()} className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-            <button onClick={() => { setDraft(item.title); setEditing(false); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+  const KIcon = KIND_ICON[item.kind];
+  const others = FIELD_ORDER.filter((k) => k !== def.key);
+  return (
+    <div className="group relative rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2.5">
+      <div className="flex items-start gap-2 pr-14">
+        <KIcon className="w-3.5 h-3.5 text-slate-500 mt-0.5 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className={`text-sm leading-snug ${item.gone ? 'text-slate-500 line-through' : 'text-white/90'}`}>{item.label}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] text-slate-600 uppercase tracking-wide">{KIND_LABEL[item.kind]}</span>
+            {item.gone && <span className="text-[10px] text-slate-600">· removed at source</span>}
+            {item.href && !item.gone && (
+              <Link href={item.href} className="text-[10px] text-slate-600 hover:text-slate-300 transition flex items-center gap-0.5">
+                open <ArrowRight className="w-2.5 h-2.5" />
+              </Link>
+            )}
           </div>
-        </div>
-      );
-    }
-    if (moving && onMove) {
-      const others = FLOOR.filter((q) => q.key !== currentSection);
-      return (
-        <div className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.04] border border-white/10 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
-          <p className="text-white/70 text-sm leading-relaxed line-clamp-2">{item.title}</p>
-          <p className="text-[11px] text-slate-500 mt-2 mb-1.5">Move to…</p>
-          <div className="flex flex-wrap items-center gap-2">
-            {others.map((q) => (
-              <button
-                key={q.key}
-                onClick={async () => {
-                  if (moveSaving) return;
-                  setMoveSaving(true);
-                  try { await onMove(item.sourceId, q.key); } finally { setMoveSaving(false); setMoving(false); }
-                }}
-                disabled={moveSaving}
-                className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[q.accent]} hover:bg-white/15 transition disabled:opacity-40`}
-              >
-                {q.key.charAt(0).toUpperCase() + q.key.slice(1)}
-              </button>
-            ))}
-            <button onClick={() => setMoving(false)} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className={`group relative block pl-4 pr-20 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
-        <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">{item.title}</p>
-        {item.context && (<p className="text-[11px] text-slate-500 mt-1">{item.context}</p>)}
-        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-          {onEdit && (
-            <button onClick={() => { setDraft(item.title); setEditing(true); }} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Edit this note" aria-label="Edit this note">
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          )}
-          {onMove && (
-            <button onClick={() => setMoving(true)} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Move to another question" aria-label="Move to another question">
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-            </button>
-          )}
-          {onRemove && (
-            <button onClick={() => onRemove(item.sourceId)} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Remove this note" aria-label="Remove this note">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
         </div>
       </div>
-    );
-  }
-  // Derived item — a link back to the change/decision it came from.
-  return (
-    <Link href={item.href ?? '#'} className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''} hover:bg-white/5 transition`}>
-      <p className="text-white/90 text-sm leading-relaxed">{item.title}</p>
-      {item.context && (<p className="text-[11px] text-slate-500 mt-1 truncate">{item.context}</p>)}
-    </Link>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Add note — a small authored attention placed into this question
-// ─────────────────────────────────────────────────────────────────────────────
-
-function AddNote({
-  section, placeholder, accent, onAdd,
-}: {
-  section: FloorKey;
-  placeholder: string;
-  accent: string;
-  onAdd: (section: FloorKey, body: string) => Promise<void>;
-}) {
-  const [open, setOpen] = useState(false);
-  const [text, setText] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const close = () => { setText(''); setOpen(false); };
-  const submit = async () => {
-    const body = text.trim();
-    if (!body || saving) return;
-    setSaving(true);
-    try { await onAdd(section, body); close(); } finally { setSaving(false); }
-  };
-
-  if (!open) {
-    return (
-      <button onClick={() => setOpen(true)} className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition">
-        <Plus className="w-3.5 h-3.5" />
-        <span>{placeholder}</span>
-      </button>
-    );
-  }
-
-  return (
-    <div className="mt-3">
-      <textarea
-        autoFocus
-        rows={2}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
-          if (e.key === 'Escape') { close(); }
-        }}
-        placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20 resize-none"
-      />
-      <div className="flex items-center gap-2 mt-2">
-        <button onClick={submit} disabled={saving || !text.trim()} className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}>
-          {saving ? 'Placing…' : 'Place'}
+      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+        <button onClick={() => setMoving((v) => !v)} title="Move to another field" className="p-1 rounded text-slate-600 hover:text-slate-300 transition">
+          <ArrowRightLeft className="w-3.5 h-3.5" />
         </button>
-        <button onClick={close} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+        <button onClick={() => onRemove(item.id)} title="Take out of this field" className="p-1 rounded text-slate-600 hover:text-slate-300 transition">
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
+      {moving && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 pl-5">
+          <span className="text-[11px] text-slate-500">Move to</span>
+          {others.map((k) => (
+            <button key={k} onClick={() => { onMove(item.id, k); setMoving(false); }}
+              className={`px-2.5 py-1 rounded-lg text-xs bg-white/5 ${FIELD_DEFS[k].text} hover:bg-white/10 transition`}>
+              {FIELD_DEFS[k].label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -533,10 +664,9 @@ function TodayPanel({ teamId, includePersonal }: { teamId: string | null; includ
   };
 
   return (
-    <section className="rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
+    <section className="h-full rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
       <h2 className="text-sm text-slate-400 flex items-center gap-2 mb-3">
-        <CalendarDays className="w-4 h-4 text-slate-500" />
-        Today
+        <CalendarDays className="w-4 h-4 text-slate-500" /> Today
       </h2>
       {events.length === 0 ? (
         <p className="text-sm text-slate-600">Nothing on your calendar today.</p>
@@ -555,26 +685,18 @@ function TodayPanel({ teamId, includePersonal }: { teamId: string | null; includ
       )}
       {open ? (
         <div className="mt-3 space-y-2">
-          <input
-            autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
-            placeholder="What’s happening?"
-            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20"
-          />
-          <input
-            type="time" value={time} onChange={(e) => setTime(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm focus:outline-none focus:border-white/20"
-          />
+          <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What’s happening?"
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20" />
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
+            className="px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm focus:outline-none focus:border-white/20" />
           <div className="flex items-center gap-2">
-            <button onClick={add} disabled={saving || !title.trim() || !time} className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-slate-200 hover:bg-white/15 transition disabled:opacity-40">
-              {saving ? 'Adding…' : 'Add'}
-            </button>
+            <button onClick={add} disabled={saving || !title.trim() || !time} className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-slate-200 hover:bg-white/15 transition disabled:opacity-40">{saving ? 'Adding…' : 'Add'}</button>
             <button onClick={() => { setOpen(false); setTitle(''); setTime(''); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
           </div>
         </div>
       ) : (
         <button onClick={() => setOpen(true)} className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition">
-          <Plus className="w-3.5 h-3.5" />
-          Add to today
+          <Plus className="w-3.5 h-3.5" /> Add to today
         </button>
       )}
     </section>
@@ -622,10 +744,9 @@ function PeoplePanel({ teamId, includePersonal }: { teamId: string | null; inclu
   };
 
   return (
-    <section className="rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
+    <section className="h-full rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
       <h2 className="text-sm text-slate-400 flex items-center gap-2 mb-3">
-        <Users className="w-4 h-4 text-slate-500" />
-        People
+        <Users className="w-4 h-4 text-slate-500" /> People
       </h2>
       {people.length === 0 ? (
         <p className="text-sm text-slate-600">No one yet — name who you’re tending to.</p>
@@ -646,49 +767,21 @@ function PeoplePanel({ teamId, includePersonal }: { teamId: string | null; inclu
       )}
       {open ? (
         <div className="mt-3 space-y-2">
-          <input
-            autoFocus value={name} onChange={(e) => setName(e.target.value)}
-            placeholder="Who are you tending to?"
-            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20"
-          />
-          <input
-            value={note} onChange={(e) => setNote(e.target.value)}
-            placeholder="A note (optional)"
-            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20"
-          />
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Who are you tending to?"
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20" />
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="A note (optional)"
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20" />
           <div className="flex items-center gap-2">
-            <button onClick={add} disabled={saving || !name.trim()} className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-slate-200 hover:bg-white/15 transition disabled:opacity-40">
-              {saving ? 'Adding…' : 'Add'}
-            </button>
+            <button onClick={add} disabled={saving || !name.trim()} className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-slate-200 hover:bg-white/15 transition disabled:opacity-40">{saving ? 'Adding…' : 'Add'}</button>
             <button onClick={() => { setOpen(false); setName(''); setNote(''); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
           </div>
         </div>
       ) : (
         <button onClick={() => setOpen(true)} className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition">
-          <Plus className="w-3.5 h-3.5" />
-          Add someone
+          <Plus className="w-3.5 h-3.5" /> Add someone
         </button>
       )}
     </section>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Navigate chip
-// ─────────────────────────────────────────────────────────────────────────────
-
-function NavChip({
-  href, icon: Icon, label,
-}: {
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-}) {
-  return (
-    <Link href={href} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20 transition text-sm">
-      <Icon className="w-3.5 h-3.5" />
-      {label}
-    </Link>
   );
 }
 
