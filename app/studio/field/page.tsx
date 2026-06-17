@@ -4,13 +4,23 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Wind, Scale, BookOpen, Calendar, CheckSquare, Mic,
   ChevronRight, RefreshCw, Flame, Compass, Sprout, Heart, Plus, X, Pencil, ArrowRightLeft,
+  Sparkles, Users, ArrowRight, CalendarDays,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useTeamContext } from '@/hooks/useStudioData';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Types — the orientation floor (four questions over the person's own content)
+// EXPLORATORY LANDSCAPE — the Personal Studio home (Approach B)
+//
+// The full home for the team to explore: greeting + person-set inner weather +
+// a Reflect-with-MAIA entry + the four-question floor as vivid cards (with Field
+// Notes: place / move / edit / remove) + honest placeholders for the imagined
+// panels (Today, People) + a Navigate strip.
+//
+// Oath guard: the person authors; MAIA never infers or decides their attention.
+// Inner weather is person-TAPPED (persisted locally), never inferred. Placeholder
+// panels are clearly imagined, not faked data.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface FloorItem {
@@ -41,15 +51,15 @@ interface FloorQuestion {
   placeholder: string;   // human invitation to place a note here — never "+ New task"
 }
 
-// The fixed floor. These four questions are the stable frame — they remain
-// present even when a bucket is empty (the recognizable point of return).
-// The floor holds room; it never tells the person what matters most.
 const FLOOR: FloorQuestion[] = [
   { key: 'alive',    question: 'What is alive?',                icon: Flame,   accent: 'amber',   empty: 'Quiet here.',               placeholder: 'Name what’s alive…' },
   { key: 'asking',   question: 'What is asking for attention?', icon: Compass, accent: 'blue',    empty: 'Nothing you’ve marked.',    placeholder: 'What’s asking for your attention?' },
   { key: 'emerging', question: 'What is emerging?',             icon: Sprout,  accent: 'emerald', empty: 'Nothing new taking shape.', placeholder: 'What’s taking shape?' },
   { key: 'tending',  question: 'What are you tending?',         icon: Heart,   accent: 'purple',  empty: 'Nothing in motion.',        placeholder: 'What are you tending?' },
 ];
+
+// Inner weather — person-TAPPED only. The system never infers it.
+const WEATHER = ['Grounded', 'Restless', 'Stretched', 'Curious', 'Tender', 'Open'];
 
 const ACCENT_TEXT: Record<string, string> = {
   amber: 'text-amber-400', blue: 'text-blue-400', emerald: 'text-emerald-400', purple: 'text-purple-400',
@@ -66,8 +76,18 @@ export default function FieldPage() {
   const [floor, setFloor] = useState<FieldFloor | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [name, setName] = useState('');
+  const [dayLabel, setDayLabel] = useState('');
   const abortRef = useRef<AbortController | null>(null);
   const { currentTeamId, includePersonal } = useTeamContext();
+
+  useEffect(() => {
+    setName(getDisplayName());
+    try {
+      const d = new Date();
+      setDayLabel(`${d.toLocaleDateString(undefined, { weekday: 'long' }).toUpperCase()} · ${d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`);
+    } catch { /* best effort */ }
+  }, []);
 
   const fetchFloor = useCallback(async (isRefresh = false) => {
     abortRef.current?.abort();
@@ -78,20 +98,12 @@ export default function FieldPage() {
       const params = new URLSearchParams();
       if (currentTeamId) params.set('teamId', currentTeamId);
       params.set('includePersonal', String(includePersonal));
-      const res = await apiFetch(`/api/studio/field/pulse?${params.toString()}`, {
-        signal: controller.signal,
-      });
-      if (res.ok && !controller.signal.aborted) {
-        setFloor(await res.json());
-      }
+      const res = await apiFetch(`/api/studio/field/pulse?${params.toString()}`, { signal: controller.signal });
+      if (res.ok && !controller.signal.aborted) setFloor(await res.json());
     } catch (err) {
-      // Orientation is not critical — ignore aborts, fail quiet on the rest.
       if (err instanceof DOMException && err.name === 'AbortError') return;
     } finally {
-      if (!controller.signal.aborted) {
-        setLoading(false);
-        setRefreshing(false);
-      }
+      if (!controller.signal.aborted) { setLoading(false); setRefreshing(false); }
     }
   }, [currentTeamId, includePersonal]);
 
@@ -100,13 +112,10 @@ export default function FieldPage() {
     return () => { abortRef.current?.abort(); };
   }, [fetchFloor]);
 
-  // Authoring: place a note into a question, or take one back out. Best-effort —
-  // a failed write should never throw into the orientation surface.
   const addNote = useCallback(async (section: FloorKey, body: string) => {
     try {
       await apiFetch('/api/studio/field/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ section, body, teamId: currentTeamId ?? undefined }),
       });
     } catch { /* best effort */ }
@@ -114,54 +123,41 @@ export default function FieldPage() {
   }, [currentTeamId, fetchFloor]);
 
   const removeNote = useCallback(async (noteId: string) => {
-    try {
-      await apiFetch(`/api/studio/field/notes/${noteId}`, { method: 'DELETE' });
-    } catch { /* best effort */ }
+    try { await apiFetch(`/api/studio/field/notes/${noteId}`, { method: 'DELETE' }); } catch { /* best effort */ }
     await fetchFloor(true);
   }, [fetchFloor]);
 
   const editNote = useCallback(async (noteId: string, body: string) => {
     try {
       await apiFetch(`/api/studio/field/notes/${noteId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body }),
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body }),
       });
     } catch { /* best effort */ }
     await fetchFloor(true);
   }, [fetchFloor]);
 
-  // Migration: move a note to a different question. Section is state, not shape —
-  // identity + created_at persist (we observe the move out-of-band; no audit trail).
+  // Migration: section is state, not shape — identity + created_at persist.
   const moveNote = useCallback(async (noteId: string, section: FloorKey) => {
     try {
       await apiFetch(`/api/studio/field/notes/${noteId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section }),
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section }),
       });
     } catch { /* best effort */ }
     await fetchFloor(true);
   }, [fetchFloor]);
 
-  const greeting = getGreeting();
-  const total = floor
-    ? floor.alive.length + floor.asking.length + floor.emerging.length + floor.tending.length
-    : 0;
-  const allQuiet = !loading && total === 0;
+  const greet = getGreetWord();
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[#1a1a2e] p-6 sm:p-8">
+      <div className="max-w-3xl mx-auto">
         {/* Greeting */}
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-slate-500 text-sm tracking-wider uppercase mb-2">{greeting.label}</p>
-              <h1 className="text-3xl font-light text-white mb-2">Field</h1>
-              <p className="text-slate-400">
-                {allQuiet ? 'Room for whatever’s here.' : 'What is alive right now.'}
-              </p>
+              {dayLabel && <p className="text-slate-500 text-xs tracking-wider uppercase mb-2">{dayLabel}</p>}
+              <h1 className="text-3xl font-light text-white mb-1">Good {greet}{name ? `, ${name}` : ''}</h1>
+              <p className="text-slate-400">What is alive in your field.</p>
             </div>
             {!loading && (
               <button
@@ -176,35 +172,57 @@ export default function FieldPage() {
           </div>
         </div>
 
+        {/* Inner weather — person-set */}
+        <WeatherStrip />
+
+        {/* Reflect with MAIA — entry into the companion */}
+        <MaiaReflect />
+
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
           </div>
         ) : (
           <>
-            {/* The fixed orientation floor — four questions, always present */}
-            {FLOOR.map((q) => (
-              <FloorSection
-                key={q.key}
-                question={q}
-                items={floor?.[q.key] ?? []}
-                onAdd={addNote}
-                onRemove={removeNote}
-                onEdit={editNote}
-                onMove={moveNote}
-              />
-            ))}
+            {/* The four questions — vivid cards, with Field Notes */}
+            <div className="grid sm:grid-cols-2 gap-4 mb-10">
+              {FLOOR.map((q) => (
+                <FloorCard
+                  key={q.key}
+                  question={q}
+                  items={floor?.[q.key] ?? []}
+                  onAdd={addNote}
+                  onRemove={removeNote}
+                  onEdit={editNote}
+                  onMove={moveNote}
+                />
+              ))}
+            </div>
 
-            {/* Navigate — demoted, person-initiated; never injected into the field */}
-            <section className="mt-2">
+            {/* Imagined panels — honest placeholders (productionized if the team reaches for them) */}
+            <div className="grid sm:grid-cols-2 gap-4 mb-10">
+              <ImaginedPanel
+                icon={CalendarDays}
+                title="Today"
+                note="A personal calendar is on the way. For now, what’s pressing lives in “Asking for attention.”"
+              />
+              <ImaginedPanel
+                icon={Users}
+                title="People"
+                note="Those you’re tending to will gather here — once the field learns who keeps returning."
+              />
+            </div>
+
+            {/* Navigate — person-initiated; never injected into the field */}
+            <section>
               <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-3">Navigate</h2>
-              <div className="space-y-2">
-                <FieldCard href="/studio/changes" icon={Wind} title="Changes" subtitle="Navigate what is shifting" accent="amber" />
-                <FieldCard href="/studio/decisions" icon={Scale} title="Decisions" subtitle="Clarify what needs choosing" accent="blue" />
-                <FieldCard href="/studio/scribe" icon={Mic} title="Scribe" subtitle="Speak what needs to be heard" accent="emerald" />
-                <FieldCard href="/studio/vault" icon={BookOpen} title="Vault" subtitle="Private notes and reflections" accent="purple" />
-                <FieldCard href="/studio/calendar" icon={Calendar} title="Calendar" subtitle="What is coming" accent="slate" />
-                <FieldCard href="/studio/tasks" icon={CheckSquare} title="Tasks" subtitle="What needs doing" accent="slate" />
+              <div className="flex flex-wrap gap-2">
+                <NavChip href="/studio/changes" icon={Wind} label="Changes" />
+                <NavChip href="/studio/decisions" icon={Scale} label="Decisions" />
+                <NavChip href="/studio/scribe" icon={Mic} label="Scribe" />
+                <NavChip href="/studio/calendar" icon={Calendar} label="Calendar" />
+                <NavChip href="/studio/tasks" icon={CheckSquare} label="Tasks" />
+                <NavChip href="/studio/vault" icon={BookOpen} label="Vault" />
               </div>
             </section>
           </>
@@ -215,10 +233,71 @@ export default function FieldPage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Floor section — one question + its items + a quiet invitation to place a note
+// Inner weather — person-tapped (never inferred); persisted per device
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FloorSection({
+function WeatherStrip() {
+  const [weather, setWeather] = useState<string | null>(null);
+  useEffect(() => {
+    try { setWeather(localStorage.getItem('studio:fieldWeather')); } catch { /* best effort */ }
+  }, []);
+  const pick = (w: string) => {
+    const next = weather === w ? null : w; // tap again to clear
+    setWeather(next);
+    try {
+      if (next) localStorage.setItem('studio:fieldWeather', next);
+      else localStorage.removeItem('studio:fieldWeather');
+    } catch { /* best effort */ }
+  };
+  return (
+    <div className="mb-8">
+      <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2">Inner weather</p>
+      <div className="flex flex-wrap gap-2">
+        {WEATHER.map((w) => (
+          <button
+            key={w}
+            onClick={() => pick(w)}
+            className={`px-3 py-1.5 rounded-full text-sm border transition ${
+              weather === w
+                ? 'bg-white/15 border-white/30 text-white'
+                : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20'
+            }`}
+          >
+            {w}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reflect with MAIA — the entry into the companion
+// ─────────────────────────────────────────────────────────────────────────────
+
+function MaiaReflect() {
+  return (
+    <Link
+      href="/studio/maia"
+      className="group block mb-10 rounded-xl bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10 border border-white/10 hover:border-white/20 transition p-4"
+    >
+      <div className="flex items-center gap-3">
+        <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="text-white/90 text-sm font-medium">What’s most alive today?</div>
+          <div className="text-slate-400 text-xs">Reflect with MAIA</div>
+        </div>
+        <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition shrink-0" />
+      </div>
+    </Link>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Floor card — one question as a card + its items + a quiet invitation to place
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FloorCard({
   question, items, onAdd, onRemove, onEdit, onMove,
 }: {
   question: FloorQuestion;
@@ -231,8 +310,8 @@ function FloorSection({
   const Icon = question.icon;
   const isEmpty = items.length === 0;
   return (
-    <section className="mb-10">
-      <h2 className={`text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${isEmpty ? 'text-slate-600' : 'text-slate-500'}`}>
+    <section className="rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
+      <h2 className={`text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${isEmpty ? 'text-slate-600' : 'text-slate-400'}`}>
         <Icon className={`w-4 h-4 ${isEmpty ? 'text-slate-600' : ACCENT_TEXT[question.accent]}`} />
         {question.question}
       </h2>
@@ -240,11 +319,11 @@ function FloorSection({
         <p className="text-sm text-slate-600 pl-1">{question.empty}</p>
       ) : (
         <div className="space-y-2">
-          {items.slice(0, 6).map((item) => (
+          {items.slice(0, 5).map((item) => (
             <FloorItemCard key={item.id} item={item} accent={question.accent} currentSection={question.key} onRemove={onRemove} onEdit={onEdit} onMove={onMove} />
           ))}
-          {items.length > 6 && (
-            <p className="text-xs text-slate-600 mt-2 pl-1">+{items.length - 6} more</p>
+          {items.length > 5 && (
+            <p className="text-xs text-slate-600 mt-2 pl-1">+{items.length - 5} more</p>
           )}
         </div>
       )}
@@ -269,8 +348,6 @@ function FloorItemCard({
   const [moving, setMoving] = useState(false);
   const [moveSaving, setMoveSaving] = useState(false);
 
-  // Authored note — not a door to a tool; render it in place. The author keeps
-  // stewardship of what they wrote (body-only edit), with a quiet remove.
   if (item.source === 'note') {
     if (editing && onEdit) {
       const save = async () => {
@@ -293,19 +370,10 @@ function FloorItemCard({
             className="w-full bg-transparent text-white/90 text-sm leading-relaxed focus:outline-none resize-none"
           />
           <div className="flex items-center gap-2 mt-2">
-            <button
-              onClick={save}
-              disabled={saving || !draft.trim()}
-              className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}
-            >
+            <button onClick={save} disabled={saving || !draft.trim()} className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}>
               {saving ? 'Saving…' : 'Save'}
             </button>
-            <button
-              onClick={() => { setDraft(item.title); setEditing(false); }}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition"
-            >
-              Cancel
-            </button>
+            <button onClick={() => { setDraft(item.title); setEditing(false); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
           </div>
         </div>
       );
@@ -331,12 +399,7 @@ function FloorItemCard({
                 {q.key.charAt(0).toUpperCase() + q.key.slice(1)}
               </button>
             ))}
-            <button
-              onClick={() => setMoving(false)}
-              className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition"
-            >
-              Cancel
-            </button>
+            <button onClick={() => setMoving(false)} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
           </div>
         </div>
       );
@@ -344,37 +407,20 @@ function FloorItemCard({
     return (
       <div className={`group relative block pl-4 pr-20 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
         <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">{item.title}</p>
-        {item.context && (
-          <p className="text-[11px] text-slate-500 mt-1">{item.context}</p>
-        )}
+        {item.context && (<p className="text-[11px] text-slate-500 mt-1">{item.context}</p>)}
         <div className="absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
           {onEdit && (
-            <button
-              onClick={() => { setDraft(item.title); setEditing(true); }}
-              className="p-1 rounded text-slate-600 hover:text-slate-300 transition"
-              title="Edit this note"
-              aria-label="Edit this note"
-            >
+            <button onClick={() => { setDraft(item.title); setEditing(true); }} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Edit this note" aria-label="Edit this note">
               <Pencil className="w-3.5 h-3.5" />
             </button>
           )}
           {onMove && (
-            <button
-              onClick={() => setMoving(true)}
-              className="p-1 rounded text-slate-600 hover:text-slate-300 transition"
-              title="Move to another question"
-              aria-label="Move to another question"
-            >
+            <button onClick={() => setMoving(true)} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Move to another question" aria-label="Move to another question">
               <ArrowRightLeft className="w-3.5 h-3.5" />
             </button>
           )}
           {onRemove && (
-            <button
-              onClick={() => onRemove(item.sourceId)}
-              className="p-1 rounded text-slate-600 hover:text-slate-300 transition"
-              title="Remove this note"
-              aria-label="Remove this note"
-            >
+            <button onClick={() => onRemove(item.sourceId)} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Remove this note" aria-label="Remove this note">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -384,14 +430,9 @@ function FloorItemCard({
   }
   // Derived item — a link back to the change/decision it came from.
   return (
-    <Link
-      href={item.href ?? '#'}
-      className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''} hover:bg-white/5 transition`}
-    >
+    <Link href={item.href ?? '#'} className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''} hover:bg-white/5 transition`}>
       <p className="text-white/90 text-sm leading-relaxed">{item.title}</p>
-      {item.context && (
-        <p className="text-[11px] text-slate-500 mt-1 truncate">{item.context}</p>
-      )}
+      {item.context && (<p className="text-[11px] text-slate-500 mt-1 truncate">{item.context}</p>)}
     </Link>
   );
 }
@@ -417,20 +458,12 @@ function AddNote({
     const body = text.trim();
     if (!body || saving) return;
     setSaving(true);
-    try {
-      await onAdd(section, body);
-      close();
-    } finally {
-      setSaving(false);
-    }
+    try { await onAdd(section, body); close(); } finally { setSaving(false); }
   };
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition"
-      >
+      <button onClick={() => setOpen(true)} className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition">
         <Plus className="w-3.5 h-3.5" />
         <span>{placeholder}</span>
       </button>
@@ -452,65 +485,80 @@ function AddNote({
         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20 resize-none"
       />
       <div className="flex items-center gap-2 mt-2">
-        <button
-          onClick={submit}
-          disabled={saving || !text.trim()}
-          className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}
-        >
+        <button onClick={submit} disabled={saving || !text.trim()} className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}>
           {saving ? 'Placing…' : 'Place'}
         </button>
-        <button
-          onClick={close}
-          className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition"
-        >
-          Cancel
-        </button>
+        <button onClick={close} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
       </div>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Navigation card (demoted)
+// Imagined panel — an honest placeholder for a destination not yet built
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FieldCard({
-  href, icon: Icon, title, subtitle, accent = 'slate',
+function ImaginedPanel({
+  icon: Icon, title, note,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  note: string;
+}) {
+  return (
+    <section className="rounded-xl bg-white/[0.015] border border-dashed border-white/10 p-4">
+      <h2 className="text-sm text-slate-400 flex items-center gap-2 mb-1.5">
+        <Icon className="w-4 h-4 text-slate-500" />
+        {title}
+      </h2>
+      <p className="text-xs text-slate-600 leading-relaxed">{note}</p>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Navigate chip
+// ─────────────────────────────────────────────────────────────────────────────
+
+function NavChip({
+  href, icon: Icon, label,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  subtitle: string;
-  accent?: string;
+  label: string;
 }) {
-  const accentColors: Record<string, string> = {
-    amber: 'text-amber-400', blue: 'text-blue-400', emerald: 'text-emerald-400',
-    purple: 'text-purple-400', slate: 'text-slate-400',
-  };
   return (
-    <Link
-      href={href}
-      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/5 hover:border-white/10 transition group"
-    >
-      <Icon className={`w-4 h-4 ${accentColors[accent] ?? 'text-slate-400'}`} />
-      <div className="flex-1 min-w-0">
-        <div className="text-white/80 text-sm">{title}</div>
-        <div className="text-slate-600 text-xs">{subtitle}</div>
-      </div>
-      <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-slate-500 transition" />
+    <Link href={href} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20 transition text-sm">
+      <Icon className="w-3.5 h-3.5" />
+      {label}
     </Link>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Greeting
+// Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function getGreeting(): { label: string } {
-  const hour = new Date().getHours();
-  if (hour < 6) return { label: 'Still night' };
-  if (hour < 12) return { label: 'Morning' };
-  if (hour < 17) return { label: 'Afternoon' };
-  if (hour < 21) return { label: 'Evening' };
-  return { label: 'Night' };
+function getGreetWord(): string {
+  const h = new Date().getHours();
+  if (h < 6) return 'evening';
+  if (h < 12) return 'morning';
+  if (h < 17) return 'afternoon';
+  return 'evening';
+}
+
+function getDisplayName(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const bu = localStorage.getItem('beta_user');
+    if (bu) {
+      const u = JSON.parse(bu);
+      const n = (u.preferredName || u.name || '').trim();
+      if (n) return n.split(' ')[0];
+    }
+    const alt = (localStorage.getItem('explorerPreferredName') || localStorage.getItem('explorerName') || '').trim();
+    return alt ? alt.split(' ')[0] : '';
+  } catch {
+    return '';
+  }
 }
