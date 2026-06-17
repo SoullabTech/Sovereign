@@ -199,18 +199,10 @@ export default function FieldPage() {
               ))}
             </div>
 
-            {/* Imagined panels — honest placeholders (productionized if the team reaches for them) */}
+            {/* Today (day calendar) + People — person-authored, real */}
             <div className="grid sm:grid-cols-2 gap-4 mb-10">
-              <ImaginedPanel
-                icon={CalendarDays}
-                title="Today"
-                note="A personal calendar is on the way. For now, what’s pressing lives in “Asking for attention.”"
-              />
-              <ImaginedPanel
-                icon={Users}
-                title="People"
-                note="Those you’re tending to will gather here — once the field learns who keeps returning."
-              />
+              <TodayPanel teamId={currentTeamId} includePersonal={includePersonal} />
+              <PeoplePanel teamId={currentTeamId} includePersonal={includePersonal} />
             </div>
 
             {/* Navigate — person-initiated; never injected into the field */}
@@ -495,23 +487,188 @@ function AddNote({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Imagined panel — an honest placeholder for a destination not yet built
+// Today — the person's day calendar (person-authored; the system never schedules)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ImaginedPanel({
-  icon: Icon, title, note,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  note: string;
-}) {
+function TodayPanel({ teamId, includePersonal }: { teamId: string | null; includePersonal: boolean }) {
+  const [events, setEvents] = useState<{ id: string; title: string; event_at: string }[]>([]);
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [time, setTime] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const p = new URLSearchParams();
+      if (teamId) p.set('teamId', teamId);
+      p.set('includePersonal', String(includePersonal));
+      const res = await apiFetch(`/api/studio/field/events?${p.toString()}`);
+      if (res.ok) { const d = await res.json(); setEvents(d.events ?? []); }
+    } catch { /* orientation surface — fail quiet */ }
+  }, [teamId, includePersonal]);
+  useEffect(() => { load(); }, [load]);
+
+  const add = async () => {
+    const t = title.trim();
+    if (!t || !time || saving) return;
+    setSaving(true);
+    const [hh, mm] = time.split(':');
+    const when = new Date();
+    when.setHours(Number(hh) || 0, Number(mm) || 0, 0, 0);
+    try {
+      await apiFetch('/api/studio/field/events', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: t, eventAt: when.toISOString(), teamId: teamId ?? undefined }),
+      });
+      setTitle(''); setTime(''); setOpen(false);
+    } catch { /* best effort */ } finally { setSaving(false); }
+    await load();
+  };
+  const remove = async (id: string) => {
+    try { await apiFetch(`/api/studio/field/events/${id}`, { method: 'DELETE' }); } catch { /* */ }
+    await load();
+  };
+  const fmt = (iso: string) => {
+    try { return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch { return ''; }
+  };
+
   return (
-    <section className="rounded-xl bg-white/[0.015] border border-dashed border-white/10 p-4">
-      <h2 className="text-sm text-slate-400 flex items-center gap-2 mb-1.5">
-        <Icon className="w-4 h-4 text-slate-500" />
-        {title}
+    <section className="rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
+      <h2 className="text-sm text-slate-400 flex items-center gap-2 mb-3">
+        <CalendarDays className="w-4 h-4 text-slate-500" />
+        Today
       </h2>
-      <p className="text-xs text-slate-600 leading-relaxed">{note}</p>
+      {events.length === 0 ? (
+        <p className="text-sm text-slate-600">Nothing on your calendar today.</p>
+      ) : (
+        <div className="space-y-2">
+          {events.map((e) => (
+            <div key={e.id} className="group flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5">
+              <span className="text-xs text-slate-500 tabular-nums w-16 shrink-0">{fmt(e.event_at)}</span>
+              <span className="text-white/90 text-sm flex-1 min-w-0 truncate">{e.title}</span>
+              <button onClick={() => remove(e.id)} className="p-1 rounded text-slate-600 opacity-0 group-hover:opacity-100 hover:text-slate-300 transition" aria-label="Remove event">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {open ? (
+        <div className="mt-3 space-y-2">
+          <input
+            autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
+            placeholder="What’s happening?"
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20"
+          />
+          <input
+            type="time" value={time} onChange={(e) => setTime(e.target.value)}
+            className="px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm focus:outline-none focus:border-white/20"
+          />
+          <div className="flex items-center gap-2">
+            <button onClick={add} disabled={saving || !title.trim() || !time} className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-slate-200 hover:bg-white/15 transition disabled:opacity-40">
+              {saving ? 'Adding…' : 'Add'}
+            </button>
+            <button onClick={() => { setOpen(false); setTitle(''); setTime(''); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setOpen(true)} className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition">
+          <Plus className="w-3.5 h-3.5" />
+          Add to today
+        </button>
+      )}
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// People — those the person is tending (person-authored; never inferred)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PeoplePanel({ teamId, includePersonal }: { teamId: string | null; includePersonal: boolean }) {
+  const [people, setPeople] = useState<{ id: string; name: string; note: string | null }[]>([]);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const p = new URLSearchParams();
+      if (teamId) p.set('teamId', teamId);
+      p.set('includePersonal', String(includePersonal));
+      const res = await apiFetch(`/api/studio/field/people?${p.toString()}`);
+      if (res.ok) { const d = await res.json(); setPeople(d.people ?? []); }
+    } catch { /* fail quiet */ }
+  }, [teamId, includePersonal]);
+  useEffect(() => { load(); }, [load]);
+
+  const add = async () => {
+    const n = name.trim();
+    if (!n || saving) return;
+    setSaving(true);
+    try {
+      await apiFetch('/api/studio/field/people', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: n, note: note.trim() || undefined, teamId: teamId ?? undefined }),
+      });
+      setName(''); setNote(''); setOpen(false);
+    } catch { /* best effort */ } finally { setSaving(false); }
+    await load();
+  };
+  const remove = async (id: string) => {
+    try { await apiFetch(`/api/studio/field/people/${id}`, { method: 'DELETE' }); } catch { /* */ }
+    await load();
+  };
+
+  return (
+    <section className="rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
+      <h2 className="text-sm text-slate-400 flex items-center gap-2 mb-3">
+        <Users className="w-4 h-4 text-slate-500" />
+        People
+      </h2>
+      {people.length === 0 ? (
+        <p className="text-sm text-slate-600">No one yet — name who you’re tending to.</p>
+      ) : (
+        <div className="space-y-2">
+          {people.map((pp) => (
+            <div key={pp.id} className="group flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5">
+              <div className="flex-1 min-w-0">
+                <div className="text-white/90 text-sm truncate">{pp.name}</div>
+                {pp.note && <div className="text-[11px] text-slate-500 truncate">{pp.note}</div>}
+              </div>
+              <button onClick={() => remove(pp.id)} className="p-1 rounded text-slate-600 opacity-0 group-hover:opacity-100 hover:text-slate-300 transition" aria-label="Remove person">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {open ? (
+        <div className="mt-3 space-y-2">
+          <input
+            autoFocus value={name} onChange={(e) => setName(e.target.value)}
+            placeholder="Who are you tending to?"
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20"
+          />
+          <input
+            value={note} onChange={(e) => setNote(e.target.value)}
+            placeholder="A note (optional)"
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20"
+          />
+          <div className="flex items-center gap-2">
+            <button onClick={add} disabled={saving || !name.trim()} className="px-3 py-1.5 rounded-lg text-sm bg-white/10 text-slate-200 hover:bg-white/15 transition disabled:opacity-40">
+              {saving ? 'Adding…' : 'Add'}
+            </button>
+            <button onClick={() => { setOpen(false); setName(''); setNote(''); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setOpen(true)} className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition">
+          <Plus className="w-3.5 h-3.5" />
+          Add someone
+        </button>
+      )}
     </section>
   );
 }
