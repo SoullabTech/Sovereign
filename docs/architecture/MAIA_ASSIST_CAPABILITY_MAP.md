@@ -47,3 +47,35 @@ constitution: Authorship · Consent · Faithful Execution · No Substitution · 
 - **No autonomous outreach.** Every action is human-authored and human-consented.
 - **No SMS exposure** until compliance is resolved.
 - A function moves to **Live** only by passing the execute-and-revoke certification against the six invariants. New channels are added at the **executor** layer; the constitutional model does not change.
+
+## Architecture Under Observation
+
+This section records architecture we *expect* but have **not yet earned the right to build**. It obeys the same promotion ladder the system does: every item is tagged by status, and each hypothesis lists the **evidence that would justify promoting it**. Nothing here is decided. If you are reading a sketch below six months from now, it is an *active hypothesis intentionally waiting for evidence* — not a plan that was forgotten, and not an architecture that was decided.
+
+**Three tiers — do not collapse them:**
+- **Implemented** — the capability matrix above. True today.
+- **Planned** — Calendar as executor #2 (reuses the consent/audit/revoke spine).
+- **Under Observation** — the hypotheses below. Do **not** build until the evidence lands.
+
+### Hypothesis A — Authorized Action becomes the shared object across executors
+*Closer to earned (one executor today; soon two).* Email and Calendar appear to share one concept — an **Authorized Action** (authored · consented · executed · audited · revocable), with the channel as an implementation detail. If so, `/studio/assist` evolves to **MAIA Assist → Authorized Actions → Executors (Email · Calendar · Text)**, with a unified pending-actions view as the operational heart of Commit.
+
+**Evidence required to promote (i.e. to build it):**
+- Calendar executor implemented (executor #2).
+- The *identical* execute-and-revoke certification passes for calendar — the six invariants unchanged.
+- A shared action/audit shape emerges that fits both executors **without bending the six** — the difference lands in the *evidence* layer (email `provider_message_id`, calendar event id), not the *law*.
+
+**Falsifier:** calendar forces a change to one of the six invariants → the abstraction was email-shaped; revise the law before generalizing.
+
+### Hypothesis B — Members organize around intentions, not executors
+*Richer hypothesis.* People may think "follow up with Nathan" / "remind me tomorrow," not "use email." If so, the surface organizes by **intention** (e.g. Communicate · Time · Reminders) with executors hidden beneath. Deliberately **not** folded into Hypothesis A: we have *observed* that Email and Calendar share "Authorized Action"; we have **not** observed that intentions are the primary organizing principle.
+
+**Evidence required to promote (i.e. to build it):**
+- Usage observations — what members actually ask MAIA to do.
+- Interview data and navigation behavior.
+- Email + Calendar coexisting long enough to see whether an intention grouping is natural.
+- A stable intention vocabulary emerging (does "Communicate" hold? does "Time" appear? does "Reminders" acquire a real executor — it has none today?).
+
+**Falsifier:** a different organizing principle emerges from usage → adopt that instead. The taxonomy is a hypothesis, not a decision.
+
+**Until promoted:** `/studio/assist` stays the accurate capability surface above. No UI refactor — the member sees real capabilities, not aspirational structure.
