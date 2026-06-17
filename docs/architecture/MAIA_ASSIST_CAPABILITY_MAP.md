@@ -52,10 +52,17 @@ constitution: Authorship · Consent · Faithful Execution · No Substitution · 
 
 This section records architecture we *expect* but have **not yet earned the right to build**. It obeys the same promotion ladder the system does: every item is tagged by status, and each hypothesis lists the **evidence that would justify promoting it**. Nothing here is decided. If you are reading a sketch below six months from now, it is an *active hypothesis intentionally waiting for evidence* — not a plan that was forgotten, and not an architecture that was decided.
 
-**Three tiers — do not collapse them:**
-- **Implemented** — the capability matrix above. True today.
-- **Planned** — Calendar as executor #2 (reuses the consent/audit/revoke spine).
-- **Under Observation** — the hypotheses below. Do **not** build until the evidence lands.
+**Lifecycle states (formalized across the project — do not collapse them):**
+
+| State | Meaning | Promotion requirement |
+|---|---|---|
+| **Implemented** | Running in production | Operational verification |
+| **Certified** | Passed its Definition of Done | Certification evidence (execute + revoke) |
+| **Planned** | Approved to build | Explicit design decision |
+| **Under Observation** | Interesting hypothesis | Empirical evidence |
+| **Rejected** | Tested and disproven | Preserved as institutional learning (not deleted) |
+
+Today: Email = **Implemented** (delivery rail), **Certified-pending** (UI A/B). Calendar = **Planned** (executor #2). Hypotheses A & B below = **Under Observation**. Rejected = none yet.
 
 ### Hypothesis A — Authorized Action becomes the shared object across executors
 *Closer to earned (one executor today; soon two).* Email and Calendar appear to share one concept — an **Authorized Action** (authored · consented · executed · audited · revocable), with the channel as an implementation detail. If so, `/studio/assist` evolves to **MAIA Assist → Authorized Actions → Executors (Email · Calendar · Text)**, with a unified pending-actions view as the operational heart of Commit.
@@ -79,3 +86,11 @@ This section records architecture we *expect* but have **not yet earned the righ
 **Falsifier:** a different organizing principle emerges from usage → adopt that instead. The taxonomy is a hypothesis, not a decision.
 
 **Until promoted:** `/studio/assist` stays the accurate capability surface above. No UI refactor — the member sees real capabilities, not aspirational structure.
+
+### Rejected — institutional memory (none yet)
+
+When evidence **disproves** a hypothesis, it is not deleted — it is recorded here, so the project keeps organizational *memory* instead of organizational *amnesia*. A rejected belief is still a finding. Format:
+
+> **We believed** X. **[Calendar / usage] demonstrated** Y. **Therefore** X was rejected — *(date)*.
+
+Nothing has been rejected yet. The first live candidate is Hypothesis A's shape: if Calendar (executor #2) bends one of the six invariants, the "the abstraction was email-shaped" belief is rejected and recorded here — with what calendar actually demonstrated — before any generalization is attempted.
