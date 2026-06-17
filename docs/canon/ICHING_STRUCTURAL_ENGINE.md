@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # I Ching Structural Engine
 
 > Use the I Ching to **know what is happening**.

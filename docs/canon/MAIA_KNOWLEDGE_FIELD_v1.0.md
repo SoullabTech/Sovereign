@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # MAIA Knowledge Field v1.0
 
 **Status:** Phase 1 (prompt-layer injection + domain detection)

@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # Sovereign Storage SOP v1.0
 
 **Status:** Canon

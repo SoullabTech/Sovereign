@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Pattern Primitive
 
 **Status:** Working doctrine — no implementation authority.

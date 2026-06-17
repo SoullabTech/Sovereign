@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # MAIA CANON v1.1
 
 ## What MAIA Must Never Do

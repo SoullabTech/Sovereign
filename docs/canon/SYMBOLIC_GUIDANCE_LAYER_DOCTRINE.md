@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Symbolic Guidance Layer — Integration Doctrine
 
 > Chinese and I Ching are not replacing the Oracle's intelligence. They are being

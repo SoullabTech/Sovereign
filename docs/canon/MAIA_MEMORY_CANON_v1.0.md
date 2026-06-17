@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # MAIA MEMORY CANON v1.0
 
 ## Continuity as Infrastructure

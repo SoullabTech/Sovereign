@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # Recognition Integrity
 
 **Status: Canon candidate — not yet placed in MAIA_SOVEREIGNTY_INVARIANTS.md**

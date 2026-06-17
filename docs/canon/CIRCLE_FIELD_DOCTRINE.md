@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # Circle Field Build Doctrine
 
 _Governing principles for all Circle development. Companion to MAIA_CANON_v1.1 and MAIA_SOVEREIGNTY_INVARIANTS._

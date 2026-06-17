@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # The Sacred and Its Architecture
 ## Operational Implications for MAIA
 
