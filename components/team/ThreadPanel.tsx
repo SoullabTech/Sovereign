@@ -60,6 +60,20 @@ export function ThreadPanel({
     if (!res || !res.ok) setReplies(prev);
   };
 
+  // Edit a reply's text (sender-only). Optimistic; roll back on failure.
+  const handleEditReply = async (messageId: string, newBody: string) => {
+    const prev = replies;
+    setReplies(p => p.map(m => m.id === messageId ? { ...m, body: newBody, editedAt: new Date().toISOString() } : m));
+    const res = await fetch(`/api/team/channels/${channelId}/messages/${messageId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body: newBody }),
+    }).catch(() => null);
+    if (!res || !res.ok) { setReplies(prev); return; }
+    const data = await res.json().catch(() => null);
+    if (data?.editedAt) setReplies(p => p.map(m => m.id === messageId ? { ...m, editedAt: data.editedAt } : m));
+  };
+
   return (
     <div className="w-80 flex-shrink-0 border-l border-white/8 bg-zinc-900/60 flex flex-col h-full">
       {/* Header */}
@@ -109,6 +123,7 @@ export function ThreadPanel({
             currentMemberId={currentMemberId}
             onReact={onReact}
             onDelete={handleDeleteReply}
+            onEdit={handleEditReply}
             canModerate={isAdmin}
           />
         ))}
