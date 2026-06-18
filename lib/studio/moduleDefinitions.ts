@@ -30,6 +30,7 @@ import {
   Wind,
   Globe,
   Compass,
+  Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -71,7 +72,8 @@ export type ModuleSlug =
   | 'settings'
   | 'portal'
   | 'scheduling'
-  | 'booking';
+  | 'booking'
+  | 'assist';
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
@@ -259,6 +261,19 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Client messaging and notifications',
     alwaysOn: false,
     mode: 'practice',
+  },
+  {
+    // MAIA Assist — the legibility surface for MAIA's outward actions (Authorized
+    // Action pattern). alwaysOn so every practitioner can see what MAIA can/can't
+    // do; it links to live executors (Email) and names what is In Build / Blocked.
+    slug: 'assist',
+    label: 'MAIA Assist',
+    icon: Zap,
+    href: '/studio/assist',
+    category: 'operations',
+    description: 'What MAIA can do on your behalf — email, calendar, and more — with consent and audit',
+    alwaysOn: true,
+    mode: 'both',
   },
   {
     slug: 'marketing',
