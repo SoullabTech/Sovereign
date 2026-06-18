@@ -66,6 +66,11 @@ BEGIN
       ('comms_webhooks_log','message_id','comms_messages')
     ) AS t(child, col, parent)
   LOOP
+    -- skip-if-absent: a table this environment doesn't have is not divergence to report
+    IF to_regclass('public.' || r.child) IS NULL OR to_regclass('public.' || r.parent) IS NULL THEN
+      RAISE NOTICE 'SKIP (table absent): FK %.% -> %', r.child, r.col, r.parent;
+      CONTINUE;
+    END IF;
     present := EXISTS (
       SELECT 1 FROM pg_constraint con
       JOIN pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = ANY(con.conkey)
@@ -126,6 +131,11 @@ BEGIN
       ('comms_webhooks_log',              ARRAY['provider','external_event_id']::text[])
     ) AS t(tbl, cols)
   LOOP
+    -- skip-if-absent: a table this environment doesn't have is not divergence to report
+    IF to_regclass('public.' || r.tbl) IS NULL THEN
+      RAISE NOTICE 'SKIP (table absent): UNIQUE %', r.tbl;
+      CONTINUE;
+    END IF;
     present := EXISTS (
       SELECT 1 FROM pg_constraint con
       WHERE con.conrelid = r.tbl::regclass AND con.contype IN ('u','p')

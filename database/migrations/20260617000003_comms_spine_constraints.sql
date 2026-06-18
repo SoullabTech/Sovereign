@@ -72,7 +72,8 @@ DECLARE
 BEGIN
   CREATE TEMP TABLE IF NOT EXISTS _comms_spine_fk_specs (
     child text, col text, parent text, ondel text
-  ) ON COMMIT DROP;
+  );  -- session-temp (NO "ON COMMIT DROP"): the migration runner is autocommit, so the
+      -- spec table must survive across this migration's separate DO blocks; auto-drops at session end.
   TRUNCATE _comms_spine_fk_specs;
   INSERT INTO _comms_spine_fk_specs (child, col, parent, ondel) VALUES
     ('comms_threads',                  'practitioner_id',     'members',                 'SET NULL'),
@@ -107,6 +108,8 @@ BEGIN
     ('comms_webhooks_log',             'message_id',          'comms_messages',          'SET NULL');
 
   FOR r IN SELECT * FROM _comms_spine_fk_specs LOOP
+    -- skip-if-absent: a table this environment doesn't have can't have orphans or get an FK
+    CONTINUE WHEN to_regclass('public.' || r.child) IS NULL OR to_regclass('public.' || r.parent) IS NULL;
     EXECUTE format(
       'SELECT count(*) FROM public.%I c WHERE c.%I IS NOT NULL '
       'AND NOT EXISTS (SELECT 1 FROM public.%I p WHERE p.id = c.%I)',
@@ -144,6 +147,10 @@ BEGIN
       ('comms_webhooks_log',              ARRAY['provider','external_event_id']::text[])
     ) AS t(tbl, cols)
   LOOP
+    IF to_regclass('public.' || r.tbl) IS NULL THEN  -- skip-if-absent (not fatal)
+      RAISE NOTICE 'table % absent, skipping UNIQUE', r.tbl;
+      CONTINUE;
+    END IF;
     IF EXISTS (  -- equivalent unique/primary-key constraint already present?
       SELECT 1 FROM pg_constraint con
       WHERE con.conrelid = r.tbl::regclass AND con.contype IN ('u','p')
@@ -187,6 +194,10 @@ DECLARE
   r RECORD;
 BEGIN
   FOR r IN SELECT * FROM _comms_spine_fk_specs LOOP
+    IF to_regclass('public.' || r.child) IS NULL OR to_regclass('public.' || r.parent) IS NULL THEN  -- skip-if-absent (not fatal)
+      RAISE NOTICE 'table % or parent % absent, skipping FK %.%', r.child, r.parent, r.child, r.col;
+      CONTINUE;
+    END IF;
     IF EXISTS (
       SELECT 1 FROM pg_constraint con
       JOIN pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = ANY(con.conkey)
