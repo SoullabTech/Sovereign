@@ -39,8 +39,13 @@ export class ProposalValidationError extends Error {
 
 /**
  * Write a member-confirmed calendar-event proposal to their calendar.
- * Mirrors the validation + INSERT used by the studio calendar route so the two
- * write paths stay consistent.
+ *
+ * INTERNAL / LOCAL-ONLY BY GUARANTEE: this path pins sync_status='local_only' and
+ * calendar_disclosure='private' so a proposal-created row can never propagate to an
+ * external calendar (Gate 0 §1.3 of docs/specs/CALENDAR_AUTHORIZED_ACTION_SPEC_2026-06-18.md).
+ * It shares validation with the studio calendar route but DELIBERATELY diverges from it on
+ * disclosure/sync — the studio path is external-capable, this one is not. Do not
+ * "consolidate" the two write paths back together without revisiting §1.3.
  */
 export async function executeCalendarEventProposal(
   payload: CalendarEventPayload,
@@ -66,9 +71,16 @@ export async function executeCalendarEventProposal(
     throw new ProposalValidationError('End time must be after start time.');
   }
 
+  // Gate 0 structural hardening (spec §1.3): pin local-only/private so a proposal-created
+  // row cannot escape via the shared calendar_events table — not left to the externally-
+  // leaning table defaults (sync_status default 'local_only', calendar_disclosure default
+  // 'generic' = would sync as "Busy"). syncEventToCalDAV() short-circuits on 'private'.
   const result = await query(
-    `INSERT INTO calendar_events (member_id, title, description, start_time, end_time, all_day, location)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO calendar_events (
+       member_id, title, description, start_time, end_time, all_day, location,
+       sync_status, calendar_disclosure
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'local_only', 'private')
      RETURNING id, title, description, start_time, end_time, all_day, location, created_at`,
     [
       ctx.memberId,
