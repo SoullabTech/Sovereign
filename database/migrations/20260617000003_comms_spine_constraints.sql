@@ -180,10 +180,21 @@ END $$;
 -- ── 2. comms_policies partial UNIQUE indexes (source declares these as indexes) ───
 -- Partial uniqueness (WHERE ...) cannot be a table UNIQUE constraint, so these stay
 -- indexes and will NOT appear in pg_constraint contype 'u'. IF NOT EXISTS = idempotent.
-CREATE UNIQUE INDEX IF NOT EXISTS idx_comms_policies_unique_client
-  ON comms_policies(practitioner_id, client_id, domain) WHERE client_id IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_comms_policies_unique_default
-  ON comms_policies(practitioner_id, domain) WHERE client_id IS NULL;
+-- Wrapped in the SAME skip-if-absent guard as §0/§1/§3: a bare CREATE INDEX ... ON
+-- comms_policies is FATAL (not skipped) when the table is absent in an environment,
+-- because IF NOT EXISTS guards the index, not the table. So guard on the table first.
+DO $$
+BEGIN
+  IF to_regclass('public.comms_policies') IS NULL THEN  -- skip-if-absent (not fatal)
+    RAISE NOTICE 'table comms_policies absent, skipping partial UNIQUE indexes';
+  ELSE
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_comms_policies_unique_client
+      ON comms_policies(practitioner_id, client_id, domain) WHERE client_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_comms_policies_unique_default
+      ON comms_policies(practitioner_id, domain) WHERE client_id IS NULL;
+    RAISE NOTICE 'Ensured comms_policies partial UNIQUE indexes';
+  END IF;
+END $$;
 
 
 -- ── 3. FOREIGN KEY constraints (contype 'f') ─────────────────────────────────────
