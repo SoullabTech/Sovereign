@@ -56,7 +56,7 @@ export function ChannelPurposeHeader({
                 {config.label}
               </span>
             )}
-            {channel.isPrivate && onOpenMembers && (
+            {onOpenMembers && (
               <button
                 onClick={onOpenMembers}
                 className="text-xs text-white/30 hover:text-white/60 transition-colors flex items-center gap-1"

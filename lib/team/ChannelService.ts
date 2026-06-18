@@ -6,6 +6,7 @@ import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, Ch
 import { notifyChannelMentions, notifyThreadReply } from '@/lib/team/notifications';
 import { createAttentionItemsForMessage } from '@/lib/team/attention';
 import { getActiveParticipants } from '@/lib/team/getActiveParticipants';
+import { isChannelAdminOrTeamAdmin } from '@/lib/team/permissions';
 
 // System channels that can never be made private (or made public).
 // Mirrors the delete-protection in app/api/team/admin/channels/route.ts.
@@ -447,6 +448,86 @@ export async function sendMessage(
     messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [],
   };
+}
+
+export type DeleteMessageResult =
+  | { ok: true }
+  | { ok: false; reason: 'not_found' | 'forbidden' };
+
+/**
+ * Soft-delete a channel message (sets deleted_at). Reversible at the DB level —
+ * getMessages / getReplies already exclude rows where deleted_at IS NOT NULL,
+ * and reply counts ignore them, so the message simply disappears on next load.
+ *
+ * Records audit metadata (deleted_by, optional deletionReason) alongside the
+ * soft delete so moderators have an accountable trail even without a recovery UI.
+ *
+ * Permission: the original sender may delete their own message; a channel
+ * owner/admin or a global team admin may delete any message in the channel.
+ */
+export async function deleteMessage(
+  channelId: string,
+  messageId: string,
+  requesterId: string,
+  deletionReason?: string
+): Promise<DeleteMessageResult> {
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_messages
+     WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL`,
+    [messageId, channelId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+
+  const isSender = row.sender_id === requesterId;
+  const canDelete = isSender || (await isChannelAdminOrTeamAdmin(requesterId, channelId));
+  if (!canDelete) return { ok: false, reason: 'forbidden' };
+
+  await query(
+    `UPDATE team_messages
+       SET deleted_at = NOW(), deleted_by = $2, deleted_reason = $3
+     WHERE id = $1`,
+    [messageId, requesterId, deletionReason ?? null]
+  );
+  return { ok: true };
+}
+
+export type EditMessageResult =
+  | { ok: true; editedAt: string }
+  | { ok: false; reason: 'not_found' | 'forbidden' | 'empty' | 'too_long' };
+
+/**
+ * Edit a channel message's text. Sets edited_at so the UI can show an "edited" tag.
+ *
+ * Permission is SENDER-ONLY by design — not even a channel/team admin may rewrite
+ * another member's words (that would put words in their mouth: a harsher boundary
+ * than deletion). Admins can delete; only the author can edit.
+ */
+export async function editMessage(
+  channelId: string,
+  messageId: string,
+  requesterId: string,
+  newBody: string
+): Promise<EditMessageResult> {
+  const trimmed = newBody.trim();
+  if (!trimmed) return { ok: false, reason: 'empty' };
+  if (trimmed.length > 8000) return { ok: false, reason: 'too_long' };
+
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_messages
+     WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL`,
+    [messageId, channelId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+  if (row.sender_id !== requesterId) return { ok: false, reason: 'forbidden' };
+
+  const upd = await query<{ edited_at: string }>(
+    `UPDATE team_messages SET body = $2, edited_at = NOW()
+     WHERE id = $1 RETURNING edited_at`,
+    [messageId, trimmed]
+  );
+  return { ok: true, editedAt: upd.rows[0].edited_at };
 }
 
 export async function markChannelRead(channelId: string, memberId: string): Promise<void> {

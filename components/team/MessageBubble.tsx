@@ -40,6 +40,10 @@ interface MessageBubbleProps {
   onOpenThread?: (message: TeamMessage) => void;
   onReflect?: (messageId: string, mode: string) => void;
   onCaptureDecision?: (messageId: string) => void;
+  onDelete?: (messageId: string) => void;
+  onEdit?: (messageId: string, newBody: string) => void;
+  /** True if the current member can moderate (delete others') in this channel. */
+  canModerate?: boolean;
   captured?: boolean;
 }
 
@@ -59,11 +63,25 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, captured }: MessageBubbleProps) {
+export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, onDelete, onEdit, canModerate, captured }: MessageBubbleProps) {
   const [showReactions, setShowReactions] = useState(false);
   const [showReflectMenu, setShowReflectMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(message.body);
   const isOwn = message.senderId === currentMemberId;
   const isMaia = message.senderType === 'maia';
+  // You can always delete your own; moderators can delete anyone's.
+  const canDelete = !!onDelete && !isMaia && (isOwn || !!canModerate);
+  // Editing is sender-only — you can revise your own words; no one edits another's.
+  const canEdit = !!onEdit && !isMaia && isOwn && !!message.body.trim();
+
+  const saveEdit = () => {
+    const v = editValue.trim();
+    if (!v || v === message.body) { setIsEditing(false); return; }
+    onEdit?.(message.id, v);
+    setIsEditing(false);
+  };
 
   const initials = isMaia
     ? 'M'
@@ -86,7 +104,7 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           : 'hover:bg-white/[0.03]'
       }`}
       onMouseEnter={() => setShowReactions(true)}
-      onMouseLeave={() => { setShowReactions(false); setShowReflectMenu(false); }}
+      onMouseLeave={() => { setShowReactions(false); setShowReflectMenu(false); setShowDeleteConfirm(false); }}
     >
       {/* Avatar */}
       <div
@@ -121,9 +139,41 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           )}
         </div>
 
-        <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-          <MessageText body={message.body} />
-        </p>
+        {isEditing ? (
+          <div className="mt-1">
+            <textarea
+              value={editValue}
+              onChange={e => setEditValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(); }
+                else if (e.key === 'Escape') { e.preventDefault(); setIsEditing(false); }
+              }}
+              autoFocus
+              rows={Math.min(10, Math.max(2, editValue.split('\n').length))}
+              className="w-full bg-zinc-800 border border-white/15 rounded-md px-2.5 py-1.5 text-sm text-white/85 focus:outline-none focus:border-amber-500/50 resize-y"
+            />
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                onClick={saveEdit}
+                disabled={!editValue.trim() || editValue.trim() === message.body}
+                className="text-xs font-medium bg-amber-500 text-black rounded px-2.5 py-1 disabled:opacity-40 hover:bg-amber-400 transition-colors"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-xs text-white/50 hover:text-white/80 transition-colors"
+              >
+                Cancel
+              </button>
+              <span className="text-[10px] text-white/30">Enter to save · Esc to cancel</span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
+            <MessageText body={message.body} />
+          </p>
+        )}
 
         {/* Reactions */}
         {message.reactions.length > 0 && (
@@ -230,6 +280,58 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
                       {m.label}
                     </button>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Edit message — sender only (revise your own words; no one edits another's) */}
+          {canEdit && (
+            <button
+              onClick={() => { setEditValue(message.body); setIsEditing(true); setShowReactions(false); setShowReflectMenu(false); setShowDeleteConfirm(false); }}
+              className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-amber-300 hover:bg-white/10 rounded transition-colors ml-0.5"
+              title="Edit message"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          )}
+
+          {/* Delete message — own messages always; others' only for moderators */}
+          {canDelete && (
+            <div className="relative ml-0.5">
+              <button
+                onClick={() => { setShowDeleteConfirm(v => !v); setShowReflectMenu(false); }}
+                className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-white/10 rounded transition-colors"
+                title="Delete message"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              {showDeleteConfirm && (
+                <div className="absolute right-0 top-8 w-60 bg-zinc-800 border border-white/12 rounded-lg p-3 shadow-xl z-20 flex flex-col gap-2.5 text-left">
+                  <div>
+                    <p className="text-xs font-semibold text-white/85">Delete message?</p>
+                    <p className="text-[11px] text-white/50 leading-relaxed mt-1">
+                      It&apos;s removed from the conversation but not erased. A record — including who deleted it — is kept for moderation.
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="flex-1 text-xs text-white/60 hover:text-white/90 hover:bg-white/5 rounded px-2 py-1.5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => { onDelete?.(message.id); setShowDeleteConfirm(false); setShowReactions(false); }}
+                      className="flex-1 text-xs font-medium bg-red-500/80 hover:bg-red-500 text-white rounded px-2 py-1.5 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

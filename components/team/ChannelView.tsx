@@ -13,13 +13,15 @@ import { ChannelMembersPanel } from './ChannelMembersPanel';
 interface ChannelViewProps {
   channel: TeamChannel;
   currentMemberId: string;
+  /** Channel owner/admin or global team admin — can manage members & delete any message. */
+  isAdmin?: boolean;
 }
 
 function sameDay(a: string, b: string): boolean {
   return new Date(a).toDateString() === new Date(b).toDateString();
 }
 
-export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
+export function ChannelView({ channel, currentMemberId, isAdmin = false }: ChannelViewProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<TeamMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,14 +74,15 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     ? new Date(messages[messages.length - 1].createdAt).getTime()
     : 0;
 
-  // Load member count for private channels
+  // Load member count wherever the Members affordance is shown:
+  // private channels (any member can view) or any channel an admin manages.
   useEffect(() => {
-    if (!channel.isPrivate) return;
+    if (!channel.isPrivate && !isAdmin) return;
     fetch(`/api/team/channels/${channel.id}/members`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.members) setMemberCount(d.members.length); })
       .catch(() => undefined);
-  }, [channel.id, channel.isPrivate]);
+  }, [channel.id, channel.isPrivate, isAdmin, showMembersPanel]);
 
   // Load initial history
   useEffect(() => {
@@ -158,6 +161,52 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     requestAnimationFrame(() => {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     });
+  };
+
+  // Soft-delete a message. Optimistically remove it from the list; roll back on failure.
+  const handleDelete = async (messageId: string) => {
+    const prev = messages;
+    setMessages(p => p.filter(m => m.id !== messageId));
+    if (threadMessage?.id === messageId) setThreadMessage(null);
+    try {
+      const res = await fetch(`/api/team/channels/${channel.id}/messages/${messageId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        setMessages(prev);
+        setToast(res.status === 403 ? 'You can only delete your own messages.' : 'Could not delete message.');
+        setTimeout(() => setToast(null), 4000);
+      }
+    } catch {
+      setMessages(prev);
+      setToast('Could not delete message.');
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
+  // Edit a message's text (sender-only). Optimistic; roll back on failure.
+  const handleEdit = async (messageId: string, newBody: string) => {
+    const prev = messages;
+    setMessages(p => p.map(m => m.id === messageId ? { ...m, body: newBody, editedAt: new Date().toISOString() } : m));
+    try {
+      const res = await fetch(`/api/team/channels/${channel.id}/messages/${messageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: newBody }),
+      });
+      if (!res.ok) {
+        setMessages(prev);
+        setToast(res.status === 403 ? 'You can only edit your own messages.' : 'Could not edit message.');
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        const data = await res.json().catch(() => null);
+        if (data?.editedAt) setMessages(p => p.map(m => m.id === messageId ? { ...m, editedAt: data.editedAt } : m));
+      }
+    } catch {
+      setMessages(prev);
+      setToast('Could not edit message.');
+      setTimeout(() => setToast(null), 4000);
+    }
   };
 
   const handleReact = async (messageId: string, emoji: string) => {
@@ -367,7 +416,7 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
         channel={channel}
         currentMemberId={currentMemberId}
         memberCount={memberCount}
-        onOpenMembers={channel.isPrivate ? () => setShowMembersPanel(p => !p) : undefined}
+        onOpenMembers={(channel.isPrivate || isAdmin) ? () => setShowMembersPanel(p => !p) : undefined}
         onVisibilityChanged={() => {
           // Re-fetch the page to get fresh channel data + sidebar refresh
           if (typeof window !== 'undefined') window.location.reload();
@@ -410,6 +459,9 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
                 onOpenThread={setThreadMessage}
                 onReflect={handleReflect}
                 onCaptureDecision={handleCaptureDecision}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                canModerate={isAdmin}
                 captured={capturedIds.has(msg.id)}
               />
             </div>
@@ -434,14 +486,16 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
           parentMessage={threadMessage}
           channelId={channel.id}
           currentMemberId={currentMemberId}
+          isAdmin={isAdmin}
           onClose={() => setThreadMessage(null)}
           onReact={handleReact}
         />
       )}
-      {showMembersPanel && channel.isPrivate && (
+      {showMembersPanel && (channel.isPrivate || isAdmin) && (
         <ChannelMembersPanel
           channelId={channel.id}
           currentMemberId={currentMemberId}
+          canManage={isAdmin}
           onClose={() => setShowMembersPanel(false)}
         />
       )}

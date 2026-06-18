@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Flame, AlertCircle, Sprout, Plus, X, GripVertical, RefreshCw, Sparkles, ArrowRight,
   CalendarDays, Users, Wind, Scale, FileText, Shuffle, CloudSun, Lightbulb, Pencil,
-  ArrowRightLeft, Maximize2, Minimize2, ChevronRight,
+  ArrowRightLeft, Maximize2, Minimize2, ChevronRight, Compass, Heart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -14,16 +14,30 @@ import { FIELD_QUOTES, dailyIndex, type Mood } from '@/lib/studio/fieldQuotes';
 // ─────────────────────────────────────────────────────────────────────────────
 // PERSONAL FIELD — a workspace you work IN, not a directory that links away.
 //
-// Worked here, not elsewhere: a thin state strip (inner weather · quote · what
-// inspires you) you set, Today + People at the top, and three CURATED fields you
-// fill yourself — Important · Needs attention · Emerging — pulling in your Changes,
-// Decisions, and free notes, with in-place add / subtract / move and drag-to-reorder.
+// TWO MODES OF ATTENTION (complementary, not competing — Kelly 2026-06-17):
+//   • Workspace (foregrounded) — what the MEMBER chooses. The three curated fields
+//     (Important / Needs attention / Emerging): you pull in your own Changes,
+//     Decisions, and free notes and curate them in place (add / subtract / move /
+//     drag / scroll / expand). field_attention.
+//   • Pulse (a switchable lens) — what the system NOTICES, drawn from your own
+//     changes & decisions: the four questions (Alive / Asking / Emerging / Tending).
+//     This is the original orientation floor, KEPT INTACT so Experiment 1 (does the
+//     four-question grammar become something people speak untaught?) keeps running.
+//     The redesign foregrounds Workspace; it does NOT delete the floor. Reality —
+//     not the redesign — decides which becomes primary.
+//
+// Around both: a thin state strip (inner weather · quote · what inspires you) you
+// set, and Today + People at the top, as movable boxes.
 //
 // Oath guard: the person authors; MAIA never infers, ranks, or decides. Weather is
-// person-tapped. The quote is OFFERED (you choose). Placement is CURATION — "Important"
-// is your label, not a computed score. Nothing here is faked or system-significance.
+// person-tapped. The quote is OFFERED (you choose). Placement is CURATION —
+// "Important" is your label, not a computed score. The floor REVEALS, it does not
+// decide. Nothing here is faked or system-significance.
 // ─────────────────────────────────────────────────────────────────────────────
 
+type Perspective = 'workspace' | 'pulse';
+
+// ── Workspace (member-curated) ──
 type FieldKey = 'important' | 'attention' | 'emerging';
 
 interface AttentionItem {
@@ -45,9 +59,9 @@ interface FieldDef {
   key: FieldKey;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  grad: string;     // header gradient
-  ring: string;     // accent ring/border
-  text: string;     // accent text
+  grad: string;
+  ring: string;
+  text: string;
   empty: string;
 }
 
@@ -57,6 +71,44 @@ const FIELD_DEFS: Record<FieldKey, FieldDef> = {
   emerging:  { key: 'emerging',  label: 'Emerging', icon: Sprout, grad: 'from-emerald-500/25 via-teal-500/10 to-transparent', ring: 'border-emerald-500/30', text: 'text-emerald-300', empty: 'What’s taking shape? Name it here.' },
 };
 const FIELD_ORDER: FieldKey[] = ['important', 'attention', 'emerging'];
+
+// ── Pulse (system-noticed, from your changes & decisions) — the original floor ──
+interface FloorItem {
+  id: string;
+  source: 'change' | 'decision' | 'note';
+  sourceId: string;
+  title: string;
+  context?: string;
+  href?: string;       // omitted for authored notes (they live in the field)
+  createdAt: string;
+}
+interface FieldFloor {
+  alive: FloorItem[];
+  asking: FloorItem[];
+  emerging: FloorItem[];
+  tending: FloorItem[];
+}
+type FloorKey = keyof FieldFloor;
+interface FloorQuestion {
+  key: FloorKey;
+  question: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accent: 'amber' | 'blue' | 'emerald' | 'purple';
+  empty: string;
+  placeholder: string;
+}
+const FLOOR: FloorQuestion[] = [
+  { key: 'alive',    question: 'What is alive?',                icon: Flame,   accent: 'amber',   empty: 'Quiet here.',               placeholder: 'Name what’s alive…' },
+  { key: 'asking',   question: 'What is asking for attention?', icon: Compass, accent: 'blue',    empty: 'Nothing you’ve marked.',    placeholder: 'What’s asking for your attention?' },
+  { key: 'emerging', question: 'What is emerging?',             icon: Sprout,  accent: 'emerald', empty: 'Nothing new taking shape.', placeholder: 'What’s taking shape?' },
+  { key: 'tending',  question: 'What are you tending?',         icon: Heart,   accent: 'purple',  empty: 'Nothing in motion.',        placeholder: 'What are you tending?' },
+];
+const ACCENT_TEXT: Record<string, string> = {
+  amber: 'text-amber-400', blue: 'text-blue-400', emerald: 'text-emerald-400', purple: 'text-purple-400',
+};
+const ACCENT_BORDER: Record<string, string> = {
+  amber: 'border-l-amber-500/40', blue: 'border-l-blue-500/40', emerald: 'border-l-emerald-500/40', purple: 'border-l-purple-500/40',
+};
 
 const WEATHER = ['Grounded', 'Restless', 'Stretched', 'Curious', 'Tender', 'Open'];
 
@@ -110,6 +162,8 @@ function useReorder(storageKey: string, initial: string[]) {
 export default function FieldPage() {
   const [fields, setFields] = useState<AttentionFields>({ important: [], attention: [], emerging: [] });
   const [options, setOptions] = useState<Options>({ changes: [], decisions: [] });
+  const [floor, setFloor] = useState<FieldFloor | null>(null);
+  const [perspective, setPerspective] = useState<Perspective>('workspace');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [name, setName] = useState('');
@@ -127,7 +181,14 @@ export default function FieldPage() {
       const d = new Date();
       setDayLabel(`${d.toLocaleDateString(undefined, { weekday: 'long' }).toUpperCase()} · ${d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`);
       setWeather(localStorage.getItem('studio:fieldWeather'));
+      const p = localStorage.getItem('studio:fieldPerspective');
+      if (p === 'pulse' || p === 'workspace') setPerspective(p);
     } catch { /* best effort */ }
+  }, []);
+
+  const setPerspectivePersist = useCallback((p: Perspective) => {
+    setPerspective(p);
+    try { localStorage.setItem('studio:fieldPerspective', p); } catch { /* best effort */ }
   }, []);
 
   const load = useCallback(async (isRefresh = false) => {
@@ -140,13 +201,15 @@ export default function FieldPage() {
       if (currentTeamId) p.set('teamId', currentTeamId);
       p.set('includePersonal', String(includePersonal));
       const qs = p.toString();
-      const [aRes, oRes] = await Promise.all([
+      const [aRes, oRes, pRes] = await Promise.all([
         apiFetch(`/api/studio/field/attention?${qs}`, { signal: controller.signal }),
         apiFetch(`/api/studio/field/attention/options?${qs}`, { signal: controller.signal }),
+        apiFetch(`/api/studio/field/pulse?${qs}`, { signal: controller.signal }),
       ]);
       if (!controller.signal.aborted) {
         if (aRes.ok) setFields(await aRes.json());
         if (oRes.ok) setOptions(await oRes.json());
+        if (pRes.ok) setFloor(await pRes.json());
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -157,6 +220,7 @@ export default function FieldPage() {
 
   useEffect(() => { load(); return () => abortRef.current?.abort(); }, [load]);
 
+  // ── Workspace mutations (field_attention) ──
   const place = useCallback(async (field: FieldKey, kind: AttentionItem['kind'], label: string, refId?: string) => {
     try {
       await apiFetch('/api/studio/field/attention', {
@@ -167,12 +231,12 @@ export default function FieldPage() {
     await load(true);
   }, [currentTeamId, load]);
 
-  const remove = useCallback(async (id: string) => {
+  const removePlacement = useCallback(async (id: string) => {
     try { await apiFetch(`/api/studio/field/attention/${id}`, { method: 'DELETE' }); } catch { /* */ }
     await load(true);
   }, [load]);
 
-  const move = useCallback(async (id: string, field: FieldKey) => {
+  const movePlacement = useCallback(async (id: string, field: FieldKey) => {
     try {
       await apiFetch(`/api/studio/field/attention/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field }),
@@ -181,13 +245,39 @@ export default function FieldPage() {
     await load(true);
   }, [load]);
 
-  const setWeatherPersist = useCallback((w: string | null) => {
-    setWeather(w);
+  // ── Pulse mutations (field_notes — place / edit / move / remove a note) ──
+  const addNote = useCallback(async (section: FloorKey, body: string) => {
     try {
-      if (w) localStorage.setItem('studio:fieldWeather', w);
-      else localStorage.removeItem('studio:fieldWeather');
+      await apiFetch('/api/studio/field/notes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section, body, teamId: currentTeamId ?? undefined }),
+      });
     } catch { /* best effort */ }
-  }, []);
+    await load(true);
+  }, [currentTeamId, load]);
+
+  const removeNote = useCallback(async (noteId: string) => {
+    try { await apiFetch(`/api/studio/field/notes/${noteId}`, { method: 'DELETE' }); } catch { /* */ }
+    await load(true);
+  }, [load]);
+
+  const editNote = useCallback(async (noteId: string, body: string) => {
+    try {
+      await apiFetch(`/api/studio/field/notes/${noteId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body }),
+      });
+    } catch { /* best effort */ }
+    await load(true);
+  }, [load]);
+
+  const moveNote = useCallback(async (noteId: string, section: FloorKey) => {
+    try {
+      await apiFetch(`/api/studio/field/notes/${noteId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section }),
+      });
+    } catch { /* best effort */ }
+    await load(true);
+  }, [load]);
 
   const greet = getGreetWord();
 
@@ -216,7 +306,7 @@ export default function FieldPage() {
 
         {/* State strip — three states in a row, all else around them */}
         <div className="grid gap-3 md:grid-cols-3 mb-6">
-          <WeatherCell weather={weather} onPick={setWeatherPersist} />
+          <WeatherCell weather={weather} onPick={setWeather} />
           <QuoteCell weather={weather} />
           <InspiresCell />
         </div>
@@ -237,12 +327,14 @@ export default function FieldPage() {
           ))}
         </div>
 
-        {/* Three curated fields — the workspace centerpiece */}
+        {/* Two modes of attention: Workspace (you choose) · Pulse (what's noticed) */}
+        <PerspectiveSwitcher value={perspective} onChange={setPerspectivePersist} />
+
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
           </div>
-        ) : (
+        ) : perspective === 'workspace' ? (
           <div className="grid gap-4 lg:grid-cols-3 items-start">
             {fieldOrder.order.map((k) => {
               const def = FIELD_DEFS[k as FieldKey];
@@ -253,8 +345,8 @@ export default function FieldPage() {
                   items={fields[k as FieldKey] ?? []}
                   options={options}
                   onPlace={place}
-                  onRemove={remove}
-                  onMove={move}
+                  onRemove={removePlacement}
+                  onMove={movePlacement}
                   onDragStart={() => fieldOrder.onDragStart(k)}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => fieldOrder.onDrop(k)}
@@ -262,8 +354,47 @@ export default function FieldPage() {
               );
             })}
           </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-4">
+            {FLOOR.map((q) => (
+              <FloorCard
+                key={q.key}
+                question={q}
+                items={floor?.[q.key] ?? []}
+                onAdd={addNote}
+                onRemove={removeNote}
+                onEdit={editNote}
+                onMove={moveNote}
+              />
+            ))}
+          </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Perspective switcher — Workspace (you choose) ⇄ Pulse (what's noticed)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PerspectiveSwitcher({ value, onChange }: { value: Perspective; onChange: (v: Perspective) => void }) {
+  const opts: { key: Perspective; label: string; sub: string }[] = [
+    { key: 'workspace', label: 'Workspace', sub: 'what you’re curating' },
+    { key: 'pulse', label: 'Pulse', sub: 'drawn from your changes & decisions' },
+  ];
+  const active = opts.find((o) => o.key === value);
+  return (
+    <div className="mb-4">
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/5 w-fit">
+        {opts.map((o) => (
+          <button key={o.key} onClick={() => onChange(o.key)} title={o.sub}
+            className={`px-4 py-1.5 rounded-lg text-sm transition ${value === o.key ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-slate-300'}`}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {active && <p className="text-[11px] text-slate-500 mt-1.5 pl-1">{active.label} — {active.sub}.</p>}
     </div>
   );
 }
@@ -293,15 +424,22 @@ function WeatherCell({ weather, onPick }: { weather: string | null; onPick: (w: 
       if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) setCustoms(a.filter((x) => typeof x === 'string')); }
     } catch { /* best effort */ }
   }, []);
+  const persist = (w: string | null) => {
+    onPick(w);
+    try {
+      if (w) localStorage.setItem('studio:fieldWeather', w);
+      else localStorage.removeItem('studio:fieldWeather');
+    } catch { /* best effort */ }
+  };
   const saveCustom = () => {
     const v = draft.trim();
     if (!v) { setNaming(false); return; }
     const next = Array.from(new Set([...customs, v])).slice(-6);
     setCustoms(next);
     try { localStorage.setItem('studio:fieldWeatherCustom', JSON.stringify(next)); } catch { /* */ }
-    onPick(v); setDraft(''); setNaming(false);
+    persist(v); setDraft(''); setNaming(false);
   };
-  const pick = (w: string) => onPick(weather === w ? null : w);
+  const pick = (w: string) => persist(weather === w ? null : w);
   const all = [...WEATHER, ...customs.filter((c) => !WEATHER.includes(c))];
   return (
     <StateShell icon={CloudSun} title="Inner weather">
@@ -481,12 +619,8 @@ function AttentionFieldCard({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`rounded-2xl bg-white/[0.02] border ${def.ring} overflow-hidden flex flex-col`}>
-      {/* Vivid header */}
       <header className={`bg-gradient-to-br ${def.grad} px-4 py-3 flex items-center gap-2.5`}>
-        <button
-          draggable
-          onDragStart={onDragStart}
-          title="Drag to reorder"
+        <button draggable onDragStart={onDragStart} title="Drag to reorder"
           className="cursor-grab active:cursor-grabbing text-white/40 hover:text-white/70 transition shrink-0">
           <GripVertical className="w-4 h-4" />
         </button>
@@ -501,7 +635,6 @@ function AttentionFieldCard({
         )}
       </header>
 
-      {/* Body — scrollable; expand to grow the box */}
       <div className={`px-3 py-3 ${expanded ? '' : 'max-h-72 overflow-y-auto'}`}>
         {items.length === 0 ? (
           <p className="text-sm text-slate-600 px-1 py-2">{def.empty}</p>
@@ -514,7 +647,6 @@ function AttentionFieldCard({
         )}
       </div>
 
-      {/* Footer — add in place (note or pull in) */}
       <div className="px-3 pb-3 mt-auto border-t border-white/5 pt-3">
         {mode === 'note' ? (
           <div className="space-y-2">
@@ -613,6 +745,198 @@ function AttentionRow({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pulse floor card — one question + its items + a quiet invitation to place a note
+// (the original orientation floor, kept intact so Experiment 1 keeps running)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FloorCard({
+  question, items, onAdd, onRemove, onEdit, onMove,
+}: {
+  question: FloorQuestion;
+  items: FloorItem[];
+  onAdd: (section: FloorKey, body: string) => Promise<void>;
+  onRemove: (id: string) => void;
+  onEdit: (id: string, body: string) => Promise<void>;
+  onMove: (id: string, section: FloorKey) => Promise<void>;
+}) {
+  const Icon = question.icon;
+  const isEmpty = items.length === 0;
+  return (
+    <section className="rounded-xl bg-white/[0.02] border border-white/5 p-4 flex flex-col">
+      <h2 className={`text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${isEmpty ? 'text-slate-600' : 'text-slate-400'}`}>
+        <Icon className={`w-4 h-4 ${isEmpty ? 'text-slate-600' : ACCENT_TEXT[question.accent]}`} />
+        {question.question}
+      </h2>
+      {isEmpty ? (
+        <p className="text-sm text-slate-600 pl-1">{question.empty}</p>
+      ) : (
+        <div className="space-y-2">
+          {items.slice(0, 5).map((item) => (
+            <FloorItemCard key={item.id} item={item} accent={question.accent} currentSection={question.key} onRemove={onRemove} onEdit={onEdit} onMove={onMove} />
+          ))}
+          {items.length > 5 && (
+            <p className="text-xs text-slate-600 mt-2 pl-1">+{items.length - 5} more</p>
+          )}
+        </div>
+      )}
+      <AddNote section={question.key} placeholder={question.placeholder} accent={question.accent} onAdd={onAdd} />
+    </section>
+  );
+}
+
+function FloorItemCard({
+  item, accent, currentSection, onRemove, onEdit, onMove,
+}: {
+  item: FloorItem;
+  accent: string;
+  currentSection?: FloorKey;
+  onRemove?: (id: string) => void;
+  onEdit?: (id: string, body: string) => Promise<void>;
+  onMove?: (id: string, section: FloorKey) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(item.title);
+  const [saving, setSaving] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const [moveSaving, setMoveSaving] = useState(false);
+
+  if (item.source === 'note') {
+    if (editing && onEdit) {
+      const save = async () => {
+        const b = draft.trim();
+        if (!b || saving) return;
+        setSaving(true);
+        try { await onEdit(item.sourceId, b); setEditing(false); } finally { setSaving(false); }
+      };
+      return (
+        <div className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.04] border border-white/10 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
+          <textarea
+            autoFocus rows={2} value={draft} onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
+              if (e.key === 'Escape') { setDraft(item.title); setEditing(false); }
+            }}
+            className="w-full bg-transparent text-white/90 text-sm leading-relaxed focus:outline-none resize-none"
+          />
+          <div className="flex items-center gap-2 mt-2">
+            <button onClick={save} disabled={saving || !draft.trim()} className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button onClick={() => { setDraft(item.title); setEditing(false); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+          </div>
+        </div>
+      );
+    }
+    if (moving && onMove) {
+      const others = FLOOR.filter((q) => q.key !== currentSection);
+      return (
+        <div className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.04] border border-white/10 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
+          <p className="text-white/70 text-sm leading-relaxed line-clamp-2">{item.title}</p>
+          <p className="text-[11px] text-slate-500 mt-2 mb-1.5">Move to…</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {others.map((q) => (
+              <button
+                key={q.key}
+                onClick={async () => {
+                  if (moveSaving) return;
+                  setMoveSaving(true);
+                  try { await onMove(item.sourceId, q.key); } finally { setMoveSaving(false); setMoving(false); }
+                }}
+                disabled={moveSaving}
+                className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[q.accent]} hover:bg-white/15 transition disabled:opacity-40`}
+              >
+                {q.key.charAt(0).toUpperCase() + q.key.slice(1)}
+              </button>
+            ))}
+            <button onClick={() => setMoving(false)} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className={`group relative block pl-4 pr-20 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''}`}>
+        <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">{item.title}</p>
+        {item.context && (<p className="text-[11px] text-slate-500 mt-1">{item.context}</p>)}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+          {onEdit && (
+            <button onClick={() => { setDraft(item.title); setEditing(true); }} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Edit this note" aria-label="Edit this note">
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onMove && (
+            <button onClick={() => setMoving(true)} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Move to another question" aria-label="Move to another question">
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onRemove && (
+            <button onClick={() => onRemove(item.sourceId)} className="p-1 rounded text-slate-600 hover:text-slate-300 transition" title="Remove this note" aria-label="Remove this note">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+  // Derived item — a link back to the change/decision it came from.
+  return (
+    <Link href={item.href ?? '#'} className={`block pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${ACCENT_BORDER[accent] ?? ''} hover:bg-white/5 transition`}>
+      <p className="text-white/90 text-sm leading-relaxed">{item.title}</p>
+      {item.context && (<p className="text-[11px] text-slate-500 mt-1 truncate">{item.context}</p>)}
+    </Link>
+  );
+}
+
+function AddNote({
+  section, placeholder, accent, onAdd,
+}: {
+  section: FloorKey;
+  placeholder: string;
+  accent: string;
+  onAdd: (section: FloorKey, body: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const close = () => { setText(''); setOpen(false); };
+  const submit = async () => {
+    const body = text.trim();
+    if (!body || saving) return;
+    setSaving(true);
+    try { await onAdd(section, body); close(); } finally { setSaving(false); }
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="mt-3 flex items-center gap-2 pl-1 text-sm text-slate-600 hover:text-slate-400 transition">
+        <Plus className="w-3.5 h-3.5" />
+        <span>{placeholder}</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3">
+      <textarea
+        autoFocus rows={2} value={text} onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+          if (e.key === 'Escape') { close(); }
+        }}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white/90 text-sm placeholder-slate-600 focus:outline-none focus:border-white/20 resize-none"
+      />
+      <div className="flex items-center gap-2 mt-2">
+        <button onClick={submit} disabled={saving || !text.trim()} className={`px-3 py-1.5 rounded-lg text-sm bg-white/10 ${ACCENT_TEXT[accent]} hover:bg-white/15 transition disabled:opacity-40`}>
+          {saving ? 'Placing…' : 'Place'}
+        </button>
+        <button onClick={close} className="px-3 py-1.5 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition">Cancel</button>
+      </div>
     </div>
   );
 }
