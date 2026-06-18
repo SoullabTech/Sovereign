@@ -55,6 +55,7 @@ import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
+import { AudioSourcesStatus } from '@/components/studio/AudioSourcesStatus';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 import { getReviewEligibility, getSessionStatusBadge } from '@/lib/studio/reviewEligibility';
@@ -875,17 +876,30 @@ ${insightsSection}
               </div>
             )}
 
-            {/* Open video call — shown when a video room URL is configured in Settings → Integrations */}
+            {/* Open video call — shown when a video room URL is configured in Settings → Integrations.
+                Annotated so practitioners understand this JOINS the external meeting and can
+                double-join if they are already in the call. */}
             {videoRoomUrl && (
-              <a
-                href={videoRoomUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mb-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/40 text-slate-300 hover:border-slate-600 hover:text-white transition-all text-sm"
-              >
-                <Video className="w-4 h-4" />
-                Open Video Call
-              </a>
+              <div className="mb-3">
+                <a
+                  href={videoRoomUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/40 text-slate-300 hover:border-slate-600 hover:text-white transition-all text-sm"
+                >
+                  <Video className="w-4 h-4" />
+                  Open meeting{' '}
+                  <span className="text-slate-500">(joins as another participant)</span>
+                </a>
+                <p className="mt-1.5 flex items-start gap-1.5 text-[11px] text-slate-500">
+                  <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                  <span>
+                    Opens the meeting link from Settings &rarr; Integrations. If you&apos;re already
+                    in the call (especially in a desktop app), this adds you a second time &mdash;
+                    skip it and keep your existing window.
+                  </span>
+                </p>
+              </div>
             )}
 
             {/* Start button */}
@@ -1167,6 +1181,12 @@ ${insightsSection}
                 </button>
               </div>
             </div>
+
+            {/* Audio sources — frames capture as a positive checklist of what MAIA can hear,
+                driven by the reactive ctx.hasTabAudio (false when meeting audio was never
+                shared AND when a shared tab stops mid-session). Display only — does not touch
+                capture, consent, Sanctuary, or transcription. */}
+            <AudioSourcesStatus hasTabAudio={ctx.hasTabAudio} />
 
             {/* Two-column: Transcript + Interactive Rail */}
             <div className="grid lg:grid-cols-2 gap-4">
