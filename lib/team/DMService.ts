@@ -303,6 +303,81 @@ export async function sendDMMessage(
   };
 }
 
+export type DeleteDMMessageResult =
+  | { ok: true }
+  | { ok: false; reason: 'not_found' | 'forbidden' };
+
+/**
+ * Soft-delete a DM message (sets deleted_at). getDMMessages / getDMMessagesSince
+ * already exclude deleted rows. SENDER-ONLY: a 1:1 DM has no moderator, so only
+ * the author may delete. No deleted_by is recorded — it would always equal
+ * sender_id, carrying no governance signal (data minimization).
+ */
+export async function deleteDMMessage(
+  dmThreadId: string,
+  messageId: string,
+  requesterId: string
+): Promise<DeleteDMMessageResult> {
+  const member = await query(
+    `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, requesterId]
+  );
+  if (!member.rows[0]) return { ok: false, reason: 'forbidden' };
+
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_dm_messages
+     WHERE id = $1 AND dm_thread_id = $2 AND deleted_at IS NULL`,
+    [messageId, dmThreadId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+  if (row.sender_id !== requesterId) return { ok: false, reason: 'forbidden' };
+
+  await query(`UPDATE team_dm_messages SET deleted_at = NOW() WHERE id = $1`, [messageId]);
+  return { ok: true };
+}
+
+export type EditDMMessageResult =
+  | { ok: true; editedAt: string }
+  | { ok: false; reason: 'not_found' | 'forbidden' | 'empty' | 'too_long' };
+
+/**
+ * Edit a DM message's text (sets body + edited_at). SENDER-ONLY — only the author
+ * may revise their own words.
+ */
+export async function editDMMessage(
+  dmThreadId: string,
+  messageId: string,
+  requesterId: string,
+  newBody: string
+): Promise<EditDMMessageResult> {
+  const trimmed = newBody.trim();
+  if (!trimmed) return { ok: false, reason: 'empty' };
+  if (trimmed.length > 8000) return { ok: false, reason: 'too_long' };
+
+  const member = await query(
+    `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, requesterId]
+  );
+  if (!member.rows[0]) return { ok: false, reason: 'forbidden' };
+
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_dm_messages
+     WHERE id = $1 AND dm_thread_id = $2 AND deleted_at IS NULL`,
+    [messageId, dmThreadId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+  if (row.sender_id !== requesterId) return { ok: false, reason: 'forbidden' };
+
+  const upd = await query<{ edited_at: string }>(
+    `UPDATE team_dm_messages SET body = $2, edited_at = NOW()
+     WHERE id = $1 RETURNING edited_at`,
+    [messageId, trimmed]
+  );
+  return { ok: true, editedAt: upd.rows[0].edited_at };
+}
+
 export async function markDMRead(dmThreadId: string, memberId: string): Promise<void> {
   await query(
     `UPDATE team_dm_members SET last_read_at = NOW()
