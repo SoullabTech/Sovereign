@@ -184,6 +184,31 @@ export function ChannelView({ channel, currentMemberId, isAdmin = false }: Chann
     }
   };
 
+  // Edit a message's text (sender-only). Optimistic; roll back on failure.
+  const handleEdit = async (messageId: string, newBody: string) => {
+    const prev = messages;
+    setMessages(p => p.map(m => m.id === messageId ? { ...m, body: newBody, editedAt: new Date().toISOString() } : m));
+    try {
+      const res = await fetch(`/api/team/channels/${channel.id}/messages/${messageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: newBody }),
+      });
+      if (!res.ok) {
+        setMessages(prev);
+        setToast(res.status === 403 ? 'You can only edit your own messages.' : 'Could not edit message.');
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        const data = await res.json().catch(() => null);
+        if (data?.editedAt) setMessages(p => p.map(m => m.id === messageId ? { ...m, editedAt: data.editedAt } : m));
+      }
+    } catch {
+      setMessages(prev);
+      setToast('Could not edit message.');
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
   const handleReact = async (messageId: string, emoji: string) => {
     const res = await fetch(`/api/team/reactions/${messageId}`, {
       method: 'POST',
@@ -435,6 +460,7 @@ export function ChannelView({ channel, currentMemberId, isAdmin = false }: Chann
                 onReflect={handleReflect}
                 onCaptureDecision={handleCaptureDecision}
                 onDelete={handleDelete}
+                onEdit={handleEdit}
                 canModerate={isAdmin}
                 captured={capturedIds.has(msg.id)}
               />

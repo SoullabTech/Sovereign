@@ -492,6 +492,44 @@ export async function deleteMessage(
   return { ok: true };
 }
 
+export type EditMessageResult =
+  | { ok: true; editedAt: string }
+  | { ok: false; reason: 'not_found' | 'forbidden' | 'empty' | 'too_long' };
+
+/**
+ * Edit a channel message's text. Sets edited_at so the UI can show an "edited" tag.
+ *
+ * Permission is SENDER-ONLY by design — not even a channel/team admin may rewrite
+ * another member's words (that would put words in their mouth: a harsher boundary
+ * than deletion). Admins can delete; only the author can edit.
+ */
+export async function editMessage(
+  channelId: string,
+  messageId: string,
+  requesterId: string,
+  newBody: string
+): Promise<EditMessageResult> {
+  const trimmed = newBody.trim();
+  if (!trimmed) return { ok: false, reason: 'empty' };
+  if (trimmed.length > 8000) return { ok: false, reason: 'too_long' };
+
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_messages
+     WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL`,
+    [messageId, channelId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+  if (row.sender_id !== requesterId) return { ok: false, reason: 'forbidden' };
+
+  const upd = await query<{ edited_at: string }>(
+    `UPDATE team_messages SET body = $2, edited_at = NOW()
+     WHERE id = $1 RETURNING edited_at`,
+    [messageId, trimmed]
+  );
+  return { ok: true, editedAt: upd.rows[0].edited_at };
+}
+
 export async function markChannelRead(channelId: string, memberId: string): Promise<void> {
   await query(
     `INSERT INTO team_channel_reads (channel_id, member_id, last_read_at)
