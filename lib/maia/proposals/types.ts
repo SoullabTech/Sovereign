@@ -6,9 +6,9 @@
  * attention + a latent action + a consent gate. MAIA *constructs* proposals;
  * nothing changes the world until a member confirms one (Art. 2).
  *
- * Status: Cat 2 → Cat 6 in progress. This is part of the calendar
- * proof-of-loop. Inert until the front-half (tool-use on the live member turn)
- * is wired.
+ * Status: the full calendar loop is wired — front-half (tool-use on the live member
+ * turn) emits the proposal; the member confirms via the consent route. Branch-only,
+ * not yet deployed; runtime certification of the internal row is the remaining gate.
  */
 
 /** The only action type in the proof-of-loop. Fixed at creation; editing the

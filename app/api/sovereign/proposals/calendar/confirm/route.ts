@@ -8,9 +8,9 @@ export async function generateStaticParams() { return []; }
  * confirmed it. This route is the ONLY entry point that reaches the executor —
  * the sole writer. MAIA cannot call it; only a confirmed member action does.
  *
- * The front-half (MAIA emitting the proposal via tool-use on the live turn) is
- * wired separately. Until then this endpoint is reachable but unused — the
- * testable back-half of the calendar proof-of-loop.
+ * The front-half (MAIA emitting the proposal via tool-use on the live turn) is wired
+ * in lib/sovereign/maiaService.ts (FAST/CORE) and surfaced by CalendarProposalCard,
+ * which POSTs here on member confirm. This is the live consent gate, not a stub.
  *
  * NOTE (iOS): this is a force-dynamic route — add it to EXCLUDED_DYNAMIC_ROUTES
  * in scripts/capacitor-patch-routes.sh before the next Capacitor static build.

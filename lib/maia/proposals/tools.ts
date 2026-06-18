@@ -7,7 +7,10 @@
  * surface an intention, but only a member-confirmed proposal (via the executor)
  * changes the world.
  *
- * Inert until wired into the live member turn (front-half of the proof-of-loop).
+ * Wired into the live member turn (FAST/CORE) in lib/sovereign/maiaService.ts: the model
+ * emits propose_calendar_event, extractCalendarProposal lifts it, and the member confirms
+ * via components/maia/CalendarProposalCard. Still write-incapable — only a member-confirmed
+ * proposal reaches the executor.
  */
 
 import type { Proposal, CalendarEventPayload } from './types';
