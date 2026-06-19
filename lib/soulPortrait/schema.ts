@@ -1,0 +1,241 @@
+/**
+ * Spiralogic Soul Portrait — Reusable Report Schema
+ * ────────────────────────────────────────────────────────────────────────
+ * A Soul Portrait is a human-centered, astrology-informed reflection that
+ * integrates natal placements, Spiralogic elemental interpretation,
+ * archetypal psychology, and developmental guidance — written as a wise
+ * letter, not a deterministic forecast.
+ *
+ * DESIGN LAW (enforced structurally by the renderer via `framing`):
+ *   1. Symbolic architecture, not fate.       (a chart describes patterns, not destiny)
+ *   2. Archetypes are companions, not cages.   (a person is never reduced to a label)
+ *   3. A becoming, not a fixed identity.       (orientation toward maturation, not diagnosis)
+ *
+ * This file is the first implementation step: a typed contract + canonical
+ * catalogs. One person's portrait (see `portraits/`) is a static object that
+ * conforms to `SoulPortrait`. Later, a generator can populate the same shape
+ * from chart data + a person's stage — the renderer never changes.
+ *
+ * Canonical Spiralogic model: see `lib/maia/spiralogicReference.ts`.
+ *   Earth (grounding/embodiment) · Water (feeling/psyche) · Fire (activation/will)
+ *   Air (perspective/mind) · Aether (integration/wholeness).
+ */
+
+export type ElementKey = 'fire' | 'water' | 'earth' | 'air' | 'aether';
+
+export type ArchetypeKey =
+  | 'seeker'
+  | 'guardian'
+  | 'alchemist'
+  | 'storyteller'
+  | 'explorer'
+  | 'builder'
+  | 'healer'
+  | 'sage'
+  | 'steward';
+
+/** How strongly an archetype shows in this person — never a ranking of worth. */
+export type Resonance = 'strong' | 'present' | 'emerging';
+
+// ── Schema fields ─────────────────────────────────────────────────────────
+
+export interface Person {
+  name: string;
+  /** URL slug, e.g. "augusten" → /soul-portrait/augusten */
+  slug: string;
+  age?: number;
+  pronouns?: string;
+  /** Whether this portrait describes a minor — gates listing/sharing. */
+  isMinor?: boolean;
+}
+
+export interface BirthData {
+  date?: string;
+  time?: string;
+  place?: string;
+  /** Use when full birth data is not on hand and only placements are known. */
+  note?: string;
+}
+
+/** One natal placement rendered in plain, non-deterministic language. */
+export interface NatalPlacement {
+  /** "Sun", "Moon", "Ascendant", "Neptune", "Chiron", ... */
+  body: string;
+  sign?: string;
+  house?: number;
+  /** e.g. "near the Midheaven", "conjunct the MC" */
+  angle?: string;
+  /** A short, human reading of what this placement points toward. */
+  meaning: string;
+}
+
+export interface NatalChartSummary {
+  placements: NatalPlacement[];
+  /** A woven paragraph that holds the placements together as one picture. */
+  synthesis: string;
+}
+
+export interface ElementalProfileEntry {
+  element: ElementKey;
+  /** The element's keyword for this report, e.g. "courage, purpose, vitality". */
+  keyword: string;
+  title: string;
+  body: string;
+}
+
+export interface ArchetypeEntry {
+  key: ArchetypeKey;
+  /** Display name (defaults available in ARCHETYPE_CATALOG). */
+  name: string;
+  /** What this archetype carries for this person. */
+  essence: string;
+  gift: string;
+  /** The shadow side held honestly — a direction of growth, not a verdict. */
+  shadow: string;
+  resonance: Resonance;
+}
+
+export interface DevelopmentalStage {
+  /** e.g. "Becoming a Young Man" */
+  label: string;
+  ageRange?: string;
+  body: string;
+}
+
+export interface ChallengeTraining {
+  challenge: string;
+  training: string;
+}
+
+export interface SeerAndProphet {
+  title: string;
+  subtitle?: string;
+  /** Verbatim body prose (paragraphs separated by blank lines). */
+  body: string;
+  /** Closing blessing lines, rendered with emphasis. */
+  blessing?: string[];
+}
+
+/** Always rendered. The structural enforcement of the design law. */
+export interface PortraitFraming {
+  /** Short notes shown near the top and echoed at the close. */
+  notes: string[];
+}
+
+export interface SoulPortrait {
+  person: Person;
+  birthData?: BirthData;
+  natalChartSummary: NatalChartSummary;
+
+  // The nine core sections, in render order ──────────────────────────────
+  /** 1. Opening Letter */
+  openingLetter: string;
+  /** 2. Soul Signature */
+  soulSignature: { headline: string; body: string };
+  /** 3. Elemental Architecture */
+  elementalProfile: ElementalProfileEntry[];
+  /** 4. Archetypal Profile */
+  archetypalProfile: ArchetypeEntry[];
+  /** 5. The Seer and the Prophet */
+  seerAndProphet: SeerAndProphet;
+  /** 6. Challenges as Training */
+  challengesAsTraining: { body: string; trainings?: ChallengeTraining[] };
+  /** 7. Becoming a Young Man (developmental stage) */
+  developmentalStage: DevelopmentalStage;
+  /** 8. Questions for This Season */
+  reflectionQuestions: string[];
+  /** 9. Parent/Guide Notes */
+  guidanceForParents: string[];
+
+  /** A one-paragraph vocation statement — what the gift is *for*. */
+  soulVocation: string;
+
+  /** Always rendered. Defaults to DEFAULT_FRAMING if omitted by a generator. */
+  framing: PortraitFraming;
+}
+
+// ── Canonical catalogs (reusable defaults for any portrait) ────────────────
+
+/**
+ * The five elements with their canonical Spiralogic meaning, the report
+ * keyword the spec calls for, plus presentation tokens (colour, glow, icon).
+ * Colours follow the softer in-app elemental palette used on /astrology;
+ * Aether is added (luminous violet) as it is absent from the holoflower facets.
+ */
+export const ELEMENT_META: Record<
+  ElementKey,
+  { label: string; keyword: string; essence: string; color: string; glow: string; icon: string }
+> = {
+  fire: {
+    label: 'Fire',
+    keyword: 'courage, purpose, vitality',
+    essence: 'activation / will',
+    color: '#F5A362',
+    glow: 'rgba(245, 163, 98, 0.35)',
+    icon: 'Flame',
+  },
+  water: {
+    label: 'Water',
+    keyword: 'heart, empathy, emotional wisdom',
+    essence: 'feeling / psyche',
+    color: '#8BADD6',
+    glow: 'rgba(139, 173, 214, 0.35)',
+    icon: 'Droplet',
+  },
+  earth: {
+    label: 'Earth',
+    keyword: 'grounding, habits, responsibility',
+    essence: 'grounding / embodiment',
+    color: '#A8C69F',
+    glow: 'rgba(168, 198, 159, 0.35)',
+    icon: 'Sprout',
+  },
+  air: {
+    label: 'Air',
+    keyword: 'curiosity, communication, ideas',
+    essence: 'perspective / mind',
+    color: '#F5D565',
+    glow: 'rgba(245, 213, 101, 0.35)',
+    icon: 'Wind',
+  },
+  aether: {
+    label: 'Aether',
+    keyword: 'meaning, spirit, mystery',
+    essence: 'integration / wholeness',
+    color: '#C4B5E8',
+    glow: 'rgba(196, 181, 232, 0.35)',
+    icon: 'Sparkles',
+  },
+};
+
+/** Canonical archetype names + one-line essences. A portrait personalises these. */
+export const ARCHETYPE_CATALOG: Record<ArchetypeKey, { name: string; essence: string }> = {
+  seeker: { name: 'The Seeker', essence: 'asks the deeper question; reaches past easy answers.' },
+  guardian: { name: 'The Guardian', essence: 'protects what is vulnerable; keeps faith with the weak.' },
+  alchemist: { name: 'The Alchemist', essence: 'turns pain and pressure into something new.' },
+  storyteller: { name: 'The Storyteller', essence: 'gives shape to meaning so others can feel it.' },
+  explorer: { name: 'The Explorer', essence: 'crosses thresholds; trusts the far horizon.' },
+  builder: { name: 'The Builder', essence: 'brings vision into form, patiently and well.' },
+  healer: { name: 'The Healer', essence: 'tends wounds — others’ and, first, their own.' },
+  sage: { name: 'The Sage', essence: 'perceives clearly and speaks the truth kindly.' },
+  steward: { name: 'The Steward', essence: 'cares for what is shared; leaves it better.' },
+};
+
+/** The default, always-on framing. Encodes the design law for every portrait. */
+export const DEFAULT_FRAMING: PortraitFraming = {
+  notes: [
+    'This is symbolic architecture, not fate. A chart describes patterns to work with — it does not decide who you become.',
+    'These archetypes are companions, not cages. You are always more than any single name for you.',
+    'This describes a becoming, not a fixed identity. Read it the way you’d read a kind letter — keep what rings true, set the rest aside.',
+  ],
+};
+
+export function getElementMeta(element: ElementKey) {
+  return ELEMENT_META[element];
+}
+
+export const RESONANCE_LABEL: Record<Resonance, string> = {
+  strong: 'Strongly present',
+  present: 'Present',
+  emerging: 'Emerging',
+};
