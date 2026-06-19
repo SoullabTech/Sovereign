@@ -3,8 +3,30 @@
 
 Kelly Nezat
 
-Soullab Media\
+Soullab Press\
+an imprint of Soullab Media\
 Hamden, Connecticut
+
+---
+
+## Permissions
+
+Copyright © 2026 Kelly W. Nezat
+
+All rights reserved. No part of this book may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law. For permission requests, write to the publisher at the address below.
+
+Published by\
+Soullab Press\
+an imprint of Soullab Media\
+Hamden, Connecticut\
+soullab.life
+
+ISBN 979-8-9967127-0-0 (paperback)\
+ISBN 979-8-9967127-1-7 (hardcover)
+
+First Soullab Press Edition
+
+Printed in the United States of America
 
 ---
 
@@ -25,16 +47,6 @@ While my goal is to honor your path and offer support, nothing replaces your own
 I aspire to offer guidance and support to all who seek the spiritual path and who want to explore the interconnectedness of our many ways of knowing, being, and becoming in the world. As the Buddha says, *"If you knew how perfect it all is you'd throw your head up at the clouds and laugh."*
 
 Take what resonates, leave what doesn't, and may your path be illuminated with joy, laughter, and profound insights.
-
----
-
-## Permissions
-
-All rights reserved. No part of this book may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law. For permission requests, write to the publisher at the address below.
-
-Copyright © 2026 by Kelly Nezat
-
-First Edition
 
 ---
 
