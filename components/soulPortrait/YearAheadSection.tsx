@@ -175,6 +175,20 @@ export function YearAheadSection({ yearAhead }: { yearAhead: YearAhead }) {
           </ol>
         </motion.div>
       )}
+
+      {/* ── A closing word / blessing for the year (optional) ────────── */}
+      {y.closing && (
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-3xl px-6 pb-24 pt-2">
+          <div className="rounded-3xl border border-maia-gold/30 bg-maia-navy-850/50 p-7 shadow-maia-spice-glow sm:p-9">
+            {y.closing.title && (
+              <p className="mb-5 text-center font-raleway text-[0.7rem] uppercase tracking-[0.25em] text-maia-gold">
+                {y.closing.title}
+              </p>
+            )}
+            <Para text={y.closing.body} />
+          </div>
+        </motion.div>
+      )}
     </section>
   );
 }
