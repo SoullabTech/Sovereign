@@ -159,6 +159,52 @@ export interface OfferedBy {
   };
 }
 
+/** One elemental phase of the Year Ahead's Seasonal Spiral (Part II). */
+export interface YearAheadPhase {
+  element: ElementKey;
+  /** e.g. "Leaving the Known". */
+  title: string;
+  /** e.g. "Spring · March – June". */
+  timeframe?: string;
+  /** The real transits this phase traces to — DATA, never a prediction. */
+  transits: string[];
+  /** Fresh, non-deterministic prose, addressed to the reader in second person. */
+  body: string;
+  /** The element's developmental question, e.g. "What foundations are no longer alive?". */
+  question?: string;
+  /** Optional elemental practice for the season. */
+  practice?: { label?: string; prompt: string };
+}
+
+/**
+ * The Year Ahead — Part II of the portrait (seasonal, revisited each year).
+ * A Spiralogic "Seasonal Spiral": development-centered — the year's transits are
+ * read as ecological forces moving the person through Earth → Fire → Water →
+ * Air → Aether. Optional; only portraits with a transit reading carry it. The
+ * element↔transit mapping is an authored Spiralogic reading (orientation, not
+ * fixed astrology and not authority), kept traceable to real transits.
+ */
+export interface YearAhead {
+  /** e.g. "The Year Ahead". */
+  title: string;
+  /** e.g. "The Spiral of Emergence". */
+  subtitle?: string;
+  /** e.g. "June 2027 – June 2028". */
+  timeframe?: string;
+  /** A single headline line met first — the heart of the opening theme. */
+  openingHeadline?: string;
+  /** The opening theme prose. */
+  openingTheme: string;
+  /** The five elemental phases, in spiral order. */
+  phases: YearAheadPhase[];
+  /** The weather-pattern table rows. */
+  weatherPattern?: Array<{ season: string; element: ElementKey; invitation: string }>;
+  /** The Golden Thread — the single developmental arc the year converges on. */
+  goldenThread: string;
+  /** Living questions to carry through the year (not goals, not predictions). */
+  questions: string[];
+}
+
 export interface SoulPortrait {
   person: Person;
   /** Which kind of portrait — shapes structure (e.g. parent notes) and voice. */
@@ -193,6 +239,13 @@ export interface SoulPortrait {
 
   /** Always rendered. Defaults to DEFAULT_FRAMING if omitted by a generator. */
   framing: PortraitFraming;
+
+  /**
+   * Part II — The Year Ahead (seasonal). Optional; rendered after the natal
+   * portrait when present. The natal portrait is timeless ("who are you?");
+   * this is the current season ("what season is inviting you now?").
+   */
+  yearAhead?: YearAhead;
 
   /**
    * Whether THIS portrait exposes the live MAIA Mentor (guardrailed dialogue) —

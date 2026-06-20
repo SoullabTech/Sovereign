@@ -320,6 +320,86 @@ The good news is that everything you need for that is already in you — the war
   soulVocation: `Your gift may be this: to make others feel at home in themselves — through the careful, warm, unhurried quality of your attention. A bright heart and a devoted hand, in service not of being impressive but of belonging. Wherever your life leads, let it be the kind of care that leaves people feeling more seen, more safe, and more themselves than before they sat down with you.`,
 
   framing: DEFAULT_FRAMING,
+
+  // ── Part II — The Year Ahead (Seasonal Spiral) ─────────────────────────────
+  // Grounded in her 12-month transit report (Astrograph) — transit DATA only;
+  // all prose written fresh in her voice (the report's interpretations are
+  // copyright Henry Seltzer / Astrograph and are never copied).
+  yearAhead: {
+    title: 'The Year Ahead',
+    subtitle: 'The Spiral of Emergence',
+    timeframe: 'June 2027 – June 2028',
+    openingHeadline:
+      'This is not a year of becoming someone new — it is a year of becoming impossible to remain who you have been.',
+    openingTheme: `Your birth chart describes the landscape you carry through your whole life. The transits are the weather moving across it. This year, almost every major movement points toward a single process: a widening of who you are, through the courage to trust your own experience.
+
+This isn't a prediction. It's an invitation to walk with the season consciously.`,
+    phases: [
+      {
+        element: 'earth',
+        title: 'Leaving the Known',
+        timeframe: 'Spring · March – June',
+        transits: ['Pluto entering your Ninth House', 'Uranus square your Sun'],
+        body: `Pluto begins reshaping your Ninth House while Uranus squares your Sun. Together they loosen inherited assumptions about who you are and what you believe. You may notice yourself questioning beliefs you once accepted, feeling restless without quite knowing why, sensing that some old identities have simply become too small.
+
+The temptation is to grip tighter. The invitation is to loosen your hold.`,
+        question: 'What foundations are no longer alive?',
+        practice: { label: 'Earth practice', prompt: 'Each evening, ask: what belief felt too small today?' },
+      },
+      {
+        element: 'fire',
+        title: 'The Courage to Become',
+        timeframe: 'Early Summer · May – August',
+        transits: ['Uranus conjunct your Jupiter', 'Jupiter crossing your Sun & Mercury'],
+        body: `Uranus meeting your Jupiter ignites real expansion, and Jupiter crossing your Sun and Mercury energizes it further. This is a season of awakening enthusiasm, vision, and possibility — not ambition for its own sake, but the recovery of authentic vitality. You may suddenly want to travel, study, create, teach, move, or begin something unexpected.
+
+Fire doesn't ask whether you're ready. It asks whether you're alive.`,
+        question: 'What wants to live through me now?',
+      },
+      {
+        element: 'water',
+        title: 'Healing the Inner Story',
+        timeframe: 'Summer · June – October',
+        transits: ['Chiron aspecting your Sun, Midheaven & Neptune', 'Neptune reshaping your ideals'],
+        body: `This is the emotional heart of the year. As Chiron touches your Sun, Midheaven, and Neptune, old stories surface — the quiet questions: Am I enough? Do I belong? Can I trust myself? Rather than avoiding them, this season invites compassion.
+
+Healing doesn't come by erasing the wound. It comes by discovering that the wound has become wisdom.`,
+        question: 'What is ready to be met with compassion, rather than avoided?',
+      },
+      {
+        element: 'air',
+        title: 'Finding a New Voice',
+        timeframe: 'Autumn · August – November',
+        transits: ['Uranus square your Mercury', 'Jupiter activating your Mercury'],
+        body: `Communication evolves. Ideas come rapidly, and old ways of speaking no longer quite fit. You begin to think more independently — not simply learning more, but developing a voice that is genuinely your own. The shift is subtle and important: from repeating what you were taught toward speaking what you have actually lived.`,
+        question: 'What do I actually know because I have lived it?',
+      },
+      {
+        element: 'aether',
+        title: 'Living from a Larger Self',
+        timeframe: 'Whole year',
+        transits: ['Pluto and Neptune in their long, slow work'],
+        body: `Beneath the seasons, Pluto and Neptune continue their long work — not events but climate. Aether is the quiet realization that life has become larger than personal success. Purpose begins to replace performance; presence begins to replace proving.
+
+You become less interested in looking impressive, and more interested in living truthfully.`,
+        question: 'What larger pattern is trying to come into being through all of this?',
+      },
+    ],
+    weatherPattern: [
+      { season: 'Spring', element: 'earth', invitation: 'Release inherited identity' },
+      { season: 'Early Summer', element: 'fire', invitation: 'Step toward expansion' },
+      { season: 'Summer', element: 'water', invitation: 'Heal the heart’s old narratives' },
+      { season: 'Autumn', element: 'air', invitation: 'Speak with your own voice' },
+      { season: 'Whole Year', element: 'aether', invitation: 'Live from deeper purpose' },
+    ],
+    goldenThread: `What's most striking about this year is that almost every major movement supports the same arc. Pluto transforms your worldview, Uranus loosens old identity, Chiron heals the inner story, Jupiter expands your confidence, and Neptune enlarges your imagination. These aren't competing themes — they converge on a single invitation: to move from a life shaped mostly by inherited structures into one authored from within.`,
+    questions: [
+      'What new horizons are quietly calling me?',
+      'Where is life asking me to trust my own understanding more deeply?',
+      'What parts of my life are ready to become more authentically my own?',
+      'How can I create a deeper sense of home — within myself, and with those I love?',
+    ],
+  },
 };
 
 export default katiePortrait;

@@ -1,0 +1,182 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { Flame, Droplet, Sprout, Wind, Sparkles, Eye, HelpCircle, type LucideIcon } from 'lucide-react';
+import { ELEMENT_META, type YearAhead, type ElementKey } from '@/lib/soulPortrait/schema';
+
+/**
+ * YearAheadSection — Part II of a Soul Portrait (seasonal).
+ *
+ * A Spiralogic "Seasonal Spiral": development-centered — the year's transits read
+ * as ecological forces moving the reader through Earth → Fire → Water → Air →
+ * Aether. Rendered only when a portrait carries `yearAhead`. Static, no AI, no
+ * memory. The natal portrait above it is Part I (timeless); this is the season.
+ */
+
+const ELEMENT_ICONS: Record<ElementKey, LucideIcon> = {
+  fire: Flame,
+  water: Droplet,
+  earth: Sprout,
+  air: Wind,
+  aether: Sparkles,
+};
+
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.6, ease: 'easeOut' },
+} as const;
+
+function Para({ text }: { text: string }) {
+  return (
+    <div className="space-y-5">
+      {text.trim().split(/\n{2,}/).map((p, i) => (
+        <p key={i} className="font-cormorant text-[1.05rem] leading-relaxed text-maia-ink-80">{p}</p>
+      ))}
+    </div>
+  );
+}
+
+export function YearAheadSection({ yearAhead }: { yearAhead: YearAhead }) {
+  const y = yearAhead;
+  return (
+    <section className="border-t border-maia-gold/15 bg-gradient-to-b from-maia-navy-950 via-maia-navy-900 to-maia-navy-950">
+      {/* ── Movement header ──────────────────────────────────────────── */}
+      <motion.div {...fadeUp} className="mx-auto w-full max-w-3xl px-6 pt-20 pb-6 text-center sm:pt-28">
+        <p className="font-raleway text-xs uppercase tracking-[0.3em] text-maia-gold">Part II</p>
+        <h2 className="mt-4 font-cinzel text-3xl text-maia-ink-100 sm:text-4xl">{y.title}</h2>
+        {y.subtitle && (
+          <p className="mt-3 font-raleway text-sm uppercase tracking-[0.22em] text-maia-ink-50">{y.subtitle}</p>
+        )}
+        {y.timeframe && (
+          <p className="mt-2 font-cormorant text-lg italic text-maia-ink-60">{y.timeframe}</p>
+        )}
+      </motion.div>
+
+      {/* ── Opening theme ────────────────────────────────────────────── */}
+      <motion.div {...fadeUp} className="mx-auto w-full max-w-3xl px-6 pb-4">
+        <div className="rounded-3xl border border-maia-gold/25 bg-maia-navy-850/50 p-7 shadow-maia-spice-glow sm:p-9">
+          {y.openingHeadline && (
+            <p className="mb-5 text-center font-cormorant text-[1.2rem] italic leading-relaxed text-maia-ink-100">
+              {y.openingHeadline}
+            </p>
+          )}
+          <Para text={y.openingTheme} />
+        </div>
+      </motion.div>
+
+      {/* ── The five elemental phases ────────────────────────────────── */}
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-6 py-8">
+        {y.phases.map((phase) => {
+          const meta = ELEMENT_META[phase.element];
+          const Icon = ELEMENT_ICONS[phase.element];
+          return (
+            <motion.div
+              key={phase.element + phase.title}
+              {...fadeUp}
+              className="rounded-2xl border bg-maia-navy-850/40 p-6"
+              style={{ borderColor: `${meta.color}40`, boxShadow: `0 0 24px ${meta.glow}` }}
+            >
+              <div className="mb-3 flex items-center gap-3">
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: `${meta.color}1f` }}
+                >
+                  <Icon className="h-5 w-5" strokeWidth={1.6} style={{ color: meta.color }} />
+                </span>
+                <div>
+                  <p className="font-raleway text-[0.7rem] uppercase tracking-[0.18em]" style={{ color: meta.color }}>
+                    {meta.label}{phase.timeframe ? ` · ${phase.timeframe}` : ''}
+                  </p>
+                  <h3 className="font-cinzel text-lg text-maia-ink-100">{phase.title}</h3>
+                </div>
+              </div>
+              {phase.transits.length > 0 && (
+                <p className="mb-3 font-raleway text-[0.68rem] uppercase tracking-[0.14em] text-maia-ink-40">
+                  Traces to&nbsp;·&nbsp;{phase.transits.join(' · ')}
+                </p>
+              )}
+              <Para text={phase.body} />
+              {phase.question && (
+                <p className="mt-4 font-cormorant text-[1.05rem] italic" style={{ color: meta.color }}>
+                  {phase.question}
+                </p>
+              )}
+              {phase.practice && (
+                <div className="mt-4 rounded-xl border border-maia-navy-700 bg-maia-navy-900/50 p-4">
+                  {phase.practice.label && (
+                    <p className="mb-1 font-raleway text-[0.62rem] uppercase tracking-[0.18em] text-maia-gold">
+                      {phase.practice.label}
+                    </p>
+                  )}
+                  <p className="font-cormorant text-[0.98rem] leading-relaxed text-maia-ink-70">{phase.practice.prompt}</p>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* ── The weather pattern ──────────────────────────────────────── */}
+      {y.weatherPattern && y.weatherPattern.length > 0 && (
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-3xl px-6 py-6">
+          <p className="mb-4 text-center font-raleway text-[0.7rem] uppercase tracking-[0.2em] text-maia-ink-50">
+            The weather pattern
+          </p>
+          <div className="overflow-hidden rounded-2xl border border-maia-navy-700">
+            {y.weatherPattern.map((row, i) => {
+              const meta = ELEMENT_META[row.element];
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 border-b border-maia-navy-800 bg-maia-navy-850/40 px-5 py-3 last:border-b-0"
+                >
+                  <span className="w-28 shrink-0 font-cormorant text-[0.95rem] text-maia-ink-60">{row.season}</span>
+                  <span
+                    className="w-20 shrink-0 font-raleway text-[0.7rem] uppercase tracking-[0.14em]"
+                    style={{ color: meta.color }}
+                  >
+                    {meta.label}
+                  </span>
+                  <span className="font-cormorant text-[1.0rem] text-maia-ink-80">{row.invitation}</span>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── The Golden Thread ────────────────────────────────────────── */}
+      <motion.div {...fadeUp} className="mx-auto w-full max-w-3xl px-6 py-8">
+        <div className="rounded-3xl border border-maia-gold/30 bg-maia-navy-850/50 p-7 shadow-maia-spice-glow sm:p-9">
+          <div className="mb-4 flex items-center gap-3">
+            <Eye className="h-5 w-5 text-maia-gold" strokeWidth={1.6} />
+            <h3 className="font-cinzel text-xl text-maia-ink-100">The Golden Thread</h3>
+          </div>
+          <Para text={y.goldenThread} />
+        </div>
+      </motion.div>
+
+      {/* ── Living questions ─────────────────────────────────────────── */}
+      {y.questions.length > 0 && (
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-3xl px-6 pb-20 pt-2">
+          <div className="mb-6 flex items-center gap-3">
+            <HelpCircle className="h-5 w-5 text-maia-gold" strokeWidth={1.6} />
+            <h3 className="font-cinzel text-xl text-maia-ink-100">Questions to Carry Through the Year</h3>
+          </div>
+          <ol className="space-y-4">
+            {y.questions.map((q, i) => (
+              <li key={i} className="flex gap-4">
+                <span className="font-cinzel text-lg text-maia-gold/70">{i + 1}</span>
+                <span className="font-cormorant text-[1.05rem] leading-relaxed text-maia-ink-80">{q}</span>
+              </li>
+            ))}
+          </ol>
+        </motion.div>
+      )}
+    </section>
+  );
+}
+
+export default YearAheadSection;
