@@ -423,6 +423,28 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Stripe webhooks (system routes, validated by signature)
   { prefix: '/api/stripe/webhook', public: true, notes: 'Stripe webhooks - validated by signature' },
+
+  // -------------------------------------------------------------------------
+  // Soul Portrait — Path B, Gate 1 (see docs/architecture/SOUL_PORTRAIT_PATH_B_SPEC.md §2)
+  // -------------------------------------------------------------------------
+  // Augusten = the single family-held exception: public-unlisted (loads without
+  // auth, noindex). These EXACT rules win over the prefix below — the matcher
+  // runs the exact pass before the prefix pass — so the exception is explicit
+  // and visible, not an accident of permissive middleware.
+  { exact: '/soul-portrait/augusten', public: true, notes: "Augusten — author's own minor child; family-held consent; unlisted exception only" },
+  { exact: '/api/soul-portrait/augusten/mentor', public: true, notes: 'Augusten Mentor — family-held exception; rate-limited; no retention' },
+  // Katie — SECOND hand-delivered Gift exception (Kelly 2026-06-20): a private,
+  // unlisted, noindex gift link to his adult niece. SAME honest posture as
+  // Augusten (public-unlisted, hand-delivered, Mentor/MAIA/memory OFF) — NOT a
+  // public opening and NOT Path B. Reception link = /soul-portrait/katie/welcome.
+  { exact: '/soul-portrait/katie/welcome', public: true, notes: 'Katie Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
+  { exact: '/soul-portrait/katie', public: true, notes: 'Katie Gift Portrait (renderer) — hand-delivered unlisted exception (adult niece); Mentor off; noindex' },
+  { exact: '/api/soul-portrait/katie/mentor', public: true, notes: 'Katie Mentor — DISABLED (mentorEnabled off → 404); public rule only so it returns 404 not 401, mirroring Augusten' },
+  // Every OTHER portrait requires an authenticated member. Per-member binding +
+  // the consent/reception gate are enforced in the route handler (the matrix is
+  // the coarse auth gate only; Path B Gate 3 adds the fine consent gate).
+  { prefix: '/soul-portrait/', minTier: 'free', notes: 'Path B: non-exception portraits require login + per-member consent gate (route-enforced)' },
+  { prefix: '/api/soul-portrait/', minTier: 'free', notes: 'Path B: portrait API requires login + per-member consent gate (route-enforced)' },
 ];
 
 // =============================================================================
