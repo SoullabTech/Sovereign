@@ -49,10 +49,13 @@ existing paperback exactly as it is** — its reviews, sales history, and rankin
 ## Part 3 — Fill ISBNs + render (DONE)
 
 4. [x] Real ISBNs in `ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`; guard comment removed.
-5. [x] Rendered both formats (verified: "Soullab Press" ×2, both ISBNs, print line, 0 placeholders):
-   - Print: `exports/elemental-alchemy/book-print-soullab-press-v2.pdf` (15.6 MB)
-   - EPUB:  `exports/elemental-alchemy/book-epub-soullab-press-v2.epub`  (18 MB)
+5. [x] Rendered **publishing-only** files from tag `elemental-alchemy-first-soullab-press-edition`
+       (Soullab Press front matter + ORIGINAL body — no manuscript body edits). Verified: imprint ×3,
+       both ISBNs, "First Soullab Press Edition", 170/170 original passages present, 0 Thread-B leaks.
+   - Print: `exports/elemental-alchemy/book-print-soullab-press-pub-v1.pdf` (≈15.6 MB) — paperback + hardcover interior
+   - EPUB:  `exports/elemental-alchemy/book-epub-soullab-press-pub-v1.epub`  (≈18 MB) — Kindle
    - (Generated artifacts — intentionally NOT committed to the repo.)
+   - Manuscript body revisions are held separately on branch `feature/manuscript-edits` (NOT in these files).
 
 ---
 
@@ -65,14 +68,14 @@ existing paperback exactly as it is** — its reviews, sales history, and rankin
 
 8. [ ] **Hardcover — the first Soullab Press edition.** Create the hardcover →
        "Use my own ISBN" `979-8-9967127-1-7` → **Imprint = Soullab Press** → upload the new
-       interior `book-print-soullab-press-v2.pdf` + a hardcover cover wrap carrying that ISBN.
+       interior `book-print-soullab-press-pub-v1.pdf` + a hardcover cover wrap carrying that ISBN.
        - ⚠️ **Set the Bowker ISBN before it goes live.** The interior copyright page now prints
          `979-8-9967127-1-7`; if the book publishes under a *free* ISBN, the printed ISBN won't
          match the barcode/metadata. If a hardback is already in review under a free ISBN, end it
          and resubmit a fresh hardcover pairing **this ISBN + this interior PDF together.**
 
 9. [ ] **Kindle eBook — update in place.** It uses an ASIN, not an ISBN. Edit its
-       **Publisher** field to `Soullab Press` and re-upload `book-epub-soullab-press-v2.epub` —
+       **Publisher** field to `Soullab Press` and re-upload `book-epub-soullab-press-pub-v1.epub` —
        same listing/ASIN, reviews preserved.
 
 ---
