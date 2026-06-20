@@ -15,6 +15,15 @@ last_review: 2026-06-20
 
 ---
 
+## Beta evaluation — release note (2026-06-20)
+
+> **Status: Frozen for beta evaluation.**
+> This interpretive principle is being deployed for real-world stress testing across consent, memory, publishing, reception, mentoring, and governance. During this phase, implementation should adapt to the principle where possible; changes to the principle itself should be made only if repeated experience demonstrates a genuine constitutional deficiency rather than a wording preference.
+
+**Beta invariant — treat failures as evidence, not embarrassment.** If the principle survives only because people avoid difficult cases, we learn very little. The strongest evidence it has earned its place is that it meets hard edge cases and still consistently *simplifies* decisions *without granting new authority*. So: surface the hard cases; ask whether the principle or the implementation failed; look for recurring patterns before revising.
+
+---
+
 ## The cascade — each principle gives rise to the next (Kelly)
 
 1. **We are in service.**
