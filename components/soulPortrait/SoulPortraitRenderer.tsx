@@ -37,6 +37,7 @@ import {
   type ElementKey,
 } from '@/lib/soulPortrait/schema';
 import { SoulPortraitMentor } from '@/components/soulPortrait/SoulPortraitMentor';
+import { YearAheadSection } from '@/components/soulPortrait/YearAheadSection';
 
 const ELEMENT_ICONS: Record<ElementKey, LucideIcon> = {
   fire: Flame,
@@ -363,6 +364,10 @@ export function SoulPortraitRenderer({ portrait }: { portrait: SoulPortrait }) {
           {p.framing.notes[0]}
         </p>
       </motion.footer>
+
+      {/* ── Part II — The Year Ahead (seasonal). Present only for portraits that
+          carry a transit reading; the natal portrait above is Part I (timeless). */}
+      {p.yearAhead && <YearAheadSection yearAhead={p.yearAhead} />}
 
       {/* MAIA Mentor — a reflective companion. Opt-in per portrait: the live
           dialogue surface is shown ONLY when this portrait explicitly enables it
