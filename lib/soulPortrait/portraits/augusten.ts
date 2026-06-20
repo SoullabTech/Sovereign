@@ -420,14 +420,25 @@ Your big heart is a strength, not a weakness. The kindest thing you can do is be
       'What is something I am starting to believe that is becoming my own?',
     ],
     closing: {
-      title: 'A Word for the Year',
-      body: `You're stepping into a new world this year — a new school, new faces, ground you haven't stood on before. You don't have to have it all figured out. You just get to keep walking in as yourself, a little braver each time.
+      title: "A Father's Blessing for the Year Ahead",
+      body: `You're stepping into a new world this year.
 
-Here's the truth about the young man you're becoming: he isn't someone fixed, waiting for you to catch up to him. He's someone you get to make — in how you treat people, what you give your heart to, the questions you're brave enough to ask, the moments you choose to rise to instead of shrink from. Challenge yourself. Let the hard things shape you rather than scare you.
+A new school. New friendships. New challenges. New opportunities to discover who you are.
 
-And stay open. The most soulful thing you can do is keep becoming — without needing to know exactly who you'll turn out to be. That not-knowing isn't you falling behind; it's the doorway.
+There will be days you feel completely at home, and there will be days you wonder where you belong. That's part of every meaningful beginning.
 
-Walk in as yourself. Rise to what this year asks of you. And trust that the becoming is the point.`,
+I hope you'll challenge yourself this year. Choose what is difficult when it helps you grow. Be courageous when it would be easier to disappear into the crowd. Be kind even when kindness costs something. Stay curious when life gives you questions instead of answers.
+
+I believe there is a remarkable young man already unfolding within you — not someone you have to pretend to become, and not someone whose future has already been written, but someone whose character is shaped every day by the choices you make, the people you love, the responsibility you accept, and the wonder you allow yourself to keep.
+
+Don't be afraid of becoming. Stay open. Stay humble. Stay brave.
+
+The world doesn't need another person trying to be someone else. It needs the man only you can become.
+
+Walk into this new year with your head held high, your heart open, and your spirit awake. I'll be cheering for you every step of the way.
+
+With all my love,
+Dad`,
     },
   },
 };
