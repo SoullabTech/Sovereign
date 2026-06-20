@@ -203,6 +203,8 @@ export interface YearAhead {
   goldenThread: string;
   /** Living questions to carry through the year (not goals, not predictions). */
   questions: string[];
+  /** Optional closing word / blessing for the year (e.g. "A Word for the Year"). */
+  closing?: { title?: string; body: string };
 }
 
 export interface SoulPortrait {

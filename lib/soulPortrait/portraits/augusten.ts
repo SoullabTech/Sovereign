@@ -344,6 +344,92 @@ That kind of man changes the people around him.`,
   soulVocation: `People often think gifts are talents. Sometimes they are. But your greatest gift may be something quieter — your willingness to care, to wonder, to imagine, to believe that life has meaning. Your gift is not certainty; it is perception. And perception becomes wisdom only when it is joined with love.`,
 
   framing: DEFAULT_FRAMING,
+
+  // ── Part II — The Year Ahead (Seasonal Spiral) ─────────────────────────────
+  // Grounded in his 12-month transit report (Astrograph, starting 6/20/2026) —
+  // transit DATA only; all prose written fresh, age-appropriate for 14, gentle,
+  // seasons-not-predictions. The report's interpretations are copyright and are
+  // never copied.
+  yearAhead: {
+    title: 'The Year Ahead',
+    subtitle: 'A Year of Opening',
+    timeframe: 'June 2026 – June 2027',
+    openingHeadline:
+      'This is a year for your world to grow — and for you to begin exploring it as yourself.',
+    openingTheme: `Your birth chart is a map of the sky you were born under. The transits are the weather moving across it, and this year's weather is mostly bright: curiosity, friendships, and the first real stirrings of finding your own way.
+
+None of this is a prediction. Think of it as a few directions that feel especially alive for you right now.`,
+    phases: [
+      {
+        element: 'air',
+        title: 'A Year for the Mind to Open',
+        timeframe: 'Summer onward',
+        transits: ['Jupiter entering your Third House', 'Jupiter meeting your Mercury, Venus & Uranus'],
+        body: `This is the brightest part of your year. Jupiter — the planet of curiosity and growth — moves into the part of your chart that loves to learn, talk, and explore, where your Gemini-rising mind and Aquarius Moon feel right at home. You may find new things you want to dive into, ideas that light you up, conversations that actually go somewhere, and friendships that grow.
+
+Follow the curiosity. It tends to know where it's going.`,
+        question: 'What am I most curious about right now — and what would happen if I followed it?',
+      },
+      {
+        element: 'fire',
+        title: 'Finding Your Own Way',
+        timeframe: 'Spring & Autumn',
+        transits: ['Uranus square your Midheaven'],
+        body: `There's a quiet new energy this year that wants you to be a little more yourself — even when that means not quite fitting the mold. You might feel restless, or notice you'd rather do things your own way. That isn't a problem; it's a sign. You're beginning to sense that your path can be yours to choose — and you don't have to have it figured out yet.`,
+        question: 'When do I feel most like myself?',
+      },
+      {
+        element: 'water',
+        title: 'Your Tender Heart',
+        timeframe: 'Summer & Autumn',
+        transits: ['Chiron touching your Mercury, Venus & Moon'],
+        body: `You feel things deeply — that's one of the realest things about you. This year a few tender spots might show up: wanting to be understood, caring a lot about your friendships, feeling more than you let on. None of that needs fixing.
+
+Your big heart is a strength, not a weakness. The kindest thing you can do is be as gentle with yourself as you'd be with a good friend.`,
+        question: 'What would I say to a friend who felt the way I feel — and can I say it to myself?',
+      },
+      {
+        element: 'earth',
+        title: 'Growing a Little Stronger',
+        timeframe: 'Autumn',
+        transits: ['Saturn steadying your Moon & Sun'],
+        body: `Alongside all the opening up, there's a steadier thread: small, ordinary practice that quietly makes you stronger. The things you give consistent attention to — a skill, a habit, something you're responsible for — start to feel solid. It isn't about pressure. It's discovering that you can build real things, one ordinary day at a time.`,
+        question: "What's one small thing I could get a little better at, just because I want to?",
+      },
+      {
+        element: 'aether',
+        title: 'The Big Questions Begin',
+        timeframe: 'Later in the year, and forward',
+        transits: ['Pluto entering your Ninth House', 'Neptune entering your Eleventh House'],
+        body: `Underneath everything, something slow and deep is beginning: your mind starting to reach for bigger questions — about meaning, about the kind of world you want, about who you're becoming. You don't need answers. These are questions to live alongside, the way you'd walk with a good companion. Let them be interesting. There's no hurry.`,
+        question: "What's a big question I find myself wondering about lately?",
+      },
+    ],
+    weatherPattern: [
+      { season: 'Summer', element: 'air', invitation: 'Follow your curiosity' },
+      { season: 'Spring & Autumn', element: 'fire', invitation: 'Find your own way' },
+      { season: 'Summer–Autumn', element: 'water', invitation: 'Be gentle with your heart' },
+      { season: 'Autumn', element: 'earth', invitation: 'Build, one small day at a time' },
+      { season: 'Whole Year', element: 'aether', invitation: 'Let the big questions be interesting' },
+    ],
+    goldenThread: `Almost everything in your year points the same direction: your world is getting bigger, and you're beginning to explore it as yourself. The learning, the friendships, the new sense of your own way, even the tender feelings — they're all part of one gentle invitation: to keep becoming who you already are, with curiosity and a kind heart.`,
+    questions: [
+      'What am I most curious about right now?',
+      'When do I feel most like myself?',
+      'Who are the friends who feel easy to be around — and why?',
+      'What is something I am starting to believe that is becoming my own?',
+    ],
+    closing: {
+      title: 'A Word for the Year',
+      body: `You're stepping into a new world this year — a new school, new faces, ground you haven't stood on before. You don't have to have it all figured out. You just get to keep walking in as yourself, a little braver each time.
+
+Here's the truth about the young man you're becoming: he isn't someone fixed, waiting for you to catch up to him. He's someone you get to make — in how you treat people, what you give your heart to, the questions you're brave enough to ask, the moments you choose to rise to instead of shrink from. Challenge yourself. Let the hard things shape you rather than scare you.
+
+And stay open. The most soulful thing you can do is keep becoming — without needing to know exactly who you'll turn out to be. That not-knowing isn't you falling behind; it's the doorway.
+
+Walk in as yourself. Rise to what this year asks of you. And trust that the becoming is the point.`,
+    },
+  },
 };
 
 export default augustenPortrait;
