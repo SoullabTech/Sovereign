@@ -1,3 +1,9 @@
+---
+declared_status: candidate
+standing: draft
+last_review: 2026-06-20
+---
+
 # MAIA — Multi-Archetypal Intelligence Architecture
 
 > Established by Kelly Nezat, 2026-06-05. This canon names what the "AI" in MAIA

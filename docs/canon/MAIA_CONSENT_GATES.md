@@ -1,3 +1,9 @@
+---
+declared_status: canonical
+standing: draft
+last_review: 2026-06-20
+---
+
 # MAIA Consent Gates
 
 **Status:** Vision / Designed — **Cat 2 (canonical primitive; no runtime authority).**

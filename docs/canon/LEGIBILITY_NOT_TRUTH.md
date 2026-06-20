@@ -1,3 +1,9 @@
+---
+declared_status: canonical
+standing: draft
+last_review: 2026-06-20
+---
+
 # Legibility, Not Truth — The Canon Against Capture
 
 *Emerged from inquiry, 2026-06-09 (Kelly Nezat with Claude Code). Offered for ratification into MAIA canon. Edit freely — the enshrining is Kelly's; this file only assembles the arrived-at language. Per its own principle, this canon is a frame, not a tablet: revisable, answerable to the work.*

@@ -1,3 +1,9 @@
+---
+declared_status: candidate
+standing: draft
+last_review: 2026-06-20
+---
+
 # The Soullab Principle — Receiving the Full Range of Experience
 
 > **Status:** Draft canon. Authored by **Kelly W. Nezat** (2026-06-18). Promotion to ratified canon is Kelly's crossing.

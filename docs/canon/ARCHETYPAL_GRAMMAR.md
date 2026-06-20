@@ -1,3 +1,9 @@
+---
+declared_status: canonical
+standing: draft
+last_review: 2026-06-20
+---
+
 # Archetypal Grammar — the core ontology (AUTHORING TEMPLATE)
 
 > **Status: TEMPLATE — structure resolved (two tiers, 2026-06-05); content awaiting authorship by Kelly.**

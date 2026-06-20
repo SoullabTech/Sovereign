@@ -1,3 +1,9 @@
+---
+declared_status: candidate
+standing: draft
+last_review: 2026-06-20
+---
+
 # Signs, Not Targets
 ## Cultivation over Optimization — recognizing life without manufacturing it
 

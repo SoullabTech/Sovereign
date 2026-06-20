@@ -1,3 +1,9 @@
+---
+declared_status: canonical
+standing: draft
+last_review: 2026-06-20
+---
+
 # Living Symbols — Canonical Principle
 
 *Emerged from inquiry, 2026-06-07 (Kelly Nezat with Claude Code). Offered for ratification into MAIA canon. Edit freely — the enshrining is Kelly's; this file only assembles the arrived-at language.*

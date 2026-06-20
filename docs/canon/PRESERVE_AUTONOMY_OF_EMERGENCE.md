@@ -1,3 +1,9 @@
+---
+declared_status: candidate
+standing: draft
+last_review: 2026-06-20
+---
+
 # Preserve the Autonomy of Emergence
 *Accompaniment jurisprudence — the relational-axis expression of a constitutional law.*
 

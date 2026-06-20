@@ -1,3 +1,9 @@
+---
+declared_status: canonical
+standing: draft
+last_review: 2026-06-20
+---
+
 # The Empty Throne — Everything Gets a Place, Nothing Gets the Throne
 
 *Emerged from inquiry, 2026-06-09 (Kelly Nezat with Claude Code). Offered for ratification. Edit freely — the enshrining is Kelly's. Per its own principle, this canon takes a chair, not the throne: it is interruptible, answerable to lived encounter, and revisable. A canon about the empty throne that enthroned itself would be the first thing to fall.*

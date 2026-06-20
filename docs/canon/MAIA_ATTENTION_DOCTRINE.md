@@ -1,3 +1,9 @@
+---
+declared_status: canonical
+standing: draft
+last_review: 2026-06-20
+---
+
 # MAIA ATTENTION DOCTRINE
 
 ## Constitutional Principles for Accompanying Human Meaning-Making

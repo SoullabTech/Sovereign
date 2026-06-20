@@ -1,3 +1,9 @@
+---
+declared_status: candidate
+standing: draft
+last_review: 2026-06-20
+---
+
 # Rig Veda / Fire — exemplar lineage (Archetypal Grammar)
 
 > The **first authored lineage** — the proof exemplar for MAIA's two-tier

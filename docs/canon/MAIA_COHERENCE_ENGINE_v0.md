@@ -1,3 +1,9 @@
+---
+declared_status: candidate
+standing: draft
+last_review: 2026-06-20
+---
+
 # MAIA Coherence Engine — v0
 
 > Status: **v0 (capture only)** · Route: `/maia/calendar` · Doctrine doc, not a product spec.

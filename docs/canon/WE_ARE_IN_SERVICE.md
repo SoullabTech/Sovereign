@@ -1,3 +1,9 @@
+---
+declared_status: candidate
+standing: draft
+last_review: 2026-06-20
+---
+
 # We Are in Service
 ## The interpretive principle of the Soullab Constitution
 
