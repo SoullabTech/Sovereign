@@ -140,10 +140,10 @@ const CHIRON_HOUSE_WOUNDS: Record<number, string> = {
 export async function getAstrologyContextForUser(memberId: string): Promise<AstrologyContext | null> {
   console.log(`[AstrologyContext] Loading for member: ${memberId?.substring(0, 8)}...`);
   try {
-    // Fetch birth data from members table
+    // Fetch birth data + astrology consent from members table
     const result = await query(
       `SELECT birth_date, birth_time, birth_location_lat, birth_location_lng,
-              birth_location_name, birth_timezone
+              birth_location_name, birth_timezone, astrology_consent
        FROM members WHERE id = $1`,
       [memberId]
     );
@@ -154,6 +154,31 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     }
 
     const member = result.rows[0];
+
+    // 🛡️ CONSENT GATE — representation before relationship.
+    // A member's birth data is an identity-layer *prior*: it shapes MAIA's
+    // generation before the person has said anything. We only let it cross into
+    // the prompt when the member EXPLICITLY opted in to astrology at collection
+    // time (onboarding BirthDataStep → members.astrology_consent).
+    //   'opted_in' → inject (the member authorized the natal lens)
+    //   'declined' → withhold (explicit no)
+    //   'unknown'  → withhold (never asked / skipped — absence of a yes is not a
+    //                yes; consent ≠ compliance)
+    // This is the single chokepoint for the live natal/birth prior: it gates the
+    // sovereign maia/list route (leg 3), the buildMaiaContext identity backfill,
+    // and the dormant oracle/conversation route at once, across FAST/CORE/DEEP.
+    // Reversible: opting in later resumes the lens. Fail-closed: returns null (no
+    // injection) on a miss, matching the outer catch.
+    // See docs/architecture/BIRTH_DATA_CONSENT_GATE_2026-06-20.md
+    if (member.astrology_consent !== 'opted_in') {
+      console.log(
+        `🛡️ [AstrologyContext] Birth-data injection withheld — ` +
+          `astrology_consent="${member.astrology_consent ?? 'unknown'}" (need "opted_in") ` +
+          `for ${memberId?.substring(0, 8)}...`,
+      );
+      return null;
+    }
+
     const hasBirthData = !!member.birth_date;
 
     // pg driver returns DATE columns as JS Date objects — normalise to YYYY-MM-DD string
