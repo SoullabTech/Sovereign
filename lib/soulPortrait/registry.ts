@@ -1,0 +1,30 @@
+/**
+ * Soul Portrait registry
+ * ────────────────────────────────────────────────────────────────────────
+ * The seam between "static / template-driven" (today) and "generated"
+ * (later). Today this is a hand-authored map of slug → SoulPortrait. When a
+ * generator exists, it can register portraits here (or this can become a DB
+ * lookup) without the renderer or route changing.
+ *
+ * Privacy note: portraits may describe minors (see `person.isMinor`). They
+ * are intentionally NOT linked from global navigation — access is by direct,
+ * unlisted URL. A generalised multi-user version must add real auth/consent
+ * gating before any portrait is broadly reachable.
+ */
+
+import type { SoulPortrait } from './schema';
+import { augustenPortrait } from './portraits/augusten';
+import { katiePortrait } from './portraits/katie';
+
+const PORTRAITS: Record<string, SoulPortrait> = {
+  [augustenPortrait.person.slug]: augustenPortrait,
+  [katiePortrait.person.slug]: katiePortrait,
+};
+
+export function getPortrait(slug: string): SoulPortrait | null {
+  return PORTRAITS[slug] ?? null;
+}
+
+export function listPortraitSlugs(): string[] {
+  return Object.keys(PORTRAITS);
+}
