@@ -163,10 +163,11 @@ Tracked here; not rewritten in this pass.
    *compression-as-ratification-evidence* bar; `GOVERNANCE_REVIEW_INSTRUMENTS` §"Compression is
    evidence" owns the broader *architecture-health-signal* form. Reconcile / cross-reference; do
    not force a single definition until the relationship is clean.
-2. **Relabel "promotion test" → "Lifting test"** in `GOVERNANCE_REVIEW_INSTRUMENTS`, to match §II.
-3. **Family coordination** — `AUDIT_PROCESS` (audit existing canon) · `REVIEW_INSTRUMENTS` (lenses
-   + floor + Lifting) · this method (Ratification): confirm clean division of labor, no further
-   overlap.
+2. **Relabel "promotion test" → "Lifting test"** in `GOVERNANCE_REVIEW_INSTRUMENTS`. **DONE (2026-06-20.)**
+3. **Family coordination — CONFIRMED clean (2026-06-20).** Three distinct roles, by *what each acts
+   on*: `AUDIT_PROCESS` → *existing* canon (drift correction); `REVIEW_INSTRUMENTS` → *incoming*
+   proposals (lenses + enforcement floor) and *Lifting*; this method → a *candidate first-principle*
+   (Ratification). The only cross-cutting concept is compression — see #1.
 
 ## Cross-references
 
