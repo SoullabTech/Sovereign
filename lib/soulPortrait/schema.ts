@@ -229,6 +229,13 @@ export interface SoulPortrait {
   seerAndProphet: SeerAndProphet;
   /** 6. Challenges as Training */
   challengesAsTraining: { body: string; trainings?: ChallengeTraining[] };
+  /**
+   * Optional forward-pointing beam — "Your North Star / The Direction of
+   * Becoming" (e.g. a North Node reading). Rendered between Challenges and the
+   * developmental stage when present. Direction, never description — the one
+   * place a portrait points forward. Omitted by portraits without it.
+   */
+  northStar?: { title: string; subtitle?: string; body: string };
   /** 7. Becoming a Young Man (developmental stage) */
   developmentalStage: DevelopmentalStage;
   /** 8. Questions for This Season */

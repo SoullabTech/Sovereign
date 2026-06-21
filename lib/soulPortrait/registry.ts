@@ -15,10 +15,12 @@
 import type { SoulPortrait } from './schema';
 import { augustenPortrait } from './portraits/augusten';
 import { katiePortrait } from './portraits/katie';
+import { sophiePortrait } from './portraits/sophie';
 
 const PORTRAITS: Record<string, SoulPortrait> = {
   [augustenPortrait.person.slug]: augustenPortrait,
   [katiePortrait.person.slug]: katiePortrait,
+  [sophiePortrait.person.slug]: sophiePortrait,
 };
 
 export function getPortrait(slug: string): SoulPortrait | null {

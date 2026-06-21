@@ -440,6 +440,12 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/soul-portrait/katie/welcome', public: true, notes: 'Katie Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
   { exact: '/soul-portrait/katie', public: true, notes: 'Katie Gift Portrait (renderer) — hand-delivered unlisted exception (adult niece); Mentor off; noindex' },
   { exact: '/api/soul-portrait/katie/mentor', public: true, notes: 'Katie Mentor — DISABLED (mentorEnabled off → 404); public rule only so it returns 404 not 401, mirroring Augusten' },
+  // Sophie — THIRD hand-delivered Gift exception (Kelly 2026-06-20): the author's
+  // own minor daughter (17, senior year), a Father's Day gift. SAME honest posture
+  // as Katie (public-unlisted, hand-delivered, noindex, Mentor/MAIA/memory OFF).
+  // No mentor rule — Mentor is off, so the endpoint stays unreachable (401, not public).
+  { exact: '/soul-portrait/sophie/welcome', public: true, notes: 'Sophie Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
+  { exact: '/soul-portrait/sophie', public: true, notes: "Sophie Gift Portrait (renderer) — hand-delivered unlisted exception (author's minor daughter, 17); Mentor off; noindex" },
   // Every OTHER portrait requires an authenticated member. Per-member binding +
   // the consent/reception gate are enforced in the route handler (the matrix is
   // the coarse auth gate only; Path B Gate 3 adds the fine consent gate).
