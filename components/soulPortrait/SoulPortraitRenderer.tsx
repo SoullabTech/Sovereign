@@ -28,6 +28,7 @@ import {
   HelpCircle,
   Users,
   Quote,
+  Star,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -46,6 +47,13 @@ const ELEMENT_ICONS: Record<ElementKey, LucideIcon> = {
   air: Wind,
   aether: Sparkles,
 };
+
+/** Ordinal for house numbers: 1 → "1st", 2 → "2nd", 3 → "3rd", 11 → "11th". */
+function ordinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
 
 /** Split a block of text into paragraphs (blank-line separated), preserving
  * single line breaks within a paragraph as <br/>. */
@@ -191,7 +199,7 @@ export function SoulPortraitRenderer({ portrait }: { portrait: SoulPortrait }) {
               <p className="font-cinzel text-sm text-maia-ink-100">
                 {pl.body}
                 {pl.sign && <span className="text-maia-gold"> · {pl.sign}</span>}
-                {pl.house != null && <span className="text-maia-ink-50"> · {pl.house}th House</span>}
+                {pl.house != null && <span className="text-maia-ink-50"> · {ordinal(pl.house)} House</span>}
                 {pl.angle && <span className="text-maia-ink-50"> · {pl.angle}</span>}
               </p>
               <p className="mt-2 font-cormorant text-[0.98rem] leading-relaxed text-maia-ink-60">{pl.meaning}</p>
@@ -317,6 +325,28 @@ export function SoulPortraitRenderer({ portrait }: { portrait: SoulPortrait }) {
           </div>
         )}
       </Section>
+
+      {/* Forward-pointing beam — Your North Star (optional; e.g. a North Node
+          reading). Rendered as an un-numbered featured panel between Challenges
+          and the developmental stage, so portraits without it are unaffected. */}
+      {p.northStar && (
+        <motion.section {...fadeUp} className="mx-auto w-full max-w-3xl px-6 py-12 sm:py-16">
+          <div className="rounded-3xl border border-maia-gold/30 bg-maia-navy-850/50 p-7 shadow-maia-spice-glow sm:p-10">
+            <div className="mb-6 flex items-center gap-3">
+              <Star className="h-5 w-5 text-maia-gold" strokeWidth={1.6} />
+              <div>
+                <h2 className="font-cinzel text-xl text-maia-ink-100 sm:text-2xl">{p.northStar.title}</h2>
+                {p.northStar.subtitle && (
+                  <p className="font-raleway text-xs uppercase tracking-[0.2em] text-maia-gold">
+                    {p.northStar.subtitle}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Prose text={p.northStar.body} />
+          </div>
+        </motion.section>
+      )}
 
       {/* 7. Becoming a Young Man */}
       <Section
