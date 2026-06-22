@@ -18,6 +18,7 @@ import { katiePortrait } from './portraits/katie';
 import { sophiePortrait } from './portraits/sophie';
 import { andreaPortrait } from './portraits/andrea';
 import { kellyPortrait } from './portraits/kelly';
+import { nathanPortrait } from './portraits/nathan';
 
 const PORTRAITS: Record<string, AnyPortrait> = {
   [augustenPortrait.person.slug]: augustenPortrait,
@@ -25,6 +26,7 @@ const PORTRAITS: Record<string, AnyPortrait> = {
   [sophiePortrait.person.slug]: sophiePortrait,
   [andreaPortrait.person.slug]: andreaPortrait,
   [kellyPortrait.person.slug]: kellyPortrait,
+  [nathanPortrait.person.slug]: nathanPortrait,
 };
 
 export function getPortrait(slug: string): AnyPortrait | null {
