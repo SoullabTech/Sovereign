@@ -451,6 +451,10 @@ export const ACCESS_RULES: AccessRule[] = [
   // Mentor/MAIA/memory OFF. Reception link = /soul-portrait/andrea/welcome.
   { exact: '/soul-portrait/andrea/welcome', public: true, notes: 'Andrea Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
   { exact: '/soul-portrait/andrea', public: true, notes: "Andrea Gift Portrait (renderer) — hand-delivered unlisted exception (author's wife); Mentor off; noindex" },
+  // Kelly — the author's own SELF-portrait (Kelly 2026-06-22): mode 'self', no
+  // giver/threshold, no Return-to-Soullab coda. SAME posture: public-unlisted,
+  // noindex, Mentor/MAIA/memory OFF. No /welcome rule (self-portrait has no threshold).
+  { exact: '/soul-portrait/kelly', public: true, notes: "Kelly self-portrait (renderer) — author's own; unlisted exception; Mentor off; noindex" },
   // Every OTHER portrait requires an authenticated member. Per-member binding +
   // the consent/reception gate are enforced in the route handler (the matrix is
   // the coarse auth gate only; Path B Gate 3 adds the fine consent gate).
