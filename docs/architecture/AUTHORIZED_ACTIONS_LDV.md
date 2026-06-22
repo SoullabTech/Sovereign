@@ -29,7 +29,7 @@ Demonstrated:
   - unauthenticated / claim-only writes are **rejected (401)** — demonstrating the boundary is *actively enforced*, not merely present.
 - Proposal-created events remain **local, reversible, and auditable**.
 
-**Stage 4 — live conversational emit — certified 2026-06-18.** A natural scheduling message ("put lunch with Nathan on my calendar next Tuesday at 12:30pm for an hour") produced a `propose_calendar_event` proposal end-to-end: correct title, start/end, and resolved timezone (America/New_York), returned to the client as an **editable draft** ("take a look, edit anything that's off, and confirm when it's right") — write-incapable, nothing persisted until confirm. The full pathway — conversation → proposal → review → confirm → bounded execution — is now **demonstrated, not inferred.**
+**Stage 4 — live conversational emit — certified 2026-06-18.** A natural scheduling message ("put lunch with Nathan on my calendar next Tuesday at 12:30pm for an hour") produced a `propose_calendar_event` proposal end-to-end: correct title, start/end, and resolved timezone (America/New_York), returned to the client as an **editable draft** ("take a look, edit anything that's off, and confirm when it's right") — write-incapable, nothing persisted until confirm. This is the **first end-to-end conversational Authorized Action demonstrated** — conversation → proposal → review → confirm → bounded execution, for the calendar executor specifically. The broader "conversation → universal execution" claim earns strength only as further executors clear the same ladder — **evidence, not inheritance.**
 
 This certification exists on the proposal branch and **has not yet been deployed to production.**
 
