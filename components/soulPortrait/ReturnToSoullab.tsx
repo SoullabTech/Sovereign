@@ -36,7 +36,7 @@ export function ReturnToSoullab() {
 
   return (
     <section className="bg-maia-navy-950 px-6 pb-20 pt-2 text-center">
-      <p className="mx-auto max-w-md font-cormorant text-[1.02rem] italic leading-relaxed text-maia-ink-50">
+      <p className="mx-auto max-w-md font-cormorant text-[1.05rem] italic leading-relaxed text-maia-ink-80">
         Whenever you’re ready, you’re welcome back.
       </p>
       <div className="mt-6">
