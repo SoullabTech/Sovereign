@@ -17,12 +17,14 @@ import { augustenPortrait } from './portraits/augusten';
 import { katiePortrait } from './portraits/katie';
 import { sophiePortrait } from './portraits/sophie';
 import { andreaPortrait } from './portraits/andrea';
+import { kellyPortrait } from './portraits/kelly';
 
 const PORTRAITS: Record<string, AnyPortrait> = {
   [augustenPortrait.person.slug]: augustenPortrait,
   [katiePortrait.person.slug]: katiePortrait,
   [sophiePortrait.person.slug]: sophiePortrait,
   [andreaPortrait.person.slug]: andreaPortrait,
+  [kellyPortrait.person.slug]: kellyPortrait,
 };
 
 export function getPortrait(slug: string): AnyPortrait | null {
