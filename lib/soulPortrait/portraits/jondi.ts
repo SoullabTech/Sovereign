@@ -104,7 +104,7 @@ Your chart is fire-led and built around the seeker. Sagittarius rises in it; you
 
 And there is a deeper thread woven right into who you are. The wounded-healer point of your chart sits almost exactly on your rising sign — closer than it falls for almost anyone. It means your own wounds were never only wounds; they became the very source of your compassion. You understand other people's pain from the inside, because you have been there. That is a rare and costly kind of gift, and it cannot be faked.
 
-So what you carry is hard-won wisdom, offered as light. The teacher, the encourager, the one who has walked through fire and come back able to say, gently and truthfully, "I know — and here is what I found on the other side." Name it as your own. Not everyone who suffers turns it into a lamp for others. You did.`,
+So what you carry is hard-won wisdom, offered as light — and the people who know you already have a name for it, even the ones who have never said it to your face. You are the wise woman they come to: the healer, the teacher, the guide. The one who has walked through fire and come back able to say, gently and truthfully, "I know — and here is what I found on the other side." Name it as your own, because it is. Not everyone who suffers turns it into a lamp for others. You did — and you have been quietly lighting the way for people for a very long time now.`,
     },
 
     // 3 ──────────────────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ That hard-won familiarity with the depths is part of your medicine. You are not 
       element: 'aether',
       body: `Some people are here to build things in the world. You are here to seek the truth, live it, and give it away — and your chart is unusually clear about it.
 
-Three things point the same direction. Your Saturn — your deepest discipline and your hardest lessons — sits in the most spiritual, most hidden room of your chart, the place of surrender and union with something larger than yourself. The transformative planets gather in your house of philosophy and higher meaning, marking you as someone who must find her own truth through direct experience, never secondhand from anyone else. And the planet of vision sits in your house of community and the collective, giving you a real, lifelong pull toward a more loving and more humane world.
+Three things point the same direction. Your Saturn — your deepest discipline and your hardest lessons — sits in the most spiritual, most hidden room of your chart, the place of surrender and union with something larger than yourself. The transformative planets gather in your house of philosophy and higher meaning, marking you as someone who must find her own truth through direct experience, never secondhand from anyone else. And the planet of vision sits in your house of community and the collective — and this is where you have become something a group treasures and rarely says out loud: its wise woman, the one the collective turns to. A maven who holds the shared wisdom and hands it back, who can feel the field of a gathering and tend it. Where many people seek the truth for themselves alone, you have always sought it for the whole, and carried it for the whole.
 
 Put together, this is the chart of a seeker-mystic with a humanitarian heart. Your soul's work was never going to be measured in conventional success. It is the deeper assignment: to keep asking what is true, to test it in your own life rather than borrow it, to surrender the small self into something larger and more sacred — and then to bring back what you find, in service of other people and of a kinder world. The wisdom is not meant to stay yours. You came to gather it, and to hand it on.
 
@@ -280,6 +280,8 @@ May you come to see in yourself the strength everyone around you has long seen �
 May you let yourself be held as warmly as you have always held others. May you receive as freely as you give. May the old verdict that there was never quite enough, or that you were never quite enough, finally fall silent.
 
 May your faith be renewed from the roots, and your seeker's fire be fed, and the meaning you have reached toward your whole life come close enough to warm you.
+
+May the healer in you finally let herself be healed; may the wise woman who has guided so many be gently guided home.
 
 You have carried a great deal, and carried it well. May this be the season the weight grows lighter — and may you feel, finally, how much light you have given.`,
     },
