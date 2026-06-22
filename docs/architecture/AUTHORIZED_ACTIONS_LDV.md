@@ -29,7 +29,7 @@ Demonstrated:
   - unauthenticated / claim-only writes are **rejected (401)** — demonstrating the boundary is *actively enforced*, not merely present.
 - Proposal-created events remain **local, reversible, and auditable**.
 
-*(code-verified, not yet runtime-demonstrated)* MAIA's proposal-**emit** path is wired and type-checked: on FAST/CORE turns the model is offered the `propose_calendar_event` tool and the proposal is extracted from its response. Demonstrating this fire during a real conversation is the remaining **Stage 4** (see below) — so "MAIA produces a proposal in conversation" is not yet in the Live column.
+**Stage 4 — live conversational emit — certified 2026-06-18.** A natural scheduling message ("put lunch with Nathan on my calendar next Tuesday at 12:30pm for an hour") produced a `propose_calendar_event` proposal end-to-end: correct title, start/end, and resolved timezone (America/New_York), returned to the client as an **editable draft** ("take a look, edit anything that's off, and confirm when it's right") — write-incapable, nothing persisted until confirm. The full pathway — conversation → proposal → review → confirm → bounded execution — is now **demonstrated, not inferred.**
 
 This certification exists on the proposal branch and **has not yet been deployed to production.**
 
@@ -74,11 +74,24 @@ Only after **two materially different executors** have been independently certif
 
 ## Remaining Milestone
 
-The final certification before deployment is the **live conversational emit (Stage 4)**: demonstrating that MAIA emits an Authorized Action proposal during a real conversation, completing the end-to-end path from conversational understanding to bounded execution.
+**Stage 4 is complete (2026-06-18)** — the entire constitutional pathway, conversation through bounded execution, has been demonstrated end-to-end on the proposal branch.
 
-Once Stage 4 is complete, the entire constitutional pathway — from conversation through authorized execution — will have been **demonstrated rather than inferred.**
+Remaining: **Stage 5 — production deployment** (merge the proposal branch, deploy, verify in production), then **Stage 6 — field use.**
 
 ---
+
+## Certification Protocol
+
+Every Authorized Action executor completes the same ladder before it is considered Live. Each rung certifies a *different* property, so "done" is defined by evidence, not intuition:
+
+1. **Code-verified** — implementation exists and typechecks.
+2. **Negative-path verified** — unauthorized / unauthenticated execution is refused.
+3. **Positive-path runtime-certified** — authorized execution succeeds.
+4. **Boundary-certified** — footprint and side effects are exactly those intended.
+5. **Conversationally certified** — MAIA emits the proposal naturally in a live interaction.
+6. **Production-certified** — deployed and validated in the field.
+
+Calendar has cleared **1–5 on the proposal branch**; rung 6 remains. The ladder is reusable for every future executor (email, messaging, contacts, tasks, Studio actions) — a shared, evidence-based definition of "done."
 
 ## Why "Live / Designed / Vision"
 
