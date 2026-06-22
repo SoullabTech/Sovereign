@@ -459,6 +459,10 @@ export const ACCESS_RULES: AccessRule[] = [
   // mode 'gift', offeredBy Kelly. SAME posture: public-unlisted, noindex,
   // Mentor/MAIA/memory OFF. Hand-delivered by link; Kelly's editorial approval first.
   { exact: '/soul-portrait/nathan', public: true, notes: "Nathan Gift Portrait (renderer) — hand-delivered unlisted exception (author's business partner); Mentor off; noindex" },
+  // Jondi — a gift portrait Kelly offers to a Soullab teammate / beta tester (Kelly
+  // 2026-06-22): mode 'gift', offeredBy Kelly. SAME posture: public-unlisted, noindex,
+  // Mentor/MAIA/memory OFF. Hand-delivered by link; Kelly's editorial approval first.
+  { exact: '/soul-portrait/jondi', public: true, notes: "Jondi Gift Portrait (renderer) — hand-delivered unlisted exception (Soullab teammate/beta tester); Mentor off; noindex" },
   // Every OTHER portrait requires an authenticated member. Per-member binding +
   // the consent/reception gate are enforced in the route handler (the matrix is
   // the coarse auth gate only; Path B Gate 3 adds the fine consent gate).
