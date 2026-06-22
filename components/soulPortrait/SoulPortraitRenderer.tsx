@@ -34,7 +34,10 @@ import {
 import {
   ELEMENT_META,
   RESONANCE_LABEL,
+  isLiterarySoulPortrait,
   type SoulPortrait,
+  type AnyPortrait,
+  type LiterarySoulPortrait,
   type ElementKey,
 } from '@/lib/soulPortrait/schema';
 import { SoulPortraitMentor } from '@/components/soulPortrait/SoulPortraitMentor';
@@ -117,8 +120,14 @@ function Section({
   );
 }
 
-export function SoulPortraitRenderer({ portrait }: { portrait: SoulPortrait }) {
+export function SoulPortraitRenderer({ portrait }: { portrait: AnyPortrait }) {
   const p = portrait;
+
+  // Literary (chapter-based) portraits render their own flowing body; the fixed
+  // nine-section path below is left entirely untouched for the existing portraits.
+  if (isLiterarySoulPortrait(p)) {
+    return <LiteraryPortraitBody p={p} />;
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-maia-navy-950 via-maia-navy-900 to-maia-navy-950 pb-24 text-maia-ink-80">
@@ -411,6 +420,105 @@ export function SoulPortraitRenderer({ portrait }: { portrait: SoulPortrait }) {
           name={p.person.name}
           starters={p.reflectionQuestions}
         />
+      )}
+    </main>
+  );
+}
+
+/**
+ * LiteraryPortraitBody — the chapter-based ("letter / essay") rendering.
+ * Same hero, gift framing, and Before-You-Begin as the structured renderer, then
+ * flowing, optionally element-accented chapters in place of the fixed sections.
+ * The natal portrait above (structured mode) is untouched.
+ */
+function LiteraryPortraitBody({ p }: { p: LiterarySoulPortrait }) {
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-maia-navy-950 via-maia-navy-900 to-maia-navy-950 pb-24 text-maia-ink-80">
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <header className="mx-auto w-full max-w-3xl px-6 pt-20 pb-10 text-center sm:pt-28">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+        >
+          <p className="font-raleway text-xs uppercase tracking-[0.3em] text-maia-gold">
+            A Spiralogic Soul Portrait
+          </p>
+          <h1 className="mt-4 font-cinzel text-3xl text-maia-ink-100 sm:text-4xl">{p.person.name}</h1>
+          {p.person.age != null && p.mode !== 'gift' && p.mode !== 'legacy' && (
+            <p className="mt-3 font-cormorant text-lg italic text-maia-ink-60">{`age ${p.person.age}`}</p>
+          )}
+        </motion.div>
+      </header>
+
+      {/* ── Gift framing ─────────────────────────────────────────────── */}
+      {p.offeredBy?.giftOpening && (
+        <div className="mx-auto mb-8 w-full max-w-3xl px-6">
+          <div className="rounded-2xl border border-maia-gold/25 bg-maia-navy-850/40 p-7 text-center shadow-maia-spice-glow sm:p-9">
+            <p className="font-raleway text-[0.7rem] uppercase tracking-[0.25em] text-maia-gold">
+              Offered with love
+            </p>
+            {p.offeredBy.giverName && (
+              <p className="mt-1 mb-5 font-cormorant text-base italic text-maia-ink-60">
+                From {p.offeredBy.giverName}
+              </p>
+            )}
+            {p.offeredBy.giftOpening.trim().split(/\n{2,}/).map((para, i) => (
+              <p key={i} className="mb-3 font-cormorant text-[1.05rem] italic leading-relaxed text-maia-ink-80">
+                {para}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Before You Begin ─────────────────────────────────────────── */}
+      <div className="mx-auto w-full max-w-3xl px-6">
+        <div className="rounded-2xl border border-maia-navy-700 bg-maia-navy-850/60 p-6 shadow-maia-panel">
+          <p className="mb-3 font-raleway text-[0.7rem] uppercase tracking-[0.2em] text-maia-ink-50">
+            Before You Begin
+          </p>
+          <ul className="space-y-3">
+            {p.framing.notes.map((note, i) => (
+              <li key={i} className="flex gap-3 font-cormorant text-[1.02rem] leading-relaxed text-maia-ink-60">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-maia-gold/70" />
+                <span>{note}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* ── Chapters ─────────────────────────────────────────────────── */}
+      {p.chapters.map((ch, i) => {
+        const meta = ch.element ? ELEMENT_META[ch.element] : null;
+        const Icon = ch.element ? ELEMENT_ICONS[ch.element] : BookOpen;
+        return (
+          <motion.section key={i} {...fadeUp} className="mx-auto w-full max-w-3xl px-6 py-11 sm:py-14">
+            <div className="mb-6 flex items-center gap-3">
+              <Icon
+                className="h-5 w-5 text-maia-gold"
+                strokeWidth={1.6}
+                style={meta ? { color: meta.color } : undefined}
+              />
+              <div>
+                <h2 className="font-cinzel text-2xl text-maia-ink-100 sm:text-[1.7rem]">{ch.title}</h2>
+                {ch.subtitle && (
+                  <p className="font-raleway text-xs uppercase tracking-[0.2em] text-maia-gold">{ch.subtitle}</p>
+                )}
+              </div>
+            </div>
+            <Prose text={ch.body} />
+          </motion.section>
+        );
+      })}
+
+      {/* ── Part II — The Year Ahead (present only when a transit reading exists) ── */}
+      {p.yearAhead && <YearAheadSection yearAhead={p.yearAhead} />}
+
+      {/* ── MAIA Mentor — opt-in per portrait (off by default) ───────── */}
+      {p.mentorEnabled && (
+        <SoulPortraitMentor slug={p.person.slug} name={p.person.name} starters={[]} />
       )}
     </main>
   );

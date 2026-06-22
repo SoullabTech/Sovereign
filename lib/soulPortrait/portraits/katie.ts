@@ -49,7 +49,7 @@ Welcome.`,
       forLine: 'For Katie Claire',
       attribution: 'Offered with love by your Uncle Kelly',
       framing:
-        'A reflection on who you are becoming — patterns to recognize, never a forecast and never a verdict. Read it gently: keep whatever rings true, and ignore anything that doesn’t.',
+        'A reflection on who you are becoming. The stars reveal the weather; your soul chooses how to walk through it.',
     },
   },
 

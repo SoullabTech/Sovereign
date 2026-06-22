@@ -51,7 +51,7 @@ export const sophiePortrait: SoulPortrait = {
 
 This portrait is an invitation to listen for yours — a reflection on who you are, and on who you are becoming.
 
-Keep whatever rings true. Set the rest gently aside. Return to it whenever life reveals another layer of you.
+Receive it with an open heart, and return to it whenever life reveals another layer of you.
 
 Welcome.`,
     threshold: {
@@ -59,7 +59,7 @@ Welcome.`,
       forLine: 'For Sophie Claire',
       attribution: 'Offered with love by your Dad',
       framing:
-        'A reflection on who you are becoming — patterns to recognize, never a forecast and never a verdict. Read it gently: keep whatever rings true, and set aside anything that doesn’t.',
+        'A reflection on who you are becoming. The stars reveal the weather; your soul chooses how to walk through it.',
     },
   },
 
@@ -150,7 +150,7 @@ Welcome.`,
 
 At seventeen, standing at the doorway of your last year of school, you already carry something steady and deep — a seriousness that isn't heaviness, a capability that doesn't need to announce itself. This letter isn't here to tell you who you are; only your own life can do that. Think of it as a mirror held up with love, reflecting back a few of the gifts already alive in you, and a compass pointing toward what seems most yours to become.
 
-Keep what rings true. Set the rest gently aside. The year ahead is a threshold, and you are more ready for it than you know.`,
+The year ahead is a threshold, and you are more ready for it than you know.`,
 
   // 2. Soul Signature ────────────────────────────────────────────────────────
   soulSignature: {

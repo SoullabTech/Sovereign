@@ -267,6 +267,45 @@ export interface SoulPortrait {
   mentorEnabled?: boolean;
 }
 
+/**
+ * A literary Soul Portrait — bespoke, chapter-based prose, for a flowing reading
+ * rather than the fixed nine-section structure. Shares the meta (person,
+ * offeredBy, framing, yearAhead, mentor) with SoulPortrait, but carries
+ * free-form `chapters` in place of the fixed sections. Same renderer, literary
+ * mode. Used when a portrait wants to read as a letter/essay (e.g. an adult who
+ * loves the symbolic language) rather than a structured report.
+ */
+export interface PortraitChapter {
+  title: string;
+  subtitle?: string;
+  /** Flowing prose (paragraphs separated by blank lines). */
+  body: string;
+  /** Optional elemental accent (colour + icon) for the chapter heading. */
+  element?: ElementKey;
+}
+
+export interface LiterarySoulPortrait {
+  person: Person;
+  mode: PortraitMode;
+  offeredBy?: OfferedBy;
+  birthData?: BirthData;
+  /** Optional chart reference. */
+  natalChartSummary?: NatalChartSummary;
+  /** The bespoke chapters, in reading order. */
+  chapters: PortraitChapter[];
+  framing: PortraitFraming;
+  yearAhead?: YearAhead;
+  mentorEnabled?: boolean;
+}
+
+/** Either structure may back a portrait page. */
+export type AnyPortrait = SoulPortrait | LiterarySoulPortrait;
+
+/** Narrow to the literary (chapter-based) form. */
+export function isLiterarySoulPortrait(p: AnyPortrait): p is LiterarySoulPortrait {
+  return Array.isArray((p as LiterarySoulPortrait).chapters);
+}
+
 // ── Canonical catalogs (reusable defaults for any portrait) ────────────────
 
 /**
@@ -334,12 +373,18 @@ export const ARCHETYPE_CATALOG: Record<ArchetypeKey, { name: string; essence: st
   steward: { name: 'The Steward', essence: 'cares for what is shared; leaves it better.' },
 };
 
-/** The default, always-on framing. Encodes the design law for every portrait. */
+/**
+ * The default, always-on framing. Still encodes the design law for every
+ * portrait — symbolic-not-fate, companions-not-cages, a-becoming — but in a
+ * magical register rather than a hedging one (Kelly 2026-06-20: "this style is
+ * good for everyone"). The sovereignty truth is delivered as starlight, not as
+ * a disclaimer; the protection is the same, the tone is dignified, not defensive.
+ */
 export const DEFAULT_FRAMING: PortraitFraming = {
   notes: [
-    'This is symbolic architecture, not fate. A chart describes patterns to work with — it does not decide who you become.',
-    'These archetypes are companions, not cages. You are always more than any single name for you.',
-    'This describes a becoming, not a fixed identity. Read it the way you’d read a kind letter — keep what rings true, set the rest aside.',
+    'The stars reveal the weather of a season; your soul chooses how to walk through it.',
+    'You are never one sign, one name, one line — you are the whole sky.',
+    'Read this as a mirror held up by love, and keep what your own heart already knows is true.',
   ],
 };
 

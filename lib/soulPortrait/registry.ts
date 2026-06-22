@@ -12,18 +12,20 @@
  * gating before any portrait is broadly reachable.
  */
 
-import type { SoulPortrait } from './schema';
+import type { AnyPortrait } from './schema';
 import { augustenPortrait } from './portraits/augusten';
 import { katiePortrait } from './portraits/katie';
 import { sophiePortrait } from './portraits/sophie';
+import { andreaPortrait } from './portraits/andrea';
 
-const PORTRAITS: Record<string, SoulPortrait> = {
+const PORTRAITS: Record<string, AnyPortrait> = {
   [augustenPortrait.person.slug]: augustenPortrait,
   [katiePortrait.person.slug]: katiePortrait,
   [sophiePortrait.person.slug]: sophiePortrait,
+  [andreaPortrait.person.slug]: andreaPortrait,
 };
 
-export function getPortrait(slug: string): SoulPortrait | null {
+export function getPortrait(slug: string): AnyPortrait | null {
   return PORTRAITS[slug] ?? null;
 }
 
