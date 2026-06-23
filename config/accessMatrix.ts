@@ -49,6 +49,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/library', public: true, notes: 'Public library browse' },
   { exact: '/book-studio', public: true, notes: 'Book Studio — editorial workspace index' },
   { exact: '/book-studio/read', public: true, notes: 'Book Studio — manuscript reader' },
+  { exact: '/read/elemental-alchemy', public: true, notes: 'Reading environment — Elemental Alchemy reader, outside Studio chrome (Hospitality Lab)' },
   { exact: '/book-studio/passages', public: true, notes: 'Book Studio — passage blocks index' },
   { exact: '/book-studio/illustrations', public: true, notes: 'Book Studio — illustration list' },
   { exact: '/book-studio/design-system', public: true, notes: 'Book Studio — design system v1' },

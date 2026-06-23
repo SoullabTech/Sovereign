@@ -30,6 +30,16 @@ import remarkGfm from 'remark-gfm';
 export interface StudioMarkdownProps {
   /** Path relative to `docs/book-studio/` (e.g. `PASSAGE_BLOCKS_INDEX.md`) */
   file: string;
+  /**
+   * Optional. If set, rendering begins at the first markdown heading whose text
+   * starts with this string, dropping everything before it. The reading
+   * environment uses this to lift publisher front matter (copyright, ISBN,
+   * disclaimer, table of contents) out of the primary attentional stream so the
+   * book begins at its own threshold. The bibliographic order is unchanged in the
+   * canonical manuscript and print editions — only the *experiential* order here
+   * differs. (Two truthful orders coexist; neither distorts the other.)
+   */
+  startAtHeading?: string;
 }
 
 interface PlateThreshold {
@@ -83,7 +93,7 @@ function injectCanonicalPlates(markdown: string, config: PlateConfig): string {
   return out.join('\n');
 }
 
-export default async function StudioMarkdown({ file }: StudioMarkdownProps) {
+export default async function StudioMarkdown({ file, startAtHeading }: StudioMarkdownProps) {
   const filePath = path.join(process.cwd(), 'docs', 'book-studio', file);
 
   let content: string;
@@ -96,6 +106,21 @@ export default async function StudioMarkdown({ file }: StudioMarkdownProps) {
         <code className="text-amber-300/70">docs/book-studio/{file}</code>
       </div>
     );
+  }
+
+  // Reading-environment front-matter lift: begin at the first heading whose text
+  // starts with `startAtHeading` (e.g. "Preface"), dropping the publisher apparatus
+  // before it. Runs before plate injection so a plate configured `beforeHeading` the
+  // start heading (the cosmogram before "Preface") still lands as the doorway.
+  if (startAtHeading) {
+    const lines = content.split('\n');
+    const startIdx = lines.findIndex((line) => {
+      const m = line.match(/^#{1,6}\s+(.+?)\s*$/);
+      return m ? m[1].trim().startsWith(startAtHeading) : false;
+    });
+    if (startIdx > 0) {
+      content = lines.slice(startIdx).join('\n');
+    }
   }
 
   const plateConfig = await loadPlateConfig();
