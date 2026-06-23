@@ -1095,3 +1095,161 @@
   font-weight: 600;
   font-family: 'Playfair Display', Georgia, serif;
 }
+
+/* ─── Book Environment (/book-studio/book) ───────────────────────────────────
+ *
+ * A reading environment, not a reader. Every rule here exists to help someone
+ * move from reference consciousness to immersive consciousness and stay there.
+ *
+ * Five gates: no competing voice · no retrieval posture · no scroll-world ·
+ * no visual urgency · remember without spectacle.
+ */
+
+/* Full-screen reading environment — no chrome, no layout container */
+.book-env {
+  position: fixed;
+  inset: 0;
+  background-color: #0c0a09; /* stone-950 */
+  z-index: 50;
+  user-select: none; /* prevent text-selection during page-click navigation */
+}
+
+/* Clipping viewport — one page tall, overflow hidden */
+.book-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+/* Full-height manuscript — translated to show current page */
+.book-content {
+  /* Wide margins: the narrower column makes text feel like it occupies a page */
+  padding: 5vh 12vw;
+  will-change: transform;
+}
+
+/* Allow text selection inside content (not on the viewport layer itself) */
+.book-content * {
+  user-select: text;
+}
+
+/* The studio-prose type register carries through unchanged — same typography,
+   more breath. Chapter openings are events; epigraphs are thresholds. */
+.book-content .studio-prose {
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+.book-content .studio-prose h1 {
+  margin-top: 8vh;
+}
+
+.book-content .studio-prose p {
+  line-height: 1.85;
+}
+
+/* Exit — nearly invisible, always accessible */
+.book-exit {
+  position: fixed;
+  top: env(safe-area-inset-top, 1rem);
+  right: 1.25rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.12);
+  text-decoration: none;
+  transition: color 200ms ease;
+  z-index: 60;
+  padding: 0.5rem;
+}
+
+.book-exit:hover {
+  color: rgba(254, 243, 199, 0.55);
+}
+
+/* TOC trigger — nearly invisible glyph at bottom center */
+.book-toc-trigger {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  color: rgba(254, 243, 199, 0.1);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 200ms ease;
+  z-index: 60;
+  line-height: 1;
+}
+
+.book-toc-trigger:hover {
+  color: rgba(254, 243, 199, 0.4);
+}
+
+/* Page indicator — small-caps, quiet */
+.book-indicator {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  right: 1.25rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.1);
+  z-index: 60;
+  font-family: 'Crimson Pro', Georgia, serif;
+  pointer-events: none;
+}
+
+/* TOC overlay */
+.book-toc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 10, 9, 0.95);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-toc-content {
+  text-align: center;
+  padding: 2rem;
+  max-width: 28rem;
+}
+
+.book-toc-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.7);
+  margin-bottom: 1.5rem;
+}
+
+.book-toc-note {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 0.9rem;
+  color: rgba(254, 243, 199, 0.35);
+  font-style: italic;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.book-toc-close {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.25);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 200ms ease;
+}
+
+.book-toc-close:hover {
+  color: rgba(254, 243, 199, 0.6);
+}

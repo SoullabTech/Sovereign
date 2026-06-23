@@ -72,6 +72,18 @@ export default function ReadFlowPage() {
       {/* Restores deep-link scroll on first paint and on hash changes — see
           component header for the two-cause rationale. Pure side effect. */}
       <AnchorScrollHandler />
+
+      {/* Threshold into immersive reading — nearly invisible, no urgency */}
+      <div className="mt-20 mb-16 flex justify-center">
+        <a
+          href="/book-studio/book"
+          className="text-amber-200/15 hover:text-amber-200/45 transition-colors duration-300
+                     text-[10px] tracking-[0.3em] uppercase font-light"
+          style={{ fontFamily: "'Crimson Pro', serif" }}
+        >
+          Enter Book
+        </a>
+      </div>
     </div>
   );
 }
