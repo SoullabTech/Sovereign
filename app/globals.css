@@ -891,6 +891,39 @@
   margin: 1.5rem 0;
 }
 
+/*  Chapter / part epigraph — a blockquote that sits immediately after a
+    top-level `#` heading (canon §2.5). The canvas Page Proof makes this an
+    epigraph by giving it its own page. The Read Flow is flat, so it makes
+    it an epigraph by recognition + visual register: ceremonial breath, no
+    analytical left-border / italic-quote treatment, line breaks preserved
+    by the `remarkChapterEpigraph` plugin in StudioMarkdown.
+
+    The override is scoped to `blockquote.studio-epigraph` so only blockquotes
+    the plugin has tagged are affected. Body blockquotes keep the standard
+    studio-prose treatment above. */
+.studio-prose blockquote.studio-epigraph {
+  border-left: none;
+  padding-left: 0;
+  font-style: normal;
+  text-align: center;
+  color: rgba(254, 243, 199, 0.78);
+  margin: 3.5rem auto;
+  max-width: 36rem;
+  line-height: 1.7;
+}
+
+.studio-prose blockquote.studio-epigraph p {
+  margin: 1.05em 0;
+}
+
+.studio-prose blockquote.studio-epigraph p:first-child {
+  margin-top: 0;
+}
+
+.studio-prose blockquote.studio-epigraph p:last-child {
+  margin-bottom: 0;
+}
+
 /*  Plates / doorway images — symbolic thresholds within the prose.
     Sized smaller than the prose container so they read as plates,
     not full-page hero images, but large enough for the cosmogram's

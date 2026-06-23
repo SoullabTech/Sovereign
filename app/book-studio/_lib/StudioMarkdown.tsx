@@ -32,6 +32,81 @@ export interface StudioMarkdownProps {
   file: string;
 }
 
+/**
+ * Tag blockquotes that sit immediately after a top-level `#` heading as
+ * chapter / part epigraphs per canon §2.5 — and preserve their line breaks.
+ *
+ * Without this, the Read Flow renders the Chapter 1 invocation (and any
+ * future chapter epigraph) as a generic body blockquote: italic, indented,
+ * with the analytical amber left border. That register is wrong for an
+ * epigraph — the bond between heading and epigraph is ceremonial, not
+ * analytical. The reader should land in dedicated breath, not a sidebar.
+ *
+ * Detection is structural and minimal:
+ *   1. Walk the top-level children of the mdast root.
+ *   2. For each `blockquote`, check the immediately preceding sibling.
+ *   3. If it's a `# heading`, tag the blockquote with
+ *      `data.hProperties.className = 'studio-epigraph'`. CSS then strips
+ *      the analytical treatment and gives ceremonial breath.
+ *   4. Within the tagged blockquote, split intra-paragraph text on `\n`
+ *      and insert `break` nodes so the author's line shape survives
+ *      (CommonMark normally collapses soft breaks to whitespace).
+ *
+ * The canvas Page Proof makes a blockquote-after-heading an epigraph by
+ * page placement; the Read Flow makes it an epigraph by recognition and
+ * visual register. Same canon, two surfaces.
+ */
+type MdastNode = {
+  type: string;
+  depth?: number;
+  value?: string;
+  data?: { hProperties?: { className?: string } };
+  children?: MdastNode[];
+};
+
+/**
+ * Recursively rewrite a node's `children` so any inline text whose value
+ * contains `\n` is split into separate text nodes with `break` nodes
+ * between. Walks through inline wrappers (emphasis, strong, link, etc.)
+ * so a multi-line `*…*` italic block still gets its line shape rendered.
+ */
+function preserveLineBreaks(node: MdastNode): void {
+  if (!node.children) return;
+  const out: MdastNode[] = [];
+  for (const child of node.children) {
+    if (child.type === 'text' && typeof child.value === 'string' && child.value.includes('\n')) {
+      const parts = child.value.split('\n');
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i]) out.push({ type: 'text', value: parts[i] });
+        if (i < parts.length - 1) out.push({ type: 'break' });
+      }
+    } else {
+      preserveLineBreaks(child);
+      out.push(child);
+    }
+  }
+  node.children = out;
+}
+
+function remarkChapterEpigraph() {
+  return (tree: MdastNode) => {
+    const kids = tree.children ?? [];
+    for (let i = 0; i < kids.length; i++) {
+      const node = kids[i];
+      if (node.type !== 'blockquote') continue;
+      const prev = kids[i - 1];
+      if (!prev || prev.type !== 'heading' || prev.depth !== 1) continue;
+      node.data = node.data ?? {};
+      node.data.hProperties = node.data.hProperties ?? {};
+      const existing = node.data.hProperties.className;
+      node.data.hProperties.className = existing
+        ? `${existing} studio-epigraph`
+        : 'studio-epigraph';
+      preserveLineBreaks(node);
+    }
+  };
+}
+
 interface PlateThreshold {
   plate: string;
   beforeHeading: string;
@@ -106,7 +181,7 @@ export default async function StudioMarkdown({ file }: StudioMarkdownProps) {
   return (
     <article className="studio-prose mx-auto max-w-3xl">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkChapterEpigraph]}
         components={{
           // True epigraphs are paragraphs whose entire content is a single
           // `*"…" — Author*`. CSS `:only-child` ignores text nodes, so a
