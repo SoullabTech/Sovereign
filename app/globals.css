@@ -924,6 +924,40 @@
   margin-bottom: 0;
 }
 
+/*  Table of Contents — clickable chapter navigation.
+    `remarkTocLinks` in StudioMarkdown slugs every heading into a stable
+    anchor `id` and wraps each Contents-section entry in an `<a>` to its
+    target. The link styling here is intentionally quiet — Contents is a
+    page of *names*, not a list of bright web-style links. We keep the
+    body color and just add a subtle hover lift + soft underline so the
+    reader feels the affordance without being shouted at.
+
+    Headings get a generous `scroll-margin-top` so anchor jumps land with
+    breath above them rather than flush against the viewport's top edge. */
+.studio-prose a.toc-link,
+.studio-prose a.toc-link strong,
+.studio-prose a.toc-link em {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.18s ease, text-decoration-color 0.18s ease;
+}
+
+.studio-prose a.toc-link:hover,
+.studio-prose a.toc-link:hover strong,
+.studio-prose a.toc-link:hover em {
+  color: rgba(252, 211, 77, 0.95);
+  text-decoration: underline;
+  text-decoration-color: rgba(252, 211, 77, 0.35);
+  text-underline-offset: 3px;
+}
+
+.studio-prose h1[id],
+.studio-prose h2[id],
+.studio-prose h3[id],
+.studio-prose h4[id] {
+  scroll-margin-top: 2rem;
+}
+
 /*  Plates / doorway images — symbolic thresholds within the prose.
     Sized smaller than the prose container so they read as plates,
     not full-page hero images, but large enough for the cosmogram's
