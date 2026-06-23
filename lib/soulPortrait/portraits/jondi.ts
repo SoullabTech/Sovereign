@@ -87,11 +87,11 @@ The stars reveal the weather; your soul chooses how to walk through it. Read thi
 
 On the surface, you meet the world as a Sagittarian — warm, honest, forthright, an optimist and a seeker. One always knows where one stands with you. You love truth and freedom and the big picture; you are drawn to meaning, to nature, to the question behind the question. People are easy around you, because you are easy to be around.
 
-But underneath that open surface is one of the rarest and most demanding patterns a chart can hold. Four of your planets stand locked together in a great square the astrologers call a Grand Cross — the Sun, the Moon, and two of the slow, deep planets, each pulling against the others. It is the signature of a life that does not get to coast: of real trials, met and survived, and of a will and a determination that most people are never asked to find in themselves. You have been tested. And the testing built something in you that ease never could.
+But underneath that open surface is one of the rarest and most demanding patterns a chart can hold. Four of your planets stand locked together in a great square the astrologers call a Grand Cross — the Sun, the Moon, and two of the slow, deep planets, each pulling against the others. It is the signature of a life that does not get to coast: of real trials, met and survived, and of a will and a determination that most people are never asked to find in themselves. If you have been tested — and a chart shaped like this rarely comes without trial — the testing built something in you that ease never could.
 
 And running through both — the open Sagittarian seeker and the forged inner strength — is an Aquarian mind that has always been a little ahead of its time: clear, humane, original, oriented toward a better and fairer world.
 
-So your essential nature is this: a seeker who was tempered in fire. Warm on the outside and unbreakable underneath. Someone who has carried a great deal, found exceptional strength in the carrying, and turned the whole hard journey into a kind of wisdom. You are not someone life left untouched. You are someone life made deep.`,
+So your essential nature is this: a seeker who was tempered in fire. Warm on the outside and unbreakable underneath. Someone who has carried a great deal, found exceptional strength in the carrying, and turned what you carried into a kind of wisdom. You are not someone life left untouched. You are someone life made deep.`,
     },
 
     // 2 ──────────────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ So what you carry is hard-won wisdom, offered as light — and the people who kn
     // 3 ──────────────────────────────────────────────────────────────────────
     {
       title: 'The Way You Love',
-      body: `You love warmly, loyally, and with your whole heart — and you have loved through real loss.
+      body: `You love warmly, loyally, and with your whole heart — and you love as someone who knows what love can cost.
 
 Your Venus, the planet of love, is in fiery Aries and sits in the house of home and roots, and it touches your rising sign with grace. This gives you an affection that is enthusiastic and generous and a little impulsive — quick to warmth, devoted to the people and the home you make your own. There is a charm to you that draws people in, and a soul-level beauty the chart marks plainly. Your Taurus Moon adds steadfastness underneath the warmth: once someone is yours, they are kept.
 
