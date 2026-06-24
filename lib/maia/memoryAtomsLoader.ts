@@ -354,11 +354,16 @@ export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
     );
     lines.push('');
     lines.push(
-      'When to surface (selection rule): surface a practitioner observation when it ' +
-        'contributes information unlikely to arise from the member\'s current message ' +
-        'alone — a pattern, perspective, or framing they have not themselves named in ' +
-        'this exchange. If the member has already articulated the same insight, support ' +
-        'their authorship rather than repeating or re-attributing it.',
+      'When to surface (REQUIRED): when one of these observations contains a concrete, ' +
+        'behaviorally relevant detail that directly bears on what the member is asking ' +
+        'right now, you SHOULD surface it — briefly and descriptively — before you ask ' +
+        'your next question. Name it as a witnessed note and invite the member to weigh ' +
+        'it. For example: "I notice there\'s a note from a prior session that you tend to ' +
+        'pause before naming what you actually want — does that feel relevant here?" ' +
+        '(descriptive and invitational) — never "You always pause before naming what you ' +
+        'want" (a verdict). Surface only what is genuinely new to this exchange; if the ' +
+        'member has already named the same insight, support their authorship rather than ' +
+        'repeating it.',
     );
     lines.push('');
 
