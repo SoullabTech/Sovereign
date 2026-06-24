@@ -103,6 +103,10 @@ export interface MaiaContext {
   // with provenance grounding. System-retrieved continuity tier; lower authority
   // than member-placed (atoms/anchor). See docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md.
   conversationalRecallAddendum?: string;
+  // 🎯 EVIDENCE ENGINE: Governing question awareness when still-alive threads are present.
+  // Orients MAIA to the evidence logic without narrating the offer — that lives in InvitationCard.
+  // See docs/architecture/EVIDENCE_ENGINE_2026-06-24.md.
+  evidenceEngineAddendum?: string;
 }
 
 /**
@@ -407,6 +411,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'consultationAddendum',            log: () => `🏛️ [Consultation] Council insights injected` },
   { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
+  { field: 'evidenceEngineAddendum',          log: v => `🎯 [Evidence Engine] Still-alive awareness injected (${v.length} chars)` },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════

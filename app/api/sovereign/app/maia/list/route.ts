@@ -1078,6 +1078,23 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       });
     }
 
+    // 🎯 EVIDENCE ENGINE: Governing question awareness for MAIA's prompt.
+    // Injected only when still_alive atoms exist, not Sanctuary, and not the first turn.
+    // MAIA holds this orientation silently — InvitationCard renders the offer; MAIA does not narrate it.
+    let evidenceEngineAddendum: string | undefined;
+    if (!isSanctuary && atomsResult.length > 0 && session.turns >= 1) {
+      const hasStillAlive = atomsResult.some((a: any) => a.status === 'still_alive');
+      if (hasStillAlive) {
+        evidenceEngineAddendum = `🎯 EVIDENCE ENGINE — governing question
+
+Still-alive living threads are present for this member. A representation has been made available alongside this response. You do not need to mention or narrate this — the invitation appears separately in the interface.
+
+Governing question: "What evidence would help answer the next question we are trying to answer together?"
+
+Hold these threads lightly. If the inquiry being worked with would genuinely benefit from knowing what has continued, trust that the evidence will reach the member through the interface. Do not surface thread titles or describe what the representation contains. Your response holds the conversation; the evidence system holds the retrieval.`;
+      }
+    }
+
     // 🔬 Layer 15 — memoryHealth: what loaded, what failed, what is unknown (canon §VII)
     const memoryHealth: MemoryHealth = buildMemoryHealth({
       recentTurns: { count: session.turn_count ?? 0 },
@@ -1222,6 +1239,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           forwardReadinessAddendum,
           atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
+          evidenceEngineAddendum,       // 🎯 Evidence Engine — still-alive governing question awareness
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
@@ -1407,7 +1425,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           id: 'still-alive',
           componentId: 'still-alive-panel',
           questionAnswered: 'What has remained alive?',
-          invitationText: 'Would it help to see what has remained alive?',
+          invitationText: 'Would it help to look at what has continued?',
           evidenceSource: 'member_memory_atoms',
           confidence: 0.85,
         }];
