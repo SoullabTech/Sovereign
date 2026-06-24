@@ -1202,6 +1202,17 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`💬 [FAST] Conversational recall addendum applied (${conversationalRecallAddendum.length} chars)`);
   }
 
+  // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
+  // atoms the member chose to keep, plus witnessed practitioner observations rendered
+  // with epistemic framing ("a practitioner observed…"). Built by the route via
+  // lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt; consent gate (return_preference)
+  // enforced at the loader's SQL. Higher authority than system-retrieved conversational
+  // recall, so interpolated AFTER it in the prompt (see ordering note above).
+  const atomsAddendum = (meta as any)?.atomsAddendum as string | undefined;
+  if (atomsAddendum) {
+    console.log(`🧬 [FAST] atoms-addendum injected: { chars: ${atomsAddendum.length} } — member-placed portfolio + practitioner observations`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   // Pronouns are core identity context — surfaced here so MAIA respects them naturally
@@ -1239,7 +1250,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1519,6 +1530,9 @@ async function corePathResponse(
     // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges. Injected
     // inside buildMaiaWisePrompt via safeAddendum iteration. See spec §IX.
     conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
+    // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
+    // atoms + witnessed practitioner observations. Injected via appendAllContextAddenda.
+    atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -2120,6 +2134,10 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md). Field is
         // set here for forward-compat with the eventual DEEP addenda repair.
         conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
+        // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): now injected
+        // for DEEP repair too — buildMaiaComprehensivePrompt appends MaiaContext addenda
+        // via appendAllContextAddenda (maiaVoice.ts), so this field reaches the prompt.
+        atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

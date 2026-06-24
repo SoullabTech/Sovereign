@@ -100,6 +100,11 @@ export interface MaiaContext {
   // with provenance grounding. System-retrieved continuity tier; lower authority
   // than member-placed (atoms/anchor). See docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md.
   conversationalRecallAddendum?: string;
+  // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
+  // atoms the member chose to keep, plus witnessed practitioner observations rendered
+  // with epistemic framing. Higher authority than system-retrieved conversational
+  // recall, so appended after it. Built by lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt.
+  atomsAddendum?: string;
 }
 
 /**
@@ -403,6 +408,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'consultationAddendum',            log: () => `🏛️ [Consultation] Council insights injected` },
   { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
+  { field: 'atomsAddendum',                   log: v => `🧬 [Atoms] Member-placed portfolio + practitioner observations injected (${v.length} chars)` },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
