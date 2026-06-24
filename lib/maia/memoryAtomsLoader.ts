@@ -145,6 +145,20 @@ const SELECT_COLUMNS = `
   facilitator_id
 `;
 
+/**
+ * Attribution guard — bridge-verification finding 2026-06-24.
+ *
+ * Canon: `facilitator_id` is the canonical runtime attribution for a
+ * practitioner_observation atom; the `provenance` jsonb is audit history, never
+ * runtime identity. An unattributed practitioner atom must NOT be loader-eligible —
+ * formatAtomsForPrompt renders the "PRACTITIONER OBSERVATIONS" section by
+ * source_type alone, so surfacing one would present "a practitioner observed…"
+ * with nothing backing it. Such atoms (legacy/seed/test) may exist; they simply
+ * never surface. (No write-time block — existence is allowed, surfacing is not.)
+ */
+export const PRACTITIONER_ATTRIBUTION_GUARD =
+  "(source_type <> 'practitioner_observation' OR facilitator_id IS NOT NULL)";
+
 interface AtomRow {
   id: string;
   title: string;
@@ -198,6 +212,7 @@ export async function loadMemberMemoryAtomsForPrompt(
          AND status IN ('active', 'still_alive')
          AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
          AND NOT ('sacred_protected' = ANY(registers))
+         AND ${PRACTITIONER_ATTRIBUTION_GUARD}
        ORDER BY is_breakthrough DESC, kept_at DESC
        LIMIT $2`,
       [memberId, limit],
