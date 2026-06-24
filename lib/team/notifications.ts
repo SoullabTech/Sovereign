@@ -2,7 +2,7 @@
 // All sends are fire-and-forget. Never throws. Never blocks message delivery.
 
 import { query } from '@/lib/db/postgres';
-import Resend from 'resend';
+import { Resend } from 'resend';
 import { resolveNotificationPreference } from '@/lib/team/notificationPreferences';
 
 function getResendClient(): Resend {
