@@ -2710,6 +2710,58 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
     }
 
+    // 🔭 CONTEXT INVENTORY — epistemic observability (descriptive, NOT interpretive).
+    // Emitted exactly once per turn, after tier decision + context assembly (incl. the
+    // identity/astrology backfill above) and before model invocation: a complete record
+    // of what information was AVAILABLE to the model this turn, uncontaminated by the
+    // response. Answers ONE question — "what was available?" — never "what did the model
+    // use?" or "why did it answer this way?" (those belong to later layers). `available`
+    // reports only context that actually reaches the prompt (developmental memory is
+    // loaded but not injected, so it is intentionally absent). representations* are null
+    // (not []) because the Representation/Evidence engines do not exist yet — null says
+    // "this layer does not exist" rather than "considered nothing". Fail-safe: a logging
+    // error must never block generation. See memory: project_epistemic_observability_layer.
+    try {
+      const m = meta as any;
+      const available = {
+        conversationalRecall: !!m.conversationalRecallAddendum,
+        atoms: {
+          loaded: m.atomsLoadedCount ?? 0,
+          injected: !!m.atomsAddendum,
+          chars: typeof m.atomsAddendum === 'string' ? m.atomsAddendum.length : 0,
+        },
+        astrology: !!m.astrologyAddendum,
+        wuXing: !!m.wuxingSnapshotAddendum,
+        memberWeb: !!m.memberWebAddendum,
+        knowledgeGate: !!m.knowledgeGateAddendum,
+        memoryOrchestrator: !!m.memoryInfluenceAddendum,
+        forwardReadiness: !!m.forwardReadinessAddendum,
+        studio: !!m.studioAddendum,
+        episodic: false, // layer not wired
+        dreams: false,   // layer not wired
+      };
+      const evidenceProviders = [
+        available.conversationalRecall && 'conversationalRecall',
+        available.atoms.injected && 'memoryAtoms',
+        available.astrology && 'astrology',
+        available.wuXing && 'wuXing',
+        available.memberWeb && 'memberWeb',
+        available.knowledgeGate && 'knowledgeGate',
+        available.memoryOrchestrator && 'memoryOrchestrator',
+      ].filter(Boolean);
+      console.log('[MAIA] context-inventory', {
+        conversationId: sessionId,
+        userId: effectiveUserId ? String(effectiveUserId).slice(0, 8) + '...' : null,
+        routingTier: processingProfile,
+        available,
+        evidenceProviders,
+        representationsConsidered: null,
+        representationsOffered: null,
+      });
+    } catch (invErr) {
+      console.warn('⚠️ [MAIA] context-inventory emit failed (non-blocking):', invErr);
+    }
+
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {

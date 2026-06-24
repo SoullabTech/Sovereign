@@ -971,6 +971,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           memoryInfluenceAddendum,
           forwardReadinessAddendum,
           atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
+          atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
         },
       }),
