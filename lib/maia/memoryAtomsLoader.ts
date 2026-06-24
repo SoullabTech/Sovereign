@@ -353,6 +353,14 @@ export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
         '"You are…" or "You have…" without the member confirming it as their own truth.',
     );
     lines.push('');
+    lines.push(
+      'When to surface (selection rule): surface a practitioner observation when it ' +
+        'contributes information unlikely to arise from the member\'s current message ' +
+        'alone — a pattern, perspective, or framing they have not themselves named in ' +
+        'this exchange. If the member has already articulated the same insight, support ' +
+        'their authorship rather than repeating or re-attributing it.',
+    );
+    lines.push('');
 
     for (const atom of practitionerAtoms) {
       const framing = epistemicFraming(atom.epistemologicalStatus);
