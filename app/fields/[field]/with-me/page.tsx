@@ -264,7 +264,11 @@ export default function WithMePage() {
     if (!sessionId) return;
     setCompleting(true);
     const approved = candidates.filter(c => c.approved);
-    await patchSession({ synthesis: { ...synthesis, candidates: approved }, status: 'complete' });
+    await patchSession({
+      synthesis: { ...synthesis, candidates: approved },
+      approved_candidate_ids: approved.map(c => c.id),
+      status: 'complete',
+    });
     setCompleting(false);
     setPhase('done');
   };
