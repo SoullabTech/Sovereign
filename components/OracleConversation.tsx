@@ -76,6 +76,7 @@ import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 // 🗓️ Calendar proposal pipeline (docs/canon/MAIA_CONSENT_GATES.md) — MAIA proposes; only confirm writes.
 import type { Proposal, CalendarEventPayload } from '@/lib/maia/proposals/types';
 import { CalendarProposalCard } from '@/components/maia/CalendarProposalCard';
+import { InvitationCard } from '@/components/maia/InvitationCard';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
@@ -546,6 +547,8 @@ interface ConversationMessage {
     feltLanguage?: string;
     silent?: boolean;
   }>;
+  // 🎯 EVIDENCE ENGINE: representation offers for this turn (EVIDENCE_ENGINE_2026-06-24.md)
+  representations?: import('@/components/maia/InvitationCard').RepresentationOption[] | null;
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -5460,6 +5463,8 @@ I'm not sure what I'm feeling yet.`;
         uiAction: responseData.uiAction || undefined,
         // 🌀 SUGGESTED ACTIONS: behavioral loop invitations (between/chat top-level OR oracle spiralogic)
         suggestedActions: responseData.suggestedActions || responseData.spiralogic?.suggestedActions || undefined,
+        // 🎯 EVIDENCE ENGINE: representation offers for this turn
+        representations: responseData.representations || null,
       };
 
       // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)
@@ -8284,6 +8289,12 @@ I'm not sure what I'm feeling yet.`;
                       {/* 🗓️ CALENDAR PROPOSAL: MAIA proposes; only confirm writes (MAIA_CONSENT_GATES Art. 2) */}
                       {message.role === 'oracle' && message.proposal && (
                         <CalendarProposalCard proposal={message.proposal} />
+                      )}
+
+                      {/* 🎯 EVIDENCE ENGINE: Representation offer — evidence invited into conversation.
+                          MAIA offers; member accepts or dismisses. Never auto-opens. */}
+                      {message.role === 'oracle' && message.representations && message.representations.length > 0 && (
+                        <InvitationCard representations={message.representations} />
                       )}
 
                       {/* 🏛️ AIN: Council consultation results panel */}

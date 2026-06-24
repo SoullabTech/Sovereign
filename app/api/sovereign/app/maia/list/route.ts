@@ -1396,6 +1396,22 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       practiceRecommendation: orchestratorResult.practiceRecommendation || null,
       // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
       proposal: orchestratorResult.proposal || null,
+      // 🎯 EVIDENCE ENGINE: Representation offers — evidence invited into conversation when it deepens understanding.
+      // Computed server-side from loaded atoms. Only offered when: member has still_alive atoms + not first turn + not Sanctuary.
+      // Governing doc: docs/architecture/EVIDENCE_ENGINE_2026-06-24.md
+      representations: (() => {
+        if (isSanctuary || !atomsResult || session.turns < 1) return null;
+        const hasStillAlive = atomsResult.some((a: any) => a.status === 'still_alive');
+        if (!hasStillAlive) return null;
+        return [{
+          id: 'still-alive',
+          componentId: 'still-alive-panel',
+          questionAnswered: 'What has remained alive?',
+          invitationText: 'Would it help to see what has remained alive?',
+          evidenceSource: 'member_memory_atoms',
+          confidence: 0.85,
+        }];
+      })(),
       // 🚪 AIN KNOWLEDGE GATE: Source well scoring (Phase 1)
       ainState: knowledgeGateResult ? {
         sourceMix: knowledgeGateResult.source_mix.map(s => ({

@@ -503,6 +503,16 @@ export type PatternMeta = {
   seen?: number;
 };
 
+// 🎯 EVIDENCE ENGINE: Representation offer — evidence invited into conversation (EVIDENCE_ENGINE_2026-06-24.md)
+export type RepresentationOption = {
+  id: string;
+  componentId: string;       // client resolves to panel component
+  questionAnswered: string;  // "What has remained alive?"
+  invitationText: string;    // "Would it help to see what has remained alive?"
+  evidenceSource: string;    // "member_memory_atoms"
+  confidence: number;        // 0–1; only surface if >= 0.7
+};
+
 export type MaiaResponse = {
   text: string;
   processingProfile?: ProcessingProfile;
@@ -512,6 +522,7 @@ export type MaiaResponse = {
   stateVector?: StateVector;                  // 🌀 State vector reading from this turn
   practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
   proposal?: Proposal;  // 🗓️ Pending action proposal (calendar) awaiting member confirm — MAIA_CONSENT_GATES Art. 2
+  representations?: RepresentationOption[] | null;  // 🎯 EVIDENCE ENGINE: evidence offers for this turn
   metadata?: {
     patterns?: PatternMeta[];
     turnId?: number;          // 🔄 For feedback linkage
