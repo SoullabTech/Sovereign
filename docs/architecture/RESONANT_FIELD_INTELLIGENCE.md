@@ -99,9 +99,42 @@ Until that fact is verified in production, everything above this line remains ar
 1. ✅ With Me → bookmark → synthesis → approval → `member_memory_atoms` (built, 2026-06-24)
 2. ✅ `epistemological_status` + `witnessed` register + provenance column (built, 2026-06-24)
 3. ✅ `formatAtomsForPrompt` renders PRACTITIONER OBSERVATIONS block with epistemic framing (built, 2026-06-24)
-4. ⬜ End-to-end verification: complete a real session with a real member UUID → query atoms → run a MAIA conversation → confirm language discipline
+4. 🔶 End-to-end verification (2026-06-24): engineering wire ✅ verified in production; "confirm language discipline" decomposed and partially open — see **First Live Production Observation** below.
 5. ⬜ Member reports on whether surfaced observations feel useful, intrusive, or mischaracterized
 6. ⬜ Only after (4) and (5): consider the next source in the interdependence map
+
+---
+
+## 6.1 First Live Production Observation (2026-06)
+
+**Engineering**
+
+The atoms prompt wire has been verified in production. Observed on one live production turn (n=1):
+
+- Retrieval: 8 atoms loaded.
+- Prompt assembly: 2280-character atoms block injected through the CORE addenda path.
+- Runtime wiring confirmed by the compiled production bundle.
+
+This retires the plumbing hypothesis ("practitioner observations do not reach the model prompt"). Fix shipped as `3ce95089e` (`atomsAddendum` wired into `maiaService` `baseSystemPrompt` + `MaiaContext` + `ADDENDA_SPECS` + both context literals).
+
+**Behavior**
+
+Behavioral continuity influence was observed on one production turn (n=1). The response contained continuity language ("it's been threading through what you've been working on") that is consistent with the retrieved practitioner observation influencing interpretation. This establishes behavioral influence on one observed turn. It does **not** yet establish reliability across members, contexts, or time.
+
+**Open Research Question**
+
+Two distinct behavioral properties remain to be separated empirically:
+
+1. **Continuity influence** — whether a prior observation shapes the present interpretation.
+2. **Explicit provenance** — whether the source of that observation remains visibly answerable to its origin when surfaced.
+
+Only the first currently has direct evidence.
+
+**Next Discriminating Experiment**
+
+Hold the stored practitioner observation constant while varying only the member's present articulation. Use a prompt that is relevant to the stored observation but does not itself express its central insight. The observation to evaluate is not simply whether the prior material is reused, but whether provenance appears precisely when the retrieved observation contributes information *beyond* what the member has already articulated.
+
+No prompt-policy changes are warranted until this discriminating test has been completed. The current data are equally compatible with two competing hypotheses — that the Selection policy is already distinguishing *echoing* from *adding*, or that it is too restraint-weighted — and the experiment above is designed to distinguish them. Preserving both until it has run is the more rigorous position.
 
 ---
 
