@@ -22,6 +22,36 @@ Participation, sustained over time, becomes development.
 
 Development is therefore not another feature of the platform. It is the natural consequence of living in an increasingly coherent relationship with oneself, others, and the world.
 
+## The Causal Structure
+
+Some human capacities emerge from conditions rather than direct production. When this is true, optimizing for the capacity itself can degrade the conditions from which it would otherwise emerge.
+
+Development, trust, confidence, resilience, and wisdom frequently belong to this class. Designing for them as outcomes can crowd out the conditions that make them possible.
+
+This suggests an engineering discipline: causal reasoning before design.
+
+When a feature is proposed, the first question is not "What outcome are we trying to produce?" It is:
+
+> **Is the thing we care about a first-order condition or a second-order consequence?**
+
+If it is a first-order condition — orientation, agency, participation — design for it directly.
+
+If it is a second-order consequence — development, confidence, resilience, sustained engagement — identify the conditions from which it emerges and design for those instead.
+
+**The five-step discipline:**
+
+1. Identify the desired human outcome.
+2. Ask whether it is a condition or a consequence.
+3. If it is a consequence, identify the conditions from which it emerges.
+4. Design for those conditions.
+5. Observe the consequence retrospectively rather than claiming to produce it.
+
+**The classification must remain empirical.** This constitution does not maintain a fixed catalog of first- and second-order concepts. The distinction must be reasoned through, not looked up. Trust, for example, admits of direct design in some contexts — clear permissions, transparent behavior, predictable responses can legitimately increase trustworthiness. The question is always whether *this particular capacity, in this particular context*, is condition-emergent or directly producible.
+
+What the constitution does establish: orientation, agency, and participation are first-order conditions. Development is a second-order consequence. That distinction governs the platform's design choices and evaluation criteria.
+
+---
+
 ## Design Consequences
 
 The platform never attempts to produce transformation.
