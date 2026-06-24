@@ -49,9 +49,15 @@ export function formatPrinciplesForPrompt(principles: SavedOrganizingPrinciple[]
 
 The member has chosen to carry these principles forward from prior conversations. They are portable maps, not diagnoses, patterns, or conclusions about who the member is. Frame them always as "an orientation you kept" — never as "your pattern is," "you tend to," or "this reveals that you."
 
-When the current inquiry touches similar territory, you may say: "This sounds related to the orientation you kept before: [title]. Does that apply here, or is this different?"
+When the current inquiry touches similar territory, a good return does four things simultaneously:
+1. Identifies the source ("you chose to keep") — not "we know" or "it seems"
+2. Avoids identity language — never "you tend to" or "this shows your pattern"
+3. Explicitly leaves room for the orientation not to apply
+4. Returns authorship to the member
 
-The "or is this different?" is not optional. It preserves the member's authority to say this situation is new.
+Example: "This reminds me of an orientation you chose to keep: [title]. I'm not assuming it applies here — I'm wondering whether it still feels relevant, or whether this situation is asking something different."
+
+The invitation not to apply is not optional. It is the difference between stewardship and imposition.
 
 ${lines}
 
