@@ -401,6 +401,7 @@ function MAIAPageContent() {
   const [showEntryScreen, setShowEntryScreen] = useState(false);
   const [entryDoor, setEntryDoor] = useState<string | null>(null);
   const [entryText, setEntryText] = useState('');
+  const [aliveAtoms, setAliveAtoms] = useState<{ id: string; title: string }[]>([]);
 
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
@@ -728,6 +729,23 @@ function MAIAPageContent() {
     window.addEventListener('maia-settings-changed', handler);
     return () => window.removeEventListener('maia-settings-changed', handler);
   }, []);
+
+  // Fetch living atoms for entry screen — MAIA holds what has been expressed
+  useEffect(() => {
+    if (!showEntryScreen || !isMounted || !explorerId || explorerId === 'guest') return;
+    apiFetch('/api/psyche/portfolio/atoms?view=chronological')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.atoms?.length) {
+          setAliveAtoms(
+            (data.atoms as { id: string; title: string }[])
+              .slice(0, 4)
+              .map(a => ({ id: a.id, title: a.title }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [showEntryScreen, isMounted, explorerId]);
 
   if (featureFlags.spatialMaiaShell) {
     return (
@@ -1852,6 +1870,20 @@ function MAIAPageContent() {
                     </div>
                   )}
                 </div>
+
+                {aliveAtoms.length > 0 && (
+                  <div className="flex flex-col gap-1.5 border-t border-white/[0.05] pt-4">
+                    {aliveAtoms.map((atom) => (
+                      <button
+                        key={atom.id}
+                        onClick={() => setEntryText(atom.title.length > 80 ? atom.title.slice(0, 77) + '…' : atom.title)}
+                        className="text-left text-xs text-stone-700 hover:text-stone-500 transition-colors leading-relaxed"
+                      >
+                        {atom.title.length > 80 ? atom.title.slice(0, 77) + '…' : atom.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="text-center">
                   <button
