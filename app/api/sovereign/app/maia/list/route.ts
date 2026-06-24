@@ -93,6 +93,9 @@ import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
+// Conversational Keep — explicit member-instruction filing only (no salience offers).
+// Mirrors the high-confidence filing path in app/api/oracle/conversation/route.ts.
+import { parseFilingInstruction, applyConversationalKeepResult, type FilingInstruction } from '@/lib/psyche/conversational-keep';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
 import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
@@ -282,17 +285,27 @@ export async function POST(req: NextRequest) {
       [key: string]: unknown;
     };
 
-    // 🔐 AUTH-DERIVED USER ID: Prefer cookie/header-based auth over body
-    // This fixes iOS memory loss after app resume (body state can be lost, cookies persist)
-    const memberIdFromAuth = await getMemberIdFromRequest(req);
-    const userId = memberIdFromAuth ||
-      (typeof bodyUserId === 'string' && bodyUserId.length > 0 ? bodyUserId : null);
+    // 🔐 AUTH-FIRST USER ID: session cookie or x-member-id header.
+    // Falls back to body userId only when auth returns null (e.g. cookie loss
+    // after iOS WebView reset), and only after DB-validating the id — prevents
+    // impersonation of unknown UUIDs while recovering known members whose
+    // auth state was lost.
+    let userId = await getMemberIdFromRequest(req);
+    if (!userId && typeof bodyUserId === 'string' && bodyUserId.length > 0) {
+      const validated = await query<{ id: string }>(
+        'SELECT id FROM members WHERE id = $1',
+        [bodyUserId],
+      );
+      if (validated.rows.length > 0) userId = bodyUserId;
+    }
 
-    // 🔍 IDENTITY DEBUG: Log userId resolution for debugging memory issues
+    // 🔍 IDENTITY DEBUG: observe resolution
     console.log('[MAIA] userId resolved:', {
-      memberIdFromAuth: memberIdFromAuth ? 'present' : 'null',
-      bodyUserId: typeof bodyUserId === 'string' ? 'present' : 'null',
-      finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
+      fromAuth: userId ? 'present' : 'null',
+      bodyUserId:
+        typeof bodyUserId === 'string' && bodyUserId.length > 0
+          ? (bodyUserId === userId ? 'matched' : 'ignored-or-fallback')
+          : 'absent',
     });
 
     // Validate and sanitize timezone (default to UTC if invalid)
@@ -1633,6 +1646,53 @@ CONSTRAINTS (non-negotiable for this response):
         }
       } catch (sigErr) {
         console.warn('[relationalSignals] detect error (non-blocking):', sigErr);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Conversational Keep — explicit entrustment on the live route.
+    // Detects ONLY member-directed filing instructions ("keep this",
+    // "save this as an idea") via parseFilingInstruction — the member's own
+    // words. Does NOT solicit keeps from salience (evaluateKeepOffer is
+    // deliberately NOT ported): entrustment is declared by the member, never
+    // inferred by the system. High-confidence filings are executed now (atom
+    // written to member_memory_atoms — the SAME registry this route loads for
+    // recall above), so an entrusted item becomes durable and visible to a
+    // later session. Low-confidence filings are surfaced for confirmation.
+    // Non-blocking and feature-flagged: any failure leaves keepIntent unset
+    // and the conversational reply stands.
+    // ═══════════════════════════════════════════════════════════════════
+    if (userId && message && process.env.CONVERSATIONAL_KEEP_ENABLED === 'true') {
+      try {
+        const filing: FilingInstruction | null = parseFilingInstruction({ utterance: message });
+        if (filing) {
+          if (filing.confidence === 'high') {
+            const atom = await applyConversationalKeepResult(userId, {
+              kind: 'filing',
+              instruction: filing,
+              context: { sessionId },
+            });
+            responseData.keepIntent = {
+              kind: 'filed',
+              atomTitle: atom.title,
+              destination: filing.destination,
+            };
+            console.log('[MAIA/sovereign] keep filed:', {
+              userId: userId.slice(0, 8) + '...',
+              destination: filing.destination,
+              atomId: atom.id,
+            });
+          } else {
+            responseData.keepIntent = { kind: 'filing_confirmation', instruction: filing };
+            console.log('[MAIA/sovereign] keep awaiting-confirm:', {
+              userId: userId.slice(0, 8) + '...',
+              destination: filing.destination,
+            });
+          }
+        }
+      } catch (keepErr) {
+        // Non-fatal: the conversational reply is never blocked by a keep failure.
+        console.error('[MAIA/sovereign] keep sidecar error (non-fatal):', keepErr);
       }
     }
 

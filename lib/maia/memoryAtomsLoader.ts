@@ -383,7 +383,9 @@ export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
     lines.push(
       'Epistemic discipline: these observations have practitioner-level standing, not ' +
         'member-confirmed standing. Surface with appropriate tentativeness. The member ' +
-        'remains the authority on their own experience.',
+        'remains the authority on their own experience. When surfacing a practitioner ' +
+        'observation, explicitly invite the member to confirm, reject, or refine it — ' +
+        'do not carry it as established context until the member has responded to it.',
     );
     lines.push('');
     sections.push(lines.join('\n'));
