@@ -119,6 +119,21 @@ SoulPortraitRenderer
 
 Each mode contributes only its own relational framing; the symbolic core stays shared — the renderer itself embodying *identity is shared, relationship is contextual.* **Not to be built now.** Sequencing (Kelly): finish the current acceptance criteria → stop → read Katie *as a gift, not as a developer* → let lived intuition choose the next architectural step. The conditionals work fine for two modes; **earn the component abstraction from experience, not anticipation** — one instance proves possibility, two reveal the abstraction ([[earn-before-name]]).
 
+## 10. Arrival & Welcome — the hospitality made literal (Kelly, 2026-06-20)
+
+The medium embodies the message: if Soullab is hospitality, the first thing a person meets is **"Welcome"** — not "Loading," "Access Granted," "Your report is ready," or "Create an account." The whole arrival is *a house opening its door*, never a product converting a visitor.
+
+**The progression (Katie is the first instance):**
+- **Opening threshold** — *BUILT, no infrastructure.* A quiet page: her name, a short note that it was made for her, one button (*Open My Portrait*). This already IS the "Welcome." (`/soul-portrait/[slug]/welcome`.)
+- **The portrait** — no nav, no account prompt, no "next." Just the gift. *Already ends as a finished gift* (vocation + framing) — there is no conversion CTA to remove.
+- **Closing "Welcome to Soullab" room — PATH B, deferred.** A room (not a sales page) of quiet doorways — Continue with MAIA · Explore the Elements · Read *Elemental Alchemy* · Begin a Living Journal · Offer a Soul Portrait · Explore Relationships — ending in *"You're always welcome here."* (anti-scarcity, anti-countdown, leave-the-light-on). Its doorways lead to login/MAIA/memory/journal/unbuilt surfaces; it is the *platform-mediated continuation* a finished gift deliberately omits. It belongs to someone *choosing* to enter Soullab.
+
+**The gift-vs-platform slice that needs NO Path B (BUILT 2026-06-20):** the distinction that matters is *gift vs. platform*, not *public vs. logged-in*. A finished Gift Portrait can RECOGNIZE an existing member (read a session if present — never require login, never bind) and offer ONE understated coda at the very end: *"Whenever you're ready, you're welcome back."* → **Return to Soullab** (`/maia`). A non-member sees nothing — the gift stays complete. Shipped for Katie: `components/soulPortrait/ReturnToSoullab.tsx`, mounted only when `portrait.offeredBy && <signed-in>`. Deliberately NOT done (still Path B): *"Welcome back, {name}"* (naming the viewer needs the binding to know they're the subject); *"now part of your journey"* (would claim a persistence that does not exist — dropped on honesty grounds); doorways, MAIA, journal, memory. **Recognition of an *existing* relationship is Path-B-free; *naming the person* and *continuation* are not.**
+
+**Adaptive recognition (the rest — Path B):** same warm tone, only the mechanics change. Signed in → *"Welcome back, Katie…"* → *Continue Your Journey*; not signed in → *"Welcome, Katie…"* → *Enter Soullab*. The personalized form needs the member↔portrait binding (§2) + the MAIA/journal rooms.
+
+**Many front doors (principle, platform-wide):** a person may arrive from a Soul Portrait, a MAIA conversation, *Elemental Alchemy*, a workshop, a friend, a therapist. The system never treats an arrival as a *conversion opportunity*; it treats every arrival — first visit or hundredth — as a **return to relationship**, and simply says *Welcome*. The non-capture stance ([[permission_over_obligation]]) made into the front door: *it doesn't persuade you to come back; it leaves the light on.*
+
 ---
 
 *The portrait already ends by handing the reader back to their own life. The threshold simply makes that gesture a place they can stand — and, when the rooms are built and consented, a door they may choose to open. We build the door only after the room exists, and only the person opens it.*

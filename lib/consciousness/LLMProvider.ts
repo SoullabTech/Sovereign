@@ -26,6 +26,12 @@
  *   - app/api/anthropic/ping — tests Anthropic connectivity
  *   - app/api/portal/[slug]/chat — requires Anthropic tool_use (booking tools)
  *   - app/api/_backend/src/services/* — legacy backend (2 files)
+ *
+ * ⚠️ SEAM DOCTRINE (Boundary Audit, docs/specs/BOUNDARY_AUDIT_PROTOCOL_2026-06-08.md §10):
+ *   The LIVE sovereign model seam is generateText() in lib/ai/modelService.ts — NOT this
+ *   provider (zero callers in lib/sovereign). Field capture and model-substitution replay
+ *   hook generateText(), not MultiLLMProvider. Do NOT re-hook audit/capture instrumentation
+ *   here — it would instrument a path live traffic bypasses.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -422,7 +428,13 @@ export class MultiLLMProvider {
 
     console.info(`[LLMProvider] tier=${tier} provider=${config.provider} model=${config.model}`);
 
-    if (forceOllama) {
+    // Honor config.provider: when the tier resolves to a local model (LOCAL_TIER_ENABLED=true),
+    // route to Ollama instead of handing the Ollama model name to the Claude API. Mirrors
+    // generate() and generateStream(), which already branch on provider. Previously this method
+    // checked only `forceOllama`, so local-tier configs were sent to Claude → 404 → masked by
+    // MAIA_STRICT_503 as "Primary provider (Claude) unavailable".
+    // (Step 2 — high-stakes opt-in to Claude — is intentionally NOT added here.)
+    if (forceOllama || config.provider === 'ollama') {
       try {
         return await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime);
       } catch (error) {

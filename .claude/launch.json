@@ -13,6 +13,54 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "monitor-worktree",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/soullab/maia-admin-monitor && PORT=3010 LABTOOLS_ADMIN_PASSWORD=devtest123 npm run dev"],
+      "port": 3010
+    },
+    {
+      "name": "members-worktree",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/soullab/maia-private-members-discoverability && PORT=3011 npm run dev"],
+      "port": 3011
+    },
+    {
+      "name": "feedback-worktree",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/soullab/maia-feedback-inbox && PORT=3012 npm run dev"],
+      "port": 3012
+    },
+    {
+      "name": "bugshot-worktree",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/soullab/maia-bug-screenshots && PORT=3013 LABTOOLS_ADMIN_PASSWORD=devtest123 npm run dev"],
+      "port": 3013
+    },
+    {
+      "name": "monitor-phase2",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/soullab/maia-monitor-bugs-phase2 && PORT=3014 npm run dev"],
+      "port": 3014
+    },
+    {
+      "name": "intake-bridge",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/soullab/maia-bug-intake-consolidation && PORT=3015 npm run dev"],
+      "port": 3015
+    },
+    {
+      "name": "orientation-verify",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/soullab/maia-orientation-verify && PORT=3016 npm run dev"],
+      "port": 3016
+    },
+    {
+      "name": "portal-home",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /tmp/feat-portal-home && PORT=3017 npm run dev"],
+      "port": 3017
     }
   ]
 }

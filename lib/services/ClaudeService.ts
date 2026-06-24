@@ -677,11 +677,11 @@ MAIA: (no response)
 ${loadMemoryNotes()}
 
 ${context.spiralInjection ? `
-## MEMBER SPIRAL STATE (This Member's Current Journey)
+## SPIRAL SENSING (a working read of this member's journey — not established fact)
 
 ${context.spiralInjection}
 
-Use this to understand where THIS member is in their spiral journey.
+Use this as a possible sense of where this member may be — hold it as a hypothesis; the member's own words remain authoritative.
 Reference their facets naturally when relevant to what they're sharing.
 Do NOT over-mention facet labels aloud — use them internally unless the member uses that language.
 ` : ''}

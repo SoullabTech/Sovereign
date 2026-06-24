@@ -2,10 +2,12 @@
 // All DB operations for team messaging. Uses local PostgreSQL only.
 
 import { query, transaction } from '@/lib/db/postgres';
-import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember, MessageKind } from './types';
+import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember, MessageKind, StoredMessageAttachment } from './types';
+import { channelServeBase, parseStoredAttachments, toClientAttachments } from '@/lib/team/attachments';
 import { notifyChannelMentions, notifyThreadReply } from '@/lib/team/notifications';
 import { createAttentionItemsForMessage } from '@/lib/team/attention';
 import { getActiveParticipants } from '@/lib/team/getActiveParticipants';
+import { isChannelAdminOrTeamAdmin } from '@/lib/team/permissions';
 
 // System channels that can never be made private (or made public).
 // Mirrors the delete-protection in app/api/team/admin/channels/route.ts.
@@ -175,6 +177,7 @@ export async function getMessages(
     created_at: string;
     reply_count: string;
     message_kind: string;
+    attachments: unknown;
   }>(
     `SELECT
        tm.*,
@@ -206,6 +209,10 @@ export async function getMessages(
     messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [] as MessageReaction[],
     replyCount: parseInt(row.reply_count, 10) || 0,
+    attachments: toClientAttachments(
+      parseStoredAttachments(row.attachments),
+      channelServeBase(row.channel_id)
+    ),
   }));
 
   // Attach reactions in batch
@@ -261,6 +268,7 @@ export async function getMessagesSince(
     deleted_at: string | null;
     created_at: string;
     message_kind: string;
+    attachments: unknown;
   }>(
     `SELECT
        tm.*,
@@ -286,6 +294,10 @@ export async function getMessagesSince(
     createdAt: row.created_at,
     messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [],
+    attachments: toClientAttachments(
+      parseStoredAttachments(row.attachments),
+      channelServeBase(row.channel_id)
+    ),
   }));
 }
 
@@ -307,6 +319,7 @@ export async function getReplies(
     deleted_at: string | null;
     created_at: string;
     message_kind: string;
+    attachments: unknown;
   }>(
     `SELECT
        tm.*,
@@ -333,6 +346,10 @@ export async function getReplies(
     createdAt: row.created_at,
     messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [] as MessageReaction[],
+    attachments: toClientAttachments(
+      parseStoredAttachments(row.attachments),
+      channelServeBase(row.channel_id)
+    ),
   }));
 
   // Attach reactions in batch
@@ -376,10 +393,12 @@ export async function sendMessage(
   senderId: string,
   body: string,
   parentId?: string,
-  messageKind?: MessageKind
+  messageKind?: MessageKind,
+  attachments: StoredMessageAttachment[] = []
 ): Promise<TeamMessage> {
   const trimmed = body.trim();
-  if (!trimmed) throw new Error('Message body cannot be empty');
+  // An image-only message (empty text + ≥1 attachment) is allowed.
+  if (!trimmed && attachments.length === 0) throw new Error('Message body cannot be empty');
   if (trimmed.length > 8000) throw new Error('Message too long (max 8000 chars)');
 
   const kind: MessageKind = messageKind ?? 'build';
@@ -394,11 +413,12 @@ export async function sendMessage(
     deleted_at: string | null;
     created_at: string;
     message_kind: string;
+    attachments: unknown;
   }>(
-    `INSERT INTO team_messages (channel_id, sender_id, body, parent_id, message_kind)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO team_messages (channel_id, sender_id, body, parent_id, message_kind, attachments)
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb)
      RETURNING *`,
-    [channelId, senderId, trimmed, parentId ?? null, kind]
+    [channelId, senderId, trimmed, parentId ?? null, kind, JSON.stringify(attachments)]
   );
 
   const row = result.rows[0];
@@ -439,7 +459,53 @@ export async function sendMessage(
     createdAt: row.created_at,
     messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [],
+    attachments: toClientAttachments(
+      parseStoredAttachments(row.attachments),
+      channelServeBase(row.channel_id)
+    ),
   };
+}
+
+export type DeleteMessageResult =
+  | { ok: true }
+  | { ok: false; reason: 'not_found' | 'forbidden' };
+
+/**
+ * Soft-delete a channel message (sets deleted_at). Reversible at the DB level —
+ * getMessages / getReplies already exclude rows where deleted_at IS NOT NULL,
+ * and reply counts ignore them, so the message simply disappears on next load.
+ *
+ * Records audit metadata (deleted_by, optional deletionReason) alongside the
+ * soft delete so moderators have an accountable trail even without a recovery UI.
+ *
+ * Permission: the original sender may delete their own message; a channel
+ * owner/admin or a global team admin may delete any message in the channel.
+ */
+export async function deleteMessage(
+  channelId: string,
+  messageId: string,
+  requesterId: string,
+  deletionReason?: string
+): Promise<DeleteMessageResult> {
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_messages
+     WHERE id = $1 AND channel_id = $2 AND deleted_at IS NULL`,
+    [messageId, channelId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+
+  const isSender = row.sender_id === requesterId;
+  const canDelete = isSender || (await isChannelAdminOrTeamAdmin(requesterId, channelId));
+  if (!canDelete) return { ok: false, reason: 'forbidden' };
+
+  await query(
+    `UPDATE team_messages
+       SET deleted_at = NOW(), deleted_by = $2, deleted_reason = $3
+     WHERE id = $1`,
+    [messageId, requesterId, deletionReason ?? null]
+  );
+  return { ok: true };
 }
 
 export async function markChannelRead(channelId: string, memberId: string): Promise<void> {
@@ -449,6 +515,32 @@ export async function markChannelRead(channelId: string, memberId: string): Prom
      ON CONFLICT (channel_id, member_id) DO UPDATE SET last_read_at = NOW()`,
     [channelId, memberId]
   );
+}
+
+/**
+ * Locate one attachment within a channel by id, scoped to the channel (a foreign
+ * attachment id cannot resolve). Returns server-only storage metadata for streaming.
+ * The caller MUST verify channel access first.
+ */
+export async function findChannelAttachment(
+  channelId: string,
+  attachmentId: string
+): Promise<{ storagePath: string; mimeType: string; filename: string } | null> {
+  const res = await query<{ storage_path: string; mime_type: string; filename: string }>(
+    `SELECT att->>'storagePath' AS storage_path,
+            att->>'mimeType'   AS mime_type,
+            att->>'filename'   AS filename
+       FROM team_messages tm,
+            jsonb_array_elements(tm.attachments) att
+      WHERE tm.channel_id = $1
+        AND tm.deleted_at IS NULL
+        AND att->>'id' = $2
+      LIMIT 1`,
+    [channelId, attachmentId]
+  );
+  const row = res.rows[0];
+  if (!row || !row.storage_path) return null;
+  return { storagePath: row.storage_path, mimeType: row.mime_type, filename: row.filename };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

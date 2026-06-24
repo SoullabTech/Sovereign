@@ -1,0 +1,63 @@
+0c27e24a9f3f49e5b55bfb6ac2309afa
+"use strict";
+// SoulComms — Channel access permissions
+// Single source of truth for "can this member access this channel"
+// and "can this member administer this channel".
+//
+// Public channels: anyone signed in.
+// Private channels: only members of team_channel_members.
+// Admin actions: channel owner/admin OR global team_admin/admin role.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.requireChannelAccess = requireChannelAccess;
+exports.isChannelAdminOrTeamAdmin = isChannelAdminOrTeamAdmin;
+const postgres_1 = require("@/lib/db/postgres");
+/**
+ * Gate for read/write access to a channel.
+ *
+ * - Public channels (is_private = FALSE): any signed-in member is allowed.
+ * - Private channels: requester must have a row in team_channel_members.
+ *
+ * Use this in every route that reads or writes channel content.
+ * Without it, "private" is purely cosmetic — anyone with a channel ID
+ * can hit /messages or /stream directly.
+ */
+async function requireChannelAccess(channelId, memberId) {
+    const r = await (0, postgres_1.query)(`SELECT
+       tc.is_private,
+       EXISTS(
+         SELECT 1 FROM team_channel_members
+         WHERE channel_id = tc.id AND member_id = $2
+       ) AS is_member
+     FROM team_channels tc
+     WHERE tc.id = $1`, [channelId, memberId]);
+    const row = r.rows[0];
+    if (!row)
+        return { allowed: false, reason: 'not_found' };
+    if (!row.is_private)
+        return { allowed: true };
+    if (row.is_member)
+        return { allowed: true };
+    return { allowed: false, reason: 'not_member' };
+}
+/**
+ * Gate for administrative actions on a channel (member management,
+ * visibility changes, settings).
+ *
+ * Allowed if requester is:
+ *   - global team_admin / admin (member.roles), OR
+ *   - channel owner / admin (team_channel_members.role)
+ */
+async function isChannelAdminOrTeamAdmin(requesterId, channelId) {
+    var _a, _b, _c;
+    // Global team admin
+    const teamAdminResult = await (0, postgres_1.query)(`SELECT roles FROM members WHERE id = $1`, [requesterId]);
+    const roles = (_b = (_a = teamAdminResult.rows[0]) === null || _a === void 0 ? void 0 : _a.roles) !== null && _b !== void 0 ? _b : [];
+    if (Array.isArray(roles) && (roles.includes('team_admin') || roles.includes('admin'))) {
+        return true;
+    }
+    // Channel-level owner/admin
+    const channelRoleResult = await (0, postgres_1.query)(`SELECT role FROM team_channel_members WHERE channel_id = $1 AND member_id = $2`, [channelId, requesterId]);
+    const role = (_c = channelRoleResult.rows[0]) === null || _c === void 0 ? void 0 : _c.role;
+    return role === 'owner' || role === 'admin';
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL1VzZXJzL3NvdWxsYWIvTUFJQS1TT1ZFUkVJR04vLmNsYXVkZS93b3JrdHJlZXMveC1tZW1iZXItaWQtYXVkaXQvbGliL3RlYW0vcGVybWlzc2lvbnMudHMiLCJtYXBwaW5ncyI6IjtBQUFBLHlDQUF5QztBQUN6QyxtRUFBbUU7QUFDbkUsaURBQWlEO0FBQ2pELEVBQUU7QUFDRixxQ0FBcUM7QUFDckMsMERBQTBEO0FBQzFELHNFQUFzRTs7QUFxQnRFLG9EQXFCQztBQVVELDhEQXFCQztBQXZFRCxnREFBMEM7QUFTMUM7Ozs7Ozs7OztHQVNHO0FBQ0ksS0FBSyxVQUFVLG9CQUFvQixDQUN4QyxTQUFpQixFQUNqQixRQUFnQjtJQUVoQixNQUFNLENBQUMsR0FBRyxNQUFNLElBQUEsZ0JBQUssRUFDbkI7Ozs7Ozs7c0JBT2tCLEVBQ2xCLENBQUMsU0FBUyxFQUFFLFFBQVEsQ0FBQyxDQUN0QixDQUFDO0lBRUYsTUFBTSxHQUFHLEdBQUcsQ0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztJQUN0QixJQUFJLENBQUMsR0FBRztRQUFFLE9BQU8sRUFBRSxPQUFPLEVBQUUsS0FBSyxFQUFFLE1BQU0sRUFBRSxXQUFXLEVBQUUsQ0FBQztJQUN6RCxJQUFJLENBQUMsR0FBRyxDQUFDLFVBQVU7UUFBRSxPQUFPLEVBQUUsT0FBTyxFQUFFLElBQUksRUFBRSxDQUFDO0lBQzlDLElBQUksR0FBRyxDQUFDLFNBQVM7UUFBRSxPQUFPLEVBQUUsT0FBTyxFQUFFLElBQUksRUFBRSxDQUFDO0lBQzVDLE9BQU8sRUFBRSxPQUFPLEVBQUUsS0FBSyxFQUFFLE1BQU0sRUFBRSxZQUFZLEVBQUUsQ0FBQztBQUNsRCxDQUFDO0FBRUQ7Ozs7Ozs7R0FPRztBQUNJLEtBQUssVUFBVSx5QkFBeUIsQ0FDN0MsV0FBbUIsRUFDbkIsU0FBaUI7O0lBRWpCLG9CQUFvQjtJQUNwQixNQUFNLGVBQWUsR0FBRyxNQUFNLElBQUEsZ0JBQUssRUFDakMseUNBQXlDLEVBQ3pDLENBQUMsV0FBVyxDQUFDLENBQ2QsQ0FBQztJQUNGLE1BQU0sS0FBSyxHQUFHLE1BQUEsTUFBQSxlQUFlLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQywwQ0FBRSxLQUFLLG1DQUFJLEVBQUUsQ0FBQztJQUNuRCxJQUFJLEtBQUssQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxLQUFLLENBQUMsUUFBUSxDQUFDLFlBQVksQ0FBQyxJQUFJLEtBQUssQ0FBQyxRQUFRLENBQUMsT0FBTyxDQUFDLENBQUMsRUFBRSxDQUFDO1FBQ3RGLE9BQU8sSUFBSSxDQUFDO0lBQ2QsQ0FBQztJQUVELDRCQUE0QjtJQUM1QixNQUFNLGlCQUFpQixHQUFHLE1BQU0sSUFBQSxnQkFBSyxFQUNuQyxnRkFBZ0YsRUFDaEYsQ0FBQyxTQUFTLEVBQUUsV0FBVyxDQUFDLENBQ3pCLENBQUM7SUFDRixNQUFNLElBQUksR0FBRyxNQUFBLGlCQUFpQixDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsMENBQUUsSUFBSSxDQUFDO0lBQzdDLE9BQU8sSUFBSSxLQUFLLE9BQU8sSUFBSSxJQUFJLEtBQUssT0FBTyxDQUFDO0FBQzlDLENBQUMiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL1VzZXJzL3NvdWxsYWIvTUFJQS1TT1ZFUkVJR04vLmNsYXVkZS93b3JrdHJlZXMveC1tZW1iZXItaWQtYXVkaXQvbGliL3RlYW0vcGVybWlzc2lvbnMudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLy8gU291bENvbW1zIOKAlCBDaGFubmVsIGFjY2VzcyBwZXJtaXNzaW9uc1xuLy8gU2luZ2xlIHNvdXJjZSBvZiB0cnV0aCBmb3IgXCJjYW4gdGhpcyBtZW1iZXIgYWNjZXNzIHRoaXMgY2hhbm5lbFwiXG4vLyBhbmQgXCJjYW4gdGhpcyBtZW1iZXIgYWRtaW5pc3RlciB0aGlzIGNoYW5uZWxcIi5cbi8vXG4vLyBQdWJsaWMgY2hhbm5lbHM6IGFueW9uZSBzaWduZWQgaW4uXG4vLyBQcml2YXRlIGNoYW5uZWxzOiBvbmx5IG1lbWJlcnMgb2YgdGVhbV9jaGFubmVsX21lbWJlcnMuXG4vLyBBZG1pbiBhY3Rpb25zOiBjaGFubmVsIG93bmVyL2FkbWluIE9SIGdsb2JhbCB0ZWFtX2FkbWluL2FkbWluIHJvbGUuXG5cbmltcG9ydCB7IHF1ZXJ5IH0gZnJvbSAnQC9saWIvZGIvcG9zdGdyZXMnO1xuXG5leHBvcnQgdHlwZSBBY2Nlc3NSZWFzb24gPSAnbm90X21lbWJlcicgfCAnbm90X2ZvdW5kJztcblxuZXhwb3J0IGludGVyZmFjZSBDaGFubmVsQWNjZXNzUmVzdWx0IHtcbiAgYWxsb3dlZDogYm9vbGVhbjtcbiAgcmVhc29uPzogQWNjZXNzUmVhc29uO1xufVxuXG4vKipcbiAqIEdhdGUgZm9yIHJlYWQvd3JpdGUgYWNjZXNzIHRvIGEgY2hhbm5lbC5cbiAqXG4gKiAtIFB1YmxpYyBjaGFubmVscyAoaXNfcHJpdmF0ZSA9IEZBTFNFKTogYW55IHNpZ25lZC1pbiBtZW1iZXIgaXMgYWxsb3dlZC5cbiAqIC0gUHJpdmF0ZSBjaGFubmVsczogcmVxdWVzdGVyIG11c3QgaGF2ZSBhIHJvdyBpbiB0ZWFtX2NoYW5uZWxfbWVtYmVycy5cbiAqXG4gKiBVc2UgdGhpcyBpbiBldmVyeSByb3V0ZSB0aGF0IHJlYWRzIG9yIHdyaXRlcyBjaGFubmVsIGNvbnRlbnQuXG4gKiBXaXRob3V0IGl0LCBcInByaXZhdGVcIiBpcyBwdXJlbHkgY29zbWV0aWMg4oCUIGFueW9uZSB3aXRoIGEgY2hhbm5lbCBJRFxuICogY2FuIGhpdCAvbWVzc2FnZXMgb3IgL3N0cmVhbSBkaXJlY3RseS5cbiAqL1xuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHJlcXVpcmVDaGFubmVsQWNjZXNzKFxuICBjaGFubmVsSWQ6IHN0cmluZyxcbiAgbWVtYmVySWQ6IHN0cmluZ1xuKTogUHJvbWlzZTxDaGFubmVsQWNjZXNzUmVzdWx0PiB7XG4gIGNvbnN0IHIgPSBhd2FpdCBxdWVyeTx7IGlzX3ByaXZhdGU6IGJvb2xlYW47IGlzX21lbWJlcjogYm9vbGVhbiB9PihcbiAgICBgU0VMRUNUXG4gICAgICAgdGMuaXNfcHJpdmF0ZSxcbiAgICAgICBFWElTVFMoXG4gICAgICAgICBTRUxFQ1QgMSBGUk9NIHRlYW1fY2hhbm5lbF9tZW1iZXJzXG4gICAgICAgICBXSEVSRSBjaGFubmVsX2lkID0gdGMuaWQgQU5EIG1lbWJlcl9pZCA9ICQyXG4gICAgICAgKSBBUyBpc19tZW1iZXJcbiAgICAgRlJPTSB0ZWFtX2NoYW5uZWxzIHRjXG4gICAgIFdIRVJFIHRjLmlkID0gJDFgLFxuICAgIFtjaGFubmVsSWQsIG1lbWJlcklkXVxuICApO1xuXG4gIGNvbnN0IHJvdyA9IHIucm93c1swXTtcbiAgaWYgKCFyb3cpIHJldHVybiB7IGFsbG93ZWQ6IGZhbHNlLCByZWFzb246ICdub3RfZm91bmQnIH07XG4gIGlmICghcm93LmlzX3ByaXZhdGUpIHJldHVybiB7IGFsbG93ZWQ6IHRydWUgfTtcbiAgaWYgKHJvdy5pc19tZW1iZXIpIHJldHVybiB7IGFsbG93ZWQ6IHRydWUgfTtcbiAgcmV0dXJuIHsgYWxsb3dlZDogZmFsc2UsIHJlYXNvbjogJ25vdF9tZW1iZXInIH07XG59XG5cbi8qKlxuICogR2F0ZSBmb3IgYWRtaW5pc3RyYXRpdmUgYWN0aW9ucyBvbiBhIGNoYW5uZWwgKG1lbWJlciBtYW5hZ2VtZW50LFxuICogdmlzaWJpbGl0eSBjaGFuZ2VzLCBzZXR0aW5ncykuXG4gKlxuICogQWxsb3dlZCBpZiByZXF1ZXN0ZXIgaXM6XG4gKiAgIC0gZ2xvYmFsIHRlYW1fYWRtaW4gLyBhZG1pbiAobWVtYmVyLnJvbGVzKSwgT1JcbiAqICAgLSBjaGFubmVsIG93bmVyIC8gYWRtaW4gKHRlYW1fY2hhbm5lbF9tZW1iZXJzLnJvbGUpXG4gKi9cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBpc0NoYW5uZWxBZG1pbk9yVGVhbUFkbWluKFxuICByZXF1ZXN0ZXJJZDogc3RyaW5nLFxuICBjaGFubmVsSWQ6IHN0cmluZ1xuKTogUHJvbWlzZTxib29sZWFuPiB7XG4gIC8vIEdsb2JhbCB0ZWFtIGFkbWluXG4gIGNvbnN0IHRlYW1BZG1pblJlc3VsdCA9IGF3YWl0IHF1ZXJ5PHsgcm9sZXM6IHN0cmluZ1tdIHwgbnVsbCB9PihcbiAgICBgU0VMRUNUIHJvbGVzIEZST00gbWVtYmVycyBXSEVSRSBpZCA9ICQxYCxcbiAgICBbcmVxdWVzdGVySWRdXG4gICk7XG4gIGNvbnN0IHJvbGVzID0gdGVhbUFkbWluUmVzdWx0LnJvd3NbMF0/LnJvbGVzID8/IFtdO1xuICBpZiAoQXJyYXkuaXNBcnJheShyb2xlcykgJiYgKHJvbGVzLmluY2x1ZGVzKCd0ZWFtX2FkbWluJykgfHwgcm9sZXMuaW5jbHVkZXMoJ2FkbWluJykpKSB7XG4gICAgcmV0dXJuIHRydWU7XG4gIH1cblxuICAvLyBDaGFubmVsLWxldmVsIG93bmVyL2FkbWluXG4gIGNvbnN0IGNoYW5uZWxSb2xlUmVzdWx0ID0gYXdhaXQgcXVlcnk8eyByb2xlOiBzdHJpbmcgfT4oXG4gICAgYFNFTEVDVCByb2xlIEZST00gdGVhbV9jaGFubmVsX21lbWJlcnMgV0hFUkUgY2hhbm5lbF9pZCA9ICQxIEFORCBtZW1iZXJfaWQgPSAkMmAsXG4gICAgW2NoYW5uZWxJZCwgcmVxdWVzdGVySWRdXG4gICk7XG4gIGNvbnN0IHJvbGUgPSBjaGFubmVsUm9sZVJlc3VsdC5yb3dzWzBdPy5yb2xlO1xuICByZXR1cm4gcm9sZSA9PT0gJ293bmVyJyB8fCByb2xlID09PSAnYWRtaW4nO1xufVxuIl0sInZlcnNpb24iOjN9

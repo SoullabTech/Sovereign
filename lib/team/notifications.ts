@@ -2,12 +2,22 @@
 // All sends are fire-and-forget. Never throws. Never blocks message delivery.
 
 import { query } from '@/lib/db/postgres';
-import Resend from 'resend';
+import { resolveNotificationPreference } from '@/lib/team/notificationPreferences';
+import { sendEmail } from '@/lib/email/sendEmail';
 
-function getResendClient(): Resend {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error('RESEND_API_KEY not set');
-  return new Resend(key);
+// soullab.life is the verified Resend domain (reminders@soullab.life ships today).
+// The previous onboarding@resend.dev sandbox sender only delivers to the Resend
+// account owner — real recipients never received these.
+const FROM = 'Soullab Team <team@soullab.life>';
+const MANAGE_URL = 'https://soullab.life/team/notifications';
+// One-click path to the consent surface (improves deliverability + honours opt-out).
+const UNSUBSCRIBE_HEADERS = { 'List-Unsubscribe': `<${MANAGE_URL}>` };
+
+function manageFooterHtml(): string {
+  return `<p style="margin-top:24px;color:#999;font-size:12px;">You're receiving this because notifications are on for your Soullab Team account. <a href="${MANAGE_URL}">Manage your notifications</a>.</p>`;
+}
+function manageFooterText(): string {
+  return `\n\n—\nManage your notifications: ${MANAGE_URL}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -33,6 +43,9 @@ export async function notifyDMRecipient(
     const recipientId = recipientResult.rows[0]?.member_id;
     if (!recipientId) return;
 
+    // Consent gate: respect the recipient's dm_received / email preference.
+    if (!(await resolveNotificationPreference(recipientId, 'dm_received', 'email'))) return;
+
     // Get recipient email + name
     const recipientData = await query<{ email: string | null; name: string | null; username: string }>(
       `SELECT email, name, username FROM members WHERE id = $1`,
@@ -50,17 +63,19 @@ export async function notifyDMRecipient(
     const senderName = sender?.name || sender?.username || 'Someone';
     const recipientName = recipient.name || recipient.username;
 
-    const resend = getResendClient();
-    await resend.emails.send({
-      from: 'Soullab <onboarding@resend.dev>',
+    await sendEmail({
+      purpose: 'team:dm',
+      from: FROM,
       to: recipient.email,
       subject: `New message from ${senderName} on SoulComms`,
+      headers: UNSUBSCRIBE_HEADERS,
       html: `
         <p>Hi ${recipientName},</p>
         <p><strong>${senderName}</strong> sent you a message on SoulComms.</p>
         <p><a href="https://soullab.life/team">Open SoulComms</a></p>
+        ${manageFooterHtml()}
       `,
-      text: `Hi ${recipientName},\n\n${senderName} sent you a message on SoulComms.\n\nOpen SoulComms: https://soullab.life/team`,
+      text: `Hi ${recipientName},\n\n${senderName} sent you a message on SoulComms.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
     });
   } catch {
     // Silent — never surface notification errors to callers
@@ -91,6 +106,9 @@ export async function notifyThreadReply(
     // Don't notify if the replier is the same person or parent not found
     if (!parentAuthorId || parentAuthorId === senderId) return;
 
+    // Consent gate: respect the author's thread_reply / email preference.
+    if (!(await resolveNotificationPreference(parentAuthorId, 'thread_reply', 'email'))) return;
+
     // Get parent author email + name
     const recipientData = await query<{ email: string | null; name: string | null; username: string }>(
       `SELECT email, name, username FROM members WHERE id = $1`,
@@ -115,17 +133,19 @@ export async function notifyThreadReply(
     const channelName = channelData.rows[0]?.name ?? 'unknown';
 
     const recipientName = recipient.name || recipient.username;
-    const resend = getResendClient();
-    await resend.emails.send({
-      from: 'Soullab <onboarding@resend.dev>',
+    await sendEmail({
+      purpose: 'team:thread-reply',
+      from: FROM,
       to: recipient.email,
       subject: `${senderName} replied to your message in #${channelName}`,
+      headers: UNSUBSCRIBE_HEADERS,
       html: `
         <p>Hi ${recipientName},</p>
         <p><strong>${senderName}</strong> replied to your message in <strong>#${channelName}</strong>.</p>
         <p><a href="https://soullab.life/team">Open SoulComms</a></p>
+        ${manageFooterHtml()}
       `,
-      text: `Hi ${recipientName},\n\n${senderName} replied to your message in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team`,
+      text: `Hi ${recipientName},\n\n${senderName} replied to your message in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
     });
   } catch {
     // Silent — never surface notification errors to callers
@@ -170,8 +190,6 @@ export async function notifyChannelMentions(
     const sender = senderData.rows[0];
     const senderName = sender?.name || sender?.username || 'Someone';
 
-    const resend = getResendClient();
-
     for (const username of usernames) {
       try {
         const memberData = await query<{ id: string; email: string | null; name: string | null; username: string }>(
@@ -183,18 +201,24 @@ export async function notifyChannelMentions(
         // Skip if not found, no email, or is the sender
         if (!member || !member.email || member.id === senderId) continue;
 
+        // Consent gate: respect the mentioned member's mentioned / email preference.
+        if (!(await resolveNotificationPreference(member.id, 'mentioned', 'email'))) continue;
+
         const recipientName = member.name || member.username;
 
-        await resend.emails.send({
-          from: 'Soullab <onboarding@resend.dev>',
+        await sendEmail({
+          purpose: 'team:mention',
+          from: FROM,
           to: member.email,
           subject: `${senderName} mentioned you in #${channelName}`,
+          headers: UNSUBSCRIBE_HEADERS,
           html: `
             <p>Hi ${recipientName},</p>
             <p><strong>${senderName}</strong> mentioned you in <strong>#${channelName}</strong>.</p>
             <p><a href="https://soullab.life/team">Open SoulComms</a></p>
+            ${manageFooterHtml()}
           `,
-          text: `Hi ${recipientName},\n\n${senderName} mentioned you in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team`,
+          text: `Hi ${recipientName},\n\n${senderName} mentioned you in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
         });
       } catch {
         // Per-mention failure is silent — continue to next mention

@@ -1,10 +1,6 @@
-import { Resend } from 'resend';
 import fs from 'fs';
 import path from 'path';
-
-function getResendClient() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
+import { sendEmail, SENDERS } from './sendEmail';
 
 export interface BetaInviteWithPasscode {
   name: string;
@@ -100,9 +96,9 @@ Kelly & the Soullab team
       .replace(/\{\{Name\}\}/g, invite.name)
       .replace(/\{\{Passcode\}\}/g, invite.passcode);
 
-    const resend = getResendClient();
-    const result = await resend.emails.send({
-      from: 'Kelly @ Soullab <onboarding@resend.dev>',  // Use Resend's verified domain for now
+    const result = await sendEmail({
+      purpose: `invite:${config.tag}`,
+      from: SENDERS.kelly, // was onboarding@resend.dev — a sandbox sender that only delivers to the Resend account owner
       to: invite.email,
       subject: config.subject,
       html: personalizedHtml,
@@ -112,6 +108,11 @@ Kelly & the Soullab team
         { name: 'type', value: config.tag }
       ]
     });
+
+    if (!result.success) {
+      console.error(`❌ Failed to send to ${invite.email}:`, result.error);
+      return { success: false, error: result.error };
+    }
 
     console.log(`✅ Sent to ${invite.name} (${invite.email}) with passcode ${invite.passcode}:`, result.id);
     return { success: true, id: result.id };

@@ -1,0 +1,110 @@
+149d9d651757df4fe3f021eee5138c63
+"use strict";
+// SoulComms — Notification delivery preferences (event_type × delivery_channel).
+//
+// Defaults live in code (notificationTypes.ts), not the database. Only EXPLICIT
+// overrides are persisted (member_notification_preferences). This keeps the table
+// small, lets the product's consent posture change without a backfill, and lets
+// new transports/events be added with no migration.
+//
+// Every read FAILS OPEN to the code default: a missing table or a transient DB
+// error must never silently kill notifications nor block message delivery. The
+// default itself encodes consent (channel_activity email defaults OFF), so a
+// failed lookup is still consent-safe for opt-in events.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.resolveNotificationPreference = resolveNotificationPreference;
+exports.getResolvedPreferences = getResolvedPreferences;
+exports.setNotificationPreference = setNotificationPreference;
+const postgres_1 = require("@/lib/db/postgres");
+const notificationTypes_1 = require("@/lib/team/notificationTypes");
+// Re-export the client-safe shapes so existing server call sites can keep
+// importing everything from this module.
+__exportStar(require("@/lib/team/notificationTypes"), exports);
+/**
+ * Resolve ONE preference: the explicit override if one exists, else the code
+ * default. Fails OPEN to the default on any error so the consent gate can never
+ * silently disable notifications or block a send.
+ */
+async function resolveNotificationPreference(memberId, event, channel) {
+    try {
+        const res = await (0, postgres_1.query)(`SELECT enabled FROM member_notification_preferences
+       WHERE member_id = $1 AND event_type = $2 AND channel = $3`, [memberId, event, channel]);
+        if (res.rows.length > 0) {
+            const val = res.rows[0].enabled;
+            // Only trust a real boolean. A malformed row (non-boolean enabled) must NOT
+            // suppress a notification — fall through to the code default instead. The
+            // gate may never become a single point of message loss.
+            if (typeof val === 'boolean')
+                return val;
+            console.warn('[notif-prefs] malformed row (non-boolean enabled), using default', event, channel);
+        }
+    }
+    catch (err) {
+        console.warn('[notif-prefs] resolve failed, using default', event, channel, err instanceof Error ? err.message : err);
+    }
+    return (0, notificationTypes_1.defaultPreference)(event, channel);
+}
+/**
+ * Full resolved matrix for the settings panel: every event × channel with its
+ * effective value and whether it is an explicit override or the default.
+ */
+async function getResolvedPreferences(memberId) {
+    const overrides = new Map();
+    try {
+        const res = await (0, postgres_1.query)(`SELECT event_type, channel, enabled
+       FROM member_notification_preferences
+       WHERE member_id = $1`, [memberId]);
+        // Ignore malformed rows (non-boolean enabled) — they fall back to the default.
+        for (const r of res.rows) {
+            if (typeof r.enabled === 'boolean')
+                overrides.set(`${r.event_type}:${r.channel}`, r.enabled);
+        }
+    }
+    catch (err) {
+        console.warn('[notif-prefs] getResolved failed, returning defaults', err instanceof Error ? err.message : err);
+    }
+    const out = [];
+    for (const event of notificationTypes_1.NOTIFICATION_EVENT_TYPES) {
+        for (const channel of notificationTypes_1.NOTIFICATION_CHANNELS) {
+            const key = `${event}:${channel}`;
+            const has = overrides.has(key);
+            out.push({
+                event_type: event,
+                channel,
+                enabled: has ? overrides.get(key) : (0, notificationTypes_1.defaultPreference)(event, channel),
+                isDefault: !has,
+            });
+        }
+    }
+    return out;
+}
+/**
+ * Upsert one explicit override. Rejects unknown event/channel so the table stays
+ * clean. Throwing is fine here — this is called from the settings API, not the
+ * fire-and-forget send path.
+ */
+async function setNotificationPreference(memberId, event, channel, enabled) {
+    if (!notificationTypes_1.NOTIFICATION_EVENT_TYPES.includes(event))
+        throw new Error(`Unknown event_type: ${event}`);
+    if (!notificationTypes_1.NOTIFICATION_CHANNELS.includes(channel))
+        throw new Error(`Unknown channel: ${channel}`);
+    await (0, postgres_1.query)(`INSERT INTO member_notification_preferences (member_id, event_type, channel, enabled)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (member_id, event_type, channel)
+     DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = NOW()`, [memberId, event, channel, enabled]);
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL1VzZXJzL3NvdWxsYWIvbWFpYS1ub3RpZi1wcmVmcy9saWIvdGVhbS9ub3RpZmljYXRpb25QcmVmZXJlbmNlcy50cyIsIm1hcHBpbmdzIjoiO0FBQUEsaUZBQWlGO0FBQ2pGLEVBQUU7QUFDRixnRkFBZ0Y7QUFDaEYsa0ZBQWtGO0FBQ2xGLGdGQUFnRjtBQUNoRixvREFBb0Q7QUFDcEQsRUFBRTtBQUNGLCtFQUErRTtBQUMvRSwrRUFBK0U7QUFDL0UsNkVBQTZFO0FBQzdFLHlEQUF5RDs7Ozs7Ozs7Ozs7Ozs7OztBQXFCekQsc0VBNEJDO0FBTUQsd0RBa0NDO0FBT0QsOERBZUM7QUE3R0QsZ0RBQTBDO0FBQzFDLG9FQU9zQztBQUV0QywwRUFBMEU7QUFDMUUseUNBQXlDO0FBQ3pDLCtEQUE2QztBQUU3Qzs7OztHQUlHO0FBQ0ksS0FBSyxVQUFVLDZCQUE2QixDQUNqRCxRQUFnQixFQUNoQixLQUE0QixFQUM1QixPQUE0QjtJQUU1QixJQUFJLENBQUM7UUFDSCxNQUFNLEdBQUcsR0FBRyxNQUFNLElBQUEsZ0JBQUssRUFDckI7aUVBQzJELEVBQzNELENBQUMsUUFBUSxFQUFFLEtBQUssRUFBRSxPQUFPLENBQUMsQ0FDM0IsQ0FBQztRQUNGLElBQUksR0FBRyxDQUFDLElBQUksQ0FBQyxNQUFNLEdBQUcsQ0FBQyxFQUFFLENBQUM7WUFDeEIsTUFBTSxHQUFHLEdBQUcsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxPQUFPLENBQUM7WUFDaEMsNEVBQTRFO1lBQzVFLDBFQUEwRTtZQUMxRSx3REFBd0Q7WUFDeEQsSUFBSSxPQUFPLEdBQUcsS0FBSyxTQUFTO2dCQUFFLE9BQU8sR0FBRyxDQUFDO1lBQ3pDLE9BQU8sQ0FBQyxJQUFJLENBQUMsa0VBQWtFLEVBQUUsS0FBSyxFQUFFLE9BQU8sQ0FBQyxDQUFDO1FBQ25HLENBQUM7SUFDSCxDQUFDO0lBQUMsT0FBTyxHQUFHLEVBQUUsQ0FBQztRQUNiLE9BQU8sQ0FBQyxJQUFJLENBQ1YsNkNBQTZDLEVBQzdDLEtBQUssRUFDTCxPQUFPLEVBQ1AsR0FBRyxZQUFZLEtBQUssQ0FBQyxDQUFDLENBQUMsR0FBRyxDQUFDLE9BQU8sQ0FBQyxDQUFDLENBQUMsR0FBRyxDQUN6QyxDQUFDO0lBQ0osQ0FBQztJQUNELE9BQU8sSUFBQSxxQ0FBaUIsRUFBQyxLQUFLLEVBQUUsT0FBTyxDQUFDLENBQUM7QUFDM0MsQ0FBQztBQUVEOzs7R0FHRztBQUNJLEtBQUssVUFBVSxzQkFBc0IsQ0FBQyxRQUFnQjtJQUMzRCxNQUFNLFNBQVMsR0FBRyxJQUFJLEdBQUcsRUFBbUIsQ0FBQztJQUM3QyxJQUFJLENBQUM7UUFDSCxNQUFNLEdBQUcsR0FBRyxNQUFNLElBQUEsZ0JBQUssRUFDckI7OzRCQUVzQixFQUN0QixDQUFDLFFBQVEsQ0FBQyxDQUNYLENBQUM7UUFDRiwrRUFBK0U7UUFDL0UsS0FBSyxNQUFNLENBQUMsSUFBSSxHQUFHLENBQUMsSUFBSSxFQUFFLENBQUM7WUFDekIsSUFBSSxPQUFPLENBQUMsQ0FBQyxPQUFPLEtBQUssU0FBUztnQkFBRSxTQUFTLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxDQUFDLFVBQVUsSUFBSSxDQUFDLENBQUMsT0FBTyxFQUFFLEVBQUUsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxDQUFDO1FBQy9GLENBQUM7SUFDSCxDQUFDO0lBQUMsT0FBTyxHQUFHLEVBQUUsQ0FBQztRQUNiLE9BQU8sQ0FBQyxJQUFJLENBQ1Ysc0RBQXNELEVBQ3RELEdBQUcsWUFBWSxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxPQUFPLENBQUMsQ0FBQyxDQUFDLEdBQUcsQ0FDekMsQ0FBQztJQUNKLENBQUM7SUFFRCxNQUFNLEdBQUcsR0FBeUIsRUFBRSxDQUFDO0lBQ3JDLEtBQUssTUFBTSxLQUFLLElBQUksNENBQXdCLEVBQUUsQ0FBQztRQUM3QyxLQUFLLE1BQU0sT0FBTyxJQUFJLHlDQUFxQixFQUFFLENBQUM7WUFDNUMsTUFBTSxHQUFHLEdBQUcsR0FBRyxLQUFLLElBQUksT0FBTyxFQUFFLENBQUM7WUFDbEMsTUFBTSxHQUFHLEdBQUcsU0FBUyxDQUFDLEdBQUcsQ0FBQyxHQUFHLENBQUMsQ0FBQztZQUMvQixHQUFHLENBQUMsSUFBSSxDQUFDO2dCQUNQLFVBQVUsRUFBRSxLQUFLO2dCQUNqQixPQUFPO2dCQUNQLE9BQU8sRUFBRSxHQUFHLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFFLENBQUMsQ0FBQyxDQUFDLElBQUEscUNBQWlCLEVBQUMsS0FBSyxFQUFFLE9BQU8sQ0FBQztnQkFDdEUsU0FBUyxFQUFFLENBQUMsR0FBRzthQUNoQixDQUFDLENBQUM7UUFDTCxDQUFDO0lBQ0gsQ0FBQztJQUNELE9BQU8sR0FBRyxDQUFDO0FBQ2IsQ0FBQztBQUVEOzs7O0dBSUc7QUFDSSxLQUFLLFVBQVUseUJBQXlCLENBQzdDLFFBQWdCLEVBQ2hCLEtBQTRCLEVBQzVCLE9BQTRCLEVBQzVCLE9BQWdCO0lBRWhCLElBQUksQ0FBQyw0Q0FBd0IsQ0FBQyxRQUFRLENBQUMsS0FBSyxDQUFDO1FBQUUsTUFBTSxJQUFJLEtBQUssQ0FBQyx1QkFBdUIsS0FBSyxFQUFFLENBQUMsQ0FBQztJQUMvRixJQUFJLENBQUMseUNBQXFCLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQztRQUFFLE1BQU0sSUFBSSxLQUFLLENBQUMsb0JBQW9CLE9BQU8sRUFBRSxDQUFDLENBQUM7SUFDN0YsTUFBTSxJQUFBLGdCQUFLLEVBQ1Q7OztrRUFHOEQsRUFDOUQsQ0FBQyxRQUFRLEVBQUUsS0FBSyxFQUFFLE9BQU8sRUFBRSxPQUFPLENBQUMsQ0FDcEMsQ0FBQztBQUNKLENBQUMiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL1VzZXJzL3NvdWxsYWIvbWFpYS1ub3RpZi1wcmVmcy9saWIvdGVhbS9ub3RpZmljYXRpb25QcmVmZXJlbmNlcy50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvLyBTb3VsQ29tbXMg4oCUIE5vdGlmaWNhdGlvbiBkZWxpdmVyeSBwcmVmZXJlbmNlcyAoZXZlbnRfdHlwZSDDlyBkZWxpdmVyeV9jaGFubmVsKS5cbi8vXG4vLyBEZWZhdWx0cyBsaXZlIGluIGNvZGUgKG5vdGlmaWNhdGlvblR5cGVzLnRzKSwgbm90IHRoZSBkYXRhYmFzZS4gT25seSBFWFBMSUNJVFxuLy8gb3ZlcnJpZGVzIGFyZSBwZXJzaXN0ZWQgKG1lbWJlcl9ub3RpZmljYXRpb25fcHJlZmVyZW5jZXMpLiBUaGlzIGtlZXBzIHRoZSB0YWJsZVxuLy8gc21hbGwsIGxldHMgdGhlIHByb2R1Y3QncyBjb25zZW50IHBvc3R1cmUgY2hhbmdlIHdpdGhvdXQgYSBiYWNrZmlsbCwgYW5kIGxldHNcbi8vIG5ldyB0cmFuc3BvcnRzL2V2ZW50cyBiZSBhZGRlZCB3aXRoIG5vIG1pZ3JhdGlvbi5cbi8vXG4vLyBFdmVyeSByZWFkIEZBSUxTIE9QRU4gdG8gdGhlIGNvZGUgZGVmYXVsdDogYSBtaXNzaW5nIHRhYmxlIG9yIGEgdHJhbnNpZW50IERCXG4vLyBlcnJvciBtdXN0IG5ldmVyIHNpbGVudGx5IGtpbGwgbm90aWZpY2F0aW9ucyBub3IgYmxvY2sgbWVzc2FnZSBkZWxpdmVyeS4gVGhlXG4vLyBkZWZhdWx0IGl0c2VsZiBlbmNvZGVzIGNvbnNlbnQgKGNoYW5uZWxfYWN0aXZpdHkgZW1haWwgZGVmYXVsdHMgT0ZGKSwgc28gYVxuLy8gZmFpbGVkIGxvb2t1cCBpcyBzdGlsbCBjb25zZW50LXNhZmUgZm9yIG9wdC1pbiBldmVudHMuXG5cbmltcG9ydCB7IHF1ZXJ5IH0gZnJvbSAnQC9saWIvZGIvcG9zdGdyZXMnO1xuaW1wb3J0IHtcbiAgTk9USUZJQ0FUSU9OX0VWRU5UX1RZUEVTLFxuICBOT1RJRklDQVRJT05fQ0hBTk5FTFMsXG4gIGRlZmF1bHRQcmVmZXJlbmNlLFxuICB0eXBlIE5vdGlmaWNhdGlvbkV2ZW50VHlwZSxcbiAgdHlwZSBOb3RpZmljYXRpb25DaGFubmVsLFxuICB0eXBlIFJlc29sdmVkUHJlZmVyZW5jZSxcbn0gZnJvbSAnQC9saWIvdGVhbS9ub3RpZmljYXRpb25UeXBlcyc7XG5cbi8vIFJlLWV4cG9ydCB0aGUgY2xpZW50LXNhZmUgc2hhcGVzIHNvIGV4aXN0aW5nIHNlcnZlciBjYWxsIHNpdGVzIGNhbiBrZWVwXG4vLyBpbXBvcnRpbmcgZXZlcnl0aGluZyBmcm9tIHRoaXMgbW9kdWxlLlxuZXhwb3J0ICogZnJvbSAnQC9saWIvdGVhbS9ub3RpZmljYXRpb25UeXBlcyc7XG5cbi8qKlxuICogUmVzb2x2ZSBPTkUgcHJlZmVyZW5jZTogdGhlIGV4cGxpY2l0IG92ZXJyaWRlIGlmIG9uZSBleGlzdHMsIGVsc2UgdGhlIGNvZGVcbiAqIGRlZmF1bHQuIEZhaWxzIE9QRU4gdG8gdGhlIGRlZmF1bHQgb24gYW55IGVycm9yIHNvIHRoZSBjb25zZW50IGdhdGUgY2FuIG5ldmVyXG4gKiBzaWxlbnRseSBkaXNhYmxlIG5vdGlmaWNhdGlvbnMgb3IgYmxvY2sgYSBzZW5kLlxuICovXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gcmVzb2x2ZU5vdGlmaWNhdGlvblByZWZlcmVuY2UoXG4gIG1lbWJlcklkOiBzdHJpbmcsXG4gIGV2ZW50OiBOb3RpZmljYXRpb25FdmVudFR5cGUsXG4gIGNoYW5uZWw6IE5vdGlmaWNhdGlvbkNoYW5uZWxcbik6IFByb21pc2U8Ym9vbGVhbj4ge1xuICB0cnkge1xuICAgIGNvbnN0IHJlcyA9IGF3YWl0IHF1ZXJ5PHsgZW5hYmxlZDogYm9vbGVhbiB9PihcbiAgICAgIGBTRUxFQ1QgZW5hYmxlZCBGUk9NIG1lbWJlcl9ub3RpZmljYXRpb25fcHJlZmVyZW5jZXNcbiAgICAgICBXSEVSRSBtZW1iZXJfaWQgPSAkMSBBTkQgZXZlbnRfdHlwZSA9ICQyIEFORCBjaGFubmVsID0gJDNgLFxuICAgICAgW21lbWJlcklkLCBldmVudCwgY2hhbm5lbF1cbiAgICApO1xuICAgIGlmIChyZXMucm93cy5sZW5ndGggPiAwKSB7XG4gICAgICBjb25zdCB2YWwgPSByZXMucm93c1swXS5lbmFibGVkO1xuICAgICAgLy8gT25seSB0cnVzdCBhIHJlYWwgYm9vbGVhbi4gQSBtYWxmb3JtZWQgcm93IChub24tYm9vbGVhbiBlbmFibGVkKSBtdXN0IE5PVFxuICAgICAgLy8gc3VwcHJlc3MgYSBub3RpZmljYXRpb24g4oCUIGZhbGwgdGhyb3VnaCB0byB0aGUgY29kZSBkZWZhdWx0IGluc3RlYWQuIFRoZVxuICAgICAgLy8gZ2F0ZSBtYXkgbmV2ZXIgYmVjb21lIGEgc2luZ2xlIHBvaW50IG9mIG1lc3NhZ2UgbG9zcy5cbiAgICAgIGlmICh0eXBlb2YgdmFsID09PSAnYm9vbGVhbicpIHJldHVybiB2YWw7XG4gICAgICBjb25zb2xlLndhcm4oJ1tub3RpZi1wcmVmc10gbWFsZm9ybWVkIHJvdyAobm9uLWJvb2xlYW4gZW5hYmxlZCksIHVzaW5nIGRlZmF1bHQnLCBldmVudCwgY2hhbm5lbCk7XG4gICAgfVxuICB9IGNhdGNoIChlcnIpIHtcbiAgICBjb25zb2xlLndhcm4oXG4gICAgICAnW25vdGlmLXByZWZzXSByZXNvbHZlIGZhaWxlZCwgdXNpbmcgZGVmYXVsdCcsXG4gICAgICBldmVudCxcbiAgICAgIGNoYW5uZWwsXG4gICAgICBlcnIgaW5zdGFuY2VvZiBFcnJvciA/IGVyci5tZXNzYWdlIDogZXJyXG4gICAgKTtcbiAgfVxuICByZXR1cm4gZGVmYXVsdFByZWZlcmVuY2UoZXZlbnQsIGNoYW5uZWwpO1xufVxuXG4vKipcbiAqIEZ1bGwgcmVzb2x2ZWQgbWF0cml4IGZvciB0aGUgc2V0dGluZ3MgcGFuZWw6IGV2ZXJ5IGV2ZW50IMOXIGNoYW5uZWwgd2l0aCBpdHNcbiAqIGVmZmVjdGl2ZSB2YWx1ZSBhbmQgd2hldGhlciBpdCBpcyBhbiBleHBsaWNpdCBvdmVycmlkZSBvciB0aGUgZGVmYXVsdC5cbiAqL1xuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGdldFJlc29sdmVkUHJlZmVyZW5jZXMobWVtYmVySWQ6IHN0cmluZyk6IFByb21pc2U8UmVzb2x2ZWRQcmVmZXJlbmNlW10+IHtcbiAgY29uc3Qgb3ZlcnJpZGVzID0gbmV3IE1hcDxzdHJpbmcsIGJvb2xlYW4+KCk7XG4gIHRyeSB7XG4gICAgY29uc3QgcmVzID0gYXdhaXQgcXVlcnk8eyBldmVudF90eXBlOiBzdHJpbmc7IGNoYW5uZWw6IHN0cmluZzsgZW5hYmxlZDogYm9vbGVhbiB9PihcbiAgICAgIGBTRUxFQ1QgZXZlbnRfdHlwZSwgY2hhbm5lbCwgZW5hYmxlZFxuICAgICAgIEZST00gbWVtYmVyX25vdGlmaWNhdGlvbl9wcmVmZXJlbmNlc1xuICAgICAgIFdIRVJFIG1lbWJlcl9pZCA9ICQxYCxcbiAgICAgIFttZW1iZXJJZF1cbiAgICApO1xuICAgIC8vIElnbm9yZSBtYWxmb3JtZWQgcm93cyAobm9uLWJvb2xlYW4gZW5hYmxlZCkg4oCUIHRoZXkgZmFsbCBiYWNrIHRvIHRoZSBkZWZhdWx0LlxuICAgIGZvciAoY29uc3QgciBvZiByZXMucm93cykge1xuICAgICAgaWYgKHR5cGVvZiByLmVuYWJsZWQgPT09ICdib29sZWFuJykgb3ZlcnJpZGVzLnNldChgJHtyLmV2ZW50X3R5cGV9OiR7ci5jaGFubmVsfWAsIHIuZW5hYmxlZCk7XG4gICAgfVxuICB9IGNhdGNoIChlcnIpIHtcbiAgICBjb25zb2xlLndhcm4oXG4gICAgICAnW25vdGlmLXByZWZzXSBnZXRSZXNvbHZlZCBmYWlsZWQsIHJldHVybmluZyBkZWZhdWx0cycsXG4gICAgICBlcnIgaW5zdGFuY2VvZiBFcnJvciA/IGVyci5tZXNzYWdlIDogZXJyXG4gICAgKTtcbiAgfVxuXG4gIGNvbnN0IG91dDogUmVzb2x2ZWRQcmVmZXJlbmNlW10gPSBbXTtcbiAgZm9yIChjb25zdCBldmVudCBvZiBOT1RJRklDQVRJT05fRVZFTlRfVFlQRVMpIHtcbiAgICBmb3IgKGNvbnN0IGNoYW5uZWwgb2YgTk9USUZJQ0FUSU9OX0NIQU5ORUxTKSB7XG4gICAgICBjb25zdCBrZXkgPSBgJHtldmVudH06JHtjaGFubmVsfWA7XG4gICAgICBjb25zdCBoYXMgPSBvdmVycmlkZXMuaGFzKGtleSk7XG4gICAgICBvdXQucHVzaCh7XG4gICAgICAgIGV2ZW50X3R5cGU6IGV2ZW50LFxuICAgICAgICBjaGFubmVsLFxuICAgICAgICBlbmFibGVkOiBoYXMgPyBvdmVycmlkZXMuZ2V0KGtleSkhIDogZGVmYXVsdFByZWZlcmVuY2UoZXZlbnQsIGNoYW5uZWwpLFxuICAgICAgICBpc0RlZmF1bHQ6ICFoYXMsXG4gICAgICB9KTtcbiAgICB9XG4gIH1cbiAgcmV0dXJuIG91dDtcbn1cblxuLyoqXG4gKiBVcHNlcnQgb25lIGV4cGxpY2l0IG92ZXJyaWRlLiBSZWplY3RzIHVua25vd24gZXZlbnQvY2hhbm5lbCBzbyB0aGUgdGFibGUgc3RheXNcbiAqIGNsZWFuLiBUaHJvd2luZyBpcyBmaW5lIGhlcmUg4oCUIHRoaXMgaXMgY2FsbGVkIGZyb20gdGhlIHNldHRpbmdzIEFQSSwgbm90IHRoZVxuICogZmlyZS1hbmQtZm9yZ2V0IHNlbmQgcGF0aC5cbiAqL1xuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHNldE5vdGlmaWNhdGlvblByZWZlcmVuY2UoXG4gIG1lbWJlcklkOiBzdHJpbmcsXG4gIGV2ZW50OiBOb3RpZmljYXRpb25FdmVudFR5cGUsXG4gIGNoYW5uZWw6IE5vdGlmaWNhdGlvbkNoYW5uZWwsXG4gIGVuYWJsZWQ6IGJvb2xlYW5cbik6IFByb21pc2U8dm9pZD4ge1xuICBpZiAoIU5PVElGSUNBVElPTl9FVkVOVF9UWVBFUy5pbmNsdWRlcyhldmVudCkpIHRocm93IG5ldyBFcnJvcihgVW5rbm93biBldmVudF90eXBlOiAke2V2ZW50fWApO1xuICBpZiAoIU5PVElGSUNBVElPTl9DSEFOTkVMUy5pbmNsdWRlcyhjaGFubmVsKSkgdGhyb3cgbmV3IEVycm9yKGBVbmtub3duIGNoYW5uZWw6ICR7Y2hhbm5lbH1gKTtcbiAgYXdhaXQgcXVlcnkoXG4gICAgYElOU0VSVCBJTlRPIG1lbWJlcl9ub3RpZmljYXRpb25fcHJlZmVyZW5jZXMgKG1lbWJlcl9pZCwgZXZlbnRfdHlwZSwgY2hhbm5lbCwgZW5hYmxlZClcbiAgICAgVkFMVUVTICgkMSwgJDIsICQzLCAkNClcbiAgICAgT04gQ09ORkxJQ1QgKG1lbWJlcl9pZCwgZXZlbnRfdHlwZSwgY2hhbm5lbClcbiAgICAgRE8gVVBEQVRFIFNFVCBlbmFibGVkID0gRVhDTFVERUQuZW5hYmxlZCwgdXBkYXRlZF9hdCA9IE5PVygpYCxcbiAgICBbbWVtYmVySWQsIGV2ZW50LCBjaGFubmVsLCBlbmFibGVkXVxuICApO1xufVxuIl0sInZlcnNpb24iOjN9

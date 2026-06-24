@@ -15,6 +15,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
  *
  * Currently exposes:
  *   - conversational_recall_enabled (Phase 2 conversational layer)
+ *   - recurrence_recall_enabled     (single-member recurrence surfacing, #2)
  *
  * Future layers attach here as additional Boolean fields without route churn:
  *   - episodic_recall_enabled        (when episodic Phase 2 lands)
@@ -42,6 +43,8 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 // source of truth for which gates exist lives in this constant.
 const RECALL_PREFERENCE_COLUMNS = [
   'conversational_recall_enabled',
+  'recurrence_recall_enabled',
+  'noticing_enabled',
 ] as const;
 
 type RecallPreferenceKey = (typeof RECALL_PREFERENCE_COLUMNS)[number];

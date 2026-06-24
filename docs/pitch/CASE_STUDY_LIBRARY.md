@@ -4,6 +4,8 @@
 **Governed by:** `docs/canon/MARKETING_CLAIM_DISCIPLINE.md` — every study declares **Layer / Center of Gravity / Failure Test**, plus a **Primary Human Carrier** (emergent metadata, watched not yet formalized).
 **Date:** 2026-06-03 · **First validation pass** of the claim discipline.
 
+> **Sibling category — keep it clean:** stories whose subject is *the system* (e.g. the guide standing-source proof — *same person, same situation, different lens, same sovereignty*) are **architecture case studies**, indexed in [`ARCHITECTURE_CASE_STUDIES.md`](./ARCHITECTURE_CASE_STUDIES.md). They do **not** belong in this library — this one stays about human transformation.
+
 > **North-star principle (Kelly):** The primary character is the *human challenge*. The profession (therapist, coach) is the secondary character. Stories, not claims.
 >
 > **Writing convention:** each study leads with its **strong (Live) version** — the publishable one — and names the **weak (Designed) drift** to avoid, so the migration stays visible.

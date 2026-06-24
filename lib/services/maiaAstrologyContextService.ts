@@ -496,6 +496,9 @@ function formatAstrologyContextForMAIA({
       'details or visit /astrology to enter them, but only if cosmically relevant.';
   }
 
+  // NOTE: the symbolic-framework epistemic boundary is applied at the route
+  // (SYMBOLIC_LENS_BOUNDARY, commit 8d6f6508d "Deploy 2"), which prepends it to
+  // this addendum for FAST+CORE — do NOT duplicate it here.
   const header = `\n# Astrological Context (IMPLICIT)\n\n${statusDirective}\n`;
 
   // ── BLOCK B: Detail — natal identity first ────────────────────────────────
@@ -554,12 +557,22 @@ function formatAstrologyContextForMAIA({
     }
   }
 
-  // 2. Mayan profile (condensed — 3 key lines)
+  // 2. Mayan profile — Core (birth) sign + life-stage only.
+  //    The three-pillar "Path of Life" is intentionally NOT surfaced here:
+  //    (a) the pre-computed youth/adulthood/future pillars are DEGENERATE — ±180
+  //        days is an exact multiple of the 20-day sign cycle, so all three land
+  //        on the same nawal and only the 13-day tone differs; and
+  //    (b) a faithful Conception/Core/Elder lens (Mark Elmy / Maya Cross — formula
+  //        verified in docs/architecture/MAYAN_THREE_PILLAR_FINDINGS_2026-06-05.md)
+  //        requires a traditional Guatemalan Cholq'ij count; this code's engine is
+  //        the Dreamspell/Argüelles count, which disagrees with the traditional
+  //        reading by ~21 kin (CeCe: code "Lunar Chicchan" vs Mark Elmy "7 K'at").
+  //    Pending count-system decision (session 2026-06-05).
+  //    tone is a GalacticToneInfo OBJECT → use .name (raw rendered "[object Object]").
   if (mayanProfile) {
     detail += '\n## Mayan Profile\n';
-    detail += `- Birth sign: ${mayanProfile.tzolkin.tone} ${mayanProfile.tzolkin.daySign.name} — ${mayanProfile.tzolkin.daySign.meaning}\n`;
-    detail += `- Adulthood pillar: ${mayanProfile.pathOfLife.adulthood.tone} ${mayanProfile.pathOfLife.adulthood.daySign.name}\n`;
-    detail += `- Life phase: ${mayanProfile.lifeCycleInsight}\n`;
+    detail += `- Core / birth sign: ${mayanProfile.tzolkin.tone.name} ${mayanProfile.tzolkin.daySign.name} — ${mayanProfile.tzolkin.daySign.meaning}\n`;
+    detail += `- Current life-stage: ${mayanProfile.lifeCycleInsight}\n`;
   }
 
   // 3. Current sky — after personal data so natal identity is prioritised
@@ -590,7 +603,7 @@ function formatAstrologyContextForMAIA({
   }
 
   if (todaysMayanSign) {
-    detail += `**Today's Mayan Day:** ${todaysMayanSign.tone} ${todaysMayanSign.daySign.name} — ${todaysMayanSign.daySign.meaning}\n`;
+    detail += `**Today's Mayan Day:** ${todaysMayanSign.tone.name} ${todaysMayanSign.daySign.name} — ${todaysMayanSign.daySign.meaning}\n`;
   }
 
   // 4. Celestial events
@@ -1114,10 +1127,10 @@ export function detectAstrologicalRelevance(
     lowerMessage.includes('galactic')
   ) {
     if (context.mayanProfile) {
-      relevantInsights.push(`Their Mayan birth sign is ${context.mayanProfile.tzolkin.tone} ${context.mayanProfile.tzolkin.daySign.name} - share their complete profile if they ask`);
+      relevantInsights.push(`Their Mayan birth sign is ${context.mayanProfile.tzolkin.tone.name} ${context.mayanProfile.tzolkin.daySign.name} - share their complete profile if they ask`);
     }
     if (context.todaysMayanSign) {
-      relevantInsights.push(`Today's Mayan energy is ${context.todaysMayanSign.tone} ${context.todaysMayanSign.daySign.name}`);
+      relevantInsights.push(`Today's Mayan energy is ${context.todaysMayanSign.tone.name} ${context.todaysMayanSign.daySign.name}`);
     }
   }
 
@@ -1133,7 +1146,7 @@ export function detectAstrologicalRelevance(
       lowerMessage.includes('future')) &&
     context.mayanProfile
   ) {
-    relevantInsights.push(`Their Mayan Path of Life shows three pillars: Youth (${context.mayanProfile.pathOfLife.youth.daySign.name}), Adulthood (${context.mayanProfile.pathOfLife.adulthood.daySign.name}), and Future (${context.mayanProfile.pathOfLife.future.daySign.name}) - ${context.mayanProfile.lifeCycleInsight}`);
+    relevantInsights.push(`Their Mayan core sign is ${context.mayanProfile.tzolkin.tone.name} ${context.mayanProfile.tzolkin.daySign.name} - ${context.mayanProfile.lifeCycleInsight} — offer as a symbolic developmental lens, only if they ask`);
   }
 
   // Purpose/destiny themes + Mayan cardinal direction

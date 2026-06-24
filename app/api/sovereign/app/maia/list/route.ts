@@ -80,6 +80,8 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { buildWisdomGuideAddendum } from '@/lib/wisdom/wisdomGuidePrompt';
+import { loadActiveGuide } from '@/lib/wisdom/wisdomGuidePersistence';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
@@ -104,6 +106,7 @@ import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/service
 // Reference implementation: app/api/between/chat/route.ts lines 1847–1885.
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref } from '@/lib/maia/memoryLoaders';
+import { detectThemeRecurrence } from '@/lib/maia/recurrenceDetector';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
@@ -127,12 +130,22 @@ import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/as
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 
 // 🌿 Wu Xing (Five Elements) integration
-import { computeWuXingSnapshot, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
-import { createBridgedSnapshot, type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
+import { buildWuXingSnapshot, computeWuXingMoment, generateWuXingPromptAddendum, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
+import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
 import { pool } from '@/lib/db/postgres';
+import { surfaceExchangeTurns } from '@/lib/sovereign/surfaceExchangeTurns';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
 import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
+
+// ─── Direct Recall ─────────────────────────────────────────────────────────────
+import { isDirectRecallEnabled, locateMemoryObjects, materializeMemoryObject } from '@/lib/memory/directRecall';
+import { detectDirectRecallIntent, detectConfirmationIntent, pendingRecalls } from '@/lib/memory/directRecall/intentDetector';
+
+// ─── Noticing Experiment (Experiment 01 — "Something I noticed") ──────────────
+// Flag OFF by default. Enable only for explicit tester pilots.
+import { checkNoticingGate } from '@/lib/maia/noticingGate';
+import { extractNoticingReferents } from '@/lib/maia/noticingObservations';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -394,6 +407,250 @@ export async function POST(req: NextRequest) {
     // 🔍 MEMORY DEBUG: Log identity state for debugging memory issues
     console.log(`🧠 [Route/MemoryDebug] userId="${userId}" isRecognized=${isRecognizedUser} effectiveUserId="${effectiveUserId}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
 
+    // ─── DIRECT RECALL GATE ────────────────────────────────────────────────────
+    // Short-circuits the full memory bundle + LLM call when the member explicitly
+    // asks for something they saved. Two-turn flow:
+    //   Turn 1: detect recall phrasing → locate → offer title/excerpt → store pending ref
+    //   Turn 2: detect confirmation → materialize → return full content
+    //
+    // Invariants: fail-closed (any error falls through), never runs in Sanctuary,
+    // only for recognized users, gated by DIRECT_RECALL_ENABLED=1.
+    // ──────────────────────────────────────────────────────────────────────────
+    if (isDirectRecallEnabled() && isRecognizedUser && !isSanctuary && userId) {
+      try {
+        const hasPending = pendingRecalls.has(userId);
+
+        // Turn 2: confirmation of a previously offered recall
+        if (hasPending && detectConfirmationIntent(message)) {
+          const ref = pendingRecalls.get(userId)!;
+          pendingRecalls.delete(userId);
+          const materialized = await materializeMemoryObject(userId, ref, { isSanctuary });
+          if (materialized) {
+            const dateStr = materialized.createdAt.toLocaleDateString('en-US', {
+              month: 'long', day: 'numeric', year: 'numeric',
+            });
+            const titlePart = materialized.title ? `"${materialized.title}"` : 'your saved note';
+            const recallMsg =
+              `Here it is — ${titlePart} (${materialized.provenance.sourceKind}, ${dateStr}):\n\n${materialized.body}`;
+            console.log(`[MAIA/directRecall] materialized { sourceKind: "${materialized.provenance.sourceKind}", sourceId: "${ref.sourceId}" }`);
+            return jsonWithCors(req, {
+              message: recallMsg,
+              route: {
+                endpoint: '/api/sovereign/app/maia',
+                type: 'Sovereign Consciousness Interface',
+                operational: true,
+                mode: 'direct-recall-materialized',
+              },
+              session: { id: session.id, turns: session.turns },
+              metadata: {
+                recallState: 'materialized',
+                sourceKind: materialized.provenance.sourceKind,
+                sourceId: ref.sourceId,
+              },
+            }, 200);
+          }
+          // Materialization returned null (ownership check failed / row gone) —
+          // fall through so the LLM can respond gracefully.
+        }
+
+        // Clear stale pending when the member's next turn is not a confirmation
+        if (hasPending && !detectConfirmationIntent(message)) {
+          pendingRecalls.delete(userId);
+        }
+
+        // Turn 1: detect explicit recall phrasing → locate candidates → offer top result
+        const { isRecall, query } = detectDirectRecallIntent(message);
+        if (isRecall) {
+          const refs = await locateMemoryObjects(userId, query, { isSanctuary });
+          if (refs.length > 0) {
+            const top = refs[0];
+            pendingRecalls.set(userId, top);
+            const dateStr = top.createdAt.toLocaleDateString('en-US', {
+              month: 'long', day: 'numeric', year: 'numeric',
+            });
+            const titlePart = top.title ? `"${top.title}"` : 'something saved';
+            const excerptPart = top.excerpt ? `\n\n> ${top.excerpt}` : '';
+            const offerMsg =
+              `I found ${titlePart} from ${top.provenance.sourceKind} (${dateStr}).${excerptPart}\n\nWould you like the full text?`;
+            console.log(`[MAIA/directRecall] offered { sourceKind: "${top.provenance.sourceKind}", sourceId: "${top.sourceId}", confidence: ${top.confidence.toFixed(2)}, totalFound: ${refs.length} }`);
+            return jsonWithCors(req, {
+              message: offerMsg,
+              route: {
+                endpoint: '/api/sovereign/app/maia',
+                type: 'Sovereign Consciousness Interface',
+                operational: true,
+                mode: 'direct-recall-offered',
+              },
+              session: { id: session.id, turns: session.turns },
+              metadata: {
+                recallState: 'offered',
+                sourceKind: top.provenance.sourceKind,
+                confidence: top.confidence,
+                totalFound: refs.length,
+              },
+            }, 200);
+          }
+          // No results found — fall through so LLM can respond with context
+          console.log(`[MAIA/directRecall] no results for query="${query.slice(0, 80)}"`);
+        }
+      } catch (recallErr) {
+        // Fail-closed: any error falls through to normal conversational LLM path
+        console.warn('[MAIA/directRecall] guard error (non-blocking):', recallErr instanceof Error ? recallErr.message : String(recallErr));
+      }
+    }
+    // ─── END DIRECT RECALL GATE ────────────────────────────────────────────────
+
+    // ─── NOTICING EXPERIMENT GATE (Experiment 01 — "Something I noticed") ──────
+    // Pre-LLM, deterministic. Returns a fixed-string response; never calls getMaiaResponse.
+    // OFF by default — enabled only via NOTICING_EXPERIMENT_ENABLED=1.
+    // Architecture mirrors the Direct Recall gate above.
+    //
+    // Invariants: fail-closed, Sanctuary excluded, tester-gated, opt-in (DEFAULT FALSE),
+    // no LLM, no inference. Full spec: docs/specs/EXPERIMENT_01_ATTENTION_MADE_VISIBLE_2026-06-20.md
+    // ─────────────────────────────────────────────────────────────────────────────
+    if (process.env.NOTICING_EXPERIMENT_ENABLED === '1' && isRecognizedUser && userId) {
+      try {
+        const noticingMeta = (meta as any)?.noticingReply as string | undefined;
+        const noticingAnswer = (meta as any)?.noticingAnswer as string | undefined;
+        const noticingUsefulness = (meta as any)?.noticingUsefulness as string | undefined;
+
+        // ── Recognition branch: member has answered the reflective question ──────
+        // DOCTRINE — the first articulation of recognition is constitutionally
+        // protected space. MAIA records the answer and acknowledges the ACT of
+        // sharing (never the content): no interpretation, affirmation, synthesis,
+        // encouragement, or coaching. The first recognition is still forming, and
+        // anything MAIA said now would change the conditions under which it develops.
+        // The LLM is NEVER invoked here. (Continuing the thread — "Inquiry" — happens
+        // only if the member explicitly asks, on a separate turn, not this one.)
+        if (noticingAnswer) {
+          await pool.query(
+            `INSERT INTO noticing_events (member_id, event_type, answer_text) VALUES ($1, 'answered', $2)`,
+            [userId, noticingAnswer],
+          );
+          console.log(`[MAIA/sovereign] noticing answered { memberIdPrefix: "${userId.slice(0, 8)}" }`);
+          return jsonWithCors(req, {
+            message: 'Thank you for sharing that.',
+            route: {
+              endpoint: '/api/sovereign/app/maia',
+              type: 'Sovereign Consciousness Interface',
+              operational: true,
+              mode: 'noticing-acknowledged',
+            },
+            session: { id: session.id, turns: session.turns },
+            metadata: { noticingState: 'acknowledged' },
+          }, 200);
+        }
+
+        if (noticingUsefulness && ['yes', 'no', 'not_sure'].includes(noticingUsefulness)) {
+          await pool.query(
+            `INSERT INTO noticing_events (member_id, event_type, usefulness) VALUES ($1, 'usefulness', $2)`,
+            [userId, noticingUsefulness],
+          );
+          console.log(`[MAIA/sovereign] noticing usefulness { memberIdPrefix: "${userId.slice(0, 8)}", value: "${noticingUsefulness}" }`);
+          // Fall through — usefulness is a side-effect write; main response from LLM
+        }
+
+        if (noticingMeta === 'decline') {
+          await pool.query(
+            `INSERT INTO noticing_events (member_id, event_type) VALUES ($1, 'declined')`,
+            [userId],
+          );
+          console.log(`[MAIA/sovereign] noticing declined { memberIdPrefix: "${userId.slice(0, 8)}" }`);
+          return jsonWithCors(req, {
+            message: 'Okay — I\'ll leave it.',
+            route: {
+              endpoint: '/api/sovereign/app/maia',
+              type: 'Sovereign Consciousness Interface',
+              operational: true,
+              mode: 'noticing-declined',
+            },
+            session: { id: session.id, turns: session.turns },
+            metadata: { noticingState: 'declined' },
+          }, 200);
+        }
+
+        if (noticingMeta === 'accept') {
+          // Compute referents at accept time (so the stored referents_json is current)
+          const observations = await extractNoticingReferents(userId);
+          const referents = observations?.referents ?? [];
+          const referentsJson = JSON.stringify(referents.map((r) => ({ text: r.text, count: r.distinctTurnCount })));
+
+          await pool.query(
+            `INSERT INTO noticing_events (member_id, event_type, referents_json) VALUES ($1, 'accepted', $2)`,
+            [userId, referentsJson],
+          );
+          console.log(`[MAIA/sovereign] noticing accepted { memberIdPrefix: "${userId.slice(0, 8)}", referentCount: ${referents.length} }`);
+
+          const observationLines = referents
+            .map((r) => r.observationSentence)
+            .join('\n\n');
+          const acceptMessage = referents.length > 0
+            ? `${observationLines}\n\n${observations!.question}`
+            : 'I don\'t have enough from our recent conversations to share just yet.';
+
+          return jsonWithCors(req, {
+            message: acceptMessage,
+            route: {
+              endpoint: '/api/sovereign/app/maia',
+              type: 'Sovereign Consciousness Interface',
+              operational: true,
+              mode: 'noticing-observations',
+            },
+            session: { id: session.id, turns: session.turns },
+            metadata: { noticingState: 'accepted', referentCount: referents.length },
+          }, 200);
+        }
+
+        // ── Offer branch: check eligibility and surface the opening question ────
+        // CONSTITUTIONAL RULE — the offer is subordinate to the conversation:
+        // checkNoticingGate withholds it whenever the member's current message could
+        // be an immediate human concern (only a clear, low-concern opener is eligible).
+        // An attention experiment must never interrupt the very attention it tests.
+        if (!noticingMeta && !noticingAnswer && !noticingUsefulness) {
+          const gate = await checkNoticingGate({
+            memberId: userId,
+            isSanctuary,
+            currentMessage: message,
+          });
+
+          if (gate.eligible && gate.observations) {
+            // Record offer + stamp throttle column
+            const referentsJson = JSON.stringify(
+              gate.observations.referents.map((r) => ({ text: r.text, count: r.distinctTurnCount })),
+            );
+            await pool.query(
+              `INSERT INTO noticing_events (member_id, event_type, referents_json) VALUES ($1, 'offered', $2)`,
+              [userId, referentsJson],
+            );
+            await pool.query(
+              `UPDATE members SET noticing_last_offered_at = NOW() WHERE id = $1`,
+              [userId],
+            );
+            console.log(`[MAIA/sovereign] noticing offered { memberIdPrefix: "${userId.slice(0, 8)}", referentCount: ${gate.observations.referents.length} }`);
+
+            return jsonWithCors(req, {
+              message: 'I\'ve noticed something across our conversations. Would you like me to share it?',
+              route: {
+                endpoint: '/api/sovereign/app/maia',
+                type: 'Sovereign Consciousness Interface',
+                operational: true,
+                mode: 'noticing-offer',
+              },
+              session: { id: session.id, turns: session.turns },
+              metadata: { noticingState: 'offered' },
+            }, 200);
+          }
+        }
+      } catch (noticingErr) {
+        // Fail-closed: any error falls through to normal conversational path
+        console.warn(
+          '[MAIA/noticing] gate error (non-blocking):',
+          noticingErr instanceof Error ? noticingErr.message : String(noticingErr),
+        );
+      }
+    }
+    // ─── END NOTICING EXPERIMENT GATE ─────────────────────────────────────────
+
     // Resolve memory mode (server-side permission check)
     // 🔧 FIX: Default to 'continuity' for recognized users instead of respecting client's request
     // This ensures cross-session memory is always attempted for authenticated users
@@ -488,43 +745,23 @@ export async function POST(req: NextRequest) {
                 console.log(`🌟 [BIRTH] Western birth data not found (optional)`);
               }
 
-              const snapshot = computeWuXingSnapshot({
-                constitution: baziProfile ? {
-                  dayMasterElement: baziProfile.day_master_element,
-                  elementCounts: baziProfile.element_counts,
-                  dominantElement: baziProfile.dominant_element,
-                } : undefined,
-                currentMoment: new Date(),
-                timezone: timezone,
-              });
+              // Moment-only Wu Xing ("today's field"). The prior code called
+              // computeWuXingSnapshot() / createBridgedSnapshot() — neither symbol exists
+              // in the current wuxingSnapshot / bridgedSnapshot modules, so it threw on
+              // every turn and the catch below swallowed it (Chinese / Wu Xing silently
+              // dark). Real builders: computeWuXingMoment + buildWuXingSnapshot +
+              // generateWuXingPromptAddendum.
+              //
+              // Constitution (BaZi Day Master) is intentionally null: member_bazi_profile
+              // has 0 rows and its real schema (user_id, pillars_json, wuxing_balance_json,
+              // dominant_elements) differs from the legacy SELECT above. Wiring the
+              // constitution path is a separate task gated on generating a profile row.
+              const moment = computeWuXingMoment(new Date(), timezone);
+              const snapshot = buildWuXingSnapshot({ constitution: null, moment });
+              const addendum = generateWuXingPromptAddendum(snapshot);
+              const bridged: BridgedSnapshot | null = null;
 
-              let bridged: BridgedSnapshot | null = null;
-              let addendum = '';
-              const spiralSnapshot = (meta as any)?.spiralSnapshot;
-              if (spiralSnapshot || snapshot) {
-                bridged = createBridgedSnapshot(spiralSnapshot || null, snapshot, baziProfile);
-                if (bridged) {
-                  const wx = bridged.wuxing;
-                  const alignment = bridged.crossSystemInsights?.elementAlignment || 'unknown';
-                  const westernBirthBlock = westernBirthData
-                    ? `- Western birth data: ${westernBirthData.birth_date}${westernBirthData.birth_time ? ` at ${westernBirthData.birth_time}` : ''}${westernBirthData.birth_location_name ? `, ${westernBirthData.birth_location_name}` : ''}${westernBirthData.birth_timezone ? ` (${westernBirthData.birth_timezone})` : ''}`
-                    : '';
-                  addendum = `
-🌿 WU XING AWARENESS (Five Elements):
-- Dominant moment energy: ${wx?.momentElement || 'Earth'} (${wx?.momentPhase || 'stable'})
-${baziProfile ? `- Constitutional element: ${baziProfile.day_master_element} (Day Master)` : '- No BaZi profile on file'}
-${westernBirthBlock}
-- Element alignment: ${alignment}
-${bridged.crossSystemInsights?.practicalGuidance ? `- Guidance: ${bridged.crossSystemInsights.practicalGuidance}` : ''}
-
-Use this awareness to attune your tone and suggestions to the current elemental qualities.
-Wood = growth, vision, initiative | Fire = clarity, passion, connection
-Earth = stability, nourishment, integration | Metal = precision, release, boundaries
-Water = depth, reflection, wisdom`;
-                }
-              }
-
-              console.log(`🌿 [WU XING] Computed: ${snapshot?.momentElement || 'none'} moment, ${baziProfile ? 'with' : 'without'} BaZi profile`);
+              console.log(`🌿 [WU XING] Computed: moment dominant=${snapshot.moment.momentDominant.join('/')}, ${baziProfile ? 'with' : 'without'} BaZi profile`);
               return { wuxingSnapshot: snapshot, bridgedSnapshot: bridged, wuxingAddendum: addendum };
             } catch (wuxingErr) {
               console.warn(`🌿 [WU XING] Computation failed (proceeding without):`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
@@ -682,6 +919,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // never wired → runtime_events.memory_layers.developmental reported 'empty'
     // despite 675 rows across 10 members in production. See DEVELOPMENTAL_LAYER_AUDIT_2026-05-26.md.
     let developmentalCount = 0;
+    // 🔁 Recurrence (#2, single-member) — declared outside the try block so the
+    // pattern count is in scope at buildMemoryHealth(). themeSignalCount feeds
+    // memoryHealth.pattern (closing the prior 0/100/0 watched-empty omission;
+    // theme_signals IS the pattern substrate). recurringThemeCount is the
+    // single-member recurrence receipt. Neither crosses member boundaries —
+    // this is NOT Morphic (held behind the consent + aggregation gate).
+    let themeSignalCount = 0;
+    let recurringThemeCount = 0;
     if (allowCrossSessionMemory && userId) {
       try {
         const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
@@ -689,6 +934,35 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           loadRecentThemeSignals(userId, 10),
         ]);
         developmentalCount = recentDevelopmentalMemories.length;
+        themeSignalCount = recentThemeSignals.length;
+
+        // 🔁 Single-member recurrence (#2, Observation stage) — does one of THIS
+        // member's own themes recur across distinct days in their recent history?
+        // Member-scoped (WHERE member_id), read-only, graceful. Leaves a
+        // discoverable receipt; does NOT surface to the member yet (surfacing is
+        // gated behind members.recurrence_recall_enabled, wired in the next stage).
+        // Explicitly not Morphic: no cross-member access.
+        try {
+          const recurrence = await detectThemeRecurrence(userId);
+          recurringThemeCount = recurrence.recurringThemes.length;
+          if (recurringThemeCount > 0) {
+            const top = recurrence.recurringThemes[0];
+            console.log('[MAIA/sovereign] recurrence', {
+              memberIdPrefix: userId.slice(0, 8),
+              recurringCount: recurringThemeCount,
+              windowDays: recurrence.windowDays,
+              topTheme: top.theme,
+              topDistinctDays: top.distinctDays,
+            });
+          } else {
+            console.log('[MAIA/sovereign] recurrence: none above threshold', {
+              memberIdPrefix: userId.slice(0, 8),
+              themeSignalCount,
+            });
+          }
+        } catch (recErr) {
+          console.warn('[MAIA/sovereign] recurrence error (non-fatal):', recErr);
+        }
 
         // 🧬 Developmental block — substrate discoverability marker (matches the
         // [MAIA/sovereign] *-block ops grep pattern used by atoms / conversational).
@@ -827,6 +1101,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       // omission archetype as the FAST conversational fix in commit f74ab4204.
       // See DEVELOPMENTAL_LAYER_AUDIT_2026-05-26.md §XII.
       developmental: { count: developmentalCount },
+      // 🔁 Pattern layer — theme_signals is the pattern substrate. Binding the
+      // loaded count closes the prior 0/100/0 watched-empty omission (loader ran
+      // per turn; loader→health bind was missing). Single-member theme recurrence
+      // evidence — NOT Morphic / cross-member.
+      pattern: { count: themeSignalCount },
     });
     if (isBaseChainDegraded(memoryHealth)) {
       console.warn('[MAIA/sovereign] memoryHealth — base chain degraded:', summarizeMemoryHealthForLog(memoryHealth));
@@ -888,6 +1167,20 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Fail path returns 503 from infrastructure channel, never from MAIA's voice channel.
     await assertProviderAvailable();
 
+    // 🧭 ARCHETYPAL STANDING SOURCE (member-chosen) — durable continuity (Guide-as-Operating-Lens Phase 1).
+    // The persisted selection is the source of truth across sessions/devices; the
+    // client meta.wisdomGuide (from localStorage) is a same-session fast-path
+    // override so a just-made choice applies immediately without awaiting the write.
+    let effectiveWisdomGuide = (meta as any)?.wisdomGuide;
+    let wisdomGuideSelectedAt: string | undefined;
+    if (!effectiveWisdomGuide) {
+      const persistedGuide = await loadActiveGuide(effectiveUserId);
+      if (persistedGuide) {
+        effectiveWisdomGuide = persistedGuide.guide;
+        wisdomGuideSelectedAt = persistedGuide.selectedAt;
+      }
+    }
+
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeoutLabeled(
       'getMaiaResponse',
@@ -918,6 +1211,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
           ...meta,
+          // 🧭 ARCHETYPAL STANDING SOURCE (member-chosen) — built from the effective guide resolved above
+          // (client meta.wisdomGuide for same-session immediacy, else the
+          // server-persisted standing guide). Placed AFTER ...meta so it is
+          // server-authoritative and cannot be overridden by client-supplied meta.
+          wisdomGuideAddendum: buildWisdomGuideAddendum(effectiveWisdomGuide, { selectedAt: wisdomGuideSelectedAt }),
           // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — placed AFTER ...meta so server-built
           // addenda cannot be overridden by stale client-supplied meta.
           memoryInfluenceAddendum,
@@ -1031,8 +1329,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
               { role: 'assistant', content: orchestratorResult.text },
             ],
             spiralDynamics: {
-              currentStage: wuxingSnapshot?.momentElement || null,
-              dynamics: wuxingSnapshot ? `${wuxingSnapshot.momentElement} moment` : 'Listening for patterns',
+              currentStage: wuxingSnapshot?.moment?.momentDominant?.[0] || null,
+              dynamics: wuxingSnapshot ? `${wuxingSnapshot.moment.momentDominant.join('/')} moment` : 'Listening for patterns',
               humanExperience: '',
             },
             sessionThread: { emergingAwareness: [] },
@@ -1080,13 +1378,24 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       })();
     }
 
+    // 🔖 EPISODIC MARK ENABLEMENT (turn-primary provenance): surface the real
+    // conversation_turns ids for THIS exchange so the client can offer the member
+    // a "remember this" gesture. Read-only enablement — the episodic-mark guard
+    // re-verifies ownership + Sanctuary at mark time. Skipped for Sanctuary
+    // (a sanctuary moment must never be offered for persistence).
+    const conversationTurns = isSanctuary ? null : await surfaceExchangeTurns(session.id);
+
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: sovereignText,  // Uses closing-anchored text for counsel mode turns
+      // 🔖 Real conversation_turns ids for this exchange (member-mark enablement).
+      conversationTurns,
       // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing
       practiceRecommendation: orchestratorResult.practiceRecommendation || null,
+      // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
+      proposal: orchestratorResult.proposal || null,
       // 🚪 AIN KNOWLEDGE GATE: Source well scoring (Phase 1)
       ainState: knowledgeGateResult ? {
         sourceMix: knowledgeGateResult.source_mix.map(s => ({

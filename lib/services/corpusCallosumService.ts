@@ -6,13 +6,18 @@
  *
  * Two types of records:
  * 1. agent_runs - Individual agent outputs (structured, symbolic, relational, etc.)
- * 2. integration_passes - Synthesis of multiple agent outputs into coherent response
+ * 2. integration_passes - DIAGNOSTIC TRACE of which agents ran together on a turn.
+ *    record_type='trace_observation' (the live default): observational only. The
+ *    member-facing answer is single-authored by MaiaVoice; this row does NOT author it.
+ *    record_type='synthesis' is RESERVED for a future path that genuinely merges voices and
+ *    must pass the accountability merge-gate before serving a member
+ *    (see docs/specs/SYNTHESIS_MERGE_GATE_SPEC_2026-06-07.md — Clause A/B).
  *
  * This enables:
- * - Tracing which agents contributed to a response
- * - Analyzing tension between different epistemic modes
- * - Measuring integration quality over time
- * - Auditing the corpus callosum (bridge between knowings)
+ * - Tracing which agents ran on a response (co-presence, not authorship)
+ * - Auditing the corpus callosum substrate (which voices fired, when)
+ * NOTE: a trace_observation does NOT measure integration quality or resolve tension — those
+ * fields are reserved for record_type='synthesis' and left NULL for traces (Clause A).
  *
  * [ROUTING-INVARIANT] (context vs cause):
  *
@@ -71,20 +76,27 @@ export type IntegrationPassInput = {
   turnId?: number;
   userId?: string;
   reqId?: string;
-  bridgeAgent: string;         // "CorpusCallosum", "ResponseIntegrator"
-  inputs: Array<{              // Summary of inputs being integrated
+  // 'trace_observation' (default) = diagnostic record of which agents ran; does NOT author the
+  // member-facing answer. 'synthesis' = a genuine voice-merge that authored the answer and MUST
+  // satisfy the merge-gate (docs/specs/SYNTHESIS_MERGE_GATE_SPEC_2026-06-07.md).
+  recordType?: 'trace_observation' | 'synthesis';
+  bridgeAgent: string;         // "CorpusCallosum", "ElementalOracle"
+  inputs: Array<{              // Which agents ran (trace) / were integrated (synthesis)
     agentName: string;
     element?: string;
     epistemicMode?: string;
     summary?: string;
   }>;
-  agentRunIds?: string[];      // UUIDs of agent_runs being integrated
-  integrationMethod?: string;  // "weighted_blend", "tension_held", "dominant_voice"
-  tensionsNamed?: string[];    // Tensions detected between inputs
-  reconciliations?: string[];  // How tensions were reconciled
-  paradoxesHeld?: string[];    // Paradoxes explicitly held (not resolved)
-  finalText?: string;          // The integrated output
-  coherenceScore?: number;     // 0-1 (how well inputs coherently combine)
+  agentRunIds?: string[];      // UUIDs of the agent_runs this record references
+  integrationMethod?: string;  // synthesis: "weighted_blend"|"tension_held"|"dominant_voice"; trace: "classifier_trace"
+  // The fields below are SYNTHESIS EVIDENCE. For record_type='trace_observation' they are left
+  // NULL on purpose (Clause A): a trace observes, it does not synthesize. Populate them ONLY on
+  // record_type='synthesis', where the merge-gate requires them to be real (not template).
+  tensionsNamed?: string[];    // tensions actually detected & adjudicated (synthesis only)
+  reconciliations?: string[];  // how named tensions were resolved (synthesis only)
+  paradoxesHeld?: string[];    // paradoxes explicitly held, not resolved (synthesis only)
+  finalText?: string;          // member-facing synthesized text — set ONLY when it EQUALS what the member saw (synthesis only)
+  coherenceScore?: number;     // 0-1, measured integration coherence (synthesis only)
   depthScore?: number;         // 0-1 (depth of integration)
   confidence?: number;         // 0-1
   elementalMode?: 'fire' | 'water' | 'earth' | 'air' | 'aether';
@@ -156,10 +168,12 @@ export async function logAgentRun(input: AgentRunInput): Promise<string | null> 
 // =============================================================================
 
 /**
- * Log an integration pass (synthesis of multiple agents)
+ * Log an integration_passes row.
  *
- * Call this after generating the final response to record how
- * different agent outputs were combined.
+ * Defaults to record_type='trace_observation' — a diagnostic record of which agents ran on a
+ * turn. It does NOT author the member-facing response (that is MaiaVoice, single-author).
+ * record_type='synthesis' is reserved for a genuine voice-merge and must satisfy the
+ * accountability merge-gate (docs/specs/SYNTHESIS_MERGE_GATE_SPEC_2026-06-07.md) before serving.
  */
 export async function logIntegrationPass(input: IntegrationPassInput): Promise<string | null> {
   try {
@@ -170,8 +184,9 @@ export async function logIntegrationPass(input: IntegrationPassInput): Promise<s
         tensions_named, reconciliations, paradoxes_held,
         final_text, coherence_score, depth_score, confidence,
         elemental_mode, meta,
-        origin_route, processing_profile
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        origin_route, processing_profile,
+        record_type
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       RETURNING id`,
       [
         input.sessionId,
@@ -193,6 +208,7 @@ export async function logIntegrationPass(input: IntegrationPassInput): Promise<s
         input.meta ? JSON.stringify(input.meta) : null,
         input.originRoute ?? null,
         input.processingProfile ?? null,
+        input.recordType ?? 'trace_observation',
       ]
     );
 
@@ -292,13 +308,16 @@ function elementToEpistemicMode(element: string): EpistemicMode {
 }
 
 /**
- * Log a complete corpus callosum trace for a turn
+ * Log a complete corpus callosum TRACE for a turn (record_type='trace_observation').
  *
- * This is a convenience wrapper that logs:
- * - Atlas classification as structured agent run
- * - MAIA response as symbolic agent run
- * - Elemental agents as parallel agent runs (the REAL corpus callosum!)
- * - Integration pass combining all
+ * Convenience wrapper that records, as agent_runs, which voices ran:
+ * - Atlas classification (structured)
+ * - MAIA response (symbolic) — the single author of the member-facing answer
+ * - Elemental agents (parallel classifiers)
+ * plus one integration_passes row of record_type='trace_observation' that references them.
+ *
+ * OBSERVATIONAL ONLY. It does not synthesize the response and does not populate
+ * synthesis-evidence fields (Clause A — docs/specs/SYNTHESIS_MERGE_GATE_SPEC_2026-06-07.md).
  */
 export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promise<{
   atlasRunId: string | null;
@@ -454,36 +473,45 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
     console.log(`🧠 [CorpusCallosum] Logged ${elementalRunIds.length} elemental agent runs`);
   }
 
-  // 5) Log integration pass if we have multiple inputs
+  // 5) Log a TRACE OBSERVATION if 2+ agents ran.
+  //
+  // CLAUSE A (docs/specs/SYNTHESIS_MERGE_GATE_SPEC_2026-06-07.md): this is
+  // record_type='trace_observation', NOT a synthesis. The member-facing answer is
+  // single-authored by MaiaVoice. We therefore leave the synthesis-evidence fields
+  // (tensionsNamed / reconciliations / paradoxesHeld / finalText / coherenceScore / depthScore /
+  // confidence) NULL — populating them with template/fabricated values would misrepresent a
+  // trace as a merge. Element co-presence is recorded honestly in meta as co-presence flags
+  // (which opposing voices ran together), NOT as detected or resolved tensions.
   let integrationId: string | null = null;
   if (inputs.length >= 2) {
-    // Determine tensions between agents
-    const tensionsNamed: string[] = [];
+    const coPresenceFlags: string[] = [];
     if (inputs.some(i => i.element === 'fire') && inputs.some(i => i.element === 'water')) {
-      tensionsNamed.push('fire_water_opposition');
+      coPresenceFlags.push('fire_water_copresent');
     }
     if (inputs.some(i => i.element === 'earth') && inputs.some(i => i.element === 'air')) {
-      tensionsNamed.push('earth_air_grounding_vs_abstraction');
+      coPresenceFlags.push('earth_air_copresent');
     }
     if (inputs.some(i => i.epistemicMode === 'structured') && inputs.some(i => i.epistemicMode === 'symbolic')) {
-      tensionsNamed.push('structured_vs_symbolic');
+      coPresenceFlags.push('structured_symbolic_copresent');
     }
 
     integrationId = await logIntegrationPass({
       sessionId: trace.sessionId,
       turnId: trace.turnId,
       userId: trace.userId,
+      recordType: 'trace_observation',
       bridgeAgent: trace.elementalSynthesis ? 'ElementalOracle' : 'CorpusCallosum',
       inputs,
       agentRunIds,
-      integrationMethod: trace.elementalSynthesis?.integrationMethod ?? (inputs.length > 1 ? 'weighted_blend' : 'single_voice'),
-      tensionsNamed,
-      reconciliations: trace.elementalSynthesis?.harmonics?.map(h => `${h.pattern}: ${h.elements.join('+')}`) ?? [],
-      paradoxesHeld: tensionsNamed.length > 0 ? ['elemental_oppositions_held'] : [],
-      finalText: trace.elementalSynthesis?.synthesis?.slice(0, 200) ?? trace.maiaResponse?.text?.slice(0, 200),
-      coherenceScore: trace.elementalSynthesis?.depth ?? (inputs.length > 1 ? 0.8 : 1.0),
-      depthScore: trace.elementalSynthesis?.depth,
-      confidence: trace.elementalSynthesis ? 0.85 : 0.7,
+      integrationMethod: 'classifier_trace',
+      // Synthesis-evidence fields intentionally left undefined (NULL) for trace_observation:
+      tensionsNamed: undefined,
+      reconciliations: undefined,
+      paradoxesHeld: undefined,
+      finalText: undefined,        // a trace does not author the member-facing text
+      coherenceScore: undefined,   // no integration is measured on a trace
+      depthScore: undefined,
+      confidence: undefined,       // fabricated confidence removed (Clause A)
       elementalMode: (trace.elementalSynthesis?.dominant?.toLowerCase() ?? trace.atlasResult?.element?.toLowerCase()) as any,
       meta: {
         agentCount: inputs.length,
@@ -494,6 +522,9 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
           return agent && agent.element !== 'shadow';
         }).length,
         traceAgentCount: trace.elementalAgents?.length ?? 0, // What the bridge produced
+        coPresenceFlags, // honest: which opposing voices ran together (NOT adjudicated tensions)
+        // The elemental classifier's own status line — kept for diagnostics, NOT member-facing text:
+        observationSummary: trace.elementalSynthesis?.synthesis?.slice(0, 200) ?? null,
         harmonics: trace.elementalSynthesis?.harmonics,
         totalLatencyMs: trace.elementalSynthesis?.latencyMs,
       },
@@ -502,7 +533,7 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
     });
 
     if (integrationId) {
-      console.log(`🌉 [CorpusCallosum] Integration pass logged: ${inputs.length} agents bridged`);
+      console.log(`🔎 [CorpusCallosum] Trace observation logged: ${inputs.length} agents ran (record_type=trace_observation, not a synthesis)`);
     }
   }
 

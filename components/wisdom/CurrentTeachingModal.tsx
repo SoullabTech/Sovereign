@@ -33,6 +33,8 @@ interface CurrentTeachingModalProps {
   onClose: () => void;
   tradition: WisdomTradition | null;
   onChangeGuide: () => void;
+  /** Clear the standing guide (deactivate). Optional — when omitted, no clear affordance shows. */
+  onClearGuide?: () => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -91,7 +93,8 @@ export function CurrentTeachingModal({
   isOpen,
   onClose,
   tradition,
-  onChangeGuide
+  onChangeGuide,
+  onClearGuide
 }: CurrentTeachingModalProps) {
   if (!isOpen) return null;
 
@@ -283,6 +286,18 @@ export function CurrentTeachingModal({
               <RefreshCw className="w-4 h-4" />
               Choose a Different Guide
             </button>
+            {onClearGuide && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onClearGuide();
+                }}
+                className="w-full mt-2 px-4 py-2 rounded-xl text-white/40 hover:text-white/70
+                           text-sm transition-all"
+              >
+                Step back — continue without a guide
+              </button>
+            )}
           </div>
         </motion.div>
       </motion.div>

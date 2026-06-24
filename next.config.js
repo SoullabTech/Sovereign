@@ -47,6 +47,15 @@ const nextConfig = {
   // Fix workspace root warning - set explicit output file tracing
   outputFileTracingRoot: __dirname,
 
+  // Include Beta Learning Field doctrine markdown in the standalone server
+  // output. With output: 'standalone', files read via fs at runtime are pruned
+  // unless explicitly traced. The loader (lib/beta-testers/docs.ts) also fails
+  // safe if a file is missing. See content/beta-testers/*.md.
+  outputFileTracingIncludes: {
+    '/beta-testers': ['./content/beta-testers/**/*.md'],
+    '/beta-testers/**': ['./content/beta-testers/**/*.md'],
+  },
+
   // Progressive Web App optimizations
   reactStrictMode: false,
   compress: true,

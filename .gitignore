@@ -305,6 +305,11 @@ certs/
 artifacts/sovereignty-audit*.json
 artifacts/*sovereignty*audit*.json
 
+# Never commit Boundary Audit field captures — they contain assembled member field
+# content (systemPrompt/userInput). On-host, gitignored, sanctuary-skipped by design.
+# Spec: docs/specs/BOUNDARY_AUDIT_PROTOCOL_2026-06-08.md
+artifacts/field-capture/
+
 # Keep manifest but not sovereignty audits
 artifacts/.manifest.json
 

@@ -1,0 +1,13 @@
+[
+  {
+    "property": "uc.quiet-chrome.intensity",
+    "label": "Calm intensity",
+    "type": "dropdown",
+    "options": [
+      { "value": "soft", "label": "Soft (default)" },
+      { "value": "medium", "label": "Medium" },
+      { "value": "deep", "label": "Deep" }
+    ],
+    "defaultValue": "soft"
+  }
+]

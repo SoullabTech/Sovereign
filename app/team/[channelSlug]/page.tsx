@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 import { getChannelBySlug } from '@/lib/team/ChannelService';
+import { isChannelAdminOrTeamAdmin } from '@/lib/team/permissions';
 import { ChannelView } from '@/components/team/ChannelView';
 
 async function getSessionMemberId(): Promise<string | null> {
@@ -52,10 +53,14 @@ export default async function ChannelPage({
     );
   }
 
+  // Channel owner/admin or global team admin: can manage members and delete any message.
+  const isAdmin = await isChannelAdminOrTeamAdmin(memberId, channel.id).catch(() => false);
+
   return (
     <ChannelView
       channel={channel}
       currentMemberId={memberId}
+      isAdmin={isAdmin}
     />
   );
 }

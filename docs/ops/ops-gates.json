@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "artifact": "ops-gates registry",
+    "purpose": "Durable record of LIVE operational-readiness gates. Each gate is a read-only check that PROPOSES a state; a human DISPOSES the resulting action.",
+    "principle": "Auto-orchestrate the proposing, never the disposing. Gates detect and report — they never deploy, merge, provision hardware, charge, or harden a route.",
+    "growRule": "Add a gate ONLY when the work it verifies is real and verifiable. Do not add speculative gates ahead of the work — no rows for stewardship re-land, admin-route hotfix, early-member continuity, or beta-to-paid until each one lands and is testable.",
+    "invariant": "Every gate MUST have mutates:false. A check that would mutate production is not a gate.",
+    "statusNote": "result is recorded after the gate runs; this file is not auto-written-back yet (a future enhancement, not claimed as live).",
+    "updated": "2026-06-10"
+  },
+  "opsGates": [
+    {
+      "id": "session-mint-acceptance",
+      "description": "Acceptance gate for the onboarding session-mint fix: confirm no new member is created without a server session.",
+      "target": "members / auth_sessions",
+      "check": "SELECT count(*) AS new_members_sessionless FROM members m WHERE m.created_at > '2026-06-10 20:22:48+00'::timestamptz AND m.password_hash IS NOT NULL AND NOT EXISTS (SELECT 1 FROM auth_sessions s WHERE s.member_id = m.id);",
+      "runVia": "ssh soullab@minisforum -> docker exec maia-postgres psql -U soullab maia_consciousness",
+      "expected": "0",
+      "onNonZero": "Grep maia-sovereign logs for '[MEMBERS] Session creation failed (non-fatal)'. Present -> the createSession degrade fired (investigate why createSession fails; member creation still succeeded). Absent -> a different sessionless-member generator still exists; do NOT start DM hardening.",
+      "mutates": false,
+      "scheduledAt": "2026-06-12T10:00:00-04:00",
+      "scheduledTaskId": "maia-session-mint-acceptance-gate",
+      "status": "scheduled",
+      "result": "pending",
+      "proposes": "The session-mint fix holds under live traffic (zero sessionless new members since deploy).",
+      "disposes": "Human — a passing gate green-lights the HELD DM auth hardening work (currently gated on exactly this).",
+      "provenance": {
+        "fix": "PR #392",
+        "mergeCommit": "4f9a85c23",
+        "deployedAt": "2026-06-10T20:22:48Z",
+        "deployVerified": true
+      }
+    }
+  ]
+}

@@ -88,35 +88,13 @@ function longitudeToZodiac(longitude: number): { sign: string; degree: number } 
   };
 }
 
-// Calculate house number from ecliptic longitude and house cusps
-// Implements angular house orb: planets within 5° before an angular cusp
-// (houses 1, 4, 7, 10) are considered to be in that angular house
+// Calculate house number from ecliptic longitude and house cusps.
+// Strict cusp-boundary assignment (matches Astrograph and standard practice):
+// a planet is in house i when it lies between cusp i and cusp i+1. No angular
+// "orb snap" — a planet a few degrees before an angle stays in the prior house.
 function calculateHouse(longitude: number, houseCusps: number[]): number {
   const normalizedLongitude = ((longitude % 360) + 360) % 360;
-  const ANGULAR_ORB = 5; // degrees before angular house cusps
 
-  // Angular houses (ASC=1, IC=4, DESC=7, MC=10)
-  const angularHouses = [0, 3, 6, 9]; // 0-indexed
-
-  // Check if planet is within orb of any angular house cusp
-  for (const angularIndex of angularHouses) {
-    const angularCusp = houseCusps[angularIndex];
-
-    // Calculate distance before the angular cusp
-    let distanceBeforeCusp = angularCusp - normalizedLongitude;
-
-    // Handle wrapping around 0 degrees
-    if (distanceBeforeCusp < 0) {
-      distanceBeforeCusp += 360;
-    }
-
-    // If planet is within 5° before this angular cusp, place it in the angular house
-    if (distanceBeforeCusp > 0 && distanceBeforeCusp <= ANGULAR_ORB) {
-      return angularIndex + 1;
-    }
-  }
-
-  // Standard house calculation
   for (let i = 0; i < 12; i++) {
     const currentCusp = houseCusps[i];
     const nextCusp = houseCusps[(i + 1) % 12];
@@ -139,26 +117,33 @@ function calculateHouse(longitude: number, houseCusps: number[]): number {
 // Calculate True Node (North Node) position
 // The lunar node is the point where Moon's orbit crosses the ecliptic
 function calculateTrueNode(time: Astronomy.AstroTime): number {
-  // Get Moon's position
-  const moonGeo = Astronomy.GeoMoon(time);
+  // True (osculating) lunar node — the ascending intersection of the Moon's
+  // instantaneous orbital plane with the ecliptic. This is what Astrograph and
+  // most modern software report (it oscillates ±~1.5° around the mean node).
+  // Derived from the Moon's geocentric ecliptic position and a numerically
+  // differentiated velocity: h = r × v is the orbit normal, and the ascending
+  // node direction is n = ẑ × h (ẑ = ecliptic north), so Ω = atan2(h.x, −h.y).
+  const R2D = 180 / Math.PI;
+  const dt = 0.02; // days, for the centered velocity difference
 
-  // Calculate ecliptic latitude - when Moon crosses ecliptic, lat = 0
-  // The ascending node (North Node) is where Moon crosses going north (lat increasing)
+  const eclVec = (t: Astronomy.AstroTime) => Astronomy.Ecliptic(Astronomy.GeoMoon(t)).vec;
+  const r = eclVec(time);
+  const rPlus = eclVec(time.AddDays(dt));
+  const rMinus = eclVec(time.AddDays(-dt));
+  const v = {
+    x: (rPlus.x - rMinus.x) / (2 * dt),
+    y: (rPlus.y - rMinus.y) / (2 * dt),
+    z: (rPlus.z - rMinus.z) / (2 * dt),
+  };
 
-  // Simplified calculation using Moon's mean node
-  // For production, would use JPL ephemeris or more precise calculation
-  // Mean node regresses ~19.3° per year
+  const h = {
+    x: r.y * v.z - r.z * v.y,
+    y: r.z * v.x - r.x * v.z,
+    z: r.x * v.y - r.y * v.x,
+  };
 
-  // Days since J2000 epoch (Jan 1, 2000 12:00 TT)
-  const daysSinceJ2000 = time.tt;
-
-  // Mean longitude of ascending node (simplified formula)
-  // At J2000: 125.0445° (epoch value)
-  // Regression rate: 0.0529539° per day (mean motion)
-  const meanNode = 125.0445 - (0.0529539 * daysSinceJ2000);
-
-  // Normalize to 0-360
-  return ((meanNode % 360) + 360) % 360;
+  const nodeLon = Math.atan2(h.x, -h.y) * R2D;
+  return ((nodeLon % 360) + 360) % 360;
 }
 
 // Check if a planet is retrograde
@@ -261,9 +246,11 @@ function calculatePorphyryHouses(
   return cusps;
 }
 
-// Calculate Placidus houses (time-based semi-arcs)
-// NOTE: True Placidus requires complex iterative solving and can distort at extreme latitudes
-// For Spiralogic, Porphyry is recommended as the steadier middle path
+// Calculate Placidus houses — authentic time-based semi-arc trisection.
+// The intermediate cusps (11, 12, 2, 3) are each solved by fixed-point iteration
+// on their OWN semi-diurnal / semi-nocturnal arc; the remaining cusps follow by
+// opposition, with the four angles fixed. Placidus is undefined within the polar
+// circles (|lat| > 66°), where it gracefully degrades to Porphyry.
 function calculatePlacidusHouses(
   lat: number,
   lng: number,
@@ -271,9 +258,58 @@ function calculatePlacidusHouses(
   ascendant: number,
   obliquity: number
 ): number[] {
-  // For now, fall back to Porphyry until true Placidus is implemented
-  console.log('Using Porphyry as Placidus approximation');
-  return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
+  const D2R = Math.PI / 180;
+  const R2D = 180 / Math.PI;
+
+  const sidTime = Astronomy.SiderealTime(time);
+  const lst = sidTime + lng / 15;
+  const ramc = (((lst * 15) % 360) + 360) % 360; // Right Ascension of the MC
+
+  const mcDeg = (((Math.atan2(
+    Math.sin(ramc * D2R),
+    Math.cos(ramc * D2R) * Math.cos(obliquity * D2R)
+  ) * R2D) % 360) + 360) % 360;
+
+  // Placidus is undefined inside the polar circles — degrade to Porphyry.
+  if (Math.abs(lat) > 66) {
+    return calculatePorphyryHouses(lat, lng, time, ascendant, obliquity);
+  }
+
+  // Solve one intermediate cusp. f = fraction of the semi-arc; 'day' measures the
+  // semi-diurnal arc east of the MC, 'night' the semi-nocturnal arc west of the IC.
+  const cuspLon = (f: number, mode: 'day' | 'night'): number => {
+    let lon = ramc; // initial guess
+    for (let iter = 0; iter < 60; iter++) {
+      const decl = Math.asin(Math.sin(obliquity * D2R) * Math.sin(lon * D2R)) * R2D;
+      const tanProduct = Math.tan(lat * D2R) * Math.tan(decl * D2R);
+      const ad = Math.abs(tanProduct) <= 1 ? Math.asin(tanProduct) * R2D : 0; // ascensional difference
+      const raTarget = mode === 'day'
+        ? ramc + f * (90 + ad)          // semi-diurnal arc = 90 + ad
+        : ramc + 180 - f * (90 - ad);   // semi-nocturnal arc = 90 - ad
+      const a = raTarget * D2R;
+      const newLon = (((Math.atan2(Math.sin(a), Math.cos(a) * Math.cos(obliquity * D2R)) * R2D) % 360) + 360) % 360;
+      const delta = ((newLon - lon + 540) % 360) - 180;
+      lon = newLon;
+      if (Math.abs(delta) < 1e-7) break;
+    }
+    return lon;
+  };
+
+  const cusps: number[] = new Array(12);
+  cusps[9] = mcDeg;                    // 10th = MC
+  cusps[0] = ascendant;               // 1st  = Ascendant
+  cusps[3] = (mcDeg + 180) % 360;     // 4th  = IC
+  cusps[6] = (ascendant + 180) % 360; // 7th  = Descendant
+  cusps[10] = cuspLon(1 / 3, 'day');   // 11th
+  cusps[11] = cuspLon(2 / 3, 'day');   // 12th
+  cusps[1] = cuspLon(2 / 3, 'night');  // 2nd
+  cusps[2] = cuspLon(1 / 3, 'night');  // 3rd
+  cusps[4] = (cusps[10] + 180) % 360;  // 5th  opposite 11th
+  cusps[5] = (cusps[11] + 180) % 360;  // 6th  opposite 12th
+  cusps[7] = (cusps[1] + 180) % 360;   // 8th  opposite 2nd
+  cusps[8] = (cusps[2] + 180) % 360;   // 9th  opposite 3rd
+
+  return cusps;
 }
 
 // Calculate house cusps based on selected system

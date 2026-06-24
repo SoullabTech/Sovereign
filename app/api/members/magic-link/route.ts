@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import {
   checkRateLimit,
   getClientIP,
@@ -28,15 +28,6 @@ import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/magic-link';
-
-// Lazy init Resend
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 // Generate secure token
 function generateToken(): string {
@@ -159,8 +150,9 @@ export async function POST(request: NextRequest) {
 
     // Send magic link email
     try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
+      const sendResult = await sendEmail({
+        purpose: isExistingMember ? 'auth:magic-link' : 'auth:signup-link',
+        from: SENDERS.noreply,
         to: normalizedEmail,
         subject,
         html: `
@@ -219,6 +211,14 @@ With presence,
 The Soullab Team
         `.trim()
       });
+
+      if (!sendResult.success) {
+        console.error('[MAGIC-LINK] Failed to send email:', sendResult.error);
+        return NextResponse.json(
+          { error: 'Failed to send magic link email. Please try again.' },
+          { status: 500 }
+        );
+      }
 
       console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember})`);
     } catch (emailError) {
@@ -364,14 +364,14 @@ export async function GET(request: NextRequest) {
       return response;
 
     } else {
-      // New user — redirect to /signin (canonical threshold/auth surface).
-      // /begin was deprecated 2026-05-16; query params preserved in case
-      // /signin grows to handle pre-verified email + verified=true UX.
+      // New user — email is verified, send them to /signup to finish (collect a
+      // name, create the account via /api/members/register-email). The navy
+      // /signup reads ?verified=true&email= and renders its completion state.
       console.log(`[MAGIC-LINK] New user email verified: ${record.email}`);
-      const signinUrl = new URL('/signin', baseUrl);
-      signinUrl.searchParams.set('email', record.email as string);
-      signinUrl.searchParams.set('verified', 'true');
-      return NextResponse.redirect(signinUrl);
+      const signupUrl = new URL('/signup', baseUrl);
+      signupUrl.searchParams.set('email', record.email as string);
+      signupUrl.searchParams.set('verified', 'true');
+      return NextResponse.redirect(signupUrl);
     }
 
   } catch (error) {

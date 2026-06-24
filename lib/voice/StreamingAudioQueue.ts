@@ -35,6 +35,10 @@ export class StreamingAudioQueue {
   // 🔥 FIX: Track audio chunks through pipeline
   private chunksEnqueued: number = 0;
   private chunksPlayed: number = 0;
+  // 🛡️ iOS hang guard — per-chunk playback watchdog handle (see playNext).
+  // Cleared on natural end/error, stop(), and reset() so it can never advance
+  // a stopped queue.
+  private playbackWatchdog: ReturnType<typeof setTimeout> | null = null;
 
   constructor(callbacks?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -147,6 +151,16 @@ export class StreamingAudioQueue {
   }
 
   /**
+   * Clear the per-chunk playback watchdog if one is armed.
+   */
+  private clearPlaybackWatchdog(): void {
+    if (this.playbackWatchdog) {
+      clearTimeout(this.playbackWatchdog);
+      this.playbackWatchdog = null;
+    }
+  }
+
+  /**
    * Play the next audio chunk in the queue
    */
   private async playNext(): Promise<void> {
@@ -192,15 +206,53 @@ export class StreamingAudioQueue {
       // 🔍 DEBUG: Track playback progress to detect unexpected cutoffs
       let playbackStarted = false;
       let expectedDuration = 0;
+      let settled = false;
+
+      // 🛡️ Single, idempotent completion path for this chunk. Whichever signal
+      // fires first — natural end, error, failed start, or the iOS hang
+      // watchdog below — advances the queue exactly once.
+      const settleChunk = () => {
+        if (settled) return;
+        settled = true;
+        this.clearPlaybackWatchdog();
+        // 🔥 Count the chunk so markStreamingComplete()/playNext() can converge.
+        this.chunksPlayed++;
+        resolve();
+        this.playNext();
+      };
+
+      // 🛡️ iOS hang guard — HTMLAudioElement.onended can silently NEVER fire on
+      // iOS/WebView (AudioContext interruption, app backgrounding, audio-route
+      // change, or the onpause-without-ended stall warned about below). Without
+      // a timeout the whole queue strands here and isResponding hangs until the
+      // 75s recovery backstop ("I seem to have gotten stuck"). This mirrors the
+      // duration+margin playbackTimeout idiom already used in maiaSpeak's iOS
+      // paths. Sized to the chunk's real duration + grace so legitimate speech
+      // is never cut off — only true stalls are caught.
+      const armWatchdog = () => {
+        this.clearPlaybackWatchdog();
+        const ceilingMs = (expectedDuration > 0 ? expectedDuration * 1000 : 20000) + 15000;
+        this.playbackWatchdog = setTimeout(() => {
+          if (settled) return;
+          // Stop the zombie element so it can't later resume and overlap the next chunk.
+          try { item.audio.pause(); } catch { /* element may already be torn down */ }
+          console.warn(`⏱️ [StreamingQueue] Playback watchdog: chunk #${this.chunksPlayed + 1}/${this.chunksEnqueued} never fired onended after ~${Math.round(ceilingMs / 1000)}s — advancing so the queue can't strand isResponding`);
+          pushVoiceDebug(`⏱️ watchdog advance ${this.chunksPlayed + 1}/${this.chunksEnqueued}`);
+          settleChunk();
+        }, ceilingMs);
+      };
 
       item.audio.onloadedmetadata = () => {
         expectedDuration = item.audio.duration;
         console.log(`⏱️ [StreamingQueue] Chunk metadata loaded: ${expectedDuration.toFixed(1)}s duration`);
+        // Re-arm with the real duration once we know it (only if already playing).
+        if (playbackStarted) armWatchdog();
       };
 
       item.audio.onplay = () => {
         playbackStarted = true;
         console.log(`▶️ [StreamingQueue] Chunk playback started`);
+        armWatchdog();
       };
 
       // 🔍 DEBUG: Detect unexpected pause (before audio ends naturally)
@@ -213,37 +265,29 @@ export class StreamingAudioQueue {
       };
 
       item.audio.onended = () => {
+        if (settled) return;
         const playedTime = item.audio.currentTime;
         const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
-        // 🔥 FIX: Track successfully played chunks
-        this.chunksPlayed++;
-        // PR 15 diagnostic: prove that audio.onended fires on Capacitor Android.
-        // The 'thinking' state stuck-bug observed 2026-05-18 hangs somewhere
-        // in this completion chain. If we see "🔚 ended N/M" markers on the
-        // overlay but never the downstream "✅ onComplete firing", the hang
-        // is in markStreamingComplete logic. If we never see "🔚 ended" at
-        // all even though audio plays, it's the WebView audio event itself.
-        pushVoiceDebug(`🔚 audio ended ${this.chunksPlayed}/${this.chunksEnqueued}`);
+        // PR 15 diagnostic: prove audio.onended fires on Capacitor/iOS. If we see
+        // "🔚 ended N/M" but never the downstream "🎬 onComplete firing", the hang
+        // is in markStreamingComplete logic; if "⏱️ watchdog advance" shows instead,
+        // the WebView never delivered onended (the original stuck-thinking bug).
+        pushVoiceDebug(`🔚 audio ended ${this.chunksPlayed + 1}/${this.chunksEnqueued}`);
         if (completionRatio < 0.9) {
-          console.warn(`⚠️ [StreamingQueue] Chunk #${this.chunksPlayed} may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
+          console.warn(`⚠️ [StreamingQueue] Chunk #${this.chunksPlayed + 1} may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
         } else {
-          console.log(`✅ [StreamingQueue] Chunk #${this.chunksPlayed}/${this.chunksEnqueued} finished completely (${playedTime.toFixed(1)}s)`);
+          console.log(`✅ [StreamingQueue] Chunk #${this.chunksPlayed + 1}/${this.chunksEnqueued} finished completely (${playedTime.toFixed(1)}s)`);
         }
         // DON'T unregister - we never registered it
-        // this.feedbackPrevention.unregisterAudioElement(item.audio);
-        resolve();
-        this.playNext(); // Play next chunk
+        settleChunk();
       };
 
       item.audio.onerror = (error) => {
-        // 🔥 FIX: Still count failed chunks so we don't wait forever
-        this.chunksPlayed++;
-        console.error(`❌ [StreamingQueue] Audio error on chunk #${this.chunksPlayed}:`, error);
+        if (settled) return;
+        console.error(`❌ [StreamingQueue] Audio error on chunk #${this.chunksPlayed + 1}:`, error);
         console.error(`❌ [StreamingQueue] Failed chunk: "${item.text.substring(0, 50)}..."`); // leak-guard:ignore
         // DON'T unregister - we never registered it
-        // this.feedbackPrevention.unregisterAudioElement(item.audio);
-        resolve();
-        this.playNext(); // Continue to next chunk even on error
+        settleChunk(); // Continue to next chunk even on error
       };
 
       // Start playback with retry logic for iOS audio unlock issues
@@ -251,12 +295,15 @@ export class StreamingAudioQueue {
 
       if (!playSucceeded) {
         // All retries failed - count as failed and move on
-        this.chunksPlayed++;
-        console.error(`❌ [StreamingQueue] All play attempts failed for chunk #${this.chunksPlayed}`);
-        resolve();
-        this.playNext();
+        console.error(`❌ [StreamingQueue] All play attempts failed for chunk #${this.chunksPlayed + 1}`);
+        settleChunk();
+      } else if (!this.playbackWatchdog && !settled) {
+        // Defensive: play() resolved but onplay/onloadedmetadata may not fire in
+        // some iOS WebView states — arm the watchdog regardless so a missing
+        // onended can never strand the queue.
+        armWatchdog();
       }
-      // If playback started, the onended/onerror handlers will call resolve() and playNext()
+      // If playback started, onended/onerror (or the watchdog) settles the chunk.
     });
   }
 
@@ -265,6 +312,9 @@ export class StreamingAudioQueue {
    */
   stop(): void {
     console.log(`🛑 [StreamingQueue] Stopping playback and clearing queue (played ${this.chunksPlayed}/${this.chunksEnqueued})`);
+
+    // 🛡️ Cancel any armed playback watchdog so it can't advance a stopped queue.
+    this.clearPlaybackWatchdog();
 
     // Stop current audio (no feedback prevention registration for streaming)
     if (this.currentAudio) {
@@ -317,6 +367,7 @@ export class StreamingAudioQueue {
    */
   reset(): void {
     console.log('🔄 [StreamingQueue] Resetting for new session');
+    this.clearPlaybackWatchdog();
     this.streamingComplete = false;
     this.queue = [];
     this.isPlaying = false;

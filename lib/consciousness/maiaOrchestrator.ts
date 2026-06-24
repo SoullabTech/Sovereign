@@ -760,32 +760,39 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     }
   };
 
-  // 🧠 CORPUS CALLOSUM: Log integration pass if multiple agents ran
+  // 🧠 CORPUS CALLOSUM: Log a trace observation if multiple layers ran.
+  // CLAUSE A (docs/specs/SYNTHESIS_MERGE_GATE_SPEC_2026-06-07.md): these consciousness layers are
+  // OBSERVERS — maiaResult.text is single-authored by MaiaVoice and the layers do not feed back
+  // into it. So this is record_type='trace_observation', NOT 'narrative_synthesis'. We do not set
+  // finalText/coherenceScore here: representing a single-author reply as a multi-voice synthesis is
+  // exactly the masquerade Clause A forbids. A genuine synthesis (record_type='synthesis') must
+  // record inclusion/exclusion/weighting/reconciliation and pass the merge-gate before serving.
   if (turnId && corpusCallosumRunIds.length >= 2) {
     await logIntegrationPass({
       turnId,
       sessionId,
       userId,
+      recordType: 'trace_observation',
       bridgeAgent: 'maiaOrchestrator',
       agentRunIds: corpusCallosumRunIds,
       inputs: corpusCallosumRunIds.map((id, i) => ({
         agentName: layersSuccessful[i] ?? `layer-${i}`,
         summary: `Agent run ${id}`,
       })),
-      integrationMethod: 'narrative_synthesis',
-      finalText: maiaResult.text,
-      coherenceScore: Math.min(1, consciousnessAnalysis.analysisMetadata.successRate),
-      depthScore: conversationContext.getSpine().trustLevel,
+      integrationMethod: 'classifier_trace',
+      // finalText / coherenceScore / depthScore intentionally omitted: the layers observed, they
+      // did not author. The member-facing text is attributed to MaiaVoice in agent_runs.
       elementalMode: (elementalField?.dominantElement as 'fire' | 'water' | 'earth' | 'air' | 'aether') ?? undefined,
       meta: {
         consciousnessAnalysis,
         layersSuccessful,
         layersFailed,
+        layerSuccessRate: Math.min(1, consciousnessAnalysis.analysisMetadata.successRate),
       },
       originRoute: originRoute ?? '/api/between/chat',
       processingProfile: processingProfileOverride ?? 'BETWEEN',
     });
-    console.log(`🧠 [CorpusCallosum] Integration pass logged | agents=${corpusCallosumRunIds.length} | turnId=${turnId}`);
+    console.log(`🔎 [CorpusCallosum] Trace observation logged | layers=${corpusCallosumRunIds.length} | turnId=${turnId} (record_type=trace_observation, not a synthesis)`);
   }
 
   // 🌀 MAIA-PAI CONVERSATIONAL KERNEL: Track this interaction

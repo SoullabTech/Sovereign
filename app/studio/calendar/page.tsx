@@ -49,8 +49,20 @@ import {
   formatEventTime,
   CalendarEvent,
 } from '@/hooks/useCalendarEvents';
+import { AskMaia, type AskMaiaProposal } from '@/components/studio/AskMaia';
 
 type ViewType = 'month' | 'week' | 'day';
+
+/** A MAIA-proposed event draft that pre-fills the Create modal — the human still confirms the write. */
+type EventDraft = {
+  title?: string;
+  date?: string; // yyyy-MM-dd
+  startTime?: string; // HH:mm
+  endTime?: string; // HH:mm
+  allDay?: boolean;
+  description?: string;
+  location?: string;
+};
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -139,6 +151,8 @@ export default function CalendarPage() {
   const [createDefaultDate, setCreateDefaultDate] = useState<Date | null>(null);
   const [createDefaultHour, setCreateDefaultHour] = useState<number | null>(null);
   const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
+  // MAIA-proposed draft awaiting human confirmation in the Create modal.
+  const [eventDraft, setEventDraft] = useState<EventDraft | null>(null);
 
   // Calculate date range based on view
   const { from, to } = useMemo(() => {
@@ -292,6 +306,31 @@ export default function CalendarPage() {
       return eventDate >= weekStart && eventDate <= weekEnd && e.source === 'maia';
     }).length;
   }, [events]);
+
+  // Read-only snapshot of what's on screen, handed to Ask MAIA so it can reflect
+  // on the schedule. Compact + capped — never the raw event objects.
+  const buildAssistContext = useCallback(() => {
+    return {
+      now: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      view,
+      range: { from: from.toISOString(), to: to.toISOString() },
+      events: events.slice(0, 80).map(e => ({
+        title: e.title,
+        start: e.start,
+        end: e.end,
+        allDay: e.allDay ?? e.start.length === 10,
+        source: e.source,
+      })),
+    };
+  }, [events, view, from, to]);
+
+  // MAIA proposes; the human commits. Accepting a proposal only opens the Create
+  // modal pre-filled — the write happens when the practitioner clicks Create.
+  const handleAcceptProposal = useCallback((p: AskMaiaProposal) => {
+    if (p.kind !== 'event') return;
+    setEventDraft(p.data as EventDraft);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#1a1a2e] p-4 md:p-6">
@@ -583,9 +622,10 @@ export default function CalendarPage() {
           </AnimatePresence>
         </div>
 
-        {/* Sidebar - Today's Events */}
+        {/* Sidebar - Today's Events + Ask MAIA */}
         <div className="w-full lg:w-80 flex-shrink-0">
-          <div className="bg-[#16162a] rounded-xl border border-slate-800/50 overflow-hidden sticky top-6">
+          <div className="sticky top-6 space-y-6">
+            <div className="bg-[#16162a] rounded-xl border border-slate-800/50 overflow-hidden">
             {/* Sidebar Header */}
             <div className={`p-4 border-b border-slate-800/50 ${isToday(selectedDay) ? 'bg-amber-500/5' : ''}`}>
               <div className="text-sm text-slate-500">
@@ -630,6 +670,21 @@ export default function CalendarPage() {
                 Go to Today
               </button>
             </div>
+            </div>
+
+            {/* Ask MAIA — reusable assist surface (proposes; the human commits) */}
+            <AskMaia
+              surface="calendar"
+              buildContext={buildAssistContext}
+              onAcceptProposal={handleAcceptProposal}
+              placeholder="Ask about your schedule…"
+              acceptLabel="Review & add"
+              suggestions={[
+                'How full is my week?',
+                'When am I free Thursday afternoon?',
+                'Block 90 min for deep work Friday morning',
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -684,6 +739,22 @@ export default function CalendarPage() {
             onClose={() => setEditEvent(null)}
             onCreated={() => {
               setEditEvent(null);
+              refetch();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* MAIA-proposed Draft — opens the Create modal pre-filled; the human confirms the write */}
+      <AnimatePresence>
+        {eventDraft && (
+          <CreateEventModal
+            draft={eventDraft}
+            defaultDate={new Date()}
+            defaultHour={null}
+            onClose={() => setEventDraft(null)}
+            onCreated={() => {
+              setEventDraft(null);
               refetch();
             }}
           />
@@ -1357,12 +1428,14 @@ function CreateEventModal({
   defaultDate,
   defaultHour,
   editEvent,
+  draft,
   onClose,
   onCreated,
 }: {
   defaultDate: Date;
   defaultHour: number | null;
   editEvent?: CalendarEvent | null;
+  draft?: EventDraft | null;
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -1370,28 +1443,28 @@ function CreateEventModal({
   const startHour = defaultHour ?? 9;
   // When editing, pre-fill from the event's instant rendered in local time —
   // date-fns `format` uses the viewer's timezone, matching the calendar.
-  const dateStr = format(
-    editEvent ? new Date(editEvent.start) : defaultDate,
-    'yyyy-MM-dd'
-  );
+  // A MAIA `draft` pre-fills the same fields but stays a create (POST), not an edit.
+  const dateStr = editEvent
+    ? format(new Date(editEvent.start), 'yyyy-MM-dd')
+    : draft?.date ?? format(defaultDate, 'yyyy-MM-dd');
 
-  const [title, setTitle] = useState(editEvent?.title ?? '');
+  const [title, setTitle] = useState(editEvent?.title ?? draft?.title ?? '');
   const [date, setDate] = useState(dateStr);
   const [startTime, setStartTime] = useState(
     editEvent
       ? format(new Date(editEvent.start), 'HH:mm')
-      : `${String(startHour).padStart(2, '0')}:00`
+      : draft?.startTime ?? `${String(startHour).padStart(2, '0')}:00`
   );
   const [endTime, setEndTime] = useState(
     editEvent
       ? format(new Date(editEvent.end), 'HH:mm')
-      : `${String(Math.min(startHour + 1, 23)).padStart(2, '0')}:00`
+      : draft?.endTime ?? `${String(Math.min(startHour + 1, 23)).padStart(2, '0')}:00`
   );
-  const [allDay, setAllDay] = useState(editEvent?.allDay ?? false);
-  const [description, setDescription] = useState(editEvent?.description ?? '');
-  const [location, setLocation] = useState(editEvent?.location ?? '');
+  const [allDay, setAllDay] = useState(editEvent?.allDay ?? draft?.allDay ?? false);
+  const [description, setDescription] = useState(editEvent?.description ?? draft?.description ?? '');
+  const [location, setLocation] = useState(editEvent?.location ?? draft?.location ?? '');
   const [showMore, setShowMore] = useState(
-    !!(editEvent?.description || editEvent?.location)
+    !!(editEvent?.description || editEvent?.location || draft?.description || draft?.location)
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

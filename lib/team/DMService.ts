@@ -2,6 +2,12 @@
 
 import { query } from '@/lib/db/postgres';
 import { notifyDMRecipient } from '@/lib/team/notifications';
+import {
+  dmServeBase,
+  parseStoredAttachments,
+  toClientAttachments,
+} from '@/lib/team/attachments';
+import type { MessageAttachment, StoredMessageAttachment } from '@/lib/team/types';
 
 export interface DMThread {
   id: string;
@@ -30,6 +36,40 @@ export interface DMMessage {
   editedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
+  attachments?: MessageAttachment[];
+}
+
+// Row shape for the message read paths (SELECT dm.*, ... sender_name). `attachments`
+// is the JSONB column (already parsed by pg into a JS value).
+type DMMessageRow = {
+  id: string;
+  dm_thread_id: string;
+  sender_id: string;
+  sender_name: string;
+  body: string;
+  message_type: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  attachments: unknown;
+};
+
+function mapDMRow(row: DMMessageRow): DMMessage {
+  return {
+    id: row.id,
+    dmThreadId: row.dm_thread_id,
+    senderId: row.sender_id,
+    senderName: row.sender_name,
+    body: row.body,
+    messageType: (row.message_type ?? 'build') as MessageType,
+    editedAt: row.edited_at,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at,
+    attachments: toClientAttachments(
+      parseStoredAttachments(row.attachments),
+      dmServeBase(row.dm_thread_id)
+    ),
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,17 +197,7 @@ export async function getDMMessages(
     params.push(opts.before);
   }
 
-  const result = await query<{
-    id: string;
-    dm_thread_id: string;
-    sender_id: string;
-    sender_name: string;
-    body: string;
-    message_type: string;
-    edited_at: string | null;
-    deleted_at: string | null;
-    created_at: string;
-  }>(
+  const result = await query<DMMessageRow>(
     `SELECT dm.*, COALESCE(m.name, m.username, 'Unknown') AS sender_name
      FROM team_dm_messages dm
      JOIN members m ON m.id = dm.sender_id
@@ -179,17 +209,7 @@ export async function getDMMessages(
     params
   );
 
-  return result.rows.map(row => ({
-    id: row.id,
-    dmThreadId: row.dm_thread_id,
-    senderId: row.sender_id,
-    senderName: row.sender_name,
-    body: row.body,
-    messageType: (row.message_type ?? 'build') as MessageType,
-    editedAt: row.edited_at,
-    deletedAt: row.deleted_at,
-    createdAt: row.created_at,
-  }));
+  return result.rows.map(mapDMRow);
 }
 
 export async function getDMMessagesSince(
@@ -204,17 +224,7 @@ export async function getDMMessagesSince(
   if (!access.rows[0]) return [];
 
   const afterDate = new Date(afterTs).toISOString();
-  const result = await query<{
-    id: string;
-    dm_thread_id: string;
-    sender_id: string;
-    sender_name: string;
-    body: string;
-    message_type: string;
-    edited_at: string | null;
-    deleted_at: string | null;
-    created_at: string;
-  }>(
+  const result = await query<DMMessageRow>(
     `SELECT dm.*, COALESCE(m.name, m.username, 'Unknown') AS sender_name
      FROM team_dm_messages dm
      JOIN members m ON m.id = dm.sender_id
@@ -225,27 +235,19 @@ export async function getDMMessagesSince(
     [dmThreadId, afterDate]
   );
 
-  return result.rows.map(row => ({
-    id: row.id,
-    dmThreadId: row.dm_thread_id,
-    senderId: row.sender_id,
-    senderName: row.sender_name,
-    body: row.body,
-    messageType: (row.message_type ?? 'build') as MessageType,
-    editedAt: row.edited_at,
-    deletedAt: row.deleted_at,
-    createdAt: row.created_at,
-  }));
+  return result.rows.map(mapDMRow);
 }
 
 export async function sendDMMessage(
   dmThreadId: string,
   senderId: string,
   body: string,
-  messageType: MessageType = 'build'
+  messageType: MessageType = 'build',
+  attachments: StoredMessageAttachment[] = []
 ): Promise<DMMessage> {
   const trimmed = body.trim();
-  if (!trimmed) throw new Error('Message body cannot be empty');
+  // An image-only message (empty text + ≥1 attachment) is allowed.
+  if (!trimmed && attachments.length === 0) throw new Error('Message body cannot be empty');
 
   const validTypes: MessageType[] = ['build', 'decision', 'insight', 'question'];
   const safeType: MessageType = validTypes.includes(messageType) ? messageType : 'build';
@@ -266,16 +268,18 @@ export async function sendDMMessage(
     edited_at: string | null;
     deleted_at: string | null;
     created_at: string;
+    attachments: unknown;
   }>(
-    `INSERT INTO team_dm_messages (dm_thread_id, sender_id, body, message_type)
-     VALUES ($1, $2, $3, $4) RETURNING *`,
-    [dmThreadId, senderId, trimmed, safeType]
+    `INSERT INTO team_dm_messages (dm_thread_id, sender_id, body, message_type, attachments)
+     VALUES ($1, $2, $3, $4, $5::jsonb) RETURNING *`,
+    [dmThreadId, senderId, trimmed, safeType, JSON.stringify(attachments)]
   );
 
   const row = result.rows[0];
 
   // Fire-and-forget email notification to the other participant
-  notifyDMRecipient(dmThreadId, senderId, trimmed).catch(() => {});
+  const notifyPreview = trimmed || (attachments.length ? '📷 Image' : '');
+  notifyDMRecipient(dmThreadId, senderId, notifyPreview).catch(() => {});
 
   const nameRes = await query<{ name: string | null; username: string }>(
     `SELECT name, username FROM members WHERE id = $1`,
@@ -300,6 +304,10 @@ export async function sendDMMessage(
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
+    attachments: toClientAttachments(
+      parseStoredAttachments(row.attachments),
+      dmServeBase(row.dm_thread_id)
+    ),
   };
 }
 
@@ -309,6 +317,44 @@ export async function markDMRead(dmThreadId: string, memberId: string): Promise<
      WHERE dm_thread_id = $1 AND member_id = $2`,
     [dmThreadId, memberId]
   );
+}
+
+/** True if the member participates in the DM thread — the DM access gate. */
+export async function isDMThreadMember(
+  dmThreadId: string,
+  memberId: string
+): Promise<boolean> {
+  const res = await query(
+    `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, memberId]
+  );
+  return !!res.rows[0];
+}
+
+/**
+ * Locate one attachment within a DM thread by id, scoped to the thread (a foreign
+ * attachment id cannot resolve). Returns server-only storage metadata for streaming.
+ * The caller MUST verify thread membership first.
+ */
+export async function findDMAttachment(
+  dmThreadId: string,
+  attachmentId: string
+): Promise<{ storagePath: string; mimeType: string; filename: string } | null> {
+  const res = await query<{ storage_path: string; mime_type: string; filename: string }>(
+    `SELECT att->>'storagePath' AS storage_path,
+            att->>'mimeType'   AS mime_type,
+            att->>'filename'   AS filename
+       FROM team_dm_messages dm,
+            jsonb_array_elements(dm.attachments) att
+      WHERE dm.dm_thread_id = $1
+        AND dm.deleted_at IS NULL
+        AND att->>'id' = $2
+      LIMIT 1`,
+    [dmThreadId, attachmentId]
+  );
+  const row = res.rows[0];
+  if (!row || !row.storage_path) return null;
+  return { storagePath: row.storage_path, mimeType: row.mime_type, filename: row.filename };
 }
 
 /**

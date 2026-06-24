@@ -70,6 +70,9 @@ export interface MaiaContext {
   // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses for Counsel/Scribe modes
   therapeuticFrameworkAddendum?: string;
   reflectionLensAddendum?: string;
+  // 🧭 ARCHETYPAL STANDING SOURCE (member-chosen): Member-selected tradition (Wisdom Council picker) —
+  // informs MAIA's voice as a lens the member invited, never as authority.
+  wisdomGuideAddendum?: string;
   // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
   astrologicalContextAddendum?: string;
   // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
@@ -394,6 +397,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'bridgeSnapshotAddendum',          log: () => `🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated` },
   { field: 'therapeuticFrameworkAddendum',    log: v => `🧘 [Therapeutic Framework] Applied: ${v.split('\n')[0]}` },
   { field: 'reflectionLensAddendum',          log: v => `🔮 [Reflection Lens] Applied: ${v.split('\n')[0]}` },
+  { field: 'wisdomGuideAddendum',             log: v => `🧭 [Wisdom Guide] Applied: ${v.split('\n')[0]}` },
   { field: 'epistemicPathAddendum',           log: v => `🧭 [Epistemic Path] Applied: ${v.split('\n')[0]}` },
   { field: 'maiaModeAddendum',                log: () => `🎭 [MAIA Mode] Relational mode guidance injected` },
   { field: 'scribeSessionDiscussionAddendum', log: () => `📝 [Scribe Discussion] Session context injected` },

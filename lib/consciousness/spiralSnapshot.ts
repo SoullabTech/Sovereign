@@ -663,10 +663,10 @@ ${snapshot.trajectory.whats_ripening ? `- Ripening: ${snapshot.trajectory.whats_
 **Wisest Move:** ${snapshot.wisestMove}
 
 ---
-Use this snapshot to anchor your response. The phase read is ${confidenceLabel} — ${
+Let this snapshot orient your attention (a working read, not a verdict). The phase read is ${confidenceLabel} — ${
   confidenceLabel === 'uncertain' ? 'stay open to other readings' :
   confidenceLabel === 'possible' ? 'hold it lightly' :
-  'trust this orientation'
+  'let it strongly inform your attention — still a working read, not a verdict'
 }.
 `.trim();
 }

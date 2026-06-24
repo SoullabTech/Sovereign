@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   X,
@@ -11,8 +11,14 @@ import {
   HelpCircle,
   AlertTriangle,
   Send,
-  CheckCircle
+  CheckCircle,
+  ImagePlus
 } from 'lucide-react';
+
+// Client-side UX hints only; the server (/api/feedback) is the authoritative gate on type/size/count.
+const ACCEPT_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+const ACCEPT_IMAGE_ATTR = ACCEPT_IMAGE_TYPES.join(',');
+const MAX_IMAGES = 5;
 
 type FeedbackCategory =
   | 'problem'      // Reporting problems/bugs
@@ -90,26 +96,64 @@ export default function FeedbackSheet({
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Local preview URLs for pending screenshots; revoked when images change or on unmount.
+  const previewUrls = useMemo(() => images.map(f => URL.createObjectURL(f)), [images]);
+  useEffect(() => () => { previewUrls.forEach(u => URL.revokeObjectURL(u)); }, [previewUrls]);
+
+  const addFiles = (files: File[]) => {
+    const picked = files.filter(f => ACCEPT_IMAGE_TYPES.includes(f.type));
+    if (picked.length) setImages(prev => [...prev, ...picked].slice(0, MAX_IMAGES));
+  };
+  const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(e.target.files ?? []));
+    e.target.value = ''; // allow re-selecting the same file
+  };
+  const removeImage = (i: number) => setImages(prev => prev.filter((_, idx) => idx !== i));
+  // Paste a screenshot directly into the description (Cmd/Ctrl+V after a screen grab).
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const imgs: File[] = [];
+    for (const item of Array.from(e.clipboardData.items)) {
+      if (item.kind === 'file' && ACCEPT_IMAGE_TYPES.includes(item.type)) {
+        const f = item.getAsFile();
+        if (f) imgs.push(f);
+      }
+    }
+    if (imgs.length) { e.preventDefault(); addFiles(imgs); }
+  };
 
   const selectedOption = feedbackOptions.find(opt => opt.id === selectedCategory);
 
   const handleSubmit = async () => {
-    if (!selectedCategory || !message.trim()) return;
+    // A bug report needs either words or a screenshot (image-only is valid: "here's the broken screen").
+    if (!selectedCategory || (!message.trim() && images.length === 0)) return;
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category: selectedCategory,
-          message: message.trim(),
-          userName,
-          userId,
-          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-          url: typeof window !== 'undefined' ? window.location.href : undefined
-        })
-      });
+      const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
+      const url = typeof window !== 'undefined' ? window.location.href : undefined;
+
+      let response: Response;
+      if (images.length > 0) {
+        // Multipart so screenshots upload alongside the report.
+        const form = new FormData();
+        form.append('category', selectedCategory);
+        form.append('message', message.trim());
+        if (userName) form.append('userName', userName);
+        if (userId) form.append('userId', userId);
+        if (userAgent) form.append('userAgent', userAgent);
+        if (url) form.append('url', url);
+        images.forEach(img => form.append('images', img));
+        response = await fetch('/api/feedback', { method: 'POST', body: form });
+      } else {
+        response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: selectedCategory, message: message.trim(), userName, userId, userAgent, url })
+        });
+      }
 
       if (response.ok) {
         setSubmitted(true);
@@ -119,6 +163,7 @@ export default function FeedbackSheet({
           setTimeout(() => {
             setSelectedCategory(null);
             setMessage('');
+            setImages([]);
             setSubmitted(false);
           }, 300);
         }, 1500);
@@ -133,6 +178,7 @@ export default function FeedbackSheet({
   const handleBack = () => {
     setSelectedCategory(null);
     setMessage('');
+    setImages([]);
   };
 
   const handleClose = () => {
@@ -141,6 +187,7 @@ export default function FeedbackSheet({
     setTimeout(() => {
       setSelectedCategory(null);
       setMessage('');
+      setImages([]);
       setSubmitted(false);
     }, 300);
   };
@@ -327,16 +374,63 @@ export default function FeedbackSheet({
                       <textarea
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
+                        onPaste={handlePaste}
                         placeholder={selectedOption?.placeholder}
                         rows={4}
                         className="w-full rounded-2xl border border-green-500/20 bg-black/30 px-4 py-3 text-sm text-green-50 placeholder:text-green-100/40 focus:border-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/20 resize-none"
                         autoFocus
                       />
 
+                      {/* Pending screenshots */}
+                      {images.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {images.map((file, i) => (
+                            <div key={`${file.name}-${i}`} className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={previewUrls[i]}
+                                alt={file.name}
+                                className="h-16 w-16 object-cover rounded-lg border border-green-500/20"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(i)}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-black border border-white/20 text-white/70 hover:text-white hover:bg-red-500/80 transition-colors text-xs leading-none"
+                                aria-label={`Remove ${file.name}`}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Attach + paste affordance */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept={ACCEPT_IMAGE_ATTR}
+                          multiple
+                          hidden
+                          onChange={handleFilePick}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={images.length >= MAX_IMAGES}
+                          className="flex items-center gap-1.5 text-xs text-green-100/70 hover:text-green-100 border border-green-500/20 rounded-lg px-2.5 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <ImagePlus className="h-3.5 w-3.5" />
+                          {images.length >= MAX_IMAGES ? `Max ${MAX_IMAGES} images` : 'Attach screenshot'}
+                        </button>
+                        <span className="text-xs text-green-100/40">or paste an image</span>
+                      </div>
+
                       {/* Submit button */}
                       <button
                         onClick={handleSubmit}
-                        disabled={!message.trim() || isSubmitting}
+                        disabled={(!message.trim() && images.length === 0) || isSubmitting}
                         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-green-500/30 bg-green-500/20 px-4 py-3 text-sm font-medium text-green-50 transition-all hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSubmitting ? (

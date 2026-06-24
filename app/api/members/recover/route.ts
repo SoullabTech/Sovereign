@@ -9,20 +9,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 
 export const revalidate = false;
 
 // Skip during static export (Capacitor builds)
-
-// Lazy init to avoid build-time errors
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 export async function POST(request: NextRequest) {
   // During static export, return placeholder response
@@ -58,8 +49,9 @@ export async function POST(request: NextRequest) {
 
     // Send recovery email
     try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
+      const sendResult = await sendEmail({
+        purpose: 'auth:passkey-recovery',
+        from: SENDERS.noreply,
         to: email,
         subject: 'Your Soullab Passkey',
         html: `
@@ -121,6 +113,14 @@ With presence,
 The Soullab Team
         `.trim()
       });
+
+      if (!sendResult.success) {
+        console.error('[MEMBERS] Failed to send recovery email:', sendResult.error);
+        return NextResponse.json(
+          { error: 'Failed to send recovery email' },
+          { status: 500 }
+        );
+      }
 
       console.log('[MEMBERS] Recovery email sent to:', email);
     } catch (emailError) {

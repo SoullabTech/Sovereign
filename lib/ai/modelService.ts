@@ -4,6 +4,7 @@ import { generateWithClaude, checkClaudeHealth } from './claudeClient';
 import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
 import { generateTextWithSovereignty } from './sovereignRouter';
+import { captureFieldPackage } from './fieldCapture';
 import type { TextResult, ProviderMeta, InferenceMode } from './types';
 
 // Phase 1: Sovereign inference mode — unset/empty = zero behavior change
@@ -66,6 +67,9 @@ export interface TextRequest {
   systemPrompt: string;
   userInput: string;
   meta?: Record<string, unknown>;
+  // Optional Anthropic tool definitions, threaded to the Claude path only.
+  // Proposal pipeline (MAIA_CONSENT_GATES): tools PROPOSE, never execute.
+  tools?: any[];
 }
 
 /**
@@ -74,6 +78,15 @@ export interface TextRequest {
  * Returns TextResult with provider metadata for sovereignty auditing.
  */
 export async function generateText(req: TextRequest): Promise<TextResult> {
+  const result = await generateTextInternal(req);
+  // Boundary Audit Step 1 — capture the assembled field + provider served.
+  // No-op unless MAIA_FIELD_CAPTURE=1; sanctuary turns are never captured.
+  // Guarded + fire-and-forget: cannot throw into or delay the generation path.
+  captureFieldPackage(req, result);
+  return result;
+}
+
+async function generateTextInternal(req: TextRequest): Promise<TextResult> {
   const t0 = Date.now();
 
   // ── Phase 1 sovereign routing guard ─────────────────────────────────────
@@ -159,6 +172,7 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
         systemPrompt: req.systemPrompt,
         userInput: req.userInput,
         meta: req.meta,
+        tools: req.tools,
       });
       logTokenUsageLine({ provider: 'anthropic', model: claudeResult.provider?.model, t0, usage: claudeResult.provider?.usage, routeTag: 'modelService.generateText' });
       return claudeResult;

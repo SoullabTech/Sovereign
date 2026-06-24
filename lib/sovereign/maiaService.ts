@@ -19,6 +19,9 @@ import {
 } from '../consciousness/bloomCognition';
 import { buildKnowledgeFieldBlock, hasKnowledgeDomainSignal } from '../maia/prompts/knowledgeFieldBlock';
 import { buildMaiaContext } from '../maia/context/buildMaiaContext';
+// 🗓️ Proposal pipeline (docs/canon/MAIA_CONSENT_GATES.md) — FAST/CORE only; tools PROPOSE, never execute.
+import { MAIA_PROPOSAL_TOOLS, extractCalendarProposal } from '../maia/proposals/tools';
+import type { Proposal } from '../maia/proposals/types';
 import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
@@ -508,6 +511,7 @@ export type MaiaResponse = {
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
   stateVector?: StateVector;                  // 🌀 State vector reading from this turn
   practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
+  proposal?: Proposal;  // 🗓️ Pending action proposal (calendar) awaiting member confirm — MAIA_CONSENT_GATES Art. 2
   metadata?: {
     patterns?: PatternMeta[];
     turnId?: number;          // 🔄 For feedback linkage
@@ -639,7 +643,7 @@ async function fastPathResponse(
   conversationHistory: any[],
   meta: Record<string, unknown>,
   mindContext?: MindContext
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; proposal?: Proposal }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
@@ -882,23 +886,23 @@ ${ainKnowledgeContext}\n`
       const wisdomMove = WISDOM_FIELD_MOVES[fieldIntelligence.recommendedWisdomField];
 
       // Provide FIELD INTELLIGENCE as educational reference for decision-making
-      fieldAwareness = `\n\n🎯 TALK MODE FIELD INTELLIGENCE (Reference Context):
+      fieldAwareness = `\n\n🎯 TALK MODE FIELD INTELLIGENCE (Reference Context). The elemental framework is MAIA's primary language of attention — foundational, not exclusive: one coherent way of organizing experience among legitimate others (developmental, relational, somatic, narrative). Its reading of THIS member is provisional.
 
-CURRENT FIELD STATE:
-- Element detected: ${fieldIntelligence.element} (${getElementTheme(fieldIntelligence.element)})
-- Phase detected: ${fieldIntelligence.phase} (${getPhaseTheme(fieldIntelligence.phase)})
-- User state: ${fieldIntelligence.userState}
+ELEMENTAL READING — an organizing lens, not a fact about the member:
+- Current elemental lens: ${fieldIntelligence.element} (${getElementTheme(fieldIntelligence.element)}) — appears to organize what's present coherently. Keep listening for evidence that confirms, refines, or disconfirms it; if their experience has to be forced to fit, set the lens down.
+- Current developmental lens: ${fieldIntelligence.phase} (${getPhaseTheme(fieldIntelligence.phase)}) — a way of holding the movement, tested against their own words, never a verdict.
+- They may be in: ${fieldIntelligence.userState} (provisional read)
 - Conversation scale: ${fieldIntelligence.spiralScale} (${fieldIntelligence.spiralScale === 'micro' ? 'moment/today' : fieldIntelligence.spiralScale === 'meso' ? 'project/season' : fieldIntelligence.spiralScale === 'macro' ? 'life/identity' : 'collective/community'})
 - Complexity level: ${fieldIntelligence.complexity}
-- Detection confidence: ${(fieldIntelligence.confidence * 100).toFixed(0)}%
+- Signal strength: ${(fieldIntelligence.confidence * 100).toFixed(0)}% (how well this lens fits the current language — NOT how true it is; signal strength is not truth strength)
 
 WISDOM FIELD CONTEXT:
 - Recommended move type: ${wisdomMove.move}
 - When this move is useful: ${wisdomMove.whenToUse}
 - Move examples: ${wisdomMove.exampleQuestions.slice(0, 2).join(' / ')}
 
-This field intelligence is provided as reference context for your conversational choices.
-Your response emerges from your own intelligence, informed by this field sensing.`;
+Trust the framework. Hold this reading lightly. Co-create the meaning with the member — even a confirming signal does not settle what it means for them. Never assert a phase or element to them as fact.
+Your response emerges from your own intelligence, informed by (not bound to) this field sensing.`;
 
       console.log(`🎯 [Talk Mode] Field: ${fieldIntelligence.element}-${fieldIntelligence.phase}, Wisdom: ${wisdomMove.field}, Confidence: ${(fieldIntelligence.confidence * 100).toFixed(0)}%`);
     } catch (error) {
@@ -1124,6 +1128,13 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🔮 [FAST] Reflection lens applied: ${reflectionLensAddendum.split('\n')[0]}`);
   }
 
+  // 🧭 ARCHETYPAL STANDING SOURCE (member-chosen): Member-selected tradition informs MAIA's voice as a lens.
+  // Resolved server-side (route) from meta.wisdomGuide → meta.wisdomGuideAddendum.
+  const wisdomGuideAddendum = (meta as any)?.wisdomGuideAddendum as string | undefined;
+  if (wisdomGuideAddendum) {
+    console.log(`🧭 [FAST] Wisdom guide applied: ${wisdomGuideAddendum.split('\n')[0]}`);
+  }
+
   // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
   const governorAddendum = (meta as any)?.governorAddendum as string | undefined;
   if (governorAddendum) {
@@ -1239,7 +1250,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${wisdomGuideAddendum ? '\n\n' + wisdomGuideAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1279,7 +1290,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // Use single model call with complete MAIA intelligence stack
-  const { text: response, provider } = await generateText({
+  const { text: response, provider, toolUses } = await generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
@@ -1288,8 +1299,18 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
       fastProcessing: true,
       engine: 'deepseek-r1', // Single reliable engine
       responseTarget: 'conversational'
-    }
+    },
+    // 🗓️ Proposal pipeline (FAST): model may PROPOSE a calendar event for the member
+    // to confirm. A tool_use is never executed here (MAIA_CONSENT_GATES Art. 2).
+    tools: MAIA_PROPOSAL_TOOLS,
   });
+
+  // Build a Proposal from any propose_calendar_event tool_use (source = member's message).
+  const proposal = extractCalendarProposal(toolUses, input);
+  let responseText = response;
+  if (proposal && !responseText.trim()) {
+    responseText = "Here's a draft — take a look, edit anything that's off, and confirm when it's right.";
+  }
 
   // 🔮 Log provider for sovereignty auditing
   if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -1300,7 +1321,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   let { response: validatedResponse } = await validateAndRepairResponse(
     sessionId,
     input,
-    response,
+    responseText,
     meta,
     'FAST'
     // No regeneration function - FAST path prioritizes speed
@@ -1312,7 +1333,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider };
+  return { response: validatedResponse, provider, proposal };
 }
 
 /**
@@ -1325,7 +1346,7 @@ async function corePathResponse(
   conversationHistory: any[],
   meta: Record<string, unknown>,
   mindContext?: MindContext
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; proposal?: Proposal }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
 
@@ -1500,6 +1521,8 @@ async function corePathResponse(
     // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
     therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
     reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
+    // 🧭 ARCHETYPAL STANDING SOURCE (member-chosen): Member-selected tradition informs voice as a lens
+    wisdomGuideAddendum: (meta as any)?.wisdomGuideAddendum as string | undefined,
     // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
     governorAddendum: (meta as any)?.governorAddendum as string | undefined,
     // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
@@ -1643,7 +1666,7 @@ The current user has not provided their name. Address them as "friend" or "there
     // Field intelligence must never break the hot path
   }
 
-  const { text: response, provider: coreProvider } = await generateText({
+  const { text: response, provider: coreProvider, toolUses } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
@@ -1652,8 +1675,17 @@ The current user has not provided their name. Address them as "friend" or "there
       coreProcessing: true,
       conversationProfile: conversationContext.profile,
       inputComplexity: 'moderate'
-    }
+    },
+    // 🗓️ Proposal pipeline (CORE): model may PROPOSE a calendar event for confirm.
+    tools: MAIA_PROPOSAL_TOOLS,
   });
+
+  // Build a Proposal from any propose_calendar_event tool_use (source = member's message).
+  const proposal = extractCalendarProposal(toolUses, input);
+  let responseText = response;
+  if (proposal && !responseText.trim()) {
+    responseText = "Here's a draft — take a look, edit anything that's off, and confirm when it's right.";
+  }
 
   // 🔮 Log provider for sovereignty auditing (returned request-locally, not module-level)
   if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -1664,7 +1696,7 @@ The current user has not provided their name. Address them as "friend" or "there
   let { response: validatedResponse } = await validateAndRepairResponse(
     sessionId,
     input,
-    response,
+    responseText,
     meta,
     'CORE',
     // Regeneration function for CORE path
@@ -1704,7 +1736,7 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider: coreProvider };
+  return { response: validatedResponse, provider: coreProvider, proposal };
 }
 
 /**
@@ -2095,6 +2127,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
         therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
         reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
+        // 🧭 ARCHETYPAL STANDING SOURCE (member-chosen): Member-selected tradition informs voice as a lens
+        wisdomGuideAddendum: (meta as any)?.wisdomGuideAddendum as string | undefined,
         // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
         governorAddendum: (meta as any)?.governorAddendum as string | undefined,
         // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
@@ -2633,6 +2667,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let consciousnessData: any = null;
     // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
     let provider: ProviderMeta | undefined;
+    let proposal: Proposal | undefined = undefined;  // 🗓️ pending calendar proposal (FAST/CORE) — MAIA_CONSENT_GATES Art. 2
     // 🧬 RCN tracking
     let rcnResult: MaiaRcnResult | null = null;
 
@@ -2698,6 +2733,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
+        proposal = fastResult.proposal;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
@@ -2709,6 +2745,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
+        proposal = coreResult.proposal;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'CORE');
@@ -2733,6 +2770,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
+        proposal = fallbackResult.proposal;
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
         }
@@ -3460,6 +3498,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
       stateVector: parsedStateVector || undefined,
       practiceRecommendation: practiceRec || undefined,
+      proposal,  // 🗓️ pending calendar proposal (FAST/CORE) awaiting member confirm
       metadata: hasMetadata ? responseMetadata : undefined
     };
 

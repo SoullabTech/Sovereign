@@ -4,6 +4,7 @@
 
 
 
+
 import { notFound } from 'next/navigation';
 import { getFieldBySlug } from '@/lib/masters/registry';
 import FieldVirtualSelfTraining from '@/components/masters/FieldVirtualSelfTraining';

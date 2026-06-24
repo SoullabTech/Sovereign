@@ -1,0 +1,51 @@
+69d7c914cc1121ad623d7aa9e36e3b28
+"use strict";
+// SoulComms — Active participant resolver
+//
+// SINGLE SOURCE OF TRUTH for "who counts as a participant in this channel"
+// when converting it from public to private.
+//
+// This module is called by both:
+//   - GET  /api/team/channels/[channelId]/visibility/preview (count for modal)
+//   - PATCH /api/team/channels/[channelId]/visibility       (seed for flip)
+//
+// They MUST use the same definition or the modal lies. Do not duplicate this
+// query elsewhere.
+//
+// Definition: a participant is a member who has either
+//   1. sent ≥1 non-deleted message in this channel (top-level OR thread reply), OR
+//   2. is the channel creator (preserves control even if they never posted)
+//
+// Reactions and read receipts deliberately do NOT count — they're too low-signal
+// to justify access in an intentional-membership model.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getActiveParticipants = getActiveParticipants;
+const postgres_1 = require("@/lib/db/postgres");
+/**
+ * Return the set of member IDs who are active participants in a channel,
+ * filtered to members who currently exist in the `members` table.
+ *
+ * Used for both preview (count) and seed (insert) — same query, no drift.
+ *
+ * @param channelId - The channel to inspect
+ * @param client - Optional transaction client; defaults to top-level query()
+ * @returns Sorted array of distinct member UUIDs
+ */
+async function getActiveParticipants(channelId, client) {
+    var _a;
+    const q = (_a = client === null || client === void 0 ? void 0 : client.query) !== null && _a !== void 0 ? _a : postgres_1.query;
+    const result = await q(`SELECT DISTINCT m.id AS member_id
+       FROM members m
+      WHERE m.id IN (
+        SELECT DISTINCT sender_id
+          FROM team_messages
+         WHERE channel_id = $1 AND deleted_at IS NULL
+        UNION
+        SELECT created_by
+          FROM team_channels
+         WHERE id = $1 AND created_by IS NOT NULL
+      )
+      ORDER BY m.id`, [channelId]);
+    return result.rows.map((row) => row.member_id);
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL1VzZXJzL3NvdWxsYWIvTUFJQS1TT1ZFUkVJR04vLmNsYXVkZS93b3JrdHJlZXMveC1tZW1iZXItaWQtYXVkaXQvbGliL3RlYW0vZ2V0QWN0aXZlUGFydGljaXBhbnRzLnRzIiwibWFwcGluZ3MiOiI7QUFBQSwwQ0FBMEM7QUFDMUMsRUFBRTtBQUNGLDJFQUEyRTtBQUMzRSw2Q0FBNkM7QUFDN0MsRUFBRTtBQUNGLGlDQUFpQztBQUNqQywrRUFBK0U7QUFDL0UsNEVBQTRFO0FBQzVFLEVBQUU7QUFDRiw2RUFBNkU7QUFDN0UsbUJBQW1CO0FBQ25CLEVBQUU7QUFDRix1REFBdUQ7QUFDdkQsbUZBQW1GO0FBQ25GLDRFQUE0RTtBQUM1RSxFQUFFO0FBQ0YsaUZBQWlGO0FBQ2pGLHdEQUF3RDs7QUFtQnhELHNEQXNCQztBQXZDRCxnREFBMEM7QUFPMUM7Ozs7Ozs7OztHQVNHO0FBQ0ksS0FBSyxVQUFVLHFCQUFxQixDQUN6QyxTQUFpQixFQUNqQixNQUFnQjs7SUFFaEIsTUFBTSxDQUFDLEdBQUcsTUFBQSxNQUFNLGFBQU4sTUFBTSx1QkFBTixNQUFNLENBQUUsS0FBSyxtQ0FBSSxnQkFBSyxDQUFDO0lBQ2pDLE1BQU0sTUFBTSxHQUFHLE1BQU0sQ0FBQyxDQUNwQjs7Ozs7Ozs7Ozs7b0JBV2dCLEVBQ2hCLENBQUMsU0FBUyxDQUFDLENBQ1osQ0FBQztJQUVGLE9BQU8sTUFBTSxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLEdBQUcsQ0FBQyxTQUFTLENBQUMsQ0FBQztBQUNqRCxDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi9Vc2Vycy9zb3VsbGFiL01BSUEtU09WRVJFSUdOLy5jbGF1ZGUvd29ya3RyZWVzL3gtbWVtYmVyLWlkLWF1ZGl0L2xpYi90ZWFtL2dldEFjdGl2ZVBhcnRpY2lwYW50cy50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvLyBTb3VsQ29tbXMg4oCUIEFjdGl2ZSBwYXJ0aWNpcGFudCByZXNvbHZlclxuLy9cbi8vIFNJTkdMRSBTT1VSQ0UgT0YgVFJVVEggZm9yIFwid2hvIGNvdW50cyBhcyBhIHBhcnRpY2lwYW50IGluIHRoaXMgY2hhbm5lbFwiXG4vLyB3aGVuIGNvbnZlcnRpbmcgaXQgZnJvbSBwdWJsaWMgdG8gcHJpdmF0ZS5cbi8vXG4vLyBUaGlzIG1vZHVsZSBpcyBjYWxsZWQgYnkgYm90aDpcbi8vICAgLSBHRVQgIC9hcGkvdGVhbS9jaGFubmVscy9bY2hhbm5lbElkXS92aXNpYmlsaXR5L3ByZXZpZXcgKGNvdW50IGZvciBtb2RhbClcbi8vICAgLSBQQVRDSCAvYXBpL3RlYW0vY2hhbm5lbHMvW2NoYW5uZWxJZF0vdmlzaWJpbGl0eSAgICAgICAoc2VlZCBmb3IgZmxpcClcbi8vXG4vLyBUaGV5IE1VU1QgdXNlIHRoZSBzYW1lIGRlZmluaXRpb24gb3IgdGhlIG1vZGFsIGxpZXMuIERvIG5vdCBkdXBsaWNhdGUgdGhpc1xuLy8gcXVlcnkgZWxzZXdoZXJlLlxuLy9cbi8vIERlZmluaXRpb246IGEgcGFydGljaXBhbnQgaXMgYSBtZW1iZXIgd2hvIGhhcyBlaXRoZXJcbi8vICAgMS4gc2VudCDiiaUxIG5vbi1kZWxldGVkIG1lc3NhZ2UgaW4gdGhpcyBjaGFubmVsICh0b3AtbGV2ZWwgT1IgdGhyZWFkIHJlcGx5KSwgT1Jcbi8vICAgMi4gaXMgdGhlIGNoYW5uZWwgY3JlYXRvciAocHJlc2VydmVzIGNvbnRyb2wgZXZlbiBpZiB0aGV5IG5ldmVyIHBvc3RlZClcbi8vXG4vLyBSZWFjdGlvbnMgYW5kIHJlYWQgcmVjZWlwdHMgZGVsaWJlcmF0ZWx5IGRvIE5PVCBjb3VudCDigJQgdGhleSdyZSB0b28gbG93LXNpZ25hbFxuLy8gdG8ganVzdGlmeSBhY2Nlc3MgaW4gYW4gaW50ZW50aW9uYWwtbWVtYmVyc2hpcCBtb2RlbC5cblxuaW1wb3J0IHsgcXVlcnkgfSBmcm9tICdAL2xpYi9kYi9wb3N0Z3Jlcyc7XG5pbXBvcnQgdHlwZSB7IFRyYW5zYWN0aW9uQ2xpZW50IH0gZnJvbSAnQC9saWIvZGIvcG9zdGdyZXMnO1xuXG50eXBlIFF1ZXJpZXIgPSB7XG4gIHF1ZXJ5OiB0eXBlb2YgcXVlcnkgfCBUcmFuc2FjdGlvbkNsaWVudFsncXVlcnknXTtcbn07XG5cbi8qKlxuICogUmV0dXJuIHRoZSBzZXQgb2YgbWVtYmVyIElEcyB3aG8gYXJlIGFjdGl2ZSBwYXJ0aWNpcGFudHMgaW4gYSBjaGFubmVsLFxuICogZmlsdGVyZWQgdG8gbWVtYmVycyB3aG8gY3VycmVudGx5IGV4aXN0IGluIHRoZSBgbWVtYmVyc2AgdGFibGUuXG4gKlxuICogVXNlZCBmb3IgYm90aCBwcmV2aWV3IChjb3VudCkgYW5kIHNlZWQgKGluc2VydCkg4oCUIHNhbWUgcXVlcnksIG5vIGRyaWZ0LlxuICpcbiAqIEBwYXJhbSBjaGFubmVsSWQgLSBUaGUgY2hhbm5lbCB0byBpbnNwZWN0XG4gKiBAcGFyYW0gY2xpZW50IC0gT3B0aW9uYWwgdHJhbnNhY3Rpb24gY2xpZW50OyBkZWZhdWx0cyB0byB0b3AtbGV2ZWwgcXVlcnkoKVxuICogQHJldHVybnMgU29ydGVkIGFycmF5IG9mIGRpc3RpbmN0IG1lbWJlciBVVUlEc1xuICovXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2V0QWN0aXZlUGFydGljaXBhbnRzKFxuICBjaGFubmVsSWQ6IHN0cmluZyxcbiAgY2xpZW50PzogUXVlcmllclxuKTogUHJvbWlzZTxzdHJpbmdbXT4ge1xuICBjb25zdCBxID0gY2xpZW50Py5xdWVyeSA/PyBxdWVyeTtcbiAgY29uc3QgcmVzdWx0ID0gYXdhaXQgcTx7IG1lbWJlcl9pZDogc3RyaW5nIH0+KFxuICAgIGBTRUxFQ1QgRElTVElOQ1QgbS5pZCBBUyBtZW1iZXJfaWRcbiAgICAgICBGUk9NIG1lbWJlcnMgbVxuICAgICAgV0hFUkUgbS5pZCBJTiAoXG4gICAgICAgIFNFTEVDVCBESVNUSU5DVCBzZW5kZXJfaWRcbiAgICAgICAgICBGUk9NIHRlYW1fbWVzc2FnZXNcbiAgICAgICAgIFdIRVJFIGNoYW5uZWxfaWQgPSAkMSBBTkQgZGVsZXRlZF9hdCBJUyBOVUxMXG4gICAgICAgIFVOSU9OXG4gICAgICAgIFNFTEVDVCBjcmVhdGVkX2J5XG4gICAgICAgICAgRlJPTSB0ZWFtX2NoYW5uZWxzXG4gICAgICAgICBXSEVSRSBpZCA9ICQxIEFORCBjcmVhdGVkX2J5IElTIE5PVCBOVUxMXG4gICAgICApXG4gICAgICBPUkRFUiBCWSBtLmlkYCxcbiAgICBbY2hhbm5lbElkXVxuICApO1xuXG4gIHJldHVybiByZXN1bHQucm93cy5tYXAoKHJvdykgPT4gcm93Lm1lbWJlcl9pZCk7XG59XG4iXSwidmVyc2lvbiI6M30=

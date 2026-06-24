@@ -22,15 +22,26 @@
  *     episodic_member_marked_requires_verbatim enforces the
  *     verbatim<->marked biconditional at the database as a backstop.
  *
+ * SANCTUARY GATE (turn-primary — guardEpisodicSource, fail-closed)
+ *   - Provenance authority is the TURN. sourceTurnId is REQUIRED (missing -> 400);
+ *     a marked moment IS a turn. sourceSessionId is corroborating metadata only —
+ *     stored, never used as ownership or Sanctuary authority, because ~68% of live
+ *     continuity sessions carry maia_sessions.member_id = NULL and a strict
+ *     session-ownership match would falsely refuse them.
+ *   - Ownership is proven by conversation_turns.user_id; Sanctuary by the turn's
+ *     session mode/privacy via join. Server-authoritative, never a client flag.
+ *   - Fails closed: a turn that is missing, unowned, or whose session cannot be
+ *     resolved is refused (403) — a purged Sanctuary turn may legitimately not
+ *     resolve.
+ *
  * SCOPE OF THIS DIFF (named honestly — what is NOT yet built)
- *   - No Sanctuary guard yet. A moment marked from a Sanctuary session must
- *     NEVER persist (absolute boundary, CLAUDE.md). This route is unwired to any
- *     UI gesture; wiring it to a live gesture REQUIRES a Sanctuary check at the
- *     call site first. Do not wire this to the UI before that gate exists.
- *   - This is the write path only. It does NOT govern recall. Whether marked
- *     moments resurface in the prompt is a separate consent gated by
+ *   - Not wired to any UI/member gesture. Endpoint-proven + Sanctuary-guarded,
+ *     not member-wired.
+ *   - Write path only. It does NOT govern recall. Whether marked moments
+ *     resurface in the prompt is a separate consent gated by
  *     members.episodic_recall_enabled (read-path). Marking and recalling are
  *     distinct consents; this route deliberately does not consult the recall gate.
+ *   - Not deployed unless separately pushed/merged/deployed.
  *
  * OWNERSHIP
  *   - Requires an authenticated member (getMemberIdFromRequest). The episode is
@@ -48,6 +59,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { guardEpisodicSource } from '@/lib/sovereign/episodicSourceGuard';
 
 interface MarkedEpisodeRow {
   id: number;
@@ -74,12 +86,14 @@ function shape(row: MarkedEpisodeRow) {
 /**
  * POST — preserve a member-marked moment, verbatim.
  *
- * Body: { verbatimText: string; sourceTurnId?: string; sourceSessionId?: string }
- *   - verbatimText:   the member's exact words. Required, non-empty.
- *   - sourceTurnId:   provenance pointer to the marked turn (optional).
- *   - sourceSessionId: provenance pointer to the marked session (optional).
+ * Body: { verbatimText: string; sourceTurnId: string; sourceSessionId?: string }
+ *   - verbatimText:    the member's exact words. Required, non-empty.
+ *   - sourceTurnId:    REQUIRED — the turn the member marked (provenance authority;
+ *                      ownership + Sanctuary are resolved from it).
+ *   - sourceSessionId: optional corroborating metadata; stored, not authoritative.
  *
- * 201 with the stored episode, 400 on empty/invalid verbatim, 401 if no member.
+ * 201 stored episode; 400 empty verbatim or missing sourceTurnId; 401 no member;
+ * 403 turn is Sanctuary, unowned, or unresolvable.
  */
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
@@ -122,6 +136,19 @@ export async function POST(request: NextRequest) {
       typeof sourceTurnId === 'string' && sourceTurnId.length > 0 ? sourceTurnId : null;
     const sessionId =
       typeof sourceSessionId === 'string' && sourceSessionId.length > 0 ? sourceSessionId : null;
+
+    // SANCTUARY GATE (fail-closed, turn-primary). The marked turn must resolve to
+    // a turn owned by this member whose session is not Sanctuary. sourceSessionId
+    // is corroborating metadata only and is not consulted here. Refuses before the
+    // insert.
+    const guard = await guardEpisodicSource({ memberId, sourceTurnId: turnId });
+    if (!guard.ok) {
+      console.log(
+        `[MAIA/sovereign] episodic mark refused { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+          `reason: ${guard.reason} }`,
+      );
+      return NextResponse.json({ error: guard.error }, { status: guard.status });
+    }
 
     // Six columns. Nothing interpretive. Every omitted interpretive column stays
     // NULL (the meaning the system refuses to author); every omitted vector

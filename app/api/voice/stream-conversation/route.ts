@@ -79,6 +79,7 @@ import { buildMaiaContext } from '@/lib/maia/context/buildMaiaContext';
 import { enforceMaiaIdentity } from '@/lib/maia/identityGuard';
 import { query } from '@/lib/db/postgres';
 import { detectIdeaCandidate } from '@/lib/consciousness/ideaDetection';
+import { buildWisdomGuideAddendum, type WisdomGuideSelection } from '@/lib/wisdom/wisdomGuidePrompt';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -462,6 +463,8 @@ interface StreamRequest {
   sanctuary?: boolean;
   /** Range of Effect: scales prosody intensity (0-4), default 1 */
   prosodyRange?: ProsodyRange;
+  /** Member-chosen wisdom guide (compact payload; client resolves the tradition). Lens, not authority. */
+  wisdomGuide?: WisdomGuideSelection;
 }
 
 /**
@@ -568,6 +571,7 @@ export async function POST(req: NextRequest) {
     mode = 'talk',
     sanctuary = false,
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
+    wisdomGuide,  // 🧭 Member-chosen wisdom guide — applied even under sanctuary (chosen ≠ retrieved)
   } = body;
 
   // ── PLATFORM DETECTION ──────────────────────────────────────────────────
@@ -1100,12 +1104,18 @@ export async function POST(req: NextRequest) {
         // Compose voice system prompt: council lens first (interpretive framing),
         // then identity-layer context (natal chart + transits). Either may be undefined
         // independently; joined only when at least one is present.
+        // 🧭 Member-chosen wisdom guide — explicit orientation, applied even under Sanctuary
+        // (a chosen standing source ≠ retrieved memory or inferred identity). Lens, not authority.
+        const wisdomGuideAddendum = buildWisdomGuideAddendum(wisdomGuide);
         const voiceSystemPrompt =
-          [councilPromptSection, identityContext?.astrologyAddendum]
+          [councilPromptSection, identityContext?.astrologyAddendum, wisdomGuideAddendum]
             .filter((s): s is string => !!s && s.length > 0)
             .join('\n\n') || undefined;
         if (councilResolution.guide.id !== 'auto' || councilResolution.source === 'auto_integrator') {
           console.log(`🏛️ [Voice Council] ${councilResolution.guide.archetypeName} | ${councilResolution.source}`);
+        }
+        if (wisdomGuideAddendum) {
+          console.log(`🧭 [Voice Wisdom Guide] Applied (member-chosen): ${wisdomGuideAddendum.split('\n')[0]}`);
         }
         // ─────────────────────────────────────────────────────────────────
 

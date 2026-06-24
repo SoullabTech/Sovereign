@@ -1,0 +1,106 @@
+/* ============================================================
+   Quiet Chrome — a Zen Mod
+
+   Lets the browser frame recede so your attention stays with the
+   page you're working in. It gently quiets the chrome around the
+   web view: softening the toolbar and dimming the tabs you aren't
+   looking at — while keeping the active tab and a focused address
+   bar fully clear.
+
+   It sets no colors of its own. It rides on top of whatever Zen
+   theme you already use, lowering salience rather than imposing a
+   palette. Match, don't override.
+
+   Scope: browser chrome only. This mod never reads, touches, or
+   styles web page content.
+
+   License: CC-BY-NC-SA 4.0 (Zen theme-store).
+   ============================================================ */
+
+:root {
+  /* Soft tier — the default. Always applies, with or without the
+     preference binding below. Values are intentionally subtle. */
+  --qc-chrome-saturate: 0.92;
+  --qc-chrome-contrast: 0.99;
+  --qc-inactive-tab-opacity: 0.85;
+  --qc-urlbar-rest-opacity: 0.92;
+
+  /* Calm easing for the quieting itself, so states settle rather
+     than snap. This is a transition only — no new motion is added. */
+  --qc-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --qc-duration: 0.18s;
+}
+
+/* ── Intensity tiers ─────────────────────────────────────────────
+   Set by the "Calm intensity" preference (uc.quiet-chrome.intensity).
+   The Soft defaults above always hold; Medium / Deep only take effect
+   once Zen reflects the preference to CSS.
+
+   The exact pref->CSS binding is not yet runtime-confirmed in Zen
+   (see ../../ZEN_MOD_CAPABILITY_SURFACE.md §4). Candidate A below is
+   the attribute-reflection form to verify in live-editing. If your
+   Zen build instead honors a string-pref media query, use Candidate B
+   and delete Candidate A. Either way, Soft is the graceful fallback —
+   if no binding works, the mod still quiets correctly at Soft. */
+
+/* Candidate A — attribute reflection (verify the selector in live-editing) */
+:root[uc-quiet-chrome-intensity="medium"] {
+  --qc-chrome-saturate: 0.85;
+  --qc-chrome-contrast: 0.97;
+  --qc-inactive-tab-opacity: 0.78;
+  --qc-urlbar-rest-opacity: 0.88;
+}
+:root[uc-quiet-chrome-intensity="deep"] {
+  --qc-chrome-saturate: 0.75;
+  --qc-chrome-contrast: 0.95;
+  --qc-inactive-tab-opacity: 0.68;
+  --qc-urlbar-rest-opacity: 0.85;
+}
+
+/* Candidate B — string-pref media query (delete Candidate A if this is
+   the form your Zen build honors):
+
+   @media (-moz-pref("uc.quiet-chrome.intensity"): "medium") {
+     :root { --qc-chrome-saturate: 0.85; --qc-chrome-contrast: 0.97;
+             --qc-inactive-tab-opacity: 0.78; --qc-urlbar-rest-opacity: 0.88; }
+   }
+   @media (-moz-pref("uc.quiet-chrome.intensity"): "deep") {
+     :root { --qc-chrome-saturate: 0.75; --qc-chrome-contrast: 0.95;
+             --qc-inactive-tab-opacity: 0.68; --qc-urlbar-rest-opacity: 0.85; }
+   }
+*/
+
+/* ── The quieting ────────────────────────────────────────────────
+   Recede the top chrome frame. saturate()/contrast() only — these
+   ride on the user's theme instead of replacing its colors. */
+#navigator-toolbox {
+  filter: saturate(var(--qc-chrome-saturate)) contrast(var(--qc-chrome-contrast)) !important;
+}
+
+/* Quiet the tabs you aren't in; keep the active tab fully legible. */
+.tabbrowser-tab:not([selected]):not([pending]) .tab-content {
+  opacity: var(--qc-inactive-tab-opacity) !important;
+}
+.tabbrowser-tab[selected] .tab-content {
+  opacity: 1 !important;
+}
+
+/* Address bar rests quietly, returns to full clarity on focus. */
+#urlbar:not([focused]) {
+  opacity: var(--qc-urlbar-rest-opacity) !important;
+}
+#urlbar[focused] {
+  opacity: 1 !important;
+}
+
+/* ── Let it settle, don't snap ───────────────────────────────────
+   A transition only on the properties this mod touches. Fully
+   suppressed when the user prefers reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  #navigator-toolbox,
+  #urlbar,
+  .tabbrowser-tab .tab-content {
+    transition: filter var(--qc-duration) var(--qc-ease),
+                opacity var(--qc-duration) var(--qc-ease) !important;
+  }
+}

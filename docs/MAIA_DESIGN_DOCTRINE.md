@@ -184,3 +184,25 @@ Before adding any UI element, also ask:
 - Does this require the user to stop talking and start managing?
 
 If yes to any, defer or remove.
+
+---
+
+## Empty State Principle
+
+> Empty surfaces communicate orientation, readiness, and purpose — not absence.
+
+A surface with no data is not a failure state. It is the space before use begins. The copy and layout should answer the question the user is implicitly asking: *"Where am I, and what is this place for?"*
+
+**Anti-patterns to avoid:**
+- `No decisions pending` — implies something is missing
+- `No recent activity` — implies the system is idle or broken
+- Generic empty states that could belong to any tool
+
+**Correct pattern:**
+- Name the current state affirmatively: *"Your desk is clear."*
+- Describe what the surface is for: *"New requests and delegated work will appear here."*
+- Use present tense and calm register throughout
+
+**First implementation:** `app/studio/command/page.tsx` — Decisions Needed and Recent Activity empty states (merged in feat/studio-orientation-empty-states, 2026-06-12).
+
+This principle applies to both Practitioner Studio and Member Portal surfaces. The practitioner's empty dashboard should feel like a ready room. The member's empty threshold should feel like an open door.

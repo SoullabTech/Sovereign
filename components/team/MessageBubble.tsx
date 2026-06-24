@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { TeamMessage, MessageKind } from '@/lib/team/types';
+import { MessageText } from './MessageText';
+import { MessageAttachments } from './MessageAttachments';
 
 const KIND_BADGE: Record<Exclude<MessageKind, 'build'>, { label: string; className: string }> = {
   question: {
@@ -39,6 +41,9 @@ interface MessageBubbleProps {
   onOpenThread?: (message: TeamMessage) => void;
   onReflect?: (messageId: string, mode: string) => void;
   onCaptureDecision?: (messageId: string) => void;
+  onDelete?: (messageId: string) => void;
+  /** True if the current member can moderate (delete others') in this channel. */
+  canModerate?: boolean;
   captured?: boolean;
 }
 
@@ -58,11 +63,14 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, captured }: MessageBubbleProps) {
+export function MessageBubble({ message, currentMemberId, onReact, onOpenThread, onReflect, onCaptureDecision, onDelete, canModerate, captured }: MessageBubbleProps) {
   const [showReactions, setShowReactions] = useState(false);
   const [showReflectMenu, setShowReflectMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isOwn = message.senderId === currentMemberId;
   const isMaia = message.senderType === 'maia';
+  // You can always delete your own; moderators can delete anyone's.
+  const canDelete = !!onDelete && !isMaia && (isOwn || !!canModerate);
 
   const initials = isMaia
     ? 'M'
@@ -85,7 +93,7 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           : 'hover:bg-white/[0.03]'
       }`}
       onMouseEnter={() => setShowReactions(true)}
-      onMouseLeave={() => { setShowReactions(false); setShowReflectMenu(false); }}
+      onMouseLeave={() => { setShowReactions(false); setShowReflectMenu(false); setShowDeleteConfirm(false); }}
     >
       {/* Avatar */}
       <div
@@ -120,9 +128,12 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           )}
         </div>
 
-        <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-          {message.body}
-        </p>
+        {message.body.trim() && (
+          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
+            <MessageText body={message.body} />
+          </p>
+        )}
+        <MessageAttachments attachments={message.attachments} />
 
         {/* Reactions */}
         {message.reactions.length > 0 && (
@@ -229,6 +240,45 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
                       {m.label}
                     </button>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Delete message — own messages always; others' only for moderators */}
+          {canDelete && (
+            <div className="relative ml-0.5">
+              <button
+                onClick={() => { setShowDeleteConfirm(v => !v); setShowReflectMenu(false); }}
+                className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-white/10 rounded transition-colors"
+                title="Delete message"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              {showDeleteConfirm && (
+                <div className="absolute right-0 top-8 w-60 bg-zinc-800 border border-white/12 rounded-lg p-3 shadow-xl z-20 flex flex-col gap-2.5 text-left">
+                  <div>
+                    <p className="text-xs font-semibold text-white/85">Delete message?</p>
+                    <p className="text-[11px] text-white/50 leading-relaxed mt-1">
+                      It&apos;s removed from the conversation but not erased. A record — including who deleted it — is kept for moderation.
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="flex-1 text-xs text-white/60 hover:text-white/90 hover:bg-white/5 rounded px-2 py-1.5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => { onDelete?.(message.id); setShowDeleteConfirm(false); setShowReactions(false); }}
+                      className="flex-1 text-xs font-medium bg-red-500/80 hover:bg-red-500 text-white rounded px-2 py-1.5 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

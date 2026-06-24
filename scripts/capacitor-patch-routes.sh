@@ -43,6 +43,7 @@ MOBILE_TOP_LEVEL=(
   "intro" "welcome-back" "capture" "journal" "field" "settings"
   "oauth-success" "magic-link-success" "reset-password" "soul-gateway"
   "maia" "labtools" "account"
+  "beta-testers"  # Beta tester learning field — cohort-gated; API calls route to prod
   "styles"  # CSS assets imported by globals.css — must stay in build
 )
 

@@ -33,6 +33,7 @@ import { useTeamContext } from '@/hooks/useStudioData';
 import { apiFetch } from '@/lib/http/apiBase';
 import { FocusGarden } from '@/components/ganesha/FocusGarden';
 import type { FocusGardenResult } from '@/components/ganesha/FocusGarden';
+import { AskMaia, type AskMaiaProposal } from '@/components/studio/AskMaia';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -236,6 +237,8 @@ export default function TasksPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTask, setExpandedTask] = useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  // MAIA-proposed task draft awaiting human confirmation in the New Task modal.
+  const [taskDraft, setTaskDraft] = useState<{ title?: string; notes?: string; due?: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('now');
   const [showQueue, setShowQueue] = useState(false);
@@ -503,6 +506,29 @@ export default function TasksPage() {
     }
   };
 
+  // Read-only snapshot of the task list, handed to Ask MAIA for reflection.
+  const buildTasksContext = useCallback(() => {
+    return {
+      now: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      tasks: tasks.slice(0, 80).map(t => ({
+        title: t.title,
+        status: t.status,
+        due: t.dueDate,
+        priority: t.priority,
+        notes: t.description,
+      })),
+    };
+  }, [tasks]);
+
+  // MAIA proposes; the human commits. Accepting opens the New Task modal pre-filled —
+  // the write happens when the practitioner submits it.
+  const handleAcceptTaskProposal = useCallback((p: AskMaiaProposal) => {
+    if (p.kind !== 'task') return;
+    const d = p.data as { title?: string; notes?: string; due?: string };
+    setTaskDraft({ title: d.title, notes: d.notes, due: d.due });
+  }, []);
+
   // ─── Render ──────────────────────────────────────────
 
   return (
@@ -757,6 +783,22 @@ export default function TasksPage() {
         </>
       )}
 
+      {/* ═══ ASK MAIA ═══ (reusable assist surface — proposes; the human commits) */}
+      <div className="mt-8 max-w-lg">
+        <AskMaia
+          surface="tasks"
+          buildContext={buildTasksContext}
+          onAcceptProposal={handleAcceptTaskProposal}
+          placeholder="Ask about your tasks…"
+          acceptLabel="Capture"
+          suggestions={[
+            'Is anything overdue?',
+            'What should I focus on next?',
+            'Capture: email Nathan the notes by Friday',
+          ]}
+        />
+      </div>
+
       {/* ═══ MODALS ═══ */}
 
       <AnimatePresence>
@@ -764,6 +806,18 @@ export default function TasksPage() {
           <NewTaskModal
             onClose={() => setShowNewTaskModal(false)}
             onSubmit={createTask}
+            saving={saving}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* MAIA-proposed task draft — opens New Task pre-filled; the human confirms the write */}
+      <AnimatePresence>
+        {taskDraft && (
+          <NewTaskModal
+            initial={taskDraft}
+            onClose={() => setTaskDraft(null)}
+            onSubmit={(t) => { createTask(t); setTaskDraft(null); }}
             saving={saving}
           />
         )}
@@ -1603,13 +1657,15 @@ interface NewTaskModalProps {
   onClose: () => void;
   onSubmit: (task: Partial<Task>) => void;
   saving: boolean;
+  /** Optional pre-fill from a MAIA proposal — the human still reviews and submits. */
+  initial?: { title?: string; notes?: string; due?: string } | null;
 }
 
-function NewTaskModal({ onClose, onSubmit, saving }: NewTaskModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+function NewTaskModal({ onClose, onSubmit, saving, initial }: NewTaskModalProps) {
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [description, setDescription] = useState(initial?.notes ?? '');
   const [priority, setPriority] = useState<Task['priority']>('medium');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(initial?.due ?? '');
   const [project, setProject] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [nextStep, setNextStep] = useState('');

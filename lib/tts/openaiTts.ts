@@ -36,13 +36,24 @@ export async function synthesizeSpeech(params: {
     keyLength: process.env.OPENAI_API_KEY?.length || 0,
   });
 
-  const response = await getOpenAI().audio.speech.create({
-    model: model || DEFAULT_TTS_MODEL,
-    input: text,
-    voice: voice as any,
-    response_format: format,
-    speed: speed,
-  });
+  // Bound the cloud TTS call. The OpenAI SDK defaults to a ~600s timeout with
+  // retries, so a single hung/slow segment could freeze an entire voice turn
+  // (observed all_tts_done ~306s on iOS → MAIA stuck on "thinking"). On timeout
+  // the SDK throws and the caller (stream-conversation) falls back to local
+  // Kokoro TTS instead of waiting. Tunable via OPENAI_TTS_TIMEOUT_MS.
+  const response = await getOpenAI().audio.speech.create(
+    {
+      model: model || DEFAULT_TTS_MODEL,
+      input: text,
+      voice: voice as any,
+      response_format: format,
+      speed: speed,
+    },
+    {
+      timeout: Number(process.env.OPENAI_TTS_TIMEOUT_MS) || 12000,
+      maxRetries: 0,
+    },
+  );
 
   return response;
 }

@@ -1,20 +1,17 @@
 'use client';
 
-import { useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { mockMessages } from '@/lib/studio/mockMessages';
-import { CommsMessageDetail } from '@/components/studio/CommsMessageDetail';
+import { CommsThreadDetail } from '@/components/studio/CommsThreadDetail';
 
-export default function CommsMessageDetailPage() {
+/**
+ * Mobile thread detail. The dynamic segment carries the thread id
+ * (the inbox links to `/studio/comms/{thread_id}`). Read-only.
+ */
+export default function CommsThreadDetailPage() {
   const params = useParams<{ messageId: string }>();
-  const messageId = params?.messageId;
-
-  const message = useMemo(
-    () => mockMessages.find((m) => m.id === messageId),
-    [messageId],
-  );
+  const threadId = params?.messageId ?? null;
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -31,13 +28,7 @@ export default function CommsMessageDetailPage() {
 
       {/* Detail */}
       <div className="h-[calc(100vh-49px)]">
-        {message ? (
-          <CommsMessageDetail message={message} />
-        ) : (
-          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
-            Message not found.
-          </div>
-        )}
+        <CommsThreadDetail threadId={threadId} />
       </div>
     </div>
   );

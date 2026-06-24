@@ -1,0 +1,14 @@
+[Unit]
+Description=Periodic MAIA Route 53 DDNS update (and shortly after boot)
+
+[Timer]
+# Run ~2 min after boot so a post-outage IP rotation self-heals fast (the
+# case that matters most), then every 15 min to reconcile drift without
+# hammering the Route 53 API.
+OnBootSec=2min
+OnUnitActiveSec=15min
+Persistent=true
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

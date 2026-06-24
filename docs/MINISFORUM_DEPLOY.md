@@ -161,6 +161,38 @@ curl -I http://localhost:4323  # Rudeboy service
 2. **Routing not working**: Verify Caddyfile syntax and service names
 3. **DNS issues**: Ensure Cloudflare DNS records are properly configured
 4. **Port conflicts**: Check that ports 80/443 are not in use
+5. **Disk pressure / root filesystem filling up**: Almost always accumulated Docker build cache from repeated `--build` deploys — see below
+
+### Disk Pressure (Docker build cache)
+
+Minisforum disk pressure is usually accumulated Docker build cache from repeated `--build` deploys. Don't guess and don't reach for `docker system prune` — diagnose first, then clear only what's rebuildable.
+
+**Procedure:**
+
+1. **Disk pressure observed** — SSH MOTD banner, or `df -h /` shows root filling up.
+2. **Diagnose — run `docker system df`.** This is the command that identifies the cause; read the `RECLAIMABLE` column by type:
+   ```bash
+   docker system df
+   ```
+3. **If Build Cache is huge → reclaim it:**
+   ```bash
+   docker builder prune -f
+   ```
+   This only clears rebuildable cache — running containers, images, and volumes are untouched.
+4. **Do not prune volumes.** Never `docker volume prune` or `docker system prune --volumes`: volumes hold PostgreSQL and Whisper data. Likewise leave the backups (`~/MAIA-SOVEREIGN/backups`, 30-day retention) — they are intentionally retained, not space to reclaim.
+5. **Verify** the space was recovered:
+   ```bash
+   df -h /
+   ```
+
+A weekly cron runs step 3 automatically (`0 3 * * 0`, Sundays 03:00, after the daily backup window). Confirm the schedule and review what the last run reclaimed:
+
+```bash
+crontab -l | grep 'builder prune'
+cat /tmp/docker-builder-prune.log
+```
+
+Precedent: on 2026-06-15 a deploy-heavy week pushed the disk to 87%. `docker system df` showed 709 GB of build cache (664 GB reclaimable); `docker builder prune -f` reclaimed 674.6 GB → 13%, with zero container disruption.
 
 ### Useful Commands
 

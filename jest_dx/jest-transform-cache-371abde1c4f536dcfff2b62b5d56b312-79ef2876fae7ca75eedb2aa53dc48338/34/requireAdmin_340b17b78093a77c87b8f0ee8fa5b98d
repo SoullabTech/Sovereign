@@ -1,0 +1,73 @@
+99104a7277fc6ad2351f1458f942d364
+"use strict";
+/**
+ * Admin request gate (real server-side enforcement).
+ *
+ * Mutating admin routes (e.g. member lifecycle changes) MUST be gated by this.
+ * It validates an admin secret the caller supplies against the configured
+ * LABTOOLS_SECRET (falling back to LABTOOLS_ADMIN_PASSWORD) — the same secret the
+ * existing app/api/admin/library/videos route enforces.
+ *
+ * The secret may be sent as:
+ *   - `x-admin-secret` request header  (preferred; used by the admin UI)
+ *   - `adminSecret` query parameter    (convenience for curl / scripts)
+ *
+ * NOTE: the token minted by /api/admin/auth is base64(admin:ts:uuid) and is NOT
+ * verifiable server-side, so it is deliberately NOT trusted for authorization here.
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isAdminRequest = isAdminRequest;
+exports.requireAdmin = requireAdmin;
+const server_1 = require("next/server");
+const crypto_1 = __importDefault(require("crypto"));
+function configuredSecret() {
+    return process.env.LABTOOLS_SECRET || process.env.LABTOOLS_ADMIN_PASSWORD;
+}
+function safeEqual(a, b) {
+    const ab = Buffer.from(a);
+    const bb = Buffer.from(b);
+    if (ab.length !== bb.length)
+        return false;
+    return crypto_1.default.timingSafeEqual(ab, bb);
+}
+function providedSecret(req) {
+    const header = req.headers.get('x-admin-secret');
+    if (header)
+        return header;
+    try {
+        return new URL(req.url).searchParams.get('adminSecret');
+    }
+    catch (_a) {
+        return null;
+    }
+}
+/** True when the request carries a valid admin secret. */
+function isAdminRequest(req) {
+    const secret = configuredSecret();
+    if (!secret) {
+        console.error('[requireAdmin] LABTOOLS_SECRET / LABTOOLS_ADMIN_PASSWORD not configured — denying');
+        return false;
+    }
+    const provided = providedSecret(req);
+    return !!provided && safeEqual(provided, secret);
+}
+/**
+ * Returns a 401 NextResponse when the request is NOT an authorized admin, or null
+ * when it is. Usage:
+ *   const denied = requireAdmin(req);
+ *   if (denied) return denied;
+ */
+function requireAdmin(req) {
+    if (isAdminRequest(req))
+        return null;
+    const configured = !!configuredSecret();
+    return server_1.NextResponse.json({
+        error: configured
+            ? 'Unauthorized — valid admin secret required'
+            : 'Admin authentication not configured',
+    }, { status: configured ? 401 : 500 });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL1VzZXJzL3NvdWxsYWIvbWFpYS1tZW1iZXItbGlmZWN5Y2xlL2xpYi9hdXRoL3JlcXVpcmVBZG1pbi50cyIsIm1hcHBpbmdzIjoiO0FBQUE7Ozs7Ozs7Ozs7Ozs7O0dBY0c7Ozs7O0FBMkJILHdDQVFDO0FBUUQsb0NBV0M7QUFwREQsd0NBQXdEO0FBQ3hELG9EQUE0QjtBQUU1QixTQUFTLGdCQUFnQjtJQUN2QixPQUFPLE9BQU8sQ0FBQyxHQUFHLENBQUMsZUFBZSxJQUFJLE9BQU8sQ0FBQyxHQUFHLENBQUMsdUJBQXVCLENBQUM7QUFDNUUsQ0FBQztBQUVELFNBQVMsU0FBUyxDQUFDLENBQVMsRUFBRSxDQUFTO0lBQ3JDLE1BQU0sRUFBRSxHQUFHLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7SUFDMUIsTUFBTSxFQUFFLEdBQUcsTUFBTSxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztJQUMxQixJQUFJLEVBQUUsQ0FBQyxNQUFNLEtBQUssRUFBRSxDQUFDLE1BQU07UUFBRSxPQUFPLEtBQUssQ0FBQztJQUMxQyxPQUFPLGdCQUFNLENBQUMsZUFBZSxDQUFDLEVBQUUsRUFBRSxFQUFFLENBQUMsQ0FBQztBQUN4QyxDQUFDO0FBRUQsU0FBUyxjQUFjLENBQUMsR0FBZ0I7SUFDdEMsTUFBTSxNQUFNLEdBQUcsR0FBRyxDQUFDLE9BQU8sQ0FBQyxHQUFHLENBQUMsZ0JBQWdCLENBQUMsQ0FBQztJQUNqRCxJQUFJLE1BQU07UUFBRSxPQUFPLE1BQU0sQ0FBQztJQUMxQixJQUFJLENBQUM7UUFDSCxPQUFPLElBQUksR0FBRyxDQUFDLEdBQUcsQ0FBQyxHQUFHLENBQUMsQ0FBQyxZQUFZLENBQUMsR0FBRyxDQUFDLGFBQWEsQ0FBQyxDQUFDO0lBQzFELENBQUM7SUFBQyxXQUFNLENBQUM7UUFDUCxPQUFPLElBQUksQ0FBQztJQUNkLENBQUM7QUFDSCxDQUFDO0FBRUQsMERBQTBEO0FBQzFELFNBQWdCLGNBQWMsQ0FBQyxHQUFnQjtJQUM3QyxNQUFNLE1BQU0sR0FBRyxnQkFBZ0IsRUFBRSxDQUFDO0lBQ2xDLElBQUksQ0FBQyxNQUFNLEVBQUUsQ0FBQztRQUNaLE9BQU8sQ0FBQyxLQUFLLENBQUMsbUZBQW1GLENBQUMsQ0FBQztRQUNuRyxPQUFPLEtBQUssQ0FBQztJQUNmLENBQUM7SUFDRCxNQUFNLFFBQVEsR0FBRyxjQUFjLENBQUMsR0FBRyxDQUFDLENBQUM7SUFDckMsT0FBTyxDQUFDLENBQUMsUUFBUSxJQUFJLFNBQVMsQ0FBQyxRQUFRLEVBQUUsTUFBTSxDQUFDLENBQUM7QUFDbkQsQ0FBQztBQUVEOzs7OztHQUtHO0FBQ0gsU0FBZ0IsWUFBWSxDQUFDLEdBQWdCO0lBQzNDLElBQUksY0FBYyxDQUFDLEdBQUcsQ0FBQztRQUFFLE9BQU8sSUFBSSxDQUFDO0lBQ3JDLE1BQU0sVUFBVSxHQUFHLENBQUMsQ0FBQyxnQkFBZ0IsRUFBRSxDQUFDO0lBQ3hDLE9BQU8scUJBQVksQ0FBQyxJQUFJLENBQ3RCO1FBQ0UsS0FBSyxFQUFFLFVBQVU7WUFDZixDQUFDLENBQUMsNENBQTRDO1lBQzlDLENBQUMsQ0FBQyxxQ0FBcUM7S0FDMUMsRUFDRCxFQUFFLE1BQU0sRUFBRSxVQUFVLENBQUMsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsR0FBRyxFQUFFLENBQ25DLENBQUM7QUFDSixDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi9Vc2Vycy9zb3VsbGFiL21haWEtbWVtYmVyLWxpZmVjeWNsZS9saWIvYXV0aC9yZXF1aXJlQWRtaW4udHMiXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXG4gKiBBZG1pbiByZXF1ZXN0IGdhdGUgKHJlYWwgc2VydmVyLXNpZGUgZW5mb3JjZW1lbnQpLlxuICpcbiAqIE11dGF0aW5nIGFkbWluIHJvdXRlcyAoZS5nLiBtZW1iZXIgbGlmZWN5Y2xlIGNoYW5nZXMpIE1VU1QgYmUgZ2F0ZWQgYnkgdGhpcy5cbiAqIEl0IHZhbGlkYXRlcyBhbiBhZG1pbiBzZWNyZXQgdGhlIGNhbGxlciBzdXBwbGllcyBhZ2FpbnN0IHRoZSBjb25maWd1cmVkXG4gKiBMQUJUT09MU19TRUNSRVQgKGZhbGxpbmcgYmFjayB0byBMQUJUT09MU19BRE1JTl9QQVNTV09SRCkg4oCUIHRoZSBzYW1lIHNlY3JldCB0aGVcbiAqIGV4aXN0aW5nIGFwcC9hcGkvYWRtaW4vbGlicmFyeS92aWRlb3Mgcm91dGUgZW5mb3JjZXMuXG4gKlxuICogVGhlIHNlY3JldCBtYXkgYmUgc2VudCBhczpcbiAqICAgLSBgeC1hZG1pbi1zZWNyZXRgIHJlcXVlc3QgaGVhZGVyICAocHJlZmVycmVkOyB1c2VkIGJ5IHRoZSBhZG1pbiBVSSlcbiAqICAgLSBgYWRtaW5TZWNyZXRgIHF1ZXJ5IHBhcmFtZXRlciAgICAoY29udmVuaWVuY2UgZm9yIGN1cmwgLyBzY3JpcHRzKVxuICpcbiAqIE5PVEU6IHRoZSB0b2tlbiBtaW50ZWQgYnkgL2FwaS9hZG1pbi9hdXRoIGlzIGJhc2U2NChhZG1pbjp0czp1dWlkKSBhbmQgaXMgTk9UXG4gKiB2ZXJpZmlhYmxlIHNlcnZlci1zaWRlLCBzbyBpdCBpcyBkZWxpYmVyYXRlbHkgTk9UIHRydXN0ZWQgZm9yIGF1dGhvcml6YXRpb24gaGVyZS5cbiAqL1xuXG5pbXBvcnQgeyBOZXh0UmVxdWVzdCwgTmV4dFJlc3BvbnNlIH0gZnJvbSAnbmV4dC9zZXJ2ZXInO1xuaW1wb3J0IGNyeXB0byBmcm9tICdjcnlwdG8nO1xuXG5mdW5jdGlvbiBjb25maWd1cmVkU2VjcmV0KCk6IHN0cmluZyB8IHVuZGVmaW5lZCB7XG4gIHJldHVybiBwcm9jZXNzLmVudi5MQUJUT09MU19TRUNSRVQgfHwgcHJvY2Vzcy5lbnYuTEFCVE9PTFNfQURNSU5fUEFTU1dPUkQ7XG59XG5cbmZ1bmN0aW9uIHNhZmVFcXVhbChhOiBzdHJpbmcsIGI6IHN0cmluZyk6IGJvb2xlYW4ge1xuICBjb25zdCBhYiA9IEJ1ZmZlci5mcm9tKGEpO1xuICBjb25zdCBiYiA9IEJ1ZmZlci5mcm9tKGIpO1xuICBpZiAoYWIubGVuZ3RoICE9PSBiYi5sZW5ndGgpIHJldHVybiBmYWxzZTtcbiAgcmV0dXJuIGNyeXB0by50aW1pbmdTYWZlRXF1YWwoYWIsIGJiKTtcbn1cblxuZnVuY3Rpb24gcHJvdmlkZWRTZWNyZXQocmVxOiBOZXh0UmVxdWVzdCk6IHN0cmluZyB8IG51bGwge1xuICBjb25zdCBoZWFkZXIgPSByZXEuaGVhZGVycy5nZXQoJ3gtYWRtaW4tc2VjcmV0Jyk7XG4gIGlmIChoZWFkZXIpIHJldHVybiBoZWFkZXI7XG4gIHRyeSB7XG4gICAgcmV0dXJuIG5ldyBVUkwocmVxLnVybCkuc2VhcmNoUGFyYW1zLmdldCgnYWRtaW5TZWNyZXQnKTtcbiAgfSBjYXRjaCB7XG4gICAgcmV0dXJuIG51bGw7XG4gIH1cbn1cblxuLyoqIFRydWUgd2hlbiB0aGUgcmVxdWVzdCBjYXJyaWVzIGEgdmFsaWQgYWRtaW4gc2VjcmV0LiAqL1xuZXhwb3J0IGZ1bmN0aW9uIGlzQWRtaW5SZXF1ZXN0KHJlcTogTmV4dFJlcXVlc3QpOiBib29sZWFuIHtcbiAgY29uc3Qgc2VjcmV0ID0gY29uZmlndXJlZFNlY3JldCgpO1xuICBpZiAoIXNlY3JldCkge1xuICAgIGNvbnNvbGUuZXJyb3IoJ1tyZXF1aXJlQWRtaW5dIExBQlRPT0xTX1NFQ1JFVCAvIExBQlRPT0xTX0FETUlOX1BBU1NXT1JEIG5vdCBjb25maWd1cmVkIOKAlCBkZW55aW5nJyk7XG4gICAgcmV0dXJuIGZhbHNlO1xuICB9XG4gIGNvbnN0IHByb3ZpZGVkID0gcHJvdmlkZWRTZWNyZXQocmVxKTtcbiAgcmV0dXJuICEhcHJvdmlkZWQgJiYgc2FmZUVxdWFsKHByb3ZpZGVkLCBzZWNyZXQpO1xufVxuXG4vKipcbiAqIFJldHVybnMgYSA0MDEgTmV4dFJlc3BvbnNlIHdoZW4gdGhlIHJlcXVlc3QgaXMgTk9UIGFuIGF1dGhvcml6ZWQgYWRtaW4sIG9yIG51bGxcbiAqIHdoZW4gaXQgaXMuIFVzYWdlOlxuICogICBjb25zdCBkZW5pZWQgPSByZXF1aXJlQWRtaW4ocmVxKTtcbiAqICAgaWYgKGRlbmllZCkgcmV0dXJuIGRlbmllZDtcbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIHJlcXVpcmVBZG1pbihyZXE6IE5leHRSZXF1ZXN0KTogTmV4dFJlc3BvbnNlIHwgbnVsbCB7XG4gIGlmIChpc0FkbWluUmVxdWVzdChyZXEpKSByZXR1cm4gbnVsbDtcbiAgY29uc3QgY29uZmlndXJlZCA9ICEhY29uZmlndXJlZFNlY3JldCgpO1xuICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oXG4gICAge1xuICAgICAgZXJyb3I6IGNvbmZpZ3VyZWRcbiAgICAgICAgPyAnVW5hdXRob3JpemVkIOKAlCB2YWxpZCBhZG1pbiBzZWNyZXQgcmVxdWlyZWQnXG4gICAgICAgIDogJ0FkbWluIGF1dGhlbnRpY2F0aW9uIG5vdCBjb25maWd1cmVkJyxcbiAgICB9LFxuICAgIHsgc3RhdHVzOiBjb25maWd1cmVkID8gNDAxIDogNTAwIH1cbiAgKTtcbn1cbiJdLCJ2ZXJzaW9uIjozfQ==

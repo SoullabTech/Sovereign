@@ -336,7 +336,7 @@ export const CAPABILITY_CLAIMS: CapabilityClaim[] = [
     modules: ['lib/consciousness/memory/EpisodicMemoryService.ts'],
     consumers: [],
     evidenceKey: 'episodic',
-    note: 'Service preserved; no live consumer wired.',
+    note: 'Status is consumer-scoped: "Built, unwired" names the recall side only. Recall consumer (surfaces episodic_memories into the live prompt) is genuinely unwired. Producer side (member-marked write path: app/api/sovereign/episodes/mark + lib/sovereign/episodicSourceGuard, turn-primary provenance) is built and wired in the working tree, uncommitted/undeployed as of 2026-06-02. The producer is not a backend route alone: a built, ungated member-facing gesture (OracleConversation "Remember this" -> handleMarkMoment -> POST /episodes/mark) exists end-to-end and is dark solely because undeployed, not feature-flagged, role-gated, or stubbed. Runtime: 0 deployed episodic events / 0 member taps. consumers[] is held empty deliberately so the status cannot escalate while the producer wiring is not yet live.',
   },
   {
     name: 'Relational memory',

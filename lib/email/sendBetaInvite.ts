@@ -1,7 +1,9 @@
 import { Resend } from 'resend';
 import fs from 'fs';
 import path from 'path';
+import { sendEmail, SENDERS } from './sendEmail';
 
+// Still used by the batch path below (resend.batch.send); single sends go through sendEmail().
 function getResendClient() {
   return new Resend(process.env.RESEND_API_KEY);
 }
@@ -46,9 +48,9 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
           .replace(/\{\{BetaCode\}\}/g, invite.betaCode || '')
       : '';
 
-    const resend = getResendClient();
-    const result = await resend.emails.send({
-      from: 'Kelly @ Soullab <kelly@soullab.org>',
+    const result = await sendEmail({
+      purpose: `invite:${config.tag}`,
+      from: SENDERS.kelly, // standardized to verified soullab.life (was kelly@soullab.org)
       to: invite.email,
       subject: config.subject,
       html: personalizedHtml,
@@ -58,6 +60,11 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
         { name: 'type', value: config.tag }
       ]
     });
+
+    if (!result.success) {
+      console.error(`❌ Failed to send to ${invite.email}:`, result.error);
+      return { success: false, error: result.error };
+    }
 
     console.log(`✅ Sent to ${invite.name} (${invite.email}):`, result.id);
     return { success: true, id: result.id };
@@ -85,7 +92,7 @@ export async function sendBatchInvites(invites: BetaInvite[], template: string =
   // Use Resend's batch API (send all at once, up to 100 per batch)
   try {
     const batchData = invites.map(invite => ({
-      from: 'Kelly @ Soullab <kelly@soullab.org>',
+      from: SENDERS.kelly, // standardized to verified soullab.life (was kelly@soullab.org)
       to: invite.email,
       subject: config.subject,
       html: htmlTemplate

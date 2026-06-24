@@ -28,6 +28,7 @@ import {
   type LayerObservation,
 } from '@/lib/maia/substrateObservability';
 import { buildProviderCognition } from '@/lib/maia/providerCognition';
+import { readBoundaryAuditStatus } from '@/lib/ai/fieldCapture';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,10 +39,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [recentTurns, activity, summary] = await Promise.all([
+    const [recentTurns, activity, summary, boundaryAudit] = await Promise.all([
       getRecentRuntimeTurns(50),
       getSubstrateActivity(),
       getRuntimeSummary(),
+      readBoundaryAuditStatus(),
     ]);
 
     const claims = CAPABILITY_CLAIMS.map((claim) => ({
@@ -67,6 +69,7 @@ export async function GET(request: NextRequest) {
         impoverishedRoutes: IMPOVERISHED_ROUTES,
       },
       claims,
+      boundaryAudit,
     });
   } catch (error) {
     console.error('[admin/maia/substrate] error:', error);

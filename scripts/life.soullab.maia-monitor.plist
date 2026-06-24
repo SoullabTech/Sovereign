@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>life.soullab.maia-monitor</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/soullab/.nvm/versions/node/v22.22.3/bin/node</string>
+        <string>/Users/soullab/MAIA-SOVEREIGN/scripts/maia-monitor.js</string>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/maia-monitor.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/maia-monitor.error.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/soullab/.nvm/versions/node/v22.22.3/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- Long-running process — launchd restarts if it exits or crashes -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>

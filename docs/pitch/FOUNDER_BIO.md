@@ -2,7 +2,7 @@
 
 ## The Short Version (for pitch deck)
 
-35 years in healing arts and psychospiritual practice. PhD program in Clinical/Developmental Psychology. Two-year practicum at Harvard's Mind Body Institute. Private practice spanning energy healing, bodywork, hypnotherapy, shamanic journeywork, Jungian archetypal work, NLP, and beyond. 25 years developing Spiralogic — the integration of all elements of human experience into a coherent developmental map.
+Nearly four decades in healing arts and psychospiritual practice (since 1989). Doctoral studies in clinical and developmental psychology at Suffolk University. A two-year practicum at Harvard Beth Israel's Mind/Body Institute. Private practice spanning energy healing, bodywork, hypnotherapy, shamanic journeywork, Jungian archetypal work, NLP, and beyond. 25 years developing Spiralogic — the integration of all elements of human experience into a coherent developmental map.
 
 MAIA is not technology pretending to be wise. It's a lifetime of practice made into architecture.
 
@@ -11,11 +11,12 @@ MAIA is not technology pretending to be wise. It's a lifetime of practice made i
 ## The Full Story
 
 ### Academic Foundation
-- PhD program in Clinical/Developmental Psychology
-- Two-year practicum at Harvard's Mind Body Institute
+- BA in Psychology, University of Washington (1995)
+- Doctoral studies in clinical and developmental psychology at Suffolk University
+- Two-year practicum at Harvard Beth Israel's Mind/Body Institute
 - Grounded in research methodology while recognizing its limits
 
-### 35+ Years of Practice
+### Nearly Four Decades of Practice
 Not sequential — integrated. Met clients where they needed to be met:
 
 **Body-Based:**
@@ -90,7 +91,7 @@ A competitor could:
 - Train AI on therapy transcripts
 
 A competitor cannot:
-- Integrate 35 years of multi-modal practice
+- Integrate nearly four decades of multi-modal practice
 - Develop frameworks through direct client work
 - Embody the ethics that come from holding people's transformation
 
@@ -104,7 +105,7 @@ The 11 prohibitions in MAIA's canon aren't product decisions. They're how Kelly 
 4. Never persuade
 5. Always honor sovereignty
 
-These aren't features. They're vows — the same vows that governed 35 years of client work.
+These aren't features. They're vows — the same vows that governed nearly four decades of client work.
 
 ### The Technology Extends the Practice
 
@@ -119,13 +120,13 @@ MAIA isn't replacing Kelly's practice. It's making the frameworks accessible to 
 ## For Different Audiences
 
 ### For Investors
-> "The founder isn't a tech entrepreneur who hired wellness consultants. She's a practitioner with 35 years of client work, Harvard training, and 25 years of original framework development. The technology is the extension of a lifetime of practice. That's not replicable."
+> "The founder isn't a tech entrepreneur who hired wellness consultants. He's a practitioner with nearly four decades of client work, Harvard training, and 25 years of original framework development. The technology is the extension of a lifetime of practice. That's not replicable."
 
 ### For Practitioners
 > "Kelly has walked the path you're walking. Energy work, depth psychology, somatic practice, altered states — integrated, not siloed. MAIA is built by someone who understands what it means to hold space for transformation."
 
 ### For Members
-> "The person behind MAIA spent 35 years sitting with people in their most vulnerable moments of transformation. That's what shaped the ethics, the three voices, the sanctuary mode. It's not AI pretending to be human. It's human wisdom made accessible."
+> "The person behind MAIA spent nearly four decades sitting with people in their most vulnerable moments of transformation. That's what shaped the ethics, the three voices, the sanctuary mode. It's not AI pretending to be human. It's human wisdom made accessible."
 
 ---
 

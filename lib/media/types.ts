@@ -267,6 +267,6 @@ export function detectMediaType(mimeType: string): MediaType | null {
 
 // ── Upload constants ───────────────────────────────────────
 
-export const DEFAULT_MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500MB
+export const DEFAULT_MAX_UPLOAD_BYTES = 4 * 1024 * 1024 * 1024; // 4GB
 export const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 export const MIN_DISK_SPACE_BYTES = 1024 * 1024 * 1024; // 1GB minimum free

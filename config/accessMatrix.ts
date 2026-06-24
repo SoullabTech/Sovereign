@@ -180,6 +180,15 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/relationships', minTier: 'free', notes: 'Relational Field — outer/inner/transpersonal, CRUD. Moved out of /dashboard/* 2026-04-08 so it no longer inherits the Jade Neural Command shell.' },
   { exact: '/ask-maia', minTier: 'free', notes: 'Ask MAIA — depth, capacity-governed' },
 
+  // Personal Portal — member daily threshold (Track A prototype, 2026-06-14)
+  // Mounted at /threshold (NOT /portal — that prefix is the public practitioner
+  // client-portals, line ~110). Architecture name per design: "Members need a Threshold."
+  // PROTOTYPE: public so it is previewable without a session and honors the floor-state
+  // principle ("valuable before knowing anything"). Flip to minTier:'free' + member/Sanctuary
+  // gate in Track B (role-auth → reconciliation → Sanctuary deploy).
+  { exact: '/threshold', public: true, notes: 'Personal Portal home — daily threshold (prototype; gate to free in Track B)' },
+  { prefix: '/threshold/', public: true, notes: 'Personal Portal sub-surfaces (prototype)' },
+
   // Community — contribution is participation, not a perk
   { exact: '/maia/community/contribute', minTier: 'free', notes: 'Contribute to commons — participation is open' },
   { exact: '/maia/community/commons/my-offerings', minTier: 'free', notes: 'My offerings' },
@@ -420,6 +429,55 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Stripe webhooks (system routes, validated by signature)
   { prefix: '/api/stripe/webhook', public: true, notes: 'Stripe webhooks - validated by signature' },
+
+  // -------------------------------------------------------------------------
+  // Soul Portrait — Path B, Gate 1 (see docs/architecture/SOUL_PORTRAIT_PATH_B_SPEC.md §2)
+  // -------------------------------------------------------------------------
+  // Augusten = the single family-held exception: public-unlisted (loads without
+  // auth, noindex). These EXACT rules win over the prefix below — the matcher
+  // runs the exact pass before the prefix pass — so the exception is explicit
+  // and visible, not an accident of permissive middleware.
+  { exact: '/soul-portrait/augusten', public: true, notes: "Augusten — author's own minor child; family-held consent; unlisted exception only" },
+  { exact: '/api/soul-portrait/augusten/mentor', public: true, notes: 'Augusten Mentor — family-held exception; rate-limited; no retention' },
+  // Katie — SECOND hand-delivered Gift exception (Kelly 2026-06-20): a private,
+  // unlisted, noindex gift link to his adult niece. SAME honest posture as
+  // Augusten (public-unlisted, hand-delivered, Mentor/MAIA/memory OFF) — NOT a
+  // public opening and NOT Path B. Reception link = /soul-portrait/katie/welcome.
+  { exact: '/soul-portrait/katie/welcome', public: true, notes: 'Katie Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
+  { exact: '/soul-portrait/katie', public: true, notes: 'Katie Gift Portrait (renderer) — hand-delivered unlisted exception (adult niece); Mentor off; noindex' },
+  { exact: '/api/soul-portrait/katie/mentor', public: true, notes: 'Katie Mentor — DISABLED (mentorEnabled off → 404); public rule only so it returns 404 not 401, mirroring Augusten' },
+  // Sophie — THIRD hand-delivered Gift exception (Kelly 2026-06-20): the author's
+  // own minor daughter (17, senior year), a Father's Day gift. SAME honest posture
+  // as Katie (public-unlisted, hand-delivered, noindex, Mentor/MAIA/memory OFF).
+  // No mentor rule — Mentor is off, so the endpoint stays unreachable (401, not public).
+  { exact: '/soul-portrait/sophie/welcome', public: true, notes: 'Sophie Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
+  { exact: '/soul-portrait/sophie', public: true, notes: "Sophie Gift Portrait (renderer) — hand-delivered unlisted exception (author's minor daughter, 17); Mentor off; noindex" },
+  // Andrea — FOURTH hand-delivered Gift exception (Kelly 2026-06-20): a gift to
+  // his wife (adult). SAME posture: public-unlisted, hand-delivered, noindex,
+  // Mentor/MAIA/memory OFF. Reception link = /soul-portrait/andrea/welcome.
+  { exact: '/soul-portrait/andrea/welcome', public: true, notes: 'Andrea Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
+  { exact: '/soul-portrait/andrea', public: true, notes: "Andrea Gift Portrait (renderer) — hand-delivered unlisted exception (author's wife); Mentor off; noindex" },
+  // Kelly — the author's own SELF-portrait (Kelly 2026-06-22): mode 'self', no
+  // giver/threshold, no Return-to-Soullab coda. SAME posture: public-unlisted,
+  // noindex, Mentor/MAIA/memory OFF. No /welcome rule (self-portrait has no threshold).
+  { exact: '/soul-portrait/kelly', public: true, notes: "Kelly self-portrait (renderer) — author's own; unlisted exception; Mentor off; noindex" },
+  // Nathan — a gift portrait Kelly offers to his business partner (Kelly 2026-06-22):
+  // mode 'gift', offeredBy Kelly. SAME posture: public-unlisted, noindex,
+  // Mentor/MAIA/memory OFF. Hand-delivered by link; Kelly's editorial approval first.
+  { exact: '/soul-portrait/nathan', public: true, notes: "Nathan Gift Portrait (renderer) — hand-delivered unlisted exception (author's business partner); Mentor off; noindex" },
+  // Jondi — a gift portrait Kelly offers to a Soullab teammate / beta tester (Kelly
+  // 2026-06-22): mode 'gift', offeredBy Kelly. SAME posture: public-unlisted, noindex,
+  // Mentor/MAIA/memory OFF. Hand-delivered by link; Kelly's editorial approval first.
+  { exact: '/soul-portrait/jondi', public: true, notes: "Jondi Gift Portrait (renderer) — hand-delivered unlisted exception (Soullab teammate/beta tester); Mentor off; noindex" },
+  // Heather — a gift portrait Kelly offers to Soullab's new marketing director (Kelly
+  // 2026-06-23): mode 'gift', offeredBy Kelly. SAME posture: public-unlisted, noindex,
+  // Mentor/MAIA/memory OFF. Hand-delivered by link; Kelly's editorial approval first.
+  { exact: '/soul-portrait/heather', public: true, notes: "Heather Gift Portrait (renderer) — hand-delivered unlisted exception (Soullab marketing director); Mentor off; noindex" },
+  // Every OTHER portrait requires an authenticated member. Per-member binding +
+  // the consent/reception gate are enforced in the route handler (the matrix is
+  // the coarse auth gate only; Path B Gate 3 adds the fine consent gate).
+  { prefix: '/soul-portrait/', minTier: 'free', notes: 'Path B: non-exception portraits require login + per-member consent gate (route-enforced)' },
+  { prefix: '/api/soul-portrait/', minTier: 'free', notes: 'Path B: portrait API requires login + per-member consent gate (route-enforced)' },
 ];
 
 // =============================================================================

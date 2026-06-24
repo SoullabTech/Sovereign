@@ -35,7 +35,8 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **Static export limits**: some Next.js routes and middleware are incompatible with `CAPACITOR_BUILD` static export → exclude via `capacitor-patch-routes.sh`.
 - **"It forgot me" symptoms**: usually indicate localStorage or cookie loss after rebuilds or WebView resets — check `beta_user`.
 - **force-dynamic routes**: any route using `export const dynamic = 'force-dynamic'` must be listed in `EXCLUDED_DYNAMIC_ROUTES` for iOS builds.
-- **LAN IP drift after power-cycle** (housekeeping check, not always user-impacting): minisforum is expected at `192.168.0.104`. After a power outage or full restart, DHCP can re-lease a different IP (seen: `.102` on 2026-05-29). If the router's port-forward rule for 80/443 is hard-coded to `.104`, external traffic will silently drop. **Verify scope before treating as causal**: if the PWA at soullab.life loads on iOS over cellular, the forward path is intact and IP drift is NOT the user-facing issue (the router may auto-track or have a different forward rule). The hairpin-NAT probe (`curl https://soullab.life from minisforum`) is misleading — most consumer routers disable hairpin by default, so HTTP 000 there does not imply external traffic is broken. Always check `ssh soullab@minisforum 'hostname -I'` after a power event for hygiene, and set a DHCP reservation pinning minisforum to `.104` to make the trap structurally impossible.
+- **NEXT_PUBLIC feature flags are build-time, not runtime**: new `NEXT_PUBLIC_*` flags require Dockerfile `ARG`/`ENV` wiring, `docker-compose.production.yml` build-arg pass-through, a `.env.production` value, AND a rebuild. Setting the env var alone after a build will NOT change behavior (Next inlines these at `next build`). Full sequence + precedent in `docs/ops/OPS_BACKLOG.md` → Deployment Invariants.
+- **LAN IP drift after power-cycle** (housekeeping check, not always user-impacting): minisforum is expected at `192.168.0.104`. After a power outage or full restart, DHCP can re-lease a different IP (seen: `.102` on 2026-05-29). If the router's port-forward rule for 80/443 is hard-coded to `.104`, external traffic will silently drop. **Verify scope before treating as causal**: if the PWA at soullab.life loads on iOS over cellular, the forward path is intact and IP drift is NOT the user-facing issue (the router may auto-track or have a different forward rule). The hairpin-NAT probe (`curl https://soullab.life from minisforum`) is misleading — most consumer routers disable hairpin by default, so HTTP 000 there does not imply external traffic is broken. Always check `ssh soullab@minisforum 'hostname -I'` after a power event for hygiene, and set a DHCP reservation pinning minisforum to `.104` to make the trap structurally impossible. **Admin access is no longer affected by LAN IP drift** — Tailscale (`100.119.226.84`) provides a stable out-of-band path regardless of DHCP state.
 
 ## Current priority thread (update each session)
 
@@ -125,6 +126,20 @@ This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any 
 - **Reverse proxy**: **Caddy** in Docker container (`maia-caddy`) on minisforum.
 - **Database**: Self-hosted PostgreSQL in Docker (`maia-postgres`) on minisforum.
 - **Containers**: Docker and docker-compose.
+- **Out-of-band admin access**: **Tailscale** (tailnet: `soullab1@gmail.com`). SSH to minisforum works from any enrolled device regardless of LAN IP, DHCP state, or router port-forward status. Use `ssh soullab@minisforum` (MagicDNS) or `ssh soullab@100.119.226.84` (stable Tailscale IP).
+
+### Tailscale Enrollment (as of 2026-06-13)
+
+| Device | Tailnet name | Tailscale IP | Status |
+|--------|-------------|--------------|--------|
+| minisforum (production) | `soullab` | `100.119.226.84` | enrolled, `--ssh` enabled |
+| iPhone | `iphone172` | `100.72.149.113` | enrolled |
+| Mac Studio | `kellys-mac-studio` | `100.83.243.58` | enrolled, verified 2026-06-13 |
+| MacBook Pro | — | — | pending |
+
+**MagicDNS**: enabled — `ssh soullab@minisforum` resolves by name from any tailnet device. Verified from Mac Studio 2026-06-13.
+
+**Key property**: router DHCP reassignment, WAN IP change, or port-forward failure no longer prevents admin access to minisforum. The service may still be down, but the management path stays open.
 
 ### Production Stack (on minisforum)
 All services run in Docker on **minisforum**:
@@ -159,8 +174,10 @@ curl -k https://soullab.life/api/health
     && git fetch origin clean-main-no-secrets \
     && git checkout clean-main-no-secrets \
     && git pull \
-    && docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d --build maia'
+    && docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d --build maia \
+    && docker restart maia-caddy'
   ```
+  **Why `docker restart maia-caddy` is part of the deploy, not optional:** rebuilding `maia` **recreates** the `maia-sovereign` container. A long-running `maia-caddy` can be left holding a stale Docker-DNS view and fail to resolve the new container (`dial tcp: lookup maia-sovereign on 127.0.0.11:53: server misbehaving` → **HTTP 502 for all of soullab.life**, even though the app itself is healthy and internal `/api/health` returns 200). This took the public site down on 2026-06-14 (~16:20–17:05Z); a `docker restart maia-caddy` restored it instantly. The deploy is not a single atomic step — it is a **sequence**: recreate maia → verify internal health → restart caddy → **verify the public route** (below), not just the container.
 - **Verify after deploy**:
   ```bash
   # 1. Container freshness
@@ -377,11 +394,23 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 3. Run `npm run preflight` for full sovereignty check
 4. Run `npm run typecheck` for TypeScript validation (do not run single-file `tsc` - it bypasses path mappings)
 5. Test with `npm run smoke` before committing
-6. **Sovereignty Invariant Check** — For any feature that touches voice, expression, relational tone, or user-facing behavior, ask:
+6. **Attention Doctrine Check** — For any feature that enters a person's experience, ask:
+   - Does this leave undisturbed the interior space that belongs to the person?
+   - Does this feature justify its presence, not merely its usefulness?
+   - Does this deepen attention rather than compete with it?
+   - If the honest answer to any is no, the feature does not ship. (See `docs/canon/MAIA_ATTENTION_DOCTRINE.md`)
+7. **Sovereignty Invariant Check** — For any feature that touches voice, expression, relational tone, or user-facing behavior, ask:
    - Does this increase user agency?
    - Does this push life outward into the world?
    - Does this reduce the system's psychological centrality over time?
    - If the honest answer to any is no, the feature does not ship. (See `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md`)
+8. **Power/Restraint Check** — Governing principle (the through-line of the constitution): *every increase in MAIA's capability should produce a corresponding increase in the person's capacity* — capacity that is **transferable** (exercisable when MAIA isn't there), or it is a leash, not capacity. What this protects is the person's **freedom** — their increasing capacity to *author their own responses rather than react* — held *independently of MAIA*. **Freedom is the person's *right*, not MAIA's objective:** MAIA's purpose is faithful accompaniment; it *protects* authorship and *never substitutes its own project* for the person's. **Guard against paternalism:** freedom is a *capacity*, not a behavior MAIA steers toward; MAIA tends the conditions and stays **indifferent to whether the person grows, depends, or departs.** To push someone toward freedom is to have a project for them — the very thing the restraints exist to prevent. This **filters** additions; it never **licenses** them (the default is restraint; "does this justify its presence at all?" comes first). For any feature that **enters the relationship** (not pure infrastructure), ask:
+   - What power does this introduce (to infer, remember, predict, persuade, classify, influence)?
+   - What corresponding restraint keeps that power in service of the member, not the system? (Power and restraint ship together — a capability that displaces the person's authorship does not ship without the restraint that returns it.)
+   - Does this deepen faithful attention, or merely display intelligence — i.e., *whose* capacity grows, the member's (recognition, choice) or the system's (apparent capability)?
+   - If it only displays what the system can do, it does not ship. (Pure-attention and subtraction features introduce no displacing power and need no new restraint — they *are* the constitution embodying itself. See `docs/architecture/ELEMENTAL_BECOMING_FIELD_2026-06-20.md` §0.6 and `docs/canon/MAIA_ATTENTION_DOCTRINE.md`)
+
+**These checks evaluate the *relationship* the feature creates, not the feature in isolation.** The relationship is primary, but its *integrity* means the kind of relationship the person is always free to leave (*character, not continuation*) — and the **person's sovereignty, not the relationship's survival, is the value it serves** (if the two ever conflict, the person wins). Treat every significant change as **constitutional review**, asking: what relationship does this create · what power does it add · what restraint balances it · what capacity becomes transferable beyond MAIA · where could it weaken authorship or consent. *A review that never says no is theater.* (See `docs/architecture/ELEMENTAL_BECOMING_FIELD_2026-06-20.md` §0.10.)
 
 ## Setup (New Clones)
 

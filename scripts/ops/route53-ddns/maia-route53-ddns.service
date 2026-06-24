@@ -1,0 +1,19 @@
+[Unit]
+Description=MAIA Route 53 DDNS updater (self-heal AT&T public-IP rotation)
+Documentation=file:/usr/local/bin/maia-route53-ddns.sh
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Secrets live here only (root-only, mode 600) — never in the repo:
+EnvironmentFile=/etc/maia-ddns/credentials
+ExecStart=/usr/local/bin/maia-route53-ddns.sh
+# Do NOT add NoNewPrivileges=true here. The aws CLI is snap-packaged
+# (aws-cli/2.34.57), and snap apps need an AppArmor profile transition at
+# exec; NoNewPrivileges blocks that transition ("cannot change profile for
+# the next exec call: Operation not permitted") so every aws call fails.
+# This is a root-only oneshot triggered solely by the timer, so the hardening
+# loss is small. If you want NoNewPrivileges back, first replace snap aws with
+# the bundled installer (self-contained binary in /usr/local/bin, no AppArmor
+# transition needed).

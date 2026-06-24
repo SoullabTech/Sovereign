@@ -1,0 +1,8 @@
+{
+  "name": "Quiet Chrome",
+  "description": "Lets the browser frame recede so your attention stays with the page. Gently quiets the toolbar and the tabs you aren't looking at, while keeping the active tab and a focused address bar fully clear. Rides on top of your existing Zen theme — it sets no colors of its own.",
+  "author": "<your-github-handle>",
+  "version": "0.1.0",
+  "tags": ["minimal", "calm", "focus", "subtle", "chrome"],
+  "image": "image.png"
+}

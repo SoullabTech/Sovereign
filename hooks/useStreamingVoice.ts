@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import type { WisdomGuideSelection } from '@/lib/wisdom/wisdomGuidePrompt';
 
 /** Relational stack metadata from server */
 interface RelationalMetadata {
@@ -90,6 +91,8 @@ interface StreamingVoiceOptions {
   memoryDepth?: 'minimal' | 'moderate' | 'deep';
   /** Audio playback volume (0.0 - 1.0) */
   volume?: number;
+  /** Member-chosen wisdom guide — a lens for MAIA's voice, not authority. Compact payload; mirrors the text path. */
+  wisdomGuide?: WisdomGuideSelection;
 }
 
 interface StreamingVoiceState {
@@ -239,6 +242,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     archetype,
     conversationMode,
     memoryDepth,
+    wisdomGuide,
     volume = 1.0,
   } = options;
 
@@ -634,6 +638,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           archetype,     // MAIA's presence/archetype mode
           conversationMode, // Conversation style
           memoryDepth,   // Memory retrieval depth
+          wisdomGuide,   // 🧭 Member-chosen wisdom guide (lens, not authority)
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -918,7 +923,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }));
       onComplete?.(fallbackText);
     }
-  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, onLimitsBlock, playNextChunk, forceRecoverFromFalseSpeaking]);
+  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, wisdomGuide, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, onLimitsBlock, playNextChunk, forceRecoverFromFalseSpeaking]);
 
   /**
    * Stop streaming and playback

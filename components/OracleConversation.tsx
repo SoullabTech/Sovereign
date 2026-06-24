@@ -1,7 +1,7 @@
 // @ts-nocheck
 // Oracle Conversation - Voice-synchronized sacred dialogue
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
-// 🔖 BUILD_STAMP: 2026-05-29_ios_timeout_verification
+// 🔖 BUILD_STAMP: 2026-06-02_ios_playback_watchdog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
@@ -73,6 +73,9 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+// 🗓️ Calendar proposal pipeline (docs/canon/MAIA_CONSENT_GATES.md) — MAIA proposes; only confirm writes.
+import type { Proposal, CalendarEventPayload } from '@/lib/maia/proposals/types';
+import { CalendarProposalCard } from '@/components/maia/CalendarProposalCard';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
@@ -472,6 +475,11 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+  // 🔖 Episodic mark (turn-primary provenance): the real conversation_turns.id for
+  // this turn + its session id, so the member can mark it. Enablement only — the
+  // server guard re-verifies ownership + Sanctuary at mark time.
+  conversationTurnId?: string;
+  sourceSessionId?: string;
   // Phase 1.5B — attached keep affordance for this message (null when absent)
   keepIntent?: KeepIntent | null;
   // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
@@ -486,6 +494,8 @@ interface ConversationMessage {
   stateVector?: any;
   // 🌿 PRACTICE: Recommended practice from state vector routing
   practiceRecommendation?: any;
+  // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
+  proposal?: Proposal<CalendarEventPayload> | null;
   // Pattern metadata for "Show why" drawer
   metadata?: {
     patterns?: Array<{
@@ -750,6 +760,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Cleared by next keystroke (via onClearSubmitError) or by the auto-fade
   // timer below.
   const [inputSubmitError, setInputSubmitError] = useState<string | null>(null);
+  // 🔖 conversation_turns ids the member has marked as episodic moments (inline confirmation).
+  const [markedTurnIds, setMarkedTurnIds] = useState<Set<string>>(new Set());
 
   // Auto-fade the submit-error banner after a short window so it doesn't linger.
   useEffect(() => {
@@ -1378,6 +1390,33 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
     return null;
   });
+
+  // 🧭 GUIDE CONTINUITY (Phase 1.5): hydrate the standing guide from the server
+  // when this device has none locally (new device / cleared cache). The server is
+  // the durable source of truth; a same-session local choice always wins, so we
+  // only fill when local is empty. Non-blocking — a failure simply leaves no guide.
+  useEffect(() => {
+    if (activeTradition) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch('/api/members/wisdom-guide');
+        if (!res.ok) return;
+        const data = await res.json();
+        const guideId = data?.guide?.id;
+        if (cancelled || !guideId) return;
+        const resolved = ELDER_COUNCIL_TRADITIONS.find((t) => t.id === guideId);
+        if (resolved) {
+          setActiveTradition(resolved);
+          localStorage.setItem('maia.activeTradition', resolved.id);
+        }
+      } catch {
+        /* non-blocking — no guide if hydration fails */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle initial action from URL (e.g., /maia?action=choose-guide)
   useEffect(() => {
@@ -2342,6 +2381,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     conversationMode: voiceSettings.conversationMode,
     memoryDepth: voiceSettings.memoryDepth,
     element: undefined, // Will be set dynamically per message
+    // 🧭 Member-chosen wisdom guide — same compact payload the text path sends (see ~line 4693).
+    // A lens, not authority; applied even under Sanctuary (chosen orientation ≠ retrieved memory).
+    wisdomGuide: activeTradition ? {
+      id: activeTradition.id,
+      name: activeTradition.name,
+      element: activeTradition.element,
+      description: activeTradition.description,
+      archetype: activeTradition.archetype,
+      mantra: activeTradition.mantra,
+      principles: activeTradition.principles,
+    } : undefined,
     // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
     onPlaybackSignal: handlePlaybackSignal,
     // 🛑 LIMITS BLOCK: Show modal when voice limit hit (429 + blocked)
@@ -4652,6 +4702,20 @@ I'm not sure what I'm feeling yet.`;
           // 📚 ASK MAIA: Orientation + Knowledge Field stance
           askMode: askMode || undefined,
 
+          // 🧭 ARCHETYPAL STANDING SOURCE (member-chosen): Member-selected tradition (Wisdom Council picker).
+          // Sent as a compact payload; the server formats + sanitizes it into a
+          // prompt lens via buildWisdomGuideAddendum so the chosen guide informs
+          // MAIA's voice (FAST/CORE/DEEP). Omitted when no guide is chosen.
+          wisdomGuide: activeTradition ? {
+            id: activeTradition.id,
+            name: activeTradition.name,
+            element: activeTradition.element,
+            description: activeTradition.description,
+            archetype: activeTradition.archetype,
+            mantra: activeTradition.mantra,
+            principles: activeTradition.principles,
+          } : undefined,
+
           // Canon Wrap (care-mode only)
           allowCanonWrap,
           allowRemoteRendering: false,
@@ -4952,6 +5016,15 @@ I'm not sure what I'm feeling yet.`;
         // 🔥 FIX: Track pending TTS requests to prevent premature onComplete
         let pendingTTSCount = 0;
         let streamEnded = false;
+        // ⚠️ Observability-only (NOT a guard): detects a PERSISTENT finalize stall —
+        // streamEnded with pendingTTSCount frozen >0 — the residual hole the per-chunk
+        // playback watchdog cannot see (every chunk's onended fired, but
+        // markStreamingComplete is never reached). Armed on entry to the pending state,
+        // fires the overlay marker only if STILL stuck after a grace window, cleared on
+        // successful finalize / error. Lets a field session EXCLUDE this path, not just
+        // confirm the primary one. Transient pending is normal, so a raw per-call marker
+        // would false-positive on healthy turns and could never close "exclusivity".
+        let finalizeStallTimer: ReturnType<typeof setTimeout> | null = null;
         let finalizePromiseResolve: (() => void) | null = null;
         const finalizePromise = new Promise<void>(resolve => {
           finalizePromiseResolve = resolve;
@@ -4960,11 +5033,23 @@ I'm not sure what I'm feeling yet.`;
         // Helper to check if we can finalize
         const checkFinalize = () => {
           if (streamEnded && pendingTTSCount === 0 && audioQueue) {
+            if (finalizeStallTimer) { clearTimeout(finalizeStallTimer); finalizeStallTimer = null; }
             console.log('✅ [STREAM] All TTS complete - NOW marking streaming complete');
             audioQueue.markStreamingComplete();
             finalizePromiseResolve?.();
           } else if (streamEnded) {
             console.log(`⏳ [STREAM] Stream ended but ${pendingTTSCount} TTS requests still pending...`);
+            // Transient pending is normal (last chunk still generating). Only a
+            // PERSISTENT stall is the residual finalize hole — arm once on entry and
+            // emit the overlay marker if we are STILL pending after the grace window.
+            if (!finalizeStallTimer) {
+              finalizeStallTimer = setTimeout(() => {
+                finalizeStallTimer = null;
+                if (streamEnded && pendingTTSCount > 0) {
+                  pushVoiceDebug(`⚠️ finalize stall: pendingTTSCount did not reach 0 (${pendingTTSCount} pending)`);
+                }
+              }, 15000);
+            }
           }
         };
 
@@ -5138,6 +5223,7 @@ I'm not sure what I'm feeling yet.`;
         } catch (streamError) {
           console.error('❌ [STREAM] Error reading stream:', streamError);
           // Clean up audio queue on error
+          if (finalizeStallTimer) { clearTimeout(finalizeStallTimer); finalizeStallTimer = null; }
           if (audioQueue) {
             audioQueue.stop();
           }
@@ -5340,6 +5426,9 @@ I'm not sure what I'm feeling yet.`;
         source: 'maia',
         opusAxioms,
         turnId,
+        // 🔖 Real conversation_turns id (+ session) for the member-mark gesture.
+        conversationTurnId: responseData.conversationTurns?.assistantTurnId ?? undefined,
+        sourceSessionId: sessionId,
         // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
         integrity,
         lensSwitchOptions,
@@ -5347,6 +5436,8 @@ I'm not sure what I'm feeling yet.`;
         stateVector: responseData.stateVector || null,
         // 🌿 PRACTICE: Recommended practice from state vector routing
         practiceRecommendation: responseData.practiceRecommendation || null,
+        // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
+        proposal: responseData.proposal || null,
         // 🚪 AIN Knowledge Gate: source mix + awareness state
         ainState: responseData.ainState || null,
         metadata: {
@@ -6467,6 +6558,27 @@ I'm not sure what I'm feeling yet.`;
   // Voice synthesis for text chat
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | undefined>();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // 🔖 Member-mark gesture: preserve this oracle turn as a member-marked episodic
+  // moment. Turn-primary provenance; the server guard re-verifies ownership +
+  // Sanctuary. Non-blocking — a failed mark must never disrupt the conversation.
+  const handleMarkMoment = useCallback(async (message: ConversationMessage) => {
+    const sourceTurnId = message.conversationTurnId;
+    const verbatimText = message.text;
+    if (!sourceTurnId || !verbatimText) return;
+    try {
+      const res = await apiFetch('/api/sovereign/episodes/mark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verbatimText, sourceTurnId, sourceSessionId: message.sourceSessionId }),
+      });
+      if (res.ok) {
+        setMarkedTurnIds((prev) => new Set(prev).add(sourceTurnId));
+      }
+    } catch {
+      // swallow — the conversation must not break on a mark failure
+    }
+  }, []);
 
   const handleSpeakMessage = useCallback(async (text: string, messageId: string) => {
     try {
@@ -8108,6 +8220,30 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
+                      {/* 🔖 Member-mark gesture — "remember this" → member-marked episodic memory.
+                          Turn-primary provenance; verbatim is what the member saw. No recall claim. */}
+                      {message.role === 'oracle' && message.conversationTurnId && (
+                        <div className="mt-2">
+                          {markedTurnIds.has(message.conversationTurnId) ? (
+                            <span
+                              className="text-xs text-dune-amber/70"
+                              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                            >
+                              Marked. This is kept.
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkMoment(message)}
+                              className="text-xs text-dune-amber/60 hover:text-dune-amber underline-offset-2 hover:underline transition-colors"
+                              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                            >
+                              Remember this
+                            </button>
+                          )}
+                        </div>
+                      )}
+
                       {/* 🌀 STATE CARD: Consciousness state reading (admin-only diagnostic) */}
                       {/* Care = full (element + kairos + movement + practice) */}
                       {/* Talk = light (kairos + movement only — phenomenological, not prescriptive) */}
@@ -8143,6 +8279,11 @@ I'm not sure what I'm feeling yet.`;
                             Send as SMS
                           </button>
                         </div>
+                      )}
+
+                      {/* 🗓️ CALENDAR PROPOSAL: MAIA proposes; only confirm writes (MAIA_CONSENT_GATES Art. 2) */}
+                      {message.role === 'oracle' && message.proposal && (
+                        <CalendarProposalCard proposal={message.proposal} />
                       )}
 
                       {/* 🏛️ AIN: Council consultation results panel */}
@@ -9078,6 +9219,23 @@ I'm not sure what I'm feeling yet.`;
           localStorage.setItem('maia.activeTradition', tradition.id);
           setShowWisdomCouncil(false);
           toast.success(`Now guided by ${tradition.name.split('(')[0].trim()}`);
+          // Persist as a STANDING guide — continuity across sessions/devices.
+          // Fire-and-forget: localStorage already drives this session; the server
+          // copy is the durable source of truth (Guide-as-Operating-Lens Phase 1).
+          apiFetch('/api/members/wisdom-guide', {
+            method: 'POST',
+            body: JSON.stringify({
+              guide: {
+                id: tradition.id,
+                name: tradition.name,
+                element: tradition.element,
+                description: tradition.description,
+                archetype: tradition.archetype,
+                mantra: tradition.mantra,
+                principles: tradition.principles,
+              },
+            }),
+          }).catch((err) => console.warn('[wisdom-guide] persist failed (non-blocking):', err));
         }}
       />
 
@@ -9089,6 +9247,16 @@ I'm not sure what I'm feeling yet.`;
         onChangeGuide={() => {
           setShowCurrentTeaching(false);
           setShowWisdomCouncil(true);
+        }}
+        onClearGuide={() => {
+          // Step back from the standing guide (Phase 1.5 clear path).
+          setActiveTradition(null);
+          localStorage.removeItem('maia.activeTradition');
+          setShowCurrentTeaching(false);
+          toast.success('Stepped back — no guide for now');
+          // Deactivate server-side (fire-and-forget; localStorage already cleared).
+          apiFetch('/api/members/wisdom-guide', { method: 'DELETE' })
+            .catch((err) => console.warn('[wisdom-guide] clear failed (non-blocking):', err));
         }}
       />
 

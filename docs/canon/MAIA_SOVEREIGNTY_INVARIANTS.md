@@ -259,6 +259,43 @@ If not, it does not align with mission.
 
 ---
 
+## Sanctuary Scope Clarification
+
+**Sanctuary protects against imported context, not conscious choice.**
+
+Sanctuary blocks:
+- memory retrieval
+- identity inference
+- retained content
+- cross-session continuity import
+
+Sanctuary does not block:
+- explicit member-chosen orientation
+- guide selection
+- mode selection
+- voice selection
+- consciously chosen standing sources
+
+Chosen standing sources may persist through Sanctuary. Retrieved memories remain blocked. Inferred or emergent standing sources do not inherit chosen-source status and are neither imported nor persisted through Sanctuary.
+
+**The guide has standing, not authority. The member remains the final authority on meaning.**
+
+**Relation:** Refines the Sanctuary protection gate named in Invariant 11 (Declared Significance) and extends Invariant 1 (Authority Return) — a consciously chosen orientation is the member's own act, not context imported on their behalf; the eligibility gate blocks retrieval and inference, never choice. Governs guides today and any future chosen-source architecture (archetypal standing, developmental-thread standing).
+
+---
+
+## Notification & Attention Boundary
+
+MAIA supports relationship and reflection. **It does not become a notification center.**
+
+- **MAIA tags** organize meaning, memory, ideas, and personal material — private/contextual organization only. They do **not** notify other people, and the MAIA companion carries no alert / badge / inbox surface.
+- **Human attention routes through the practice surfaces, never the companion:** Co-lab mentions and practitioner requests are the attention layer (notifications allowed); the Command Center "Needs Attention" card is the primary alert surface; badges / email / push / SMS are secondary supporting channels.
+- Introducing any alert, mention-that-notifies, or notification surface into the MAIA companion space requires **explicit ratification** against this boundary — it is never a default.
+
+**Relation:** Extends Invariant 3 (Dependency Resistance) and Invariant 4 (No Emotional Capture Optimization) — a notification surface in the reflective space manufactures pull and re-engagement, the opposite of pushing life outward. Attention belongs on the work (Co-lab / Command Center), not on the companion. Codified 2026-06-06.
+
+---
+
 ## The Constitutional Sentence
 
 To sit alongside the Oath:

@@ -2,9 +2,10 @@
 // Primary AI provider for MAIA - Claude (Anthropic)
 
 import Anthropic from '@anthropic-ai/sdk';
+import { logStancePre, logStancePost } from '../sovereign/stanceReanchor';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
-import type { TextResult, ProviderMeta } from './types';
+import type { TextResult, ProviderMeta, ToolUseBlock } from './types';
 
 // Model configuration
 // ARCHITECTURE: MAIA's mind is the consciousness system (Spiralogic, AIN, prompts)
@@ -88,6 +89,10 @@ export interface ClaudeChatParams {
   systemPrompt: string;
   userInput: string;
   meta?: Record<string, unknown>;
+  // Optional Anthropic tool definitions. When provided, the model may emit
+  // tool_use blocks (returned via TextResult.toolUses). Used by the Proposal
+  // pipeline — tools PROPOSE, they never execute (MAIA_CONSENT_GATES Art. 2).
+  tools?: any[];
 }
 
 // Lazy-initialized client
@@ -114,7 +119,7 @@ export async function generateWithClaude(
   params: ClaudeChatParams,
 ): Promise<TextResult> {
   const t0 = Date.now();
-  const { systemPrompt, userInput, meta } = params;
+  const { systemPrompt, userInput, meta, tools } = params;
 
   const client = getAnthropicClient();
   if (!client) {
@@ -138,6 +143,10 @@ export async function generateWithClaude(
     : '';
   console.log(`🎭 Voice selection: ${selection.tier} (${selection.reason})${awarenessLog}`);
 
+  // 🪟 STANCE PRE (Phase 1 denominator — logging only, no prompt mutation, no injection).
+  // Wired here because generateWithClaude is the live fingerprinted chokepoint.
+  logStancePre({ tier: selection.tier, reason: selection.reason });
+
   try {
     console.log(`🧠 Calling Claude (${selection.model})...`);
 
@@ -149,20 +158,34 @@ export async function generateWithClaude(
       messages: [
         { role: 'user', content: userInput }
       ],
+      ...(tools && tools.length ? { tools } : {}),
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
-      throw new Error(`Unexpected Claude response type: ${content.type}`);
+    // Collect text + any tool_use blocks. A tool_use is a PROPOSAL surfaced for
+    // member confirmation (MAIA_CONSENT_GATES Art. 2) — never executed here.
+    let text = '';
+    const toolUses: ToolUseBlock[] = [];
+    for (const block of message.content) {
+      if (block.type === 'text') {
+        text += block.text;
+      } else if (block.type === 'tool_use') {
+        toolUses.push({
+          id: block.id,
+          name: block.name,
+          input: (block.input ?? {}) as Record<string, unknown>,
+        });
+      }
     }
-
-    const text = content.text.trim();
-    if (!text) {
+    text = text.trim();
+    if (!text && toolUses.length === 0) {
       throw new Error('Empty response from Claude');
     }
 
     const latencyMs = Date.now() - t0;
     console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${latencyMs}ms`);
+
+    // 🪟 STANCE POST (Phase 1 denominator — classify the generated response, never throws).
+    logStancePost(text, { tier: selection.tier, reason: selection.reason });
 
     // Log telemetry (async, non-blocking)
     logVoiceTierTelemetry({
@@ -187,6 +210,7 @@ export async function generateWithClaude(
         tier: selection.tier,
         reason: selection.reason,
       } as ProviderMeta,
+      toolUses: toolUses.length ? toolUses : undefined,
     };
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
