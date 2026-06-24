@@ -129,6 +129,10 @@ import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/as
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 
+// 🧭 ORGANIZING PRINCIPLES: Extractor + loader for principle representation layer
+import { extractOrganizingPrinciple } from '@/lib/maia/principleExtractor';
+import { loadOrganizingPrinciples, formatPrinciplesForPrompt } from '@/lib/maia/organizingPrinciplesLoader';
+
 // 🌿 Wu Xing (Five Elements) integration
 import { buildWuXingSnapshot, computeWuXingMoment, generateWuXingPromptAddendum, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
 import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
@@ -908,6 +912,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     let atomsResult: MemoryAtomSnapshot[] = [];
     let atomsError = false;
     let atomsAddendum: string | undefined;
+    // 🧭 Organizing principles — member-kept portable orientation statements
+    let organizingPrinciplesAddendum: string | undefined;
     // 💬 Phase 2 — Conversational recall (cross-session continuity, wire site
     // corrected per spec §IX). Block is built inside the if-block below, consumed
     // by maiaService.ts via meta.conversationalRecallAddendum.
@@ -1015,6 +1021,13 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: userId.slice(0, 8) + '...' });
         } else {
           console.log('[MAIA/sovereign] atoms: none surfacable for this member');
+        }
+
+        // 🧭 Organizing principles — load member-kept portable orientation statements
+        const savedPrinciples = await loadOrganizingPrinciples(userId);
+        if (savedPrinciples.length > 0) {
+          organizingPrinciplesAddendum = formatPrinciplesForPrompt(savedPrinciples);
+          console.log('[MAIA/sovereign] organizing principles loaded:', { count: savedPrinciples.length, userId: userId.slice(0, 8) + '...' });
         }
 
         // 💬 Phase 2 — Conversational recall (live route wire site per spec §IX).
@@ -1239,6 +1252,7 @@ Hold these threads lightly. If the inquiry being worked with would genuinely ben
           atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
           evidenceEngineAddendum,       // 🎯 Evidence Engine — still-alive governing question awareness
+          organizingPrinciplesAddendum, // 🧭 Organizing Principles — member-kept portable orientation statements
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
@@ -1254,6 +1268,21 @@ Hold these threads lightly. If the inquiry being worked with would genuinely ben
       console.log(
         `✅ Sovereign response: ${duration}ms | session=${session.id}`
       );
+    }
+
+    // 🧭 ORGANIZING PRINCIPLE EXTRACTION — run post-oracle, gated by session depth + non-Sanctuary.
+    // Lightweight Haiku call (6s timeout). Fire-and-forget: null if no principle emerged or timeout.
+    let organizingPrincipleProposal: import('@/lib/maia/principleExtractor').OrganizingPrincipleProposal | null = null;
+    if (!isSanctuary && userId && session.turns >= 2) {
+      const convHistory = ((meta as any)?.conversationHistory || []) as Array<{ role?: string; userMessage?: string; maiaResponse?: string; content?: string }>;
+      const turns = convHistory.slice(-8).map((h: any) => ({
+        role: (h.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
+        content: h.userMessage || h.maiaResponse || h.content || '',
+      })).filter((t: { role: 'user' | 'assistant'; content: string }) => t.content.length > 10);
+      organizingPrincipleProposal = await extractOrganizingPrinciple(turns, message).catch(() => null);
+      if (organizingPrincipleProposal) {
+        console.log('[MAIA/sovereign] organizing principle detected:', { title: organizingPrincipleProposal.title, userId: userId.slice(0, 8) + '...' });
+      }
     }
 
     // 🔮 Standardize provider info for sovereignty verification
@@ -1414,20 +1443,29 @@ Hold these threads lightly. If the inquiry being worked with would genuinely ben
       // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
       proposal: orchestratorResult.proposal || null,
       // 🎯 EVIDENCE ENGINE: Representation offers — evidence invited into conversation when it deepens understanding.
-      // Computed server-side from loaded atoms. Only offered when: member has still_alive atoms + not first turn + not Sanctuary.
       // Governing doc: docs/architecture/EVIDENCE_ENGINE_2026-06-24.md
       representations: (() => {
-        // Gate: any surfaced atoms (active or still_alive), not Sanctuary, not first turn.
-        // StillAlivePanel falls back to chronological when no still_alive atoms exist.
-        if (isSanctuary || !atomsResult || atomsResult.length === 0 || session.turns < 1) return null;
-        return [{
-          id: 'still-alive',
-          componentId: 'still-alive-panel',
-          questionAnswered: 'What has remained alive?',
-          invitationText: 'Would it help to look at what has continued?',
-          evidenceSource: 'member_memory_atoms',
-          confidence: 0.85,
-        }];
+        const reps: import('@/lib/sovereign/maiaService').RepresentationOption[] = [];
+
+        // still_alive: living threads the member has accumulated. Gate: atoms loaded, not first turn, not Sanctuary.
+        if (!isSanctuary && atomsResult && atomsResult.length > 0 && session.turns >= 1) {
+          reps.push({
+            type: 'still_alive',
+            id: 'still-alive',
+            componentId: 'still-alive-panel',
+            questionAnswered: 'What has remained alive?',
+            invitationText: 'Would it help to look at what has continued?',
+            evidenceSource: 'member_memory_atoms',
+            confidence: 0.85,
+          });
+        }
+
+        // organizing_principle: portable orientation statement that emerged this turn.
+        if (organizingPrincipleProposal) {
+          reps.push(organizingPrincipleProposal);
+        }
+
+        return reps.length > 0 ? reps : null;
       })(),
       // 🚪 AIN KNOWLEDGE GATE: Source well scoring (Phase 1)
       ainState: knowledgeGateResult ? {

@@ -107,6 +107,10 @@ export interface MaiaContext {
   // Orients MAIA to the evidence logic without narrating the offer — that lives in InvitationCard.
   // See docs/architecture/EVIDENCE_ENGINE_2026-06-24.md.
   evidenceEngineAddendum?: string;
+  // 🧭 ORGANIZING PRINCIPLES: Member-kept portable orientation statements from prior conversations.
+  // Enables "This sounds related to the orientation you kept before" recognition.
+  // See docs/canon/AGENCY_THE_FREEDOM_TO_MOVE.md.
+  organizingPrinciplesAddendum?: string;
 }
 
 /**
@@ -412,6 +416,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
   { field: 'evidenceEngineAddendum',          log: v => `🎯 [Evidence Engine] Still-alive awareness injected (${v.length} chars)` },
+  { field: 'organizingPrinciplesAddendum',    log: v => `🧭 [Organizing Principles] ${v.split('\n').length - 1} principles injected` },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════

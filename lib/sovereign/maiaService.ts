@@ -503,15 +503,33 @@ export type PatternMeta = {
   seen?: number;
 };
 
-// 🎯 EVIDENCE ENGINE: Representation offer — evidence invited into conversation (EVIDENCE_ENGINE_2026-06-24.md)
-export type RepresentationOption = {
+// 🎯 EVIDENCE ENGINE: Representation offers — evidence invited into conversation (EVIDENCE_ENGINE_2026-06-24.md)
+export type RepresentationType = 'still_alive' | 'organizing_principle';
+
+// still_alive: pointer to a panel component that fetches live data
+export type StillAliveRepresentation = {
+  type: 'still_alive';
   id: string;
-  componentId: string;       // client resolves to panel component
-  questionAnswered: string;  // "What has remained alive?"
-  invitationText: string;    // "Would it help to see what has remained alive?"
-  evidenceSource: string;    // "member_memory_atoms"
-  confidence: number;        // 0–1; only surface if >= 0.7
+  componentId: 'still-alive-panel';
+  questionAnswered: string;
+  invitationText: string;
+  evidenceSource: string;
+  confidence: number;
 };
+
+// organizing_principle: carries the proposed principle data directly
+export type OrganizingPrincipleRepresentation = {
+  type: 'organizing_principle';
+  id: string;
+  title: string;
+  principle: string;
+  questionAnswered: string;
+  evidence: string[];
+  invitation: string;
+  confidence: number;
+};
+
+export type RepresentationOption = StillAliveRepresentation | OrganizingPrincipleRepresentation;
 
 export type MaiaResponse = {
   text: string;
