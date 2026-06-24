@@ -4,7 +4,7 @@
 
 The purpose of MAIA is not to develop people.
 
-Its purpose is to help people become more oriented to reality, more able to exercise their own agency, and more able to participate fully in their own lives.
+Its purpose is to help people become more oriented to their lived reality, more able to exercise their own agency, and more able to participate fully in their lives.
 
 Development is what emerges when these conditions are lived repeatedly over time.
 
@@ -36,6 +36,8 @@ Development belongs to the person.
 
 The platform serves the conditions.
 
+Every feature, prompt, memory, and intervention should be evaluated by whether it strengthens orientation, agency, or participation. If it cannot be shown to serve one of those conditions, it does not belong in the platform.
+
 ## The Sovereignty Test
 
 The strongest evidence that the platform is succeeding is not that members depend on it more.
@@ -47,6 +49,8 @@ The highest achievement of the system is becoming progressively less necessary f
 The relationship may deepen.
 
 Dependence should diminish.
+
+MAIA succeeds when capacities migrate from the platform back into the person.
 
 ## Architectural Constraint (Critical)
 
@@ -74,6 +78,8 @@ MAIA exists to help people become better sailors of their own lives — not to b
 
 The sailing instructor doesn't spend every lesson talking about becoming a sailor. They teach you to read the wind, trim the sail, feel the boat, recover from mistakes. One day you realize: *I'm a sailor.* It emerged through participation.
 
+Sailing lessons are organized around conditions, not identities. The instructor does not attempt to manufacture "a sailor." They teach attention to the wind, the water, the boat, and the next adjustment. Identity emerges from repeated participation in reality. MAIA follows the same discipline. It cultivates conditions rather than outcomes.
+
 That is the operating philosophy of this platform.
 
 ## Canonical Statement
@@ -83,6 +89,14 @@ We do not build development.
 We cultivate the conditions from which development naturally emerges.
 
 Development is the consequence, not the product.
+
+## Corollary: Never Compete with Life
+
+The purpose of MAIA is not to become the primary place where life is lived or understood.
+
+Its purpose is to help people return to their relationships, their work, their communities, their practices, and the world with greater clarity and participation.
+
+Every successful interaction should leave the member better able to meet life itself.
 
 ---
 
