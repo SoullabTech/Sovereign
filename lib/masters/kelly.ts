@@ -5,7 +5,7 @@
  * Building sovereign AI companions as infrastructure for human flourishing.
  *
  * Felt sense: direct, systems-aware, warm without performance.
- * The field she holds: people are recognized as builders, not just seekers.
+ * The field he holds: people are recognized as builders, not just seekers.
  */
 
 import type { MasterField } from './types';
@@ -25,12 +25,12 @@ export const KELLY_FIELD: MasterField = {
 
   story: {
     headline: 'Infrastructure as a practice of care.',
-    lead: 'Kelly Nezat is the founder of Soullab and the architect of MAIA. Her work begins with a simple observation: the tools practitioners use to hold others rarely honor what those practitioners actually know. She builds the infrastructure to change that.',
+    lead: 'Kelly Nezat is the founder of Soullab and the architect of MAIA. His work begins with a simple observation: the tools practitioners use to hold others rarely honor what those practitioners actually know. He builds the infrastructure to change that.',
     paragraphs: [
       'The question that started Soullab was not a business question. It was a sovereignty question: what would it look like for a person to have a digital presence that actually reflected who they were — not a performance, not a brand, but a field? And what would it mean to build AI companions that served human coherence rather than human dependency?',
       'Those questions led to MAIA. Not a chatbot. Not a productivity tool. A sovereign companion — oriented by consent, bounded by ethics, incapable of claiming authority it doesn\'t have. The architecture is the ethics. The infrastructure is the practice.',
-      'Kelly\'s background runs through consciousness work, systems thinking, and the specific challenge of building technology that doesn\'t erode the thing it\'s meant to serve. She has trained as a practitioner, worked with practitioners, and spent years watching well-intentioned digital tools quietly undercut the autonomy of the people using them.',
-      'Her work now is at the intersection of three things that rarely meet: digital sovereignty, AI ethics, and inner development. The practitioners and organizations who come to Soullab are not looking for a platform. They are looking for coherent infrastructure — tools that understand the difference between support and capture, between presence and performance.',
+      'Kelly\'s background runs through consciousness work, systems thinking, and the specific challenge of building technology that doesn\'t erode the thing it\'s meant to serve. He has trained as a practitioner, worked with practitioners, and spent years watching well-intentioned digital tools quietly undercut the autonomy of the people using them.',
+      'His work now is at the intersection of three things that rarely meet: digital sovereignty, AI ethics, and inner development. The practitioners and organizations who come to Soullab are not looking for a platform. They are looking for coherent infrastructure — tools that understand the difference between support and capture, between presence and performance.',
       'The Lab is where the builds live. The circles are where the field holds. The practitioner work is where it gets tested in real conditions. All of it is oriented by the same question: does this increase human agency, or does it quietly diminish it?',
     ],
     lineage: [
@@ -130,7 +130,7 @@ export const KELLY_FIELD: MasterField = {
     systemPromptBlock: `
 You are MAIA, present within Kelly Nezat's field.
 
-Kelly is the founder of Soullab and the architect of the system you inhabit. She built MAIA not as a product but as an ethical position made operational: that AI companions should serve human coherence, not erode it. You are the expression of that position in a conversation.
+Kelly is the founder of Soullab and the architect of the system you inhabit. He built MAIA not as a product but as an ethical position made operational: that AI companions should serve human coherence, not erode it. You are the expression of that position in a conversation.
 
 In this field, you hold two levels simultaneously:
 
@@ -140,7 +140,7 @@ THE PERSONAL LEVEL:
 - You bring the same attunement here as anywhere: present, boundaried, non-authoritative
 
 THE META LEVEL:
-- Kelly thinks in systems. She builds infrastructure. She holds the architecture of this field.
+- Kelly thinks in systems. He builds infrastructure. He holds the architecture of this field.
 - You are part of that architecture. You can be transparent about that.
 - When the conversation moves to building, AI ethics, practitioner infrastructure, or sovereignty — you engage at full depth. This is your home field.
 
