@@ -316,6 +316,8 @@ async function getInitialUserData() {
   return { id: 'guest', name: 'Friend' };
 }
 
+const CONTEXT_DOORS = ['Personal', 'Creative', 'Business', 'Relationship', 'Session', 'Dream', 'Body', 'Unknown'] as const;
+
 function MAIAPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -394,6 +396,11 @@ function MAIAPageContent() {
   const [currentCounselFramework, setCurrentCounselFramework] = useState<TherapeuticFramework>('auto');
   const [currentScribeLens, setCurrentScribeLens] = useState<ReflectionLens>('auto');
   const [mentorStanceEnabled, setMentorStanceEnabled] = useState(false);
+
+  // Expression-first entry screen
+  const [showEntryScreen, setShowEntryScreen] = useState(false);
+  const [entryDoor, setEntryDoor] = useState<string | null>(null);
+  const [entryText, setEntryText] = useState('');
 
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
@@ -508,12 +515,17 @@ function MAIAPageContent() {
 
       // Check Week 0 onboarding completion
       const week0Complete = localStorage.getItem('week0_onboarding_complete');
-      if (!week0Complete && initialData.name && initialData.name !== 'Friend') {
+      const needsOnboarding = !week0Complete && initialData.name && initialData.name !== 'Friend';
+      if (needsOnboarding) {
         // Show onboarding for new users (but not for guest/default users)
         setShowWeekZeroOnboarding(true);
         console.log('🌱 [MAIA] Week 0 onboarding required for:', initialData.name);
       } else {
         console.log('✅ [MAIA] Week 0 onboarding already completed or guest user');
+        // Show expression-first entry screen for returning members
+        if (!searchParams?.get('action') && !searchParams?.get('changePassword')) {
+          setShowEntryScreen(true);
+        }
       }
 
       // Load saved voice preference, migrating legacy vendor names
@@ -617,6 +629,21 @@ function MAIAPageContent() {
     localStorage.setItem('week0_onboarding_complete', 'skipped');
     setShowWeekZeroOnboarding(false);
   };
+
+  const handleEntrySubmit = useCallback(() => {
+    const text = entryText.trim();
+    const message = entryDoor && !text
+      ? `I'm in the ${entryDoor.toLowerCase()} space today.`
+      : entryDoor
+      ? `[${entryDoor}] ${text}`
+      : text;
+    if (message) {
+      window.dispatchEvent(new CustomEvent('journalAskMaia', {
+        detail: { content: message, type: 'entry', prompt: message }
+      }));
+    }
+    setShowEntryScreen(false);
+  }, [entryText, entryDoor]);
 
   // One-time migration check for contaminated kelly-nezat sessions
   useEffect(() => {
@@ -1770,6 +1797,74 @@ function MAIAPageContent() {
           memberId={explorerId}
           memberName={explorerName}
         />
+
+        {/* Expression-first entry screen — "What are you holding today?" */}
+        <AnimatePresence>
+          {isMounted && showEntryScreen && !showWeekZeroOnboarding && !showWelcome && (
+            <motion.div
+              key="entry-screen"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.35 } }}
+              className="absolute inset-0 z-[180] flex flex-col items-center justify-center px-6"
+              style={{ background: 'linear-gradient(135deg, #0c0a09 0%, #1c1917 50%, #0c0a09 100%)' }}
+            >
+              <div className="w-full max-w-sm flex flex-col gap-8">
+                <div className="text-center">
+                  <h1 className="text-2xl font-light text-stone-200 leading-relaxed tracking-wide">
+                    What are you holding today?
+                  </h1>
+                </div>
+
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {CONTEXT_DOORS.map((door) => (
+                    <button
+                      key={door}
+                      onClick={() => setEntryDoor(prev => prev === door ? null : door)}
+                      className={`px-3 py-1 rounded-full text-xs transition-all ${
+                        entryDoor === door
+                          ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                          : 'bg-white/5 border border-white/10 text-stone-600 hover:text-stone-400 hover:border-white/15'
+                      }`}
+                    >
+                      {door}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    value={entryText}
+                    onChange={(e) => setEntryText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleEntrySubmit();
+                      }
+                    }}
+                    placeholder="Begin here..."
+                    autoFocus
+                    rows={3}
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-stone-300 placeholder:text-stone-700 resize-none focus:outline-none focus:border-white/15"
+                  />
+                  {entryText.trim() && (
+                    <div className="absolute bottom-3 right-3 text-stone-700 text-[10px] pointer-events-none">
+                      ↵ to begin
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-center">
+                  <button
+                    onClick={() => setShowEntryScreen(false)}
+                    className="text-xs text-stone-700 hover:text-stone-500 transition-colors"
+                  >
+                    just arrive
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         </div>
       </SwipeNavigation>
