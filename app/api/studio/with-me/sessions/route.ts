@@ -9,19 +9,37 @@ export async function POST(req: NextRequest) {
   if (!facilitatorId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { field_slug, member_id, member_name, intention } = body;
+  const { field_slug, member_id, member_name, member_username, intention } = body;
 
   if (!field_slug) return NextResponse.json({ error: 'field_slug required' }, { status: 400 });
+
+  // Resolve member_id from username if not provided directly
+  let resolvedMemberId: string | null = member_id ?? null;
+  let resolvedMemberName: string | null = member_name ?? null;
+
+  if (!resolvedMemberId && member_username) {
+    const lookup = await query<{ id: string; name: string }>(
+      `SELECT id, name FROM members WHERE username = $1 LIMIT 1`,
+      [member_username.trim()],
+    );
+    if (lookup.rows[0]) {
+      resolvedMemberId = lookup.rows[0].id;
+      resolvedMemberName = resolvedMemberName ?? lookup.rows[0].name;
+    }
+  }
 
   const result = await query(
     `INSERT INTO with_me_sessions
        (field_slug, facilitator_id, member_id, member_name, intention)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
-    [field_slug, facilitatorId, member_id ?? null, member_name ?? null, intention ?? null],
+    [field_slug, facilitatorId, resolvedMemberId, resolvedMemberName, intention ?? null],
   );
 
-  return NextResponse.json({ session: result.rows[0] }, { status: 201 });
+  return NextResponse.json({
+    session: result.rows[0],
+    member_linked: !!resolvedMemberId,
+  }, { status: 201 });
 }
 
 export async function GET(req: NextRequest) {

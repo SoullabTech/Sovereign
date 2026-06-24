@@ -100,6 +100,8 @@ export default function WithMePage() {
 
   const [phase, setPhase] = useState<Phase>('setup');
   const [memberName, setMemberName] = useState('');
+  const [memberUsername, setMemberUsername] = useState('');
+  const [memberLinked, setMemberLinked] = useState(false);
   const [intention, setIntention] = useState('');
 
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -237,12 +239,18 @@ export default function WithMePage() {
     const res = await apiFetch('/api/studio/with-me/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ field_slug: slug, member_name: memberName || null, intention: intention || null }),
+      body: JSON.stringify({
+        field_slug: slug,
+        member_name: memberName || null,
+        member_username: memberUsername || null,
+        intention: intention || null,
+      }),
     });
     const data = await res.json();
     if (!data.session) return;
     setSessionId(data.session.id);
     setSessionStartedAt(data.session.created_at);
+    setMemberLinked(!!data.member_linked);
     setPhase('active');
   };
 
@@ -276,6 +284,8 @@ export default function WithMePage() {
   const handleNewSession = () => {
     setPhase('setup');
     setMemberName('');
+    setMemberUsername('');
+    setMemberLinked(false);
     setIntention('');
     setSessionId(null);
     setSessionStartedAt(null);
@@ -331,6 +341,20 @@ export default function WithMePage() {
 
               <div>
                 <label className="text-xs uppercase tracking-wider block mb-2" style={{ color: palette.text, opacity: 0.5 }}>
+                  Soullab username
+                </label>
+                <input
+                  type="text"
+                  value={memberUsername}
+                  onChange={e => setMemberUsername(e.target.value)}
+                  placeholder="Username — links session to MAIA memory (optional)"
+                  className={inputCls}
+                  style={{ color: palette.text }}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs uppercase tracking-wider block mb-2" style={{ color: palette.text, opacity: 0.5 }}>
                   Session intention
                 </label>
                 <textarea
@@ -368,6 +392,16 @@ export default function WithMePage() {
                 {intention && (
                   <p className="text-xs mt-0.5" style={{ color: palette.text, opacity: 0.35 }}>
                     {intention.slice(0, 60)}
+                  </p>
+                )}
+                {memberLinked && (
+                  <p className="text-xs mt-0.5" style={{ color: palette.primary, opacity: 0.6 }}>
+                    ● linked to MAIA memory
+                  </p>
+                )}
+                {!memberLinked && memberUsername && (
+                  <p className="text-xs mt-0.5" style={{ color: palette.text, opacity: 0.3 }}>
+                    username not found — session unlinked
                   </p>
                 )}
               </div>
