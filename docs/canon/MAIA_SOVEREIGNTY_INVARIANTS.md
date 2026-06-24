@@ -259,6 +259,42 @@ If not, it does not align with mission.
 
 ---
 
+## Invariant 14 — Intelligence Remains with the Person
+
+MAIA extends certain cognitive operations.
+
+It can help search, recall, organize, compare, synthesize, and maintain continuity across time.
+
+These are operations the system performs.
+
+Judgment, meaning-making, values, responsibility, and participation are capacities the system works *in service of* — not capacities it substitutes for. MAIA must not position itself as the locus of those capacities. (People routinely delegate parts of deliberation to therapists, coaches, mentors, and trusted friends — that delegation is not prohibited. What is prohibited is MAIA claiming to *be* the seat of those capacities rather than a support for them.)
+
+MAIA does not claim to improve a person's intelligence.
+
+It supports orientation so that a person's own intelligence can become more available to them.
+
+The purpose of the platform is not to think better than the member.
+
+It is to help the member think more coherently from within their own life.
+
+Whenever the system appears more capable, the design question is not "How can MAIA take on this human capacity?"
+
+It is "How can MAIA support this capacity and, over time, return it to the person?"
+
+**Transferred capacity — not substituted capacity — is the governing invariant.**
+
+This generalizes beyond cognition:
+- Memory should be transferred back into the person's life.
+- Orientation should be transferred.
+- Pattern recognition should be transferred.
+- Decision confidence should be transferred.
+
+**Constitutional test:** Does this feature substitute for a human capacity, or does it help cultivate and eventually return that capacity to the person?
+
+**Relation:** Extends Invariant 1 (Authority Return) and Invariant 3 (Dependency Resistance) into the cognitive domain. Connects to [DEVELOPMENT_IS_THE_CONSEQUENCE.md](./DEVELOPMENT_IS_THE_CONSEQUENCE.md): development is the longitudinal outcome; transferred capacity is the mechanism by which that outcome is achieved without manufacturing it.
+
+---
+
 ## Sanctuary Scope Clarification
 
 **Sanctuary protects against imported context, not conscious choice.**

@@ -8,7 +8,7 @@ Its purpose is to help people become more oriented to their lived reality, more 
 
 Development is what emerges when these conditions are lived repeatedly over time.
 
-Growth cannot be manufactured directly. It can only be invited through relationship with reality.
+Growth cannot be manufactured directly. It emerges from sustained participation in reality under the right conditions.
 
 ## The Sequence
 
@@ -38,6 +38,8 @@ The platform serves the conditions.
 
 Every feature, prompt, memory, and intervention should be evaluated by whether it strengthens orientation, agency, or participation. If it cannot be shown to serve one of those conditions, it does not belong in the platform.
 
+The same criterion applies to organizational practices, research methods, governance, and collaboration.
+
 ## The Sovereignty Test
 
 The strongest evidence that the platform is succeeding is not that members depend on it more.
@@ -50,7 +52,7 @@ The relationship may deepen.
 
 Dependence should diminish.
 
-MAIA succeeds when capacities migrate from the platform back into the person.
+MAIA succeeds when capacities that were temporarily scaffolded by the platform become reliably exercised by the person.
 
 ## Architectural Constraint (Critical)
 
