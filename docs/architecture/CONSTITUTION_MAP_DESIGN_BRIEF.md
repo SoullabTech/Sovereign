@@ -82,6 +82,48 @@ Timescale: Every pull request
 
 ---
 
+## How to Read the Constitution
+
+Not every constitutional document is asking the reader to do the same thing.
+
+Knowing which type of document you are reading determines the appropriate mode of engagement.
+
+---
+
+### Purpose Documents
+
+These answer: **Why do we exist?**
+
+The appropriate question is: *Does this still express who we are?*
+
+Purpose documents change rarely. They are revisited only when the organization's fundamental mission is in question.
+
+---
+
+### Constraint Documents
+
+These answer: **What must we never do?**
+
+The appropriate question is: *Does this proposal cross a constitutional boundary?*
+
+Constraint documents are enforced continuously. They are amended only with considerable evidence that a prohibition is mistaken or has been superseded.
+
+---
+
+### Explanatory Documents
+
+These answer: **Why do we believe this architecture works?**
+
+The appropriate question is: *Is this proposal consistent with our current causal understanding?*
+
+Explanatory documents should be refined through disciplined observation and evidence, while preserving the underlying constitutional commitments they support. Disagreement with an explanatory document is an invitation to reason about the causal model — not to override it by authority.
+
+---
+
+The constitution contains both commitments and hypotheses. Contributors should not confuse disagreement about a hypothesis with disagreement about the organization's purpose, nor treat a purpose statement as though it were an empirical claim.
+
+---
+
 ## Change Discipline
 
 The Constitution Map changes only when the constitutional structure changes.
