@@ -62,14 +62,14 @@ const EVENT_BUTTONS: {
   needsDetail?: boolean;
   detailFields?: string[];
 }[] = [
-  { type: 'arrival_intention',       label: 'Arrival',        color: 'bg-slate-700 hover:bg-slate-600' },
-  { type: 'observer_capacity_shift', label: 'Observer Shift', color: 'bg-teal-800 hover:bg-teal-700',     needsDetail: true, detailFields: ['from', 'to'] },
-  { type: 'movement_recognized',     label: 'Movement Named', color: 'bg-blue-900 hover:bg-blue-800' },
-  { type: 'protector_named',         label: 'Protector',      color: 'bg-purple-900 hover:bg-purple-800', needsDetail: true, detailFields: ['name'] },
-  { type: 'orientation_restored',    label: 'Oriented',       color: 'bg-emerald-900 hover:bg-emerald-800' },
-  { type: 'symbolic_frame_accepted', label: 'Symbol',         color: 'bg-amber-900 hover:bg-amber-800',   needsDetail: true, detailFields: ['symbol'] },
-  { type: 'facilitator_bookmark',    label: 'Bookmark',       color: 'bg-slate-700 hover:bg-slate-600',   needsDetail: true, detailFields: ['note'] },
-  { type: 'closing_commitment',      label: 'Commitment',     color: 'bg-rose-900 hover:bg-rose-800',     needsDetail: true, detailFields: ['commitment'] },
+  { type: 'arrival_intention',       label: 'Arrival',        color: 'bg-slate-700 hover:bg-slate-600 text-white' },
+  { type: 'observer_capacity_shift', label: 'Observer Shift', color: 'bg-teal-800 hover:bg-teal-700 text-white',     needsDetail: true, detailFields: ['from', 'to'] },
+  { type: 'movement_recognized',     label: 'Movement Named', color: 'bg-blue-900 hover:bg-blue-800 text-white' },
+  { type: 'protector_named',         label: 'Protector',      color: 'bg-purple-900 hover:bg-purple-800 text-white', needsDetail: true, detailFields: ['name'] },
+  { type: 'orientation_restored',    label: 'Oriented',       color: 'bg-emerald-900 hover:bg-emerald-800 text-white' },
+  { type: 'symbolic_frame_accepted', label: 'Symbol',         color: 'bg-amber-900 hover:bg-amber-800 text-white',   needsDetail: true, detailFields: ['symbol'] },
+  { type: 'facilitator_bookmark',    label: 'Bookmark',       color: 'bg-slate-700 hover:bg-slate-600 text-white',   needsDetail: true, detailFields: ['note'] },
+  { type: 'closing_commitment',      label: 'Commitment',     color: 'bg-rose-900 hover:bg-rose-800 text-white',     needsDetail: true, detailFields: ['commitment'] },
 ];
 
 // ---------------------------------------------------------------------------
@@ -82,6 +82,10 @@ function elapsed(startedAt: string): string {
   const s = secs % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
 }
+
+// Shared input/textarea class for light-background fields
+const inputCls =
+  'w-full bg-black/[0.04] border border-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black/20 resize-none transition-colors';
 
 // ---------------------------------------------------------------------------
 // Component
@@ -190,7 +194,6 @@ export default function WithMePage() {
     setSessionId(data.session.id);
     setSessionStartedAt(data.session.created_at);
     setPhase('active');
-    // Log arrival after session exists
     setTimeout(() => logEvent('arrival_intention', { intention }), 100);
   };
 
@@ -266,8 +269,8 @@ export default function WithMePage() {
 
         <Link
           href={`/fields/${slug}`}
-          className="text-xs uppercase tracking-widest mb-12 inline-block opacity-40 hover:opacity-70 transition-opacity"
-          style={{ color: palette.text }}
+          className="text-xs uppercase tracking-widest mb-12 inline-block transition-opacity hover:opacity-100"
+          style={{ color: palette.text, opacity: 0.4 }}
         >
           ← {shortName}&apos;s Field
         </Link>
@@ -277,14 +280,14 @@ export default function WithMePage() {
           <div className="space-y-8">
             <div>
               <h1 className="text-3xl font-light mb-2" style={{ color: palette.text }}>Walk With Me</h1>
-              <p className="text-sm opacity-40" style={{ color: palette.text }}>
+              <p className="text-sm" style={{ color: palette.text, opacity: 0.5 }}>
                 Begin a session. MAIA witnesses quietly and offers synthesis at the close.
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs uppercase tracking-wider opacity-40 block mb-2" style={{ color: palette.text }}>
+                <label className="text-xs uppercase tracking-wider block mb-2" style={{ color: palette.text, opacity: 0.5 }}>
                   Who is here
                 </label>
                 <input
@@ -292,12 +295,13 @@ export default function WithMePage() {
                   value={memberName}
                   onChange={e => setMemberName(e.target.value)}
                   placeholder="Name (optional)"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:border-white/25 text-sm"
+                  className={inputCls}
+                  style={{ color: palette.text }}
                 />
               </div>
 
               <div>
-                <label className="text-xs uppercase tracking-wider opacity-40 block mb-2" style={{ color: palette.text }}>
+                <label className="text-xs uppercase tracking-wider block mb-2" style={{ color: palette.text, opacity: 0.5 }}>
                   Session intention
                 </label>
                 <textarea
@@ -305,14 +309,15 @@ export default function WithMePage() {
                   onChange={e => setIntention(e.target.value)}
                   placeholder="What is this session for? (optional)"
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 focus:outline-none focus:border-white/25 text-sm resize-none"
+                  className={inputCls}
+                  style={{ color: palette.text }}
                 />
               </div>
 
               <button
                 onClick={handleBeginSession}
                 className="w-full py-4 rounded-xl text-sm font-medium transition-all"
-                style={{ backgroundColor: `${palette.primary}20`, color: palette.primary, border: `1px solid ${palette.primary}35` }}
+                style={{ backgroundColor: `${palette.primary}18`, color: palette.primary, border: `1px solid ${palette.primary}50` }}
               >
                 Begin Session
               </button>
@@ -326,9 +331,13 @@ export default function WithMePage() {
             <div className="flex items-center justify-between">
               <h1 className="text-lg font-light" style={{ color: palette.text }}>
                 {memberName || 'Session'}
-                {intention && <span className="opacity-35 text-sm ml-2">· {intention.slice(0, 45)}</span>}
+                {intention && (
+                  <span className="text-sm ml-2" style={{ color: palette.text, opacity: 0.35 }}>
+                    · {intention.slice(0, 45)}
+                  </span>
+                )}
               </h1>
-              <div className="flex items-center gap-1.5 text-xs opacity-35" style={{ color: palette.text }}>
+              <div className="flex items-center gap-1.5 text-xs" style={{ color: palette.text, opacity: 0.4 }}>
                 <Clock className="w-3 h-3" />
                 {elapsedDisplay}
                 {saving && <span className="ml-1 opacity-60">saving…</span>}
@@ -337,17 +346,18 @@ export default function WithMePage() {
 
             {/* Element selector */}
             <div>
-              <p className="text-xs uppercase tracking-wider opacity-35 mb-2" style={{ color: palette.text }}>Element</p>
+              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.45 }}>Element</p>
               <div className="flex gap-2 flex-wrap items-center">
                 {ELEMENTS.map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
                     onClick={() => handleElementChange(key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
+                    style={
                       element === key
-                        ? 'bg-white/20 text-white'
-                        : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70'
-                    }`}
+                        ? { backgroundColor: `${palette.primary}20`, color: palette.primary, border: `1px solid ${palette.primary}40` }
+                        : { backgroundColor: 'rgba(0,0,0,0.05)', color: palette.text, opacity: 0.5, border: '1px solid transparent' }
+                    }
                   >
                     <Icon className="w-3 h-3" />
                     {label}
@@ -360,7 +370,8 @@ export default function WithMePage() {
                     onChange={e => setSpiralPosition(e.target.value)}
                     onBlur={() => patchSession({ spiral_position: spiralPosition })}
                     placeholder="Spiral position…"
-                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/25 focus:outline-none w-36"
+                    className="px-3 py-1.5 bg-black/[0.04] border border-black/10 rounded-lg text-xs focus:outline-none w-36"
+                    style={{ color: palette.text }}
                   />
                 )}
               </div>
@@ -368,13 +379,13 @@ export default function WithMePage() {
 
             {/* Event bookmarks */}
             <div>
-              <p className="text-xs uppercase tracking-wider opacity-35 mb-2" style={{ color: palette.text }}>Mark moment</p>
+              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.45 }}>Mark moment</p>
               <div className="flex flex-wrap gap-2">
                 {EVENT_BUTTONS.map(btn => (
                   <button
                     key={btn.type}
                     onClick={() => handleEventButtonClick(btn)}
-                    className={`px-3 py-1.5 rounded-lg text-xs text-white/80 transition-all ${btn.color}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-all ${btn.color}`}
                   >
                     {btn.label}
                   </button>
@@ -382,11 +393,11 @@ export default function WithMePage() {
               </div>
 
               {pendingEventType && eventBtn && (
-                <div className="mt-3 p-4 bg-white/5 rounded-xl border border-white/10 space-y-2">
-                  <p className="text-xs text-white/50 font-medium">{eventBtn.label}</p>
+                <div className="mt-3 p-4 bg-black/[0.04] rounded-xl border border-black/10 space-y-2">
+                  <p className="text-xs font-medium" style={{ color: palette.text, opacity: 0.6 }}>{eventBtn.label}</p>
                   {(eventBtn.detailFields ?? []).map((field, fi) => (
                     <div key={field}>
-                      <label className="text-xs text-white/35 block mb-1 capitalize">{field}</label>
+                      <label className="text-xs block mb-1 capitalize" style={{ color: palette.text, opacity: 0.45 }}>{field}</label>
                       <input
                         type="text"
                         value={detailValues[field] ?? ''}
@@ -398,7 +409,8 @@ export default function WithMePage() {
                           `${field}…`
                         }
                         autoFocus={fi === 0}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none"
+                        className="w-full bg-black/[0.04] border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                        style={{ color: palette.text }}
                       />
                     </div>
                   ))}
@@ -406,7 +418,7 @@ export default function WithMePage() {
                     <button onClick={handleDetailSubmit} className="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 text-white text-xs rounded-lg">
                       Log
                     </button>
-                    <button onClick={() => setPendingEventType(null)} className="px-3 py-1.5 bg-white/5 text-white/45 text-xs rounded-lg hover:bg-white/10">
+                    <button onClick={() => setPendingEventType(null)} className="px-3 py-1.5 text-xs rounded-lg border border-black/10 hover:bg-black/5" style={{ color: palette.text, opacity: 0.5 }}>
                       Cancel
                     </button>
                   </div>
@@ -416,17 +428,17 @@ export default function WithMePage() {
 
             {/* Event log */}
             {events.length > 0 && (
-              <div className="space-y-1 py-2 border-t border-white/5">
+              <div className="space-y-1 py-2 border-t border-black/8">
                 {events.map(e => (
-                  <div key={e.id} className="flex items-start gap-2 text-xs text-white/35">
+                  <div key={e.id} className="flex items-start gap-2 text-xs" style={{ color: palette.text, opacity: 0.45 }}>
                     <Tag className="w-3 h-3 shrink-0 mt-0.5" />
                     <span>{e.event_type.replace(/_/g, ' ')}</span>
-                    {e.elemental_phase && <span className="opacity-60">· {e.elemental_phase}</span>}
+                    {e.elemental_phase && <span className="opacity-70">· {e.elemental_phase}</span>}
                     {typeof e.payload?.from === 'string' && (
-                      <span className="opacity-50 truncate">· &ldquo;{e.payload.from}&rdquo; → &ldquo;{String(e.payload.to ?? '')}&rdquo;</span>
+                      <span className="opacity-60 truncate">· &ldquo;{e.payload.from}&rdquo; → &ldquo;{String(e.payload.to ?? '')}&rdquo;</span>
                     )}
                     {typeof e.payload?.note === 'string' && (
-                      <span className="opacity-50 truncate">· {e.payload.note}</span>
+                      <span className="opacity-60 truncate">· {e.payload.note}</span>
                     )}
                   </div>
                 ))}
@@ -435,13 +447,14 @@ export default function WithMePage() {
 
             {/* Notes */}
             <div>
-              <p className="text-xs uppercase tracking-wider opacity-35 mb-2" style={{ color: palette.text }}>Notes</p>
+              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.45 }}>Notes</p>
               <textarea
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Live notes…"
                 rows={6}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none resize-none"
+                className={inputCls}
+                style={{ color: palette.text }}
               />
             </div>
 
@@ -449,8 +462,8 @@ export default function WithMePage() {
             <div>
               <button
                 onClick={() => setShowTranscript(v => !v)}
-                className="flex items-center gap-2 text-xs opacity-35 hover:opacity-60 transition-opacity"
-                style={{ color: palette.text }}
+                className="flex items-center gap-2 text-xs transition-opacity hover:opacity-80"
+                style={{ color: palette.text, opacity: 0.4 }}
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 Transcript
@@ -462,14 +475,18 @@ export default function WithMePage() {
                   onChange={e => setTranscript(e.target.value)}
                   placeholder="Paste or type transcript…"
                   rows={8}
-                  className="mt-2 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none resize-none font-mono"
+                  className={`mt-2 ${inputCls} font-mono`}
+                  style={{ color: palette.text }}
                 />
               )}
             </div>
 
             <button
               onClick={() => setPhase('closing')}
-              className="w-full py-3 rounded-xl text-sm text-white/45 hover:text-white/70 border border-white/10 hover:border-white/20 transition-all"
+              className="w-full py-3 rounded-xl text-sm transition-all border"
+              style={{ color: palette.text, opacity: 0.5, borderColor: 'rgba(0,0,0,0.1)' }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
             >
               Close Session →
             </button>
@@ -481,7 +498,7 @@ export default function WithMePage() {
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-light mb-2" style={{ color: palette.text }}>Closing</h2>
-              <p className="text-sm opacity-40" style={{ color: palette.text }}>
+              <p className="text-sm" style={{ color: palette.text, opacity: 0.5 }}>
                 One reflection before MAIA synthesizes. What was most alive in this session?
               </p>
             </div>
@@ -491,22 +508,24 @@ export default function WithMePage() {
               onChange={e => setClosingReflection(e.target.value)}
               placeholder="Closing reflection…"
               rows={5}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none resize-none"
+              className={inputCls}
+              style={{ color: palette.text }}
               autoFocus
             />
 
             <div className="flex gap-3">
               <button
                 onClick={() => setPhase('active')}
-                className="px-4 py-2 text-sm text-white/40 hover:text-white/60 border border-white/10 rounded-xl transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-black/10 transition-colors"
+                style={{ color: palette.text, opacity: 0.5 }}
               >
                 ← Back
               </button>
               <button
                 onClick={handleRequestSynthesis}
                 disabled={synthesizing}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm text-white transition-all disabled:opacity-60"
-                style={{ backgroundColor: `${palette.primary}20`, border: `1px solid ${palette.primary}35` }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm transition-all disabled:opacity-60"
+                style={{ backgroundColor: `${palette.primary}18`, color: palette.primary, border: `1px solid ${palette.primary}50` }}
               >
                 {synthesizing
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> MAIA is reviewing…</>
@@ -523,13 +542,13 @@ export default function WithMePage() {
             <div>
               <h2 className="text-xl font-light mb-2" style={{ color: palette.text }}>Memory Review</h2>
               {synthesis.synthesis_note && (
-                <p className="text-sm italic opacity-50 border-l-2 border-white/15 pl-4" style={{ color: palette.text }}>
+                <p className="text-sm italic" style={{ color: palette.text, opacity: 0.55, borderLeft: `2px solid rgba(0,0,0,0.12)`, paddingLeft: '1rem' }}>
                   {synthesis.synthesis_note}
                 </p>
               )}
             </div>
 
-            <p className="text-xs opacity-35" style={{ color: palette.text }}>
+            <p className="text-xs" style={{ color: palette.text, opacity: 0.4 }}>
               Approve what belongs in the developmental record. Nothing is written until you complete.
             </p>
 
@@ -537,33 +556,38 @@ export default function WithMePage() {
               {candidates.map((c, i) => (
                 <div
                   key={c.id}
-                  className={`p-4 rounded-xl border transition-all ${
-                    c.approved ? 'border-white/15 bg-white/5' : 'border-white/5 bg-transparent opacity-35'
-                  }`}
+                  className="p-4 rounded-xl border transition-all"
+                  style={{
+                    borderColor: c.approved ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.04)',
+                    backgroundColor: c.approved ? 'rgba(0,0,0,0.03)' : 'transparent',
+                    opacity: c.approved ? 1 : 0.4,
+                  }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs px-2 py-0.5 rounded bg-white/10 text-white/55">
+                        <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.07)', color: palette.text, opacity: 0.7 }}>
                           {c.category.replace(/_/g, ' ')}
                         </span>
-                        {c.elemental_phase && <span className="text-xs text-white/35">{c.elemental_phase}</span>}
-                        {c.spiral_position && <span className="text-xs text-white/25">{c.spiral_position}</span>}
-                        <span className="text-xs text-white/20 ml-auto">{Math.round(c.confidence * 100)}%</span>
+                        {c.elemental_phase && <span className="text-xs" style={{ color: palette.text, opacity: 0.4 }}>{c.elemental_phase}</span>}
+                        {c.spiral_position && <span className="text-xs" style={{ color: palette.text, opacity: 0.3 }}>{c.spiral_position}</span>}
+                        <span className="text-xs ml-auto" style={{ color: palette.text, opacity: 0.3 }}>{Math.round(c.confidence * 100)}%</span>
                       </div>
-                      <p className="text-sm text-white/80 leading-relaxed">{c.content}</p>
-                      <p className="text-xs text-white/25 italic">Basis: {c.basis}</p>
+                      <p className="text-sm leading-relaxed" style={{ color: palette.text, opacity: 0.85 }}>{c.content}</p>
+                      <p className="text-xs italic" style={{ color: palette.text, opacity: 0.35 }}>Basis: {c.basis}</p>
                     </div>
                     <div className="flex gap-1.5 shrink-0 mt-1">
                       <button
                         onClick={() => setCandidates(prev => prev.map((x, j) => j === i ? { ...x, approved: true } : x))}
-                        className={`p-1.5 rounded-lg transition-all ${c.approved ? 'bg-emerald-700 text-white' : 'bg-white/5 text-white/30 hover:bg-white/10'}`}
+                        className={`p-1.5 rounded-lg transition-all ${c.approved ? 'bg-emerald-700 text-white' : 'bg-black/5 hover:bg-black/10'}`}
+                        style={!c.approved ? { color: palette.text, opacity: 0.35 } : {}}
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => setCandidates(prev => prev.map((x, j) => j === i ? { ...x, approved: false } : x))}
-                        className={`p-1.5 rounded-lg transition-all ${!c.approved ? 'bg-rose-800 text-white' : 'bg-white/5 text-white/30 hover:bg-white/10'}`}
+                        className={`p-1.5 rounded-lg transition-all ${!c.approved ? 'bg-rose-800 text-white' : 'bg-black/5 hover:bg-black/10'}`}
+                        style={c.approved ? { color: palette.text, opacity: 0.35 } : {}}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -574,14 +598,14 @@ export default function WithMePage() {
             </div>
 
             <div className="flex items-center gap-4 pt-2">
-              <span className="text-xs opacity-35 flex-1" style={{ color: palette.text }}>
+              <span className="text-xs flex-1" style={{ color: palette.text, opacity: 0.4 }}>
                 {candidates.filter(c => c.approved).length} of {candidates.length} approved
               </span>
               <button
                 onClick={handleComplete}
                 disabled={completing}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm text-white transition-all disabled:opacity-60"
-                style={{ backgroundColor: `${palette.primary}25`, border: `1px solid ${palette.primary}45` }}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm transition-all disabled:opacity-60"
+                style={{ backgroundColor: `${palette.primary}20`, color: palette.primary, border: `1px solid ${palette.primary}50` }}
               >
                 {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
                 Complete Session
@@ -593,12 +617,15 @@ export default function WithMePage() {
         {/* ── DONE ── */}
         {phase === 'done' && (
           <div className="space-y-6 text-center py-16">
-            <div className="w-12 h-12 rounded-full bg-white/8 flex items-center justify-center mx-auto">
-              <Check className="w-6 h-6 text-white/50" />
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto"
+              style={{ backgroundColor: `${palette.primary}15` }}
+            >
+              <Check className="w-6 h-6" style={{ color: palette.primary }} />
             </div>
             <div>
               <h2 className="text-xl font-light mb-2" style={{ color: palette.text }}>Session Complete</h2>
-              <p className="text-sm opacity-35" style={{ color: palette.text }}>
+              <p className="text-sm" style={{ color: palette.text, opacity: 0.4 }}>
                 {candidates.filter(c => c.approved).length} memory candidate{candidates.filter(c => c.approved).length !== 1 ? 's' : ''} approved.
                 The next session begins with deeper continuity.
               </p>
@@ -606,14 +633,15 @@ export default function WithMePage() {
             <div className="flex gap-3 justify-center pt-4">
               <Link
                 href={`/fields/${slug}`}
-                className="px-5 py-2.5 text-sm rounded-xl border border-white/10 text-white/45 hover:text-white/70 transition-colors"
+                className="px-5 py-2.5 text-sm rounded-xl border border-black/10 transition-colors"
+                style={{ color: palette.text, opacity: 0.5 }}
               >
                 Return to Field
               </Link>
               <button
                 onClick={handleNewSession}
-                className="px-5 py-2.5 text-sm rounded-xl text-white/45 hover:text-white/70 transition-colors"
-                style={{ border: `1px solid ${palette.primary}30` }}
+                className="px-5 py-2.5 text-sm rounded-xl transition-colors"
+                style={{ color: palette.primary, border: `1px solid ${palette.primary}40` }}
               >
                 New Session
               </button>
