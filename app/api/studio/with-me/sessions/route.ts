@@ -9,15 +9,16 @@ export async function POST(req: NextRequest) {
   if (!facilitatorId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { field_slug, member_id, member_name, member_username, intention } = body;
+  const { field_slug, member_name, member_username, intention } = body;
 
   if (!field_slug) return NextResponse.json({ error: 'field_slug required' }, { status: 400 });
 
-  // Resolve member_id from username if not provided directly
-  let resolvedMemberId: string | null = member_id ?? null;
+  // member_id is resolved from member_username only — never accepted directly from the body,
+  // since that path bypasses the existence check the username lookup provides.
+  let resolvedMemberId: string | null = null;
   let resolvedMemberName: string | null = member_name ?? null;
 
-  if (!resolvedMemberId && member_username) {
+  if (member_username) {
     const lookup = await query<{ id: string; name: string }>(
       `SELECT id, name FROM members WHERE username = $1 LIMIT 1`,
       [member_username.trim()],
