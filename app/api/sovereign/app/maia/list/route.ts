@@ -1079,20 +1079,19 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     }
 
     // 🎯 EVIDENCE ENGINE: Governing question awareness for MAIA's prompt.
-    // Injected only when still_alive atoms exist, not Sanctuary, and not the first turn.
+    // Injected when any surfaced atoms exist (active or still_alive — the loader surfaces both),
+    // not Sanctuary, and not the first turn. hasStillAlive would miss members with active-only
+    // atoms; the StillAlivePanel already falls back to chronological view when needed.
     // MAIA holds this orientation silently — InvitationCard renders the offer; MAIA does not narrate it.
     let evidenceEngineAddendum: string | undefined;
     if (!isSanctuary && atomsResult.length > 0 && session.turns >= 1) {
-      const hasStillAlive = atomsResult.some((a: any) => a.status === 'still_alive');
-      if (hasStillAlive) {
-        evidenceEngineAddendum = `🎯 EVIDENCE ENGINE — governing question
+      evidenceEngineAddendum = `🎯 EVIDENCE ENGINE — governing question
 
-Still-alive living threads are present for this member. A representation has been made available alongside this response. You do not need to mention or narrate this — the invitation appears separately in the interface.
+Living threads are present for this member. A representation has been made available alongside this response. You do not need to mention or narrate this — the invitation appears separately in the interface.
 
 Governing question: "What evidence would help answer the next question we are trying to answer together?"
 
 Hold these threads lightly. If the inquiry being worked with would genuinely benefit from knowing what has continued, trust that the evidence will reach the member through the interface. Do not surface thread titles or describe what the representation contains. Your response holds the conversation; the evidence system holds the retrieval.`;
-      }
     }
 
     // 🔬 Layer 15 — memoryHealth: what loaded, what failed, what is unknown (canon §VII)
@@ -1418,9 +1417,9 @@ Hold these threads lightly. If the inquiry being worked with would genuinely ben
       // Computed server-side from loaded atoms. Only offered when: member has still_alive atoms + not first turn + not Sanctuary.
       // Governing doc: docs/architecture/EVIDENCE_ENGINE_2026-06-24.md
       representations: (() => {
-        if (isSanctuary || !atomsResult || session.turns < 1) return null;
-        const hasStillAlive = atomsResult.some((a: any) => a.status === 'still_alive');
-        if (!hasStillAlive) return null;
+        // Gate: any surfaced atoms (active or still_alive), not Sanctuary, not first turn.
+        // StillAlivePanel falls back to chronological when no still_alive atoms exist.
+        if (isSanctuary || !atomsResult || atomsResult.length === 0 || session.turns < 1) return null;
         return [{
           id: 'still-alive',
           componentId: 'still-alive-panel',
