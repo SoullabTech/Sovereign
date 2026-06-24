@@ -840,6 +840,88 @@ function MAIAPageContent() {
           onOpenFeedback={() => setShowFeedbackSheet(true)}
           onSignOut={handleSignOut}
         />
+
+        {/* Expression-first entry screen — spatial shell path */}
+        <AnimatePresence>
+          {isMounted && showEntryScreen && !showWeekZeroOnboarding && (
+            <motion.div
+              key="entry-screen-spatial"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.35 } }}
+              className="fixed inset-0 z-[200] flex flex-col items-center justify-center px-6"
+              style={{ background: 'linear-gradient(135deg, #0c0a09 0%, #1c1917 50%, #0c0a09 100%)' }}
+            >
+              <div className="w-full max-w-sm flex flex-col gap-8">
+                <div className="text-center">
+                  <h1 className="text-2xl font-light text-stone-200 leading-relaxed tracking-wide">
+                    What are you holding today?
+                  </h1>
+                </div>
+
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {CONTEXT_DOORS.map((door) => (
+                    <button
+                      key={door}
+                      onClick={() => setEntryDoor(prev => prev === door ? null : door)}
+                      className={`px-3 py-1 rounded-full text-xs transition-all ${
+                        entryDoor === door
+                          ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                          : 'bg-white/5 border border-white/10 text-stone-600 hover:text-stone-400 hover:border-white/15'
+                      }`}
+                    >
+                      {door}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    value={entryText}
+                    onChange={(e) => setEntryText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleEntrySubmit();
+                      }
+                    }}
+                    placeholder="Begin here..."
+                    autoFocus
+                    rows={3}
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-stone-300 placeholder:text-stone-700 resize-none focus:outline-none focus:border-white/15"
+                  />
+                  {entryText.trim() && (
+                    <div className="absolute bottom-3 right-3 text-stone-700 text-[10px] pointer-events-none">
+                      ↵ to begin
+                    </div>
+                  )}
+                </div>
+
+                {aliveAtoms.length > 0 && (
+                  <div className="flex flex-col gap-1.5 border-t border-white/[0.05] pt-4">
+                    {aliveAtoms.map((atom) => (
+                      <button
+                        key={atom.id}
+                        onClick={() => setEntryText(atom.title.length > 80 ? atom.title.slice(0, 77) + '…' : atom.title)}
+                        className="text-left text-xs text-stone-700 hover:text-stone-500 transition-colors leading-relaxed"
+                      >
+                        {atom.title.length > 80 ? atom.title.slice(0, 77) + '…' : atom.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="text-center">
+                  <button
+                    onClick={() => setShowEntryScreen(false)}
+                    className="text-xs text-stone-700 hover:text-stone-500 transition-colors"
+                  >
+                    just arrive
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </ErrorBoundary>
     );
   }
