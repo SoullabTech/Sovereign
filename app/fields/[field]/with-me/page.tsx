@@ -6,9 +6,8 @@ import Link from 'next/link';
 import { getFieldBySlug } from '@/lib/masters/registry';
 import { apiFetch } from '@/lib/http/apiBase';
 import {
-  Flame, Droplets, Mountain, Wind, Sparkles,
-  BookOpen, Tag, ArrowRight, Check, X, Clock,
-  ChevronDown, ChevronUp, Send, Loader2,
+  BookOpen, ArrowRight, Check, X,
+  Clock, ChevronDown, ChevronUp, Send, Loader2,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -16,15 +15,11 @@ import {
 // ---------------------------------------------------------------------------
 
 type Phase = 'setup' | 'active' | 'closing' | 'review' | 'done';
-type Element = 'fire' | 'water' | 'earth' | 'air' | 'aether';
 
-interface SessionEvent {
+interface Bookmark {
   id: string;
-  event_type: string;
-  elemental_phase: string | null;
-  spiral_position: string | null;
-  payload: Record<string, unknown>;
-  created_at: string;
+  elapsed: string;
+  timestamp_seconds: number;
 }
 
 interface MemoryCandidate {
@@ -35,6 +30,8 @@ interface MemoryCandidate {
   content: string;
   basis: string;
   confidence: number;
+  bookmark_timestamp?: string;
+  source_type?: 'bookmark' | 'autonomous';
   approved?: boolean;
 }
 
@@ -44,48 +41,51 @@ interface Synthesis {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
+// Spoken marker detection
 // ---------------------------------------------------------------------------
 
-const ELEMENTS: { key: Element; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: 'fire',   label: 'Fire',   icon: Flame },
-  { key: 'water',  label: 'Water',  icon: Droplets },
-  { key: 'earth',  label: 'Earth',  icon: Mountain },
-  { key: 'air',    label: 'Air',    icon: Wind },
-  { key: 'aether', label: 'Aether', icon: Sparkles },
+const SPOKEN_MARKERS = [
+  /\bbookmark\s+that\b/gi,
+  /\bremember\s+this\b/gi,
+  /\bbig\s+shift\b/gi,
+  /\bmark\s+that\b/gi,
+  /\bflag\s+that\b/gi,
 ];
 
-const EVENT_BUTTONS: {
-  type: string;
-  label: string;
-  color: string;
-  needsDetail?: boolean;
-  detailFields?: string[];
-}[] = [
-  { type: 'arrival_intention',       label: 'Arrival',        color: 'bg-slate-700 hover:bg-slate-600 text-white' },
-  { type: 'observer_capacity_shift', label: 'Observer Shift', color: 'bg-teal-800 hover:bg-teal-700 text-white',     needsDetail: true, detailFields: ['from', 'to'] },
-  { type: 'movement_recognized',     label: 'Movement Named', color: 'bg-blue-900 hover:bg-blue-800 text-white' },
-  { type: 'protector_named',         label: 'Protector',      color: 'bg-purple-900 hover:bg-purple-800 text-white', needsDetail: true, detailFields: ['name'] },
-  { type: 'orientation_restored',    label: 'Oriented',       color: 'bg-emerald-900 hover:bg-emerald-800 text-white' },
-  { type: 'symbolic_frame_accepted', label: 'Symbol',         color: 'bg-amber-900 hover:bg-amber-800 text-white',   needsDetail: true, detailFields: ['symbol'] },
-  { type: 'facilitator_bookmark',    label: 'Bookmark',       color: 'bg-slate-700 hover:bg-slate-600 text-white',   needsDetail: true, detailFields: ['note'] },
-  { type: 'closing_commitment',      label: 'Commitment',     color: 'bg-rose-900 hover:bg-rose-800 text-white',     needsDetail: true, detailFields: ['commitment'] },
-];
+function findSpokenMarkers(text: string): Array<{ phrase: string; index: number; context: string }> {
+  const found: Array<{ phrase: string; index: number; context: string }> = [];
+  for (const pattern of SPOKEN_MARKERS) {
+    let match;
+    pattern.lastIndex = 0;
+    while ((match = pattern.exec(text)) !== null) {
+      const start = Math.max(0, match.index - 80);
+      const end = Math.min(text.length, match.index + match[0].length + 80);
+      found.push({
+        phrase: match[0].toLowerCase(),
+        index: match.index,
+        context: text.slice(start, end).trim(),
+      });
+    }
+  }
+  return found;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function elapsed(startedAt: string): string {
+function elapsedString(startedAt: string): string {
   const secs = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-// Shared input/textarea class for light-background fields
-const inputCls =
-  'w-full bg-black/[0.04] border border-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black/20 resize-none transition-colors';
+function elapsedSeconds(startedAt: string): number {
+  return Math.round((Date.now() - new Date(startedAt).getTime()) / 1000);
+}
+
+const inputCls = 'w-full bg-black/[0.04] border border-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black/20 resize-none transition-colors';
 
 // ---------------------------------------------------------------------------
 // Component
@@ -99,44 +99,32 @@ export default function WithMePage() {
   const { palette, shortName } = master;
 
   const [phase, setPhase] = useState<Phase>('setup');
-
-  // Setup
   const [memberName, setMemberName] = useState('');
   const [intention, setIntention] = useState('');
 
-  // Session identity
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStartedAt, setSessionStartedAt] = useState<string | null>(null);
   const [elapsedDisplay, setElapsedDisplay] = useState('0:00');
 
-  // Active state
-  const [element, setElement] = useState<Element | null>(null);
-  const [spiralPosition, setSpiralPosition] = useState('');
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [notes, setNotes] = useState('');
   const [transcript, setTranscript] = useState('');
   const [showTranscript, setShowTranscript] = useState(false);
-  const [events, setEvents] = useState<SessionEvent[]>([]);
-
-  // Event detail input
-  const [pendingEventType, setPendingEventType] = useState<string | null>(null);
-  const [detailValues, setDetailValues] = useState<Record<string, string>>({});
-
-  // Closing
   const [closingReflection, setClosingReflection] = useState('');
 
-  // Review
   const [synthesis, setSynthesis] = useState<Synthesis | null>(null);
   const [synthesizing, setSynthesizing] = useState(false);
   const [candidates, setCandidates] = useState<MemoryCandidate[]>([]);
   const [completing, setCompleting] = useState(false);
-
   const [saving, setSaving] = useState(false);
+
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const detectedMarkerIndices = useRef<Set<number>>(new Set());
 
   // Elapsed timer
   useEffect(() => {
     if (phase !== 'active' || !sessionStartedAt) return;
-    const interval = setInterval(() => setElapsedDisplay(elapsed(sessionStartedAt)), 1000);
+    const interval = setInterval(() => setElapsedDisplay(elapsedString(sessionStartedAt)), 1000);
     return () => clearInterval(interval);
   }, [phase, sessionStartedAt]);
 
@@ -153,7 +141,7 @@ export default function WithMePage() {
     });
   }, [sessionId]);
 
-  const autoSaveNotes = useCallback(() => {
+  const autoSave = useCallback(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       setSaving(true);
@@ -161,26 +149,88 @@ export default function WithMePage() {
     }, 1500);
   }, [notes, transcript, patchSession]);
 
-  useEffect(() => { autoSaveNotes(); }, [notes, transcript, autoSaveNotes]);
+  useEffect(() => { autoSave(); }, [notes, transcript, autoSave]);
 
-  const logEvent = useCallback(async (eventType: string, payload: Record<string, unknown> = {}) => {
-    if (!sessionId) return;
+  const createBookmarkEvent = useCallback(async (payload: Record<string, unknown>): Promise<string | null> => {
+    if (!sessionId) return null;
     const res = await apiFetch(`/api/studio/with-me/sessions/${sessionId}/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_type: eventType,
-        elemental_phase: element,
-        spiral_position: spiralPosition || null,
-        payload,
-      }),
+      body: JSON.stringify({ event_type: 'facilitator_bookmark', source: 'facilitator', payload }),
     });
     const data = await res.json();
-    if (data.event) setEvents(prev => [...prev, data.event]);
-  }, [sessionId, element, spiralPosition]);
+    return data.event?.id ?? null;
+  }, [sessionId]);
 
   // ---------------------------------------------------------------------------
-  // Handlers
+  // Bookmark handler — the only live action during session
+  // ---------------------------------------------------------------------------
+
+  // Active session protects presence: mark moments now, classify only after.
+  const handleBookmark = useCallback(async () => {
+    if (!sessionId || !sessionStartedAt) return;
+    const secs = elapsedSeconds(sessionStartedAt);
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    const label = `${m}:${String(s).padStart(2, '0')}`;
+
+    const id = await createBookmarkEvent({
+      timestamp_seconds: secs,
+      label: null,
+      note: null,
+      trigger: 'manual',
+    });
+
+    if (id) {
+      setBookmarks(prev => [...prev, { id, elapsed: label, timestamp_seconds: secs }]);
+    }
+  }, [sessionId, sessionStartedAt, createBookmarkEvent]);
+
+  // Keyboard shortcut: ⌘B / Ctrl+B
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b' && phase === 'active') {
+        e.preventDefault();
+        handleBookmark();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [phase, handleBookmark]);
+
+  // ---------------------------------------------------------------------------
+  // Spoken marker detection (runs on transcript change)
+  // ---------------------------------------------------------------------------
+
+  const handleTranscriptChange = useCallback((text: string) => {
+    setTranscript(text);
+    if (!sessionId || !sessionStartedAt) return;
+
+    const markers = findSpokenMarkers(text);
+    for (const marker of markers) {
+      if (detectedMarkerIndices.current.has(marker.index)) continue;
+      detectedMarkerIndices.current.add(marker.index);
+
+      const secs = elapsedSeconds(sessionStartedAt);
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      const label = `${m}:${String(s).padStart(2, '0')} (spoken)`;
+
+      createBookmarkEvent({
+        timestamp_seconds: secs,
+        phrase: marker.phrase,
+        context: marker.context,
+        trigger: 'spoken_marker',
+      }).then(id => {
+        if (id) {
+          setBookmarks(prev => [...prev, { id, elapsed: label, timestamp_seconds: secs }]);
+        }
+      });
+    }
+  }, [sessionId, sessionStartedAt, createBookmarkEvent]);
+
+  // ---------------------------------------------------------------------------
+  // Session lifecycle
   // ---------------------------------------------------------------------------
 
   const handleBeginSession = async () => {
@@ -194,28 +244,6 @@ export default function WithMePage() {
     setSessionId(data.session.id);
     setSessionStartedAt(data.session.created_at);
     setPhase('active');
-    setTimeout(() => logEvent('arrival_intention', { intention }), 100);
-  };
-
-  const handleElementChange = async (el: Element) => {
-    setElement(el);
-    await patchSession({ elemental_phase: el });
-  };
-
-  const handleEventButtonClick = (btn: typeof EVENT_BUTTONS[number]) => {
-    if (btn.needsDetail) {
-      setPendingEventType(btn.type);
-      setDetailValues({});
-    } else {
-      logEvent(btn.type);
-    }
-  };
-
-  const handleDetailSubmit = async () => {
-    if (!pendingEventType) return;
-    await logEvent(pendingEventType, { ...detailValues });
-    setPendingEventType(null);
-    setDetailValues({});
   };
 
   const handleRequestSynthesis = async () => {
@@ -247,21 +275,18 @@ export default function WithMePage() {
     setIntention('');
     setSessionId(null);
     setSessionStartedAt(null);
-    setElement(null);
-    setSpiralPosition('');
+    setBookmarks([]);
     setNotes('');
     setTranscript('');
     setClosingReflection('');
-    setEvents([]);
     setSynthesis(null);
     setCandidates([]);
+    detectedMarkerIndices.current = new Set();
   };
 
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
-
-  const eventBtn = EVENT_BUTTONS.find(b => b.type === pendingEventType);
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: palette.background }}>
@@ -281,7 +306,7 @@ export default function WithMePage() {
             <div>
               <h1 className="text-3xl font-light mb-2" style={{ color: palette.text }}>Walk With Me</h1>
               <p className="text-sm" style={{ color: palette.text, opacity: 0.5 }}>
-                Begin a session. MAIA witnesses quietly and offers synthesis at the close.
+                Begin a session. MAIA witnesses quietly. Mark moments as they happen — interpret afterward.
               </p>
             </div>
 
@@ -326,17 +351,22 @@ export default function WithMePage() {
         )}
 
         {/* ── ACTIVE ── */}
+        {/* Active session protects presence: mark moments now, classify only after. */}
         {phase === 'active' && (
           <div className="space-y-6">
+
+            {/* Header */}
             <div className="flex items-center justify-between">
-              <h1 className="text-lg font-light" style={{ color: palette.text }}>
-                {memberName || 'Session'}
+              <div>
+                <h1 className="text-lg font-light" style={{ color: palette.text }}>
+                  {memberName || 'Session'}
+                </h1>
                 {intention && (
-                  <span className="text-sm ml-2" style={{ color: palette.text, opacity: 0.35 }}>
-                    · {intention.slice(0, 45)}
-                  </span>
+                  <p className="text-xs mt-0.5" style={{ color: palette.text, opacity: 0.35 }}>
+                    {intention.slice(0, 60)}
+                  </p>
                 )}
-              </h1>
+              </div>
               <div className="flex items-center gap-1.5 text-xs" style={{ color: palette.text, opacity: 0.4 }}>
                 <Clock className="w-3 h-3" />
                 {elapsedDisplay}
@@ -344,125 +374,11 @@ export default function WithMePage() {
               </div>
             </div>
 
-            {/* Element selector */}
-            <div>
-              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.45 }}>Element</p>
-              <div className="flex gap-2 flex-wrap items-center">
-                {ELEMENTS.map(({ key, label, icon: Icon }) => (
-                  <button
-                    key={key}
-                    onClick={() => handleElementChange(key)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
-                    style={
-                      element === key
-                        ? { backgroundColor: `${palette.primary}20`, color: palette.primary, border: `1px solid ${palette.primary}40` }
-                        : { backgroundColor: 'rgba(0,0,0,0.05)', color: palette.text, opacity: 0.5, border: '1px solid transparent' }
-                    }
-                  >
-                    <Icon className="w-3 h-3" />
-                    {label}
-                  </button>
-                ))}
-                {element && (
-                  <input
-                    type="text"
-                    value={spiralPosition}
-                    onChange={e => setSpiralPosition(e.target.value)}
-                    onBlur={() => patchSession({ spiral_position: spiralPosition })}
-                    placeholder="Spiral position…"
-                    className="px-3 py-1.5 bg-black/[0.04] border border-black/10 rounded-lg text-xs focus:outline-none w-36"
-                    style={{ color: palette.text }}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Event bookmarks */}
-            <div>
-              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.45 }}>Mark moment</p>
-              <div className="flex flex-wrap gap-2">
-                {EVENT_BUTTONS.map(btn => (
-                  <button
-                    key={btn.type}
-                    onClick={() => handleEventButtonClick(btn)}
-                    className={`px-3 py-1.5 rounded-lg text-xs transition-all ${btn.color}`}
-                  >
-                    {btn.label}
-                  </button>
-                ))}
-              </div>
-
-              {pendingEventType && eventBtn && (
-                <div className="mt-3 p-4 bg-black/[0.04] rounded-xl border border-black/10 space-y-2">
-                  <p className="text-xs font-medium" style={{ color: palette.text, opacity: 0.6 }}>{eventBtn.label}</p>
-                  {(eventBtn.detailFields ?? []).map((field, fi) => (
-                    <div key={field}>
-                      <label className="text-xs block mb-1 capitalize" style={{ color: palette.text, opacity: 0.45 }}>{field}</label>
-                      <input
-                        type="text"
-                        value={detailValues[field] ?? ''}
-                        onChange={e => setDetailValues(prev => ({ ...prev, [field]: e.target.value }))}
-                        onKeyDown={e => e.key === 'Enter' && handleDetailSubmit()}
-                        placeholder={
-                          field === 'from' ? '"I am panic"' :
-                          field === 'to'   ? '"Part of me is panicking"' :
-                          `${field}…`
-                        }
-                        autoFocus={fi === 0}
-                        className="w-full bg-black/[0.04] border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                        style={{ color: palette.text }}
-                      />
-                    </div>
-                  ))}
-                  <div className="flex gap-2 pt-1">
-                    <button onClick={handleDetailSubmit} className="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 text-white text-xs rounded-lg">
-                      Log
-                    </button>
-                    <button onClick={() => setPendingEventType(null)} className="px-3 py-1.5 text-xs rounded-lg border border-black/10 hover:bg-black/5" style={{ color: palette.text, opacity: 0.5 }}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Event log */}
-            {events.length > 0 && (
-              <div className="space-y-1 py-2 border-t border-black/8">
-                {events.map(e => (
-                  <div key={e.id} className="flex items-start gap-2 text-xs" style={{ color: palette.text, opacity: 0.45 }}>
-                    <Tag className="w-3 h-3 shrink-0 mt-0.5" />
-                    <span>{e.event_type.replace(/_/g, ' ')}</span>
-                    {e.elemental_phase && <span className="opacity-70">· {e.elemental_phase}</span>}
-                    {typeof e.payload?.from === 'string' && (
-                      <span className="opacity-60 truncate">· &ldquo;{e.payload.from}&rdquo; → &ldquo;{String(e.payload.to ?? '')}&rdquo;</span>
-                    )}
-                    {typeof e.payload?.note === 'string' && (
-                      <span className="opacity-60 truncate">· {e.payload.note}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Notes */}
-            <div>
-              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.45 }}>Notes</p>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Live notes…"
-                rows={6}
-                className={inputCls}
-                style={{ color: palette.text }}
-              />
-            </div>
-
-            {/* Transcript (collapsible) */}
+            {/* Transcript — primary space */}
             <div>
               <button
                 onClick={() => setShowTranscript(v => !v)}
-                className="flex items-center gap-2 text-xs transition-opacity hover:opacity-80"
+                className="flex items-center gap-2 text-xs mb-2 transition-opacity hover:opacity-80"
                 style={{ color: palette.text, opacity: 0.4 }}
               >
                 <BookOpen className="w-3.5 h-3.5" />
@@ -472,21 +388,75 @@ export default function WithMePage() {
               {showTranscript && (
                 <textarea
                   value={transcript}
-                  onChange={e => setTranscript(e.target.value)}
-                  placeholder="Paste or type transcript…"
-                  rows={8}
-                  className={`mt-2 ${inputCls} font-mono`}
+                  onChange={e => handleTranscriptChange(e.target.value)}
+                  placeholder={`Paste or type transcript. Say "Bookmark that" or "Remember this" and it will be marked automatically.`}
+                  rows={10}
+                  className={`${inputCls} font-mono text-xs leading-relaxed`}
                   style={{ color: palette.text }}
                 />
               )}
             </div>
 
+            {/* Bookmark timeline */}
+            {bookmarks.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.35 }}>
+                  Moments marked
+                </p>
+                <div className="flex flex-wrap gap-3 items-center">
+                  {bookmarks.map((b) => (
+                    <div key={b.id} className="flex items-center gap-1.5">
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: palette.primary, opacity: 0.7 }}
+                      />
+                      <span className="text-xs" style={{ color: palette.text, opacity: 0.45 }}>
+                        {b.elapsed}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bookmark button — the only live action */}
+            <div className="py-4">
+              <button
+                onClick={handleBookmark}
+                className="w-full py-5 rounded-2xl text-base font-light transition-all active:scale-95"
+                style={{
+                  backgroundColor: `${palette.primary}12`,
+                  color: palette.primary,
+                  border: `1px solid ${palette.primary}35`,
+                }}
+              >
+                ● Bookmark
+                <span className="ml-3 text-xs opacity-40">⌘B</span>
+              </button>
+              <p className="text-center text-xs mt-2" style={{ color: palette.text, opacity: 0.25 }}>
+                Mark this moment. Stay present.
+              </p>
+            </div>
+
+            {/* Notes — visually secondary */}
+            <div className="pt-2 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
+              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: palette.text, opacity: 0.35 }}>
+                Notes
+              </p>
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Brief notes if needed…"
+                rows={3}
+                className={inputCls}
+                style={{ color: palette.text, fontSize: '0.8rem' }}
+              />
+            </div>
+
             <button
               onClick={() => setPhase('closing')}
               className="w-full py-3 rounded-xl text-sm transition-all border"
-              style={{ color: palette.text, opacity: 0.5, borderColor: 'rgba(0,0,0,0.1)' }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+              style={{ color: palette.text, opacity: 0.45, borderColor: 'rgba(0,0,0,0.08)' }}
             >
               Close Session →
             </button>
@@ -497,16 +467,17 @@ export default function WithMePage() {
         {phase === 'closing' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-light mb-2" style={{ color: palette.text }}>Closing</h2>
+              <h2 className="text-xl font-light mb-1" style={{ color: palette.text }}>Closing</h2>
               <p className="text-sm" style={{ color: palette.text, opacity: 0.5 }}>
-                One reflection before MAIA synthesizes. What was most alive in this session?
+                One reflection before MAIA reviews the session.
+                {bookmarks.length > 0 && ` You marked ${bookmarks.length} moment${bookmarks.length !== 1 ? 's' : ''}.`}
               </p>
             </div>
 
             <textarea
               value={closingReflection}
               onChange={e => setClosingReflection(e.target.value)}
-              placeholder="Closing reflection…"
+              placeholder="What was most alive in this session?"
               rows={5}
               className={inputCls}
               style={{ color: palette.text }}
@@ -540,16 +511,24 @@ export default function WithMePage() {
         {phase === 'review' && synthesis && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-light mb-2" style={{ color: palette.text }}>Memory Review</h2>
+              <h2 className="text-xl font-light mb-2" style={{ color: palette.text }}>Review</h2>
               {synthesis.synthesis_note && (
-                <p className="text-sm italic" style={{ color: palette.text, opacity: 0.55, borderLeft: `2px solid rgba(0,0,0,0.12)`, paddingLeft: '1rem' }}>
+                <p
+                  className="text-sm italic"
+                  style={{
+                    color: palette.text,
+                    opacity: 0.55,
+                    borderLeft: `2px solid rgba(0,0,0,0.12)`,
+                    paddingLeft: '1rem',
+                  }}
+                >
                   {synthesis.synthesis_note}
                 </p>
               )}
             </div>
 
             <p className="text-xs" style={{ color: palette.text, opacity: 0.4 }}>
-              Approve what belongs in the developmental record. Nothing is written until you complete.
+              These are MAIA&apos;s interpretations of the moments you marked. Approve what belongs in the developmental record.
             </p>
 
             <div className="space-y-3">
@@ -566,15 +545,32 @@ export default function WithMePage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.07)', color: palette.text, opacity: 0.7 }}>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded"
+                          style={{ backgroundColor: 'rgba(0,0,0,0.07)', color: palette.text, opacity: 0.7 }}
+                        >
                           {c.category.replace(/_/g, ' ')}
                         </span>
-                        {c.elemental_phase && <span className="text-xs" style={{ color: palette.text, opacity: 0.4 }}>{c.elemental_phase}</span>}
-                        {c.spiral_position && <span className="text-xs" style={{ color: palette.text, opacity: 0.3 }}>{c.spiral_position}</span>}
-                        <span className="text-xs ml-auto" style={{ color: palette.text, opacity: 0.3 }}>{Math.round(c.confidence * 100)}%</span>
+                        {c.bookmark_timestamp && (
+                          <span className="text-xs" style={{ color: palette.primary, opacity: 0.6 }}>
+                            ● {c.bookmark_timestamp}
+                          </span>
+                        )}
+                        {c.source_type === 'autonomous' && (
+                          <span className="text-xs italic" style={{ color: palette.text, opacity: 0.3 }}>
+                            MAIA noticed
+                          </span>
+                        )}
+                        <span className="text-xs ml-auto" style={{ color: palette.text, opacity: 0.3 }}>
+                          {Math.round(c.confidence * 100)}%
+                        </span>
                       </div>
-                      <p className="text-sm leading-relaxed" style={{ color: palette.text, opacity: 0.85 }}>{c.content}</p>
-                      <p className="text-xs italic" style={{ color: palette.text, opacity: 0.35 }}>Basis: {c.basis}</p>
+                      <p className="text-sm leading-relaxed" style={{ color: palette.text, opacity: 0.85 }}>
+                        {c.content}
+                      </p>
+                      <p className="text-xs italic" style={{ color: palette.text, opacity: 0.35 }}>
+                        Basis: {c.basis}
+                      </p>
                     </div>
                     <div className="flex gap-1.5 shrink-0 mt-1">
                       <button
