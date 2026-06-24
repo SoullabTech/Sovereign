@@ -66,5 +66,63 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   );
 
   if (!result.rows[0]) return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
-  return NextResponse.json({ session: result.rows[0] });
+
+  const session = result.rows[0];
+
+  // On completion: write approved synthesis candidates to member_memory_atoms as
+  // practitioner observations. Provenance-preserving — these enter the 'witnessed'
+  // register with facilitator_id and epistemological_status: 'observed'.
+  // Gate: requires member_id on the session (not all sessions have one).
+  if (body.status === 'complete' && session.member_id) {
+    const candidates: Record<string, unknown>[] = body.synthesis?.candidates ?? [];
+
+    if (candidates.length > 0) {
+      const validLenses = new Set(['fire', 'water', 'earth', 'air', 'aether']);
+      let written = 0;
+
+      for (const c of candidates) {
+        const lenses = c.elemental_phase && validLenses.has(String(c.elemental_phase))
+          ? [String(c.elemental_phase)]
+          : [];
+
+        const title = String(c.category ?? 'observation').replace(/_/g, ' ');
+        const bodyText = [
+          String(c.content ?? ''),
+          c.basis ? `\n\nBasis: ${c.basis}` : '',
+          c.bookmark_timestamp ? `\n\nMarked at: ${c.bookmark_timestamp}` : '',
+          `\n\nSession: ${sessionId}`,
+        ].join('').trim();
+
+        try {
+          await query(
+            `INSERT INTO member_memory_atoms
+               (member_id, source_type, source_id,
+                facilitator_id, title, body,
+                primary_register, registers, elemental_lenses,
+                epistemological_status, status, return_preference, crossing_allowed)
+             VALUES
+               ($1, 'practitioner_observation', gen_random_uuid(),
+                $2, $3, $4,
+                'witnessed', ARRAY['witnessed']::text[], $5::text[],
+                'observed', 'active', 'contextual_doorway', false)`,
+            [session.member_id, facilitatorId, title, bodyText, lenses],
+          );
+          written++;
+        } catch (err) {
+          console.error(`[with-me/complete] atom write failed for candidate:`, c.id, err);
+        }
+      }
+
+      console.log(
+        `[with-me/complete] ${written}/${candidates.length} practitioner observations → member_memory_atoms`,
+        { sessionId, memberId: session.member_id, facilitatorId },
+      );
+    }
+  } else if (body.status === 'complete' && !session.member_id) {
+    console.log(
+      `[with-me/complete] session ${sessionId} has no member_id — practitioner observations not written to memory`,
+    );
+  }
+
+  return NextResponse.json({ session });
 }
