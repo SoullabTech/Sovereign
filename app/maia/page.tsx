@@ -858,6 +858,22 @@ function MAIAPageContent() {
                   </h1>
                 </div>
 
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('journalAskMaia', {
+                      detail: {
+                        content: "I'm spiraling.",
+                        type: 'entry',
+                        prompt: "I'm spiraling. Help me slow down, find what matters, and identify the next grounded step."
+                      }
+                    }));
+                    setShowEntryScreen(false);
+                  }}
+                  className="w-full py-3 px-4 rounded-xl border border-stone-700/30 hover:border-stone-600/50 bg-white/[0.02] hover:bg-white/[0.04] text-stone-500 hover:text-stone-300 text-sm transition-all text-left"
+                >
+                  I'm spiraling / I need to orient
+                </button>
+
                 <div className="flex flex-wrap gap-2 justify-center">
                   {CONTEXT_DOORS.map((door) => (
                     <button
@@ -1914,6 +1930,22 @@ function MAIAPageContent() {
                     What are you holding today?
                   </h1>
                 </div>
+
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('journalAskMaia', {
+                      detail: {
+                        content: "I'm spiraling.",
+                        type: 'entry',
+                        prompt: "I'm spiraling. Help me slow down, find what matters, and identify the next grounded step."
+                      }
+                    }));
+                    setShowEntryScreen(false);
+                  }}
+                  className="w-full py-3 px-4 rounded-xl border border-stone-700/30 hover:border-stone-600/50 bg-white/[0.02] hover:bg-white/[0.04] text-stone-500 hover:text-stone-300 text-sm transition-all text-left"
+                >
+                  I'm spiraling / I need to orient
+                </button>
 
                 <div className="flex flex-wrap gap-2 justify-center">
                   {CONTEXT_DOORS.map((door) => (

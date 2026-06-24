@@ -1241,6 +1241,12 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
   if (conversationalRecallAddendum) {
     console.log(`💬 [FAST] Conversational recall addendum applied (${conversationalRecallAddendum.length} chars)`);
   }
+  const organizingPrinciplesAddendum = (meta as any)?.organizingPrinciplesAddendum as string | undefined;
+  const evidenceEngineAddendum = (meta as any)?.evidenceEngineAddendum as string | undefined;
+  const spiralOrientationAddendum = (meta as any)?.spiralOrientationAddendum as string | undefined;
+  if (spiralOrientationAddendum) {
+    console.log(`🌀 [FAST] Spiral orientation protocol applied`);
+  }
 
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
@@ -1279,7 +1285,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${wisdomGuideAddendum ? '\n\n' + wisdomGuideAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${wisdomGuideAddendum ? '\n\n' + wisdomGuideAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${evidenceEngineAddendum ? '\n\n' + evidenceEngineAddendum : ''}${organizingPrinciplesAddendum ? '\n\n' + organizingPrinciplesAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${spiralOrientationAddendum ? '\n\n' + spiralOrientationAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1571,6 +1577,8 @@ async function corePathResponse(
     // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges. Injected
     // inside buildMaiaWisePrompt via safeAddendum iteration. See spec §IX.
     conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
+    organizingPrinciplesAddendum: (meta as any)?.organizingPrinciplesAddendum as string | undefined,
+    spiralOrientationAddendum: (meta as any)?.spiralOrientationAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness

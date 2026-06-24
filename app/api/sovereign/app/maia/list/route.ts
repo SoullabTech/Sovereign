@@ -914,6 +914,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     let atomsAddendum: string | undefined;
     // 🧭 Organizing principles — member-kept portable orientation statements
     let organizingPrinciplesAddendum: string | undefined;
+    // 🌀 Spiral orientation protocol — activated by "I'm spiraling" entry
+    let spiralOrientationAddendum: string | undefined;
     // 💬 Phase 2 — Conversational recall (cross-session continuity, wire site
     // corrected per spec §IX). Block is built inside the if-block below, consumed
     // by maiaService.ts via meta.conversationalRecallAddendum.
@@ -1107,6 +1109,55 @@ Governing question: "What evidence would help answer the next question we are tr
 Hold these threads lightly. If the inquiry being worked with would genuinely benefit from knowing what has continued, trust that the evidence will reach the member through the interface. Do not surface thread titles or describe what the representation contains. Your response holds the conversation; the evidence system holds the retrieval.`;
     }
 
+    // 🌀 Spiral Orientation Protocol — activated by "I'm spiraling" entry button.
+    // Injects a 6-step behavioral protocol that governs MAIA's response when a
+    // member enters under load/overwhelm. Fires on first turn only (the message
+    // that triggered the spiral entry); subsequent turns in the session proceed
+    // normally since the conversation is already grounded.
+    if (!isSanctuary && message?.includes("I'm spiraling")) {
+      spiralOrientationAddendum = `🌀 SPIRAL ORIENTATION PROTOCOL
+
+The member entered through "I'm spiraling" — a direct request for grounding and orientation under load, not general conversation. Apply this sequence deliberately:
+
+STEP 1 — SLOW THE FIELD
+Begin with grounding presence. Do not immediately address every thread they raise. Do not intensify complexity. One breath, one thread at a time.
+
+STEP 2 — FIND THE THREAD
+Ask what feels most urgent right now. Listen beneath the list of concerns for the one that is actually alive and requiring participation today.
+
+STEP 3 — SORT ATTENTION
+When the live concern emerges, help the member see where their attention actually belongs:
+• Mine to act on — requires direct action now
+• Mine to decide — requires a decision, not necessarily immediate action
+• Mine to influence — I can affect this but don't control it
+• Mine to witness — I can be present without doing
+• Not mine to carry — this belongs to someone else's field
+
+STEP 4 — LOOP OR LIVE REALITY?
+Before engaging deeply with any recurring concern: has anything materially changed since this was last held? Is there a new decision to make — or has attention returned to a familiar loop?
+If nothing has changed: "It looks like the situation itself hasn't shifted. Would it help to return to what is actually asking for your participation today?"
+
+STEP 5 — RETURN TO ORGANIZING PRINCIPLES
+If organizing principles have been kept (see above in context), offer them gently and invitionally — never as prescriptions:
+"This may be related to..."
+"Would it help to return to..."
+"Does this still apply here, or is this situation different?"
+
+STEP 6 — ONE GROUNDED STEP
+Close by helping the member identify:
+• What can be set down right now?
+• What needs protection?
+• What is the one next sane step?
+
+CONSTRAINTS (non-negotiable for this response):
+— Do not diagnose. Do not produce a report or analyze everything at once.
+— Do not treat every concern as equally actionable.
+— Do not encourage endless reflection.
+— Optimize for restored agency and movement.
+— Success: the member leaves feeling calmer, knowing what is theirs to hold, and with one clear next step.`;
+      console.log('[MAIA/sovereign] spiral-orientation-protocol: activated');
+    }
+
     // 🔬 Layer 15 — memoryHealth: what loaded, what failed, what is unknown (canon §VII)
     const memoryHealth: MemoryHealth = buildMemoryHealth({
       recentTurns: { count: session.turn_count ?? 0 },
@@ -1253,6 +1304,7 @@ Hold these threads lightly. If the inquiry being worked with would genuinely ben
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
           evidenceEngineAddendum,       // 🎯 Evidence Engine — still-alive governing question awareness
           organizingPrinciplesAddendum, // 🧭 Organizing Principles — member-kept portable orientation statements
+          spiralOrientationAddendum,    // 🌀 Spiral Protocol — orientation-under-load 6-step governor
         },
       }),
       SOVEREIGN_TIMEOUT_MS,

@@ -111,6 +111,9 @@ export interface MaiaContext {
   // Enables "This sounds related to the orientation you kept before" recognition.
   // See docs/canon/AGENCY_THE_FREEDOM_TO_MOVE.md.
   organizingPrinciplesAddendum?: string;
+  // 🌀 SPIRAL ORIENTATION PROTOCOL: Active when member enters via "I'm spiraling" button.
+  // Governs the 6-step orientation-under-load sequence. Injected as final behavioral governor.
+  spiralOrientationAddendum?: string;
 }
 
 /**
@@ -417,6 +420,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
   { field: 'evidenceEngineAddendum',          log: v => `🎯 [Evidence Engine] Still-alive awareness injected (${v.length} chars)` },
   { field: 'organizingPrinciplesAddendum',    log: v => `🧭 [Organizing Principles] ${v.split('\n').length - 1} principles injected` },
+  { field: 'spiralOrientationAddendum',       log: v => `🌀 [Spiral Protocol] Orientation-under-load protocol injected (${v.length} chars)` },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
