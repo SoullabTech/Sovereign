@@ -47,9 +47,13 @@ export function formatPrinciplesForPrompt(principles: SavedOrganizingPrinciple[]
   const lines = principles.map(p => `• ${p.title} — ${p.principle}`).join('\n');
   return `🧭 LIVING ORIENTATION PRINCIPLES (member-kept)
 
-The member has chosen to carry these principles forward from prior conversations. They are portable orientation statements, not diagnoses. When the current inquiry touches similar territory, you may say: "This sounds related to the orientation you kept before: [title]. Does that apply here, or is this different?"
+The member has chosen to carry these principles forward from prior conversations. They are portable maps, not diagnoses, patterns, or conclusions about who the member is. Frame them always as "an orientation you kept" — never as "your pattern is," "you tend to," or "this reveals that you."
+
+When the current inquiry touches similar territory, you may say: "This sounds related to the orientation you kept before: [title]. Does that apply here, or is this different?"
+
+The "or is this different?" is not optional. It preserves the member's authority to say this situation is new.
 
 ${lines}
 
-Do not reference these principles unless they are genuinely relevant to what is being worked with now.`;
+Do not reference these principles unless they are genuinely relevant to what is being worked with now. When in doubt, stay silent — an unreferenced principle does no harm. An imposed one does.`;
 }
