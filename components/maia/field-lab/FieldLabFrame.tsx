@@ -6,29 +6,29 @@
  * Carries:
  *   - The Field Lab header chrome
  *   - The experimental-posture status row
- *   - Client-side tester check (fetches /api/members/tester)
+ *   - The entitlement gate, via <PreviewGate> on `labs.preview`
  *
- * If the member is not a tester, this frame shows the opt-in invitation
- * instead of the experiment surface — without making the absence punitive.
- * The non-tester state explains what Field Lab is, what opting in means,
- * and what it does not mean.
+ * If the member is not entitled, this frame shows the opt-in invitation instead
+ * of the experiment surface — without making the absence punitive. The
+ * non-entitled state explains what Field Lab is, what opting in means, and what
+ * it does not mean.
  *
- * Invariant: this frame does NOT optimize for tester conversion. The opt-in
- * copy must read as honest invitation, not as a CTA. If you find yourself
- * adjusting it to "improve activation," you have misread what this surface is.
+ * `labs.preview` is the entitlement generalization of the live `members.tester`
+ * proto-entitlement; the opt-in/opt-out below still toggle the tester flag
+ * (which is what `labs.preview` currently resolves from), so behavior is
+ * unchanged by the extraction.
+ *
+ * Invariant: this frame does NOT optimize for conversion. The opt-in copy must
+ * read as honest invitation, not as a CTA. If you find yourself adjusting it to
+ * "improve activation," you have misread what this surface is.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
-
-type TesterState =
-  | { status: 'loading' }
-  | { status: 'signed-out' }
-  | { status: 'not-tester' }
-  | { status: 'tester' };
+import { PreviewGate } from '@/components/auth/PreviewGate';
 
 interface FieldLabFrameProps {
   title: string;
@@ -46,28 +46,6 @@ export function FieldLabFrame({
   children,
 }: FieldLabFrameProps) {
   const router = useRouter();
-  const [tester, setTester] = useState<TesterState>({ status: 'loading' });
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await apiFetch('/api/members/tester', { method: 'GET' });
-        if (res.status === 401) {
-          if (!cancelled) setTester({ status: 'signed-out' });
-          return;
-        }
-        const json = await res.json().catch(() => ({}));
-        if (cancelled) return;
-        setTester({ status: json.tester ? 'tester' : 'not-tester' });
-      } catch {
-        if (!cancelled) setTester({ status: 'not-tester' });
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   return (
     <div
@@ -126,22 +104,14 @@ export function FieldLabFrame({
           </motion.div>
         )}
 
-        {tester.status === 'loading' && (
-          <div className="text-[14px] text-stone-500">…</div>
-        )}
-
-        {tester.status === 'signed-out' && (
-          <NotSignedInView />
-        )}
-
-        {tester.status === 'not-tester' && <OptInInvitation />}
-
-        {tester.status === 'tester' && (
-          <>
-            {children}
-            <TesterOptOutFooter />
-          </>
-        )}
+        <PreviewGate
+          entitlement="labs.preview"
+          signedOut={<NotSignedInView />}
+          preview={<OptInInvitation />}
+        >
+          {children}
+          <TesterOptOutFooter />
+        </PreviewGate>
       </main>
     </div>
   );
