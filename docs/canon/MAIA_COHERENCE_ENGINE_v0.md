@@ -29,13 +29,31 @@ This document exists so that, as calendar and executive-function capability grow
 
 5. **The Marran Doctrine — don't rush from idea to build.** Clarify purpose, reduce scope, test lightly. Each increment must justify its *presence*, not merely its usefulness (see [Attention Doctrine](./MAIA_ATTENTION_DOCTRINE.md)). We do not build the productivity app we can imagine; we build the smallest coherence surface that earns its next step from real use.
 
+6. **Capture is not commitment.** Nothing becomes an obligation merely because it was captured. Capture is permission to *let go*, not a promise to act. A held item may carry no classification at all; classification is optional — and when it happens, it is a later, *consented* act, never inferred at the moment of capture. Commitment (a calendar event, a reminder, a task) is a separate, deliberate act taken by the member. This is what keeps the surface from quietly becoming another to-do list.
+
+## "Held" — the primitive
+
+Most software assumes `thought → task`. People don't work that way. The real progression is **thought → held → understood → (maybe) action**. Some held things become calendar events; some become reminders, conversations, or journal entries; some are never anything — speaking them aloud reveals they didn't matter. *Held* is the missing primitive: a trusted place to set something down that does **not** convert it into work.
+
+So this is an **attentional threshold**, not a calendar feature. The functional sequence is:
+
+> Arrival → Unload → Held → Orient → Prioritize → Act → Reflect → Integrate
+
+Capture (Arrival / Unload / Held) comes first and stays sacred; routing comes later, and only by invitation. The calendar is therefore **one possible destination, not the center** — alongside reminder, task, journal, conversation, waiting-for, someday, reference.
+
+This pattern — *attention becomes available once unresolved concerns are externalized into a trusted container before deeper work begins* — recurs across contemplative practice, psychotherapy, coaching, and even aviation checklists. MAIA arrives at it independently rather than borrowing it; that convergence is the warrant for naming it.
+
+**The success metric follows.** A coherence engine optimizes not commitments-completed but *cognitive availability* — "how present is this person to what actually matters?" Only the second objective is ours.
+
+**The guardrail (what must never happen at capture):** the first act of the system is **custody, not inference**. MAIA may later help classify, route, or reflect — but only as an invited, consented crossing, never automatically on intake. Interpretation at step one is exactly what this surface forbids.
+
 ## What v0 actually is (earned, not aspirational)
 
 A single direct surface a member can open without navigating through Studio — usable as a mobile home-screen entry point.
 
 - **One field:** *"Anything missing from today?"* — freeform natural-language capture.
 - **Stored verbatim.** No AI parsing, no entity extraction, no calendar-event creation, no reminders. The text is held exactly as written.
-- **Light, member-chosen classification:** `today` · `later` · `time_sensitive` · `ongoing` ("keep an eye on"). This is a *disposition*, not a priority, status, or AI-inferred label.
+- **Light, member-chosen classification:** `today` · `later` · `time_sensitive` · `ongoing` ("keep an eye on"). This is a *disposition*, not a priority, status, or AI-inferred label. *(v0 currently defaults this to `today`; per Doctrine 6, making classification optional/absent — and the prompt arrival-framed rather than today-framed — is the next aligned increment.)*
 - **Reversible release.** Marking a capture handled sets `released_at`; it can be restored. Nothing is destroyed by a tap.
 - **Member-scoped, consent-aligned.** Captures belong to the member; every read and write is scoped to their ID. No cross-member aggregation, no pattern-formation, no synthesis in v0.
 
