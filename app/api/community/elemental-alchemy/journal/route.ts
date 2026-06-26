@@ -16,6 +16,9 @@ import {
   type JournalFilters
 } from '@/lib/elemental-alchemy/journalService';
 import type { ElementKey } from '@/lib/elemental-alchemy/assessmentQuestions';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { resolveEntitlements, hasEntitlement } from '@/lib/auth/entitlements';
+import { recordRelease } from '@/lib/recognition/releaseService';
 
 export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -113,6 +116,11 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const userId = searchParams.get('userId');
+  // Recognition (beta-gated, member-chosen): does the member want to remember the
+  // ACT of releasing this entry? Defaults off — absent these params, delete is
+  // byte-unchanged from before.
+  const recognize = searchParams.get('recognize') === 'true';
+  const note = searchParams.get('note');
 
   if (!id || !userId) {
     return NextResponse.json({ ok: false, error: 'id and userId required' }, { status: 400 });
@@ -125,7 +133,27 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Entry not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ ok: true });
+    // The content is now released. If the member explicitly chose recognition AND
+    // holds the beta entitlement AND is releasing their own entry, record the ACT
+    // (never the content — see lib/recognition/releaseService). Best-effort: a
+    // recording failure must not turn a successful release into an error.
+    let recognized = false;
+    if (recognize) {
+      try {
+        const session = await getCurrentSession();
+        if (session && session.memberId === userId) {
+          const entitlements = await resolveEntitlements(session.memberId);
+          if (hasEntitlement(entitlements, 'labs.preview')) {
+            await recordRelease(session.memberId, 'journal_entry', note);
+            recognized = true;
+          }
+        }
+      } catch (recErr) {
+        console.error('[Elemental Journal] release recognition failed (content already released):', recErr);
+      }
+    }
+
+    return NextResponse.json({ ok: true, recognized });
   } catch (err) {
     console.error('[Elemental Journal] DELETE error:', err);
     return NextResponse.json({ ok: false, error: 'Failed to delete entry' }, { status: 500 });
