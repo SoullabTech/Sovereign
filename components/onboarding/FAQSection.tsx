@@ -26,7 +26,7 @@ Soullab is a space where consciousness exploration and personal development meet
 
 There are no rules about what you "should" explore. Follow your curiosity, test edges, play with ideas — and notice what actually changes in your life.
 
-You're among the first to explore this. Your experience shapes what MAIA becomes.
+You are among the first people exploring this approach. Some aspects of MAIA are established; others remain active research. Your experience helps determine what earns a permanent place in the platform.
 
 ---
 
@@ -141,11 +141,9 @@ The quality of presence you develop with MAIA doesn't stay siloed here. It can c
 
 ## Can MAIA make mistakes or hallucinate?
 
-Yes — but far less than typical AI chat, and for architectural reasons.
+MAIA uses a frontier language model, so she can make factual mistakes like any current AI system. Where the architecture makes a measurable difference is in personal continuity: memories, consent, and what may be recalled are governed by explicit rules rather than generated from conversation alone.
 
-Like any system built on a language model, she can. MAIA adds practices that reduce it: distinguishing observation from interpretation, signaling uncertainty, and refusing to invent details when something matters.
-
-We also test aggressively with hallucination-resistant practices: tighter truth-checking, uncertainty signaling, refusal to invent details, and continuous internal benchmarking. Even so, she can still misremember, overconnect patterns, or speak too confidently at times.
+On general facts, treat her like any capable AI — verify what matters. Where it can, MAIA adds practices that reduce error: distinguishing observation from interpretation, signaling uncertainty, and refusing to invent details when something matters. Even so, she can still misremember, overconnect patterns, or speak too confidently at times.
 
 Treat MAIA like a high-level thinking partner: keep what helps, question what doesn't, and ask her to show her assumptions when something matters. She's designed to support your discernment, not replace it.
 
@@ -417,7 +415,7 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-amber-100">What's the adventure here?</h3>
                       <div className="mt-2 text-xs text-amber-100/90 leading-relaxed group-open:block hidden">
-                        You're exploring consciousness — and using what you discover to grow. Soullab is a space where consciousness exploration and personal development meet: insight that translates into clearer choices, better relationships, stronger boundaries, more creative flow, and more inner steadiness. There are no rules about what you "should" explore. Follow your curiosity, test edges, play with ideas — and notice what actually changes in your life. You're among the first to explore this. Your experience shapes what MAIA becomes.
+                        You're exploring consciousness — and using what you discover to grow. Soullab is a space where consciousness exploration and personal development meet: insight that translates into clearer choices, better relationships, stronger boundaries, more creative flow, and more inner steadiness. There are no rules about what you "should" explore. Follow your curiosity, test edges, play with ideas — and notice what actually changes in your life. You are among the first people exploring this approach. Some aspects of MAIA are established; others remain active research. Your experience helps determine what earns a permanent place in the platform.
                       </div>
                     </div>
                   </div>
@@ -529,7 +527,7 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-amber-100">Can MAIA make mistakes or hallucinate?</h3>
                       <div className="mt-2 text-xs text-amber-100/90 leading-relaxed group-open:block hidden">
-                        Yes — but far less than typical AI chat, and for architectural reasons. Like any system built on a language model, she can. MAIA adds practices that reduce it: distinguishing observation from interpretation, signaling uncertainty, and refusing to invent details when something matters. We also test aggressively with hallucination-resistant practices. Even so, she can still misremember or speak too confidently at times. Treat MAIA like a high-level thinking partner: keep what helps, question what doesn't. She's designed to support your discernment, not replace it.
+                        MAIA uses a frontier language model, so she can make factual mistakes like any current AI system. Where the architecture makes a measurable difference is in personal continuity: memories, consent, and what may be recalled are governed by explicit rules rather than generated from conversation alone. On general facts, treat her like any capable AI — verify what matters. Where it can, MAIA adds practices that reduce error: distinguishing observation from interpretation, signaling uncertainty, and refusing to invent details. Even so, she can still misremember or speak too confidently at times. Treat MAIA like a high-level thinking partner: keep what helps, question what doesn't. She's designed to support your discernment, not replace it.
                       </div>
                     </div>
                   </div>
