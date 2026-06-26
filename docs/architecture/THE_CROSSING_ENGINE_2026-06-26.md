@@ -14,9 +14,10 @@ This constitution is the **why/invariants**; the per-instance build specs are th
 One architecture, two centers:
 
 ```
-CenterOfInquiry = "person" | "project"
-   Conversation → Proposal → Authorship → Crossing
+CenterOfInquiry = "person" | "project" | …
+   [medium] → Recognition → Proposal → Authorship → Crossing
 ```
+*Conversation is medium #1; the primitive underneath is medium-agnostic **Recognition** — see §12.*
 
 - **Field Notes** = `CenterOfInquiry: person` — *"Who are you becoming?"*
 - **Vision Studio** = `CenterOfInquiry: project` — *"What are we bringing into the world together?"*
@@ -68,4 +69,33 @@ For a developing person (e.g., a young member), the purpose is not to *discover*
 - **Order:** the shared primitive is extracted/owned first; both instances answer to this constitution. Do not let Field Notes and Vision Studio drift into two systems.
 
 ## 11. Status
-Constitution = governing principles, **candidate Conditions-of-Encounter canon** (steward ratification pending). The person-center crossing is partly built and aligned-on-paper (audit pending). Vision Studio is buildable on the primitive but unbuilt. The web, the living field, longitudinal/developmental-over-time reflection, and any elemental layer are **earned-later** — each behind its own gate, each resting on something the member has already claimed as their own.
+Constitution = governing principles, **candidate Conditions-of-Encounter canon** (steward ratification pending). The person-center crossing is partly built; the read-only audit (2026-06-26) found it faithful as an *experience* but with the learning loop open (no persistence/instrumentation; Split missing; raw Anthropic SDK vs `MultiLLMProvider`). Vision Studio is buildable on the primitive but unbuilt. The web, the living field, longitudinal/developmental-over-time reflection, and any elemental layer are **earned-later** — each behind its own gate, each resting on something the member has already claimed as their own.
+
+---
+
+## 12. The recognition primitive — candidate apex (named, kept visible, NOT built)
+
+A pattern has surfaced across the work, named here (Kelly, 2026-06-26) and held as a **candidate**, not an implemented or canon claim:
+
+> **AIN is not fundamentally a conversational system. It is a recognition architecture. Conversation is simply the first medium through which recognition is cultivated.**
+
+**The primitive is the pipeline, not the chat:** `CenterOfInquiry → Recognition → Proposal → Authorship → Crossing`. Conversation is medium #1; recognition could later be cultivated through voice, images, documents, sketches, timelines, whiteboards, embodied practice (= the **modality-independence** already named for Practice Sources). The invariant underneath is the same.
+
+**The Center of Inquiry is the OS knob** — the interview doesn't change; the center does:
+
+| Center | Authored crossing | Authorship |
+|---|---|---|
+| Person | a life thread | single-author (clean) |
+| Project | a project direction | single-author (clean) |
+| Book | central themes | single-author (clean) |
+| Relationship | a shared understanding | **multi-author** ⚠ |
+| Team | areas of convergence / divergence | **multi-author** ⚠ |
+| Organization | constitutional commitments | **multi-author** ⚠ |
+
+**Governor catch — the table is not uniform.** Single-author centers (Person, Project, Book) are clean specializations — same primitive, center swapped. The **multi-author** centers (Relationship, Team, Organization) introduce a harder class: *whose* authorship is the crossing — shared, or each party's? That is the **triadic / multi-party authorship frontier** (kin to Legacy Stage 4 "continuation beyond the author"; the triadic-consent constitution is undrafted). Not a center-swap — a separate constitutional problem. Build single-author centers first.
+
+**Persistence is promotion, not storage** — the felt form of `PERSISTENCE_GOVERNANCE` §8. Nothing persists because it was said, liked, or repeated; only because *the member authored it.* The authorship gesture is the boundary a thing crosses from conversation into shared reality — "sacramental" in the architectural sense: the moment meaning is **promoted.**
+
+**Reconciliation — do not float two competing apexes.** This is *not* a rival to the candidate "orientation architecture" (`project_orientation_architecture_candidate`); they are **stacked, different logical types.** *Recognition* is the operational **primitive** (how meaning legitimately enters); *orientation* is the governing **discipline/question** (how intelligence stays oriented to reality / relationship / authority / its-own-limits). The Crossing's *"authorship always stays the member's"* is **orientation-to-authority, operationalized.** The engine serves the discipline.
+
+**What would earn apex standing** (it has not): (1) the **second center** — Vision Studio (Project) — works as a true *center-swap* of the same engine, not a new architecture; (2) eventually a **non-conversational medium** produces a crossing through the same Recognition→Authorship pipeline; (3) it **survives contact with real members** (the experience lands as recognition). Until then: a strong candidate — **named and kept visible, built to no further than the single-author crossing.**
