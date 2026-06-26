@@ -48,4 +48,25 @@ export const EXPERIMENTS: Experiment[] = [
       // layer + third-party-consent obligation.
     },
   },
+  {
+    slug: 'crossing',
+    name: 'The Crossing',
+    oneLiner:
+      'One conversation in which you recognize — and author — a thread that feels genuinely yours.',
+    status: ['Experimental', 'Recognition not extraction', 'No persistence yet'],
+    exploring:
+      'Whether MAIA can help a member recognize something true about themselves that they choose to author — without becoming the author of it.',
+    phase: 'phase-1',
+    // The first Reflective Companionship experiment. Principal uncertainty = the
+    // liability the crossing exists to discharge. Single-session, member-authored;
+    // cross-session field + elemental inference deferred.
+    // Spec: docs/specs/FIELD_LAB_CONVERSATIONAL_INTERVIEW_SPEC_2026-06-26.md
+    governingUncertainty: {
+      current:
+        'Can MAIA propose enduring structure without becoming the author or the boundary of the person’s self-understanding?',
+      transitionState: 'admitted',
+      admittedAt: '2026-06-26',
+      transitions: [],
+    },
+  },
 ];
