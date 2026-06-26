@@ -26,14 +26,17 @@
 import { motion } from 'framer-motion';
 import { FieldLabFrame } from '@/components/maia/field-lab/FieldLabFrame';
 import { ExperimentCard } from '@/components/maia/field-lab/ExperimentCard';
-import { EXPERIMENTS } from '@/lib/maia/fieldLab/experiments';
+import { getShelfExperiments } from '@/lib/maia/fieldLab/shelf';
 
 export default function FieldLabIndexPage() {
+  // Validated read: a room whose governing uncertainty does not validate is
+  // excluded — better an absent experiment than a falsely governed one.
+  const experiments = getShelfExperiments();
   return (
     <FieldLabFrame title="">
       <FieldLabHero />
       <section className="space-y-4">
-        {EXPERIMENTS.map((exp) => (
+        {experiments.map((exp) => (
           <ExperimentCard key={exp.slug} exp={exp} />
         ))}
       </section>
@@ -50,16 +53,16 @@ function FieldLabHero() {
       transition={{ duration: 0.5 }}
       className="mb-10"
     >
-      <h2 className="text-2xl font-light text-stone-800 tracking-wide mb-3">
+      <h2 className="font-cormorant text-[32px] font-light text-amber-50/90 tracking-wide mb-3">
         Surfaces being shaped, walked together.
       </h2>
-      <p className="text-[15px] leading-relaxed text-stone-600 max-w-2xl">
+      <p className="text-[15px] leading-relaxed text-soullab-text-secondary max-w-2xl">
         Field Lab is where new MAIA surfaces live while they are still being
         formed. None of them are finished. Some may change shape. Some may be
         removed. They are offered here because the next thing they need is
         contact with members — not more refinement in the absence of contact.
       </p>
-      <p className="text-[14px] leading-relaxed text-stone-500 max-w-2xl mt-3 italic">
+      <p className="text-[14px] leading-relaxed text-amber-200/40 max-w-2xl mt-3 italic">
         What is collected from these rooms is observation — what surprised you,
         what felt off, what subtly pulled — not engagement.
       </p>
@@ -69,8 +72,8 @@ function FieldLabHero() {
 
 function FieldLabFooter() {
   return (
-    <footer className="mt-16 pt-8 border-t border-stone-200/60">
-      <p className="text-[12.5px] leading-relaxed text-stone-500 max-w-xl">
+    <footer className="mt-16 pt-8 border-t border-soullab-border-subtle">
+      <p className="text-[12.5px] leading-relaxed text-soullab-text-muted max-w-xl">
         Anything you notice in Field Lab — friction, surprise, drift, a moment
         of release or pull — is what helps these surfaces find their shape.
         Bring observations directly to the stewardship team.

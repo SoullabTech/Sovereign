@@ -39,8 +39,8 @@ export function ResponseRenderer({
   }
   if (degradedText) {
     return (
-      <motion.div {...fadeUp} className="rounded-2xl bg-white/60 border border-stone-200 p-6">
-        <p className="text-[15px] leading-relaxed text-stone-700 whitespace-pre-wrap">
+      <motion.div {...fadeUp} className="rounded-2xl bg-stone-900/40 backdrop-blur-md border border-amber-500/15 p-6">
+        <p className="text-[15px] leading-relaxed text-soullab-text-secondary whitespace-pre-wrap">
           {degradedText}
         </p>
       </motion.div>
@@ -64,16 +64,16 @@ function Section({
 }) {
   const palette =
     tone === 'unknown'
-      ? 'border-amber-300/40 bg-amber-50/40'
+      ? 'border-amber-500/20 bg-amber-500/[0.08]'
       : tone === 'closing'
-        ? 'border-[#5a7a6f]/30 bg-[#5a7a6f]/8'
-        : 'border-stone-200 bg-white/60';
+        ? 'border-amber-400/30 bg-amber-500/15'
+        : 'border-amber-500/15 bg-stone-900/40 backdrop-blur-md';
   return (
     <motion.section {...fadeUp} className={`rounded-2xl border ${palette} p-6`}>
-      <h3 className="text-xs font-medium tracking-[0.12em] text-stone-500 uppercase mb-3">
+      <h3 className="text-xs font-medium tracking-[0.12em] font-cormorant text-amber-50/90 uppercase mb-3">
         {title}
       </h3>
-      <div className="text-[15px] leading-relaxed text-stone-700">
+      <div className="text-[15px] leading-relaxed text-soullab-text-secondary">
         {children}
       </div>
     </motion.section>
@@ -95,7 +95,7 @@ function PrepareView({ response }: { response: PrepareResponse }) {
         <ul className="space-y-3 list-none">
           {response.approaches.map((a, i) => (
             <li key={i} className="flex gap-3">
-              <span className="text-stone-400 mt-1">·</span>
+              <span className="text-soullab-text-muted mt-1">·</span>
               <span>{a}</span>
             </li>
           ))}
@@ -103,7 +103,7 @@ function PrepareView({ response }: { response: PrepareResponse }) {
       </Section>
 
       <Section title="A possible opening (a draft, not a script)">
-        <p className="italic text-stone-700">&ldquo;{response.possibleOpening}&rdquo;</p>
+        <p className="italic text-soullab-text-secondary">&ldquo;{response.possibleOpening}&rdquo;</p>
       </Section>
 
       <Section title="Before you go in">
@@ -134,12 +134,12 @@ function IntegrateView({ response }: { response: IntegrateResponse }) {
         <ul className="space-y-3 list-none">
           {response.possibleReadings.map((r, i) => (
             <li key={i} className="flex gap-3">
-              <span className="text-stone-400 mt-1">·</span>
+              <span className="text-soullab-text-muted mt-1">·</span>
               <span>{r}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-[13px] text-stone-500 italic">
+        <p className="mt-4 text-[13px] text-soullab-text-muted italic">
           Each of these is one possibility, not the truth of what happened. You
           may want to check directly with them.
         </p>
@@ -156,14 +156,14 @@ function IntegrateView({ response }: { response: IntegrateResponse }) {
       <Section title="Some options, if you want one">
         <ul className="space-y-3 list-none">
           {response.nextStepOptions.map((opt, i) => (
-            <li key={i} className="rounded-xl bg-stone-50/60 border border-stone-200/70 p-4">
-              <div className="text-[12px] uppercase tracking-wide text-stone-500 mb-1">
+            <li key={i} className="rounded-xl bg-stone-900/50 border border-amber-500/15 p-4">
+              <div className="text-[12px] uppercase tracking-wide text-amber-300/80 mb-1">
                 {opt.kind}
               </div>
-              <div className="text-[14px] font-medium text-stone-800 mb-1">
+              <div className="text-[14px] font-medium text-soullab-text-primary mb-1">
                 {opt.label}
               </div>
-              <div className="text-[14px] text-stone-600 leading-relaxed">
+              <div className="text-[14px] text-soullab-text-secondary leading-relaxed">
                 {opt.description}
               </div>
             </li>
@@ -193,35 +193,35 @@ function KnowFeltInferredUnknownView({
   return (
     <motion.section
       {...fadeUp}
-      className="rounded-2xl border border-stone-200 bg-stone-50/40 p-6"
+      className="rounded-2xl border border-amber-500/15 bg-stone-900/40 backdrop-blur-md p-6"
     >
-      <h3 className="text-xs font-medium tracking-[0.12em] text-stone-500 uppercase mb-4">
+      <h3 className="text-xs font-medium tracking-[0.12em] font-cormorant text-amber-50/90 uppercase mb-4">
         Holding the distinction
       </h3>
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-[14px]">
-        <div>
-          <dt className="text-[12px] uppercase tracking-wide text-stone-500 mb-1">
+        <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/20 px-3 py-2">
+          <dt className="text-[12px] uppercase tracking-wide text-amber-300/80 mb-1">
             Known
           </dt>
-          <dd className="text-stone-700 leading-relaxed">{kfiu.known}</dd>
+          <dd className="text-soullab-text-secondary leading-relaxed">{kfiu.known}</dd>
         </div>
-        <div>
-          <dt className="text-[12px] uppercase tracking-wide text-stone-500 mb-1">
+        <div className="rounded-xl bg-sky-500/10 border border-sky-400/20 px-3 py-2">
+          <dt className="text-[12px] uppercase tracking-wide text-amber-300/80 mb-1">
             Felt
           </dt>
-          <dd className="text-stone-700 leading-relaxed">{kfiu.felt}</dd>
+          <dd className="text-soullab-text-secondary leading-relaxed">{kfiu.felt}</dd>
         </div>
-        <div>
-          <dt className="text-[12px] uppercase tracking-wide text-stone-500 mb-1">
+        <div className="rounded-xl bg-amber-500/10 border border-amber-400/20 px-3 py-2">
+          <dt className="text-[12px] uppercase tracking-wide text-amber-300/80 mb-1">
             Inferred (provisional)
           </dt>
-          <dd className="text-stone-700 leading-relaxed">{kfiu.inferred}</dd>
+          <dd className="text-soullab-text-secondary leading-relaxed">{kfiu.inferred}</dd>
         </div>
-        <div>
-          <dt className="text-[12px] uppercase tracking-wide text-stone-500 mb-1">
+        <div className="rounded-xl bg-stone-700/30 border border-white/10 px-3 py-2">
+          <dt className="text-[12px] uppercase tracking-wide text-amber-300/80 mb-1">
             Unknown
           </dt>
-          <dd className="text-stone-700 leading-relaxed">{kfiu.unknown}</dd>
+          <dd className="text-soullab-text-secondary leading-relaxed">{kfiu.unknown}</dd>
         </div>
       </dl>
     </motion.section>
@@ -232,15 +232,15 @@ function RefusalView({ refusal }: { refusal: FlowRefusal }) {
   return (
     <motion.div
       {...fadeUp}
-      className="rounded-2xl border border-stone-300 bg-white/70 p-6 space-y-4"
+      className="rounded-2xl border border-amber-500/15 bg-stone-900/40 backdrop-blur-md p-6 space-y-4"
     >
-      <h3 className="text-xs font-medium tracking-[0.12em] text-stone-500 uppercase">
+      <h3 className="text-xs font-medium tracking-[0.12em] font-cormorant text-amber-50/90 uppercase">
         A small reframe
       </h3>
-      <p className="text-[15px] leading-relaxed text-stone-700">
+      <p className="text-[15px] leading-relaxed text-soullab-text-secondary">
         {refusal.reframe}
       </p>
-      <p className="text-[15px] leading-relaxed text-stone-600">
+      <p className="text-[15px] leading-relaxed text-soullab-text-muted">
         {refusal.invitation}
       </p>
     </motion.div>
