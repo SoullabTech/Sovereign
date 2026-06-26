@@ -15,7 +15,8 @@
  *     not an abandonment.
  *   - MAIA proposes, never declares. Proposing nothing is a faithful outcome.
  *   - Nothing here builds a model of the person — no categories, no elements,
- *     no scores. The conversation is ephemeral; only an authored thread crosses.
+ *     no scores. The conversation is ephemeral; only an authored thread crosses
+ *     (persisted via /api/maia/field-lab/field-note, by an explicit member gesture).
  *
  * Spec: docs/specs/FIELD_LAB_CONVERSATIONAL_INTERVIEW_SPEC_2026-06-26.md
  */
@@ -34,10 +35,14 @@ interface ProposedThread {
   reflection: string;
   groundedIn: string;
 }
-type Decision = 'keep' | 'revise' | 'discard';
+type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread {
   title: string;
   origin: 'maia_proposed' | 'member_authored';
+}
+interface CarryPayload {
+  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[] }[];
+  created: string[];
 }
 
 type Phase = 'arrival' | 'conversation' | 'proposal' | 'closed';
@@ -47,10 +52,12 @@ export function CrossingRoom() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
   const [working, setWorking] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [proposed, setProposed] = useState<ProposedThread[]>([]);
   const [authored, setAuthored] = useState<AuthoredThread[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sessionRef = useRef<string>('');
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -88,6 +95,9 @@ export function CrossingRoom() {
 
   async function beginFromArrival() {
     if (!draft.trim()) return;
+    sessionRef.current =
+      (typeof crypto !== 'undefined' && crypto.randomUUID?.()) ||
+      Math.random().toString(36).slice(2);
     setPhase('conversation');
     await sendTurn(draft);
   }
@@ -107,26 +117,45 @@ export function CrossingRoom() {
     }
   }
 
-  function decide(thread: ProposedThread, decision: Decision, revisedTitle?: string) {
-    if (decision === 'discard') return; // a discarded thread simply disappears
-    const title = (revisedTitle ?? thread.title).trim();
-    if (!title) return;
-    setAuthored((a) => [...a, { title, origin: 'maia_proposed' }]);
-  }
-
-  function originate(title: string) {
-    const t = title.trim();
-    if (!t) return;
-    setAuthored((a) => [...a, { title: t, origin: 'member_authored' }]);
-  }
-
-  // Leaving with nothing is a first-class, successful close.
+  // Leaving with nothing is a first-class, successful close. Nothing is saved.
   function leaveWithNothing() {
     setAuthored([]);
     setPhase('closed');
   }
-  function carryForward() {
-    setPhase('closed');
+
+  // The crossing: persist only what the member authored.
+  async function carryForward(payload: CarryPayload) {
+    if (saving) return;
+    setError(null);
+    setSaving(true);
+    const finalAuthored: AuthoredThread[] = [
+      ...payload.proposals
+        .filter((p) => p.decision === 'keep' || p.decision === 'revise')
+        .map((p) => ({
+          title: p.decision === 'revise' ? (p.revisedTitle || p.title) : p.title,
+          origin: 'maia_proposed' as const,
+        })),
+      // split: the original is not kept; the member-authored children are
+      ...payload.proposals
+        .filter((p) => p.decision === 'split')
+        .flatMap((p) => (p.children ?? []).map((c) => ({ title: c, origin: 'member_authored' as const }))),
+      ...payload.created.map((t) => ({ title: t, origin: 'member_authored' as const })),
+    ];
+    try {
+      const res = await apiFetch('/api/maia/field-lab/field-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, sessionRef: sessionRef.current }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Could not save right now.');
+      setAuthored(finalAuthored);
+      setPhase('closed');
+    } catch (e: any) {
+      setError(e?.message || 'Could not save. Your conversation is unaffected; try once more.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -248,9 +277,7 @@ export function CrossingRoom() {
             {phase === 'proposal' && (
               <Crossing
                 proposed={proposed}
-                authoredCount={authored.length}
-                onDecide={decide}
-                onOriginate={originate}
+                saving={saving}
                 onCarry={carryForward}
                 onLeave={leaveWithNothing}
               />
@@ -291,6 +318,12 @@ export function CrossingRoom() {
                 <p className="text-[12.5px] text-soullab-text-muted mt-5 max-w-sm">
                   Held only because you authored them — not because they were proposed.
                 </p>
+                <a
+                  href="/maia/field-lab/your-threads"
+                  className="mt-5 text-[13px] text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline"
+                >
+                  Visit your threads — to return, revise, or release →
+                </a>
               </>
             )}
           </motion.div>
@@ -302,23 +335,24 @@ export function CrossingRoom() {
 
 function Crossing({
   proposed,
-  authoredCount,
-  onDecide,
-  onOriginate,
+  saving,
   onCarry,
   onLeave,
 }: {
   proposed: ProposedThread[];
-  authoredCount: number;
-  onDecide: (t: ProposedThread, d: Decision, revisedTitle?: string) => void;
-  onOriginate: (title: string) => void;
-  onCarry: () => void;
+  saving: boolean;
+  onCarry: (payload: CarryPayload) => void;
   onLeave: () => void;
 }) {
   const [decided, setDecided] = useState<Record<number, Decision>>({});
+  const [revised, setRevised] = useState<Record<number, string>>({});
   const [revising, setRevising] = useState<number | null>(null);
   const [revisionText, setRevisionText] = useState('');
   const [ownThread, setOwnThread] = useState('');
+  const [created, setCreated] = useState<string[]>([]);
+  // Split: per-proposal member-authored children + the in-progress draft per card.
+  const [children, setChildren] = useState<Record<number, string[]>>({});
+  const [splitDraft, setSplitDraft] = useState<Record<number, string>>({});
 
   function act(i: number, t: ProposedThread, d: Decision) {
     if (d === 'revise') {
@@ -326,13 +360,49 @@ function Crossing({
       setRevisionText(t.title);
       return;
     }
-    onDecide(t, d);
     setDecided((s) => ({ ...s, [i]: d }));
   }
   function commitRevision(i: number, t: ProposedThread) {
-    onDecide(t, 'revise', revisionText);
+    const title = revisionText.trim() || t.title;
+    setRevised((s) => ({ ...s, [i]: title }));
     setDecided((s) => ({ ...s, [i]: 'revise' }));
     setRevising(null);
+  }
+  function originate() {
+    const t = ownThread.trim();
+    if (!t) return;
+    setCreated((c) => [...c, t]);
+    setOwnThread('');
+  }
+  function addChild(i: number) {
+    const c = (splitDraft[i] ?? '').trim();
+    if (!c) return;
+    setChildren((s) => ({ ...s, [i]: [...(s[i] ?? []), c] }));
+    setSplitDraft((s) => ({ ...s, [i]: '' }));
+  }
+  function removeChild(i: number, ci: number) {
+    setChildren((s) => ({ ...s, [i]: (s[i] ?? []).filter((_, k) => k !== ci) }));
+  }
+
+  // A split contributes the children the member authored, never the (unkept) original.
+  const splitChildCount = Object.entries(children).reduce(
+    (n, [i, arr]) => n + (decided[Number(i)] === 'split' ? arr.length : 0),
+    0,
+  );
+  const authoredCount =
+    Object.values(decided).filter((d) => d === 'keep' || d === 'revise').length +
+    created.length +
+    splitChildCount;
+
+  function carry() {
+    if (saving || authoredCount === 0) return;
+    const proposals = proposed.map((t, i) => ({
+      title: t.title,
+      decision: (decided[i] ?? 'discard') as Decision,
+      revisedTitle: revised[i],
+      children: decided[i] === 'split' ? (children[i] ?? []) : undefined,
+    }));
+    onCarry({ proposals, created });
   }
 
   return (
@@ -347,63 +417,121 @@ function Crossing({
           Nothing clear enough surfaced to offer today — and that&apos;s honest, not a failure.
         </p>
       ) : (
-        proposed.map((t, i) => (
-          <div
-            key={i}
-            className={[
-              'rounded-2xl border p-4 transition-all',
-              decided[i]
-                ? 'border-amber-500/10 bg-stone-900/20 opacity-60'
-                : 'border-amber-500/15 bg-stone-900/40 backdrop-blur-sm',
-            ].join(' ')}
-          >
-            <div className="font-cormorant text-[19px] text-amber-50/90 mb-1">{t.title}</div>
-            {t.reflection && (
-              <p className="text-[13.5px] text-soullab-text-secondary leading-relaxed">{t.reflection}</p>
-            )}
-            {revising === i ? (
-              <div className="mt-3 space-y-2">
-                <input
-                  value={revisionText}
-                  onChange={(e) => setRevisionText(e.target.value)}
-                  className="w-full rounded-lg border border-amber-400/30 bg-stone-900/50 px-3 py-2 text-[14px] text-soullab-text-primary focus:outline-none"
-                  placeholder="Name it in your own words…"
-                />
-                <button
-                  type="button"
-                  onClick={() => commitRevision(i, t)}
-                  className="text-[13px] text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline"
-                >
-                  This is mine
-                </button>
+        proposed.map((t, i) => {
+          const d = decided[i];
+          return (
+            <div
+              key={i}
+              className={[
+                'rounded-2xl border p-4 transition-all',
+                d && d !== 'split'
+                  ? 'border-amber-500/10 bg-stone-900/20 opacity-60'
+                  : 'border-amber-500/15 bg-stone-900/40 backdrop-blur-sm',
+              ].join(' ')}
+            >
+              <div className="font-cormorant text-[19px] text-amber-50/90 mb-1">
+                {revised[i] || t.title}
               </div>
-            ) : decided[i] ? (
-              <p className="mt-2 text-[12px] text-soullab-text-muted uppercase tracking-wider">
-                {decided[i] === 'revise' ? 'revised & kept' : 'kept'}
-              </p>
-            ) : (
-              <div className="mt-3 flex flex-wrap gap-3 text-[13px]">
-                <button type="button" onClick={() => act(i, t, 'keep')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Keep</button>
-                <button type="button" onClick={() => act(i, t, 'revise')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Revise</button>
-                <button type="button" onClick={() => act(i, t, 'discard')} className="text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline">Discard</button>
-              </div>
-            )}
-          </div>
-        ))
+              {t.reflection && !d && (
+                <p className="text-[13.5px] text-soullab-text-secondary leading-relaxed">{t.reflection}</p>
+              )}
+              {revising === i ? (
+                <div className="mt-3 space-y-2">
+                  <input
+                    value={revisionText}
+                    onChange={(e) => setRevisionText(e.target.value)}
+                    className="w-full rounded-lg border border-amber-400/30 bg-stone-900/50 px-3 py-2 text-[14px] text-soullab-text-primary focus:outline-none"
+                    placeholder="Name it in your own words…"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => commitRevision(i, t)}
+                    className="text-[13px] text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline"
+                  >
+                    This is mine
+                  </button>
+                </div>
+              ) : d === 'split' ? (
+                <div className="mt-3 space-y-2">
+                  <p className="text-[12px] text-soullab-text-muted uppercase tracking-wider">
+                    separated into your own threads
+                  </p>
+                  {(children[i] ?? []).length > 0 && (
+                    <ul className="space-y-1">
+                      {(children[i] ?? []).map((c, ci) => (
+                        <li key={ci} className="flex items-center gap-2 text-[13.5px] text-soullab-text-secondary italic">
+                          &ldquo;{c}&rdquo;
+                          <button
+                            type="button"
+                            onClick={() => removeChild(i, ci)}
+                            className="not-italic text-[11px] text-soullab-text-muted hover:text-amber-200 underline-offset-2 hover:underline"
+                          >
+                            remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      value={splitDraft[i] ?? ''}
+                      onChange={(e) => setSplitDraft((s) => ({ ...s, [i]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addChild(i); }}
+                      placeholder="Name one of the threads in your own words…"
+                      className="flex-1 rounded-lg border border-amber-400/30 bg-stone-900/50 px-3 py-2 text-[13.5px] text-soullab-text-primary placeholder:text-soullab-text-muted focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addChild(i)}
+                      disabled={!(splitDraft[i] ?? '').trim()}
+                      className="rounded-lg px-3 py-2 text-[13px] text-amber-300/80 hover:text-amber-200 disabled:opacity-40 border border-amber-500/20"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              ) : d ? (
+                <p className="mt-2 text-[12px] text-soullab-text-muted uppercase tracking-wider">
+                  {d === 'revise' ? 'revised — yours' : d === 'keep' ? 'kept' : 'left'}
+                </p>
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-3 text-[13px]">
+                  <button type="button" onClick={() => act(i, t, 'keep')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Keep</button>
+                  <button type="button" onClick={() => act(i, t, 'revise')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Revise</button>
+                  <button type="button" onClick={() => act(i, t, 'split')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Split</button>
+                  <button type="button" onClick={() => act(i, t, 'discard')} className="text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline">Discard</button>
+                </div>
+              )}
+            </div>
+          );
+        })
       )}
 
       <div className="rounded-2xl border border-amber-500/10 bg-stone-900/20 p-4">
         <p className="text-[13px] text-soullab-text-muted mb-2">Something MAIA didn&apos;t name?</p>
+        {created.length > 0 && (
+          <ul className="mb-3 space-y-1">
+            {created.map((c, i) => (
+              <li key={i} className="text-[13.5px] text-soullab-text-secondary italic">
+                &ldquo;{c}&rdquo;{' '}
+                <span className="not-italic text-[11px] uppercase tracking-wider text-amber-300/60">yours</span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="flex gap-2">
           <input
             value={ownThread}
             onChange={(e) => setOwnThread(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') originate();
+            }}
             placeholder="Name your own thread…"
             className="flex-1 rounded-lg border border-amber-500/15 bg-stone-900/40 px-3 py-2 text-[14px] text-soullab-text-primary placeholder:text-soullab-text-muted focus:outline-none focus:border-amber-400/30"
           />
           <button
             type="button"
-            onClick={() => { onOriginate(ownThread); setOwnThread(''); }}
+            onClick={originate}
             disabled={!ownThread.trim()}
             className="rounded-lg px-3 py-2 text-[13px] text-amber-300/80 hover:text-amber-200 disabled:opacity-40 border border-amber-500/20"
           >
@@ -416,17 +544,18 @@ function Crossing({
         <button
           type="button"
           onClick={onLeave}
-          className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline"
+          disabled={saving}
+          className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary disabled:opacity-40 underline-offset-4 hover:underline"
         >
           Leave with nothing
         </button>
         <button
           type="button"
-          onClick={onCarry}
-          disabled={authoredCount === 0}
+          onClick={carry}
+          disabled={authoredCount === 0 || saving}
           className="rounded-xl px-5 py-2.5 text-[14px] font-medium border bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
         >
-          Carry {authoredCount > 0 ? `${authoredCount} forward` : 'forward'}
+          {saving ? 'Carrying…' : `Carry ${authoredCount > 0 ? `${authoredCount} ` : ''}forward`}
         </button>
       </div>
     </div>
