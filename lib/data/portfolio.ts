@@ -126,45 +126,55 @@ export const UPCOMING_PROJECTS: UpcomingProject[] = [
   },
 ];
 
-export type InnovationStatus = 'live' | 'built_not_wired' | 'prompt_shaped' | 'vision';
-export type InnovationVisibility = 'homepage' | 'research' | 'internal';
+/**
+ * Capability maturity — the four-state taxonomy ratified 2026-06-26.
+ *   live            — wired; executes in the live request path; member can experience today
+ *   built_not_wired — substrate built, 0 importers on the live path or unverified surfacing
+ *   designed        — architectural design; no built substrate yet; claim requires marker verb
+ *   research        — active investigation; hypothesis not yet proven; may never ship as designed
+ *
+ * Old values `prompt_shaped` and `vision` are retired. Prompt-shaped postures that have no
+ * distinct wired mechanism are `built_not_wired`; vision-only items are `designed` or `research`.
+ */
+export type InnovationStatus = 'live' | 'built_not_wired' | 'designed' | 'research';
+
+/** Public rendering bucket — derived from status + steward decision; governs section placement. */
+export type PublicBucket = 'available_today' | 'architected_for_release' | 'research';
 
 export interface Innovation {
   title: string;
   description: string;
   category: 'core-intelligence' | 'relational-safety' | 'developmental-continuity' | 'knowledge-modality' | 'infrastructure';
   /**
-   * Governance metadata (maturity) — from the runtime/wiring audit 2026-06-25.
-   * Encoded as DATA, never in headings/prose, so the rendering layer decides what to surface.
-   * Separation of governance from presentation: the truth lives here; visibility is a display choice.
-   *   live            — wired; executes in the live request path
-   *   built_not_wired — module exists, 0 importers on the live path (NOT the same as vision)
-   *   prompt_shaped   — a system-prompt posture, not a distinct mechanism
-   *   vision          — not yet built
+   * Governance metadata (maturity). Encoded as DATA so the rendering layer decides presentation.
+   * Separation of governance from presentation: the truth lives here; the renderer reads it.
+   * To change a status, cite new evidence in `verifiedBy`. Status is earned, not declared.
    */
-  status?: InnovationStatus;
-  /** Pointer to the evidence justifying `status` (audit reference / kind). */
+  status: InnovationStatus;
+  /**
+   * Which public section this item renders in.
+   * available_today      → "Available Today" bucket
+   * architected_for_release → "Architected for Release" bucket
+   * research             → "Research" bucket
+   */
+  publicBucket: PublicBucket;
+  /**
+   * Short label rendered after the item name in the card heading.
+   * Omit for `live` items. Set to 'Architected' for designed/built_not_wired; 'Research' for research.
+   * Rendered as: "<title> (<statusLabel>)" — keeps the name clean in the data.
+   */
+  statusLabel?: 'Architected' | 'Research';
+  /** Pointer to the evidence or audit that justifies `status`. */
   evidence?: string;
-  /**
-   * Provenance — which audit/method earned this status. Makes status an EARNED property:
-   * "why is this Live?" is answered here, not by re-auditing. To change a status, cite new evidence.
-   */
+  /** Which audit/method earned this status. Makes status an earned property. */
   verifiedBy?: string;
-  /** When the status was earned (ISO date). Status is earned, not declared. */
+  /** When the status was earned (ISO date). */
   earnedAt?: string;
-  /**
-   * Which surfaces may display this item — a presentation decision, not the truth:
-   *   homepage — eligible for homepage (which shows only `live`) and research
-   *   research — research page only, grouped under a maturity heading
-   *   internal — governance metadata only; not shown as a public card
-   * Not all statuses are exposed publicly; most visitors only care what they can use today.
-   */
-  publicVisibility?: InnovationVisibility;
 }
 
-// Maturity status per item is governance metadata from the taxonomy audit
-// (docs/pitch/INNOVATIONS_TAXONOMY_AUDIT_2026-06-25.md). It is intentionally NOT
-// yet consumed by the renderer — presentation changes are held for a single review.
+// Maturity status and public bucket per item — steward-ratified 2026-06-26.
+// Status is governance DATA; publicBucket is the rendering decision derived from it.
+// To change a status, cite new evidence in verifiedBy. Status is earned, not declared.
 export const INNOVATIONS: Innovation[] = [
   // — Core Intelligence —
   {
@@ -172,61 +182,64 @@ export const INNOVATIONS: Innovation[] = [
     description: 'MAIA adapts its responses to the depth, complexity, and developmental level of the moment, meeting people where they are without flattening nuance or overreaching.',
     category: 'core-intelligence',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
     verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
   {
     title: 'Dialectical Scaffold',
-    description: 'Rather than forcing premature certainty, MAIA can hold tension between perspectives and help insight emerge through structured contrast, paradox, and integrative reasoning.',
+    description: 'A multi-perspective processing architecture designed to hold tension between viewpoints and help insight emerge through contrast and integrative reasoning, rather than forcing premature resolution.',
     category: 'core-intelligence',
-    status: 'prompt_shaped',
-    evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
-    earnedAt: '2026-06-25',
-    publicVisibility: 'internal',
+    status: 'built_not_wired',
+    publicBucket: 'architected_for_release',
+    statusLabel: 'Architected',
+    evidence: 'taxonomy_audit_2026_06_26',
+    verifiedBy: 'Audit 2026-06-26 — Corpus Callosum substrate exists; member-facing effect unmeasured',
+    earnedAt: '2026-06-26',
   },
   {
     title: '4-Phase Relational Sequencing',
-    description: 'Conversations unfold through a relational sequence that helps MAIA recognize what kind of response is needed next — attunement, clarification, reflection, or forward movement.',
+    description: 'A designed interaction model that will progressively govern how conversations mature over time — through attunement, clarification, reflection, or forward movement.',
     category: 'core-intelligence',
-    status: 'built_not_wired',
-    evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
-    earnedAt: '2026-06-25',
-    publicVisibility: 'research',
+    status: 'designed',
+    publicBucket: 'architected_for_release',
+    statusLabel: 'Architected',
+    evidence: 'taxonomy_audit_2026_06_26',
+    verifiedBy: 'Audit 2026-06-26 — relational_phase schema exists; behavioral signal retired (ADR-003)',
+    earnedAt: '2026-06-26',
   },
   {
     title: 'AIN Relational Field Intelligence',
-    description: 'The intelligence beneath relating — a field-level awareness that holds turns, sessions, and emerging spaces in coherent relation, prior to any specific feature or response. The condition that makes everything else possible.',
+    description: 'The relational foundation being architected for future platform releases — a field-level awareness designed to hold turns, sessions, and emerging meaning in coherent relation, prior to any specific feature or response.',
     category: 'core-intelligence',
-    status: 'built_not_wired',
-    evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
-    earnedAt: '2026-06-25',
-    publicVisibility: 'research',
+    status: 'research',
+    publicBucket: 'research',
+    statusLabel: 'Research',
+    evidence: 'taxonomy_audit_2026_06_26',
+    verifiedBy: 'Audit 2026-06-26 — Cat 1 (preserved direction); 0 live callers in any production route',
+    earnedAt: '2026-06-26',
   },
   // — Relational Safety —
   {
     title: 'Relational Safeguards',
-    description: 'MAIA is governed by explicit relational safeguards that protect consent, boundaries, privacy, and user sovereignty, especially in emotionally sensitive or developmentally important exchanges.',
+    description: 'Architectural gates protect consent, boundaries, privacy, and user sovereignty — especially in emotionally sensitive or developmentally important exchanges.',
     category: 'relational-safety',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
+    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace); client representation governance verified 2026-06-26',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
   {
     title: 'Sanctuary Mode',
-    description: 'Sanctuary Mode creates a more protected conversational environment, reducing extraction and preserving the sense of privacy, trust, and psychological safety needed for deeper work.',
+    description: 'A protected conversational environment where nothing is retained — reducing extraction and preserving the psychological safety needed for deeper work.',
     category: 'relational-safety',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
     verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
   // — Developmental Continuity —
   {
@@ -234,95 +247,95 @@ export const INNOVATIONS: Innovation[] = [
     description: 'MAIA tracks developmental movement across time, allowing the system to remember where a person is in process and respond with continuity rather than treating every exchange as isolated.',
     category: 'developmental-continuity',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
     verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
   {
     title: 'Spiralogic Governor',
-    description: 'A governing developmental framework helps MAIA stay oriented to process, pacing, and human complexity so responses remain coherent, grounded, and evolution-sensitive.',
+    description: 'A governing developmental framework that keeps MAIA oriented to process, pacing, and human complexity so responses remain coherent, grounded, and evolution-sensitive.',
     category: 'developmental-continuity',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
     verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
   {
     title: 'MAIA Mentor',
-    description: 'MAIA walks members through the full arc of their work — idea, development, design, distribution — without becoming the author of it. Continuous mentorship across stages, not a one-shot assistant.',
+    description: 'A guided developmental companion designed to walk members through the full arc of their work — idea, development, design, distribution — without becoming the author of it. Currently being integrated into the platform.',
     category: 'developmental-continuity',
-    // live but partial scope: dev→distribution reflection wired; idea-generation not yet in scope
-    status: 'live',
-    evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
-    earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
+    status: 'designed',
+    publicBucket: 'architected_for_release',
+    statusLabel: 'Architected',
+    evidence: 'taxonomy_audit_2026_06_26',
+    verifiedBy: 'Audit 2026-06-26 — no distinctly wired feature; architectural property of voice design',
+    earnedAt: '2026-06-26',
   },
   // — Knowledge & Modality —
   {
     title: 'Knowledge Field',
-    description: 'Knowledge appears contextually as the conversation enters it. Rather than dumping information, MAIA surfaces the right domains, concepts, and cross-disciplinary bridges when they become relevant.',
+    description: 'Knowledge appears contextually as the conversation enters it. MAIA draws on relevant domains, concepts, and connections when they become alive in the exchange — not on demand.',
     category: 'knowledge-modality',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
     verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
   {
     title: 'Care Lens System',
-    description: 'MAIA can interpret the same moment through different care lenses — therapeutic, developmental, symbolic, practical, or spiritual — so the response matches the real need of the exchange.',
+    description: 'A lens-based framework allowing the same moment to be interpreted through different care orientations — therapeutic, developmental, symbolic, practical, or reflective. Built in the Studio layer; being extended across the platform.',
     category: 'knowledge-modality',
-    // code present (CARE_MODE_CONTRACTS) but route.ts: careLensActive: false until wired
     status: 'built_not_wired',
-    evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
-    earnedAt: '2026-06-25',
-    publicVisibility: 'research',
+    publicBucket: 'architected_for_release',
+    statusLabel: 'Architected',
+    evidence: 'taxonomy_audit_2026_06_26',
+    verifiedBy: 'Audit 2026-06-26 — Studio review lenses built; broader conversational lens-switching not wired',
+    earnedAt: '2026-06-26',
   },
   {
     title: 'Relational Context Bridge',
-    description: 'The lens you brought in the morning is still present in the evening. MAIA stabilizes a way of seeing across turns and across surfaces, so members don’t have to re-explain themselves to be understood.',
+    description: 'Cross-session continuity that carries the lens, the thread, and the context of prior work forward — so members do not have to re-establish themselves to be understood. Substrate built; deployment in progress.',
     category: 'knowledge-modality',
-    // continuity core is live (overlaps Spiral State Persistence); "across surfaces" to verify
-    status: 'live',
-    evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
-    earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
+    status: 'built_not_wired',
+    publicBucket: 'architected_for_release',
+    statusLabel: 'Architected',
+    evidence: 'taxonomy_audit_2026_06_26',
+    verifiedBy: 'Audit 2026-06-26 — conversational Phase 2 built on branch; not yet deployed to production',
+    earnedAt: '2026-06-26',
   },
   // — Infrastructure —
   {
     title: 'Sovereign Infrastructure',
-    description: 'Built on a sovereignty-first architecture, MAIA is designed for privacy, consent, and controlled data boundaries rather than extractive engagement models.',
+    description: 'Built on a sovereignty-first architecture for privacy, consent, and controlled data boundaries — self-hosted and private rather than extractive by design.',
     category: 'infrastructure',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
     verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
   {
-    title: 'White-Label Engine',
-    description: 'The MAIA engine can be adapted for practitioners, organizations, and specialized environments, making it possible to deploy the architecture within distinct brands and relational contexts.',
+    title: 'White-Label Architecture',
+    description: 'Designed to support practitioner and organizational deployments. The MAIA architecture is built to adapt for distinct brands, practice contexts, and professional environments without redesigning itself.',
     category: 'infrastructure',
-    // absent in code: no multi-tenant / per-practitioner deployment path (design-only)
-    status: 'vision',
-    evidence: 'taxonomy_audit_2026_06_25',
-    verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
-    earnedAt: '2026-06-25',
-    publicVisibility: 'research',
+    status: 'designed',
+    publicBucket: 'architected_for_release',
+    statusLabel: 'Architected',
+    evidence: 'taxonomy_audit_2026_06_26',
+    verifiedBy: 'Audit 2026-06-26 — architectural design; 0 third-party deployments; Larry = first constitutionally falsifiable test',
+    earnedAt: '2026-06-26',
   },
   {
     title: 'Multi-Modal Voice',
     description: 'MAIA is designed for voice as well as text, supporting more natural conversational flow, emotional nuance, and accessible interaction across different user settings.',
     category: 'infrastructure',
     status: 'live',
+    publicBucket: 'available_today',
     evidence: 'taxonomy_audit_2026_06_25',
     verifiedBy: 'Audit 2026-06-25 (runtime + wiring trace)',
     earnedAt: '2026-06-25',
-    publicVisibility: 'homepage',
   },
 ];
