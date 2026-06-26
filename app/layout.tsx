@@ -17,7 +17,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Soullab — We build for the soul",
-  description: "Consciousness AI and relational intelligence systems. We built AIN — the engine that brings soul to any app, site, or platform.",
+  description: "Consciousness AI and relational intelligence systems. AIN is the intelligence engine behind MAIA — sovereign, model-independent, private by design.",
   manifest: "/manifest.json",
   metadataBase: new URL("https://soullab.life"),
   openGraph: {

@@ -96,7 +96,7 @@ export function HeroSection() {
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
           Relational intelligence for human coherence.
-          The engine that brings soul to any app, site, or platform.
+          The sovereign intelligence engine behind MAIA.
         </motion.p>
 
         {/* CTAs */}
@@ -127,7 +127,7 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 1.8 }}
           className="mt-14 text-white/20 text-xs tracking-widest uppercase"
         >
-          Private by design &middot; Your data never leaves your hands
+          Private by design &middot; Self-hosted &middot; You control what's remembered
         </motion.p>
       </div>
     </section>
