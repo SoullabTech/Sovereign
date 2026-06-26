@@ -119,3 +119,26 @@ The matrix is the *shape* of the audit; recommendations are **hypotheses until t
 | `relational_phase` | person | model inference | **audit** | highest priority for redesign |
 
 Running the read-site audit (grep every consumer, classify each against §8.2) is the first concrete **design → live-code** action — and is itself an act of *verify, don't assert.*
+
+---
+
+## 9. Scope before provenance: adapt to the encounter, don't model the person
+
+§1–§8 govern **provenance, referent, and authority** for persisted state. ADR-003 (`docs/adr/003-relational-phase-as-behavioral-signal.md`) surfaced a **prior gate**: some person-state fails not on provenance but on **scope** — it answers a question the room should not be asking. An autonomy / maturity / dependence *score*, even honestly computed and attributed, is still wrong — it models *who the person is* rather than *what the encounter requires.*
+
+> **The room may adapt to the encounter; it must not model the person.**
+
+This **scope gate sits above** the referent/provenance tests: first ask whether the question is in-scope (about the encounter), *then* apply §3/§8. Everything behavior keys on should fall into **three legitimate input classes:**
+1. **Encounter signals** *(preferred)* — properties of the current interaction (first session · returning after a gap · continuing a thread · an explicit in-the-moment request).
+2. **Member declarations** — what the practitioner intentionally tells the room (the authorship / capture channel — `CAPTURE_BRIDGE…` ).
+3. **Earned relational continuity** — recognizable, attributable facts of the working relationship (prefers voice · returns to unfinished ideas · has an active project). *Relational continuity, not developmental stages.*
+
+**Excluded:** latent developmental / evaluative **person-models** (stages, scores) — they fail scope *even with good provenance.* (Member-declared person-state, §8.3, remains legitimate — it's authored, recognizable, revisable; the exclusion is of *inferred/latent* models.)
+
+**Constitutional test —** *could the room explain its behavior using only things the practitioner would reasonably recognize?*
+- ✓ *"We're continuing yesterday's thread."* · *"You asked me to challenge you."*
+- ✗ *"I'm using relational phase 3."* · *"Your autonomy score has risen."*
+
+**Schema heuristic (generative — apply to every new field):** *Whenever you are about to add a field that describes the **person**, ask whether it can instead describe the **encounter.*** The Studio grows more sophisticated in how it *holds an encounter* while staying restrained in what it *claims to know about the person.*
+
+**Status:** candidate **Conditions-of-Encounter** constitutional principle (Kelly, 2026-06-26) — flagged for canon ratification by the steward, **not self-promoted to canon here.**

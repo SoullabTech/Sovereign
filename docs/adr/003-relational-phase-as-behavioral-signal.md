@@ -1,6 +1,6 @@
 # ADR-003: Should `relational_phase` exist as an internal behavioral signal?
 
-**Status:** Proposed — **DECISION OPEN** (steward/Kelly call; no code until decided)
+**Status:** **Accepted** (2026-06-26) — Option A, *refined*. Implementation pending (read-only wiring trace first; no behavior change until then).
 **Date:** 2026-06-25
 **Authors:** Kelly + Claude
 **Reviewers:** (pending — Kelly)
@@ -22,7 +22,14 @@ The shape of the problem: **a person-state developmental label, with no honest p
 
 **Question:** Should `relational_phase` exist as an internal behavioral signal at all?
 
-**OPEN — steward (Kelly) to decide.** Options:
+**ACCEPTED (2026-06-26): Option A — refined.** Retire `relational_phase` *entirely* as an internal model of the member, and replace it **not with another person model** (an autonomy / maturity / dependence *score* recreates the same problem with better data) but with three legitimate input classes:
+1. **Encounter signals (preferred)** — properties of *this interaction*: first session · returning after a gap · continuing yesterday's thread · an explicit in-the-moment request (brainstorm / challenge / quiet).
+2. **Member declarations** — what the practitioner intentionally tells the room (*"challenge me today," "I'm overwhelmed," "help me organize"*).
+3. **Earned relational continuity** — recognizable, attributable facts of the relationship (prefers voice · returns to unfinished ideas · has an active project) — *not* developmental stages.
+
+**The deeper reason is scope, not just provenance.** `relational_phase` doesn't merely fail provenance — it **fails scope**: it answers *"what stage is this person in?"* when the room should ask *"what does this encounter require me to hold?"* Even a perfectly-computed person-score stays out of scope. Now the constitutional principle in `PERSISTENCE_GOVERNANCE_ROOM_VS_PERSON_2026-06-25.md` §9: **the room may adapt to the encounter; it must not model the person.**
+
+Options (retained for the record):
 
 - **A — Retire it as a behavioral signal (recommended).** Remove the readers' dependence on `relational_phase`. Where developmental adaptation is genuinely wanted, gate instead on **observed behavioral signals** (`autonomy_streak` / `return_count` — counts of what the member *did*: room-state, honest provenance) or on **member-declared** state. Aligns with the framework: no uncomputed person-state gates behavior.
 - **B — Keep it, but make it honest.** If developmental staging is genuinely intended, give it **real provenance** (compute it, or have the member declare it) *and* explicit promotion authority, kept unsurfaced. Heavier; reintroduces a persisted person-state *model* (psychological-centrality cost, `PERSISTENCE_GOVERNANCE` §5).
@@ -30,7 +37,7 @@ The shape of the problem: **a person-state developmental label, with no honest p
 
 **Recommendation: A.** The signal is currently person-state *and* fictional; retiring it is the framework-aligned and cleanest move. **B** is defensible only with real intent to do developmental staging honestly. **C** is weakest — it keeps the failure mode dormant rather than resolved.
 
-This is a **constitutional/stewardship decision** (it shapes tone and depth), not an auditor's call. **No code changes until it is made.**
+This was a **constitutional/stewardship decision** (it shapes tone and depth), made by the steward. **Decided 2026-06-26 (Option A, refined).** Implementation is the next step and is *not yet done*: (1) a read-only **wiring trace** of the three candidate readers, then (2) re-express `relationalStance` (confirmed) + any traced readers on encounter signals / declarations / earned continuity, or remove them — a reviewable behavior change with before/after checks. No code until that plan is on the table.
 
 ## Consequences
 
