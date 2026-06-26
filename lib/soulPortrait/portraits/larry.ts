@@ -1,5 +1,5 @@
 /**
- * Soul Portrait — Larry Clos (LITERARY form)
+ * Soul Portrait — Larry Closs (LITERARY form)
  * ────────────────────────────────────────────────────────────────────────
  * A gift portrait offered by Kelly, written as a flowing Spiralogic Soul
  * Portrait — soul-and-symbol language, not a structured astrology report.
@@ -64,7 +64,7 @@ import { DEFAULT_FRAMING } from '../schema';
 
 export const larryPortrait: LiterarySoulPortrait = {
   person: {
-    name: 'Larry Clos',
+    name: 'Larry Closs',
     slug: 'larry',
     pronouns: 'he/him',
     isMinor: false,
