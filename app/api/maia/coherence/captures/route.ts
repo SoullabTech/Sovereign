@@ -7,9 +7,10 @@ export const dynamic = 'force-dynamic';
 // MAIA Coherence Engine v0 — capture surface ("loose ends safely held").
 // Doctrine: docs/canon/MAIA_COHERENCE_ENGINE_v0.md
 //
-// v0 contract: store the member's text VERBATIM with a light, member-chosen
-// classification. No AI parsing, no calendar writes, no reminders. Releasing a
-// capture is reversible. Member-scoped on every read and write.
+// v0 contract: store the member's text VERBATIM with an OPTIONAL, member-chosen
+// classification (absent → NULL = held, unsorted). No AI parsing, no calendar
+// writes, no reminders. Releasing a capture is reversible. Member-scoped on every
+// read and write.
 
 const CLASSIFICATIONS = ['today', 'later', 'time_sensitive', 'ongoing'] as const;
 type Classification = (typeof CLASSIFICATIONS)[number];
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST — create a capture. Text stored verbatim; classification is light + member-chosen.
+// POST — create a capture. Text stored verbatim; classification is OPTIONAL.
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
@@ -63,9 +64,17 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const text = typeof body?.text === 'string' ? body.text.trim() : '';
-    const classification: Classification = isClassification(body?.classification)
-      ? body.classification
-      : 'today';
+
+    // Classification is OPTIONAL (Doctrine 6: capture is not commitment). Absent/empty
+    // → NULL (held, unsorted). A provided value must be a known disposition.
+    const rawClass = body?.classification;
+    let classification: Classification | null = null;
+    if (rawClass !== undefined && rawClass !== null && rawClass !== '') {
+      if (!isClassification(rawClass)) {
+        return NextResponse.json({ error: 'Invalid classification' }, { status: 400 });
+      }
+      classification = rawClass;
+    }
 
     if (!text) {
       return NextResponse.json({ error: 'Capture text required' }, { status: 400 });

@@ -12,11 +12,11 @@ Full doctrine: [`docs/canon/MAIA_COHERENCE_ENGINE_v0.md`](../../../docs/canon/MA
 ## What ships in v0
 
 - **Route:** `app/maia/calendar/page.tsx` — authenticated (unauth → `/signin`), mobile-first, links back to `/maia` and to the full `/studio/calendar`.
-- **Capture field:** *"Anything missing from today?"* — natural language, **stored verbatim** (no AI parsing).
-- **Light classification:** `today` · `later` · `time_sensitive` · `ongoing` (member-chosen disposition, not a priority).
+- **Capture field:** *"What are you still carrying?"* (arrival-framed) — natural language, **stored verbatim** (no AI parsing).
+- **Optional classification:** `today` · `later` · `time_sensitive` · `ongoing` — or none (held, unsorted); member-chosen, never required (Doctrine 6).
 - **Reversible release:** mark a capture handled (`released_at`); restorable.
 - **API:** `app/api/maia/coherence/captures/route.ts` — `GET` / `POST` / `PATCH?id=` (member-scoped).
-- **Storage:** `coherence_captures` table — `database/migrations/20260619000001_coherence_captures.sql`.
+- **Storage:** `coherence_captures` table — `database/migrations/20260619000001_coherence_captures.sql` + `…20260625000001_coherence_captures_optional_classification.sql` (classification nullable).
 
 ## Verify locally
 

@@ -51,16 +51,16 @@ This pattern — *attention becomes available once unresolved concerns are exter
 
 A single direct surface a member can open without navigating through Studio — usable as a mobile home-screen entry point.
 
-- **One field:** *"Anything missing from today?"* — freeform natural-language capture.
+- **One field:** *"What are you still carrying?"* — freeform natural-language capture, arrival-framed (not today-bound).
 - **Stored verbatim.** No AI parsing, no entity extraction, no calendar-event creation, no reminders. The text is held exactly as written.
-- **Light, member-chosen classification:** `today` · `later` · `time_sensitive` · `ongoing` ("keep an eye on"). This is a *disposition*, not a priority, status, or AI-inferred label. *(v0 currently defaults this to `today`; per Doctrine 6, making classification optional/absent — and the prompt arrival-framed rather than today-framed — is the next aligned increment.)*
+- **Optional, member-chosen classification:** `today` · `later` · `time_sensitive` · `ongoing` ("keep an eye on") — or none at all (held, unsorted). A *disposition*, never required, never a priority/status, never AI-inferred (Doctrine 6); capture works with nothing selected.
 - **Reversible release.** Marking a capture handled sets `released_at`; it can be restored. Nothing is destroyed by a tap.
 - **Member-scoped, consent-aligned.** Captures belong to the member; every read and write is scoped to their ID. No cross-member aggregation, no pattern-formation, no synthesis in v0.
 
 ### Data model
 
-`coherence_captures` (migration `database/migrations/20260619000001_coherence_captures.sql`):
-`id`, `member_id` → `members(id)`, `capture_text`, `classification` (CHECK enum), `released_at` (NULL = held), `created_at`, `updated_at`.
+`coherence_captures` (migrations `database/migrations/20260619000001_coherence_captures.sql` + `…20260625000001_coherence_captures_optional_classification.sql`):
+`id`, `member_id` → `members(id)`, `capture_text`, `classification` (**nullable** CHECK enum; NULL = held/unsorted), `released_at` (NULL = held), `created_at`, `updated_at`.
 
 ### API
 
