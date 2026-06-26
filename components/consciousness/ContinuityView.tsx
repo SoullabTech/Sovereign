@@ -187,7 +187,7 @@ export default function ContinuityView() {
   if (hasError) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
-        Unable to load your current position right now.
+        Unable to load your current register right now.
       </div>
     );
   }
@@ -196,7 +196,7 @@ export default function ContinuityView() {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <p className="text-sm text-white/70">
-          No sessions yet. Your position will appear here after your first conversation.
+          No sessions yet. Your current register will appear here after your first conversation.
         </p>
       </div>
     );
@@ -216,6 +216,7 @@ export default function ContinuityView() {
         </div>
 
         <div className="min-w-0">
+          <div className="text-xs uppercase tracking-wide text-white/40">Current register</div>
           <div className={`text-lg font-medium ${meta?.textClass}`}>{meta?.label}</div>
 
           {data.phase != null && (
