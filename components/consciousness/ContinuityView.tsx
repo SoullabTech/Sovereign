@@ -9,7 +9,6 @@ type SpiralStateResponse =
       currentElement: 'fire' | 'water' | 'earth' | 'air' | 'aether' | string;
       phase: number | null;
       motion: 'ascending' | 'stuck' | 'breakthrough' | null;
-      relationalPhase: number | null;
       autonomyStreak: number | null;
       updatedAt: string | null;
     };
@@ -65,13 +64,6 @@ const elementMeta: Record<
     bgClass: 'bg-violet-400/10',
     textClass: 'text-violet-100',
   },
-};
-
-const relationalPhaseLabels: Record<number, string> = {
-  1: 'Orientation',
-  2: 'Capacity',
-  3: 'Autonomy',
-  4: 'Seasonal Return',
 };
 
 const motionLabels: Record<string, string> = {
@@ -211,10 +203,6 @@ export default function ContinuityView() {
   }
 
   const motionLabel = data.motion ? (motionLabels[data.motion] ?? data.motion) : null;
-  const relationalLabel =
-    data.relationalPhase != null
-      ? (relationalPhaseLabels[data.relationalPhase] ?? `Phase ${data.relationalPhase}`)
-      : null;
   const relativeTime = formatRelativeTime(data.updatedAt);
 
   return (
@@ -241,12 +229,6 @@ export default function ContinuityView() {
       </div>
 
       <div className="mt-6 space-y-2 text-sm">
-        {relationalLabel && (
-          <div className="text-white/75">
-            Relational phase: <span className="text-white">{relationalLabel}</span>
-          </div>
-        )}
-
         <div className="text-white/75">
           Autonomy streak:{' '}
           <span className="text-white">
