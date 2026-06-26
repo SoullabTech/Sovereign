@@ -1,6 +1,6 @@
 # ADR-003: Should `relational_phase` exist as an internal behavioral signal?
 
-**Status:** **Accepted** (2026-06-26) — Option A, *refined*. Implementation pending (read-only wiring trace first; no behavior change until then).
+**Status:** **Accepted** (2026-06-26) — Option A, *refined*. Wiring trace **complete** (see *Implementation sizing*); behavioral retirement is a **one-file** change in `relationalStance`, not yet made. No runtime code changed by this ADR.
 **Date:** 2026-06-25
 **Authors:** Kelly + Claude
 **Reviewers:** (pending — Kelly)
@@ -14,7 +14,7 @@
 - **No longer member-visible.** Removed from `ContinuityView` + the `/api/members/spiral-state` serialization (commit `a516a76b7`). The display harm is fixed.
 - **Still shapes server-side behavior** — but the surface is only *partly* confirmed:
   - **Confirmed:** `lib/relational/relationalStance.ts:106` reads `persistedState.relational_phase` → `≥3` ⇒ competence, `≥4` ⇒ seasonal-return → tone/stance (HOLD / CHALLENGE / RELEASE / MIRROR / SEASONAL_RETURN).
-  - **Candidate (wiring NOT traced):** `lib/greetings/greetingScoring.ts`, `lib/consciousness/conversationDepthClassifier.ts`, `lib/library/dynamicRange.ts` each *accept* a `relationalPhase` input parameter. Whether it is fed from `member_spiral_state.relational_phase` (vs. another source, vs. unwired) was **not traced** — confirming this is part of scoping the decision, not an established fact.
+  - **Now traced (2026-06-26) — NOT live consumers:** `greetingScoring` (param typed, read nowhere; router off the oracle path), `conversationDepthClassifier` (body reads it, but its sole caller passes no `relationalPhase` → always `undefined`), `dynamicRange` (`calculateDynamicRange` has zero callers). See *Implementation sizing*.
 
 The shape of the problem: **a person-state developmental label, with no honest provenance (uncomputed), gates tone (confirmed) and possibly depth/greeting/range.** For most members the gate keys off the constant `1`, so the "developmental adaptation" is largely *not happening* (everyone treated as orientation), and is *inconsistent* for the few whose value was set by hand. Per the persistence framework, **model-/no-provenance person-state shaping behavior is the governed failure mode** — here in an unusually clear form: the signal is fictional.
 
@@ -37,7 +37,26 @@ Options (retained for the record):
 
 **Recommendation: A.** The signal is currently person-state *and* fictional; retiring it is the framework-aligned and cleanest move. **B** is defensible only with real intent to do developmental staging honestly. **C** is weakest — it keeps the failure mode dormant rather than resolved.
 
-This was a **constitutional/stewardship decision** (it shapes tone and depth), made by the steward. **Decided 2026-06-26 (Option A, refined).** Implementation is the next step and is *not yet done*: (1) a read-only **wiring trace** of the three candidate readers, then (2) re-express `relationalStance` (confirmed) + any traced readers on encounter signals / declarations / earned continuity, or remove them — a reviewable behavior change with before/after checks. No code until that plan is on the table.
+This was a **constitutional/stewardship decision** (it shapes tone and depth), made by the steward. **Decided 2026-06-26 (Option A, refined).** The read-only wiring trace is now **complete** (below); implementation — a one-file `relationalStance` change — is the next step and is **not yet made** (a separate commit, kept apart from this evidence record).
+
+## Implementation sizing (verified wiring trace — 2026-06-26)
+
+The read-only trace (load-bearing claims verified by direct read of the call sites) collapses ADR-003's "up to four readers" concern to **one**:
+
+| Reader | Live consumer? | Evidence |
+|---|---|---|
+| `relationalStance` | **YES — the only one** | oracle route passes `persistedState: spiralState` (incl. `relational_phase`); used at `relationalStance.ts:115` (`≥4` → seasonal-return) and `:118` (`≥3` → competence), guarded `?? null`. |
+| `greetingScoring` | No | `relationalPhase` appears only at the type decl; read nowhere in the body; its router is not on the oracle path. |
+| `conversationDepthClassifier` | No | its body reads `relationalPhase`, but its sole caller (`voice/stream-conversation`) passes `{activation, conversationLength, posture, mode}` — no `relationalPhase` → always `undefined`. |
+| `dynamicRange` | No | `calculateDynamicRange` has **zero callers**. |
+
+- **Column is not app-written.** The only `upsertSpiralState` caller (the oracle route) omits `relational_phase` → it stays at the schema default `1` for normal members.
+- **`memoryPlan` copy is dead weight.** `relational_phase` is read into `memoryPlan.spiralState` (oracle route) but `memoryOrchestrator` reads it **0 times** → it never reaches a prompt.
+- **Behavioral effect today is near-zero.** Because the column is static `1`, `relationalStance`'s `≥3` / `≥4` branches essentially never fire; the only members affected by retirement are the rare hand-set ones, who fall back to the existing `returnCount` / `autonomyStreak` paths. The `?? null` guards already make this graceful.
+
+**Therefore:**
+- **Behavioral retirement = one file** (`relationalStance`): drop / stop feeding the `relational_phase` branch; the fallback is already present; near-zero behavior change. The three non-consumers need nothing.
+- **Full column retirement** (load / upsert-setter / `getSpiralStateSummary` / admin-aggregate / the dead `memoryPlan` copy + a migration) is a **separate, optional** schema cleanup — **out of scope for this ADR's decision.**
 
 ## Consequences
 
@@ -47,7 +66,7 @@ This was a **constitutional/stewardship decision** (it shapes tone and depth), m
 - Removes the latent "wake-up" risk.
 
 ### Negative (Option A)
-- Requires a **wiring trace first** (confirm whether `greetingScoring` / `conversationDepthClassifier` / `dynamicRange` actually consume this column), then re-expressing `relationalStance`'s branch (certain) + any others on observed signals or removing them → a reviewable **behavior change** with before/after checks on tone/depth selection.
+- A reviewable **behavior change** in **one file** (`relationalStance`) — re-express or drop its `relational_phase` branch. The `?? null` fallback to `returnCount` / `autonomyStreak` is already present, so the effective change is near-zero (the trace confirmed the other three are not live consumers).
 - Loses the *option* of developmental staging unless re-added deliberately (Option B).
 
 ### Neutral
@@ -57,4 +76,4 @@ This was a **constitutional/stewardship decision** (it shapes tone and depth), m
 - `docs/architecture/MEMBER_SPIRAL_STATE_AUDIT_2026-06-25.md` §4/§5
 - `docs/architecture/PERSISTENCE_GOVERNANCE_ROOM_VS_PERSON_2026-06-25.md` §3 (Room vs Person), §5 (centrality), §8.3 (provenance ≠ authority)
 - Commits: `a516a76b7` (display removal), `2258bbc15` (`dominant_element` reframe)
-- Readers (to trace/handle): `lib/relational/relationalStance.ts` (confirmed), `lib/greetings/greetingScoring.ts`, `lib/consciousness/conversationDepthClassifier.ts`, `lib/library/dynamicRange.ts`
+- Readers (traced 2026-06-26): `lib/relational/relationalStance.ts` (**live — the only consumer**); `lib/greetings/greetingScoring.ts`, `lib/consciousness/conversationDepthClassifier.ts`, `lib/library/dynamicRange.ts` (**not live consumers**)
