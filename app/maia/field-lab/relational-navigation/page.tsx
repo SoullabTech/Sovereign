@@ -47,11 +47,11 @@ export default function RelationalNavigationPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-2xl font-light text-stone-800 tracking-wide mb-3">
+        <h2 className="font-cormorant text-[28px] font-light text-amber-50/90 tracking-wide mb-3">
           A place to become more conscious before and after important
           conversations.
         </h2>
-        <p className="text-[15px] leading-relaxed text-stone-600">
+        <p className="text-[15px] leading-relaxed text-soullab-text-secondary">
           MAIA accompanies your own discernment — options, lenses, boundaries.
           She does not interpret the other person, and does not carry them in
           memory across sessions. The reading is always yours to make.
@@ -59,7 +59,7 @@ export default function RelationalNavigationPage() {
       </motion.div>
 
       <motion.div
-        className="mb-10 flex items-center justify-center gap-2 rounded-full border border-stone-200 bg-white/60 p-1.5 max-w-md mx-auto"
+        className="mb-10 flex items-center justify-center gap-2 rounded-full border border-amber-500/15 bg-stone-900/40 backdrop-blur-md p-1.5 max-w-md mx-auto"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -87,8 +87,8 @@ export default function RelationalNavigationPage() {
         {mode === 'prepare' ? <PrepareFlow /> : <IntegrateFlow />}
       </motion.div>
 
-      <footer className="mt-20 pt-8 border-t border-stone-200/60 text-center">
-        <p className="text-[12.5px] leading-relaxed text-stone-500 max-w-lg mx-auto">
+      <footer className="mt-20 pt-8 border-t border-amber-500/10 text-center">
+        <p className="text-[12.5px] leading-relaxed text-soullab-text-muted max-w-lg mx-auto">
           MAIA refuses requests shaped as &ldquo;what did they really
           mean?&rdquo; or &ldquo;what is wrong with them?&rdquo; — gently. The
           other person is not in this room, and remains more than any reading
@@ -117,8 +117,8 @@ function ModeButton({
       className={[
         'flex-1 rounded-full px-5 py-2.5 text-left transition-all',
         active
-          ? 'bg-[#5a7a6f] text-white shadow-sm'
-          : 'text-stone-600 hover:bg-stone-100/60',
+          ? 'bg-amber-500/15 text-amber-50 border border-amber-400/25 shadow-[0_0_24px_rgba(212,184,150,0.12)]'
+          : 'text-soullab-text-muted hover:bg-stone-800/40 hover:text-amber-100/80',
       ].join(' ')}
       aria-pressed={active}
     >
@@ -126,7 +126,7 @@ function ModeButton({
       <div
         className={[
           'text-[11px] uppercase tracking-wider mt-0.5',
-          active ? 'text-white/70' : 'text-stone-400',
+          active ? 'text-amber-200/60' : 'text-soullab-text-muted',
         ].join(' ')}
       >
         {sublabel}
