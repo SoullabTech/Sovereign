@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
         c.chart_image_url,
         c.leadership_profile,
         c.client_types,
+        c.relationship_roles,
         c.created_at,
         c.updated_at,
         c.last_session_at,
@@ -85,10 +86,17 @@ export async function GET(request: NextRequest) {
       params.push(status);
     }
 
-    // Client type filter (e.g., ?type=leadership)
+    // Client type filter (e.g., ?type=leadership) — work/domain
     if (clientType) {
       sql += ` AND $${params.length + 1} = ANY(c.client_types)`;
       params.push(clientType);
+    }
+
+    // Relationship role filter (e.g., ?role=guest) — relationship nature, distinct from type
+    const role = searchParams.get('role');
+    if (role) {
+      sql += ` AND $${params.length + 1} = ANY(c.relationship_roles)`;
+      params.push(role);
     }
 
     // Search filter
@@ -119,6 +127,7 @@ export async function GET(request: NextRequest) {
       chartImageUrl: row.chart_image_url,
       leadershipProfile: row.leadership_profile,
       clientTypes: row.client_types || [],
+      relationshipRoles: row.relationship_roles || ['client'],
       lastSessionAt: row.last_session_at,
       nextSessionAt: row.next_session_at,
       totalSessions: parseInt(row.total_sessions) || 0,
@@ -159,14 +168,31 @@ export async function POST(request: NextRequest) {
       internalNotes,
       leadershipProfile,
       clientTypes = [],
+      relationshipRoles = ['client'],
     } = body;
 
-    if (!name?.trim()) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
-    }
+    // Relationship roles (additive, distinct from client_types). Computed up front so
+    // validation can branch on whether this is a guest.
+    const normalizedRoles = (Array.isArray(relationshipRoles) ? relationshipRoles : [])
+      .map((r: unknown) => String(r).trim().toLowerCase())
+      .filter(Boolean);
+    const rolesToInsert = normalizedRoles.length > 0 ? normalizedRoles : ['client'];
+    const isGuest = rolesToInsert.includes('guest');
 
-    if (!email?.trim()) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    // Ordinary clients still require name + email. A guest (event/session participant)
+    // is lighter: name-only OR email-only is allowed (at least one identifier), and a
+    // guest never creates a member record. Non-guest validation is unchanged.
+    if (isGuest) {
+      if (!name?.trim() && !email?.trim()) {
+        return NextResponse.json({ error: 'A guest needs at least a name or an email' }, { status: 400 });
+      }
+    } else {
+      if (!name?.trim()) {
+        return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+      }
+      if (!email?.trim()) {
+        return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+      }
     }
 
     if (!isValidStatus(status)) {
@@ -176,29 +202,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for existing client with same email
-    const existingCheck = await db.query(
-      'SELECT id FROM practitioner_clients WHERE practitioner_id = $1 AND email = $2',
-      [practitionerId, email.trim().toLowerCase()]
-    );
-
-    if (existingCheck.rows.length > 0) {
-      return NextResponse.json(
-        { error: 'A client with this email already exists' },
-        { status: 409 }
+    // Email uniqueness — only when an email is provided (a guest may have none).
+    if (email?.trim()) {
+      const existingCheck = await db.query(
+        'SELECT id FROM practitioner_clients WHERE practitioner_id = $1 AND email = $2',
+        [practitionerId, email.trim().toLowerCase()]
       );
+
+      if (existingCheck.rows.length > 0) {
+        return NextResponse.json(
+          { error: 'A client with this email already exists' },
+          { status: 409 }
+        );
+      }
     }
 
     const clientId = randomUUID();
     const result = await db.query(
       `INSERT INTO practitioner_clients
-        (id, practitioner_id, name, email, phone, status, tier, tags, birth_date, birth_time, birth_location, internal_notes, leadership_profile, client_types)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        (id, practitioner_id, name, email, phone, status, tier, tags, birth_date, birth_time, birth_location, internal_notes, leadership_profile, client_types, relationship_roles)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
       [
         clientId,
         practitionerId,
-        name.trim(),
+        name?.trim() || null,
         email?.trim().toLowerCase() || null,
         phone?.trim() || null,
         status,
@@ -210,6 +238,7 @@ export async function POST(request: NextRequest) {
         internalNotes?.trim() || null,
         leadershipProfile ? JSON.stringify(leadershipProfile) : null,
         clientTypes,
+        rolesToInsert,
       ]
     );
 
@@ -229,6 +258,7 @@ export async function POST(request: NextRequest) {
         internalNotes: client.internal_notes,
         leadershipProfile: client.leadership_profile,
         clientTypes: client.client_types || [],
+        relationshipRoles: client.relationship_roles || ['client'],
         lastSessionAt: client.last_session_at,
         nextSessionAt: null,
         totalSessions: 0,
@@ -331,6 +361,15 @@ export async function PATCH(request: NextRequest) {
       params.push(updates.clientTypes);
     }
 
+    // Relationship roles (e.g. promote a guest to client, or add a role)
+    if (updates.relationshipRoles !== undefined) {
+      const roles = (Array.isArray(updates.relationshipRoles) ? updates.relationshipRoles : [])
+        .map((r: unknown) => String(r).trim().toLowerCase())
+        .filter(Boolean);
+      updateFields.push(`relationship_roles = $${params.length + 1}`);
+      params.push(roles.length > 0 ? roles : ['client']);
+    }
+
     if (updateFields.length === 0) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
@@ -365,6 +404,7 @@ export async function PATCH(request: NextRequest) {
         internalNotes: client.internal_notes,
         leadershipProfile: client.leadership_profile,
         clientTypes: client.client_types || [],
+        relationshipRoles: client.relationship_roles || ['client'],
         lastSessionAt: client.last_session_at,
         createdAt: client.created_at,
         updatedAt: client.updated_at,
