@@ -25,7 +25,7 @@ jobs:
 
             const FOUNDERS = ['Soullab']; // #448: corrected from non-existent 'kelly-nezat' so a founder approval can register
             const GUARDIAN_CIRCLE = []; // Add council usernames when appointed
-            const MENTORS = [];          // Add mentor usernames when appointed
+            const MENTORS = ['SoullabCovenant']; // Release Steward — clears Class B (structural); not a founder (no Class A authority)
 
             // ═══════════════════════════════════════════════════════════════
             // APPROVAL REQUIREMENTS BY CLASS
