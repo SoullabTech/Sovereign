@@ -16,6 +16,7 @@ import { generateLocalEmbedding } from '@/lib/memory/embeddings';
 import { generateWithKimi, isKimiAvailable } from '@/lib/ai/kimiClient';
 import { randomUUID } from 'crypto';
 import type { SpiralContext } from './dynamicRange';
+import { authorizationPredicateSql, type RetrievalPurpose } from './governedRetrieval';
 
 // =============================================================================
 // TYPES
@@ -185,6 +186,7 @@ export class LibraryService {
       memberId?: string;
       sessionId?: string;
       spiralContext?: SpiralContext;  // Dynamic range: tune retrieval to spiral state
+      purpose?: RetrievalPurpose;  // Governed retrieval: which usage-authority levels admit (default 'guidance')
     } = {}
   ): Promise<LibraryContext> {
     const {
@@ -193,7 +195,8 @@ export class LibraryService {
       mode = 'fast',
       memberId,
       sessionId,
-      spiralContext
+      spiralContext,
+      purpose = 'guidance'
     } = options;
 
     const startTime = Date.now();
@@ -202,11 +205,11 @@ export class LibraryService {
 
     try {
       // Phase 1: Try semantic search with embeddings (with optional element boost)
-      chunks = await this.semanticSearch(queryText, limit, sourceTypes, spiralContext?.element);
+      chunks = await this.semanticSearch(queryText, limit, sourceTypes, spiralContext?.element, memberId, purpose);
 
       // If semantic search returns nothing, fall back to full-text
       if (chunks.length === 0) {
-        chunks = await this.fullTextSearch(queryText, limit, sourceTypes);
+        chunks = await this.fullTextSearch(queryText, limit, sourceTypes, memberId, purpose);
       }
 
       // In fast mode, also fetch distillate from top source
@@ -254,7 +257,9 @@ export class LibraryService {
     queryText: string,
     limit: number,
     sourceTypes?: string[],
-    elementBoost?: string
+    elementBoost?: string,
+    viewerId?: string,
+    purpose: RetrievalPurpose = 'guidance'
   ): Promise<LibrarySearchResult[]> {
     try {
       // Generate embedding for query
@@ -297,6 +302,11 @@ export class LibraryService {
         params.push(sourceTypes);
       }
 
+      // Governed retrieval: admit by authority BEFORE similarity ranks (governedRetrieval.ts).
+      const auth = authorizationPredicateSql({ viewerId, purpose }, params.length + 1);
+      sql += auth.clause;
+      params.push(...auth.params);
+
       sql += `
         ORDER BY (1 - (c.embedding <=> $1::vector)) ${boostClause} DESC
         LIMIT ${limit}
@@ -328,7 +338,9 @@ export class LibraryService {
   private async fullTextSearch(
     queryText: string,
     limit: number,
-    sourceTypes?: string[]
+    sourceTypes?: string[],
+    viewerId?: string,
+    purpose: RetrievalPurpose = 'guidance'
   ): Promise<LibrarySearchResult[]> {
     try {
       // Prepare query for tsquery (simple word matching)
@@ -363,6 +375,11 @@ export class LibraryService {
         sql += ` AND s.type = ANY($2)`;
         params.push(sourceTypes);
       }
+
+      // Governed retrieval: admit by authority BEFORE rank (governedRetrieval.ts).
+      const auth = authorizationPredicateSql({ viewerId, purpose }, params.length + 1);
+      sql += auth.clause;
+      params.push(...auth.params);
 
       sql += `
         ORDER BY score DESC
@@ -753,12 +770,45 @@ export class LibraryService {
     filePath: string;
     checksum: string;
     meta?: Record<string, any>;
+    // Governance axes (Personal Wisdom Library §4). Omit → DB defaults (platform/published),
+    // so existing platform-ingest callers are unaffected.
+    scope?: 'platform' | 'practitioner' | 'member';
+    ownerType?: 'platform' | 'practitioner' | 'member';
+    ownerId?: string;
+    visibility?: 'private' | 'shared' | 'published';
+    usageAuthority?: 'store_only' | 'only_when_i_ask' | 'reflect_with_me' | 'use_in_guidance';
+    lifecycleState?: 'kept' | 'curated' | 'trusted' | 'active' | 'retired';
+    provenance?: string;
   }): Promise<string> {
+    const cols = ['type', 'title', 'author', 'file_path', 'checksum', 'meta'];
+    const vals: any[] = [
+      params.type,
+      params.title,
+      params.author || null,
+      params.filePath,
+      params.checksum,
+      JSON.stringify(params.meta || {}),
+    ];
+    // Append governance columns only when provided (additive, non-breaking).
+    const governance: Array<[string, any]> = [
+      ['scope', params.scope],
+      ['owner_type', params.ownerType],
+      ['owner_id', params.ownerId],
+      ['visibility', params.visibility],
+      ['usage_authority', params.usageAuthority],
+      ['lifecycle_state', params.lifecycleState],
+      ['provenance', params.provenance],
+    ];
+    for (const [col, val] of governance) {
+      if (val !== undefined) {
+        cols.push(col);
+        vals.push(val);
+      }
+    }
+    const placeholders = vals.map((_, i) => `$${i + 1}`).join(', ');
     const result = await queryOne<{ id: string }>(
-      `INSERT INTO library_sources (type, title, author, file_path, checksum, meta)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id`,
-      [params.type, params.title, params.author || null, params.filePath, params.checksum, JSON.stringify(params.meta || {})]
+      `INSERT INTO library_sources (${cols.join(', ')}) VALUES (${placeholders}) RETURNING id`,
+      vals,
     );
     return result!.id;
   }

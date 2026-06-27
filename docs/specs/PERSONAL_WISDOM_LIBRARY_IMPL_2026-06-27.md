@@ -88,7 +88,7 @@ Add to `library_sources` (the object), propagating `scope` to `library_chunks` f
 | `owner_id` | uuid (nullable) | null | Owner |
 | `steward_id` | uuid (nullable) | null | Steward |
 | `visibility` | enum(`private`,`shared`,`published`) | `published` if platform else `private` | Visibility |
-| `usage_authority` | enum(`store_only`,`only_when_i_ask`,`reflect`,`use_in_guidance`) | `only_when_i_ask` | Usage authority |
+| `usage_authority` | enum(`store_only`,`only_when_i_ask`,`reflect_with_me`,`use_in_guidance`) | `only_when_i_ask` | Usage authority |
 | `provenance` | text/enum (`transcript`,`manual`,`book`,`paper`,`workshop`,`personal_insight`,`clinical`,`tradition`,`maia_conversation`) | — | provenance |
 | `lifecycle_state` | enum(`kept`,`curated`,`trusted`,`active`,`retired`) | `kept` | Status (maturity) |
 
@@ -96,7 +96,7 @@ Add to `library_sources` (the object), propagating `scope` to `library_chunks` f
 
 `library_chunks` carries a denormalized `scope` (+ optional `owner_id`) copied from its source, so the retrieval filter stays index-friendly.
 
-**Usage-authority invariant (enforced by the default):** `usage_authority` defaults to `only_when_i_ask`; reaching `use_in_guidance` requires a deliberate member act — *no kept item is guidance-authoritative by default.* Usage authority is **orthogonal to `lifecycle_state`** (maturity): a member may fully trust a piece (`trusted`) yet set `usage_authority='store_only'`. Note `store_only` is the member-facing "private vault" — distinct from the **"Keep this"** verb, which is the intent to preserve (architecture §6), not a usage level.
+**Usage-authority invariant (enforced by the default):** `usage_authority` defaults to `only_when_i_ask`; reaching `use_in_guidance` requires a deliberate member act — *no kept item is guidance-authoritative by default.* Usage authority is **orthogonal to `lifecycle_state`** (maturity): a member may fully trust a piece (`trusted`) yet set `usage_authority='store_only'`. Note `store_only` is the member-facing "private vault" — distinct from the **"Keep this"** verb, which is the intent to preserve (architecture §6), not a usage level. And `store_only` is a deliberate **vault state, never the default** — the default is `only_when_i_ask`.
 
 ---
 
@@ -132,7 +132,7 @@ The v1 deliverable is the member write path itself — **not** a Clean Language 
 
 **Fixed in v1:** `scope='member'`, `visibility='private'`, **Offer deferred** (no upward promotion path yet).
 
-**Write path:** a member entrypoint (e.g. `POST /api/library/keep`) writes a `library_sources` row (`owner_id=:member`, `scope='member'`, `visibility='private'`, `usage_authority=:selected`) and runs the **same** chunk → embed path as the platform engine. Retrieval honors `usage_authority` at query time (architecture §4 mapping: `store_only` never retrieved into the prompt; `only_when_i_ask` gated behind an explicit request; `reflect` = mirror context; `use_in_guidance` = active). Embedding dim must match `library_chunks`. **Sanctuary guard:** no "Keep this" inside a sanctuary session. Accepted file types / size limits: TBD.
+**Write path:** a member entrypoint (e.g. `POST /api/library/keep`) writes a `library_sources` row (`owner_id=:member`, `scope='member'`, `visibility='private'`, `usage_authority=:selected`) and runs the **same** chunk → embed path as the platform engine. Retrieval honors `usage_authority` at query time (architecture §4 mapping: `store_only` never retrieved into the prompt; `only_when_i_ask` gated behind an explicit request; `reflect_with_me` = mirror context; `use_in_guidance` = active). Embedding dim must match `library_chunks`. **Sanctuary guard:** no "Keep this" inside a sanctuary session. Accepted file types / size limits: TBD.
 
 ---
 
