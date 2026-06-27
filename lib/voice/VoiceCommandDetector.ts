@@ -15,6 +15,8 @@
  */
 
 import type { TherapeuticFramework } from '@/lib/consciousness/therapeuticFrameworks';
+import { MAIA_WORLDS } from '@/lib/navigation/maiaNav';
+import { matchNavigation, type NavDestination, type NavigationCommand } from './navigationGrammar';
 
 // ============================================================================
 // Types
@@ -320,3 +322,55 @@ export function getModeConfirmation(mode: ConversationMode): string {
   const options = confirmations[mode];
   return options[Math.floor(Math.random() * options.length)];
 }
+
+// ============================================================================
+// Navigation commands — explicit "switch the field" path (text bar)
+// ============================================================================
+//
+// Sits beside detectMaiaCommands and follows the same contract: deterministic,
+// pre-LLM, command-not-content. "open journal" / "go to relationships" / "switch to
+// astrology" / "take me to field lab" resolve to a maiaNav route; "open/turn on/leave
+// sanctuary" toggles the Sanctuary flag (never a route). Emotional/inferred content is
+// never auto-switched — see navigationGrammar.ts for the matching rules.
+
+/** Spoken/typed aliases per world. Tight on purpose — a name, not an emotional theme. */
+const WORLD_ALIASES: Record<string, string[]> = {
+  maia: ['maia', 'center', 'center field', 'home', 'chat', 'main'],
+  journal: ['journal'],
+  ideas: ['ideas', 'idea'],
+  relationships: ['relationships', 'relationship'],
+  wisdom: ['wisdom', 'wisdom keepers'],
+  anchor: ['anchor'],
+};
+
+/** Valid targets that are not left-rail worlds (boundary / standalone surfaces). */
+const EXTRA_DESTINATIONS: NavDestination[] = [
+  { id: 'astrology', label: 'Astrology', worldId: null, route: '/astrology', aliases: ['astrology', 'astro'] },
+  { id: 'field-lab', label: 'Field Lab', worldId: null, route: '/maia/field-lab', aliases: ['field lab', 'fieldlab'] },
+];
+
+let cachedDestinations: NavDestination[] | null = null;
+
+/** Build the destination list from maiaNav (single source of truth) + extras. */
+export function getNavigationDestinations(): NavDestination[] {
+  if (cachedDestinations) return cachedDestinations;
+  const fromWorlds: NavDestination[] = MAIA_WORLDS.map((w) => ({
+    id: w.id,
+    label: w.label,
+    worldId: w.id,
+    route: w.route,
+    aliases: WORLD_ALIASES[w.id] ?? [w.label.toLowerCase()],
+  }));
+  cachedDestinations = [...fromWorlds, ...EXTRA_DESTINATIONS];
+  return cachedDestinations;
+}
+
+/**
+ * Detect an explicit navigation / sanctuary command in typed text. Deterministic, no LLM.
+ * Returns { kind: 'none' } for anything that is not an unmistakable command.
+ */
+export function detectMaiaNavigationCommand(input: string): NavigationCommand {
+  return matchNavigation(input, getNavigationDestinations());
+}
+
+export type { NavigationCommand, NavDestination };

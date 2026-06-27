@@ -26,7 +26,7 @@ import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
-import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation, detectMaiaCommands, getMaiaCommandConfirmation } from '@/lib/voice/VoiceCommandDetector';
+import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation, detectMaiaCommands, detectMaiaNavigationCommand, getMaiaCommandConfirmation } from '@/lib/voice/VoiceCommandDetector';
 import type { MaiaCommand } from '@/lib/voice/VoiceCommandDetector';
 import {
   matchVoiceCommand,
@@ -190,6 +190,7 @@ import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand } from '@/lib/services/conversationEssenceExtractor';
+import { dispatchVoiceNavigation } from '@/lib/maia/voiceNavigationBridge';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
 import { useDemoEventListener } from '@/hooks/useDemoEventListener';
 import { BookPlus } from 'lucide-react';
@@ -4163,6 +4164,38 @@ I'm not sure what I'm feeling yet.`;
     // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): typed turn — the mic must NOT
     // auto-re-arm after MAIA's response. Typed input is not voice re-consent.
     lastSendWasVoiceRef.current = false;
+
+    // 🧭 NAVIGATION COMMAND DETECTION (explicit-command path):
+    // Deterministic, pre-LLM, sits beside detectMaiaCommands below. "open journal",
+    // "go to relationships", "switch to astrology", "take me to field lab" → route via the
+    // same bridge voice navigation uses. "open/turn on/leave sanctuary" toggles Sanctuary
+    // mode (never a route). No model is consulted; the member says where to go. Emotional /
+    // inferred content is never auto-switched ("I'm struggling in my marriage" stays in chat);
+    // an unmistakable-but-unknown navigation asks for clarification instead of acting.
+    const navCommand = detectMaiaNavigationCommand(text);
+    if (navCommand.kind === 'sanctuary') {
+      setIsSanctuary(navCommand.enable);
+      toast.success(navCommand.enable ? "Sanctuary on. This won't be remembered." : 'Sanctuary off.');
+      console.log(`🛡️ [Command] Sanctuary → ${navCommand.enable ? 'ENABLED' : 'disabled'}`);
+      return; // mode toggle, not conversation content
+    }
+    if (navCommand.kind === 'navigate') {
+      const { destination, command } = navCommand;
+      dispatchVoiceNavigation(destination.worldId as any, command, {
+        route: destination.route,
+        label: destination.label,
+        source: 'text-command',
+      });
+      toast.success(`Opening ${destination.label}`);
+      console.log(`🧭 [Command] Navigate → ${destination.label} (${destination.route})`);
+      return; // navigation is a command, not conversation content
+    }
+    if (navCommand.kind === 'ambiguous') {
+      // Confirm, don't act — and don't send to MAIA. The member can restate.
+      toast('I can take you to Journal, Ideas, Relationships, Wisdom, Anchor, Astrology, or Field Lab — which one?');
+      console.log(`🧭 [Command] Ambiguous navigation, asked for clarification: "${text}"`);
+      return;
+    }
 
     if (detectJournalCommand(text)) {
       await handleCaptureSpirit();

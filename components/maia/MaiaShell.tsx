@@ -157,11 +157,15 @@ export function MaiaShell({
   // Studio transitions use router.push (handled in the bridge detail).
   useEffect(() => {
     const cleanup = onVoiceNavigate((detail) => {
-      console.log(`🧭 [MaiaShell] Voice navigation received: ${detail.worldId}`);
-      if (detail.worldId === 'studio') {
+      console.log(`🧭 [MaiaShell] Navigation received: ${detail.route ?? detail.worldId}`);
+      if (detail.route) {
+        // Explicit text command (e.g. "open journal") — route-push, predictable.
+        router.push(detail.route);
+        revealChrome();
+      } else if (detail.worldId === 'studio') {
         // Studio is a boundary transition — navigate to separate shell
         router.push('/studio');
-      } else {
+      } else if (detail.worldId) {
         handleWorldChange(detail.worldId as MaiaWorldId);
         // Also reveal chrome briefly so user sees the transition
         revealChrome();
