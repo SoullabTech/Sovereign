@@ -71,7 +71,7 @@ Success is: people capture **rarely but deliberately**, and when they do, it **g
 
 ## Cohort & exposure
 
-- **Small, known beta cohort only — not the masses.** Reachable solely by invited testers via the existing tester gate (`members.tester` / `requireCohort`, the same pattern as the Field Lab).
+- **Small, known beta cohort only — not the masses.** Reachable solely by invited testers (`members.tester`): enforced **server-side** via `isMemberTester` / the `labs.preview` entitlement in the API, plus the client `<PreviewGate>` on the page — the same pattern as Field Lab. **Wired in this branch** (not a deferred deploy step), so no deploy can expose it member-wide.
 - Keep N small enough for qualitative, conversational debriefs (the questions above), not aggregate dashboards.
 
 ## Feedback capture

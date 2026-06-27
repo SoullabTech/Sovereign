@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import { PreviewGate } from '@/components/auth/PreviewGate';
 
 type Classification = 'today' | 'later' | 'time_sensitive' | 'ongoing';
 
@@ -47,7 +48,7 @@ function timeAgo(iso: string): string {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export default function MaiaCalendarPage() {
+function ArrivalSurface() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [text, setText] = useState('');
@@ -280,5 +281,56 @@ export default function MaiaCalendarPage() {
         </footer>
       </div>
     </main>
+  );
+}
+
+// Shown to signed-in members who aren't in the tester cohort — an honest invitation,
+// never a tease or upsell (the PreviewGate "preview" branch).
+function ArrivalInvitation() {
+  return (
+    <main className="min-h-screen bg-[#1a1a2e] text-slate-200">
+      <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-6 md:py-8">
+        <nav className="text-sm">
+          <Link href="/maia" className="text-slate-400 transition-colors hover:text-slate-200">
+            ← MAIA
+          </Link>
+        </nav>
+        <header className="mb-5 mt-6">
+          <h1 className="text-2xl font-semibold text-white">Arrival</h1>
+          <p className="mt-1 text-sm text-slate-400">A quiet place to set down what you’re carrying.</p>
+        </header>
+        <p className="text-sm leading-relaxed text-slate-400">
+          Arrival is in a small private beta right now. There’s nothing you need to do — you’ll be
+          welcomed in when it opens more widely.
+        </p>
+      </div>
+    </main>
+  );
+}
+
+// Signed-out → sign in cleanly (no broken unauthenticated state).
+function GateRedirect() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/signin?next=/maia/calendar');
+  }, [router]);
+  return (
+    <main className="min-h-screen bg-[#1a1a2e] text-slate-300 flex items-center justify-center p-6">
+      <p className="text-sm text-slate-500">Taking you to sign in…</p>
+    </main>
+  );
+}
+
+// Tester cohort gate (labs.preview ⟸ members.tester). PreviewGate is the client UX gate;
+// the /api/maia/coherence/* routes enforce the same entitlement server-side.
+export default function MaiaCalendarPage() {
+  return (
+    <PreviewGate
+      entitlement="labs.preview"
+      signedOut={<GateRedirect />}
+      preview={<ArrivalInvitation />}
+    >
+      <ArrivalSurface />
+    </PreviewGate>
   );
 }

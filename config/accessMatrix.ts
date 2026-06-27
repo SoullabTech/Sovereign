@@ -167,7 +167,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // MAIA Interface (core) — all depth, open to all
   { exact: '/maia', minTier: 'free', notes: 'MAIA main interface' },
-  { exact: '/maia/calendar', minTier: 'free', notes: 'Coherence Engine v0 — Arrival/capture entry, authenticated members' },
+  { exact: '/maia/calendar', minTier: 'free', notes: 'Coherence Engine v0 — Arrival/capture entry; tester cohort-gated server-side (labs.preview ⟸ members.tester) + client PreviewGate, like Field Lab' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
   { exact: '/maia/field-dashboard', minTier: 'free', notes: 'Field dashboard' },
@@ -407,8 +407,8 @@ export const ACCESS_RULES: AccessRule[] = [
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
-  // MAIA Coherence Engine API (v0) — capture surface, authenticated members
-  { prefix: '/api/maia/coherence', minTier: 'free', notes: 'Coherence Engine captures API (GET/POST/PATCH), authenticated members' },
+  // MAIA Coherence Engine API (v0) — capture surface, tester cohort-gated server-side
+  { prefix: '/api/maia/coherence', minTier: 'free', notes: 'Coherence Engine captures API (GET/POST/PATCH); tester cohort-gated server-side (isMemberTester / labs.preview)' },
 
   // Studio API - session room, bookings, scribe markers, live prompts
   { prefix: '/api/studio', minTier: 'free', notes: 'Studio API' },

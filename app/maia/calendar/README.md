@@ -44,9 +44,11 @@ which 404s unmapped routes), add to `ACCESS_RULES`:
 { prefix: '/api/maia/coherence', minTier: 'free', notes: 'Coherence Engine captures (GET/POST/PATCH)' },
 ```
 
-`minTier: 'free'` = authenticated member (not public). These two entries **are included in
-this branch** (added to `config/accessMatrix.ts`), so the route is registered for both
-permissive and strict access modes — no follow-up needed.
+`minTier: 'free'` = authenticated (not public); the tier model can't express cohort, so the
+**tester cohort gate is enforced server-side** — `isMemberTester` / `labs.preview` in the API
+(`route.ts`), plus the client `<PreviewGate entitlement="labs.preview">` wrapping the page —
+the same pattern as Field Lab. These two entries **are included in this branch**, so the route
+is registered for both permissive and strict access modes.
 
 ## Intentionally deferred (next steps — placeholders only)
 

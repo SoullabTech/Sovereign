@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { isMemberTester } from '@/lib/auth/tester';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic';
 // v0 contract: store the member's text VERBATIM with an OPTIONAL, member-chosen
 // classification (absent → NULL = held, unsorted). No AI parsing, no calendar
 // writes, no reminders. Releasing a capture is reversible. Member-scoped on every
-// read and write.
+// read and write, and gated to the tester cohort (labs.preview ⟸ members.tester).
 
 const CLASSIFICATIONS = ['today', 'later', 'time_sensitive', 'ongoing'] as const;
 type Classification = (typeof CLASSIFICATIONS)[number];
@@ -21,16 +22,30 @@ function isClassification(v: unknown): v is Classification {
 
 const CAPTURE_COLUMNS = 'id, capture_text, classification, released_at, created_at';
 
+// Tester cohort gate — the SERVER enforcement boundary (the page's <PreviewGate> is only
+// the client UX gate). Resolves the member (x-member-id on iOS, cookies on web), then
+// requires the labs.preview entitlement (members.tester). Returns the memberId, or a
+// NextResponse error for the caller to return as-is.
+async function requireTester(request: NextRequest): Promise<string | NextResponse> {
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) {
+    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
+  }
+  if (!(await isMemberTester(memberId))) {
+    return NextResponse.json({ error: 'Tester access required' }, { status: 403 });
+  }
+  return memberId;
+}
+
 // GET — list captures for the member. Held only by default; ?include=released for all.
 export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
 
-  const memberId = await getMemberIdFromRequest(request);
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
-  }
+  const gated = await requireTester(request);
+  if (gated instanceof NextResponse) return gated;
+  const memberId = gated;
 
   const includeReleased = request.nextUrl.searchParams.get('include') === 'released';
 
@@ -56,10 +71,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
 
-  const memberId = await getMemberIdFromRequest(request);
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
-  }
+  const gated = await requireTester(request);
+  if (gated instanceof NextResponse) return gated;
+  const memberId = gated;
 
   try {
     const body = await request.json().catch(() => ({}));
@@ -102,10 +116,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
 
-  const memberId = await getMemberIdFromRequest(request);
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
-  }
+  const gated = await requireTester(request);
+  if (gated instanceof NextResponse) return gated;
+  const memberId = gated;
 
   const id = request.nextUrl.searchParams.get('id');
   if (!id) {
