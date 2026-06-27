@@ -43,9 +43,14 @@ interface AuthoredThread {
 interface CarryPayload {
   proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[] }[];
   created: string[];
+  consent?: { remembered: boolean; protocolVersion: string };
 }
 
 type Phase = 'arrival' | 'conversation' | 'proposal' | 'closed';
+
+// Mirrors the save route's CONSENT_PROTOCOL — the informed-consent protocol version
+// recorded when a member chooses to remember. Bump together with the route.
+const CONSENT_PROTOCOL = 'recognition-continuity-v1';
 
 export function CrossingRoom() {
   const [phase, setPhase] = useState<Phase>('arrival');
@@ -353,6 +358,7 @@ function Crossing({
   // Split: per-proposal member-authored children + the in-progress draft per card.
   const [children, setChildren] = useState<Record<number, string[]>>({});
   const [splitDraft, setSplitDraft] = useState<Record<number, string>>({});
+  const [confirming, setConfirming] = useState(false); // informed-consent gate before keeping
 
   function act(i: number, t: ProposedThread, d: Decision) {
     if (d === 'revise') {
@@ -394,7 +400,26 @@ function Crossing({
     created.length +
     splitChildCount;
 
+  // The titles the member is about to keep — shown back to them at the consent gate.
+  const keptItems: string[] = [
+    ...proposed.flatMap((t, i) =>
+      decided[i] === 'keep'
+        ? [t.title]
+        : decided[i] === 'revise'
+          ? [revised[i] || t.title]
+          : decided[i] === 'split'
+            ? (children[i] ?? [])
+            : [],
+    ),
+    ...created,
+  ];
+
+  // Carry is a two-step gesture: choose, then give informed consent to remember.
   function carry() {
+    if (saving || authoredCount === 0) return;
+    setConfirming(true);
+  }
+  function confirmCarry() {
     if (saving || authoredCount === 0) return;
     const proposals = proposed.map((t, i) => ({
       title: t.title,
@@ -402,7 +427,7 @@ function Crossing({
       revisedTitle: revised[i],
       children: decided[i] === 'split' ? (children[i] ?? []) : undefined,
     }));
-    onCarry({ proposals, created });
+    onCarry({ proposals, created, consent: { remembered: true, protocolVersion: CONSENT_PROTOCOL } });
   }
 
   return (
@@ -540,24 +565,77 @@ function Crossing({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-2">
-        <button
-          type="button"
-          onClick={onLeave}
-          disabled={saving}
-          className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary disabled:opacity-40 underline-offset-4 hover:underline"
-        >
-          Leave with nothing
-        </button>
-        <button
-          type="button"
-          onClick={carry}
-          disabled={authoredCount === 0 || saving}
-          className="rounded-xl px-5 py-2.5 text-[14px] font-medium border bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
-        >
-          {saving ? 'Carrying…' : `Carry ${authoredCount > 0 ? `${authoredCount} ` : ''}forward`}
-        </button>
-      </div>
+      {confirming ? (
+        <div className="rounded-2xl border border-amber-400/30 bg-stone-900/50 p-5 space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="font-cormorant text-[20px] text-amber-50/90">
+              Before these become part of your memory
+            </p>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={saving}
+              className="shrink-0 text-[12px] text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline disabled:opacity-40"
+            >
+              ← edit your choices
+            </button>
+          </div>
+          <p className="text-[13.5px] text-soullab-text-secondary leading-relaxed">
+            You&apos;re choosing to keep {keptItems.length === 1 ? 'this thread' : `these ${keptItems.length} threads`}.
+            Keeping {keptItems.length === 1 ? 'it' : 'them'} means:
+          </p>
+          <ul className="space-y-1.5 text-[13px] text-soullab-text-secondary leading-relaxed">
+            <li><span className="text-amber-50/80">Yours to change</span> — revise or release {keptItems.length === 1 ? 'it' : 'any of them'} anytime, in Your Threads.</li>
+            <li><span className="text-amber-50/80">Yours alone</span> — never shown to anyone else, never used to train a model, never sold. Not a profile of you.</li>
+            <li><span className="text-amber-50/80">Kept for you</span> — so you can return to your own reflection over time.</li>
+          </ul>
+          <ul className="space-y-1 border-l border-amber-500/15 pl-3">
+            {keptItems.map((it, i) => (
+              <li key={i} className="text-[13.5px] text-soullab-text-secondary italic">&ldquo;{it}&rdquo;</li>
+            ))}
+          </ul>
+          <div className="flex items-center justify-between pt-1">
+            <button
+              type="button"
+              onClick={onLeave}
+              disabled={saving}
+              className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary disabled:opacity-40 underline-offset-4 hover:underline"
+            >
+              Leave with nothing
+            </button>
+            <button
+              type="button"
+              onClick={confirmCarry}
+              disabled={saving}
+              className="rounded-xl px-5 py-2.5 text-[14px] font-medium border bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+            >
+              {saving ? 'Keeping…' : 'Keep these — I understand'}
+            </button>
+          </div>
+          <p className="text-[10.5px] uppercase tracking-wider text-soullab-text-muted/70">
+            Recognition continuity · v1
+          </p>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={onLeave}
+            disabled={saving}
+            className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary disabled:opacity-40 underline-offset-4 hover:underline"
+          >
+            Leave with nothing
+          </button>
+          <button
+            type="button"
+            onClick={carry}
+            disabled={authoredCount === 0 || saving}
+            className="rounded-xl px-5 py-2.5 text-[14px] font-medium border bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+          >
+            {saving ? 'Carrying…' : `Carry ${authoredCount > 0 ? `${authoredCount} ` : ''}forward`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
