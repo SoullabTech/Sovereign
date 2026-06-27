@@ -59,6 +59,8 @@ const ALLOWED_EVENTS = new Set([
   'meeting_audio_no_track',
   'meeting_audio_self_capture_blocked',
   'meeting_audio_blocked_feedback',
+  // In-room meeting launcher: practitioner opened a Meet/Zoom/Teams link.
+  'meeting_audio_launch_opened',
 ] as const);
 
 type AllowedEvent = typeof ALLOWED_EVENTS extends Set<infer T> ? T : never;
