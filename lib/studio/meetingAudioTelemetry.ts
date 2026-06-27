@@ -12,6 +12,7 @@
  *   meeting_audio_no_track             — picker returned no audio track ("Share tab audio" not checked)
  *   meeting_audio_self_capture_blocked — user selected the Session Room tab itself; guard fired
  *   meeting_audio_blocked_feedback     — practitioner self-reports the gap (clicked feedback link)
+ *   meeting_audio_launch_opened        — opened a meeting link from the in-room launcher (metadata.platform)
  *
  * Fires to /api/telemetry/client which logs to `docker logs maia-sovereign`.
  * No DB table until volume justifies one.
@@ -26,7 +27,8 @@ export type MeetingAudioEvent =
   | 'meeting_audio_picker_cancelled'
   | 'meeting_audio_no_track'
   | 'meeting_audio_self_capture_blocked'
-  | 'meeting_audio_blocked_feedback';
+  | 'meeting_audio_blocked_feedback'
+  | 'meeting_audio_launch_opened';
 
 type Meta = Record<string, string | number | boolean | null>;
 
