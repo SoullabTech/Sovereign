@@ -56,6 +56,7 @@ import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
 import { AudioSourcesStatus } from '@/components/studio/AudioSourcesStatus';
+import SessionSetupPanel from '@/components/studio/SessionSetupPanel';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 import { getReviewEligibility, getSessionStatusBadge } from '@/lib/studio/reviewEligibility';
@@ -900,6 +901,11 @@ ${insightsSection}
                   </span>
                 </p>
               </div>
+            )}
+
+            {/* Facilitation setup — meeting provider + resources, owned by the Session (ADR-006) */}
+            {localContainer === 'practitioner' && (
+              <SessionSetupPanel sessionTitle={localSessionTitle} />
             )}
 
             {/* Start button */}
