@@ -1,4 +1,4 @@
-# ADR-005: Person, Relationship, and Participation as separate authority domains
+# ADR-007: Person, Relationship, and Participation as separate authority domains
 
 **Status:** Accepted
 **Date:** 2026-06-27

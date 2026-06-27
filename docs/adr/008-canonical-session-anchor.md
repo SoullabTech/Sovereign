@@ -1,9 +1,13 @@
-# ADR-006: A canonical Session anchor for the facilitation layer
+# ADR-008: A canonical Session anchor for the facilitation layer
 
 **Status:** Proposed — recommendation pending steward ratification of the canonical choice
 **Date:** 2026-06-27
 **Authors:** Kelly Nezat, Claude
 **Reviewers:** Kelly Nezat
+
+> **Implements [ADR-005](005-studio-orchestration-domain.md)** (Studio as Orchestration Domain;
+> Providers as Replaceable Adapters) — this ADR makes the concrete canonical-Session decision
+> within that domain.
 
 ## Context
 
@@ -114,5 +118,5 @@ panel + provider picker in the Session Room setup phase (absorbing the create-in
 - `lib/studio/RecordingContext.tsx`, `app/studio/session-room/page.tsx`, `app/api/scribe/*`,
   `app/api/studio/sessions/route.ts`, `database/migrations/20260407100001_media_studio_build_a.sql`,
   `database/migrations/20260407000001_trust_layer_phase1.sql` (`meeting_provider` enum).
-- Builds on [ADR-005](005-person-relationship-participation.md) (Person/Relationship/Participation;
+- Builds on [ADR-007](007-person-relationship-participation.md) (Person/Relationship/Participation;
   Series→Instance→Session frame).
