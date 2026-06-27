@@ -22,6 +22,7 @@ import {
 import { ELEMENT_INFO, type ElementKey } from '@/lib/elemental-alchemy/assessmentQuestions';
 import { getPracticeById } from '@/lib/elemental-alchemy/practices';
 import type { ElementalJournalEntry } from '@/lib/elemental-alchemy/journalService';
+import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 
 const ELEMENT_ICONS: Record<ElementKey, React.ComponentType<{ className?: string }>> = {
   fire: Flame,
@@ -70,18 +71,35 @@ function ElementalJournalContent() {
   const [newPrompt, setNewPrompt] = useState(prefillPrompt || '');
   const [saving, setSaving] = useState(false);
 
-  // Mock user ID (replace with real auth)
-  const userId = 'beta-user-1';
+  // Real signed-in member identity. The server derives identity from the verified
+  // session (cookie / session-token), not from anything the client sends — this
+  // state only gates the page and avoids calling the API while signed out.
+  const [memberId, setMemberId] = useState<string | null>(null);
 
-  // Fetch entries
+  // Resolve identity on mount; redirect to sign-in if not authenticated.
+  useEffect(() => {
+    const id = getValidMemberId();
+    if (!id) {
+      router.replace('/signin?returnTo=/maia/community/elemental-alchemy/journal');
+      return;
+    }
+    setMemberId(id);
+  }, [router]);
+
+  // Fetch entries. apiFetch attaches the session credential; no userId is sent —
+  // the server scopes every entry to the authenticated member.
   const fetchEntries = useCallback(async () => {
+    if (!memberId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ userId });
+      const params = new URLSearchParams();
       if (filterElement) params.append('element', filterElement);
       if (searchQuery) params.append('search', searchQuery);
+      const qs = params.toString();
 
-      const res = await fetch(`/api/community/elemental-alchemy/journal?${params}`);
+      const res = await apiFetch(
+        `/api/community/elemental-alchemy/journal${qs ? `?${qs}` : ''}`
+      );
       const data = await res.json();
 
       if (data.ok) {
@@ -92,23 +110,21 @@ function ElementalJournalContent() {
     } finally {
       setLoading(false);
     }
-  }, [userId, filterElement, searchQuery]);
+  }, [memberId, filterElement, searchQuery]);
 
   useEffect(() => {
     fetchEntries();
   }, [fetchEntries]);
 
-  // Save new entry
+  // Save new entry (identity from session; no userId sent)
   const saveEntry = async () => {
-    if (!newContent.trim()) return;
+    if (!newContent.trim() || !memberId) return;
 
     setSaving(true);
     try {
-      const res = await fetch('/api/community/elemental-alchemy/journal', {
+      const res = await apiFetch('/api/community/elemental-alchemy/journal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           element: newElement,
           practiceId: prefillPractice,
           prompt: newPrompt || null,
@@ -141,8 +157,8 @@ function ElementalJournalContent() {
     if (!confirm('Delete this journal entry?')) return;
 
     try {
-      const res = await fetch(
-        `/api/community/elemental-alchemy/journal?id=${id}&userId=${userId}`,
+      const res = await apiFetch(
+        `/api/community/elemental-alchemy/journal?id=${encodeURIComponent(id)}`,
         { method: 'DELETE' }
       );
 
