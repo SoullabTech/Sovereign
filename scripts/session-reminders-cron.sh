@@ -20,8 +20,16 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # API endpoint - development uses localhost
 API_URL="http://localhost:3005"
 
-# Cron secret for authentication
-CRON_SECRET="badf9f0555895fec46bbf2e50a5bd9053bdb6bdb4e63faedfdb548a19d7f7800"
+# Cron secret for authentication — NEVER hardcode it here.
+# The route allows unauthenticated calls when NODE_ENV=development
+# (see app/api/cron/session-reminders/route.ts), so this script works against
+# a local dev server with no secret at all. For a non-dev target, export
+# CRON_SECRET in your shell, or place it in .env.local (gitignored) and it is
+# sourced below. Mirrors the prod host scripts, which read CRON_SECRET from
+# .env.production rather than embedding it.
+if [ -z "${CRON_SECRET:-}" ] && [ -f "$PROJECT_DIR/.env.local" ]; then
+  CRON_SECRET="$(grep -E '^CRON_SECRET=' "$PROJECT_DIR/.env.local" | head -1 | cut -d '=' -f2- | tr -d '"' | tr -d "'")"
+fi
 
 echo "[$(date)] Running session reminders..."
 
