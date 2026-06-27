@@ -52,24 +52,49 @@ export function authorityRank(authority?: string | null): number {
   return AUTHORITY_RANK[(authority ?? '') as UsageAuthority] ?? 0;
 }
 
+export type OwnerType = 'platform' | 'practitioner' | 'member';
+export type Visibility = 'private' | 'shared' | 'published';
+
+/**
+ * Visibilities a practitioner-scope object may carry. For owner self-view — the only
+ * practitioner path wired (ratified 2026-06-27) — any of these admits the owner; visibility
+ * becomes a gate for OTHERS only when cross-practitioner grants land (deferred). Unknown or
+ * null ⇒ fail closed.
+ */
+export const PRACTITIONER_VISIBILITIES: ReadonlySet<string> = new Set(['private', 'shared', 'published']);
+
 export interface GovernedItem {
   scope: Scope | string;
   ownerId?: string | null;
+  /** Who authored/owns the item. For the practitioner branch this MUST be 'practitioner'. */
+  ownerType?: OwnerType | string | null;
+  /** private | shared | published. A known value is required for practitioner-scope admission. */
+  visibility?: Visibility | string | null;
   usageAuthority?: UsageAuthority | string | null;
 }
 
 export interface RetrievalContext {
   /** The member doing the retrieving (server-derived). Undefined ⇒ anonymous ⇒ platform only. */
   viewerId?: string | null;
+  /**
+   * The practitioner doing the retrieving (server-derived; practitioners.id — a DISTINCT id
+   * space from viewerId). Set ONLY on practitioner-facing prep/recap flows. Undefined ⇒
+   * practitioner-scope items stay fail-closed, so member-facing retrieval never admits them.
+   */
+  practitionerId?: string | null;
   purpose: RetrievalPurpose;
 }
 
 /**
  * The governance gate. Returns whether `item` may enter retrieval for `ctx`.
- * Platform scope is admitted unconditionally (it is curated canon, governed by
- * review/visibility, not by member usage-authority). Practitioner scope is
- * deferred → fail-closed. Member scope is private to its owner and gated by the
- * authority ladder.
+ *
+ * Three scopes, three authority rules over ONE substrate:
+ *   • platform     — curated canon, admitted unconditionally (governed by review/visibility).
+ *   • member       — private to its owner, gated by the §4 usage-authority ladder.
+ *   • practitioner — private to its owning practitioner, governed by OWNERSHIP + VISIBILITY,
+ *                    NOT the usage-authority ladder and NOT purpose (ratified 2026-06-27).
+ *                    Self-view only; cross-practitioner sharing is deferred.
+ * Anything else fails closed.
  */
 export function isAdmitted(item: GovernedItem, ctx: RetrievalContext): boolean {
   if (item.scope === 'platform') return true;
@@ -77,15 +102,29 @@ export function isAdmitted(item: GovernedItem, ctx: RetrievalContext): boolean {
     if (!ctx.viewerId || item.ownerId !== ctx.viewerId) return false; // privacy: own items only
     return authorityRank(item.usageAuthority) >= PURPOSE_MIN_RANK[ctx.purpose];
   }
-  return false; // practitioner (and anything unknown) — fail closed until governed
+  if (item.scope === 'practitioner') {
+    // Practitioner resources: governed by ownership + visibility — no usage-authority ladder,
+    // no purpose gating. The owner_type guard means a member-owned row can never enter here;
+    // requiring ctx.practitionerId means member-facing retrieval (which carries none) keeps
+    // practitioner rows fail-closed. No grants path ⇒ no cross-practitioner sharing.
+    if (!ctx.practitionerId) return false;
+    if (item.ownerType !== 'practitioner') return false;
+    if (item.ownerId !== ctx.practitionerId) return false; // own items only
+    return PRACTITIONER_VISIBILITIES.has((item.visibility ?? '') as string);
+  }
+  return false; // unknown scope — fail closed until governed
 }
 
 /**
  * SQL fragment for LibraryService.semanticSearch / fullTextSearch. Appended to
  * the existing `WHERE s.ingestion_status='completed' AND ...`. Mirrors isAdmitted()
- * exactly. Parameters are bound (no interpolation of viewer id).
+ * exactly. Parameters are bound (no interpolation of viewer/practitioner id).
  *
- * @param ctx            viewer + purpose
+ * The practitioner branch is emitted ONLY when ctx.practitionerId is set; otherwise the
+ * clause and params are exactly the prior platform+member predicate — back-compatible for
+ * existing member-facing callers, and practitioner rows stay fail-closed.
+ *
+ * @param ctx            viewer + optional practitioner + purpose
  * @param nextParamIndex the next free $N placeholder index in the caller's params array
  * @returns clause (SQL string), params (to append, in order), nextIndex (first free index after)
  */
@@ -95,6 +134,25 @@ export function authorizationPredicateSql(
 ): { clause: string; params: any[]; nextIndex: number } {
   const viewerIdx = nextParamIndex;
   const minRankIdx = nextParamIndex + 1;
+  const params: any[] = [ctx.viewerId ?? null, PURPOSE_MIN_RANK[ctx.purpose]];
+  let nextIndex = nextParamIndex + 2;
+
+  // Practitioner-scope self-view: ownership + visibility, no usage-authority CASE. Emitted
+  // only with a practitionerId so member-facing callers get the unchanged predicate above.
+  let practitionerClause = '';
+  if (ctx.practitionerId) {
+    const practitionerIdx = nextIndex;
+    practitionerClause = `
+          OR (
+            s.scope = 'practitioner'
+            AND s.owner_type = 'practitioner'
+            AND s.owner_id = $${practitionerIdx}
+            AND s.visibility IN ('private', 'shared', 'published')
+          )`;
+    params.push(ctx.practitionerId);
+    nextIndex += 1;
+  }
+
   const clause = `
         AND (
           s.scope = 'platform'
@@ -107,11 +165,7 @@ export function authorizationPredicateSql(
                    WHEN 'only_when_i_ask' THEN 1
                    ELSE 0
                  END) >= $${minRankIdx}
-          )
+          )${practitionerClause}
         )`;
-  return {
-    clause,
-    params: [ctx.viewerId ?? null, PURPOSE_MIN_RANK[ctx.purpose]],
-    nextIndex: nextParamIndex + 2,
-  };
+  return { clause, params, nextIndex };
 }
