@@ -4,6 +4,16 @@
  *
  * CRUD operations for elemental journal entries.
  * Uses local PostgreSQL (NOT Supabase).
+ *
+ * OWNERSHIP (security): every operation is scoped to a single member. Reads,
+ * updates, and deletes constrain `WHERE user_id = $1` (and `AND id = $2` for
+ * single-entry ops); creates stamp the row with that id. Ownership is therefore
+ * *derived* from the id passed in, not asserted by the row being addressed —
+ * naming another member's entry id simply matches zero rows.
+ *
+ * CALLER CONTRACT: `userId` MUST be a server-verified member id (resolved from
+ * an authenticated session via getMemberIdFromRequest), NEVER a client-supplied
+ * value. This layer enforces ownership scoping; the route enforces identity.
  */
 
 import { pool } from '@/lib/db/postgres';
