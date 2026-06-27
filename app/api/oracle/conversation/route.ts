@@ -989,7 +989,12 @@ export async function POST(request: NextRequest) {
           libraryService.shouldConsultLibrary(message) || hasJotcAdjacentSignal(message);
         if (triggerHit) {
           retrievalContextActive = true;
-          const ctx = await libraryService.search(message, { limit: 8, mode: 'fast' });
+          // Governed retrieval (PWL §4): the viewer is the SERVER-DERIVED member, never
+          // the client-claimed userId — member-scope items admit only for their owner.
+          // purpose 'guidance' (proactive consult) ⇒ only use_in_guidance member items
+          // surface; platform scope always admits.
+          const viewerId = (await getCurrentSession())?.memberId ?? undefined;
+          const ctx = await libraryService.search(message, { limit: 8, mode: 'fast', memberId: viewerId, purpose: 'guidance' });
           const hits = (ctx.chunks || []).map((c: any) => ({
             source_id: c.source_id,
             score: c.score,
