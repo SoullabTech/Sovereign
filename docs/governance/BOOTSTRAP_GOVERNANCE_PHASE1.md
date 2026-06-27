@@ -20,13 +20,13 @@ Bootstrap Phase 1 installs a bounded governance identity that can approve PRs wi
 `SoullabCovenant` is a governance principal, not a development identity.
 
 **Placed in:** `MENTORS` (Release Steward role)
-**Normal authority:** Class B (Structural Risk) approvals — as a Mentor / Release Steward
-**Bootstrap authority:** Class A deadlock substitution — *only* when the founder self-approval deadlock condition is met (see below)
-**Not placed in:** `FOUNDERS` — not a Founder, not general Sacred Boundaries authority
+**Normal operation:** mentor review satisfies the Class B role
+**Bootstrap deadlock:** under the explicitly defined bootstrap conditions, mentor review temporarily satisfies the founder approval requirement as specified by the enforcement layer
+**Not placed in:** `FOUNDERS` — `SoullabCovenant` holds no intrinsic founder-level authority
 
 `SoullabCovenant` is not the Founder. It represents the covenant process itself.
 
-The two-tier authority model is intentional: the MENTORS placement governs everyday Class B operation; the Class A deadlock substitution is a separate, bounded, logged exception path that exists only because GitHub structurally prevents self-approval.
+The authority that permits mentor review to satisfy a Class A requirement during deadlock comes from the governance rules in force — not from the identity of the reviewer. When those conditions change (Guardian Circle appointed), the same reviewer returns to the Class B role without any change to the identity itself.
 
 ## Class A deadlock fallback
 
@@ -45,7 +45,7 @@ When this substitution fires, the gate logs:
    Bootstrap Phase 1: no independent Founder or Guardian Circle exists.
 ```
 
-This is not a weakening of Class A. The PR still requires review and approval from a governance identity distinct from the author. The substitution is bounded to the deadlock condition only.
+This is not a weakening of Class A. The PR still requires review and approval from a governance identity distinct from the author. The authority that permits this comes from the enforcement rules in force during Bootstrap Phase 1 — it is conditional, not intrinsic to the reviewer.
 
 ## Governance org structure (Bootstrap Phase 1)
 
@@ -62,8 +62,8 @@ SoullabTech
 | Permission | Granted |
 |---|---|
 | Review PRs | ✅ |
-| Approve Class B (Structural Risk) — normal Mentor role | ✅ |
-| Substitute for Class A founder approval — deadlock only, logged | ✅ (bounded) |
+| Satisfy Class B approval requirement — normal Mentor role | ✅ |
+| Satisfy founder approval requirement under deadlock conditions — bounded, logged | ✅ (conditional) |
 | Push to protected branches | ❌ |
 | Merge by itself | ❌ |
 | Deploy production | ❌ |
