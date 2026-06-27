@@ -30,6 +30,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { ConsciousnessLevel } from './ConsciousnessLevelDetector';
+import { ensureUserTerminal } from './messageTerminal';
 
 export type LLMProvider = 'ollama' | 'anthropic';
 export type OllamaModel = 'llama3.3:70b' | 'deepseek-r1:latest' | 'deepseek-v3' | 'llama3.1:70b';
@@ -74,6 +75,10 @@ export const DEFAULT_CLAUDE_FALLBACK_MODEL = 'claude-sonnet-4-6';
 export function coerceClaudeModel(model: string): string {
   return model.startsWith('claude') ? model : DEFAULT_CLAUDE_FALLBACK_MODEL;
 }
+
+// Re-exported so callers that already import from this module (e.g. the FieldLab
+// interview route) can reach the user-terminal guard without a second import path.
+export { ensureUserTerminal };
 
 /**
  * Level-specific LLM configuration
@@ -300,10 +305,18 @@ export class MultiLLMProvider {
 
     // Use proper alternating messages array when provided (multi-turn context).
     // Fallback: wrap userInput in a single user message (legacy single-turn path).
-    const claudeMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
+    const rawMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
       messages && messages.length > 0
         ? messages
         : [{ role: 'user', content: userInput }];
+
+    // Structural backstop: Claude 400s on an assistant-terminal array (last-assistant-turn
+    // prefill → "the conversation must end with a user message"). Trim trailing assistant
+    // turns so this footgun can't reach the API from any route, not just FieldLab.
+    const claudeMessages = ensureUserTerminal(rawMessages);
+    if (claudeMessages.length === 0) {
+      throw new Error('Claude call has no user turn (message history is all-assistant).');
+    }
 
     const maxRetries = 3;
     const baseDelay = 1000; // 1 second
