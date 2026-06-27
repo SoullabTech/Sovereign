@@ -41,6 +41,12 @@ interface ProposalDecision {
 const asStr = (v: unknown, max = 400): string =>
   typeof v === 'string' ? v.slice(0, max).trim() : '';
 
+// Informed-consent protocol (the "informed" leg of informed · reversible · honored).
+// Keeping a thread is an explicit, purpose-stated act — never stealth memory. The
+// version is recorded with the consent event so the basis is auditable; bump it
+// when the consent surface's meaning changes.
+const CONSENT_PROTOCOL = 'recognition-continuity-v1';
+
 function parseProposals(input: unknown): ProposalDecision[] {
   if (!Array.isArray(input)) return [];
   const out: ProposalDecision[] = [];
@@ -73,7 +79,7 @@ function parseCreated(input: unknown): string[] {
 async function logEvent(
   memberId: string,
   threadId: string | null,
-  eventType: 'kept' | 'revised' | 'discarded' | 'created',
+  eventType: 'kept' | 'revised' | 'discarded' | 'created' | 'split',
   memberDecision: string | null,
 ) {
   // Best-effort: the ledger is trust/ecology evidence, never a correctness lock.
@@ -93,6 +99,21 @@ async function logEvent(
     );
   } catch (err) {
     console.warn('[FieldLab/field-note] ledger append failed (non-fatal):', err);
+  }
+}
+
+// The informed-consent record — nothing is remembered without it. Session-level
+// (thread_id NULL); carries the protocol version so the consent basis is auditable.
+async function logConsent(memberId: string, protocolVersion: string) {
+  try {
+    await query(
+      `INSERT INTO member_field_note_events
+         (thread_id, member_id, event_type, consent_state_new, surface, reason)
+       VALUES (NULL, $1, 'consent_changed', 'member-confirmed-memory', 'api/field-lab/field-note', $2)`,
+      [memberId, `informed-consent:${protocolVersion}`],
+    );
+  } catch (err) {
+    console.warn('[FieldLab/field-note] consent event append failed (non-fatal):', err);
   }
 }
 
@@ -171,6 +192,20 @@ export async function POST(request: NextRequest) {
     const created = parseCreated(body?.created);
     const sessionRef = asStr(body?.sessionRef, 80) || null;
 
+    // Informed-consent gate (no stealth memory): a thread crosses into memory only
+    // by an explicit, informed member act carrying a protocol version. Without it the
+    // crossing is ephemeral — nothing is written (no threads, no events), like leaving
+    // with nothing. "reversible" is already built (revise/release); this is "honored".
+    const consentRemembered = body?.consent?.remembered === true;
+    const protocolVersion = asStr(body?.consent?.protocolVersion, 60) || CONSENT_PROTOCOL;
+    if (!consentRemembered) {
+      console.info(
+        '[FieldLab/field-note] crossing',
+        JSON.stringify({ saved: 0, proposed: proposals.length, remembered: false }),
+      );
+      return NextResponse.json({ ok: true, saved: 0, consent: 'not-remembered' });
+    }
+
     // Authorship Activity — observed, never optimized. Counts only.
     const activity = { kept: 0, revised: 0, split: 0, discarded: 0, created: 0 };
     let saved = 0;
@@ -218,12 +253,15 @@ export async function POST(request: NextRequest) {
       await logEvent(memberId, id, 'created', 'create');
     }
 
+    // Record informed consent once, only when something was actually kept.
+    if (saved > 0) await logConsent(memberId, protocolVersion);
+
     console.info(
       '[FieldLab/field-note] crossing',
-      JSON.stringify({ saved, proposed: proposals.length, ...activity }),
+      JSON.stringify({ saved, proposed: proposals.length, ...activity, remembered: true }),
     );
 
-    return NextResponse.json({ ok: true, saved, activity });
+    return NextResponse.json({ ok: true, saved, activity, consent: 'remembered' });
   } catch (err: any) {
     console.error('[FieldLab/field-note] error:', err?.message || err);
     return NextResponse.json(
