@@ -15,6 +15,7 @@
  */
 
 import { query, findOne, insertOne, updateOne } from '@/lib/db/postgres';
+import { buildEventPayload, parseCreatedEvent } from './graphEventPayload';
 
 // ============================================================================
 // Types
@@ -32,9 +33,15 @@ interface CalendarEvent {
   id?: string;
   summary: string;
   description?: string;
+  /** Optional HTML body (e.g. to embed the Teams join link). Takes precedence over description. */
+  bodyHtml?: string;
   start: Date;
   end: Date;
   location?: string;
+  /** Invited attendees. Modelled as invite-only — never used to join/admit a live call. */
+  attendees?: Array<{ email: string; name?: string; type?: 'required' | 'optional' }>;
+  /** When true, attach a Microsoft Teams online meeting to the calendar event. */
+  isOnlineMeeting?: boolean;
   reminders?: {
     useDefault?: boolean;
     overrides?: Array<{ method: 'email' | 'popup'; minutes: number }>;
@@ -383,6 +390,9 @@ export async function listCalendars(memberId: string): Promise<MicrosoftCalendar
   }
 }
 
+// buildEventPayload + parseCreatedEvent are imported from ./graphEventPayload
+// (pure, DB-free, unit-tested) so the Graph request/response shaping has one source of truth.
+
 /**
  * Create a calendar event
  */
@@ -405,33 +415,13 @@ export async function createEvent(
       : `${GRAPH_API_URL}/me/calendars/${calendar}/events`;
 
   try {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        subject: event.summary,
-        body: {
-          contentType: 'text',
-          content: event.description || '',
-        },
-        start: {
-          dateTime: event.start.toISOString().slice(0, -1), // Remove Z for Graph API
-          timeZone: timezone,
-        },
-        end: {
-          dateTime: event.end.toISOString().slice(0, -1),
-          timeZone: timezone,
-        },
-        location: event.location ? { displayName: event.location } : undefined,
-        // Microsoft uses isReminderOn and reminderMinutesBeforeStart
-        isReminderOn: true,
-        reminderMinutesBeforeStart: 15,
-      }),
+      body: JSON.stringify(buildEventPayload(event)),
     });
 
     if (!response.ok) {
@@ -445,6 +435,62 @@ export async function createEvent(
     return result.id;
   } catch (error) {
     console.error('[MicrosoftGraph] Event creation error:', error);
+    return null;
+  }
+}
+
+/**
+ * Create a calendar event with a Microsoft Teams online meeting attached.
+ *
+ * Uses the calendar-event route with isOnlineMeeting + onlineMeetingProvider, NOT the
+ * standalone /onlineMeetings API — standalone meetings are not calendar-backed and do not
+ * appear on attendees' calendars. Returns the Graph event id plus the Teams join URL and the
+ * Outlook web link. This INVITES people (calendar + join URL); it never joins/admits anyone
+ * to a live call — lobby/admission stays in Teams.
+ */
+export async function createOnlineMeetingEvent(
+  memberId: string,
+  event: CalendarEvent,
+  calendarId?: string
+): Promise<{ eventId: string; joinUrl: string | null; webLink: string | null } | null> {
+  const accessToken = await getValidAccessToken(memberId);
+  if (!accessToken) {
+    console.error('[MicrosoftGraph] No valid access token for online meeting creation');
+    return null;
+  }
+
+  const calendar = calendarId || 'primary';
+  const endpoint =
+    calendar === 'primary'
+      ? `${GRAPH_API_URL}/me/calendar/events`
+      : `${GRAPH_API_URL}/me/calendars/${calendar}/events`;
+
+  try {
+    const payload = buildEventPayload({ ...event, isOnlineMeeting: true });
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[MicrosoftGraph] Online meeting event creation failed:', error);
+      return null;
+    }
+
+    const result = await response.json();
+    const parsed = parseCreatedEvent(result);
+    console.log(
+      `[MicrosoftGraph] Teams meeting event created: ${parsed.eventId} (joinUrl: ${parsed.joinUrl ? 'present' : 'absent'})`
+    );
+    return parsed;
+  } catch (error) {
+    console.error('[MicrosoftGraph] Online meeting event creation error:', error);
     return null;
   }
 }
@@ -484,6 +530,13 @@ export async function updateEvent(
         timeZone: timezone,
       };
     if (event.location) body.location = { displayName: event.location };
+    if (event.attendees) {
+      // Graph replaces the whole attendee list on PATCH — send the full set.
+      body.attendees = event.attendees.map((a) => ({
+        emailAddress: { address: a.email, name: a.name || a.email },
+        type: a.type || 'required',
+      }));
+    }
 
     const response = await fetch(endpoint, {
       method: 'PATCH',
@@ -595,6 +648,7 @@ export const MicrosoftGraphService = {
   // Calendar API
   listCalendars,
   createEvent,
+  createOnlineMeetingEvent,
   updateEvent,
   deleteEvent,
   getUpcomingEvents,
