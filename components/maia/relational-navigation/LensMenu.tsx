@@ -39,14 +39,14 @@ export function LensMenu({ selected, onChange, max = 4 }: LensMenuProps) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
-        <h3 className="text-sm font-medium tracking-wide text-stone-700 uppercase">
+        <h3 className="text-sm font-medium tracking-wide text-amber-300/80 uppercase">
           Lenses
         </h3>
-        <span className="text-[12px] text-stone-500">
+        <span className="text-[12px] text-soullab-text-muted">
           {selected.length} / {max} chosen
         </span>
       </div>
-      <p className="text-[13px] text-stone-500 mb-4 leading-relaxed">
+      <p className="text-[13px] text-soullab-text-muted mb-4 leading-relaxed">
         Ways of looking, not categories. Choose what feels right for this
         moment. You may pick none and reflect openly.
       </p>
@@ -63,8 +63,8 @@ export function LensMenu({ selected, onChange, max = 4 }: LensMenuProps) {
               className={[
                 'text-left rounded-xl border px-4 py-3 transition-all',
                 isSelected
-                  ? 'border-[#5a7a6f] bg-[#5a7a6f]/8 ring-1 ring-[#5a7a6f]/30'
-                  : 'border-stone-200 bg-white/40 hover:border-stone-300 hover:bg-white/70',
+                  ? 'border-amber-400/30 bg-amber-500/15 ring-1 ring-amber-400/30'
+                  : 'border-amber-500/15 bg-stone-900/40 backdrop-blur-md hover:border-amber-500/25 hover:bg-stone-900/60',
                 isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
               ].join(' ')}
               aria-pressed={isSelected}
@@ -72,12 +72,12 @@ export function LensMenu({ selected, onChange, max = 4 }: LensMenuProps) {
               <div
                 className={[
                   'text-[14px] font-medium tracking-wide',
-                  isSelected ? 'text-stone-900' : 'text-stone-800',
+                  isSelected ? 'text-amber-50' : 'text-soullab-text-primary',
                 ].join(' ')}
               >
                 {lens.label}
               </div>
-              <div className="text-[12.5px] text-stone-500 mt-1 leading-snug">
+              <div className="text-[12.5px] text-soullab-text-muted mt-1 leading-snug">
                 {lens.invitation}
               </div>
             </button>

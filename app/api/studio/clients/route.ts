@@ -13,7 +13,9 @@ import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { randomUUID } from 'crypto';
 
-const VALID_STATUSES = ['active', 'inactive', 'archived', 'waitlist'] as const;
+// Must match the practitioner_clients.status CHECK constraint in the DB
+// (migration 20260114000001_practitioner_themes.sql). The form default is 'invited'.
+const VALID_STATUSES = ['invited', 'active', 'paused', 'completed', 'archived'] as const;
 type ClientStatus = typeof VALID_STATUSES[number];
 
 function isValidStatus(s: string): s is ClientStatus {

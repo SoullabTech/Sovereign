@@ -278,6 +278,30 @@ If not, it does not align with mission.
 
 ---
 
+## Invariant 15 — Authored Adaptation
+
+**Rule:** AIN may learn from practitioners through governed revision of the Domain Definition Layer. It must not optimize its interaction strategy with members through runtime behavioral adaptation.
+
+**The two loops:**
+- **Allowed — Platform Evolution (open-loop, human-directed):** practitioner → experience → Architectural Translation → Domain Definition Layer → engine. The feedback returns to the practitioner and steward, who *deliberate and revise the Domain Definition*. Nothing in the runtime changes itself; the practitioner remains the author.
+- **Prohibited — Runtime Member Optimization (closed-loop):** member → interaction → behavior signal → automatic adaptation of the interaction. This is the loop of recommendation and engagement systems. AIN does not run it.
+
+**The lawful adaptation point:** the Domain Definition Layer. Above it, the system evolves only through human deliberation; below it, it executes. **The engine never rewrites the Domain Definition — only practitioners can, through Architectural Translation.**
+
+**Open constitutional question (not yet ratified):** whether the DDL is the *only* lawful adaptation point — i.e., whether it *excludes every future adaptation mechanism* — or merely the *primary / canonical* one. The exclusivity reading constrains future architecture, not just present interpretation, so it is held open for deliberate adoption rather than asserted here. What *is* settled (entailed by Invariant 4 and the DDL's Constitutional Principle): members are never optimized at runtime, and whatever adaptation exists is practitioner-authored at the DDL.
+
+**Scope — two failure modes this also names:**
+- *Calibration authority.* Authority can relocate from interpretation to calibration. Most frameworks watch for "the AI told me who I am"; this also watches for "the AI quietly decided how to handle me" — harder to see. A learned per-member style profile ("this person prefers stronger hypotheses") is a *persistent inference about the member* — i.e., memory — and inherits the full consent regime (recall consent, Sanctuary Mode). It is not a free interaction knob.
+- *Performative vs. operative governance.* A governance mechanism that is performative rather than operative becomes detectable: people test whether revision actually changes future behavior. An invitation to revise that the system will not act on is pressure-release theater. Governance must be operative to be real.
+
+**Why:** An open-loop design discipline and a closed-loop behavioral optimizer are both "adaptive systems," but they embody opposite relationships to human agency. Closing the runtime loop reintroduces the single monotone objective the governing-uncertainty relay exists to refuse (and so reintroduces Goodhart), and it is the engagement-optimization the Oath forbids. The architecture differs from most contemporary AI not by refusing to learn, but by *locating* learning in a different place.
+
+**Principle:** *Adaptation is authored, not automatic — learning is relocated, not refused.*
+
+**Relation:** Extends Invariant 4 (No Emotional Capture Optimization) and Invariant 3 (Dependency Resistance) into the domain of *how the system itself is allowed to improve*, and serves Invariant 1 (Authority Return) and Invariant 7 (Human World Priority). Grounded in the Domain Definition Layer's existing Constitutional Principle (the practitioner authors and approves the Domain Definition; the engine only reads it) — this invariant is the *connecting* statement between that architecture and the relational constitution, not a new abstraction. Written before any runtime member-optimization is wired — the same protective-anticipation posture as Invariant 13. Also called the Authorship Preservation / Human-Directed Adaptation Principle.
+
+---
+
 ## The Constitutional Sentence
 
 To sit alongside the Oath:

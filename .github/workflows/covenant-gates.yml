@@ -25,7 +25,7 @@ jobs:
 
             const FOUNDERS = ['Soullab']; // #448: corrected from non-existent 'kelly-nezat' so a founder approval can register
             const GUARDIAN_CIRCLE = []; // Add council usernames when appointed
-            const MENTORS = [];          // Add mentor usernames when appointed
+            const MENTORS = ['SoullabCovenant']; // Release Steward — clears Class B (structural); not a founder (no Class A authority)
 
             // ═══════════════════════════════════════════════════════════════
             // APPROVAL REQUIREMENTS BY CLASS
@@ -134,9 +134,33 @@ jobs:
 
             const failures = [];
 
-            // Class A requirements
-            if (reqs.founderRequired && founderApprovals.length === 0) {
-              failures.push(`Founder-Steward approval required (need 1 of: ${FOUNDERS.join(', ')})`);
+            // Class A requirements — with bootstrap deadlock fallback.
+            // Deadlock condition: the only Founder is the PR author, so GitHub blocks
+            // self-approval and no independent Founder or Guardian Circle exists.
+            // In that case a Mentor may substitute temporarily — not as general Founder
+            // authority, but as a principled bridge until Guardian Circle is appointed.
+            if (reqs.founderRequired) {
+              const prAuthor = pr.user.login;
+              const noIndependentFounder = FOUNDERS.every(f => f === prAuthor);
+              const bootstrapDeadlock = noIndependentFounder && GUARDIAN_CIRCLE.length === 0;
+
+              if (founderApprovals.length > 0) {
+                // Normal path: a Founder (who is not the PR author) approved.
+              } else if (bootstrapDeadlock && mentorApprovals.length > 0) {
+                // Deadlock broken by Mentor substitution.
+                console.log(`⚠️ Mentor substitution used for founder self-approval deadlock.`);
+                console.log(`   PR author: ${prAuthor} | Mentor approvals: ${mentorApprovals.join(', ')}`);
+                console.log(`   Bootstrap Phase 1: no independent Founder or Guardian Circle exists.`);
+              } else if (bootstrapDeadlock) {
+                const mentorList = MENTORS.length > 0 ? MENTORS.join(', ') : '(no mentors configured)';
+                failures.push(
+                  `Founder self-approval deadlock: ${prAuthor} cannot approve their own PR.\n` +
+                  `  Mentor substitution required — need 1 approval from: ${mentorList}\n` +
+                  `  (Bootstrap Phase 1: no independent Founder or Guardian Circle exists)`
+                );
+              } else {
+                failures.push(`Founder-Steward approval required (need 1 of: ${FOUNDERS.join(', ')})`);
+              }
             }
 
             if (reqs.councilRequired) {

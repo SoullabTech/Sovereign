@@ -45,17 +45,17 @@ function Field({
     <div>
       <label className="block">
         <div className="flex items-baseline justify-between mb-1.5">
-          <span className="text-[14px] font-medium text-stone-800">
+          <span className="text-[14px] font-medium text-soullab-text-primary">
             {label}
           </span>
           {optional && (
-            <span className="text-[11px] uppercase tracking-wide text-stone-400">
+            <span className="text-[11px] uppercase tracking-wide text-soullab-text-muted">
               optional
             </span>
           )}
         </div>
         {hint && (
-          <p className="text-[13px] text-stone-500 mb-2 leading-relaxed">
+          <p className="text-[13px] text-soullab-text-muted mb-2 leading-relaxed">
             {hint}
           </p>
         )}
@@ -64,7 +64,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
-          className="w-full rounded-xl border border-stone-200 bg-white/60 px-4 py-3 text-[15px] text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#5a7a6f]/40 focus:border-[#5a7a6f]/40 transition-all resize-y leading-relaxed"
+          className="w-full rounded-xl border border-amber-500/15 bg-stone-900/40 backdrop-blur-sm px-4 py-3 text-[15px] text-soullab-text-primary placeholder:text-soullab-text-muted focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400/30 transition-all resize-y leading-relaxed"
         />
       </label>
     </div>
@@ -83,23 +83,23 @@ function SanctuaryToggle({
       type="button"
       onClick={() => onChange(!on)}
       className={[
-        'flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-all w-full',
+        'flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-all w-full backdrop-blur-sm',
         on
-          ? 'border-[#5a7a6f] bg-[#5a7a6f]/8'
-          : 'border-stone-200 bg-white/40 hover:border-stone-300',
+          ? 'border-amber-400/30 bg-amber-500/[0.08]'
+          : 'border-amber-500/15 bg-stone-900/40 hover:border-amber-400/25',
       ].join(' ')}
       aria-pressed={on}
     >
       <div
         className={[
           'mt-1 w-4 h-4 rounded-sm border flex items-center justify-center shrink-0',
-          on ? 'border-[#5a7a6f] bg-[#5a7a6f]' : 'border-stone-300 bg-white',
+          on ? 'border-amber-400 bg-amber-400' : 'border-amber-500/30 bg-stone-900/40',
         ].join(' ')}
       >
         {on && (
           <svg
             viewBox="0 0 12 12"
-            className="w-3 h-3 text-white"
+            className="w-3 h-3 text-stone-950"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -109,10 +109,10 @@ function SanctuaryToggle({
         )}
       </div>
       <div>
-        <div className="text-[14px] font-medium text-stone-800">
+        <div className="text-[14px] font-medium text-soullab-text-primary">
           Sanctuary Mode
         </div>
-        <div className="text-[12.5px] text-stone-500 mt-0.5 leading-snug">
+        <div className="text-[12.5px] text-soullab-text-muted mt-0.5 leading-snug">
           This reflection won&apos;t be saved or remembered. Speak freely.
         </div>
       </div>
@@ -134,10 +134,10 @@ function SubmitButton({
       type="submit"
       disabled={loading || disabled}
       className={[
-        'rounded-xl px-6 py-3 text-[15px] font-medium tracking-wide transition-all',
+        'rounded-xl px-6 py-3 text-[15px] font-medium tracking-wide transition-all border',
         loading || disabled
-          ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
-          : 'bg-[#5a7a6f] text-white hover:bg-[#4a6a5f] active:scale-[0.98]',
+          ? 'bg-stone-900/40 text-soullab-text-muted border-amber-500/10 cursor-not-allowed'
+          : 'bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 hover:border-amber-400/40 active:scale-[0.98]',
       ].join(' ')}
     >
       {loading ? 'Reflecting…' : label}
@@ -147,7 +147,7 @@ function SubmitButton({
 
 function ErrorView({ message }: { message: string }) {
   return (
-    <div className="rounded-xl border border-amber-300/50 bg-amber-50/60 p-4 text-[14px] text-stone-700">
+    <div className="rounded-xl border border-amber-400/30 bg-amber-900/15 p-4 text-[14px] text-amber-100/80">
       {message}
     </div>
   );
@@ -418,7 +418,7 @@ function FlowLayout({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="text-[15px] leading-relaxed text-stone-600"
+        className="text-[15px] leading-relaxed text-soullab-text-secondary"
       >
         {intro}
       </motion.p>
@@ -452,7 +452,7 @@ function FlowLayout({
       </form>
 
       {hasOutput && (
-        <div className="pt-4 border-t border-stone-200/60">
+        <div className="pt-4 border-t border-amber-500/10">
           <ResponseRenderer
             response={shared.response}
             refusal={shared.refusal}
