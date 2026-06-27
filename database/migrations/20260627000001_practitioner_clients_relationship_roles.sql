@@ -46,3 +46,27 @@ ALTER TABLE practitioner_clients ALTER COLUMN email DROP NOT NULL;
 -- creation keeps requiring name at the APP layer; guest creation allows name-only OR
 -- email-only. Backward-compatible: every existing row already has a name.
 ALTER TABLE practitioner_clients ALTER COLUMN name DROP NOT NULL;
+
+-- ── TRANSITIONAL: roles on the person row, not yet a first-class Relationship ─────────
+-- relationship_roles[] is the correct ADDITIVE first step, but it is explicitly
+-- transitional. The deeper model is Person → Relationship → roles, where a Relationship
+-- carries its OWN lifecycle and authority: started_at / ended_at, notes, permissions,
+-- visibility, trust level, archive state. Those belong to the relationship, not the
+-- person. Promote relationship_roles[] into a first-class `practitioner_relationships`
+-- table the moment any of that lifecycle is needed (separate-by-authority-source).
+-- Invariant to preserve through that move: a DECLARED relationship (what the practitioner
+-- says — "mentor") and OBSERVED interaction (what happened — "17 conversations") are
+-- different authorities and must NEVER overwrite each other. See
+-- docs/adr/005-person-relationship-participation.md.
+
+-- ── Honest name now, without the destructive rename ──────────────────────────────────
+-- Once trusted contacts, colleagues, mentors, family, and clients all live here, the name
+-- `practitioner_clients` stops describing reality. The table is NOT renamed yet (10+ FKs,
+-- ~12 callers depend on it); this VIEW gives the vocabulary-correct surface additively.
+-- The eventual rename target is `practitioner_people`; this view is the seam for it.
+CREATE OR REPLACE VIEW practitioner_people AS
+  SELECT pc.*, (pc.member_id IS NOT NULL) AS is_member
+  FROM practitioner_clients pc;
+
+COMMENT ON VIEW practitioner_people IS
+  'Vocabulary-correct alias for practitioner_clients while the table keeps its legacy name. A practitioner stewards people in many relationships (relationship_roles), not only clients. Read-only; writes target the base table. Seam for the eventual table rename.';
