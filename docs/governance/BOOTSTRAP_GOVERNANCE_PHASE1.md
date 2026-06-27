@@ -20,10 +20,13 @@ Bootstrap Phase 1 installs a bounded governance identity that can approve PRs wi
 `SoullabCovenant` is a governance principal, not a development identity.
 
 **Placed in:** `MENTORS` (Release Steward role)
-**Authority:** Class B (Structural Risk) approvals
-**Not placed in:** `FOUNDERS` — no Sacred Boundaries authority by default
+**Normal authority:** Class B (Structural Risk) approvals — as a Mentor / Release Steward
+**Bootstrap authority:** Class A deadlock substitution — *only* when the founder self-approval deadlock condition is met (see below)
+**Not placed in:** `FOUNDERS` — not a Founder, not general Sacred Boundaries authority
 
 `SoullabCovenant` is not the Founder. It represents the covenant process itself.
+
+The two-tier authority model is intentional: the MENTORS placement governs everyday Class B operation; the Class A deadlock substitution is a separate, bounded, logged exception path that exists only because GitHub structurally prevents self-approval.
 
 ## Class A deadlock fallback
 
@@ -59,8 +62,8 @@ SoullabTech
 | Permission | Granted |
 |---|---|
 | Review PRs | ✅ |
-| Approve covenant workflows (Class B) | ✅ |
-| Deadlock substitute for Class A | ✅ (bounded) |
+| Approve Class B (Structural Risk) — normal Mentor role | ✅ |
+| Substitute for Class A founder approval — deadlock only, logged | ✅ (bounded) |
 | Push to protected branches | ❌ |
 | Merge by itself | ❌ |
 | Deploy production | ❌ |
