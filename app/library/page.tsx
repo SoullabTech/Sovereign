@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { LibrarySearch } from '@/components/community/LibrarySearch';
 import { ArticleViewer } from '@/components/community/ArticleViewer';
 import type { ArticleIndex } from '@/lib/library/types';
-import { ChevronLeft, Plus, X, BookOpen, Mail, Github, MessageCircle, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Plus, X, BookOpen, Mail, Send, CheckCircle } from 'lucide-react';
 
 export default function LibraryPage() {
   const [selectedArticle, setSelectedArticle] = useState<ArticleIndex | null>(null);
@@ -136,9 +136,30 @@ export default function LibraryPage() {
               <div className="space-y-3">
                 <h3 className="font-medium text-white mb-3">Ways to Contribute</h3>
 
-                {/* Email */}
+                {/* Telegram — Soullab Co-lab (primary CTA).
+                    INTERIM: points to the @SoullabMyBot managing bot until a public
+                    Co-lab channel/group invite link (t.me/+…) exists. */}
                 <a
-                  href="mailto:commons@soullab.io?subject=Wisdom%20Files%20Contribution"
+                  href="https://t.me/SoullabMyBot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 rounded-lg
+                           bg-[#1a1a1a] border border-white/10
+                           hover:border-orange-500/50 transition-colors group"
+                >
+                  <div className="p-2 rounded-lg bg-orange-500/10">
+                    <Send size={20} className="text-orange-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-white">Soullab Co-lab on Telegram</div>
+                    <div className="text-sm text-white/40">@SoullabMyBot</div>
+                  </div>
+                  <ChevronLeft size={16} className="text-orange-500 rotate-180 group-hover:translate-x-0.5 transition-transform" />
+                </a>
+
+                {/* Email — non-Telegram fallback */}
+                <a
+                  href="mailto:submissions@soullab.life?subject=Wisdom%20Files%20Contribution"
                   className="flex items-center gap-4 p-4 rounded-lg
                            bg-[#1a1a1a] border border-white/10
                            hover:border-orange-500/50 transition-colors group"
@@ -148,45 +169,7 @@ export default function LibraryPage() {
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-white">Email Submission</div>
-                    <div className="text-sm text-white/40">commons@soullab.io</div>
-                  </div>
-                  <ChevronLeft size={16} className="text-orange-500 rotate-180 group-hover:translate-x-0.5 transition-transform" />
-                </a>
-
-                {/* GitHub */}
-                <a
-                  href="https://github.com/SoullabTech/community-commons"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 rounded-lg
-                           bg-[#1a1a1a] border border-white/10
-                           hover:border-orange-500/50 transition-colors group"
-                >
-                  <div className="p-2 rounded-lg bg-orange-500/10">
-                    <Github size={20} className="text-orange-500" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-white">GitHub Pull Request</div>
-                    <div className="text-sm text-white/40">For technical contributors</div>
-                  </div>
-                  <ChevronLeft size={16} className="text-orange-500 rotate-180 group-hover:translate-x-0.5 transition-transform" />
-                </a>
-
-                {/* Discord */}
-                <a
-                  href="https://discord.gg/soullab"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 rounded-lg
-                           bg-[#1a1a1a] border border-white/10
-                           hover:border-orange-500/50 transition-colors group"
-                >
-                  <div className="p-2 rounded-lg bg-orange-500/10">
-                    <MessageCircle size={20} className="text-orange-500" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-white">Join the Discussion</div>
-                    <div className="text-sm text-white/40">Connect in our community</div>
+                    <div className="text-sm text-white/40">submissions@soullab.life</div>
                   </div>
                   <ChevronLeft size={16} className="text-orange-500 rotate-180 group-hover:translate-x-0.5 transition-transform" />
                 </a>
