@@ -57,7 +57,7 @@ ALTER TABLE practitioner_clients ALTER COLUMN name DROP NOT NULL;
 -- Invariant to preserve through that move: a DECLARED relationship (what the practitioner
 -- says — "mentor") and OBSERVED interaction (what happened — "17 conversations") are
 -- different authorities and must NEVER overwrite each other. See
--- docs/adr/005-person-relationship-participation.md.
+-- docs/adr/007-person-relationship-participation.md.
 
 -- ── Honest name now, without the destructive rename ──────────────────────────────────
 -- Once trusted contacts, colleagues, mentors, family, and clients all live here, the name

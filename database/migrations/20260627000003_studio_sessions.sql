@@ -1,8 +1,8 @@
 -- The canonical facilitation Session — the lived encounter Studio actually conducts.
 -- Artifact type: Implementation pattern. Additive; bridges, does NOT migrate/collapse legacy.
--- Ratified in docs/adr/006-canonical-session-anchor.md (Kelly, 2026-06-27).
+-- Ratified in docs/adr/008-canonical-session-anchor.md (Kelly, 2026-06-27).
 --
--- Series → Instance → Session (per ADR-005/006):
+-- Series → Instance → Session (per ADR-007/008):
 --   Series    = rl_containers (repeating intent)
 --   Instance  = the scheduled occurrence — sessions (booking) / rl_sessions (ledger,
 --               carries meeting_provider) / group_sessions
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS studio_sessions (
   notes           TEXT,                          -- facilitator notes (practitioner-only)
 
   -- Bridges to existing facets — additive, nullable. Legacy tables keep their jobs; this
-  -- anchor unifies them without migrating or collapsing anything (ADR-006).
+  -- anchor unifies them without migrating or collapsing anything (ADR-008).
   booking_session_id      UUID REFERENCES sessions(id)              ON DELETE SET NULL,  -- Instance: public booking/calendar
   rl_session_id           UUID REFERENCES rl_sessions(id)           ON DELETE SET NULL,  -- Instance: relational-ledger slot (provider lives here too)
   group_session_id        UUID REFERENCES group_sessions(id)        ON DELETE SET NULL,  -- Instance: group meeting
