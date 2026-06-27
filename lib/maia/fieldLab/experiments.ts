@@ -22,5 +22,51 @@ export const EXPERIMENTS: Experiment[] = [
     exploring:
       'Whether MAIA can support relational discernment without becoming an interpretive authority over human relationships.',
     phase: 'phase-1',
+    // The room's single principal uncertainty (U1) — contact-reducible, still on the
+    // shelf. No baton-pass has been declared, so transitions is empty and the room
+    // remains 'admitted'. See docs/canon/THE_GOVERNING_UNCERTAINTY.md §9.
+    governingUncertainty: {
+      current:
+        'Does this relational preparation surface reveal member pull without persistence?',
+      transitionState: 'admitted',
+      admittedAt: '2026-05-22',
+      transitions: [],
+      // When U1 resolves, the steward will declare the pass here (NOT before — that
+      // would be telling tomorrow's story as today's). The anticipated shape:
+      //   {
+      //     leaving: 'Does this relational preparation surface reveal member pull without persistence?',
+      //     entering: 'Can a relational preparation surface persist anything without representing non-consenting third parties?',
+      //     enteringState: 'dwelling',
+      //     evidenceCarry: {
+      //       carries: 'Member pull may carry.',
+      //       mustBeNewlyProven: 'Persistence safety cannot carry; it must be newly proven.',
+      //     },
+      //     basis: '<why U1 is declared resolved>',
+      //     declaredAt: '<ISO date>',
+      //   }
+      // with a dwellBlocker of type 'architectural'/'governance' naming the persistence
+      // layer + third-party-consent obligation.
+    },
+  },
+  {
+    slug: 'crossing',
+    name: 'The Crossing',
+    oneLiner:
+      'One conversation in which you recognize — and author — a thread that feels genuinely yours.',
+    status: ['Experimental', 'Recognition not extraction', 'No persistence yet'],
+    exploring:
+      'Whether MAIA can help a member recognize something true about themselves that they choose to author — without becoming the author of it.',
+    phase: 'phase-1',
+    // The first Reflective Companionship experiment. Principal uncertainty = the
+    // liability the crossing exists to discharge. Single-session, member-authored;
+    // cross-session field + elemental inference deferred.
+    // Spec: docs/specs/FIELD_LAB_CONVERSATIONAL_INTERVIEW_SPEC_2026-06-26.md
+    governingUncertainty: {
+      current:
+        'Can MAIA propose enduring structure without becoming the author or the boundary of the person’s self-understanding?',
+      transitionState: 'admitted',
+      admittedAt: '2026-06-26',
+      transitions: [],
+    },
   },
 ];
