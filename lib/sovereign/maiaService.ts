@@ -1533,6 +1533,8 @@ async function corePathResponse(
     // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
     // atoms + witnessed practitioner observations. Injected via appendAllContextAddenda.
     atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
+    // 🚪 ORIENTATION CONTEXT: First-arrival signal from /orient (turn 0 only).
+    orientationAddendum: (meta as any)?.orientationAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness

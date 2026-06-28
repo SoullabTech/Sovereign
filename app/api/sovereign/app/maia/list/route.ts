@@ -715,6 +715,31 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // memory bundle build — recognized user, not sanctuary.
     let memoryInfluenceAddendum: string | undefined;
     let forwardReadinessAddendum: string | undefined;
+    // 🚪 ORIENTATION CONTEXT — injected only on turn 0 of a first session.
+    // Uses the member's own words (orientation_arrival_energy), not a category.
+    // MAIA receives what the person said, not a label we assigned them.
+    let orientationAddendum: string | undefined;
+    const turnCount = session.turn_count ?? 0;
+    if (turnCount === 0 && userId) {
+      try {
+        const orientResult = await pool.query(
+          `SELECT orientation_arrival_energy FROM members WHERE id = $1`,
+          [userId]
+        );
+        const arrivalEnergy = orientResult.rows[0]?.orientation_arrival_energy as string | null;
+        if (arrivalEnergy) {
+          orientationAddendum = `ARRIVAL CONTEXT (first session — use once, lightly)\nWhen this member crossed the threshold, they were asked what brought them here. They said:\n\n"${arrivalEnergy}"\n\nLet this inform how you open — reflect it naturally, without quoting it back or making it a theme. After this turn, hold it as background only.`;
+          console.log(`[MAIA/sovereign] orientation-context { hasEnergy: true, userId: ${userId.slice(0, 8)}... }`);
+        } else {
+          // Member crossed the threshold but didn't share anything — first arrival, open warmly
+          orientationAddendum = `ARRIVAL CONTEXT (first session)\nThis member has just arrived for the first time. They chose to begin without sharing what brought them. Open warmly without assuming what they need.`;
+          console.log(`[MAIA/sovereign] orientation-context { hasEnergy: false, userId: ${userId.slice(0, 8)}... }`);
+        }
+      } catch {
+        // Non-blocking — orientation context is helpful, not required
+      }
+    }
+
     // 🧬 Cut 1 — atoms (Layer 5) and health tracking (Layer 15)
     let atomsResult: MemoryAtomSnapshot[] = [];
     let atomsError = false;
@@ -973,6 +998,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
           atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
+          orientationAddendum,          // 🚪 First-arrival context (turn 0 only)
         },
       }),
       SOVEREIGN_TIMEOUT_MS,

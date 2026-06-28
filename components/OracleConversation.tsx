@@ -3126,6 +3126,39 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     // Load soul-recognized greeting asynchronously
     (async () => {
+      // 🚪 Orientation path: first-arrival member who just completed /orient
+      // Use their arrival energy to generate a real MAIA opening, not the static template
+      const orientationEnergy = localStorage.getItem('maia_orientation_energy');
+      if (orientationEnergy !== null) {
+        // Clear immediately — used once only
+        localStorage.removeItem('maia_orientation_energy');
+        try {
+          const res = await fetch('/api/members/orientation/greeting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ arrival_energy: orientationEnergy }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const orientationMessage: ConversationMessage = {
+              id: `orientation-${Date.now()}`,
+              role: 'oracle',
+              text: data.greeting,
+              timestamp: new Date(),
+              source: 'maia'
+            };
+            if (!sessionRestoredRef.current) {
+              setMessages([orientationMessage]);
+              setHasActivated(true); // Dismiss welcome screen — MAIA received them, they're in conversation
+            }
+            localStorage.setItem('lastSessionDate', new Date().toISOString());
+            return; // Skip standard greeting
+          }
+        } catch (err) {
+          console.warn('[Orientation/Greeting] Generation failed, falling back to standard greeting:', err);
+        }
+      }
+
       // Read onboarding context from sessionStorage for first contact
       let onboardingContext;
       try {
@@ -7000,6 +7033,7 @@ I'm not sure what I'm feeling yet.`;
           });
 
           // Generate personalized welcome greeting (one clean signal)
+          // Note: orientation path bypasses this entirely (first oracle message set in useEffect above)
           const hourLocal = new Date().getHours();
           const welcomeGreeting = generateWelcomeGreeting({
             userName,

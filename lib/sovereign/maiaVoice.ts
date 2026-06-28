@@ -105,6 +105,10 @@ export interface MaiaContext {
   // with epistemic framing. Higher authority than system-retrieved conversational
   // recall, so appended after it. Built by lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt.
   atomsAddendum?: string;
+  // 🚪 ORIENTATION CONTEXT: What brought this member here (from /orient first-login choice).
+  // Injected only on turn 0 of the first session. Used once, lightly. Mutable — member
+  // can change their orientation over time. Source: members.primary_orientation_need.
+  orientationAddendum?: string;
 }
 
 /**
@@ -409,6 +413,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
   { field: 'atomsAddendum',                   log: v => `🧬 [Atoms] Member-placed portfolio + practitioner observations injected (${v.length} chars)` },
+  { field: 'orientationAddendum',             log: () => `🚪 [Orientation] First-arrival context injected` },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════

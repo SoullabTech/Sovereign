@@ -13,7 +13,7 @@
 
 export type MemberStyleProfile = 'direct' | 'warm' | 'playful' | 'minimal' | 'mystic' | 'professional';
 
-export type WelcomeEnrichmentType = 'memory' | 'time_gap' | 'time_flavor' | 'default';
+export type WelcomeEnrichmentType = 'orientation' | 'memory' | 'time_gap' | 'time_flavor' | 'default';
 
 export interface WelcomeGreetingContext {
   userName?: string;
@@ -21,6 +21,8 @@ export interface WelcomeGreetingContext {
   lastConversationTheme?: string;     // short phrase, already summarized upstream
   memberStyleProfile?: MemberStyleProfile;
   hourLocal?: number;                  // 0-23 (optional)
+  // First-arrival context: what they said on /orient ("What called you here today?")
+  orientationArrivalEnergy?: string;
 }
 
 export interface WelcomeGreeting {
@@ -226,8 +228,18 @@ export function generateWelcomeGreeting(ctx: WelcomeGreetingContext): WelcomeGre
   let enrichmentType: WelcomeEnrichmentType = 'default';
   let subtext = '';
 
-  // 1) Memory reference (highest priority)
-  if (ctx.lastConversationTheme) {
+  // 0) First-arrival orientation energy — what they said on /orient (highest priority)
+  if (ctx.orientationArrivalEnergy) {
+    const energy = ctx.orientationArrivalEnergy.trim();
+    if (energy) {
+      // Reflect their words back lightly, without quoting verbatim
+      subtext = 'I heard what called you here. Let\'s begin there.';
+      enrichmentType = 'orientation';
+    }
+  }
+
+  // 1) Memory reference (highest priority for returning members)
+  if (!subtext && ctx.lastConversationTheme) {
     const line = memoryLine(ctx.lastConversationTheme, style);
     if (line) {
       subtext = line;

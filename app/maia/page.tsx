@@ -430,6 +430,21 @@ function MAIAPageContent() {
         return;
       }
 
+      // First-login orientation: redirect once until the member picks a path.
+      // Skip for existing members who were already using the platform before this shipped
+      // (identified by the presence of maia_session_id, which only exists after a real session).
+      const orientationSeen = localStorage.getItem('maia_orientation_seen');
+      const hasExistingSession = localStorage.getItem('maia_session_id');
+      if (!orientationSeen && !hasExistingSession) {
+        console.log('[NAV] /maia -> /orient (reason: first login)');
+        router.replace('/orient');
+        return;
+      }
+      // Backfill the flag for existing members so future loads don't check further
+      if (!orientationSeen) {
+        localStorage.setItem('maia_orientation_seen', 'true');
+      }
+
       // Load user data first (needed for session registration)
       const initialData = await getInitialUserData();
 
