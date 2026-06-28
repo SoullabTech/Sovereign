@@ -152,7 +152,7 @@ export function CrossingRoom({ center = 'person' }: { center?: CenterOfInquiry }
       const res = await apiFetch('/api/maia/field-lab/field-note', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, sessionRef: sessionRef.current }),
+        body: JSON.stringify({ ...payload, sessionRef: sessionRef.current, center }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || 'Could not save right now.');

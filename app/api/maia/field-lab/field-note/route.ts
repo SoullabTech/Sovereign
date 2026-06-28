@@ -29,6 +29,7 @@ import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { isMemberTester } from '@/lib/auth/tester';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
+import { asCenter } from '@/lib/maia/field-lab/centerOfInquiry';
 
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface ProposalDecision {
@@ -125,16 +126,17 @@ async function saveThread(
   isDirectlyStated: boolean,
   memberDecision: Decision | 'create',
   revisionNotes: string | null,
+  center: 'person' | 'project',
 ): Promise<string | null> {
   const res = await query<{ id: string }>(
     `INSERT INTO member_field_note_threads
        (member_id, source_session_ref, title, content, authorship, is_directly_stated,
         member_confirmed, member_decision, member_decision_at, revision_notes,
-        consent_state, can_be_remembered, can_be_shown_to_practitioner, confirmed_at)
+        consent_state, can_be_remembered, can_be_shown_to_practitioner, confirmed_at, center)
      VALUES ($1, $2, $3, $3, $4, $5, TRUE, $6, NOW(), $7,
-             'member-confirmed-memory', TRUE, FALSE, NOW())
+             'member-confirmed-memory', TRUE, FALSE, NOW(), $8)
      RETURNING id`,
-    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes],
+    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, center],
   );
   return res.rows[0]?.id ?? null;
 }
@@ -151,19 +153,25 @@ export async function GET(request: NextRequest) {
     if (!(await isMemberTester(memberId))) {
       return NextResponse.json({ error: 'This is an experimental Field Lab surface.' }, { status: 403 });
     }
+    // Optional center filter so Legacy Field (person) and Vision Studio (project) do
+    // not blur — provenance, not interpretation. Absent → return all the member's threads.
+    const cp = new URL(request.url).searchParams.get('center');
+    const centerFilter = cp === 'project' ? 'project' : cp === 'person' ? 'person' : null;
     const res = await query<{
       id: string;
       title: string;
       authorship: string;
       member_decision: string | null;
       created_at: string;
+      center: string;
     }>(
-      `SELECT id, title, authorship, member_decision, created_at
+      `SELECT id, title, authorship, member_decision, created_at, center
          FROM member_field_note_threads
         WHERE member_id = $1 AND released_at IS NULL
+          AND ($2::text IS NULL OR center = $2)
         ORDER BY created_at DESC
         LIMIT 200`,
-      [memberId],
+      [memberId, centerFilter],
     );
     return NextResponse.json({ threads: res.rows });
   } catch (err: any) {
@@ -191,6 +199,7 @@ export async function POST(request: NextRequest) {
     const proposals = parseProposals(body?.proposals);
     const created = parseCreated(body?.created);
     const sessionRef = asStr(body?.sessionRef, 80) || null;
+    const center = asCenter(body?.center); // person (Legacy Field) | project (Vision Studio) — provenance only
 
     // Informed-consent gate (no stealth memory): a thread crosses into memory only
     // by an explicit, informed member act carrying a protocol version. Without it the
@@ -226,7 +235,7 @@ export async function POST(request: NextRequest) {
         for (const childTitle of p.children ?? []) {
           const childId = await saveThread(
             memberId, sessionRef, childTitle, 'member_authored', true, 'split',
-            `split from MAIA's "${p.title}"`,
+            `split from MAIA's "${p.title}"`, center,
           );
           saved += 1;
           activity.created += 1; // a split child is a member origination
@@ -239,7 +248,7 @@ export async function POST(request: NextRequest) {
         p.decision === 'revise' && p.revisedTitle && p.revisedTitle !== p.title
           ? `revised from MAIA's "${p.title}"`
           : null;
-      const id = await saveThread(memberId, sessionRef, title, 'member_confirmed', false, p.decision, revisionNotes);
+      const id = await saveThread(memberId, sessionRef, title, 'member_confirmed', false, p.decision, revisionNotes, center);
       saved += 1;
       if (p.decision === 'keep') activity.kept += 1;
       else activity.revised += 1;
@@ -247,7 +256,7 @@ export async function POST(request: NextRequest) {
     }
 
     for (const title of created) {
-      const id = await saveThread(memberId, sessionRef, title, 'member_authored', true, 'create', null);
+      const id = await saveThread(memberId, sessionRef, title, 'member_authored', true, 'create', null, center);
       saved += 1;
       activity.created += 1;
       await logEvent(memberId, id, 'created', 'create');
@@ -258,7 +267,7 @@ export async function POST(request: NextRequest) {
 
     console.info(
       '[FieldLab/field-note] crossing',
-      JSON.stringify({ saved, proposed: proposals.length, ...activity, remembered: true }),
+      JSON.stringify({ saved, proposed: proposals.length, ...activity, remembered: true, center }),
     );
 
     return NextResponse.json({ ok: true, saved, activity, consent: 'remembered' });
