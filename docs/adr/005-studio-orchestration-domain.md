@@ -101,7 +101,7 @@ The three forks below are **ratified**; the ADR is **Accepted**. Ratification se
 
 ## Open implementation decisions (named here, decided elsewhere)
 
-The model above is ratified; two **implementation anchors remain open**, each to be settled by its
+The model above is ratified; the **Session anchor remains open** (the Person anchor is resolved — item 1), to be settled by its
 own explicit spec — never by a branch merge. They are named here so parallel work cannot resolve
 them by accident:
 
@@ -109,14 +109,16 @@ them by accident:
    this week model the identity layer differently (`practitioner_contacts_layer` ·
    `studio_people` / `studio_person_roles`; see Mapping). An earlier approach —
    `relationship_roles[]` on `practitioner_clients` (branch `feat/relationship-roles-additive`) —
-   is **reference-only and superseded**. Which is the canonical Person anchor, or how the two
-   relate, is **undecided**.
+   is **reference-only and superseded**. **RESOLVED by [ADR-006](006-studio-person-anchor.md):**
+   `studio_people` (saved identity) + `encounter_participants` (participation) — participation
+   never forces identity creation; `practitioner_contacts` as a parallel table and
+   `relationship_roles[]` as the final anchor are rejected.
 2. **Session anchor — a canonical `studio_sessions` table vs helpers over existing facets**
    (`sessions` = Meeting Instance per D2 + the realized session-room Session + a thin
    `lib/studio/studioSessionMeeting.ts` provider wrapper). The Mapping leans to the latter; a
    `studio_sessions` proposal lives in the reference branch (its ADR-008). **Undecided.**
 
-Neither is decided in this ADR. Reference-branch survivors are not ported until both are settled.
+The **Person anchor is resolved** (ADR-006); the **Session anchor remains open**. Reference-branch survivors are not ported until the Session anchor is also settled.
 
 ## Consequences
 
