@@ -24,6 +24,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
+import { CENTERS, type CenterOfInquiry } from '@/lib/maia/field-lab/centerOfInquiry';
 
 type Role = 'user' | 'assistant';
 interface Turn {
@@ -52,7 +53,8 @@ type Phase = 'arrival' | 'conversation' | 'proposal' | 'closed';
 // recorded when a member chooses to remember. Bump together with the route.
 const CONSENT_PROTOCOL = 'recognition-continuity-v1';
 
-export function CrossingRoom() {
+export function CrossingRoom({ center = 'person' }: { center?: CenterOfInquiry } = {}) {
+  const cfg = CENTERS[center];
   const [phase, setPhase] = useState<Phase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
@@ -72,7 +74,7 @@ export function CrossingRoom() {
     const res = await apiFetch('/api/maia/field-lab/interview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history, mode }),
+      body: JSON.stringify({ history, mode, center }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json?.error || 'Something is not available right now.');
@@ -176,7 +178,7 @@ export function CrossingRoom() {
             className="flex-1 flex flex-col items-center justify-center text-center px-2 py-16"
           >
             <p className="font-cormorant text-[26px] font-light text-amber-50/90 leading-snug max-w-md">
-              What feels most alive for you today?
+              {cfg.arrivalPrompt}
             </p>
             <p className="text-[13px] text-soullab-text-muted mt-3 mb-6 max-w-sm">
               No forms. Just talk. We&apos;ll stay with it as long as it&apos;s useful — and you&apos;re
