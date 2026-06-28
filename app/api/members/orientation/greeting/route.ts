@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     console.error('[Orientation/Greeting] Error generating greeting:', error);
     // Graceful fallback — never block the member from entering
     return NextResponse.json({
-      greeting: 'You\'ve arrived. I\'m here.'
+      greeting: 'You\'ve arrived. We can begin with whatever feels most alive.'
     });
   }
 }
