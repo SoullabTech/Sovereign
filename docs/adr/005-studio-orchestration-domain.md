@@ -101,8 +101,8 @@ The three forks below are **ratified**; the ADR is **Accepted**. Ratification se
 
 ## Open implementation decisions (named here, decided elsewhere)
 
-The model above is ratified; the **Session anchor remains open** (the Person anchor is resolved — item 1), to be settled by its
-own explicit spec — never by a branch merge. They are named here so parallel work cannot resolve
+The model above is ratified; **both anchors are now resolved** (below) — each settled by its own
+explicit spec, never by a branch merge. They were named here so parallel work could not resolve
 them by accident:
 
 1. **Person anchor — `practitioner_contacts` vs `studio_people`.** Two built-not-deployed migrations
@@ -116,9 +116,12 @@ them by accident:
 2. **Session anchor — a canonical `studio_sessions` table vs helpers over existing facets**
    (`sessions` = Meeting Instance per D2 + the realized session-room Session + a thin
    `lib/studio/studioSessionMeeting.ts` provider wrapper). The Mapping leans to the latter; a
-   `studio_sessions` proposal lives in the reference branch (its ADR-008). **Undecided.**
+   `studio_sessions` proposal lives in the reference branch (its ADR-008). **RESOLVED by
+   [ADR-007](007-studio-session-anchor.md):** `studio_sessions` realizes the Session tier (an
+   orchestration anchor for a realized encounter); `sessions` stays Meeting Instance; facets stay
+   facets; not a super-table.
 
-The **Person anchor is resolved** (ADR-006); the **Session anchor remains open**. Reference-branch survivors are not ported until the Session anchor is also settled.
+**Both anchors are resolved** (ADR-006 · ADR-007). Reference-branch survivors are ported under those decisions in a separate, later implementation lane.
 
 ## Consequences
 
