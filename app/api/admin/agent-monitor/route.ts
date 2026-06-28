@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAgentRuns, getAgentRunById, getAgentRunEvents, getAgentRunSummaryCounts } from '@/lib/ai/agentMonitorQueries'
 import { updateAgentRunHumanReview, HumanReviewStatus } from '@/lib/ai/agentMonitor'
+import { isAdminRequest } from '@/lib/admin/requireAdmin'
 
 export const dynamic = 'force-dynamic'
 
 const VALID_REVIEW_STATUSES: HumanReviewStatus[] = ['pending', 'approved', 'revised', 'rejected']
 
 export async function GET(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id')
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 })
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const params = request.nextUrl.searchParams
@@ -56,9 +56,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id')
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 })
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {

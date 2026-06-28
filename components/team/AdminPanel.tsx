@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-type Tab = 'overview' | 'channels' | 'members';
+type Tab = 'overview' | 'channels' | 'members' | 'bugs';
 
 interface PendingInvite {
   id: string;
@@ -47,6 +47,25 @@ interface Stats {
   dmThreads: number;
 }
 
+interface BugItem {
+  id: string;
+  message: string;
+  severity: string;
+  status: string;
+  reporterName: string | null;
+  url: string | null;
+  attachmentCount: number;
+  createdAt: string;
+}
+
+interface BugCounts {
+  new: number;
+  seen: number;
+  resolved: number;
+  wont_fix: number;
+  total: number;
+}
+
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="bg-[#16162a]/80 border border-white/8 rounded-xl p-4">
@@ -73,6 +92,8 @@ export function AdminPanel() {
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState('');
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
+  const [bugs, setBugs] = useState<BugItem[]>([]);
+  const [bugCounts, setBugCounts] = useState<BugCounts>({ new: 0, seen: 0, resolved: 0, wont_fix: 0, total: 0 });
   const [saving, setSaving] = useState<string | null>(null);
   const [editChannel, setEditChannel] = useState<Channel | null>(null);
   const [editName, setEditName] = useState('');
@@ -85,16 +106,22 @@ export function AdminPanel() {
   const [expandedMembersChannel, setExpandedMembersChannel] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [sRes, cRes, mRes, iRes] = await Promise.all([
+    const [sRes, cRes, mRes, iRes, bRes] = await Promise.all([
       fetch('/api/team/admin/stats'),
       fetch('/api/team/admin/channels'),
       fetch('/api/team/admin/members'),
       fetch('/api/team/invites'),
+      fetch('/api/team/admin/bugs'),
     ]);
     if (sRes.ok) setStats(await sRes.json().then(d => d));
     if (cRes.ok) setChannels(await cRes.json().then(d => d.channels));
     if (mRes.ok) setMembers(await mRes.json().then(d => d.members));
     if (iRes.ok) setPendingInvites(await iRes.json().then((d: { invites: PendingInvite[] }) => d.invites ?? []));
+    if (bRes.ok) {
+      const bd = await bRes.json();
+      setBugs(bd.bugs ?? []);
+      setBugCounts(bd.counts ?? { new: 0, seen: 0, resolved: 0, wont_fix: 0, total: 0 });
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -267,7 +294,7 @@ export function AdminPanel() {
 
       {/* Tabs */}
       <div className="flex gap-0 border-b border-white/8 flex-shrink-0 px-6">
-        {(['overview', 'channels', 'members'] as Tab[]).map(t => (
+        {(['overview', 'channels', 'members', 'bugs'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -277,9 +304,14 @@ export function AdminPanel() {
                 : 'border-transparent text-white/35 hover:text-white/60'
             }`}
           >
-            {t}
+            {t === 'bugs' ? 'Bug Reports' : t}
             {t === 'channels' && <span className="ml-1.5 text-xs text-white/25">{activeChannels.length}</span>}
             {t === 'members' && <span className="ml-1.5 text-xs text-white/25">{members.length}</span>}
+            {t === 'bugs' && (bugCounts.new + bugCounts.seen) > 0 && (
+              <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400/80">
+                {bugCounts.new + bugCounts.seen}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -599,6 +631,91 @@ export function AdminPanel() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* BUG REPORTS */}
+        {tab === 'bugs' && (
+          <div className="max-w-3xl space-y-3">
+            <div className="flex items-center gap-3 mb-4">
+              <p className="text-xs text-white/30">
+                {bugCounts.total} total · {bugCounts.new} new · {bugCounts.seen} seen · {bugCounts.resolved} resolved
+              </p>
+              <a
+                href="https://soullab.life/admin/monitor"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto text-xs text-amber-400/50 hover:text-amber-400/80 transition-colors"
+              >
+                Open Monitor →
+              </a>
+            </div>
+
+            {bugs.length === 0 && (
+              <div className="text-sm text-white/25 py-8 text-center">No bug reports yet.</div>
+            )}
+
+            {bugs.map(bug => {
+              const monitorUrl = `https://soullab.life/admin/monitor?bug=${bug.id}`;
+              const isOpen = bug.status === 'new' || bug.status === 'seen';
+              const severityColor =
+                bug.severity === 'critical' ? 'bg-red-500/20 text-red-400/80' :
+                bug.severity === 'high'     ? 'bg-orange-500/20 text-orange-400/80' :
+                bug.severity === 'low'      ? 'bg-white/5 text-white/25' :
+                                              'bg-white/5 text-white/30';
+              const statusColor =
+                bug.status === 'new'       ? 'bg-red-500/15 text-red-400/70' :
+                bug.status === 'seen'      ? 'bg-amber-500/15 text-amber-400/70' :
+                bug.status === 'resolved'  ? 'bg-emerald-500/10 text-emerald-400/50' :
+                                             'bg-white/5 text-white/25';
+              const preview = bug.message.length > 100
+                ? `${bug.message.slice(0, 100)}…`
+                : bug.message;
+              const when = new Date(bug.createdAt).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+              });
+
+              return (
+                <div
+                  key={bug.id}
+                  className={`flex flex-col gap-1.5 bg-[#16162a]/60 border rounded-lg px-4 py-3 transition-colors ${
+                    isOpen ? 'border-white/10 hover:border-white/18' : 'border-white/5 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${severityColor}`}>
+                      {bug.severity}
+                    </span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${statusColor}`}>
+                      {bug.status.replace('_', ' ')}
+                    </span>
+                    {bug.attachmentCount > 0 && (
+                      <span className="text-xs text-white/25">
+                        📎 {bug.attachmentCount}
+                      </span>
+                    )}
+                    <span className="text-xs text-white/20 ml-auto flex-shrink-0">{when}</span>
+                  </div>
+                  <p className="text-sm text-white/70 leading-snug">{preview}</p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    {bug.reporterName && (
+                      <span className="text-xs text-white/25">{bug.reporterName}</span>
+                    )}
+                    {bug.url && (
+                      <span className="text-xs text-white/20 truncate max-w-[200px]">{bug.url}</span>
+                    )}
+                    <a
+                      href={monitorUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-xs text-amber-400/40 hover:text-amber-400/70 transition-colors flex-shrink-0"
+                    >
+                      → Monitor
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

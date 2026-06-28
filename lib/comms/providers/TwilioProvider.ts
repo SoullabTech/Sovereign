@@ -131,8 +131,14 @@ export class TwilioProvider implements CommsProvider {
         body.append('From', from_number);
       }
 
-      // Optional: Add status callback URL
-      // body.append('StatusCallback', `${process.env.BASE_URL}/api/webhooks/twilio`);
+      // Status callbacks: Twilio POSTs delivery updates (sent/delivered/failed)
+      // to this endpoint so the async outcome is recorded, not just acceptance.
+      const statusCallback =
+        process.env.TWILIO_STATUS_CALLBACK_URL ||
+        'https://soullab.life/api/notifications/sms/status';
+      if (statusCallback) {
+        body.append('StatusCallback', statusCallback);
+      }
 
       const response = await fetch(
         `${this.apiUrl}/Accounts/${account_sid}/Messages.json`,
@@ -168,18 +174,34 @@ export class TwilioProvider implements CommsProvider {
           status: 'failed',
           externalId: sent.sid,
           errorCode: String(sent.error_code),
-          errorMessage: sent.error_message,
+          errorMessage: sent.error_message || `Twilio rejected the message (error ${sent.error_code})`,
           rawResponse: result,
         };
       }
 
-      // Twilio statuses: queued, sending, sent, delivered, failed
-      const isQueued = ['queued', 'sending', 'sent'].includes(sent.status);
+      // Statuses that mean Twilio has accepted the message for delivery.
+      // For Messaging Service / A2P sends the synchronous status is typically
+      // "accepted" (Twilio has taken the message and will select a sender and
+      // route it); "scheduled" applies to scheduled sends. Treat all of these as a
+      // successful handoff — final delivery is confirmed asynchronously via the
+      // StatusCallback webhook, not in this synchronous response.
+      const isAcceptedByProvider = ['accepted', 'scheduled', 'queued', 'sending', 'sent', 'delivered'].includes(sent.status);
 
       return {
-        success: isQueued,
-        status: isQueued ? 'queued' : 'failed',
+        success: isAcceptedByProvider,
+        status: isAcceptedByProvider ? 'queued' : 'failed',
         externalId: sent.sid,
+        // If Twilio accepted the request (HTTP 2xx) but returned a non-acceptance
+        // status (e.g. failed/undelivered), surface a truthful reason instead of
+        // leaving errorMessage undefined (which collapsed to a generic error).
+        ...(isAcceptedByProvider
+          ? {}
+          : {
+              errorCode: sent.error_code ? String(sent.error_code) : 'TWILIO_NOT_QUEUED',
+              errorMessage:
+                sent.error_message ||
+                `Twilio returned status "${sent.status || 'unknown'}" instead of an accepted status${sent.error_code ? ` (error ${sent.error_code})` : ''}`,
+            }),
         rawResponse: result,
       };
     } catch (error) {

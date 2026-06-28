@@ -63,6 +63,19 @@ const OLLAMA_MODEL_DEEP = process.env.OLLAMA_MODEL_DEEP ?? 'qwen3:32b';
 const LOCAL_TIER_ENABLED = process.env.LOCAL_TIER_ENABLED === 'true';
 
 /**
+ * Default Claude model used when a non-Claude model id would otherwise reach the
+ * Anthropic API. Under LOCAL_TIER_ENABLED, tier/level configs carry Ollama model
+ * names (e.g. 'qwen2.5:7b'); if such a config reaches Claude — generateSimple's
+ * primary path, or any Ollama→Claude fallback — the SDK 404s on the unknown model.
+ */
+export const DEFAULT_CLAUDE_FALLBACK_MODEL = 'claude-sonnet-4-6';
+
+/** Return `model` unchanged if it is a Claude model id, else a safe Claude default. */
+export function coerceClaudeModel(model: string): string {
+  return model.startsWith('claude') ? model : DEFAULT_CLAUDE_FALLBACK_MODEL;
+}
+
+/**
  * Level-specific LLM configuration
  * Levels 1-2: local Ollama (when LOCAL_TIER_ENABLED) or Sonnet fallback
  * Levels 3-4: Claude Sonnet 4.5
@@ -296,10 +309,18 @@ export class MultiLLMProvider {
     const baseDelay = 1000; // 1 second
     let lastError: any;
 
+    // Guard: the Anthropic API only accepts Claude model ids. Under LOCAL_TIER_ENABLED,
+    // tier/level configs carry Ollama model names (e.g. 'qwen2.5:7b'); coerce here so a
+    // local model id is never sent to Claude — the 404 behind "Primary provider unavailable".
+    const claudeModel = coerceClaudeModel(config.model);
+    if (claudeModel !== config.model) {
+      console.warn(`[LLMProvider] coercing non-Claude model '${config.model}' → '${claudeModel}' for Anthropic call`);
+    }
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const message = await this.anthropic.messages.create({
-          model: config.model,
+          model: claudeModel,
           max_tokens: config.maxTokens,
           temperature: config.temperature,
           system: systemPrompt,
@@ -317,14 +338,14 @@ export class MultiLLMProvider {
           console.warn(JSON.stringify({
             tag: 'llm.truncated', stop_reason: 'max_tokens',
             output_tokens: message.usage.output_tokens, max_tokens: config.maxTokens,
-            model: config.model
+            model: claudeModel
           }));
         }
 
         return {
           text: response.text,
           provider: 'anthropic',
-          model: config.model,
+          model: claudeModel,
           metadata: {
             generationTime,
             tokenCount: message.usage.output_tokens,
@@ -422,7 +443,10 @@ export class MultiLLMProvider {
 
     console.info(`[LLMProvider] tier=${tier} provider=${config.provider} model=${config.model}`);
 
-    if (forceOllama) {
+    // Honor the tier's provider (Ollama for fast/core under LOCAL_TIER_ENABLED), matching
+    // generate(). forceClaude overrides to the cloud path. Previously this only checked
+    // forceOllama, so tier-routed Ollama configs were sent to Claude → qwen2.5:7b 404.
+    if (!forceClaude && (forceOllama || config.provider === 'ollama')) {
       try {
         return await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime);
       } catch (error) {

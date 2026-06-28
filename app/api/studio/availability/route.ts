@@ -32,7 +32,11 @@ export async function GET(request: NextRequest) {
         [identity.practitionerId]
       ),
       db.query(
-        `SELECT id, override_date, is_blocked, start_time, end_time, reason
+        // DB column is `is_available` (true = open, false = blocked); the API
+        // contract exposes `is_blocked`, so invert on the way out. Format the
+        // DATE as a plain YYYY-MM-DD string so the client parses it without a
+        // timezone shift (pg returns DATE as a TZ-offset Date object otherwise).
+        `SELECT id, to_char(override_date, 'YYYY-MM-DD') AS override_date, (NOT is_available) AS is_blocked, start_time, end_time, reason
          FROM availability_overrides
          WHERE practitioner_id = $1 AND override_date >= CURRENT_DATE
          ORDER BY override_date`,
@@ -121,17 +125,21 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'override_date required' }, { status: 400 });
     }
 
+    // DB column is `is_available` (true = open, false = blocked); the API
+    // contract uses `is_blocked`, so invert before writing. The live unique
+    // constraint is (practitioner_id, override_date).
+    const isAvailable = !(is_blocked ?? true);
     const result = await db.query(
       `INSERT INTO availability_overrides
-       (practitioner_id, override_date, is_blocked, start_time, end_time, reason)
+       (practitioner_id, override_date, is_available, start_time, end_time, reason)
        VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT (practitioner_id, override_date, start_time)
-       DO UPDATE SET is_blocked = $3, end_time = $5, reason = $6
+       ON CONFLICT (practitioner_id, override_date)
+       DO UPDATE SET is_available = $3, start_time = $4, end_time = $5, reason = $6
        RETURNING id`,
       [
         identity.practitionerId,
         override_date,
-        is_blocked ?? true,
+        isAvailable,
         start_time || null,
         end_time || null,
         reason || null,

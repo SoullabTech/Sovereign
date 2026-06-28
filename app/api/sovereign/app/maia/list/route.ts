@@ -89,11 +89,14 @@ import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { resolveMemberIdentity } from './resolveIdentity';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
 import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
+// Conversational Keep — explicit member-instruction filing only (no salience offers).
+// Mirrors the high-confidence filing path in app/api/oracle/conversation/route.ts.
+import { parseFilingInstruction, applyConversationalKeepResult, type FilingInstruction } from '@/lib/psyche/conversational-keep';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here because THIS is the live
 // sovereign-MAIA route the UI actually hits (not /api/sovereign/app/maia/route.ts,
@@ -127,8 +130,9 @@ import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/as
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 
 // 🌿 Wu Xing (Five Elements) integration
-import { computeWuXingSnapshot, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
-import { createBridgedSnapshot, type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
+import { buildWuXingSnapshot, computeWuXingConstitution, computeWuXingMoment, generateWuXingPromptAddendum, type BaZiProfile, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
+import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
+import { calculateDaYun } from '@/lib/astrology/daYunCalculator';
 import { pool } from '@/lib/db/postgres';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
@@ -229,6 +233,15 @@ function defaultSovereignResponse() {
   };
 }
 
+// Deploy 2 — governance primitive: prefaces every symbolic addendum (astrology
+// Western+Mayan, Wu Xing constitution) so the model holds them as lenses, not grounds
+// for assertion about the member. Ablation-validated (scripts/repro/deploy2-boundary-
+// ablation.ts): over-assertion index -3.63, every dimension correct direction; the
+// bounded arm still engages the lens (symbolic_framing stayed high) — bounds, not kills.
+// Da Yun keeps its own per-addendum boundary (Deploy 1).
+const SYMBOLIC_LENS_BOUNDARY = `## HOW TO HOLD EVERY SYMBOLIC FRAMEWORK BELOW (astrology, Mayan, Chinese/Wu Xing, elements, cycles, archetypes)
+These are traditional interpretive lenses — NOT facts, NOT predictions, NOT evidence about this member's actual life. Possessing a framework gives you NO grounds to assert anything about who they are, what phase they are in, or where they are heading. You still know only what they have actually told you. Do not lead with a lens or announce "you are entering / this means / your chart shows" as fact; offer one only when it genuinely illuminates what they are living or when they ask, frame it explicitly as a traditional association, and when a lens conflicts with their lived experience, their experience wins.`;
+
 export async function POST(req: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
@@ -265,16 +278,23 @@ export async function POST(req: NextRequest) {
       [key: string]: unknown;
     };
 
-    // 🔐 AUTH-DERIVED USER ID: Prefer cookie/header-based auth over body
-    // This fixes iOS memory loss after app resume (body state can be lost, cookies persist)
-    const memberIdFromAuth = await getMemberIdFromRequest(req);
-    const userId = memberIdFromAuth ||
-      (typeof bodyUserId === 'string' && bodyUserId.length > 0 ? bodyUserId : null);
+    // 🔐 IDENTITY (security): resolve the member ONLY from a verified session
+    // credential (maia_session cookie / x-session-token header, validated against
+    // auth_sessions). A request-body `userId` is NEVER trusted for identity —
+    // member UUIDs are client-exposed, so honoring a body id would let a caller
+    // read/write another member's memory (impersonation). The legacy
+    // `|| bodyUserId` fallback was removed once apiFetch shipped x-session-token
+    // on every native path. See ./resolveIdentity.ts.
+    const userId = await resolveMemberIdentity(req);
 
-    // 🔍 IDENTITY DEBUG: Log userId resolution for debugging memory issues
+    // 🔍 IDENTITY DEBUG: observe resolution + flag a body id that was ignored
+    // (stale client or spoof attempt) so it's visible without being trusted.
     console.log('[MAIA] userId resolved:', {
-      memberIdFromAuth: memberIdFromAuth ? 'present' : 'null',
-      bodyUserId: typeof bodyUserId === 'string' ? 'present' : 'null',
+      fromSession: userId ? 'present' : 'null',
+      bodyUserId:
+        typeof bodyUserId === 'string' && bodyUserId.length > 0
+          ? (bodyUserId === userId ? 'matches-session' : 'ignored')
+          : 'absent',
       finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
     });
 
@@ -450,22 +470,41 @@ export async function POST(req: NextRequest) {
       shouldComputeWuXing
         ? (async (): Promise<{ wuxingSnapshot: WuXingSnapshot | null; bridgedSnapshot: BridgedSnapshot | null; wuxingAddendum: string }> => {
             try {
-              let baziProfile = null;
+              let baziProfile: BaZiProfile | null = null;
               let westernBirthData: { birth_date: string | null; birth_time: string | null; birth_location_name: string | null; birth_timezone: string | null } | null = null;
               try {
+                // Schema-correct loader (the legacy SELECT queried member_id / year_pillar /
+                // element_counts — none of which exist; it threw every turn and the row was
+                // never read). Real schema: user_id + *_json + dominant/deficient_elements.
                 const baziResult = await pool.query(
-                  `SELECT birth_datetime, birth_timezone, day_master, day_master_element,
-                          year_pillar, month_pillar, day_pillar, hour_pillar,
-                          element_counts, dominant_element, element_balance_score
+                  `SELECT birth_datetime_utc, birth_timezone, location_text, pillars_json,
+                          day_master, day_master_element, day_master_yinyang,
+                          wuxing_balance_json, wuxing_percentages_json,
+                          dominant_elements, deficient_elements, balance_score
                    FROM member_bazi_profile
-                   WHERE member_id = $1`,
+                   WHERE user_id = $1`,
                   [effectiveUserId]
                 );
                 if (baziResult.rows.length > 0) {
-                  baziProfile = baziResult.rows[0];
+                  const r = baziResult.rows[0];
+                  baziProfile = {
+                    userId: String(effectiveUserId),
+                    birthDatetimeUtc: new Date(r.birth_datetime_utc),
+                    birthTimezone: r.birth_timezone,
+                    locationText: r.location_text ?? undefined,
+                    pillars: r.pillars_json,
+                    dayMaster: r.day_master,
+                    dayMasterElement: r.day_master_element,
+                    dayMasterYinYang: r.day_master_yinyang,
+                    elementTally: r.wuxing_balance_json,
+                    wuxingBalancePercentages: r.wuxing_percentages_json,
+                    dominantElements: r.dominant_elements,
+                    deficientElements: r.deficient_elements,
+                    balanceScore: r.balance_score,
+                  };
                 }
               } catch (baziErr) {
-                console.log(`🌿 [WU XING] BaZi profile not found (optional enhancement)`);
+                console.log(`🌿 [WU XING] BaZi profile not loaded (optional):`, baziErr instanceof Error ? baziErr.message : 'unknown');
               }
 
               // 🌟 WESTERN BIRTH DATA + IDENTITY CONTEXT: Fetch birth data + pronouns for astrological and identity context
@@ -488,43 +527,52 @@ export async function POST(req: NextRequest) {
                 console.log(`🌟 [BIRTH] Western birth data not found (optional)`);
               }
 
-              const snapshot = computeWuXingSnapshot({
-                constitution: baziProfile ? {
-                  dayMasterElement: baziProfile.day_master_element,
-                  elementCounts: baziProfile.element_counts,
-                  dominantElement: baziProfile.dominant_element,
-                } : undefined,
-                currentMoment: new Date(),
-                timezone: timezone,
-              });
+              // Wu Xing snapshot: personal constitution (from BaZi) + today's field.
+              // When a member_bazi_profile row exists we derive the WuXingConstitution
+              // (Day Master + element balance); otherwise constitution stays null and the
+              // snapshot falls back to moment-only ("today's field").
+              const moment = computeWuXingMoment(new Date(), timezone);
+              const constitution = baziProfile ? computeWuXingConstitution(baziProfile) : null;
+              const snapshot = buildWuXingSnapshot({ constitution, moment });
+              let addendum = SYMBOLIC_LENS_BOUNDARY + '\n\n' + generateWuXingPromptAddendum(snapshot);
+              const bridged: BridgedSnapshot | null = null;
 
-              let bridged: BridgedSnapshot | null = null;
-              let addendum = '';
-              const spiralSnapshot = (meta as any)?.spiralSnapshot;
-              if (spiralSnapshot || snapshot) {
-                bridged = createBridgedSnapshot(spiralSnapshot || null, snapshot, baziProfile);
-                if (bridged) {
-                  const wx = bridged.wuxing;
-                  const alignment = bridged.crossSystemInsights?.elementAlignment || 'unknown';
-                  const westernBirthBlock = westernBirthData
-                    ? `- Western birth data: ${westernBirthData.birth_date}${westernBirthData.birth_time ? ` at ${westernBirthData.birth_time}` : ''}${westernBirthData.birth_location_name ? `, ${westernBirthData.birth_location_name}` : ''}${westernBirthData.birth_timezone ? ` (${westernBirthData.birth_timezone})` : ''}`
-                    : '';
-                  addendum = `
-🌿 WU XING AWARENESS (Five Elements):
-- Dominant moment energy: ${wx?.momentElement || 'Earth'} (${wx?.momentPhase || 'stable'})
-${baziProfile ? `- Constitutional element: ${baziProfile.day_master_element} (Day Master)` : '- No BaZi profile on file'}
-${westernBirthBlock}
-- Element alignment: ${alignment}
-${bridged.crossSystemInsights?.practicalGuidance ? `- Guidance: ${bridged.crossSystemInsights.practicalGuidance}` : ''}
-
-Use this awareness to attune your tone and suggestions to the current elemental qualities.
-Wood = growth, vision, initiative | Fire = clarity, passion, connection
-Earth = stability, nourishment, integration | Metal = precision, release, boundaries
-Water = depth, reflection, wisdom`;
+              // Da Yun (10-year Luck Pillar) — a SEPARATE, available interpretive lens,
+              // only computed when a personal chart exists. Appended to the Wu Xing
+              // addendum so the whole Chinese/BaZi lens travels one channel. Framed as
+              // available-not-imposed: MAIA decides if/when it actually illuminates.
+              if (baziProfile) {
+                try {
+                  const pronouns = (meta as any)?.pronouns as string | undefined;
+                  const gender: 'male' | 'female' = /\b(she|her)\b/i.test(pronouns || '') ? 'female' : 'male';
+                  const dyFmt = new Intl.DateTimeFormat('en-US', { timeZone: baziProfile.birthTimezone, timeZoneName: 'shortOffset' });
+                  const dyTzPart = dyFmt.formatToParts(baziProfile.birthDatetimeUtc).find(p => p.type === 'timeZoneName')?.value || 'UTC';
+                  const dyTzm = dyTzPart.match(/GMT([+-])(\d+)/);
+                  const dyTzOffset = dyTzm ? (dyTzm[1] === '+' ? 1 : -1) * parseInt(dyTzm[2]) * 60 : 0;
+                  const dy = calculateDaYun(baziProfile.birthDatetimeUtc, gender, undefined, dyTzOffset);
+                  const cp = dy.currentPeriod;
+                  const progressPct = Math.round((dy.periodProgress ?? 0) * 100);
+                  // Reframed framing (epistemic boundaries) — ablation-proven to remove the
+                  // over-assertion the original framing caused: on general prompts the lens
+                  // stays holstered; on explicit Chinese-cycle requests it engages but
+                  // calibrated ("traditional associations, not a window into your actual life").
+                  // See scripts/repro/dayun-ablation.ts. Deliberately omits the age/progress
+                  // anchor the original arm latched onto as a personal-fact cue.
+                  addendum += `\n\n## DA YUN — traditional 10-year-cycle REFERENCE DATA (not a reading, not evidence)\n`
+                    + `EPISTEMIC BOUNDARIES (read before using):\n`
+                    + `- The lines below are traditional symbolic associations for this cycle TYPE. They are NOT predictions, NOT facts about this member, NOT evidence about their current situation.\n`
+                    + `- Possessing this framework gives you NO grounds to assert anything about the member's life. You still know only what they have actually told you. If you lack their story, say so — do not let the framework substitute for it.\n`
+                    + `- Use ONLY if the member explicitly asks about their Chinese astrology or cycle. Do not volunteer it; do not reach for it on general life questions.\n`
+                    + `- If an association conflicts with the member's lived experience, the lived experience wins.\n`
+                    + `Reference (cycle type, ages ${cp.ageRange.start}-${cp.ageRange.end}): ${cp.element}, traditionally themed "${cp.lifeTheme}"; relation to Day Master ${baziProfile.dayMasterElement}: ${cp.natalHarmony}.\n`
+                    + `Traditional associations for this cycle type (NOT claims about the member): ${cp.opportunities.join('; ')}. Frictions traditionally noted: ${cp.challenges.join('; ')}.`;
+                  console.log(`🌿 [DA YUN] Current period: ${cp.element} ages ${cp.ageRange.start}-${cp.ageRange.end}, harmony=${cp.natalHarmony}, ${progressPct}% through`);
+                } catch (dyErr) {
+                  console.warn(`🌿 [DA YUN] Computation failed (proceeding without):`, dyErr instanceof Error ? dyErr.message : 'unknown');
                 }
               }
 
-              console.log(`🌿 [WU XING] Computed: ${snapshot?.momentElement || 'none'} moment, ${baziProfile ? 'with' : 'without'} BaZi profile`);
+              console.log(`🌿 [WU XING] Computed: moment dominant=${snapshot.moment.momentDominant.join('/')}, ${baziProfile ? `with BaZi profile (Day Master ${baziProfile.dayMaster}/${baziProfile.dayMasterElement}, dominant ${baziProfile.dominantElements.join('/')})` : 'without BaZi profile'}`);
               return { wuxingSnapshot: snapshot, bridgedSnapshot: bridged, wuxingAddendum: addendum };
             } catch (wuxingErr) {
               console.warn(`🌿 [WU XING] Computation failed (proceeding without):`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
@@ -572,7 +620,7 @@ Water = depth, reflection, wisdom`;
       const detail = astrologyContext.contextDetail.length > 3000
         ? astrologyContext.contextDetail.slice(0, 3000) + '\n...[astrology detail capped]\n'
         : astrologyContext.contextDetail;
-      astrologyAddendum = astrologyContext.contextHeader + detail;
+      astrologyAddendum = SYMBOLIC_LENS_BOUNDARY + '\n\n' + astrologyContext.contextHeader + detail;
       if (astrologyContext.hasBirthData) {
         console.log('🌟 [Astrology] Birth chart loaded:', {
           sun: astrologyContext.birthChart?.sun?.sign,
@@ -676,12 +724,31 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // by maiaService.ts via meta.conversationalRecallAddendum.
     let conversationalRecallAddendum: string | undefined;
     let priorExchangesCount = 0;
+    // 🧬 Developmental layer — declared outside the memory-orchestrator try block
+    // so the count is in scope when buildMemoryHealth() reads it below. Prior bug:
+    // loader ran every turn and orchestrator used the rows, but health input was
+    // never wired → runtime_events.memory_layers.developmental reported 'empty'
+    // despite 675 rows across 10 members in production. See DEVELOPMENTAL_LAYER_AUDIT_2026-05-26.md.
+    let developmentalCount = 0;
     if (allowCrossSessionMemory && userId) {
       try {
         const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
           loadRecentDevelopmentalMemories(userId, 3),
           loadRecentThemeSignals(userId, 10),
         ]);
+        developmentalCount = recentDevelopmentalMemories.length;
+
+        // 🧬 Developmental block — substrate discoverability marker (matches the
+        // [MAIA/sovereign] *-block ops grep pattern used by atoms / conversational).
+        // Emission ≠ prompt-influence: orchestrator usage is logged separately in
+        // the [MAIA/sovereign] memory-plan line below. This log proves the loader
+        // returned rows for this member this turn — the substrate-side of axis 2
+        // (emitted ↔ discoverable) of the substrate-crossing scaffold.
+        console.log('[MAIA/sovereign] developmental-block', {
+          count: recentDevelopmentalMemories.length,
+          userId: userId.slice(0, 8) + '...',
+        });
+
         const memoryPlan = buildMemoryInfluencePlan({
           message,
           userId,
@@ -772,18 +839,42 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       });
     }
 
+    // 🌟 Layer 10 — breakthrough: count of member-marked atoms among those
+    // surfaced. Atoms loader orders is_breakthrough DESC; a non-zero count
+    // means a member-marked breakthrough reached the prompt block this turn.
+    // Marker aligned with the production grep contract so the substrate
+    // crossing is discoverable from ops, not just emitted into the void.
+    const markedBreakthroughCount = atomsResult.filter((a) => a.isBreakthrough).length;
+    if (markedBreakthroughCount > 0) {
+      console.info('[MAIA/sovereign] breakthrough surfaced:', {
+        memberIdPrefix: userId ? userId.slice(0, 8) : null,
+        markedCount: markedBreakthroughCount,
+      });
+    }
+
     // 🔬 Layer 15 — memoryHealth: what loaded, what failed, what is unknown (canon §VII)
     const memoryHealth: MemoryHealth = buildMemoryHealth({
       recentTurns: { count: session.turn_count ?? 0 },
       session: { present: !!session },
       relational: { present: !!(memoryBundle as any)?.recentTurns?.length || !!memoryBundle },
       semantic: { count: atomsResult.length, error: atomsError },
+      // Breakthrough is a property of surfaced atoms (member-marked, never
+      // system-set). If the atoms loader errored, breakthrough state is
+      // unknown too — same dependency.
+      breakthrough: { count: markedBreakthroughCount, error: atomsError },
       // Conversational layer (Phase 2, wire site corrected per spec §IX, 2026-05-24):
       // count is the retriever's candidate count (does NOT distinguish emitted from
       // suppressed — emission detail lives in the [MAIA] conversational-block log line).
       // 'ok' here means "the substrate carried candidate material this turn." Whether
       // that material actually reached the prompt is a separate signal.
       conversational: { count: priorExchangesCount },
+      // 🧬 Developmental layer (wire site fix, 2026-05-26). loadRecentDevelopmentalMemories
+      // runs every turn (line ~682) and the orchestrator uses the rows; the binding from
+      // loader → health was missing, causing runtime_events.memory_layers.developmental to
+      // report 'empty' despite 675 rows across 10 members in production. Same call-site
+      // omission archetype as the FAST conversational fix in commit f74ab4204.
+      // See DEVELOPMENTAL_LAYER_AUDIT_2026-05-26.md §XII.
+      developmental: { count: developmentalCount },
     });
     if (isBaseChainDegraded(memoryHealth)) {
       console.warn('[MAIA/sovereign] memoryHealth — base chain degraded:', summarizeMemoryHealthForLog(memoryHealth));
@@ -880,6 +971,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           memoryInfluenceAddendum,
           forwardReadinessAddendum,
           atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
+          atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
         },
       }),
@@ -988,8 +1080,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
               { role: 'assistant', content: orchestratorResult.text },
             ],
             spiralDynamics: {
-              currentStage: wuxingSnapshot?.momentElement || null,
-              dynamics: wuxingSnapshot ? `${wuxingSnapshot.momentElement} moment` : 'Listening for patterns',
+              currentStage: wuxingSnapshot?.moment?.momentDominant?.[0] || null,
+              dynamics: wuxingSnapshot ? `${wuxingSnapshot.moment.momentDominant.join('/')} moment` : 'Listening for patterns',
               humanExperience: '',
             },
             sessionThread: { emergingAwareness: [] },
@@ -1139,7 +1231,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     });
 
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
-    if (userId && message && orchestratorResult.text) {
+    // 🔒 SANCTUARY MODE: a sanctuary turn must never feed relational observation or signal
+    // persistence — its content must not become available to Relationship Field retrieval.
+    if (userId && message && orchestratorResult.text && !isSanctuary) {
       observeRelationalContent(userId, message, orchestratorResult.text);
 
       // 🌊 RELATIONAL FIELD CARD: Phase 4 detection (fire-and-forget).
@@ -1158,6 +1252,53 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         }
       } catch (sigErr) {
         console.warn('[relationalSignals] detect error (non-blocking):', sigErr);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Conversational Keep — explicit entrustment on the live route.
+    // Detects ONLY member-directed filing instructions ("keep this",
+    // "save this as an idea") via parseFilingInstruction — the member's own
+    // words. Does NOT solicit keeps from salience (evaluateKeepOffer is
+    // deliberately NOT ported): entrustment is declared by the member, never
+    // inferred by the system. High-confidence filings are executed now (atom
+    // written to member_memory_atoms — the SAME registry this route loads for
+    // recall above), so an entrusted item becomes durable and visible to a
+    // later session. Low-confidence filings are surfaced for confirmation.
+    // Non-blocking and feature-flagged: any failure leaves keepIntent unset
+    // and the conversational reply stands.
+    // ═══════════════════════════════════════════════════════════════════
+    if (userId && message && process.env.CONVERSATIONAL_KEEP_ENABLED === 'true') {
+      try {
+        const filing: FilingInstruction | null = parseFilingInstruction({ utterance: message });
+        if (filing) {
+          if (filing.confidence === 'high') {
+            const atom = await applyConversationalKeepResult(userId, {
+              kind: 'filing',
+              instruction: filing,
+              context: { sessionId },
+            });
+            responseData.keepIntent = {
+              kind: 'filed',
+              atomTitle: atom.title,
+              destination: filing.destination,
+            };
+            console.log('[MAIA/sovereign] keep filed:', {
+              userId: userId.slice(0, 8) + '...',
+              destination: filing.destination,
+              atomId: atom.id,
+            });
+          } else {
+            responseData.keepIntent = { kind: 'filing_confirmation', instruction: filing };
+            console.log('[MAIA/sovereign] keep awaiting-confirm:', {
+              userId: userId.slice(0, 8) + '...',
+              destination: filing.destination,
+            });
+          }
+        }
+      } catch (keepErr) {
+        // Non-fatal: the conversational reply is never blocked by a keep failure.
+        console.error('[MAIA/sovereign] keep sidecar error (non-fatal):', keepErr);
       }
     }
 

@@ -8,6 +8,11 @@ AuthKey_*.p8
 # Local env overrides for Fastlane
 ios/App/.env.local
 
+# ── Local ops backups (never commit; prod infra is reconciled in source) ──────
+Caddyfile.bak.*
+docker-compose*.bak.*
+*.deploy-bak.*
+
 # Dependencies
 node_modules/
 npm-debug.log*
@@ -424,3 +429,6 @@ exports/
 
 # voice-ecosystem watch — per-instance state, gitignored
 scripts/voice-ecosystem-watch-state.json
+
+# Node compile cache — Bun/Node build artifacts, regenerated per build
+node-compile-cache/

@@ -12,11 +12,12 @@
  *   }
  *
  * No writes to maia_turns. No duplication of primary content.
- * Auth: x-member-id header.
+ * Auth: isAdminRequest (LABTOOLS_ADMIN_PASSWORD via x-admin-password).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,9 +34,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { id: idParam } = await params;

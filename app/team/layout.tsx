@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
-import { TeamSidebar } from '@/components/team/TeamSidebar';
+import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
+import { TeamShell } from '@/components/team/TeamShell';
 
 async function getSessionMemberId(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -33,10 +34,15 @@ export default async function TeamLayout({
   const memberId = await getSessionMemberId();
   if (!memberId) redirect('/signin?next=/team/general');
 
+  const cookieStore = await cookies();
+  const currentTeamId = await resolveCurrentTeamId(
+    memberId,
+    cookieStore.get(COLAB_TEAM_COOKIE)?.value ?? null
+  );
+
   return (
-    <div className="flex h-screen bg-[#1a1a2e] overflow-hidden">
-      <TeamSidebar currentMemberId={memberId} />
-      <main className="flex-1 min-w-0 flex flex-col">{children}</main>
-    </div>
+    <TeamShell currentMemberId={memberId} currentTeamId={currentTeamId}>
+      {children}
+    </TeamShell>
   );
 }

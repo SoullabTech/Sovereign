@@ -177,4 +177,5 @@ Nathan's field is where we build things that can explain their own failure modes
   theme: FIELD_PRESETS.nathan,
 
   active: true,
+  partnerSlugs: ['kelly'],
 };

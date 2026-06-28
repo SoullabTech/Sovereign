@@ -10,6 +10,8 @@ import FlagsDebug from "@/components/FlagsDebug";
 import { CapacitorBoot } from "@/components/CapacitorBoot";
 import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
+import { BetaBanner } from "@/components/BetaBanner";
+import BugReportButton from "@/components/bugs/BugReportButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -187,9 +189,12 @@ export default function RootLayout({
         `}} />
       </head>
       <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
+        <BetaBanner />
         <CapacitorBoot />
         <FlagsDebug />
         <AppErrorBoundary>
+        {/* Global "Report a bug" affordance — self-renders only for signed-in members */}
+        <BugReportButton />
         <SubscriptionProvider>
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>

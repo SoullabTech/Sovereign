@@ -13,13 +13,15 @@ import { ChannelMembersPanel } from './ChannelMembersPanel';
 interface ChannelViewProps {
   channel: TeamChannel;
   currentMemberId: string;
+  /** Channel owner/admin or global team admin — can manage members & delete any message. */
+  isAdmin?: boolean;
 }
 
 function sameDay(a: string, b: string): boolean {
   return new Date(a).toDateString() === new Date(b).toDateString();
 }
 
-export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
+export function ChannelView({ channel, currentMemberId, isAdmin = false }: ChannelViewProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<TeamMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,13 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
   const [memberCount, setMemberCount] = useState<number | undefined>(undefined);
   const [accessRevoked, setAccessRevoked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [capturedIds, setCapturedIds] = useState<Set<string>>(new Set());
+  // Option A — offer "Create Task" immediately after capture (no Decisions detour)
+  const [captureAction, setCaptureAction] = useState<{ decisionId: string; title: string } | null>(null);
+  const [taskMembers, setTaskMembers] = useState<{ memberId: string; name: string }[]>([]);
+  const [taskAssignee, setTaskAssignee] = useState('');
+  const [taskBusy, setTaskBusy] = useState(false);
+  const [showAssign, setShowAssign] = useState(false);
 
   // Pick up redirect toast (e.g. set when access was revoked from another channel)
   useEffect(() => {
@@ -65,14 +74,15 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     ? new Date(messages[messages.length - 1].createdAt).getTime()
     : 0;
 
-  // Load member count for private channels
+  // Load member count wherever the Members affordance is shown:
+  // private channels (any member can view) or any channel an admin manages.
   useEffect(() => {
-    if (!channel.isPrivate) return;
+    if (!channel.isPrivate && !isAdmin) return;
     fetch(`/api/team/channels/${channel.id}/members`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.members) setMemberCount(d.members.length); })
       .catch(() => undefined);
-  }, [channel.id, channel.isPrivate]);
+  }, [channel.id, channel.isPrivate, isAdmin, showMembersPanel]);
 
   // Load initial history
   useEffect(() => {
@@ -153,6 +163,52 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     });
   };
 
+  // Soft-delete a message. Optimistically remove it from the list; roll back on failure.
+  const handleDelete = async (messageId: string) => {
+    const prev = messages;
+    setMessages(p => p.filter(m => m.id !== messageId));
+    if (threadMessage?.id === messageId) setThreadMessage(null);
+    try {
+      const res = await fetch(`/api/team/channels/${channel.id}/messages/${messageId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        setMessages(prev);
+        setToast(res.status === 403 ? 'You can only delete your own messages.' : 'Could not delete message.');
+        setTimeout(() => setToast(null), 4000);
+      }
+    } catch {
+      setMessages(prev);
+      setToast('Could not delete message.');
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
+  // Edit a message's text (sender-only). Optimistic; roll back on failure.
+  const handleEdit = async (messageId: string, newBody: string) => {
+    const prev = messages;
+    setMessages(p => p.map(m => m.id === messageId ? { ...m, body: newBody, editedAt: new Date().toISOString() } : m));
+    try {
+      const res = await fetch(`/api/team/channels/${channel.id}/messages/${messageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: newBody }),
+      });
+      if (!res.ok) {
+        setMessages(prev);
+        setToast(res.status === 403 ? 'You can only edit your own messages.' : 'Could not edit message.');
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        const data = await res.json().catch(() => null);
+        if (data?.editedAt) setMessages(p => p.map(m => m.id === messageId ? { ...m, editedAt: data.editedAt } : m));
+      }
+    } catch {
+      setMessages(prev);
+      setToast('Could not edit message.');
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
   const handleReact = async (messageId: string, emoji: string) => {
     const res = await fetch(`/api/team/reactions/${messageId}`, {
       method: 'POST',
@@ -210,6 +266,72 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     // The response will arrive via SSE — no need to manually add it
   };
 
+  // Capture a channel message as an operational Team Decision (studio_decisions).
+  // "A decision becomes operational when it is captured into Studio Decisions."
+  const handleCaptureDecision = async (messageId: string) => {
+    const showToast = (msg: string) => {
+      setToast(msg);
+      setTimeout(() => setToast(null), 4000);
+    };
+    try {
+      const res = await fetch(`/api/team/channels/${channel.id}/decisions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId }),
+      });
+      if (res.status === 403) { handleAccessRevoked(); return; }
+      if (!res.ok) { showToast('Could not capture decision. Try again.'); return; }
+      const data = await res.json().catch(() => ({}));
+      setCapturedIds(prev => new Set(prev).add(messageId));
+      const decision = data.decision;
+      if (decision?.id) {
+        // Offer Create Task right here (Option A) instead of routing to Team Decisions.
+        setCaptureAction({ decisionId: decision.id, title: decision.title || 'Decision' });
+        setShowAssign(false);
+        setTaskAssignee('');
+        if (taskMembers.length === 0) {
+          fetch('/api/team/members')
+            .then(r => (r.ok ? r.json() : { members: [] }))
+            .then(d => setTaskMembers(d.members ?? []))
+            .catch(() => {});
+        }
+      } else {
+        showToast(data.alreadyCaptured ? 'Already in Team Decisions.' : 'Captured to Team Decisions.');
+      }
+    } catch {
+      showToast('Could not capture decision. Try again.');
+    }
+  };
+
+  // Option A — create a task straight from the just-captured decision.
+  const createTaskFromCapture = async () => {
+    if (!captureAction) return;
+    setTaskBusy(true);
+    try {
+      const res = await fetch(`/api/team/decisions/${captureAction.decisionId}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: captureAction.title, assignee: taskAssignee || undefined }),
+      });
+      if (res.ok) {
+        setCaptureAction(null);
+        setShowAssign(false);
+        setTaskAssignee('');
+        setToast(taskAssignee ? `Task created · assigned to ${taskAssignee}` : 'Task created');
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        setToast('Could not create task. Try again.');
+        setTimeout(() => setToast(null), 4000);
+      }
+    } catch {
+      setToast('Could not create task. Try again.');
+      setTimeout(() => setToast(null), 4000);
+    } finally {
+      setTaskBusy(false);
+    }
+  };
+
+
   if (accessRevoked) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
@@ -236,11 +358,65 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
           </button>
         </div>
       )}
+      {/* Option A — actionable post-capture banner: Create Task without leaving the conversation */}
+      {captureAction && (
+        <div className="bg-emerald-500/15 border-b border-emerald-500/30 px-4 py-2.5 text-xs text-emerald-100 flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 min-w-0">
+              <span className="text-emerald-400 flex-shrink-0">✓</span>
+              <span className="truncate">Captured to Team Decisions</span>
+            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {!showAssign && (
+                <button
+                  onClick={() => setShowAssign(true)}
+                  className="px-2.5 py-1 rounded-md bg-amber-500 text-black font-medium hover:bg-amber-400 transition-colors"
+                >
+                  Create task
+                </button>
+              )}
+              <a href="/team/decisions" className="text-emerald-300/70 hover:text-emerald-200 underline underline-offset-2">View</a>
+              <button
+                onClick={() => { setCaptureAction(null); setShowAssign(false); }}
+                aria-label="Dismiss"
+                className="text-emerald-300/50 hover:text-emerald-200"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {showAssign && (
+            <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-emerald-500/20">
+              <span className="text-white/50">Assign to</span>
+              <select
+                value={taskAssignee}
+                onChange={e => setTaskAssignee(e.target.value)}
+                className="bg-[#1a1a2e] border border-white/10 rounded-md px-2 py-1 text-xs text-white/80 focus:outline-none focus:border-amber-500/50"
+              >
+                <option value="">Unassigned</option>
+                {taskMembers.map(m => (
+                  <option key={m.memberId} value={m.name}>{m.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={createTaskFromCapture}
+                disabled={taskBusy}
+                className="px-2.5 py-1 rounded-md bg-amber-500 text-black font-medium disabled:opacity-40 hover:bg-amber-400 transition-colors"
+              >
+                {taskBusy ? 'Creating…' : 'Create'}
+              </button>
+              <button onClick={() => setShowAssign(false)} className="text-white/40 hover:text-white/70">Cancel</button>
+            </div>
+          )}
+        </div>
+      )}
       <ChannelPurposeHeader
         channel={channel}
         currentMemberId={currentMemberId}
         memberCount={memberCount}
-        onOpenMembers={channel.isPrivate ? () => setShowMembersPanel(p => !p) : undefined}
+        onOpenMembers={(channel.isPrivate || isAdmin) ? () => setShowMembersPanel(p => !p) : undefined}
         onVisibilityChanged={() => {
           // Re-fetch the page to get fresh channel data + sidebar refresh
           if (typeof window !== 'undefined') window.location.reload();
@@ -282,6 +458,11 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
                 onReact={handleReact}
                 onOpenThread={setThreadMessage}
                 onReflect={handleReflect}
+                onCaptureDecision={handleCaptureDecision}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                canModerate={isAdmin}
+                captured={capturedIds.has(msg.id)}
               />
             </div>
           );
@@ -305,14 +486,16 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
           parentMessage={threadMessage}
           channelId={channel.id}
           currentMemberId={currentMemberId}
+          isAdmin={isAdmin}
           onClose={() => setThreadMessage(null)}
           onReact={handleReact}
         />
       )}
-      {showMembersPanel && channel.isPrivate && (
+      {showMembersPanel && (channel.isPrivate || isAdmin) && (
         <ChannelMembersPanel
           channelId={channel.id}
           currentMemberId={currentMemberId}
+          canManage={isAdmin}
           onClose={() => setShowMembersPanel(false)}
         />
       )}

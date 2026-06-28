@@ -75,6 +75,7 @@ import {
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
 import { logFieldOrchestratorTelemetry } from '../field/fieldOrchestratorTelemetry';
@@ -834,12 +835,21 @@ ${ainKnowledgeContext}\n`
     : '';
 
   let contextPrompt: string;
+  // 🧵 LIVE THREAD: the cross-session memory bundle and the in-session recent thread are
+  // complementary, not either/or. The bundle gives depth; recentContext keeps the live
+  // thread so short referential FAST turns ("the Zen browser") don't lose what was just
+  // said. Prior bug: when a bundle existed, recentContext was discarded and FAST lost
+  // in-session continuity — CORE/DEEP inject conversationHistory directly, so only FAST
+  // was affected, which is exactly why the drop showed up on short messages.
+  const recentThreadBlock = recentContext.length > 0
+    ? `Recent conversation (this session):\n${recentContext}\n\n`
+    : '';
   if (memoryContext && memoryContext.length > 0) {
-    // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
-    contextPrompt = `${memoryContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
-    console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE for context (${memoryContext.length} chars)`);
+    // Memory bundle (relationship snapshot + ranked cross-session memories) AND live thread
+    contextPrompt = `${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE + recent thread (bundle=${memoryContext.length} chars, recent=${recentContext.length} chars)`);
   } else if (recentContext.length > 0) {
-    // Fallback to simple recent context
+    // No bundle yet — recent in-session thread carries continuity on its own
     contextPrompt = `Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using RECENT CONTEXT fallback (${recentContext.length} chars)`);
   } else {
@@ -1192,6 +1202,17 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`💬 [FAST] Conversational recall addendum applied (${conversationalRecallAddendum.length} chars)`);
   }
 
+  // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
+  // atoms the member chose to keep, plus witnessed practitioner observations rendered
+  // with epistemic framing ("a practitioner observed…"). Built by the route via
+  // lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt; consent gate (return_preference)
+  // enforced at the loader's SQL. Higher authority than system-retrieved conversational
+  // recall, so interpolated AFTER it in the prompt (see ordering note above).
+  const atomsAddendum = (meta as any)?.atomsAddendum as string | undefined;
+  if (atomsAddendum) {
+    console.log(`🧬 [FAST] atoms-addendum injected: { chars: ${atomsAddendum.length} } — member-placed portfolio + practitioner observations`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   // Pronouns are core identity context — surfaced here so MAIA respects them naturally
@@ -1229,7 +1250,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1509,6 +1530,9 @@ async function corePathResponse(
     // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges. Injected
     // inside buildMaiaWisePrompt via safeAddendum iteration. See spec §IX.
     conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
+    // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
+    // atoms + witnessed practitioner observations. Injected via appendAllContextAddenda.
+    atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -2110,6 +2134,10 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md). Field is
         // set here for forward-compat with the eventual DEEP addenda repair.
         conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
+        // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): now injected
+        // for DEEP repair too — buildMaiaComprehensivePrompt appends MaiaContext addenda
+        // via appendAllContextAddenda (maiaVoice.ts), so this field reaches the prompt.
+        atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);
@@ -2682,6 +2710,58 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
     }
 
+    // 🔭 CONTEXT INVENTORY — epistemic observability (descriptive, NOT interpretive).
+    // Emitted exactly once per turn, after tier decision + context assembly (incl. the
+    // identity/astrology backfill above) and before model invocation: a complete record
+    // of what information was AVAILABLE to the model this turn, uncontaminated by the
+    // response. Answers ONE question — "what was available?" — never "what did the model
+    // use?" or "why did it answer this way?" (those belong to later layers). `available`
+    // reports only context that actually reaches the prompt (developmental memory is
+    // loaded but not injected, so it is intentionally absent). representations* are null
+    // (not []) because the Representation/Evidence engines do not exist yet — null says
+    // "this layer does not exist" rather than "considered nothing". Fail-safe: a logging
+    // error must never block generation. See memory: project_epistemic_observability_layer.
+    try {
+      const m = meta as any;
+      const available = {
+        conversationalRecall: !!m.conversationalRecallAddendum,
+        atoms: {
+          loaded: m.atomsLoadedCount ?? 0,
+          injected: !!m.atomsAddendum,
+          chars: typeof m.atomsAddendum === 'string' ? m.atomsAddendum.length : 0,
+        },
+        astrology: !!m.astrologyAddendum,
+        wuXing: !!m.wuxingSnapshotAddendum,
+        memberWeb: !!m.memberWebAddendum,
+        knowledgeGate: !!m.knowledgeGateAddendum,
+        memoryOrchestrator: !!m.memoryInfluenceAddendum,
+        forwardReadiness: !!m.forwardReadinessAddendum,
+        studio: !!m.studioAddendum,
+        episodic: false, // layer not wired
+        dreams: false,   // layer not wired
+      };
+      const evidenceProviders = [
+        available.conversationalRecall && 'conversationalRecall',
+        available.atoms.injected && 'memoryAtoms',
+        available.astrology && 'astrology',
+        available.wuXing && 'wuXing',
+        available.memberWeb && 'memberWeb',
+        available.knowledgeGate && 'knowledgeGate',
+        available.memoryOrchestrator && 'memoryOrchestrator',
+      ].filter(Boolean);
+      console.log('[MAIA] context-inventory', {
+        conversationId: sessionId,
+        userId: effectiveUserId ? String(effectiveUserId).slice(0, 8) + '...' : null,
+        routingTier: processingProfile,
+        available,
+        evidenceProviders,
+        representationsConsidered: null,
+        representationsOffered: null,
+      });
+    } catch (invErr) {
+      console.warn('⚠️ [MAIA] context-inventory emit failed (non-blocking):', invErr);
+    }
+
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
@@ -3081,24 +3161,32 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     // 🧠 SOVEREIGN LEARNING INTEGRATION: Log conversation turn
     try {
-      // Direct call to training service (avoid server-side fetch with relative URL)
-      const { logMaiaTurn } = await import('../learning/maiaTrainingDataService');
+      // 🔒 SANCTUARY MODE: No learning capture. turnId stays 0, which skips the entire
+      // turnId-gated cascade below (shadow mode, engine comparison, decision persistence,
+      // expansion events, corpus callosum). Sanctuary content must never enter maia_turns
+      // (a training-data store) or any downstream learning sink. (Canon: "Sanctuary content
+      // never enters any model training pipeline.")
+      let turnId = 0;
+      if (!isSanctuary) {
+        // Direct call to training service (avoid server-side fetch with relative URL)
+        const { logMaiaTurn } = await import('../learning/maiaTrainingDataService');
 
-      const turnId = await logMaiaTurn(
-        sessionId,
-        turnCount - 1, // Turn index is 0-based
-        input,
-        text,
-        processingProfile,
-        {
-          primaryEngine: meta.engine as string || 'deepseek-r1',
-          latencyMs: processingTimeMs,
-          element: meta.element as string,
-          consciousnessData: consciousnessData,
-          usedClaudeConsult: consciousnessData?.claudeConsultation ? true : false,
-          // NOTE: cognition/bloomMeta not in logMaiaTurn interface - stored separately
-        }
-      );
+        turnId = await logMaiaTurn(
+          sessionId,
+          turnCount - 1, // Turn index is 0-based
+          input,
+          text,
+          processingProfile,
+          {
+            primaryEngine: meta.engine as string || 'deepseek-r1',
+            latencyMs: processingTimeMs,
+            element: meta.element as string,
+            consciousnessData: consciousnessData,
+            usedClaudeConsult: consciousnessData?.claudeConsultation ? true : false,
+            // NOTE: cognition/bloomMeta not in logMaiaTurn interface - stored separately
+          }
+        );
+      }
 
       // Store turnId in response metadata for feedback widget
       meta.turnId = turnId;
@@ -3201,7 +3289,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Detects growth moments in user text for longitudinal analysis
       const EXPANSION_EVENTS_ENABLED = process.env.EXPANSION_EVENTS_ENABLED === '1';
       console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', effectiveUserId);
-      if (EXPANSION_EVENTS_ENABLED && turnId) {
+      // 🔒 SANCTUARY: never store user text in expansion_events (defense-in-depth; turnId is 0 in sanctuary)
+      if (!isSanctuary && EXPANSION_EVENTS_ENABLED && turnId) {
         try {
           const memoryBundle = (meta as any)?.memoryBundle;
           const expansionId = await detectAndPersistExpansion({
@@ -3273,6 +3362,28 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           const elementalCount = traceResult.elementalRunIds?.length ?? 0;
           if (traceResult.integrationId) {
             console.log(`🧠 [CorpusCallosum] Traced | agents=${traceResult.atlasRunId ? 1 : 0}+${traceResult.maiaRunId ? 1 : 0}+${elementalCount}elemental | integration=${traceResult.integrationId.slice(0, 8)}...`);
+          }
+
+          // 🔬 VOICE DISTINCTION (observability-only collapse detector)
+          // Scores LEXICAL separation across the RAW pre-integration elemental voices.
+          // Strong negative gate: low separation ⇒ voices collapsing into one generic voice.
+          // This is NOT a generativity/affordance proof — the scorer's ceiling is lexical.
+          // No behavior / prompt / schema impact; isolated try so it cannot affect the trace path.
+          try {
+            const SCORABLE = ['fire', 'water', 'earth', 'air', 'aether'];
+            const signatures: Array<{ element: 'fire' | 'water' | 'earth' | 'air' | 'aether'; response: string; timestamp: number }> = [];
+            for (const a of (elementalAgents ?? [])) {
+              if (SCORABLE.includes(a?.element) && a?.status !== 'error' && a?.status !== 'skipped' && typeof a?.wisdom === 'string' && a.wisdom.trim().length > 0) {
+                signatures.push({ element: a.element, response: a.wisdom, timestamp: Date.now() });
+              }
+            }
+            if (signatures.length >= 2) {
+              const vd = VoiceDistinctionScorer.scoreFirewallIntegrity(signatures);
+              const weakest = [...vd.pairwiseSeparation].sort((p, q) => p.separationScore - q.separationScore)[0];
+              console.log(`🔬 [VoiceDistinction] collapse-detector | voices=${signatures.length} | overall=${vd.overallScore.toFixed(2)} | status=${vd.firewallStatus}(uncalibrated) | weakestPair=${weakest ? `${weakest.elementA}↔${weakest.elementB}:${weakest.separationScore.toFixed(2)}` : 'n/a'} | scope=lexical-only(not-generativity)`);
+            }
+          } catch (vdErr) {
+            console.warn('[VoiceDistinction] scoring failed (non-blocking):', vdErr);
           }
         } catch (callosumErr) {
           console.warn('[CorpusCallosum] Trace failed (non-blocking):', callosumErr);

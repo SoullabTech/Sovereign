@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { adminFetch } from '@/lib/admin/adminFetch';
 import { motion } from 'framer-motion';
 import {
   Users,
@@ -175,7 +176,7 @@ export default function MembersPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/command-center/members', {
+      const res = await adminFetch('/api/admin/command-center/members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ days }),

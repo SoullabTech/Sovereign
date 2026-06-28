@@ -84,7 +84,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   const [value, setValue] = useState(initialValue);
   const [isFocused, setIsFocused] = useState(false);
   const [showTools, setShowTools] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Voice input hook - ChatGPT-style voice recording
@@ -166,14 +166,19 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     return 'a moment';
   };
 
-  // Forward ref to external ref if provided
-  useEffect(() => {
-    if (ref && typeof ref === 'object' && ref.current !== textareaRef.current) {
-      if (ref.current) {
-        ref.current = textareaRef.current;
-      }
+  // Callback ref: assign the textarea node to both the internal ref and the
+  // forwarded parent ref. The previous useEffect only copied when the parent
+  // ref was already truthy — but it starts null, so the parent ref never got
+  // the node and parent-side .focus() (auto-focus after each reply) silently
+  // no-op'd.
+  const setTextareaRef = (node: HTMLTextAreaElement | null) => {
+    textareaRef.current = node;
+    if (typeof ref === 'function') {
+      ref(node);
+    } else if (ref) {
+      ref.current = node;
     }
-  }, [ref]);
+  };
 
   // Sync external value (support both valueProp and externalValue)
   useEffect(() => {
@@ -450,14 +455,20 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
           {/* Text Input Container */}
           <div className="flex-1 relative">
             <textarea
-              ref={textareaRef}
+              ref={setTextareaRef}
               value={value}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder={isRecording ? 'Listening...' : getIntimatePlaceholder()}
-              disabled={disabled || enableVoiceInput || isRecording}
+              // Voice/recording genuinely disables the field. Processing does NOT:
+              // a `disabled` textarea is force-blurred by the browser, which drops
+              // the soft keyboard (and the cursor) every turn. `readOnly` blocks
+              // typing during processing while keeping focus — so the field stays
+              // ready reply-to-reply without re-selecting it.
+              disabled={enableVoiceInput || isRecording}
+              readOnly={disabled || isProcessing}
               autoFocus={autoFocus}
               maxLength={maxLength}
               autoComplete="off"
@@ -509,6 +520,9 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               {canSubmit && (
                 <button
                   type="button"
+                  // Keep focus on the textarea when tapping Send so the browser
+                  // doesn't blur it and dismiss the keyboard at send time.
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={handleSubmit}
                   className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 flex items-center justify-center transition-all duration-200 touch-manipulation"
                   title="Send message"

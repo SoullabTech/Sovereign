@@ -1073,7 +1073,13 @@ export async function POST(request: NextRequest) {
       useFrameBlock,
       memoryPlan.promptBlock,
       spiralState?.dominant_element ?? null,
-      recentAnchors
+      recentAnchors,
+      askMode,
+      memberMemoryAtoms,
+      priorCrossSessionExchanges,
+      conversationalRecallEnabled,
+      recentDevelopmentalMemories,
+      recentThemeSignals
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -2170,7 +2176,16 @@ async function generateSpiralogicResponseWithLLM(
   /** Member's persisted dominant element from spiralState (passed in to avoid outer-scope closure). */
   dominantElement?: string | null,
   /** Member-authored Daily Anchor continuity (verbatim, recent-first). */
-  recentAnchors?: RecentAnchor[]
+  recentAnchors?: RecentAnchor[],
+  // Phase 1/2 memory-continuity inputs. Loaded in POST and threaded in here to
+  // avoid outer-scope closure - this is a separate top-level function, so
+  // referencing them free throws ReferenceError at runtime (prod crash fix).
+  askMode?: boolean,
+  memberMemoryAtoms?: any[],
+  priorCrossSessionExchanges?: any[],
+  conversationalRecallEnabled?: boolean,
+  recentDevelopmentalMemories?: any[],
+  recentThemeSignals?: any[]
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];

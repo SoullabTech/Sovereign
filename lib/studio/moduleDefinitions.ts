@@ -29,6 +29,7 @@ import {
   Scale,
   Wind,
   Globe,
+  Compass,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -46,6 +47,7 @@ export type PortalType =
 
 export type ModuleSlug =
   | 'command_center'
+  | 'field'
   | 'threshold'
   | 'clients'
   | 'groups'
@@ -95,6 +97,12 @@ export interface ModuleDefinition {
   alwaysOn: boolean;
   /** Which mode this module appears in. Defaults to 'both' if omitted. */
   mode: ModuleMode;
+  /**
+   * When true, the module is hidden from nav (getVisibleModules filters it out)
+   * regardless of presets or enabled_modules. Use for surfaces with no working
+   * backend yet — avoids shipping a broken door. Reversible: remove the flag.
+   */
+  comingSoon?: boolean;
 }
 
 // ─── All Modules (ordered as they appear in nav) ────────
@@ -103,13 +111,26 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   // ── Core (both modes) ──
   {
     slug: 'command_center',
-    label: 'Command Center',
+    label: 'Home',
     icon: LayoutGrid,
     href: '/studio',
     category: 'core',
-    description: 'Your daily dashboard and triage queue',
+    description: 'Your practice at a glance',
     alwaysOn: true,
     mode: 'practice',
+  },
+  {
+    // Personal Field home — the orientation floor. Symmetric to command_center
+    // ("Home") in Practice mode: always-on, leads the sidebar, the place you
+    // return to. mode 'field' → shows in Personal Field, hidden in Practice.
+    slug: 'field',
+    label: 'Field',
+    icon: Compass,
+    href: '/studio/field',
+    category: 'core',
+    description: 'Your orientation space — what is alive right now',
+    alwaysOn: true,
+    mode: 'field',
   },
   {
     slug: 'threshold',
@@ -119,7 +140,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Six-week passage for practitioners',
     alwaysOn: false,
-    mode: 'both',
+    // Practitioner passage — does not belong in Personal Field. Shows in Practice Portal only.
+    mode: 'practice',
   },
 
   // ── Practice modules (client-facing, operational) ──
@@ -189,9 +211,11 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     icon: CalendarDays,
     href: '/studio/calendar',
     category: 'operations',
-    description: 'Availability and booking calendar',
+    description: 'Your schedule and what is coming',
     alwaysOn: false,
-    mode: 'practice',
+    // On the Personal sidebar too (Kelly directive). Today's day-calendar lives
+    // in the Field home (field_events); this links to the fuller calendar view.
+    mode: 'both',
   },
   {
     slug: 'scheduling',
@@ -219,9 +243,12 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     icon: CheckSquare,
     href: '/studio/tasks',
     category: 'operations',
-    description: 'Task delegation and tracking',
+    description: 'Track what needs doing',
     alwaysOn: false,
-    mode: 'practice',
+    // Person-centric — a task is a task whether you're a practitioner, founder,
+    // or member. Available in both modes so Personal has a home for intentions
+    // (keeps the Field contemplative instead of a disguised task list).
+    mode: 'both',
   },
   {
     slug: 'comms',
@@ -242,6 +269,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Outreach, campaigns, and content',
     alwaysOn: false,
     mode: 'practice',
+    // Showroom only (mockStats, no backend) — hidden from the practitioner
+    // threshold until a real campaigns backend exists. Reversible.
+    comingSoon: true,
   },
 
   // ── Field modules (personal orientation) ──
@@ -276,6 +306,10 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Secure document and note storage',
     alwaysOn: false,
     mode: 'both',
+    // No backend yet: /api/vault/files and the vault_files table do not exist, so
+    // the page 404s on load. Hidden until the storage backend is built/validated.
+    // See docs/architecture/PRACTITIONER_STUDIO_INVENTORY_2026-06-06.md
+    comingSoon: true,
   },
   {
     slug: 'media',
@@ -296,6 +330,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Live video and streaming tools',
     alwaysOn: false,
     mode: 'both',
+    // Showroom only (browser-only, no backend) — hidden from the practitioner
+    // threshold until real streaming tooling exists. Reversible.
+    comingSoon: true,
   },
   {
     slug: 'code',
@@ -348,6 +385,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Integrations and utilities',
     alwaysOn: false,
     mode: 'both',
+    // Showroom only (no backend) — hidden from the practitioner threshold
+    // until real integrations exist. Reversible.
+    comingSoon: true,
   },
   {
     slug: 'settings',
@@ -364,14 +404,14 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'vault'],
+  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'teams', 'decisions', 'changes', 'maia', 'vault'],
   astrology: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'vault', 'comms'],
   bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'services'],
   groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
   consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
-  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
+  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools', 'tasks', 'calendar'],
 };
 
 // ─── Helpers ────────────────────────────────────────────
@@ -397,6 +437,9 @@ export function getVisibleModules(
   const all = new Set([...alwaysOn, ...slugs]);
 
   let modules = MODULE_DEFINITIONS.filter(m => all.has(m.slug));
+
+  // Hide modules with no working backend yet (e.g. Vault) regardless of source.
+  modules = modules.filter(m => !m.comingSoon);
 
   // Filter by studio mode if provided
   if (studioMode === 'personal') {

@@ -59,6 +59,12 @@ export type LayerObservation = {
   observedUnderAuthMember: boolean;
 };
 
+export type ProviderMixEntry = {
+  provider: string;
+  model: string | null;
+  count: number;
+};
+
 export type RuntimeSummary = {
   totalRecorded: number;
   bufferCapacity: number;
@@ -68,6 +74,7 @@ export type RuntimeSummary = {
   fallbacksActive: number;
   sanctuaryTurns: number;
   unknownRouteTurns: number;
+  providerMix: ProviderMixEntry[];
 };
 
 /**
@@ -250,9 +257,11 @@ export async function getRuntimeSummary(): Promise<RuntimeSummary> {
       fallbacksActive: 0,
       sanctuaryTurns: 0,
       unknownRouteTurns: 0,
+      providerMix: [],
     };
   }
   const routes = new Set<string>();
+  const mix = new Map<string, ProviderMixEntry>();
   let fallbacks = 0;
   let sanctuary = 0;
   let unknownRoute = 0;
@@ -261,7 +270,23 @@ export async function getRuntimeSummary(): Promise<RuntimeSummary> {
     if (turn.provider.fallbackActive) fallbacks += 1;
     if (turn.member.isSanctuary) sanctuary += 1;
     if (!turn.routeKnown) unknownRoute += 1;
+    const key = `${turn.provider.provider}|${turn.provider.model ?? ''}`;
+    const existing = mix.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      mix.set(key, {
+        provider: turn.provider.provider,
+        model: turn.provider.model,
+        count: 1,
+      });
+    }
   }
+  const providerMix = Array.from(mix.values()).sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    if (a.provider !== b.provider) return a.provider.localeCompare(b.provider);
+    return (a.model ?? '').localeCompare(b.model ?? '');
+  });
   // turns is newest-first; windowStart = oldest, windowEnd = newest
   return {
     totalRecorded: turns.length,
@@ -272,5 +297,6 @@ export async function getRuntimeSummary(): Promise<RuntimeSummary> {
     fallbacksActive: fallbacks,
     sanctuaryTurns: sanctuary,
     unknownRouteTurns: unknownRoute,
+    providerMix,
   };
 }

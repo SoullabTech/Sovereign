@@ -891,6 +891,73 @@
   margin: 1.5rem 0;
 }
 
+/*  Chapter / part epigraph — a blockquote that sits immediately after a
+    top-level `#` heading (canon §2.5). The canvas Page Proof makes this an
+    epigraph by giving it its own page. The Read Flow is flat, so it makes
+    it an epigraph by recognition + visual register: ceremonial breath, no
+    analytical left-border / italic-quote treatment, line breaks preserved
+    by the `remarkChapterEpigraph` plugin in StudioMarkdown.
+
+    The override is scoped to `blockquote.studio-epigraph` so only blockquotes
+    the plugin has tagged are affected. Body blockquotes keep the standard
+    studio-prose treatment above. */
+.studio-prose blockquote.studio-epigraph {
+  border-left: none;
+  padding-left: 0;
+  font-style: normal;
+  text-align: center;
+  color: rgba(254, 243, 199, 0.78);
+  margin: 3.5rem auto;
+  max-width: 36rem;
+  line-height: 1.7;
+}
+
+.studio-prose blockquote.studio-epigraph p {
+  margin: 1.05em 0;
+}
+
+.studio-prose blockquote.studio-epigraph p:first-child {
+  margin-top: 0;
+}
+
+.studio-prose blockquote.studio-epigraph p:last-child {
+  margin-bottom: 0;
+}
+
+/*  Table of Contents — clickable chapter navigation.
+    `remarkTocLinks` in StudioMarkdown slugs every heading into a stable
+    anchor `id` and wraps each Contents-section entry in an `<a>` to its
+    target. The link styling here is intentionally quiet — Contents is a
+    page of *names*, not a list of bright web-style links. We keep the
+    body color and just add a subtle hover lift + soft underline so the
+    reader feels the affordance without being shouted at.
+
+    Headings get a generous `scroll-margin-top` so anchor jumps land with
+    breath above them rather than flush against the viewport's top edge. */
+.studio-prose a.toc-link,
+.studio-prose a.toc-link strong,
+.studio-prose a.toc-link em {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.18s ease, text-decoration-color 0.18s ease;
+}
+
+.studio-prose a.toc-link:hover,
+.studio-prose a.toc-link:hover strong,
+.studio-prose a.toc-link:hover em {
+  color: rgba(252, 211, 77, 0.95);
+  text-decoration: underline;
+  text-decoration-color: rgba(252, 211, 77, 0.35);
+  text-underline-offset: 3px;
+}
+
+.studio-prose h1[id],
+.studio-prose h2[id],
+.studio-prose h3[id],
+.studio-prose h4[id] {
+  scroll-margin-top: 2rem;
+}
+
 /*  Plates / doorway images — symbolic thresholds within the prose.
     Sized smaller than the prose container so they read as plates,
     not full-page hero images, but large enough for the cosmogram's
@@ -954,11 +1021,14 @@
 
 /*  Epigraph paragraphs — italic-only paragraphs (markdown `*"…" — Author*`).
     Mirrors print register: quiet pause with breath above and below, slightly
-    smaller and softer than body. Uses :has() to detect single-em paragraphs
-    automatically, so any `*…*` epigraph in the manuscript is styled without
-    manual class tagging. The body paragraph immediately after gets a tighter
-    top margin so the body resumes cleanly under the quote. */
-.studio-prose p:has(> em:only-child) {
+    smaller and softer than body. The `.epigraph` class is injected by the
+    StudioMarkdown <p> renderer when the paragraph's mdast children consist
+    of a single emphasis node and nothing else — text vs. emphasis is
+    unambiguous at the mdast layer, unlike CSS `:only-child` which ignores
+    text-node siblings and falsely matched body paragraphs ending in inline
+    italic. The body paragraph immediately after gets a tighter top margin
+    so the body resumes cleanly under the quote. */
+.studio-prose p.epigraph {
   font-size: 0.95em;
   line-height: 1.55;
   color: rgba(254, 243, 199, 0.66);
@@ -966,11 +1036,11 @@
   max-width: 38em;
 }
 
-.studio-prose p:has(> em:only-child) > em {
+.studio-prose p.epigraph > em {
   color: inherit; /* override the amber em color so epigraphs read calmer */
 }
 
-.studio-prose p:has(> em:only-child) + p {
+.studio-prose p.epigraph + p {
   margin-top: 0;
 }
 
@@ -1024,4 +1094,162 @@
   color: rgba(254, 243, 199, 0.85);
   font-weight: 600;
   font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* ─── Book Environment (/book-studio/book) ───────────────────────────────────
+ *
+ * A reading environment, not a reader. Every rule here exists to help someone
+ * move from reference consciousness to immersive consciousness and stay there.
+ *
+ * Five gates: no competing voice · no retrieval posture · no scroll-world ·
+ * no visual urgency · remember without spectacle.
+ */
+
+/* Full-screen reading environment — no chrome, no layout container */
+.book-env {
+  position: fixed;
+  inset: 0;
+  background-color: #0c0a09; /* stone-950 */
+  z-index: 50;
+  user-select: none; /* prevent text-selection during page-click navigation */
+}
+
+/* Clipping viewport — one page tall, overflow hidden */
+.book-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+/* Full-height manuscript — translated to show current page */
+.book-content {
+  /* Wide margins: the narrower column makes text feel like it occupies a page */
+  padding: 5vh 12vw;
+  will-change: transform;
+}
+
+/* Allow text selection inside content (not on the viewport layer itself) */
+.book-content * {
+  user-select: text;
+}
+
+/* The studio-prose type register carries through unchanged — same typography,
+   more breath. Chapter openings are events; epigraphs are thresholds. */
+.book-content .studio-prose {
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+.book-content .studio-prose h1 {
+  margin-top: 8vh;
+}
+
+.book-content .studio-prose p {
+  line-height: 1.85;
+}
+
+/* Exit — nearly invisible, always accessible */
+.book-exit {
+  position: fixed;
+  top: env(safe-area-inset-top, 1rem);
+  right: 1.25rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.12);
+  text-decoration: none;
+  transition: color 200ms ease;
+  z-index: 60;
+  padding: 0.5rem;
+}
+
+.book-exit:hover {
+  color: rgba(254, 243, 199, 0.55);
+}
+
+/* TOC trigger — nearly invisible glyph at bottom center */
+.book-toc-trigger {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  color: rgba(254, 243, 199, 0.1);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 200ms ease;
+  z-index: 60;
+  line-height: 1;
+}
+
+.book-toc-trigger:hover {
+  color: rgba(254, 243, 199, 0.4);
+}
+
+/* Page indicator — small-caps, quiet */
+.book-indicator {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  right: 1.25rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.1);
+  z-index: 60;
+  font-family: 'Crimson Pro', Georgia, serif;
+  pointer-events: none;
+}
+
+/* TOC overlay */
+.book-toc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 10, 9, 0.95);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-toc-content {
+  text-align: center;
+  padding: 2rem;
+  max-width: 28rem;
+}
+
+.book-toc-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.7);
+  margin-bottom: 1.5rem;
+}
+
+.book-toc-note {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 0.9rem;
+  color: rgba(254, 243, 199, 0.35);
+  font-style: italic;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.book-toc-close {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(254, 243, 199, 0.25);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 200ms ease;
+}
+
+.book-toc-close:hover {
+  color: rgba(254, 243, 199, 0.6);
 }

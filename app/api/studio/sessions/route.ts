@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
-import { sendBookingConfirmation as sendWhatsAppConfirmation } from '@/lib/notifications/SessionNotificationService';
+import { sendBookingConfirmation } from '@/lib/notifications/SessionNotificationService';
 import { syncNewSessionToGoogle, syncUpdatedSessionToGoogle, syncCancelledSessionToGoogle } from '@/lib/calendar/syncSessionToGoogle';
 
 const VALID_STATUSES = ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'] as const;
@@ -192,8 +192,7 @@ export async function POST(request: NextRequest) {
     if (!effectiveDisclosure) {
       try {
         const settingsResult = await db.query(
-          `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default' AND member_id = $1`,
-          [memberId]
+          `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default'`
         );
         effectiveDisclosure = settingsResult.rows[0]?.value || 'generic';
       } catch {
@@ -248,8 +247,8 @@ export async function POST(request: NextRequest) {
       );
       const practitioner = practitionerResult.rows[0];
 
-      if (clientPhone) {
-        sendWhatsAppConfirmation({
+      if (clientEmail || clientPhone) {
+        sendBookingConfirmation({
           id: session.id,
           clientName: clientName || 'Client',
           clientPhone: clientPhone,
@@ -260,8 +259,13 @@ export async function POST(request: NextRequest) {
           locationType: location_type,
           locationDetails: meeting_link,
           practitionerName: practitioner?.name || 'Your practitioner',
-        }, practitionerId).then(notifResult => {
-          console.log(`[Studio Sessions] Notification sent via ${notifResult.channel}:`, notifResult.success);
+        }, practitionerId).then(results => {
+          const channels = [
+            results.email    && `email=${results.email.success ? 'ok' : 'fail'}`,
+            results.whatsapp && `whatsapp=${results.whatsapp.success ? 'ok' : 'fail'}`,
+            results.sms      && `sms=${results.sms.success ? 'ok' : 'fail'}`,
+          ].filter(Boolean).join(', ');
+          console.log(`[Studio Sessions] Notifications: ${channels || 'none attempted'} | anySuccess=${results.anySuccess}`);
         }).catch(err => {
           console.error('[Studio Sessions] Notification error:', err);
         });

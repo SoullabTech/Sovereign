@@ -3,8 +3,12 @@
  * Render the full polished Elemental Alchemy manuscript as a
  * print-ready PDF.
  *
- * Source of truth: docs/book-studio/ELEMENTAL_ALCHEMY_MANUSCRIPT.md
- * (the canonical edited file — NOT the JSON used by render-chapter-1).
+ * Source of truth: docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md
+ * (canonical editorial source — same file rendered by /book-studio/read
+ *  via StudioMarkdown. Repointed from ELEMENTAL_ALCHEMY_MANUSCRIPT.md
+ *  after MANUSCRIPT.md fell behind editorial state and the dual-canon
+ *  drift was caught while preparing a KDP correction pass. Web Read Flow
+ *  and print pipeline now share one source.)
  *
  * Pipeline: markdown → pandoc HTML → wrap with print CSS → puppeteer
  * + Paged.js → 6×9 PDF.
@@ -25,7 +29,7 @@ import { pathToFileURL } from 'node:url';
 import { renderHtmlToPdf } from '../lib/manuscript/render/pagedPdf';
 
 const REPO_ROOT = process.cwd();
-const MD_PATH = path.join(REPO_ROOT, 'docs/book-studio/ELEMENTAL_ALCHEMY_MANUSCRIPT.md');
+const MD_PATH = path.join(REPO_ROOT, 'docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md');
 const CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/print-book.css');
 const OUT_DIR = path.join(REPO_ROOT, 'exports/elemental-alchemy');
 const VERSION = process.argv[2] ?? 'v1';
@@ -51,7 +55,14 @@ async function main(): Promise<void> {
     // --no-highlight is supported on both Pandoc 2.x and 3.x.
     // (--syntax-highlighting=none was Pandoc 3.x only — production
     // runs Pandoc 2.17 from Debian Bookworm apt, which rejected it.)
-    `pandoc "${MD_PATH}" -t html5 --standalone --no-highlight --toc --toc-depth=3 -V toc-title="" --lua-filter "${LUA_FILTER}"`,
+    // No --toc: FROM_ORIGINAL_FULL.md carries a hand-curated prose TOC
+    // under `# Contents` (markdown lines 44-113) that gives the printed
+    // book a compact, editorial TOC matching the May 9 KDP upload.
+    // Adding pandoc's --toc on top produces a duplicate auto-TOC parked
+    // at body-top because the post-processing relocation only knew how
+    // to handle MANUSCRIPT.md's H2-Preface anchor — see git history of
+    // c32768c05 / b569f1928 for why the two manuscripts diverge here.
+    `pandoc "${MD_PATH}" -t html5 --standalone --no-highlight --lua-filter "${LUA_FILTER}"`,
     {
       maxBuffer: 256 * 1024 * 1024,
       encoding: 'utf-8',

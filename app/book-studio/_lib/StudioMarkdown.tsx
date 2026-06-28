@@ -32,6 +32,251 @@ export interface StudioMarkdownProps {
   file: string;
 }
 
+/**
+ * Tag blockquotes that sit immediately after a top-level `#` heading as
+ * chapter / part epigraphs per canon §2.5 — and preserve their line breaks.
+ *
+ * Without this, the Read Flow renders the Chapter 1 invocation (and any
+ * future chapter epigraph) as a generic body blockquote: italic, indented,
+ * with the analytical amber left border. That register is wrong for an
+ * epigraph — the bond between heading and epigraph is ceremonial, not
+ * analytical. The reader should land in dedicated breath, not a sidebar.
+ *
+ * Detection is structural and minimal:
+ *   1. Walk the top-level children of the mdast root.
+ *   2. For each `blockquote`, check the immediately preceding sibling.
+ *   3. If it's a `# heading`, tag the blockquote with
+ *      `data.hProperties.className = 'studio-epigraph'`. CSS then strips
+ *      the analytical treatment and gives ceremonial breath.
+ *   4. Within the tagged blockquote, split intra-paragraph text on `\n`
+ *      and insert `break` nodes so the author's line shape survives
+ *      (CommonMark normally collapses soft breaks to whitespace).
+ *
+ * The canvas Page Proof makes a blockquote-after-heading an epigraph by
+ * page placement; the Read Flow makes it an epigraph by recognition and
+ * visual register. Same canon, two surfaces.
+ */
+type MdastNode = {
+  type: string;
+  depth?: number;
+  value?: string;
+  url?: string;
+  data?: { hProperties?: { className?: string; id?: string } };
+  children?: MdastNode[];
+};
+
+function extractText(node: MdastNode): string {
+  if (typeof node.value === 'string') return node.value;
+  if (!node.children) return '';
+  return node.children.map(extractText).join('');
+}
+
+/**
+ * Slugify a heading's text for use as an anchor `id`. Strips Markdown
+ * punctuation and HTML entities, lowercases, replaces whitespace with
+ * dashes. Stable across the manuscript so the TOC can link to it
+ * deterministically without storing a mapping anywhere else.
+ *
+ *   "Chapter 1: The Journey Begins"            → "chapter-1-the-journey-begins"
+ *   "Conclusion — Embracing Your Elemental..."  → "conclusion-embracing-your-elemental-soul"
+ *   "Preface"                                   → "preface"
+ */
+function slugify(text: string): string {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .toLowerCase()
+    .replace(/[ ]/g, ' ')
+    .replace(/[—–]/g, ' ')
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+function normalize(text: string): string {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .toLowerCase()
+    .replace(/[:—–]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Resolve a TOC entry's text to a heading slug. Tries exact-normalize match
+ * first; if that fails AND the entry starts with `Chapter N`, matches by
+ * chapter-number prefix (TOC says "Chapter 1 The Journey Begins" but the
+ * heading is "Chapter 1: The Journey Begins" — same target, different
+ * punctuation). Last resort: prefix match in either direction so
+ * "Conclusion — Embracing Your Elemental Soul" in TOC resolves to the
+ * `# Conclusion — Embracing Your Elemental Soul` heading.
+ */
+function findHeadingSlug(text: string, headingMap: Map<string, string>): string | null {
+  const norm = normalize(text);
+  if (!norm) return null;
+
+  if (headingMap.has(norm)) return headingMap.get(norm)!;
+
+  const chapterMatch = norm.match(/^chapter\s+(\d+|[ivxlcdm]+)\b/);
+  if (chapterMatch) {
+    const prefix = `chapter ${chapterMatch[1]}`;
+    for (const [key, slug] of headingMap) {
+      if (key === prefix || key.startsWith(prefix + ' ')) return slug;
+    }
+  }
+
+  for (const [key, slug] of headingMap) {
+    if (key.length < 4) continue;
+    if (key.startsWith(norm) || norm.startsWith(key)) return slug;
+  }
+
+  return null;
+}
+
+/**
+ * Build anchor IDs on every heading and wrap each Contents-section entry
+ * in a markdown link to its corresponding heading anchor. Two passes:
+ *
+ *   Pass 1: walk top-level children, slugify each heading's text, set
+ *           `data.hProperties.id` so the rendered HTML carries `id="…"`.
+ *           Build `headingMap` of normalized-text → slug for lookup.
+ *
+ *   Pass 2: find the `# Contents` heading. For every paragraph and
+ *           sub-heading between it and the next depth-1 heading, attempt
+ *           to resolve the entry's text to a slug via `findHeadingSlug`.
+ *           If found, wrap the node's existing children inside a single
+ *           `link` node with `url: '#' + slug`. Existing inline
+ *           emphasis/strong/text structure is preserved underneath.
+ *
+ * The manuscript itself is not modified. Detection is structural so
+ * future chapters added to the TOC are linked automatically as long as
+ * they match an existing top-level heading.
+ */
+function remarkTocLinks() {
+  return (tree: MdastNode) => {
+    const kids = tree.children ?? [];
+    const headingMap = new Map<string, string>();
+
+    // Locate the TOC region so its own internal sub-headings
+    // (`### Part One — The Ground`, etc.) don't pollute the headingMap or
+    // claim the slug that belongs to the real `# Part One — The Ground`
+    // later in the manuscript.
+    let tocStart = -1;
+    let tocEnd = kids.length;
+    for (let i = 0; i < kids.length; i++) {
+      const node = kids[i];
+      if (node.type !== 'heading' || node.depth !== 1) continue;
+      const text = extractText(node);
+      const norm = normalize(text);
+      if (tocStart === -1 && norm === 'contents') {
+        tocStart = i;
+      } else if (tocStart !== -1 && i > tocStart) {
+        tocEnd = i;
+        break;
+      }
+    }
+
+    // Pass 1: set anchor IDs on depth-1 and depth-2 headings OUTSIDE the
+    // TOC region, and populate the slug map for resolution. Deeper
+    // sub-headings (h3+) intentionally don't get IDs — TOC entries
+    // address chapters and major sections, not internal subsections,
+    // and skipping them avoids duplicate slug collisions (the manuscript
+    // has e.g. multiple `### Introduction` headings inside chapters).
+    for (let i = 0; i < kids.length; i++) {
+      if (i >= tocStart && i < tocEnd) continue;
+      const node = kids[i];
+      if (node.type !== 'heading') continue;
+      if (node.depth !== 1 && node.depth !== 2) continue;
+      const text = extractText(node);
+      const slug = slugify(text);
+      if (!slug) continue;
+      node.data = node.data ?? {};
+      node.data.hProperties = node.data.hProperties ?? {};
+      if (!node.data.hProperties.id) {
+        node.data.hProperties.id = slug;
+      }
+      const norm = normalize(text);
+      if (!norm) continue;
+      const existing = headingMap.get(norm);
+      // depth-1 always wins over depth-2 with the same normalized text,
+      // so chapters/parts/conclusion take precedence over any later h2
+      // that happens to share their name.
+      if (!existing || node.depth === 1) {
+        headingMap.set(norm, slug);
+      }
+    }
+
+    // Pass 2: walk TOC entries and wrap each one in a link to its
+    // resolved heading. Entries whose text doesn't match any depth-1 or
+    // depth-2 heading (e.g. "Introduction" — no top-level Introduction
+    // exists) stay as plain text.
+    if (tocStart === -1) return;
+    for (let i = tocStart + 1; i < tocEnd; i++) {
+      const node = kids[i];
+      if (node.type !== 'paragraph' && node.type !== 'heading') continue;
+      if (!node.children || node.children.length === 0) continue;
+
+      const text = extractText(node);
+      const trimmed = text.replace(/&nbsp;/g, ' ').trim();
+      if (!trimmed) continue;
+
+      const slug = findHeadingSlug(trimmed, headingMap);
+      if (!slug) continue;
+
+      const link: MdastNode = {
+        type: 'link',
+        url: '#' + slug,
+        data: { hProperties: { className: 'toc-link' } },
+        children: node.children,
+      };
+      node.children = [link];
+    }
+  };
+}
+
+/**
+ * Recursively rewrite a node's `children` so any inline text whose value
+ * contains `\n` is split into separate text nodes with `break` nodes
+ * between. Walks through inline wrappers (emphasis, strong, link, etc.)
+ * so a multi-line `*…*` italic block still gets its line shape rendered.
+ */
+function preserveLineBreaks(node: MdastNode): void {
+  if (!node.children) return;
+  const out: MdastNode[] = [];
+  for (const child of node.children) {
+    if (child.type === 'text' && typeof child.value === 'string' && child.value.includes('\n')) {
+      const parts = child.value.split('\n');
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i]) out.push({ type: 'text', value: parts[i] });
+        if (i < parts.length - 1) out.push({ type: 'break' });
+      }
+    } else {
+      preserveLineBreaks(child);
+      out.push(child);
+    }
+  }
+  node.children = out;
+}
+
+function remarkChapterEpigraph() {
+  return (tree: MdastNode) => {
+    const kids = tree.children ?? [];
+    for (let i = 0; i < kids.length; i++) {
+      const node = kids[i];
+      if (node.type !== 'blockquote') continue;
+      const prev = kids[i - 1];
+      if (!prev || prev.type !== 'heading' || prev.depth !== 1) continue;
+      node.data = node.data ?? {};
+      node.data.hProperties = node.data.hProperties ?? {};
+      const existing = node.data.hProperties.className;
+      node.data.hProperties.className = existing
+        ? `${existing} studio-epigraph`
+        : 'studio-epigraph';
+      preserveLineBreaks(node);
+    }
+  };
+}
+
 interface PlateThreshold {
   plate: string;
   beforeHeading: string;
@@ -105,7 +350,33 @@ export default async function StudioMarkdown({ file }: StudioMarkdownProps) {
 
   return (
     <article className="studio-prose mx-auto max-w-3xl">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkChapterEpigraph, remarkTocLinks]}
+        components={{
+          // True epigraphs are paragraphs whose entire content is a single
+          // `*"…" — Author*`. CSS `:only-child` ignores text nodes, so a
+          // body paragraph ending in inline italic falsely matched the old
+          // `:has(> em:only-child)` selector. Tag at the syntax-tree layer
+          // where text vs. emphasis is unambiguous. react-markdown v9 passes
+          // HAST nodes — children with whitespace-only text are skipped so
+          // a trailing newline doesn't disqualify a true epigraph.
+          p: ({ node, children, ...props }) => {
+            type HastChild = { type?: string; tagName?: string; value?: string };
+            const kids = ((node as { children?: HastChild[] } | undefined)?.children ?? []).filter(
+              (k) => !(k.type === 'text' && (k.value ?? '').trim() === ''),
+            );
+            const isEpigraph =
+              kids.length === 1 && kids[0]?.type === 'element' && kids[0]?.tagName === 'em';
+            return (
+              <p {...props} className={isEpigraph ? 'epigraph' : undefined}>
+                {children}
+              </p>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </article>
   );
 }

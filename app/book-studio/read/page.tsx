@@ -1,4 +1,5 @@
 import StudioMarkdown from '../_lib/StudioMarkdown';
+import AnchorScrollHandler from './AnchorScrollHandler';
 
 export const metadata = {
   title: 'Read Flow · The Book Studio',
@@ -67,6 +68,22 @@ export default function ReadFlowPage() {
       {/* Cosmogram now lives inside the manuscript at the Preface threshold,
           so it does not compete with the cover and metadata at the top. */}
       <StudioMarkdown file="ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md" />
+
+      {/* Restores deep-link scroll on first paint and on hash changes — see
+          component header for the two-cause rationale. Pure side effect. */}
+      <AnchorScrollHandler />
+
+      {/* Threshold into immersive reading — nearly invisible, no urgency */}
+      <div className="mt-20 mb-16 flex justify-center">
+        <a
+          href="/book-studio/book"
+          className="text-amber-200/15 hover:text-amber-200/45 transition-colors duration-300
+                     text-[10px] tracking-[0.3em] uppercase font-light"
+          style={{ fontFamily: "'Crimson Pro', serif" }}
+        >
+          Enter Book
+        </a>
+      </div>
     </div>
   );
 }

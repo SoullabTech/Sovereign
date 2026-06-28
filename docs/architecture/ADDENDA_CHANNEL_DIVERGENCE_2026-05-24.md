@@ -87,3 +87,27 @@ Each step has its own commit. None of them are Phase 2 work.
 This document is the artifact requested by Kelly's directive 2026-05-24 (post-Phase-2-wire-correction): *"Open a separate issue/spec note for atomsAddendum not reaching FAST/CORE prompt. Do not fix atoms in this same cut unless it is trivially identical and you explicitly scope it."*
 
 The note is broader than atoms because the survey of DEEP tier (required by the same directive: "survey DEEP first") revealed that DEEP tier addenda channel is also inert. Both findings sit here so they can be addressed as a single architectural fix instead of layer-by-layer patches.
+
+## §VIII. Closure (2026-05-26) — §V steps 1–3 complete
+
+Per Kelly's "Option A" directive 2026-05-26 (preferring shared addenda foundation over FAST+CORE-only scope so episodic inherits a single attachment point), §V steps 1–3 are complete on branch `feature/conversational-memory-phase2`:
+
+1. ✅ **Shared `appendAllContextAddenda` helper extracted** in `lib/sovereign/maiaVoice.ts` immediately before `buildMaiaWisePrompt`. Module-level. Single point of truth: the `ADDENDA_SPECS` const lists all 20 addenda with their stable log markers in canonical order.
+2. ✅ **`buildMaiaWisePrompt` refactored** to delegate addenda injection to the helper (`adaptedPrompt = appendAllContextAddenda(context, adaptedPrompt)` replaces ~150 lines of open-coded `safeAddendum` blocks). FAST+CORE behavior preserved — same ordering, same log markers, same `safeAddendum` gating.
+3. ✅ **DEEP repair path wired** in `buildMaiaComprehensivePrompt` (`lib/sovereign/maiaVoice.ts`). Helper call lands AFTER `buildComprehensiveVoicePrompt` returns, augmenting the returned `.prompt` field. Decision rationale: keeping the call in `maiaVoice.ts` (where `MaiaContext` is canonical) avoids importing the interface into `intelligentVoiceAdaptation.ts` (which uses `context: any`), preserving the loose-typing boundary while closing §II.B.
+
+**Verification at commit time**: `npm run typecheck` clean. `npm run check:no-supabase` clean. Behavioral verification (FAST+CORE byte-identical, DEEP now receives addenda) requires production deploy + log inspection per §IV gate.
+
+### What remains open (still tracked as divergence-debt)
+
+4. **§V step 4** — `consciousnessOrchestrator.processRequest` audit (DEEP primary path, §II.C). The bridge function `buildMaiaComprehensivePrompt` only handles the repair path. Primary path still uninstrumented. *Separate cut.*
+5. **§V step 5** — `atomsAddendum` end-to-end wire (extract in FAST template + add to `MaiaContext` interface). The helper now iterates the interface, so once `atomsAddendum` lands on `MaiaContext` it flows automatically. *Separate cut, downstream of episodic.*
+6. **§V step 6** — Production verification across all three tiers (`[MAIA] conversational-block { emitted: true }` for ≥3 distinct members, multiple sessions). *Required before any "live across DEEP" claim.*
+
+### Discipline maintained
+
+This closure note covers what was wired. It does not claim what was not wired. The single honest source of truth for what's reaching prompts vs not remains this document.
+
+### Sequencing context
+
+This work unblocks **gate 1** of the priority-thread sequence (per `CLAUDE.md` priority thread). Gates 2–4 (consent toggle / engagement-shape clarification / production verification) remain ahead of episodic spec opening.

@@ -17,6 +17,7 @@ import {
   ToggleRight,
   ChevronRight,
 } from 'lucide-react';
+import { storeAdminPassword } from '@/lib/admin/adminFetch';
 
 // ─── Refresh Context ────────────────────────────────────────────────
 interface RefreshContextValue {
@@ -68,6 +69,11 @@ function AuthGate({ onAuth }: { onAuth: () => void }) {
       if (res.ok) {
         const data = await res.json();
         sessionStorage.setItem('maia_admin_token', data.token || 'authenticated');
+        // Persist the validated admin password so adminFetch() can authorize the
+        // command-center pages' /api/admin/* calls — isAdminRequest expects it as the
+        // x-admin-password header. /api/admin/auth validates against the same
+        // LABTOOLS_ADMIN_PASSWORD, so this is the correct secret to store.
+        storeAdminPassword(password);
         onAuth();
       } else {
         setError('Invalid password');

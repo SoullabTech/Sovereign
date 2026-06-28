@@ -72,6 +72,10 @@ export interface StartSessionConfig {
   title?: string;
   captureTabAudio?: boolean;
   bookingId?: string;
+  // Relationship Memory v1 — Phase 1: attach to an existing practitioner_clients person.
+  clientId?: string;
+  // Stricter-sanctuary opt-out: store no client link for this session (spec §4).
+  keepLinkPrivate?: boolean;
 }
 
 export interface AudioLevels {
@@ -450,6 +454,8 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
           container: config.container,
           memoryPolicy: config.memoryPolicy,
           ...(config.bookingId ? { bookingId: config.bookingId } : {}),
+          ...(config.clientId ? { clientId: config.clientId } : {}),
+          ...(config.keepLinkPrivate ? { keepLinkPrivate: true } : {}),
         }),
       });
       const scribeData = await scribeResp.json();

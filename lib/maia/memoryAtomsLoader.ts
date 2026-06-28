@@ -79,7 +79,15 @@ export type MemoryAtomSourceType =
   | 'decision'
   | 'change'
   | 'session_excerpt'
-  | 'spontaneous';
+  | 'spontaneous'
+  | 'practitioner_observation';
+
+export type EpistemologicalStatus =
+  | 'observed'    // witnessed directly by a facilitator in session
+  | 'reported'    // shared by the member in their own words
+  | 'inferred'    // derived from patterns
+  | 'provisional' // low confidence or flagged for member review
+  | 'claimed';    // asserted by the member as their truth
 
 /**
  * Prompt-safe snapshot of a member memory atom.
@@ -107,6 +115,13 @@ export interface MemoryAtomSnapshot {
    */
   isBreakthrough: boolean;
   markedBreakthroughAt: Date | null;
+  /**
+   * Epistemic provenance — how was this known? Null for member-placed atoms.
+   * Populated for practitioner_observation atoms written by the With Me bridge.
+   */
+  epistemologicalStatus: EpistemologicalStatus | null;
+  /** Facilitator who authored the observation. Null for member-placed atoms. */
+  facilitatorId: string | null;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -125,8 +140,24 @@ const SELECT_COLUMNS = `
   return_preference,
   source_type,
   is_breakthrough,
-  marked_breakthrough_at
+  marked_breakthrough_at,
+  epistemological_status,
+  facilitator_id
 `;
+
+/**
+ * Attribution guard — bridge-verification finding 2026-06-24.
+ *
+ * Canon: `facilitator_id` is the canonical runtime attribution for a
+ * practitioner_observation atom; the `provenance` jsonb is audit history, never
+ * runtime identity. An unattributed practitioner atom must NOT be loader-eligible —
+ * formatAtomsForPrompt renders the "PRACTITIONER OBSERVATIONS" section by
+ * source_type alone, so surfacing one would present "a practitioner observed…"
+ * with nothing backing it. Such atoms (legacy/seed/test) may exist; they simply
+ * never surface. (No write-time block — existence is allowed, surfacing is not.)
+ */
+export const PRACTITIONER_ATTRIBUTION_GUARD =
+  "(source_type <> 'practitioner_observation' OR facilitator_id IS NOT NULL)";
 
 interface AtomRow {
   id: string;
@@ -141,6 +172,8 @@ interface AtomRow {
   source_type: MemoryAtomSourceType;
   is_breakthrough: boolean;
   marked_breakthrough_at: Date | null;
+  epistemological_status: EpistemologicalStatus | null;
+  facilitator_id: string | null;
 }
 
 /**
@@ -179,6 +212,7 @@ export async function loadMemberMemoryAtomsForPrompt(
          AND status IN ('active', 'still_alive')
          AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
          AND NOT ('sacred_protected' = ANY(registers))
+         AND ${PRACTITIONER_ATTRIBUTION_GUARD}
        ORDER BY is_breakthrough DESC, kept_at DESC
        LIMIT $2`,
       [memberId, limit],
@@ -187,8 +221,11 @@ export async function loadMemberMemoryAtomsForPrompt(
     return result.rows.map((r) => ({
       id: r.id,
       title: r.title,
-      // Body only carried for spontaneous atoms; sourced atoms keep content in source table
-      body: r.source_type === 'spontaneous' ? r.body : null,
+      // Body carried for spontaneous (member-typed) and practitioner_observation atoms.
+      // Sourced atoms (idea/journal/etc.) keep content in their native table.
+      body: (r.source_type === 'spontaneous' || r.source_type === 'practitioner_observation')
+        ? r.body
+        : null,
       primaryRegister: r.primary_register,
       registers: r.registers ?? [],
       elementalLenses: r.elemental_lenses ?? [],
@@ -198,11 +235,18 @@ export async function loadMemberMemoryAtomsForPrompt(
       sourceType: r.source_type,
       isBreakthrough: r.is_breakthrough ?? false,
       markedBreakthroughAt: r.marked_breakthrough_at,
+      epistemologicalStatus: r.epistemological_status ?? null,
+      facilitatorId: r.facilitator_id ?? null,
     }));
   } catch (err) {
+    // Failure-empty (distinct from legitimate-empty path in the route handler,
+    // which logs '[MAIA/sovereign] atoms: none surfacable for this member').
+    // Marker aligned with the production grep pattern so this surfaces in ops
+    // diagnostics. See memory: project_semantic_atoms_cat6_verified — silent
+    // catch swallowing schema-drift errors hid a broken substrate for weeks.
     console.warn(
-      '[memoryAtomsLoader] loadMemberMemoryAtomsForPrompt failed (non-fatal):',
-      err,
+      '[MAIA/sovereign] atoms loader failure-empty:',
+      err instanceof Error ? err.message : String(err),
     );
     return [];
   }
@@ -237,72 +281,160 @@ function relativeTime(d: Date): string {
  * Format atoms into a prompt block.
  *
  * Discipline:
- *   - Member-placed framing, not system-tagged
- *   - Each atom rendered as the atom itself declares (registers, lenses, status)
- *   - Explicit "do NOT cross-reference, synthesize, or interpret across" instruction
- *   - Returns empty string if no atoms — never injects an empty block
- *   - Never includes source content for non-spontaneous atoms (only the title)
+ *   - Member-placed atoms and practitioner-witnessed atoms are rendered in
+ *     separate blocks with distinct epistemic framing.
+ *   - Practitioner observations are never phrased as "You are…" — always as
+ *     "A practitioner observed…" or similar, with authority proportional to
+ *     epistemologicalStatus.
+ *   - No cross-atom synthesis or interpretation regardless of source type.
+ *   - Returns empty string if no atoms — never injects an empty block.
  *
  * Returns '' when atoms array is empty so the caller can safely concat.
  */
 export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
   if (!atoms || atoms.length === 0) return '';
 
-  const lines: string[] = [];
-  lines.push('# MEMBER-PLACED PORTFOLIO');
-  lines.push('');
-  lines.push(
-    'The member has explicitly kept the following material in their portfolio. ' +
-      'These are *member-placed*, not system-inferred. Recognize naturally if the ' +
-      'present moment connects, but do NOT cross-reference, synthesize, or interpret ' +
-      'across them — each atom stands as the member declared it.',
-  );
-  lines.push('');
+  const memberAtoms = atoms.filter(a => a.sourceType !== 'practitioner_observation');
+  const practitionerAtoms = atoms.filter(a => a.sourceType === 'practitioner_observation');
 
-  for (const atom of atoms) {
-    const parts: string[] = [`"${atom.title}"`];
+  const sections: string[] = [];
 
-    parts.push(`kept ${relativeTime(atom.keptAt)}`);
+  // ── Member-placed portfolio ──────────────────────────────────────────────
+  if (memberAtoms.length > 0) {
+    const lines: string[] = [];
+    lines.push('# MEMBER-PLACED PORTFOLIO');
+    lines.push('');
+    lines.push(
+      'The member has explicitly kept the following material in their portfolio. ' +
+        'These are *member-placed*, not system-inferred. Recognize naturally if the ' +
+        'present moment connects, but do NOT cross-reference, synthesize, or interpret ' +
+        'across them — each atom stands as the member declared it.',
+    );
+    lines.push('');
 
-    if (atom.primaryRegister) {
-      parts.push(`primary register: ${atom.primaryRegister}`);
-    } else if (atom.registers.length > 0) {
-      parts.push(`registers: ${atom.registers.join(', ')}`);
-    }
+    for (const atom of memberAtoms) {
+      const parts: string[] = [`"${atom.title}"`];
+      parts.push(`kept ${relativeTime(atom.keptAt)}`);
 
-    if (atom.elementalLenses.length > 0) {
-      parts.push(`lens: ${atom.elementalLenses.join('/')}`);
-    }
+      if (atom.primaryRegister) {
+        parts.push(`primary register: ${atom.primaryRegister}`);
+      } else if (atom.registers.length > 0) {
+        parts.push(`registers: ${atom.registers.join(', ')}`);
+      }
 
-    if (atom.status === 'still_alive') {
-      parts.push('marked still alive by the member');
-    }
+      if (atom.elementalLenses.length > 0) {
+        parts.push(`lens: ${atom.elementalLenses.join('/')}`);
+      }
 
-    if (atom.isBreakthrough) {
-      parts.push('marked as a breakthrough by the member');
-    }
+      if (atom.status === 'still_alive') {
+        parts.push('marked still alive by the member');
+      }
 
-    lines.push(`- ${parts.join(' — ')}`);
+      if (atom.isBreakthrough) {
+        parts.push('marked as a breakthrough by the member');
+      }
 
-    // Spontaneous atoms carry member-typed body content; surface verbatim
-    if (atom.sourceType === 'spontaneous' && atom.body) {
-      const body = atom.body.trim();
-      if (body.length > 0) {
-        // Indent one level; cap to ~200 chars to avoid prompt bloat
-        const truncated = body.length > 200 ? body.slice(0, 200) + '…' : body;
-        lines.push(`    ${truncated}`);
+      lines.push(`- ${parts.join(' — ')}`);
+
+      if (atom.sourceType === 'spontaneous' && atom.body) {
+        const body = atom.body.trim();
+        if (body.length > 0) {
+          const truncated = body.length > 200 ? body.slice(0, 200) + '…' : body;
+          lines.push(`    ${truncated}`);
+        }
       }
     }
+
+    lines.push('');
+    lines.push(
+      'Discipline: surface as the atoms themselves declare. No cross-atom claims. ' +
+        'No system inference of patterns across these.',
+    );
+    lines.push('');
+    sections.push(lines.join('\n'));
   }
 
-  lines.push('');
-  lines.push(
-    'Discipline: surface as the atoms themselves declare. No cross-atom claims. ' +
-      'No system inference of patterns across these.',
-  );
-  lines.push('');
+  // ── Practitioner-witnessed observations ─────────────────────────────────
+  if (practitionerAtoms.length > 0) {
+    const lines: string[] = [];
+    lines.push('# PRACTITIONER OBSERVATIONS');
+    lines.push('');
+    lines.push(
+      'The following observations were made by a practitioner during a facilitated session ' +
+        'and approved for inclusion in MAIA context. These are NOT statements of fact about ' +
+        'the member — they are practitioner-witnessed observations with their own epistemic ' +
+        'standing. Phrase accordingly: "A practitioner observed…", "It was noted in a ' +
+        'session that…", "A facilitator\'s impression was…". Never collapse these into ' +
+        '"You are…" or "You have…" without the member confirming it as their own truth.',
+    );
+    lines.push('');
+    lines.push(
+      'When to surface (REQUIRED): when one of these observations contains a concrete, ' +
+        'behaviorally relevant detail that directly bears on what the member is asking ' +
+        'right now, you SHOULD surface it — briefly and descriptively — before you ask ' +
+        'your next question. Name it as a witnessed note and invite the member to weigh ' +
+        'it. For example: "I notice there\'s a note from a prior session that you tend to ' +
+        'pause before naming what you actually want — does that feel relevant here?" ' +
+        '(descriptive and invitational) — never "You always pause before naming what you ' +
+        'want" (a verdict). Surface only what is genuinely new to this exchange; if the ' +
+        'member has already named the same insight, support their authorship rather than ' +
+        'repeating it.',
+    );
+    lines.push('');
 
-  return lines.join('\n');
+    for (const atom of practitionerAtoms) {
+      const framing = epistemicFraming(atom.epistemologicalStatus);
+      const parts: string[] = [`"${atom.title}"`];
+      parts.push(framing);
+      parts.push(`noted ${relativeTime(atom.keptAt)}`);
+
+      if (atom.elementalLenses.length > 0) {
+        parts.push(`lens: ${atom.elementalLenses.join('/')}`);
+      }
+
+      lines.push(`- ${parts.join(' — ')}`);
+
+      if (atom.body) {
+        const body = atom.body.trim();
+        if (body.length > 0) {
+          // Strip the "Session: <uuid>" provenance line — MAIA doesn't need it inline
+          const displayBody = body.replace(/\n\nSession: [a-f0-9-]{36}$/, '').trim();
+          const truncated = displayBody.length > 300 ? displayBody.slice(0, 300) + '…' : displayBody;
+          if (truncated.length > 0) {
+            lines.push(`    ${truncated}`);
+          }
+        }
+      }
+    }
+
+    lines.push('');
+    lines.push(
+      'Epistemic discipline: these observations have practitioner-level standing, not ' +
+        'member-confirmed standing. Surface with appropriate tentativeness. The member ' +
+        'remains the authority on their own experience. When surfacing a practitioner ' +
+        'observation, explicitly invite the member to confirm, reject, or refine it — ' +
+        'do not carry it as established context until the member has responded to it.',
+    );
+    lines.push('');
+    sections.push(lines.join('\n'));
+  }
+
+  return sections.join('\n');
+}
+
+/**
+ * Map epistemological_status to a prompt-facing framing phrase.
+ * Proportions authority to the quality of the knowledge.
+ */
+function epistemicFraming(status: EpistemologicalStatus | null): string {
+  switch (status) {
+    case 'observed':    return 'observed by a practitioner in session';
+    case 'reported':    return 'reported by the member during a session';
+    case 'inferred':    return 'inferred from session patterns — provisional';
+    case 'provisional': return 'provisional practitioner impression';
+    case 'claimed':     return 'stated by the member during a session';
+    default:            return 'noted in a practitioner session';
+  }
 }
 
 /**

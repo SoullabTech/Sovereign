@@ -3,6 +3,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { adminFetch } from '@/lib/admin/adminFetch';
 
 interface FacetCell {
   facet: string;
@@ -19,7 +20,7 @@ export default function FacetElementGrid() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/admin/opus-pulse/facet-heatmap');
+        const res = await adminFetch('/api/admin/opus-pulse/facet-heatmap');
         if (!res.ok) return;
         const data = await res.json();
         setCells(data.cells || []);

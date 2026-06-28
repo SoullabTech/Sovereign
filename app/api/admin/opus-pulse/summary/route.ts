@@ -5,10 +5,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;
 import { getPool } from '@/lib/database/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 // Skip during static export (Capacitor builds)
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   // Static placeholder for Capacitor builds
   // Use POST for runtime queries with parameters
   return NextResponse.json({
@@ -20,6 +24,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const pool = getPool();
 
   try {

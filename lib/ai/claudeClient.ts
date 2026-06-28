@@ -2,6 +2,7 @@
 // Primary AI provider for MAIA - Claude (Anthropic)
 
 import Anthropic from '@anthropic-ai/sdk';
+import { logStancePre, logStancePost } from '../sovereign/stanceReanchor';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
 import type { TextResult, ProviderMeta } from './types';
@@ -138,6 +139,10 @@ export async function generateWithClaude(
     : '';
   console.log(`🎭 Voice selection: ${selection.tier} (${selection.reason})${awarenessLog}`);
 
+  // 🪟 STANCE PRE (Phase 1 denominator — logging only, no prompt mutation, no injection).
+  // Wired here because generateWithClaude is the live fingerprinted chokepoint.
+  logStancePre({ tier: selection.tier, reason: selection.reason });
+
   try {
     console.log(`🧠 Calling Claude (${selection.model})...`);
 
@@ -163,6 +168,9 @@ export async function generateWithClaude(
 
     const latencyMs = Date.now() - t0;
     console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${latencyMs}ms`);
+
+    // 🪟 STANCE POST (Phase 1 denominator — classify the generated response, never throws).
+    logStancePost(text, { tier: selection.tier, reason: selection.reason });
 
     // Log telemetry (async, non-blocking)
     logVoiceTierTelemetry({

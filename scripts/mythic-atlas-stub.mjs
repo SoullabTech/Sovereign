@@ -11,7 +11,10 @@
 
 import http from 'http';
 
-const PORT = 8000;
+// Port is configurable so the same stub can run on the host (local dev → 8000)
+// or in the prod compose network on a distinct port (MYTHIC_ATLAS_PORT=8088;
+// 8000 is owned by whisper). Falls back to 8000 to preserve local-dev behavior.
+const PORT = Number(process.env.MYTHIC_ATLAS_PORT) || 8000;
 
 // Simple keyword-based classification for testing
 function classify(input) {
@@ -164,7 +167,10 @@ const server = http.createServer((req, res) => {
 
         const result = classify(input);
 
-        console.log(`✅ [Atlas Stub] → ${result.primary} (${(result.confidence * 100).toFixed(0)}% confidence)`);
+        // Discoverable marker — grep `MythicAtlas:reached` to confirm the wire is
+        // live and a real classification was served. `keyword-stub` keeps the claim
+        // honest: this is deterministic keyword matching, not a learned classifier.
+        console.log(`✅ [Atlas Stub] → ${result.primary} (${(result.confidence * 100).toFixed(0)}% confidence)  [MythicAtlas:reached keyword-stub]`);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));

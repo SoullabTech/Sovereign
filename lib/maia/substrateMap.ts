@@ -143,6 +143,27 @@ export const ACTIVE_SUBSTRATE: SubstrateEntry[] = [
     note: 'Spiral core orchestration',
     consumers: ['app/api/oracle/conversation/route.ts'],
   },
+  {
+    module: 'lib/maia/substrateObservability.ts',
+    category: 'orchestration',
+    note: 'Substrate runtime evidence — in-process ring buffer + runtime_events DB persistence',
+    consumers: [
+      'app/api/admin/maia/substrate/route.ts',
+      'app/api/oracle/conversation/route.ts',
+    ],
+  },
+  {
+    module: 'lib/maia/fieldContextAdapter.ts',
+    category: 'support',
+    note: 'Field context adapter — feature-flagged read-only field context retrieval',
+    consumers: ['app/api/oracle/conversation/route.ts'],
+  },
+  {
+    module: 'lib/maia/dailyAnchor.ts',
+    category: 'support',
+    note: 'Daily Anchor prompt module',
+    consumers: ['app/api/anchor/today/route.ts'],
+  },
 ];
 
 // ─── Preserved but Bypassed Substrate ─────────────────────────────────────────
@@ -226,8 +247,7 @@ export const BYPASSED_SUBSTRATE: SubstrateEntry[] = [
   {
     module: 'lib/consciousness/memory/MorphicPatternService.ts',
     category: 'underutilized-consciousness',
-    note: 'Morphic pattern — unmapped',
-    evidenceKey: 'pattern',
+    note: 'Morphic pattern — declared service, no producer, no runtime slot (the pattern evidence slot belongs to theme_signals)',
   },
   // Legacy / test phase
   {
@@ -283,9 +303,13 @@ export const CAPABILITY_CLAIMS: CapabilityClaim[] = [
       'lib/maia/memoryLoaders.ts',
       'lib/maia/conversationalRecallBlock.ts',
     ],
-    consumers: ['app/api/oracle/conversation/route.ts'],
+    consumers: [
+      'app/api/sovereign/app/maia/list/route.ts',
+      'lib/sovereign/maiaService.ts',
+      'app/api/oracle/conversation/route.ts',
+    ],
     evidenceKey: 'conversational',
-    note: 'Phase 2 — prior cross-session exchanges surfaced into prompt with provenance grounding, gated by members.conversational_recall_enabled (default TRUE). No synthesis, recency-ordered only.',
+    note: 'Phase 2 — prior cross-session exchanges surfaced into prompt with provenance grounding, gated by members.conversational_recall_enabled (default TRUE). No synthesis, recency-ordered only. FAST + CORE tiers reach prompt via maiaService extraction; DEEP carries on context only — see docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md §II.B.',
   },
   {
     name: 'Semantic memory (atoms)',
@@ -323,12 +347,18 @@ export const CAPABILITY_CLAIMS: CapabilityClaim[] = [
     note: 'Who this person is in context of the member.',
   },
   {
-    name: 'Pattern memory (morphic)',
+    name: 'Theme Signals',
     layer: 'pattern',
-    modules: ['lib/consciousness/memory/MorphicPatternService.ts'],
+    modules: ['lib/maia/memoryLoaders.ts'],
     consumers: [],
     evidenceKey: 'pattern',
-    note: 'Service preserved; no live consumer wired.',
+    note: 'Live producer — member_theme_signals (member-scoped; loadRecentThemeSignals runs per turn). Holds the pattern evidence slot (memoryHealth.ts: theme_signals feeds pattern). The loader count is not bound into memoryHealth, so the triplet reads 0/100/0 — watched-empty, not absent.',
+  },
+  {
+    name: 'Morphic pattern',
+    modules: ['lib/consciousness/memory/MorphicPatternService.ts'],
+    consumers: [],
+    note: 'Service preserved (MorphicPatternService, 0 callers); no producer, no runtime evidence slot — declared only, rendered as — (unwatched).',
   },
   {
     name: 'Somatic memory',
@@ -380,5 +410,42 @@ export const CAPABILITY_CLAIMS: CapabilityClaim[] = [
     ],
     staticStatus: 'wired-unobserved',
     note: 'Live read-only surface (Cut 2). Atoms-backed.',
+  },
+  {
+    name: 'Daily Anchor',
+    modules: [
+      'lib/maia/dailyAnchor.ts',
+      'lib/anchor/buildAnchorContextBlock.ts',
+      'lib/anchor/loadRecentAnchors.ts',
+    ],
+    consumers: [
+      'app/api/anchor/today/route.ts',
+      'app/maia/anchor/page.tsx',
+    ],
+    staticStatus: 'wired-unobserved',
+    note: 'Minimal continuity return point. Member-facing surface.',
+  },
+  {
+    name: 'Engine Comparison Reviewer (Loop C)',
+    modules: [
+      'app/api/admin/maia/engine-comparisons/route.ts',
+      'app/api/admin/maia/engine-comparisons/[id]/route.ts',
+    ],
+    consumers: ['app/admin/maia/engine-comparisons/page.tsx'],
+    staticStatus: 'wired-unobserved',
+    note: 'Learning Spine Move 2 — paired engine comparison reviewer. Admin altitude.',
+  },
+  {
+    name: 'Substrate Monitor',
+    modules: [
+      'lib/maia/substrateObservability.ts',
+      'lib/maia/substrateMap.ts',
+    ],
+    consumers: [
+      'app/api/admin/maia/substrate/route.ts',
+      'app/admin/maia/substrate/page.tsx',
+    ],
+    staticStatus: 'wired-unobserved',
+    note: 'Self-recursive — the surface that renders this map.',
   },
 ];

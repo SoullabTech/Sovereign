@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { DMMessage, DMThread } from '@/lib/team/DMService';
 import { MessageInput } from './MessageInput';
+import { MessageText } from './MessageText';
 import { useChannelStream } from './useChannelStream';
 import { DMProfileCard } from './DMProfileCard';
 
@@ -27,6 +28,9 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const otherMembers = dmThread.members.filter(m => m.memberId !== currentMemberId);
   const title = otherMembers.map(m => m.name).join(', ') || 'Direct Message';
@@ -84,6 +88,35 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
     const { message } = await res.json();
     setMessages(prev => prev.some(m => m.id === message.id) ? prev : [...prev, message]);
     requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }));
+  };
+
+  // Soft-delete own DM message. Optimistic; roll back on failure.
+  const handleDelete = async (messageId: string) => {
+    const prev = messages;
+    setMessages(p => p.filter(m => m.id !== messageId));
+    setConfirmDeleteId(null);
+    const res = await fetch(`/api/team/dm/${dmThread.id}/messages/${messageId}`, {
+      method: 'DELETE',
+    }).catch(() => null);
+    if (!res || !res.ok) setMessages(prev);
+  };
+
+  // Edit own DM message. Optimistic; roll back on failure.
+  const saveEdit = async (messageId: string) => {
+    const v = editValue.trim();
+    const orig = messages.find(m => m.id === messageId)?.body;
+    if (!v || v === orig) { setEditingId(null); return; }
+    const prev = messages;
+    setMessages(p => p.map(m => m.id === messageId ? { ...m, body: v, editedAt: new Date().toISOString() } : m));
+    setEditingId(null);
+    const res = await fetch(`/api/team/dm/${dmThread.id}/messages/${messageId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body: v }),
+    }).catch(() => null);
+    if (!res || !res.ok) { setMessages(prev); return; }
+    const data = await res.json().catch(() => null);
+    if (data?.editedAt) setMessages(p => p.map(m => m.id === messageId ? { ...m, editedAt: data.editedAt } : m));
   };
 
   return (
@@ -151,8 +184,9 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
         {messages.map(msg => {
           const isOwn = msg.senderId === currentMemberId;
           const initials = msg.senderName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+          const editing = editingId === msg.id;
           return (
-            <div key={msg.id} className="flex gap-3 px-4 py-1.5 hover:bg-white/[0.03] rounded-lg transition-colors">
+            <div key={msg.id} className="group relative flex gap-3 px-4 py-1.5 hover:bg-white/[0.03] rounded-lg transition-colors">
               <div
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold mt-0.5"
                 style={{ background: stringToColor(msg.senderId) }}
@@ -166,11 +200,77 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
                     {isOwn && <span className="text-xs text-white/30 font-normal ml-1">(you)</span>}
                   </span>
                   <span className="text-xs text-white/30">{formatTime(msg.createdAt)}</span>
+                  {msg.editedAt && <span className="text-xs text-white/25 italic">edited</span>}
                 </div>
-                <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
-                  {msg.body}
-                </p>
+                {editing ? (
+                  <div className="mt-1">
+                    <textarea
+                      value={editValue}
+                      onChange={e => setEditValue(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msg.id); }
+                        else if (e.key === 'Escape') { e.preventDefault(); setEditingId(null); }
+                      }}
+                      autoFocus
+                      rows={Math.min(10, Math.max(2, editValue.split('\n').length))}
+                      className="w-full bg-zinc-800 border border-white/15 rounded-md px-2.5 py-1.5 text-sm text-white/85 focus:outline-none focus:border-amber-500/50 resize-y"
+                    />
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => saveEdit(msg.id)}
+                        disabled={!editValue.trim() || editValue.trim() === msg.body}
+                        className="text-xs font-medium bg-amber-500 text-black rounded px-2.5 py-1 disabled:opacity-40 hover:bg-amber-400 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button onClick={() => setEditingId(null)} className="text-xs text-white/50 hover:text-white/80 transition-colors">Cancel</button>
+                      <span className="text-[10px] text-white/30">Enter to save · Esc to cancel</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
+                    <MessageText body={msg.body} />
+                  </p>
+                )}
               </div>
+
+              {/* Own-message actions (sender-only) */}
+              {isOwn && !editing && (
+                <div className="absolute right-3 -top-3 flex gap-0.5 bg-zinc-800 border border-white/10 rounded-lg p-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => { setEditingId(msg.id); setEditValue(msg.body); }}
+                    title="Edit message"
+                    className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-amber-300 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteId(msg.id)}
+                    title="Delete message"
+                    className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+
+              {/* Delete confirm */}
+              {confirmDeleteId === msg.id && (
+                <div className="absolute right-3 top-6 w-56 bg-zinc-800 border border-white/12 rounded-lg p-3 shadow-xl z-20 flex flex-col gap-2.5">
+                  <div>
+                    <p className="text-xs font-semibold text-white/85">Delete message?</p>
+                    <p className="text-[11px] text-white/50 leading-relaxed mt-1">It&apos;s removed from the conversation but not erased.</p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => setConfirmDeleteId(null)} className="flex-1 text-xs text-white/60 hover:text-white/90 hover:bg-white/5 rounded px-2 py-1.5 transition-colors">Cancel</button>
+                    <button onClick={() => handleDelete(msg.id)} className="flex-1 text-xs font-medium bg-red-500/80 hover:bg-red-500 text-white rounded px-2 py-1.5 transition-colors">Delete</button>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

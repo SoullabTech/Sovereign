@@ -29,15 +29,18 @@ interface AllMember {
 interface ChannelMembersPanelProps {
   channelId: string;
   currentMemberId: string;
+  /** Only admins may add/remove members; others see a read-only roster. */
+  canManage?: boolean;
   onClose: () => void;
 }
 
-export function ChannelMembersPanel({ channelId, currentMemberId, onClose }: ChannelMembersPanelProps) {
+export function ChannelMembersPanel({ channelId, currentMemberId, canManage = false, onClose }: ChannelMembersPanelProps) {
   const [members, setMembers] = useState<ChannelMember[]>([]);
   const [allMembers, setAllMembers] = useState<AllMember[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const loadMembers = useCallback(async () => {
     const res = await fetch(`/api/team/channels/${channelId}/members`);
@@ -65,24 +68,34 @@ export function ChannelMembersPanel({ channelId, currentMemberId, onClose }: Cha
 
   const addMember = async (targetId: string) => {
     setSaving(targetId);
-    await fetch(`/api/team/channels/${channelId}/members`, {
+    setError(null);
+    const res = await fetch(`/api/team/channels/${channelId}/members`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ memberId: targetId }),
-    });
-    await loadMembers();
+    }).catch(() => null);
+    if (res && res.ok) {
+      await loadMembers();
+      setSearch('');
+    } else {
+      setError(res?.status === 403 ? 'Only admins can add members.' : 'Could not add member.');
+    }
     setSaving(null);
-    setSearch('');
   };
 
   const removeMember = async (targetId: string) => {
     setSaving(targetId);
-    await fetch(`/api/team/channels/${channelId}/members`, {
+    setError(null);
+    const res = await fetch(`/api/team/channels/${channelId}/members`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ memberId: targetId }),
-    });
-    await loadMembers();
+    }).catch(() => null);
+    if (res && res.ok) {
+      await loadMembers();
+    } else {
+      setError(res?.status === 403 ? 'Only admins can remove members.' : 'Could not remove member.');
+    }
     setSaving(null);
   };
 
@@ -109,39 +122,42 @@ export function ChannelMembersPanel({ channelId, currentMemberId, onClose }: Cha
         </button>
       </div>
 
-      {/* Add member search */}
-      <div className="px-3 py-2 border-b border-white/6 flex-shrink-0">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Add member…"
-          className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
-        />
-        {search && suggestions.length > 0 && (
-          <div className="mt-1 bg-zinc-800 border border-white/10 rounded-lg overflow-hidden">
-            {suggestions.slice(0, 6).map(m => (
-              <button
-                key={m.memberId}
-                onClick={() => addMember(m.memberId)}
-                disabled={saving === m.memberId}
-                className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors"
-              >
-                <div
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
-                  style={{ background: stringToColor(m.memberId) }}
+      {/* Add member search — admins only */}
+      {canManage && (
+        <div className="px-3 py-2 border-b border-white/6 flex-shrink-0">
+          {error && <p className="mb-1.5 text-xs text-red-400/80">{error}</p>}
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Add member…"
+            className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
+          />
+          {search && suggestions.length > 0 && (
+            <div className="mt-1 bg-zinc-800 border border-white/10 rounded-lg overflow-hidden">
+              {suggestions.slice(0, 6).map(m => (
+                <button
+                  key={m.memberId}
+                  onClick={() => addMember(m.memberId)}
+                  disabled={saving === m.memberId}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors"
                 >
-                  {m.name[0]?.toUpperCase()}
-                </div>
-                <span className="text-xs text-white/70 truncate">{m.name}</span>
-                {saving === m.memberId && <span className="text-xs text-white/30 ml-auto">…</span>}
-              </button>
-            ))}
-          </div>
-        )}
-        {search && suggestions.length === 0 && (
-          <p className="mt-1 text-xs text-white/25 px-1">No matches</p>
-        )}
-      </div>
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                    style={{ background: stringToColor(m.memberId) }}
+                  >
+                    {m.name[0]?.toUpperCase()}
+                  </div>
+                  <span className="text-xs text-white/70 truncate">{m.name}</span>
+                  {saving === m.memberId && <span className="text-xs text-white/30 ml-auto">…</span>}
+                </button>
+              ))}
+            </div>
+          )}
+          {search && suggestions.length === 0 && (
+            <p className="mt-1 text-xs text-white/25 px-1">No matches</p>
+          )}
+        </div>
+      )}
 
       {/* Member list */}
       <div className="flex-1 overflow-y-auto scrollbar-hide py-2">
@@ -173,7 +189,7 @@ export function ChannelMembersPanel({ channelId, currentMemberId, onClose }: Cha
                   <span className="text-xs text-white/30">{m.role}</span>
                 )}
               </div>
-              {!isOwner && !isMe && (
+              {canManage && !isOwner && !isMe && (
                 <button
                   onClick={() => removeMember(m.memberId)}
                   disabled={saving === m.memberId}

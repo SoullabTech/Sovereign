@@ -9,6 +9,7 @@ interface ThreadPanelProps {
   parentMessage: TeamMessage;
   channelId: string;
   currentMemberId: string;
+  isAdmin?: boolean;
   onClose: () => void;
   onReact: (messageId: string, emoji: string) => void;
 }
@@ -17,6 +18,7 @@ export function ThreadPanel({
   parentMessage,
   channelId,
   currentMemberId,
+  isAdmin = false,
   onClose,
   onReact,
 }: ThreadPanelProps) {
@@ -46,6 +48,30 @@ export function ThreadPanel({
     const { message } = await res.json();
     setReplies(prev => prev.some(m => m.id === message.id) ? prev : [...prev, message]);
     requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }));
+  };
+
+  // Soft-delete a reply. Optimistically remove it; roll back on failure.
+  const handleDeleteReply = async (messageId: string) => {
+    const prev = replies;
+    setReplies(p => p.filter(m => m.id !== messageId));
+    const res = await fetch(`/api/team/channels/${channelId}/messages/${messageId}`, {
+      method: 'DELETE',
+    }).catch(() => null);
+    if (!res || !res.ok) setReplies(prev);
+  };
+
+  // Edit a reply's text (sender-only). Optimistic; roll back on failure.
+  const handleEditReply = async (messageId: string, newBody: string) => {
+    const prev = replies;
+    setReplies(p => p.map(m => m.id === messageId ? { ...m, body: newBody, editedAt: new Date().toISOString() } : m));
+    const res = await fetch(`/api/team/channels/${channelId}/messages/${messageId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body: newBody }),
+    }).catch(() => null);
+    if (!res || !res.ok) { setReplies(prev); return; }
+    const data = await res.json().catch(() => null);
+    if (data?.editedAt) setReplies(p => p.map(m => m.id === messageId ? { ...m, editedAt: data.editedAt } : m));
   };
 
   return (
@@ -96,6 +122,9 @@ export function ThreadPanel({
             message={msg}
             currentMemberId={currentMemberId}
             onReact={onReact}
+            onDelete={handleDeleteReply}
+            onEdit={handleEditReply}
+            canModerate={isAdmin}
           />
         ))}
         <div ref={bottomRef} />

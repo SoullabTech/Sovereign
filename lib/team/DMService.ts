@@ -303,12 +303,106 @@ export async function sendDMMessage(
   };
 }
 
+export type DeleteDMMessageResult =
+  | { ok: true }
+  | { ok: false; reason: 'not_found' | 'forbidden' };
+
+/**
+ * Soft-delete a DM message (sets deleted_at). getDMMessages / getDMMessagesSince
+ * already exclude deleted rows. SENDER-ONLY: a 1:1 DM has no moderator, so only
+ * the author may delete. No deleted_by is recorded — it would always equal
+ * sender_id, carrying no governance signal (data minimization).
+ */
+export async function deleteDMMessage(
+  dmThreadId: string,
+  messageId: string,
+  requesterId: string
+): Promise<DeleteDMMessageResult> {
+  const member = await query(
+    `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, requesterId]
+  );
+  if (!member.rows[0]) return { ok: false, reason: 'forbidden' };
+
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_dm_messages
+     WHERE id = $1 AND dm_thread_id = $2 AND deleted_at IS NULL`,
+    [messageId, dmThreadId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+  if (row.sender_id !== requesterId) return { ok: false, reason: 'forbidden' };
+
+  await query(`UPDATE team_dm_messages SET deleted_at = NOW() WHERE id = $1`, [messageId]);
+  return { ok: true };
+}
+
+export type EditDMMessageResult =
+  | { ok: true; editedAt: string }
+  | { ok: false; reason: 'not_found' | 'forbidden' | 'empty' | 'too_long' };
+
+/**
+ * Edit a DM message's text (sets body + edited_at). SENDER-ONLY — only the author
+ * may revise their own words.
+ */
+export async function editDMMessage(
+  dmThreadId: string,
+  messageId: string,
+  requesterId: string,
+  newBody: string
+): Promise<EditDMMessageResult> {
+  const trimmed = newBody.trim();
+  if (!trimmed) return { ok: false, reason: 'empty' };
+  if (trimmed.length > 8000) return { ok: false, reason: 'too_long' };
+
+  const member = await query(
+    `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, requesterId]
+  );
+  if (!member.rows[0]) return { ok: false, reason: 'forbidden' };
+
+  const existing = await query<{ sender_id: string }>(
+    `SELECT sender_id FROM team_dm_messages
+     WHERE id = $1 AND dm_thread_id = $2 AND deleted_at IS NULL`,
+    [messageId, dmThreadId]
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, reason: 'not_found' };
+  if (row.sender_id !== requesterId) return { ok: false, reason: 'forbidden' };
+
+  const upd = await query<{ edited_at: string }>(
+    `UPDATE team_dm_messages SET body = $2, edited_at = NOW()
+     WHERE id = $1 RETURNING edited_at`,
+    [messageId, trimmed]
+  );
+  return { ok: true, editedAt: upd.rows[0].edited_at };
+}
+
 export async function markDMRead(dmThreadId: string, memberId: string): Promise<void> {
   await query(
     `UPDATE team_dm_members SET last_read_at = NOW()
      WHERE dm_thread_id = $1 AND member_id = $2`,
     [dmThreadId, memberId]
   );
+}
+
+/**
+ * Total unread DM messages across all of a member's threads — the DM half of the
+ * Co-lab rail badge. Matches listDMThreads' per-thread unread logic exactly (so the
+ * rail total equals the sum of the sidebar's DM unread badges): a message counts if
+ * it is newer than the member's last_read_at for that thread and not deleted.
+ */
+export async function countUnreadDMs(memberId: string): Promise<number> {
+  const res = await query<{ n: number }>(
+    `SELECT count(*)::int AS n
+       FROM team_dm_members tdm
+       JOIN team_dm_messages dm ON dm.dm_thread_id = tdm.dm_thread_id
+      WHERE tdm.member_id = $1
+        AND dm.created_at > COALESCE(tdm.last_read_at, '1970-01-01')
+        AND dm.deleted_at IS NULL`,
+    [memberId]
+  );
+  return res.rows[0]?.n ?? 0;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

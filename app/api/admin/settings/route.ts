@@ -4,11 +4,12 @@
  * GET - Retrieve all or specific settings
  * POST - Update a setting
  *
- * Currently no auth - labtools is internal/dev only
+ * Admin-secret gated (LABTOOLS_ADMIN_PASSWORD via x-admin-password) — fail-closed.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,9 @@ function pickSettingFields(row: SystemSettingRow) {
 }
 
 export async function GET(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const key = req.nextUrl.searchParams.get('key');
 
@@ -64,6 +68,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const body = await req.json();
     const { key, value, updatedBy } = body;

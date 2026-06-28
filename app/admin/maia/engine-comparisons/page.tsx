@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { apiFetch } from '@/lib/http/apiBase';
+import { adminFetch } from '@/lib/admin/adminFetch';
 
 type Filter = 'unreviewed' | 'reviewed' | 'all';
 
@@ -55,7 +55,7 @@ export default function EngineComparisonsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiFetch(
+      const res = await adminFetch(
         `/api/admin/maia/engine-comparisons?status=${filter}&limit=50`,
       );
       if (!res.ok) {
@@ -79,7 +79,7 @@ export default function EngineComparisonsPage() {
     async (id: number, patch: ReviewPatch) => {
       setSavingId(id);
       try {
-        const res = await apiFetch(`/api/admin/maia/engine-comparisons/${id}`, {
+        const res = await adminFetch(`/api/admin/maia/engine-comparisons/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(patch),

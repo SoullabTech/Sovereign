@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 import {
   ACTIVE_SUBSTRATE,
   BYPASSED_SUBSTRATE,
@@ -27,13 +28,13 @@ import {
   getRuntimeSummary,
   type LayerObservation,
 } from '@/lib/maia/substrateObservability';
+import { buildProviderCognition } from '@/lib/maia/providerCognition';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -56,6 +57,9 @@ export async function GET(request: NextRequest) {
         summary,
         recentTurns,
       },
+      // Cognition routing evidence — surfaced as its own lane, deliberately NOT a
+      // memory-substrate claim. Provider fallback is not a memory-layer capability.
+      providerCognition: buildProviderCognition(recentTurns, summary),
       activity,
       consumption: {
         active: ACTIVE_SUBSTRATE,

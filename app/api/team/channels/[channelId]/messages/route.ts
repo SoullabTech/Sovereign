@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getMessages, getReplies, sendMessage, markChannelRead } from '@/lib/team/ChannelService';
+import { getSenderAttentionStates, COLAB_MESSAGE } from '@/lib/team/attention';
 import { requireChannelAccess } from '@/lib/team/permissions';
 
 export const dynamic = 'force-dynamic';
@@ -48,6 +49,29 @@ export async function GET(
     }
   }
 
+  // Enrich the sender's OWN messages with their attention-loop states, so the
+  // sender sees Sent / Opened / Resolved / Declined. Only the creator sees these.
+  // Non-fatal: the attention layer must NEVER break core messaging (e.g. if this
+  // runs before the attention_items migration is applied — degrade, don't 500).
+  try {
+    const ownIds = messages.filter(m => m.senderId === memberId).map(m => m.id);
+    if (ownIds.length > 0) {
+      const states = await getSenderAttentionStates(COLAB_MESSAGE, ownIds, memberId);
+      const byMsg = new Map<string, { recipientName: string; kind: string; status: 'open' | 'resolved' | 'declined'; opened: boolean }[]>();
+      for (const s of states) {
+        const arr = byMsg.get(s.sourceId) ?? [];
+        arr.push({ recipientName: s.recipientName, kind: s.kind, status: s.status, opened: s.openedAt != null });
+        byMsg.set(s.sourceId, arr);
+      }
+      for (const m of messages) {
+        const st = byMsg.get(m.id);
+        if (st) m.attentionStates = st;
+      }
+    }
+  } catch (err) {
+    console.error('[Co-lab/attention] sender-state enrichment skipped (non-fatal)', err);
+  }
+
   return NextResponse.json({ messages });
 }
 
@@ -73,7 +97,7 @@ export async function POST(
     return NextResponse.json({ error: 'body is required' }, { status: 400 });
   }
 
-  const VALID_KINDS = ['build', 'question', 'decision', 'insight'] as const;
+  const VALID_KINDS = ['build', 'question', 'decision', 'insight', 'request'] as const;
   type MessageKind = typeof VALID_KINDS[number];
   const validatedKind: MessageKind =
     typeof messageKind === 'string' && (VALID_KINDS as readonly string[]).includes(messageKind)

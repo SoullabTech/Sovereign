@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { insertOne } from '@/lib/db/postgres';
+import { insertOne, queryOne } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 
 export async function POST(request: NextRequest) {
@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
       participants = [],
       memoryPolicy = 'sealed',
       bookingId,
+      clientId,
+      keepLinkPrivate = false,
     } = body;
 
     // Validate container
@@ -39,6 +41,27 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid container type', code: 'INVALID_CONTAINER' },
         { status: 400 }
       );
+    }
+
+    // Relationship Memory v1 — Phase 1: attach the session to an existing person.
+    // Sealed sessions MAY carry the client link (operational provenance, spec §4);
+    // only the stricter-sanctuary "keep even the client link private" opt-out blocks it.
+    // Fail closed on ownership: the link is stored only when the client belongs to this
+    // practitioner (practitioner_clients.practitioner_id references members(id)), so a
+    // foreign or bogus clientId can never attach (cross-practitioner safeguard).
+    let clientLink: string | null = null;
+    if (clientId && !keepLinkPrivate) {
+      const owned = await queryOne<{ id: string }>(
+        'SELECT id FROM practitioner_clients WHERE id = $1 AND practitioner_id = $2',
+        [clientId, memberId]
+      );
+      if (owned) {
+        clientLink = owned.id;
+      } else {
+        console.warn(
+          `[RelMem] attach rejected: client ${String(clientId).slice(0, 8)} not owned by member ${memberId.slice(0, 8)}`
+        );
+      }
     }
 
     // Create session
@@ -51,9 +74,15 @@ export async function POST(request: NextRequest) {
       is_active: true,
       transcript_enabled: false,
       ...(bookingId ? { booking_id: bookingId } : {}),
+      ...(clientLink ? { client_id: clientLink } : {}),
     });
 
     console.log(`[Scribe] Started ${container} session: ${session.id} for member ${memberId}${bookingId ? ` (booking: ${bookingId})` : ''}`);
+    // Phase 1 observability — see spec §6/§10. linkStored=false when solo, skipped,
+    // stricter-sanctuary, or ownership-rejected.
+    console.log(
+      `[RelMem] attach { sessionId: ${String(session.id).slice(0, 8)}, clientIdPrefix: ${clientLink ? clientLink.slice(0, 8) : 'none'}, memoryPolicy: ${memoryPolicy}, keepLinkPrivate: ${Boolean(keepLinkPrivate)}, linkStored: ${Boolean(clientLink)} }`
+    );
 
     return NextResponse.json({
       success: true,
@@ -62,6 +91,8 @@ export async function POST(request: NextRequest) {
         container: session.container,
         startedAt: session.started_at,
         consentStatus: session.consent_status,
+        clientId: clientLink,
+        linkStored: Boolean(clientLink),
       },
       consentRequired: true,
     });

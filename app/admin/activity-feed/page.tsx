@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiFetch } from '@/lib/http/apiBase';
+import { adminFetch } from '@/lib/admin/adminFetch';
 
 interface PulseData {
   period: { hours: number; start: string; end: string };
@@ -132,7 +132,7 @@ export default function PlatformPulsePage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiFetch('/api/admin/activity-feed', {
+      const res = await adminFetch('/api/admin/activity-feed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hours }),

@@ -507,6 +507,17 @@ MOBILE_EXCLUDED_DIRS=(
     "app/book-studio"
     # Team (desktop practitioner collaboration; layout.tsx uses cookies())
     "app/team"
+    # Commons (practitioner circles; apiFetch reads cookies during prerender)
+    "app/commons"
+    # Commons sub-routes — listed explicitly because the parent "app/commons"
+    # entry above is silently being skipped during hide_web_only_routes
+    # (root cause not yet diagnosed). The list-page `app/commons/circles/page.tsx`
+    # is a client component that imports apiFetch, which reads cookies during
+    # prerender, so `dynamic = "error"` static export fails. The auto-detection
+    # in hide_incompatible_pages only catches direct `cookies()`/`headers()`/
+    # `force-dynamic` literals, not transitive cookie reads through helpers.
+    "app/commons/circles"
+    "app/commons/join"
     # MAIA advanced tools (web-only)
     "app/maia/labtools"
     "app/maia/community"

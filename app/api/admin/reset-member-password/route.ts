@@ -16,8 +16,13 @@ export async function POST(request: NextRequest) {
   try {
     const { email, newPassword, adminSecret } = await request.json();
 
-    // Protect with admin secret
-    const expectedSecret = process.env.ADMIN_RESET_SECRET || 'maia-admin-reset-2026';
+    // Protect with admin secret — fail closed, NO hardcoded fallback.
+    // (Previously fell back to a hardcoded constant when the env was unset,
+    //  which made this an unauthenticated account-takeover path in prod.)
+    const expectedSecret = process.env.ADMIN_RESET_SECRET;
+    if (!expectedSecret) {
+      return NextResponse.json({ error: 'Admin reset not configured' }, { status: 503 });
+    }
     if (adminSecret !== expectedSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

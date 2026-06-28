@@ -23,7 +23,7 @@ export default function YouthOnboardingPage() {
   useEffect(() => {
     const betaUser = localStorage.getItem('beta_user');
     if (!betaUser) {
-      router.push('/test-elemental');
+      router.push('/signin');
       return;
     }
 
@@ -32,7 +32,7 @@ export default function YouthOnboardingPage() {
 
       // Reject local_* fallback IDs
       if (!parsed.id || parsed.id.startsWith('local_')) {
-        router.push('/test-elemental');
+        router.push('/signin');
         return;
       }
 
@@ -46,7 +46,7 @@ export default function YouthOnboardingPage() {
       setLoading(false);
     } catch (e) {
       console.error('[youth-onboarding] Error parsing user data:', e);
-      router.push('/test-elemental');
+      router.push('/signin');
     }
   }, [router]);
 

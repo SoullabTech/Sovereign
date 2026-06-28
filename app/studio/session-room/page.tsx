@@ -48,12 +48,14 @@ import {
   History,
   ArrowLeft,
   AlertCircle,
+  Video,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
+import { AudioSourcesStatus } from '@/components/studio/AudioSourcesStatus';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 import { getReviewEligibility, getSessionStatusBadge } from '@/lib/studio/reviewEligibility';
@@ -77,6 +79,8 @@ interface PastSession {
   id: string;
   container: string;
   title: string | null;
+  client_id: string | null;
+  client_name: string | null;
   started_at: string;
   ended_at: string | null;
   memory_policy: string;
@@ -90,6 +94,7 @@ interface PastSession {
 
 interface BookingOption {
   id: string;
+  clientId: string | null;
   clientName: string;
   serviceName: string | null;
   startAt: string;
@@ -196,6 +201,7 @@ export default function SessionRoomPage() {
   const [localSessionTitle, setLocalSessionTitle] = useState('');
   const [captureTabAudio, setCaptureTabAudio] = useState(false);
   const [blockedFeedbackSent, setBlockedFeedbackSent] = useState(false);
+  const [videoRoomUrl, setVideoRoomUrl] = useState<string | null>(null);
 
   // Past sessions / history review
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
@@ -208,6 +214,8 @@ export default function SessionRoomPage() {
   const [bookings, setBookings] = useState<BookingOption[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  // Relationship Memory v1 — Phase 1: stricter-sanctuary opt-out (store no client link).
+  const [keepLinkPrivate, setKeepLinkPrivate] = useState(false);
 
   // Interactive rail
   const [activeTab, setActiveTab] = useState<RailTab>('markers');
@@ -301,6 +309,7 @@ export default function SessionRoomPage() {
               .filter((b: any) => b.status !== 'cancelled' && b.status !== 'completed')
               .map((b: any) => ({
                 id: b.id,
+                clientId: b.clientId ?? null,
                 clientName: b.clientName || 'Unknown Client',
                 serviceName: b.serviceName,
                 startAt: b.startAt,
@@ -318,6 +327,20 @@ export default function SessionRoomPage() {
     fetchBookings();
     return () => { cancelled = true; };
   }, [localContainer, phase]);
+
+  // Fetch practitioner's configured video room URL (non-critical — silently ignored if absent)
+  useEffect(() => {
+    const fetchVideoRoomUrl = async () => {
+      try {
+        const res = await apiFetch('/api/studio/settings?key=video_room_url');
+        const data = await res.json();
+        if (data?.value) setVideoRoomUrl(data.value);
+      } catch {
+        // non-critical — Session Room works without it
+      }
+    };
+    fetchVideoRoomUrl();
+  }, []);
 
   // Auto-scroll transcript
   useEffect(() => {
@@ -345,6 +368,7 @@ export default function SessionRoomPage() {
       }
     }
 
+    const selectedBooking = bookings.find(b => b.id === selectedBookingId);
     await ctx.startSession({
       container: localContainer,
       memoryPolicy: localMemoryPolicy,
@@ -353,6 +377,11 @@ export default function SessionRoomPage() {
       ...(localContainer === 'practitioner' && selectedBookingId
         ? { bookingId: selectedBookingId }
         : {}),
+      // Attach the durable person the booking already references (spec §6 Phase 1).
+      ...(localContainer === 'practitioner' && selectedBooking?.clientId
+        ? { clientId: selectedBooking.clientId }
+        : {}),
+      ...(keepLinkPrivate ? { keepLinkPrivate: true } : {}),
     });
   };
 
@@ -827,6 +856,52 @@ ${insightsSection}
               </p>
             </div>
 
+            {/* Relationship Memory (Phase 1): client link + stricter-sanctuary opt-out */}
+            {localContainer === 'practitioner' && selectedBookingId && (
+              <div className="mb-6">
+                <p className="text-[10px] text-slate-600 mb-2 leading-relaxed">
+                  {localMemoryPolicy === 'sealed'
+                    ? 'Sealed: this session can remain attached to the client record for continuity of care, but its content will not be remembered or used in future preparation.'
+                    : 'This session will be linked to the client record for continuity.'}
+                </p>
+                <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={keepLinkPrivate}
+                    onChange={(e) => setKeepLinkPrivate(e.target.checked)}
+                    className="rounded border-slate-700 bg-[#1e1e38] accent-amber-500"
+                  />
+                  Keep even the client link private for this session
+                </label>
+              </div>
+            )}
+
+            {/* Open video call — shown when a video room URL is configured in Settings → Integrations.
+                Annotated so practitioners understand this JOINS the external meeting and can
+                double-join if they are already in the call. */}
+            {videoRoomUrl && (
+              <div className="mb-3">
+                <a
+                  href={videoRoomUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/40 text-slate-300 hover:border-slate-600 hover:text-white transition-all text-sm"
+                >
+                  <Video className="w-4 h-4" />
+                  Open meeting{' '}
+                  <span className="text-slate-500">(joins as another participant)</span>
+                </a>
+                <p className="mt-1.5 flex items-start gap-1.5 text-[11px] text-slate-500">
+                  <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                  <span>
+                    Opens the meeting link from Settings &rarr; Integrations. If you&apos;re already
+                    in the call (especially in a desktop app), this adds you a second time &mdash;
+                    skip it and keep your existing window.
+                  </span>
+                </p>
+              </div>
+            )}
+
             {/* Start button */}
             <button
               onClick={handleStartSession}
@@ -917,7 +992,7 @@ ${insightsSection}
                           const startDate = new Date(s.started_at);
                           const durMin = Math.floor(s.duration_seconds / 60);
                           const durSec = s.duration_seconds % 60;
-                          const label = s.title || `${s.container.charAt(0).toUpperCase() + s.container.slice(1)} session`;
+                          const label = s.client_name || s.title || `${s.container.charAt(0).toUpperCase() + s.container.slice(1)} session`;
                           const eligibility = getReviewEligibility(s);
                           const statusBadge = getSessionStatusBadge(s);
                           return (
@@ -1106,6 +1181,12 @@ ${insightsSection}
                 </button>
               </div>
             </div>
+
+            {/* Audio sources — frames capture as a positive checklist of what MAIA can hear,
+                driven by the reactive ctx.hasTabAudio (false when meeting audio was never
+                shared AND when a shared tab stops mid-session). Display only — does not touch
+                capture, consent, Sanctuary, or transcription. */}
+            <AudioSourcesStatus hasTabAudio={ctx.hasTabAudio} />
 
             {/* Two-column: Transcript + Interactive Rail */}
             <div className="grid lg:grid-cols-2 gap-4">

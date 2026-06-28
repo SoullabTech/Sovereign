@@ -366,6 +366,47 @@ export class ConsciousnessMemoryLattice {
 
     console.log(`🌐 [FIELD ASSEMBLED] Nodes: ${field.nodes.length}, Cycles: ${field.spiralCycles.length}, Breakthroughs: ${field.breakthroughMoments.length}`);
 
+    // ── TEMP channel-provenance instrumentation (observability ONLY) ─────────────
+    // Env-gated, default OFF. Enable for a facet-ablation window:
+    //   MAIA_RECALL_PROVENANCE=1 on the maia container, then disable after.
+    // WHY HERE: synthesizeMemoryField does matchArrays.flat() + dedupe-by-id,
+    // which ERASES which channel admitted each memory. The channel labels only
+    // exist at this scope. We log IDs + counts only — never query/memory content.
+    // node.memoryTrace is the developmental_memory id (same id space as the channel
+    // matches), so finalTop3Ids cross-references semantic/spiral/temporal. finalTop3
+    // is the field-level recency order (created_at DESC); the prompt clamp is
+    // mode-specific downstream (dialogue=3, scribe=2). This block does not alter
+    // retrieval — it is wrapped so it can never affect the returned field.
+    if (process.env.MAIA_RECALL_PROVENANCE === '1') {
+      try {
+        const pickIds = (arr: any[]): string[] =>
+          (arr || []).map((m: any) => m?.id).filter(Boolean);
+        const semanticIds = pickIds(semanticMatches);
+        const spiralIds = pickIds(facetMatches);
+        const temporalIds = pickIds(temporalMatches);
+        const unionIds = Array.from(new Set([
+          ...semanticIds, ...spiralIds, ...temporalIds,
+          ...pickIds(somaticMatches), ...pickIds(emotionalMatches),
+        ]));
+        const finalTop3Ids = field.nodes.slice(0, 3).map(n => n.memoryTrace);
+        const queryId = `q_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`;
+        console.log('[ResonanceRecall/provenance] ' + JSON.stringify({
+          queryId,
+          facetCode: currentState.facet?.code ?? null,
+          semanticIds, spiralIds, temporalIds, unionIds, finalTop3Ids,
+          semanticCount: semanticIds.length,
+          spiralCount: spiralIds.length,
+          temporalCount: temporalIds.length,
+          unionCount: unionIds.length,
+          finalTop3Count: finalTop3Ids.length,
+        }));
+      } catch (err) {
+        // Observability must never affect recall.
+        console.warn('[ResonanceRecall/provenance] log failed (non-blocking):', (err as Error)?.message);
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────────
+
     return field;
   }
 

@@ -91,6 +91,21 @@ export default function NewSessionPage() {
     fetchClients();
   }, []);
 
+  // Preselect the client when arriving from a client card's "Schedule"
+  // (/studio/sessions/new?clientId=<id>). Reads the param from the URL directly
+  // so the page needs no Suspense boundary. Only fires once clients have loaded
+  // and nothing is selected yet, so it never overrides a manual choice.
+  useEffect(() => {
+    if (selectedClient || clients.length === 0) return;
+    const id = new URLSearchParams(window.location.search).get('clientId');
+    if (!id) return;
+    const match = clients.find((c) => c.id === id);
+    if (match) {
+      setSelectedClient(match);
+      setShowClientDropdown(false);
+    }
+  }, [clients, selectedClient]);
+
   const filteredClients = clients.filter(
     (client) =>
       client.name.toLowerCase().includes(clientSearch.toLowerCase()) ||

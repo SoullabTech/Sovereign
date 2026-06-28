@@ -16,9 +16,11 @@ import type { MaiaWorldId, BoundaryId } from '@/lib/navigation/types';
 interface MaiaBoundaryLayoutProps {
   boundary: BoundaryId;
   children: React.ReactNode;
+  /** Let the member rail recede visually so the boundary's own nav reads as primary. */
+  railRecede?: boolean;
 }
 
-export function MaiaBoundaryLayout({ boundary, children }: MaiaBoundaryLayoutProps) {
+export function MaiaBoundaryLayout({ boundary, children, railRecede = false }: MaiaBoundaryLayoutProps) {
   const router = useRouter();
 
   const handleWorldChange = (world: MaiaWorldId) => {
@@ -33,8 +35,8 @@ export function MaiaBoundaryLayout({ boundary, children }: MaiaBoundaryLayoutPro
       <MaiaLeftRail
         activeWorld={null}
         activeBoundary={boundary}
-        calmMode={false}
-        calmCeiling={false}
+        calmMode={railRecede}
+        calmCeiling={railRecede}
         onWorldChange={handleWorldChange}
       />
       <div style={{ paddingLeft: RAIL_WIDTH_PX }}>

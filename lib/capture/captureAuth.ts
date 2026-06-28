@@ -99,10 +99,12 @@ export async function resolveCaptureUserId(
     }
   }
 
-  // Method 3: Dev mode with trust - accept client-provided userId
+  // Method 3: Dev mode with trust - accept client-provided userId.
+  // DEV-ONLY: this can never apply in production. The MAIA_TRUST_BODY_ID_IN_PROD
+  // prod escape hatch was removed — it let a client spoof identity via a body
+  // field (impersonation footgun).
   const TRUST_BODY_ID =
-    process.env.MAIA_DEV_TRUST_BODY_ID === '1' &&
-    (!IS_PROD || process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1');
+    process.env.MAIA_DEV_TRUST_BODY_ID === '1' && !IS_PROD;
 
   if (TRUST_BODY_ID && bodyUserId && bodyUserId.trim()) {
     console.log('[captureAuth] Using trusted body userId (dev mode)');

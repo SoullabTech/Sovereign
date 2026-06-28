@@ -1,5 +1,13 @@
 import { useState, useCallback } from 'react';
 
+// Hard ceiling for a single /api/between/chat request. Accommodates the slowest
+// expected path (DEEP tier, ~6-20s per CLAUDE.md) with comfortable headroom,
+// short enough that a true SSE/streaming hang names itself before users notice.
+// NOTE: This timeout covers the *primary* fetch only. The dev-port fallback
+// path below (window.location.port + 3001/3003/3005) is a separate substrate
+// concern and remains unhardened in this commit — flagged for follow-up.
+const STREAM_TIMEOUT_MS = 90_000;
+
 export interface StreamMessage {
   type: 'delta' | 'done' | 'error' | 'meta';
   text?: string;
@@ -56,7 +64,19 @@ export function useMaiaStream(): UseMaiaStreamResult {
     setController(newController);
     setIsStreaming(true);
 
+    // Time-bind the controller so a hung primary fetch can't trap the UI.
+    // `timedOut` distinguishes timeout-driven abort from user-driven abort
+    // (stopStream) so the failure mode is logged with a named timeout label
+    // instead of being silently swallowed as a generic AbortError.
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let timedOut = false;
+
     try {
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        newController.abort();
+      }, STREAM_TIMEOUT_MS);
+
       // Use the current working MAIA endpoint
       const currentPort = window.location.port || '3000';
       const backendUrl = `${window.location.protocol}//${window.location.hostname}:${currentPort}`;
@@ -95,6 +115,11 @@ export function useMaiaStream(): UseMaiaStreamResult {
     } catch (error: any) {
       setIsStreaming(false);
       setController(null);
+
+      if (timedOut) {
+        console.error(`[MaiaStream] streaming voice send timed out after ${STREAM_TIMEOUT_MS}ms`);
+        return 'I apologize, but the response is taking longer than expected. Please try again.';
+      }
 
       if (error.name === 'AbortError') {
         return ''; // Stream was cancelled
@@ -139,6 +164,11 @@ export function useMaiaStream(): UseMaiaStreamResult {
       }
 
       return 'I apologize, but I am having trouble connecting right now. Please try refreshing the page.';
+    } finally {
+      // Always release the pending timer so a successful fetch doesn't trigger
+      // a stray abort after the function returns, and a failed fetch doesn't
+      // leave a dangling timer.
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }, [controller, stopStream]);
 

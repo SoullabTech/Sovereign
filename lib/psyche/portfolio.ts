@@ -339,6 +339,19 @@ export async function keepSource(
     throw new Error('keepSource: memberId mismatch between session and input');
   }
 
+  // Practitioner observations carry practitioner attribution (facilitator_id) and
+  // are written ONLY through the facilitated With-Me path, never the member-keep
+  // gesture. keepSource has no facilitator context, so a practitioner atom written
+  // here would be unattributable — and the loader's PRACTITIONER_ATTRIBUTION_GUARD
+  // bars unattributed practitioner atoms from surfacing. Reject at the door.
+  // (Bridge-verification finding 2026-06-24; canon: facilitator_id is canonical.)
+  if (input.sourceType === 'practitioner_observation') {
+    throw new Error(
+      "keepSource: 'practitioner_observation' atoms must be written through the " +
+        'facilitated With-Me path (which sets facilitator_id), not the member-keep gesture.',
+    );
+  }
+
   // Spontaneous requires body; sourced requires sourceId (DB enforces too)
   if (input.sourceType === 'spontaneous') {
     if (!input.body) {

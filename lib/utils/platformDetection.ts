@@ -136,13 +136,25 @@ export async function getPlatformInfo(): Promise<PlatformInfo> {
   const hasSpeechAPI = hasSpeechRecognitionAPI();
   const hasMicDevice = typeof navigator !== 'undefined' && !!navigator.mediaDevices;
 
-  // Voice support = Speech API exists AND mediaDevices API exists
-  // Don't call getUserMedia here - it needs a user gesture and will fail if called too early
-  const hasVoiceSupport = hasSpeechAPI && hasMicDevice;
+  // 🦊 Firefox / Zen ship NO Web Speech API but DO support MediaRecorder +
+  // getUserMedia, which routes to one-shot local Whisper capture (see
+  // androidVoiceFallback.ts + the web-whisper branch in ContinuousConversation).
+  // Count that as voice support so the mic affordance matches real capability
+  // instead of gating on Web Speech alone — otherwise the button shows a
+  // permanent "unavailable" state on a browser that can actually do voice.
+  const canRecordForWhisper =
+    typeof MediaRecorder !== 'undefined' &&
+    !!navigator?.mediaDevices?.getUserMedia;
+
+  // Voice support = a mic device exists AND we can either run Web Speech OR
+  // record audio for server-side transcription. Don't call getUserMedia here —
+  // it needs a user gesture and will fail if called too early.
+  const hasVoiceSupport = hasMicDevice && (hasSpeechAPI || canRecordForWhisper);
 
   console.log('[platformDetection] Web voice check:', {
     hasSpeechAPI,
     hasMicDevice,
+    canRecordForWhisper,
     hasVoiceSupport
   });
 

@@ -3,6 +3,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { adminFetch } from '@/lib/admin/adminFetch';
 
 interface OpusTimelineItem {
   id: number;
@@ -23,7 +24,7 @@ export default function OpusTimeline() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/admin/opus-pulse/turns');
+        const res = await adminFetch('/api/admin/opus-pulse/turns');
         if (!res.ok) return;
         const data = await res.json();
         setItems(data.items || []);

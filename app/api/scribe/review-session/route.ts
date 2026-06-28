@@ -27,28 +27,55 @@ export async function POST(req: NextRequest) {
 
     console.log(`🔍 Session Review: ${reviewedSessionId} | Q${questionNumber || 1} | lens=${lens || 'core'}`);
 
-    const { prompt, meta } = await buildSessionReviewPrompt(
-      {
-        reviewedSessionId,
-        currentSessionId: currentSessionId || 'review-session',
-        questionNumber: questionNumber || 1,
-        lens: lens || 'core',
-        clientName: clientName || undefined,
-      },
-      question
-    );
+    // Phase 1 — load the session content. A failure here means the data could not be
+    // loaded (session missing / transcript lookup failed), distinct from a model failure.
+    let prompt: string;
+    let meta: Awaited<ReturnType<typeof buildSessionReviewPrompt>>['meta'];
+    try {
+      ({ prompt, meta } = await buildSessionReviewPrompt(
+        {
+          reviewedSessionId,
+          currentSessionId: currentSessionId || 'review-session',
+          questionNumber: questionNumber || 1,
+          lens: lens || 'core',
+          clientName: clientName || undefined,
+        },
+        question
+      ));
+    } catch (loadError: any) {
+      console.error('❌ Session review load error:', loadError);
+      return NextResponse.json(
+        { success: false, phase: 'load', error: loadError.message || 'Failed to load session data' },
+        { status: 500 }
+      );
+    }
 
     console.log(`[SessionReview] ${meta.segmentCount} segments, sampled=${meta.segmentsSampled}, phantom=${meta.phantomPrefixRemoved ? 'stripped' : 'none'}`);
 
-    const llmResponse = await getLLMProvider().generateSimple({
-      tier: 'core',
-      systemPrompt: '', // prompt is self-contained
-      messages: [{ role: 'user', content: prompt }],
-      maxTokens: 3000,
-      temperature: 0.7,
-    });
-
-    const responseText = llmResponse.text;
+    // Phase 2 — generate the review. A failure here is a model/provider failure; the
+    // session data already loaded, so the UI must not claim it "couldn't load the data".
+    let responseText: string;
+    try {
+      const llmResponse = await getLLMProvider().generateSimple({
+        tier: 'core',
+        // Session Review is a long-context clinical/practitioner synthesis (often
+        // hundreds of turns). The local core model is too slow (~197s on a 373-turn
+        // review) and too shallow for this surface, so this route opts out of
+        // LOCAL_TIER_ENABLED and uses Claude. Ordinary core/fast routes stay local-first.
+        forceClaude: true,
+        systemPrompt: '', // prompt is self-contained
+        messages: [{ role: 'user', content: prompt }],
+        maxTokens: 3000,
+        temperature: 0.7,
+      });
+      responseText = llmResponse.text;
+    } catch (genError: any) {
+      console.error('❌ Session review generation error:', genError);
+      return NextResponse.json(
+        { success: false, phase: 'generation', error: genError.message || 'Failed to generate the review' },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

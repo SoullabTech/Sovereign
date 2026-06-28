@@ -36,6 +36,7 @@ export interface BookingDetails {
   duration: number; // minutes
   timezone: string;
   notes?: string;
+  managementUrl?: string;
 }
 
 export interface PractitionerInfo {
@@ -322,6 +323,348 @@ Duration: ${booking.duration} minutes
 ${booking.notes ? `Notes: ${booking.notes}` : ''}
 
 Reply to the client: ${booking.clientEmail}
+  `.trim();
+}
+
+// ============================================================================
+// Cancellation Notifications (Client + Practitioner)
+// ============================================================================
+
+/**
+ * Send cancellation confirmation to client
+ */
+export async function sendCancellationNotification(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  reason?: string
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const resend = getResend();
+  if (!resend) {
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
+  const practitionerDisplay = practitioner.businessName || practitioner.name;
+
+  try {
+    const result = await resend.emails.send({
+      from: `${practitionerDisplay} <bookings@soullab.life>`,
+      replyTo: practitioner.email,
+      to: booking.clientEmail,
+      subject: `Booking Cancelled: ${booking.sessionType} with ${practitioner.name}`,
+      html: generateCancellationClientHtml(booking, practitioner, formattedDate, reason),
+      text: generateCancellationClientText(booking, practitioner, formattedDate, reason),
+      tags: [
+        { name: 'type', value: 'booking-cancellation' },
+        { name: 'portal', value: practitioner.portalSlug },
+      ],
+    });
+
+    console.log(`[Portal Notifications] Cancellation notification sent to ${booking.clientEmail}`);
+    return { success: true, id: result.data?.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Portal Notifications] Failed to send cancellation notification:', message);
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Send cancellation alert to practitioner
+ */
+export async function sendCancellationNotificationToPractitioner(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  reason?: string
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const resend = getResend();
+  if (!resend) {
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
+
+  try {
+    const result = await resend.emails.send({
+      from: 'Soullab Bookings <bookings@soullab.life>',
+      to: practitioner.email,
+      subject: `Booking Cancelled: ${booking.clientName} - ${booking.sessionType}`,
+      html: generateCancellationPractitionerHtml(booking, formattedDate, reason),
+      text: generateCancellationPractitionerText(booking, formattedDate, reason),
+      tags: [
+        { name: 'type', value: 'booking-cancellation-practitioner' },
+        { name: 'portal', value: practitioner.portalSlug },
+      ],
+    });
+
+    console.log(`[Portal Notifications] Cancellation alert sent to practitioner ${practitioner.email}`);
+    return { success: true, id: result.data?.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Portal Notifications] Failed to send practitioner cancellation alert:', message);
+    return { success: false, error: message };
+  }
+}
+
+function generateCancellationClientHtml(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  formattedDate: string,
+  reason?: string
+): string {
+  const practitionerDisplay = practitioner.businessName || practitioner.name;
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <h2 style="color:#1A2F24;margin:0 0 16px;">Booking Cancelled</h2>
+  <p style="color:#333;font-size:16px;">Hi ${booking.clientName},</p>
+  <p style="color:#333;font-size:16px;">Your session with <strong>${practitioner.name}</strong> on <strong>${formattedDate}</strong> has been cancelled.</p>
+  ${reason ? `<p style="color:#666;font-size:14px;"><strong>Reason:</strong> ${reason}</p>` : ''}
+  <p style="color:#333;font-size:16px;">If you'd like to rebook, please visit the portal or reply to this email.</p>
+  <p style="color:#666;font-size:14px;margin-top:24px;">${practitionerDisplay} · Powered by Soullab</p>
+</body>
+</html>
+  `.trim();
+}
+
+function generateCancellationClientText(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  formattedDate: string,
+  reason?: string
+): string {
+  return `
+BOOKING CANCELLED
+
+Hi ${booking.clientName},
+
+Your session with ${practitioner.name} on ${formattedDate} has been cancelled.
+${reason ? `Reason: ${reason}` : ''}
+
+If you'd like to rebook, please reply to this email.
+
+--
+${practitioner.businessName || practitioner.name}
+Powered by Soullab
+  `.trim();
+}
+
+function generateCancellationPractitionerHtml(
+  booking: BookingDetails,
+  formattedDate: string,
+  reason?: string
+): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <h2 style="color:#1A2F24;margin:0 0 16px;">Booking Cancelled by Client</h2>
+  <table style="background:#f8faf9;border-radius:8px;padding:16px;width:100%;border-collapse:collapse;">
+    <tr><td style="padding:8px 0;color:#666;">Client:</td><td style="padding:8px 0;color:#333;font-weight:600;">${booking.clientName}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">Session:</td><td style="padding:8px 0;color:#333;">${booking.sessionType}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">Was scheduled:</td><td style="padding:8px 0;color:#333;">${formattedDate}</td></tr>
+    ${reason ? `<tr><td style="padding:8px 0;color:#666;">Reason:</td><td style="padding:8px 0;color:#333;">${reason}</td></tr>` : ''}
+  </table>
+  <p style="margin:24px 0 0;color:#666;font-size:14px;">Reply to client: <a href="mailto:${booking.clientEmail}" style="color:#2C5530;">${booking.clientEmail}</a></p>
+</body>
+</html>
+  `.trim();
+}
+
+function generateCancellationPractitionerText(
+  booking: BookingDetails,
+  formattedDate: string,
+  reason?: string
+): string {
+  return `
+BOOKING CANCELLED BY CLIENT
+
+Client: ${booking.clientName}
+Email: ${booking.clientEmail}
+Session: ${booking.sessionType}
+Was scheduled: ${formattedDate}
+${reason ? `Reason: ${reason}` : ''}
+  `.trim();
+}
+
+// ============================================================================
+// Reschedule Notifications (Client + Practitioner)
+// ============================================================================
+
+/**
+ * Send reschedule confirmation to client
+ */
+export async function sendRescheduleNotification(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  oldDateTime: Date,
+  newDateTime: Date
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const resend = getResend();
+  if (!resend) {
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  const oldFormatted = formatDateTime(oldDateTime, booking.timezone);
+  const newFormatted = formatDateTime(newDateTime, booking.timezone);
+  const practitionerDisplay = practitioner.businessName || practitioner.name;
+
+  try {
+    const result = await resend.emails.send({
+      from: `${practitionerDisplay} <bookings@soullab.life>`,
+      replyTo: practitioner.email,
+      to: booking.clientEmail,
+      subject: `Booking Rescheduled: ${booking.sessionType} with ${practitioner.name}`,
+      html: generateRescheduleClientHtml(booking, practitioner, oldFormatted, newFormatted),
+      text: generateRescheduleClientText(booking, practitioner, oldFormatted, newFormatted),
+      tags: [
+        { name: 'type', value: 'booking-reschedule' },
+        { name: 'portal', value: practitioner.portalSlug },
+      ],
+    });
+
+    console.log(`[Portal Notifications] Reschedule notification sent to ${booking.clientEmail}`);
+    return { success: true, id: result.data?.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Portal Notifications] Failed to send reschedule notification:', message);
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Send reschedule alert to practitioner
+ */
+export async function sendRescheduleNotificationToPractitioner(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  oldDateTime: Date,
+  newDateTime: Date
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const resend = getResend();
+  if (!resend) {
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  const oldFormatted = formatDateTime(oldDateTime, booking.timezone);
+  const newFormatted = formatDateTime(newDateTime, booking.timezone);
+
+  try {
+    const result = await resend.emails.send({
+      from: 'Soullab Bookings <bookings@soullab.life>',
+      to: practitioner.email,
+      subject: `Booking Rescheduled: ${booking.clientName} - ${booking.sessionType}`,
+      html: generateReschedulePractitionerHtml(booking, oldFormatted, newFormatted),
+      text: generateReschedulePractitionerText(booking, oldFormatted, newFormatted),
+      tags: [
+        { name: 'type', value: 'booking-reschedule-practitioner' },
+        { name: 'portal', value: practitioner.portalSlug },
+      ],
+    });
+
+    console.log(`[Portal Notifications] Reschedule alert sent to practitioner ${practitioner.email}`);
+    return { success: true, id: result.data?.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Portal Notifications] Failed to send practitioner reschedule alert:', message);
+    return { success: false, error: message };
+  }
+}
+
+function generateRescheduleClientHtml(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  oldFormatted: string,
+  newFormatted: string
+): string {
+  const practitionerDisplay = practitioner.businessName || practitioner.name;
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <h2 style="color:#1A2F24;margin:0 0 16px;">Booking Rescheduled</h2>
+  <p style="color:#333;font-size:16px;">Hi ${booking.clientName},</p>
+  <p style="color:#333;font-size:16px;">Your session with <strong>${practitioner.name}</strong> has been rescheduled.</p>
+  <table style="background:#f8faf9;border-radius:8px;padding:16px;width:100%;border-collapse:collapse;margin-bottom:16px;">
+    <tr><td style="padding:8px 0;color:#666;">Session:</td><td style="padding:8px 0;color:#333;">${booking.sessionType}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">Previous time:</td><td style="padding:8px 0;color:#999;text-decoration:line-through;">${oldFormatted}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">New time:</td><td style="padding:8px 0;color:#1A2F24;font-weight:600;">${newFormatted}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">Duration:</td><td style="padding:8px 0;color:#333;">${booking.duration} minutes</td></tr>
+  </table>
+  <p style="color:#333;font-size:16px;">If you have any questions, please reply to this email.</p>
+  <p style="color:#666;font-size:14px;margin-top:24px;">${practitionerDisplay} · Powered by Soullab</p>
+</body>
+</html>
+  `.trim();
+}
+
+function generateRescheduleClientText(
+  booking: BookingDetails,
+  practitioner: PractitionerInfo,
+  oldFormatted: string,
+  newFormatted: string
+): string {
+  return `
+BOOKING RESCHEDULED
+
+Hi ${booking.clientName},
+
+Your session with ${practitioner.name} has been rescheduled.
+
+Session: ${booking.sessionType}
+Previous time: ${oldFormatted}
+New time: ${newFormatted}
+Duration: ${booking.duration} minutes
+
+If you have any questions, please reply to this email.
+
+--
+${practitioner.businessName || practitioner.name}
+Powered by Soullab
+  `.trim();
+}
+
+function generateReschedulePractitionerHtml(
+  booking: BookingDetails,
+  oldFormatted: string,
+  newFormatted: string
+): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <h2 style="color:#1A2F24;margin:0 0 16px;">Booking Rescheduled by Client</h2>
+  <table style="background:#f8faf9;border-radius:8px;padding:16px;width:100%;border-collapse:collapse;">
+    <tr><td style="padding:8px 0;color:#666;">Client:</td><td style="padding:8px 0;color:#333;font-weight:600;">${booking.clientName}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">Email:</td><td style="padding:8px 0;"><a href="mailto:${booking.clientEmail}" style="color:#2C5530;">${booking.clientEmail}</a></td></tr>
+    <tr><td style="padding:8px 0;color:#666;">Session:</td><td style="padding:8px 0;color:#333;">${booking.sessionType}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">Previous time:</td><td style="padding:8px 0;color:#999;">${oldFormatted}</td></tr>
+    <tr><td style="padding:8px 0;color:#666;">New time:</td><td style="padding:8px 0;color:#1A2F24;font-weight:600;">${newFormatted}</td></tr>
+  </table>
+  <p style="margin:24px 0 0;color:#666;font-size:14px;">Reply to client: <a href="mailto:${booking.clientEmail}" style="color:#2C5530;">${booking.clientEmail}</a></p>
+</body>
+</html>
+  `.trim();
+}
+
+function generateReschedulePractitionerText(
+  booking: BookingDetails,
+  oldFormatted: string,
+  newFormatted: string
+): string {
+  return `
+BOOKING RESCHEDULED BY CLIENT
+
+Client: ${booking.clientName}
+Email: ${booking.clientEmail}
+Session: ${booking.sessionType}
+Previous time: ${oldFormatted}
+New time: ${newFormatted}
   `.trim();
 }
 

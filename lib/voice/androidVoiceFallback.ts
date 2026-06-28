@@ -29,6 +29,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 const PREFERRED_MIME_TYPES = [
   'audio/webm;codecs=opus', // Android Chrome default
   'audio/webm',
+  'audio/ogg;codecs=opus',  // Firefox / Zen native container
+  'audio/ogg',
   'audio/mp4',
   'audio/wav',
 ] as const;
@@ -255,6 +257,16 @@ async function recordWithSilenceDetection(
     // ── Silence detection via Web Audio API analyser ───────────────────
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const audioCtx = new AudioCtx();
+    // 🦊 Firefox / Zen create the context `suspended` under the autoplay policy
+    // even inside a user-gesture chain (the awaits before us can drop the
+    // activation). A suspended context feeds the analyser pure silence → the VAD
+    // sees false-silence and stops at ~1.5s → "listening but doesn't hear".
+    // Resume so silence detection reads real levels. Non-blocking: minMs (800ms)
+    // covers the resume latency before any silence-stop can fire. The
+    // MediaRecorder itself captures audio regardless of context state.
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => { /* fall back to max-duration stop */ });
+    }
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
     analyser.fftSize = 1024;
