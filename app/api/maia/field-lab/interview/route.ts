@@ -30,13 +30,17 @@ export async function generateStaticParams() {
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { isMemberTester } from '@/lib/auth/tester';
+import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
+import { getLLMProvider, ensureUserTerminal } from '@/lib/consciousness/LLMProvider';
+import { getCenter } from '@/lib/maia/field-lab/centerOfInquiry';
 
-const anthropic = new Anthropic();
-
-const MODEL = 'claude-opus-4-7';
+// Provider abstraction (sovereignty): all generation goes through MultiLLMProvider
+// — Claude primary, local Ollama fallback (LOCAL_TIER_ENABLED / DISABLE_CLAUDE).
+// No raw Anthropic SDK here, so the room never hard-depends on the cloud.
+// turn → 'core' (responsive reflective dialogue); propose → 'deep' (the high-stakes
+// listen-back + structured JSON benefits from the strongest tier).
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
 
@@ -91,37 +95,9 @@ function extractJson(text: string): unknown {
   return null;
 }
 
-const INTERVIEW_SYSTEM = `You are MAIA, a reflective companion in a quiet Field Lab room. This is a living conversation, not an intake form.
-
-Your work is presence, not interrogation. You are not collecting information; you are creating the conditions in which a person recognizes something while speaking.
-
-How you move:
-- Begin and stay with the person. Follow their own language and what feels alive for them. Never steer toward a topic you have decided on; the person's life decides the direction.
-- Ask one thing at a time. Usually a single, genuinely curious question — or a brief reflection of what you notice, then one question.
-- Reflect, do not conclude. You may say "I'm noticing…" or "Something shifted just now…". You never diagnose, label, summarize the person, or tell them who they are.
-- Tolerate unfinishedness. If they say "I don't know," stay with it — silence and "let's stay with that" are often where the real thing appears. Do not rush to resolution.
-- Ask from curiosity, not explanation: "What surprised you about that?" rather than "Why did you do that?"
-
-Hard boundaries:
-- Do NOT sort the person into any framework, type, element, or category. Do not build a model of them. There is no hidden assessment.
-- Keep it short and human. Warm, unhurried, plain language. No lists, no headings, no analysis.
-- Authority is always theirs. You accompany; you do not direct.
-
-Respond with only your next spoken turn — a question or a brief reflection-and-question. Nothing else.`;
-
-const PROPOSE_SYSTEM = `You are MAIA. The reflective conversation has come to a natural pause. Listen back across everything the person shared and offer, tentatively, the threads you heard returning in THEIR words.
-
-What a "thread" is: a short, human phrase the person could recognize as theirs — something that kept surfacing across what they said. Not a diagnosis, not a category, not a framework or element. Their language, not yours.
-
-How to offer:
-- Offer 1 to 3 threads. Fewer is better than forced. If you genuinely did not hear an enduring thread worth naming, offer none — that is a faithful outcome, not a failure.
-- Every thread is tentative and offered, never declared. "One thread I keep hearing…", "This may be worth carrying…". The person is the author of whether any of these belong to them.
-- Ground each in what they actually said, briefly.
-
-Return ONLY valid JSON, no prose, in exactly this shape:
-{"threads":[{"title":"<short human phrase, ideally their own words>","reflection":"<one tentative sentence, e.g. 'I keep hearing…'>","groundedIn":"<brief: what in the conversation this came from>"}]}
-
-If you have nothing worth proposing, return {"threads":[]}. Never invent a thread to fill the space.`;
+// Center-specific system prompts (person → Legacy Field, project → Vision Studio) now
+// live in lib/maia/field-lab/centerOfInquiry.ts and are selected per request below. The
+// engine is one recognition primitive; the center is configuration, not a rebuild.
 
 interface ProposedThread {
   title: string;
@@ -150,11 +126,14 @@ function asThreads(parsed: unknown): ProposedThread[] | null {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getCurrentSession();
-    if (!session) {
+    // Cookie-based session first; fall back to x-session-token header for iOS Safari/Capacitor
+    // where SameSite=Lax cookies are not sent cross-origin from the WebView.
+    const cookieSession = await getCurrentSession();
+    const memberId = cookieSession?.memberId ?? await getMemberIdFromRequest(request);
+    if (!memberId) {
       return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
     }
-    const tester = await isMemberTester(session.memberId);
+    const tester = await isMemberTester(memberId);
     if (!tester) {
       return NextResponse.json(
         { error: 'This is an experimental Field Lab surface. To participate, opt in from /maia/field-lab.' },
@@ -179,20 +158,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const system = mode === 'turn' ? INTERVIEW_SYSTEM : PROPOSE_SYSTEM;
+    // Center of Inquiry: person (Legacy Field) or project (Vision Studio). Same engine —
+    // the center only selects the framing config. Defaults to person.
+    const center = getCenter(body?.center);
+    const system = mode === 'turn' ? center.interviewSystem : center.proposeSystem;
     const maxTokens = mode === 'turn' ? MAX_TOKENS_TURN : MAX_TOKENS_PROPOSE;
 
-    const completion = await anthropic.messages.create({
-      model: MODEL,
-      max_tokens: maxTokens,
-      system,
-      messages: history.map((t) => ({ role: t.role, content: t.content })),
-    });
+    // Claude rejects an assistant-terminal messages array (last-assistant-turn "prefill"
+    // → 400 "the conversation must end with a user message" on Sonnet/Opus 4.6+). Both
+    // modes must be user-terminal before the provider call:
+    //   - 'propose' history usually ends on MAIA's reflection → append the member's
+    //     implicit "offer what you heard" request so the listen-back has a turn to answer.
+    //   - 'turn' history may end on MAIA (continue / regenerate / retry) → trim trailing
+    //     assistant turns so MAIA responds to the member's last real message, not a prefill.
+    // generateClaude applies the same trim as a structural backstop for every route.
+    let messages: Array<{ role: Role; content: string }> = history.map((t) => ({
+      role: t.role,
+      content: t.content,
+    }));
+    if (messages[messages.length - 1]?.role !== 'user') {
+      if (mode === 'propose') {
+        messages.push({
+          role: 'user',
+          content:
+            'Looking back over everything I just shared, offer — tentatively, in my own words — the threads you heard returning.',
+        });
+      } else {
+        messages = ensureUserTerminal(messages);
+        if (messages.length === 0) {
+          return NextResponse.json(
+            { error: 'Say something first — the conversation begins with you.' },
+            { status: 400 }
+          );
+        }
+      }
+    }
 
-    const textBlock = completion.content.find(
-      (block: any) => block.type === 'text'
-    ) as { type: 'text'; text: string } | undefined;
-    const raw = (textBlock?.text ?? '').trim();
+    const result = await getLLMProvider().generateSimple({
+      tier: mode === 'turn' ? 'core' : 'deep',
+      systemPrompt: system,
+      messages,
+      maxTokens,
+    });
+    const raw = (result.text ?? '').trim();
 
     if (mode === 'turn') {
       if (!raw) {

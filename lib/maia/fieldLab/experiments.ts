@@ -49,23 +49,44 @@ export const EXPERIMENTS: Experiment[] = [
     },
   },
   {
-    slug: 'crossing',
-    name: 'The Crossing',
+    slug: 'legacy-field',
+    name: 'Legacy Field',
     oneLiner:
       'One conversation in which you recognize — and author — a thread that feels genuinely yours.',
-    status: ['Experimental', 'Recognition not extraction', 'No persistence yet'],
+    status: ['Experimental', 'Recognition not extraction', 'Consent-gated memory'],
     exploring:
       'Whether MAIA can help a member recognize something true about themselves that they choose to author — without becoming the author of it.',
     phase: 'phase-1',
-    // The first Reflective Companionship experiment. Principal uncertainty = the
-    // liability the crossing exists to discharge. Single-session, member-authored;
-    // cross-session field + elemental inference deferred.
+    // The first Reflective Companionship experiment (person-centered). Principal
+    // uncertainty = the liability the crossing exists to discharge. Member-authored,
+    // consent-gated persistence; cross-session field + elemental inference deferred.
     // Spec: docs/specs/FIELD_LAB_CONVERSATIONAL_INTERVIEW_SPEC_2026-06-26.md
     governingUncertainty: {
       current:
         'Can MAIA propose enduring structure without becoming the author or the boundary of the person’s self-understanding?',
       transitionState: 'admitted',
       admittedAt: '2026-06-26',
+      transitions: [],
+    },
+  },
+  {
+    slug: 'project-field',
+    name: 'Project Field',
+    oneLiner:
+      'One conversation in which you recognize — and author — a thread the work itself keeps returning to.',
+    status: ['Experimental', 'Recognition not a roadmap', 'Consent-gated memory'],
+    exploring:
+      'Whether MAIA can help a maker recognize what a piece of work is becoming — without modeling, scoring, or planning it for them.',
+    phase: 'phase-1',
+    // The same recognition primitive, center-swapped from the person to the work
+    // (lib/maia/field-lab/centerOfInquiry.ts). Project-centered authored recognitions,
+    // consent-gated; NO profiling, confidence, Spiralogic mapping, or crossings — those
+    // field "organs" are earned only by the post-Harvest concierge phase, never assumed.
+    governingUncertainty: {
+      current:
+        'Can MAIA propose enduring structure about a piece of work without becoming the author or the boundary of the maker’s understanding of it?',
+      transitionState: 'admitted',
+      admittedAt: '2026-06-28',
       transitions: [],
     },
   },

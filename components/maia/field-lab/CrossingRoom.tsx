@@ -15,7 +15,8 @@
  *     not an abandonment.
  *   - MAIA proposes, never declares. Proposing nothing is a faithful outcome.
  *   - Nothing here builds a model of the person — no categories, no elements,
- *     no scores. The conversation is ephemeral; only an authored thread crosses.
+ *     no scores. The conversation is ephemeral; only an authored thread crosses
+ *     (persisted via /api/maia/field-lab/field-note, by an explicit member gesture).
  *
  * Spec: docs/specs/FIELD_LAB_CONVERSATIONAL_INTERVIEW_SPEC_2026-06-26.md
  */
@@ -23,6 +24,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
+import { CENTERS, type CenterOfInquiry } from '@/lib/maia/field-lab/centerOfInquiry';
 
 type Role = 'user' | 'assistant';
 interface Turn {
@@ -34,23 +36,35 @@ interface ProposedThread {
   reflection: string;
   groundedIn: string;
 }
-type Decision = 'keep' | 'revise' | 'discard';
+type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread {
   title: string;
   origin: 'maia_proposed' | 'member_authored';
 }
+interface CarryPayload {
+  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[] }[];
+  created: string[];
+  consent?: { remembered: boolean; protocolVersion: string };
+}
 
 type Phase = 'arrival' | 'conversation' | 'proposal' | 'closed';
 
-export function CrossingRoom() {
+// Mirrors the save route's CONSENT_PROTOCOL — the informed-consent protocol version
+// recorded when a member chooses to remember. Bump together with the route.
+const CONSENT_PROTOCOL = 'recognition-continuity-v1';
+
+export function CrossingRoom({ center = 'person' }: { center?: CenterOfInquiry } = {}) {
+  const cfg = CENTERS[center];
   const [phase, setPhase] = useState<Phase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
   const [working, setWorking] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [proposed, setProposed] = useState<ProposedThread[]>([]);
   const [authored, setAuthored] = useState<AuthoredThread[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sessionRef = useRef<string>('');
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -60,7 +74,7 @@ export function CrossingRoom() {
     const res = await apiFetch('/api/maia/field-lab/interview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history, mode }),
+      body: JSON.stringify({ history, mode, center }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json?.error || 'Something is not available right now.');
@@ -88,6 +102,9 @@ export function CrossingRoom() {
 
   async function beginFromArrival() {
     if (!draft.trim()) return;
+    sessionRef.current =
+      (typeof crypto !== 'undefined' && crypto.randomUUID?.()) ||
+      Math.random().toString(36).slice(2);
     setPhase('conversation');
     await sendTurn(draft);
   }
@@ -107,26 +124,45 @@ export function CrossingRoom() {
     }
   }
 
-  function decide(thread: ProposedThread, decision: Decision, revisedTitle?: string) {
-    if (decision === 'discard') return; // a discarded thread simply disappears
-    const title = (revisedTitle ?? thread.title).trim();
-    if (!title) return;
-    setAuthored((a) => [...a, { title, origin: 'maia_proposed' }]);
-  }
-
-  function originate(title: string) {
-    const t = title.trim();
-    if (!t) return;
-    setAuthored((a) => [...a, { title: t, origin: 'member_authored' }]);
-  }
-
-  // Leaving with nothing is a first-class, successful close.
+  // Leaving with nothing is a first-class, successful close. Nothing is saved.
   function leaveWithNothing() {
     setAuthored([]);
     setPhase('closed');
   }
-  function carryForward() {
-    setPhase('closed');
+
+  // The crossing: persist only what the member authored.
+  async function carryForward(payload: CarryPayload) {
+    if (saving) return;
+    setError(null);
+    setSaving(true);
+    const finalAuthored: AuthoredThread[] = [
+      ...payload.proposals
+        .filter((p) => p.decision === 'keep' || p.decision === 'revise')
+        .map((p) => ({
+          title: p.decision === 'revise' ? (p.revisedTitle || p.title) : p.title,
+          origin: 'maia_proposed' as const,
+        })),
+      // split: the original is not kept; the member-authored children are
+      ...payload.proposals
+        .filter((p) => p.decision === 'split')
+        .flatMap((p) => (p.children ?? []).map((c) => ({ title: c, origin: 'member_authored' as const }))),
+      ...payload.created.map((t) => ({ title: t, origin: 'member_authored' as const })),
+    ];
+    try {
+      const res = await apiFetch('/api/maia/field-lab/field-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, sessionRef: sessionRef.current, center }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Could not save right now.');
+      setAuthored(finalAuthored);
+      setPhase('closed');
+    } catch (e: any) {
+      setError(e?.message || 'Could not save. Your conversation is unaffected; try once more.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -142,7 +178,7 @@ export function CrossingRoom() {
             className="flex-1 flex flex-col items-center justify-center text-center px-2 py-16"
           >
             <p className="font-cormorant text-[26px] font-light text-amber-50/90 leading-snug max-w-md">
-              What feels most alive for you today?
+              {cfg.arrivalPrompt}
             </p>
             <p className="text-[13px] text-soullab-text-muted mt-3 mb-6 max-w-sm">
               No forms. Just talk. We&apos;ll stay with it as long as it&apos;s useful — and you&apos;re
@@ -248,9 +284,7 @@ export function CrossingRoom() {
             {phase === 'proposal' && (
               <Crossing
                 proposed={proposed}
-                authoredCount={authored.length}
-                onDecide={decide}
-                onOriginate={originate}
+                saving={saving}
                 onCarry={carryForward}
                 onLeave={leaveWithNothing}
               />
@@ -291,6 +325,12 @@ export function CrossingRoom() {
                 <p className="text-[12.5px] text-soullab-text-muted mt-5 max-w-sm">
                   Held only because you authored them — not because they were proposed.
                 </p>
+                <a
+                  href="/maia/field-lab/your-threads"
+                  className="mt-5 text-[13px] text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline"
+                >
+                  Visit your threads — to return, revise, or release →
+                </a>
               </>
             )}
           </motion.div>
@@ -302,23 +342,25 @@ export function CrossingRoom() {
 
 function Crossing({
   proposed,
-  authoredCount,
-  onDecide,
-  onOriginate,
+  saving,
   onCarry,
   onLeave,
 }: {
   proposed: ProposedThread[];
-  authoredCount: number;
-  onDecide: (t: ProposedThread, d: Decision, revisedTitle?: string) => void;
-  onOriginate: (title: string) => void;
-  onCarry: () => void;
+  saving: boolean;
+  onCarry: (payload: CarryPayload) => void;
   onLeave: () => void;
 }) {
   const [decided, setDecided] = useState<Record<number, Decision>>({});
+  const [revised, setRevised] = useState<Record<number, string>>({});
   const [revising, setRevising] = useState<number | null>(null);
   const [revisionText, setRevisionText] = useState('');
   const [ownThread, setOwnThread] = useState('');
+  const [created, setCreated] = useState<string[]>([]);
+  // Split: per-proposal member-authored children + the in-progress draft per card.
+  const [children, setChildren] = useState<Record<number, string[]>>({});
+  const [splitDraft, setSplitDraft] = useState<Record<number, string>>({});
+  const [confirming, setConfirming] = useState(false); // informed-consent gate before keeping
 
   function act(i: number, t: ProposedThread, d: Decision) {
     if (d === 'revise') {
@@ -326,13 +368,68 @@ function Crossing({
       setRevisionText(t.title);
       return;
     }
-    onDecide(t, d);
     setDecided((s) => ({ ...s, [i]: d }));
   }
   function commitRevision(i: number, t: ProposedThread) {
-    onDecide(t, 'revise', revisionText);
+    const title = revisionText.trim() || t.title;
+    setRevised((s) => ({ ...s, [i]: title }));
     setDecided((s) => ({ ...s, [i]: 'revise' }));
     setRevising(null);
+  }
+  function originate() {
+    const t = ownThread.trim();
+    if (!t) return;
+    setCreated((c) => [...c, t]);
+    setOwnThread('');
+  }
+  function addChild(i: number) {
+    const c = (splitDraft[i] ?? '').trim();
+    if (!c) return;
+    setChildren((s) => ({ ...s, [i]: [...(s[i] ?? []), c] }));
+    setSplitDraft((s) => ({ ...s, [i]: '' }));
+  }
+  function removeChild(i: number, ci: number) {
+    setChildren((s) => ({ ...s, [i]: (s[i] ?? []).filter((_, k) => k !== ci) }));
+  }
+
+  // A split contributes the children the member authored, never the (unkept) original.
+  const splitChildCount = Object.entries(children).reduce(
+    (n, [i, arr]) => n + (decided[Number(i)] === 'split' ? arr.length : 0),
+    0,
+  );
+  const authoredCount =
+    Object.values(decided).filter((d) => d === 'keep' || d === 'revise').length +
+    created.length +
+    splitChildCount;
+
+  // The titles the member is about to keep — shown back to them at the consent gate.
+  const keptItems: string[] = [
+    ...proposed.flatMap((t, i) =>
+      decided[i] === 'keep'
+        ? [t.title]
+        : decided[i] === 'revise'
+          ? [revised[i] || t.title]
+          : decided[i] === 'split'
+            ? (children[i] ?? [])
+            : [],
+    ),
+    ...created,
+  ];
+
+  // Carry is a two-step gesture: choose, then give informed consent to remember.
+  function carry() {
+    if (saving || authoredCount === 0) return;
+    setConfirming(true);
+  }
+  function confirmCarry() {
+    if (saving || authoredCount === 0) return;
+    const proposals = proposed.map((t, i) => ({
+      title: t.title,
+      decision: (decided[i] ?? 'discard') as Decision,
+      revisedTitle: revised[i],
+      children: decided[i] === 'split' ? (children[i] ?? []) : undefined,
+    }));
+    onCarry({ proposals, created, consent: { remembered: true, protocolVersion: CONSENT_PROTOCOL } });
   }
 
   return (
@@ -347,63 +444,121 @@ function Crossing({
           Nothing clear enough surfaced to offer today — and that&apos;s honest, not a failure.
         </p>
       ) : (
-        proposed.map((t, i) => (
-          <div
-            key={i}
-            className={[
-              'rounded-2xl border p-4 transition-all',
-              decided[i]
-                ? 'border-amber-500/10 bg-stone-900/20 opacity-60'
-                : 'border-amber-500/15 bg-stone-900/40 backdrop-blur-sm',
-            ].join(' ')}
-          >
-            <div className="font-cormorant text-[19px] text-amber-50/90 mb-1">{t.title}</div>
-            {t.reflection && (
-              <p className="text-[13.5px] text-soullab-text-secondary leading-relaxed">{t.reflection}</p>
-            )}
-            {revising === i ? (
-              <div className="mt-3 space-y-2">
-                <input
-                  value={revisionText}
-                  onChange={(e) => setRevisionText(e.target.value)}
-                  className="w-full rounded-lg border border-amber-400/30 bg-stone-900/50 px-3 py-2 text-[14px] text-soullab-text-primary focus:outline-none"
-                  placeholder="Name it in your own words…"
-                />
-                <button
-                  type="button"
-                  onClick={() => commitRevision(i, t)}
-                  className="text-[13px] text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline"
-                >
-                  This is mine
-                </button>
+        proposed.map((t, i) => {
+          const d = decided[i];
+          return (
+            <div
+              key={i}
+              className={[
+                'rounded-2xl border p-4 transition-all',
+                d && d !== 'split'
+                  ? 'border-amber-500/10 bg-stone-900/20 opacity-60'
+                  : 'border-amber-500/15 bg-stone-900/40 backdrop-blur-sm',
+              ].join(' ')}
+            >
+              <div className="font-cormorant text-[19px] text-amber-50/90 mb-1">
+                {revised[i] || t.title}
               </div>
-            ) : decided[i] ? (
-              <p className="mt-2 text-[12px] text-soullab-text-muted uppercase tracking-wider">
-                {decided[i] === 'revise' ? 'revised & kept' : 'kept'}
-              </p>
-            ) : (
-              <div className="mt-3 flex flex-wrap gap-3 text-[13px]">
-                <button type="button" onClick={() => act(i, t, 'keep')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Keep</button>
-                <button type="button" onClick={() => act(i, t, 'revise')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Revise</button>
-                <button type="button" onClick={() => act(i, t, 'discard')} className="text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline">Discard</button>
-              </div>
-            )}
-          </div>
-        ))
+              {t.reflection && !d && (
+                <p className="text-[13.5px] text-soullab-text-secondary leading-relaxed">{t.reflection}</p>
+              )}
+              {revising === i ? (
+                <div className="mt-3 space-y-2">
+                  <input
+                    value={revisionText}
+                    onChange={(e) => setRevisionText(e.target.value)}
+                    className="w-full rounded-lg border border-amber-400/30 bg-stone-900/50 px-3 py-2 text-[14px] text-soullab-text-primary focus:outline-none"
+                    placeholder="Name it in your own words…"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => commitRevision(i, t)}
+                    className="text-[13px] text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline"
+                  >
+                    This is mine
+                  </button>
+                </div>
+              ) : d === 'split' ? (
+                <div className="mt-3 space-y-2">
+                  <p className="text-[12px] text-soullab-text-muted uppercase tracking-wider">
+                    separated into your own threads
+                  </p>
+                  {(children[i] ?? []).length > 0 && (
+                    <ul className="space-y-1">
+                      {(children[i] ?? []).map((c, ci) => (
+                        <li key={ci} className="flex items-center gap-2 text-[13.5px] text-soullab-text-secondary italic">
+                          &ldquo;{c}&rdquo;
+                          <button
+                            type="button"
+                            onClick={() => removeChild(i, ci)}
+                            className="not-italic text-[11px] text-soullab-text-muted hover:text-amber-200 underline-offset-2 hover:underline"
+                          >
+                            remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      value={splitDraft[i] ?? ''}
+                      onChange={(e) => setSplitDraft((s) => ({ ...s, [i]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addChild(i); }}
+                      placeholder="Name one of the threads in your own words…"
+                      className="flex-1 rounded-lg border border-amber-400/30 bg-stone-900/50 px-3 py-2 text-[13.5px] text-soullab-text-primary placeholder:text-soullab-text-muted focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addChild(i)}
+                      disabled={!(splitDraft[i] ?? '').trim()}
+                      className="rounded-lg px-3 py-2 text-[13px] text-amber-300/80 hover:text-amber-200 disabled:opacity-40 border border-amber-500/20"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              ) : d ? (
+                <p className="mt-2 text-[12px] text-soullab-text-muted uppercase tracking-wider">
+                  {d === 'revise' ? 'revised — yours' : d === 'keep' ? 'kept' : 'left'}
+                </p>
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-3 text-[13px]">
+                  <button type="button" onClick={() => act(i, t, 'keep')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Keep</button>
+                  <button type="button" onClick={() => act(i, t, 'revise')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Revise</button>
+                  <button type="button" onClick={() => act(i, t, 'split')} className="text-amber-300/80 hover:text-amber-200 underline-offset-4 hover:underline">Split</button>
+                  <button type="button" onClick={() => act(i, t, 'discard')} className="text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline">Discard</button>
+                </div>
+              )}
+            </div>
+          );
+        })
       )}
 
       <div className="rounded-2xl border border-amber-500/10 bg-stone-900/20 p-4">
         <p className="text-[13px] text-soullab-text-muted mb-2">Something MAIA didn&apos;t name?</p>
+        {created.length > 0 && (
+          <ul className="mb-3 space-y-1">
+            {created.map((c, i) => (
+              <li key={i} className="text-[13.5px] text-soullab-text-secondary italic">
+                &ldquo;{c}&rdquo;{' '}
+                <span className="not-italic text-[11px] uppercase tracking-wider text-amber-300/60">yours</span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="flex gap-2">
           <input
             value={ownThread}
             onChange={(e) => setOwnThread(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') originate();
+            }}
             placeholder="Name your own thread…"
             className="flex-1 rounded-lg border border-amber-500/15 bg-stone-900/40 px-3 py-2 text-[14px] text-soullab-text-primary placeholder:text-soullab-text-muted focus:outline-none focus:border-amber-400/30"
           />
           <button
             type="button"
-            onClick={() => { onOriginate(ownThread); setOwnThread(''); }}
+            onClick={originate}
             disabled={!ownThread.trim()}
             className="rounded-lg px-3 py-2 text-[13px] text-amber-300/80 hover:text-amber-200 disabled:opacity-40 border border-amber-500/20"
           >
@@ -412,23 +567,77 @@ function Crossing({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-2">
-        <button
-          type="button"
-          onClick={onLeave}
-          className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline"
-        >
-          Leave with nothing
-        </button>
-        <button
-          type="button"
-          onClick={onCarry}
-          disabled={authoredCount === 0}
-          className="rounded-xl px-5 py-2.5 text-[14px] font-medium border bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
-        >
-          Carry {authoredCount > 0 ? `${authoredCount} forward` : 'forward'}
-        </button>
-      </div>
+      {confirming ? (
+        <div className="rounded-2xl border border-amber-400/30 bg-stone-900/50 p-5 space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="font-cormorant text-[20px] text-amber-50/90">
+              Before these become part of your memory
+            </p>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={saving}
+              className="shrink-0 text-[12px] text-soullab-text-muted hover:text-soullab-text-secondary underline-offset-4 hover:underline disabled:opacity-40"
+            >
+              ← edit your choices
+            </button>
+          </div>
+          <p className="text-[13.5px] text-soullab-text-secondary leading-relaxed">
+            You&apos;re choosing to keep {keptItems.length === 1 ? 'this thread' : `these ${keptItems.length} threads`}.
+            Keeping {keptItems.length === 1 ? 'it' : 'them'} means:
+          </p>
+          <ul className="space-y-1.5 text-[13px] text-soullab-text-secondary leading-relaxed">
+            <li><span className="text-amber-50/80">Yours to change</span> — revise or release {keptItems.length === 1 ? 'it' : 'any of them'} anytime, in Your Threads.</li>
+            <li><span className="text-amber-50/80">Yours alone</span> — never shown to anyone else, never used to train a model, never sold. Not a profile of you.</li>
+            <li><span className="text-amber-50/80">Kept for you</span> — so you can return to your own reflection over time.</li>
+          </ul>
+          <ul className="space-y-1 border-l border-amber-500/15 pl-3">
+            {keptItems.map((it, i) => (
+              <li key={i} className="text-[13.5px] text-soullab-text-secondary italic">&ldquo;{it}&rdquo;</li>
+            ))}
+          </ul>
+          <div className="flex items-center justify-between pt-1">
+            <button
+              type="button"
+              onClick={onLeave}
+              disabled={saving}
+              className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary disabled:opacity-40 underline-offset-4 hover:underline"
+            >
+              Leave with nothing
+            </button>
+            <button
+              type="button"
+              onClick={confirmCarry}
+              disabled={saving}
+              className="rounded-xl px-5 py-2.5 text-[14px] font-medium border bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+            >
+              {saving ? 'Keeping…' : 'Keep these — I understand'}
+            </button>
+          </div>
+          <p className="text-[10.5px] uppercase tracking-wider text-soullab-text-muted/70">
+            Recognition continuity · v1
+          </p>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={onLeave}
+            disabled={saving}
+            className="text-[13px] text-soullab-text-muted hover:text-soullab-text-secondary disabled:opacity-40 underline-offset-4 hover:underline"
+          >
+            Leave with nothing
+          </button>
+          <button
+            type="button"
+            onClick={carry}
+            disabled={authoredCount === 0 || saving}
+            className="rounded-xl px-5 py-2.5 text-[14px] font-medium border bg-amber-500/15 text-amber-50 border-amber-400/30 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+          >
+            {saving ? 'Carrying…' : `Carry ${authoredCount > 0 ? `${authoredCount} ` : ''}forward`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
