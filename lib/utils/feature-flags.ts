@@ -44,7 +44,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryReality: false,        // Off until Phase 2 wiring complete
   participatoryJournalingLens: false, // Off until Phase 2
   participatoryPractitioner: false,   // Off until Phase 3
-  relationalRouting: false,           // Off until v1 tested
+  relationalRouting: true,            // On — intent-driven doorways verified
   worldDoorways: true,               // On — core experience shift
   cmPractitionerEnvironment: false,   // Off until v1 tested
   soullabStore: false,                // Off until store verified in production
