@@ -13,7 +13,7 @@
  *     scores, no Spiralogic mapping). Only an authored thread crosses, by consent.
  *   - MAIA proposes; she never declares. Proposing nothing is faithful.
  *
- * Same recognition engine as Vision Studio (../vision-studio); only the Center of
+ * Same recognition engine as Project Field (../project-field); only the Center of
  * Inquiry differs. Spec: docs/specs/FIELD_LAB_CONVERSATIONAL_INTERVIEW_SPEC_2026-06-26.md
  */
 

@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Vision Studio — inside Field Lab (Center of Inquiry: project).
+ * Project Field — inside Field Lab (Center of Inquiry: project).
  *
- * The same recognition engine as the Legacy Field (../crossing) — center-swapped
+ * The same recognition engine as the Legacy Field (../legacy-field) — center-swapped
  * from the person to the WORK. One conversation in which MAIA helps the maker
  * recognize what their work is asking to become, which the maker then authors — or
  * chooses not to. The authored thread, not the conversation, is the product.
@@ -23,10 +23,10 @@
 import { FieldLabFrame } from '@/components/maia/field-lab/FieldLabFrame';
 import { CrossingRoom } from '@/components/maia/field-lab/CrossingRoom';
 
-export default function VisionStudioPage() {
+export default function ProjectFieldPage() {
   return (
     <FieldLabFrame
-      title="Vision Studio"
+      title="Project Field"
       status="Experimental · Recognition, not a roadmap · Consent-gated · Always free to leave with nothing"
       exploring="A reflective conversation about the work — what it is asking to become, in your own words. MAIA helps you recognize the threads the work keeps returning to; you author the ones that are the work's own — or keep nothing. Recognition ends the conversation; the clock never does."
     >

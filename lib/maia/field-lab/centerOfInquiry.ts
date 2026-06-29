@@ -3,7 +3,7 @@
  *
  * The Crossing engine (interview → propose → author → consent → accrue) is a single
  * recognition primitive. What changes between **Legacy Field** (person-centered) and
- * **Vision Studio** (project-centered) is NOT the engine — it is this config: the
+ * **Project Field** (project-centered) is NOT the engine — it is this config: the
  * arrival prompt, the framing of the system prompts, and the surface labels. Same
  * flow, same JSON contract, same consent gate, same persistence.
  *
@@ -67,8 +67,8 @@ Return ONLY valid JSON, no prose, in exactly this shape:
 
 If you have nothing worth proposing, return {"threads":[]}. Never invent a thread to fill the space.`;
 
-// ── Vision Studio — center: the work (parallel discipline, project-framed) ──────────
-const PROJECT_INTERVIEW = `You are MAIA, a reflective companion in a quiet Vision Studio. This is a living conversation about a piece of work — a project, a practice, a body of work — not an intake form and not a planning session.
+// ── Project Field — center: the work (parallel discipline, project-framed) ──────────
+const PROJECT_INTERVIEW = `You are MAIA, a reflective companion in a quiet Field Lab room, sitting with a piece of work. This is a living conversation about that work — a project, a practice, a body of work — not an intake form and not a planning session.
 
 Your work is presence, not interrogation. You are not collecting requirements; you are creating the conditions in which the maker recognizes what the work is becoming, while speaking of it.
 
@@ -112,7 +112,7 @@ export const CENTERS: Record<CenterOfInquiry, CenterConfig> = {
   },
   project: {
     id: 'project',
-    surfaceTitle: 'Vision Studio',
+    surfaceTitle: 'Project Field',
     surfaceTagline:
       'A reflective conversation about the work — what it is asking to become, in your own words. Recognition, not a roadmap; you are always free to leave with nothing.',
     arrivalPrompt: 'What is this work asking to become?',
