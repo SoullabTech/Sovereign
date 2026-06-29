@@ -8,45 +8,52 @@ import { motion, AnimatePresence } from 'framer-motion';
 type OrientationStep =
   | 'root_options'
   | 'typing'
-  | 'practical_options'
-  | 'personal_options'
+  | 'understand_options'
+  | 'creating_options'
+  | 'know_self_options'
   | 'curious_options';
 
-// ── Option definitions ─────────────────────────────────────────────────────────
+type RootKey = 'understand' | 'creating' | 'know_self' | 'curious';
 
-const ROOT_OPTIONS = [
-  { key: 'practical', label: 'I came with something practical' },
-  { key: 'personal',  label: 'I came with something personal'  },
-  { key: 'curious',   label: "I'm just curious"                },
-] as const;
+// ── Root doors — ways of arriving, not feature destinations ───────────────────
 
-type RootKey = typeof ROOT_OPTIONS[number]['key'];
+const ROOT_OPTIONS: { key: RootKey; label: string; glyph: string }[] = [
+  { key: 'understand', label: 'I want to understand something',  glyph: '🌱' },
+  { key: 'creating',   label: 'I\'m creating something',         glyph: '🔥' },
+  { key: 'know_self',  label: 'I want to know myself better',    glyph: '🌊' },
+  { key: 'curious',    label: 'I\'m just curious',               glyph: '🌎' },
+];
+
+// ── Branch invitations — these are the prompts that start the conversation ────
 
 const BRANCH_OPTIONS: Record<RootKey, { label: string; prompt: string }[]> = {
-  practical: [
-    { label: 'Help me organize something',     prompt: 'Help me organize something I\'ve been putting off.' },
-    { label: 'Help me write something',        prompt: 'Help me write something — I\'ll tell you what it is.' },
-    { label: 'Help me make a decision',        prompt: 'Help me think through a decision I\'m facing.' },
-    { label: 'Help me develop an idea',        prompt: 'I have an idea I\'d like to develop. Let me tell you about it.' },
+  understand: [
+    { label: 'Help me understand something that\'s been on my mind.',  prompt: 'Help me understand something that\'s been on my mind.' },
+    { label: 'Reflect with me.',                                        prompt: 'I\'d like to reflect on something. Let\'s begin.' },
+    { label: 'Help me untangle a situation.',                           prompt: 'Help me untangle a situation I\'ve been in.' },
   ],
-  personal: [
-    { label: 'Help me reflect on an experience',         prompt: 'Help me understand an experience that\'s still with me.' },
-    { label: 'Help me understand a relationship',        prompt: 'Help me understand what happened in a relationship that is still affecting me.' },
-    { label: 'Help me explore a dream or symbol',        prompt: 'I had a dream — or something keeps recurring — and I\'d like to explore it.' },
-    { label: 'Help me return to myself',                 prompt: 'I\'ve been feeling scattered. Help me return to myself.' },
+  creating: [
+    { label: 'Help me shape an idea.',          prompt: 'I have an idea I\'d like to shape. Help me think it through.' },
+    { label: 'Explore a project with me.',      prompt: 'I\'m working on a project. Let\'s explore it together.' },
+    { label: 'Think something through.',        prompt: 'I need to think something through carefully.' },
+  ],
+  know_self: [
+    { label: 'Explore a dream.',                         prompt: 'I\'d like to explore a dream I had.' },
+    { label: 'Help me understand a relationship.',       prompt: 'Help me understand a relationship that\'s on my mind.' },
+    { label: 'Notice patterns with me.',                 prompt: 'I\'ve been noticing a pattern in my life. Help me look at it.' },
   ],
   curious: [
-    { label: 'Show me what MAIA can do',  prompt: 'What else can we do together?' },
-    { label: 'Surprise me',               prompt: 'Surprise me with one way we could begin.' },
-    { label: 'Ask me a question',         prompt: 'Ask me something. I\'ll see where it goes.' },
-    { label: "Let's wander",              prompt: "I don't know where to start. Let's just begin." },
+    { label: 'What can you actually do?',  prompt: 'What can we actually do together? I\'m still figuring that out.' },
+    { label: 'Show me around.',            prompt: 'I\'d like a sense of what\'s possible here. Show me around a little.' },
+    { label: 'Surprise me.',               prompt: 'Surprise me with one way we could begin.' },
   ],
 };
 
 const BRANCH_INTROS: Record<RootKey, string> = {
-  practical: 'We can begin with something concrete. What fits?',
-  personal:  'Some things need more than thinking. Where does this live?',
-  curious:   "Good place to start. Let's find a door that fits.",
+  understand: 'Where would you like to begin?',
+  creating:   'What are you building?',
+  know_self:  'Which feels closest to where you are?',
+  curious:    'Good place to start. Here are a few doors.',
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -61,7 +68,6 @@ export function MaiaLivingOrientation({ onPromptSelect, onDismiss }: Props) {
   const [selectedRoot, setSelectedRoot] = useState<RootKey | null>(null);
   const [introText, setIntroText] = useState('');
 
-  // Typing animation — reveal intro character by character
   useEffect(() => {
     if (step !== 'typing' || !selectedRoot) return;
     const full = BRANCH_INTROS[selectedRoot];
@@ -73,9 +79,9 @@ export function MaiaLivingOrientation({ onPromptSelect, onDismiss }: Props) {
       if (i >= full.length) {
         clearInterval(interval);
         const nextStep = `${selectedRoot}_options` as OrientationStep;
-        setTimeout(() => setStep(nextStep), 300);
+        setTimeout(() => setStep(nextStep), 250);
       }
-    }, 22);
+    }, 20);
     return () => clearInterval(interval);
   }, [step, selectedRoot]);
 
@@ -85,6 +91,7 @@ export function MaiaLivingOrientation({ onPromptSelect, onDismiss }: Props) {
   }
 
   const branchOptions = selectedRoot ? BRANCH_OPTIONS[selectedRoot] : [];
+  const isInBranch = step !== 'root_options' && step !== 'typing';
 
   return (
     <motion.div
@@ -94,26 +101,50 @@ export function MaiaLivingOrientation({ onPromptSelect, onDismiss }: Props) {
       transition={{ duration: 0.35, ease: 'easeOut' }}
       className="w-full max-w-lg mx-auto px-2"
     >
-      {/* MAIA intro line */}
-      <p
-        className="text-stone-400 text-sm mb-5 text-center"
-        style={{ fontFamily: 'Spectral, Georgia, serif' }}
-      >
-        {step === 'root_options'
-          ? "Let's begin with where you are. You don't need to know what to ask yet."
-          : introText}
-      </p>
-
+      {/* MAIA presence line */}
       <AnimatePresence mode="wait">
-        {/* Root — 3 doors */}
         {step === 'root_options' && (
-          <motion.div
-            key="root"
+          <motion.p
+            key="root-intro"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col gap-2"
+            className="text-stone-400 text-sm mb-5 text-center leading-relaxed"
+            style={{ fontFamily: 'Spectral, Georgia, serif' }}
           >
+            People come here for many different reasons.<br />
+            We can begin anywhere.
+          </motion.p>
+        )}
+        {step === 'typing' && (
+          <motion.div
+            key="typing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex justify-center py-3 mb-2"
+          >
+            <span className="text-stone-600 text-xs tracking-widest animate-pulse">· · ·</span>
+          </motion.div>
+        )}
+        {isInBranch && (
+          <motion.p
+            key="branch-intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-stone-400 text-sm mb-4 text-center"
+            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+          >
+            {introText}
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        {/* Root — 4 ways of arriving */}
+        {step === 'root_options' && (
+          <motion.div key="root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-2">
             {ROOT_OPTIONS.map((opt, i) => (
               <motion.button
                 key={opt.key}
@@ -121,34 +152,18 @@ export function MaiaLivingOrientation({ onPromptSelect, onDismiss }: Props) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.07 }}
                 onClick={() => handleRootSelect(opt.key)}
-                className="text-left px-4 py-3 rounded-lg border border-stone-800 text-stone-300 text-sm hover:border-stone-600 hover:text-stone-100 hover:bg-stone-900/50 transition-all duration-200"
+                className="text-left px-4 py-3 rounded-lg border border-stone-800 text-stone-300 text-sm hover:border-stone-600 hover:text-stone-100 hover:bg-stone-900/50 transition-all duration-200 flex items-center gap-3"
               >
-                {opt.label}
+                <span className="text-base">{opt.glyph}</span>
+                <span>{opt.label}</span>
               </motion.button>
             ))}
           </motion.div>
         )}
 
-        {/* Typing state */}
-        {step === 'typing' && (
-          <motion.div
-            key="typing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-center py-4"
-          >
-            <span className="text-stone-600 text-xs tracking-widest animate-pulse">· · ·</span>
-          </motion.div>
-        )}
-
-        {/* Branch options */}
-        {(step === 'practical_options' || step === 'personal_options' || step === 'curious_options') && (
-          <motion.div
-            key="branch"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col gap-2"
-          >
+        {/* Branch — specific invitations */}
+        {isInBranch && (
+          <motion.div key="branch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-2">
             {branchOptions.map((opt, i) => (
               <motion.button
                 key={opt.label}
@@ -156,16 +171,11 @@ export function MaiaLivingOrientation({ onPromptSelect, onDismiss }: Props) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.06 }}
                 onClick={() => onPromptSelect(opt.prompt)}
-                className="text-left px-4 py-3 rounded-lg border border-stone-800 text-stone-300 text-sm hover:border-amber-800/60 hover:text-stone-100 hover:bg-stone-900/50 transition-all duration-200 group"
+                className="text-left px-4 py-3 rounded-lg border border-stone-800 text-stone-300 text-sm hover:border-amber-800/60 hover:text-stone-100 hover:bg-stone-900/50 transition-all duration-200"
               >
-                <span>{opt.label}</span>
-                <span className="block text-stone-600 text-xs mt-0.5 group-hover:text-stone-500 italic">
-                  "{opt.prompt.length > 60 ? opt.prompt.slice(0, 57) + '…' : opt.prompt}"
-                </span>
+                {opt.label}
               </motion.button>
             ))}
-
-            {/* Back */}
             <button
               onClick={() => { setStep('root_options'); setSelectedRoot(null); setIntroText(''); }}
               className="text-stone-700 text-xs mt-1 hover:text-stone-500 transition-colors text-left px-1"
@@ -176,18 +186,24 @@ export function MaiaLivingOrientation({ onPromptSelect, onDismiss }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Always-available escape */}
+      {/* Permission line + escape */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-5 text-center"
+        transition={{ delay: 0.6 }}
+        className="mt-6 text-center space-y-2"
       >
+        {step === 'root_options' && (
+          <p className="text-stone-700 text-xs leading-relaxed">
+            You don&apos;t need to know what you need.<br />
+            Many conversations begin with &ldquo;I&apos;m not sure why I&apos;m here.&rdquo;
+          </p>
+        )}
         <button
           onClick={onDismiss}
           className="text-stone-700 text-xs hover:text-stone-500 transition-colors"
         >
-          Or just tell me what's here →
+          Or just tell me what&apos;s here →
         </button>
       </motion.div>
     </motion.div>

@@ -7120,13 +7120,16 @@ I'm not sure what I'm feeling yet.`;
                   >
                     <MaiaLivingOrientation
                       onPromptSelect={(prompt) => {
-                        setComposerDraft(prompt);
                         setShowLivingOrientation(false);
                         setHasActivated(true);
+                        setShowChatInterface(true);
+                        // Small delay so the chat interface renders before the message sends
+                        setTimeout(() => handleTextMessage(prompt), 100);
                       }}
                       onDismiss={() => {
                         setShowLivingOrientation(false);
                         setHasActivated(true);
+                        setShowChatInterface(true);
                       }}
                     />
                   </motion.div>
@@ -7146,8 +7149,9 @@ I'm not sure what I'm feeling yet.`;
                     </button>
                     <button
                       onClick={() => {
-                        setComposerDraft('What else can we do together?');
                         setHasActivated(true);
+                        setShowChatInterface(true);
+                        setTimeout(() => handleTextMessage('What else can we do together?'), 100);
                       }}
                       className="text-stone-700 text-xs hover:text-stone-500 transition-colors"
                     >
