@@ -6,6 +6,14 @@
 
 ---
 
+## The positioning
+
+> **AIN OS is a relational operating system for human development. MAIA is its first conversational companion.**
+
+This framing accomplishes several things at once: AIN OS is the platform; MAIA is an application of the platform; future companions (practitioner, organizational, clinical) are already implicit; and the architecture that governs MAIA governs all of them.
+
+---
+
 ## The one-sentence answer
 
 > MAIA doesn't begin by asking people to understand the platform. She begins by understanding the person — then the platform quietly organizes itself around what will genuinely serve them.
@@ -57,6 +65,26 @@ For Larry, Jondi, a therapist, an entrepreneur, or a Soullab client, the first e
 > "I'm understood before I'm instructed."
 
 That is rare. Almost every AI product today asks the person to learn the platform before the platform learns the person. MAIA inverts that from the first moment.
+
+---
+
+## Four demonstrations (not one)
+
+Most AI demos stop after #2. Very few have #3. Almost none can demonstrate #4 in a way that is directly reflected in the product.
+
+**1. Orientation** — *"I'm understood before I'm instructed."*
+The consultant enters through the same threshold every member uses. They describe where they are. MAIA receives them before they've typed a single message.
+
+**2. Continuity** — *The conversation persists across time.*
+The relationship doesn't reset. Prior themes surface. What mattered last time still matters. The person doesn't have to reintroduce themselves.
+
+**3. Living Fields** — *Work develops instead of being stored.*
+A vision, a book, a practice doesn't get saved as a file. It gets a living space that accumulates, evolves, and remains available to continue.
+
+**4. Constitution** — *The platform behaves this way because it is governed this way.*
+The insight card makes this visible in real time: "The platform organized itself around your situation rather than asking you to organize yourself around the platform." That statement is not marketing. It's a description of what just happened — and it's true because the Capability Manifest, the Stewardship contract, and the orientation architecture make it structurally true.
+
+The goal with the consultant is not agreement that the architecture is correct. It's demonstrating that the experience they just had is a *consequence of a coherent architectural discipline* — reproducible and extensible, not a carefully crafted demo.
 
 ---
 

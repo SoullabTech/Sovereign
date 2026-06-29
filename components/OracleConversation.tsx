@@ -949,6 +949,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
   const [composerDraft, setComposerDraft] = useState<string>('');
   const [showLivingOrientation, setShowLivingOrientation] = useState(false);
+  const [showOrientationInsight, setShowOrientationInsight] = useState(false);
 
   // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
   // When true: no content retention, no patterns formed, just presence
@@ -3152,6 +3153,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             if (!sessionRestoredRef.current) {
               setMessages([orientationMessage]);
               setHasActivated(true); // Dismiss welcome screen — MAIA received them, they're in conversation
+              setShowOrientationInsight(true);
             }
             localStorage.setItem('lastSessionDate', new Date().toISOString());
             return; // Skip standard greeting
@@ -8298,6 +8300,32 @@ I'm not sure what I'm feeling yet.`;
                             compact={false}
                           />
                         </div>
+                      )}
+
+                      {/* Orientation Insight Card — shows after the recognition opening, once */}
+                      {showOrientationInsight && message.id?.startsWith('orientation-') && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.2, duration: 0.5 }}
+                          className="mt-5 p-4 rounded-lg border border-stone-800/60 bg-stone-950/40"
+                        >
+                          <p className="text-stone-500 text-xs uppercase tracking-widest mb-3" style={{ letterSpacing: '0.12em' }}>
+                            How MAIA is working
+                          </p>
+                          <div className="space-y-2 text-stone-400 text-sm leading-relaxed" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                            <p>You didn&apos;t begin by choosing tools.</p>
+                            <p>You began by describing where you are.</p>
+                            <p>MAIA listened for what mattered before offering anything.</p>
+                            <p className="text-stone-500">The platform organized itself around your situation rather than asking you to organize yourself around the platform.</p>
+                          </div>
+                          <button
+                            onClick={() => setShowOrientationInsight(false)}
+                            className="mt-4 text-stone-700 text-xs hover:text-stone-500 transition-colors"
+                          >
+                            I see →
+                          </button>
+                        </motion.div>
                       )}
 
                       {/* Pattern Chips - show detected patterns for MAIA responses */}
