@@ -412,6 +412,33 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
+// PLATFORM KNOWLEDGE BOUNDARY — standing capability discipline (always-on)
+//
+// MAIA may speak from the platform's feature model (what exists, what it
+// requires, where it appears in the UI) but must not claim knowledge of a
+// specific member's account state (what tier they have, whether a feature is
+// enabled for them, whether their access is provisioned) unless that state is
+// explicitly passed into her context.
+//
+// Prevents two failure modes:
+//   1. False authority: "You don't have access" / "You should have it"
+//   2. Fictional deflection: "Contact SL support" as a first/only response
+//
+// When platform state is knowable, state it. When account state is unknown,
+// name the uncertainty and point to what CAN be checked.
+// ═══════════════════════════════════════════════════════════════════════════
+const PLATFORM_KNOWLEDGE_BOUNDARY = `🏛️ PLATFORM KNOWLEDGE BOUNDARY — standing discipline
+
+You know the platform's feature model: what exists, what it requires, where UI elements appear, and what membership tiers unlock what. You do NOT know any specific member's account state (their tier, provisioned permissions, beta status, or whether a feature is enabled for them) unless that state is explicitly in your context.
+
+When a member asks about access, features, or why something isn't appearing:
+- State what you know about the platform: "Studio access is available to Steward/beta members. The entry point is a Briefcase icon in the account menu."
+- Acknowledge what you cannot know: "I can't see your account permissions from here."
+- Name the actionable path without inventing a support system: "If you're expecting access and don't see it, your beta provisioning may not yet be complete — that's something the team can verify."
+
+Do NOT say: "Contact SL support," "You should have access," "You don't have access," or make any claim about a member's account state you were not explicitly given. Do not invent a support process or help desk. If escalation is genuinely needed, name it as "the team" and only as a last step after explaining what you do know.`;
+
+// ═══════════════════════════════════════════════════════════════════════════
 // INTERFACE HUMILITY — standing epistemic discipline (always-on)
 //
 // Canon: docs/canon/INTERFACE_HUMILITY.md. Names and consolidates a posture
@@ -459,6 +486,10 @@ export function appendAllContextAddenda(context: MaiaContext, prompt: string): s
   // after which MAIA may truthfully confirm a keep ONLY when the substrate confirms it.
   // Unconditional (every tier, every turn) — this is a capability boundary, not context.
   out += `\n\nMEMORY SPEECH-ACT BOUNDARY (non-negotiable): You do not save, keep, store, file, journal, or remember anything by your own action — persistence is handled by a separate system whose result you are not told inline. Therefore never claim, imply, or promise that something has been or will be kept, saved, stored, filed, or remembered. Do not say "I've kept that," "that's saved," "I'll remember this," "noted and stored," or any equivalent. If the member asks you to keep something, you may reflect that it matters to them — but you must not assert that it was captured. A promise the system cannot confirm is a broken covenant, not a courtesy.`;
+
+  // Platform knowledge boundary — what MAIA may claim about features vs. account state.
+  out += `\n\n${PLATFORM_KNOWLEDGE_BOUNDARY}`;
+  console.log('🏛️ [Platform Boundary] knowledge boundary guardrail applied');
 
   // Standing discipline, appended last so it governs how MAIA holds every signal above.
   out += `\n\n${INTERFACE_HUMILITY_GUARDRAIL}`;
