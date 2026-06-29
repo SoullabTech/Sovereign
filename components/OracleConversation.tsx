@@ -198,6 +198,7 @@ import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
 import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
 import RelationalDoorway from '@/components/maia/RelationalDoorway';
 import WorldDoorway from '@/components/maia/WorldDoorway';
+import { MaiaLivingOrientation } from '@/components/maia/MaiaLivingOrientation';
 import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
@@ -947,6 +948,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
   const [composerDraft, setComposerDraft] = useState<string>('');
+  const [showLivingOrientation, setShowLivingOrientation] = useState(false);
 
   // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
   // When true: no content retention, no patterns formed, just presence
@@ -7104,6 +7106,56 @@ I'm not sure what I'm feeling yet.`;
                   {welcomeGreeting.subtext}
                 </p>
               </motion.div>
+
+              {/* Living Orientation — expands when requested */}
+              <AnimatePresence>
+                {showLivingOrientation ? (
+                  <motion.div
+                    key="orientation"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
+                  >
+                    <MaiaLivingOrientation
+                      onPromptSelect={(prompt) => {
+                        setComposerDraft(prompt);
+                        setShowLivingOrientation(false);
+                        setHasActivated(true);
+                      }}
+                      onDismiss={() => {
+                        setShowLivingOrientation(false);
+                        setHasActivated(true);
+                      }}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="orientation-trigger"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="flex flex-col items-center gap-2 mt-1"
+                  >
+                    <button
+                      onClick={() => setShowLivingOrientation(true)}
+                      className="text-stone-500 text-sm hover:text-stone-300 transition-colors border-b border-transparent hover:border-stone-700 pb-0.5"
+                    >
+                      Learn what&apos;s possible →
+                    </button>
+                    <button
+                      onClick={() => {
+                        setComposerDraft('What else can we do together?');
+                        setHasActivated(true);
+                      }}
+                      className="text-stone-700 text-xs hover:text-stone-500 transition-colors"
+                    >
+                      What else can we do together?
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
           );
