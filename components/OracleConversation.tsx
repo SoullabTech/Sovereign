@@ -7116,7 +7116,8 @@ I'm not sure what I'm feeling yet.`;
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.3 }}
-                    className="w-full"
+                    className="w-full overflow-y-auto"
+                    style={{ maxHeight: 'calc(100vh - 220px)' }}
                   >
                     <MaiaLivingOrientation
                       onPromptSelect={(prompt) => {
