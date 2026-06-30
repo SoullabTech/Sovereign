@@ -10,6 +10,8 @@ import { BookAnnouncement } from './BookAnnouncement';
 import { PastSitesSection } from './PastSitesSection';
 import { AskSection } from './AskSection';
 import { ContactSection } from './ContactSection';
+import { NarrativeSection } from './NarrativeSection';
+import { CovenantSection } from './CovenantSection';
 import { AskWidget } from './AskWidget';
 
 export function SoullabLanding() {
@@ -20,11 +22,13 @@ export function SoullabLanding() {
         <HeroSection />
         <MaiaSection />
         <ResearchSection />
+        <NarrativeSection />
         <PortfolioSection />
         <BookAnnouncement />
         <ProjectsSection />
         <AskSection />
         <PastSitesSection />
+        <CovenantSection />
         <ContactSection />
       </main>
       <AskWidget />

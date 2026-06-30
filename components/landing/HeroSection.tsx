@@ -21,7 +21,7 @@ export function HeroSection() {
       }}
     >
       {/* Content — text above, holoflower below */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-4xl w-full">
+      <div className="relative z-10 flex flex-col items-center text-center max-w-4xl w-full pt-20 sm:pt-24">
 
         {/* SOULLAB */}
         <motion.h1
@@ -95,8 +95,8 @@ export function HeroSection() {
           className="text-sm sm:text-base text-white/35 max-w-lg mx-auto mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          Relational intelligence for human coherence.
-          The engine that brings soul to any app, site, or platform.
+          Technology should help you become more yourself,
+          not more dependent on technology.
         </motion.p>
 
         {/* CTAs */}
@@ -127,7 +127,7 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 1.8 }}
           className="mt-14 text-white/20 text-xs tracking-widest uppercase"
         >
-          Private by design &middot; Your data never leaves your hands
+          Private by design &middot; Self-hosted &middot; You control what's remembered
         </motion.p>
       </div>
     </section>
