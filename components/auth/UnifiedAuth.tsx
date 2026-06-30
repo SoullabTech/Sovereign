@@ -367,8 +367,12 @@ function UnifiedAuthInner() {
         <AnimatePresence mode="wait">
           {phase === 'password' ? (
             <motion.div key="password" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Welcome</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">Sign in with your password.</p>
+              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">
+                {usernameParam ? `Welcome back, ${usernameParam.charAt(0).toUpperCase() + usernameParam.slice(1).toLowerCase()}.` : 'Welcome'}
+              </h1>
+              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
+                {usernameParam ? 'Continue your conversation with MAIA.' : 'Sign in with your password.'}
+              </p>
               {errorBlock}
               <form onSubmit={signInWithPassword} className="space-y-3">
                 <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoComplete="username" className={INPUT_CLASS} />
