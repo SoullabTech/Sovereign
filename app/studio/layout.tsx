@@ -15,6 +15,7 @@ import {
   Users,
   Calendar,
   GripVertical,
+  LogOut,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -137,6 +138,7 @@ export default function StudioLayout({
   const [enabledModulesRef, setEnabledModulesRef] = useState<ModuleSlug[] | null>(null);
   const studioModeRef = useRef<StudioMode>('practice');
   const [currentMode, setCurrentMode] = useState<StudioMode>('practice');
+  const [practitionerName, setPractitionerName] = useState<string | null>(null);
   // Personal Field sidebar order — local, per-device navigation comfort only.
   const [personalOrder, setPersonalOrder] = useState<string[]>([]);
 
@@ -163,6 +165,7 @@ export default function StudioLayout({
 
         if (data.isPractitioner) {
           setIsPractitioner(true);
+          setPractitionerName(data.identity?.name ?? null);
 
           // Resolve visible modules from identity
           const portalType = (data.identity?.portalType ?? 'generalist') as PortalType;
@@ -500,6 +503,22 @@ export default function StudioLayout({
                   {renderGroupedNav(false, () => setDrawerOpen(false))}
                 </nav>
 
+                {/* Identity + Sign out */}
+                <div className="px-2 pb-3 border-t border-slate-800/50">
+                  {practitionerName && (
+                    <div className="px-2 pt-2 pb-1 text-[10px] text-slate-500 truncate">
+                      {practitionerName}
+                    </div>
+                  )}
+                  <Link
+                    href="/signout"
+                    className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800/50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs">Sign out</span>
+                  </Link>
+                </div>
+
               </motion.div>
             </div>
           )}
@@ -596,6 +615,23 @@ export default function StudioLayout({
           {renderGroupedNav(collapsed)}
         </nav>
 
+
+        {/* Identity + Sign out */}
+        <div className="px-2 pb-2 border-t border-slate-800/50">
+          {!collapsed && practitionerName && (
+            <div className="px-2 pt-2 pb-1 text-[10px] text-slate-500 truncate">
+              {practitionerName}
+            </div>
+          )}
+          <Link
+            href="/signout"
+            className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800/50 transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span className="text-xs">Sign out</span>}
+          </Link>
+        </div>
 
         {/* Expand button when collapsed */}
         {collapsed && (
