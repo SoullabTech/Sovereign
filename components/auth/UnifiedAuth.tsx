@@ -63,12 +63,13 @@ function UnifiedAuthInner() {
   const searchParams = useSearchParams();
   const preVerified = searchParams?.get('verified') === 'true';
   const emailParam = searchParams?.get('email') || '';
+  const usernameParam = searchParams?.get('u') || '';
 
-  const [phase, setPhase] = useState<Phase>(preVerified ? 'name' : 'email');
+  const [phase, setPhase] = useState<Phase>(preVerified ? 'name' : usernameParam ? 'password' : 'email');
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(usernameParam);
   const [password, setPassword] = useState('');
   const [showPasswordText, setShowPasswordText] = useState(false);
   const [error, setError] = useState('');
