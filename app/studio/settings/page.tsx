@@ -844,35 +844,47 @@ function SettingsContent() {
                         {modules.map((mod) => {
                           const isEnabled = enabledModules.has(mod.slug);
                           const isLocked = mod.alwaysOn;
+                          // comingSoon = present in the config surface but intentionally not
+                          // available yet (no working backend / gated). The sidebar hides it
+                          // (getVisibleModules); here we keep it visible but tell the truth —
+                          // badge it and disable the toggle so "checked" never reads as "available".
+                          const isComingSoon = !!mod.comingSoon;
+                          const isActive = !isComingSoon && (isEnabled || isLocked);
                           return (
                             <button
                               key={mod.slug}
                               type="button"
                               onClick={() => toggleSettingsModule(mod.slug)}
-                              disabled={isLocked}
+                              disabled={isLocked || isComingSoon}
                               className={`
                                 flex items-center gap-3 p-3 rounded-lg border text-left transition-all
-                                ${isLocked
-                                  ? 'bg-slate-800/30 border-slate-800 cursor-default'
-                                  : isEnabled
-                                    ? 'bg-teal-500/10 border-teal-500/30 hover:bg-teal-500/15'
-                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'}
+                                ${isComingSoon
+                                  ? 'bg-slate-900/40 border-slate-800/60 cursor-default opacity-60'
+                                  : isLocked
+                                    ? 'bg-slate-800/30 border-slate-800 cursor-default'
+                                    : isEnabled
+                                      ? 'bg-teal-500/10 border-teal-500/30 hover:bg-teal-500/15'
+                                      : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'}
                               `}
                             >
                               <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
-                                isEnabled || isLocked ? 'bg-teal-500/30' : 'bg-slate-800 border border-slate-600'
+                                isActive ? 'bg-teal-500/30' : 'bg-slate-800 border border-slate-600'
                               }`}>
-                                {(isEnabled || isLocked) && <Check className="w-3 h-3 text-teal-400" />}
+                                {isActive && <Check className="w-3 h-3 text-teal-400" />}
+                                {isComingSoon && isEnabled && <Check className="w-3 h-3 text-slate-500" />}
                               </div>
                               <mod.icon className={`w-4 h-4 flex-shrink-0 ${
-                                isEnabled || isLocked ? 'text-teal-400' : 'text-slate-500'
+                                isActive ? 'text-teal-400' : 'text-slate-500'
                               }`} />
                               <div className="min-w-0">
-                                <span className={`text-sm ${isEnabled || isLocked ? 'text-white' : 'text-slate-400'}`}>
+                                <span className={`text-sm ${isActive ? 'text-white' : 'text-slate-400'}`}>
                                   {mod.label}
                                 </span>
                                 {isLocked && (
                                   <span className="text-[10px] text-slate-600 ml-2">Always on</span>
+                                )}
+                                {isComingSoon && (
+                                  <span className="text-[10px] uppercase tracking-wider text-amber-500/80 ml-2">Coming soon</span>
                                 )}
                               </div>
                             </button>
