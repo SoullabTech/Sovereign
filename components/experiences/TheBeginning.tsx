@@ -34,10 +34,8 @@ const LIFE_WORDS = [
 
 export function TheBeginning({
   recipientName,
-  replyTo,
 }: {
   recipientName: string | null;
-  replyTo: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -61,14 +59,6 @@ export function TheBeginning({
 
   const arrivalName = recipientName ?? 'The Beginning';
   const letterGreeting = recipientName ? `${recipientName} —` : 'Hello —';
-  const signOff = recipientName ? `\n\n- ${recipientName}` : '';
-  const mailtoBody =
-    `Kelly,\n\nThe future you described resonates with me. ` +
-    `I'd like to talk about how I might help build it.${signOff}`;
-  const mailto =
-    `mailto:${replyTo}` +
-    `?subject=${encodeURIComponent("AIN - Let's Begin")}` +
-    `&body=${encodeURIComponent(mailtoBody)}`;
 
   return (
     <div className={styles.root} ref={rootRef}>
@@ -214,19 +204,19 @@ export function TheBeginning({
               who&rsquo;s spent his life pushing what human minds can do. I don&rsquo;t want to
               imagine where it goes by myself. I&rsquo;d love to dream it up and build it with you.
             </p>
-            <p className={`${styles.line} ${styles.gold}`}>If it lands for you, let&rsquo;s talk.</p>
+            <p className={`${styles.line} ${styles.gold}`}>
+              Just looking forward to some real imagineering.
+            </p>
             <p className={styles.sig}>&mdash; Kelly</p>
           </div>
         </section>
 
-        {/* 11 — silence, then a single question, then the invitation, quietly */}
+        {/* 11 — the experience ends here, in silence, on a single question.
+            No call to action: the conversation is already underway. */}
         <section className={`${styles.section} ${styles.silence}`} data-reveal>
           <p className={styles.question}>
             What kind of relationship with intelligence do you want to help create?
           </p>
-          <div className={`${styles.cta} ${styles.delayed}`}>
-            <a className={styles.button} href={mailto}>Let&rsquo;s Begin</a>
-          </div>
         </section>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { TheBeginning } from '@/components/experiences/TheBeginning';
-import { getRecipient, DEFAULT_REPLY_TO } from '@/lib/experiences/recipients';
+import { getRecipient } from '@/lib/experiences/recipients';
 
 type Params = { params: Promise<{ recipient: string }> };
 
@@ -17,5 +17,5 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function TheBeginningPage({ params }: Params) {
   const { recipient } = await params;
   const r = getRecipient(recipient);
-  return <TheBeginning recipientName={r?.name ?? null} replyTo={r?.replyTo ?? DEFAULT_REPLY_TO} />;
+  return <TheBeginning recipientName={r?.name ?? null} />;
 }
