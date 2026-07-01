@@ -1,4 +1,4 @@
-# ADR-010: Personal Portal as Base Layer; Professional Portal as Additive Co-Lab Layer
+# ADR-010: Personal Field as Base Layer; Contribution Field as Additive Co-Lab Layer
 
 **Status:** Accepted
 **Date:** 2026-07-01
@@ -21,26 +21,26 @@ A secondary tension emerged from the Co-Lab structure: Co-Labs were conceived as
 
 ## Decision
 
-### Layer 1: Personal Portal (universal base)
+### Layer 1: Personal Field (universal base)
 
-Every member always has a Personal Portal. It is not optional, not upgradable away from, and not replaced by any professional identity.
+Every member always has a Personal Field. It is not optional, not upgradable away from, and not replaced by any professional or contributory identity.
 
-Personal Portal contains:
+Personal Field contains:
 - MAIA conversations and memory
 - Personal journey and development
 - Personal relationships and encounters
 - Journal, practices, astrology, personal memory
 - Vision Studio (the developmental environment for a lifetime body of work)
 
-Personal Portal answers: *How do I develop as a person?*
+Personal Field answers: *How do I develop as a person?*
 
-### Layer 2: Professional Portal (additive, Co-Lab-scoped)
+### Layer 2: Contribution Field (additive, Co-Lab-scoped)
 
-A member may participate in one or more Co-Labs configured for professional work. Each Co-Lab has a `studio_type` field that configures the surrounding tooling without changing the underlying architecture.
+A member may participate in one or more Co-Labs configured for contributory work. Each Co-Lab has a `studio_type` field that configures the surrounding tooling without changing the underlying architecture.
 
-Professional Portal answers: *How do I bring meaningful work into the world?*
+Contribution Field answers: *How do I bring my work, service, and gifts into the world?*
 
-> **Naming note:** "Professional Portal" is the current working name for this layer. The constitutional distinction is between personal development and contribution — not employment status. A founder, artist, retiree writing a memoir, or open-source maintainer all belong here without being "professionals" in any conventional sense. The name should be tested with users and may be refined; the constitutional distinction it marks is durable regardless of what the layer is called.
+> **Naming note:** Earlier drafts used "Professional Portal" for this layer. That language was accurate but carried SaaS and employment connotations that narrow the audience and misrepresent the ontology. "Contribution Field" is native to the platform: contribution includes practice, creation, teaching, founding, healing, and organizing without requiring a professional identity. The word *field* also aligns with the platform's broader constitutional language (Living Fields, Field Intelligence, field state). The constitutional distinction this layer marks — personal development vs. bringing one's work and service into the world — is durable regardless of surface naming.
 
 ### `studio_type` belongs on the Co-Lab, not the member
 
@@ -52,16 +52,18 @@ A single member may simultaneously:
 - Be a creator in another
 - Be an advisor or collaborator in a third
 
-### Studio type taxonomy (initial)
+### Field type taxonomy (initial)
 
-| `studio_type`    | Primary purpose                                                |
-|------------------|----------------------------------------------------------------|
-| `practitioner`   | Serving people — clients, relationships, encounters, consent   |
-| `creator`        | Creating work — projects, writing, research, publishing        |
-| `educator`       | Teaching — courses, cohorts, workshops, learning journeys      |
-| `organization`   | Leading teams — projects, governance, shared knowledge         |
+Within the Contribution Field, each Co-Lab is configured as one of the following field types:
 
-Future studio types may be added without architectural change.
+| `studio_type`    | Field name              | Primary orientation                                            |
+|------------------|-------------------------|----------------------------------------------------------------|
+| `practitioner`   | Practitioner Field      | Service through relationships and encounters                   |
+| `creator`        | Creator Field           | Service through making and expression                          |
+| `educator`       | Educator Field          | Service through learning and transmission                      |
+| `organization`   | Organization Field      | Service through collective work and governance                 |
+
+Future field types may be added without architectural change. All are expressions of contribution — service in the broadest sense.
 
 ### Shared foundation (studio_type-independent)
 
@@ -92,19 +94,19 @@ Vision Studio is constitutionally part of the Personal Portal. It is the develop
 
 ### Architectural invariants introduced
 
-1. **Personal Portal is always present.** A member who has no Co-Lab still has full Personal Portal access.
-2. **Professional Portal is additive.** It does not replace or restrict the Personal Portal.
-3. **studio_type configures, not constrains.** A `practitioner` Co-Lab still has Relationships, Encounters, and Messaging — they are just surfaced in a practitioner-appropriate configuration.
+1. **Personal Field is always present.** A member who has no Co-Lab still has full Personal Field access.
+2. **Contribution Field is additive.** It does not replace or restrict the Personal Field.
+3. **studio_type configures, not constrains.** A `practitioner` Co-Lab still has Relationships, Encounters, and Messaging — they are just surfaced in a field-appropriate configuration.
 4. **Identity sovereignty.** The platform never asserts what kind of person a member is. It only describes what a Co-Lab is configured for.
-5. **One constitutional foundation.** Studio types configure presentation, workflows, and domain tooling. They do not create separate architectures, schemas, or platform identities. Any divergence that requires a schema fork or a separate platform is a violation of this invariant.
+5. **One constitutional foundation.** Field types configure presentation, workflows, and domain tooling. They do not create separate architectures, schemas, or platform identities. Any divergence that requires a schema fork or a separate platform is a violation of this invariant.
 
 ### Market implication
 
 This separates the platform's two audiences without fragmenting the architecture:
-- **Personal Portal** — anyone seeking personal development with MAIA
-- **Professional Portal** — anyone bringing meaningful work into the world
+- **Personal Field** — anyone seeking personal development with MAIA
+- **Contribution Field** — anyone bringing work, service, or gifts into the world
 
-Both enter the same platform. Neither is a second-class pathway.
+Both enter the same platform. Neither is a second-class pathway. A practitioner, novelist, founder, teacher, and healer all belong to Contribution Field without being forced into a shared professional identity.
 
 ---
 
