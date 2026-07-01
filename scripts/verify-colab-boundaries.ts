@@ -192,8 +192,8 @@ async function checkDMsScoped(p: Principal, other: Principal) {
   const crossDMs = await qOne<{ n: number }>(
     `SELECT COUNT(*)::int AS n
      FROM team_dm_threads dt
-     JOIN team_dm_participants dp ON dp.thread_id = dt.id
-     WHERE dp.member_id = $1 AND dt.team_id = $2`,
+     JOIN team_dm_members dm ON dm.dm_thread_id = dt.id
+     WHERE dm.member_id = $1 AND dt.team_id = $2`,
     [p.id, other.ownedCoLabId]
   );
 
