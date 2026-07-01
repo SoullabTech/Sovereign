@@ -154,9 +154,9 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const isResponding = presenceState === 'responding';
   const glowIntensity = isResponding ? 0.2 + amplitude * 0.3 : 0;
 
-  const ideasIndex = MAIA_WORLDS.findIndex((w) => w.id === 'ideas');
-  const worldsBeforeIdeas = ideasIndex >= 0 ? MAIA_WORLDS.slice(0, ideasIndex) : MAIA_WORLDS;
-  const worldsFromIdeas = ideasIndex >= 0 ? MAIA_WORLDS.slice(ideasIndex) : [];
+  // Split worlds into always-visible (no group or 'life') vs collapsible ('work')
+  const worldsBeforeIdeas = MAIA_WORLDS.filter((w) => w.group !== 'work');
+  const worldsFromIdeas = MAIA_WORLDS.filter((w) => w.group === 'work');
 
   const renderWorldButton = (world: (typeof MAIA_WORLDS)[number]) => {
     const Icon = world.icon;

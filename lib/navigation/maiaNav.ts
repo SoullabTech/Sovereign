@@ -25,6 +25,7 @@ import {
   NotebookPen,
   Compass,
   Sprout,
+  Footprints,
 } from 'lucide-react';
 
 import type {
@@ -38,6 +39,7 @@ import type {
 // --- Left Rail: Worlds ---
 
 export const MAIA_WORLDS: MaiaRailItem[] = [
+  // MAIA — always at center, no group
   {
     id: 'maia',
     label: 'MAIA',
@@ -46,21 +48,25 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     classification: 'world',
     tooltip: 'Return to center field',
   },
+
+  // ── MY LIFE — dimensions of the Personal Field (becoming) ──
   {
-    id: 'journal',
-    label: 'Journal',
-    icon: BookOpen,
-    route: '/labtools/journal',
+    id: 'living-field',
+    label: 'Living Field',
+    icon: Sprout,
+    route: '/maia/living-field',
     classification: 'world',
-    tooltip: 'Expressive writing & captures',
+    tooltip: 'Who you are becoming',
+    group: 'life',
   },
   {
-    id: 'ideas',
-    label: 'Ideas',
-    icon: Lightbulb,
-    route: '/maia/ideas',
+    id: 'encounters',
+    label: 'Encounters',
+    icon: Footprints,
+    route: '/sessions',
     classification: 'world',
-    tooltip: 'Generative emergence',
+    tooltip: 'Lived experiences and sessions',
+    group: 'life',
   },
   {
     id: 'relationships',
@@ -68,15 +74,17 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     icon: Heart,
     route: '/relationships',
     classification: 'world',
-    tooltip: 'Relational awareness',
+    tooltip: 'The people in your developmental ecology',
+    group: 'life',
   },
   {
-    id: 'wisdom',
-    label: 'Wisdom',
-    icon: Library,
-    route: '/wisdom-keepers/wisdom',
+    id: 'journal',
+    label: 'Journal',
+    icon: BookOpen,
+    route: '/labtools/journal',
     classification: 'world',
-    tooltip: 'Sacred texts & learning',
+    tooltip: 'Expressive writing — one practice surface',
+    group: 'life',
   },
   {
     id: 'anchor',
@@ -85,14 +93,27 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     route: '/maia/anchor',
     classification: 'world',
     tooltip: 'A quiet place to return',
+    group: 'life',
+  },
+
+  // ── MY WORK — dimensions of the Contribution Field (offering) ──
+  {
+    id: 'ideas',
+    label: 'Ideas',
+    icon: Lightbulb,
+    route: '/maia/ideas',
+    classification: 'world',
+    tooltip: 'Emerging thoughts and creative impulses',
+    group: 'work',
   },
   {
-    id: 'living-field',
-    label: 'Living Field',
-    icon: Sprout,
-    route: '/maia/living-field',
+    id: 'wisdom',
+    label: 'Wisdom',
+    icon: Library,
+    route: '/wisdom-keepers/wisdom',
     classification: 'world',
-    tooltip: 'Your Personal Living Field',
+    tooltip: 'Sacred texts, learning, and collected knowledge',
+    group: 'work',
   },
 ];
 

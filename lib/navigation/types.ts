@@ -36,7 +36,8 @@ export type MaiaWorldId =
   | 'relationships'
   | 'wisdom'
   | 'anchor'
-  | 'living-field';
+  | 'living-field'
+  | 'encounters';
 
 export type BoundaryId = 'studio' | 'book-studio' | 'circles' | 'astrology' | 'labtools' | 'community-library' | 'vision-studio';
 
@@ -59,6 +60,13 @@ export interface MaiaRailItem {
    * Audience controls rail visibility only; server-side route auth is enforced separately.
    */
   audience?: 'all' | 'founder';
+  /**
+   * Ontological group for future section rendering.
+   * 'life' — dimensions of the Personal Field (becoming)
+   * 'work' — dimensions of the Contribution Field (offering)
+   * Undefined = no group (MAIA center, boundaries)
+   */
+  group?: 'life' | 'work';
 }
 
 // --- Utility items ---
