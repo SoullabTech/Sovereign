@@ -15,7 +15,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { createBugReport } from '@/lib/bugs/bugReports';
 import { processUploadedBugImages, AttachmentValidationError } from '@/lib/bugs/attachments';
 import { BUG_SEVERITIES, type BugSeverity } from '@/lib/bugs/types';
@@ -88,6 +90,19 @@ export async function POST(request: NextRequest) {
 
   const memberId = await getMemberIdFromRequest(request).catch(() => null);
 
+  // Capture which Co-Lab the reporter was active in — preserved for audit context,
+  // not used to scope bug visibility (bugs are platform-level admin records).
+  let sourceTeamId: string | null = null;
+  if (memberId) {
+    try {
+      const jar = await cookies();
+      const cookieTeam = jar.get(COLAB_TEAM_COOKIE)?.value ?? null;
+      sourceTeamId = await resolveCurrentTeamId(memberId, cookieTeam);
+    } catch {
+      // non-fatal — sourceTeamId stays null
+    }
+  }
+
   const url = typeof body?.url === 'string' ? body.url.slice(0, 500) : null;
   const userAgent = (
     typeof body?.userAgent === 'string' ? body.userAgent : request.headers.get('user-agent') ?? ''
@@ -113,6 +128,7 @@ export async function POST(request: NextRequest) {
       severity,
       context,
       attachments,
+      sourceTeamId,
     });
     return NextResponse.json(
       { ok: true, id: bug.id, status: bug.status, mirrored: Boolean(bug.mirroredMessageId) },

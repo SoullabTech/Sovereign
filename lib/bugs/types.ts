@@ -83,6 +83,8 @@ export interface CreateBugInput {
   context?: Record<string, unknown>;
   severity?: BugSeverity;
   attachments?: StoredBugAttachment[];
+  /** Co-Lab the reporter was active in when filing. Preserved for audit, not used to scope visibility. */
+  sourceTeamId?: string | null;
 }
 
 export interface BugStatusCounts {

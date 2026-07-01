@@ -16,7 +16,7 @@
 import { query, queryOne } from '@/lib/db/postgres';
 import { getChannelBySlug, sendMessage } from '@/lib/team/ChannelService';
 import { parseStoredBugAttachments, toClientBugAttachments } from './attachments';
-import { getDefaultTeamId } from '@/lib/team/colabTeams';
+import { getAdminTeamId } from '@/lib/team/colabTeams';
 import {
   BUG_MIRROR_CHANNEL_SLUG,
   BUG_LOG_CHANNEL_SLUG,
@@ -135,7 +135,7 @@ async function mirrorBugToChannel(
 ): Promise<{ channelSlug: string; messageId: string } | null> {
   try {
     // #bugs is a system channel that lives in the default Co-Lab workspace.
-    const channel = await getChannelBySlug(BUG_MIRROR_CHANNEL_SLUG, await getDefaultTeamId());
+    const channel = await getChannelBySlug(BUG_MIRROR_CHANNEL_SLUG, await getAdminTeamId());
     if (!channel) return null;
     const senderId = bug.memberId || channel.createdBy;
     if (!senderId) return null;
@@ -154,7 +154,7 @@ async function mirrorBugToChannel(
  */
 async function logNewBugToAuditChannel(bug: BugReport): Promise<void> {
   try {
-    const teamId = await getDefaultTeamId();
+    const teamId = await getAdminTeamId();
     const channel = await getChannelBySlug(BUG_LOG_CHANNEL_SLUG, teamId);
     if (!channel) return;
     const senderId = bug.memberId || channel.createdBy;
@@ -175,7 +175,7 @@ async function logTransitionToBugLog(
   linkedPr?: string | null,
 ): Promise<void> {
   try {
-    const teamId = await getDefaultTeamId();
+    const teamId = await getAdminTeamId();
     const channel = await getChannelBySlug(BUG_LOG_CHANNEL_SLUG, teamId);
     if (!channel) return;
     const senderId = bug.memberId || channel.createdBy;
@@ -202,7 +202,7 @@ async function logTransitionToBugLog(
  */
 async function logPrLinkedToBugLog(bug: BugReport, pr: string): Promise<void> {
   try {
-    const teamId = await getDefaultTeamId();
+    const teamId = await getAdminTeamId();
     const channel = await getChannelBySlug(BUG_LOG_CHANNEL_SLUG, teamId);
     if (!channel) return;
     const senderId = bug.memberId || channel.createdBy;
@@ -232,8 +232,8 @@ export async function createBugReport(input: CreateBugInput): Promise<BugReport>
 
   const result = await query<Record<string, any>>(
     `INSERT INTO bug_reports
-       (title, message, source, member_id, reporter_name, url, user_agent, context, severity, attachments)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)
+       (title, message, source, member_id, reporter_name, url, user_agent, context, severity, attachments, source_team_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb, $11)
      RETURNING *`,
     [
       input.title ?? null,
@@ -246,6 +246,7 @@ export async function createBugReport(input: CreateBugInput): Promise<BugReport>
       JSON.stringify(input.context ?? {}),
       severity,
       JSON.stringify(input.attachments ?? []),
+      input.sourceTeamId ?? null,
     ],
   );
 

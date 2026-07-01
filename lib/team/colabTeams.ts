@@ -75,6 +75,19 @@ export async function getDefaultTeamId(): Promise<string | null> {
 }
 
 /**
+ * The platform admin/ops workspace — where #bugs and #bug-log channels live.
+ * Resolved via the is_admin_workspace flag (migration 20260630000007), which
+ * explicitly marks Team Soullab rather than relying on creation order.
+ * Falls back to getDefaultTeamId() if no team is flagged (pre-migration safety).
+ */
+export async function getAdminTeamId(): Promise<string | null> {
+  const r = await query<{ id: string }>(
+    `SELECT id FROM studio_teams WHERE is_admin_workspace = true LIMIT 1`
+  );
+  return r.rows[0]?.id ?? getDefaultTeamId();
+}
+
+/**
  * Teams shown in the Co-Lab switcher: only teams this member explicitly belongs
  * to. If they belong to none, ensureOwnCoLab creates one first. The member's own
  * team (where they are owner) is sorted first.
