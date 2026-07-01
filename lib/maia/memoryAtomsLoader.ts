@@ -6,38 +6,37 @@
  *   - docs/canon/SPIRAL_CONTINUITY_ENGINE.md
  *   - docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md
  *   - database/migrations/20260521000001_member_memory_atoms.sql (schema-level discipline)
+ *   - database/migrations/20260630000005_memory_atoms_scope.sql (scope containment)
  *   - docs/specs/PSYCHE_ENGAGEMENT_LAYER_SPEC.md (the Psyche Engagement spec governing atoms)
- *   - docs/specs/CUT_1_SUBSTRATE_RESTORATION.md §II.B (this cut's authorization)
  *
  * What this module does:
  *   Reads the member's portfolio (member_memory_atoms) and produces a prompt-ready
- *   block of member-PLACED material. The atoms tell MAIA what they are willing to be.
- *   System does not cross, infer, synthesize, or interpret across atoms.
+ *   block of member-PLACED material within an explicit scope boundary.
+ *   The atoms tell MAIA what they are willing to be, within the context in which
+ *   they were placed. System does not cross, infer, synthesize, or interpret.
+ *
+ * Scope containment (migration 20260630000005):
+ *   Every atom carries a memory_scope: personal | colab | client | encounter.
+ *   The loader NEVER surfaces atoms outside their declared scope:
+ *   - personal atoms: surface only in the member's own MAIA context.
+ *   - colab atoms: surface only when the active team_id matches.
+ *   - client atoms: surface only when the active client_id matches.
+ *   - encounter atoms: surface only within that encounter's review context.
+ *   Cross-scope surfacing is architecturally blocked in SQL, not runtime logic.
  *
  * What this module does NOT do:
- *   - Does NOT write atoms (extraction is out of Cut 1 scope, and atoms canon says
- *     writes must be member gestures only — see lib/psyche/portfolio.ts).
- *   - Does NOT surface 'member_pulled' atoms ambiently — those return only on member
- *     direct request, not in implicit prompt context.
- *   - Does NOT surface 'sacred_protected' register atoms — structurally voice-ineligible
- *     per migration CONSTRAINT sacred_protected_register_status.
+ *   - Does NOT write atoms — writes must be member gestures only.
+ *   - Does NOT surface 'member_pulled' atoms ambiently.
+ *   - Does NOT surface 'sacred_protected' register atoms.
  *   - Does NOT surface atoms whose status is set_aside / protected / archived.
- *   - Does NOT load the source content of sourced atoms (idea / journal / dream / etc.)
- *     — the atom points at the source; the source remains in its native table.
- *     Only spontaneous atoms (member-typed body) carry body text.
- *   - Does NOT compute "atom patterns" or "register frequencies" or any cross-atom
- *     synthesis. The migration's crossing_must_be_false constraint backstops this.
+ *   - Does NOT blend atoms across scope boundaries.
+ *   - Does NOT compute cross-atom patterns or synthesis.
  *
- * Consent gate enforced by SQL WHERE clauses:
+ * Consent + scope gates enforced by SQL WHERE clauses:
+ *   - memory_scope + scope context (team_id / client_id / encounter_id)
  *   - status IN ('active', 'still_alive')
  *   - NOT 'sacred_protected' = ANY(registers)
  *   - return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
- *
- * The default return_preference is 'member_pulled' — meaning until the member
- * explicitly sets a different preference on an atom, it does not surface here.
- * This is the consent gate, encoded in the schema's default value + this WHERE clause.
- *
- * The atoms read by this loader are atoms the member has consented to ambient surfacing of.
  */
 
 import { query } from '@/lib/db/postgres';
@@ -81,6 +80,28 @@ export type MemoryAtomSourceType =
   | 'session_excerpt'
   | 'spontaneous'
   | 'practitioner_observation';
+
+export type MemoryScope = 'personal' | 'colab' | 'client' | 'encounter';
+
+/**
+ * Scope context passed to the loader. Determines which atoms are eligible.
+ * Omitting a field does NOT widen the scope — it restricts it.
+ *
+ * - No context / personal: only memory_scope = 'personal' atoms surface.
+ * - teamId only: personal + colab atoms for that team.
+ * - clientId (+ teamId): client-scope atoms for that person in that Co-Lab.
+ * - encounterId (+ teamId): encounter-scope atoms for that encounter.
+ *
+ * The loader never blends across boundaries — each path is a separate query clause.
+ */
+export interface AtomScopeContext {
+  /** Active Co-Lab. Required for colab/client/encounter scope atoms to surface. */
+  teamId?: string | null;
+  /** Active client (studio_people.id). Required for client-scope atoms. */
+  clientId?: string | null;
+  /** Active encounter (encounters.id). Required for encounter-scope atoms. */
+  encounterId?: string | null;
+}
 
 export type EpistemologicalStatus =
   | 'observed'    // witnessed directly by a facilitator in session
@@ -177,45 +198,81 @@ interface AtomRow {
 }
 
 /**
- * Load the member's surfacable portfolio atoms for ambient prompt context.
+ * Load surfacable portfolio atoms for ambient prompt context.
  *
- * Filters (all canon-derived, all required):
- *   - status IN ('active', 'still_alive') — excludes set_aside / protected / archived
- *   - return_preference IN ('contextual_doorway', 'ritual_review_opt_in') — member
- *     has explicitly opted into ambient surfacing (default is member_pulled, which
- *     is excluded here)
- *   - NOT 'sacred_protected' = ANY(registers) — sacred-protected register is
- *     structurally voice-ineligible per migration constraint
+ * Scope enforcement (migration 20260630000005):
+ *   The scope parameter determines which atoms are eligible. This is enforced
+ *   in SQL — not runtime filtering — so the query never even reads atoms from
+ *   other scopes. The boundary is structural, not behavioral.
  *
- * Ordering: is_breakthrough DESC, kept_at DESC. Member-marked breakthroughs
- * surface first within the saliency window. The flag is never system-set —
- * it reflects only material the member has explicitly marked as a breakthrough.
+ *   No scope / personal only: memory_scope = 'personal'
+ *   teamId provided:          personal + colab atoms for that team
+ *   clientId provided:        + client-scope atoms for that client in that team
+ *   encounterId provided:     + encounter-scope atoms for that encounter
+ *
+ * Consent filters (all canon-derived, all required):
+ *   - status IN ('active', 'still_alive')
+ *   - return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+ *   - NOT 'sacred_protected' = ANY(registers)
+ *
+ * Ordering: is_breakthrough DESC, kept_at DESC.
  *
  * @param memberId - the member's UUID
  * @param limit - max atoms to return (default 8)
- * @returns array of atom snapshots, empty array on no eligible atoms or DB error
- *
- * Errors are caught and logged. Returns [] on failure — never throws. The loader
- * is non-blocking to the route; the orchestrator can run without atoms.
+ * @param scope - scope context; defaults to personal-only
+ * @returns array of atom snapshots, empty on no eligible atoms or DB error
  */
 export async function loadMemberMemoryAtomsForPrompt(
   memberId: string,
   limit: number = 8,
+  scope: AtomScopeContext = {},
 ): Promise<MemoryAtomSnapshot[]> {
   if (!memberId) return [];
 
   try {
+    // Build scope clause with parameterized values. Each branch is additive —
+    // the caller's context determines which scopes are reachable.
+    // Absence = restriction, not widening.
+    // $1 = memberId, $2 = limit; scope params start at $3.
+    const params: unknown[] = [memberId, limit];
+    const scopeClauses: string[] = [`memory_scope = 'personal'`];
+
+    // Push teamId once — all non-personal scope clauses reference the same param.
+    let teamParam: number | null = null;
+    if (scope.teamId) {
+      params.push(scope.teamId);
+      teamParam = params.length; // e.g. $3
+      scopeClauses.push(`(memory_scope = 'colab' AND team_id = $${teamParam}::uuid)`);
+    }
+    if (scope.clientId && teamParam !== null) {
+      params.push(scope.clientId);
+      const pc = params.length; // e.g. $4
+      scopeClauses.push(
+        `(memory_scope = 'client' AND client_id = $${pc}::uuid AND team_id = $${teamParam}::uuid)`
+      );
+    }
+    if (scope.encounterId && teamParam !== null) {
+      params.push(scope.encounterId);
+      const pe = params.length; // e.g. $4 or $5
+      scopeClauses.push(
+        `(memory_scope = 'encounter' AND encounter_id = $${pe}::uuid AND team_id = $${teamParam}::uuid)`
+      );
+    }
+
+    const scopeWhere = `(${scopeClauses.join(' OR ')})`;
+
     const result = await query<AtomRow>(
       `SELECT ${SELECT_COLUMNS}
        FROM member_memory_atoms
        WHERE member_id = $1
+         AND ${scopeWhere}
          AND status IN ('active', 'still_alive')
          AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
          AND NOT ('sacred_protected' = ANY(registers))
          AND ${PRACTITIONER_ATTRIBUTION_GUARD}
        ORDER BY is_breakthrough DESC, kept_at DESC
        LIMIT $2`,
-      [memberId, limit],
+      params,
     );
 
     return result.rows.map((r) => ({
