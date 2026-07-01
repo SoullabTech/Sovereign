@@ -121,6 +121,8 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   const [authored, setAuthored] = useState<AuthoredThread[]>([]);
   const [revising, setRevising] = useState<Record<string, string>>({});
   const [newThread, setNewThread] = useState('');
+  const [guided, setGuided] = useState(true);
+  const [showFrame, setShowFrame] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string>(`vs-${Date.now()}`);
 
@@ -222,7 +224,7 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   const phaseLabel = PHASE_LABELS[phase] ?? phase;
   const openingQuestion = PHASE_OPENING_QUESTIONS[phase];
 
-  // — Arrival: show Opening frame —
+  // — Arrival: Ways to Begin —
   if (roomPhase === 'arrival') {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-10">
@@ -230,20 +232,47 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
           <p className="text-xs uppercase tracking-widest text-stone-400">Vision Studio</p>
           <h1 className="text-lg font-light text-stone-200">{phaseLabel}</h1>
         </div>
-        <div className="text-stone-400 text-sm leading-relaxed whitespace-pre-line font-light italic">
-          {OPENING_FRAME}
+
+        <div className="space-y-1">
+          <p className="text-stone-300 text-base font-light leading-relaxed">Every practitioner begins differently.</p>
+          <p className="text-stone-500 text-sm font-light leading-relaxed">Choose whatever feels most natural today.</p>
         </div>
-        {openingQuestion && (
-          <div className="border-l-2 border-stone-600 pl-4 text-stone-300 text-base font-light leading-relaxed">
-            {openingQuestion}
-          </div>
-        )}
-        <button
-          onClick={() => setRoomPhase('conversation')}
-          className="text-stone-400 hover:text-stone-200 text-sm underline underline-offset-4 transition-colors"
-        >
-          Begin
-        </button>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => { setGuided(false); setRoomPhase('conversation'); }}
+            className="w-full text-left border border-stone-800 rounded-lg px-5 py-4 hover:border-stone-600 hover:bg-stone-900/40 transition-colors"
+          >
+            <p className="text-stone-200 text-sm font-light">Begin in your own words</p>
+            <p className="text-stone-500 text-xs font-light mt-1">Just start — no prompt, no structure.</p>
+          </button>
+
+          <button
+            onClick={() => { setGuided(true); setRoomPhase('conversation'); }}
+            className="w-full text-left border border-stone-800 rounded-lg px-5 py-4 hover:border-stone-600 hover:bg-stone-900/40 transition-colors"
+          >
+            <p className="text-stone-200 text-sm font-light">Begin with a question</p>
+            <p className="text-stone-500 text-xs font-light mt-1">A place to start, at your own pace.</p>
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowFrame(v => !v)}
+            className="text-stone-500 hover:text-stone-300 text-xs underline underline-offset-4 transition-colors"
+          >
+            {showFrame ? 'Hide' : 'What is this space?'}
+          </button>
+          {showFrame && (
+            <div className="text-stone-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-stone-800 pl-4">
+              {OPENING_FRAME}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-stone-900 pt-4 text-stone-600 text-xs font-light leading-relaxed">
+          The authority for meaning stays with you. Your practitioner sees only what you choose to carry — never the conversation, never a record of who you are.
+        </div>
       </div>
     );
   }
@@ -408,7 +437,7 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
         )}
       </div>
 
-      {openingQuestion && turns.length === 0 && (
+      {guided && openingQuestion && turns.length === 0 && (
         <div className="px-4 py-6 border-b border-stone-800">
           <p className="text-stone-300 text-base font-light leading-relaxed">{openingQuestion}</p>
         </div>
