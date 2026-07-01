@@ -162,6 +162,9 @@ export const COMMUNITY_LIBRARY_RAIL_ITEM: MaiaRailItem = {
   isBoundaryTransition: true,
 };
 
+// NOTE: currently gated OUT of MAIA_BOUNDARIES (see below). /maia/vision-studio's default
+// (Living Field) tab 404s in production until its API is reviewed + committed. Definition
+// kept intact for easy re-enable once the default path is functional.
 export const VISION_STUDIO_RAIL_ITEM: MaiaRailItem = {
   id: 'vision-studio',
   label: 'Vision Studio',
@@ -227,7 +230,11 @@ export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   ASTROLOGY_RAIL_ITEM,
   LABTOOLS_RAIL_ITEM,
   COMMUNITY_LIBRARY_RAIL_ITEM,
-  VISION_STUDIO_RAIL_ITEM,
+  // Vision Studio referent-2 pending jurisdiction/naming/API review — gated out of nav
+  // 2026-07-01: its default (Living Field) tab calls uncommitted
+  // /api/maia/vision-studio/{interview,field-note} routes → 404 in production. Hidden
+  // until the default path is functional. Reversible: re-add the line below.
+  // VISION_STUDIO_RAIL_ITEM,
 ];
 
 /** Left rail width in pixels — used for content padding in boundary layouts */
