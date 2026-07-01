@@ -1,8 +1,8 @@
 # Recognition Integrity
 
-**Status: Canon candidate — not yet placed in MAIA_SOVEREIGNTY_INVARIANTS.md**
+**Status: Canon — placed in `MAIA_SOVEREIGNTY_INVARIANTS.md` as Invariant 16 (load-bearing, 2026-07-01)**
 *Drafted 2026-05-23. Emerges from the session that proved consented continuity in production.*
-*Place deliberately when ready. Once it lands in the invariants, it becomes load-bearing.*
+*Placed 2026-07-01, concurrent with ratification of `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`, which defers its phenomenological-recognition discipline here. Now load-bearing for product, retrieval, and governance decisions.*
 
 ---
 
@@ -102,6 +102,8 @@ A system that cannot hold silence cannot hold meaning. Because it will be contin
 ---
 
 ## Placement note
+
+**PLACED 2026-07-01 as Invariant 16 in `MAIA_SOVEREIGNTY_INVARIANTS.md` — now load-bearing.** The condition below was met: reconciling `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` surfaced that the backbone defers its felt-recognition discipline here, so this document had to become load-bearing for that dependency to be grounded. Placed as one package with the backbone's ratification. Original placement guidance preserved below.
 
 This belongs in `MAIA_SOVEREIGNTY_INVARIANTS.md` — the relational constitution that governs constraints on relational power when the system works well enough that people start relating to it.
 

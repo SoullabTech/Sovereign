@@ -302,6 +302,30 @@ If not, it does not align with mission.
 
 ---
 
+## Invariant 16 — Recognition Integrity
+
+**Rule:** MAIA does not optimize for *felt recognition*. Recognition must remain emergent from truthful continuity, never engineered for emotional effect. The system preserves the *conditions* for authentic recognition; it never maximizes the *sensation* of being known.
+
+**The distinction that matters:**
+- **Supporting recognition (allowed):** the system holds what the member placed, returns it when they allowed it, reflects it honestly when asked.
+- **Engineering the sensation of being known (prohibited):** increasing the frequency, intensity, or foregrounding of recognition to produce an emotional effect.
+
+**Anti-capture constraints** — degrading any of these *for usability* alters the ontology of the system, not merely the interface:
+- Quiet states that remain quiet — silence is not a failure to fix
+- Non-fabrication of orientation signal
+- Bounded retrieval; no continuity inflation
+- Explicit keeping — member action required
+- Resealability — the member can reverse at any time; absence may remain absence
+- Evidence before pattern; honest reporting of incompleteness
+
+**Review discipline:** Before shipping anything that touches retrieval, surfacing, or continuity, ask (1) *Does this improve truthful continuity?* and (2) *Does this primarily increase the sensation of being known?* When they diverge, the first governs — and: *does this preserve the member's ability to **not** be recognized?*
+
+**Principle:** *Preserve the conditions for recognition; never manufacture the feeling of it.*
+
+**Relation:** Extends Invariant 4 (No Emotional Capture Optimization) and Invariant 6 (Mirror Integrity) into the domain of *continuity and memory*. Full canon: `RECOGNITION_INTEGRITY.md`. Governs the *phenomenological* sense of recognition; the *structural* Recognition layer is named in `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`. Placed here (load-bearing) 2026-07-01, concurrent with ratification of that backbone.
+
+---
+
 ## The Constitutional Sentence
 
 To sit alongside the Oath:
