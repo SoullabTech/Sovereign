@@ -251,7 +251,7 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
             placeholder={`Message #${channelName}`}
             disabled={disabled || sending}
             rows={1}
-            className="flex-1 bg-transparent text-sm text-white/90 placeholder-white/25 resize-none outline-none leading-relaxed py-1"
+            className="flex-1 bg-transparent text-sm text-white/90 placeholder-white/50 resize-none outline-none leading-relaxed py-1"
             style={{ minHeight: '24px', maxHeight: '160px' }}
           />
           {/* Insert link */}
@@ -272,7 +272,7 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
             value={selectedKind}
             onChange={e => setSelectedKind(e.target.value as MessageKind)}
             disabled={disabled || sending}
-            className="flex-shrink-0 text-xs bg-transparent text-white/35 hover:text-white/60 border-none outline-none cursor-pointer mb-0.5 pr-1"
+            className="flex-shrink-0 text-xs bg-transparent text-white/60 hover:text-white/90 border-none outline-none cursor-pointer mb-0.5 pr-1"
             title="Message kind"
             aria-label="Message kind"
           >

@@ -52,7 +52,7 @@ export default function SchedulingPage() {
     try {
       const [availRes, svcRes, configRes] = await Promise.all([
         fetch('/api/studio/availability'),
-        fetch('/api/studio/services'),
+        fetch('/api/studio/services?includeInactive=true'),
         fetch('/api/studio/settings'),
       ]);
 
