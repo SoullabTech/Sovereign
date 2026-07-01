@@ -60,9 +60,7 @@ export function TheBeginning({
   }, []);
 
   const arrivalName = recipientName ?? 'The Beginning';
-  const letterOpening = recipientName
-    ? `${recipientName}, when we first spoke,`
-    : 'When we first spoke,';
+  const letterGreeting = recipientName ? `${recipientName} —` : 'Hello —';
   const signOff = recipientName ? `\n\n- ${recipientName}` : '';
   const mailtoBody =
     `Kelly,\n\nThe future you described resonates with me. ` +
@@ -201,23 +199,23 @@ export function TheBeginning({
           </p>
         </section>
 
-        {/* 10 — the letter, signed as the natural close of a letter (no button here) */}
+        {/* 10 — a short personal message, signed simply, as to a friend (no button here) */}
         <section className={styles.section} data-reveal>
           <div className={styles.letter}>
+            <p className={styles.line}>{letterGreeting}</p>
             <p className={styles.line}>
-              {letterOpening} you didn&rsquo;t see another AI company. You saw an ecosystem. A
-              foundation. A movement. You saw what this might become.
+              when we first talked, you saw what this could become before I&rsquo;d even shown you
+              much of anything.
             </p>
-            <p className={styles.line}>That&rsquo;s why I&rsquo;m sending you this.</p>
+            <p className={styles.line}>Well &mdash; it&rsquo;s real now. I built it.</p>
             <p className={styles.line}>
-              I don&rsquo;t need help imagining this future anymore. I need help building the
-              company that can carry it into the world without losing its soul.
+              And honestly, the part that excites me most is the chance to play in whole new
+              dimensions of human development and collective intelligence &mdash; with someone
+              who&rsquo;s spent his life pushing what human minds can do. I don&rsquo;t want to
+              imagine where it goes by myself. I&rsquo;d love to dream it up and build it with you.
             </p>
-            <p className={`${styles.line} ${styles.gold}`}>
-              If this future resonates with you, I&rsquo;d love to build it together.
-            </p>
-            <p className={styles.sig}>&mdash; Kelly Nezat</p>
-            <p className={styles.sigRole}>Founder, Soullab</p>
+            <p className={`${styles.line} ${styles.gold}`}>If it lands for you, let&rsquo;s talk.</p>
+            <p className={styles.sig}>&mdash; Kelly</p>
           </div>
         </section>
 
