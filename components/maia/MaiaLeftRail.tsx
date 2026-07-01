@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bookmark, BookMarked, ChevronDown, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen, Users } from 'lucide-react';
+import { Bookmark, BookMarked, ChevronDown, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen, Users, Compass } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { MAIA_WORLDS, MAIA_UTILITIES, getBoundaryFromPathname, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
@@ -135,7 +135,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library') {
+    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library' || id === 'vision-studio') {
       router.push(route);
     } else {
       // If we're in a boundary, world clicks need router navigation
@@ -389,6 +389,37 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
           )}
         </AnimatePresence>
 
+      </div>
+
+      {/* Guidance — quiet compass, always available, never announces itself */}
+      <div className="flex flex-col items-center pb-2">
+        {(() => {
+          const isActive = pathname?.startsWith('/now-what') ?? false;
+          return (
+            <button
+              onClick={() => router.push('/now-what/guide')}
+              className={`
+                group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+                ${isActive
+                  ? 'bg-[#D4B896]/15 text-[#D4B896]'
+                  : 'text-stone-600 hover:text-[#D4B896]/60 hover:bg-[#D4B896]/5'
+                }
+              `}
+              title="Find my next step"
+            >
+              <Compass className="w-5 h-5" />
+              {isActive && (
+                <motion.div
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#D4B896] rounded-r-full"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+                Find my next step
+              </span>
+            </button>
+          );
+        })()}
       </div>
 
       {/* Bottom utility: Account + Settings */}

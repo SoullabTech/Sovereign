@@ -153,6 +153,17 @@ export const COMMUNITY_LIBRARY_RAIL_ITEM: MaiaRailItem = {
   isBoundaryTransition: true,
 };
 
+export const VISION_STUDIO_RAIL_ITEM: MaiaRailItem = {
+  id: 'vision-studio',
+  label: 'Vision Studio',
+  icon: Compass,
+  route: '/maia/vision-studio',
+  classification: 'studio',
+  tooltip: 'Vision Studio — developmental field',
+  isBoundaryTransition: true,
+  audience: 'founder',
+};
+
 // --- Utility Items (top bar + bottom of rail) ---
 
 export const MAIA_UTILITIES: MaiaUtilityItem[] = [
@@ -207,6 +218,7 @@ export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   ASTROLOGY_RAIL_ITEM,
   LABTOOLS_RAIL_ITEM,
   COMMUNITY_LIBRARY_RAIL_ITEM,
+  VISION_STUDIO_RAIL_ITEM,
 ];
 
 /** Left rail width in pixels — used for content padding in boundary layouts */
