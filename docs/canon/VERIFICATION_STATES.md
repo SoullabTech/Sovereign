@@ -37,6 +37,8 @@ They are active obligations.
 
 ### PENDING
 
+**PENDING is not absence. It is named readiness awaiting its condition.**
+
 The capability has been designed, specified, or intentionally deferred.
 
 It is part of the platform's direction.
@@ -44,6 +46,18 @@ It is part of the platform's direction.
 It is **not** part of its present capabilities.
 
 Pending items are commitments to future work — not descriptions of present reality.
+
+A valid PENDING state has three required parts:
+
+| Part | Meaning |
+|---|---|
+| **Recognized** | The capability or refinement is real enough to track |
+| **Named** | Its purpose and requirement are explicit |
+| **Conditioned** | The trigger for implementation is defined |
+
+The question that closes a PENDING item is not *"do we feel like doing this now?"* It is *"has the named condition been met?"*
+
+That is the difference between constitutional governance and backlog management.
 
 ---
 
