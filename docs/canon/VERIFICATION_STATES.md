@@ -146,6 +146,24 @@ They declare it LIVE because production data shows the invariant holds.
 
 ---
 
+## Auditability of Governance States
+
+Not only are capabilities verified — the governance states themselves are subject to verification.
+
+A PENDING label is malformed if it exhibits any of the following:
+
+| Malformation | Meaning |
+|---|---|
+| **Missing condition** | The exit criterion is absent. This is a wish, not a governance state. |
+| **Condition already satisfied** | The named condition has been met but the item remains PENDING. This is stale governance. |
+| **Condition unobservable** | The trigger cannot be detected by any evidence the system can produce. This is a poorly specified PENDING. |
+
+This creates a useful symmetry: the same discipline that verifiers apply to capabilities applies to the verifiers' own use of constitutional vocabulary. The system can audit not just whether capabilities work, but whether the governance states labeling them are themselves valid.
+
+This is what it means for a canon to be self-governing rather than merely descriptive. The vocabulary defines its own admission criteria, and those criteria can be checked.
+
+---
+
 ## What This Prohibits
 
 - Marking a capability LIVE because it has been designed or specified
@@ -153,6 +171,7 @@ They declare it LIVE because production data shows the invariant holds.
 - Silencing PENDING items because they do not affect the current release
 - Representing WARNING as equivalent to FAIL in order to resolve it by deletion rather than by doing the work
 - Representing PENDING as equivalent to LIVE in order to claim a capability not yet built
+- Labeling something PENDING without a named, observable exit condition
 
 ---
 
