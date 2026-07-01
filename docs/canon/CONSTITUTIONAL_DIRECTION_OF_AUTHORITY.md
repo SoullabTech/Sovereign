@@ -11,7 +11,7 @@
 
 Several existing canon documents are the same discipline seen from different angles:
 
-- `RECOGNITION_INTEGRITY.md` — a recognition is owned by the member, never concluded by the system.
+- `RECOGNITION_INTEGRITY.md` — the *felt* sense of recognition (the sensation of being known) must stay emergent from truthful continuity, never engineered for effect.
 - `DISCIPLINED_NON_COLLAPSE.md` — layers stay distinct; they must not collapse into a single profile.
 - `RIGHT_TO_REMAIN_UNPOSSESSED.md` — a person is never reduced to a machine reading of themselves.
 - `INTERFACE_HUMILITY.md` — the system may observe and propose; it may not conclude.
@@ -68,7 +68,7 @@ This is why "flow of human development" was the wrong name: it is not developmen
 
 - **Encounter** — *what happened.* The source record; immutable once recorded. Sanctuary governs whether an encounter is recorded at all (`MAIA_SANCTUARY_ECONOMY.md`), not the direction of authority. The only layer at which un-authored material may enter.
 - **Reflection** — *what the person is thinking, feeling, questioning.* May be incomplete or self-contradictory. The system may hold it but must never store or surface it as a conclusion.
-- **Recognition** — *a consciously owned realization.* Authority rises here **only** by the member's explicit acceptance — never a system conclusion. Governed by `RECOGNITION_INTEGRITY.md`.
+- **Recognition** — *a consciously owned realization: the constitutional place where the member's explicit acceptance of meaning resides.* Authority rises here **only** by that acceptance — never a system conclusion. This document owns the **structural layer**; it does **not** define the *phenomenological* sense — the felt experience of being known — which is governed by the sibling candidate `RECOGNITION_INTEGRITY.md` (*"We do not optimize for felt recognition"*). The two are **orthogonal and complementary**: one names *where* owned recognition lives; the other forbids *engineering the sensation of it*.
 - **Living Field** — *the current best member-authored expression of accumulated recognitions.* Never a profile, never an AI portrait, always revisable. The system may draft from selected, member-owned material; it may never synthesize identity. The highest layer the system may carry outward.
 - **Developmental Ecology** — the relational medium the authored Living Field participates *into* (below).
 
@@ -78,16 +78,17 @@ This is why "flow of human development" was the wrong name: it is not developmen
 
 Developmental Ecology is **not another layer on the ladder.** It is the **relational environment within which Living Fields participate.**
 
-Its expressions are already in the architecture:
+> **Developmental Ecology describes a shared relational medium, not a unified operational center or substrate. Distinct constitutional centers retain their independent jurisdiction even while participating in the same ecological medium.**
 
-- **Personal Field** — the member's own Living Field.
+The member's **Personal Field** — their own Living Field — is what *participates* in the medium. The medium's expressions are already in the architecture:
+
 - **Relationships** — connections *between* fields.
 - **Co-Labs** — shared developmental environments.
 - **Practice Fields** — specialized ecologies.
 
-These are **different expressions of one developmental ecology, not additional developmental stages.** That is the reconciliation with ADR-010 and the Studio/Co-Lab architecture: as new relational surfaces are built, they are *kinds of ecology* — never new rungs to climb.
+These are **different expressions of one relational medium — not additional developmental stages, and not a single substrate.** As new relational surfaces are built they are *kinds of ecology*, never new rungs to climb and never a consolidation of distinct centers. This reconciles with ADR-010, the Studio/Co-Lab architecture, and the **binding** `FEDERATED_RELATIONAL_ARCHITECTURE.md`: practitioner sovereignty, cultural-production sovereignty, and relationship sovereignty are preserved — the ecology is the medium they *share*, not a center that absorbs them.
 
-**The authority constraint carries outward:** what reaches the Ecology flows only from the member's **authored Living Field** — never from raw Encounters, never from system inference. A practitioner, a Co-Lab, a shared field receives the member's *authored expression and consented recognitions*, not a machine reading of who the member "is." (Reconcile: `FEDERATED_RELATIONAL_ARCHITECTURE.md`, `MEDIA_FIELD_AND_RELATIONAL_FIELD_BOUNDARIES.md`, practitioner–client privacy model.)
+**The authority constraint carries outward:** what reaches the Ecology flows only from the member's **authored Living Field** — never from raw Encounters, never from system inference. A practitioner, a Co-Lab, a shared field receives the member's *authored expression and consented recognitions*, not a machine reading of who the member "is." (Consistent with `MEDIA_FIELD_AND_RELATIONAL_FIELD_BOUNDARIES.md`'s permitted-flow law — *"MAIA → public field: only what the member authors and chooses; Analytics → MAIA: never"* — and the practitioner–client privacy model, which is currently **spec/memory-level, not canon**. `FEDERATED_RELATIONAL_ARCHITECTURE.md` governs the center-distinction above, not this consent flow.)
 
 ---
 
@@ -147,6 +148,12 @@ That the live system already partitions this way is evidence the constraint is *
 
 ## Ratification
 
-Proposed by founder directive (2026-07-01). Per `CONSTITUTIONAL_AUDIT_PROCESS.md`, a backbone-level addition becomes binding canon only after reconciliation with its named neighbors — chiefly (1) Recognition's treatment here against `RECOGNITION_INTEGRITY.md`, and (2) the Ecology constraint against the federated-relational and practitioner-privacy canon. Until then this is a **proposed constitutional backbone**, held with intent to ratify.
+Proposed by founder directive (2026-07-01). Per `CONSTITUTIONAL_AUDIT_PROCESS.md`, a backbone-level addition becomes binding canon only after reconciliation with its named neighbors.
+
+**Reconciliation audit — 2026-07-01, read-only, against `RECOGNITION_INTEGRITY.md`, `FEDERATED_RELATIONAL_ARCHITECTURE.md`, `MEDIA_FIELD_AND_RELATIONAL_FIELD_BOUNDARIES.md`, `DISCIPLINED_NON_COLLAPSE.md`.** No contradictions found. Two *needs-adjustment* findings — both jurisdictional clarifications that left the constitutional idea unchanged — now applied:
+1. **Recognition** — separated the *structural layer* (owned here) from the *phenomenological* felt-recognition discipline (governed by `RECOGNITION_INTEGRITY.md`); downgraded that citation to sibling-candidate (it is not yet placed / load-bearing).
+2. **Ecology** — added the shared-medium / not-unified-substrate clause to preserve the `FEDERATED_RELATIONAL_ARCHITECTURE.md` center-distinction; corrected the citations (practitioner–client privacy is spec/memory-level, not canon).
+
+Awaiting a confirming re-audit. Until then this remains a **proposed constitutional backbone**, held with intent to ratify.
 
 *A proposal becomes constitutional through reconciliation — not because it is compelling.*
