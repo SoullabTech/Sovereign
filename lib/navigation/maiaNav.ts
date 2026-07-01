@@ -24,6 +24,7 @@ import {
   BookCopy,
   NotebookPen,
   Compass,
+  Sprout,
 } from 'lucide-react';
 
 import type {
@@ -84,6 +85,14 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     route: '/maia/anchor',
     classification: 'world',
     tooltip: 'A quiet place to return',
+  },
+  {
+    id: 'living-field',
+    label: 'Living Field',
+    icon: Sprout,
+    route: '/maia/living-field',
+    classification: 'world',
+    tooltip: 'Your Personal Living Field',
   },
 ];
 

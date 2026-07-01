@@ -35,7 +35,8 @@ export type MaiaWorldId =
   | 'ideas'
   | 'relationships'
   | 'wisdom'
-  | 'anchor';
+  | 'anchor'
+  | 'living-field';
 
 export type BoundaryId = 'studio' | 'book-studio' | 'circles' | 'astrology' | 'labtools' | 'community-library' | 'vision-studio';
 
