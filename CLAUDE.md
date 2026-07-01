@@ -377,6 +377,21 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 - Processing paths: FAST (<2s), CORE (2-6s), DEEP (6-20s)
 - Consciousness framework: Spiralogic (see `/lib/maia/spiralogicReference.ts`)
 
+## Co-Lab Release Gate (MANDATORY before tester invites)
+
+**No invite unless `verify-colab-boundaries.ts` passes 31/31 in production.**
+
+Run inside the container on minisforum:
+```bash
+docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+```
+
+Pass condition: `31 passed · 0 failed · 0 warned`
+
+This gate runs automatically as part of `scripts/deploy-production.sh` smoke tests. It must also be run manually before any tester wave. See `docs/ops/COLAB_RELEASE_GATE.md` for the full gate specification — what it checks, which surfaces trigger it, and how to add new checks when new scoped surfaces ship.
+
+Triggers: Co-Lab changes · Studio people · DMs · sessions/encounters · files · memory atoms · onboarding · invitations/roles · any migration touching those tables.
+
 ## Before Making Changes
 
 1. Search codebase for existing implementations

@@ -271,6 +271,37 @@ run_smoke_tests() {
         all_passed=false
     fi
 
+    # ── Co-Lab Boundary Gate ────────────────────────────────────────────────
+    # Runs inside the maia-sovereign container where pg is available.
+    # Skipped if the container isn't running (first-time deploys) or the
+    # script is absent. A non-zero exit from the script is a hard failure.
+    #
+    # Gate invariant: a Co-Lab release is not ready because the UI looks
+    # correct — it is ready when production data proves that ownership,
+    # membership, memory, files, sessions, DMs, and people are scoped correctly.
+    log_info "  Running Co-Lab boundary verification..."
+    if docker exec maia-sovereign test -f /app/scripts/verify-colab-boundaries.ts 2>/dev/null; then
+        local boundary_output
+        if boundary_output=$(docker exec maia-sovereign sh -c \
+            'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts 2>&1'); then
+            # Extract the result line for the report
+            local result_line
+            result_line=$(echo "$boundary_output" | grep -E "Results:" | head -1 | sed 's/.*Results:/Results:/' | tr -d '║')
+            log_success "  Co-Lab boundary gate: ${result_line:-passed}"
+            add_result "PASS  Co-Lab boundary gate (${result_line:-31/31})"
+        else
+            local failures
+            failures=$(echo "$boundary_output" | grep "FAIL" | head -5)
+            log_error "  Co-Lab boundary gate FAILED"
+            echo "$boundary_output" | grep -E "FAIL|Results:" >&2
+            add_result "FAIL  Co-Lab boundary gate — run: docker exec maia-sovereign sh -c 'DATABASE_URL=\"\$DATABASE_URL\" npx tsx scripts/verify-colab-boundaries.ts'"
+            all_passed=false
+        fi
+    else
+        log_warn "  Co-Lab boundary script not found in container — skipping (deploy in progress?)"
+        add_result "SKIP  Co-Lab boundary gate (script not in image)"
+    fi
+
     # Print summary report
     echo -e "\n${CYAN}═══ Smoke Test Report ═══${NC}${report}\n"
 
