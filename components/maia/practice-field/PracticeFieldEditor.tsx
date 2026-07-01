@@ -17,6 +17,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { MirrorFieldAssist } from './MirrorFieldAssist';
 import type { PracticeField, PracticeFieldStatus, OrientationStyle } from '@/lib/types/practiceField';
 
 type EditorSection = 'identity' | 'relationship' | 'practice' | 'invite';
@@ -206,6 +207,7 @@ export function PracticeFieldEditor() {
               rows={5}
               placeholder="Welcome. I'm glad you're here. This space is for the work we're doing together…"
             />
+            <MirrorFieldAssist fieldKey="welcome_message" currentValue={field?.welcome_message ?? ''} onAccept={v => updateField('welcome_message', v)} />
           </InterviewQuestion>
 
           <InterviewQuestion
@@ -218,6 +220,7 @@ export function PracticeFieldEditor() {
               rows={4}
               placeholder="I work with EFT (Emotional Freedom Techniques) to help people release stuck patterns…"
             />
+            <MirrorFieldAssist fieldKey="about_practice" currentValue={field?.about_practice ?? ''} onAccept={v => updateField('about_practice', v)} />
           </InterviewQuestion>
 
           <InterviewQuestion
@@ -250,6 +253,7 @@ export function PracticeFieldEditor() {
               rows={7}
               placeholder={`I read reflections before each session, so you'll find it useful to capture what's been alive for you in between.\n\nMessages here reach me between sessions — I aim to respond within 24 hours. If something feels urgent, please contact me directly.\n\nWhat you bring here is yours. I don't share what I see without your explicit permission.`}
             />
+            <MirrorFieldAssist fieldKey="how_we_work_together" currentValue={field?.how_we_work_together ?? ''} onAccept={v => updateField('how_we_work_together', v)} />
           </InterviewQuestion>
 
           <InterviewQuestion
@@ -263,6 +267,7 @@ export function PracticeFieldEditor() {
               rows={7}
               placeholder={`MAIA is here to support the work we're doing together — not to replace it.\n\nIt can help you reflect between sessions, prepare for our next meeting, or integrate what arose after. It remembers what you've shared over time, with your consent.\n\nMAIA doesn't share your conversations with me. If something feels urgent or needs my direct attention, please reach out to me personally rather than relying on MAIA.`}
             />
+            <MirrorFieldAssist fieldKey="how_maia_supports" currentValue={field?.how_maia_supports ?? ''} onAccept={v => updateField('how_maia_supports', v)} />
           </InterviewQuestion>
 
           <InterviewQuestion
@@ -276,6 +281,7 @@ export function PracticeFieldEditor() {
               rows={5}
               placeholder={`I am a certified EFT practitioner. I maintain session records for [duration] per professional guidelines.\n\nI am not a licensed therapist and this work is not a substitute for therapy. If you are in crisis, please contact [crisis resource].`}
             />
+            <MirrorFieldAssist fieldKey="professional_practice" currentValue={field?.professional_practice ?? ''} onAccept={v => updateField('professional_practice', v)} />
           </InterviewQuestion>
 
           <InterviewQuestion
