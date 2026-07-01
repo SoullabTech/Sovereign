@@ -753,10 +753,22 @@ services:
   # ═════════════════════════════════════════════════════════════════════════════
   # Palisades Master Handyman - Jeremy Larson's Business Site
   # ═════════════════════════════════════════════════════════════════════════════
-  # Handyman business website with admin dashboard + invoicing
-  # Uses pre-built image (source: /Users/soullab/PalisadesHandyman)
-  # Deploy: docker compose -f docker-compose.production.yml up -d palisades
+  # Handyman business website with admin dashboard + invoicing.
+  # Uses a pre-built image (source: separate repo /Users/soullab/PalisadesHandyman).
+  # There is NO build context in this tree, so a profile-less `docker compose up -d`
+  # would try to PULL palisades-handyman:prod from a registry and fail
+  # ("pull access denied, repository does not exist"), aborting the entire deploy
+  # under `set -e` (scripts/deploy-production.sh). Sibling sites oldhead/demo avoid
+  # this only because they carry a build context (./services/oldhead).
+  #
+  # Gated behind the "palisades" profile so the canonical MAIA deploy
+  # (deploy-production.sh → `docker compose up -d`, no profile) skips it entirely.
+  # A profile-less `up -d` does NOT stop the already-running container (a profiled
+  # service is not treated as an orphan). Build/load the image on the host first,
+  # then deploy this site explicitly:
+  #   docker compose -f docker-compose.production.yml --profile palisades up -d palisades
   palisades:
+    profiles: ["palisades"]
     image: palisades-handyman:prod
     container_name: palisades-handyman
     restart: unless-stopped
