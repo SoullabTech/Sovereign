@@ -93,6 +93,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/field/enter', public: true, notes: 'Field canonical iOS entry router' },
   { prefix: '/field', minTier: 'free', notes: 'Field mobile shell — all authenticated users' },
 
+  // Guided Experiences — personalized orientation encounters (no auth, no friction).
+  // Delivery is by private link (e.g. /the-beginning/mark); noindex is set in the route.
+  { prefix: '/the-beginning', public: true, notes: 'The Beginning — guided orientation experience (private link, zero-friction)' },
+
   // Beta access (invite-gated but public routes)
   { exact: '/beta-welcome', public: true, notes: 'Beta welcome' },
   { exact: '/beta-onboarding', public: true, notes: 'Beta onboarding' },
