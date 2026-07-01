@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarDays,
@@ -18,7 +18,9 @@ import {
   Trash2,
   Pencil,
   FileText,
+  Video,
 } from 'lucide-react';
+import { MeetingCreateModal } from '@/components/studio/MeetingCreateModal';
 import { apiFetch } from '@/lib/http/apiBase';
 import {
   startOfMonth,
@@ -132,6 +134,11 @@ function layoutOverlappingEvents(events: CalendarEvent[]): Map<string, { column:
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [nowTime, setNowTime] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNowTime(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
   const [view, setView] = useState<ViewType>('month');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
@@ -162,7 +169,32 @@ export default function CalendarPage() {
     }
   }, [currentDate, view]);
 
-  const { events, loading, error, googleConnected, refetch, lastUpdated } = useCalendarEvents({ from, to });
+  const { events: calEvents, loading, error, googleConnected, refetch, lastUpdated } = useCalendarEvents({ from, to });
+
+  // Co-Lab meetings
+  const [meetings, setMeetings] = useState<CalendarEvent[]>([]);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const fetchMeetings = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/studio/meetings');
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped: CalendarEvent[] = (data.meetings ?? []).map((m: any) => ({
+        id: `meeting-${m.id}`,
+        title: m.title,
+        start: m.start,
+        end: m.end,
+        source: 'meeting' as const,
+        description: m.description,
+        location: m.location,
+        teamsJoinUrl: m.teamsJoinUrl,
+        participants: m.participants,
+      }));
+      setMeetings(mapped);
+    } catch { /* non-fatal */ }
+  }, []);
+  useEffect(() => { fetchMeetings(); }, [fetchMeetings]);
+  const events = useMemo(() => [...calEvents, ...meetings], [calEvents, meetings]);
 
   // Sync state
   const [syncing, setSyncing] = useState(false);
@@ -594,6 +626,13 @@ export default function CalendarPage() {
               <div className={`text-xl font-medium ${isToday(selectedDay) ? 'text-amber-400' : 'text-white'}`}>
                 {format(selectedDay, 'MMMM d')}
               </div>
+              {isToday(selectedDay) && (
+                <div className="text-xs text-slate-500 mt-0.5">
+                  {nowTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {' · '}
+                  {Intl.DateTimeFormat().resolvedOptions().timeZone.replace('_', ' ')}
+                </div>
+              )}
             </div>
 
             {/* Events List */}
@@ -622,6 +661,13 @@ export default function CalendarPage() {
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Event
+              </button>
+              <button
+                onClick={() => setShowMeetingModal(true)}
+                className="w-full py-2 text-sm text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Video className="w-3.5 h-3.5" />
+                Schedule Meeting
               </button>
               <button
                 onClick={goToToday}
@@ -689,6 +735,15 @@ export default function CalendarPage() {
           />
         )}
       </AnimatePresence>
+
+      {showMeetingModal && (
+        <MeetingCreateModal
+          defaultDate={selectedDay}
+          defaultHour={createDefaultHour ?? 10}
+          onClose={() => setShowMeetingModal(false)}
+          onCreated={() => { fetchMeetings(); }}
+        />
+      )}
     </div>
   );
 }
@@ -703,6 +758,11 @@ function SidebarEventCard({
 }) {
   const startTime = formatEventTime(event.start);
   const endTime = formatEventTime(event.end);
+  const tzAbbr = event.start.length > 10
+    ? new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+        .formatToParts(new Date(event.start))
+        .find(p => p.type === 'timeZoneName')?.value ?? ''
+    : '';
 
   return (
     <button
@@ -711,13 +771,16 @@ function SidebarEventCard({
         w-full p-3 rounded-lg text-left transition-all hover:scale-[1.02]
         ${event.source === 'maia'
           ? 'bg-amber-500/20 hover:bg-amber-500/30'
-          : event.source === 'studio'
-            ? 'bg-slate-700/50 hover:bg-slate-700/70'
-            : 'bg-teal-500/10 hover:bg-teal-500/20'}
+          : event.source === 'meeting'
+            ? 'bg-violet-500/20 hover:bg-violet-500/30'
+            : event.source === 'studio'
+              ? 'bg-slate-700/50 hover:bg-slate-700/70'
+              : 'bg-teal-500/10 hover:bg-teal-500/20'}
       `}
     >
       <div className={`font-medium ${
         event.source === 'maia' ? 'text-amber-300'
+        : event.source === 'meeting' ? 'text-violet-300'
         : event.source === 'studio' ? 'text-slate-200'
         : 'text-teal-300'
       }`}>
@@ -727,10 +790,11 @@ function SidebarEventCard({
         <Clock className="w-3 h-3" />
         <span className={
           event.source === 'maia' ? 'text-amber-400'
+          : event.source === 'meeting' ? 'text-violet-400'
           : event.source === 'studio' ? 'text-slate-400'
           : 'text-teal-400'
         }>
-          {startTime} - {endTime}
+          {startTime} - {endTime}{tzAbbr ? ` ${tzAbbr}` : ''}
         </span>
       </div>
       {event.location && (
@@ -822,9 +886,11 @@ function WeekView({
                         hover:opacity-80 transition-opacity
                         ${event.source === 'maia'
                           ? 'bg-amber-500/20 text-amber-400'
-                          : event.source === 'studio'
-                            ? 'bg-slate-500/20 text-slate-300'
-                            : 'border border-teal-500/30 text-teal-400'}
+                          : event.source === 'meeting'
+                            ? 'bg-violet-500/20 text-violet-300'
+                            : event.source === 'studio'
+                              ? 'bg-slate-500/20 text-slate-300'
+                              : 'border border-teal-500/30 text-teal-400'}
                       `}
                     >
                       {event.title}

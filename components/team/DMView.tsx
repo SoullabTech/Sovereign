@@ -25,6 +25,7 @@ function stringToColor(str: string): string {
 
 export function DMView({ dmThread, currentMemberId }: DMViewProps) {
   const [messages, setMessages] = useState<DMMessage[]>([]);
+  const [lastReadAt, setLastReadAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
@@ -45,7 +46,10 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
     setMessages([]);
     fetch(`/api/team/dm/${dmThread.id}/messages?limit=50`)
       .then(r => r.json())
-      .then(data => setMessages(data.messages ?? []))
+      .then(data => {
+        setLastReadAt(data.lastReadAt ?? null);
+        setMessages(data.messages ?? []);
+      })
       .finally(() => setLoading(false));
   }, [dmThread.id]);
 
@@ -181,12 +185,25 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
           </div>
         )}
 
-        {messages.map(msg => {
+        {messages.map((msg, idx) => {
           const isOwn = msg.senderId === currentMemberId;
           const initials = msg.senderName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
           const editing = editingId === msg.id;
+          // Show "New" divider at the first message after lastReadAt (only for messages not sent by current member)
+          const isFirstUnread = lastReadAt != null
+            && !isOwn
+            && msg.createdAt > lastReadAt
+            && (idx === 0 || messages[idx - 1].createdAt <= lastReadAt);
           return (
-            <div key={msg.id} className="group relative flex gap-3 px-4 py-1.5 hover:bg-white/[0.03] rounded-lg transition-colors">
+            <div key={msg.id}>
+              {isFirstUnread && (
+                <div className="flex items-center gap-3 px-4 py-2">
+                  <div className="flex-1 h-px bg-rose-400/40" />
+                  <span className="text-xs text-rose-300/80 font-medium tracking-wide">New</span>
+                  <div className="flex-1 h-px bg-rose-400/40" />
+                </div>
+              )}
+            <div className="group relative flex gap-3 px-4 py-1.5 hover:bg-white/[0.03] rounded-lg transition-colors">
               <div
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold mt-0.5"
                 style={{ background: stringToColor(msg.senderId) }}
@@ -271,6 +288,7 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
                   </div>
                 </div>
               )}
+            </div>
             </div>
           );
         })}

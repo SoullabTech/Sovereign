@@ -393,6 +393,14 @@ export async function editDMMessage(
   return { ok: true, editedAt: upd.rows[0].edited_at };
 }
 
+export async function getLastReadAt(dmThreadId: string, memberId: string): Promise<string | null> {
+  const res = await query<{ last_read_at: string | null }>(
+    `SELECT last_read_at FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, memberId]
+  );
+  return res.rows[0]?.last_read_at ?? null;
+}
+
 export async function markDMRead(dmThreadId: string, memberId: string): Promise<void> {
   await query(
     `UPDATE team_dm_members SET last_read_at = NOW()

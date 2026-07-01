@@ -6,7 +6,9 @@ export interface CalendarEvent {
   title: string;
   start: string;
   end: string;
-  source: 'maia' | 'google' | 'studio';
+  source: 'maia' | 'google' | 'studio' | 'meeting';
+  teamsJoinUrl?: string;
+  participants?: { id: string; name: string; email: string; responseStatus: string }[];
   allDay?: boolean;
   description?: string;
   location?: string;

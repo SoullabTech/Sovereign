@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { getDMMessages, sendDMMessage, markDMRead } from '@/lib/team/DMService';
+import { getDMMessages, sendDMMessage, markDMRead, getLastReadAt } from '@/lib/team/DMService';
 import { sendPartnerNotification } from '@/lib/masters/partnerNotifications';
 import { logFieldActivity } from '@/lib/masters/fieldActivityLog';
 
@@ -22,9 +22,12 @@ export async function GET(
   const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 100);
 
   try {
-    const messages = await getDMMessages(dmId, memberId, { limit, before });
+    const [messages, lastReadAt] = await Promise.all([
+      getDMMessages(dmId, memberId, { limit, before }),
+      getLastReadAt(dmId, memberId),
+    ]);
     await markDMRead(dmId, memberId);
-    return NextResponse.json({ messages });
+    return NextResponse.json({ messages, lastReadAt });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error';
     return NextResponse.json({ error: msg }, { status: 403 });
