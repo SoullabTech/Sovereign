@@ -8,8 +8,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
+import { getTeamRole, getTeamById } from '@/lib/auth/teamPermissions';
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,6 +51,14 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
 
+    // Resolve active Co-Lab and role for the identity display.
+    const jar = await cookies();
+    const cookieTeam = jar.get(COLAB_TEAM_COOKIE)?.value ?? null;
+    const teamId = await resolveCurrentTeamId(identity.memberId, cookieTeam);
+    const [team, teamRole] = teamId
+      ? await Promise.all([getTeamById(teamId), getTeamRole(identity.memberId, teamId)])
+      : [null, null];
+
     return NextResponse.json({
       authenticated: true,
       isPractitioner: true,
@@ -60,6 +71,10 @@ export async function GET(request: NextRequest) {
         portalType: identity.portalType,
         enabledModules: identity.enabledModules,
         studioMode: identity.studioMode,
+        // Co-Lab context — who are you, inside whose workspace, under what authority?
+        coLabId: teamId,
+        coLabName: team?.name ?? null,
+        coLabRole: teamRole ?? null,
       },
       authMethod,
     });

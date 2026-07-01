@@ -139,6 +139,8 @@ export default function StudioLayout({
   const studioModeRef = useRef<StudioMode>('practice');
   const [currentMode, setCurrentMode] = useState<StudioMode>('practice');
   const [practitionerName, setPractitionerName] = useState<string | null>(null);
+  const [coLabName, setCoLabName] = useState<string | null>(null);
+  const [coLabRole, setCoLabRole] = useState<string | null>(null);
   // Personal Field sidebar order — local, per-device navigation comfort only.
   const [personalOrder, setPersonalOrder] = useState<string[]>([]);
 
@@ -166,6 +168,8 @@ export default function StudioLayout({
         if (data.isPractitioner) {
           setIsPractitioner(true);
           setPractitionerName(data.identity?.name ?? null);
+          setCoLabName(data.identity?.coLabName ?? null);
+          setCoLabRole(data.identity?.coLabRole ?? null);
 
           // Resolve visible modules from identity
           const portalType = (data.identity?.portalType ?? 'generalist') as PortalType;
@@ -506,8 +510,10 @@ export default function StudioLayout({
                 {/* Identity + Sign out */}
                 <div className="px-2 pb-3 border-t border-slate-800/50">
                   {practitionerName && (
-                    <div className="px-2 pt-2 pb-1 text-[10px] text-slate-500 truncate">
-                      {practitionerName}
+                    <div className="px-2 pt-2 pb-1 space-y-0.5">
+                      <div className="text-xs font-medium text-slate-300 truncate">{practitionerName}</div>
+                      {coLabRole && <div className="text-[10px] text-slate-500 capitalize truncate">{coLabRole}</div>}
+                      {coLabName && <div className="text-[10px] text-amber-500/70 truncate">{coLabName}</div>}
                     </div>
                   )}
                   <Link
@@ -619,8 +625,10 @@ export default function StudioLayout({
         {/* Identity + Sign out */}
         <div className="px-2 pb-2 border-t border-slate-800/50">
           {!collapsed && practitionerName && (
-            <div className="px-2 pt-2 pb-1 text-[10px] text-slate-500 truncate">
-              {practitionerName}
+            <div className="px-2 pt-2 pb-1 space-y-0.5">
+              <div className="text-xs font-medium text-slate-300 truncate">{practitionerName}</div>
+              {coLabRole && <div className="text-[10px] text-slate-500 capitalize truncate">{coLabRole}</div>}
+              {coLabName && <div className="text-[10px] text-amber-500/70 truncate">{coLabName}</div>}
             </div>
           )}
           <Link
