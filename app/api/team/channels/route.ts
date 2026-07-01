@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { listChannels } from '@/lib/team/ChannelService';
-import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
+import { resolveCurrentTeamId, canActInTeam, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { query } from '@/lib/db/postgres';
 import crypto from 'crypto';
 
@@ -43,6 +43,11 @@ export async function POST(request: NextRequest) {
   const teamId = await resolveCurrentTeamId(memberId, requestedTeamId(request, body.teamId));
   if (!teamId) {
     return NextResponse.json({ error: 'No workspace available' }, { status: 400 });
+  }
+
+  // Writes require explicit Co-Lab membership — no default-team bypass.
+  if (!(await canActInTeam(memberId, teamId))) {
+    return NextResponse.json({ error: 'You do not have permission to create channels in this Co-Lab.' }, { status: 403 });
   }
 
   const slugClean = String(slug).toLowerCase().replace(/[^a-z0-9-]/g, '-');

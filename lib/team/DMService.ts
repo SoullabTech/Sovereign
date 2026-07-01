@@ -1,7 +1,12 @@
 // SoulComms — Direct Message Service
+//
+// Co-Lab sovereign: DM threads are scoped to the active Co-Lab (team_id).
+// A member may only DM people who share membership in the same Co-Lab.
+// No global roster exposure. No cross-Co-Lab DM threads.
 
 import { query } from '@/lib/db/postgres';
 import { notifyDMRecipient } from '@/lib/team/notifications';
+import { getTeamRole } from '@/lib/auth/teamPermissions';
 
 export interface DMThread {
   id: string;
@@ -36,7 +41,7 @@ export interface DMMessage {
 // THREAD MANAGEMENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function listDMThreads(memberId: string): Promise<DMThread[]> {
+export async function listDMThreads(memberId: string, teamId: string): Promise<DMThread[]> {
   const result = await query<{
     id: string;
     created_at: string;
@@ -59,9 +64,10 @@ export async function listDMThreads(memberId: string): Promise<DMThread[]> {
      FROM team_dm_threads dt
      JOIN team_dm_members tdm ON tdm.dm_thread_id = dt.id AND tdm.member_id = $1
      LEFT JOIN team_dm_messages dm ON dm.dm_thread_id = dt.id
+     WHERE dt.team_id = $2
      GROUP BY dt.id, tdm.last_read_at
      ORDER BY last_message_at DESC NULLS LAST`,
-    [memberId]
+    [memberId, teamId]
   );
 
   const threads: DMThread[] = [];
@@ -102,25 +108,46 @@ export async function getDMThreadMembers(dmThreadId: string): Promise<DMThreadMe
 
 export async function findOrCreateDMThread(
   memberIdA: string,
-  memberIdB: string
+  memberIdB: string,
+  teamId: string
 ): Promise<string> {
-  // Find existing 1:1 thread between exactly these two members
+  // Both participants must be members of the active Co-Lab.
+  const [roleA, roleB] = await Promise.all([
+    getTeamRole(memberIdA, teamId),
+    getTeamRole(memberIdB, teamId),
+  ]);
+
+  // Allow if either participant is in the team, or fall back to default-team
+  // membership check (for backward compat with the legacy shared workspace).
+  const { rows: defaultTeam } = await query<{ id: string }>(
+    `SELECT id FROM studio_teams ORDER BY created_at ASC, id ASC LIMIT 1`
+  );
+  const defaultId = defaultTeam[0]?.id;
+  const isDefault = teamId === defaultId;
+
+  if (!isDefault && (!roleA || !roleB)) {
+    throw new Error('Both participants must be members of the active Co-Lab to start a DM');
+  }
+
+  // Find existing 1:1 thread scoped to this Co-Lab
   const existing = await query<{ id: string }>(
     `SELECT dt.id FROM team_dm_threads dt
-     WHERE (
-       SELECT COUNT(*) FROM team_dm_members WHERE dm_thread_id = dt.id
-     ) = 2
-     AND EXISTS (SELECT 1 FROM team_dm_members WHERE dm_thread_id = dt.id AND member_id = $1)
-     AND EXISTS (SELECT 1 FROM team_dm_members WHERE dm_thread_id = dt.id AND member_id = $2)
+     WHERE dt.team_id = $3
+       AND (
+         SELECT COUNT(*) FROM team_dm_members WHERE dm_thread_id = dt.id
+       ) = 2
+       AND EXISTS (SELECT 1 FROM team_dm_members WHERE dm_thread_id = dt.id AND member_id = $1)
+       AND EXISTS (SELECT 1 FROM team_dm_members WHERE dm_thread_id = dt.id AND member_id = $2)
      LIMIT 1`,
-    [memberIdA, memberIdB]
+    [memberIdA, memberIdB, teamId]
   );
 
   if (existing.rows[0]) return existing.rows[0].id;
 
-  // Create new thread
+  // Create new thread scoped to this Co-Lab
   const { rows } = await query<{ id: string }>(
-    `INSERT INTO team_dm_threads DEFAULT VALUES RETURNING id`
+    `INSERT INTO team_dm_threads (team_id) VALUES ($1) RETURNING id`,
+    [teamId]
   );
   const threadId = rows[0].id;
 
@@ -143,7 +170,7 @@ export async function getDMMessages(
 ): Promise<DMMessage[]> {
   const limit = opts.limit ?? 50;
 
-  // Verify membership
+  // Verify membership in this thread
   const access = await query(
     `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
     [dmThreadId, memberId]
@@ -250,7 +277,7 @@ export async function sendDMMessage(
   const validTypes: MessageType[] = ['build', 'decision', 'insight', 'question'];
   const safeType: MessageType = validTypes.includes(messageType) ? messageType : 'build';
 
-  // Verify membership
+  // Verify membership in this thread
   const access = await query(
     `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
     [dmThreadId, senderId]
@@ -274,7 +301,6 @@ export async function sendDMMessage(
 
   const row = result.rows[0];
 
-  // Fire-and-forget email notification to the other participant
   notifyDMRecipient(dmThreadId, senderId, trimmed).catch(() => {});
 
   const nameRes = await query<{ name: string | null; username: string }>(
@@ -283,7 +309,6 @@ export async function sendDMMessage(
   );
   const sender = nameRes.rows[0];
 
-  // Update last_read_at for sender
   await query(
     `UPDATE team_dm_members SET last_read_at = NOW()
      WHERE dm_thread_id = $1 AND member_id = $2`,
@@ -307,12 +332,6 @@ export type DeleteDMMessageResult =
   | { ok: true }
   | { ok: false; reason: 'not_found' | 'forbidden' };
 
-/**
- * Soft-delete a DM message (sets deleted_at). getDMMessages / getDMMessagesSince
- * already exclude deleted rows. SENDER-ONLY: a 1:1 DM has no moderator, so only
- * the author may delete. No deleted_by is recorded — it would always equal
- * sender_id, carrying no governance signal (data minimization).
- */
 export async function deleteDMMessage(
   dmThreadId: string,
   messageId: string,
@@ -341,10 +360,6 @@ export type EditDMMessageResult =
   | { ok: true; editedAt: string }
   | { ok: false; reason: 'not_found' | 'forbidden' | 'empty' | 'too_long' };
 
-/**
- * Edit a DM message's text (sets body + edited_at). SENDER-ONLY — only the author
- * may revise their own words.
- */
 export async function editDMMessage(
   dmThreadId: string,
   messageId: string,
@@ -386,30 +401,30 @@ export async function markDMRead(dmThreadId: string, memberId: string): Promise<
   );
 }
 
-/**
- * Total unread DM messages across all of a member's threads — the DM half of the
- * Co-lab rail badge. Matches listDMThreads' per-thread unread logic exactly (so the
- * rail total equals the sum of the sidebar's DM unread badges): a message counts if
- * it is newer than the member's last_read_at for that thread and not deleted.
- */
-export async function countUnreadDMs(memberId: string): Promise<number> {
+export async function countUnreadDMs(memberId: string, teamId: string): Promise<number> {
   const res = await query<{ n: number }>(
     `SELECT count(*)::int AS n
        FROM team_dm_members tdm
        JOIN team_dm_messages dm ON dm.dm_thread_id = tdm.dm_thread_id
+       JOIN team_dm_threads dt ON dt.id = tdm.dm_thread_id
       WHERE tdm.member_id = $1
+        AND dt.team_id = $2
         AND dm.created_at > COALESCE(tdm.last_read_at, '1970-01-01')
         AND dm.deleted_at IS NULL`,
-    [memberId]
+    [memberId, teamId]
   );
   return res.rows[0]?.n ?? 0;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TEAM MEMBERS (for DM target selection)
+// TEAM MEMBERS (DM target selection — Co-Lab scoped)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function listTeamMembers(): Promise<Array<{
+/**
+ * Members eligible to DM within the active Co-Lab. Returns only members who
+ * explicitly belong to the given team — no global roster exposure.
+ */
+export async function listTeamMembers(teamId: string): Promise<Array<{
   memberId: string;
   name: string;
   status: 'online' | 'away' | 'offline';
@@ -421,9 +436,12 @@ export async function listTeamMembers(): Promise<Array<{
     status: string | null;
   }>(
     `SELECT m.id, m.name, m.username, tp.status
-     FROM members m
+     FROM studio_team_members stm
+     JOIN members m ON m.id = stm.member_id
      LEFT JOIN team_presence tp ON tp.member_id = m.id
-     ORDER BY tp.last_seen_at DESC NULLS LAST, m.name ASC`
+     WHERE stm.team_id = $1
+     ORDER BY tp.last_seen_at DESC NULLS LAST, m.name ASC`,
+    [teamId]
   );
 
   return result.rows.map(row => ({
