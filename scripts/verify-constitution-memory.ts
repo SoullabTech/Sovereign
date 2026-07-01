@@ -20,6 +20,9 @@
  *   they will become LIVE as the memory substrate matures. Pending checks
  *   emit WARN (not FAIL) and are never silently skipped.
  *
+ * Canon: docs/canon/VERIFICATION_STATES.md
+ * States: LIVE, WARNING, PENDING — current maturity assessments, not declarations.
+ *
  * Authority: docs/canon/THE_CLEARING.md · SPIRAL_CONTINUITY_ENGINE.md ·
  *            RIGHT_TO_REMAIN_UNPOSSESSED.md · migration 20260630000005
  *

@@ -16,6 +16,9 @@
  *      and memory context — not just UI state.
  *   4. Personal scope atoms/files do not bleed into Co-Lab contexts.
  *   5. The admin workspace (Team Soullab) is flagged explicitly.
+ *
+ * Canon: docs/canon/VERIFICATION_STATES.md
+ * States: LIVE, WARNING, PENDING — current maturity assessments, not declarations.
  */
 
 import { Pool } from 'pg';

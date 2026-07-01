@@ -22,6 +22,9 @@
  *   layer of constitutional discipline. Each one names a commitment the
  *   platform has made and has not yet proven. The verifier is the record.
  *
+ * Canon: docs/canon/VERIFICATION_STATES.md
+ * States: LIVE, WARNING, PENDING — current maturity assessments, not declarations.
+ *
  * Authority: docs/canon/MAIA_OATH.md · MAIA_SOVEREIGNTY_INVARIANTS.md ·
  *            MAIA_CANON_v1.1.md · docs/canon/VOICE_CONSTITUTION.md
  */

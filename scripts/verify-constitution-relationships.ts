@@ -15,6 +15,9 @@
  *   [LIVE] checks run against current production data.
  *   [PENDING] marks constitutional commitments not yet fully wired.
  *
+ * Canon: docs/canon/VERIFICATION_STATES.md
+ * States: LIVE, WARNING, PENDING — current maturity assessments, not declarations.
+ *
  * Authority: docs/canon/ENCOUNTER_AS_PRIMITIVE.md ·
  *            docs/canon/RELATIONAL_FACULTIES.md ·
  *            ADRs 005–009

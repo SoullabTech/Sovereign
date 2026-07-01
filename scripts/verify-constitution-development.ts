@@ -20,6 +20,9 @@
  *   The [PENDING] checks are the constitutional commitments that must be
  *   verified as each subsystem ships.
  *
+ * Canon: docs/canon/VERIFICATION_STATES.md
+ * States: LIVE, WARNING, PENDING — current maturity assessments, not declarations.
+ *
  * Authority: docs/canon/LIVING_FIELDS.md · EPISTEMIC_JURISDICTION.md ·
  *            PREPARATION_IS_NOT_AUTHORIZATION.md ·
  *            docs/adr/009-field-manifest.md
