@@ -65,6 +65,7 @@ export async function listDMThreads(memberId: string, teamId: string): Promise<D
      JOIN team_dm_members tdm ON tdm.dm_thread_id = dt.id AND tdm.member_id = $1
      LEFT JOIN team_dm_messages dm ON dm.dm_thread_id = dt.id
      WHERE dt.team_id = $2
+       AND tdm.hidden_at IS NULL
      GROUP BY dt.id, tdm.last_read_at
      ORDER BY last_message_at DESC NULLS LAST`,
     [memberId, teamId]
@@ -157,6 +158,14 @@ export async function findOrCreateDMThread(
   );
 
   return threadId;
+}
+
+export async function hideDMThread(dmThreadId: string, memberId: string): Promise<void> {
+  await query(
+    `UPDATE team_dm_members SET hidden_at = NOW()
+     WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, memberId]
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -308,6 +317,12 @@ export async function sendDMMessage(
     [senderId]
   );
   const sender = nameRes.rows[0];
+
+  // Unhide for all members — a new message reopens the thread for everyone
+  await query(
+    `UPDATE team_dm_members SET hidden_at = NULL WHERE dm_thread_id = $1`,
+    [dmThreadId]
+  );
 
   await query(
     `UPDATE team_dm_members SET last_read_at = NOW()

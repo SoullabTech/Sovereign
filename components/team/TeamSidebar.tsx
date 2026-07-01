@@ -480,23 +480,36 @@ export function TeamSidebar({ currentMemberId, currentTeamId: initialTeamId }: T
               const isActive = pathname === `/team/dm/${thread.id}`;
               const firstStatus = others[0]?.status ?? 'offline';
               return (
-                <Link
-                  key={thread.id}
-                  href={`/team/dm/${thread.id}`}
-                  className={`flex items-center gap-2 px-4 py-1.5 text-sm transition-colors rounded-md mx-1 ${
-                    isActive
-                      ? 'bg-amber-500/15 text-white/90'
-                      : 'text-white/45 hover:text-white/70 hover:bg-white/5'
-                  }`}
-                >
-                  <PresenceDot status={firstStatus} />
-                  <span className="flex-1 truncate">{name}</span>
-                  {(thread.unreadCount ?? 0) > 0 && !isActive && (
-                    <span className="text-xs bg-amber-500 text-black font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                      {thread.unreadCount > 99 ? '99+' : thread.unreadCount}
-                    </span>
-                  )}
-                </Link>
+                <div key={thread.id} className="group relative flex items-center mx-1">
+                  <Link
+                    href={`/team/dm/${thread.id}`}
+                    className={`flex-1 flex items-center gap-2 px-4 py-1.5 text-sm transition-colors rounded-md ${
+                      isActive
+                        ? 'bg-amber-500/15 text-white/90'
+                        : 'text-white/45 hover:text-white/70 hover:bg-white/5'
+                    }`}
+                  >
+                    <PresenceDot status={firstStatus} />
+                    <span className="flex-1 truncate">{name}</span>
+                    {(thread.unreadCount ?? 0) > 0 && !isActive && (
+                      <span className="text-xs bg-amber-500 text-black font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                        {thread.unreadCount > 99 ? '99+' : thread.unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <button
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await fetch(`/api/team/dm/${thread.id}`, { method: 'DELETE' });
+                      setDMThreads(prev => prev.filter(t => t.id !== thread.id));
+                      if (isActive) router.push('/team/general');
+                    }}
+                    className="absolute right-1 opacity-0 group-hover:opacity-100 transition-opacity text-white/30 hover:text-white/70 p-1 rounded"
+                    title="Hide conversation"
+                  >
+                    ×
+                  </button>
+                </div>
               );
             })}
           </ChannelGroup>
