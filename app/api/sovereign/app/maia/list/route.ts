@@ -135,6 +135,7 @@ import { type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
 import { calculateDaYun } from '@/lib/astrology/daYunCalculator';
 import { pool } from '@/lib/db/postgres';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
+import { buildPracticeFieldContext, formatPracticeFieldContextForPrompt } from '@/lib/practiceField/practiceFieldService';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
 import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 
@@ -674,6 +675,32 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.log(`🏢 [Route] Studio surface detected — practitioner prompt cap applied`);
     }
 
+    // 🤝 PRACTICE FIELD CONTEXT: Inject practitioner's accompaniment context when member
+    // is a participant in an active Relationship Space. Received as context, not instructions.
+    // Constitutional behavior is invariant across all Practice Fields.
+    let practiceFieldAddendum: string | null = null;
+    if (isRecognizedUser && !isSanctuary) {
+      try {
+        const spaceResult = await pool.query(
+          `SELECT rs.id, rs.practitioner_display_name
+           FROM relationship_spaces rs
+           WHERE rs.participant_member_id = $1 AND rs.status = 'active' AND rs.consent_status = 'accepted'
+           ORDER BY rs.created_at DESC LIMIT 1`,
+          [userId]
+        );
+        if (spaceResult.rows.length) {
+          const space = spaceResult.rows[0];
+          const pfCtx = await buildPracticeFieldContext(space.id, space.practitioner_display_name);
+          if (pfCtx) {
+            practiceFieldAddendum = formatPracticeFieldContextForPrompt(pfCtx);
+            console.log(`🤝 [Route] Practice Field context injected for space ${space.id.slice(0, 8)}…`);
+          }
+        }
+      } catch (err) {
+        console.warn('[Route] Practice Field context load failed (non-blocking):', err);
+      }
+    }
+
     // 🚪 AIN KNOWLEDGE GATE: Score 5 wells × awareness level (local regex, zero latency)
     let knowledgeGateResult: { source_mix: SourceContribution[]; awarenessState: any; awarenessDescription: string } | null = null;
     let knowledgeGateAddendum: string | null = null;
@@ -962,6 +989,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           bridgedSnapshot, // 🌿 Combined Spiral × Wu Xing snapshot
           conversationId: bodyConversationId || session.id, // 📝 Stable conversation ID for thread continuity
           studioAddendum, // 🏢 Studio prompt cap (when surface === 'studio')
+          practiceFieldAddendum, // 🤝 Practice Field: practitioner accompaniment context
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
