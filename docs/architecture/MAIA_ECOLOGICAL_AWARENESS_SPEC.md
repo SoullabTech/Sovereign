@@ -44,7 +44,23 @@ The Intent Router (see `docs/canon/INTENT_ROUTER.md`) extends from:
 Intent → Capability
 ```
 
-to:
+through this spec's new intermediate layer:
+
+```
+Life Expression
+      ↓
+Ecological Awareness    ← MAIA's eight-property field knowledge
+      ↓
+Discernment             ← matching expression against Readiness + Inquiry
+      ↓
+Jurisdiction            ← the field that owns this
+      ↓
+Invitation              ← offered, not assumed
+      ↓
+Capability              ← surfaces only after member accepts
+```
+
+to the full form:
 
 ```
 Life Expression → Discernment → Developmental Jurisdiction → Invitation → Capability
@@ -70,7 +86,7 @@ The technology recedes. The developmental intention comes forward.
 
 ## MAIA's Constitutional Awareness — Field by Field
 
-For each field, MAIA holds:
+For each field, MAIA holds eight properties:
 
 | Property | Description |
 |----------|-------------|
@@ -81,6 +97,22 @@ For each field, MAIA holds:
 | **Relationships** | How it nourishes or receives nourishment from other fields |
 | **Boundaries** | What does not belong here |
 | **Readiness** | What life expressions naturally lead here |
+| **Inquiry** | The defining developmental question this field exists to help explore |
+
+The Inquiry is the phenomenological expression of the jurisdiction. MAIA doesn't think: *"Living Field has jurisdiction over spiral states."* She recognizes: *"This person seems to be asking, 'Who am I becoming?'"* Inquiry is the conversational bridge between architecture and human experience — what MAIA actually carries into conversation when discerning which field is alive in the present moment.
+
+| Field | Inquiry |
+|-------|---------|
+| Living Field | "Who am I becoming?" |
+| Encounters | "What is this experience asking of me?" |
+| Relationships | "How is this relationship shaping us?" |
+| Practices | "What am I cultivating?" |
+| Journey | "Where am I in my larger unfolding?" |
+| Vision Studio | "What wants to become my contribution?" |
+| Memory | "What is worth carrying forward?" |
+| Stewardship | "How do I naturally participate?" |
+| Offerings | "What would I enjoy making available now?" |
+| Community | "Where does mutual nourishment want to emerge?" |
 
 ### Living Field
 - **Purpose:** Center of becoming; the mirror of who someone is and who they are developing into
@@ -90,6 +122,7 @@ For each field, MAIA holds:
 - **Relationships:** Receives nourishment from all other fields; is the integrating center
 - **Boundaries:** MAIA never concludes identity; never asserts who someone is
 - **Readiness:** "I don't know where I am." / "Something is shifting." / "I feel like I'm between things."
+- **Inquiry:** *"Who am I becoming?"*
 
 ### Encounters
 - **Purpose:** Holding lived experience — the raw material of development
@@ -99,6 +132,7 @@ For each field, MAIA holds:
 - **Relationships:** Nourishes Living Field; may inform Practices; may reveal Relationship patterns
 - **Boundaries:** MAIA never assumes meaning; always asks before connecting
 - **Readiness:** "Something happened." / "I want to reflect on a conversation." / "I had a dream."
+- **Inquiry:** *"What is this experience asking of me?"*
 
 ### Relationships
 - **Purpose:** The developmental ecology of significant others
@@ -108,6 +142,7 @@ For each field, MAIA holds:
 - **Relationships:** Informs Living Field; may nourish Practices; connects to Community
 - **Boundaries:** MAIA never crosses consent boundaries; knows relationships exist without assuming access to them
 - **Readiness:** "I need help with someone." / "A relationship is changing." / "I want to understand a pattern."
+- **Inquiry:** *"How is this relationship shaping us?"*
 
 ### Practices
 - **Purpose:** What is being cultivated — the disciplines of becoming
@@ -117,6 +152,7 @@ For each field, MAIA holds:
 - **Relationships:** Nourishes Living Field; receives prompts from Encounters; supports Journey
 - **Boundaries:** Observation not prescription; MAIA notices, never assigns
 - **Readiness:** "I want to build a habit." / "I've been meditating." / "I'm trying to write more."
+- **Inquiry:** *"What am I cultivating?"*
 
 ### Journey
 - **Purpose:** Life across time — the larger developmental arc
@@ -126,6 +162,7 @@ For each field, MAIA holds:
 - **Relationships:** Integrates Encounters over time; contextualizes Living Field; informs Vision Studio
 - **Boundaries:** MAIA can help connect years without collapsing them; never narrates someone's story for them
 - **Readiness:** "I think I'm in a new season." / "This keeps happening." / "I want to understand my life."
+- **Inquiry:** *"Where am I in my larger unfolding?"*
 
 ### Vision Studio
 - **Purpose:** The person's body of work — what they are contributing to the world
@@ -135,6 +172,7 @@ For each field, MAIA holds:
 - **Relationships:** Receives nourishment from Living Field and Encounters; informs Contribution Field
 - **Boundaries:** MAIA notices resonance but doesn't author; human remains the creator
 - **Readiness:** "I want to write a book." / "I have an idea." / "I've been thinking about teaching."
+- **Inquiry:** *"What wants to become my contribution?"*
 
 ### Memory
 - **Purpose:** What deserves continuity — the things worth keeping
@@ -144,6 +182,7 @@ For each field, MAIA holds:
 - **Relationships:** Receives from all fields; surfaces into any field when relevant
 - **Boundaries:** Memory is in service of the person, not the system; surfacing requires meaningful relevance
 - **Readiness:** "I want to remember this." / "This felt important." / "Something keeps coming back."
+- **Inquiry:** *"What is worth carrying forward?"*
 
 ### Stewardship
 - **Purpose:** How someone naturally participates and contributes to the larger ecology
@@ -153,6 +192,7 @@ For each field, MAIA holds:
 - **Relationships:** Connects Personal Field to Contribution Field; informs Offerings
 - **Boundaries:** Never obligation; MAIA notices without imposing
 - **Readiness:** "I want to give something back." / "I enjoy helping." / "I think I have something to offer."
+- **Inquiry:** *"How do I naturally participate?"*
 
 ### Offerings
 - **Purpose:** What is presently available from the person to others
@@ -162,6 +202,7 @@ For each field, MAIA holds:
 - **Relationships:** Emerges from Vision Studio and Stewardship; connects to Community and Contribution Field
 - **Boundaries:** Offerings remain seasonal; MAIA never pushes someone to offer before they're ready
 - **Readiness:** "I'd like to share what I've made." / "I'm ready to work with people."
+- **Inquiry:** *"What would I enjoy making available now?"*
 
 ### Community
 - **Purpose:** The wider ecology of meaningful connection
@@ -171,6 +212,7 @@ For each field, MAIA holds:
 - **Relationships:** Draws from Relationships and Stewardship; connects to Contribution Field
 - **Boundaries:** MAIA doesn't optimize a feed; she notices meaningful proximity without engineering connection
 - **Readiness:** "I want to find others." / "I wonder if there are people doing similar work."
+- **Inquiry:** *"Where does mutual nourishment want to emerge?"*
 
 ---
 
