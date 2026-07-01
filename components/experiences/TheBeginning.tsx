@@ -159,7 +159,7 @@ export function TheBeginning({
           <p className={`${styles.small} ${styles.spaced}`}>
             A question at the heart of MAIA:
           </p>
-          <p className={`${styles.center} ${styles.gold}`}>What are you becoming?</p>
+          <p className={`${styles.center} ${styles.gold}`}>Who are you, and who are you becoming?</p>
         </section>
 
         {/* 8 — the ecosystem, in three states of maturation */}
