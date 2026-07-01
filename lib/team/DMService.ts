@@ -168,6 +168,40 @@ export async function hideDMThread(dmThreadId: string, memberId: string): Promis
   );
 }
 
+export async function addMemberToDMThread(dmThreadId: string, memberId: string): Promise<void> {
+  const already = await query(
+    `SELECT 1 FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, memberId]
+  );
+  if (already.rows[0]) {
+    // Already a member — clear hidden_at in case they were hidden
+    await query(
+      `UPDATE team_dm_members SET hidden_at = NULL WHERE dm_thread_id = $1 AND member_id = $2`,
+      [dmThreadId, memberId]
+    );
+    return;
+  }
+  await query(
+    `INSERT INTO team_dm_members (dm_thread_id, member_id) VALUES ($1, $2)`,
+    [dmThreadId, memberId]
+  );
+}
+
+export async function removeMemberFromDMThread(dmThreadId: string, memberId: string): Promise<void> {
+  // Require at least 2 members to remain after removal
+  const count = await query<{ cnt: string }>(
+    `SELECT COUNT(*) AS cnt FROM team_dm_members WHERE dm_thread_id = $1`,
+    [dmThreadId]
+  );
+  if (parseInt(count.rows[0]?.cnt ?? '0', 10) <= 2) {
+    throw new Error('Cannot remove the last two members from a DM thread');
+  }
+  await query(
+    `DELETE FROM team_dm_members WHERE dm_thread_id = $1 AND member_id = $2`,
+    [dmThreadId, memberId]
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MESSAGES
 // ─────────────────────────────────────────────────────────────────────────────
