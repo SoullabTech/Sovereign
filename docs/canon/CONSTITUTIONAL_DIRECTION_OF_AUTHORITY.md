@@ -1,6 +1,6 @@
 # Constitutional Direction of Authority
 
-**Status:** Proposed backbone — pending reconciliation via `CONSTITUTIONAL_AUDIT_PROCESS.md`
+**Status:** **Ratified canon — 2026-07-01** (reconciled + re-audited; ratified as one package with the placement of `RECOGNITION_INTEGRITY.md` as Invariant 16 in `MAIA_SOVEREIGNTY_INVARIANTS.md`)
 **Proposed by:** Kelly Nezat (founder) — 2026-07-01
 **Type:** Canon — a *constraint on authority* (it constrains where the system may generate meaning; it grants no capability, and it does **not** describe how people develop).
 **Governs:** every developmental surface — Session Room, Personal Portal / Personal Field, Vision Studio, Practitioner Studio, Co-Labs, the memory layers, and any future feature that carries a person's material between lived experience and authored meaning.
@@ -151,9 +151,11 @@ That the live system already partitions this way is evidence the constraint is *
 Proposed by founder directive (2026-07-01). Per `CONSTITUTIONAL_AUDIT_PROCESS.md`, a backbone-level addition becomes binding canon only after reconciliation with its named neighbors.
 
 **Reconciliation audit — 2026-07-01, read-only, against `RECOGNITION_INTEGRITY.md`, `FEDERATED_RELATIONAL_ARCHITECTURE.md`, `MEDIA_FIELD_AND_RELATIONAL_FIELD_BOUNDARIES.md`, `DISCIPLINED_NON_COLLAPSE.md`.** No contradictions found. Two *needs-adjustment* findings — both jurisdictional clarifications that left the constitutional idea unchanged — now applied:
-1. **Recognition** — separated the *structural layer* (owned here) from the *phenomenological* felt-recognition discipline (governed by `RECOGNITION_INTEGRITY.md`); downgraded that citation to sibling-candidate (it is not yet placed / load-bearing).
+1. **Recognition** — separated the *structural layer* (owned here) from the *phenomenological* felt-recognition discipline (governed by `RECOGNITION_INTEGRITY.md`); at audit time that document was a sibling candidate, so the citation was downgraded accordingly.
 2. **Ecology** — added the shared-medium / not-unified-substrate clause to preserve the `FEDERATED_RELATIONAL_ARCHITECTURE.md` center-distinction; corrected the citations (practitioner–client privacy is spec/memory-level, not canon).
 
-Awaiting a confirming re-audit. Until then this remains a **proposed constitutional backbone**, held with intent to ratify.
+**Re-audit — 2026-07-01.** Both findings resolved; both items **hold**; no contradictions, no residual adjustments.
+
+**Ratified — 2026-07-01**, by founder directive, as one constitutional package with the placement of `RECOGNITION_INTEGRITY.md` into `MAIA_SOVEREIGNTY_INVARIANTS.md` as **Invariant 16** — the sibling this backbone depends on for its phenomenological-recognition boundary. That dependency is now grounded: both are load-bearing together. Audit-trail commits kept distinct (propose → reconcile → place Invariant 16 → ratify).
 
 *A proposal becomes constitutional through reconciliation — not because it is compelling.*
