@@ -133,6 +133,7 @@ import type { PrivacyGateResult, CheckAccessResult } from '@/lib/trust/types';
 import { checkAccess } from '@/lib/trust/checkAccess';
 import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
 import { buildKnowledgeFieldBlock, hasKnowledgeDomainSignal } from '@/lib/maia/prompts/knowledgeFieldBlock';
+import { emitSignal } from '@/lib/observation/observationService';
 
 // Skip during static export (Capacitor builds)
 
@@ -1991,6 +1992,9 @@ export async function POST(request: NextRequest) {
     // Null when flag is off, when no signal, or when sidecar errored (non-fatal).
     (response as any).keepIntent = keepIntent;
 
+    if (userId) {
+      emitSignal({ signal_type: 'conversation_started', context_type: 'member', context_id: userId, surface: 'oracle/conversation' });
+    }
     const jsonResponse = NextResponse.json(response);
     Object.entries(canonHeaders).forEach(([key, value]) => {
       jsonResponse.headers.set(key, value);

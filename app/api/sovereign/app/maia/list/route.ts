@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
+import { emitSignal } from '@/lib/observation/observationService';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -1330,6 +1331,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       }
     }
 
+    if (userId) {
+      emitSignal({ signal_type: 'conversation_started', context_type: 'member', context_id: userId, surface: 'maia/list' });
+    }
     const response = jsonWithCors(req, responseData, 200, canonHeaders);
     return response;
   } catch (err: any) {
