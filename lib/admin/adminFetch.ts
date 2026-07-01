@@ -51,13 +51,26 @@ export function hasAdminPassword(): boolean {
   return getAdminPassword() !== null && getAdminPassword() !== '';
 }
 
+function getSessionToken(): string | null {
+  if (!browser()) return null;
+  try {
+    return window.localStorage.getItem('maia_session_token');
+  } catch {
+    return null;
+  }
+}
+
 /**
- * fetch() wrapper that attaches the admin password header for /api/admin/* routes.
- * Caller-supplied headers/method/body are preserved; an explicit `x-admin-password`
- * in `init.headers` is NOT overwritten.
+ * fetch() wrapper that attaches auth headers for /api/admin/* routes.
+ * Sends x-session-token (member session path — no password needed for admin_role members)
+ * and falls back to x-admin-password from localStorage for the shared-password path.
  */
 export async function adminFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
+  const sessionToken = getSessionToken();
+  if (sessionToken && !headers.has('x-session-token')) {
+    headers.set('x-session-token', sessionToken);
+  }
   const pwd = getAdminPassword();
   if (pwd && !headers.has('x-admin-password')) {
     headers.set('x-admin-password', pwd);

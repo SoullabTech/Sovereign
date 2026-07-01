@@ -117,6 +117,19 @@ export default function MonitorFieldPage() {
     if (id) setExpandedId(id);
   }, []);
 
+  // Auto-auth: if the signed-in member has an admin role, skip the password gate.
+  useEffect(() => {
+    adminFetch('/api/admin/auth').then(async (res) => {
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.isAdmin) {
+        setAuthed(true);
+        load('', statusFilter, search);
+      }
+    }).catch(() => { /* non-fatal — fall through to password gate */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const fetchBugs = useCallback(
     async (pwd: string, status: BugStatus | '', q: string): Promise<boolean> => {
       const params = new URLSearchParams();
