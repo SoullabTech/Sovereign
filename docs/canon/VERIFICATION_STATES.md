@@ -149,3 +149,32 @@ They declare it LIVE because production data shows the invariant holds.
 - Every PENDING names what would be required for it to become LIVE
 - The release gate reflects actual state, not aspirational state
 - New capabilities begin at PENDING and earn their way to LIVE through evidence, not declaration
+
+---
+
+## Release Summary Discipline
+
+A release summary may collapse counts, but it must not conceal active obligations.
+
+The individual verifiers already satisfy this: every `WARNING` call names its obligation and what resolves it. The obligation is visible in the full verifier output.
+
+The orchestrator release summary currently collapses to counts only:
+
+```
+PASS  Memory  (10 passed · 0 failed · 4 warned)
+```
+
+The target form surfaces active WARNING obligations by name:
+
+```
+PASS  Memory  (10 passed · 0 failed · 4 warned)
+WARNINGS
+  - 9 practitioner_observation atoms lack facilitator_id — attribute or archive
+  - Member recall opt-out not yet verifiable
+```
+
+**Current state of the orchestrator summary: PENDING.**
+
+**Timing condition:** implement when the WARNING list is short enough that surfacing all obligations in the summary increases clarity rather than producing noise. The right moment is after the PENDING items across Development and MAIA begin converting to LIVE — when a deployment decision benefits from reading the obligations directly rather than scrolling back through full output.
+
+Do not implement early. A wall of pending noise in the summary would train readers to skip it, which defeats the purpose.
