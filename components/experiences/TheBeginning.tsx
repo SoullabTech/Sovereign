@@ -114,7 +114,7 @@ export function TheBeginning({
         {/* 4 — Kelly's voice */}
         <section className={`${styles.section} ${styles.stack}`} data-reveal>
           <p className={styles.small}>
-            For twenty-five years I thought I was studying human development. I wasn&rsquo;t.
+            For over forty-five years I thought I was studying human development. I wasn&rsquo;t.
             I was preparing for this moment.
           </p>
           <p className={styles.small}>
