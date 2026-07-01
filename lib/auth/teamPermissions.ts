@@ -159,6 +159,28 @@ export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
 }
 
 /**
+ * Remove a member from a team (membership removal, not account deletion).
+ * Also removes them from all DM threads scoped to that team so they no
+ * longer appear in the DM roster or have access to thread history.
+ */
+export async function removeTeamMember(teamId: string, memberId: string): Promise<void> {
+  // Remove from DM threads scoped to this team
+  await query(
+    `DELETE FROM team_dm_members
+     WHERE member_id = $1
+       AND dm_thread_id IN (
+         SELECT id FROM team_dm_threads WHERE team_id = $2
+       )`,
+    [memberId, teamId]
+  );
+  // Remove Co-Lab enrollment — the member account itself is untouched
+  await query(
+    `DELETE FROM studio_team_members WHERE team_id = $1 AND member_id = $2`,
+    [teamId, memberId]
+  );
+}
+
+/**
  * Check if member can perform action on content owned by another member
  */
 export async function canEditTeamContent(

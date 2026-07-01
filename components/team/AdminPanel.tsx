@@ -257,6 +257,14 @@ export function AdminPanel() {
     setSaving(null);
   };
 
+  const removeFromStudio = async (m: Member) => {
+    if (!confirm(`Remove ${m.name || m.username} from the Studio? Their MAIA account will not be deleted.`)) return;
+    setSaving(m.id);
+    await fetch(`/api/team/admin/members/${m.id}`, { method: 'DELETE' });
+    await load();
+    setSaving(null);
+  };
+
   const revokeInvite = async (inviteId: string) => {
     if (!confirm('Revoke this invite?')) return;
     setSaving(inviteId);
@@ -595,6 +603,13 @@ export function AdminPanel() {
                       }`}
                     >
                       {saving === m.id ? '…' : isAdmin ? 'Remove admin' : 'Make admin'}
+                    </button>
+                    <button
+                      onClick={() => removeFromStudio(m)}
+                      disabled={saving === m.id}
+                      className="text-xs px-2.5 py-1 rounded border border-white/8 text-white/20 hover:border-red-500/30 hover:text-red-400/60 transition-colors flex-shrink-0"
+                    >
+                      Remove from Studio
                     </button>
                   </div>
                 );
