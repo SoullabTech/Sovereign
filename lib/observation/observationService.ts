@@ -53,7 +53,9 @@ export function emitSignal(payload: SignalPayload): void {
       payload.surface ?? null,
       JSON.stringify(payload.metadata ?? {}),
     ]
-  ).catch(() => {});
+  ).catch((err) => {
+    console.error('[observation] signal emit failed:', err?.message ?? err);
+  });
 }
 
 export async function recordObservation(payload: ObservationPayload): Promise<string> {
