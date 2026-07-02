@@ -399,10 +399,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     description: 'Developmental field — vision, legacy, and long arc',
     alwaysOn: false,
     mode: 'both',
-    // Gated 2026-07-01: /maia/vision-studio default (Living Field) tab calls uncommitted
-    // /api/maia/vision-studio/{interview,field-note} routes → 404 in production. Hidden from
-    // the practitioner threshold until its default path is functional. Reversible.
-    comingSoon: true,
+    // Un-gated 2026-07 (beta): consent threshold shipped; per-thread shareWithPractitioner
+    // defaults private; routes are functional. Founder/practitioner-scoped via nav audience gate.
   },
   {
     slug: 'settings',

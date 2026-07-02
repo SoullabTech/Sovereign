@@ -14,7 +14,7 @@
  *   - Nothing persists without explicit member gesture.
  *   - No sorting, typing, or identity modeling.
  *   - MAIA proposes; participant authors. Proposing nothing is faithful.
- *   - can_be_shown_to_practitioner = TRUE (Vision Studio is explicitly facilitated).
+ *   - can_be_shown_to_practitioner defaults FALSE; set only by an explicit per-thread member gesture ("Share with your practitioner"). Carrying a thread is private to the member's field; sharing is a separate choice.
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -27,8 +27,8 @@ interface ProposedThread { title: string; reflection: string; groundedIn: string
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread { title: string; origin: 'maia_proposed' | 'member_authored'; }
 interface CarryPayload {
-  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[] }[];
-  created: string[];
+  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean }[];
+  created: { title: string; shareWithPractitioner: boolean }[];
 }
 
 type RoomPhase = 'arrival' | 'conversation' | 'proposal' | 'closed';
@@ -75,7 +75,7 @@ The field will remember the work.
 
 You remain the author of its meaning.
 
-One thing to name clearly: Kelly accompanies this field as your facilitating practitioner. She will see what you choose to carry into it — not the conversation, not a record of who you are. Only what you author or recognize as yours. Nothing the system concluded about you.
+One thing to name clearly: Kelly can accompany this field as your facilitating practitioner. What you author here is yours and enters your own Living Field — private by default. Sharing any thread with Kelly is a separate choice you make thread by thread; nothing is shared unless you choose it. Never the conversation, never a record of who you are — only what you explicitly choose to share.
 
 This is an early beta, and part of what you are helping us learn is how this kind of field can support your own recognition without turning you into a profile.`;
 
@@ -123,6 +123,8 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   const [newThread, setNewThread] = useState('');
   const [guided, setGuided] = useState(true);
   const [showFrame, setShowFrame] = useState(false);
+  // Per-thread sharing consent: keyed by thread title; absent = private (default).
+  const [shared, setShared] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string>(`vs-${Date.now()}`);
 
@@ -211,13 +213,15 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     const proposals = proposed.map(t => {
       const rev = revising[t.title];
       if (rev !== undefined) {
-        if (rev === '') return { title: t.title, decision: 'discard' as Decision };
-        return { title: t.title, decision: 'revise' as Decision, revisedTitle: rev };
+        if (rev === '') return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
+        // For a revised thread, the sharing key is the revised title the member chose.
+        return { title: t.title, decision: 'revise' as Decision, revisedTitle: rev, shareWithPractitioner: !!shared[rev] };
       }
-      if (authored.some(a => a.title === t.title)) return { title: t.title, decision: 'keep' as Decision };
-      return { title: t.title, decision: 'discard' as Decision };
+      if (authored.some(a => a.title === t.title)) return { title: t.title, decision: 'keep' as Decision, shareWithPractitioner: !!shared[t.title] };
+      return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
     });
-    const created = newThread.trim() ? [newThread.trim()] : [];
+    const trimmed = newThread.trim();
+    const created = trimmed ? [{ title: trimmed, shareWithPractitioner: !!shared[trimmed] }] : [];
     return { proposals, created };
   }
 
@@ -271,7 +275,7 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
         </div>
 
         <div className="border-t border-stone-900 pt-4 text-stone-600 text-xs font-light leading-relaxed">
-          The authority for meaning stays with you. Your practitioner sees only what you choose to carry — never the conversation, never a record of who you are.
+          The authority for meaning stays with you. What you carry stays private in your own field; sharing a thread with your practitioner is a separate, explicit choice — off by default. Never the conversation, never a record of who you are.
         </div>
       </div>
     );
@@ -375,6 +379,21 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
                       >carry revised</button>
                     )}
                   </div>
+                  {/* Share toggle — only shown when thread is carried (kept or carry-revised) */}
+                  {(kept || (rev !== undefined && rev !== '' && authored.some(a => a.title === rev))) && (
+                    <label className="flex items-center gap-2 cursor-pointer mt-1">
+                      <input
+                        type="checkbox"
+                        checked={!!shared[rev !== undefined && rev !== '' ? rev : t.title]}
+                        onChange={e => {
+                          const key = rev !== undefined && rev !== '' ? rev : t.title;
+                          setShared(s => ({ ...s, [key]: e.target.checked }));
+                        }}
+                        className="accent-stone-500 w-3 h-3"
+                      />
+                      <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+                    </label>
+                  )}
                 </div>
               );
             })}
@@ -389,14 +408,25 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
             value={newThread}
             onChange={e => setNewThread(e.target.value)}
           />
+          {newThread.trim() && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!shared[newThread.trim()]}
+                onChange={e => setShared(s => ({ ...s, [newThread.trim()]: e.target.checked }))}
+                className="accent-stone-500 w-3 h-3"
+              />
+              <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+            </label>
+          )}
         </div>
 
         {error && <p className="text-red-400 text-xs">{error}</p>}
 
         <div className="border-t border-stone-900 pt-4 text-stone-600 text-xs font-light leading-relaxed space-y-1">
-          <p>What you carry enters your Living Field and is visible to your facilitating practitioner.</p>
+          <p>What you carry enters your own Living Field — private by default.</p>
+          <p>Sharing a thread with your practitioner is a separate choice, per thread; nothing is shared unless you check it.</p>
           <p>Only what you authored or affirmed. Not a record of this conversation. Nothing the system concluded about you.</p>
-          <p>Your choices here also help us improve the process, but only the recognitions you choose to carry enter your field.</p>
         </div>
 
         <div className="flex gap-4">

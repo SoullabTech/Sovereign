@@ -8,10 +8,11 @@ export async function generateStaticParams() {
  *
  * Same authorship model as the field-lab field-note route, with two additions:
  *   1. spiralogic_phase is tagged on every thread (evidence typed by arc phase)
- *   2. can_be_shown_to_practitioner is set ONLY by an explicit member gesture
- *      (shareWithPractitioner), DEFAULT FALSE (ratified 2026-07-01). A
- *      practitioner-facilitated context may imply possible visibility — never
- *      automatic sharing of authored material. Member consent governs all connections.
+ *   2. can_be_shown_to_practitioner defaults FALSE; set only by an explicit
+ *      per-thread member gesture ("Share with your practitioner"). Carrying a
+ *      thread is private to the member's field; sharing is a separate choice.
+ *      Member consent governs all connections — a practitioner-facilitated context
+ *      may imply possible visibility but never automatic sharing of authored material.
  *
  * Invariants (inherited from field-lab, unchanged):
  *   - Nothing persists unless the member made an explicit gesture.
@@ -19,7 +20,7 @@ export async function generateStaticParams() {
  *   - MAIA proposed; the member authored. The member is the authority.
  *
  * GET — returns the member's Vision Studio threads for a given field_context.
- * POST — saves authored threads with phase + practitioner visibility.
+ * POST — saves authored threads with phase + per-thread practitioner visibility.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -33,6 +34,7 @@ interface ProposalDecision {
   decision: Decision;
   revisedTitle?: string;
   children?: string[];
+  shareWithPractitioner: boolean;
 }
 
 const asStr = (v: unknown, max = 400): string =>
@@ -59,18 +61,26 @@ function parseProposals(input: unknown): ProposalDecision[] {
       decision === 'split' && Array.isArray((p as any).children)
         ? (p as any).children.map((c: unknown) => asStr(c)).filter(Boolean).slice(0, 6)
         : undefined;
-    out.push({ title, decision, revisedTitle: asStr((p as any).revisedTitle) || undefined, children });
+    const shareWithPractitioner = (p as any).shareWithPractitioner === true;
+    out.push({ title, decision, revisedTitle: asStr((p as any).revisedTitle) || undefined, children, shareWithPractitioner });
     if (out.length >= 6) break;
   }
   return out;
 }
 
-function parseCreated(input: unknown): string[] {
+function parseCreated(input: unknown): { title: string; shareWithPractitioner: boolean }[] {
   if (!Array.isArray(input)) return [];
-  const out: string[] = [];
+  const out: { title: string; shareWithPractitioner: boolean }[] = [];
   for (const c of input) {
-    const t = asStr(c);
-    if (t) out.push(t);
+    // Accept both legacy string items (shareWithPractitioner defaults false) and
+    // object items { title, shareWithPractitioner } for per-thread consent.
+    if (typeof c === 'string') {
+      const t = asStr(c);
+      if (t) out.push({ title: t, shareWithPractitioner: false });
+    } else if (c && typeof c === 'object') {
+      const t = asStr((c as any).title);
+      if (t) out.push({ title: t, shareWithPractitioner: (c as any).shareWithPractitioner === true });
+    }
     if (out.length >= 6) break;
   }
   return out;
@@ -168,12 +178,10 @@ export async function POST(request: NextRequest) {
     const sessionRef = asStr(body?.sessionRef, 80) || null;
     const spiralogicPhase = asPhase(body?.spiralogicPhase);
     const fieldContext = asStr(body?.fieldContext, 80) || null;
-    // Practitioner visibility is an explicit member gesture, DEFAULT FALSE. Member
-    // consent governs all connections — a practitioner-facilitated context implies
-    // possible visibility, never automatic sharing of authored material (ratified
-    // 2026-07-01). Batch-level today; per-thread granularity wires in with the
-    // entry-contract UI.
-    const shareWithPractitioner = body?.shareWithPractitioner === true;
+    // Practitioner visibility is per-thread, DEFAULT FALSE. Each thread carries its
+    // own shareWithPractitioner flag parsed from the request body. Carrying a thread
+    // is private to the member's field; sharing is a separate explicit gesture, per
+    // thread, never inferred from context (ratified 2026-07-01).
 
     const activity = { kept: 0, revised: 0, split: 0, discarded: 0, created: 0 };
     let saved = 0;
@@ -187,10 +195,11 @@ export async function POST(request: NextRequest) {
       if (p.decision === 'split') {
         activity.split += 1;
         await logEvent(memberId, null, 'discarded', 'split');
+        // Split children inherit the parent proposal's shareWithPractitioner gesture.
         for (const childTitle of p.children ?? []) {
           const childId = await saveThread(
             memberId, sessionRef, childTitle, 'member_authored', true, 'split',
-            `split from MAIA's "${p.title}"`, spiralogicPhase, fieldContext, shareWithPractitioner,
+            `split from MAIA's "${p.title}"`, spiralogicPhase, fieldContext, p.shareWithPractitioner,
           );
           saved += 1;
           activity.created += 1;
@@ -204,7 +213,7 @@ export async function POST(request: NextRequest) {
           ? `revised from MAIA's "${p.title}"` : null;
       const id = await saveThread(
         memberId, sessionRef, title, 'member_confirmed', false, p.decision, revisionNotes,
-        spiralogicPhase, fieldContext, shareWithPractitioner,
+        spiralogicPhase, fieldContext, p.shareWithPractitioner,
       );
       saved += 1;
       if (p.decision === 'keep') activity.kept += 1;
@@ -212,8 +221,8 @@ export async function POST(request: NextRequest) {
       await logEvent(memberId, id, p.decision === 'keep' ? 'kept' : 'revised', p.decision);
     }
 
-    for (const title of created) {
-      const id = await saveThread(memberId, sessionRef, title, 'member_authored', true, 'create', null, spiralogicPhase, fieldContext, shareWithPractitioner);
+    for (const c of created) {
+      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, spiralogicPhase, fieldContext, c.shareWithPractitioner);
       saved += 1;
       activity.created += 1;
       await logEvent(memberId, id, 'created', 'create');

@@ -1,0 +1,56 @@
+/**
+ * Refusal Registry — falsification harness (runner)
+ *
+ *   npx tsx tests/constitutional/refusal-registry/index.ts
+ *
+ * Runs every proof attempt against the Grade-A / A-minus refusals documented in
+ * docs/architecture/REFUSAL_REGISTRY.md. Exit code is non-zero if ANY refusal is
+ * falsified (FAIL). This is what converts a Registry row's Test status from
+ * "None yet" to "demonstrated."
+ *
+ * Scope (this first wave): the strongest structural refusals.
+ *   R01  memory read path does not write
+ *   R02  integration_passes log has no readers
+ *   R03  request identity never trusted from a client-asserted claim
+ *   R04  sacred_protected atoms never surface in ambient recall
+ */
+
+// NOTE: explicit .ts extensions so this runs under both `tsx` and Node's native
+// type-stripping (`node --experimental-strip-types`), which does not resolve
+// extensionless ESM specifiers. tests/** is excluded from tsconfig, so this does
+// not affect `npm run typecheck`.
+import { runCheck, type RefusalCheck, type Tally } from './harness.ts';
+import { check as r01 } from './refusal-01-memory-loader-no-write.ts';
+import { check as r02 } from './refusal-02-integration-passes-no-readers.ts';
+import { check as r03 } from './refusal-03-body-userid-not-trusted.ts';
+import { check as r04 } from './refusal-04-sacred-protected-not-surfaced.ts';
+import { check as r05 } from './refusal-05-vision-studio-no-implicit-practitioner-share.ts';
+
+const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05];
+
+const BOLD = '\x1b[1m';
+const DIM = '\x1b[2m';
+const RESET = '\x1b[0m';
+
+console.log(`${BOLD}Refusal Registry — falsification harness${RESET}`);
+console.log(`${DIM}Candidate certification instrument · docs/architecture/REFUSAL_REGISTRY.md${RESET}`);
+console.log(`${DIM}Each PASS = a proof attempt that could not falsify the refusal.${RESET}`);
+
+const tally: Tally = { passed: 0, failed: 0, warned: 0 };
+
+for (const check of CHECKS) {
+  runCheck(check, tally);
+}
+
+console.log(`\n${'─'.repeat(64)}`);
+console.log(
+  `${BOLD}${tally.passed} passed · ${tally.failed} failed · ${tally.warned} warned${RESET}` +
+    `  ${DIM}(${CHECKS.length} refusals)${RESET}`,
+);
+
+if (tally.failed > 0) {
+  console.log('\n❌ A refusal was falsified. The Registry claim is not currently true in code.');
+  process.exit(1);
+}
+console.log('\n✅ All proof attempts held. These refusals are demonstrated, not assumed.');
+process.exit(0);
