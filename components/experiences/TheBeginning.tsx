@@ -167,6 +167,9 @@ export function TheBeginning({
             unconscious. In that sense, the work of alchemy is less about changing the world than
             becoming whole enough to participate in it.
           </p>
+          <p className={`${styles.line} ${styles.gold} ${styles.spaced}`}>
+            The tree grows according to its own nature.
+          </p>
         </section>
 
         {/* 8 — the ecosystem, in three states of maturation */}
