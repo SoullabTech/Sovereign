@@ -153,5 +153,27 @@ Model files: `refusal-01-memory-loader-no-write.ts` (grep for banned patterns), 
 
 ## 10. Implementation log
 
-- **2026-07-02** — §4.2 audit resolved GREEN (source #5 admissible). R06 **A-half** landed: `tests/constitutional/refusal-registry/refusal-06-book-studio-member-authored-only.ts` (registered in `index.ts`); registry row added to `docs/architecture/REFUSAL_REGISTRY.md`. Harness: **19 passed · 0 failed · 0 warned (6 refusals)**. The A-half passes by *preserving* the current absence of any memory/inference reader in the Book Studio surface — a ratchet, not a placeholder. B-half remains pending `mirrorSources`. **Build: not started. Ratification: not done.**
+- **2026-07-02** — §4.2 audit resolved GREEN (source #5 admissible). R06 **A-half** landed: `tests/constitutional/refusal-registry/refusal-06-book-studio-member-authored-only.ts` (registered in `index.ts`); registry row added to `docs/architecture/REFUSAL_REGISTRY.md`. Harness: **19 passed · 0 failed · 0 warned (6 refusals)**. The A-half passes by *preserving* the current absence of any memory/inference reader in the Book Studio surface — a ratchet, not a placeholder.
+- **2026-07-02 (later)** — `lib/bookStudio/mirrorSources.ts` implemented as a **constitutionally-constrained reader** (its contribution is *what it refuses to read*, not that it reads); R06 **B-half active**. Then an adversarial verification pass (5 skeptics, one per source + completeness + SQL-validity) **found two bypasses that changed v1** — see §11. Net result: R06 harness **25 passed · 0 failed · 0 warned**; typecheck clean. **Reader: constrained-v1 implemented (no surface wired yet). Ratification: not done.**
+
+---
+
+## 11. Adversarial verification (2026-07-02) — findings & v1 admission set
+
+Five independent skeptics tried to *refute* mirror-safety of each admitted source. Two found real bypasses; both were resolved by **hardening or deferring**, not by weakening the claim.
+
+| Source | Bypass | Sev | Resolution |
+|---|---|---|---|
+| **notes** (`member_field_note_threads`) | **YES** | **HIGH** | **DEFERRED.** `member_confirmed=TRUE` is server-stamped unconditionally; `authorship='member_confirmed'` derives from a client-supplied `decision` flag with no server verification the proposal was MAIA-issued or member-acted. MAIA's verbatim proposed prose could circulate as "You accepted this reflection" (the vision-studio writer has no consent/tester gate). This is a live path from MAIA content → prompt — the acceptance criterion's falsifier. Re-admit only after: write-side `member_decision_at` binding + proposal-provenance verification + vision-studio consent/tester gate, and read predicate additionally requires `member_decision_at IS NOT NULL`. |
+| keep + breakthrough (`member_memory_atoms`) | yes | LOW | **HARDENED.** Exclusion of the one non-member writer (facilitated With-Me path) rested on the `source_type` string literal alone. Added the **positive structural marker `facilitator_id IS NULL`** (only With-Me stamps it; cannot drift on a source_type rename). `is_breakthrough` verified never system-set. |
+| named_spiral (`personal_spirals`) | no | LOW | **GUARDED.** Safe by write-monopoly, but *inherited* (no `authored_by` column). Added R06 **B5**: a CI assertion that no file other than the member-POST route writes `personal_spirals` — a future agent-writer now fails the harness. |
+| completeness | no | LOW | Deferrals all confirmed justified; no over-admission; `loadKeptAtoms` is *stricter* than spec §2. |
+| SQL validity | no | none | All predicates valid; sacred-register exclusion, `memory_scope` backfill (old rows read `'personal'`), and consent CHECK-match all correct. |
+
+**v1 admission set (post-adversarial):** three structurally-provable classes across two tables —
+`keep` + `breakthrough` (`member_memory_atoms`, with `facilitator_id IS NULL`) and `named_spiral` (`personal_spirals`, write-monopoly + B5).
+
+**Deferred (v1), each with its earned-marker condition:** `member_note` + `accepted_reflection` (notes — HIGH, above); `encounter_recognition` (encounter — `artifact_type` never persisted, acceptance is a practitioner act on PHI); Living Field dimensions (§4.1). Note: the member's own accepted reflections were *intended* to ride on `member_field_note_threads` — deferring it is a real capability reduction for v1, made because the acceptance is not yet structurally provable at the read choke point.
+
+**Lesson recorded:** documentation review (the completeness skeptic said "SHIP") was overridden by the deeper writer-trace (the notes skeptic found the HIGH bypass). Adversarial diversity — a skeptic that *traces every writer* vs. one that *reads the schema* — is what caught it. The spec §2 table predates this pass; §11 is the authoritative v1 admission set.
 ```
