@@ -243,7 +243,8 @@ export function TheBeginning({
             No call to action: the conversation is already underway. */}
         <section className={`${styles.section} ${styles.silence}`} data-reveal>
           <p className={styles.question}>
-            What kind of relationship with intelligence do you want to help create?
+            What becomes possible when intelligence is designed to help people become more fully
+            themselves?
           </p>
         </section>
       </div>
