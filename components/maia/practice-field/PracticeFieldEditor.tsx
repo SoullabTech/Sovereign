@@ -198,14 +198,14 @@ export function PracticeFieldEditor() {
         <div className="space-y-8">
           <InterviewQuestion
             question="Write a welcome message for clients arriving in your shared space."
-            hint="This is the first thing they'll read. Speak to them directly — not to MAIA, not to the platform."
+            hint="This is the first thing they'll read. You can speak directly, or let MAIA carry your voice — 'Kelly asked me, Maia, to share something with you about us…'"
             required
           >
             <Textarea
               value={field?.welcome_message ?? ''}
               onChange={v => updateField('welcome_message', v)}
               rows={5}
-              placeholder="Welcome. I'm glad you're here. This space is for the work we're doing together…"
+              placeholder={`Kelly asked me, Maia, to share something with you about us…\n\nThis space was built for the work you and Kelly are doing together. What you bring here is yours. MAIA holds it with care, and Kelly has shaped how it shows up for you.`}
             />
             <MirrorFieldAssist fieldKey="welcome_message" currentValue={field?.welcome_message ?? ''} onAccept={v => updateField('welcome_message', v)} />
           </InterviewQuestion>

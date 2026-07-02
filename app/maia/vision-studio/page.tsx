@@ -21,11 +21,15 @@ import { PracticeFieldEditor } from '@/components/maia/practice-field/PracticeFi
 function VisionStudioInner() {
   const params = useSearchParams();
   const router = useRouter();
-  const tab = params.get('tab') ?? 'field';
+  const tab = params.get('tab') ?? 'vision';
   const phase = params.get('phase') ?? 'fire_1';
   const fieldContext = params.get('fieldContext') ?? undefined;
 
   function switchTab(t: string) {
+    if (t === 'living-field') {
+      router.push('/maia/living-field');
+      return;
+    }
     const p = new URLSearchParams(params.toString());
     p.set('tab', t);
     router.replace(`/maia/vision-studio?${p.toString()}`);
@@ -35,11 +39,12 @@ function VisionStudioInner() {
     <div className="min-h-screen bg-stone-950 text-stone-200 flex flex-col">
       {/* Tab bar */}
       <div className="border-b border-stone-800 px-6 flex gap-6">
-        <TabButton label="Living Field" active={tab === 'field'} onClick={() => switchTab('field')} />
+        <TabButton label="Living Field" active={false} onClick={() => switchTab('living-field')} />
+        <TabButton label="Vision Studio" active={tab === 'vision'} onClick={() => switchTab('vision')} />
         <TabButton label="Practice Field" active={tab === 'practice'} onClick={() => switchTab('practice')} />
       </div>
 
-      {tab === 'field' && (
+      {tab === 'vision' && (
         <VisionStudioRoom phase={phase} fieldContext={fieldContext} />
       )}
       {tab === 'practice' && (
