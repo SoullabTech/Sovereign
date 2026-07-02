@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
+import { countEligibleKeeps } from '@/lib/maia/living-field/gatheringPool'
 
 export const CANONICAL_FIELD_KEYS: { key: string; label: string }[] = [
   { key: 'who_i_am_becoming', label: 'Who I Am Becoming' },
@@ -76,17 +77,9 @@ export async function GET(request: NextRequest) {
     )
 
     // Denominator — total eligible Keeps in the member's pool (the M in "N of M").
-    // Selection warrant requires the denominator be visible, not hidden.
-    const denomResult = await query(
-      `SELECT COUNT(*)::int AS n
-       FROM member_memory_atoms
-       WHERE member_id = $1
-         AND status NOT IN ('protected', 'archived')
-         AND primary_register IS DISTINCT FROM 'sacred_protected'
-         AND NOT ('sacred_protected' = ANY(registers))`,
-      [memberId]
-    )
-    const keepDenominator = (denomResult.rows[0]?.n as number) ?? 0
+    // Selection warrant requires the denominator be visible, not hidden. Drawn from
+    // the shared guarded pool so it matches the gathering route's denominator exactly.
+    const keepDenominator = await countEligibleKeeps(memberId)
 
     // Merge with canonical stubs for missing keys
     const fields = CANONICAL_FIELD_KEYS.map(({ key, label }) => {

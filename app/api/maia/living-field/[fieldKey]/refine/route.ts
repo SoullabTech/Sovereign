@@ -7,8 +7,19 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import Anthropic from '@anthropic-ai/sdk'
+import {
+  GATHERING_CRITERION,
+  loadFieldGathering,
+  humanizeEvidenceReason,
+} from '@/lib/maia/living-field/gatheringPool'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// MAIA drafts from the top-N gathered Keeps. The pool it drew from may be larger;
+// the refine response discloses the denominator so the draft never presents a
+// truncated subset as the whole of what gathered (ECOLOGY_OF_MIRRORS.md #6). The
+// full set is inspectable via the co-located gathering panel / gathering route.
+const SURFACED_LIMIT = 10
 
 const HAIKU_MODEL = 'claude-haiku-4-5'
 
@@ -70,27 +81,13 @@ export async function POST(
     )
     const states = statesResult.rows
 
-    // 4. Load atom affinities for this field (member-triggered = include member_pulled)
-    const atomsResult = await query<{
-      title: string
-      body: string | null
-      source_type: string
-      primary_register: string | null
-      affinity_score: number
-    }>(
-      `SELECT a.title, a.body, a.source_type, a.primary_register, lfa.affinity_score
-       FROM living_field_affinities lfa
-       JOIN member_memory_atoms a ON a.id = lfa.atom_id
-       WHERE lfa.member_id = $1
-         AND lfa.field_key = $2
-         AND a.status NOT IN ('protected', 'archived')
-         AND a.primary_register != 'sacred_protected'
-         AND 'sacred_protected' != ALL(a.registers)
-       ORDER BY lfa.affinity_score DESC
-       LIMIT 10`,
-      [memberId, fieldKey]
-    )
-    const affinityAtoms = atomsResult.rows
+    // 4. Load the gathered Keeps for this field from the shared guarded pool — the
+    //    same source the gathering route reads, so the draft's denominator matches
+    //    what the member inspects. denominator = all Keeps gathered in this dimension;
+    //    affinityAtoms = the top-N MAIA actually drafts from.
+    const allGathered = await loadFieldGathering(memberId, fieldKey, { includeBody: true })
+    const affinityAtoms = allGathered.slice(0, SURFACED_LIMIT)
+    const gatheredDenominator = allGathered.length
 
     // 6. If nothing has gathered, return invitation
     const hasAnything = currentExpression || sourceExcerpts.length > 0 || history.length > 0 || states.length > 0 || affinityAtoms.length > 0
@@ -134,6 +131,45 @@ export async function POST(
 
     const gatheredMaterial = parts.join('\n\n')
 
+    // Refine-draft provenance (ECOLOGY_OF_MIRRORS.md #6). Disclose the denominator
+    // the draft drew from and why each surfaced Keep qualified. Present only when
+    // the gathered pool actually contributed — other sources are taken wholesale,
+    // so no denominator is hidden for them. Inspectability is provided by the
+    // co-located gathering panel; this line ties the draft to that visible set.
+    const gathering =
+      gatheredDenominator > 0
+        ? {
+            selection_criterion: GATHERING_CRITERION,
+            denominator: gatheredDenominator, // Keeps gathered in this dimension
+            surfaced_count: affinityAtoms.length, // what MAIA drafted from
+            surfaced: affinityAtoms.map((a) => ({
+              atom_id: a.atom_id,
+              title: a.title,
+              affinity_score: a.affinity_score,
+              why_qualified: humanizeEvidenceReason(a.evidence_reason),
+            })),
+          }
+        : null
+
+    // Dev inspection: members receive the humanized warrant; the raw structural
+    // tokens (evidence_reason) stay here, in logs. Discoverable marker for verification.
+    if (gathering) {
+      console.log(
+        '[living-field/refine] gathering',
+        JSON.stringify({
+          memberIdPrefix: memberId.slice(0, 8),
+          fieldKey,
+          denominator: gathering.denominator,
+          surfacedCount: gathering.surfaced_count,
+          surfaced: affinityAtoms.map((a) => ({
+            atomIdPrefix: a.atom_id.slice(0, 8),
+            score: a.affinity_score,
+            evidence_reason: a.evidence_reason,
+          })),
+        })
+      )
+    }
+
     const systemPrompt = `You are helping a member articulate one dimension of their Personal Living Field — a developing, member-owned expression of who they are becoming.
 
 Your role: draft a candidate expression from the material the member has explicitly brought here. You do not synthesize beyond what the material shows. You do not assign identity. You do not conclude.
@@ -161,6 +197,7 @@ Please draft a first-person candidate expression for this field dimension.`
         candidate_expression: currentExpression ?? 'Something is beginning to take shape in this dimension.',
         sources_used: sourcesUsed,
         rationale: 'Draft from existing expression (AI unavailable).',
+        gathering,
       })
     }
 
@@ -192,6 +229,7 @@ Please draft a first-person candidate expression for this field dimension.`
       candidate_expression: candidateExpression,
       sources_used: sourcesUsed,
       rationale,
+      gathering,
     })
   } catch (err) {
     console.error('[living-field/refine] POST error', err)
