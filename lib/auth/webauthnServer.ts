@@ -167,8 +167,14 @@ export async function createRegistrationOptions(
       transports: cred.transports,
     })),
     authenticatorSelection: {
-      residentKey: 'preferred',
-      userVerification: 'preferred',
+      // 'required': the credential MUST be discoverable (resident) so a usernameless
+      // "Continue with Face ID" login can find it. 'preferred' let iOS store a
+      // non-discoverable credential that empty-allowCredentials auth could never
+      // surface — the root cause of 7 enrolled / 0 authenticated.
+      residentKey: 'required',
+      // 'required': force the biometric/user-verification gesture — this is what
+      // makes it Face ID / Touch ID rather than a silent assertion.
+      userVerification: 'required',
       authenticatorAttachment: 'platform', // Prefer built-in (Face ID, Touch ID)
     },
     timeout: CHALLENGE_TIMEOUT_MS,
@@ -262,10 +268,20 @@ export async function createAuthenticationOptions(
     }));
   }
 
+  // Diagnostic: separates "not tapped" from "tapped and failed". An empty
+  // allowCredentials means we're relying on a discoverable/resident credential
+  // (usernameless flow) — the path that silently returned nothing pre-fix.
+  if (allowCredentials.length === 0) {
+    console.log(`[WebAuthn] auth options: empty allowCredentials (discoverable flow), memberId=${memberId ? 'known' : 'none'}`);
+  } else {
+    console.log(`[WebAuthn] auth options: ${allowCredentials.length} allowCredentials for known member`);
+  }
+
   const options = await generateAuthenticationOptions({
     rpID: RP_ID,
     allowCredentials: allowCredentials.length > 0 ? allowCredentials : undefined,
-    userVerification: 'preferred',
+    // 'required': the assertion must carry a user-verification (biometric) flag.
+    userVerification: 'required',
     timeout: CHALLENGE_TIMEOUT_MS,
   });
 

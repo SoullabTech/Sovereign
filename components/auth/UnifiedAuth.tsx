@@ -239,9 +239,17 @@ function UnifiedAuthInner() {
     setIsLoading(true);
     try {
       const useNative = Capacitor.isNativePlatform() && nativeBiometryEnabled;
-      const res: any = useNative ? await unifiedBiometry.authenticate(undefined) : await biometricAuth.authenticate(undefined);
+      // Pass the known username (from ?u= param / typed) so the server can populate
+      // allowCredentials — works even for non-discoverable creds. When empty, the
+      // usernameless discoverable flow (residentKey:'required') carries it.
+      const rememberedUsername = username.trim() || undefined;
+      // Diagnostic: proves the button was actually tapped (separates "not tapped"
+      // from "tapped and failed" in the 0-authentications signature).
+      console.log(`[WebAuthn] biometric tap: path=${useNative ? 'native' : 'webauthn'} username=${rememberedUsername ? 'known' : 'none'}`);
+      const res: any = useNative ? await unifiedBiometry.authenticate(rememberedUsername) : await biometricAuth.authenticate(rememberedUsername);
       if (!res?.success) {
         const code = res?.code;
+        console.log(`[WebAuthn] biometric result: failed code=${code || 'none'} error=${res?.error || 'none'}`);
         let msg = res?.error || 'Let’s try another way.';
         if (code === 'CREDENTIAL_NOT_FOUND') msg = 'No Face ID set up here yet — enter your email and we’ll send a code.';
         else if (code === 'DEVICE_NOT_TRUSTED' || code === 'NO_MEMBER_ID') msg = 'This device isn’t set up yet — continue with your email.';
