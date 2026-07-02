@@ -152,6 +152,23 @@ export function TheBeginning({
           <p className={`${styles.center} ${styles.gold}`}>Who are you, and who are you becoming?</p>
         </section>
 
+        {/* 7b — the alchemical tree: individuation as becoming.
+            Evocative art, toned into the field — not presented as a historical plate. */}
+        <section className={styles.section} data-reveal>
+          <img
+            className={styles.plate}
+            src="/experiences/philosophical-tree.webp"
+            alt="An alchemical engraving of a human figure rooted as a tree, arms open, joining earth and sky."
+          />
+          <p className={`${styles.small} ${styles.spaced}`}>
+            Carl Jung saw the alchemical philosophical tree as an image of individuation &mdash; not
+            something human beings manufacture, but something they gradually become. The tree grows
+            from a living center, joining earth and heaven, matter and spirit, conscious and
+            unconscious. In that sense, the work of alchemy is less about changing the world than
+            becoming whole enough to participate in it.
+          </p>
+        </section>
+
         {/* 8 — the ecosystem, in three states of maturation */}
         <section className={styles.section} data-reveal>
           <div className={styles.eco}>

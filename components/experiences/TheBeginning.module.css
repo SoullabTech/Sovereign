@@ -81,6 +81,16 @@
   color: #C7BFB0;
   max-width: 640px;
 }
+
+/* The alchemical plate — already vignetted to black, so it merges into the field. */
+.plate {
+  display: block;
+  width: auto;
+  max-width: min(86vw, 520px);
+  max-height: 54vh;
+  object-fit: contain;
+  margin: 0 auto 2.4rem;
+}
 .center {
   font-size: clamp(1.9rem, 5vw, 3.3rem);
   line-height: 1.35;
