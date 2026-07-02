@@ -120,4 +120,23 @@ The aspirational homepage sentence — *"AIN is a living ecology of mirrors"* �
 
 ---
 
+## Recorded architectural debt
+
+This canon records a recognized obligation; it does not open an implementation task. The distinction is deliberate: **canon records an obligation that has been recognized; a task represents an intention to satisfy that obligation in implementation.** The debt below is a concrete, bounded gap that need not become a work item until it competes for engineering time. It is stated in implementation-neutral language so it survives whatever retrieval mechanism eventually satisfies it.
+
+> **Living Field gatherings** currently satisfy retrieval but do not yet satisfy the full constitutional disclosure chain.
+>
+> Missing capabilities:
+> - **Source provenance** — *where did this come from?*
+> - **Selection warrant** — *why was this selected?*
+> - **Inspectability** — *can I verify that explanation?*
+>
+> Recognition of gathered material remains gated until these are available to the member.
+>
+> Future retrieval mechanisms (semantic search, learned retrieval, affinity, etc.) inherit the same obligations — **without** requiring reproducibility where reproducibility is not technically meaningful.
+
+These three are genuinely independent responsibilities, each independently testable: a system can have perfect provenance while making an opaque selection, or explain a selection without permitting inspection. They do not collapse into one another.
+
+---
+
 *Candidate. Reconcile and re-audit before any promotion to ratified canon. Do not tell tomorrow's story as if it were today's.*
