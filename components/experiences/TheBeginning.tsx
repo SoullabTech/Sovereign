@@ -73,31 +73,35 @@ export function TheBeginning({
           <div className={styles.scrollcue}>Scroll</div>
         </section>
 
-        {/* 1 */}
-        <section className={styles.section} data-reveal>
-          <p className={styles.line}>
-            Every generation inherits a technology that changes what it means to be human.
+        {/* 1 — the frontier, named once; then we return to our own language */}
+        <section className={`${styles.section} ${styles.stack}`} data-reveal>
+          <p className={styles.line}>Every generation inherits a frontier.</p>
+          <p className={`${styles.line} ${styles.dim}`}>Some are landscapes.</p>
+          <p className={`${styles.line} ${styles.dim}`}>Some are technologies.</p>
+          <p className={`${styles.line} ${styles.dim}`}>Some change what human beings can do.</p>
+          <p className={`${styles.line} ${styles.gold} ${styles.spaced}`}>
+            This one changes how we will live with intelligence.
           </p>
         </section>
 
-        {/* 2 */}
-        <section className={`${styles.section} ${styles.stack}`} data-reveal>
-          <p className={styles.line}>Printing changed knowledge.</p>
-          <p className={styles.line}>Electricity changed industry.</p>
-          <p className={styles.line}>The Internet changed information.</p>
-          <p className={`${styles.line} ${styles.gold}`}>
-            Artificial intelligence changes intelligence itself.
-          </p>
-        </section>
-
-        {/* 3 */}
+        {/* 2 — relationship, not intelligence, is the frontier */}
         <section className={`${styles.section} ${styles.stack}`} data-reveal>
           <p className={styles.line}>
-            Within the next decade, every person on Earth will live beside intelligence.
+            For the first time in history, humanity is not simply creating increasingly capable
+            tools.
           </p>
-          <p className={`${styles.line} ${styles.dim}`}>That is no longer the question.</p>
           <p className={`${styles.line} ${styles.spaced}`}>
-            The question is what kind of relationship we will have with it.
+            We are entering into an enduring relationship with intelligence.
+          </p>
+        </section>
+
+        {/* 3 — the question the age has forgotten to ask */}
+        <section className={`${styles.section} ${styles.stack}`} data-reveal>
+          <p className={`${styles.line} ${styles.dim}`}>
+            The question is no longer whether intelligence will continue to grow.
+          </p>
+          <p className={`${styles.line} ${styles.gold} ${styles.spaced}`}>
+            The question is whether, together, we become wiser.
           </p>
         </section>
 
