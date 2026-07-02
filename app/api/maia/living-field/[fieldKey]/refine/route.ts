@@ -70,8 +70,30 @@ export async function POST(
     )
     const states = statesResult.rows
 
-    // 4. If nothing has gathered, return invitation
-    const hasAnything = currentExpression || sourceExcerpts.length > 0 || history.length > 0 || states.length > 0
+    // 4. Load atom affinities for this field (member-triggered = include member_pulled)
+    const atomsResult = await query<{
+      title: string
+      body: string | null
+      source_type: string
+      primary_register: string | null
+      affinity_score: number
+    }>(
+      `SELECT a.title, a.body, a.source_type, a.primary_register, lfa.affinity_score
+       FROM living_field_affinities lfa
+       JOIN member_memory_atoms a ON a.id = lfa.atom_id
+       WHERE lfa.member_id = $1
+         AND lfa.field_key = $2
+         AND a.status NOT IN ('protected', 'archived')
+         AND a.primary_register != 'sacred_protected'
+         AND 'sacred_protected' != ALL(a.registers)
+       ORDER BY lfa.affinity_score DESC
+       LIMIT 10`,
+      [memberId, fieldKey]
+    )
+    const affinityAtoms = atomsResult.rows
+
+    // 6. If nothing has gathered, return invitation
+    const hasAnything = currentExpression || sourceExcerpts.length > 0 || history.length > 0 || states.length > 0 || affinityAtoms.length > 0
     if (!hasAnything) {
       return NextResponse.json({
         candidate_expression: null,
@@ -101,6 +123,13 @@ export async function POST(
       const stateLines = states.map(s => `- ${s.label}${s.intensity != null ? ` (intensity: ${s.intensity})` : ''}`).join('\n')
       parts.push(`Recent states the member has reported (last 14 days):\n${stateLines}`)
       sourcesUsed.push('recent_states')
+    }
+    if (affinityAtoms.length > 0) {
+      const atomLines = affinityAtoms.map(a =>
+        `[Keep: "${a.title}"]\n${a.body ?? `(sourced from ${a.source_type})`}\nRegister: ${a.primary_register ?? 'unset'}`
+      ).join('\n\n')
+      parts.push(`KEEPS / MEMORY ATOMS (what this member has chosen to hold):\n${atomLines}`)
+      sourcesUsed.push(...affinityAtoms.map(a => a.title))
     }
 
     const gatheredMaterial = parts.join('\n\n')

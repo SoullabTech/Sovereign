@@ -389,7 +389,15 @@ export async function keepSource(
     ],
   );
 
-  return rowToAtom(result.rows[0]);
+  const atom = rowToAtom(result.rows[0]);
+
+  // Fire-and-forget: index affinities to Living Field dimensions.
+  // Never awaited — atom creation must not block on this.
+  import('@/lib/maia/living-field/indexAtom').then(({ indexAtomAffinities }) => {
+    indexAtomAffinities(atom.id, memberId);
+  }).catch(() => { /* silent */ });
+
+  return atom;
 }
 
 /**
