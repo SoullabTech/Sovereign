@@ -17,17 +17,22 @@
  * jurisdiction into a judgment, and exercising judgment is what a constitutional
  * reader must not do.
  *
- * TWO CLASSES OF CHANGE follow from that hierarchy — respect the boundary between them:
- *   - SUBORDINATE (normal review): improving retrieval over the ALREADY-admitted
- *     sources — ranking, recall, ordering, performance. No new source, no predicate change.
- *   - CONSTITUTIONAL (must pass the R06 gate — `npm run check:refusals` — and
+ * TWO CLASSES OF CHANGE follow from that hierarchy. The discriminator is JURISDICTIONAL,
+ * not complexity: does the change make this layer smarter about MEANING, or only about
+ * EXECUTION? Smarter-about-execution is always fine; smarter-about-meaning is authority
+ * drifting downward into a layer that must not hold it.
+ *   - SUBORDINATE (execution — normal review): recall, latency, performance, and
+ *     ordering keyed to member-act FACTS (e.g. `memberActAt DESC` — WHEN the member
+ *     acted). No new source, no predicate change, no inferred salience.
+ *   - CONSTITUTIONAL (meaning — must pass the R06 gate `npm run check:refusals` +
  *     architectural-integrity review): weakening/removing a member-act predicate,
- *     ADDING ANY source, or reading any surface named in DEFERRED. Note: adding a
- *     source is constitutional-by-default — "it's provably member-authored" is a
- *     VERDICT the adversarial/refusal gate returns, never a self-assessment that skips
- *     it. Once the gate confirms row-level authorship, that source's later retrieval
- *     tuning drops to subordinate. These changes alter what this module refuses, which
- *     is its identity — not a feature knob.
+ *     ADDING ANY source, reading any surface named in DEFERRED, OR ranking by INFERRED
+ *     readiness / importance / relevance. That last one is the subtle case: deciding
+ *     which material is "most ready to become writing" is a MEANING judgment MAIA must
+ *     not make — the exact drift this module refuses — so ordering stays on member-act
+ *     facts, never inferred salience. And "it's provably member-authored" is a VERDICT
+ *     the refusal gate returns, never a self-issued exemption that skips it. These
+ *     changes alter what this module refuses, which is its identity — not a feature knob.
  *
  * Constitutional grounding:
  *   - docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md:72 — "The system may draft
