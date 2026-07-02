@@ -218,8 +218,13 @@ export function TheBeginning({
           <div className={styles.letter}>
             <p className={styles.line}>{letterGreeting}</p>
             <p className={styles.line}>
-              when we first talked, you saw what this could become before I&rsquo;d even shown you
-              much of anything.
+              Jondi brought us together. She said we were all matched as good souls. That&rsquo;s
+              enough for me.
+            </p>
+            <p className={styles.line}>
+              When we first talked, you recognized something I hadn&rsquo;t yet been able to
+              demonstrate &mdash; that the future wasn&rsquo;t another AI company, but a different
+              relationship between human beings and intelligence.
             </p>
             <p className={styles.line}>Well &mdash; it&rsquo;s real now. I built it.</p>
             <p className={styles.line}>
