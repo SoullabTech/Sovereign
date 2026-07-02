@@ -6,6 +6,9 @@ export interface LivingField {
   status: 'gathering' | 'active' | 'resting'
   updated_at: string | null
   sources_count: number
+  /** Keeps that have gathered into this dimension via affinity. A field with
+   * gathered_count > 0 is NOT empty, even before the member has authored. */
+  gathered_count: number
 }
 
 export interface FieldVersion {
@@ -22,6 +25,28 @@ export interface FieldSource {
   source_id: string | null
   source_excerpt: string | null
   created_at: string
+}
+
+/** One Keep that has gathered into a field, with its selection warrant. */
+export interface GatheredKeep {
+  atom_id: string
+  title: string
+  source_type: string
+  primary_register: string | null
+  affinity_score: number
+  /** Selection warrant — WHY this Keep gathered here (e.g. "register:developmental, lens:fire"). */
+  evidence_reason: string
+  kept_at: string
+}
+
+/** The full gathering for a field — denominator visible, warrant per item, inspectable. */
+export interface FieldGathering {
+  field_key: string
+  gathered: GatheredKeep[]
+  gathered_count: number
+  /** The M in "N of M" — the full eligible pool this gathering was drawn from. */
+  denominator: number
+  criterion: string
 }
 
 export interface ParticipantConsent {

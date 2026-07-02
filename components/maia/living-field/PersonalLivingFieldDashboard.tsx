@@ -31,6 +31,17 @@ export function PersonalLivingFieldDashboard({
   const phase = spiralState?.relational_phase
   const phaseLabel = phase ? RELATIONAL_PHASE_LABELS[phase] : null
 
+  // Surface aliveness at the top level. A field is "alive" if the member has
+  // authored it OR material has gathered into it. Order alive fields first so the
+  // constellation never opens looking empty when it isn't.
+  const rank = (f: LivingField) =>
+    f.current_expression ? 0 : (f.gathered_count ?? 0) > 0 ? 1 : 2
+  const orderedFields = [...fields].sort((a, b) => rank(a) - rank(b))
+  const gatheringCount = fields.filter(
+    (f) => !f.current_expression && (f.gathered_count ?? 0) > 0
+  ).length
+  const authoredCount = fields.filter((f) => f.current_expression).length
+
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
@@ -45,6 +56,17 @@ export function PersonalLivingFieldDashboard({
           {phaseLabel && (
             <p className="text-stone-500 text-xs">
               Current life phase: <span className="text-stone-300">{phaseLabel}</span>
+            </p>
+          )}
+          {(gatheringCount > 0 || authoredCount > 0) && (
+            <p className="text-teal-300/70 text-xs">
+              {authoredCount > 0 && (
+                <span>{authoredCount} dimension{authoredCount !== 1 ? 's' : ''} you've begun to author</span>
+              )}
+              {authoredCount > 0 && gatheringCount > 0 && <span className="text-stone-600"> · </span>}
+              {gatheringCount > 0 && (
+                <span>{gatheringCount} already gathering from what you've kept</span>
+              )}
             </p>
           )}
         </div>
@@ -81,7 +103,7 @@ export function PersonalLivingFieldDashboard({
             Living Field Dimensions
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {fields.map((field) => (
+            {orderedFields.map((field) => (
               <LivingFieldCard key={field.field_key} field={field} memberId={memberId} />
             ))}
           </div>

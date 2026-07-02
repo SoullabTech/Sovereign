@@ -61,11 +61,39 @@ export async function GET(request: NextRequest) {
 
     const existingByKey = new Map(fieldsResult.rows.map((r) => [r.field_key, r]))
 
+    // 1b. Gathered affinities per field — the Keeps that have gathered into each
+    // dimension. This is what makes a field's gathering VISIBLE before the member
+    // has authored anything. A field with gathered Keeps is not empty.
+    const gatheredResult = await query(
+      `SELECT field_key, COUNT(*)::int AS gathered_count
+       FROM living_field_affinities
+       WHERE member_id = $1
+       GROUP BY field_key`,
+      [memberId]
+    )
+    const gatheredByKey = new Map(
+      gatheredResult.rows.map((r) => [r.field_key, r.gathered_count as number])
+    )
+
+    // Denominator — total eligible Keeps in the member's pool (the M in "N of M").
+    // Selection warrant requires the denominator be visible, not hidden.
+    const denomResult = await query(
+      `SELECT COUNT(*)::int AS n
+       FROM member_memory_atoms
+       WHERE member_id = $1
+         AND status NOT IN ('protected', 'archived')
+         AND primary_register IS DISTINCT FROM 'sacred_protected'
+         AND NOT ('sacred_protected' = ANY(registers))`,
+      [memberId]
+    )
+    const keepDenominator = (denomResult.rows[0]?.n as number) ?? 0
+
     // Merge with canonical stubs for missing keys
     const fields = CANONICAL_FIELD_KEYS.map(({ key, label }) => {
       const existing = existingByKey.get(key)
+      const gathered_count = gatheredByKey.get(key) ?? 0
       return existing
-        ? { ...existing, label }
+        ? { ...existing, label, gathered_count }
         : {
             id: null,
             field_key: key,
@@ -74,6 +102,7 @@ export async function GET(request: NextRequest) {
             status: 'gathering',
             updated_at: null,
             sources_count: 0,
+            gathered_count,
           }
     })
 
@@ -106,6 +135,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       fields,
+      keep_denominator: keepDenominator,
       spiral_state: spiralState,
       active_spirals: spiralsResult.rows,
       recent_states: statesResult.rows,
