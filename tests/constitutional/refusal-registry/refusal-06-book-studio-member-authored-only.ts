@@ -21,16 +21,26 @@ import type { RefusalCheck } from './harness';
  *     lib/bookStudio/mirrorSources — never inline in the surface.
  *     Defeating it requires ADDING a forbidden import/read = visible diff.
  *
- *   B-half (Grade B, query predicate — ACTIVE: mirrorSources built 2026-07-02):
- *     EVERY query in lib/bookStudio/mirrorSources.ts carries its own member-act
- *     predicate (proven per source, not file-wide — see B4); it imports no
- *     inference surface; it reads no inference table; it does not query the
- *     Living Field dimension tables (excluded per spec §4.1 until they earn a
- *     member-act marker).
+ *   B-half (Grade B, query predicate + fail-closed whitelist — ACTIVE 2026-07-02):
+ *     The mirror reads ONLY positively-admitted member-material tables (fail-closed
+ *     whitelist — B6), and EVERY admitted query carries its own member-act predicate
+ *     (proven per source, not file-wide — B4). It imports no inference surface, reads
+ *     no inference table, and excludes the Living Field dimension tables (spec §4.1).
+ *     Deferred sources fail closed with their admission criterion — "deferred is not
+ *     denied unless the verifier enforces it as denied."
  *
  * This is NOT Grade C: no part is a prompt instruction. We do not ask MAIA to
  * "only use accepted material" — that is the memoryAtomsLoader.ts Grade-C
  * pattern this refusal exists to replace with structure.
+ *
+ * THIS TEST IS THE MEASUREMENT LAYER (verification jurisdiction) — distinct from the
+ * reader's EXECUTION and from the constitution's MEANING. Strengthening it (richer
+ * per-source proofs, tighter greps, more skeptics) is legitimate sophistication: it
+ * reduces uncertainty about whether the refusal holds; it decides nothing new. But it
+ * carries its own jurisdiction guard: a verifier may only OBSERVE structure, never
+ * ADJUDICATE meaning. That is why B4 checks for the PRESENCE of a member-act token in
+ * the query — not whether the content "looks" member-authored. A judging verifier would
+ * manufacture the very authority it exists to check.
  */
 
 // The Book Studio surface — everything a member touches when writing.
@@ -64,26 +74,29 @@ const MEMBER_MATERIAL_TABLES =
 const importRe = (mods: string) => `^[[:space:]]*import.*(${mods})`;
 const readRe = (tables: string) => `(FROM|JOIN)[[:space:]]+(${tables})`;
 
-// Per admitted member-material table: the sanctioned member-act token its query
-// MUST carry. This is the B-half proof — "every admitted source carries a
-// member-act predicate" — asserted PER SOURCE, not file-wide. Ownership alone is
-// insufficient (spec §3: an un-kept atom is member-owned but MAIA-extracted);
-// personal_spirals is the audited exception (§4.2 writer audit: the sole writer
-// is the member-initiated POST, so member_id scope IS the member act there).
-// Tables not read by the module are not asserted; a future reader that ADDS one
-// of these without its token fails this check (visible diff to defeat).
+// ADMITTED member-material sources: the ONLY tables the mirror may read, each paired with
+// the member-act token its query MUST carry (the B-half per-source proof — B4). Ownership
+// alone is insufficient (spec §3: an un-kept atom is member-owned but MAIA-extracted).
+// Admission requires a VERIFIED write-event marker: member_memory_atoms via facilitator_id
+// IS NULL + keep/breakthrough gestures; personal_spirals via member_id, safe only under the
+// §4.2 write-monopoly (enforced by B5). Promoting a deferred source into this list is a
+// deliberate two-part diff — add here with a verified predicate AND remove from
+// DEFERRED_SOURCES — which forces a writer re-audit (the member_confirmed lesson).
 const MEMBER_ACT_BY_TABLE: Array<{ table: string; predicate: RegExp; why: string }> = [
   { table: 'member_memory_atoms', predicate: /kept_at|is_breakthrough|status\s+IN/i, why: 'member keep / breakthrough gesture (status reflects member gestures only)' },
-  // member_field_note_threads is DEFERRED (spec §11): its writers stamp
-  // member_confirmed=TRUE and authorship='member_confirmed' UNCONDITIONALLY on every
-  // insert (field-note routes VALUES (...,TRUE,...)), so neither column proves a member
-  // acceptance act — MAIA-proposed prose would circulate as an "accepted reflection".
-  // Deliberately NOT listed here: with no sanctioned predicate, any future
-  // `FROM member_field_note_threads` fails B4 until the table earns a real member-act
-  // marker (a server-verified acceptance column, not a client-driven flag).
   { table: 'personal_spirals', predicate: /member_id/i, why: 'member-created — §4.2 audit: sole writer is the member POST' },
-  { table: 'encounter_moments', predicate: /artifact_type\s*=\s*'accepted_recognition'/i, why: 'member accepted the recognition' },
-  { table: 'recognitions', predicate: /authored_by/i, why: 'member authored the recognition' },
+];
+
+// DEFERRED member-material sources: named, NOT admitted. Their write paths do not (yet)
+// produce a member-provable marker, so the mirror must NOT read them — enforced as DENIAL
+// by B6, not left as mere absence from the admitted list (absence alone is fail-OPEN:
+// unchecked). "Deferred is not denied unless the verifier enforces it as denied." Each
+// carries its admission criterion: the observable WRITE EVENT that would confer authority.
+const DEFERRED_SOURCES: Array<{ table: string; admitWhen: string }> = [
+  { table: 'member_field_note_threads', admitWhen: 'a server-verified acceptance column exists — today member_confirmed/authorship are stamped TRUE unconditionally by the field-note writers (spec §11)' },
+  { table: 'encounter_moments', admitWhen: "the accept path persists artifact_type='accepted_recognition' + authored_by=member — today it never does (spec §11)" },
+  { table: 'encounter_reflections', admitWhen: 'a verified member action sets a member-authorship marker on the reflection row' },
+  { table: 'recognitions', admitWhen: 'a member-authoring write path exists and authored_by is set ONLY by it (no writer today)' },
 ];
 
 export const check: RefusalCheck = {
@@ -109,7 +122,7 @@ export const check: RefusalCheck = {
   passingDoesNotAuthorize:
     'that any member material is READY or worth writing (content judgment, out of scope), nor that the mirror reader itself is built and predicate-gated (B-half) — only that no synthesis/inference path exists in the surface today',
   hostileForkMustChange:
-    'ADD a forbidden import or a direct member-material/inference table read in the Book Studio surface (visible diff), or — once mirrorSources exists — remove a member-act WHERE predicate from one of its queries (visible diff)',
+    'ADD a forbidden import or a direct member-material/inference read in the Book Studio surface; or remove a member-act WHERE predicate from an admitted mirror query (B4); or make the mirror read a deferred/unrecognized member-material table (fails the B6 fail-closed whitelist) — each a visible diff',
 
   run(io) {
     // ── A1: no inference-surface imports in the surface ──
@@ -236,6 +249,43 @@ export const check: RefusalCheck = {
           foreign.slice(0, 3).join(' | '),
         );
       }
+    }
+
+    // B6: FAIL CLOSED on unrecognized jurisdiction — the whitelist that makes "deferred"
+    // mean "denied". The mirror may read ONLY the positively-ADMITTED member-material
+    // tables; every other member-material read fails — a DEFERRED source with its admission
+    // criterion, anything else as unrecognized jurisdiction. Absence from the admitted set
+    // is ENFORCED here, not merely unchecked: without this, a member-material table not
+    // listed in MEMBER_ACT_BY_TABLE (e.g. a re-added member_field_note_threads) would pass
+    // B4 silently — fail-open. B6 closes that. Promotion = a deliberate two-part diff
+    // (admit in MEMBER_ACT_BY_TABLE with a verified predicate AND remove from DEFERRED_SOURCES).
+    const admitted = new Set(MEMBER_ACT_BY_TABLE.map((e) => e.table));
+    const deferredWhen = new Map(DEFERRED_SOURCES.map((d) => [d.table, d.admitWhen]));
+    const materialReadTables = new Set<string>();
+    for (const line of io.grep(readRe(MEMBER_MATERIAL_TABLES), [MIRROR_MODULE])) {
+      const m = /(?:FROM|JOIN)\s+([a-z_]+)/i.exec(line);
+      if (m) materialReadTables.add(m[1]);
+    }
+    let jurisdictionClean = true;
+    for (const t of materialReadTables) {
+      if (admitted.has(t)) continue; // admitted — B4 enforces its per-source write-event predicate
+      jurisdictionClean = false;
+      if (deferredWhen.has(t)) {
+        io.fail(`mirror reads a DEFERRED source: ${t}`, `admit only when ${deferredWhen.get(t)}`);
+      } else if (/personal_living_field/.test(t)) {
+        io.fail(`mirror reads a Living Field dimension: ${t}`, 'excluded per spec §4.1 until it earns a member-act marker');
+      } else {
+        io.fail(
+          `mirror reads UNRECOGNIZED member-material jurisdiction: ${t}`,
+          'fail closed — admit explicitly in MEMBER_ACT_BY_TABLE with a verified write-event predicate',
+        );
+      }
+    }
+    if (jurisdictionClean) {
+      io.pass(
+        'mirror reads only positively-admitted member-material tables (fail-closed whitelist)',
+        `admitted: ${[...admitted].join(', ')}`,
+      );
     }
   },
 };
