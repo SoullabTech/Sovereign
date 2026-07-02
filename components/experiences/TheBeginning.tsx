@@ -199,13 +199,12 @@ export function TheBeginning({
             </p>
             <p className={styles.line}>Well &mdash; it&rsquo;s real now. I built it.</p>
             <p className={styles.line}>
-              And honestly, the part that excites me most is the chance to play in whole new
-              dimensions of human development and collective intelligence &mdash; with someone
-              who&rsquo;s spent his life pushing what human minds can do. I don&rsquo;t want to
-              imagine where it goes by myself. I&rsquo;d love to dream it up and build it with you.
+              And honestly, what excites me most is simply what&rsquo;s possible now &mdash; whole
+              new dimensions of human development and collective intelligence.
             </p>
             <p className={`${styles.line} ${styles.gold}`}>
-              Just looking forward to some real imagineering.
+              I&rsquo;m excited to share the journey &mdash; and some real imagineering &mdash; with
+              wise souls.
             </p>
             <p className={styles.sig}>&mdash; Kelly</p>
           </div>
