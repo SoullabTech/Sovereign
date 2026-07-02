@@ -29,6 +29,10 @@
  *   - Does NOT surface 'member_pulled' atoms ambiently.
  *   - Does NOT surface 'sacred_protected' register atoms.
  *   - Does NOT surface atoms whose status is set_aside / protected / archived.
+ *   - Does NOT surface a practitioner observation the member has DECLINED
+ *     (member_response_status = 'rejected'). The prompt invites the member to
+ *     confirm, reject, or refine; a recorded reject RELEASES the atom — it is
+ *     not silently re-carried next session. (Right to Remain Unpossessed.)
  *   - Does NOT blend atoms across scope boundaries.
  *   - Does NOT compute cross-atom patterns or synthesis.
  *
@@ -37,6 +41,7 @@
  *   - status IN ('active', 'still_alive')
  *   - NOT 'sacred_protected' = ANY(registers)
  *   - return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+ *   - member_response_status IS DISTINCT FROM 'rejected' (declined = released)
  */
 
 import { query } from '@/lib/db/postgres';
@@ -261,6 +266,10 @@ export async function loadMemberMemoryAtomsForPrompt(
 
     const scopeWhere = `(${scopeClauses.join(' OR ')})`;
 
+    // Release unit: the member_response_status predicate below depends on
+    // migration 20260702000002. Schema + reader ship together — never deploy
+    // this loader ahead of that migration (see the migration header). Missing
+    // column → this query throws → failure-empty (atoms stop surfacing).
     const result = await query<AtomRow>(
       `SELECT ${SELECT_COLUMNS}
        FROM member_memory_atoms
@@ -270,6 +279,7 @@ export async function loadMemberMemoryAtomsForPrompt(
          AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
          AND NOT ('sacred_protected' = ANY(registers))
          AND ${PRACTITIONER_ATTRIBUTION_GUARD}
+         AND member_response_status IS DISTINCT FROM 'rejected'
        ORDER BY is_breakthrough DESC, kept_at DESC
        LIMIT $2`,
       params,

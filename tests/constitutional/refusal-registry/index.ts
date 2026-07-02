@@ -15,6 +15,7 @@
  *   R04  sacred_protected atoms never surface in ambient recall
  *   R05  Vision Studio field-note has no implicit practitioner-share path
  *   R06  Book Studio surface has no inference/synthesis reader (member-authored only)
+ *   R07  A declined practitioner observation never resurfaces (decline = release)
  */
 
 // NOTE: explicit .ts extensions so this runs under both `tsx` and Node's native
@@ -28,8 +29,9 @@ import { check as r03 } from './refusal-03-body-userid-not-trusted.ts';
 import { check as r04 } from './refusal-04-sacred-protected-not-surfaced.ts';
 import { check as r05 } from './refusal-05-vision-studio-no-implicit-practitioner-share.ts';
 import { check as r06 } from './refusal-06-book-studio-member-authored-only.ts';
+import { check as r07 } from './refusal-07-declined-observation-released.ts';
 
-const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06];
+const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07];
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';

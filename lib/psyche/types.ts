@@ -104,6 +104,21 @@ export type ReturnPreference =
   | 'contextual_doorway'    // MAIA may offer when proximity filter passes (Phase 2)
   | 'ritual_review_opt_in'; // appears in member-enabled review surfaces (Phase 2+)
 
+/**
+ * The member's verdict on an observation surfaced ABOUT them (a
+ * practitioner_observation atom). NULL until the member responds.
+ *
+ * This is a DIFFERENT axis from status: status is how the member curates
+ * material they placed; member_response_status is the member's authority over a
+ * claim someone else made about them. 'rejected' releases the observation from
+ * ambient recall — the loader excludes it, so a declined observation is not
+ * silently re-carried. Only 'rejected' has a runtime writer today; 'confirmed'
+ * and 'modified' are reserved forward-compat verdicts.
+ *
+ * The system NEVER sets this. It moves only via an explicit member gesture.
+ */
+export type MemberResponseStatus = 'confirmed' | 'rejected' | 'modified';
+
 // ════════════════════════════════════════════════════════════════════════════
 // Reverberation guard
 // ════════════════════════════════════════════════════════════════════════════
@@ -183,6 +198,11 @@ export interface CrystallizedMemory {
   returnPreference: ReturnPreference;
   lastSurfacedAt: string | null;
   surfaceCount: number;
+
+  // Member's response to an observation surfaced ABOUT them (practitioner_observation).
+  // NULL until the member responds. 'rejected' releases the atom from ambient recall.
+  memberResponseStatus: MemberResponseStatus | null;
+  memberResponseAt: string | null;
 
   // The formation moment (when the member kept this)
   keptAt: string;

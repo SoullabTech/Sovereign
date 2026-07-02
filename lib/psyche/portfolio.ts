@@ -32,6 +32,7 @@ import type {
   KeepGestureInput,
   LensPass,
   LensPassInput,
+  MemberResponseStatus,
   MemoryAtomSourceType,
   MemoryRegister,
   PortfolioSourceCandidate,
@@ -58,6 +59,8 @@ interface AtomRow {
   return_preference: ReturnPreference;
   last_surfaced_at: string | null;
   surface_count: number;
+  member_response_status: MemberResponseStatus | null;
+  member_response_at: string | null;
   kept_at: string;
   last_touched_at: string;
   created_at: string;
@@ -95,6 +98,8 @@ function rowToAtom(row: AtomRow): CrystallizedMemory {
     returnPreference: row.return_preference,
     lastSurfacedAt: row.last_surfaced_at,
     surfaceCount: row.surface_count,
+    memberResponseStatus: row.member_response_status ?? null,
+    memberResponseAt: row.member_response_at ?? null,
     keptAt: row.kept_at,
     lastTouchedAt: row.last_touched_at,
     createdAt: row.created_at,
@@ -129,6 +134,7 @@ const ATOM_COLUMNS = `
   id, member_id, source_type, source_id, title, body,
   primary_register, registers, elemental_lenses, thread_ids,
   status, return_preference, last_surfaced_at, surface_count,
+  member_response_status, member_response_at,
   kept_at, last_touched_at, created_at, updated_at, crossing_allowed
 `;
 
@@ -596,4 +602,78 @@ export async function createLensPass(
   );
 
   return rowToLensPass(result.rows[0]);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Observation response — the refusal that completes the surfacing capability
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * The member declines a practitioner-authored observation surfaced about them.
+ *
+ * The loader surfaces practitioner_observation atoms with an explicit invitation
+ * to "confirm, reject, or refine" (lib/maia/memoryAtomsLoader.ts). This gesture
+ * is the RECORD of a reject — the missing half that lets the invitation mean
+ * something. It sets member_response_status = 'rejected' + member_response_at;
+ * the loader then excludes the atom (member_response_status IS DISTINCT FROM
+ * 'rejected'), so a declined observation is RELEASED, not silently re-carried.
+ * This is the Right to Remain Unpossessed made structural — the member may
+ * decline what is held about them, and the system releases it.
+ *
+ * Scoped to practitioner_observation atoms: a member's OWN placed material is
+ * curated via status gestures (set_aside / archive), never "rejected." Targeting
+ * any other source_type matches 0 rows and returns null — the misapplication is
+ * structurally refused, not honored.
+ *
+ * Idempotent: re-declining preserves the first member_response_at (COALESCE),
+ * so the moment of declining stays recoverable.
+ *
+ * Returns the updated atom, or null if no owned practitioner_observation atom
+ * with that id exists for the member.
+ */
+export async function declineObservation(
+  memberId: string,
+  atomId: string,
+): Promise<CrystallizedMemory | null> {
+  const result = await query<AtomRow>(
+    `UPDATE member_memory_atoms
+        SET member_response_status = 'rejected',
+            member_response_at = COALESCE(member_response_at, NOW()),
+            last_touched_at = NOW()
+      WHERE member_id = $1 AND id = $2
+        AND source_type = 'practitioner_observation'
+      RETURNING ${ATOM_COLUMNS}`,
+    [memberId, atomId],
+  );
+  return result.rows[0] ? rowToAtom(result.rows[0]) : null;
+}
+
+/**
+ * The member withdraws a prior decline (changed their mind).
+ *
+ * Sovereignty is reversible: declining is not a punishment or a permanent
+ * verdict. Clearing the response (→ NULL) lets the observation surface again.
+ * Only clears a 'rejected' response — it never fabricates a 'confirmed', and it
+ * will not touch a verdict this path did not set. If the atom is not currently
+ * declined, this matches 0 rows and returns null (nothing to withdraw).
+ *
+ * Returns the updated atom, or null if no owned, currently-declined
+ * practitioner_observation atom with that id exists for the member.
+ */
+export async function clearObservationResponse(
+  memberId: string,
+  atomId: string,
+): Promise<CrystallizedMemory | null> {
+  const result = await query<AtomRow>(
+    `UPDATE member_memory_atoms
+        SET member_response_status = NULL,
+            member_response_at = NULL,
+            last_touched_at = NOW()
+      WHERE member_id = $1 AND id = $2
+        AND source_type = 'practitioner_observation'
+        AND member_response_status = 'rejected'
+      RETURNING ${ATOM_COLUMNS}`,
+    [memberId, atomId],
+  );
+  return result.rows[0] ? rowToAtom(result.rows[0]) : null;
 }
