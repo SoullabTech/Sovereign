@@ -55,6 +55,16 @@ export function LivingFieldCard({ field, memberId }: Props) {
   }
 
   const hasExpression = Boolean(field.current_expression)
+  const gathered = field.gathered_count ?? 0
+  // A field is truly empty only when nothing has gathered AND nothing is authored.
+  const isGatheringWithoutExpression = !hasExpression && gathered > 0
+  // A field holding gathered material but no authored expression is "gathering",
+  // never "empty" — the dot reflects that the field is alive with material.
+  const dotClass = hasExpression
+    ? (STATUS_DOT[field.status] ?? 'bg-stone-700')
+    : isGatheringWithoutExpression
+      ? 'bg-teal-600'
+      : 'bg-stone-700'
 
   return (
     <>
@@ -62,8 +72,8 @@ export function LivingFieldCard({ field, memberId }: Props) {
            onClick={openDetail}>
         {/* Status dot */}
         <span
-          className={`absolute top-3 right-3 w-2 h-2 rounded-full ${STATUS_DOT[field.status] ?? 'bg-stone-700'}`}
-          title={field.status}
+          className={`absolute top-3 right-3 w-2 h-2 rounded-full ${dotClass}`}
+          title={hasExpression ? field.status : isGatheringWithoutExpression ? 'gathering' : 'quiet'}
         />
 
         <h3 className="text-stone-200 text-sm font-medium mb-2 pr-4">{field.label}</h3>
@@ -71,6 +81,13 @@ export function LivingFieldCard({ field, memberId }: Props) {
         {hasExpression ? (
           <p className="text-stone-400 text-sm leading-relaxed line-clamp-3">
             {field.current_expression}
+          </p>
+        ) : isGatheringWithoutExpression ? (
+          <p className="text-teal-200/70 text-sm leading-relaxed">
+            {gathered} {gathered === 1 ? 'reflection has' : 'reflections have'} gathered here.
+            <span className="block text-stone-500 text-xs mt-1">
+              Nothing written yet — draft with MAIA when you're ready.
+            </span>
           </p>
         ) : (
           <p className="text-stone-600 text-sm italic">

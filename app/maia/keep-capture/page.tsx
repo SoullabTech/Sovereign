@@ -66,6 +66,15 @@ async function apiPost<T>(url: string, body: unknown): Promise<T> {
   return r.json();
 }
 
+async function apiDelete<T>(url: string): Promise<T> {
+  const r = await apiFetch(url, { method: 'DELETE' });
+  if (!r.ok) {
+    const text = await r.text().catch(() => '');
+    throw new Error(`DELETE ${url} failed: ${r.status} ${text}`);
+  }
+  return r.json();
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Page
 // ════════════════════════════════════════════════════════════════════════════
@@ -123,6 +132,35 @@ export default function KeepCapturePage() {
     }
   }
 
+  // Decline a practitioner observation ("This isn't true for me"). Records the
+  // member's verdict — the loader then releases the atom from ambient recall.
+  // Reversible: withdrawDecline restores it. Only ever applied to
+  // source_type === 'practitioner_observation' atoms (see the observations section).
+  async function declineObservation(atomId: string) {
+    try {
+      await apiPost(`/api/sovereign/atoms/${atomId}/decline`, {});
+      await reload();
+    } catch (err) {
+      console.error('[keep-capture] decline failed', err);
+    }
+  }
+
+  async function withdrawDecline(atomId: string) {
+    try {
+      await apiDelete(`/api/sovereign/atoms/${atomId}/decline`);
+      await reload();
+    } catch (err) {
+      console.error('[keep-capture] withdraw decline failed', err);
+    }
+  }
+
+  // Observations shared ABOUT the member by a practitioner are held on a
+  // distinct axis from the member's own kept material: they carry a decline
+  // verdict (member_response_status), not curation gestures. Split them out so
+  // each surface shows only the affordances that apply.
+  const observations = kept.filter((a) => a.sourceType === 'practitioner_observation');
+  const memberAtoms = kept.filter((a) => a.sourceType !== 'practitioner_observation');
+
   return (
     <main className="min-h-screen bg-stone-50">
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -145,18 +183,36 @@ export default function KeepCapturePage() {
 
         {!loading && !error && (
           <>
-            {kept.length > 0 && (
+            {memberAtoms.length > 0 && (
               <section className="mb-12">
                 <h2 className="text-xs uppercase tracking-widest text-stone-400 mb-4">
                   Kept
                 </h2>
                 <ul className="space-y-3">
-                  {kept.map((atom) => (
+                  {memberAtoms.map((atom) => (
                     <KeptItem
                       key={atom.id}
                       atom={atom}
                       onGesture={(g) => applyGesture(atom.id, g)}
                       onLook={() => setActiveLensAtom(atom)}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {observations.length > 0 && (
+              <section className="mb-12">
+                <h2 className="text-xs uppercase tracking-widest text-stone-400 mb-4">
+                  Shared with you
+                </h2>
+                <ul className="space-y-3">
+                  {observations.map((atom) => (
+                    <PractitionerObservationItem
+                      key={atom.id}
+                      atom={atom}
+                      onDecline={() => declineObservation(atom.id)}
+                      onWithdrawDecline={() => withdrawDecline(atom.id)}
                     />
                   ))}
                 </ul>
@@ -324,6 +380,82 @@ function KeptItem({
           {atom.returnPreference === 'member_pulled' ? 'Allow return' : 'Reseal'}
         </button>
       </div>
+    </li>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Practitioner observation item
+//
+// An observation a practitioner recorded ABOUT the member. Unlike the member's
+// own kept material, this carries no curation gestures — only the member's
+// verdict. "This isn't true for me" records a decline (member_response_status =
+// 'rejected'), which releases the observation so it stops surfacing in
+// conversation. Fully reversible: "Undo" withdraws the decline and it may
+// surface again. Sovereignty is reversible — the undo is always visible.
+//
+// Authority: docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md
+// ════════════════════════════════════════════════════════════════════════════
+
+function PractitionerObservationItem({
+  atom,
+  onDecline,
+  onWithdrawDecline,
+}: {
+  atom: CrystallizedMemory;
+  onDecline: () => Promise<void> | void;
+  onWithdrawDecline: () => Promise<void> | void;
+}) {
+  const isDeclined = atom.memberResponseStatus === 'rejected';
+  const [busy, setBusy] = useState(false);
+
+  async function run(action: () => Promise<void> | void) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await action();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <li className="bg-white rounded-lg p-5 border border-stone-200">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-stone-800 font-medium leading-snug">{atom.title}</h3>
+        <span className="text-xs text-stone-400 mt-1 whitespace-nowrap">
+          shared with you
+        </span>
+      </div>
+
+      {atom.body && (
+        <p className="text-stone-600 text-sm mt-2 whitespace-pre-wrap">{atom.body}</p>
+      )}
+
+      {!isDeclined ? (
+        <div className="mt-4 flex items-center gap-4 text-sm">
+          <button
+            onClick={() => run(onDecline)}
+            disabled={busy}
+            className="text-stone-500 hover:text-stone-800 disabled:text-stone-300"
+          >
+            This isn&apos;t true for me
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between gap-3 text-sm">
+          <span className="text-stone-500">
+            You declined this. It won&apos;t come back up.
+          </span>
+          <button
+            onClick={() => run(onWithdrawDecline)}
+            disabled={busy}
+            className="text-amber-700 hover:text-amber-900 disabled:text-stone-300"
+          >
+            Undo
+          </button>
+        </div>
+      )}
     </li>
   );
 }

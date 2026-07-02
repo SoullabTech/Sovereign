@@ -211,8 +211,8 @@ export function PracticeFieldEditor() {
           </InterviewQuestion>
 
           <InterviewQuestion
-            question="Tell us about your practice — in your own words."
-            hint="Your modality, philosophy, or how you think about the work. Clients will see this on the threshold screen."
+            question="How do you understand the work you do?"
+            hint="Your modality, philosophy, or how you think about the work — in your own words. Clients will see this on the threshold screen."
           >
             <Textarea
               value={field?.about_practice ?? ''}

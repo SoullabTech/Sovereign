@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { LivingField, FieldVersion, FieldSource, ParticipantConsent } from './types'
 import { deriveConsentStatus } from './types'
 import { LivingFieldSourceList } from './LivingFieldSourceList'
+import { LivingFieldGatheringPanel } from './LivingFieldGatheringPanel'
 import { MaiaCandidatePanel, type MaiaCandidate } from './MaiaCandidatePanel'
 
 function formatDate(iso: string) {
@@ -129,6 +130,15 @@ export function LivingFieldDetailPanel({
               </button>
             </div>
           </div>
+
+          {/* What has gathered — inspectability before Recognition. The member sees
+              the denominator, the criterion, and the per-Keep warrant BEFORE asking
+              MAIA to draft from it. Recognition is gated behind inspectability. */}
+          <LivingFieldGatheringPanel
+            fieldKey={field.field_key}
+            fieldLabel={field.label}
+            memberId={memberId}
+          />
 
           {/* Candidate panel */}
           {candidate && (
