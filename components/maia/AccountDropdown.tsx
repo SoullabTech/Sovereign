@@ -10,13 +10,15 @@
 
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Settings, MessageCircle } from 'lucide-react';
+import { LogOut, Settings, MessageCircle, User } from 'lucide-react';
 
 interface AccountDropdownProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenFeedback: () => void;
   onSignOut: () => void;
+  /** Member's name — so the opened sheet confirms whose account this is. */
+  explorerName?: string;
 }
 
 export function AccountDropdown({
@@ -24,8 +26,11 @@ export function AccountDropdown({
   onClose,
   onOpenFeedback,
   onSignOut,
+  explorerName,
 }: AccountDropdownProps) {
   const router = useRouter();
+  const trimmedName = (explorerName || '').trim();
+  const initial = trimmedName ? trimmedName[0].toUpperCase() : '';
 
   return (
     <AnimatePresence>
@@ -52,6 +57,21 @@ export function AccountDropdown({
             <div className="w-12 h-1 bg-amber-500/40 rounded-full mx-auto mb-4" />
 
             <div className="space-y-2 max-w-md mx-auto">
+              {/* Identity header — "this is you" */}
+              <div className="flex items-center gap-3 px-4 py-3 mb-1">
+                <span className="w-10 h-10 flex items-center justify-center rounded-full bg-[#D4B896]/15 border border-[#D4B896]/30 text-[#D4B896] text-base font-medium shrink-0">
+                  {initial || <User className="w-5 h-5" />}
+                </span>
+                <div className="min-w-0 text-left">
+                  <div className="text-[#D4B896] text-base truncate">
+                    {trimmedName || 'Your account'}
+                  </div>
+                  <div className="text-stone-500 text-xs">Signed in</div>
+                </div>
+              </div>
+
+              <div className="border-t border-[#D4B896]/20 mb-1" />
+
               {/* Settings */}
               <button
                 onClick={() => { onClose(); router.push('/account/settings'); }}

@@ -794,6 +794,7 @@ function MAIAPageContent() {
           onClose={() => setShowAccountMenu(false)}
           onOpenFeedback={() => setShowFeedbackSheet(true)}
           onSignOut={handleSignOut}
+          explorerName={explorerName}
         />
       </ErrorBoundary>
     );

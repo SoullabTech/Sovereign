@@ -45,6 +45,12 @@ export function MaiaTopBar({
   // Calm: 15% opacity. Ceiling: 40% opacity. Normal: 100%.
   const opacityClass = calmMode ? (calmCeiling ? 'opacity-40' : 'opacity-15') : 'opacity-100';
 
+  // Personal entry point: show the member as themselves ("Me"), not a generic icon.
+  // On touch/PWA there is no hover, so the name must be on screen — not in a title tooltip.
+  const trimmedName = (explorerName || '').trim();
+  const firstName = trimmedName.split(/\s+/)[0] || '';
+  const initial = firstName ? firstName[0].toUpperCase() : '';
+
   return (
     <header
       className={`
@@ -97,10 +103,24 @@ export function MaiaTopBar({
 
         <button
           onClick={onOpenAccount}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all"
+          className="h-8 flex items-center gap-2 pl-1 pr-2 rounded-lg text-stone-300 hover:text-[#D4B896] hover:bg-[#D4B896]/5 transition-all"
           title={explorerName || 'Account'}
+          aria-label={firstName ? `You — ${firstName}` : 'Account'}
         >
-          <User className="w-4 h-4" />
+          {initial ? (
+            <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#D4B896]/15 border border-[#D4B896]/30 text-[#D4B896] text-[11px] font-medium">
+              {initial}
+            </span>
+          ) : (
+            <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#D4B896]/10 border border-[#D4B896]/20 text-stone-300">
+              <User className="w-3.5 h-3.5" />
+            </span>
+          )}
+          {firstName && (
+            <span className="text-xs font-light tracking-wide max-w-[7rem] truncate">
+              {firstName}
+            </span>
+          )}
         </button>
       </div>
     </header>
