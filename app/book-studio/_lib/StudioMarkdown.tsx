@@ -352,6 +352,14 @@ export default async function StudioMarkdown({ file }: StudioMarkdownProps) {
     <article className="studio-prose mx-auto max-w-3xl">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkChapterEpigraph, remarkTocLinks]}
+        // The manuscript is shared source: the Pandoc print pipeline consumes
+        // raw HTML (e.g. `<div class="toc-prose">` for print-only TOC page
+        // breaks — see lib/manuscript/render/print-book.css), but the Read Flow
+        // has no rehypeRaw, so react-markdown would otherwise render those tags
+        // as literal escaped text. `skipHtml` drops raw HTML nodes on screen —
+        // print keeps its markup, the Read Flow stays clean, and any future
+        // stray tag disappears gracefully instead of leaking as visible code.
+        skipHtml
         components={{
           // True epigraphs are paragraphs whose entire content is a single
           // `*"…" — Author*`. CSS `:only-child` ignores text nodes, so a
