@@ -40,28 +40,6 @@
 
 ---
 
-## Covenant Governance
-
-Covenant Gates checks the change class of every PR. **Check exactly one** (leave the `[x]` exactly as shown so the gate can read it):
-
-- [ ] **Class A — Sacred Boundaries** (privacy / consent / safety / sovereignty). Required for anything under `lib/safety/`, `lib/memory/`, `lib/consciousness/`, `lib/session/`, `app/api/session/`, `docs/policy/`, `docs/GOVERNANCE`.
-- [ ] **Class B — Structural Risk** (migrations / auth / routing / infra / governance workflows).
-- [ ] **Class C — Routine Improvement** (refactor / copy / UX / prompt tuning).
-- [ ] **Frontier-Dependent** (models / providers / pricing).
-
-### Rollback plan (required for Class B) — check one:
-
-- [ ] Revert commit is sufficient
-- [ ] Migration rollback script provided
-- [ ] Feature flag can disable
-- [ ] **No rollback possible**
-
-### Sign-off
-
-Covenant approval is meant to be an independent steward review. **Until an independent steward account exists**, the founder records an explicit, logged sign-off by applying the **`covenant-signoff`** label to this PR — a temporary bootstrap bridge, *not* independent review. The label bridges only the founder/mentor approval requirement; it does **not** satisfy classification, rollback, sacred-path escalation, or CI. Remove the bridge once an independent steward exists.
-
----
-
 ## PHI / Security Impact
 
 - [ ] This PR does not touch PHI-related paths/tables
