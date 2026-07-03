@@ -6,7 +6,6 @@ import Link from 'next/link';
 import {
   Settings,
   User,
-  Bell,
   Clock,
   Shield,
   Palette,
@@ -16,8 +15,6 @@ import {
   Save,
   Moon,
   Sun,
-  Volume2,
-  VolumeX,
   Calendar,
   CheckCircle2,
   AlertCircle,
@@ -33,6 +30,11 @@ import {
   Check,
   Compass,
   Briefcase,
+  Waves,
+  AtSign,
+  MessagesSquare,
+  Hash,
+  Inbox,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
@@ -47,6 +49,13 @@ import {
   type ModuleSlug,
   type ModuleCategory,
 } from '@/lib/studio/moduleDefinitions';
+import {
+  NOTIFICATION_EVENT_TYPES,
+  EVENT_LABELS,
+  type NotificationEventType,
+  type NotificationChannel,
+  type ResolvedPreference,
+} from '@/lib/team/notificationTypes';
 
 interface SettingsSection {
   id: string;
@@ -58,13 +67,30 @@ const sections: SettingsSection[] = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'studio-mode', label: 'Studio Mode', icon: Compass },
   { id: 'modules', label: 'Modules', icon: LayoutGrid },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'attention', label: 'Attention', icon: Waves },
   { id: 'time-tracking', label: 'Time Tracking', icon: Clock },
   { id: 'agents', label: 'Agent Defaults', icon: GitBranch },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'integrations', label: 'Integrations', icon: Key },
   { id: 'data', label: 'Data & Storage', icon: Database },
+];
+
+// Attention section — icon per awareness event (the "what may surface").
+const EVENT_ICONS: Record<NotificationEventType, typeof Settings> = {
+  dm_received: MessageCircle,
+  mentioned: AtSign,
+  thread_reply: MessagesSquare,
+  channel_activity: Hash,
+};
+
+// Delivery channels (the "how it reaches you"). in_app + email are live; sms is
+// modeled in the schema but not delivered until a later phase — shown disabled,
+// never written (the API rejects sms writes too).
+const ATTENTION_CHANNELS: { key: NotificationChannel; label: string; available: boolean }[] = [
+  { key: 'in_app', label: 'In-app', available: true },
+  { key: 'email', label: 'Email', available: true },
+  { key: 'sms', label: 'SMS', available: false },
 ];
 
 // Calendar connection state
@@ -347,12 +373,6 @@ function SettingsContent() {
     displayName: '',
     email: '',
 
-    // Notifications
-    notifyOnAgentComplete: true,
-    notifyOnHighPriority: true,
-    notifyOnReviewReady: true,
-    soundEnabled: true,
-
     // Time Tracking
     dailyHourTarget: 8,
     trackingEnabled: true,
@@ -375,6 +395,65 @@ function SettingsContent() {
   const updateSetting = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
+
+  // ─── Attention (notification delivery preferences) ─────────
+  // Backed by the existing member_notification_preferences table via
+  // /api/team/notifications/preferences. Separates WHAT may surface (event
+  // types) from HOW it reaches you (channels). Persists per-toggle — no new
+  // notification system, no client-only dead toggles.
+  const [attentionPrefs, setAttentionPrefs] = useState<Record<string, boolean>>({});
+  const [attentionLoading, setAttentionLoading] = useState(true);
+  const [attentionError, setAttentionError] = useState<string | null>(null);
+  const [attentionSaving, setAttentionSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadAttention() {
+      try {
+        const res = await apiFetch('/api/team/notifications/preferences');
+        if (res.ok) {
+          const data = await res.json();
+          const map: Record<string, boolean> = {};
+          for (const p of (data.preferences ?? []) as ResolvedPreference[]) {
+            map[`${p.event_type}:${p.channel}`] = p.enabled;
+          }
+          setAttentionPrefs(map);
+        } else {
+          setAttentionError('Could not load your attention settings.');
+        }
+      } catch {
+        setAttentionError('Could not load your attention settings.');
+      } finally {
+        setAttentionLoading(false);
+      }
+    }
+    loadAttention();
+  }, []);
+
+  async function toggleAttention(event: NotificationEventType, channel: NotificationChannel) {
+    const key = `${event}:${channel}`;
+    const next = !attentionPrefs[key];
+    // Optimistic — reflect the member's intent immediately, reconcile on response.
+    setAttentionPrefs(prev => ({ ...prev, [key]: next }));
+    setAttentionSaving(key);
+    setAttentionError(null);
+    try {
+      const res = await apiFetch('/api/team/notifications/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: event, channel, enabled: next }),
+      });
+      if (!res.ok) {
+        setAttentionPrefs(prev => ({ ...prev, [key]: !next })); // revert
+        const data = await res.json().catch(() => ({}));
+        setAttentionError(data.error || 'Could not save that change.');
+      }
+    } catch {
+      setAttentionPrefs(prev => ({ ...prev, [key]: !next })); // revert
+      setAttentionError('Could not save that change.');
+    } finally {
+      setAttentionSaving(null);
+    }
+  }
 
   // ─── Profile ──────────────────────────────────────────────
   const [profileLoading, setProfileLoading] = useState(true);
@@ -920,97 +999,139 @@ function SettingsContent() {
           </div>
         )}
 
-        {activeSection === 'notifications' && (
+        {activeSection === 'attention' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-white mb-1">Notifications</h2>
-              <p className="text-sm text-slate-400">Control how you receive alerts</p>
+              <h2 className="text-lg font-semibold text-white mb-1">Attention</h2>
+              <p className="text-sm text-slate-400">
+                Choose what deserves your attention, and how MAIA may bring it to you. You can change this at any time.
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                <div>
-                  <div className="text-white font-medium">Agent Task Complete</div>
-                  <div className="text-sm text-slate-400">Notify when delegated tasks finish</div>
-                </div>
-                <button
-                  onClick={() => updateSetting('notifyOnAgentComplete', !settings.notifyOnAgentComplete)}
-                  className={`
-                    w-12 h-6 rounded-full transition-colors relative
-                    ${settings.notifyOnAgentComplete ? 'bg-teal-500' : 'bg-slate-700'}
-                  `}
-                >
-                  <div className={`
-                    w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all
-                    ${settings.notifyOnAgentComplete ? 'left-6' : 'left-0.5'}
-                  `} />
-                </button>
+            {attentionLoading ? (
+              <div className="flex items-center gap-3 p-8 justify-center">
+                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                <span className="text-slate-400">Loading…</span>
               </div>
-
-              <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-xl">
+            ) : (
+              <>
+                {/* What may surface (rows) × how it reaches you (channel columns) */}
                 <div>
-                  <div className="text-white font-medium">High Priority Items</div>
-                  <div className="text-sm text-slate-400">Alert for urgent triage items</div>
-                </div>
-                <button
-                  onClick={() => updateSetting('notifyOnHighPriority', !settings.notifyOnHighPriority)}
-                  className={`
-                    w-12 h-6 rounded-full transition-colors relative
-                    ${settings.notifyOnHighPriority ? 'bg-teal-500' : 'bg-slate-700'}
-                  `}
-                >
-                  <div className={`
-                    w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all
-                    ${settings.notifyOnHighPriority ? 'left-6' : 'left-0.5'}
-                  `} />
-                </button>
-              </div>
+                  <div className="flex items-center justify-between mb-3 px-4">
+                    <h3 className="text-xs uppercase tracking-wider text-slate-500">
+                      What may surface
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {ATTENTION_CHANNELS.map((c) => (
+                        <div key={c.key} className="w-14 text-center">
+                          <span className={`text-[11px] ${c.available ? 'text-slate-400' : 'text-slate-600'}`}>
+                            {c.label}
+                          </span>
+                          {!c.available && (
+                            <span className="block text-[9px] text-slate-600 leading-tight">soon</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                <div>
-                  <div className="text-white font-medium">Review Ready</div>
-                  <div className="text-sm text-slate-400">Notify when items need your review</div>
-                </div>
-                <button
-                  onClick={() => updateSetting('notifyOnReviewReady', !settings.notifyOnReviewReady)}
-                  className={`
-                    w-12 h-6 rounded-full transition-colors relative
-                    ${settings.notifyOnReviewReady ? 'bg-teal-500' : 'bg-slate-700'}
-                  `}
-                >
-                  <div className={`
-                    w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all
-                    ${settings.notifyOnReviewReady ? 'left-6' : 'left-0.5'}
-                  `} />
-                </button>
-              </div>
+                  <div className="space-y-2">
+                    {NOTIFICATION_EVENT_TYPES.map((event) => {
+                      const Icon = EVENT_ICONS[event];
+                      const label = EVENT_LABELS[event];
+                      return (
+                        <div
+                          key={event}
+                          className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-xl"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <div className="text-white font-medium text-sm">{label.title}</div>
+                              <div className="text-xs text-slate-400">{label.detail}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {ATTENTION_CHANNELS.map((c) => {
+                              const cellKey = `${event}:${c.key}`;
+                              const on = !!attentionPrefs[cellKey];
+                              const busy = attentionSaving === cellKey;
+                              return (
+                                <div key={c.key} className="w-14 flex justify-center">
+                                  <button
+                                    type="button"
+                                    disabled={!c.available || busy}
+                                    onClick={() => toggleAttention(event, c.key)}
+                                    aria-label={`${label.title} via ${c.label}`}
+                                    className={`
+                                      w-12 h-6 rounded-full transition-colors relative
+                                      ${!c.available
+                                        ? 'bg-slate-800 cursor-not-allowed opacity-40'
+                                        : on ? 'bg-teal-500' : 'bg-slate-700'}
+                                    `}
+                                  >
+                                    <div className={`
+                                      w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all
+                                      ${on && c.available ? 'left-6' : 'left-0.5'}
+                                    `} />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                <div className="flex items-center gap-3">
-                  {settings.soundEnabled ? (
-                    <Volume2 className="w-5 h-5 text-teal-400" />
-                  ) : (
-                    <VolumeX className="w-5 h-5 text-slate-400" />
+                  {attentionError && (
+                    <p className="mt-3 flex items-center gap-1.5 text-sm text-red-400">
+                      <AlertCircle className="w-4 h-4" /> {attentionError}
+                    </p>
                   )}
-                  <div>
-                    <div className="text-white font-medium">Sound Effects</div>
-                    <div className="text-sm text-slate-400">Play sounds for notifications</div>
+
+                  <p className="mt-3 text-xs text-slate-500">
+                    In-app stays gentle — a quiet badge, never an interruption. Changes save as you set them.
+                  </p>
+                </div>
+
+                {/* Sacred Time — model in docs/architecture/ATTENTION.md; infra not built yet */}
+                <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-xl opacity-70">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Moon className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                      <div>
+                        <div className="text-slate-300 font-medium">Sacred Time</div>
+                        <div className="text-xs text-slate-500">
+                          Protect a window from interruption. Only what you name as urgent may enter.
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500 px-2 py-1 bg-slate-800 rounded whitespace-nowrap">
+                      Not available yet
+                    </span>
                   </div>
                 </div>
-                <button
-                  onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
-                  className={`
-                    w-12 h-6 rounded-full transition-colors relative
-                    ${settings.soundEnabled ? 'bg-teal-500' : 'bg-slate-700'}
-                  `}
-                >
-                  <div className={`
-                    w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all
-                    ${settings.soundEnabled ? 'left-6' : 'left-0.5'}
-                  `} />
-                </button>
-              </div>
-            </div>
+
+                {/* Digest — cadence not modeled yet; shown so the model is visible, honestly disabled */}
+                <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-xl opacity-70">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Inbox className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                      <div>
+                        <div className="text-slate-300 font-medium">Daily & weekly reflection</div>
+                        <div className="text-xs text-slate-500">
+                          Collect quiet items into a digest instead of surfacing them in the moment.
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500 px-2 py-1 bg-slate-800 rounded whitespace-nowrap">
+                      Not available yet
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -1698,8 +1819,8 @@ function SettingsContent() {
           </div>
         )}
 
-        {/* Save Button — Profile and Modules have their own working save buttons */}
-        {activeSection !== 'profile' && activeSection !== 'modules' && (
+        {/* Save Button — Profile, Modules, and Attention persist on their own */}
+        {activeSection !== 'profile' && activeSection !== 'modules' && activeSection !== 'attention' && (
           <div className="mt-8 pt-6 border-t border-slate-800">
             <button className="flex items-center gap-2 px-6 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors">
               <Save className="w-4 h-4" />
