@@ -9,44 +9,44 @@
 # ═══════════════════════════════════════════════════════════════
 
 # Safety system — any change requires Founder + Council review
-/lib/safety/                    @kelly-nezat
+/lib/safety/                    @Soullab
 
 # Memory and consciousness — member sovereignty
-/lib/memory/                    @kelly-nezat
-/lib/consciousness/             @kelly-nezat
+/lib/memory/                    @Soullab
+/lib/consciousness/             @Soullab
 
 # Privacy, consent, retention policies
-/docs/policy/                   @kelly-nezat
-/docs/GOVERNANCE*.md            @kelly-nezat
+/docs/policy/                   @Soullab
+/docs/GOVERNANCE*.md            @Soullab
 
 # Database migrations — structural risk with rollback implications
-/database/migrations/           @kelly-nezat
+/database/migrations/           @Soullab
 
 # ═══════════════════════════════════════════════════════════════
 # CLASS B — STRUCTURAL RISK (Founder OR Release Steward + Mentor)
 # ═══════════════════════════════════════════════════════════════
 
 # Authentication and authorization
-/lib/auth/                      @kelly-nezat
-/app/api/auth/                  @kelly-nezat
+/lib/auth/                      @Soullab
+/app/api/auth/                  @Soullab
 
 # Core AI service configuration
-/lib/ai/                        @kelly-nezat
-/lib/sovereign/                 @kelly-nezat
+/lib/ai/                        @Soullab
+/lib/sovereign/                 @Soullab
 
 # Infrastructure and deployment
-/.github/workflows/             @kelly-nezat
-/scripts/deploy*.sh             @kelly-nezat
+/.github/workflows/             @Soullab
+/scripts/deploy*.sh             @Soullab
 
 # ═══════════════════════════════════════════════════════════════
 # DOCTRINE LOCK — Non-Negotiables
 # ═══════════════════════════════════════════════════════════════
 
 # The covenant itself
-/docs/GOVERNANCE_MENTOR_COVENANT.md   @kelly-nezat
+/docs/GOVERNANCE_MENTOR_COVENANT.md   @Soullab
 
 # Project invariants
-/CLAUDE.md                      @kelly-nezat
+/CLAUDE.md                      @Soullab
 
 # ═══════════════════════════════════════════════════════════════
 # DEFAULT — All other files (Class C, 1 Mentor sufficient)
