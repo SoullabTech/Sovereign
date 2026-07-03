@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
-import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
+import { createSession, setSessionCookie, setAccessCookies, MemberNotActiveError } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import {
@@ -127,6 +127,21 @@ export async function POST(request: NextRequest) {
         session.expiresAt
       );
     } catch (sessionError) {
+      // Lifecycle gate: disabled / archived members cannot sign in. createSession
+      // refuses them (the universal chokepoint); surface a clear message here
+      // rather than the swallow-and-continue path below.
+      if (sessionError instanceof MemberNotActiveError) {
+        await logAuthEvent({
+          action: 'password_signin',
+          memberId: member.id,
+          result: 'failure',
+          errorMessage: `account_${sessionError.status}`
+        }, request);
+        return NextResponse.json(
+          { error: 'This account is not active. Please contact an administrator.' },
+          { status: 403 }
+        );
+      }
       console.error('[PasswordSignin] Failed to create session:', sessionError);
       // Continue without session - still return member data
     }

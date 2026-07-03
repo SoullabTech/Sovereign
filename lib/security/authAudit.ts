@@ -12,6 +12,7 @@ import crypto from 'crypto';
 export type AuthAction =
   | 'signin_success'
   | 'signin_failed'
+  | 'password_signin'
   | 'passcode_valid'
   | 'passcode_invalid'
   | 'register_success'
@@ -20,7 +21,11 @@ export type AuthAction =
   | 'webauthn_authenticate'
   | 'webauthn_register'
   | 'webauthn_step_up'
-  | 'session_revoked';
+  | 'session_revoked'
+  | 'member_disabled'
+  | 'member_archived'
+  | 'member_reactivated'
+  | 'member_hard_deleted';
 
 export interface AuthAuditEntry {
   action: AuthAction;

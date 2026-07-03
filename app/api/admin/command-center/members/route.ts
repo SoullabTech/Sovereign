@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       SELECT COUNT(*)::int as total,
              COUNT(*) FILTER (WHERE onboarded = true)::int as onboarded
       FROM members
+      WHERE status <> 'archived'
     `);
 
     const membersRow = membersResult.rows[0] || { total: 0, onboarded: 0 };
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
       SELECT COUNT(*)::int as total,
              COUNT(*) FILTER (WHERE onboarded = true)::int as onboarded
       FROM members
+      WHERE status <> 'archived'
     `);
 
     const membersRow = membersResult.rows[0] || { total: 0, onboarded: 0 };

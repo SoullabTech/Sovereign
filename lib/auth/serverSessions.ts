@@ -37,6 +37,19 @@ export interface CreateSessionOptions {
 }
 
 /**
+ * Thrown when a session mint is refused because the member is not active
+ * (disabled or archived). Distinct from generic session failures so callers can
+ * surface a clear message. See docs/specs/MEMBER_LIFECYCLE_2026-06-10.md.
+ */
+export class MemberNotActiveError extends Error {
+  readonly code = 'MEMBER_NOT_ACTIVE';
+  constructor(public readonly memberId: string, public readonly status: string) {
+    super(`Member ${memberId} is ${status}; session mint refused`);
+    this.name = 'MemberNotActiveError';
+  }
+}
+
+/**
  * Create a new server-side session
  */
 export async function createSession(options: CreateSessionOptions): Promise<Session> {
@@ -47,6 +60,16 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
     userAgent = null,
     durationDays = SESSION_DURATION_DAYS
   } = options;
+
+  // Lifecycle gate — single chokepoint for ALL sign-in / session-mint paths.
+  // A member whose status is not 'active' (disabled / archived) cannot mint a
+  // session. A missing row is left to the existing INSERT behavior (no behavior
+  // change for flows that create the member and session together).
+  const statusResult = await query(`SELECT status FROM members WHERE id = $1`, [memberId]);
+  const memberStatus = statusResult.rows[0]?.status;
+  if (memberStatus && memberStatus !== 'active') {
+    throw new MemberNotActiveError(memberId, memberStatus);
+  }
 
   const sessionToken = generateSecureToken(32); // 64 hex chars
   const expiresAt = new Date();
