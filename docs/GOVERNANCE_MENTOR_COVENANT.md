@@ -182,13 +182,10 @@ Implement branch protections on `main`:
 * `requires-council` — requires Council review
 * `class-a`, `class-b`, `class-c` — change class gate
 * `frontier-check` — requires mentor verification of external facts
-* `covenant-signoff` — **bootstrap bridge (temporary).** Explicit, logged single-operator sign-off that satisfies the founder / mentor / founder-or-release *approval* requirements when no independent second steward exists yet. It does **not** bridge classification or rollback — those are still required. Not independent review; retire once a real second operator can give independent steward approval.
 * `staging-ready` — approved + safe to test in staging
 * `release-approved` — steward signed, ready for production
 
 **Rule:** A PR cannot be labeled `release-approved` if it has `frontier-check` unresolved.
-
-**Classification is required on every PR.** Check exactly one class box in the PR template *or* apply the matching `class-*` label. A Class C (routine) change needs only its classification; Class A/B/Frontier additionally need approval, which the `covenant-signoff` label may bridge during bootstrap.
 
 ---
 
