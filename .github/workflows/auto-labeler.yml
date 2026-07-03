@@ -38,14 +38,17 @@ jobs:
             // CLASS A — SACRED BOUNDARIES
             // ═══════════════════════════════════════════════════════════════
 
+            // Class A = safety/consent/sovereignty ENFORCEMENT code only.
+            // Governance *documentation* is not auto-elevated to Class A; it is
+            // classified by the actual risk of the change (docs edits default to
+            // Class C, or Class B if structural). Keeps process/doc improvements
+            // off the heaviest governance path. See covenant-gates.yml sacredPaths.
             const classAPaths = [
               'lib/safety/',
               'lib/memory/',
               'lib/consciousness/',
               'lib/session/',
-              'app/api/session/',
-              'docs/policy/',
-              'docs/GOVERNANCE'
+              'app/api/session/'
             ];
 
             if (changedPaths.some(p => classAPaths.some(sacred => p.startsWith(sacred)))) {

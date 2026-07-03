@@ -1,0 +1,319 @@
+# MAIA Mentor Covenant — Enforcement Gates
+# See docs/GOVERNANCE_MENTOR_COVENANT.md for full governance rules
+#
+# Core principle: "MAIA proposes; Mentors approve; Production is human-signed."
+
+name: Covenant Gates
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+jobs:
+  covenant-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce covenant gates
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // ═══════════════════════════════════════════════════════════════
+            // GOVERNANCE CONFIGURATION
+            // ═══════════════════════════════════════════════════════════════
+
+            const FOUNDERS = ['Soullab']; // #448: corrected from non-existent 'kelly-nezat' so a founder approval can register
+            const GUARDIAN_CIRCLE = []; // Add council usernames when appointed
+            const MENTORS = ['SoullabCovenant']; // Release Steward — clears Class B (structural); not a founder (no Class A authority)
+
+            // ═══════════════════════════════════════════════════════════════
+            // APPROVAL REQUIREMENTS BY CLASS
+            // ═══════════════════════════════════════════════════════════════
+
+            const REQUIREMENTS = {
+              'class-a': {
+                founderRequired: true,
+                councilRequired: 2,
+                mentorRequired: 1,
+                description: 'Sacred Boundaries (privacy/consent/safety/sovereignty)'
+              },
+              'class-b': {
+                founderOrReleaseRequired: true,
+                mentorRequired: 1,
+                rollbackRequired: true,
+                description: 'Structural Risk (migrations/auth/routing/infra)'
+              },
+              'class-c': {
+                // Routine tier: CI-green is sufficient. Required status checks
+                // (build + check-diagrams, enforced by branch protection) are the
+                // gate; no human-approval requirement here. Mentor/founder approval
+                // is reserved for Class A/B, where sacred-boundary and structural
+                // risk live. The file-path safety rails below still force Class A/B
+                // when a routine PR actually touches sacred or migration paths, so
+                // this does not create a loophole for risky changes mislabeled C.
+                ciRequired: true,
+                description: 'Routine Improvement (refactor/copy/UX/prompt tuning)'
+              },
+              'frontier-dependent': {
+                founderRequired: true,
+                mentorRequired: 1,
+                verificationRequired: true,
+                revalidationRequired: true,
+                description: 'Frontier-Dependent (models/providers/pricing)'
+              }
+            };
+
+            // ═══════════════════════════════════════════════════════════════
+            // PARSE PR BODY FOR CLASSIFICATION
+            // ═══════════════════════════════════════════════════════════════
+
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            const labels = pr.labels.map(l => l.name);
+
+            // Detect classification from checkbox or label
+            const classAChecked = body.includes('[x] **Class A');
+            const classBChecked = body.includes('[x] **Class B');
+            const classCChecked = body.includes('[x] **Class C');
+            const frontierChecked = body.includes('[x] **Frontier-Dependent');
+
+            const hasClassA = classAChecked || labels.includes('class-a');
+            const hasClassB = classBChecked || labels.includes('class-b');
+            const hasClassC = classCChecked || labels.includes('class-c');
+            const hasFrontier = frontierChecked || labels.includes('frontier-dependent');
+
+            // Determine effective class (highest takes precedence)
+            let effectiveClass = null;
+            if (hasClassA) effectiveClass = 'class-a';
+            else if (hasFrontier) effectiveClass = 'frontier-dependent';
+            else if (hasClassB) effectiveClass = 'class-b';
+            else if (hasClassC) effectiveClass = 'class-c';
+
+            if (!effectiveClass) {
+              core.setFailed(
+                '❌ No change classification found.\n\n' +
+                'Please check one of the classification boxes in the PR template:\n' +
+                '- [ ] Class A — Sacred Boundaries\n' +
+                '- [ ] Class B — Structural Risk\n' +
+                '- [ ] Class C — Routine Improvement\n' +
+                '- [ ] Frontier-Dependent'
+              );
+              return;
+            }
+
+            console.log(`📋 Classification: ${effectiveClass}`);
+            const reqs = REQUIREMENTS[effectiveClass];
+            console.log(`📜 Requirements: ${reqs.description}`);
+
+            // ═══════════════════════════════════════════════════════════════
+            // GET APPROVALS
+            // ═══════════════════════════════════════════════════════════════
+
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            // Get most recent review per user (only APPROVED counts)
+            const approvalsByUser = {};
+            for (const review of reviews) {
+              if (review.state === 'APPROVED') {
+                approvalsByUser[review.user.login] = review;
+              } else if (review.state === 'CHANGES_REQUESTED' || review.state === 'DISMISSED') {
+                delete approvalsByUser[review.user.login];
+              }
+            }
+
+            const approvers = Object.keys(approvalsByUser);
+            console.log(`✅ Approvers: ${approvers.join(', ') || '(none)'}`);
+
+            // Categorize approvers
+            const founderApprovals = approvers.filter(u => FOUNDERS.includes(u));
+            const councilApprovals = approvers.filter(u => GUARDIAN_CIRCLE.includes(u));
+            const mentorApprovals = approvers.filter(u => MENTORS.includes(u));
+
+            // ═══════════════════════════════════════════════════════════════
+            // VALIDATE REQUIREMENTS
+            // ═══════════════════════════════════════════════════════════════
+
+            const failures = [];
+
+            // ── Bootstrap bridge sign-off (TEMPORARY) ─────────────────────────
+            // A single-admin repo cannot produce an independent APPROVED review:
+            // GitHub forbids self-approval, and no second operator account currently
+            // exists. The `covenant-signoff` label is an explicit, logged operator
+            // sign-off that BRIDGES the review-approval requirements below (founder /
+            // mentor / founder-or-release) so the gate is satisfiable — NOT independent
+            // review. It deliberately does NOT satisfy classification, rollback,
+            // sacred-path escalation, or CI; those remain hard requirements.
+            // Target end-state: remove this bridge once a real second operator can give
+            // independent steward approval. This is a bootstrap bridge, not review.
+            const hasCovenantSignoff = labels.includes('covenant-signoff');
+            if (hasCovenantSignoff) {
+              console.log('🌉 BOOTSTRAP BRIDGE: `covenant-signoff` label present.');
+              console.log('   Explicit single-admin operator sign-off — NOT independent review.');
+              console.log('   Bridges founder/mentor approval only; classification, rollback,');
+              console.log('   sacred-path, and CI remain enforced. Temporary until an independent steward exists.');
+            }
+
+            // Class A requirements — with bootstrap deadlock fallback.
+            // Deadlock condition: the only Founder is the PR author, so GitHub blocks
+            // self-approval and no independent Founder or Guardian Circle exists.
+            // In that case a Mentor may substitute temporarily — not as general Founder
+            // authority, but as a principled bridge until Guardian Circle is appointed.
+            if (reqs.founderRequired) {
+              const prAuthor = pr.user.login;
+              const noIndependentFounder = FOUNDERS.every(f => f === prAuthor);
+              const bootstrapDeadlock = noIndependentFounder && GUARDIAN_CIRCLE.length === 0;
+
+              if (founderApprovals.length > 0) {
+                // Normal path: a Founder (who is not the PR author) approved.
+              } else if (hasCovenantSignoff) {
+                console.log('🌉 Founder requirement bridged by `covenant-signoff` (bootstrap).');
+              } else if (bootstrapDeadlock && mentorApprovals.length > 0) {
+                // Deadlock broken by Mentor substitution.
+                console.log(`⚠️ Mentor substitution used for founder self-approval deadlock.`);
+                console.log(`   PR author: ${prAuthor} | Mentor approvals: ${mentorApprovals.join(', ')}`);
+                console.log(`   Bootstrap Phase 1: no independent Founder or Guardian Circle exists.`);
+              } else if (bootstrapDeadlock) {
+                const mentorList = MENTORS.length > 0 ? MENTORS.join(', ') : '(no mentors configured)';
+                failures.push(
+                  `Founder self-approval deadlock: ${prAuthor} cannot approve their own PR.\n` +
+                  `  Provide 1 mentor approval (${mentorList}) OR apply the \`covenant-signoff\` label (bootstrap bridge).\n` +
+                  `  (Bootstrap Phase 1: no independent Founder or Guardian Circle exists)`
+                );
+              } else {
+                failures.push(`Founder-Steward approval required (need 1 of: ${FOUNDERS.join(', ')}) — or apply the \`covenant-signoff\` label (bootstrap bridge).`);
+              }
+            }
+
+            if (reqs.councilRequired) {
+              if (GUARDIAN_CIRCLE.length === 0) {
+                console.log('⚠️ Guardian Circle not yet configured - skipping council check');
+              } else if (councilApprovals.length < reqs.councilRequired) {
+                failures.push(`Guardian Circle approval required (need ${reqs.councilRequired}, have ${councilApprovals.length})`);
+              }
+            }
+
+            if (reqs.mentorRequired) {
+              if (MENTORS.length === 0) {
+                console.log('⚠️ Mentors not yet configured - skipping mentor check');
+              } else if (hasCovenantSignoff) {
+                console.log('🌉 Mentor requirement bridged by `covenant-signoff` (bootstrap).');
+              } else if (mentorApprovals.length < reqs.mentorRequired) {
+                failures.push(`Mentor approval required (need ${reqs.mentorRequired}, have ${mentorApprovals.length}) — or apply the \`covenant-signoff\` label (bootstrap bridge).`);
+              }
+            }
+
+            // Class B: Founder OR Release Steward
+            if (reqs.founderOrReleaseRequired) {
+              const hasFounderOrSteward = founderApprovals.length > 0 ||
+                approvers.some(u => MENTORS.includes(u)); // Release steward is a designated mentor
+              if (hasCovenantSignoff) {
+                console.log('🌉 Founder-or-Release requirement bridged by `covenant-signoff` (bootstrap).');
+              } else if (!hasFounderOrSteward) {
+                failures.push(`Founder-Steward OR Release Steward approval required — or apply the \`covenant-signoff\` label (bootstrap bridge).`);
+              }
+            }
+
+            // Rollback plan check for Class B
+            if (reqs.rollbackRequired) {
+              const hasRollbackPlan =
+                body.includes('[x] Revert commit is sufficient') ||
+                body.includes('[x] Migration rollback script provided') ||
+                body.includes('[x] Feature flag can disable') ||
+                body.includes('[x] **No rollback possible**');
+
+              if (!hasRollbackPlan) {
+                failures.push('Rollback plan required - check one of the rollback options in the PR template');
+              }
+            }
+
+            // Frontier verification check
+            if (reqs.verificationRequired) {
+              const hasVerification = body.includes('[x] Verified by Mentor:');
+              if (!hasVerification) {
+                failures.push('Frontier verification required - a Mentor must verify external dependencies');
+              }
+
+              // Check for revalidation date
+              if (reqs.revalidationRequired) {
+                const hasRevalidation = body.toLowerCase().includes('revalidat') ||
+                                        body.toLowerCase().includes('expires') ||
+                                        body.toLowerCase().includes('valid until');
+                if (!hasRevalidation) {
+                  console.log('⚠️ Consider adding revalidation date for frontier-dependent changes');
+                }
+              }
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // FILE PATH SAFETY RAILS
+            // ═══════════════════════════════════════════════════════════════
+
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            const changedPaths = files.map(f => f.filename);
+
+            // Sacred paths require Class A — safety/consent/sovereignty ENFORCEMENT
+            // CODE only. Governance *documentation* (docs/policy, docs/GOVERNANCE) is
+            // descriptive, not enforcement: it is classified by the actual risk of the
+            // change (typically Class C, or Class B if structural), not forced to Class A
+            // merely for touching a governance file. The enforcement itself lives in
+            // .github/workflows/ (Class B) and the code paths below, which stay gated.
+            const sacredPaths = [
+              'lib/safety/',
+              'lib/memory/',
+              'lib/consciousness/',
+              'lib/session/',
+              'app/api/session/'
+            ];
+
+            const touchesSacred = changedPaths.some(p =>
+              sacredPaths.some(sacred => p.startsWith(sacred))
+            );
+
+            if (touchesSacred && effectiveClass !== 'class-a') {
+              failures.push(
+                'This PR modifies Sacred Boundary files but is not classified as Class A.\n' +
+                'Please update classification to Class A for files in: ' +
+                sacredPaths.join(', ')
+              );
+            }
+
+            // Migration paths require at least Class B
+            const touchesMigrations = changedPaths.some(p => p.startsWith('database/migrations/'));
+            if (touchesMigrations && effectiveClass === 'class-c') {
+              failures.push(
+                'This PR modifies database migrations but is classified as Class C.\n' +
+                'Please update classification to at least Class B.'
+              );
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // REPORT RESULTS
+            // ═══════════════════════════════════════════════════════════════
+
+            if (failures.length > 0) {
+              const message =
+                `❌ Covenant Gates Failed for ${effectiveClass}\n\n` +
+                `**${reqs.description}**\n\n` +
+                `Missing requirements:\n` +
+                failures.map(f => `- ${f}`).join('\n') +
+                `\n\n` +
+                `See [GOVERNANCE_MENTOR_COVENANT.md](../docs/GOVERNANCE_MENTOR_COVENANT.md) for details.\n\n` +
+                `*"MAIA proposes; Mentors approve; Production is human-signed."*`;
+
+              core.setFailed(message);
+            } else {
+              console.log(`✅ All covenant gates passed for ${effectiveClass}`);
+              console.log(`   Founder approvals: ${founderApprovals.length}`);
+              console.log(`   Council approvals: ${councilApprovals.length}`);
+              console.log(`   Mentor approvals: ${mentorApprovals.length}`);
+            }
