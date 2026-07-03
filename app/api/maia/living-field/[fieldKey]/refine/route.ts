@@ -84,8 +84,8 @@ export async function POST(
        WHERE lfa.member_id = $1
          AND lfa.field_key = $2
          AND a.status NOT IN ('protected', 'archived')
-         AND a.primary_register != 'sacred_protected'
-         AND 'sacred_protected' != ALL(a.registers)
+         AND a.primary_register IS DISTINCT FROM 'sacred_protected'
+         AND NOT ('sacred_protected' = ANY(a.registers))
        ORDER BY lfa.affinity_score DESC
        LIMIT 10`,
       [memberId, fieldKey]
