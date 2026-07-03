@@ -39,7 +39,12 @@ export type MemoryAtomSourceType =
   | 'decision'         // a decision block, or standalone
   | 'change'           // a change block, or standalone
   | 'session_excerpt'  // excerpt from a conversation session
-  | 'spontaneous';     // member typed directly into Keep (body required)
+  | 'spontaneous'      // member typed directly into Keep (body required)
+  | 'practitioner_observation'; // authored BY a practitioner ABOUT the member —
+                                // NOT member-keepable (keepSource rejects it); the
+                                // member may only respond to it (decline). Present
+                                // in member_memory_atoms.source_type; the loader
+                                // surfaces it and the decline route scopes to it.
 
 // ════════════════════════════════════════════════════════════════════════════
 // Registers and lenses (the webbing)
