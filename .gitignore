@@ -14,7 +14,12 @@ docker-compose*.bak.*
 *.deploy-bak.*
 
 # Dependencies
-node_modules/
+# Ignore node_modules whether it is a real directory OR a symlink. The worktree
+# shared-tree pattern points node_modules at the main checkout via a symlink, and
+# a trailing-slash rule (`node_modules/`) matches directories only — it skips the
+# symlink, which is how a self-referential node_modules symlink got committed and
+# ELOOP'd every checkout (untracked in #544). The bare form matches both.
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
