@@ -1875,8 +1875,6 @@ The solution is to ask instead, “Who am I not to dare to accept this new adven
 
 The crucible of fire presents us with a series of trials to true us and make us worthy of our vision. It is the transformative aspect of every journey of every artist, visionary, entrepreneur, and spiritual being who dares to seek change. No matter what you are going through in this moment of your life, tend your fire and stay with it. There is nothing more important. Without fire we are left in the dark.
 
-*"Do not go where the path may lead, go instead where there is no path and leave a trail." – Ralph Waldo Emerson*
-
 Many receive great ideas but few follow through on the initial inspiration. As long as these visions remain internalized they can be preserved and we are saved from the growth demands necessary to fulfill them. We can all identify ourselves with something great and it’ll remain this inflated sense of self until we take the leap into expressing it to the world. Many of us struggle with feeling worthy of such a commission yet comforted in our secret world of potential.
 
 However, if we dare to actualize our inner fire then we subject ourselves to the edifying experiences life offers. A painter who puts their work in a gallery is subjected to the ritual of “Opening Night” where potential buyers are welcomed in with wine and story. If it is a success then the artist will feel confident in their vision and execution. If it goes poorly, they will either go back to the “drawing board” or give up and try something new. The edifying experiences life offers are those that build us up, strengthen our character and skills, and help us grow into the fullest expression of ourselves. It is when we decide to act on our inspirations that the challenges and opportunities for growth begin.
@@ -2338,8 +2336,6 @@ For many dreamers, this crucial phase of development can be challenging. In Jose
 
 The first phase in the alchemical earth journey is to identify our purpose and envision how we will accomplish it in the material world. This involves developing an awareness of our place in the world and understanding how we can give back to humanity and the planet. It’s about discovering our unique mission and finding ways to be of service.
 
-*"Do not go where the path may lead, go instead where there is no path and leave a trail." — Ralph Waldo Emerson*
-
 By embracing our mission and finding ways to serve, we align with our true purpose and contribute to the greater good. This is the essence of the alchemical earth journey: to transform ourselves and, in turn, transform the world around us.
 
 ![][image45]{.image-system}
@@ -2395,8 +2391,6 @@ Each of us is here to be in service in our own way. There are countless ways to 
 ### Earth Wisdom
 
 In the midst of stirring the roux for the gumbo (a lengthy process), Sophie asks me if I bought the seeds for this coming year's garden. We've been plotting a design for a new garden since our last one was a mixed success. It's not what I'm used to, so I need to adjust the style of planting I employ. I still garden as if I live in Louisiana, but the soil in Connecticut where I live today with my wife and kids is much different. The weather patterns and humidity are different. The flowers and vegetables that grow best here are a bit different. Sure, there are similarities, but also many clear distinctions. My local friends and neighbors who know this land well are teaching me when to plant, what to plant, and how to tend the garden appropriately. Accommodating the demands and limitations of time and place is earth wisdom.
-
-*"Do not go where the path may lead, go instead where there is no path and leave a trail." — Ralph Waldo Emerson*
 
 #### Immersive Phase: Method (Fixed Method)
 
