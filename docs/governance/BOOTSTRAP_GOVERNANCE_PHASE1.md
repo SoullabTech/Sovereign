@@ -85,4 +85,40 @@ Bootstrap Phase 1 ends when the Guardian Circle has at least two appointed membe
 | 2026-06-27 | `SoullabCovenant` account created |
 | 2026-06-27 | Added to `MENTORS` in covenant-gates.yml (this PR) |
 | 2026-06-27 | Class A deadlock fallback logic added |
+| 2026-07-03 | **Exception recorded** — PR #548 (Gate 2 migration) merged via admin bypass (see "Recorded exceptions" below) |
 | [future] | Guardian Circle appointed — Phase 2 begins |
+
+## Recorded exceptions
+
+Exceptions to the normal covenant path are recorded here — visibly — so that a bypass
+never becomes silent precedent.
+
+### 2026-07-03 — PR #548 (Soul Portrait Path B, Gate 2): admin bypass
+
+**Event (established facts):**
+
+- PR #548 (Gate 2 — Path B consent schema: `soul_portraits`, `member_guardians`,
+  `soul_portrait_consents`) was classified **Class B** (structural / migration) by
+  covenant-gates.
+- It was **merged to `clean-main-no-secrets` by `Soullab` (the PR author) via admin
+  bypass** — merge commit `caecc57`, "3 of 5 checks" — with **covenant-gates failing**,
+  not cleared. The required infra checks (build, check-diagrams) were green.
+- The designed **Tier-0 resolution — a `SoullabCovenant` (Release Steward / Mentor)
+  approval — was not used**; the merge overrode the gate rather than satisfying it.
+
+**Not asserted:** the reason the bypass was chosen. That is not established by the
+available evidence and is not claimed here.
+
+**Status (verified 2026-07-03, read-only):** the schema has since been **deployed and
+applied to production** — `soul_portraits` and `soul_portrait_consents` are present in the
+production database and the live container was built 2026-07-03. The tables are **inert**
+(no callers until later gates), so the deployment carries no runtime effect yet.
+
+**Remediation:**
+
+- Confirm `SoullabCovenant` is operationally available before the next Class-A/B crossing.
+- Route the **next** Class-A/B change through the normal covenant path (mentor/founder
+  approval, or the temporary bootstrap sign-off bridge) — not a bypass — proving the
+  exception did not normalize.
+
+*This record is submitted via PR through the covenant path — not by a second bypass.*
