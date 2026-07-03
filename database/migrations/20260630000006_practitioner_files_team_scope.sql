@@ -42,16 +42,19 @@ ALTER TABLE practitioner_files
   ADD COLUMN IF NOT EXISTS encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL;
 
 -- Scope coherence: non-personal files must declare their Co-Lab.
+ALTER TABLE practitioner_files DROP CONSTRAINT IF EXISTS file_scope_requires_team;
 ALTER TABLE practitioner_files
   ADD CONSTRAINT file_scope_requires_team CHECK (
     file_scope = 'personal' OR team_id IS NOT NULL
   );
 
+ALTER TABLE practitioner_files DROP CONSTRAINT IF EXISTS file_client_scope_requires_client;
 ALTER TABLE practitioner_files
   ADD CONSTRAINT file_client_scope_requires_client CHECK (
     file_scope <> 'client' OR client_id IS NOT NULL
   );
 
+ALTER TABLE practitioner_files DROP CONSTRAINT IF EXISTS file_encounter_scope_requires_encounter;
 ALTER TABLE practitioner_files
   ADD CONSTRAINT file_encounter_scope_requires_encounter CHECK (
     file_scope <> 'encounter' OR encounter_id IS NOT NULL
