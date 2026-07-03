@@ -33,9 +33,12 @@ import {
   Check,
   Compass,
   Briefcase,
+  ShieldCheck,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { adminFetch } from '@/lib/admin/adminFetch';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
+import AdminManagementSection from '@/components/studio/AdminManagementSection';
 import {
   MODULE_DEFINITIONS,
   ALL_MODULE_SLUGS,
@@ -89,6 +92,29 @@ function SettingsContent() {
   const justConnectedGoogle = connected === 'google';
 
   const [activeSection, setActiveSection] = useState(isCalendarOnboarding || justConnectedGoogle ? 'integrations' : 'profile');
+
+  // Owner gate for the Admin section. Best-effort UI check via /api/admin/auth;
+  // the authoritative gate is server-side on the admin endpoints (founder/cto only).
+  const [isOwner, setIsOwner] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    adminFetch('/api/admin/auth')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data && (data.role === 'founder' || data.role === 'cto')) {
+          setIsOwner(true);
+        }
+      })
+      .catch(() => {
+        /* non-owner or not signed in — Admin section stays hidden */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const visibleSections: SettingsSection[] = isOwner
+    ? [...sections, { id: 'admin', label: 'Admin', icon: ShieldCheck }]
+    : sections;
   const [googleStatus, setGoogleStatus] = useState<CalendarStatus | null>(null);
   const [googleLoading, setGoogleLoading] = useState(true);
   const [googleConnecting, setGoogleConnecting] = useState(false);
@@ -581,7 +607,7 @@ function SettingsContent() {
         </h1>
 
         <nav className="space-y-1">
-          {sections.map((section) => (
+          {visibleSections.map((section) => (
             <button
               key={section.id}
               onClick={() => setActiveSection(section.id)}
@@ -1662,6 +1688,8 @@ function SettingsContent() {
             </div>
           </div>
         )}
+
+        {activeSection === 'admin' && isOwner && <AdminManagementSection />}
 
         {activeSection === 'data' && (
           <div className="space-y-6">
