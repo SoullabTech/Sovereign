@@ -8,6 +8,38 @@
 
 ---
 
+## Change Classification (required)
+
+<!--
+  Check exactly ONE box, OR apply the matching class-* label. The Covenant Gates
+  check reads this section. See docs/GOVERNANCE_MENTOR_COVENANT.md for definitions.
+  "MAIA proposes; Mentors approve; Production is human-signed."
+-->
+
+- [ ] **Class A — Sacred Boundaries** (privacy/consent/safety/sovereignty)
+- [ ] **Class B — Structural Risk** (migrations/auth/routing/infra)
+- [ ] **Class C — Routine Improvement** (refactor/copy/UX/prompt tuning)
+- [ ] **Frontier-Dependent** (models/providers/pricing)
+
+### Rollback Plan (required for Class B)
+
+- [ ] Revert commit is sufficient
+- [ ] Migration rollback script provided
+- [ ] Feature flag can disable
+- [ ] **No rollback possible**
+
+### Frontier Verification (required for Frontier-Dependent)
+
+- [ ] Verified by Mentor: <!-- @handle, date, valid until YYYY-MM-DD -->
+
+<!--
+  Approval: Class A/B/Frontier need founder/mentor approval. During bootstrap,
+  a maintainer may apply the `covenant-signoff` label to bridge that approval
+  requirement. It does NOT bridge classification or rollback.
+-->
+
+---
+
 ## PHI / Security Impact
 
 - [ ] This PR does not touch PHI-related paths/tables

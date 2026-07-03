@@ -11,7 +11,7 @@
 // text-only stays JSON.
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent } from 'react';
-import { Bug, X, ImagePlus } from 'lucide-react';
+import { Bug, X, ImagePlus, CheckCircle2 } from 'lucide-react';
 import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 import { BUG_SEVERITIES, type BugSeverity } from '@/lib/bugs/types';
 
@@ -29,6 +29,9 @@ export default function BugReportButton() {
   const [severity, setSeverity] = useState<BugSeverity>('normal');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
+  // What was just submitted — kept after the composer resets so the 'sent' phase can
+  // reflect the report back to the member (confirming we captured what they experienced).
+  const [confirmed, setConfirmed] = useState<{ message: string; severity: BugSeverity; imageCount: number; page: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Local preview URLs for pending screenshots; revoked when images change / on unmount.
@@ -115,9 +118,16 @@ export default function BugReportButton() {
         setPhase('error');
         return;
       }
+      // Capture what was reported BEFORE resetting, so the confirmation can reflect it back.
+      setConfirmed({
+        message: text,
+        severity,
+        imageCount: images.length,
+        page: url ?? 'this screen',
+      });
       setPhase('sent');
       resetComposer();
-      setTimeout(() => setPhase('idle'), 2200);
+      setTimeout(() => setPhase('idle'), 6000);
     } catch (e) {
       setErrorMsg((e as Error).message);
       setPhase('error');
@@ -134,22 +144,54 @@ export default function BugReportButton() {
   return (
     <>
       {/* Launcher */}
-      {(phase === 'idle' || phase === 'sent') && (
+      {phase === 'idle' && (
         <button
           onClick={() => setPhase('open')}
           aria-label="Report a bug"
           title="Report a bug"
           className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 rounded-full border border-white/15 bg-[#1A1513]/90 px-3 py-2 text-xs text-white/70 shadow-lg backdrop-blur transition hover:text-white hover:border-white/30"
         >
-          {phase === 'sent' ? (
-            <span className="text-emerald-300">✓ Reported</span>
-          ) : (
-            <>
-              <Bug className="h-4 w-4" />
-              <span className="hidden sm:inline">Report a bug</span>
-            </>
-          )}
+          <Bug className="h-4 w-4" />
+          <span className="hidden sm:inline">Report a bug</span>
         </button>
+      )}
+
+      {/* Confirmation — reflects the submitted report back to the member so they can see
+          we captured what they're experiencing (not just a generic "sent" flash). */}
+      {phase === 'sent' && confirmed && (
+        <div className="fixed bottom-4 right-4 z-[60] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-emerald-400/25 bg-[#1A1513] p-4 text-white shadow-2xl">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-light tracking-wide text-emerald-200">
+              <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+              Report received — thank you
+            </div>
+            <button
+              onClick={() => setPhase('idle')}
+              aria-label="Dismiss"
+              className="text-white/40 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <p className="mb-2 text-[11px] leading-relaxed text-white/40">
+            We&rsquo;ve logged what you&rsquo;re experiencing on <span className="text-white/60">{confirmed.page}</span> and flagged it as{' '}
+            <span className="text-white/60">{confirmed.severity}</span>. Our team will look into it.
+          </p>
+
+          {confirmed.message && (
+            <blockquote className="rounded-lg border-l-2 border-emerald-400/40 bg-black/30 px-2.5 py-2 text-[12px] italic leading-relaxed text-white/70">
+              &ldquo;{confirmed.message}&rdquo;
+            </blockquote>
+          )}
+
+          {confirmed.imageCount > 0 && (
+            <div className="mt-2 flex items-center gap-1 text-[11px] text-white/40">
+              <ImagePlus className="h-3.5 w-3.5" />
+              {confirmed.imageCount} screenshot{confirmed.imageCount === 1 ? '' : 's'} attached
+            </div>
+          )}
+        </div>
       )}
 
       {/* Composer */}
