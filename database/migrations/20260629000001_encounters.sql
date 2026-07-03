@@ -124,18 +124,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_encounters_updated_at ON encounters;
 CREATE TRIGGER trg_encounters_updated_at
   BEFORE UPDATE ON encounters
   FOR EACH ROW EXECUTE FUNCTION update_encounters_updated_at();
 
+DROP TRIGGER IF EXISTS trg_encounter_transcripts_updated_at ON encounter_transcripts;
 CREATE TRIGGER trg_encounter_transcripts_updated_at
   BEFORE UPDATE ON encounter_transcripts
   FOR EACH ROW EXECUTE FUNCTION update_encounters_updated_at();
 
+DROP TRIGGER IF EXISTS trg_encounter_moments_updated_at ON encounter_moments;
 CREATE TRIGGER trg_encounter_moments_updated_at
   BEFORE UPDATE ON encounter_moments
   FOR EACH ROW EXECUTE FUNCTION update_encounters_updated_at();
 
+DROP TRIGGER IF EXISTS trg_encounter_reflections_updated_at ON encounter_reflections;
 CREATE TRIGGER trg_encounter_reflections_updated_at
   BEFORE UPDATE ON encounter_reflections
   FOR EACH ROW EXECUTE FUNCTION update_encounters_updated_at();
