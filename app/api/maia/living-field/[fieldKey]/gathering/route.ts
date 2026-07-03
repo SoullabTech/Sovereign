@@ -11,7 +11,11 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/db/postgres'
+import {
+  GATHERING_CRITERION,
+  countEligibleKeeps,
+  loadFieldGathering,
+} from '@/lib/maia/living-field/gatheringPool'
 
 function getMemberId(request: NextRequest): string | null {
   return request.headers.get('x-member-id') || null
@@ -31,47 +35,20 @@ export async function GET(
   const { fieldKey } = params
 
   try {
-    // The gathered Keeps for this field, with their warrant. Constitutional guards
-    // re-applied at read time (defence in depth) — sacred/protected/archived never surface.
-    const gatheredResult = await query(
-      `SELECT
-         a.id            AS atom_id,
-         a.title,
-         a.source_type,
-         a.primary_register,
-         lfa.affinity_score,
-         lfa.evidence_reason,
-         a.kept_at
-       FROM living_field_affinities lfa
-       JOIN member_memory_atoms a ON a.id = lfa.atom_id
-       WHERE lfa.member_id = $1
-         AND lfa.field_key = $2
-         AND a.status NOT IN ('protected', 'archived')
-         AND a.primary_register IS DISTINCT FROM 'sacred_protected'
-         AND NOT ('sacred_protected' = ANY(a.registers))
-       ORDER BY lfa.affinity_score DESC, a.kept_at DESC`,
-      [memberId, fieldKey]
-    )
-
-    // Denominator — the full eligible pool this gathering was drawn from.
-    const denomResult = await query(
-      `SELECT COUNT(*)::int AS n
-       FROM member_memory_atoms
-       WHERE member_id = $1
-         AND status NOT IN ('protected', 'archived')
-         AND primary_register IS DISTINCT FROM 'sacred_protected'
-         AND NOT ('sacred_protected' = ANY(registers))`,
-      [memberId]
-    )
-    const denominator = (denomResult.rows[0]?.n as number) ?? 0
+    // The gathered Keeps for this field (with warrant) and the denominator — both
+    // drawn from the single guarded pool so they cannot diverge. Sacred / protected
+    // / archived never surface; the guard lives once in gatheringPool.ts.
+    const [gathered, denominator] = await Promise.all([
+      loadFieldGathering(memberId, fieldKey),
+      countEligibleKeeps(memberId),
+    ])
 
     return NextResponse.json({
       field_key: fieldKey,
-      gathered: gatheredResult.rows,
-      gathered_count: gatheredResult.rows.length,
+      gathered,
+      gathered_count: gathered.length,
       denominator,
-      criterion:
-        'Keeps you have held, matched to this dimension by register, elemental lens, and source type — scored and surfaced at or above the affinity threshold. Sacred and protected material is never included.',
+      criterion: GATHERING_CRITERION,
     })
   } catch (err) {
     console.error('[living-field/[fieldKey]/gathering] GET error', err)
