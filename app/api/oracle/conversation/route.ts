@@ -941,7 +941,15 @@ export async function POST(request: NextRequest) {
     }
 
     // MEMBER-AUTHORED CONTINUITY: Load recent Daily Anchors verbatim.
-    // Gated by MAIA_ANCHOR_CONTEXT_ENABLED — default off; enable per environment.
+    // TWO-LAYER GATING (do not conflate):
+    //   1. MAIA_ANCHOR_CONTEXT_ENABLED (below) is a DEPLOYMENT KILL-SWITCH — it
+    //      can turn the whole feature off, but it is NOT the consent source.
+    //   2. Member STANDING CONSENT is enforced inside loadRecentAnchors: its SQL
+    //      admits only anchors whose surface_preference the member opted in to
+    //      surface (default member_pulled → excluded from ambient surfacing).
+    //      Eligibility to surface originates from a member act, not this flag.
+    //      See lib/anchor/loadRecentAnchors.ts + SPIRAL_CONTINUITY_ENGINE.md §7
+    //      + refusal R08.
     // Anchor is member-authored (form category per the longitudinal memory
     // category gradient canon). No inference, no synthesis — just their words.
     let recentAnchors: RecentAnchor[] = [];
