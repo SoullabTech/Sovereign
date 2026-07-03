@@ -1,3 +1,7 @@
+// Make this file a module so top-level `const`s are file-scoped (not global) —
+// prevents TS2451 redeclaration collisions with sibling test files.
+export {};
+
 /**
  * Beta Core Integration Tests
  *
