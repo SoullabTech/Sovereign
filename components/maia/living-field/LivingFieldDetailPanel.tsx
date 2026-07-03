@@ -61,7 +61,7 @@ export function LivingFieldDetailPanel({
     ['revoked', 'removed', 'paused', 'silenced'].includes(deriveConsentStatus(c))
   )
 
-  async function save(expr: string) {
+  async function save(expr: string | null | undefined) {
     if (!expr || !expr.trim()) return
     setSaving(true)
     try {
