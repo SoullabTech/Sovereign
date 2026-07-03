@@ -47,18 +47,21 @@ ALTER TABLE member_memory_atoms
 -- ── Step 2: scope coherence constraints ───────────────────────────────────
 
 -- Non-personal atoms must declare their Co-Lab.
+ALTER TABLE member_memory_atoms DROP CONSTRAINT IF EXISTS atom_scope_requires_team;
 ALTER TABLE member_memory_atoms
   ADD CONSTRAINT atom_scope_requires_team CHECK (
     memory_scope = 'personal' OR team_id IS NOT NULL
   );
 
 -- Client-scope atoms must name the client relationship.
+ALTER TABLE member_memory_atoms DROP CONSTRAINT IF EXISTS atom_client_scope_requires_client;
 ALTER TABLE member_memory_atoms
   ADD CONSTRAINT atom_client_scope_requires_client CHECK (
     memory_scope <> 'client' OR client_id IS NOT NULL
   );
 
 -- Encounter-scope atoms must name the encounter.
+ALTER TABLE member_memory_atoms DROP CONSTRAINT IF EXISTS atom_encounter_scope_requires_encounter;
 ALTER TABLE member_memory_atoms
   ADD CONSTRAINT atom_encounter_scope_requires_encounter CHECK (
     memory_scope <> 'encounter' OR encounter_id IS NOT NULL
