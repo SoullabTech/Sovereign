@@ -7,7 +7,7 @@
 // never exposed to any client (the bug's JSONB resolves it server-side here).
 
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdminRequest } from '@/lib/admin/requireAdmin';
+import { checkAdminAuth } from '@/lib/admin/adminAuth';
 import { getBugAttachmentStored } from '@/lib/bugs/bugReports';
 import { readVaultBytes } from '@/lib/storage/fileVault';
 
@@ -17,7 +17,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; attachmentId: string }> },
 ) {
-  if (!isAdminRequest(request)) {
+  // Session+role (founder/cto/…) OR shared password.
+  if (!(await checkAdminAuth(request)).authed) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
