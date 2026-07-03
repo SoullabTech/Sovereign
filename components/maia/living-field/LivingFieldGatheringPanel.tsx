@@ -33,15 +33,28 @@ const SOURCE_WORDS: Record<string, string> = {
   spontaneous: 'a note you wrote',
 }
 
-function humanizeWarrant(reason: string): string[] {
-  const parts: string[] = []
+function humanizeWarrant(reason: string): string {
+  const regs: string[] = []
+  const lenses: string[] = []
+  const srcs: string[] = []
   for (const token of reason.split(',').map((t) => t.trim())) {
     const [kind, value] = token.split(':')
-    if (kind === 'register' && REGISTER_WORDS[value]) parts.push(`kept as ${REGISTER_WORDS[value]}`)
-    else if (kind === 'lens' && LENS_WORDS[value]) parts.push(`seen through ${LENS_WORDS[value]}`)
-    else if (kind === 'source_type' && SOURCE_WORDS[value]) parts.push(`came from ${SOURCE_WORDS[value]}`)
+    if (kind === 'register' && REGISTER_WORDS[value]) regs.push(REGISTER_WORDS[value])
+    else if (kind === 'lens' && LENS_WORDS[value]) lenses.push(LENS_WORDS[value])
+    else if (kind === 'source_type' && SOURCE_WORDS[value]) srcs.push(SOURCE_WORDS[value])
   }
-  return parts
+  const clauses: string[] = []
+  if (regs.length) clauses.push(`kept as ${regs.join(' and ')}`)
+  if (lenses.length) clauses.push(`seen through ${lenses.join(' and ')}`)
+  if (srcs.length) clauses.push(`drawn from ${srcs.join(' and ')}`)
+  return clauses.join(', ')
+}
+
+// A Keep gathered on a "broad" signal when only its source type placed it here —
+// no register, no elemental lens. Broad signals route the same Keep into several
+// dimensions, so disclosing this keeps the warrant honest about its own thinness.
+function isBroadSignal(reason: string): boolean {
+  return !/register:|lens:/.test(reason)
 }
 
 interface Props {
@@ -76,6 +89,12 @@ export function LivingFieldGatheringPanel({ fieldKey, fieldLabel, memberId }: Pr
   const { gathered, gathered_count, denominator, criterion } = gathering
   const shown: GatheredKeep[] = expanded ? gathered : gathered.slice(0, 5)
 
+  // Honesty about the gathering's own precision: when most Keeps gathered on a
+  // broad signal (source type only), say so — don't let a thin rationale read as
+  // a rich one. This makes the mapping's coarseness inspectable, not hidden.
+  const broadCount = gathered.filter((k) => isBroadSignal(k.evidence_reason)).length
+  const broadDominant = gathered_count > 0 && broadCount / gathered_count > 0.6
+
   return (
     <div className="space-y-3 border-t border-stone-800 pt-4">
       {/* Denominator — never hidden */}
@@ -90,20 +109,26 @@ export function LivingFieldGatheringPanel({ fieldKey, fieldLabel, memberId }: Pr
           </span>
         </p>
         <p className="text-stone-600 text-xs leading-relaxed">{criterion}</p>
+        {broadDominant && (
+          <p className="text-amber-700/80 text-xs leading-relaxed">
+            Most of these gathered on a single broad signal — the <em>kind</em> of Keep, not a
+            register or elemental lens. Broad signals route the same Keep into more than one
+            dimension. Giving a Keep a register or lens would place it more precisely.
+          </p>
+        )}
       </div>
 
-      {/* Why these — per-item selection warrant */}
+      {/* Why these — per-item selection warrant + match strength */}
       <ul className="space-y-2">
         {shown.map((k) => {
           const warrant = humanizeWarrant(k.evidence_reason)
           return (
             <li key={k.atom_id} className="text-sm border-l border-stone-800 pl-3">
               <p className="text-stone-300">{k.title}</p>
-              {warrant.length > 0 && (
-                <p className="text-stone-600 text-xs">
-                  Here because it was {warrant.join(', ')}.
-                </p>
-              )}
+              <p className="text-stone-600 text-xs">
+                {warrant && <>Here because it was {warrant}. </>}
+                <span className="text-stone-700">match {k.affinity_score.toFixed(2)}</span>
+              </p>
             </li>
           )
         })}
