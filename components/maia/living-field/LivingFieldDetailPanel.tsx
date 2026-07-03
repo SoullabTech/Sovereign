@@ -41,6 +41,7 @@ export function LivingFieldDetailPanel({
   const [refining, setRefining] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [captured, setCaptured] = useState<string | null>(null)
+  const [refineNote, setRefineNote] = useState<string | null>(null)
 
   async function handleCapture(text: string, source: CaptureSource) {
     // Store as a source (evidence that feeds Refine and provenance) …
@@ -60,8 +61,8 @@ export function LivingFieldDetailPanel({
     ['revoked', 'removed', 'paused', 'silenced'].includes(deriveConsentStatus(c))
   )
 
-  async function save(expr: string) {
-    if (!expr.trim()) return
+  async function save(expr: string | null | undefined) {
+    if (!expr || !expr.trim()) return
     setSaving(true)
     try {
       await fetch(`/api/maia/living-field/${field.field_key}`, {
@@ -79,13 +80,21 @@ export function LivingFieldDetailPanel({
   async function refine() {
     setRefining(true)
     setCandidate(null)
+    setRefineNote(null)
     try {
       const res = await fetch(`/api/maia/living-field/${field.field_key}/refine`, {
         method: 'POST',
         headers: { 'x-member-id': memberId },
       })
-      if (res.ok) {
-        setCandidate(await res.json())
+      const drafted = res.ok ? await res.json().catch(() => null) : null
+      // A draft is only actionable when MAIA actually returned text. When
+      // candidate_expression is null/empty, never open the accept/edit panel —
+      // accepting a null draft crashed the app (null.trim()). Surface a neutral
+      // note instead; do not claim "nothing gathered" when Keeps have gathered.
+      if (drafted && typeof drafted.candidate_expression === 'string' && drafted.candidate_expression.trim()) {
+        setCandidate(drafted)
+      } else {
+        setRefineNote('MAIA could not draft a candidate just now. You can write directly, or try again in a moment.')
       }
     } finally {
       setRefining(false)
@@ -163,6 +172,13 @@ export function LivingFieldDetailPanel({
               onEdit={editCandidate}
               onDismiss={() => setCandidate(null)}
             />
+          )}
+
+          {/* No actionable draft — neutral note, no crash, no false "nothing gathered" */}
+          {refineNote && (
+            <p className="text-stone-500 text-xs rounded-lg bg-stone-900 border border-stone-800 px-4 py-3">
+              {refineNote}
+            </p>
           )}
 
           {/* Actions */}

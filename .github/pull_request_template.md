@@ -11,19 +11,17 @@
 ## Change Classification (required)
 
 <!--
-  Check exactly ONE box. The Covenant Gates check reads this section.
-  See docs/GOVERNANCE_MENTOR_COVENANT.md for the full definitions.
+  Check exactly ONE box, OR apply the matching class-* label. The Covenant Gates
+  check reads this section. See docs/GOVERNANCE_MENTOR_COVENANT.md for definitions.
   "MAIA proposes; Mentors approve; Production is human-signed."
 -->
 
-- [ ] **Class A — Sacred Boundaries** (privacy/consent/safety/sovereignty) — Founder + 2 Council + 1 Mentor
-- [ ] **Class B — Structural Risk** (migrations/auth/routing/infra) — Founder or Release Steward + 1 Mentor + rollback plan
-- [ ] **Class C — Routine Improvement** (refactor/copy/UX/prompt tuning) — 1 Mentor + green CI
-- [ ] **Frontier-Dependent** (models/providers/pricing) — Founder + 1 Mentor + verification
+- [ ] **Class A — Sacred Boundaries** (privacy/consent/safety/sovereignty)
+- [ ] **Class B — Structural Risk** (migrations/auth/routing/infra)
+- [ ] **Class C — Routine Improvement** (refactor/copy/UX/prompt tuning)
+- [ ] **Frontier-Dependent** (models/providers/pricing)
 
 ### Rollback Plan (required for Class B)
-
-<!-- Check one if this is a Class B change. -->
 
 - [ ] Revert commit is sufficient
 - [ ] Migration rollback script provided
@@ -32,9 +30,13 @@
 
 ### Frontier Verification (required for Frontier-Dependent)
 
-<!-- A Mentor fills this in for model/provider/pricing changes; note a revalidation date. -->
-
 - [ ] Verified by Mentor: <!-- @handle, date, valid until YYYY-MM-DD -->
+
+<!--
+  Approval: Class A/B/Frontier need founder/mentor approval. During bootstrap,
+  a maintainer may apply the `covenant-signoff` label to bridge that approval
+  requirement. It does NOT bridge classification or rollback.
+-->
 
 ---
 
