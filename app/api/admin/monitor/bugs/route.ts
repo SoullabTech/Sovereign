@@ -7,13 +7,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdminRequest } from '@/lib/admin/requireAdmin';
+import { checkAdminAuth } from '@/lib/admin/adminAuth';
 import { listBugReports } from '@/lib/bugs/bugReports';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  // Session+role (founder/cto/…) OR shared password. Honors a signed-in admin's
+  // session so role-holders reach the monitor field without the password gate.
+  if (!(await checkAdminAuth(request)).authed) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

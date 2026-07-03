@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdminRequest } from '@/lib/admin/requireAdmin';
+import { checkAdminAuth } from '@/lib/admin/adminAuth';
 import { updateBugReport, type BugPatch } from '@/lib/bugs/bugReports';
 import { BUG_STATUSES, BUG_SEVERITIES, type BugStatus, type BugSeverity } from '@/lib/bugs/types';
 
@@ -25,7 +25,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  if (!isAdminRequest(request)) {
+  // Session+role (founder/cto/…) OR shared password.
+  if (!(await checkAdminAuth(request)).authed) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
