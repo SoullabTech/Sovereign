@@ -261,15 +261,18 @@ jobs:
 
             const changedPaths = files.map(f => f.filename);
 
-            // Sacred paths require Class A
+            // Sacred paths require Class A — safety/consent/sovereignty ENFORCEMENT
+            // CODE only. Governance *documentation* (docs/policy, docs/GOVERNANCE) is
+            // descriptive, not enforcement: it is classified by the actual risk of the
+            // change (typically Class C, or Class B if structural), not forced to Class A
+            // merely for touching a governance file. The enforcement itself lives in
+            // .github/workflows/ (Class B) and the code paths below, which stay gated.
             const sacredPaths = [
               'lib/safety/',
               'lib/memory/',
               'lib/consciousness/',
               'lib/session/',
-              'app/api/session/',
-              'docs/policy/',
-              'docs/GOVERNANCE'
+              'app/api/session/'
             ];
 
             const touchesSacred = changedPaths.some(p =>
