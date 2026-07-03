@@ -220,8 +220,10 @@ export async function verifyRegistration(
 
   // Save credential to database
   try {
-    // Convert credential ID to base64 for storage
-    const credentialIdBase64 = Buffer.from(credential.id).toString('base64url');
+    // credential.id is ALREADY a Base64URLString in @simplewebauthn/server v13 — store it as-is.
+    // Do NOT re-encode: Buffer.from(<string>).toString('base64url') double-encodes it, so the stored
+    // value never matches response.id at login (getCredentialById) → CREDENTIAL_NOT_FOUND on every sign-in.
+    const credentialIdBase64 = credential.id;
     const publicKeyBase64 = Buffer.from(credential.publicKey).toString('base64');
 
     await query(

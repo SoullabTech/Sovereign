@@ -7,6 +7,7 @@ import { deriveConsentStatus } from './types'
 import { LivingFieldSourceList } from './LivingFieldSourceList'
 import { LivingFieldGatheringPanel } from './LivingFieldGatheringPanel'
 import { MaiaCandidatePanel, type MaiaCandidate } from './MaiaCandidatePanel'
+import { MaiaCapture, type CaptureSource } from '@/components/maia/MaiaCapture'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -39,14 +40,29 @@ export function LivingFieldDetailPanel({
   const [candidate, setCandidate] = useState<MaiaCandidate | null>(null)
   const [refining, setRefining] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [captured, setCaptured] = useState<string | null>(null)
+  const [refineNote, setRefineNote] = useState<string | null>(null)
+
+  async function handleCapture(text: string, source: CaptureSource) {
+    // Store as a source (evidence that feeds Refine and provenance) …
+    await fetch(`/api/maia/living-field/${field.field_key}/sources`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+      body: JSON.stringify({ source_type: source, source_excerpt: text }),
+    })
+    // … and drop the material into the expression so the member isn't retyping it.
+    setExpression((prev) => (prev ? `${prev}\n\n${text}` : text))
+    setCaptured(source === 'voice_note' ? 'Transcribed and added below.' : 'Added below.')
+    setTimeout(() => setCaptured(null), 3000)
+  }
 
   const activeConsents = consents.filter((c) => deriveConsentStatus(c) === 'active')
   const revokedConsents = consents.filter((c) =>
     ['revoked', 'removed', 'paused', 'silenced'].includes(deriveConsentStatus(c))
   )
 
-  async function save(expr: string) {
-    if (!expr.trim()) return
+  async function save(expr: string | null | undefined) {
+    if (!expr || !expr.trim()) return
     setSaving(true)
     try {
       await fetch(`/api/maia/living-field/${field.field_key}`, {
@@ -64,13 +80,21 @@ export function LivingFieldDetailPanel({
   async function refine() {
     setRefining(true)
     setCandidate(null)
+    setRefineNote(null)
     try {
       const res = await fetch(`/api/maia/living-field/${field.field_key}/refine`, {
         method: 'POST',
         headers: { 'x-member-id': memberId },
       })
-      if (res.ok) {
-        setCandidate(await res.json())
+      const drafted = res.ok ? await res.json().catch(() => null) : null
+      // A draft is only actionable when MAIA actually returned text. When
+      // candidate_expression is null/empty, never open the accept/edit panel —
+      // accepting a null draft crashed the app (null.trim()). Surface a neutral
+      // note instead; do not claim "nothing gathered" when Keeps have gathered.
+      if (drafted && typeof drafted.candidate_expression === 'string' && drafted.candidate_expression.trim()) {
+        setCandidate(drafted)
+      } else {
+        setRefineNote('MAIA could not draft a candidate just now. You can write directly, or try again in a moment.')
       }
     } finally {
       setRefining(false)
@@ -150,6 +174,13 @@ export function LivingFieldDetailPanel({
             />
           )}
 
+          {/* No actionable draft — neutral note, no crash, no false "nothing gathered" */}
+          {refineNote && (
+            <p className="text-stone-500 text-xs rounded-lg bg-stone-900 border border-stone-800 px-4 py-3">
+              {refineNote}
+            </p>
+          )}
+
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
             <button
@@ -165,13 +196,12 @@ export function LivingFieldDetailPanel({
             >
               Talk with MAIA about this
             </Link>
-            <button
-              disabled
-              title="Coming soon"
-              className="px-3 py-1.5 rounded text-stone-600 text-xs border border-stone-800 cursor-not-allowed"
-            >
-              Add voice note
-            </button>
+          </div>
+
+          {/* Bring material in by voice or upload — not only by typing. */}
+          <div className="space-y-1">
+            <MaiaCapture onCapture={handleCapture} />
+            {captured && <p className="text-teal-400/80 text-xs">{captured}</p>}
           </div>
 
           {/* Sources */}

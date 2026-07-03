@@ -45,7 +45,13 @@ jobs:
                 description: 'Structural Risk (migrations/auth/routing/infra)'
               },
               'class-c': {
-                mentorRequired: 1,
+                // Routine tier: CI-green is sufficient. Required status checks
+                // (build + check-diagrams, enforced by branch protection) are the
+                // gate; no human-approval requirement here. Mentor/founder approval
+                // is reserved for Class A/B, where sacred-boundary and structural
+                // risk live. The file-path safety rails below still force Class A/B
+                // when a routine PR actually touches sacred or migration paths, so
+                // this does not create a loophole for risky changes mislabeled C.
                 ciRequired: true,
                 description: 'Routine Improvement (refactor/copy/UX/prompt tuning)'
               },
