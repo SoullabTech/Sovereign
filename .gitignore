@@ -437,3 +437,7 @@ scripts/voice-ecosystem-watch-state.json
 
 # Node compile cache — Bun/Node build artifacts, regenerated per build
 node-compile-cache/
+
+# build/test caches (not source)
+jest_dx/
+tsx-501/
