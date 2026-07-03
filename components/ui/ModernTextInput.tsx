@@ -55,7 +55,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   onChange,
   onSubmit,
   onVoiceMessage,
-  placeholder = "Message MAIA...",
+  placeholder = "What's on your mind?",
   disabled = false,
   isProcessing = false,
   enableVoiceInput = false,
@@ -147,7 +147,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     }
 
     if (relationshipDepth === 'new') {
-      return "What's on your mind? Let's talk...";
+      return "What's on your mind?";
     }
 
     return placeholder;

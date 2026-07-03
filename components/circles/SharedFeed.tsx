@@ -80,35 +80,46 @@ export function SharedFeed({ circleId, memberId }: { circleId: string; memberId?
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {items.map((it) => (
         <div
           key={it.id}
-          className="rounded-2xl border border-maia-navy-700 bg-maia-navy-850 p-5"
+          className="rounded-2xl border border-amber-50/8 bg-[#1a1812] px-7 py-8"
+          style={{ boxShadow: '0 1px 24px rgba(0,0,0,0.3)' }}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 text-xs text-maia-ink-40">
-                <span>{it.sharer_name || 'A member'}</span>
-                <span>&middot;</span>
-                <span className="capitalize">{it.artifact_type.replace(/_/g, ' ')}</span>
-                <span>&middot;</span>
-                <span>{new Date(it.created_at).toLocaleDateString()}</span>
-              </div>
-              <h3 className="mt-1 text-base font-semibold text-maia-ink-100">
-                {it.shared_title || 'Shared reflection'}
-              </h3>
-              {it.shared_summary && (
-                <p className="mt-2 text-sm text-maia-ink-60">{it.shared_summary}</p>
-              )}
-            </div>
+          {/* The artifact — hero text */}
+          <div className="mb-6">
+            <h3
+              className="text-xl font-light leading-relaxed text-amber-50/90"
+              style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '-0.01em' }}
+            >
+              {it.shared_title || 'Shared reflection'}
+            </h3>
+            {it.shared_summary && (
+              <p
+                className="mt-3 text-base leading-relaxed text-amber-50/65"
+                style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              >
+                {it.shared_summary}
+              </p>
+            )}
+          </div>
+
+          {/* Attribution — quiet, not branded */}
+          <div className="flex items-end justify-between">
+            <p
+              className="text-xs text-amber-50/30 italic"
+              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+            >
+              — from a conversation in Soullab
+            </p>
 
             {memberId && it.shared_by === memberId && (
               <button
                 onClick={() => handleRevoke(it.id)}
-                className="shrink-0 rounded-lg border border-maia-navy-700 px-3 py-1.5 text-xs text-maia-ink-40 transition-colors hover:border-red-500/30 hover:text-red-400"
+                className="text-xs text-amber-50/20 hover:text-red-400/60 transition-colors"
               >
-                Unshare
+                unshare
               </button>
             )}
           </div>

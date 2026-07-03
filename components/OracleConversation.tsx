@@ -1366,6 +1366,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return true;
   });
 
+  // First-session entry screen: shown once before the welcome screen for brand-new users
+  const [showFirstSessionEntry, setShowFirstSessionEntry] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return !sessionStorage.getItem('maia_first_session_seen');
+  });
+
+  const dismissFirstSessionEntry = useCallback(() => {
+    sessionStorage.setItem('maia_first_session_seen', 'true');
+    setShowFirstSessionEntry(false);
+  }, []);
+
   // Wisdom Council state
   const [showWisdomCouncil, setShowWisdomCouncil] = useState(false);
   const [showCurrentTeaching, setShowCurrentTeaching] = useState(false);
@@ -7011,6 +7022,70 @@ I'm not sure what I'm feeling yet.`;
 
           // Debug log removed - was causing console spam on every re-render
           // To debug greeting logic, use: console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
+
+          // First-session entry screen: only for users with no history and who haven't seen it
+          const isFirstEverSession = showFirstSessionEntry && historicalMessagesRef.current.length === 0 && messages.length === 0;
+
+          if (isFirstEverSession) {
+            return (
+              <motion.div
+                key="first-session-entry"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                className="fixed inset-0 z-40 flex flex-col items-center justify-center px-6"
+              >
+                <div className="flex flex-col items-center gap-8 w-full max-w-lg text-center">
+                  <img
+                    src="/logo_flower 2.png"
+                    alt="MAIA"
+                    className="w-12 h-12 object-contain opacity-80"
+                  />
+                  <div className="flex flex-col gap-4">
+                    <p
+                      className="text-maia-ink-80 text-lg md:text-xl leading-relaxed"
+                      style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                    >
+                      This isn't a system that gives you perfect answers.
+                    </p>
+                    <p
+                      className="text-maia-ink-60 text-base md:text-lg leading-relaxed"
+                      style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                    >
+                      It can be wrong, and you should question it.
+                    </p>
+                    <p
+                      className="text-maia-ink-60 text-base md:text-lg leading-relaxed"
+                      style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                    >
+                      It's not here to think for you.
+                    </p>
+                    <p
+                      className="text-maia-ink-70 text-base md:text-lg leading-relaxed mt-2"
+                      style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                    >
+                      It's a space to slow down, hear yourself more clearly,
+                      and let something real take shape.
+                    </p>
+                    <p
+                      className="text-maia-ink-40 text-sm leading-relaxed mt-1"
+                      style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                    >
+                      If something meaningful forms, you'll have the option to keep it.
+                    </p>
+                  </div>
+                  <button
+                    onClick={dismissFirstSessionEntry}
+                    className="mt-4 px-8 py-3 rounded-full border border-maia-spice-400/40 text-maia-spice-400 text-sm tracking-wide hover:border-maia-spice-400/70 hover:text-maia-spice-300 transition-all duration-200"
+                    style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.08em' }}
+                  >
+                    Begin
+                  </button>
+                </div>
+              </motion.div>
+            );
+          }
 
           return (
           <motion.div
