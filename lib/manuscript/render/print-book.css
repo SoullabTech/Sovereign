@@ -264,6 +264,15 @@ p:has(> em:only-child) + p {
   text-indent: 0 !important;
 }
 
+/* Copyright / colophon page — flush-left throughout. Wrap the block in
+ * <div class="colophon"> so the standard body indent
+ * (p { text-indent: 0.2in }) doesn't stagger the imprint and ISBN lines
+ * against their soft-wrapped continuation lines. Same scoping pattern as
+ * .toc-prose. */
+.colophon p {
+  text-indent: 0 !important;
+}
+
 /* Pandoc HTML5 promotes <div class="toc-prose"> with an id'd heading
  * inside it into <section id="contents" class="toc-prose">, moving
  * the `id` from the h1 to the section. The `#contents` page-break

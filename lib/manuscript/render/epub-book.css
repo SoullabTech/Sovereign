@@ -46,6 +46,13 @@ figure + p {
   text-indent: 0;
 }
 
+/* Copyright / colophon page — flush-left throughout (imprint + ISBN
+ * lines should not stagger against their continuation lines). Matches
+ * the print pipeline's .colophon rule. */
+.colophon p {
+  text-indent: 0;
+}
+
 /* ============================================================
  * HEADINGS
  * ============================================================ */

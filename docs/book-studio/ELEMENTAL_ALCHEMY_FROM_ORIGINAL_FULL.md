@@ -11,6 +11,8 @@ Hamden, Connecticut
 
 ## Permissions
 
+<div class="colophon">
+
 Copyright © 2026 Kelly W. Nezat
 
 All rights reserved. No part of this book may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law. For permission requests, write to the publisher at the address below.
@@ -27,6 +29,8 @@ ISBN 979-8-9967127-2-4 (hardcover)
 First Soullab Press Edition
 
 Printed in the United States of America
+
+</div>
 
 ---
 
