@@ -242,6 +242,8 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 > far greater
 > than we can imagine.*
 
+<div class="force-break-before"></div>
+
 *"The Soul should always stand ajar, ready to welcome the ecstatic experience." – Emily Dickinson*
 
 The night air was crisp with the first hints of autumn as I tended to the crackling flames before me. My son Augusten and I had made this backyard campfire a nightly ritual during the final stretches of summer. There was something profoundly grounding about watching the mesmerizing dance of the flames that kindled a sense of presence and enchantment.
