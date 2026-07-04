@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { getMemberIdFromSessionToken } from '@/lib/auth/getMemberFromRequest';
-import { getPortraitById } from '@/lib/soulPortrait/portraitStore';
+import { getOwnedPortrait } from '@/lib/soulPortrait/portraitStore';
 import { SoulPortraitRenderer } from '@/components/soulPortrait/SoulPortraitRenderer';
 
 /**
@@ -10,12 +10,14 @@ import { SoulPortraitRenderer } from '@/components/soulPortrait/SoulPortraitRend
  *
  * Practitioner-only surface for reviewing a generated DRAFT before an in-session
  * use. It refuses four things by construction:
- *   · no client access      — owner-only; any non-owner (or no session) → 404
+ *   · no client access      — owner-scoped read (getOwnedPortrait); non-owner / no session → 404
  *   · no consent recording   — a preview writes nothing to the consent ledger
  *   · no publishing          — noindex; draft stays pending/unpublished
  *   · no Gate-4 reuse        — this is not a delivery link; there is no self-serve path
  *
- * Deliberately does NOT render the Mentor or any client-facing coda.
+ * Owner-scoping is enforced in the STORE (SQL filters by owner_member_id), not by a
+ * check here — a non-owner simply gets null. Deliberately does NOT render the Mentor
+ * or any client-facing coda.
  */
 
 export const metadata: Metadata = {
@@ -26,13 +28,14 @@ export const metadata: Metadata = {
 export default async function PortraitPreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  // Owner-only. Resolve the member from a verified session cookie; anything else → 404.
+  // Resolve the member from a verified session cookie; no session → 404.
   const token = (await cookies()).get('maia_session')?.value;
   const memberId = await getMemberIdFromSessionToken(token);
   if (!memberId) notFound();
 
-  const portrait = await getPortraitById(id);
-  if (!portrait || portrait.ownerMemberId !== memberId) notFound();
+  // Owner-scoped: the store returns null for a portrait this member does not own.
+  const portrait = await getOwnedPortrait(id, memberId);
+  if (!portrait) notFound();
 
   return (
     <div>
