@@ -20,7 +20,26 @@ export const summerPortrait: LiterarySoulPortrait = {
     slug: 'summer',
     pronouns: 'she/her',
   },
-  mode: 'self',
+  mode: 'gift',
+  offeredBy: {
+    relationship: 'her guide',
+    giverName: 'Kelly',
+    // DRAFT — Kelly to replace with his own words. The words in the gift remain his.
+    giftOpening: `Every life carries a particular signature — a way of meeting the world that belongs to no one else.
+
+This one is yours: the depth people feel and confide in before you have said a word, the warm and searching mind that comes most alive across a table, and — underneath — a healer's craft you earned the hard way, by finding your own path through the very thing you now help others carry. As you step into a season of real change, it seemed right to hold up a mirror, so you could see the whole of it at once.
+
+The stars reveal the weather; your soul chooses how to walk through it. Read this as a reflection offered with respect and care — and keep only what your own heart already knows is true.
+
+— Kelly`,
+    threshold: {
+      eyebrow: 'A Soul Portrait',
+      forLine: 'For Summer',
+      attribution: 'Offered by Kelly',
+      framing:
+        'A reflection on who you are, and who you are becoming — written in the language of soul and symbol. The stars reveal the weather; your soul chooses how to walk through it.',
+    },
+  },
   birthData: {
     date: 'May 22, 1977',
     time: '6:49 PM (CDT)',
@@ -152,6 +171,13 @@ export const summerPortrait: LiterarySoulPortrait = {
         question: 'What have I healed enough to now offer freely?',
         practice: { prompt: 'Take an evening to trace the arc of fifty years, and thank the version of you who survived the parts you would not choose again.' },
       },
+    ],
+    weatherPattern: [
+      { season: 'Through the year', element: 'earth', invitation: 'Relay the ground of worth and service, one honest stone at a time' },
+      { season: 'Late 2026 → spring 2027', element: 'fire', invitation: 'Let the self break free of the shape it has outgrown' },
+      { season: 'Summer 2026 → winter', element: 'water', invitation: 'Feel the old wounds all the way through; let them soften' },
+      { season: 'Autumn 2026 onward', element: 'air', invitation: 'Name the truer self on the far side of the change' },
+      { season: 'Toward mid-2027', element: 'aether', invitation: 'Gather the whole arc; heal enough to hold others' },
     ],
     goldenThread:
       'The whole year converges on one movement: your deepest transformative power meeting your own sense of self — and being freed, softened, and finally healed enough to become the very thing you are here to be. This is the year the wound becomes the gift.',
