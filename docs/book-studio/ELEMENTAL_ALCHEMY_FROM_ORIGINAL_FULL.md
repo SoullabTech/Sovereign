@@ -140,6 +140,8 @@ I am flame and ember, illuminating the dark. I am rain and dew, nurturing the bl
 
 This dream reminds me that the natural world is the foundation of all human consciousness, not just something onto which we project our thoughts, feelings, and intentions. In this moment, everything that separated me from the natural world has dissipated into a dynamic field of being, completely integrated into it, an at-oneness. For the first time in my life, I feel truly a part of it all. No longer am I certain if I am dreaming of the elements or if I am the elements dreaming me. How had I missed this knowing?
 
+<div class="force-break-before"></div>
+
 *"If your heart is truly open, then all of nature, life, and experience is the mystery of interconnection and opportunity for communion." – Michael A. Singer*
 
 My being, my heart, and my aspirations all arise from a field of presence, which feels both vast and intimate, infinite and finite. Whatever felt foreign, alien, or disconnected in me before has now resolved into an expansive state of peace, harmony, and love.

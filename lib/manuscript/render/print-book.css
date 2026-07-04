@@ -554,13 +554,18 @@ nav#TOC a::after {
   break-after: page;
   page-break-inside: avoid;
   break-inside: avoid;
-  display: block;
+  /* Full-page flex box so the plate image sits centered on BOTH axes
+   * rather than top-aligned. Height matches the plate page's content
+   * area (9in trim − 0.25in top/bottom @page plate margins = 8.5in);
+   * justify-content centers vertically, align-items horizontally. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 8.5in;
   text-align: center;
   margin: 0;
   padding: 0;
-  /* The plate page should breathe — vertical centering is achieved by
-   * the surrounding paragraph margins; large top/bottom keep the image
-   * reserved rather than crowding the trim. */
 }
 
 .canonical-plate p {
