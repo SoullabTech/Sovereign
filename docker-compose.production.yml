@@ -907,18 +907,45 @@ services:
       - maia-public     # Caddy proxies wss://nostr.soullab.life → :7777
 
   # ═════════════════════════════════════════════════════════════════════════════
-  # LiveKit — Session Room Phase 3 media SFU (self-hosted)   [PR2 — NOT deployed]
+  # coturn — Session Room TURN/STUN (self-hosted)   [Phase A transport]
   # ═════════════════════════════════════════════════════════════════════════════
-  # Self-hosted LiveKit SFU. Media is sovereign (our own server), relayed ephemerally and never
-  # recorded unless the agreement permits (Sanctuary = no egress). Decision #1 (Kelly 2026-06-15):
-  # a dedicated TURN listener on 3478 is the ONLY externally-published port (router-forward 3478
-  # TCP+UDP -> 192.168.0.104). Signaling/API (7880) is deliberately NOT host-published — internal
-  # Docker networks only; Caddy proxies the signaling WS, the maia app reaches the room-mgmt API
-  # over maia-internal. SECRETS via LIVEKIT_KEYS env (from .env.production), never in any file/log.
-  # Review only — needs the security-auditor pass + secret provisioning + the deploy/proof rungs.
+  # Sovereign NAT traversal for 1:1 P2P WebRTC Encounters. Decision (Kelly 2026-07-05): raw P2P +
+  # self-hosted coturn — NO SFU in the 1:1 media path ("no unnecessary intermediary in the
+  # Encounter field"). This service now owns the 3478 router-forward (was LiveKit's).
+  # Constitutional basis: NATIVE_SESSION_ROOM_PHASE1_SPEC §6; refusal R-A5 (self-hosted-only ICE).
+  # SECRET: --static-auth-secret comes from TURN_STATIC_AUTH_SECRET (.env.production), never a file.
+  # Deploy notes: coturn is behind NAT — add `--external-ip=<PUBLIC_IP>/192.168.0.104` at deploy;
+  # router-forward 3478 (TCP+UDP) AND the 49160-49200/udp relay range to 192.168.0.104.
+  coturn:
+    image: coturn/coturn:4.6   # TODO(deploy): pin to a @sha256 digest after the security-auditor pass
+    container_name: maia-coturn
+    restart: unless-stopped
+    logging: *default_logging
+    command: ["-c", "/etc/coturn/turnserver.conf", "--static-auth-secret=${TURN_STATIC_AUTH_SECRET}", "--external-ip=${TURN_EXTERNAL_IP}"]
+    volumes:
+      - ./config/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    ports:
+      - "3478:3478/udp"                 # STUN + TURN (UDP)  — router-forward 3478 -> 192.168.0.104
+      - "3478:3478/tcp"                 # TURN (TCP fallback)
+      - "49160-49200:49160-49200/udp"   # TURN relay range   — also router-forwarded
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - maia-public
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # LiveKit — media SFU (self-hosted)   [ARCHIVED 2026-07-05 · future group-room substrate]
+  # ═════════════════════════════════════════════════════════════════════════════
+  # ARCHIVED: superseded by coturn (raw P2P) for 1:1 Encounters — an SFU is architectural excess
+  # for two parties (Decision, Kelly 2026-07-05). RETAINED, not deleted: this is the intended
+  # substrate for FUTURE group rooms (N>2). Inert by default via `profiles` (starts only with
+  # `--profile future-group-rooms`) and it no longer publishes 3478 — coturn owns that forward.
+  # Original note (Decision #1, Kelly 2026-06-15): self-hosted SFU, media sovereign, TURN on 3478.
+  # SECRETS via LIVEKIT_KEYS env (from .env.production), never in any file/log.
   livekit:
     image: livekit/livekit-server:v1.8@sha256:621fd87bd64a0c83e1f2418ee0323eb920d00acdd73e5f79b303c64f6cc532af   # pinned to the v1.8 manifest digest (immutable)
     container_name: maia-livekit
+    profiles: ["future-group-rooms"]   # ARCHIVED: inert unless this profile is explicitly enabled
     restart: unless-stopped
     logging: *default_logging
 
@@ -932,12 +959,9 @@ services:
       # "<api_key>: <api_secret>" — provisioned in .env.production (server-only). Never logged.
       LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
 
-    # The ONLY externally-published port: the dedicated TURN listener (Decision #1).
-    # 7880 (signaling+API) and the RTC ports (7881/7882) are intentionally NOT published —
-    # RTC media is reached via the embedded TURN relay, so one forward suffices.
-    ports:
-      - "3478:3478/udp"   # TURN relay (UDP)  — router-forward 3478 TCP+UDP -> 192.168.0.104
-      - "3478:3478/tcp"   # TURN relay (TCP fallback)
+    # Ports intentionally NOT published while ARCHIVED — coturn owns the 3478 forward now.
+    # When group rooms (N>2) are built, restore a media-port strategy here (embedded TURN,
+    # or reuse the coturn relay) and re-run the security-auditor pass before publishing.
 
     security_opt:
       - no-new-privileges:true

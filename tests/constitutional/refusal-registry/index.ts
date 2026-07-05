@@ -19,6 +19,7 @@
  *   R08  A Daily Anchor never surfaces ambiently without member standing consent
  *   R09  Admin standing can only be granted/revoked by an owner (founder/cto)
  *   R10  The last remaining founder cannot be removed
+ *   R-A5 Session Room offers only self-hosted ICE endpoints (no third-party media relay)
  */
 
 // NOTE: explicit .ts extensions so this runs under both `tsx` and Node's native
@@ -36,8 +37,9 @@ import { check as r07 } from './refusal-07-declined-observation-released.ts';
 import { check as r08 } from './refusal-08-anchor-consent-gated-surfacing.ts';
 import { check as r09 } from './refusal-09-admin-grant-owner-only.ts';
 import { check as r10 } from './refusal-10-last-founder-protected.ts';
+import { check as rA5 } from './refusal-11-session-room-ice-self-hosted-only.ts';
 
-const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10];
+const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, rA5];
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
