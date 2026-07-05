@@ -7,6 +7,7 @@ import { deriveConsentStatus } from './types'
 import { LivingFieldSourceList } from './LivingFieldSourceList'
 import { LivingFieldGatheringPanel } from './LivingFieldGatheringPanel'
 import { MaiaCandidatePanel, type MaiaCandidate } from './MaiaCandidatePanel'
+import { LivingEncounterView } from './LivingEncounterView'
 import { MaiaCapture, type CaptureSource } from '@/components/maia/MaiaCapture'
 
 function formatDate(iso: string) {
@@ -42,6 +43,7 @@ export function LivingFieldDetailPanel({
   const [historyOpen, setHistoryOpen] = useState(false)
   const [captured, setCaptured] = useState<string | null>(null)
   const [refineNote, setRefineNote] = useState<string | null>(null)
+  const [encounterOpen, setEncounterOpen] = useState(false)
 
   async function handleCapture(text: string, source: CaptureSource) {
     // Store as a source (evidence that feeds Refine and provenance) …
@@ -132,7 +134,25 @@ export function LivingFieldDetailPanel({
         </div>
 
         <div className="px-6 py-5 space-y-6">
-          {/* Current Expression */}
+          {/* Primary action — enter the conversation. Conversation ↔ Field;
+              everything else here is a projection / secondary path. */}
+          {!encounterOpen ? (
+            <button
+              onClick={() => setEncounterOpen(true)}
+              className="w-full px-4 py-3 rounded-lg bg-amber-700 hover:bg-amber-600 text-stone-950 text-sm font-semibold transition-colors"
+            >
+              Enter this dimension with MAIA
+            </button>
+          ) : (
+            <LivingEncounterView
+              fieldKey={field.field_key}
+              fieldLabel={field.label}
+              memberId={memberId}
+              onClose={() => setEncounterOpen(false)}
+            />
+          )}
+
+          {/* Current Expression — secondary, quiet path */}
           <div className="space-y-2">
             <label className="text-stone-500 text-xs uppercase tracking-widest">
               Current Expression
