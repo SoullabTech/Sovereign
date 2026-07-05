@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { getLLMProvider, ensureUserTerminal } from '@/lib/consciousness/LLMProvider';
+import { inferSpiralogicCell, type Element } from '@/lib/consciousness/spiralogic-core';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -225,6 +226,59 @@ interface ProposedThread {
   groundedIn: string;
 }
 
+interface CellCandidate {
+  element: Element;
+  phase: 1 | 2 | 3;
+  confidence: number;
+  source: 'system_inferred';
+}
+
+const CELL_CANDIDATE_THRESHOLD = 0.55;
+
+// Mirrors the keyword sets inferSpiralogicCell uses internally. inferSpiralogicCell
+// itself always returns a cell (Fire is its unconditional default) with a fixed
+// confidence of 0.7 regardless of whether a keyword actually matched — so its
+// confidence number alone cannot gate anything. We check for real keyword signal
+// here so "no match" genuinely produces null, not a disguised default.
+const ELEMENT_KEYWORDS: Record<Element, RegExp> = {
+  Fire: /\b(start|begin|motivation|energy|resistance|struggle)\b/i,
+  Water: /\b(feel|emotion|overwhelm|process|conflict|shadow)\b/i,
+  Earth: /\b(structure|plan|practice|habit|building|routine)\b/i,
+  Air: /\b(understand|clarity|explain|share|teaching|pattern)\b/i,
+  Aether: /\b(spirit|soul|mystery|sacred|transcend|unity)\b/i,
+};
+
+/**
+ * Best-effort, read-only Spiralogic cell inference for a single member turn.
+ * Never throws — inference must never break the interview. Returns null when
+ * there is no genuine keyword signal or confidence falls below the surfacing
+ * threshold; below threshold we surface NOTHING (no disguised guess).
+ */
+async function detectCellCandidate(message: string): Promise<CellCandidate | null> {
+  try {
+    if (!message || !message.trim()) return null;
+
+    const hasSignal = (Object.keys(ELEMENT_KEYWORDS) as Element[]).some((el) =>
+      ELEMENT_KEYWORDS[el].test(message),
+    );
+    if (!hasSignal) return null;
+
+    const cell = await inferSpiralogicCell(message, 'vision-studio-ephemeral');
+    if (!cell || typeof cell.confidence !== 'number') return null;
+    if (cell.confidence < CELL_CANDIDATE_THRESHOLD) return null;
+
+    return {
+      element: cell.element,
+      phase: cell.phase,
+      confidence: cell.confidence,
+      source: 'system_inferred',
+    };
+  } catch (err) {
+    console.warn('[VisionStudio/interview] cell inference failed (non-fatal):', err);
+    return null;
+  }
+}
+
 function asThreads(parsed: unknown): ProposedThread[] | null {
   if (!parsed || typeof parsed !== 'object') return null;
   const arr = (parsed as any).threads;
@@ -294,7 +348,11 @@ export async function POST(request: NextRequest) {
 
     if (mode === 'turn') {
       if (!raw) return NextResponse.json({ error: 'Nothing came through. Try once more.' }, { status: 502 });
-      return NextResponse.json({ ok: true, reply: raw });
+      // Read-only, best-effort cell inference on the member's own message text.
+      // This route remains read+reply only — no writes occur here or below.
+      const lastMemberTurn = [...history].reverse().find((t) => t.role === 'user');
+      const cellCandidate = lastMemberTurn ? await detectCellCandidate(lastMemberTurn.content) : null;
+      return NextResponse.json({ ok: true, reply: raw, cellCandidate });
     }
 
     const threads = asThreads(extractJson(raw));

@@ -20,6 +20,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
+import { RoomHoloflower, type RoomMotionState, type SpiralElement } from './RoomHoloflower';
 
 type Role = 'user' | 'assistant';
 interface Turn { role: Role; content: string; }
@@ -30,6 +31,22 @@ interface CarryPayload {
   proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean }[];
   created: { title: string; shareWithPractitioner: boolean }[];
 }
+interface CellCandidate {
+  element: SpiralElement;
+  phase: 1 | 2 | 3;
+  confidence: number;
+  source: 'system_inferred';
+}
+
+const ELEMENT_FEELING_LABEL: Record<SpiralElement, string> = {
+  Fire: 'Fire awakening',
+  Water: 'Water moving',
+  Earth: 'Earth settling',
+  Air: 'Air clarifying',
+  Aether: 'something wider gathering',
+};
+
+const ALL_ELEMENTS: SpiralElement[] = ['Fire', 'Water', 'Earth', 'Air', 'Aether'];
 
 type RoomPhase = 'arrival' | 'conversation' | 'proposal' | 'closed';
 
@@ -128,6 +145,15 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string>(`vs-${Date.now()}`);
 
+  // — Room holoflower: ambient motion + ephemeral cell-candidate reflection —
+  // Nothing here is persisted. Confirmed elements live only in this component's
+  // state for the duration of the session; they are never sent to any API and
+  // never written to localStorage.
+  const [roomMotion, setRoomMotion] = useState<RoomMotionState>('idle');
+  const [cellCandidate, setCellCandidate] = useState<CellCandidate | null>(null);
+  const [confirmedElements, setConfirmedElements] = useState<SpiralElement[]>([]);
+  const [showElementPicker, setShowElementPicker] = useState(false);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns, working]);
@@ -152,14 +178,45 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     setTurns(updated);
     setDraft('');
     setWorking(true);
+    setRoomMotion('processing');
+    // A new turn arriving fades any unconfirmed candidate from the prior turn —
+    // no nagging, no re-ask. Member correction always wins; silence just moves on.
+    setCellCandidate(null);
+    setShowElementPicker(false);
     try {
       const json = await callInterview(updated, 'turn');
       setTurns(prev => [...prev, { role: 'assistant', content: json.reply }]);
+      setRoomMotion('responding');
+      if (json?.cellCandidate && typeof json.cellCandidate === 'object') {
+        setCellCandidate(json.cellCandidate);
+      }
+      setTimeout(() => setRoomMotion('idle'), 900);
     } catch (e: any) {
       setError(e.message);
+      setRoomMotion('idle');
     } finally {
       setWorking(false);
     }
+  }
+
+  function confirmCandidate() {
+    if (!cellCandidate) return;
+    setConfirmedElements(prev =>
+      prev.includes(cellCandidate.element) ? prev : [...prev, cellCandidate.element],
+    );
+    setCellCandidate(null);
+    setShowElementPicker(false);
+  }
+
+  function dismissCandidate() {
+    setCellCandidate(null);
+    setShowElementPicker(false);
+  }
+
+  function chooseElementInstead(element: SpiralElement) {
+    setConfirmedElements(prev => (prev.includes(element) ? prev : [...prev, element]));
+    setCellCandidate(null);
+    setShowElementPicker(false);
   }
 
   async function listenBack() {
@@ -451,20 +508,28 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   // — Conversation —
   return (
     <div className="flex flex-col h-full max-w-prose mx-auto">
-      <div className="px-4 py-4 border-b border-stone-800 flex items-center justify-between">
+      <div className="px-4 py-4 border-b border-stone-800 flex items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-widest text-stone-500">Vision Studio</p>
           <p className="text-stone-400 text-sm font-light">{phaseLabel}</p>
         </div>
-        {turns.length >= 4 && (
-          <button
-            onClick={listenBack}
-            disabled={working}
-            className="text-stone-500 hover:text-stone-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
-          >
-            Listen back
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <RoomHoloflower
+            motionState={roomMotion}
+            proposedElement={cellCandidate?.element ?? null}
+            confirmedElements={confirmedElements}
+            size={64}
+          />
+          {turns.length >= 4 && (
+            <button
+              onClick={listenBack}
+              disabled={working}
+              className="text-stone-500 hover:text-stone-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
+            >
+              Listen back
+            </button>
+          )}
+        </div>
       </div>
 
       {guided && openingQuestion && turns.length === 0 && (
@@ -498,6 +563,53 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
         </AnimatePresence>
       </div>
 
+      {cellCandidate && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-4 py-3 border-t border-stone-900 space-y-2"
+        >
+          <p className="text-stone-400 text-sm font-light italic">
+            This feels like {ELEMENT_FEELING_LABEL[cellCandidate.element]}. Does that feel true for you?
+          </p>
+          {!showElementPicker ? (
+            <div className="flex gap-4 text-xs">
+              <button
+                onClick={confirmCandidate}
+                className="text-stone-300 hover:text-stone-100 underline underline-offset-2 transition-colors"
+              >
+                Feels true
+              </button>
+              <button
+                onClick={dismissCandidate}
+                className="text-stone-500 hover:text-stone-300 underline underline-offset-2 transition-colors"
+              >
+                Not quite
+              </button>
+              <button
+                onClick={() => setShowElementPicker(true)}
+                className="text-stone-600 hover:text-stone-400 underline underline-offset-2 transition-colors"
+              >
+                It&apos;s something else
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3 text-xs">
+              {ALL_ELEMENTS.map(el => (
+                <button
+                  key={el}
+                  onClick={() => chooseElementInstead(el)}
+                  className="text-stone-400 hover:text-stone-200 underline underline-offset-2 transition-colors"
+                >
+                  {el}
+                </button>
+              ))}
+            </div>
+          )}
+          <p className="text-stone-700 text-xs font-light">A lens you can correct — never a verdict.</p>
+        </motion.div>
+      )}
+
       {error && (
         <div className="px-4 py-2 text-red-400 text-xs">{error}</div>
       )}
@@ -508,7 +620,10 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
           placeholder="Say something…"
           rows={3}
           value={draft}
-          onChange={e => setDraft(e.target.value)}
+          onChange={e => {
+            setDraft(e.target.value);
+            if (!working) setRoomMotion(e.target.value ? 'listening' : 'idle');
+          }}
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
