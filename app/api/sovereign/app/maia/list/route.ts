@@ -11,6 +11,8 @@ import { observeRelationalContent } from '@/lib/consciousness/relationalObserver
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
 import { emitSignal } from '@/lib/observation/observationService';
+import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
+import { logAgentRun } from '@/lib/services/corpusCallosumService';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -1089,6 +1091,45 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       }).catch((err) => {
         console.warn('[sovereign/maia/list] AIN shape telemetry write failed:', err?.message);
       });
+    }
+
+    // 📓 INTERRUPTION LEDGER (fire-and-forget, observation-only): per-turn friction/novelty/elegance
+    // evidence of the runtime being changed by encounter. No raw content persisted — scores and
+    // markers only, into agent_runs.meta. Sanctuary turns are refused here AND inside the module.
+    // Observation instrument, not an interpreter: rows accumulate; nothing is concluded or surfaced.
+    if (!isSanctuary && sovereignText && process.env.INTERRUPTION_LEDGER_ENABLED !== '0') {
+      try {
+        const _priorResponses = (Array.isArray(_convHistory) ? _convHistory : [])
+          .map((h: any) => h?.maiaResponse ?? (h?.role === 'assistant' ? h?.content : null))
+          .filter((t: any): t is string => typeof t === 'string' && t.length > 0)
+          .slice(-5);
+        const _ledger = computeInterruptionMetadata({
+          memberMessage: message as string,
+          assistantResponse: sovereignText,
+          priorResponses: _priorResponses,
+          sanctuary: isSanctuary,
+        });
+        if (_ledger) {
+          console.log('[MAIA] interruption-ledger', {
+            isInterruption: _ledger.isInterruption,
+            markers: _ledger.friction.markers,
+            novelty: Number(_ledger.novelty.toFixed(3)),
+          });
+          logAgentRun({
+            sessionId: session.id,
+            userId: effectiveUserId ?? undefined,
+            agentName: 'interruption-ledger',
+            epistemicMode: 'structured',
+            source: 'interruption-ledger',
+            status: 'ok',
+            latencyMs: duration,
+            meta: { ..._ledger, turnIndex: _historyLen },
+            originRoute: '/api/sovereign/app/maia/list',
+          }).catch(() => { /* fire-and-forget; never blocks the turn */ });
+        }
+      } catch (ledgerErr: any) {
+        console.warn('[MAIA] interruption-ledger failed (non-blocking):', ledgerErr?.message);
+      }
     }
 
     // 💫 ANAMNESIS WRITE (fire-and-forget): Capture relationship essence after each turn.
