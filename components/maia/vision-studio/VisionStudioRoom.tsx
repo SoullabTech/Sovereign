@@ -152,6 +152,9 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   const [roomMotion, setRoomMotion] = useState<RoomMotionState>('idle');
   const [cellCandidate, setCellCandidate] = useState<CellCandidate | null>(null);
   const [confirmedElements, setConfirmedElements] = useState<SpiralElement[]>([]);
+  // Correction teaches restraint: an element the member has declined stays
+  // silent for the rest of the session — the room never argues by re-asking.
+  const [dismissedElements, setDismissedElements] = useState<SpiralElement[]>([]);
   const [showElementPicker, setShowElementPicker] = useState(false);
 
   useEffect(() => {
@@ -187,7 +190,12 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
       const json = await callInterview(updated, 'turn');
       setTurns(prev => [...prev, { role: 'assistant', content: json.reply }]);
       setRoomMotion('responding');
-      if (json?.cellCandidate && typeof json.cellCandidate === 'object') {
+      if (
+        json?.cellCandidate &&
+        typeof json.cellCandidate === 'object' &&
+        !dismissedElements.includes(json.cellCandidate.element) &&
+        !confirmedElements.includes(json.cellCandidate.element)
+      ) {
         setCellCandidate(json.cellCandidate);
       }
       setTimeout(() => setRoomMotion('idle'), 900);
@@ -209,11 +217,24 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   }
 
   function dismissCandidate() {
+    if (cellCandidate) {
+      setDismissedElements(prev =>
+        prev.includes(cellCandidate.element) ? prev : [...prev, cellCandidate.element],
+      );
+    }
     setCellCandidate(null);
     setShowElementPicker(false);
   }
 
   function chooseElementInstead(element: SpiralElement) {
+    // The redirect is also a correction of the proposed element — silence it too.
+    if (cellCandidate && cellCandidate.element !== element) {
+      setDismissedElements(prev =>
+        prev.includes(cellCandidate.element) ? prev : [...prev, cellCandidate.element],
+      );
+    }
+    // An explicit member choice outranks any earlier dismissal of that element.
+    setDismissedElements(prev => prev.filter(e => e !== element));
     setConfirmedElements(prev => (prev.includes(element) ? prev : [...prev, element]));
     setCellCandidate(null);
     setShowElementPicker(false);
