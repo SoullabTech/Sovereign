@@ -96,16 +96,18 @@ export default function SpiralogicReportPage() {
       const profileRes = await apiFetch('/api/members/profile', { method: 'GET' });
       if (profileRes.ok) {
         const profile = await profileRes.json();
-        if (profile.birth_date || profile.birthDate) {
+        // Profile API returns birth data nested under `birthData` (see
+        // app/api/members/profile GET), not as flat birth_* columns
+        if (profile.birthData?.date) {
           setHasBirthData(true);
           setSavedBirthData({
-            date: profile.birth_date || profile.birthDate,
-            time: profile.birth_time || profile.birthTime || '12:00',
+            date: profile.birthData.date,
+            time: profile.birthData.time || '12:00',
             location: {
-              name: profile.birth_location || profile.birthLocation || '',
-              lat: parseFloat(profile.birth_lat || profile.birthLat || '0'),
-              lng: parseFloat(profile.birth_lng || profile.birthLng || '0'),
-              timezone: profile.birth_timezone || profile.birthTimezone || 'UTC',
+              name: profile.birthData.location?.name || '',
+              lat: profile.birthData.location?.lat ?? 0,
+              lng: profile.birthData.location?.lng ?? 0,
+              timezone: profile.birthData.location?.timezone || 'UTC',
             },
           });
         }

@@ -125,3 +125,5 @@ app/dashboard/ain-committee/
 # Ignore packages build output (but not source)
 packages/**/dist/
 packages/**/node_modules/
+# Local backup trees (nested copies broke Next standalone copyfile during build, 2026-07-05)
+backups/
