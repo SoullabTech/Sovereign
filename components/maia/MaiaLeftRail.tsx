@@ -135,7 +135,10 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library' || id === 'vision-studio') {
+    // living-field is a full page (/maia/living-field), not an in-shell world panel —
+    // navigate to it directly. onWorldChange would open an empty Context panel because
+    // no contextual panel is registered for it.
+    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library' || id === 'vision-studio' || id === 'living-field') {
       router.push(route);
     } else {
       // If we're in a boundary, world clicks need router navigation

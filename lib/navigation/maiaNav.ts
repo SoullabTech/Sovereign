@@ -23,6 +23,7 @@ import {
   BookCopy,
   NotebookPen,
   Compass,
+  Sprout,
 } from 'lucide-react';
 
 import type {
@@ -47,9 +48,15 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
   },
 
   // ── MY LIFE — dimensions of the Personal Field (becoming) ──
-  // Living Field (Sprout → /maia/living-field, "Who you are becoming") removed from
-  // the rail 2026-07-06: surfaced only a contextual panel with no process behind it.
-  // Restore here once it is attached to an actual process.
+  {
+    id: 'living-field',
+    label: 'Living Field',
+    icon: Sprout,
+    route: '/maia/living-field',
+    classification: 'world',
+    tooltip: 'Who you are becoming',
+    group: 'life',
+  },
   // Encounters (Footprints → /sessions) and Relationships (Heart → /relationships)
   // removed from the rail 2026-07-05: both surfaced only a contextual panel with no
   // process behind it. Restore here once each is attached to an actual process.
