@@ -43,13 +43,9 @@ const asStr = (v: unknown, max = 400): string =>
 const asPhase = (v: unknown): string | null => {
   if (typeof v !== 'string') return null;
   const cleaned = v.toLowerCase().replace(/[^a-z0-9_]/g, '');
-  // Allow fire_1..air_3 + 'unsolicited' + 'closure' + workshop-loop tags
+  // Allow fire_1..air_3 + 'unsolicited' + 'closure'
   if (/^(fire|water|earth|air|aether)_[123]$/.test(cleaned)) return cleaned;
   if (cleaned === 'unsolicited' || cleaned === 'closure') return cleaned;
-  // 'practice' = the one commitment chosen at the end of a session ("Now what will you actually live?").
-  // 'offering' = what the member chooses to make available to others. Both are member-authored
-  // threads under the same consent model — the tag types the evidence, never the person.
-  if (cleaned === 'practice' || cleaned === 'offering') return cleaned;
   return null;
 };
 
