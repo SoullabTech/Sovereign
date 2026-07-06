@@ -54,7 +54,11 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     icon: Sprout,
     route: '/maia/living-field',
     classification: 'world',
-    tooltip: 'Who you are becoming',
+    // Label names the PLACE, not the person. Per Constitutional Direction of
+    // Authority / Invariant 16, the system must not assert who the member is
+    // becoming — that is the member's to author. Prior copy ("Who you are
+    // becoming") made that claim; this frames the place and its purpose instead.
+    tooltip: 'A place where lived experience becomes coherent',
     group: 'life',
   },
   // Encounters (Footprints → /sessions) and Relationships (Heart → /relationships)
