@@ -135,7 +135,10 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library' || id === 'vision-studio') {
+    // living-field is a full page (/maia/living-field), not an in-shell world panel —
+    // navigate to it directly. onWorldChange would open an empty Context panel because
+    // no contextual panel is registered for it.
+    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library' || id === 'vision-studio' || id === 'living-field') {
       router.push(route);
     } else {
       // If we're in a boundary, world clicks need router navigation
@@ -155,8 +158,13 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const glowIntensity = isResponding ? 0.2 + amplitude * 0.3 : 0;
 
   // Split worlds into always-visible (no group or 'life') vs collapsible ('work')
-  const worldsBeforeIdeas = MAIA_WORLDS.filter((w) => w.group !== 'work');
+  const worldsBeforeIdeas = MAIA_WORLDS.filter((w) => w.group !== 'work' && w.id !== 'living-field');
   const worldsFromIdeas = MAIA_WORLDS.filter((w) => w.group === 'work');
+  // Living Field renders in the lower collapsible section, just above the steward
+  // boundary divider — a member-facing world positioned adjacent to (not among) the
+  // steward functions. Stays a world, not a boundary: visible to all members, no
+  // audience gate. "Gate capabilities within the page, not existence at the rail."
+  const livingFieldWorld = MAIA_WORLDS.find((w) => w.id === 'living-field');
 
   const renderWorldButton = (world: (typeof MAIA_WORLDS)[number]) => {
     const Icon = world.icon;
@@ -379,6 +387,9 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
               className="w-full flex flex-col items-center gap-1 overflow-hidden"
             >
               {worldsFromIdeas.map(renderWorldButton)}
+
+              {/* Living Field — member world, positioned just above the steward divider */}
+              {livingFieldWorld && renderWorldButton(livingFieldWorld)}
 
               {/* Divider before boundaries */}
               <div className="w-6 h-px bg-[#3a2a1f]/40 my-2" />

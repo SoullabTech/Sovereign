@@ -90,6 +90,18 @@ const nextConfig = {
     // homes of each world, but old bookmarks and external links should
     // still resolve. Permanent (308) so clients cache the new location.
     //
+    // /now-what — the Now What? demo home (Larry Closs program), served from
+    // public/now-what/index.html with a clean address. Plain-array rewrites are
+    // afterFiles: if an app route at app/now-what/page.tsx ever ships, it takes
+    // precedence and this rewrite becomes inert — no collision.
+    async rewrites() {
+      return [
+        {
+          source: '/now-what',
+          destination: '/now-what/index.html',
+        },
+      ];
+    },
     // NOTE: redirects defined here run at the Next.js edge layer, BEFORE
     // any route prerendering. This is the only reliable way to emit a
     // true 308 for paths whose "page" would otherwise be collapsed into a
