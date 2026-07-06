@@ -930,8 +930,8 @@ services:
       - ./config/turnserver.conf:/etc/coturn/turnserver.conf:ro
     security_opt:
       - no-new-privileges:true
-    networks:
-      - maia-public
+    # No `networks:` block — mutually exclusive with network_mode: host
+    # (compose v5 rejects the pair at parse time and blocks ALL deploys).
 
   # ═════════════════════════════════════════════════════════════════════════════
   # LiveKit — media SFU (self-hosted)   [ARCHIVED 2026-07-05 · future group-room substrate]
