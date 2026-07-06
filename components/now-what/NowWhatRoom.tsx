@@ -619,7 +619,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <p className="text-slate-500 text-sm font-light italic pt-2">When you're ready…</p>
           <button
             onClick={() => setEntered(true)}
-            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-base font-light underline underline-offset-4 transition-colors"
+            className="text-[#ffe27a] hover:text-[#fff2ab] text-base font-light underline underline-offset-4 transition-colors"
           >
             Come in.
           </button>
@@ -663,7 +663,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={beginFromThreshold}
             disabled={!arrivalAnswer.trim()}
-            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             Begin
           </button>
@@ -798,7 +798,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={commitPractice}
             disabled={saving || !practiceDraft.trim()}
-            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Carry this practice'}
           </button>
@@ -858,7 +858,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={commitOffering}
             disabled={saving || !offeringDraft.trim()}
-            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Offer it'}
           </button>
@@ -1051,7 +1051,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={() => carry(collectPayload())}
             disabled={saving}
-            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
+            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
           >
             {saving ? 'Saving…' : 'Carry what I chose'}
           </button>

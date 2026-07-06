@@ -110,9 +110,9 @@ export function RoomHoloflower({
             maskRepeat: 'no-repeat',
             WebkitMaskPosition: 'center',
             maskPosition: 'center',
-            background: 'linear-gradient(160deg, #6fc3da 0%, #3f88a8 52%, #1f5273 100%)',
+            background: 'linear-gradient(160deg, #2fd0f0 0%, #1a9fd0 50%, #0d5b86 100%)',
             mixBlendMode: 'color',
-            opacity: 0.55,
+            opacity: 0.34,
             pointerEvents: 'none',
           }}
         />

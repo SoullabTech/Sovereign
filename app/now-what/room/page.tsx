@@ -22,7 +22,7 @@ function NowWhatRoomInner() {
   const fieldContext = params?.get('fieldContext') ?? undefined;
 
   return (
-    <div className="min-h-screen bg-[#0b1a26] text-slate-200">
+    <div className="min-h-screen bg-[#062a42] text-slate-200">
       <NowWhatRoom phase={phase} fieldContext={fieldContext} />
     </div>
   );
@@ -31,7 +31,7 @@ function NowWhatRoomInner() {
 export default function NowWhatRoomPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0b1a26] flex items-center justify-center">
+      <div className="min-h-screen bg-[#062a42] flex items-center justify-center">
         <p className="text-slate-500 text-sm font-light">Opening the room…</p>
       </div>
     }>
