@@ -29,6 +29,12 @@ interface RoomHoloflowerProps {
   /** Elements the member has confirmed this session — stay gently warm. */
   confirmedElements: SpiralElement[];
   size?: number;
+  /**
+   * Larry's Now What? room only: wash the mark toward his nautical blues.
+   * A masked colour overlay (mix-blend) tints the SAME artwork — it is never
+   * redrawn. Off by default, so Soullab's own room keeps the warm original.
+   */
+  coolTint?: boolean;
 }
 
 // Glow colours only — the artwork carries its own petal colour. These tint the
@@ -46,6 +52,7 @@ export function RoomHoloflower({
   proposedElement,
   confirmedElements,
   size = 120,
+  coolTint = false,
 }: RoomHoloflowerProps) {
   // Most recently confirmed element holds the glow; a proposal warms it faintly.
   const confirmed = confirmedElements[confirmedElements.length - 1] ?? null;
@@ -64,7 +71,7 @@ export function RoomHoloflower({
   return (
     <div
       className={`relative inline-flex items-center justify-center ${breatheClass}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, isolation: coolTint ? 'isolate' : 'auto' }}
     >
       <div
         aria-hidden="true"
@@ -88,6 +95,28 @@ export function RoomHoloflower({
         className="relative select-none"
         draggable={false}
       />
+      {coolTint && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 select-none"
+          style={{
+            width: size,
+            height: size,
+            WebkitMaskImage: 'url(/holoflower-v2-transparent.png)',
+            maskImage: 'url(/holoflower-v2-transparent.png)',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            background: 'linear-gradient(160deg, #6fc3da 0%, #3f88a8 52%, #1f5273 100%)',
+            mixBlendMode: 'color',
+            opacity: 0.55,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       <style jsx>{`
         .room-holoflower-idle {
           opacity: 1;

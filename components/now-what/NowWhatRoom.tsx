@@ -593,7 +593,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     if (fieldContext && !returnChecked) {
       return (
         <div className="max-w-prose mx-auto px-4 py-16 flex justify-center">
-          <RoomHoloflower motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+          <RoomHoloflower coolTint motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
         </div>
       );
     }
@@ -605,50 +605,50 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     if (!returning && !entered) {
       return (
         <div className="max-w-prose mx-auto px-4 py-16 space-y-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-500">Now What? · with Larry Closs</p>
-          <h1 className="text-2xl font-light text-stone-100">Welcome.</h1>
-          <div className="space-y-4 text-stone-300 text-base font-light leading-relaxed">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Now What? · with Larry Closs</p>
+          <h1 className="text-2xl font-light text-slate-100">Welcome.</h1>
+          <div className="space-y-4 text-slate-300 text-base font-light leading-relaxed">
             <p>Flourishing isn't a destination. It's a practice — one you live, day by day, long after a conversation ends.</p>
             <p>This is where that practice continues.</p>
             <p>It's a place to return to between our conversations. A place to notice what you're learning, work with the questions that matter, and bring fresh experience back into the conversation.</p>
-            <p className="text-stone-200">You set the rhythm.</p>
-            <p className="text-stone-200">You decide what deserves your attention.</p>
+            <p className="text-slate-200">You set the rhythm.</p>
+            <p className="text-slate-200">You decide what deserves your attention.</p>
             <p>Nothing here measures you or grades your progress. The only growth that matters is the growth you recognize in your own life.</p>
             <p>Think of this as our coaching continuing — carried into your real, working life, one step at a time.</p>
           </div>
-          <p className="text-stone-500 text-sm font-light italic pt-2">When you're ready…</p>
+          <p className="text-slate-500 text-sm font-light italic pt-2">When you're ready…</p>
           <button
             onClick={() => setEntered(true)}
-            className="text-stone-100 hover:text-white text-base font-light underline underline-offset-4 transition-colors"
+            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-base font-light underline underline-offset-4 transition-colors"
           >
             Come in.
           </button>
-          <p className="text-stone-600 text-xs font-light pt-6 border-t border-stone-900">Larry Closs · Now What?</p>
+          <p className="text-slate-600 text-xs font-light pt-6 border-t border-slate-900">Larry Closs · Now What?</p>
         </div>
       );
     }
 
     return (
       <div className="max-w-prose mx-auto px-4 py-16 space-y-10">
-        <h1 className="text-2xl font-light text-stone-100 tracking-wide">Now What?</h1>
+        <h1 className="text-2xl font-light text-slate-100 tracking-wide">Now What?</h1>
 
         {returning ? (
           <div className="space-y-4">
-            <p className="text-stone-400 text-sm font-light">Last time you chose this practice:</p>
-            <p className="text-stone-200 text-base font-light border-l-2 border-stone-600 pl-4 leading-relaxed">
+            <p className="text-slate-400 text-sm font-light">Last time you chose this practice:</p>
+            <p className="text-slate-200 text-base font-light border-l-2 border-slate-600 pl-4 leading-relaxed">
               {priorPractice}
             </p>
-            <p className="text-stone-300 text-base font-light">What happened?</p>
+            <p className="text-slate-300 text-base font-light">What happened?</p>
           </div>
         ) : (
-          <p className="text-stone-300 text-base font-light leading-relaxed">
+          <p className="text-slate-300 text-base font-light leading-relaxed">
             How are you entering this room today?
           </p>
         )}
 
         <div className="space-y-3">
           <textarea
-            className="w-full bg-transparent border-b border-stone-700 text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-500 placeholder:text-stone-700 py-2"
+            className="w-full bg-transparent border-b border-slate-700 text-slate-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-slate-500 placeholder:text-slate-700 py-2"
             rows={3}
             placeholder={returning ? 'What actually happened…' : 'In your own words…'}
             value={arrivalAnswer}
@@ -663,7 +663,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={beginFromThreshold}
             disabled={!arrivalAnswer.trim()}
-            className="text-stone-300 hover:text-stone-100 text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             Begin
           </button>
@@ -672,16 +672,16 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         <div className="space-y-3 pt-6">
           <button
             onClick={() => setShowFrame(v => !v)}
-            className="text-stone-600 hover:text-stone-400 text-xs underline underline-offset-4 transition-colors"
+            className="text-slate-600 hover:text-slate-400 text-xs underline underline-offset-4 transition-colors"
           >
             {showFrame ? 'Hide' : 'What is this space?'}
           </button>
           {showFrame && (
-            <div className="text-stone-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-stone-800 pl-4">
+            <div className="text-slate-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-slate-800 pl-4">
               {OPENING_FRAME}
             </div>
           )}
-          <p className="text-stone-700 text-xs font-light leading-relaxed">
+          <p className="text-slate-700 text-xs font-light leading-relaxed">
             What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.
           </p>
         </div>
@@ -694,51 +694,51 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-10">
         <div className="flex justify-center">
-          <RoomHoloflower motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+          <RoomHoloflower coolTint motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
         </div>
         <div className="space-y-1 text-center">
-          <p className="text-xs uppercase tracking-widest text-stone-400">Vision Studio</p>
-          <h1 className="text-lg font-light text-stone-200">{phaseLabel}</h1>
+          <p className="text-xs uppercase tracking-widest text-slate-400">Vision Studio</p>
+          <h1 className="text-lg font-light text-slate-200">{phaseLabel}</h1>
         </div>
 
         <div className="space-y-1">
-          <p className="text-stone-300 text-base font-light leading-relaxed">Every practitioner begins differently.</p>
-          <p className="text-stone-500 text-sm font-light leading-relaxed">Choose whatever feels most natural today.</p>
+          <p className="text-slate-300 text-base font-light leading-relaxed">Every practitioner begins differently.</p>
+          <p className="text-slate-500 text-sm font-light leading-relaxed">Choose whatever feels most natural today.</p>
         </div>
 
         <div className="space-y-3">
           <button
             onClick={() => { setGuided(false); setRoomPhase('conversation'); }}
-            className="w-full text-left border border-stone-800 rounded-lg px-5 py-4 hover:border-stone-600 hover:bg-stone-900/40 transition-colors"
+            className="w-full text-left border border-slate-800 rounded-lg px-5 py-4 hover:border-slate-600 hover:bg-slate-900/40 transition-colors"
           >
-            <p className="text-stone-200 text-sm font-light">Begin in your own words</p>
-            <p className="text-stone-500 text-xs font-light mt-1">Just start — no prompt, no structure.</p>
+            <p className="text-slate-200 text-sm font-light">Begin in your own words</p>
+            <p className="text-slate-500 text-xs font-light mt-1">Just start — no prompt, no structure.</p>
           </button>
 
           <button
             onClick={() => { setGuided(true); setRoomPhase('conversation'); }}
-            className="w-full text-left border border-stone-800 rounded-lg px-5 py-4 hover:border-stone-600 hover:bg-stone-900/40 transition-colors"
+            className="w-full text-left border border-slate-800 rounded-lg px-5 py-4 hover:border-slate-600 hover:bg-slate-900/40 transition-colors"
           >
-            <p className="text-stone-200 text-sm font-light">Begin with a question</p>
-            <p className="text-stone-500 text-xs font-light mt-1">A place to start, at your own pace.</p>
+            <p className="text-slate-200 text-sm font-light">Begin with a question</p>
+            <p className="text-slate-500 text-xs font-light mt-1">A place to start, at your own pace.</p>
           </button>
         </div>
 
         <div className="space-y-3">
           <button
             onClick={() => setShowFrame(v => !v)}
-            className="text-stone-500 hover:text-stone-300 text-xs underline underline-offset-4 transition-colors"
+            className="text-slate-500 hover:text-slate-300 text-xs underline underline-offset-4 transition-colors"
           >
             {showFrame ? 'Hide' : 'What is this space?'}
           </button>
           {showFrame && (
-            <div className="text-stone-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-stone-800 pl-4">
+            <div className="text-slate-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-slate-800 pl-4">
               {OPENING_FRAME}
             </div>
           )}
         </div>
 
-        <div className="border-t border-stone-900 pt-4 text-stone-600 text-xs font-light leading-relaxed">
+        <div className="border-t border-slate-900 pt-4 text-slate-600 text-xs font-light leading-relaxed">
           The authority for meaning stays with you. What you carry stays private in your own field; sharing a thread with your practitioner is a separate, explicit choice — off by default. Never the conversation, never a record of who you are.
         </div>
       </div>
@@ -751,19 +751,19 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-8">
         <div>
-          <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">{roomTitle}</p>
-          <h2 className="text-stone-200 text-lg font-light">Now what will you actually live?</h2>
-          <p className="text-stone-500 text-sm font-light mt-2">One practice. One experiment. One commitment. Not ten.</p>
+          <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">{roomTitle}</p>
+          <h2 className="text-slate-200 text-lg font-light">Now what will you actually live?</h2>
+          <p className="text-slate-500 text-sm font-light mt-2">One practice. One experiment. One commitment. Not ten.</p>
         </div>
 
         {suggestedPractices.length > 0 && (
           <div className="space-y-2">
-            <p className="text-stone-500 text-xs uppercase tracking-widest">Practices that surfaced</p>
+            <p className="text-slate-500 text-xs uppercase tracking-widest">Practices that surfaced</p>
             {suggestedPractices.map((t, i) => (
               <button
                 key={i}
                 onClick={() => setPracticeDraft(t.title)}
-                className="block w-full text-left text-stone-400 hover:text-stone-200 text-sm font-light border-l-2 border-stone-800 hover:border-stone-600 pl-3 py-1 transition-colors"
+                className="block w-full text-left text-slate-400 hover:text-slate-200 text-sm font-light border-l-2 border-slate-800 hover:border-slate-600 pl-3 py-1 transition-colors"
               >
                 {t.title}
               </button>
@@ -773,7 +773,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
 
         <div className="space-y-3">
           <textarea
-            className="w-full bg-transparent border-b border-stone-700 text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-500 placeholder:text-stone-700 py-2"
+            className="w-full bg-transparent border-b border-slate-700 text-slate-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-slate-500 placeholder:text-slate-700 py-2"
             rows={2}
             placeholder="In your own words — what will you live between now and next time?"
             value={practiceDraft}
@@ -785,9 +785,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 type="checkbox"
                 checked={sharePractice}
                 onChange={e => setSharePractice(e.target.checked)}
-                className="accent-stone-500 w-3 h-3"
+                className="accent-slate-500 w-3 h-3"
               />
-              <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+              <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
             </label>
           )}
         </div>
@@ -798,20 +798,20 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={commitPractice}
             disabled={saving || !practiceDraft.trim()}
-            className="text-stone-300 hover:text-stone-100 text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Carry this practice'}
           </button>
           <button
             onClick={() => setRoomPhase('offering')}
             disabled={saving}
-            className="text-stone-600 hover:text-stone-400 text-sm underline underline-offset-4 transition-colors"
+            className="text-slate-600 hover:text-slate-400 text-sm underline underline-offset-4 transition-colors"
           >
             Not today
           </button>
         </div>
 
-        <p className="text-stone-700 text-xs font-light">
+        <p className="text-slate-700 text-xs font-light">
           When you return, the room will begin from this practice — not from the beginning.
         </p>
       </div>
@@ -823,17 +823,17 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-8">
         <div>
-          <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">{roomTitle}</p>
-          <p className="text-stone-500 text-sm font-light">One more — only if it feels right. This one is optional.</p>
+          <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">{roomTitle}</p>
+          <p className="text-slate-500 text-sm font-light">One more — only if it feels right. This one is optional.</p>
         </div>
 
-        <p className="text-stone-300 text-base font-light leading-relaxed">
+        <p className="text-slate-300 text-base font-light leading-relaxed">
           What would you enjoy making available to others at this point in your life?
         </p>
 
         <div className="space-y-3">
           <textarea
-            className="w-full bg-transparent border-b border-stone-700 text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-500 placeholder:text-stone-700 py-2"
+            className="w-full bg-transparent border-b border-slate-700 text-slate-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-slate-500 placeholder:text-slate-700 py-2"
             rows={2}
             placeholder="Nothing is required here…"
             value={offeringDraft}
@@ -845,9 +845,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 type="checkbox"
                 checked={shareOffering}
                 onChange={e => setShareOffering(e.target.checked)}
-                className="accent-stone-500 w-3 h-3"
+                className="accent-slate-500 w-3 h-3"
               />
-              <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+              <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
             </label>
           )}
         </div>
@@ -858,14 +858,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={commitOffering}
             disabled={saving || !offeringDraft.trim()}
-            className="text-stone-300 hover:text-stone-100 text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Offer it'}
           </button>
           <button
             onClick={() => setRoomPhase('closed')}
             disabled={saving}
-            className="text-stone-600 hover:text-stone-400 text-sm underline underline-offset-4 transition-colors"
+            className="text-slate-600 hover:text-slate-400 text-sm underline underline-offset-4 transition-colors"
           >
             Skip for now
           </button>
@@ -878,20 +878,20 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   if (roomPhase === 'closed') {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-6">
-        <p className="text-xs uppercase tracking-widest text-stone-400">{roomTitle}</p>
+        <p className="text-xs uppercase tracking-widest text-slate-400">{roomTitle}</p>
         {savedPractice && (
           <div className="space-y-2">
-            <p className="text-stone-500 text-xs uppercase tracking-widest">The practice you chose</p>
-            <p className="text-stone-200 text-base font-light border-l-2 border-stone-600 pl-4 leading-relaxed">
+            <p className="text-slate-500 text-xs uppercase tracking-widest">The practice you chose</p>
+            <p className="text-slate-200 text-base font-light border-l-2 border-slate-600 pl-4 leading-relaxed">
               {savedPractice}
             </p>
-            <p className="text-stone-500 text-sm font-light">
+            <p className="text-slate-500 text-sm font-light">
               When you return, we'll begin from what happened.
             </p>
           </div>
         )}
         {(authored.length > 0 || !savedPractice) && (
-          <p className="text-stone-300 font-light text-base leading-relaxed">
+          <p className="text-slate-300 font-light text-base leading-relaxed">
             {authored.length > 0
               ? `${authored.length} thread${authored.length === 1 ? '' : 's'} carried into your field.`
               : 'Nothing carried — that is a faithful outcome too.'}
@@ -900,13 +900,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         {authored.length > 0 && (
           <ul className="space-y-2">
             {authored.map((t, i) => (
-              <li key={i} className="text-stone-400 text-sm font-light border-l-2 border-stone-700 pl-3">
+              <li key={i} className="text-slate-400 text-sm font-light border-l-2 border-slate-700 pl-3">
                 {t.title}
               </li>
             ))}
           </ul>
         )}
-        <p className="text-stone-500 text-sm font-light">
+        <p className="text-slate-500 text-sm font-light">
           The field holds what you authored. You may return to continue.
         </p>
       </div>
@@ -922,21 +922,21 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-8">
         <div>
-          <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">{roomTitle}</p>
-          <p className="text-stone-400 text-sm font-light">{nowWhat ? 'What surfaced' : `${phaseLabel} — What surfaced`}</p>
+          <p className="text-xs uppercase tracking-widest text-slate-400 mb-1">{roomTitle}</p>
+          <p className="text-slate-400 text-sm font-light">{nowWhat ? 'What surfaced' : `${phaseLabel} — What surfaced`}</p>
         </div>
 
-        <div className="text-stone-400 text-sm font-light leading-relaxed border-l-2 border-stone-700 pl-4">
+        <div className="text-slate-400 text-sm font-light leading-relaxed border-l-2 border-slate-700 pl-4">
           {CLOSURE_QUESTION}
         </div>
 
         {proposed.length === 0 ? (
-          <p className="text-stone-500 text-sm font-light italic">
+          <p className="text-slate-500 text-sm font-light italic">
             Nothing clear enough to propose — that is a faithful outcome. You may name something yourself below.
           </p>
         ) : (
           <div className="space-y-6">
-            {!nowWhat && <p className="text-stone-500 text-xs uppercase tracking-widest">Threads MAIA heard returning</p>}
+            {!nowWhat && <p className="text-slate-500 text-xs uppercase tracking-widest">Threads MAIA heard returning</p>}
             {orderedProposed.map((t, i, arr) => {
               const rev = revising[t.title];
               const kept = authored.some(a => a.title === t.title);
@@ -946,53 +946,53 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
               return (
                 <div key={i} className="space-y-3">
                   {showHeading && (
-                    <p className="text-stone-500 text-xs uppercase tracking-widest pt-1">{kindHeading}</p>
+                    <p className="text-slate-500 text-xs uppercase tracking-widest pt-1">{kindHeading}</p>
                   )}
-                  <div className="space-y-2 border-l-2 border-stone-700 pl-4">
+                  <div className="space-y-2 border-l-2 border-slate-700 pl-4">
                   {rev !== undefined ? (
                     rev === '' ? (
-                      <p className="text-stone-600 text-sm line-through">{t.title}</p>
+                      <p className="text-slate-600 text-sm line-through">{t.title}</p>
                     ) : (
                       <input
-                        className="bg-transparent border-b border-stone-600 text-stone-200 text-sm w-full focus:outline-none"
+                        className="bg-transparent border-b border-slate-600 text-slate-200 text-sm w-full focus:outline-none"
                         value={rev}
                         onChange={e => setRevising(r => ({ ...r, [t.title]: e.target.value }))}
                       />
                     )
                   ) : (
-                    <p className={`text-sm font-light ${kept ? 'text-stone-200' : 'text-stone-400'}`}>
+                    <p className={`text-sm font-light ${kept ? 'text-slate-200' : 'text-slate-400'}`}>
                       {t.title}
                     </p>
                   )}
-                  <p className="text-stone-500 text-xs font-light leading-relaxed">{t.reflection}</p>
+                  <p className="text-slate-500 text-xs font-light leading-relaxed">{t.reflection}</p>
                   <div className="flex gap-3 text-xs">
                     {rev === undefined && !kept && (
                       <>
                         <button
                           onClick={() => { handleDecision(t, 'keep'); }}
-                          className="text-stone-400 hover:text-stone-200 underline underline-offset-2"
+                          className="text-slate-400 hover:text-slate-200 underline underline-offset-2"
                         >carry</button>
                         <button
                           onClick={() => setRevising(r => ({ ...r, [t.title]: t.title }))}
-                          className="text-stone-500 hover:text-stone-300 underline underline-offset-2"
+                          className="text-slate-500 hover:text-slate-300 underline underline-offset-2"
                         >revise</button>
                         <button
                           onClick={() => setRevising(r => ({ ...r, [t.title]: '' }))}
-                          className="text-stone-600 hover:text-stone-400 underline underline-offset-2"
+                          className="text-slate-600 hover:text-slate-400 underline underline-offset-2"
                         >leave</button>
                       </>
                     )}
-                    {kept && <span className="text-stone-500 italic">carried</span>}
+                    {kept && <span className="text-slate-500 italic">carried</span>}
                     {rev === '' && (
                       <button
                         onClick={() => setRevising(r => { const n = { ...r }; delete n[t.title]; return n; })}
-                        className="text-stone-600 hover:text-stone-400 underline underline-offset-2"
+                        className="text-slate-600 hover:text-slate-400 underline underline-offset-2"
                       >undo</button>
                     )}
                     {rev !== undefined && rev !== '' && (
                       <button
                         onClick={() => { handleDecision(t, 'revise', rev); }}
-                        className="text-stone-400 hover:text-stone-200 underline underline-offset-2"
+                        className="text-slate-400 hover:text-slate-200 underline underline-offset-2"
                       >carry revised</button>
                     )}
                   </div>
@@ -1006,9 +1006,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                           const key = rev !== undefined && rev !== '' ? rev : t.title;
                           setShared(s => ({ ...s, [key]: e.target.checked }));
                         }}
-                        className="accent-stone-500 w-3 h-3"
+                        className="accent-slate-500 w-3 h-3"
                       />
-                      <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+                      <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
                     </label>
                   )}
                   </div>
@@ -1019,9 +1019,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         )}
 
         <div className="space-y-2">
-          <p className="text-stone-500 text-xs uppercase tracking-widest">Something of your own</p>
+          <p className="text-slate-500 text-xs uppercase tracking-widest">Something of your own</p>
           <input
-            className="bg-transparent border-b border-stone-700 text-stone-300 text-sm w-full focus:outline-none focus:border-stone-500 placeholder:text-stone-700 py-1"
+            className="bg-transparent border-b border-slate-700 text-slate-300 text-sm w-full focus:outline-none focus:border-slate-500 placeholder:text-slate-700 py-1"
             placeholder="Name a thread that is genuinely yours..."
             value={newThread}
             onChange={e => setNewThread(e.target.value)}
@@ -1032,16 +1032,16 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 type="checkbox"
                 checked={!!shared[newThread.trim()]}
                 onChange={e => setShared(s => ({ ...s, [newThread.trim()]: e.target.checked }))}
-                className="accent-stone-500 w-3 h-3"
+                className="accent-slate-500 w-3 h-3"
               />
-              <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+              <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
             </label>
           )}
         </div>
 
         {error && <p className="text-red-400 text-xs">{error}</p>}
 
-        <div className="border-t border-stone-900 pt-4 text-stone-600 text-xs font-light leading-relaxed space-y-1">
+        <div className="border-t border-slate-900 pt-4 text-slate-600 text-xs font-light leading-relaxed space-y-1">
           <p>What you carry enters your own Living Field — private by default.</p>
           <p>Sharing a thread with your practitioner is a separate choice, per thread; nothing is shared unless you check it.</p>
           <p>Only what you authored or affirmed. Not a record of this conversation. Nothing the system concluded about you.</p>
@@ -1051,13 +1051,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <button
             onClick={() => carry(collectPayload())}
             disabled={saving}
-            className="text-stone-300 hover:text-stone-100 text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
+            className="text-[#7fcbe0] hover:text-[#b3e4f2] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
           >
             {saving ? 'Saving…' : 'Carry what I chose'}
           </button>
           <button
             onClick={() => carry({ proposals: [], created: [] })}
-            className="text-stone-600 hover:text-stone-400 text-sm underline underline-offset-4 transition-colors"
+            className="text-slate-600 hover:text-slate-400 text-sm underline underline-offset-4 transition-colors"
           >
             Leave without carrying
           </button>
@@ -1073,6 +1073,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       <div className="px-4 pt-8 pb-4 flex flex-col items-center gap-3">
         <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
+            coolTint
             motionState={roomMotion}
             proposedElement={cellCandidate?.element ?? null}
             confirmedElements={confirmedElements}
@@ -1080,14 +1081,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           />
         </div>
         <div className="text-center">
-          <p className="text-xs uppercase tracking-widest text-stone-500">{roomTitle}</p>
-          {!nowWhat && <p className="text-stone-400 text-sm font-light">{phaseLabel}</p>}
+          <p className="text-xs uppercase tracking-widest text-slate-500">{roomTitle}</p>
+          {!nowWhat && <p className="text-slate-400 text-sm font-light">{phaseLabel}</p>}
         </div>
         {turns.length >= 4 && (
           <button
             onClick={listenBack}
             disabled={working}
-            className="text-stone-500 hover:text-stone-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
+            className="text-slate-500 hover:text-slate-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
           >
             Listen back
           </button>
@@ -1110,8 +1111,8 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       </div>
 
       {guided && openingQuestion && turns.length === 0 && (
-        <div className="px-4 pb-6 border-b border-stone-800 text-center">
-          <p className="text-stone-300 text-base font-light leading-relaxed">{openingQuestion}</p>
+        <div className="px-4 pb-6 border-b border-slate-800 text-center">
+          <p className="text-slate-300 text-base font-light leading-relaxed">{openingQuestion}</p>
         </div>
       )}
 
@@ -1122,7 +1123,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
               key={i}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`text-sm leading-relaxed font-light ${t.role === 'user' ? 'text-stone-200' : 'text-stone-400'}`}
+              className={`text-sm leading-relaxed font-light ${t.role === 'user' ? 'text-slate-200' : 'text-slate-400'}`}
             >
               {t.content}
             </motion.div>
@@ -1132,7 +1133,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
               key="working"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-stone-600 text-sm font-light"
+              className="text-slate-600 text-sm font-light"
             >
               …
             </motion.div>
@@ -1144,28 +1145,28 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="px-4 py-3 border-t border-stone-900 space-y-2"
+          className="px-4 py-3 border-t border-slate-900 space-y-2"
         >
-          <p className="text-stone-400 text-sm font-light italic">
+          <p className="text-slate-400 text-sm font-light italic">
             This feels like {ELEMENT_FEELING_LABEL[cellCandidate.element]}. Does that feel true for you?
           </p>
           {!showElementPicker ? (
             <div className="flex gap-4 text-xs">
               <button
                 onClick={confirmCandidate}
-                className="text-stone-300 hover:text-stone-100 underline underline-offset-2 transition-colors"
+                className="text-slate-300 hover:text-slate-100 underline underline-offset-2 transition-colors"
               >
                 Feels true
               </button>
               <button
                 onClick={dismissCandidate}
-                className="text-stone-500 hover:text-stone-300 underline underline-offset-2 transition-colors"
+                className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors"
               >
                 Not quite
               </button>
               <button
                 onClick={() => setShowElementPicker(true)}
-                className="text-stone-600 hover:text-stone-400 underline underline-offset-2 transition-colors"
+                className="text-slate-600 hover:text-slate-400 underline underline-offset-2 transition-colors"
               >
                 It&apos;s something else
               </button>
@@ -1176,14 +1177,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 <button
                   key={el}
                   onClick={() => chooseElementInstead(el)}
-                  className="text-stone-400 hover:text-stone-200 underline underline-offset-2 transition-colors"
+                  className="text-slate-400 hover:text-slate-200 underline underline-offset-2 transition-colors"
                 >
                   {el}
                 </button>
               ))}
             </div>
           )}
-          <p className="text-stone-700 text-xs font-light">A lens you can correct — never a verdict.</p>
+          <p className="text-slate-700 text-xs font-light">A lens you can correct — never a verdict.</p>
         </motion.div>
       )}
 
@@ -1195,13 +1196,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="px-4 py-3 border-t border-stone-900 space-y-2"
+          className="px-4 py-3 border-t border-slate-900 space-y-2"
         >
-          <p className="text-stone-500 text-xs font-light">
+          <p className="text-slate-500 text-xs font-light">
             Bring something with you — a journal page, a note, anything alive.
           </p>
           <textarea
-            className="w-full bg-transparent border border-stone-800 rounded-lg text-stone-300 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-600 placeholder:text-stone-700 p-3"
+            className="w-full bg-transparent border border-slate-800 rounded-lg text-slate-300 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-slate-600 placeholder:text-slate-700 p-3"
             rows={4}
             placeholder="Paste it here…"
             value={bringText}
@@ -1211,19 +1212,19 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             <button
               onClick={() => applyBroughtText(bringText)}
               disabled={!bringText.trim()}
-              className="text-stone-300 hover:text-stone-100 underline underline-offset-2 transition-colors disabled:opacity-30"
+              className="text-slate-300 hover:text-slate-100 underline underline-offset-2 transition-colors disabled:opacity-30"
             >
               Bring this in
             </button>
             <button
               onClick={() => bringFileInputRef.current?.click()}
-              className="text-stone-500 hover:text-stone-300 underline underline-offset-2 transition-colors"
+              className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors"
             >
               Choose a .txt or .md file
             </button>
             <button
               onClick={() => { setShowBring(false); setBringText(''); }}
-              className="text-stone-600 hover:text-stone-400 underline underline-offset-2 transition-colors"
+              className="text-slate-600 hover:text-slate-400 underline underline-offset-2 transition-colors"
             >
               Never mind
             </button>
@@ -1235,21 +1236,21 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             onChange={handleBringFile}
             className="hidden"
           />
-          <p className="text-stone-700 text-xs font-light">
+          <p className="text-slate-700 text-xs font-light">
             Stays on your device — nothing uploads. You review and edit before it's sent.
           </p>
         </motion.div>
       )}
 
       {bringTruncated && (
-        <div className="px-4 pt-2 text-stone-600 text-xs font-light">
+        <div className="px-4 pt-2 text-slate-600 text-xs font-light">
           That was long — I brought in the first {BRING_CHAR_CAP.toLocaleString()} characters. You're welcome to trim or continue it.
         </div>
       )}
 
-      <div className="px-4 py-4 border-t border-stone-800">
+      <div className="px-4 py-4 border-t border-slate-800">
         <textarea
-          className="w-full bg-transparent text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none placeholder:text-stone-700"
+          className="w-full bg-transparent text-slate-200 text-sm font-light leading-relaxed resize-none focus:outline-none placeholder:text-slate-700"
           placeholder="Say something…"
           rows={3}
           value={draft}
@@ -1266,10 +1267,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         />
         <div className="flex justify-between items-center mt-2 gap-3">
           <div className="flex items-center gap-3">
-            <span className="text-stone-700 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
+            <span className="text-slate-700 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
             <button
               onClick={() => setShowBring(v => !v)}
-              className="text-stone-600 hover:text-stone-400 text-xs underline underline-offset-2 transition-colors"
+              className="text-slate-600 hover:text-slate-400 text-xs underline underline-offset-2 transition-colors"
             >
               Bring something with you
             </button>
@@ -1281,7 +1282,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 title={speakReplies ? 'Stop speaking replies' : 'Hear the room'}
                 aria-pressed={speakReplies}
                 className={`text-xs underline underline-offset-2 transition-colors ${
-                  speakReplies ? 'text-amber-300 hover:text-amber-200' : 'text-stone-600 hover:text-stone-400'
+                  speakReplies ? 'text-amber-300 hover:text-amber-200' : 'text-slate-600 hover:text-slate-400'
                 }`}
               >
                 {speakReplies ? 'Speaking' : 'Hear the room'}
@@ -1293,7 +1294,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 title="Speak instead of typing"
                 aria-pressed={micListening}
                 className={`text-xs underline underline-offset-2 transition-colors ${
-                  micListening ? 'text-amber-300 hover:text-amber-200' : 'text-stone-500 hover:text-stone-300'
+                  micListening ? 'text-amber-300 hover:text-amber-200' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
                 {micListening ? 'Listening…' : 'Speak'}
@@ -1302,7 +1303,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             <button
               onClick={() => sendTurn(draft)}
               disabled={working || !draft.trim()}
-              className="text-stone-400 hover:text-stone-200 text-xs underline underline-offset-2 transition-colors disabled:opacity-30"
+              className="text-slate-400 hover:text-slate-200 text-xs underline underline-offset-2 transition-colors disabled:opacity-30"
             >
               Send
             </button>
