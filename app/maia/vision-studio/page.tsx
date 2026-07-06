@@ -21,31 +21,37 @@ import { PracticeFieldEditor } from '@/components/maia/practice-field/PracticeFi
 function VisionStudioInner() {
   const params = useSearchParams();
   const router = useRouter();
-  const tab = params.get('tab') ?? 'vision';
-  const phase = params.get('phase') ?? 'fire_1';
-  const fieldContext = params.get('fieldContext') ?? undefined;
+  const tab = params?.get('tab') ?? 'vision';
+  const phase = params?.get('phase') ?? 'fire_1';
+  const fieldContext = params?.get('fieldContext') ?? undefined;
+  // program=now-what renders the Now What? workshop loop: single-focus threshold,
+  // no tab chrome — nothing competes with the room.
+  const program = params?.get('program') ?? undefined;
+  const singleFocus = program === 'now-what';
 
   function switchTab(t: string) {
     if (t === 'living-field') {
       router.push('/maia/living-field');
       return;
     }
-    const p = new URLSearchParams(params.toString());
+    const p = new URLSearchParams(params?.toString() ?? '');
     p.set('tab', t);
     router.replace(`/maia/vision-studio?${p.toString()}`);
   }
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-200 flex flex-col">
-      {/* Tab bar */}
-      <div className="border-b border-stone-800 px-6 flex gap-6">
-        <TabButton label="Living Field" active={false} onClick={() => switchTab('living-field')} />
-        <TabButton label="Vision Studio" active={tab === 'vision'} onClick={() => switchTab('vision')} />
-        <TabButton label="Practice Field" active={tab === 'practice'} onClick={() => switchTab('practice')} />
-      </div>
+      {/* Tab bar — hidden in single-focus program mode */}
+      {!singleFocus && (
+        <div className="border-b border-stone-800 px-6 flex gap-6">
+          <TabButton label="Living Field" active={false} onClick={() => switchTab('living-field')} />
+          <TabButton label="Vision Studio" active={tab === 'vision'} onClick={() => switchTab('vision')} />
+          <TabButton label="Practice Field" active={tab === 'practice'} onClick={() => switchTab('practice')} />
+        </div>
+      )}
 
       {tab === 'vision' && (
-        <VisionStudioRoom phase={phase} fieldContext={fieldContext} />
+        <VisionStudioRoom phase={phase} fieldContext={fieldContext} program={program} />
       )}
       {tab === 'practice' && (
         <PracticeFieldEditor />

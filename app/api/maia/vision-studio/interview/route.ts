@@ -174,6 +174,28 @@ ${TWELVE_DISCIPLINES}
 
 ${HARD_LIMITS}`;
 
+// Return visit: the participant previously committed to one practice. The room does not
+// begin again — it begins from what happened. Continuity, not conversation history.
+const RETURN_PROMPT = (practice: string) => `You are MAIA, facilitating a RETURN visit in the Vision Field Interview — a Living Field conversation, not an intake or assessment.
+
+Last session, the participant chose one practice to actually live, in their own words:
+"${practice}"
+
+The opening has already been presented:
+"Last time you chose this practice. What happened?"
+
+Receive what actually happened — lived experience before analysis. Whether they lived it fully, partially, differently than planned, or not at all: all of it is faithful material. Not living a practice is information about the practice or the season, never a failure of the person. Do not evaluate adherence. Do not praise compliance.
+
+Follow aliveness in what the practice revealed:
+- "What did you notice while living it — or while not living it?"
+- "What surprised you?"
+- "Did the practice stay the same, or did it change shape as you lived it?"
+- "What is this practice teaching you that thinking about it couldn't?"
+
+${TWELVE_DISCIPLINES}
+
+${HARD_LIMITS}`;
+
 const PROPOSE_SYSTEM = `You are MAIA. A round of the Vision Field Interview has reached a natural pause.
 
 Look back across everything the participant shared. You are listening for evidence in their Living Field — specific moments, images, recurring questions, or threads that kept returning in THEIR OWN WORDS.
@@ -186,8 +208,14 @@ How to offer:
 - Every thread is tentative and offered. "One thread I kept hearing..." "This image kept returning..."
 - The participant is the author of whether anything belongs to them.
 
+Type each thread by what kind of evidence it is (never what kind of person they are):
+- "theme" — an image, thread, or motif that kept returning
+- "question" — a question still alive, unresolved, reaching
+- "practice" — something they could actually live or try, grounded in what they said
+- "open" — something that surfaced and remains open, not yet formed
+
 Return ONLY valid JSON, no prose:
-{"threads":[{"title":"<short phrase, ideally their own words>","reflection":"<one tentative sentence>","groundedIn":"<brief: what in the conversation this came from>"}]}
+{"threads":[{"title":"<short phrase, ideally their own words>","reflection":"<one tentative sentence>","groundedIn":"<brief: what in the conversation this came from>","kind":"theme|question|practice|open"}]}
 
 If nothing worth proposing: {"threads":[]}. Never invent a thread to fill the space.`;
 
@@ -224,7 +252,10 @@ interface ProposedThread {
   title: string;
   reflection: string;
   groundedIn: string;
+  kind: 'theme' | 'question' | 'practice' | 'open';
 }
+
+const THREAD_KINDS = new Set(['theme', 'question', 'practice', 'open']);
 
 interface CellCandidate {
   element: Element;
@@ -288,10 +319,12 @@ function asThreads(parsed: unknown): ProposedThread[] | null {
     if (!t || typeof t !== 'object') continue;
     const title = typeof t.title === 'string' ? t.title.slice(0, 200).trim() : '';
     if (!title) continue;
+    const kind = typeof t.kind === 'string' && THREAD_KINDS.has(t.kind) ? t.kind : 'theme';
     out.push({
       title,
       reflection: typeof t.reflection === 'string' ? t.reflection.slice(0, 600).trim() : '',
       groundedIn: typeof t.groundedIn === 'string' ? t.groundedIn.slice(0, 600).trim() : '',
+      kind: kind as ProposedThread['kind'],
     });
     if (out.length >= 3) break;
   }
@@ -310,6 +343,10 @@ export async function POST(request: NextRequest) {
     const mode = body?.mode;
     const phase = typeof body?.phase === 'string' ? body.phase.toLowerCase().replace(/[^a-z0-9_]/g, '') : 'fire_1';
     const history = sanitizeHistory(body?.history);
+    // Return visit: the prior committed practice, in the member's own words. Ephemeral
+    // context only — read from the request, folded into the prompt, never persisted here.
+    const returningPractice =
+      typeof body?.returningPractice === 'string' ? body.returningPractice.slice(0, 300).trim() : '';
 
     if (mode !== 'turn' && mode !== 'propose') {
       return NextResponse.json({ error: 'mode must be "turn" or "propose".' }, { status: 400 });
@@ -320,7 +357,9 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = mode === 'propose'
       ? PROPOSE_SYSTEM
-      : (PHASE_PROMPTS[phase] ?? FALLBACK_PHASE_PROMPT(phase));
+      : returningPractice
+        ? RETURN_PROMPT(returningPractice)
+        : (PHASE_PROMPTS[phase] ?? FALLBACK_PHASE_PROMPT(phase));
     const maxTokens = mode === 'turn' ? MAX_TOKENS_TURN : MAX_TOKENS_PROPOSE;
 
     let messages = history.map(t => ({ role: t.role, content: t.content }));

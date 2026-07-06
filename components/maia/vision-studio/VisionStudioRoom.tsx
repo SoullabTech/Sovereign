@@ -24,7 +24,8 @@ import { RoomHoloflower, type RoomMotionState, type SpiralElement } from './Room
 
 type Role = 'user' | 'assistant';
 interface Turn { role: Role; content: string; }
-interface ProposedThread { title: string; reflection: string; groundedIn: string; }
+type ThreadKind = 'theme' | 'question' | 'practice' | 'open';
+interface ProposedThread { title: string; reflection: string; groundedIn: string; kind?: ThreadKind; }
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread { title: string; origin: 'maia_proposed' | 'member_authored'; }
 interface CarryPayload {
@@ -48,7 +49,16 @@ const ELEMENT_FEELING_LABEL: Record<SpiralElement, string> = {
 
 const ALL_ELEMENTS: SpiralElement[] = ['Fire', 'Water', 'Earth', 'Air', 'Aether'];
 
-type RoomPhase = 'arrival' | 'conversation' | 'proposal' | 'closed';
+// 'practice' and 'offering' are the Now What? workshop-loop steps: one committed
+// practice ("Now what will you actually live?"), then an optional offering.
+type RoomPhase = 'arrival' | 'conversation' | 'proposal' | 'practice' | 'offering' | 'closed';
+
+const THREAD_KIND_HEADINGS: { kind: ThreadKind; heading: string }[] = [
+  { kind: 'theme', heading: 'Themes that emerged' },
+  { kind: 'question', heading: 'Questions still alive' },
+  { kind: 'practice', heading: 'Practices available' },
+  { kind: 'open', heading: 'What remains open' },
+];
 
 const OPENING_FRAME = `Before we begin, I'd like to frame what we're doing together.
 
@@ -125,9 +135,13 @@ const CLOSURE_QUESTION = 'Before we pause — what surprised you in what you jus
 interface Props {
   phase?: string;
   fieldContext?: string;
+  /** program="now-what" renders the Now What? workshop loop: minimal threshold,
+   *  categorized listen-back, one committed practice, optional offering, return visit. */
+  program?: string;
 }
 
-export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
+export function VisionStudioRoom({ phase = 'fire_1', fieldContext, program }: Props) {
+  const nowWhat = program === 'now-what';
   const [roomPhase, setRoomPhase] = useState<RoomPhase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
@@ -142,6 +156,15 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   const [showFrame, setShowFrame] = useState(false);
   // Per-thread sharing consent: keyed by thread title; absent = private (default).
   const [shared, setShared] = useState<Record<string, boolean>>({});
+  // Now What? loop state. priorPractice = the practice committed on a previous visit
+  // (drives the Return branch); practiceDraft/offeringDraft = this visit's commitments.
+  const [priorPractice, setPriorPractice] = useState<string | null>(null);
+  const [arrivalAnswer, setArrivalAnswer] = useState('');
+  const [practiceDraft, setPracticeDraft] = useState('');
+  const [sharePractice, setSharePractice] = useState(false);
+  const [offeringDraft, setOfferingDraft] = useState('');
+  const [shareOffering, setShareOffering] = useState(false);
+  const [savedPractice, setSavedPractice] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string>(`vs-${Date.now()}`);
 
@@ -161,11 +184,36 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns, working]);
 
+  // Return detection: if a practice was committed on a prior visit in this field
+  // context, the room begins from what happened — not from the beginning.
+  useEffect(() => {
+    if (!nowWhat || !fieldContext) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/maia/vision-studio/field-note?fieldContext=${encodeURIComponent(fieldContext)}`);
+        if (!res.ok) return;
+        const json = await res.json().catch(() => ({}));
+        const threads: { title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
+        const practice = threads.find(t => t.spiralogic_phase === 'practice');
+        if (practice && !cancelled) setPriorPractice(practice.title);
+      } catch {
+        // Quiet fallback: no return context — the room simply begins fresh.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [nowWhat, fieldContext]);
+
   async function callInterview(history: Turn[], mode: 'turn' | 'propose') {
     const res = await apiFetch('/api/maia/vision-studio/interview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history, mode, phase }),
+      body: JSON.stringify({
+        history,
+        mode,
+        phase,
+        ...(priorPractice ? { returningPractice: priorPractice } : {}),
+      }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json?.error || 'Not available right now.');
@@ -271,6 +319,56 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || 'Could not save.');
+      // The Now What? loop continues into the practice step; the generic room closes here.
+      setRoomPhase(nowWhat ? 'practice' : 'closed');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Saves a single tagged thread (practice/offering) through the same field-note
+  // route and consent model as every other authored thread.
+  async function saveTagged(tag: 'practice' | 'offering', title: string, share: boolean) {
+    const res = await apiFetch('/api/maia/vision-studio/field-note', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proposals: [],
+        created: [{ title, shareWithPractitioner: share }],
+        sessionRef: sessionRef.current,
+        spiralogicPhase: tag,
+        fieldContext: fieldContext ?? null,
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json?.error || 'Could not save.');
+  }
+
+  async function commitPractice() {
+    const title = practiceDraft.trim();
+    if (!title || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await saveTagged('practice', title, sharePractice);
+      setSavedPractice(title);
+      setRoomPhase('offering');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function commitOffering() {
+    const title = offeringDraft.trim();
+    if (!title || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await saveTagged('offering', title, shareOffering);
       setRoomPhase('closed');
     } catch (e: any) {
       setError(e.message);
@@ -305,6 +403,78 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
 
   const phaseLabel = PHASE_LABELS[phase] ?? phase;
   const openingQuestion = PHASE_OPENING_QUESTIONS[phase];
+  const roomTitle = nowWhat ? 'Now What?' : 'Vision Studio';
+
+  function beginFromThreshold() {
+    const answer = arrivalAnswer.trim();
+    if (!answer) return;
+    setRoomPhase('conversation');
+    sendTurn(answer);
+  }
+
+  // — Now What? threshold: one question, nothing competing for attention —
+  if (roomPhase === 'arrival' && nowWhat) {
+    const returning = priorPractice !== null;
+    return (
+      <div className="max-w-prose mx-auto px-4 py-16 space-y-10">
+        <h1 className="text-2xl font-light text-stone-100 tracking-wide">Now What?</h1>
+
+        {returning ? (
+          <div className="space-y-4">
+            <p className="text-stone-400 text-sm font-light">Last time you chose this practice:</p>
+            <p className="text-stone-200 text-base font-light border-l-2 border-stone-600 pl-4 leading-relaxed">
+              {priorPractice}
+            </p>
+            <p className="text-stone-300 text-base font-light">What happened?</p>
+          </div>
+        ) : (
+          <p className="text-stone-300 text-base font-light leading-relaxed">
+            How are you entering this room today?
+          </p>
+        )}
+
+        <div className="space-y-3">
+          <textarea
+            className="w-full bg-transparent border-b border-stone-700 text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-500 placeholder:text-stone-700 py-2"
+            rows={3}
+            placeholder={returning ? 'What actually happened…' : 'In your own words…'}
+            value={arrivalAnswer}
+            onChange={e => setArrivalAnswer(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                beginFromThreshold();
+              }
+            }}
+          />
+          <button
+            onClick={beginFromThreshold}
+            disabled={!arrivalAnswer.trim()}
+            className="text-stone-300 hover:text-stone-100 text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+          >
+            Begin
+          </button>
+        </div>
+
+        <div className="space-y-3 pt-6">
+          <button
+            onClick={() => setShowFrame(v => !v)}
+            className="text-stone-600 hover:text-stone-400 text-xs underline underline-offset-4 transition-colors"
+          >
+            {showFrame ? 'Hide' : 'What is this space?'}
+          </button>
+          {showFrame && (
+            <div className="text-stone-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-stone-800 pl-4">
+              {OPENING_FRAME}
+            </div>
+          )}
+          <p className="text-stone-700 text-xs font-light leading-relaxed">
+            What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // — Arrival: Ways to Begin —
   if (roomPhase === 'arrival') {
@@ -359,16 +529,158 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     );
   }
 
+  // — Practice: the heart of the loop. One practice. One experiment. One commitment. —
+  if (roomPhase === 'practice') {
+    const suggestedPractices = proposed.filter(t => t.kind === 'practice' && !revising[t.title]);
+    return (
+      <div className="max-w-prose mx-auto px-4 py-12 space-y-8">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">{roomTitle}</p>
+          <h2 className="text-stone-200 text-lg font-light">Now what will you actually live?</h2>
+          <p className="text-stone-500 text-sm font-light mt-2">One practice. One experiment. One commitment. Not ten.</p>
+        </div>
+
+        {suggestedPractices.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-stone-500 text-xs uppercase tracking-widest">Practices that surfaced</p>
+            {suggestedPractices.map((t, i) => (
+              <button
+                key={i}
+                onClick={() => setPracticeDraft(t.title)}
+                className="block w-full text-left text-stone-400 hover:text-stone-200 text-sm font-light border-l-2 border-stone-800 hover:border-stone-600 pl-3 py-1 transition-colors"
+              >
+                {t.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <textarea
+            className="w-full bg-transparent border-b border-stone-700 text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-500 placeholder:text-stone-700 py-2"
+            rows={2}
+            placeholder="In your own words — what will you live between now and next time?"
+            value={practiceDraft}
+            onChange={e => setPracticeDraft(e.target.value)}
+          />
+          {practiceDraft.trim() && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sharePractice}
+                onChange={e => setSharePractice(e.target.checked)}
+                className="accent-stone-500 w-3 h-3"
+              />
+              <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+            </label>
+          )}
+        </div>
+
+        {error && <p className="text-red-400 text-xs">{error}</p>}
+
+        <div className="flex gap-4">
+          <button
+            onClick={commitPractice}
+            disabled={saving || !practiceDraft.trim()}
+            className="text-stone-300 hover:text-stone-100 text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+          >
+            {saving ? 'Saving…' : 'Carry this practice'}
+          </button>
+          <button
+            onClick={() => setRoomPhase('offering')}
+            disabled={saving}
+            className="text-stone-600 hover:text-stone-400 text-sm underline underline-offset-4 transition-colors"
+          >
+            Not today
+          </button>
+        </div>
+
+        <p className="text-stone-700 text-xs font-light">
+          When you return, the room will begin from this practice — not from the beginning.
+        </p>
+      </div>
+    );
+  }
+
+  // — Offering: optional. The movement from flourishing into contribution. —
+  if (roomPhase === 'offering') {
+    return (
+      <div className="max-w-prose mx-auto px-4 py-12 space-y-8">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">{roomTitle}</p>
+          <p className="text-stone-500 text-sm font-light">One more — only if it feels right. This one is optional.</p>
+        </div>
+
+        <p className="text-stone-300 text-base font-light leading-relaxed">
+          What would you enjoy making available to others at this point in your life?
+        </p>
+
+        <div className="space-y-3">
+          <textarea
+            className="w-full bg-transparent border-b border-stone-700 text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-500 placeholder:text-stone-700 py-2"
+            rows={2}
+            placeholder="Nothing is required here…"
+            value={offeringDraft}
+            onChange={e => setOfferingDraft(e.target.value)}
+          />
+          {offeringDraft.trim() && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={shareOffering}
+                onChange={e => setShareOffering(e.target.checked)}
+                className="accent-stone-500 w-3 h-3"
+              />
+              <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
+            </label>
+          )}
+        </div>
+
+        {error && <p className="text-red-400 text-xs">{error}</p>}
+
+        <div className="flex gap-4">
+          <button
+            onClick={commitOffering}
+            disabled={saving || !offeringDraft.trim()}
+            className="text-stone-300 hover:text-stone-100 text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+          >
+            {saving ? 'Saving…' : 'Offer it'}
+          </button>
+          <button
+            onClick={() => setRoomPhase('closed')}
+            disabled={saving}
+            className="text-stone-600 hover:text-stone-400 text-sm underline underline-offset-4 transition-colors"
+          >
+            Skip for now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // — Closed: session complete —
   if (roomPhase === 'closed') {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-6">
-        <p className="text-xs uppercase tracking-widest text-stone-400">Vision Studio</p>
-        <p className="text-stone-300 font-light text-base leading-relaxed">
-          {authored.length > 0
-            ? `${authored.length} thread${authored.length === 1 ? '' : 's'} carried into your field.`
-            : 'Nothing carried — that is a faithful outcome too.'}
-        </p>
+        <p className="text-xs uppercase tracking-widest text-stone-400">{roomTitle}</p>
+        {savedPractice && (
+          <div className="space-y-2">
+            <p className="text-stone-500 text-xs uppercase tracking-widest">The practice you chose</p>
+            <p className="text-stone-200 text-base font-light border-l-2 border-stone-600 pl-4 leading-relaxed">
+              {savedPractice}
+            </p>
+            <p className="text-stone-500 text-sm font-light">
+              When you return, we'll begin from what happened.
+            </p>
+          </div>
+        )}
+        {(authored.length > 0 || !savedPractice) && (
+          <p className="text-stone-300 font-light text-base leading-relaxed">
+            {authored.length > 0
+              ? `${authored.length} thread${authored.length === 1 ? '' : 's'} carried into your field.`
+              : 'Nothing carried — that is a faithful outcome too.'}
+          </p>
+        )}
         {authored.length > 0 && (
           <ul className="space-y-2">
             {authored.map((t, i) => (
@@ -387,11 +699,15 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
 
   // — Proposal: listen-back + authorship —
   if (roomPhase === 'proposal') {
+    // Now What? presents what surfaced in four categories (themes / questions alive /
+    // practices / open) — organized as views over what was said, never conclusions.
+    const kindRank = (t: ProposedThread) => THREAD_KIND_HEADINGS.findIndex(h => h.kind === (t.kind ?? 'theme'));
+    const orderedProposed = nowWhat ? [...proposed].sort((a, b) => kindRank(a) - kindRank(b)) : proposed;
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-8">
         <div>
-          <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">Vision Studio</p>
-          <p className="text-stone-400 text-sm font-light">{phaseLabel} — What surfaced</p>
+          <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">{roomTitle}</p>
+          <p className="text-stone-400 text-sm font-light">{nowWhat ? 'What surfaced' : `${phaseLabel} — What surfaced`}</p>
         </div>
 
         <div className="text-stone-400 text-sm font-light leading-relaxed border-l-2 border-stone-700 pl-4">
@@ -404,12 +720,19 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
           </p>
         ) : (
           <div className="space-y-6">
-            <p className="text-stone-500 text-xs uppercase tracking-widest">Threads MAIA heard returning</p>
-            {proposed.map((t, i) => {
+            {!nowWhat && <p className="text-stone-500 text-xs uppercase tracking-widest">Threads MAIA heard returning</p>}
+            {orderedProposed.map((t, i, arr) => {
               const rev = revising[t.title];
               const kept = authored.some(a => a.title === t.title);
+              const tKind = t.kind ?? 'theme';
+              const showHeading = nowWhat && (i === 0 || (arr[i - 1].kind ?? 'theme') !== tKind);
+              const kindHeading = THREAD_KIND_HEADINGS.find(h => h.kind === tKind)?.heading ?? '';
               return (
-                <div key={i} className="space-y-2 border-l-2 border-stone-700 pl-4">
+                <div key={i} className="space-y-3">
+                  {showHeading && (
+                    <p className="text-stone-500 text-xs uppercase tracking-widest pt-1">{kindHeading}</p>
+                  )}
+                  <div className="space-y-2 border-l-2 border-stone-700 pl-4">
                   {rev !== undefined ? (
                     rev === '' ? (
                       <p className="text-stone-600 text-sm line-through">{t.title}</p>
@@ -472,6 +795,7 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
                       <span className="text-stone-600 text-xs font-light">Share with your practitioner</span>
                     </label>
                   )}
+                  </div>
                 </div>
               );
             })}
@@ -531,8 +855,8 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     <div className="flex flex-col h-full max-w-prose mx-auto">
       <div className="px-4 py-4 border-b border-stone-800 flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-widest text-stone-500">Vision Studio</p>
-          <p className="text-stone-400 text-sm font-light">{phaseLabel}</p>
+          <p className="text-xs uppercase tracking-widest text-stone-500">{roomTitle}</p>
+          {!nowWhat && <p className="text-stone-400 text-sm font-light">{phaseLabel}</p>}
         </div>
         <div className="flex items-center gap-3">
           <RoomHoloflower
