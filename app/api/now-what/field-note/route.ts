@@ -43,9 +43,13 @@ const asStr = (v: unknown, max = 400): string =>
 const asPhase = (v: unknown): string | null => {
   if (typeof v !== 'string') return null;
   const cleaned = v.toLowerCase().replace(/[^a-z0-9_]/g, '');
-  // Allow fire_1..air_3 + 'unsolicited' + 'closure'
+  // Allow fire_1..air_3 + 'unsolicited' + 'closure' + workshop-loop tags
   if (/^(fire|water|earth|air|aether)_[123]$/.test(cleaned)) return cleaned;
   if (cleaned === 'unsolicited' || cleaned === 'closure') return cleaned;
+  // 'practice' = the one commitment chosen at the end of a session ("Now what will you actually live?").
+  // 'offering' = what the member chooses to make available to others. Both are member-authored
+  // threads under the same consent model — the tag types the evidence, never the person.
+  if (cleaned === 'practice' || cleaned === 'offering') return cleaned;
   return null;
 };
 
@@ -97,10 +101,10 @@ async function logEvent(
       `INSERT INTO member_field_note_events
          (thread_id, member_id, event_type, member_decision, consent_state_new, surface)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [threadId, memberId, eventType, memberDecision, threadId ? 'member-confirmed-memory' : null, 'api/maia/vision-studio/field-note'],
+      [threadId, memberId, eventType, memberDecision, threadId ? 'member-confirmed-memory' : null, 'api/now-what/field-note'],
     );
   } catch (err) {
-    console.warn('[VisionStudio/field-note] ledger append failed (non-fatal):', err);
+    console.warn('[NowWhat/field-note] ledger append failed (non-fatal):', err);
   }
 }
 
@@ -159,7 +163,7 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.json({ threads: res.rows });
   } catch (err: any) {
-    console.error('[VisionStudio/field-note] GET error:', err?.message || err);
+    console.error('[NowWhat/field-note] GET error:', err?.message || err);
     return NextResponse.json({ error: 'Could not load your threads right now.' }, { status: 500 });
   }
 }
@@ -228,10 +232,10 @@ export async function POST(request: NextRequest) {
       await logEvent(memberId, id, 'created', 'create');
     }
 
-    console.info('[VisionStudio/field-note] saved', JSON.stringify({ saved, phase: spiralogicPhase, fieldContext, ...activity }));
+    console.info('[NowWhat/field-note] saved', JSON.stringify({ saved, phase: spiralogicPhase, fieldContext, ...activity }));
     return NextResponse.json({ ok: true, saved, activity });
   } catch (err: any) {
-    console.error('[VisionStudio/field-note] error:', err?.message || err);
+    console.error('[NowWhat/field-note] error:', err?.message || err);
     return NextResponse.json({ error: 'Could not save right now. Try once more in a moment.' }, { status: 500 });
   }
 }
