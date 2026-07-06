@@ -27,13 +27,14 @@ type Status =
   | { kind: 'recording' }
   | { kind: 'transcribing' }
   | { kind: 'reading'; name: string }
-  | { kind: 'error'; message: string }
+  | { kind: 'error'; message: string; retryable?: boolean }
 
 export function MaiaCapture({ onCapture, disabled, className }: Props) {
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const lastAudioBlobRef = useRef<Blob | null>(null)
 
   async function startRecording() {
     try {
@@ -62,6 +63,7 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
   }
 
   async function transcribe(blob: Blob) {
+    lastAudioBlobRef.current = blob
     setStatus({ kind: 'transcribing' })
     try {
       const fd = new FormData()
@@ -70,14 +72,21 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
       const data = await res.json()
       const text: string = (data?.transcription ?? '').trim()
       if (!text) {
-        setStatus({ kind: 'error', message: 'Nothing was transcribed. Try again.' })
+        setStatus({ kind: 'error', message: 'Nothing was transcribed. Try again.', retryable: true })
         return
       }
+      lastAudioBlobRef.current = null
       await onCapture(text, 'voice_note')
       setStatus({ kind: 'idle' })
     } catch {
-      setStatus({ kind: 'error', message: 'Transcription failed. Try again.' })
+      setStatus({ kind: 'error', message: 'Transcription failed. Try again.', retryable: true })
     }
+  }
+
+  async function retryTranscription() {
+    const blob = lastAudioBlobRef.current
+    if (!blob) return
+    await transcribe(blob)
   }
 
   async function handleFile(file: File) {
@@ -120,7 +129,7 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
         {status.kind === 'recording' ? (
           <button
             onClick={stopRecording}
-            className="px-3 py-1.5 rounded bg-red-900/40 hover:bg-red-900/60 text-red-200 text-xs border border-red-800 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded bg-red-900/40 hover:bg-red-900/60 text-red-200 text-xs border border-red-800 transition-colors flex items-center gap-1.5"
           >
             <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
             Stop &amp; transcribe
@@ -129,7 +138,7 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
           <button
             onClick={startRecording}
             disabled={disabled || busy}
-            className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs border border-stone-700 disabled:opacity-40 transition-colors"
+            className="px-4 py-2.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs border border-stone-700 disabled:opacity-40 transition-colors"
           >
             Speak
           </button>
@@ -138,7 +147,7 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || busy || status.kind === 'recording'}
-          className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs border border-stone-700 disabled:opacity-40 transition-colors"
+          className="px-4 py-2.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs border border-stone-700 disabled:opacity-40 transition-colors"
         >
           Upload
         </button>
@@ -162,7 +171,17 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
         <p className="text-stone-500 text-xs">Reading {status.name}…</p>
       )}
       {status.kind === 'error' && (
-        <p className="text-amber-600/80 text-xs">{status.message}</p>
+        <div className="space-y-1">
+          <p className="text-amber-600/80 text-xs">{status.message}</p>
+          {status.retryable && lastAudioBlobRef.current && (
+            <button
+              onClick={retryTranscription}
+              className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-amber-400 text-xs border border-stone-700 transition-colors"
+            >
+              Retry transcription
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

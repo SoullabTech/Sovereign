@@ -6,6 +6,7 @@
 // page must resolve identity on the client — matching every other MAIA surface.
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { apiFetch, getValidMemberId } from '@/lib/http/apiBase'
 import { PersonalLivingFieldDashboard } from '@/components/maia/living-field/PersonalLivingFieldDashboard'
 import type {
@@ -59,7 +60,15 @@ export default function LivingFieldPage() {
   if (!memberId) {
     return (
       <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-        <p className="text-stone-400 text-sm">Sign in to enter your Living Field.</p>
+        <div className="text-center space-y-3">
+          <p className="text-stone-400 text-sm">Sign in to enter your Living Field.</p>
+          <Link
+            href="/signin"
+            className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
+          >
+            Sign in →
+          </Link>
+        </div>
       </div>
     )
   }

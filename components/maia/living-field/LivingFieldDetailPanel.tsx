@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { LivingField, FieldVersion, FieldSource, ParticipantConsent } from './types'
 import { deriveConsentStatus } from './types'
 import { LivingFieldSourceList } from './LivingFieldSourceList'
 import { LivingFieldGatheringPanel } from './LivingFieldGatheringPanel'
 import { MaiaCandidatePanel, type MaiaCandidate } from './MaiaCandidatePanel'
+import { LivingEncounterView } from './LivingEncounterView'
 import { MaiaCapture, type CaptureSource } from '@/components/maia/MaiaCapture'
 
 function formatDate(iso: string) {
@@ -42,6 +43,20 @@ export function LivingFieldDetailPanel({
   const [historyOpen, setHistoryOpen] = useState(false)
   const [captured, setCaptured] = useState<string | null>(null)
   const [refineNote, setRefineNote] = useState<string | null>(null)
+  // Conversation-first: opening a dimension lands the member IN the encounter.
+  // The expression form, gathering panel, and history are below — projections,
+  // not the primary surface.
+  const [encounterOpen, setEncounterOpen] = useState(true)
+
+  // Modal is fixed inset-0 — lock background scroll while it's open, and
+  // restore whatever overflow value was there before.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
 
   async function handleCapture(text: string, source: CaptureSource) {
     // Store as a source (evidence that feeds Refine and provenance) …
@@ -132,7 +147,25 @@ export function LivingFieldDetailPanel({
         </div>
 
         <div className="px-6 py-5 space-y-6">
-          {/* Current Expression */}
+          {/* Primary action — enter the conversation. Conversation ↔ Field;
+              everything else here is a projection / secondary path. */}
+          {!encounterOpen ? (
+            <button
+              onClick={() => setEncounterOpen(true)}
+              className="w-full px-4 py-3 rounded-lg bg-amber-700 hover:bg-amber-600 text-stone-950 text-sm font-semibold transition-colors"
+            >
+              Enter this dimension with MAIA
+            </button>
+          ) : (
+            <LivingEncounterView
+              fieldKey={field.field_key}
+              fieldLabel={field.label}
+              memberId={memberId}
+              onClose={() => setEncounterOpen(false)}
+            />
+          )}
+
+          {/* Current Expression — secondary, quiet path */}
           <div className="space-y-2">
             <label className="text-stone-500 text-xs uppercase tracking-widest">
               Current Expression

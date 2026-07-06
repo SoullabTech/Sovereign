@@ -1,10 +1,11 @@
 'use client'
 
-import Link from 'next/link'
+import { useState } from 'react'
 import type { LivingField, PersonalSpiral, PersonalState, SpiralState } from './types'
 import { LivingFieldCard } from './LivingFieldCard'
 import { SpiralSummaryCard } from './SpiralSummaryCard'
 import { PhaseStatePanel } from './PhaseStatePanel'
+import { LivingEncounterView } from './LivingEncounterView'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -31,6 +32,11 @@ export function PersonalLivingFieldDashboard({
   const phase = spiralState?.relational_phase
   const phaseLabel = phase ? RELATIONAL_PHASE_LABELS[phase] : null
 
+  // "Talk this through" stays IN the field — it opens the in-field encounter
+  // (Current Questions: the dimension for what is alive right now), never a
+  // navigation away to main MAIA. Closing returns to the constellation.
+  const [talkOpen, setTalkOpen] = useState(false)
+
   // Surface aliveness at the top level. A field is "alive" if the member has
   // authored it OR material has gathered into it. Order alive fields first so the
   // constellation never opens looking empty when it isn't.
@@ -53,9 +59,13 @@ export function PersonalLivingFieldDashboard({
             AIN does not ask people to fill in fields. It cultivates Living Fields that grow
             alongside a life. These dimensions are not a profile — they are a developmental mirror.
           </p>
-          {phaseLabel && (
+          {phaseLabel ? (
             <p className="text-stone-500 text-xs">
               Current life phase: <span className="text-stone-300">{phaseLabel}</span>
+            </p>
+          ) : (
+            <p className="text-stone-600 text-xs">
+              Your spiral state is still forming — it will appear here as patterns emerge.
             </p>
           )}
           {(gatheringCount > 0 || authoredCount > 0) && (
@@ -109,14 +119,26 @@ export function PersonalLivingFieldDashboard({
           </div>
         </section>
 
-        {/* Footer invite */}
-        <div className="border-t border-stone-800 pt-6 text-center">
-          <Link
-            href="/maia"
-            className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
-          >
-            Talk this through with MAIA →
-          </Link>
+        {/* Footer invite — stays in the field */}
+        <div className="border-t border-stone-800 pt-6">
+          {talkOpen ? (
+            <LivingEncounterView
+              fieldKey="current_questions"
+              fieldLabel="Current Questions"
+              memberId={memberId}
+              onClose={() => setTalkOpen(false)}
+            />
+          ) : (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setTalkOpen(true)}
+                className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
+              >
+                Talk this through with MAIA →
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

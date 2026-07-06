@@ -205,6 +205,15 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---------------------------------------------------------------------
+  // Public WebRTC transport surface (Phase A smoke test): a guest/client joins
+  // a room with a link — no auth. Transport only: no persistence, no Encounter
+  // write. See app/open/session-room + app/api/open/session-room.
+  // ---------------------------------------------------------------------
+  if (pathname.startsWith('/open/') || pathname.startsWith('/api/open/')) {
+    return NextResponse.next();
+  }
+
+  // ---------------------------------------------------------------------
   // Generate request ID for auth incident correlation
   // Short ID is sufficient for debugging - not cryptographic
   // ---------------------------------------------------------------------

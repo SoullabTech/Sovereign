@@ -10,7 +10,6 @@ import {
   Layers,
   BookOpen,
   Lightbulb,
-  Heart,
   Library,
   Briefcase,
   Users,
@@ -25,7 +24,6 @@ import {
   NotebookPen,
   Compass,
   Sprout,
-  Footprints,
 } from 'lucide-react';
 
 import type {
@@ -59,24 +57,9 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     tooltip: 'Who you are becoming',
     group: 'life',
   },
-  {
-    id: 'encounters',
-    label: 'Encounters',
-    icon: Footprints,
-    route: '/sessions',
-    classification: 'world',
-    tooltip: 'Lived experiences and sessions',
-    group: 'life',
-  },
-  {
-    id: 'relationships',
-    label: 'Relationships',
-    icon: Heart,
-    route: '/relationships',
-    classification: 'world',
-    tooltip: 'The people in your developmental ecology',
-    group: 'life',
-  },
+  // Encounters (Footprints → /sessions) and Relationships (Heart → /relationships)
+  // removed from the rail 2026-07-05: both surfaced only a contextual panel with no
+  // process behind it. Restore here once each is attached to an actual process.
   {
     id: 'journal',
     label: 'Journal',

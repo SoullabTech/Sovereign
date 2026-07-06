@@ -1,0 +1,312 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Now What? × MAIA — Overview</title>
+<style>
+  :root{
+    --ground:#0c0a09; --panel:#171412; --line:#2b2624;
+    --ink:#e7e5e4; --ink2:#a8a29e; --ink3:#6f6862;
+    --amber:#d9a441; --amber-dim:#8a6a2f;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  }
+  html,body{margin:0;padding:0;background:var(--ground);color:var(--ink);font-family:var(--sans);}
+  body{overflow:hidden;}
+  .deck{position:fixed;inset:0;}
+  .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    opacity:0;visibility:hidden;transition:opacity .45s ease;padding:4vh 6vw;box-sizing:border-box;overflow-y:auto;}
+  .slide.active{opacity:1;visibility:visible;}
+  @media (prefers-reduced-motion: reduce){.slide{transition:none;}}
+  .inner{max-width:660px;width:100%;}
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink3);margin:0 0 28px;font-weight:400;}
+  .eyebrow b{color:var(--amber-dim);font-weight:400;}
+  h1,h2{font-weight:200;line-height:1.15;text-wrap:balance;margin:0;}
+  h1{font-size:clamp(34px,5.2vw,56px);letter-spacing:.01em;}
+  h2{font-size:clamp(26px,3.6vw,38px);}
+  .serif{font-family:var(--serif);font-style:italic;font-weight:400;}
+  p{font-weight:300;color:var(--ink2);line-height:1.65;font-size:16px;margin:0;}
+  .lead{color:var(--ink);font-size:18px;}
+  .stack{display:flex;flex-direction:column;gap:18px;}
+  .stack-lg{display:flex;flex-direction:column;gap:30px;}
+  .thread{border-left:2px solid var(--line);padding-left:18px;}
+  .thread.lit{border-left-color:var(--amber-dim);}
+  .quote{font-family:var(--serif);font-style:italic;font-size:clamp(22px,3vw,30px);line-height:1.4;color:var(--ink);font-weight:400;text-wrap:balance;}
+  .small{font-size:13px;color:var(--ink3);}
+  .amber{color:var(--amber);}
+  /* UI mock panel — echoes the deployed room */
+  .mock{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:34px 34px 30px;box-shadow:0 20px 60px rgba(0,0,0,.45);}
+  .mock .m-eyebrow{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink3);margin:0 0 20px;}
+  .mock h3{font-weight:200;font-size:26px;margin:0 0 18px;color:#f5f5f4;letter-spacing:.02em;}
+  .mock .m-q{font-weight:300;color:#d6d3d1;font-size:16px;margin:0 0 22px;line-height:1.6;}
+  .mock .m-input{border-bottom:1px solid #44403c;color:var(--ink3);font-weight:300;font-size:14px;padding:6px 0 10px;}
+  .mock .m-link{display:inline-block;margin-top:18px;color:#d6d3d1;font-size:14px;font-weight:300;text-decoration:underline;text-underline-offset:5px;}
+  .mock .m-note{margin-top:22px;font-size:11.5px;color:#57534e;font-weight:300;line-height:1.6;}
+  .mock .m-practice{border-left:2px solid #78716c;padding-left:16px;color:#e7e5e4;font-weight:300;font-size:16px;line-height:1.6;margin:0 0 18px;}
+  /* facilitator sections */
+  .fac-section{margin:0 0 22px;}
+  .fac-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);margin:0 0 10px;}
+  .fac-item{border-left:2px solid #44403c;padding:2px 0 2px 14px;color:#d6d3d1;font-weight:300;font-size:14px;line-height:1.55;margin:0 0 8px;}
+  .fac-item .when{color:#57534e;font-size:11.5px;display:block;margin-top:2px;}
+  /* timeline */
+  .tl{display:grid;grid-template-columns:64px 1fr;gap:10px 22px;}
+  .tl .wk{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber-dim);padding-top:4px;}
+  .tl .ev{border-left:2px solid var(--line);padding:0 0 22px 18px;}
+  .tl .ev p{color:#d6d3d1;font-size:15px;}
+  .tl .ev .small{margin-top:4px;display:block;}
+  /* loop */
+  .loop{font-family:var(--sans);font-weight:300;color:var(--ink2);font-size:15px;line-height:1.5;}
+  .loop .step{padding:7px 0;}
+  .loop .arrow{color:var(--amber-dim);padding:0;font-size:13px;line-height:1;}
+  .loop .hot{color:var(--ink);}
+  /* four spaces grid */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .space{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px;}
+  .space h4{margin:0 0 8px;font-weight:400;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber-dim);}
+  .space p{font-size:13.5px;line-height:1.6;}
+  /* status columns */
+  .cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  @media(max-width:720px){.cols{grid-template-columns:1fr;}}
+  .col h4{margin:0 0 12px;font-weight:400;font-size:11px;letter-spacing:.2em;text-transform:uppercase;}
+  .col.live h4{color:#86b08a;} .col.designed h4{color:var(--amber-dim);} .col.vision h4{color:#8a7f9e;}
+  .col ul{margin:0;padding:0;list-style:none;}
+  .col li{font-size:13px;font-weight:300;color:var(--ink2);line-height:1.55;padding:5px 0;border-top:1px solid var(--line);}
+  .col li:first-child{border-top:none;}
+  /* nav */
+  .nav{position:fixed;bottom:26px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:22px;z-index:10;}
+  .nav button{background:none;border:1px solid var(--line);color:var(--ink2);width:38px;height:38px;border-radius:50%;
+    cursor:pointer;font-size:15px;line-height:1;transition:border-color .2s,color .2s;}
+  .nav button:hover,.nav button:focus-visible{border-color:var(--amber-dim);color:var(--ink);outline:none;}
+  .dots{display:flex;gap:7px;}
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--line);cursor:pointer;transition:background .2s;}
+  .dot.on{background:var(--amber);}
+  .count{font-size:11px;color:var(--ink3);letter-spacing:.12em;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;}
+  .hint{position:fixed;top:22px;right:26px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);z-index:10;}
+</style>
+
+</head><body><div class="deck" id="deck">
+
+  <!-- 1 · Title -->
+  <section class="slide active"><div class="inner stack-lg">
+    <p class="eyebrow"><b>Soullab</b> · Prepared for Larry Closs · July 2026</p>
+    <h1>Now&nbsp;What?&nbsp;<span style="color:var(--ink3)">×</span>&nbsp;MAIA</h1>
+    <p class="quote">The workshop creates transformation.<br>The companion helps people live it.</p>
+    <p class="small">A walkthrough of the participant companion, the facilitator's view, and the environment that stewards your body of work. Fifteen minutes, one complete journey.</p>
+  </div></section>
+
+  <!-- 2 · The question -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">The central question</p>
+    <h2 class="serif">What happens between transformational moments?</h2>
+    <p class="lead">Every transformational program faces the same gap. People leave inspired — and then life resumes. The insight starts fading by Monday.</p>
+    <p>Now What? creates the catalytic experiences. MAIA becomes the developmental companion that helps participants actually live what they discovered — until they return to the next human encounter.</p>
+  </div></section>
+
+  <!-- 3 · Michael -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">Act one · A participant</p>
+    <h2>Meet Michael</h2>
+    <div class="stack">
+      <p class="lead">52. CEO of a regional manufacturing company. Successful, respected, financially secure.</p>
+      <p>And carrying a growing sense that success no longer answers the deeper question: <span class="serif" style="color:var(--ink)">now what?</span></p>
+      <p>A trusted colleague recommends your program. He attends the three-day executive workshop. Something shifts. He leaves with one sentence:</p>
+      <p class="quote" style="font-size:20px">"I know something has changed. I don't know how to live it."</p>
+    </div>
+  </div></section>
+
+  <!-- 4 · Monday -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">The problem every program knows</p>
+    <h2>Monday arrives.</h2>
+    <p class="lead">Meetings begin. The inbox fills. The old patterns reach for him.</p>
+    <p>Ordinarily, Michael would wait three months for the next gathering — running on remembered inspiration. Instead, you say: <em style="color:var(--ink)">"Between now and our next gathering, I'd like you to continue working inside Now&nbsp;What?"</em></p>
+    <p>He opens MAIA.</p>
+  </div></section>
+
+  <!-- 5 · Threshold -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">Act two · First arrival — <b>live today</b></p>
+    <div class="mock">
+      <h3>Now What?</h3>
+      <p class="m-q">How are you entering this room today?</p>
+      <div class="m-input">In your own words…</div>
+      <span class="m-link">Begin</span>
+      <p class="m-note">What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.</p>
+    </div>
+    <p>The interface is intentionally quiet. Nothing competes for attention. Michael writes: <em style="color:var(--ink)">"I keep slipping back into the person I was before the workshop."</em> His own words become the first turn of the conversation — he is received, not interrogated.</p>
+  </div></section>
+
+  <!-- 6 · Practice emerges -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">Act three · One practice — <b>live today</b></p>
+    <div class="mock">
+      <p class="m-eyebrow">Now What?</p>
+      <h3 style="font-size:22px">Now what will you actually live?</h3>
+      <p class="m-q" style="font-size:13.5px;color:#78716c">One practice. One experiment. One commitment. Not ten.</p>
+      <p class="m-practice">Three quiet minutes before my first executive meeting: what kind of leader do I want to become today?</p>
+      <span class="m-link">Carry this practice</span>
+      <p class="m-note">When you return, the room will begin from this practice — not from the beginning.</p>
+    </div>
+    <p>The conversation doesn't end in notes. It ends in <em style="color:var(--ink)">one committed practice</em> — in Michael's own words, carried into his field by his own gesture.</p>
+  </div></section>
+
+  <!-- 7 · Four weeks -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">Act four · Living between sessions</p>
+    <div class="tl">
+      <div class="wk">Week 1</div><div class="ev"><p>The workshop cracked something open — "I don't want to manage my way out of it."</p><span class="small">The practice begins.</span></div>
+      <div class="wk">Week 2</div><div class="ev"><p>Caught himself performing confidence in the budget review — paused, named it, chose honesty.</p></div>
+      <div class="wk">Week 3</div><div class="ev"><p>Conflict with his COO — "I listened past my own defense for the first time."</p></div>
+      <div class="wk">Week 4</div><div class="ev"><p>An unexpected recognition: <em style="color:var(--ink)">achievement no longer defines identity — it expresses it.</em></p></div>
+    </div>
+    <p class="small">Some days are difficult. Some days he forgets. The important thing is not compliance — it is awareness. MAIA holds the thread.</p>
+  </div></section>
+
+  <!-- 8 · Return -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">Act five · The return — <b>live today</b></p>
+    <div class="mock">
+      <h3>Now What?</h3>
+      <p class="m-q" style="color:#78716c;margin-bottom:10px">Last time you chose this practice:</p>
+      <p class="m-practice">Three quiet minutes before my first executive meeting: what kind of leader do I want to become today?</p>
+      <p class="m-q">What happened?</p>
+      <div class="m-input">What actually happened…</div>
+    </div>
+    <p>This is the differentiator. The room never begins again — it begins <em style="color:var(--ink)">from what happened.</em> And by design, not living the practice is information about the practice or the season — never a failure of the person. No adherence scores. No compliance praise. Continuity, not conversation history.</p>
+  </div></section>
+
+  <!-- 9 · Larry's view -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">Act six · Your view — <b>live today</b></p>
+    <div class="mock">
+      <p class="m-eyebrow">Michael · Now What? Field</p>
+      <div class="fac-section"><p class="fac-label">Questions alive</p>
+        <p class="fac-item">What kind of leader am I becoming?</p></div>
+      <div class="fac-section"><p class="fac-label">Practices</p>
+        <p class="fac-item">Three quiet minutes before the first executive meeting<span class="when">carried five weeks ago · still active</span></p></div>
+      <div class="fac-section"><p class="fac-label">Recognitions</p>
+        <p class="fac-item">Achievement no longer defines identity — it expresses it<span class="when">shared last week</span></p></div>
+      <div class="fac-section" style="margin-bottom:0"><p class="fac-label">Shared reflections</p>
+        <p class="fac-item">The budget review — performed confidence, then chose honesty</p>
+        <p class="fac-item">The COO conflict — listened past his own defense</p></div>
+    </div>
+    <p>No analytics. No profile. No transcript. <em style="color:var(--ink)">Only what Michael chose to share, item by item</em> — each line authored or affirmed by him. What you don't see is the point: his private reflections never appear here. So the next gathering opens six weeks deeper: not <em>"How have you been?"</em> but <em style="color:var(--ink)">"Tell me what happened when you tried that morning practice."</em></p>
+  </div></section>
+
+  <!-- 10 · The loop -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">The shape of it</p>
+    <div class="loop">
+      <div class="step hot">Your workshop</div><div class="arrow">↓</div>
+      <div class="step">Insight</div><div class="arrow">↓</div>
+      <div class="step">Daily life · MAIA companion</div><div class="arrow">↓</div>
+      <div class="step">Practice</div><div class="arrow">↓</div>
+      <div class="step">Reflection → Recognition</div><div class="arrow">↓</div>
+      <div class="step hot">Return to you — six weeks deeper</div>
+    </div>
+    <p>The same spine carries every relationship you hold: workshop cohorts between gatherings, executive clients between one-to-one sessions, and — in time — leadership teams between off-sites. Only the rhythm changes. The architecture doesn't.</p>
+  </div></section>
+
+  <!-- 11 · Vision Studio -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">The second field · Your own — <b>the vision</b></p>
+    <h2>Vision Studio: a place to become the practitioner you're becoming</h2>
+    <p class="lead" style="font-family:var(--serif);font-style:italic;">You already have a lifetime of experience. Vision Studio helps that experience become a coherent practice.</p>
+    <p>Everything so far serves your participants. This one serves you. Not an admin dashboard — a developmental environment. Three decades of leadership, a Harvard certification in positive psychology, a coaching practice finding its own voice: you don't start empty, you start with raw material. The studio does not ask you to perform certainty — it gives uncertainty, experimentation, and emerging insight a place to mature into authentic practice.</p>
+    <div class="grid2">
+      <div class="space"><h4>Body of Work</h4><p>The CEO years as source material — stories, lessons, instincts — alongside coursework, reading, and ideas being tested.</p></div>
+      <div class="space"><h4>Teaching</h4><p>Workshops and curriculum as they take shape; stories from the corporate years, becoming teaching.</p></div>
+      <div class="space"><h4>Practice</h4><p>Themes emerging across clients — drawn only from what participants explicitly shared. Which moments felt most like <em>your</em> way of coaching?</p></div>
+      <div class="space"><h4>Evolution</h4><p>What did the CEO years teach you that certification now gives language to? What are you discovering that the coursework didn't predict? Which ideas are becoming yours?</p></div>
+    </div>
+  </div></section>
+
+  <!-- 12 · Reciprocal loop -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">The reciprocal loop</p>
+    <div class="loop">
+      <div class="step hot">Your lifetime of work</div><div class="arrow">↓</div>
+      <div class="step">Vision Studio → workshop design</div><div class="arrow">↓</div>
+      <div class="step">Participants, living the work with MAIA</div><div class="arrow">↓</div>
+      <div class="step">Reflections they <em class="amber" style="font-style:normal">explicitly choose to share</em></div><div class="arrow">↓</div>
+      <div class="step">Themes across the practice — offered as invitations, never conclusions</div><div class="arrow">↓</div>
+      <div class="step hot">Your next evolution — workshop, article, book</div>
+    </div>
+    <p>Participants aren't consuming your work. Their lived experience — only what they consent to share — contributes to its evolution. The Flourishing Field helps people <em style="color:var(--ink)">live</em> your work. Vision Studio helps you <em style="color:var(--ink)">evolve</em> it.</p>
+  </div></section>
+
+  <!-- 13 · Honesty slide -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">Where this stands · July 2026</p>
+    <p class="lead">We don't tell tomorrow's story as if it were today's. What you just walked through is layered honestly:</p>
+    <div class="cols">
+      <div class="col live"><h4>Live now</h4><ul>
+        <li>The threshold &amp; arrival</li><li>The guided conversation</li><li>One committed practice</li><li>The return — room opens from the practice</li><li>Your view of shared threads</li><li>Private-by-default, share per item</li>
+      </ul></div>
+      <div class="col designed"><h4>Designed</h4><ul>
+        <li>Four-section reading of your view</li><li>Transcript → candidate recognitions pipeline</li><li>Member-approved developmental summaries</li>
+      </ul></div>
+      <div class="col vision"><h4>Vision</h4><ul>
+        <li>Workshop cohort spaces</li><li>Leadership-team companion</li><li>Vision Studio's four spaces</li><li>Themes across the practice</li>
+      </ul></div>
+    </div>
+    <p class="small">Everything in the Live column is running in production today — the walkthrough you'll take is the real product, not a mockup.</p>
+  </div></section>
+
+  <!-- 14 · Close -->
+  <section class="slide"><div class="inner stack-lg">
+    <p class="eyebrow">The invitation</p>
+    <p class="quote">Every meaningful developmental relationship has time between encounters.<br><br>The question is what carries the work forward until the next one.</p>
+    <p class="lead">The workshop creates transformation. The companion helps people live it — and the same environment stewards the next twenty years of your work.</p>
+    <p class="small">Next: a fifteen-minute walkthrough as Michael, then the field as you would see it. When you're ready.</p>
+  </div></section>
+
+</div>
+
+<p class="hint">← → to navigate</p>
+<div class="nav">
+  <button id="prev" aria-label="Previous slide">←</button>
+  <div class="dots" id="dots"></div>
+  <span class="count" id="count"></span>
+  <button id="next" aria-label="Next slide">→</button>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var dotsEl = document.getElementById('dots');
+  var countEl = document.getElementById('count');
+  var i = 0;
+  slides.forEach(function(_, n){
+    var d = document.createElement('span');
+    d.className = 'dot' + (n === 0 ? ' on' : '');
+    d.addEventListener('click', function(){ go(n); });
+    dotsEl.appendChild(d);
+  });
+  var dots = Array.prototype.slice.call(dotsEl.children);
+  function go(n){
+    if (n < 0 || n >= slides.length) return;
+    slides[i].classList.remove('active');
+    dots[i].classList.remove('on');
+    i = n;
+    slides[i].classList.add('active');
+    dots[i].classList.add('on');
+    countEl.textContent = (i + 1) + ' / ' + slides.length;
+  }
+  document.getElementById('prev').addEventListener('click', function(){ go(i - 1); });
+  document.getElementById('next').addEventListener('click', function(){ go(i + 1); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ') go(i + 1);
+    if (e.key === 'ArrowLeft') go(i - 1);
+  });
+  var x0 = null;
+  document.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if (dx < -40) go(i + 1);
+    if (dx > 40) go(i - 1);
+    x0 = null;
+  }, {passive:true});
+  countEl.textContent = '1 / ' + slides.length;
+})();
+</script>
+</body></html>

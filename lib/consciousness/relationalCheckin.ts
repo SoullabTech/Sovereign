@@ -204,10 +204,15 @@ export async function performRelationalCheckin(input: CheckInInput): Promise<Che
     const prompt = buildPrompt(input);
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
       max_tokens: 400,
+      // Sonnet 5 runs adaptive thinking by default; disable it so the small
+      // token budget goes entirely to the four labeled sections. The installed
+      // SDK (0.27.x) predates the `thinking` param, hence the assertion — the
+      // SDK forwards it to the API untouched.
+      thinking: { type: 'disabled' },
       messages: [{ role: 'user', content: prompt }],
-    });
+    } as Anthropic.MessageCreateParamsNonStreaming);
 
     const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
     const entryCount = input.recentEntries?.length ?? 0;

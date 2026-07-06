@@ -1,0 +1,219 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Now What? — A Living Companion Between Encounters</title>
+<style>
+  :root{
+    --ground:#0c0a09; --panel:#171412; --panel2:#1c1917; --line:#2b2624;
+    --ink:#e7e5e4; --ink2:#a8a29e; --ink3:#6f6862;
+    --amber:#d9a441; --amber-dim:#8a6a2f; --green:#86b08a; --violet:#8a7f9e;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);}
+  .screen{display:none;min-height:100vh;padding:8vh 6vw 12vh;}
+  .screen.active{display:block;}
+  .inner{max-width:720px;margin:0 auto;}
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink3);margin:0 0 26px;}
+  h1{font-weight:200;font-size:clamp(34px,5vw,52px);line-height:1.12;margin:0 0 14px;text-wrap:balance;}
+  h2{font-weight:200;font-size:clamp(24px,3.4vw,34px);line-height:1.2;margin:0 0 10px;text-wrap:balance;}
+  .serif{font-family:var(--serif);font-style:italic;font-weight:400;}
+  p{font-weight:300;color:var(--ink2);line-height:1.65;font-size:15.5px;margin:0;}
+  .lead{color:var(--ink);font-size:17px;}
+  .stack{display:flex;flex-direction:column;gap:16px;}
+  .stack-lg{display:flex;flex-direction:column;gap:28px;}
+  .doors{display:flex;flex-direction:column;gap:14px;margin-top:6px;}
+  .door{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:24px 26px;cursor:pointer;transition:border-color .2s,background .2s;color:inherit;font-family:inherit;}
+  .door:hover,.door:focus-visible{border-color:var(--amber-dim);background:var(--panel2);outline:none;}
+  .door h3{margin:0 0 6px;font-weight:300;font-size:19px;color:var(--ink);}
+  .door p{font-size:13.5px;}
+  .door .tag{float:right;font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin-top:4px;}
+  .tag.live{color:var(--green);} .tag.vision{color:var(--violet);} .tag.designed{color:var(--amber-dim);}
+  .back{background:none;border:none;color:var(--ink3);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    cursor:pointer;padding:0;margin:0 0 30px;font-family:inherit;}
+  .back:hover,.back:focus-visible{color:var(--ink);outline:none;}
+  .tl{display:grid;grid-template-columns:150px 1fr;gap:8px 22px;margin-top:8px;}
+  .tl .wk{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber-dim);padding-top:4px;}
+  .tl .ev{border-left:2px solid var(--line);padding:0 0 20px 16px;}
+  .tl .ev p{color:#d6d3d1;font-size:14.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;} .tl{grid-template-columns:100px 1fr;}}
+  .space{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px 22px;}
+  .space h4{margin:0 0 8px;font-weight:400;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber-dim);}
+  .space p{font-size:13px;line-height:1.6;}
+  .space ul{margin:8px 0 0;padding:0 0 0 2px;list-style:none;}
+  .space li{font-size:13px;color:var(--ink2);font-weight:300;padding:3px 0;line-height:1.5;}
+  .space li::before{content:"·";color:var(--amber-dim);margin-right:8px;}
+  .maiaq{background:var(--panel2);border-left:2px solid var(--amber-dim);padding:14px 18px;border-radius:0 6px 6px 0;}
+  .maiaq p{font-size:14px;color:#d6d3d1;line-height:1.6;}
+  .maiaq .who{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:6px;}
+  .contrast{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:640px){.contrast{grid-template-columns:1fr;}}
+  .contrast .no,.contrast .yes{border:1px solid var(--line);border-radius:8px;padding:18px 20px;}
+  .contrast .no p:first-child,.contrast .yes p:first-child{font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;}
+  .contrast .no p:first-child{color:var(--ink3);} .contrast .yes p:first-child{color:var(--green);}
+  .contrast .no p:last-child{color:var(--ink3);text-decoration:line-through;text-decoration-color:#44403c;}
+  .contrast .yes p:last-child{color:var(--ink);}
+  .small{font-size:12.5px;color:var(--ink3);line-height:1.6;}
+  .prog{display:grid;grid-template-columns:1fr auto 1fr;gap:8px 16px;align-items:baseline;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px 24px;}
+  .prog .h{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);padding-bottom:4px;}
+  .prog .from{color:var(--ink2);font-weight:300;font-size:14px;}
+  .prog .arr{color:var(--amber-dim);font-size:12px;}
+  .prog .to{color:var(--ink);font-weight:300;font-size:14px;}
+  .quote{font-family:var(--serif);font-style:italic;font-size:clamp(20px,2.6vw,26px);line-height:1.45;color:var(--ink);text-wrap:balance;}
+  a.plain{color:var(--ink2);text-decoration:underline;text-underline-offset:4px;}
+  a.plain:hover{color:var(--ink);}
+  .foot{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);}
+</style></head><body>
+
+<!-- HOME -->
+<section class="screen active" id="home"><div class="inner stack-lg">
+  <div>
+    <p class="eyebrow">Soullab · Prepared for Larry Closs</p>
+    <h1>Now What?</h1>
+    <p class="quote">A living companion between encounters.</p>
+  </div>
+  <div class="doors">
+    <button class="door" data-go="p1">
+      <span class="tag live">Live · walkable</span>
+      <h3>After My Workshop</h3>
+      <p>"I've just completed a Now What? workshop." Follow one executive's six weeks between gatherings.</p>
+    </button>
+    <button class="door" data-go="p2">
+      <span class="tag live">Live · same surfaces</span>
+      <h3>Between Coaching Sessions</h3>
+      <p>"I'm working privately with Larry." A different rhythm. The same architecture.</p>
+    </button>
+    <button class="door" data-go="studio">
+      <span class="tag vision">The vision</span>
+      <h3>My Studio</h3>
+      <p>Not admin. Not a dashboard. Your own developmental field — where decades of leadership and a new practice grow into one body of work.</p>
+    </button>
+    <button class="door" data-go="next">
+      <span class="tag designed">Coming next</span>
+      <h3>Live Conversations</h3>
+      <p>One sentence, for now.</p>
+    </button>
+  </div>
+  <p class="small">Fifteen minutes, at your own pace. Nothing here is a mockup unless labeled as vision — the participant journey runs on the production platform today.</p>
+</div></section>
+
+<!-- PATH 1 -->
+<section class="screen" id="p1"><div class="inner stack-lg">
+  <button class="back" data-go="home">← Now What?</button>
+  <div>
+    <p class="eyebrow">Path one · After my workshop — live today</p>
+    <h2>Six weeks in one executive's life</h2>
+    <p>Michael, 52, CEO. He left your three-day program with one sentence: <em style="color:var(--ink)">"I know something has changed. I don't know how to live it."</em></p>
+  </div>
+  <div class="tl">
+    <div class="wk">Workshop</div><div class="ev"><p>Something cracks open. You say: "Between now and our next gathering, continue working inside Now What?"</p></div>
+    <div class="wk">First arrival</div><div class="ev"><p>The room asks one question: <em style="color:var(--ink)">How are you entering this room today?</em> His answer becomes the first turn of the conversation.</p></div>
+    <div class="wk">A practice</div><div class="ev"><p>One commitment emerges, in his own words: <em style="color:var(--ink)">"Three quiet minutes before my first executive meeting: what kind of leader do I want to become today?"</em></p></div>
+    <div class="wk">Weeks 2–4</div><div class="ev"><p>The budget review. The COO conflict. An unexpected recognition: achievement no longer defines identity — it expresses it. Some days he forgets. That's information, not failure.</p></div>
+    <div class="wk">Return</div><div class="ev"><p>The room opens with: <em style="color:var(--ink)">"Last time you chose this practice. What happened?"</em> — and your next gathering starts six weeks deeper.</p></div>
+  </div>
+  <div class="foot">
+    <p class="small">Your side: a field view showing only what Michael chose to share — questions alive, his practice, recognitions, shared reflections. His private reflections never appear. The full walkthrough: <a class="plain" href="/now-what/overview.html">the overview deck</a>.</p>
+  </div>
+</div></section>
+
+<!-- PATH 2 -->
+<section class="screen" id="p2"><div class="inner stack-lg">
+  <button class="back" data-go="home">← Now What?</button>
+  <div>
+    <p class="eyebrow">Path two · Between coaching sessions — same architecture</p>
+    <h2>A different rhythm, one-to-one</h2>
+    <p>An executive you work with privately over six months. At the end of the first session you say: <em style="color:var(--ink)">"Let's keep this conversation alive between our meetings."</em></p>
+  </div>
+  <div class="tl">
+    <div class="wk">Session #1</div><div class="ev"><p>Leadership, purpose, a difficult transition. One thread chosen to keep working.</p></div>
+    <div class="wk">Week 1</div><div class="ev"><p>She reflects after a hard board meeting — with her own companion, in her own field.</p></div>
+    <div class="wk">Week 2</div><div class="ev"><p>A recognition about her leadership style she chooses to carry — and to share with you.</p></div>
+    <div class="wk">Week 3</div><div class="ev"><p>She struggles. Instead of holding it alone for three weeks, she has somewhere to continue reflecting.</p></div>
+    <div class="wk">Session #2</div><div class="ev"><p>You already hold the developmental thread she chose to share. No twenty minutes of catching up — you begin where the work actually is.</p></div>
+  </div>
+  <div class="foot">
+    <p class="small">Workshop cohorts and private clients need different rhythms. The platform underneath is exactly the same — only the context changes.</p>
+  </div>
+</div></section>
+
+<!-- STUDIO -->
+<section class="screen" id="studio"><div class="inner stack-lg">
+  <button class="back" data-go="home">← Now What?</button>
+  <div>
+    <p class="eyebrow">My Studio · the vision — designed around your practice</p>
+    <h2>A place to become the practitioner you're becoming</h2>
+    <p class="lead"><em class="serif">You already have a lifetime of experience. The studio helps that experience become a coherent practice.</em></p>
+    <p>Three decades of leadership. A Harvard certification in positive psychology. A coaching practice in formation. You don't start empty — you start with raw material. Dropbox stores files; Notion stores notes; <em style="color:var(--ink)">a studio develops a body of work.</em></p>
+    <p class="small" style="margin-top:10px">The studio does not ask practitioners to perform certainty. It gives uncertainty, experimentation, and emerging insight a place to mature into authentic practice — <em>"I'm exploring… this is still emerging… this has become one of my core principles"</em> are all legitimate entries.</p>
+  </div>
+  <div class="prog">
+    <span class="h">What you bring</span><span class="h"></span><span class="h">What it becomes here</span>
+    <span class="from">Experience</span><span class="arr">→</span><span class="to">Recognition</span>
+    <span class="from">Practice</span><span class="arr">→</span><span class="to">Coherence</span>
+    <span class="from">Insights</span><span class="arr">→</span><span class="to">Principles</span>
+    <span class="from">Stories</span><span class="arr">→</span><span class="to">Teaching</span>
+    <span class="from">Patterns</span><span class="arr">→</span><span class="to">Methodology</span>
+    <span class="from">Questions</span><span class="arr">→</span><span class="to">Direction</span>
+  </div>
+  <div class="grid2">
+    <div class="space"><h4>Body of Work</h4>
+      <ul><li>Twenty-five years of leadership — the stories, lessons, and instincts that are already source material</li><li>Harvard coursework, notes &amp; research</li><li>Books you're reading, ideas you're testing</li><li>Talks, articles &amp; exercises as they emerge</li></ul></div>
+    <div class="space"><h4>Teaching</h4>
+      <ul><li>Workshops &amp; curriculum as they take shape</li><li>Stories from the corporate years, becoming teaching</li><li>Questions that open rooms</li><li>What worked — and what you'd change</li></ul></div>
+    <div class="space"><h4>Coaching</h4>
+      <ul><li>Themes emerging across clients</li><li>Practices that consistently become lived</li><li>Client moments that felt most like <em>your</em> way of coaching</li><li>Insights participants have chosen to share</li></ul></div>
+    <div class="space"><h4>Evolution</h4>
+      <ul><li>What did the CEO years teach you that certification now gives language to?</li><li>What are you discovering in practice that the coursework didn't predict?</li><li>What no longer feels true?</li><li>Which ideas are becoming <em>yours</em>?</li></ul></div>
+  </div>
+  <div class="stack">
+    <p class="eyebrow" style="margin:14px 0 0">How it speaks to you — invitations, never conclusions</p>
+    <div class="maiaq"><span class="who">MAIA</span>
+      <p>"You've returned to psychological safety in three recent client reflections — and it echoes what you learned in your own boardroom. This may be becoming one of your core principles. Would you like to hold those together?"</p></div>
+    <div class="maiaq"><span class="who">MAIA</span>
+      <p>"Several executives have independently described the same transition after achievement — drawn from reflections they chose to share. It sits close to something you've been writing about identity. Worth exploring the relationship?"</p></div>
+  </div>
+  <div class="stack">
+    <p class="eyebrow" style="margin:14px 0 0">States of practice — not rankings</p>
+    <p><span style="color:var(--ink)">Emerging → Developing → Established → Distinctive.</span> The studio knows which season a practice is in — not to judge it, but to ask the right questions. An emerging practitioner needs help integrating learning with experience. An established one needs help articulating what they already know. Same environment, different questions.</p>
+  </div>
+  <div class="stack">
+    <p class="eyebrow" style="margin:14px 0 0">Build my next workshop</p>
+    <p>"I'm teaching flourishing for healthcare leaders next month." The studio gathers what already exists — relevant slides, stories, exercises, book passages, consented participant insights, questions alive in recent cohorts. <em style="color:var(--ink)">You assemble rather than start over.</em></p>
+  </div>
+  <div class="stack">
+    <p class="eyebrow" style="margin:14px 0 0">Development, not analytics</p>
+    <div class="contrast">
+      <div class="no"><p>Not this</p><p>Number of conversations · engagement metrics · flourishing scores</p></div>
+      <div class="yes"><p>This</p><p>What executives are wrestling with now · practices that consistently become lived — from shared reflections only</p></div>
+    </div>
+  </div>
+  <div class="foot"><p class="small">Today, the companion can honestly say: <em style="color:var(--ink2)">"Larry is developing an approach that integrates executive leadership with positive psychology."</em> Five years of practice will let it honestly say much more. Nothing invented — the field matures because the practitioner matures. Status: the participant journey is live today; the Studio is the designed horizon. Built in this order deliberately: the loop first, so the Studio grows from real practice rather than empty rooms.</p></div>
+</div></section>
+
+<!-- COMING NEXT -->
+<section class="screen" id="next"><div class="inner stack-lg">
+  <button class="back" data-go="home">← Now What?</button>
+  <p class="eyebrow">Coming next</p>
+  <h2>Live Conversations</h2>
+  <p class="lead">Participants will soon be able to enter consent-based voice conversations that become part of the same developmental journey.</p>
+  <p class="small">That's the whole announcement, on purpose. The developmental loop comes first; the live room is the next layer.</p>
+</div></section>
+
+<script>
+(function(){
+  var screens = document.querySelectorAll('.screen');
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-go]');
+    if(!btn) return;
+    var id = btn.getAttribute('data-go');
+    screens.forEach(function(s){ s.classList.toggle('active', s.id === id); });
+    window.scrollTo(0,0);
+  });
+})();
+</script>
+</body></html>

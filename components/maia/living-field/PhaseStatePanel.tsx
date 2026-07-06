@@ -53,6 +53,8 @@ export function PhaseStatePanel({ spiralState, recentStates, memberId }: Props) 
     }
   }
 
+  const isEmpty = !element && !phase && localStates.length === 0
+
   return (
     <div className="rounded-lg bg-stone-900 border border-stone-800 p-4 space-y-3">
       <div className="flex items-center gap-4 flex-wrap">
@@ -65,6 +67,12 @@ export function PhaseStatePanel({ spiralState, recentStates, memberId }: Props) 
           <span className="text-stone-400 text-sm">{RELATIONAL_PHASE_LABELS[phase]}</span>
         )}
       </div>
+
+      {isEmpty && (
+        <p className="text-stone-600 text-xs">
+          Your emotional weather will form here as you note what you're holding.
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {localStates.map((s) => (
