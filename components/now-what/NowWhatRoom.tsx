@@ -181,6 +181,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   const [offeringDraft, setOfferingDraft] = useState('');
   const [shareOffering, setShareOffering] = useState(false);
   const [savedPractice, setSavedPractice] = useState<string | null>(null);
+  // Welcome gate (first visit only): returnChecked flips true once return-detection
+  // resolves, so the threshold never flashes before we know this is a return;
+  // entered is the member's "Come in" — the welcome orients, it is never a wall.
+  const [returnChecked, setReturnChecked] = useState(false);
+  const [entered, setEntered] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string>(`vs-${Date.now()}`);
 
@@ -240,18 +245,23 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   // Return detection: if a practice was committed on a prior visit in this field
   // context, the room begins from what happened — not from the beginning.
   useEffect(() => {
-    if (!nowWhat || !fieldContext) return;
+    if (!nowWhat) return;
+    // No field context → nothing to return to; treat as a first visit at once.
+    if (!fieldContext) { setReturnChecked(true); return; }
     let cancelled = false;
     (async () => {
       try {
         const res = await apiFetch(`/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}`);
-        if (!res.ok) return;
-        const json = await res.json().catch(() => ({}));
-        const threads: { title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
-        const practice = threads.find(t => t.spiralogic_phase === 'practice');
-        if (practice && !cancelled) setPriorPractice(practice.title);
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const threads: { title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
+          const practice = threads.find(t => t.spiralogic_phase === 'practice');
+          if (practice && !cancelled) setPriorPractice(practice.title);
+        }
       } catch {
         // Quiet fallback: no return context — the room simply begins fresh.
+      } finally {
+        if (!cancelled) setReturnChecked(true);
       }
     })();
     return () => { cancelled = true; };
@@ -575,9 +585,49 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     sendTurn(answer);
   }
 
-  // — Now What? threshold: one question, nothing competing for attention —
+  // — Now What? welcome + threshold. First-visit welcome (Larry's standing frame),
+  //   then one question. Return visits skip the welcome and begin from what happened. —
   if (roomPhase === 'arrival' && nowWhat) {
+    // Hold a quiet beat while return-detection resolves, so a returning member
+    // never sees the first-visit welcome flash ahead of the return prompt.
+    if (fieldContext && !returnChecked) {
+      return (
+        <div className="max-w-prose mx-auto px-4 py-16 flex justify-center">
+          <RoomHoloflower motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+        </div>
+      );
+    }
     const returning = priorPractice !== null;
+
+    // First visit: Larry's welcome. "Come in" is a threshold, not a wall — the
+    // welcome orients and invites; it never measures, and authorship of meaning
+    // stays with the member ("the growth you recognize in your own life").
+    if (!returning && !entered) {
+      return (
+        <div className="max-w-prose mx-auto px-4 py-16 space-y-6">
+          <p className="text-xs uppercase tracking-[0.2em] text-stone-500">Now What? · with Larry Closs</p>
+          <h1 className="text-2xl font-light text-stone-100">Welcome.</h1>
+          <div className="space-y-4 text-stone-300 text-base font-light leading-relaxed">
+            <p>Flourishing isn't a destination. It's a practice — one you live, day by day, long after a conversation ends.</p>
+            <p>This is where that practice continues.</p>
+            <p>It's a place to return to between our conversations. A place to notice what you're learning, work with the questions that matter, and bring fresh experience back into the conversation.</p>
+            <p className="text-stone-200">You set the rhythm.</p>
+            <p className="text-stone-200">You decide what deserves your attention.</p>
+            <p>Nothing here measures you or grades your progress. The only growth that matters is the growth you recognize in your own life.</p>
+            <p>Think of this as our coaching continuing — carried into your real, working life, one step at a time.</p>
+          </div>
+          <p className="text-stone-500 text-sm font-light italic pt-2">When you're ready…</p>
+          <button
+            onClick={() => setEntered(true)}
+            className="text-stone-100 hover:text-white text-base font-light underline underline-offset-4 transition-colors"
+          >
+            Come in.
+          </button>
+          <p className="text-stone-600 text-xs font-light pt-6 border-t border-stone-900">Larry Closs · Now What?</p>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-prose mx-auto px-4 py-16 space-y-10">
         <h1 className="text-2xl font-light text-stone-100 tracking-wide">Now What?</h1>
