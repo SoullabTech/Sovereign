@@ -97,16 +97,19 @@ Return ONLY a JSON object with this structure:
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
       max_tokens: 2000,
-      temperature: 0.7,
+      // Sonnet 5 rejects non-default temperature (400) and defaults to adaptive
+      // thinking; disable so content[0] stays text.
+      // Cast: installed @anthropic-ai/sdk 0.27.3 types predate the thinking param.
+      thinking: { type: 'disabled' },
       messages: [
         {
           role: 'user',
           content: extractionPrompt
         }
       ]
-    });
+    } as any);
 
     const contentBlock = response.content[0];
     if (contentBlock.type !== 'text') {
