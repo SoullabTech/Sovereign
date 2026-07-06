@@ -71,41 +71,37 @@
 
 <!-- HOME -->
 <section class="screen active" id="home"><div class="inner stack-lg">
-  <div>
-    <p class="eyebrow">Soullab · Prepared for Larry Closs</p>
-    <h1>Now What?</h1>
-    <p class="quote">A living companion between encounters.</p>
+  <div class="stack">
+    <p class="eyebrow">Soullab · Now What? · Prepared for Larry Closs</p>
+    <p class="small" style="max-width:52ch">Development doesn't happen in workshops. It happens in the days, weeks, and months after them. This environment exists for that part.</p>
+    <h1 style="margin-top:8px">A lifetime of practice doesn't end when the session does.</h1>
+    <p class="quote" style="font-size:clamp(17px,2.2vw,21px)">Every meaningful developmental relationship has time between encounters.<br>The question is: what carries the work forward?</p>
   </div>
   <div class="doors">
     <button class="door" data-go="p1">
-      <span class="tag live">Live · walkable</span>
-      <h3>After My Workshop</h3>
-      <p>"I've just completed a Now What? workshop." Follow one executive's six weeks between gatherings.</p>
+      <span class="tag live">Live</span>
+      <h3>Workshop Companion</h3>
+      <p>Continue the work between gatherings. <span style="color:var(--ink)">→ Enter</span></p>
     </button>
     <button class="door" data-go="p2">
-      <span class="tag live">Live · same surfaces</span>
-      <h3>Between Coaching Sessions</h3>
-      <p>"I'm working privately with Larry." A different rhythm. The same architecture.</p>
+      <span class="tag live">Live</span>
+      <h3>Coaching Companion</h3>
+      <p>Continue the conversation between sessions. <span style="color:var(--ink)">→ Enter</span></p>
     </button>
-    <button class="door" data-go="studio">
-      <span class="tag vision">The vision</span>
-      <h3>My Studio</h3>
-      <p>Not admin. Not a dashboard. Your own developmental field — where decades of leadership and a new practice grow into one body of work.</p>
-    </button>
-    <button class="door" data-go="next">
-      <span class="tag designed">Coming next</span>
-      <h3>Live Conversations</h3>
-      <p>One sentence, for now.</p>
-    </button>
+    <div class="door" style="cursor:default;opacity:.55" aria-disabled="true">
+      <span class="tag vision">Coming soon</span>
+      <h3>Leadership Companion</h3>
+      <p>Continue the work of becoming between off-sites.</p>
+    </div>
   </div>
-  <p class="small">Fifteen minutes, at your own pace. Nothing here is a mockup unless labeled as vision — the participant journey runs on the production platform today.</p>
+  <p class="small">The relationship comes first — what accompanies it reveals itself inside. For the practitioner: <a class="plain" href="#" data-go="studio">My Studio</a>, where your own work develops. Coming next: consent-based live voice conversations, part of the same journey.</p>
 </div></section>
 
 <!-- PATH 1 -->
 <section class="screen" id="p1"><div class="inner stack-lg">
   <button class="back" data-go="home">← Now What?</button>
   <div>
-    <p class="eyebrow">Path one · After my workshop — live today</p>
+    <p class="eyebrow">Workshop Companion · live today</p>
     <h2>Six weeks in one executive's life</h2>
     <p>Michael, 52, CEO. He left your three-day program with one sentence: <em style="color:var(--ink)">"I know something has changed. I don't know how to live it."</em></p>
   </div>
@@ -125,7 +121,7 @@
 <section class="screen" id="p2"><div class="inner stack-lg">
   <button class="back" data-go="home">← Now What?</button>
   <div>
-    <p class="eyebrow">Path two · Between coaching sessions — same architecture</p>
+    <p class="eyebrow">Coaching Companion · same architecture</p>
     <h2>A different rhythm, one-to-one</h2>
     <p>An executive you work with privately over six months. At the end of the first session you say: <em style="color:var(--ink)">"Let's keep this conversation alive between our meetings."</em></p>
   </div>
@@ -210,6 +206,7 @@
   document.addEventListener('click', function(e){
     var btn = e.target.closest('[data-go]');
     if(!btn) return;
+    e.preventDefault();
     var id = btn.getAttribute('data-go');
     screens.forEach(function(s){ s.classList.toggle('active', s.id === id); });
     window.scrollTo(0,0);
