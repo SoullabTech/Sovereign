@@ -9,7 +9,22 @@
 
 **Identity:** A developmental environment where practitioners cultivate a body of work over a lifetime.
 
-Not an authoring tool. Not a knowledge management system. Not an AI workspace. Those are capabilities. Vision Studio is defined by what it is *for*: practitioners who are becoming, not practitioners who have arrived.
+> Vision Studio is a developmental environment for practitioners. Whether you're discovering your voice or refining a lifetime of work, it helps lived experience become a coherent body of practice — without asking you to claim authority you haven't yet earned. *(Kelly, 2026-07-06 — anchor formulation)*
+
+Not an authoring tool. Not a knowledge management system. Not an AI workspace. Those are capabilities. Vision Studio is defined by what it is *for*: practitioners who are becoming, not practitioners who have arrived. The common thread across practitioners is not career stage — someone transitioning from another profession, an established practitioner refining decades of work, someone discovering a distinctive approach after years of client experience — it is **developmental orientation**. Vision Studio is not a repository for established expertise; it is a developmental environment where expertise becomes coherent.
+
+**What practitioners bring vs. what the studio helps develop:**
+
+| What they already have | What Vision Studio helps develop |
+|---|---|
+| Experience | Recognition |
+| Practice | Coherence |
+| Insights | Principles |
+| Stories | Teaching |
+| Patterns | Methodology |
+| Questions | Direction |
+
+The progression tells an emerging practitioner: *you don't start empty — you start with raw material.*
 
 **Feature test:** Every Vision Studio capability should satisfy at least one of:
 - Does this help someone develop?
@@ -98,6 +113,12 @@ It's the willingness to continue becoming.
 The first sentence is restrictive: it names what Vision Studio refuses to do — fabricate expertise, generate artificial authority, substitute AI inference for human recognition. The second is generative: it names what Vision Studio is designed to do instead — create conditions under which genuine authority develops over time through recognition, reflection, and practice.
 
 The paired principle distinguishes Vision Studio from systems that use AI to make people appear more developed than they are. Authority here is earned in practice. The field records what has been recognized. MAIA accompanies the process.
+
+**Companion principle (Kelly, 2026-07-06):**
+
+> Vision Studio does not ask practitioners to perform certainty. It gives them a place where uncertainty, experimentation, and emerging insight can mature into authentic practice.
+
+Where the paired principle governs what the system may not do (manufacture authority), the companion principle governs what the practitioner is never required to do (perform it). Together they hold both sides of the same boundary.
 
 ---
 
