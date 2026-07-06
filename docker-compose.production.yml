@@ -920,14 +920,14 @@ services:
     image: coturn/coturn:4.6   # TODO(deploy): pin to a @sha256 digest after the security-auditor pass
     container_name: maia-coturn
     restart: unless-stopped
+    # Host networking: binds 3478 + 49160-49200/udp on the host directly. Docker-bridge
+    # placement double-NATs relay traffic (peers surface as 172.x and trip the RFC1918
+    # denied-peer rules — observed 2026-07-05). coturn's own docs recommend host mode.
+    network_mode: host
     logging: *default_logging
     command: ["-c", "/etc/coturn/turnserver.conf", "--static-auth-secret=${TURN_STATIC_AUTH_SECRET}", "--external-ip=${TURN_EXTERNAL_IP}"]
     volumes:
       - ./config/turnserver.conf:/etc/coturn/turnserver.conf:ro
-    ports:
-      - "3478:3478/udp"                 # STUN + TURN (UDP)  — router-forward 3478 -> 192.168.0.104
-      - "3478:3478/tcp"                 # TURN (TCP fallback)
-      - "49160-49200:49160-49200/udp"   # TURN relay range   — also router-forwarded
     security_opt:
       - no-new-privileges:true
     networks:

@@ -36,6 +36,8 @@ export default function WebRtcSmokeRoom() {
   const isInitiator = role === 'practitioner';
 
   const [joined, setJoined] = useState(false);
+  // Signaling liveness is VISIBLE — a dead stream must never be silent (Phase A hardening).
+  const [sigState, setSigState] = useState<'off' | 'connected' | 'reconnecting'>('off');
   const [micState, setMicState] = useState<'idle' | 'granted' | 'denied'>('idle');
   const [connState, setConnState] = useState<string>('new');
   const [iceState, setIceState] = useState<string>('new');
@@ -50,6 +52,11 @@ export default function WebRtcSmokeRoom() {
   const peerIdRef = useRef<string>('');
   const offerSentRef = useRef(false);
   const iceServersRef = useRef<RTCIceServer[]>([]);
+  // Reconnect machinery: same peerId across reconnects; backoff; staleness watchdog.
+  const leftRef = useRef(false);
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastEventAtRef = useRef(0);
 
   const addLog = useCallback((line: string) => {
     setLog((l) => [...l.slice(-40), `${line}`]);
@@ -72,15 +79,17 @@ export default function WebRtcSmokeRoom() {
     if (!pc) return;
     const stats = await pc.getStats();
     let pairId: string | null = null;
-    const cands: Record<string, { type?: string }> = {};
+    // NB: candidateType (host|srflx|prflx|relay) — NOT .type, which is the stat-record
+    // type ('local-candidate'/'remote-candidate'). The earlier display bug read .type.
+    const cands: Record<string, { candidateType?: string }> = {};
     stats.forEach((r) => {
       if (r.type === 'candidate-pair' && r.state === 'succeeded' && r.nominated) pairId = r.id;
-      if (r.type === 'local-candidate' || r.type === 'remote-candidate') cands[r.id] = r as { type?: string };
+      if (r.type === 'local-candidate' || r.type === 'remote-candidate') cands[r.id] = r as { candidateType?: string };
     });
     stats.forEach((r) => {
       if (r.id === pairId) {
-        const local = cands[(r as { localCandidateId: string }).localCandidateId]?.type ?? '?';
-        const remote = cands[(r as { remoteCandidateId: string }).remoteCandidateId]?.type ?? '?';
+        const local = cands[(r as { localCandidateId: string }).localCandidateId]?.candidateType ?? '?';
+        const remote = cands[(r as { remoteCandidateId: string }).remoteCandidateId]?.candidateType ?? '?';
         const relay = local === 'relay' || remote === 'relay';
         setConnectedVia(`${local} ⇄ ${remote}${relay ? '  (TURN relay used → coturn NEEDED)' : '  (no relay → host/STUN sufficient)'}`);
         addLog(`selected pair: local=${local} remote=${remote}`);
@@ -130,11 +139,41 @@ export default function WebRtcSmokeRoom() {
 
   const handleSignal = useCallback(
     async (msg: { type: string; from: string; payload?: unknown }) => {
+      // Liveness signals come BEFORE the self-check: 'connected' is our own subscribe ack,
+      // 'ping' is the server heartbeat (both only update liveness, never negotiate).
+      if (msg.type === 'ping') return;
+      if (msg.type === 'connected') {
+        reconnectAttemptRef.current = 0;
+        setSigState('connected');
+        return;
+      }
       if (msg.from === peerIdRef.current) return;
       if (msg.type === 'peer-present' || msg.type === 'peer-join') {
         addLog(`peer ${msg.type === 'peer-join' ? 'joined' : 'present'}: ${msg.from}`);
-        if (isInitiator) makeOffer();
+        if (isInitiator) {
+          const pc = pcRef.current;
+          if (pc && pc.connectionState === 'connected') {
+            // Healthy media + a re-announce (their signaling reconnected) — nothing to do.
+            addLog('peer re-announced — media already connected, no renegotiation');
+          } else {
+            // Fresh peer, or our PC is dead/stale: rebuild and offer again.
+            if (pc && pc.connectionState !== 'new') {
+              pc.close();
+              pcRef.current = null;
+              createPeer();
+              addLog('rebuilt peer connection for re-offer');
+            }
+            offerSentRef.current = false;
+            makeOffer();
+          }
+        }
       } else if (msg.type === 'offer') {
+        // If our old PC is dead, replace it before answering.
+        if (pcRef.current && ['failed', 'disconnected', 'closed'].includes(pcRef.current.connectionState)) {
+          pcRef.current.close();
+          pcRef.current = null;
+          addLog('rebuilt peer connection to answer fresh offer');
+        }
         const pc = pcRef.current ?? createPeer();
         await pc.setRemoteDescription(msg.payload as RTCSessionDescriptionInit);
         const answer = await pc.createAnswer();
@@ -153,6 +192,8 @@ export default function WebRtcSmokeRoom() {
       } else if (msg.type === 'peer-leave') {
         addLog(`peer left: ${msg.from}`);
         setRemoteAudible(false);
+        // Allow a re-offer when they (or their signaling) come back.
+        offerSentRef.current = false;
       }
     },
     [isInitiator, createPeer, makeOffer, addLog, post]
@@ -188,14 +229,58 @@ export default function WebRtcSmokeRoom() {
       addLog('ICE: turn-credentials fetch failed (host-candidate-only)');
     }
     createPeer();
+    leftRef.current = false;
+    reconnectAttemptRef.current = 0;
+    lastEventAtRef.current = Date.now();
+    connectSignaling();
+    setJoined(true);
+  }, [role, roomId, createPeer, addLog]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Signaling connection with reconnect: SAME peerId across reconnects (the server
+  // re-announces on re-subscribe, so presence self-heals). Backoff 1s→10s. A dead
+  // stream is never silent: sigState goes 'reconnecting' and the log says so.
+  const connectSignaling = useCallback(() => {
+    esRef.current?.close();
     const es = new EventSource(`/api/open/session-room/${roomId}/signal?peerId=${peerIdRef.current}`);
     esRef.current = es;
-    es.onmessage = (e) => handleSignal(JSON.parse(e.data));
-    es.onerror = () => addLog('signaling stream error/closed');
-    setJoined(true);
-  }, [role, roomId, createPeer, handleSignal, addLog]);
+    es.onmessage = (e) => {
+      lastEventAtRef.current = Date.now();
+      handleSignal(JSON.parse(e.data));
+    };
+    es.onerror = () => {
+      es.close();
+      if (leftRef.current) return;
+      setSigState('reconnecting');
+      const attempt = ++reconnectAttemptRef.current;
+      const delay = Math.min(1000 * 2 ** Math.min(attempt - 1, 4), 10000);
+      addLog(`signaling lost — reconnecting in ${Math.round(delay / 1000)}s (attempt ${attempt})`);
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = setTimeout(() => {
+        if (!leftRef.current) connectSignaling();
+      }, delay);
+    };
+  }, [roomId, handleSignal, addLog]);
+
+  // Staleness watchdog: the server pings every 15s; >45s of silence = zombie stream
+  // (observed failure mode: background-tab reaping without an error event). Force reconnect.
+  useEffect(() => {
+    if (!joined) return;
+    const iv = setInterval(() => {
+      if (leftRef.current) return;
+      if (Date.now() - lastEventAtRef.current > 45000) {
+        addLog('signaling stale (>45s silent) — forcing reconnect');
+        setSigState('reconnecting');
+        lastEventAtRef.current = Date.now(); // avoid immediate re-trigger
+        connectSignaling();
+      }
+    }, 20000);
+    return () => clearInterval(iv);
+  }, [joined, connectSignaling, addLog]);
 
   const leave = useCallback(() => {
+    leftRef.current = true;
+    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    setSigState('off');
     esRef.current?.close();
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
@@ -249,6 +334,7 @@ export default function WebRtcSmokeRoom() {
 
         <div className="rounded-lg bg-neutral-900 border border-neutral-800 p-4">
           <Row k="mic" v={micState} />
+          <Row k="signaling" v={sigState} />
           <Row k="connection" v={connState} />
           <Row k="ice" v={iceState} />
           <Row k="remote audible" v={remoteAudible ? 'yes' : 'no'} />

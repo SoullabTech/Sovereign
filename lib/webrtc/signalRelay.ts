@@ -19,7 +19,7 @@ const MODULE_ID = Math.floor(Math.random() * 1e6).toString(36);
 console.log(`[signal] relay module loaded — MODULE_ID=${MODULE_ID}`);
 
 export type SignalMessage = {
-  type: 'offer' | 'answer' | 'ice' | 'peer-join' | 'peer-present' | 'peer-leave' | 'connected';
+  type: 'offer' | 'answer' | 'ice' | 'peer-join' | 'peer-present' | 'peer-leave' | 'connected' | 'ping';
   from: string;
   to?: string;
   payload?: unknown;
@@ -43,9 +43,10 @@ export function subscribe(roomId: string, peerId: string, send: Send): void {
     room = new Map();
     rooms.set(roomId, room);
   }
+  const isReconnect = room.has(peerId);
   room.set(peerId, send);
   // eslint-disable-next-line no-console
-  console.log(`[signal] SUBSCRIBE ${peerId} room=${roomId} MODULE_ID=${MODULE_ID} members=[${members(roomId)}]`);
+  console.log(`[signal] ${isReconnect ? 'RE-SUBSCRIBE' : 'SUBSCRIBE'} ${peerId} room=${roomId} MODULE_ID=${MODULE_ID} members=[${members(roomId)}]`);
 
   // Tell the newcomer who is already here, and tell the incumbents someone joined.
   for (const [pid, incumbentSend] of room) {
@@ -57,9 +58,20 @@ export function subscribe(roomId: string, peerId: string, send: Send): void {
   }
 }
 
-export function unsubscribe(roomId: string, peerId: string): void {
+/**
+ * Remove a peer. `send` (when provided) guards a reconnect race: the OLD connection's
+ * abort may fire AFTER the new one re-subscribed with the same peerId — deleting by
+ * peerId alone would evict the NEW connection and broadcast a spurious peer-leave.
+ * Only delete if the current entry belongs to the departing connection.
+ */
+export function unsubscribe(roomId: string, peerId: string, send?: Send): void {
   const room = rooms.get(roomId);
   if (!room) return;
+  if (send && room.get(peerId) !== send) {
+    // eslint-disable-next-line no-console
+    console.log(`[signal] stale UNSUBSCRIBE ignored for ${peerId} room=${roomId} (reconnected already)`);
+    return;
+  }
   room.delete(peerId);
   // eslint-disable-next-line no-console
   console.log(`[signal] UNSUBSCRIBE ${peerId} room=${roomId} remaining=[${members(roomId)}]`);

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  *
  * Relays SDP/ICE only. No auth gate (a guest joins with a link), no DB, no persistence,
  * no Encounter/scribe write. See lib/webrtc/signalRelay.ts.
+ * (chaos-test marker: recompile intentionally triggered to verify client reconnect)
  */
 
 import { NextRequest } from 'next/server';
@@ -34,9 +35,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       subscribe(roomId, peerId, send);
       send({ type: 'connected', from: peerId });
 
+      // Heartbeat as a REAL event (not an SSE comment): EventSource never surfaces
+      // comments to JS, so a comment can't feed the client's staleness watchdog.
       const heartbeat = setInterval(() => {
         try {
-          controller.enqueue(encoder.encode(`: hb\n\n`));
+          controller.enqueue(encoder.encode(`data: {"type":"ping","from":"__server"}\n\n`));
         } catch {
           /* closed */
         }
@@ -44,7 +47,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
       request.signal.addEventListener('abort', () => {
         clearInterval(heartbeat);
-        unsubscribe(roomId, peerId);
+        unsubscribe(roomId, peerId, send);
         try {
           controller.close();
         } catch {
