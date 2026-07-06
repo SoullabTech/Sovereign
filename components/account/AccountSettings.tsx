@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiUrl, apiBaseUrl, BUILD_STAMP } from '@/lib/http/apiBase';
+import { apiFetch, apiBaseUrl, BUILD_STAMP } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -279,7 +279,7 @@ export function AccountSettings() {
 
         // Load profile from server
         console.log('[AccountSettings] Fetching profile from API...');
-        const profileRes = await fetch(apiUrl(`/api/members/profile?id=${memberId}`));
+        const profileRes = await apiFetch(`/api/members/profile?id=${memberId}`);
         console.log('[AccountSettings] Profile API response status:', profileRes.status);
         if (profileRes.ok) {
           const profileData = await profileRes.json();
@@ -333,7 +333,7 @@ export function AccountSettings() {
         }
 
         // Load settings from server
-        const settingsRes = await fetch(apiUrl(`/api/members/settings?memberId=${memberId}`));
+        const settingsRes = await apiFetch(`/api/members/settings?memberId=${memberId}`);
         if (settingsRes.ok) {
           const settingsData = await settingsRes.json();
           setMemberSettings({
@@ -349,7 +349,7 @@ export function AccountSettings() {
         // Reconcile with server-authoritative consent
         // Server is the source of truth for *Server consent flags
         try {
-          const consentRes = await fetch(apiUrl(`/api/account/storage-consent?memberId=${memberId}`));
+          const consentRes = await apiFetch(`/api/account/storage-consent?memberId=${memberId}`);
           if (consentRes.ok) {
             const { consent: serverConsent } = await consentRes.json();
             if (serverConsent && typeof serverConsent === 'object') {
@@ -395,7 +395,7 @@ export function AccountSettings() {
 
         // Load practitioner projects (if user is a practitioner)
         try {
-          const projectsRes = await fetch(apiUrl('/api/practitioner/projects'), {
+          const projectsRes = await apiFetch('/api/practitioner/projects', {
             headers: { 'x-member-id': memberId }
           });
           if (projectsRes.ok) {
@@ -463,7 +463,7 @@ export function AccountSettings() {
 
     // Also sync to server if we have userId
     if (userId) {
-      fetch(apiUrl('/api/members/settings'), {
+      apiFetch('/api/members/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -511,7 +511,7 @@ export function AccountSettings() {
 
       const serverKey = serverKeyMap[path];
       if (serverKey) {
-        fetch(apiUrl('/api/members/settings'), {
+        apiFetch('/api/members/settings', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -539,7 +539,7 @@ export function AccountSettings() {
       notifications: { ...memberSettings.notifications, [key]: value },
     });
 
-    await fetch(apiUrl('/api/members/settings'), {
+    await apiFetch('/api/members/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
@@ -562,7 +562,7 @@ export function AccountSettings() {
       privacy: { ...memberSettings.privacy, [key]: value },
     });
 
-    await fetch(apiUrl('/api/members/settings'), {
+    await apiFetch('/api/members/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
@@ -576,7 +576,7 @@ export function AccountSettings() {
     setSaving(true);
 
     try {
-      const res = await fetch(apiUrl('/api/members/profile'), {
+      const res = await apiFetch('/api/members/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -629,7 +629,7 @@ export function AccountSettings() {
 
     setSearchingLocation(true);
     try {
-      const res = await fetch(apiUrl(`/api/astrology/geocode?q=${encodeURIComponent(query)}`));
+      const res = await apiFetch(`/api/astrology/geocode?q=${encodeURIComponent(query)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.data) {
@@ -672,7 +672,7 @@ export function AccountSettings() {
         } : null,
       } : null;
 
-      const res = await fetch(apiUrl('/api/members/profile'), {
+      const res = await apiFetch('/api/members/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberId: userId, birthData }),
@@ -685,6 +685,8 @@ export function AccountSettings() {
           try {
             const user = JSON.parse(storedUser);
             user.birthData = birthData;
+            // /maia reads the flat birthDate key (set at registration) — keep it in sync
+            user.birthDate = birthData?.date ?? null;
             localStorage.setItem('beta_user', JSON.stringify(user));
           } catch { /* silent */ }
         }
@@ -706,7 +708,7 @@ export function AccountSettings() {
     setSaving(true);
     setBirthSaveError(null);
     try {
-      const res = await fetch(apiUrl('/api/members/profile'), {
+      const res = await apiFetch('/api/members/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberId: userId, birthData: null }),
@@ -722,6 +724,7 @@ export function AccountSettings() {
           try {
             const user = JSON.parse(storedUser);
             delete user.birthData;
+            delete user.birthDate;
             localStorage.setItem('beta_user', JSON.stringify(user));
           } catch { /* silent */ }
         }
@@ -742,7 +745,7 @@ export function AccountSettings() {
     if (!userId) return;
     setConsentSaving(true);
     try {
-      const res = await fetch(apiUrl('/api/members/profile'), {
+      const res = await apiFetch('/api/members/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberId: userId, astrologyConsent: consent }),
@@ -796,7 +799,7 @@ export function AccountSettings() {
     if (!userId) return;
 
     try {
-      const res = await fetch(apiUrl('/api/members/export-data'), {
+      const res = await apiFetch('/api/members/export-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberId: userId }),
@@ -821,7 +824,7 @@ export function AccountSettings() {
     setDeleting(true);
 
     try {
-      const res = await fetch(apiUrl('/api/members/delete-account'), {
+      const res = await apiFetch('/api/members/delete-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -868,7 +871,7 @@ export function AccountSettings() {
     setPasswordSuccess(false);
 
     try {
-      const res = await fetch('/api/members/change-password', {
+      const res = await apiFetch('/api/members/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword }),
@@ -2013,7 +2016,7 @@ export function AccountSettings() {
     // Sync to server (server-authoritative consent)
     if (profile?.id) {
       try {
-        await fetch(apiUrl('/api/account/storage-consent'), {
+        await apiFetch('/api/account/storage-consent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

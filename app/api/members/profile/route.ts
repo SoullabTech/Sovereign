@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -62,8 +62,9 @@ function isSchemaError(error: unknown): boolean {
  * Get member profile from session
  *
  * Authentication:
- *   - Session cookie only (HttpOnly, secure)
- *   - Server decides who you are - no client-provided identity
+ *   - Verified session credential only: maia_session cookie (web) or
+ *     x-session-token header (Safari/iOS where cookies are blocked)
+ *   - Server decides who you are - no bare client-provided identity
  *
  * Never returns 500 for expected failures:
  * - 401: Auth required
@@ -80,9 +81,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get identity from session cookie only - server decides who you are
-    const session = await getCurrentSession();
-    const memberId = session?.memberId ?? null;
+    // Get identity from a verified session credential (cookie or x-session-token
+    // header) — server decides who you are
+    const memberId = await getMemberIdFromRequest(request);
 
     if (!memberId) {
       return NextResponse.json(
@@ -212,8 +213,9 @@ export async function GET(request: NextRequest) {
  * Update member profile
  *
  * Authentication:
- *   - Session cookie only (HttpOnly, secure)
- *   - Server decides who you are - no client-provided identity
+ *   - Verified session credential only: maia_session cookie (web) or
+ *     x-session-token header (Safari/iOS where cookies are blocked)
+ *   - Server decides who you are - no bare client-provided identity
  *
  * Never returns 500 for expected failures:
  * - 400: Bad request (missing/invalid params, malformed JSON)
@@ -225,9 +227,9 @@ export async function PUT(request: NextRequest) {
   const correlationId = generateCorrelationId();
   const headers = { 'X-Correlation-ID': correlationId };
 
-  // Get identity from session cookie only - server decides who you are
-  const session = await getCurrentSession();
-  const memberId = session?.memberId ?? null;
+  // Get identity from a verified session credential (cookie or x-session-token
+  // header) — server decides who you are
+  const memberId = await getMemberIdFromRequest(request);
 
   if (!memberId) {
     return NextResponse.json(
