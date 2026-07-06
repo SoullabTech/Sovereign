@@ -43,7 +43,10 @@ export function LivingFieldDetailPanel({
   const [historyOpen, setHistoryOpen] = useState(false)
   const [captured, setCaptured] = useState<string | null>(null)
   const [refineNote, setRefineNote] = useState<string | null>(null)
-  const [encounterOpen, setEncounterOpen] = useState(false)
+  // Conversation-first: opening a dimension lands the member IN the encounter.
+  // The expression form, gathering panel, and history are below — projections,
+  // not the primary surface.
+  const [encounterOpen, setEncounterOpen] = useState(true)
 
   async function handleCapture(text: string, source: CaptureSource) {
     // Store as a source (evidence that feeds Refine and provenance) …
