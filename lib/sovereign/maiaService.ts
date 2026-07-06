@@ -37,6 +37,7 @@ import {
   logPresenceModeTelemetry,
   type ResponseMode,
 } from './presenceMode';
+import { enforceIdentityPredicateConstraint, logIdentityGuardTelemetry } from './identityPredicateGuard';
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
 import { lattice } from '../memory/ConsciousnessMemoryLattice';
 import type { ConsciousnessEvent, SpiralFacet, LifePhase, MemoryField } from '../memory/ConsciousnessMemoryLattice';
@@ -2257,6 +2258,47 @@ function determineConsultationType(
   return 'relational-enhancement';
 }
 
+/**
+ * Member-facing egress funnel — the single mouth-layer choke point.
+ *
+ * sanitize → Presence constraints → identity-predicate guard, applied to the
+ * final outgoing utterance on EVERY model-generated path before voice synthesis,
+ * persistence, or route return. Structural, not archival: it evaluates the text
+ * that is about to reach the member, independent of which module produced it.
+ *
+ * `sanitizeMaiaOutput` is idempotent (blocked-pattern removal + whitespace
+ * normalization), so paths that already sanitized upstream (the FAST/CORE/DEEP
+ * tail) can re-run it here harmlessly; the RCN path, which previously skipped
+ * both sanitize and Presence, is brought through the same discipline.
+ */
+function finalizeMemberFacingText(
+  input: string,
+  rawText: string,
+  opts: { sanctuary: boolean },
+): { text: string; presenceConstrained: boolean; identityGuarded: boolean } {
+  let text = sanitizeMaiaOutput(rawText);
+
+  const { mode, recognition } = determineResponseMode(input);
+  let presenceConstrained = false;
+  if (mode === 'PRESENCE') {
+    const presenceResult = enforcePresenceConstraints(text);
+    if (presenceResult.wasConstrained) {
+      text = presenceResult.response;
+      presenceConstrained = true;
+    }
+    logPresenceModeTelemetry(mode, recognition, presenceResult.wasConstrained);
+  }
+
+  const guard = enforceIdentityPredicateConstraint(text);
+  if (guard.wasConstrained) {
+    text = guard.response;
+    console.log(`🛡️ [Identity Guard] Reframed a system-authored identity assertion before emission`);
+  }
+  logIdentityGuardTelemetry(guard.wasConstrained, guard.matchedPatternIds, { sanctuary: opts.sanctuary });
+
+  return { text, presenceConstrained, identityGuarded: guard.wasConstrained };
+}
+
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
   const startTime = Date.now();
@@ -2691,8 +2733,15 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           const trustReceipt = extractTrustReceipt(rcnResult);
           console.log(`✅ [RCN] High-confidence response: ${trustReceipt.chunksRead} chunks read in ${trustReceipt.processingTimeMs}ms`);
 
+          // Bring the RCN early-return through the same egress discipline as the
+          // FAST/CORE/DEEP tail — sanitize → Presence → identity guard — before it
+          // is persisted or returned. (This path previously skipped all three.)
+          const rcnText = finalizeMemberFacingText(input, rawResponse, {
+            sanctuary: (meta as any)?.sanctuary === true,
+          }).text;
+
           // Store conversation and return early
-          await addConversationExchange(sessionId, input, rawResponse, {
+          await addConversationExchange(sessionId, input, rcnText, {
             ...meta,
             processingProfile: 'RCN',
             rcnIntent: rcnResult.intent,
@@ -2703,7 +2752,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           });
 
           return {
-            text: rawResponse,
+            text: rcnText,
             processingProfile: 'DEEP', // Report as DEEP for client compatibility
             processingTimeMs: Date.now() - startTime,
             rcn: {
@@ -2881,17 +2930,12 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
     }
 
-    // 🌿 PRESENCE MODE: When recognition occurs, MAIA does not advance. She abides.
-    // This is a mouth-layer constraint applied after mind state generation.
-    const { mode: responseMode, recognition } = determineResponseMode(input);
-    if (responseMode === 'PRESENCE') {
-      const presenceResult = enforcePresenceConstraints(text);
-      if (presenceResult.wasConstrained) {
-        console.log(`🌿 [Presence Mode] Constrained response: ${presenceResult.violations.join(', ')}`);
-        text = presenceResult.response;
-      }
-      logPresenceModeTelemetry(responseMode, recognition, presenceResult.wasConstrained);
-    }
+    // 🌿 MEMBER-FACING EGRESS FUNNEL: sanitize → Presence → identity-predicate guard.
+    // The single mouth-layer choke point, applied before voice synthesis, persistence,
+    // and route return. `text` is already sanitized + state-vector-stripped above; the
+    // funnel re-sanitizes idempotently, then applies Presence Mode ("MAIA does not
+    // advance; she abides") and refuses/reframes system-authored identity assertions.
+    text = finalizeMemberFacingText(input, text, { sanctuary: (meta as any)?.sanctuary === true }).text;
 
     // 🎤 VOICE SYNTHESIS: MAIA's mind (Claude/local) vs MAIA's voice (OpenAI TTS)
     if (includeAudio) {
