@@ -1,15 +1,18 @@
 'use client';
 
 /**
- * WebRTC Session Room — Phase A smoke test. TRANSPORT ONLY.
+ * WebRTC Session Room — consent-gated door + P2P transport. TRANSPORT ONLY.
  *
- * Proves: room entry, P2P connect, mic permission, remote audio audible, signaling route,
- * and MEASURES whether a TURN relay (coturn) was actually needed. Explicitly:
- * NO recording, NO transcript, NO memory, NO Encounter/scribe write.
+ * Consent opens the door (threshold → room wiring): the room is reached from
+ * /open/threshold/<token> after the participant authors their own `join` consent —
+ * the URL carries ?threshold=<token>, the participant's own capability. Without a
+ * valid, consented proof the room refuses: no mic is requested, no signaling occurs
+ * (the signal route re-checks the consent row on EVERY request — structural, not UI).
+ * Role is taken from the participant row server-side, not trusted from the URL.
+ * Explicitly still: NO recording, NO transcript, NO memory, NO Encounter/scribe write.
  *
- * Manual smoke test: open in two browsers/tabs —
- *   /open/session-room/<roomId>?role=practitioner
- *   /open/session-room/<roomId>?role=guest
+ * Entry: mint links via POST /api/studio/encounters/[id]/threshold → each participant
+ * crosses their own threshold → "Enter the session room".
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -30,10 +33,21 @@ export default function WebRtcSmokeRoom() {
   const params = useParams();
   const search = useSearchParams();
   const roomId = (params?.roomId as string) ?? 'test';
-  const role = (search?.get('role') === 'practitioner' ? 'practitioner' : 'guest') as
-    | 'practitioner'
-    | 'guest';
-  const isInitiator = role === 'practitioner';
+  const thresholdToken = search?.get('threshold') ?? null;
+
+  // Role is SERVER-derived (participant row) once the door check passes; the ?role param is
+  // only a provisional label until then. Held in a ref so signaling callbacks read the truth.
+  const [role, setRole] = useState<'practitioner' | 'guest'>(
+    search?.get('role') === 'practitioner' ? 'practitioner' : 'guest'
+  );
+  const roleRef = useRef<'practitioner' | 'guest'>(role);
+
+  // The door: consent opens the room. 'none' = no proof in URL (refuse, no controls);
+  // 'unconsented' = valid token but the participant hasn't crossed the threshold yet.
+  const [door, setDoor] = useState<'checking' | 'none' | 'unconsented' | 'open' | 'refused'>(
+    thresholdToken ? 'checking' : 'none'
+  );
+  const [doorName, setDoorName] = useState<string | null>(null);
 
   const [joined, setJoined] = useState(false);
   // Signaling liveness is VISIBLE — a dead stream must never be silent (Phase A hardening).
@@ -64,14 +78,56 @@ export default function WebRtcSmokeRoom() {
     console.log('[webrtc-smoke]', line);
   }, []);
 
+  // Door check on mount — BEFORE any mic request. The consent row is the authority; this
+  // pre-check is honesty for the person (the enforcing check lives in the signal route).
+  useEffect(() => {
+    if (!thresholdToken) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/open/threshold/${encodeURIComponent(thresholdToken)}`);
+        if (cancelled) return;
+        if (!r.ok) {
+          setDoor('refused');
+          addLog(`door: threshold link invalid (${r.status})`);
+          return;
+        }
+        const j = await r.json();
+        if (j.encounterId !== roomId) {
+          setDoor('refused');
+          addLog('door: this link belongs to a different room');
+          return;
+        }
+        if (!j.joined) {
+          setDoor('unconsented');
+          addLog('door: consent not yet given — cross the threshold first');
+          return;
+        }
+        const serverRole = j.role === 'practitioner' ? 'practitioner' : 'guest';
+        roleRef.current = serverRole;
+        setRole(serverRole);
+        setDoorName(j.displayName ?? null);
+        setDoor('open');
+        addLog(`door: consented ✓ (${j.displayName ?? 'participant'} · ${serverRole})`);
+      } catch {
+        if (!cancelled) setDoor('refused');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [thresholdToken, roomId, addLog]);
+
   const post = useCallback(
     (msg: Record<string, unknown>) =>
       fetch(`/api/open/session-room/${roomId}/signal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: peerIdRef.current, ...msg }),
+        // threshold = this participant's own door proof; the server verifies the consent
+        // row on every publish and STRIPS the token before relaying to the peer.
+        body: JSON.stringify({ from: peerIdRef.current, threshold: thresholdToken, ...msg }),
       }).catch(() => {}),
-    [roomId]
+    [roomId, thresholdToken]
   );
 
   const measureSelectedPair = useCallback(async () => {
@@ -128,14 +184,14 @@ export default function WebRtcSmokeRoom() {
   }, [addLog, post, measureSelectedPair]);
 
   const makeOffer = useCallback(async () => {
-    if (!isInitiator || offerSentRef.current) return;
+    if (roleRef.current !== 'practitioner' || offerSentRef.current) return;
     const pc = pcRef.current ?? createPeer();
     offerSentRef.current = true;
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     addLog('sent offer');
     post({ type: 'offer', payload: offer });
-  }, [isInitiator, createPeer, addLog, post]);
+  }, [createPeer, addLog, post]);
 
   const handleSignal = useCallback(
     async (msg: { type: string; from: string; payload?: unknown }) => {
@@ -150,7 +206,7 @@ export default function WebRtcSmokeRoom() {
       if (msg.from === peerIdRef.current) return;
       if (msg.type === 'peer-present' || msg.type === 'peer-join') {
         addLog(`peer ${msg.type === 'peer-join' ? 'joined' : 'present'}: ${msg.from}`);
-        if (isInitiator) {
+        if (roleRef.current === 'practitioner') {
           const pc = pcRef.current;
           if (pc && pc.connectionState === 'connected') {
             // Healthy media + a re-announce (their signaling reconnected) — nothing to do.
@@ -196,10 +252,16 @@ export default function WebRtcSmokeRoom() {
         offerSentRef.current = false;
       }
     },
-    [isInitiator, createPeer, makeOffer, addLog, post]
+    [createPeer, makeOffer, addLog, post]
   );
 
   const join = useCallback(async () => {
+    // Consent opens the door: no proof, no mic, no signaling. (The server enforces the
+    // same rule on every signal request; this guard keeps the client honest too.)
+    if (door !== 'open' || !thresholdToken) {
+      addLog('door is not open — the room opens from a consent threshold');
+      return;
+    }
     peerIdRef.current = randomPeerId();
     addLog(`joining as ${role} (${peerIdRef.current}) room=${roomId}`);
     try {
@@ -234,14 +296,16 @@ export default function WebRtcSmokeRoom() {
     lastEventAtRef.current = Date.now();
     connectSignaling();
     setJoined(true);
-  }, [role, roomId, createPeer, addLog]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [role, roomId, door, thresholdToken, createPeer, addLog]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Signaling connection with reconnect: SAME peerId across reconnects (the server
   // re-announces on re-subscribe, so presence self-heals). Backoff 1s→10s. A dead
   // stream is never silent: sigState goes 'reconnecting' and the log says so.
   const connectSignaling = useCallback(() => {
     esRef.current?.close();
-    const es = new EventSource(`/api/open/session-room/${roomId}/signal?peerId=${peerIdRef.current}`);
+    const es = new EventSource(
+      `/api/open/session-room/${roomId}/signal?peerId=${peerIdRef.current}&threshold=${encodeURIComponent(thresholdToken ?? '')}`
+    );
     esRef.current = es;
     es.onmessage = (e) => {
       lastEventAtRef.current = Date.now();
@@ -259,7 +323,7 @@ export default function WebRtcSmokeRoom() {
         if (!leftRef.current) connectSignaling();
       }, delay);
     };
-  }, [roomId, handleSignal, addLog]);
+  }, [roomId, thresholdToken, handleSignal, addLog]);
 
   // Staleness watchdog: the server pings every 15s; >45s of silence = zombie stream
   // (observed failure mode: background-tab reaping without an error event). Force reconnect.
@@ -307,14 +371,52 @@ export default function WebRtcSmokeRoom() {
     <div className="min-h-screen bg-neutral-950 text-neutral-100 p-6">
       <div className="mx-auto max-w-xl space-y-5">
         <div>
-          <h1 className="text-lg font-semibold">Session Room — transport smoke test</h1>
+          <h1 className="text-lg font-semibold">Session Room</h1>
           <p className="text-xs text-neutral-500">
-            Phase A · no recording, no transcript, no memory. Room <span className="font-mono">{roomId}</span> · role{' '}
+            No recording, no transcript, no memory. Room <span className="font-mono">{roomId}</span> · role{' '}
             <span className="font-mono">{role}</span>
           </p>
         </div>
 
-        <div className="flex gap-2">
+        {door === 'none' && (
+          <div className="rounded-xl bg-neutral-900 border border-neutral-800 p-5 space-y-2" data-testid="door-none">
+            <h2 className="text-sm font-semibold text-neutral-200">This room opens from a consent threshold</h2>
+            <p className="text-sm text-neutral-400">
+              There is no side door. Ask your practitioner for your threshold link — the room opens
+              after you agree there, and only for you.
+            </p>
+          </div>
+        )}
+
+        {door === 'checking' && (
+          <p className="text-sm text-neutral-400" data-testid="door-checking">Checking your threshold…</p>
+        )}
+
+        {door === 'unconsented' && (
+          <div className="rounded-xl bg-neutral-900 border border-neutral-800 p-5 space-y-3" data-testid="door-unconsented">
+            <h2 className="text-sm font-semibold text-neutral-200">You haven&apos;t crossed the threshold yet</h2>
+            <p className="text-sm text-neutral-400">The room opens only after you agree at the threshold.</p>
+            <a
+              href={`/open/threshold/${encodeURIComponent(thresholdToken ?? '')}`}
+              className="inline-block px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm hover:bg-emerald-500/25"
+            >
+              Go to the threshold
+            </a>
+          </div>
+        )}
+
+        {door === 'refused' && (
+          <div className="rounded-xl bg-neutral-900 border border-neutral-800 p-5 space-y-2" data-testid="door-refused">
+            <h2 className="text-sm font-semibold text-neutral-200">This link doesn&apos;t open this room</h2>
+            <p className="text-sm text-neutral-400">
+              The threshold link is invalid, expired, or belongs to a different session. Please ask
+              your practitioner for a new link.
+            </p>
+          </div>
+        )}
+
+        {door === 'open' && (
+          <div className="flex gap-2">
           {!joined ? (
             <button onClick={join} className="px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm hover:bg-emerald-500/25">
               Join as {role}
@@ -330,9 +432,11 @@ export default function WebRtcSmokeRoom() {
           >
             Play remote audio
           </button>
-        </div>
+          </div>
+        )}
 
         <div className="rounded-lg bg-neutral-900 border border-neutral-800 p-4">
+          <Row k="door" v={door === 'open' ? `consented ✓${doorName ? ` (${doorName})` : ''}` : door} />
           <Row k="mic" v={micState} />
           <Row k="signaling" v={sigState} />
           <Row k="connection" v={connState} />
