@@ -37,10 +37,13 @@ export async function extractContent(source: ContentSource): Promise<ExtractedCo
   const prompt = EXTRACTION_PROMPT.replace('{TEXT}', source.body);
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-5',
     max_tokens: 4096,
+    // Sonnet 5 defaults to adaptive thinking; disable so content[0] stays text.
+    // Cast: installed @anthropic-ai/sdk 0.27.3 types predate the thinking param.
+    thinking: { type: 'disabled' },
     messages: [{ role: 'user', content: prompt }],
-  });
+  } as any);
 
   const text = response.content[0].type === 'text' ? response.content[0].text : '';
 
