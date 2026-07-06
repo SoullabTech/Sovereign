@@ -15,6 +15,20 @@
  *   - No sorting, typing, or identity modeling.
  *   - MAIA proposes; participant authors. Proposing nothing is faithful.
  *   - can_be_shown_to_practitioner defaults FALSE; set only by an explicit per-thread member gesture ("Share with your practitioner"). Carrying a thread is private to the member's field; sharing is a separate choice.
+ *
+ * Room recomposition (founder feedback — the room the member can talk to,
+ * bring insights into, and type within):
+ *   - The holoflower is the room's center, not a header badge. Motion states
+ *     are interaction-reactive only — idle stays still ("recognition is
+ *     earned; silence is a successful outcome").
+ *   - Voice input (browser SpeechRecognition, local only, never auto-sends),
+ *     optional spoken replies (window.speechSynthesis, session-only, off by
+ *     default), and a "bring an insight" affordance (client-side FileReader
+ *     or paste, never uploaded) all feed the SAME draft the member reviews
+ *     and sends themselves. None of this adds persistence — R13 (no
+ *     elemental persistence path) and R05 (no implicit practitioner share)
+ *     are unaffected: no new state here ever reaches carry()/collectPayload()
+ *     or localStorage.
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -157,6 +171,43 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   const [dismissedElements, setDismissedElements] = useState<SpiralElement[]>([]);
   const [showElementPicker, setShowElementPicker] = useState(false);
 
+  // — Talk to it: browser SpeechRecognition, local only, member authority preserved —
+  // Interim + final transcripts stream into the draft; the member always reviews and
+  // sends. Nothing here is persisted, nothing leaves the device except the eventual
+  // sent turn (identical to a typed one).
+  const [micListening, setMicListening] = useState(false);
+  const [micSupported, setMicSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const draftBeforeMicRef = useRef('');
+
+  // — Hear the room: optional spoken replies, session-only preference (not persisted) —
+  const [speakReplies, setSpeakReplies] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+
+  // — Bring an insight: paste or local file, member authors the entry themselves —
+  const [showBring, setShowBring] = useState(false);
+  const [bringText, setBringText] = useState('');
+  const [bringTruncated, setBringTruncated] = useState(false);
+  const bringFileInputRef = useRef<HTMLInputElement>(null);
+  const BRING_CHAR_CAP = 3500;
+
+  // Desktop ~240px, mobile ~150px — the mandala is the room's center at either size.
+  const [mandalaSize, setMandalaSize] = useState(150);
+
+  useEffect(() => {
+    setMicSupported(
+      typeof window !== 'undefined' &&
+        !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition),
+    );
+    setSpeechSupported(typeof window !== 'undefined' && !!window.speechSynthesis);
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 640px)');
+    const applySize = () => setMandalaSize(mq.matches ? 240 : 150);
+    applySize();
+    mq.addEventListener?.('change', applySize);
+    return () => mq.removeEventListener?.('change', applySize);
+  }, []);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns, working]);
@@ -175,6 +226,8 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   async function sendTurn(text: string) {
     const content = text.trim();
     if (!content || working) return;
+    // Sending always ends an in-progress dictation — the member is moving on.
+    if (micListening) stopMic();
     setError(null);
     const newTurn: Turn = { role: 'user', content };
     const updated = [...turns, newTurn];
@@ -190,6 +243,7 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
       const json = await callInterview(updated, 'turn');
       setTurns(prev => [...prev, { role: 'assistant', content: json.reply }]);
       setRoomMotion('responding');
+      speakText(json.reply);
       if (
         json?.cellCandidate &&
         typeof json.cellCandidate === 'object' &&
@@ -205,6 +259,113 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     } finally {
       setWorking(false);
     }
+  }
+
+  // — Hear the room: speak MAIA's reply aloud when the member has opted in. —
+  // Cancels any ongoing utterance first; OFF is always silent immediately.
+  function speakText(text: string) {
+    if (!speakReplies || !speechSupported || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utter);
+    } catch {
+      // Quiet fallback: speaking is a nicety, never a blocker.
+    }
+  }
+
+  function toggleSpeakReplies() {
+    setSpeakReplies(prev => {
+      const next = !prev;
+      if (!next) {
+        try { window.speechSynthesis?.cancel(); } catch {}
+      }
+      return next;
+    });
+  }
+
+  // — Talk to it: start/stop dictation. Appends to whatever is already typed —
+  // never overwrites it. The member always reviews before Send; nothing auto-sends.
+  function startMic() {
+    if (!micSupported || micListening) return;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const recognition: SpeechRecognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    draftBeforeMicRef.current = draft;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = '';
+      let final = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const chunk = event.results[i][0].transcript;
+        if (event.results[i].isFinal) final += chunk;
+        else interim += chunk;
+      }
+      if (final) draftBeforeMicRef.current = `${draftBeforeMicRef.current} ${final}`.trim();
+      const combined = `${draftBeforeMicRef.current} ${interim}`.trim();
+      setDraft(combined);
+      if (!working) setRoomMotion(combined ? 'listening' : 'idle');
+    };
+    recognition.onerror = () => {
+      setMicListening(false);
+      recognitionRef.current = null;
+    };
+    recognition.onend = () => {
+      setMicListening(false);
+      recognitionRef.current = null;
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setMicListening(true);
+    } catch {
+      setMicListening(false);
+    }
+  }
+
+  function stopMic() {
+    try { recognitionRef.current?.stop(); } catch {}
+    recognitionRef.current = null;
+    setMicListening(false);
+  }
+
+  function toggleMic() {
+    if (micListening) stopMic();
+    else startMic();
+  }
+
+  useEffect(() => {
+    return () => {
+      try { recognitionRef.current?.stop(); } catch {}
+      try { window.speechSynthesis?.cancel(); } catch {}
+    };
+  }, []);
+
+  // — Bring an insight: member-authored material, reviewed and edited before send. —
+  // Client-side only — pasted text or a local .txt/.md file read via FileReader.
+  // Nothing uploads; nothing persists beyond this component's draft state.
+  function applyBroughtText(raw: string) {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    const truncated = trimmed.length > BRING_CHAR_CAP;
+    const capped = truncated ? trimmed.slice(0, BRING_CHAR_CAP) : trimmed;
+    setBringTruncated(truncated);
+    setDraft(`Something I'm bringing: ${capped}`);
+    setShowBring(false);
+    setBringText('');
+  }
+
+  function handleBringFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => applyBroughtText(String(reader.result ?? ''));
+    reader.readAsText(file);
+    e.target.value = '';
   }
 
   function confirmCandidate() {
@@ -310,7 +471,10 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   if (roomPhase === 'arrival') {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-10">
-        <div className="space-y-1">
+        <div className="flex justify-center">
+          <RoomHoloflower motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+        </div>
+        <div className="space-y-1 text-center">
           <p className="text-xs uppercase tracking-widest text-stone-400">Vision Studio</p>
           <h1 className="text-lg font-light text-stone-200">{phaseLabel}</h1>
         </div>
@@ -526,35 +690,51 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     );
   }
 
-  // — Conversation —
+  // — Conversation: the room, recomposed. The mandala anchors the vertical axis; —
+  // — the conversation flows beneath it in a comfortable measure. —
   return (
-    <div className="flex flex-col h-full max-w-prose mx-auto">
-      <div className="px-4 py-4 border-b border-stone-800 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-stone-500">Vision Studio</p>
-          <p className="text-stone-400 text-sm font-light">{phaseLabel}</p>
-        </div>
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col h-full max-w-[46rem] mx-auto w-full">
+      <div className="px-4 pt-8 pb-4 flex flex-col items-center gap-3">
+        <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
             motionState={roomMotion}
             proposedElement={cellCandidate?.element ?? null}
             confirmedElements={confirmedElements}
-            size={64}
+            size={mandalaSize}
           />
-          {turns.length >= 4 && (
-            <button
-              onClick={listenBack}
-              disabled={working}
-              className="text-stone-500 hover:text-stone-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
-            >
-              Listen back
-            </button>
-          )}
         </div>
+        <div className="text-center">
+          <p className="text-xs uppercase tracking-widest text-stone-500">Vision Studio</p>
+          <p className="text-stone-400 text-sm font-light">{phaseLabel}</p>
+        </div>
+        {turns.length >= 4 && (
+          <button
+            onClick={listenBack}
+            disabled={working}
+            className="text-stone-500 hover:text-stone-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
+          >
+            Listen back
+          </button>
+        )}
+        <style jsx>{`
+          .room-mic-active::after {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border-radius: 9999px;
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            animation: room-mic-pulse 1.8s ease-in-out infinite;
+            pointer-events: none;
+          }
+          @keyframes room-mic-pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.04); }
+          }
+        `}</style>
       </div>
 
       {guided && openingQuestion && turns.length === 0 && (
-        <div className="px-4 py-6 border-b border-stone-800">
+        <div className="px-4 pb-6 border-b border-stone-800 text-center">
           <p className="text-stone-300 text-base font-light leading-relaxed">{openingQuestion}</p>
         </div>
       )}
@@ -635,6 +815,62 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
         <div className="px-4 py-2 text-red-400 text-xs">{error}</div>
       )}
 
+      {showBring && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-4 py-3 border-t border-stone-900 space-y-2"
+        >
+          <p className="text-stone-500 text-xs font-light">
+            Bring something with you — a journal page, a note, anything alive.
+          </p>
+          <textarea
+            className="w-full bg-transparent border border-stone-800 rounded-lg text-stone-300 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-stone-600 placeholder:text-stone-700 p-3"
+            rows={4}
+            placeholder="Paste it here…"
+            value={bringText}
+            onChange={e => setBringText(e.target.value)}
+          />
+          <div className="flex items-center gap-4 text-xs">
+            <button
+              onClick={() => applyBroughtText(bringText)}
+              disabled={!bringText.trim()}
+              className="text-stone-300 hover:text-stone-100 underline underline-offset-2 transition-colors disabled:opacity-30"
+            >
+              Bring this in
+            </button>
+            <button
+              onClick={() => bringFileInputRef.current?.click()}
+              className="text-stone-500 hover:text-stone-300 underline underline-offset-2 transition-colors"
+            >
+              Choose a .txt or .md file
+            </button>
+            <button
+              onClick={() => { setShowBring(false); setBringText(''); }}
+              className="text-stone-600 hover:text-stone-400 underline underline-offset-2 transition-colors"
+            >
+              Never mind
+            </button>
+          </div>
+          <input
+            ref={bringFileInputRef}
+            type="file"
+            accept=".txt,.md,text/plain,text/markdown"
+            onChange={handleBringFile}
+            className="hidden"
+          />
+          <p className="text-stone-700 text-xs font-light">
+            Stays on your device — nothing uploads. You review and edit before it's sent.
+          </p>
+        </motion.div>
+      )}
+
+      {bringTruncated && (
+        <div className="px-4 pt-2 text-stone-600 text-xs font-light">
+          That was long — I brought in the first {BRING_CHAR_CAP.toLocaleString()} characters. You're welcome to trim or continue it.
+        </div>
+      )}
+
       <div className="px-4 py-4 border-t border-stone-800">
         <textarea
           className="w-full bg-transparent text-stone-200 text-sm font-light leading-relaxed resize-none focus:outline-none placeholder:text-stone-700"
@@ -652,15 +888,49 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
             }
           }}
         />
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-stone-700 text-xs">Enter to send · Shift+Enter for newline</span>
-          <button
-            onClick={() => sendTurn(draft)}
-            disabled={working || !draft.trim()}
-            className="text-stone-400 hover:text-stone-200 text-xs underline underline-offset-2 transition-colors disabled:opacity-30"
-          >
-            Send
-          </button>
+        <div className="flex justify-between items-center mt-2 gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-stone-700 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
+            <button
+              onClick={() => setShowBring(v => !v)}
+              className="text-stone-600 hover:text-stone-400 text-xs underline underline-offset-2 transition-colors"
+            >
+              Bring something with you
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            {speechSupported && (
+              <button
+                onClick={toggleSpeakReplies}
+                title={speakReplies ? 'Stop speaking replies' : 'Hear the room'}
+                aria-pressed={speakReplies}
+                className={`text-xs underline underline-offset-2 transition-colors ${
+                  speakReplies ? 'text-amber-300 hover:text-amber-200' : 'text-stone-600 hover:text-stone-400'
+                }`}
+              >
+                {speakReplies ? 'Speaking' : 'Hear the room'}
+              </button>
+            )}
+            {micSupported && (
+              <button
+                onClick={toggleMic}
+                title="Speak instead of typing"
+                aria-pressed={micListening}
+                className={`text-xs underline underline-offset-2 transition-colors ${
+                  micListening ? 'text-amber-300 hover:text-amber-200' : 'text-stone-500 hover:text-stone-300'
+                }`}
+              >
+                {micListening ? 'Listening…' : 'Speak'}
+              </button>
+            )}
+            <button
+              onClick={() => sendTurn(draft)}
+              disabled={working || !draft.trim()}
+              className="text-stone-400 hover:text-stone-200 text-xs underline underline-offset-2 transition-colors disabled:opacity-30"
+            >
+              Send
+            </button>
+          </div>
         </div>
       </div>
     </div>
