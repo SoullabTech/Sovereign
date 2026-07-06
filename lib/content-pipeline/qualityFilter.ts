@@ -47,10 +47,13 @@ async function scoreItems(items: string[], formatLabel: string): Promise<ScoredI
   const prompt = QUALITY_PROMPT.replace('{CONTENT}', `Format: ${formatLabel}\n\n${content}`);
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-5',
     max_tokens: 2048,
+    // Sonnet 5 defaults to adaptive thinking; disable so content[0] stays text.
+    // Cast: installed @anthropic-ai/sdk 0.27.3 types predate the thinking param.
+    thinking: { type: 'disabled' },
     messages: [{ role: 'user', content: prompt }],
-  });
+  } as any);
 
   const text = response.content[0].type === 'text' ? response.content[0].text : '';
 

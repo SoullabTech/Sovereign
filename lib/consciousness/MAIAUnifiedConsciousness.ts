@@ -384,8 +384,10 @@ export class MAIAUnifiedConsciousness {
         });
 
         const claudeResponse = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514', // FAST: Sonnet 4 (not old Opus)
+          model: 'claude-sonnet-5', // FAST tier
           max_tokens: 800,
+          // Sonnet 5 defaults to adaptive thinking; disable so content[0] stays text
+          thinking: { type: 'disabled' },
           system: consciousnessPrompt,
           messages: [
             { role: 'user', content: content }

@@ -72,15 +72,18 @@ export async function generateArchetypalNarrative(
   const anthropic = new Anthropic();
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-5',
     max_tokens: 2000,
+    // Sonnet 5 defaults to adaptive thinking; disable so content[0] stays text.
+    // Cast: installed @anthropic-ai/sdk 0.27.3 types predate the thinking param.
+    thinking: { type: 'disabled' },
     messages: [
       {
         role: 'user',
         content: prompt,
       },
     ],
-  });
+  } as any);
 
   // Extract text from response
   const textBlock = response.content.find((block) => block.type === 'text');

@@ -178,16 +178,19 @@ Return JSON:
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
       max_tokens: 1500,
-      temperature: 0.3, // Lower temp for consistent insight extraction
+      // Sonnet 5 rejects non-default temperature (400) and defaults to adaptive
+      // thinking; disable so content[0] stays text.
+      // Cast: installed @anthropic-ai/sdk 0.27.3 types predate the thinking param.
+      thinking: { type: 'disabled' },
       messages: [
         {
           role: 'user',
           content: detectionPrompt
         }
       ]
-    });
+    } as any);
 
     const contentBlock = response.content[0];
     if (contentBlock.type !== 'text') {
@@ -402,16 +405,19 @@ Write AS MAIA - present, alive, seeing them.`;
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
       max_tokens: 2000,
-      temperature: 0.8,
+      // Sonnet 5 rejects non-default temperature (400) and defaults to adaptive
+      // thinking; disable so content[0] stays text.
+      // Cast: installed @anthropic-ai/sdk 0.27.3 types predate the thinking param.
+      thinking: { type: 'disabled' },
       messages: [
         {
           role: 'user',
           content: synthesisPrompt
         }
       ]
-    });
+    } as any);
 
     const synthesis = response.content[0].type === 'text'
       ? response.content[0].text

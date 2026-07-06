@@ -659,9 +659,10 @@ export class PersonalOracleAgent implements IPersonalOracleAgent {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-3-opus-20240229',
+          model: 'claude-opus-4-8',
           max_tokens: 2000, // UNLEASHED: Restored for complete expression
-          temperature: 0.8,
+          // Opus 4.8 rejects non-default temperature (400); omitting thinking
+          // runs without thinking, so content[0] stays text
           system: prompt,
           messages: [
             {

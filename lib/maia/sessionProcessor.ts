@@ -421,11 +421,14 @@ Earth: CHEN (Purpose & Mission), ALVE (Resources & Plans), ZWOIF (Refined Medici
 Air: AIN (Interpersonal), ZWEI (Collective Dynamics), AIRE (Codified Systems)`;
 
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-5',
     max_tokens: 8000,
-    temperature: 0.3,
+    // Sonnet 5 rejects non-default temperature (400) and defaults to adaptive
+    // thinking; disable so content[0] stays text.
+    // Cast: installed @anthropic-ai/sdk 0.27.3 types predate the thinking param.
+    thinking: { type: 'disabled' },
     messages: [{ role: 'user', content: prompt }],
-  });
+  } as any);
 
   const text = message.content[0].type === 'text' ? message.content[0].text : '';
 
