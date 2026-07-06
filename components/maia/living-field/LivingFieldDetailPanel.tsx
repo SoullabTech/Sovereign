@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { LivingField, FieldVersion, FieldSource, ParticipantConsent } from './types'
 import { deriveConsentStatus } from './types'
@@ -47,6 +47,16 @@ export function LivingFieldDetailPanel({
   // The expression form, gathering panel, and history are below — projections,
   // not the primary surface.
   const [encounterOpen, setEncounterOpen] = useState(true)
+
+  // Modal is fixed inset-0 — lock background scroll while it's open, and
+  // restore whatever overflow value was there before.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
 
   async function handleCapture(text: string, source: CaptureSource) {
     // Store as a source (evidence that feeds Refine and provenance) …

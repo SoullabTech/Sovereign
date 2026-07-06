@@ -53,9 +53,13 @@ export function PersonalLivingFieldDashboard({
             AIN does not ask people to fill in fields. It cultivates Living Fields that grow
             alongside a life. These dimensions are not a profile — they are a developmental mirror.
           </p>
-          {phaseLabel && (
+          {phaseLabel ? (
             <p className="text-stone-500 text-xs">
               Current life phase: <span className="text-stone-300">{phaseLabel}</span>
+            </p>
+          ) : (
+            <p className="text-stone-600 text-xs">
+              Your spiral state is still forming — it will appear here as patterns emerge.
             </p>
           )}
           {(gatheringCount > 0 || authoredCount > 0) && (

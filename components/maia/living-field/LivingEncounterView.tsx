@@ -41,6 +41,7 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
   const [error, setError] = useState<string | null>(null)
   const [markOpen, setMarkOpen] = useState(false)
   const [markSent, setMarkSent] = useState<string | null>(null)
+  const [markError, setMarkError] = useState<MarkKind | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -126,17 +127,22 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
 
   async function mark(kind: MarkKind) {
     if (!encounterId) return
-    setMarkOpen(false)
+    setMarkError(null)
     try {
-      await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+      const res = await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
         body: JSON.stringify({ encounter_id: encounterId, mark: kind }),
       })
+      if (!res.ok) {
+        setMarkError(kind)
+        return
+      }
+      setMarkOpen(false)
       setMarkSent(kind)
       setTimeout(() => setMarkSent(null), 2000)
     } catch {
-      // silent — marking is a quiet affordance, not a critical path
+      setMarkError(kind)
     }
   }
 
@@ -202,7 +208,7 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
         <button
           type="submit"
           disabled={opening || sending || !input.trim() || !encounterId}
-          className="px-3 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 text-sm font-medium disabled:opacity-40 transition-colors"
+          className="px-4 py-2.5 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 text-sm font-medium disabled:opacity-40 transition-colors"
         >
           Send
         </button>
@@ -221,19 +227,23 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
             Mark this moment
           </button>
         ) : (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             {MARK_OPTIONS.map((opt) => (
               <button
                 key={opt.kind}
                 onClick={() => mark(opt.kind)}
-                className="px-2 py-1 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs border border-stone-800 transition-colors"
+                className={
+                  markError === opt.kind
+                    ? 'px-3 py-2 rounded bg-amber-950/30 hover:bg-amber-950/50 text-amber-400 text-xs border border-amber-900/50 transition-colors'
+                    : 'px-3 py-2 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs border border-stone-800 transition-colors'
+                }
               >
-                {opt.label}
+                {markError === opt.kind ? 'Could not mark — tap to retry' : opt.label}
               </button>
             ))}
             <button
               onClick={() => setMarkOpen(false)}
-              className="text-stone-700 hover:text-stone-500 text-xs px-1"
+              className="text-stone-700 hover:text-stone-500 text-xs px-2 py-1.5"
             >
               never mind
             </button>
