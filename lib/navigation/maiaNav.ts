@@ -54,11 +54,12 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     icon: Sprout,
     route: '/maia/living-field',
     classification: 'world',
-    // Label names the PLACE, not the person. Per Constitutional Direction of
-    // Authority / Invariant 16, the system must not assert who the member is
-    // becoming — that is the member's to author. Prior copy ("Who you are
-    // becoming") made that claim; this frames the place and its purpose instead.
-    tooltip: 'A place where lived experience becomes coherent',
+    // Label names the PLACE, not the person, and describes the ACTIVITY, not an
+    // outcome. Per Invariant 16 / Direction of Authority the system must not assert
+    // who the member is becoming, nor promise coherence/integration the member (not
+    // the place) authors. Prior copy: "Who you are becoming" (asserted the person),
+    // then "…becomes coherent" (agentless outcome-claim). This names the work only.
+    tooltip: 'A place to gather and reflect on lived experience',
     group: 'life',
   },
   // Encounters (Footprints → /sessions) and Relationships (Heart → /relationships)
