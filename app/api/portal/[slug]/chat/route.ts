@@ -126,7 +126,7 @@ export async function POST(
       // Log request summary for debugging
       console.log('[Portal Chat] Anthropic request', {
         slug,
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-5',
         messagesCount: claudeMessages.length,
         toolsEnabled: bookingEnabled,
         toolsCount: bookingEnabled ? BOOKING_TOOLS.length : 0,
@@ -134,12 +134,15 @@ export async function POST(
 
       response = await anthropicCreateWithRetry(() =>
         anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-5',
           max_tokens: 1024,
+          // Sonnet 5 defaults to adaptive thinking; disable so the budget stays
+          // text. Cast: installed @anthropic-ai/sdk types predate `thinking`.
+          thinking: { type: 'disabled' },
           system: systemPrompt,
           messages: claudeMessages,
           ...(bookingEnabled ? { tools: BOOKING_TOOLS } : {}),
-        })
+        } as any)
       );
     } catch (err: any) {
       console.error('[Portal Chat] Anthropic error', {
@@ -271,12 +274,13 @@ export async function POST(
       try {
         response = await anthropicCreateWithRetry(() =>
           anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
+            model: 'claude-sonnet-5',
             max_tokens: 1024,
+            thinking: { type: 'disabled' },
             system: systemPrompt,
             messages: claudeMessages,
             ...(bookingEnabled ? { tools: BOOKING_TOOLS } : {}),
-          })
+          } as any)
         );
       } catch (err: any) {
         console.error('[Portal Chat] Anthropic error (tool loop)', {

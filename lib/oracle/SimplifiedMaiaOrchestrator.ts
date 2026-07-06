@@ -36,9 +36,11 @@ class ClaudeService {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
+          model: 'claude-sonnet-5',
           max_tokens: options.max_tokens || 150,
-          temperature: options.temperature || 0.8,
+          // Sonnet 5 rejects non-default temperature (400) and defaults to
+          // adaptive thinking; disable so content[0] stays text
+          thinking: { type: 'disabled' },
           system: prompt,
           messages: [{
             role: 'user',

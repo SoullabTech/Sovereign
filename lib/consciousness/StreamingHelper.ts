@@ -58,7 +58,7 @@ export async function* parseSSE(response: Response): AsyncGenerator<StreamChunk>
 export async function streamClaudeResponse(
   systemPrompt: string,
   messages: Array<{ role: string; content: string }>,
-  model: string = 'claude-sonnet-4-20250514'
+  model: string = 'claude-sonnet-5'
 ): Promise<Response> {
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
   if (!anthropicApiKey) {
@@ -75,6 +75,9 @@ export async function streamClaudeResponse(
     body: JSON.stringify({
       model,
       max_tokens: 4096,
+      // Sonnet 5 runs adaptive thinking when omitted; disable so streamed
+      // deltas stay text-only and latency stays low
+      thinking: { type: 'disabled' },
       system: systemPrompt,
       messages,
       stream: true, // Enable streaming

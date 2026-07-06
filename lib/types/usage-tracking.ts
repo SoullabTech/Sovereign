@@ -108,7 +108,7 @@ export interface UsageLogEntry {
   // REQUEST METADATA
   // ─────────────────────────────────────────────────────────────────────
 
-  /** Model used (e.g., 'claude-sonnet-4-20250514') */
+  /** Model used (e.g., 'claude-sonnet-5') */
   modelUsed: string;
 
   /** Whether this was a voice mode interaction */
@@ -445,7 +445,8 @@ export const TIER_CONFIGS: Record<UserTier, TierConfig> = {
 // ============================================================================
 
 /**
- * Anthropic Claude Sonnet 4 pricing (as of January 2025)
+ * Anthropic Claude Sonnet 5 pricing (sticker $3/$15 per 1M tokens; intro
+ * $2/$10 through 2026-08-31 not modeled here). Const name kept for importers.
  */
 export const SONNET_4_PRICING = {
   /** Cost per input token in cents */
@@ -455,7 +456,7 @@ export const SONNET_4_PRICING = {
   OUTPUT_COST_PER_TOKEN: 0.0015, // $15 per 1M tokens
 
   /** Model identifier */
-  MODEL_ID: 'claude-sonnet-4-20250514',
+  MODEL_ID: 'claude-sonnet-5',
 } as const;
 
 /**
