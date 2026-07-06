@@ -21,6 +21,22 @@ const OPUS_REASONING_MODES = ['ain_deliberation', 'consultation', 'analysis', 'd
 // NOTE: Deep dive patterns no longer trigger Opus - MAIA's mind handles depth,
 // Claude just needs to articulate cleanly. Opus reserved for actual reasoning tasks.
 
+// Canonical processing tier carried in meta as `processingProfile`. The tier is
+// already computed per-turn by MaiaConversationRouter and (before this seam) was
+// dropped before model selection. It now reaches selectClaudeModel below.
+type ProcessingProfile = 'FAST' | 'CORE' | 'DEEP';
+
+// TIER → MODEL MAP — the single policy edit point for tier-based routing.
+// BEHAVIOR-PRESERVING (Commit 1): every tier resolves to the model it resolves to
+// TODAY, i.e. SONNET (the prior unconditional fall-through). Reassigning these
+// values (e.g. DEEP → OPUS_MODEL, FAST → a local model) is a deliberate POLICY
+// change and belongs in its own commit — do NOT edit as part of unrelated work.
+const TIER_MODEL: Record<ProcessingProfile, string> = {
+  FAST: SONNET_MODEL,
+  CORE: SONNET_MODEL,
+  DEEP: SONNET_MODEL,
+};
+
 interface ModelSelection {
   model: string;
   tier: 'opus' | 'sonnet';
@@ -50,6 +66,7 @@ interface ModelSelection {
 function selectClaudeModel(meta?: Record<string, unknown>, _userInput?: string): ModelSelection {
   const mode = (meta?.mode as string) || 'talk';
   const reasoningMode = (meta?.reasoningMode as string) || '';
+  const processingProfile = meta?.processingProfile as ProcessingProfile | undefined;
 
   // Feature flags / overrides
   const forceOpus = Boolean(meta?.forceOpus);
@@ -61,7 +78,7 @@ function selectClaudeModel(meta?: Record<string, unknown>, _userInput?: string):
       _tag: 'MODEL_ROUTING',
       model: selection.tier,
       reason: selection.reason,
-      ctx: { mode, reasoningMode },
+      ctx: { mode, reasoningMode, tier: processingProfile ?? null },
     }));
     return selection;
   };
@@ -79,10 +96,14 @@ function selectClaudeModel(meta?: Record<string, unknown>, _userInput?: string):
     return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: `reasoning_mode:${reasoningMode}` });
   }
 
-  // 3. DEFAULT: Sonnet for all conversation (MAIA's reliable voice)
-  // MAIA's mind has already done the thinking via Spiralogic/AIN/consciousness system
-  // Claude just needs to articulate it cleanly
-  return logAndReturn({ model: SONNET_MODEL, tier: 'sonnet', reason: 'maia_voice' });
+  // 3. DEFAULT: resolve by processing tier (FAST/CORE/DEEP).
+  // MAIA's mind has already done the thinking via Spiralogic/AIN/consciousness system;
+  // Claude just articulates it cleanly. The tier now flows into selection (previously
+  // computed and dropped). BEHAVIOR-PRESERVING: TIER_MODEL maps every tier to
+  // SONNET_MODEL, so this returns exactly the prior unconditional Sonnet fall-through
+  // for all inputs. Which model a tier resolves to changes only when TIER_MODEL does.
+  const tieredModel = (processingProfile && TIER_MODEL[processingProfile]) || SONNET_MODEL;
+  return logAndReturn({ model: tieredModel, tier: 'sonnet', reason: 'maia_voice' });
 }
 
 export interface ClaudeChatParams {

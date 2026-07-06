@@ -1755,6 +1755,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
       ...meta,
       currentUserMessage: input, // Raw user input for routing (not full context)
       fastProcessing: true,
+      processingProfile: 'FAST', // canonical tier key read by selectClaudeModel
       engine: 'deepseek-r1', // Single reliable engine
       responseTarget: 'conversational'
     }
@@ -2251,6 +2252,7 @@ The current user has not provided their name. Address them as "friend" or "there
       ...meta,
       currentUserMessage: input, // Raw user input for routing (consistent with FAST path)
       coreProcessing: true,
+      processingProfile: 'CORE', // canonical tier key read by selectClaudeModel
       conversationProfile: conversationContext.profile,
       inputComplexity: 'moderate'
     }
@@ -2294,6 +2296,7 @@ The current user has not provided their name. Address them as "friend" or "there
           ...meta,
           currentUserMessage: input,
           coreProcessing: true,
+          processingProfile: 'CORE', // canonical tier key read by selectClaudeModel
           regeneration: true,
           conversationProfile: conversationContext.profile
         }
@@ -2917,6 +2920,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
           ...meta,
           currentUserMessage: input,
           deepProcessing: true,
+          processingProfile: 'DEEP', // canonical tier key read by selectClaudeModel
           regeneration: true,
           conversationProfile: conversationContext.profile,
           consciousnessDepth: 'full'
