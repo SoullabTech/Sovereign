@@ -4,16 +4,17 @@
  * Room Holoflower — the room's weather, not a widget.
  *
  * Renders the CANONICAL Soullab holoflower artwork:
- *     public/holoflower-v2-transparent.png
- * the multicolor 12-petal mark (Fire / Air / Earth / Water quadrants, phase-shaded,
- * spiral center). The interview's ambient motion state gently breathes the image;
- * when an element is proposed or confirmed, a soft radial glow in that element's
- * colour warms behind it. The artwork itself is never redrawn.
+ *     public/maia-spiral-logo-alt.png
+ * the radial spiral-of-dots mark (Air/gold top · Fire/red right · Water/blue bottom ·
+ * Earth/green left — the four elemental quadrants, spiral center). The interview's
+ * ambient motion state gently breathes the image; when an element is proposed or
+ * confirmed, a soft radial glow in that element's colour warms behind it. The
+ * artwork itself is never redrawn.
  *
- * ⚠️ DO NOT replace this with a hand-drawn <svg> mandala. That recreation renders
- * muted/dark on the room's black ground and reads as off-brand — it has been
- * reverted more than once. The holoflower is a fixed brand asset: render the PNG,
- * warm it, breathe it. Never regenerate it.
+ * ⚠️ DO NOT replace this with a hand-drawn <svg> mandala, and DO NOT revert to the
+ * 12-petal `holoflower-v2` mark — both read off-brand and have been reverted before
+ * (Kelly, 2026-07-07: the spiral-of-dots is the correct holoflower). The holoflower
+ * is a fixed brand asset: render the PNG, warm it, breathe it. Never regenerate it.
  *
  * No persistence, no reads — it only renders local, ephemeral UI state passed in
  * as props.
@@ -87,7 +88,7 @@ export function RoomHoloflower({
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/holoflower-v2-transparent.png"
+        src="/maia-spiral-logo-alt.png"
         alt=""
         aria-hidden="true"
         width={size}
@@ -102,8 +103,8 @@ export function RoomHoloflower({
           style={{
             width: size,
             height: size,
-            WebkitMaskImage: 'url(/holoflower-v2-transparent.png)',
-            maskImage: 'url(/holoflower-v2-transparent.png)',
+            WebkitMaskImage: 'url(/maia-spiral-logo-alt.png)',
+            maskImage: 'url(/maia-spiral-logo-alt.png)',
             WebkitMaskSize: 'contain',
             maskSize: 'contain',
             WebkitMaskRepeat: 'no-repeat',
