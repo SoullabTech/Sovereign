@@ -123,6 +123,37 @@ export async function POST(request: NextRequest) {
     const memberName = (member?.name as string) || 'Beautiful Soul';
     const isExistingMember = !!member;
 
+    // ── Private-beta gate ──────────────────────────────────────────────────
+    // Existing members ALWAYS get a code (never lock out someone already in).
+    // New emails only if explicitly admitted to beta_allowlist; otherwise no
+    // code is sent — the email is captured to beta_waitlist and the client
+    // shows a warm "small groups" message. Fails CLOSED (waitlist) if the
+    // allowlist can't be read — for a private beta that is the safe direction.
+    if (!isExistingMember) {
+      let admitted = false;
+      try {
+        const allow = await query('SELECT 1 FROM beta_allowlist WHERE LOWER(email) = $1 LIMIT 1', [normalizedEmail]);
+        admitted = allow.rows.length > 0;
+      } catch (gateErr) {
+        console.error('[EMAIL-CODE] beta_allowlist check failed — failing closed (waitlist):', gateErr);
+        admitted = false;
+      }
+      if (!admitted) {
+        try {
+          await query(
+            `INSERT INTO beta_waitlist (email) VALUES ($1)
+             ON CONFLICT (LOWER(email)) DO UPDATE
+               SET request_count = beta_waitlist.request_count + 1, requested_at = NOW()`,
+            [normalizedEmail],
+          );
+        } catch (wlErr) {
+          console.warn('[EMAIL-CODE] waitlist capture failed (non-fatal):', wlErr);
+        }
+        console.log(`[EMAIL-CODE] Not admitted → waitlist: ${normalizedEmail}`);
+        return NextResponse.json({ status: 'waitlist' });
+      }
+    }
+
     const code = generateCode();
     const token = generateToken();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
