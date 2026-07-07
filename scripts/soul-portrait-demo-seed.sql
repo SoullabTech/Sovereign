@@ -31,17 +31,26 @@ INSERT INTO auth_sessions (member_id, session_token, expires_at)
 VALUES ('00000000-0000-4000-a000-000000000d01', 'demo_soul_portrait_review', NOW() + INTERVAL '30 days')
 ON CONFLICT DO NOTHING;
 
--- The practitioner directory record (older practitioners table: slug/name/email/status).
-INSERT INTO practitioners (id, slug, name, email, status)
-VALUES ('00000000-0000-4000-a000-000000000d02',
+-- The practitioner record. member_id is THE link Studio identity resolves by
+-- (getCurrentPractitioner: practitioners JOIN members ON member_id) — without it the
+-- whole /studio shell bounces the member as "not a practitioner". slug/name/email/status.
+INSERT INTO practitioners (id, member_id, slug, name, email, status)
+VALUES ('00000000-0000-4000-a000-000000000d02', '00000000-0000-4000-a000-000000000d01',
         'demo-practitioner', 'Demo Practitioner', 'demo+practitioner@soullab.life', 'active')
+ON CONFLICT (id) DO UPDATE SET member_id = EXCLUDED.member_id, status = 'active';
+
+-- The Co-Lab workspace the directory belongs to. studio_people is TEAM-scoped
+-- (studio_people.team_id -> studio_teams, NOT NULL). Set the cookie
+-- colab_team_id = this id to make the generate-form people-selector resolve.
+INSERT INTO studio_teams (id, name, owner_id)
+VALUES ('00000000-0000-4000-a000-000000000d08', 'Demo Practice', '00000000-0000-4000-a000-000000000d01')
 ON CONFLICT (id) DO NOTHING;
 
--- Two fictional subjects in the practitioner's directory (studio_people).
-INSERT INTO studio_people (id, practitioner_id, name, notes)
+-- Two fictional subjects in the practitioner's directory (studio_people), team-scoped.
+INSERT INTO studio_people (id, team_id, practitioner_id, name, notes)
 VALUES
-  ('00000000-0000-4000-a000-000000000d03', '00000000-0000-4000-a000-000000000d02', 'Marcus Chen', 'demo subject'),
-  ('00000000-0000-4000-a000-000000000d04', '00000000-0000-4000-a000-000000000d02', 'Diane Okafor', 'demo subject')
+  ('00000000-0000-4000-a000-000000000d03', '00000000-0000-4000-a000-000000000d08', '00000000-0000-4000-a000-000000000d02', 'Marcus Chen', 'demo subject'),
+  ('00000000-0000-4000-a000-000000000d04', '00000000-0000-4000-a000-000000000d08', '00000000-0000-4000-a000-000000000d02', 'Diane Okafor', 'demo subject')
 ON CONFLICT (id) DO NOTHING;
 
 -- Three draft portraits owned by the demo member, threaded by subject. immutable_text
