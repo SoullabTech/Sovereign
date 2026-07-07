@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -26,10 +26,41 @@ export function GeneratePortraitForm() {
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
+  const [subjectPersonId, setSubjectPersonId] = useState<string>('');
 
   function set<K extends keyof typeof f>(k: K, v: (typeof f)[K]) {
     setF((prev) => ({ ...prev, [k]: v }));
   }
+
+  // Load the practitioner's Co-Lab people for the subject selector. Optional — an
+  // unlinked draft is still valid. Preselects ?personId when present (the regenerate flow).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/studio/people', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const list: { id: string; name: string }[] = Array.isArray(data?.people)
+          ? data.people.map((p: any) => ({ id: String(p.id), name: String(p.name ?? '') }))
+          : [];
+        if (cancelled) return;
+        setPeople(list);
+        const pre = new URLSearchParams(window.location.search).get('personId');
+        if (pre && list.some((p) => p.id === pre)) {
+          setSubjectPersonId(pre);
+          const match = list.find((p) => p.id === pre);
+          if (match) setF((prev) => ({ ...prev, name: prev.name || match.name }));
+        }
+      } catch {
+        /* people list is optional; the portrait can still be generated unlinked */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const ready =
     f.name.trim() && f.date && f.time && f.lat && f.lng && f.timezone.trim() && !isNaN(Number(f.lat)) && !isNaN(Number(f.lng));
@@ -45,6 +76,7 @@ export function GeneratePortraitForm() {
         body: JSON.stringify({
           name: f.name.trim(),
           mode: f.mode,
+          subjectPersonId: subjectPersonId || undefined,
           age: f.age ? Number(f.age) : undefined,
           isMinor: f.isMinor,
           birthPlace: f.place.trim() || undefined,
@@ -77,6 +109,29 @@ export function GeneratePortraitForm() {
           Creates a private draft for your review. Nothing is published or shared. Generation takes about a minute.
         </p>
 
+        {people.length > 0 && (
+          <Row>
+            <Field label="Client (from your Co-Lab)">
+              <select
+                style={inp}
+                value={subjectPersonId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSubjectPersonId(id);
+                  const match = people.find((p) => p.id === id);
+                  if (match) set('name', match.name);
+                }}
+              >
+                <option value="">— None (unlinked draft) —</option>
+                {people.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </Row>
+        )}
         <Row><Field label="Name"><input style={inp} value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Client's name" /></Field></Row>
         <Row>
           <Field label="Kind">

@@ -87,10 +87,20 @@ describe('Soul Portrait — Stage 1 owner-scoping (cross-practitioner leak refus
     expect(aList.map((p) => p.id)).toEqual(['portrait-A']);
   });
 
+  it('the Return list (with subject name) is owner-scoped — never another practitioner’s rows', async () => {
+    const bList = await store.listOwnedPortraitsWithSubject(OWNER_B);
+    expect(bList.map((p) => p.id)).toEqual(['portrait-B']);
+    expect(bList.some((p) => p.ownerMemberId === OWNER_A)).toBe(false);
+
+    const aList = await store.listOwnedPortraitsWithSubject(OWNER_A);
+    expect(aList.map((p) => p.id)).toEqual(['portrait-A']);
+  });
+
   it('every read accessor sends an owner-scoped query to the DB (structural)', async () => {
     await getOwnedPortrait('portrait-A', OWNER_A);
     await getOwnedPortraitBySlug('a-11111111', OWNER_A);
     await listOwnedPortraits(OWNER_A);
+    await store.listOwnedPortraitsWithSubject(OWNER_A);
     const allSql = [...mockQueryOne.mock.calls, ...mockQuery.mock.calls].map((c) => String(c[0]));
     expect(allSql.length).toBeGreaterThan(0);
     for (const sql of allSql) expect(scopesByOwner(sql)).toBe(true);

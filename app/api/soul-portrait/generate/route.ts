@@ -15,6 +15,9 @@ import { randomUUID } from 'crypto';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { generateSoulPortrait } from '@/lib/soulPortrait/generator/generatePortrait';
 import { createDraftPortrait } from '@/lib/soulPortrait/portraitStore';
+import { subjectIsInColab } from '@/lib/soulPortrait/subjectScope';
+import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
+import { cookies } from 'next/headers';
 import type { PortraitMode } from '@/lib/soulPortrait/schema';
 
 const MODES: PortraitMode[] = ['self', 'parent-child', 'gift', 'legacy'];
@@ -47,6 +50,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Optional subject linkage to a studio_people client. REFUSAL: a practitioner may only
+  // link a subject that lives in their own Co-Lab (studio_people is Co-Lab-scoped).
+  // Validated BEFORE generation so a rejected subject never triggers the generator.
+  const subjectPersonId = body?.subjectPersonId ? String(body.subjectPersonId) : null;
+  if (subjectPersonId) {
+    const jar = await cookies();
+    const cookieTeam = jar.get(COLAB_TEAM_COOKIE)?.value ?? request.headers.get('x-colab-team-id') ?? null;
+    const teamId = await resolveCurrentTeamId(memberId, cookieTeam);
+    if (!(await subjectIsInColab(subjectPersonId, teamId))) {
+      return NextResponse.json({ error: 'subject not found in your Co-Lab' }, { status: 400 });
+    }
+  }
+
   try {
     const draft = await generateSoulPortrait({
       name,
@@ -63,6 +79,7 @@ export async function POST(request: NextRequest) {
       slug: draft.person.slug,
       ownerMemberId: memberId,
       subjectMemberId: body?.subjectMemberId ? String(body.subjectMemberId) : null,
+      subjectPersonId,
       mode,
       isMinor: body?.isMinor === true,
       subjectAge: typeof body?.age === 'number' ? body.age : undefined,

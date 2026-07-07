@@ -119,3 +119,31 @@ export async function listOwnedPortraits(ownerMemberId: string): Promise<StoredP
   );
   return res.rows.map(rowToStored);
 }
+
+/** A portrait plus the display name of its linked studio_people subject (if any). */
+export interface StoredPortraitWithSubject extends StoredPortrait {
+  subjectName: string | null;
+}
+
+/**
+ * Return surface (the Studio "Your Soul Portraits" index): the caller's own portraits,
+ * newest first, with the linked studio_people subject name resolved for display.
+ *
+ * Owner-scoped by the SAME structural refusal as listOwnedPortraits
+ * (`sp.owner_member_id = $1`). The LEFT JOIN only resolves a name for a subject the
+ * OWNER already linked; it never widens the row set to another practitioner's portraits.
+ * Cross-Co-Lab subject linkage is refused at WRITE time (see lib/soulPortrait/subjectScope.ts).
+ */
+export async function listOwnedPortraitsWithSubject(
+  ownerMemberId: string,
+): Promise<StoredPortraitWithSubject[]> {
+  const res = await query<any>(
+    `SELECT sp.*, ppl.name AS subject_name
+       FROM soul_portraits sp
+       LEFT JOIN studio_people ppl ON ppl.id = sp.subject_person_id
+      WHERE sp.owner_member_id = $1
+      ORDER BY sp.created_at DESC`,
+    [ownerMemberId],
+  );
+  return res.rows.map((r) => ({ ...rowToStored(r), subjectName: r.subject_name ?? null }));
+}

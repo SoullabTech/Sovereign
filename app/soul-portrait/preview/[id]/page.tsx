@@ -51,6 +51,14 @@ export default async function PortraitPreviewPage({ params }: { params: Promise<
       >
         Private practitioner preview — draft, not published, not shared. For your preparation only.
       </div>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '12px 16px', display: 'flex', gap: 16, fontSize: 14 }}>
+        <a href="/studio/soul-portraits" style={{ color: '#2C5530' }}>← Your Soul Portraits</a>
+        {portrait.subjectPersonId && (
+          <a href={`/soul-portrait/generate?personId=${portrait.subjectPersonId}`} style={{ color: '#2C5530' }}>
+            Regenerate for this client
+          </a>
+        )}
+      </div>
       <SoulPortraitRenderer portrait={portrait.immutableText} />
     </div>
   );
