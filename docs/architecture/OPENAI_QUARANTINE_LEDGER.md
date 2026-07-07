@@ -1,5 +1,7 @@
 # OpenAI Quarantine Ledger
 
+> **AUTHORITATIVE SOURCE = the Provider Governance layer** (`docs/canon/PROVIDER_GOVERNANCE.md` + machine-readable `scripts/provider-policy.json`, enforced by `npm run check:no-openai`). That guard structurally **fails on any NEW OpenAI surface** and tracks the enumerated migration debt (53 files as of 2026-07-07) toward zero, burn order: browser keys → TTS → `_backend` → deps → key. **This ledger does not compete with it** — it adds a *reachability annotation* the flat allowlist doesn't encode: which debt files are **dormant** (no live path — safe/deferrable) vs **live** (urgent) vs **voice-adjacent** (hands off). Consult the policy for what's enforced; consult this for how dormant each item is.
+
 **Created:** 2026-07-07 · Sovereignty completion plan, step 4.1 (dormant quarantine).
 **Scope of this pass (authorized, narrow):** *record* the dormant OpenAI-using files so future audits don't overstate live dependency. **No code moved or deleted, no dependency removed, no key removed, no TTS/voice file touched.** This is the "mark" form of quarantine — a central manifest with reachability evidence — chosen over per-file edits because a concurrent session holds uncommitted voice work across the tree.
 
