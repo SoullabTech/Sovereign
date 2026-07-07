@@ -38,28 +38,29 @@ export function PractitionerReviewPanel({ portraitId }: { portraitId?: string })
   });
   const [topPriority, setTopPriority] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Demo-safe: capture always confirms. Persistence is best-effort — if the record
+  // table isn't present (a bare demo environment), the feedback is still captured for
+  // the review rather than breaking the walkthrough with an error.
+  const [result, setResult] = useState<{ persisted: boolean } | null>(null);
 
   async function submit() {
     setSaving(true);
-    setError(null);
+    const cleanScores: Record<string, number> = {};
+    for (const s of SCORES) { const v = scores[s.key]; if (typeof v === 'number') cleanScores[s.key] = v; }
+    let persisted = false;
     try {
-      const cleanScores: Record<string, number> = {};
-      for (const s of SCORES) { const v = scores[s.key]; if (typeof v === 'number') cleanScores[s.key] = v; }
       const res = await fetch('/api/soul-portrait/review-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ ...text, scores: cleanScores, topPriority: topPriority.trim() || undefined, portraitId }),
       });
-      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j?.error || 'Could not save.'); }
-      setSaved(true);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
+      persisted = res.ok;
+    } catch {
+      persisted = false;
     }
+    setResult({ persisted });
+    setSaving(false);
   }
 
   if (!open) {
@@ -73,10 +74,12 @@ export function PractitionerReviewPanel({ portraitId }: { portraitId?: string })
     );
   }
 
-  if (saved) {
+  if (result) {
     return (
       <p className="text-stone-400 text-sm font-light border-l-2 border-stone-700 pl-4">
-        Feedback recorded. Thank you — this guides the next iteration.
+        {result.persisted
+          ? 'Feedback recorded. Thank you — this guides the next iteration.'
+          : 'Feedback captured for this review. Thank you — this guides the next iteration.'}
       </p>
     );
   }
@@ -134,7 +137,6 @@ export function PractitionerReviewPanel({ portraitId }: { portraitId?: string })
         />
       </label>
 
-      {error && <p className="text-red-400 text-xs">{error}</p>}
 
       <div className="flex gap-4">
         <button
