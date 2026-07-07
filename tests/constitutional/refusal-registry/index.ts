@@ -42,8 +42,9 @@ import { check as r10 } from './refusal-10-last-founder-protected.ts';
 import { check as rA5 } from './refusal-11-session-room-ice-self-hosted-only.ts';
 import { check as r13 } from './refusal-13-vision-studio-no-elemental-persistence.ts';
 import { check as r14 } from './refusal-14-identity-predicate-guard.ts';
+import { check as r15 } from './refusal-15-tts-provider-qualification-guard.ts';
 
-const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, rA5, r13, r14];
+const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, rA5, r13, r14, r15];
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
