@@ -260,6 +260,22 @@ describe('ttsRouter sovereignty invariants', () => {
       }
     });
 
+    it('REFUSES sesame selection in production-maia (CI-shaping backend, not an audio provider)', async () => {
+      process.env.MAIA_LOCAL_VOICE_ENABLED = '1';
+      process.env.MAIA_TTS_PROVIDER = 'sesame';
+      delete process.env.MAIA_DEPLOYMENT_CONTEXT; // → fails closed to production-maia
+
+      const ttsRouter = require('../ttsRouter');
+
+      await expect(
+        ttsRouter.synthesize({ text: 'hello' }),
+      ).rejects.toMatchObject({
+        name: 'ProviderNotQualifiedError',
+        provider: 'sesame',
+        context: 'production-maia',
+      });
+    });
+
     it('REFUSES pplex selection in production-maia but ALLOWS it in the lab', async () => {
       // Production context → refused.
       process.env.MAIA_TTS_PROVIDER = 'pplex';

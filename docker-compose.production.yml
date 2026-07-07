@@ -144,10 +144,14 @@ services:
       VOICE_NOTES_DIR: "/app/storage/voice-notes"
       # Feature flag: Explainer Scripts for HeyGen (Phase 1)
       NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS: "true"
-      # Sovereign TTS: Sesame primary → Kokoro fallback → (consented) OpenAI fallback
+      # Sovereign TTS: Kokoro is the production voice provider (zero-OpenAI doctrine).
+      # `sesame` is NOT a qualified production audio provider — the maia-sesame-tts
+      # service does CI text-shaping only, not synthesis (see R15 in lib/tts/ttsRouter.ts;
+      # docs/adr/012). It stays a Voice Lab candidate until a verified Sesame CSM
+      # audio backend exists. OpenAI TTS remains a consented cloud fallback only.
       MAIA_LOCAL_VOICE_ENABLED: "1"
       MAIA_TTS_PROVIDER: "kokoro"       # Sovereign TTS — zero-OpenAI doctrine
-      KOKORO_TTS_URL: "http://kokoro-tts:8880"  # Backup: Kokoro (sovereign fallback)
+      KOKORO_TTS_URL: "http://kokoro-tts:8880"  # Production voice provider (sovereign)
       SESAME_TTS_URL: "http://maia-sesame-tts:8000"  # CI shaping only — not audio synthesis
 
     # Schema gate: refuse to boot if required migrations are missing

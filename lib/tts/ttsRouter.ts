@@ -37,10 +37,15 @@ export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'pplex' | 'auto';
 // qualified. This is the structural gate that keeps the Voice Lab's provider
 // switcher from becoming a production egress bypass: lab may compare every
 // engine; `production-maia` may select only Stage-A-qualified (local, sovereign)
-// providers. `openai` and `pplex` are NOT qualified for production-maia —
-// openai is cloud egress (governance question: docs/adr/012), pplex is MLX with
-// no x86 production backend. Widening the production-maia allow-list requires an
-// explicit, referenced decision record — not a config flip.
+// providers. `openai`, `pplex`, and `sesame` are NOT qualified for
+// production-maia — openai is cloud egress (governance question: docs/adr/012),
+// pplex is MLX with no x86 production backend, and the production `maia-sesame-tts`
+// service does CI text-shaping only (not audio synthesis), so selecting `sesame`
+// there would emit a buffer stamped provider:'sesame' from a non-Sesame backend —
+// a mislabeled production provider. `sesame` remains a candidate in the lab
+// (voice-quality-lab) until a verified Sesame CSM audio backend exists. Widening
+// the production-maia allow-list requires an explicit, referenced decision
+// record — not a config flip.
 //
 // Capability and gate ship together: the pplex dispatch branch below is only
 // reachable through this guard.
@@ -53,8 +58,9 @@ export type DeploymentContext = 'production-maia' | 'voice-quality-lab';
  * resolves to a local provider (kokoro) in production and never widens the set.
  */
 const QUALIFIED_PROVIDERS: Record<DeploymentContext, TTSProvider[]> = {
-  // Stage-A local/sovereign providers only. NOT openai (egress), NOT pplex (MLX).
-  'production-maia': ['auto', 'kokoro', 'sesame'],
+  // Stage-A local/sovereign providers only. NOT openai (egress), NOT pplex (MLX),
+  // NOT sesame (prod maia-sesame-tts is CI-shaping only, not audio — mislabel risk).
+  'production-maia': ['auto', 'kokoro'],
   // Lab compares everything.
   'voice-quality-lab': ['auto', 'openai', 'kokoro', 'sesame', 'pplex'],
 };

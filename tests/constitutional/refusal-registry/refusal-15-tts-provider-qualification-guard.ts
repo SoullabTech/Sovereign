@@ -3,7 +3,10 @@ import type { RefusalCheck } from './harness';
 /**
  * Refusal 15 — In the `production-maia` deployment context, the TTS router may
  * only *select* Stage-A-qualified (local, sovereign) providers. `openai` (cloud
- * egress) and `pplex` (MLX, no x86 production backend) cannot be selected there.
+ * egress), `pplex` (MLX, no x86 production backend), and `sesame` (the production
+ * `maia-sesame-tts` service does CI text-shaping only, not audio synthesis — so a
+ * production selection would emit a buffer mislabeled provider:'sesame' from a
+ * non-Sesame backend) cannot be selected there. `sesame` remains a lab candidate.
  *
  * This is the gate that ships WITH the PersonaPlex capability: the `pplex`
  * dispatch branch in ttsRouter is only reachable through `assertProviderQualified`,
@@ -38,18 +41,18 @@ const PPLEX_DISPATCH_RE = /primary === 'pplex'/;
 export const check: RefusalCheck = {
   id: 'R15',
   refusal:
-    'In production-maia, ttsRouter may only select Stage-A-qualified local providers; openai and pplex cannot be selected (Voice Lab switch is not a production egress bypass)',
+    'In production-maia, ttsRouter may only select Stage-A-qualified local providers; openai, pplex, and sesame cannot be selected (Voice Lab switch is not a production egress bypass; prod sesame backend is CI-shaping only, not audio)',
   grade: 'B',
   enforcedBy:
-    'lib/tts/ttsRouter.ts — assertProviderQualified() invoked in synthesize() before dispatch; QUALIFIED_PROVIDERS["production-maia"] excludes openai + pplex; getDeploymentContext() fails closed',
+    'lib/tts/ttsRouter.ts — assertProviderQualified() invoked in synthesize() before dispatch; QUALIFIED_PROVIDERS["production-maia"] excludes openai + pplex + sesame; getDeploymentContext() fails closed',
   evidence: [
-    `${ROUTER}: QUALIFIED_PROVIDERS['production-maia'] = ['auto','kokoro','sesame'] (no openai, no pplex)`,
+    `${ROUTER}: QUALIFIED_PROVIDERS['production-maia'] = ['auto','kokoro'] (no openai, no pplex, no sesame)`,
     `${ROUTER}: synthesize() calls assertProviderQualified(provider) before any dispatch branch`,
     `${ROUTER}: getDeploymentContext() returns 'production-maia' unless env is explicitly 'voice-quality-lab'`,
     `${ROUTER}: pplex dispatch branch exists and is reachable only past the guard`,
   ].join(' | '),
   violationAttempted: [
-    "(1) is 'openai' or 'pplex' present in the production-maia allow-list?",
+    "(1) is 'openai', 'pplex', or 'sesame' present in the production-maia allow-list?",
     '(2) is the guard call missing from synthesize (allow-list dead)?',
     '(3) does the deployment context fail OPEN (default to lab)?',
     '(4) does the pplex capability branch exist without a guard (capability shipped without gate)?',
@@ -59,12 +62,12 @@ export const check: RefusalCheck = {
   passingDoesNotAuthorize:
     'that OpenAI is absent from production entirely (the archetype→OpenAI path is a separate, open governance question — ADR-012), that PersonaPlex is deployed or reachable anywhere, that the Voice Lab UI exists yet, or that member voice preference paths are gated by this (they resolve to auto/local)',
   hostileForkMustChange:
-    "add 'openai' or 'pplex' to QUALIFIED_PROVIDERS['production-maia'] (visible diff), delete the assertProviderQualified(provider) call in synthesize (visible diff), or make getDeploymentContext default to voice-quality-lab (visible diff)",
+    "add 'openai', 'pplex', or 'sesame' to QUALIFIED_PROVIDERS['production-maia'] (visible diff), delete the assertProviderQualified(provider) call in synthesize (visible diff), or make getDeploymentContext default to voice-quality-lab (visible diff)",
 
   run(io) {
     const src = io.read(ROUTER);
 
-    // ── 1: production-maia allow-list excludes openai AND pplex ──
+    // ── 1: production-maia allow-list excludes openai, pplex AND sesame ──
     const prod = PROD_ALLOWLIST_RE.exec(src);
     if (!prod) {
       io.fail(
@@ -77,15 +80,15 @@ export const check: RefusalCheck = {
       const hasPplex = /'pplex'/.test(body);
       const hasKokoro = /'kokoro'/.test(body);
       const hasSesame = /'sesame'/.test(body);
-      if (!hasOpenai && !hasPplex && hasKokoro && hasSesame) {
+      if (!hasOpenai && !hasPplex && !hasSesame && hasKokoro) {
         io.pass(
-          'production-maia allow-list is local-only',
-          `[${body.trim()}] — no openai, no pplex`,
+          'production-maia allow-list is verified-local-only',
+          `[${body.trim()}] — no openai, no pplex, no sesame`,
         );
       } else {
         io.fail(
           'production-maia allow-list admits a non-qualified provider',
-          `openai=${hasOpenai} pplex=${hasPplex} kokoro=${hasKokoro} sesame=${hasSesame}`,
+          `openai=${hasOpenai} pplex=${hasPplex} sesame=${hasSesame} kokoro=${hasKokoro}`,
         );
       }
     }
