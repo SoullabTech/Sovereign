@@ -129,7 +129,6 @@ async function bridgeRemembranceToEpisodicMemory(
     let semanticVector: number[] | null = null;
     try {
       const embedder = new VectorEmbeddingService({
-        openaiApiKey: process.env.OPENAI_API_KEY,
         dimension: 768,
       });
       semanticVector = await embedder.getEmbedding(`${title} ${description}`);

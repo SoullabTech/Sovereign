@@ -62,7 +62,6 @@ export async function POST(request: NextRequest) {
 
     // Generate embedding for query
     const embedder = new VectorEmbeddingService({
-      openaiApiKey: process.env.OPENAI_API_KEY,
       dimension: 768
     })
 

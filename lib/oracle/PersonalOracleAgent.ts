@@ -677,8 +677,8 @@ export class PersonalOracleAgent implements IPersonalOracleAgent {
         const errorData = await response.text();
         logger.error(`Claude API call failed: ${response.status}`, { error: errorData });
 
-        // Fallback to OpenAI if Claude fails
-        return this.callOpenAIFallback(prompt);
+        // Fallback to a lighter Claude model if the primary Claude call fails
+        return this.callClaudeFallback(prompt);
       }
 
       const data = await response.json() as any;
@@ -686,7 +686,7 @@ export class PersonalOracleAgent implements IPersonalOracleAgent {
 
       if (!content) {
         logger.warn("Empty response from Claude, using fallback");
-        return this.callOpenAIFallback(prompt);
+        return this.callClaudeFallback(prompt);
       }
 
       // Hard enforcement with zero tolerance
@@ -695,46 +695,49 @@ export class PersonalOracleAgent implements IPersonalOracleAgent {
       return content;
     } catch (error) {
       logger.error("Claude API call failed", { error });
-      // Fallback to OpenAI
-      return this.callOpenAIFallback(prompt);
+      // Fallback to a lighter Claude model
+      return this.callClaudeFallback(prompt);
     }
   }
   
   /**
-   * Fallback to OpenAI if Claude is unavailable
+   * Fallback to a lighter Claude model if the primary Claude call is unavailable.
+   * Sovereignty (CLAUDE.md): Anthropic only — never OpenAI or other cloud LLM providers.
    */
-  private async callOpenAIFallback(prompt: string): Promise<string> {
+  private async callClaudeFallback(prompt: string): Promise<string> {
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+          'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'gpt-4',
-          messages: [
-            { role: 'system', content: prompt },
-            { role: 'user', content: 'Remember: Maximum 20 words. Zen wisdom like Maya Angelou. No therapy-speak.' }
-          ],
+          model: 'claude-sonnet-5',
           max_tokens: 2000, // UNLEASHED: Restored for complete expression
-          temperature: 0.7
+          // Sonnet 5 defaults to adaptive thinking; disable so content[0] stays text.
+          thinking: { type: 'disabled' },
+          system: prompt,
+          messages: [
+            { role: 'user', content: 'Remember: Maximum 20 words. Zen wisdom like Maya Angelou. No therapy-speak.' }
+          ]
         })
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API call failed: ${response.status}`);
+        throw new Error(`Claude fallback API call failed: ${response.status}`);
       }
 
       const data = await response.json() as any;
-      let content = data.choices[0]?.message?.content || "Tell me your truth.";
+      let content = data.content?.[0]?.text || "Tell me your truth.";
 
       // Hard enforcement with zero tolerance
       content = this.enforceZenBrevity(content);
 
       return content;
     } catch (error) {
-      logger.error("OpenAI fallback also failed", { error });
+      logger.error("Claude fallback also failed", { error });
       // Final fallback to Maya Angelou zen response
       return "Tell me your truth.";
     }
