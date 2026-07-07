@@ -63,6 +63,10 @@ export async function POST(request: NextRequest) {
       slug: draft.person.slug,
       ownerMemberId: memberId,
       subjectMemberId: body?.subjectMemberId ? String(body.subjectMemberId) : null,
+      // Subject threading: link this draft to the practitioner's directory record
+      // (studio_people.id) so the body of work threads by subject on Return. Nullable —
+      // a portrait may be about a hand-entered subject with no directory record.
+      subjectPersonId: body?.subjectPersonId ? String(body.subjectPersonId) : null,
       mode,
       isMinor: body?.isMinor === true,
       subjectAge: typeof body?.age === 'number' ? body.age : undefined,

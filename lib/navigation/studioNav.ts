@@ -22,6 +22,7 @@ import {
   Briefcase,
   UserCircle,
   FolderOpen,
+  Sparkles,
 } from 'lucide-react';
 
 import type { LucideIcon } from 'lucide-react';
@@ -57,6 +58,7 @@ export const STUDIO_NAV_ITEMS: StudioNavItem[] = [
   { id: 'changes', label: 'Changes', icon: FileText, route: '/studio/changes', category: 'content' },
   { id: 'decisions', label: 'Decisions', icon: FileText, route: '/studio/decisions', category: 'content' },
   { id: 'case-studies', label: 'Case Studies', icon: FileText, route: '/studio/case-studies', category: 'content' },
+  { id: 'soul-portraits', label: 'Soul Portraits', icon: Sparkles, route: '/studio/soul-portraits', category: 'content' },
   { id: 'marketing', label: 'Marketing', icon: Megaphone, route: '/studio/marketing', category: 'content' },
   { id: 'media', label: 'Media', icon: Camera, route: '/studio/media', category: 'content' },
 

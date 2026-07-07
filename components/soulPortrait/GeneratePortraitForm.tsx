@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+interface StudioPerson { id: string; name: string; }
 
 /**
  * Practitioner draft generator form. Collects birth data → POST /api/soul-portrait/generate
@@ -23,12 +25,35 @@ export function GeneratePortraitForm() {
     timezone: 'America/New_York',
     age: '',
     isMinor: false,
+    subjectPersonId: '',
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Subject threading: the practitioner's directory (studio_people) powers the
+  // selector, so a draft can be linked to who it's about. Optional — a subject may
+  // be hand-entered with no directory record.
+  const [people, setPeople] = useState<StudioPerson[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/studio/people', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : { people: [] }))
+      .then((d) => { if (!cancelled) setPeople(Array.isArray(d?.people) ? d.people : []); })
+      .catch(() => { /* selector is optional — a directory fetch failure never blocks generation */ });
+    return () => { cancelled = true; };
+  }, []);
 
   function set<K extends keyof typeof f>(k: K, v: (typeof f)[K]) {
     setF((prev) => ({ ...prev, [k]: v }));
+  }
+
+  // Selecting a directory person links the subject and, as a convenience, fills an
+  // empty name — never overwrites a name the practitioner already typed.
+  function chooseSubject(id: string) {
+    setF((prev) => {
+      const person = people.find((p) => p.id === id);
+      return { ...prev, subjectPersonId: id, name: prev.name.trim() || (person?.name ?? prev.name) };
+    });
   }
 
   const ready =
@@ -48,6 +73,7 @@ export function GeneratePortraitForm() {
           age: f.age ? Number(f.age) : undefined,
           isMinor: f.isMinor,
           birthPlace: f.place.trim() || undefined,
+          subjectPersonId: f.subjectPersonId || undefined,
           birthData: {
             date: f.date,
             time: f.time,
@@ -76,6 +102,19 @@ export function GeneratePortraitForm() {
         <p style={{ color: '#718096', fontSize: 14, margin: '0 0 28px' }}>
           Creates a private draft for your review. Nothing is published or shared. Generation takes about a minute.
         </p>
+
+        {people.length > 0 && (
+          <Row>
+            <Field label="Link to a person (optional)">
+              <select style={inp} value={f.subjectPersonId} onChange={(e) => chooseSubject(e.target.value)}>
+                <option value="">— not linked —</option>
+                {people.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </Field>
+          </Row>
+        )}
 
         <Row><Field label="Name"><input style={inp} value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Client's name" /></Field></Row>
         <Row>
