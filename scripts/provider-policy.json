@@ -1,0 +1,96 @@
+{
+  "_doc": "Provider Governance policy (machine-readable). Enforced by scripts/check-provider-governance.ts (npm run check:no-openai). Human policy + rationale: docs/canon/PROVIDER_GOVERNANCE.md",
+  "_invariant": "Providers are replaceable, governable infrastructure BENEATH MAIA's identity — never the identity itself. Production data flows only to sovereign/approved providers; non-approved providers are lab-only or forbidden. The guard prevents NEW non-compliant surfaces; the allowlist below is the enumerated migration debt, tracked toward zero.",
+
+  "tiers": {
+    "production": {
+      "description": "May run in production and receive member data / synthesized audio.",
+      "providers": {
+        "anthropic":   { "capabilities": ["chat", "member_data"], "via": "lib/ai/sovereignRouter" },
+        "ollama":      { "capabilities": ["chat", "embedding", "member_data"], "note": "episodic embeddings live on nomic-embed-text (768d)" },
+        "kokoro":      { "capabilities": ["tts", "member_audio"] },
+        "sesame":      { "capabilities": ["tts"] },
+        "personaplex": { "capabilities": ["tts"], "status": "pending_qualification" },
+        "faster-whisper": { "capabilities": ["stt", "member_audio"], "note": "local maia-whisper container" }
+      }
+    },
+    "lab": {
+      "description": "Benchmarking / comparison only. MUST NOT be a production default and MUST NOT receive member data outside an explicit, gated evaluation (e.g. an admin Voice Lab).",
+      "providers": {
+        "openai": { "capabilities": ["benchmark"], "status": "removal_in_progress" }
+      }
+    },
+    "forbidden": {
+      "description": "Never permitted. These have NO allowlist target — any existing occurrence is quarantine debt that must reach zero.",
+      "rules": [
+        "browser_api_keys — NEXT_PUBLIC_*OPENAI* and any provider secret reaching the client bundle",
+        "direct_provider_calls_for_cognition bypassing lib/ai/sovereignRouter",
+        "provider_specific_ui — vendor voice/model names surfaced to members"
+      ]
+    }
+  },
+
+  "openai_removal": {
+    "_note": "Every file here is migration debt. A NEW OpenAI surface in a file NOT listed here FAILS the guard. Removal order in docs/canon/PROVIDER_GOVERNANCE.md: browser keys -> TTS -> _backend -> deps -> OPENAI_API_KEY.",
+
+    "quarantine_browser_keys": {
+      "_priority": "HIGHEST — violates a Forbidden rule; burn first",
+      "description": "Files exposing an OpenAI key to the client bundle via NEXT_PUBLIC_*. Target: zero. Do not add to this list.",
+      "files": [
+        "lib/voice/PersonalizedVoiceService.ts",
+        "lib/services/VoiceServiceWithFallback.ts",
+        "lib/utils/modelService.ts"
+      ]
+    },
+
+    "pending_migration": {
+      "description": "Live-tree OpenAI clients / imports / endpoints awaiting migration to a production-tier provider (or deletion if dead).",
+      "files": [
+        "app/api/voice/openai-tts/route.ts",
+        "app/api/voice/webrtc-session/route.ts",
+        "lib/agents/utils/OracleAI.ts",
+        "lib/agents/PersonalOracleAgent.ts",
+        "lib/ai/openaiClient.ts",
+        "lib/consciousness/CollectiveWisdomField.ts",
+        "lib/consciousness/OpenAIVoiceSynthesis.ts",
+        "lib/consciousness/WeQIngestionQueue.ts",
+        "lib/elemental-oracle-2-bridge.ts",
+        "lib/langchain/DecentralizedMayaChains.ts",
+        "lib/langchain/MayaReasoningChains.ts",
+        "lib/maia/claude-elemental-connection.ts",
+        "lib/maia/maia-router.ts",
+        "lib/memory/compression/MemoryCompressor.ts",
+        "lib/memory/embeddings/OpenAIEmbedder.ts",
+        "lib/multi-tenant/TenantKnowledgeBase.ts",
+        "lib/safety/sentiment.ts",
+        "lib/semantic/index.ts",
+        "lib/services/FileIngestionService.ts",
+        "lib/services/SesameVoiceService.ts",
+        "lib/services/UnifiedVoiceRouter.ts",
+        "lib/sovereignty/LocalVectorDB.ts",
+        "lib/tts/openaiTts.ts",
+        "lib/vectors/soulIndex.ts",
+        "lib/voice/MaiaRealtimeClientDirect.ts",
+        "lib/voice/maiaVoiceService.ts",
+        "lib/voice/streamTranscribe.ts",
+        "scripts/generate-audiobook.ts",
+        "scripts/generate-chapter-illustrations.ts"
+      ]
+    },
+
+    "governance_scripts": {
+      "description": "Guard/audit scripts that reference OpenAI patterns in order to DETECT or BLOCK them. They legitimately contain the strings.",
+      "files": [
+        "scripts/audit-sovereignty.ts",
+        "scripts/check-provider-governance.ts"
+      ]
+    },
+
+    "legacy_backend": {
+      "description": "app/api/_backend/** — unreachable legacy Express backend, pending wholesale deletion. Path-prefixed so the ~20 OpenAI files there need not be enumerated.",
+      "path_prefixes": [
+        "app/api/_backend/"
+      ]
+    }
+  }
+}
