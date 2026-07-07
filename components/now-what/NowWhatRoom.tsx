@@ -181,6 +181,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   const [offeringDraft, setOfferingDraft] = useState('');
   const [shareOffering, setShareOffering] = useState(false);
   const [savedPractice, setSavedPractice] = useState<string | null>(null);
+  // A parse-degraded 'propose' returns zero threads for a mechanical reason, not
+  // because nothing was worth naming — surfaced distinctly so a glitch never reads
+  // as "MAIA found nothing in you."
+  const [degraded, setDegraded] = useState(false);
   // Welcome gate (first visit only): returnChecked flips true once return-detection
   // resolves, so the threshold never flashes before we know this is a return;
   // entered is the member's "Come in" — the welcome orients, it is never a wall.
@@ -354,7 +358,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    draftBeforeMicRef.current = draft;
+    // Route dictation to whichever draft is active: the arrival answer during
+    // the threshold, the conversation draft once inside the room.
+    const micArrival = roomPhase === 'arrival';
+    const setMicValue = micArrival ? setArrivalAnswer : setDraft;
+    draftBeforeMicRef.current = micArrival ? arrivalAnswer : draft;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let interim = '';
@@ -366,12 +374,15 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       }
       if (final) draftBeforeMicRef.current = `${draftBeforeMicRef.current} ${final}`.trim();
       const combined = `${draftBeforeMicRef.current} ${interim}`.trim();
-      setDraft(combined);
+      setMicValue(combined);
       if (!working) setRoomMotion(combined ? 'listening' : 'idle');
     };
-    recognition.onerror = () => {
+    recognition.onerror = (event: any) => {
       setMicListening(false);
       recognitionRef.current = null;
+      if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') {
+        setError('Microphone access is blocked — enable it in your browser settings to dictate.');
+      }
     };
     recognition.onend = () => {
       setMicListening(false);
@@ -414,7 +425,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     const truncated = trimmed.length > BRING_CHAR_CAP;
     const capped = truncated ? trimmed.slice(0, BRING_CHAR_CAP) : trimmed;
     setBringTruncated(truncated);
-    setDraft(`Something I'm bringing: ${capped}`);
+    // In the arrival threshold the brought text IS the answer; inside the room
+    // it's framed as brought material appended to the conversation draft.
+    if (roomPhase === 'arrival') setArrivalAnswer(capped);
+    else setDraft(`Something I'm bringing: ${capped}`);
     setShowBring(false);
     setBringText('');
   }
@@ -424,6 +438,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => applyBroughtText(String(reader.result ?? ''));
+    reader.onerror = () => setError("Couldn't read that file — try a plain .txt or .md.");
     reader.readAsText(file);
     e.target.value = '';
   }
@@ -464,10 +479,12 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   async function listenBack() {
     if (turns.length < 2 || working) return;
     setError(null);
+    setDegraded(false);
     setWorking(true);
     try {
       const json = await callInterview(turns, 'propose');
       setProposed(json.threads ?? []);
+      setDegraded(!!json?.degraded);
       setRoomPhase('proposal');
     } catch (e: any) {
       setError(e.message);
@@ -585,6 +602,16 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     sendTurn(answer);
   }
 
+  // — Discuss: enter the back-and-forth immediately, without composing a threshold
+  //   answer first. "I'm not ready to formulate this — help me talk it through."
+  //   The conversation's guided opener does the inviting; nothing is sent yet.
+  function beginDiscussion() {
+    if (working) return;
+    if (micListening) stopMic();
+    setGuided(true);
+    setRoomPhase('conversation');
+  }
+
   // — Now What? welcome + threshold. First-visit welcome (Larry's standing frame),
   //   then one question. Return visits skip the welcome and begin from what happened. —
   if (roomPhase === 'arrival' && nowWhat) {
@@ -641,14 +668,15 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             <p className="text-slate-300 text-base font-light">What happened?</p>
           </div>
         ) : (
-          <p className="text-slate-300 text-base font-light leading-relaxed">
-            How are you entering this room today?
+          <p className="text-slate-100 text-xl font-light leading-relaxed">
+            Where&apos;s your attention right now?
           </p>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-5">
           <textarea
-            className="w-full bg-transparent border-b border-slate-700 text-slate-200 text-sm font-light leading-relaxed resize-none focus:outline-none focus:border-slate-500 placeholder:text-slate-700 py-2"
+            aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
+            className="w-full bg-transparent border-b border-slate-600 text-slate-100 text-base font-light leading-relaxed resize-none focus:outline-none focus:border-slate-400 placeholder:text-slate-500 py-2"
             rows={3}
             placeholder={returning ? 'What actually happened…' : 'In your own words…'}
             value={arrivalAnswer}
@@ -662,11 +690,66 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           />
           <button
             onClick={beginFromThreshold}
-            disabled={!arrivalAnswer.trim()}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            disabled={!arrivalAnswer.trim() || working}
+            className="text-[#ffe27a] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             Begin
           </button>
+
+          {/* Three ways in — equal, legible. Dictate & Upload fill the draft above;
+              Discuss skips the draft and starts the conversation directly. */}
+          <div className="pt-3">
+            <p className="text-slate-500 text-xs font-light mb-3">or, another way in —</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={toggleMic}
+                disabled={!micSupported}
+                aria-pressed={micListening}
+                aria-label="Dictate — speak your answer aloud and it is transcribed into your draft"
+                className={`text-left border rounded-lg px-4 py-3 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  micListening
+                    ? 'border-amber-400/60 text-amber-200'
+                    : 'border-slate-700 hover:border-slate-500 text-slate-200'
+                }`}
+              >
+                <span className="block text-base font-light">{micListening ? 'Listening…' : 'Dictate'}</span>
+                <span className="block text-slate-500 text-xs font-light mt-0.5">
+                  {micSupported ? 'speak it once' : 'not available here'}
+                </span>
+              </button>
+
+              <label
+                aria-label="Upload — bring a .txt or .md note into your draft"
+                className="text-left border border-slate-700 hover:border-slate-500 text-slate-200 rounded-lg px-4 py-3 cursor-pointer transition-colors"
+              >
+                <span className="block text-base font-light">Upload</span>
+                <span className="block text-slate-500 text-xs font-light mt-0.5">bring a note</span>
+                <input
+                  type="file"
+                  accept=".txt,.md,text/plain,text/markdown"
+                  onChange={handleBringFile}
+                  className="hidden"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={beginDiscussion}
+                aria-label="Discuss — start talking it through with MAIA without composing an answer first"
+                className="text-left border border-slate-700 hover:border-slate-500 text-slate-200 rounded-lg px-4 py-3 transition-colors"
+              >
+                <span className="block text-base font-light">Discuss</span>
+                <span className="block text-slate-500 text-xs font-light mt-0.5">talk it through</span>
+              </button>
+            </div>
+          </div>
+          {error && (
+            <p role="alert" className="text-red-400 text-xs font-light">{error}</p>
+          )}
+          {bringTruncated && (
+            <p className="text-slate-500 text-xs font-light">Brought in — trimmed to fit.</p>
+          )}
         </div>
 
         <div className="space-y-3 pt-6">
@@ -681,7 +764,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
               {OPENING_FRAME}
             </div>
           )}
-          <p className="text-slate-700 text-xs font-light leading-relaxed">
+          <p className="text-slate-500 text-xs font-light leading-relaxed">
             What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.
           </p>
         </div>
@@ -785,14 +868,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 type="checkbox"
                 checked={sharePractice}
                 onChange={e => setSharePractice(e.target.checked)}
-                className="accent-slate-500 w-3 h-3"
+                className="accent-slate-300 w-4 h-4"
               />
-              <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
+              <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
             </label>
           )}
         </div>
 
-        {error && <p className="text-red-400 text-xs">{error}</p>}
+        {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
 
         <div className="flex gap-4">
           <button
@@ -845,14 +928,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 type="checkbox"
                 checked={shareOffering}
                 onChange={e => setShareOffering(e.target.checked)}
-                className="accent-slate-500 w-3 h-3"
+                className="accent-slate-300 w-4 h-4"
               />
-              <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
+              <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
             </label>
           )}
         </div>
 
-        {error && <p className="text-red-400 text-xs">{error}</p>}
+        {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
 
         <div className="flex gap-4">
           <button
@@ -909,6 +992,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         <p className="text-slate-500 text-sm font-light">
           The field holds what you authored. You may return to continue.
         </p>
+        <button
+          type="button"
+          onClick={() => { if (typeof window !== 'undefined') window.location.reload(); }}
+          className="text-[#ffe27a] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
+        >
+          Return to continue
+        </button>
       </div>
     );
   }
@@ -931,9 +1021,25 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         </div>
 
         {proposed.length === 0 ? (
-          <p className="text-slate-500 text-sm font-light italic">
-            Nothing clear enough to propose — that is a faithful outcome. You may name something yourself below.
-          </p>
+          degraded ? (
+            <div className="space-y-3">
+              <p className="text-slate-400 text-sm font-light italic">
+                I couldn&apos;t quite gather that this time — that&apos;s on me, not you. Try listening back again, or name something yourself below.
+              </p>
+              <button
+                type="button"
+                onClick={listenBack}
+                disabled={working}
+                className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+              >
+                {working ? 'Listening…' : 'Try listening back again'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-slate-500 text-sm font-light italic">
+              Nothing clear enough to propose — that is a faithful outcome. You may name something yourself below.
+            </p>
+          )
         ) : (
           <div className="space-y-6">
             {!nowWhat && <p className="text-slate-500 text-xs uppercase tracking-widest">Threads MAIA heard returning</p>}
@@ -1006,9 +1112,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                           const key = rev !== undefined && rev !== '' ? rev : t.title;
                           setShared(s => ({ ...s, [key]: e.target.checked }));
                         }}
-                        className="accent-slate-500 w-3 h-3"
+                        className="accent-slate-300 w-4 h-4"
                       />
-                      <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
+                      <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
                     </label>
                   )}
                   </div>
@@ -1032,14 +1138,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 type="checkbox"
                 checked={!!shared[newThread.trim()]}
                 onChange={e => setShared(s => ({ ...s, [newThread.trim()]: e.target.checked }))}
-                className="accent-slate-500 w-3 h-3"
+                className="accent-slate-300 w-4 h-4"
               />
-              <span className="text-slate-600 text-xs font-light">Share with your practitioner</span>
+              <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
             </label>
           )}
         </div>
 
-        {error && <p className="text-red-400 text-xs">{error}</p>}
+        {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
 
         <div className="border-t border-slate-900 pt-4 text-slate-600 text-xs font-light leading-relaxed space-y-1">
           <p>What you carry enters your own Living Field — private by default.</p>
@@ -1110,9 +1216,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         `}</style>
       </div>
 
-      {guided && openingQuestion && turns.length === 0 && (
+      {guided && turns.length === 0 && (
         <div className="px-4 pb-6 border-b border-slate-800 text-center">
-          <p className="text-slate-300 text-base font-light leading-relaxed">{openingQuestion}</p>
+          <p className="text-slate-300 text-base font-light leading-relaxed">
+            {openingQuestion || "No need to have it fully formed — what's stirring? We can talk it through."}
+          </p>
         </div>
       )}
 
@@ -1133,9 +1241,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
               key="working"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-slate-600 text-sm font-light"
+              className="text-slate-400 text-sm font-light"
+              aria-live="polite"
             >
-              …
+              <span className="sr-only">MAIA is responding…</span>
+              <span aria-hidden="true">…</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1189,7 +1299,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       )}
 
       {error && (
-        <div className="px-4 py-2 text-red-400 text-xs">{error}</div>
+        <div role="alert" className="px-4 py-2 text-red-400 text-xs">{error}</div>
       )}
 
       {showBring && (
@@ -1250,7 +1360,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
 
       <div className="px-4 py-4 border-t border-slate-800">
         <textarea
-          className="w-full bg-transparent text-slate-200 text-sm font-light leading-relaxed resize-none focus:outline-none placeholder:text-slate-700"
+          autoFocus
+          aria-label="Your message"
+          className="w-full bg-transparent text-slate-100 text-base font-light leading-relaxed resize-none focus:outline-none placeholder:text-slate-500"
           placeholder="Say something…"
           rows={3}
           value={draft}

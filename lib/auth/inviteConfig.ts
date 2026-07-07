@@ -68,13 +68,37 @@ export const inviteConfig = {
 } as const;
 
 /**
- * Generate a unique passkey for an invite
+ * Crockford-style base32 alphabet for invite tokens — omits ambiguous
+ * characters (0 O 1 I L U) so a human can transcribe a passkey without error.
+ */
+const PASSKEY_ALPHABET = '23456789ABCDEFGHJKMNPQRSTVWXYZ'; // 30 symbols
+const PASSKEY_BODY_LENGTH = 14; // 30^14 ≈ 68.7 bits of entropy
+
+/**
+ * Generate a unique, cryptographically-random passkey for an invite.
+ *
+ * Keeps the `SOULLAB-` prefix (required by the registration format gate,
+ * `isAdminPasskey`) so the invite → register → onboarding mechanism is
+ * unchanged, but replaces the old memorable word + 3-digit suffix
+ * (~16 bits, Math.random — guessable) with a crypto-random body drawn from
+ * Web Crypto (`getRandomValues`, available in every runtime — no import).
+ * Uses rejection sampling (`b < max`) to avoid modulo bias. Grouped for
+ * readable manual entry: SOULLAB-XXXXX-XXXXX-XXXX.
  */
 export function generateInvitePasskey(): string {
-  const words = inviteConfig.passkeyWords;
-  const word = words[Math.floor(Math.random() * words.length)];
-  const suffix = Math.floor(Math.random() * 900 + 100); // 100-999
-  return `SOULLAB-${word}-${suffix}`;
+  const n = PASSKEY_ALPHABET.length;      // 30
+  const max = 256 - (256 % n);            // 240 — reject bytes >= 240 to stay unbiased
+  const out: string[] = [];
+  while (out.length < PASSKEY_BODY_LENGTH) {
+    const bytes = new Uint8Array(PASSKEY_BODY_LENGTH);
+    crypto.getRandomValues(bytes);
+    for (const b of bytes) {
+      if (out.length >= PASSKEY_BODY_LENGTH) break;
+      if (b < max) out.push(PASSKEY_ALPHABET[b % n]);
+    }
+  }
+  const body = out.join('');
+  return `SOULLAB-${body.slice(0, 5)}-${body.slice(5, 10)}-${body.slice(10)}`;
 }
 
 /**
