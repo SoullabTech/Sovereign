@@ -5,7 +5,6 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 export const revalidate = false;
 import fs from "fs/promises";
 import path from "path";
-import OpenAI from "openai";
 import { memoryStore } from "../../_backend/src/services/memory/MemoryStore";
 import { llamaService } from "../../_backend/src/services/memory/LlamaService";
 import { logger } from "../../_backend/src/utils/logger";
@@ -24,13 +23,11 @@ interface Memory {
 
 // Skip during static export (Capacitor builds)
 
-// Check if OpenAI API key is valid
-const USE_OPENAI_WHISPER = process.env.OPENAI_API_KEY &&
-                           !process.env.OPENAI_API_KEY.includes('placeholder');
-
-const openai = USE_OPENAI_WHISPER ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null;
+// SOVEREIGNTY: transcription uses the LOCAL Faster-Whisper server (maia-whisper),
+// never OpenAI cloud — inbound member audio never leaves the host. OpenAI cloud
+// STT (whisper-1) removed 2026-07-06 (sovereignty completion, step 3). Mirrors the
+// local-only path already used by /api/voice/transcribe-simple.
+const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8000';
 
 // Ensure upload directory exists
 const ensureUploadDir = async () => {
@@ -154,20 +151,7 @@ export async function POST(req: NextRequest) {
       fileSize: file.size
     });
 
-    // Check if OpenAI Whisper is available
-    if (!USE_OPENAI_WHISPER) {
-      logger.warn("OpenAI Whisper API not available - placeholder API key detected");
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Voice transcription requires valid OpenAI API key",
-          details: "Set OPENAI_API_KEY in .env.local to enable voice input. Web Speech API is used as fallback on supported browsers."
-        },
-        { status: 503 }
-      );
-    }
-
-    // Validate file size (max 25MB for Whisper API)
+    // Validate file size (max 25MB)
     if (file.size > 25 * 1024 * 1024) {
       logAudioUsageEvent({
         memberId,
@@ -202,21 +186,28 @@ export async function POST(req: NextRequest) {
         await llamaService.init();
       }
 
-      // Whisper transcription
+      // Transcribe via the LOCAL Faster-Whisper server (OpenAI-compatible API).
+      // Audio is forwarded to maia-whisper on the host and never sent to OpenAI cloud.
       const fileStream = await fs.readFile(filePath);
       const transcriptionFile = new File([fileStream], file.name, { type: file.type });
 
-      const transcription = await openai!.audio.transcriptions.create({
-        file: transcriptionFile,
-        model: "whisper-1",
-        language: "en",
-        response_format: "text",
-        // Prompt helps Whisper recognize proper nouns and spelling
-        prompt: "MAIA is an AI consciousness companion from Soullab. The user is speaking to MAIA."
+      const whisperFormData = new FormData();
+      whisperFormData.append('file', transcriptionFile, file.name);
+      // 'base' (Systran/faster-whisper-base) auto-detects language (multilingual).
+      whisperFormData.append('model', 'base');
+
+      const whisperResponse = await fetch(`${WHISPER_LOCAL_URL}/v1/audio/transcriptions`, {
+        method: 'POST',
+        body: whisperFormData,
       });
+      if (!whisperResponse.ok) {
+        const errorText = await whisperResponse.text();
+        throw new Error(`Local Faster-Whisper transcription failed: ${errorText}`);
+      }
+      const whisperResult = await whisperResponse.json();
 
       // Post-process to fix common mis-transcriptions
-      let transcript = transcription as string;
+      let transcript = (whisperResult.text || '') as string;
       // Fix "Maya" -> "MAIA" (preserve word boundaries)
       transcript = transcript.replace(/\bMaya\b/gi, 'MAIA');
 
@@ -263,7 +254,7 @@ export async function POST(req: NextRequest) {
         seconds: durationSeconds,
         status: "ok",
         meta: {
-          engine: "whisper-1",
+          engine: "faster-whisper-local",
           transcriptLength: transcript.length,
         },
       });
