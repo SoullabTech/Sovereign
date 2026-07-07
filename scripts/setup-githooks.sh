@@ -24,6 +24,9 @@ npm run check:no-direct-anthropic
 # Vendor voice ban (no OpenAI/ElevenLabs names in UI)
 npm run check:no-vendor-voices
 
+# Provider governance — no NEW OpenAI surfaces (docs/canon/PROVIDER_GOVERNANCE.md)
+npm run check:no-openai
+
 # Dark text opacity guard (prevents invisible text on dark panels)
 bash scripts/check-dark-text-opacity.sh
 
