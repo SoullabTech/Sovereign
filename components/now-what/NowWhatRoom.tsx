@@ -1381,24 +1381,26 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             }
           }}
         />
-        <div className="flex justify-between items-center mt-2 gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-slate-700 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
+        <div className="flex flex-wrap justify-between items-center mt-3 gap-3">
+          <div className="flex items-center gap-4">
+            <span className="text-slate-500 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
             <button
               onClick={() => setShowBring(v => !v)}
-              className="text-slate-600 hover:text-slate-400 text-xs underline underline-offset-2 transition-colors"
+              className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors"
             >
               Bring something with you
             </button>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {speechSupported && (
               <button
                 onClick={toggleSpeakReplies}
                 title={speakReplies ? 'Stop speaking replies' : 'Hear the room'}
                 aria-pressed={speakReplies}
-                className={`text-xs underline underline-offset-2 transition-colors ${
-                  speakReplies ? 'text-amber-300 hover:text-amber-200' : 'text-slate-600 hover:text-slate-400'
+                className={`rounded-full border px-3 py-1.5 text-sm font-light transition-colors ${
+                  speakReplies
+                    ? 'border-amber-400/60 text-amber-200 hover:border-amber-300'
+                    : 'border-slate-600 text-slate-300 hover:border-slate-400 hover:text-slate-100'
                 }`}
               >
                 {speakReplies ? 'Speaking' : 'Hear the room'}
@@ -1409,8 +1411,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 onClick={toggleMic}
                 title="Speak instead of typing"
                 aria-pressed={micListening}
-                className={`text-xs underline underline-offset-2 transition-colors ${
-                  micListening ? 'text-amber-300 hover:text-amber-200' : 'text-slate-500 hover:text-slate-300'
+                className={`rounded-full border px-3 py-1.5 text-sm font-light transition-colors ${
+                  micListening
+                    ? 'border-amber-400/60 text-amber-200 hover:border-amber-300'
+                    : 'border-slate-600 text-slate-300 hover:border-slate-400 hover:text-slate-100'
                 }`}
               >
                 {micListening ? 'Listening…' : 'Speak'}
@@ -1419,9 +1423,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             <button
               onClick={() => sendTurn(draft)}
               disabled={working || !draft.trim()}
-              className="text-slate-400 hover:text-slate-200 text-xs underline underline-offset-2 transition-colors disabled:opacity-30"
+              className="rounded-full bg-slate-100 px-5 py-1.5 text-sm font-medium text-slate-900 transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              Send
+              {working ? 'Sending…' : 'Send'}
             </button>
           </div>
         </div>
