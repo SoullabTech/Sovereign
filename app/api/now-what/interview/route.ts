@@ -33,6 +33,17 @@ import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { getLLMProvider, ensureUserTerminal } from '@/lib/consciousness/LLMProvider';
 import { inferSpiralogicCell, type Element } from '@/lib/consciousness/spiralogic-core';
 
+// Stage 1 — MAIA presence (ADR-013 Proof 1). Read-only reuse of the production runtime's
+// constitutional identity + memory loaders, assembled IN-ROUTE. Deliberately NOT
+// getMaiaResponse: that path increments turn count, reads history from the DB, and writes
+// the exchange — incompatible with this room's ephemeral, client-held, no-write contract.
+// Every import below is read-only; MAIA_RUNTIME_PROMPT already embeds the memory-canon guard.
+import { MAIA_RUNTIME_PROMPT } from '@/lib/consciousness/MAIA_RUNTIME_PROMPT';
+import { buildMemoryInfluencePlan } from '@/lib/maia/memoryOrchestrator';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref } from '@/lib/maia/memoryLoaders';
+import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt } from '@/lib/maia/memoryAtomsLoader';
+import { formatPriorExchangesForPrompt, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
+
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
 const MAX_HISTORY = 40;
@@ -270,6 +281,64 @@ function asThreads(parsed: unknown): ProposedThread[] | null {
   return out;
 }
 
+// Stage 1 flag. Off by default → the room behaves byte-identically to 6648497e5
+// (Experiment A baseline). On → MAIA's constitutional identity + read-only memory are
+// composed OVER the room's Great-Interviewer Field Configuration, turn-only.
+const PRESENCE_ENABLED = process.env.NOW_WHAT_MAIA_PRESENCE_ENABLED === '1';
+
+/**
+ * Assemble the member's read-only presence context: constitutional-memory addenda
+ * (developmental influence, member-placed atoms, opt-out-gated cross-session recall).
+ * Read-only and non-fatal by construction — the room persists nothing, and any failure
+ * degrades silently to the base Field Configuration rather than breaking the encounter.
+ * The room holds no server session, so cross-session recall is passed an ephemeral marker
+ * id (nothing excluded, nothing written).
+ */
+async function assemblePresenceContext(memberId: string, message: string): Promise<string> {
+  const blocks: string[] = [];
+  try {
+    const [developmental, themeSignals] = await Promise.all([
+      loadRecentDevelopmentalMemories(memberId, 3),
+      loadRecentThemeSignals(memberId, 10),
+    ]);
+    const memoryPlan = buildMemoryInfluencePlan({
+      message,
+      userId: memberId,
+      conversationHistory: [],
+      recentDevelopmentalMemories: developmental,
+      recentThemeSignals: themeSignals,
+      hasMemberLiveContext: false,
+      hasRelationshipAnamnesis: false,
+    });
+    if (memoryPlan.promptBlock) blocks.push(memoryPlan.promptBlock);
+
+    const atoms = await loadMemberMemoryAtomsForPrompt(memberId);
+    const atomsBlock = formatAtomsForPrompt(atoms);
+    if (atomsBlock) blocks.push(atomsBlock);
+
+    const recallEnabled = await loadConversationalRecallPref(memberId);
+    const prior = await loadPriorCrossSessionExchanges(memberId, 'now-what-ephemeral', 6);
+    const recall = formatPriorExchangesForPrompt(prior, {
+      recallEnabled,
+      mode: null,
+      currentSessionTurnCount: 0,
+      lastPriorSessionMinutesAgo: computeLastPriorSessionMinutesAgo(prior),
+    });
+    if (recall.block) blocks.push(recall.block);
+
+    console.log('[NowWhat/presence] assembled', {
+      memberIdPrefix: memberId.slice(0, 8),
+      developmental: developmental.length,
+      atoms: atoms.length,
+      priorExchanges: prior.length,
+      blockChars: blocks.join('\n\n').length,
+    });
+  } catch (err) {
+    console.warn('[NowWhat/presence] assembly failed (non-fatal; degraded to base):', err);
+  }
+  return blocks.join('\n\n');
+}
+
 export async function POST(request: NextRequest) {
   try {
     const cookieSession = await getCurrentSession();
@@ -294,12 +363,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Say something first.' }, { status: 400 });
     }
 
-    const systemPrompt = mode === 'propose'
+    let systemPrompt = mode === 'propose'
       ? PROPOSE_SYSTEM
       : returningPractice
         ? buildReturnPrompt(returningPractice)
         : buildPhasePrompt(phase);
     const maxTokens = mode === 'turn' ? MAX_TOKENS_TURN : MAX_TOKENS_PROPOSE;
+
+    // Stage 1 (Proof 1): compose MAIA's constitutional identity + read-only memory OVER
+    // the room's Field Configuration. Turn-only — the live encounter; 'propose' stays a
+    // thin JSON extractor (a utility, not an encounter). Ephemeral-safe: read-only, no
+    // writes. Flag off → systemPrompt is exactly the room's own prompt, unchanged.
+    if (PRESENCE_ENABLED && mode === 'turn') {
+      const lastMemberMessage = [...history].reverse().find((t) => t.role === 'user')?.content ?? '';
+      const presence = await assemblePresenceContext(memberId, lastMemberMessage);
+      systemPrompt = [MAIA_RUNTIME_PROMPT, presence, systemPrompt].filter(Boolean).join('\n\n');
+      console.log('[NowWhat/presence] composed', { systemPromptChars: systemPrompt.length });
+    }
 
     let messages = history.map(t => ({ role: t.role, content: t.content }));
     if (messages[messages.length - 1]?.role !== 'user') {
