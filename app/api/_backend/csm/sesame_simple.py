@@ -1,7 +1,20 @@
 #!/usr/bin/env python3
 """
-Sesame CSM - Simple TTS Implementation using Google TTS
-Provides voice synthesis with conversational intelligence
+gTTS Cloud Placeholder — NON-SOVEREIGN TTS backend.
+
+WHAT THIS IS: a text-shaping (/ci/shape) helper that ALSO exposes a Google
+Cloud TTS (gTTS) audio path. It is NOT Sesame CSM. It is NOT a local sovereign
+voice. The /tts audio path sends text to Google's servers.
+
+Integrity rules (see docs/specs/VOICE_FUNCTION_TAXONOMY_2026-07-07.md §B):
+  1. This service MUST NOT report itself as `sesame`/`csm` — it is `gtts-cloud`.
+     A caller must be able to trust `service`/`provider`/`sovereign` verbatim.
+  2. The /tts cloud-egress path is DEFAULT OFF. It only serves audio when the
+     operator sets ALLOW_CLOUD_TTS=1, i.e. cloud egress is never silent.
+  3. /ci/shape and /health are pure-local (no network egress) and stay open.
+
+Real Sesame CSM = Dockerfile.real / start-sesame-real.sh (Coqui + torch + HF
+weights), gated on Meta Llama-3.2 license review — not this file.
 """
 import os
 import io
@@ -20,7 +33,7 @@ import numpy as np
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Sesame CSM", version="3.0.0")
+app = FastAPI(title="gTTS Cloud Placeholder (NON-SOVEREIGN)", version="3.0.0")
 
 # Add CORS middleware
 app.add_middleware(
@@ -31,9 +44,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Service configuration
+# ── Truthful identity ────────────────────────────────────────────────────────
+# This backend must never claim to be Sesame CSM. Callers key provenance off
+# these values; they are the honest answer to "what actually served this?".
+SERVICE_NAME = "gtts-cloud"      # NOT "sesame-csm"
+ENGINE = "gtts"                  # Google Cloud TTS
+SOVEREIGN = False                # audio egresses to Google
+CLOUD_VENDOR = "google"
 SERVICE_MODE = "live"
+# gTTS has no local model; the audio path is a remote Google call. Kept as a
+# field for health-gating consumers, but paired with SOVEREIGN=False so no one
+# can read `model_loaded` as "a local sovereign model is loaded".
 MODEL_LOADED = True
+
+# Cloud-egress kill switch. The /tts (Google) path is refused unless the
+# operator explicitly opts in — cloud egress is never silent.
+def cloud_tts_allowed() -> bool:
+    return os.environ.get("ALLOW_CLOUD_TTS", "0") == "1"
 
 # Voice personality mappings
 VOICE_PERSONALITIES = {
@@ -72,9 +99,11 @@ class TTSResponse(BaseModel):
     audio: Optional[str] = None  # Base64 encoded audio
     audio_url: Optional[str] = None
     duration_ms: Optional[int] = None
-    service: str = "sesame-csm"
+    service: str = SERVICE_NAME       # honest: "gtts-cloud", never "sesame-csm"
+    sovereign: bool = SOVEREIGN       # False — this audio came from Google
+    cloud_vendor: Optional[str] = CLOUD_VENDOR
     cached: bool = False
-    engine: str = "gtts"
+    engine: str = ENGINE
     model: Optional[str] = None
     shaped_text: Optional[str] = None
     voice_personality: Optional[str] = None
@@ -127,13 +156,18 @@ def apply_conversational_shaping(text: str, element: str = None, context: str = 
 async def root():
     """Root endpoint with service info"""
     return {
-        "service": "Sesame CSM",
+        "service": SERVICE_NAME,
+        "engine": ENGINE,
+        "sovereign": SOVEREIGN,
+        "cloud_vendor": CLOUD_VENDOR,
+        "notice": "NON-SOVEREIGN gTTS placeholder — /tts egresses to Google. Not Sesame CSM.",
         "mode": SERVICE_MODE,
         "model_loaded": MODEL_LOADED,
         "version": "3.0.0",
         "capabilities": {
-            "tts": True,
-            "conversational_intelligence": True,
+            "tts": cloud_tts_allowed(),  # cloud audio only when explicitly enabled
+            "tts_requires_optin": True,
+            "conversational_intelligence": True,   # /ci/shape — local, sovereign
             "voice_personalities": list(VOICE_PERSONALITIES.keys()),
             "elements": ["fire", "water", "earth", "air", "aether"]
         },
@@ -153,19 +187,35 @@ async def health_check():
         "status": "healthy",
         "mode": SERVICE_MODE,
         "model_loaded": MODEL_LOADED,
-        "service": "sesame-csm",
+        "service": SERVICE_NAME,        # honest: "gtts-cloud", never "sesame-csm"
+        "sovereign": SOVEREIGN,
+        "cloud_vendor": CLOUD_VENDOR,
+        "cloud_tts_enabled": cloud_tts_allowed(),
         "version": "3.0.0",
-        "engine": "gtts",
+        "engine": ENGINE,
         "uptime": time.time()
     }
 
 @app.post("/tts")
 async def text_to_speech(request: TTSRequest):
-    """Generate speech from text with conversational intelligence"""
+    """Generate speech from text via Google Cloud TTS (gTTS).
+
+    NON-SOVEREIGN: this sends `text` to Google. Refused unless the operator has
+    explicitly opted into cloud egress via ALLOW_CLOUD_TTS=1 — never silent.
+    """
     try:
+        if not cloud_tts_allowed():
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Cloud TTS disabled. This backend is gTTS (Google Cloud), not "
+                    "a sovereign voice. Set ALLOW_CLOUD_TTS=1 to permit egress, or "
+                    "use a sovereign provider (Kokoro / real Sesame CSM)."
+                ),
+            )
         if not request.text.strip():
             raise HTTPException(status_code=400, detail="Text cannot be empty")
-        
+
         # Apply conversational shaping
         shaped_text = apply_conversational_shaping(
             request.text, 
@@ -208,8 +258,10 @@ async def text_to_speech(request: TTSRequest):
                     success=True,
                     audio=audio_base64,
                     duration_ms=duration_ms,
-                    service="sesame-csm",
-                    engine="gtts",
+                    service=SERVICE_NAME,
+                    sovereign=SOVEREIGN,
+                    cloud_vendor=CLOUD_VENDOR,
+                    engine=ENGINE,
                     model=voice_config.get("tld", "com"),
                     shaped_text=shaped_text,
                     voice_personality=request.voice
@@ -241,9 +293,11 @@ async def generate_speech(request: TTSRequest):
             success=True,
             audio_url=audio_url,
             duration_ms=response.duration_ms,
-            service="sesame-csm",
+            service=SERVICE_NAME,
+            sovereign=SOVEREIGN,
+            cloud_vendor=CLOUD_VENDOR,
             cached=False,
-            engine="gtts",
+            engine=ENGINE,
             voice_personality=request.voice
         )
     
@@ -304,7 +358,9 @@ async def list_voices():
     return {
         "voices": VOICE_PERSONALITIES,
         "default": "maya",
-        "engine": "gtts",
+        "engine": ENGINE,
+        "sovereign": SOVEREIGN,
+        "cloud_vendor": CLOUD_VENDOR,
         "model_loaded": MODEL_LOADED
     }
 
@@ -329,7 +385,13 @@ async def serve_audio(filename: str):
 if __name__ == "__main__":
     import uvicorn
     
-    print("Initializing Sesame CSM with Google TTS...")
+    print("=" * 70)
+    print("  gTTS CLOUD PLACEHOLDER — NON-SOVEREIGN")
+    print("  This is NOT Sesame CSM. The /tts audio path egresses to Google.")
+    print(f"  service={SERVICE_NAME}  engine={ENGINE}  sovereign={SOVEREIGN}")
+    print(f"  cloud /tts audio: {'ENABLED (ALLOW_CLOUD_TTS=1)' if cloud_tts_allowed() else 'DISABLED (default)'}")
+    print("  Real CSM = Dockerfile.real (gated on Meta Llama-3.2 license review).")
+    print("=" * 70)
     print(f"Available voices: {list(VOICE_PERSONALITIES.keys())}")
     
     # Start server
