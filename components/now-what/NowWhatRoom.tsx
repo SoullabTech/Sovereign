@@ -620,7 +620,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     if (fieldContext && !returnChecked) {
       return (
         <div className="max-w-prose mx-auto px-4 py-16 flex justify-center">
-          <RoomHoloflower coolTint motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
         </div>
       );
     }
@@ -777,7 +777,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-10">
         <div className="flex justify-center">
-          <RoomHoloflower coolTint motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
         </div>
         <div className="space-y-1 text-center">
           <p className="text-xs uppercase tracking-widest text-slate-400">Vision Studio</p>
@@ -1180,6 +1180,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
             coolTint
+            mono
             motionState={roomMotion}
             proposedElement={cellCandidate?.element ?? null}
             confirmedElements={confirmedElements}
