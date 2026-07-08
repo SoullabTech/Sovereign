@@ -743,6 +743,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                 <span className="block text-slate-500 text-xs font-light mt-0.5">talk it through</span>
               </button>
             </div>
+            <p className="text-slate-600 text-xs font-light mt-3 leading-relaxed">
+              Dictation depends on your browser&rsquo;s speech support. If it&rsquo;s unavailable, type or upload instead.
+            </p>
           </div>
           {error && (
             <p role="alert" className="text-red-400 text-xs font-light">{error}</p>
