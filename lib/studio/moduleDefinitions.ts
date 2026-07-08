@@ -72,7 +72,8 @@ export type ModuleSlug =
   | 'portal'
   | 'scheduling'
   | 'booking'
-  | 'vision-studio';
+  | 'vision-studio'
+  | 'maia-guidance';
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
@@ -153,6 +154,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     href: '/studio/clients',
     category: 'clients',
     description: 'Manage your client relationships',
+    alwaysOn: false,
+    mode: 'practice',
+  },
+  {
+    slug: 'maia-guidance',
+    label: 'MAIA Guidance',
+    icon: Compass,
+    href: '/studio/maia-guidance',
+    category: 'clients',
+    description: 'Shape how MAIA engages within your field — tone, language, boundaries (narrows only; never overrides her safeguards)',
     alwaysOn: false,
     mode: 'practice',
   },
@@ -417,13 +428,13 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'teams', 'decisions', 'changes', 'maia', 'vault', 'vision-studio'],
-  astrology: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'services'],
-  groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
-  consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
+  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'vision-studio'],
+  astrology: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault'],
+  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'comms'],
+  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'comms'],
+  bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'services'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'comms', 'marketing'],
+  consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'maia-guidance', 'comms', 'teams'],
   personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools', 'tasks', 'calendar', 'vision-studio'],
 };
 
