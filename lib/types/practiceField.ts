@@ -20,6 +20,23 @@ export interface PracticeFieldResource {
   note?: string;
 }
 
+/**
+ * Layer 4 — Adaptive Guidance ("MAIA Guidance").
+ * Practitioner preferences that NARROW or SPECIFY how MAIA engages within the
+ * field. Narrow-only by invariant: may never relax constitutional safeguards or
+ * widen MAIA's authority (enforced in lib/practiceField/fieldGuidance.ts).
+ * All fields optional; an empty object means "no field-specific guidance".
+ */
+export interface FieldGuidance {
+  tone?: string;                    // e.g. "warm, direct, unhurried; few words"
+  preferred_language?: string;      // vocabulary/framework the practitioner works in (IFS, somatic, contemplative…)
+  invitations?: string[];           // things MAIA may gently offer within this field
+  boundaries?: string[];            // things MAIA should hold/avoid within this field
+  forbidden_topics?: string[];      // topics MAIA must not raise or engage in this field
+  forbidden_engagements?: string[]; // modes MAIA must not enact here (e.g. "do not give medical advice")
+  custom_notes?: string;            // free-text field preferences
+}
+
 export interface PracticeField {
   id: string;
   practitioner_member_id: string;
@@ -42,6 +59,9 @@ export interface PracticeField {
   active_field_content: string | null;
   active_field_updated_at: string | null;
 
+  // Layer 4: Adaptive Guidance ("MAIA Guidance") — live, not snapshotted
+  maia_guidance: FieldGuidance;
+
   // State
   status: PracticeFieldStatus;
   status_reason: string | null;
@@ -60,6 +80,7 @@ export interface PracticeFieldUpdate {
   orientation_style?: OrientationStyle;
   resources?: PracticeFieldResource[];
   active_field_content?: string | null;
+  maia_guidance?: FieldGuidance;
 }
 
 export interface PracticeFieldSnapshot {
@@ -86,6 +107,8 @@ export interface PracticeFieldContext {
   active_field_content: string | null;
   resources_available: boolean;
   orientation_style: OrientationStyle;
+  /** Layer 4 — narrow-only field preferences (null when none set). */
+  maia_guidance: FieldGuidance | null;
 }
 
 /** PENDING → LIVE readiness check */
