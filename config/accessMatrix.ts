@@ -470,6 +470,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // to an adult friend. SAME posture: public-unlisted, hand-delivered, noindex,
   // Mentor/MAIA/memory OFF. No /welcome rule yet — the giver's threshold note is
   // Kelly's to add before delivery.
+  { exact: '/soul-portrait/andrea-fagan/welcome', public: true, notes: 'Andrea Fagan Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
   { exact: '/soul-portrait/andrea-fagan', public: true, notes: 'Andrea Fagan Gift Portrait (renderer) — hand-delivered unlisted exception (adult); Mentor off; noindex; includes computed Year Ahead' },
   // Kelly — the author's own SELF-portrait (Kelly 2026-06-22): mode 'self', no
   // giver/threshold, no Return-to-Soullab coda. SAME posture: public-unlisted,

@@ -45,8 +45,28 @@ export const andreaFaganPortrait: LiterarySoulPortrait = {
   mode: 'gift',
 
   // mentorEnabled intentionally omitted → default-deny. Mentor OFF.
-  // offeredBy intentionally omitted for now — the giver's opening is Kelly's
-  // to write in his own words before this is delivered.
+
+  // DRAFT offeredBy — Kelly: correct `relationship` (one word) and edit the
+  // opening in your own voice before delivery. No relationship is claimed in
+  // the prose itself.
+  offeredBy: {
+    relationship: 'a friend',
+    giverName: 'Kelly',
+    giftOpening: `Every life carries a quiet music.
+
+This one is yours — the steadiness people rest on, the care that remembers everything, and the table that has always had room for one more. It seemed worth gathering here and reflecting back, so you could see what everyone around you has always seen.
+
+The stars reveal the weather; your soul chooses how to walk through it. Read this as a mirror offered with warmth — and keep what your own heart already knows is true.
+
+— Kelly`,
+    threshold: {
+      eyebrow: 'A Soul Portrait',
+      forLine: 'For Andrea',
+      attribution: 'Offered with love by Kelly',
+      framing:
+        'A reflection on who you are, and who you are still becoming — written in the language of soul and symbol. The stars reveal the weather; your soul chooses how to walk through it.',
+    },
+  },
 
   birthData: {
     date: 'July 11, 1956',
@@ -182,6 +202,19 @@ The weight carried in partnership (Saturn in the 7th) — training: let others c
     },
 
     // 13 ─────────────────────────────────────────────────────────────────────
+    {
+      title: 'Practices',
+      subtitle: 'Small doors, opened often',
+      body: `For the Steward — once a season, hand something on deliberately: a recipe taught rather than served, a story told with its ending, a key copied for someone else's pocket. Stewardship completes itself in the giving.
+
+For the Storyteller — say the remembered detail out loud. When you notice you have kept someone's small history safe, tell them. It is a gift only you can give, and it costs one sentence.
+
+For the one who is always tending — practice receiving on purpose: one offered kindness a week accepted without deflection, without repayment arithmetic. Let the circle carry you back.
+
+For the horizon — keep one standing engagement that is not a duty: the class, the trip, the long lunch on the far side of town. Somewhere the road can find you.`,
+    },
+
+    // 14 ─────────────────────────────────────────────────────────────────────
     {
       title: 'Questions to Sit With',
       subtitle: 'Not goals. Not predictions. Company.',
