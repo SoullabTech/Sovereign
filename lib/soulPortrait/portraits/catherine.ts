@@ -43,7 +43,7 @@ import { DEFAULT_FRAMING } from '../schema';
 
 export const catherinePortrait: LiterarySoulPortrait = {
   person: {
-    name: 'Catherine',
+    name: 'Catherine Teresa Butler',
     slug: 'catherine',
     pronouns: 'she/her',
     isMinor: false,
