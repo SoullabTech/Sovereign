@@ -155,16 +155,18 @@ curl -k https://soullab.life/api/health
 - Host: **minisforum** (SSH from Mac Studio: `ssh soullab@minisforum`)
 - Stack: Docker + Caddy
 - Compose file: `docker-compose.production.yml`
-- **Deploy command — quick `maia`-only rebuild** (run from Mac Studio, executes on minisforum). **Prefix `GIT_COMMIT`** so the image is commit-bound: the compose build-arg is `${GIT_COMMIT:-unknown}`, so the bare command (without the prefix) bakes `GIT_COMMIT=unknown` into the image. The wiring is already present (Dockerfile `ENV GIT_COMMIT` ← compose `build.args`); the bare command just bypasses it.
+- **Deploy lane lock (one deploy at a time — structural, not disciplinary)**: every deploy entry point (`deploy-production.sh deploy/update/migrate/rollback` and `pre-deploy-gate.sh deploy-maia`) takes an exclusive non-blocking `flock` on `/home/soullab/MAIA-SOVEREIGN/.deploy.lock` via `scripts/deploy-lock.sh`. A second deploy attempt is **refused** with the holder's PID / start time / entry point / commit printed. The kernel lock is inherited by the docker compose build and auto-releases when the whole deploy tree exits or dies — a crashed deploy cannot leave the lane locked. If a refusal shows a dead holder PID, a child of that deploy (usually the build) is still running: inspect with `fuser -v ~/MAIA-SOVEREIGN/.deploy.lock`. **Never delete the lockfile to force entry** — that detaches the kernel lock from future acquirers and re-opens the 2026-07-09 concurrent-deploy race (five processes wedged on the buildkit lock because parallel sessions' deploys could not see each other).
+- **Deploy command — quick `maia`-only rebuild** (run from Mac Studio, executes on minisforum). Canonical quick path is the pre-deploy gate, which acquires the deploy-lane lock, validates provenance (`GIT_COMMIT` never `unknown`), runs the Co-Lab boundary gate, then builds:
   ```bash
   ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
     && git fetch origin clean-main-no-secrets \
     && git checkout clean-main-no-secrets \
     && git pull \
-    && GIT_COMMIT=$(git rev-parse --short HEAD) docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d --build maia'
+    && scripts/pre-deploy-gate.sh deploy-maia'
   ```
   Fast, but rebuilds **only** the `maia` service — it does **not** run migrations, tag images for rollback, or touch other services.
-- **Full deploy — canonical path**: `scripts/deploy-production.sh`. The complete all-services deploy: it exports `GIT_COMMIT`/`APP_VERSION`/`BUILD_DATE`, builds with the provenance build-args, tags images per-commit for rollback, brings the stack up, and runs DB migrations. Use it for schema changes, multi-service changes, or whenever you want a rollback point — i.e. anything beyond a quick `maia`-only code rebuild.
+  **The bare compose command (`GIT_COMMIT=... docker compose ... up -d --build maia`, with or without the prefix) is doubly deprecated**: (1) without the `GIT_COMMIT` prefix it bakes `GIT_COMMIT=unknown` into the image (the compose build-arg is `${GIT_COMMIT:-unknown}`; the Dockerfile ← compose wiring is present, the bare command bypasses it); (2) it bypasses the deploy-lane lock entirely, so it can race a deploy already in flight. Do not use it.
+- **Full deploy — canonical path**: `scripts/deploy-production.sh`. The complete all-services deploy: it acquires the deploy-lane lock, exports `GIT_COMMIT`/`APP_VERSION`/`BUILD_DATE`, builds with the provenance build-args, tags images per-commit for rollback, brings the stack up, and runs DB migrations. Use it for schema changes, multi-service changes, or whenever you want a rollback point — i.e. anything beyond a quick `maia`-only code rebuild.
 - **Verify after deploy**:
   ```bash
   # 1. Container freshness
