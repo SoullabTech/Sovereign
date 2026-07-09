@@ -206,6 +206,15 @@ export class MultiLLMProvider {
       } catch (error) {
         console.warn('Ollama generation failed, trying Claude fallback:', error);
         if (this.anthropic) {
+          this.logSovereigntyFallback({
+            path: 'generate',
+            tierOrLevel: `level=${level}`,
+            intendedModel: config.model,
+            servedProvider: 'anthropic',
+            servedModel: coerceClaudeModel(config.model),
+            error,
+            startTime,
+          });
           return await this.generateClaude(systemPrompt, userInput, config, startTime, messages);
         }
         throw error;
@@ -254,6 +263,12 @@ export class MultiLLMProvider {
     startTime: number
   ): Promise<LLMResponse> {
 
+    // stream:true so Ollama sends HTTP response headers at the FIRST token. With
+    // stream:false, headers are withheld until the entire generation completes —
+    // on slow local hardware a long generation exceeds undici's default 5-minute
+    // headersTimeout, false-failing the local path on every long request (the
+    // Soul Portrait silent-cloud-fallback regression, 2026-07-09). undici's
+    // bodyTimeout is an idle timeout between chunks, which streaming satisfies.
     const response = await fetch(`${this.ollamaBaseUrl}/api/generate`, {
       method: 'POST',
       headers: {
@@ -262,7 +277,7 @@ export class MultiLLMProvider {
       body: JSON.stringify({
         model: config.model,
         prompt: `${systemPrompt}\n\nUser: ${userInput}\n\nMAIA:`,
-        stream: false,
+        stream: true,
         options: {
           temperature: config.temperature,
           num_predict: config.maxTokens
@@ -270,20 +285,50 @@ export class MultiLLMProvider {
       })
     });
 
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
       throw new Error(`Ollama request failed: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    // Accumulate the NDJSON stream: each line carries a `response` delta; the
+    // final line has done:true plus the eval counters. External contract is
+    // unchanged — callers still receive one complete LLMResponse.
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let text = '';
+    let evalCount: number | undefined;
+
+    const consumeLine = (line: string) => {
+      if (!line) return;
+      const chunk = JSON.parse(line);
+      if (chunk.error) {
+        throw new Error(`Ollama error: ${chunk.error}`);
+      }
+      if (chunk.response) text += chunk.response;
+      if (chunk.done) evalCount = chunk.eval_count;
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let newline;
+      while ((newline = buffer.indexOf('\n')) !== -1) {
+        consumeLine(buffer.slice(0, newline).trim());
+        buffer = buffer.slice(newline + 1);
+      }
+    }
+    consumeLine(buffer.trim());
+
     const generationTime = Date.now() - startTime;
 
     return {
-      text: data.response.trim(),
+      text: text.trim(),
       provider: 'ollama',
       model: config.model,
       metadata: {
         generationTime,
-        tokenCount: data.eval_count
+        tokenCount: evalCount
       }
     };
   }
@@ -394,6 +439,42 @@ export class MultiLLMProvider {
   }
 
   /**
+   * Sovereignty-path observability: emit a single greppable, structured event when a
+   * request that was INTENDED for the local sovereign provider (Ollama) is instead
+   * served by cloud Claude because the local path failed. A silent cloud fallback on a
+   * sovereignty-critical path (e.g. Soul Portrait generation) must never be invisible.
+   *
+   * Grep in prod:  docker logs maia-sovereign | grep 'llm.sovereignty_fallback'
+   */
+  private logSovereigntyFallback(args: {
+    path: 'generate' | 'generateSimple';
+    tierOrLevel: string;
+    intendedModel: string;
+    servedProvider: LLMProvider;
+    servedModel: string;
+    error: any;
+    startTime: number;
+  }): void {
+    const e = args.error;
+    // Prefer the concrete cause (undici surfaces UND_ERR_HEADERS_TIMEOUT on error.cause.code).
+    const reason =
+      e?.cause?.code || e?.code || e?.name || (e?.message ? String(e.message) : String(e));
+    console.warn(
+      JSON.stringify({
+        tag: 'llm.sovereignty_fallback',
+        path: args.path,
+        intended_provider: 'ollama',
+        intended_model: args.intendedModel,
+        served_provider: args.servedProvider,
+        served_model: args.servedModel,
+        tier_or_level: args.tierOrLevel,
+        reason,
+        local_elapsed_ms: Date.now() - args.startTime,
+      })
+    );
+  }
+
+  /**
    * Check which models are available
    */
   async getAvailableModels(): Promise<{
@@ -465,6 +546,15 @@ export class MultiLLMProvider {
       } catch (error) {
         console.warn('Ollama generation failed, trying Claude fallback:', error);
         if (this.anthropic) {
+          this.logSovereigntyFallback({
+            path: 'generateSimple',
+            tierOrLevel: tier,
+            intendedModel: config.model,
+            servedProvider: 'anthropic',
+            servedModel: coerceClaudeModel(config.model),
+            error,
+            startTime,
+          });
           return await this.generateClaude(systemPrompt, '', config, startTime, messages);
         }
         throw error;
