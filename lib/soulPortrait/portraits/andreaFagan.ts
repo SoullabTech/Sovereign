@@ -145,44 +145,62 @@ The quiet dignity of that gift is also its growth edge. What is kept can be kept
       title: 'The Low, Long Flame',
       subtitle: 'Fire — courage, purpose, vitality',
       element: 'fire',
-      body: `Your courage does not announce itself; it endures. With the Sun in easy trine to Mars, your will and your vitality cooperate rather than argue — purpose in you moves like warmth through a house, steady and unforced. You are braver than you sound, and your persistence outlasts louder people's sparks.`,
+      body: `Here is a secret your chart tells about you: your fire lives at the hearth.
+
+Most people's courage is out in front — loud, visible, spent in bursts. Yours is banked like coals. The only two planets you have in fire signs are Uranus and Pluto in Leo, and they sit in your Fourth House — the house of home. Which means the blaze in you has never been for the stage or the street; it burns in the private center of your life, warming what is yours to warm, flaring when what you love is threatened, powering decades of ordinary devotion that only looks ordinary from the outside.
+
+And the Sun's easy trine to Mars gives that banked fire its patience: will and vitality cooperating rather than arguing, purpose moving through you like heat through a house. You are braver than you sound. You always have been. The proof is not in dramatic moments — it is in how long you have kept the flame lit, and how many people have warmed themselves at it.`,
     },
     {
       title: 'The Native Element',
       subtitle: 'Water — heart, empathy, emotional wisdom',
       element: 'water',
-      body: `Feeling is your first intelligence. A Cancer Sun and Mercury mean you sense a room before you read it, and your empathy is not performed — it remembers. Water in you is the tide that Mars in Pisces rides too: compassion that keeps arriving, wave after wave, long after the occasion for it has passed.`,
+      body: `If the elements were a family, Water would be the one whose house everyone gathers at. Four of your ten planets swim in the feeling signs — the Sun and Mercury in Cancer, Mars in Pisces, Saturn in Scorpio — and that makes feeling not one of your faculties but your first intelligence: the sense that reads the room before your eyes finish looking.
+
+Each of those four waters does distinct work. The Cancer Sun and Mercury give you the empathy that remembers — care with a long memory, words that carry the family's history in them. Mars in Pisces turns your effort tidal: quiet, persistent, arriving wave after wave long after louder people have spent themselves. And Saturn in Scorpio — the deepest of the four — is where your water learned discipline: loyalty that endures, feeling that can hold pressure, the capacity to stay present in the intense and unspoken places where most people flinch.
+
+Water like yours is not softness. It is the strength that rivers have — patient, shaping, impossible to argue with over time.`,
     },
     {
       title: 'The Tending Hands',
       subtitle: 'Earth — grounding, habits, responsibility',
       element: 'earth',
-      body: `Taurus rising and a Virgo Moon beside Jupiter make Earth your visible element: the settled presence, the made bed, the meal that appears, the detail no one else noticed handled before anyone asked. Grounding, for you, is not stillness — it is usefulness. You steady the world by taking care of it.`,
+      body: `Earth is your visible element — the one people meet first and trust immediately. Taurus rises in your chart, giving you that settled, unhurried presence that makes rooms calmer just by your being in them. And your Moon stands beside Jupiter in Virgo, in the house of home: feeling that becomes craft, generosity that becomes the meal and the calendar and the detail no one else noticed, handled before anyone asked.
+
+This is the element that makes your love usable. Plenty of people feel deeply; you are one of the rarer ones whose feeling reliably becomes something someone can eat, wear, lean on, or live in. Grounding, for you, has never meant stillness — it means usefulness. You steady the world by taking care of it, and the world can tell the difference between care that performs and care that shows up on Tuesday too.`,
     },
     {
       title: 'The Bright Thread',
       subtitle: 'Air — curiosity, communication, ideas',
       element: 'air',
-      body: `Venus in Gemini gives your seriousness a light companion: a real delight in words, wit, and the play of ideas. And with the Midheaven in Aquarius, the airy part of you faces outward — toward community, toward the future, toward the question of what we owe one another. Curiosity is how your care thinks.`,
+      body: `Air moves through your chart like the bright thread in a tapestry — not the dominant color, but the one that makes the whole design sing. Venus in Gemini gives your seriousness a light companion: genuine delight in words, wit, good talk, the play of ideas — the reason your kitchen table has always doubled as a salon. Neptune in Libra graces the house of your daily work, lending an idealism to ordinary service: you have never quite been able to do a task without also caring that it be fair, and kind, and right.
+
+And at the very top of your chart, the Midheaven in Aquarius turns your public face toward community and the common good — the wide-open, future-facing sky under which your whole vocation stands. Curiosity is how your care thinks; community is where your air wants to fly. The invitation of this element, all your life, has been to let the bright thread show — to let people hear the quick, funny, far-seeing mind that the tending sometimes keeps tucked behind the apron.`,
     },
     {
       title: 'The Widening Circle',
       subtitle: 'Aether — meaning, spirit, mystery',
       element: 'aether',
-      body: `Meaning, in your chart, is not found alone on a mountaintop — it is found at a shared table that keeps adding chairs. The Sagittarian node in the house of partnership, and Chiron's tender intelligence about who gets left outside the circle, point the mystery of your life toward hospitality: the sacred, for you, is whoever just walked in.`,
+      body: `Aether is the element of meaning — and your chart is unusually clear about where yours lives: not on a mountaintop, but at a table.
+
+The North Node in Sagittarius stands in your house of partnership, naming a lifelong direction toward shared horizons — faith and frankness practiced with someone, meaning made in company. And Chiron in Aquarius sits at the top of your chart, in the house of your public place: the old tender spot around belonging, the feeling of having stood — somewhere, sometime — just outside the circle. Those two placements are one story told twice. The ache about the circle's edge became your genius for the circle's center: no one sets a wider table than the one who remembers standing outside.
+
+So the sacred, for you, has a face and a chair. It is whoever just walked in. Your mysticism is hospitality; your liturgy is the meal; your congregation is everyone who has ever left your home more themselves than they arrived. That is not a smaller spirituality than the mountaintop kind. It may be the older one.`,
     },
 
     // 8 ──────────────────────────────────────────────────────────────────────
     {
       title: 'Archetypal Companions',
       subtitle: 'Lenses to pick up or set down — never labels',
-      body: `The Steward (strong). One to whom things — and people — can be entrusted. The gift: making places where life can settle, mend, and grow; care that holds its shape over years. The growth edge: over-tending — the moment care starts managing what it should be blessing.
+      body: `Archetypes are companions, not cages — lenses you can pick up or set down, never labels. Four of them walk closely with you.
 
-The Storyteller (strong). The keeper of the family's memory, the one who says what happened and makes it belong to everyone. The gift: people feel remembered around you — their small details kept safe in your telling. The growth edge: keeping the story small to keep it safe, when it is ready to be told wider.
+The Steward walks closest. She is the one to whom things — and people — can be entrusted: the keys, the story, the recipe, the grief. Her gift in you is the making of places where life can settle, mend, and grow; care that holds its shape over years. Her shadow, held honestly, is over-tending — the moment care starts managing what it should be blessing. You will know her grip has tightened when helping starts to feel like holding on.
 
-The Sage (present). Wisdom earned the slow way, in committed relationship, through what Saturn in the seventh house teaches. The gift: truth with gravity — when you finally say the thing, it lands, because you carried it first. The growth edge: bracing for loss before it arrives; wisdom hardening into guardedness.
+The Storyteller walks beside her. You are the keeper of the family's memory — the one who says what happened and makes it belong to everyone, who keeps other people's small histories safe in your telling. People feel remembered around you, which is among the rarer gifts a person can give. Her shadow is keeping the story small to keep it safe, when it has grown ready to be told wider.
 
-The Healer (emerging). One who knows, from the inside, what it is to stand slightly outside the circle. The gift: widening circles so that no one has to stand where you once stood. The growth edge: tending everyone's belonging but your own.`,
+The Sage walks a half-step behind — wisdom earned the slow way, in committed relationship, in Saturn's seventh-house school of depth and endurance. When you finally say the thing, it lands, because you carried it first. Her shadow is bracing for loss before it arrives, letting wisdom harden into guardedness.
+
+And the Healer is still emerging — the one who knows, from the inside, what it is to stand slightly outside the circle, and who therefore widens every circle she tends so that no one has to stand where she once stood. Her unfinished work is the obvious one: tending everyone's belonging but her own.`,
     },
 
     // 9 ──────────────────────────────────────────────────────────────────────
@@ -202,13 +220,13 @@ May the truth you carry find its hour, and be welcome.`,
     {
       title: 'Challenges as Trainings',
       subtitle: 'Difficulty, reframed — never a verdict',
-      body: `A chart's hard angles are not punishments; they are the gym. Yours describe three trainings, each one already half-mastered by the living of your life.
+      body: `A chart's hard angles are not punishments; they are the gym — and yours describe three trainings, each one already half-mastered by the living of your life.
 
-The pull between hearth and horizon (Moon square the Nodes) — training: let the familiar bless the journey instead of replacing it. Pack the home; don't stay for it.
+The first is the pull between hearth and horizon. Your Moon squares the Nodes of your chart: the familiar will always call you back toward what you already keep well, exactly when the road calls you outward. A lifetime of choosing the hearth has built something beautiful — and the training now is to let the familiar bless the journey instead of replacing it. Pack the home; don't stay for it.
 
-Care flowing one direction (Sun square Ceres) — training: receive tending as willingly as you give it. Letting yourself be cared for is not a debt; it is the circle completing.
+The second is care flowing one direction. The Sun's square to Ceres names an old economy in you: giving as the default setting, receiving as the awkward exception. The training is to let the circle complete — to receive tending as willingly as you give it, and to discover that being cared for is not a debt. It is what makes a lifetime of giving sustainable.
 
-The weight carried in partnership (Saturn in the 7th) — training: let others carry their half. Loyalty does not require you to be the strong one every time.`,
+The third is the weight carried in partnership. Saturn in your seventh house has made relationship your life's most serious school — loyalty, endurance, the long haul — and it has also taught you to be the strong one every time, whether or not the moment required it. The training is simple to say and long to learn: let others carry their half. It will not make you less faithful. It will make you less alone.`,
     },
 
     // 11 ─────────────────────────────────────────────────────────────────────
