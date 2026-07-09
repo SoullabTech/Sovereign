@@ -363,7 +363,14 @@ export default function WebRtcSmokeRoom() {
     addLog('left cleanly');
   }, [post, addLog]);
 
-  useEffect(() => () => { esRef.current?.close(); pcRef.current?.close(); }, []);
+  // Unmount cleanup. `leave()` stops the mic on the intentional exit; this covers the OTHER exits
+  // (tab close, back nav, route change) where leave() never runs — otherwise localStream tracks
+  // keep the mic hot (browser recording indicator stays on) after the room is gone.
+  useEffect(() => () => {
+    esRef.current?.close();
+    pcRef.current?.close();
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+  }, []);
 
   const Row = ({ k, v }: { k: string; v: string }) => (
     <div className="flex justify-between gap-4 py-1 border-b border-neutral-800">
