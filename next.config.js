@@ -90,14 +90,18 @@ const nextConfig = {
     // homes of each world, but old bookmarks and external links should
     // still resolve. Permanent (308) so clients cache the new location.
     //
-    // /now-what — the Now What? demo home (Larry Closs program), served from
-    // public/now-what/index.html with a clean address. Plain-array rewrites are
-    // afterFiles: if an app route at app/now-what/page.tsx ever ships, it takes
-    // precedence and this rewrite becomes inert — no collision.
+    // /now-what/pitch — the Now What? pitch deck (Larry Closs program), served
+    // from public/now-what/index.html with a clean address. The pitch was
+    // demoted OUT of the entry path (2026-07-08): /now-what now redirects
+    // straight into the live room (see redirects() below) so a person here to
+    // practice lands in the practice, not a slideshow. Prospects get the deck
+    // at /now-what/pitch. Plain-array rewrites are afterFiles: if an app route
+    // at app/now-what/pitch/page.tsx ever ships, it takes precedence and this
+    // rewrite becomes inert — no collision.
     async rewrites() {
       return [
         {
-          source: '/now-what',
+          source: '/now-what/pitch',
           destination: '/now-what/index.html',
         },
       ];
@@ -110,6 +114,17 @@ const nextConfig = {
     // the HTML and the browser will receive 200 instead of 308.
     async redirects() {
       return [
+        // /now-what — room as entry (2026-07-08). The front door of the
+        // Now What? field is the live room, not the pitch slideshow. Redirects
+        // run BEFORE middleware, so the unauthenticated flow composes cleanly:
+        // /now-what → 307 /now-what/room → middleware auth gate →
+        // /signin?next=/now-what/room → back into the room, signed in.
+        // NOT permanent: entry-flow design decision, don't 308-cache it.
+        {
+          source: '/now-what',
+          destination: '/now-what/room',
+          permanent: false,
+        },
         // /begin was deprecated 2026-05-16 in favor of /signin as the
         // canonical threshold/auth surface. Page-level redirect() did not
         // work here for the reasons noted above — the page was statically
