@@ -7,9 +7,50 @@ import { useRouter } from 'next/navigation';
  * Practitioner draft generator form. Collects birth data → POST /api/soul-portrait/generate
  * → redirects to the private preview. Generation takes ~1 minute (deep-tier).
  *
- * Birth coordinates are entered directly for now (lat/lng/timezone); place-name
- * geocoding is a later nicety.
+ * Birthplace is the primary input: it resolves to coordinates + timezone via the
+ * existing /api/astrology/geocode endpoint. Coordinates stay editable as a fallback
+ * and accept both decimal (43.23) and ephemeris notation (43N14) — the format a
+ * practitioner holding a printed chart will actually have in hand.
+ *
+ * Nothing here is ever silently disabled: every unmet requirement is named inline.
  */
+
+/**
+ * Parse a coordinate in decimal ("43.2342", "-86.25") or ephemeris notation
+ * ("43N14", "86W15", "43 N 14.5"). Returns signed decimal degrees, or null if
+ * unparseable / out of range / wrong axis (an N/S value in the longitude field).
+ */
+export function parseCoord(raw: string, kind: 'lat' | 'lng'): number | null {
+  const s = raw.trim().toUpperCase();
+  if (!s) return null;
+  const max = kind === 'lat' ? 90 : 180;
+
+  if (/^[-+]?\d+(\.\d+)?$/.test(s)) {
+    const n = Number(s);
+    return Math.abs(n) <= max ? n : null;
+  }
+
+  // Ephemeris style: degrees + hemisphere letter + optional minutes (43N14, 86 W 15.5)
+  const m = s.match(/^(\d{1,3})\s*([NSEW])\s*(\d{1,2}(?:\.\d+)?)?$/);
+  if (!m) return null;
+  const deg = Number(m[1]);
+  const hemi = m[2];
+  const min = m[3] ? Number(m[3]) : 0;
+  if (min >= 60) return null;
+  const isLatHemi = hemi === 'N' || hemi === 'S';
+  if (isLatHemi !== (kind === 'lat')) return null;
+  const val = deg + min / 60;
+  if (val > max) return null;
+  return hemi === 'S' || hemi === 'W' ? -val : val;
+}
+
+type GeoResult = {
+  display_name: string;
+  lat: string;
+  lon: string;
+  timezone: string;
+};
+
 export function GeneratePortraitForm() {
   const router = useRouter();
   const [f, setF] = useState({
@@ -28,6 +69,12 @@ export function GeneratePortraitForm() {
   const [error, setError] = useState<string | null>(null);
   const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
   const [subjectPersonId, setSubjectPersonId] = useState<string>('');
+
+  // Birthplace lookup state
+  const [geoBusy, setGeoBusy] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [geoResults, setGeoResults] = useState<GeoResult[]>([]);
+  const [geoFilled, setGeoFilled] = useState(false);
 
   function set<K extends keyof typeof f>(k: K, v: (typeof f)[K]) {
     setF((prev) => ({ ...prev, [k]: v }));
@@ -62,10 +109,63 @@ export function GeneratePortraitForm() {
     };
   }, []);
 
-  const ready =
-    f.name.trim() && f.date && f.time && f.lat && f.lng && f.timezone.trim() && !isNaN(Number(f.lat)) && !isNaN(Number(f.lng));
+  async function lookupPlace() {
+    const q = f.place.trim();
+    if (q.length < 2) {
+      setGeoError('Type a birthplace first (e.g. "Muskegon, MI").');
+      return;
+    }
+    setGeoBusy(true);
+    setGeoError(null);
+    setGeoResults([]);
+    try {
+      const res = await fetch(`/api/astrology/geocode?q=${encodeURIComponent(q)}`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setGeoError(data.error || 'Location search is unavailable right now — enter coordinates below instead.');
+        return;
+      }
+      const results: GeoResult[] = Array.isArray(data.data) ? data.data : [];
+      if (results.length === 0) {
+        setGeoError('No match found — try a broader name, or enter coordinates below.');
+        return;
+      }
+      setGeoResults(results.slice(0, 5));
+    } catch {
+      setGeoError('Location search failed — enter coordinates below instead.');
+    } finally {
+      setGeoBusy(false);
+    }
+  }
+
+  function pickPlace(r: GeoResult) {
+    setF((prev) => ({
+      ...prev,
+      lat: String(Math.round(parseFloat(r.lat) * 10000) / 10000),
+      lng: String(Math.round(parseFloat(r.lon) * 10000) / 10000),
+      timezone: r.timezone || prev.timezone,
+    }));
+    setGeoResults([]);
+    setGeoFilled(true);
+  }
+
+  const latParsed = parseCoord(f.lat, 'lat');
+  const lngParsed = parseCoord(f.lng, 'lng');
+  const latInvalid = f.lat.trim() !== '' && latParsed === null;
+  const lngInvalid = f.lng.trim() !== '' && lngParsed === null;
+
+  // Name every unmet requirement — the button is never silently disabled.
+  const missing: string[] = [];
+  if (!f.name.trim()) missing.push('name');
+  if (!f.date) missing.push('birth date');
+  if (!f.time) missing.push('birth time');
+  if (latParsed === null) missing.push(latInvalid ? 'a valid latitude' : 'latitude');
+  if (lngParsed === null) missing.push(lngInvalid ? 'a valid longitude' : 'longitude');
+  if (!f.timezone.trim()) missing.push('timezone');
+  const ready = missing.length === 0;
 
   async function generate() {
+    if (latParsed === null || lngParsed === null) return;
     setBusy(true);
     setError(null);
     try {
@@ -83,7 +183,7 @@ export function GeneratePortraitForm() {
           birthData: {
             date: f.date,
             time: f.time,
-            location: { lat: Number(f.lat), lng: Number(f.lng), timezone: f.timezone.trim() },
+            location: { lat: latParsed, lng: lngParsed, timezone: f.timezone.trim() },
           },
         }),
       });
@@ -148,11 +248,56 @@ export function GeneratePortraitForm() {
           <Field label="Birth date"><input style={inp} type="date" value={f.date} onChange={(e) => set('date', e.target.value)} /></Field>
           <Field label="Birth time (24h)"><input style={inp} type="time" value={f.time} onChange={(e) => set('time', e.target.value)} /></Field>
         </Row>
-        <Row><Field label="Birth place (for display)"><input style={inp} value={f.place} onChange={(e) => set('place', e.target.value)} placeholder="New York, NY" /></Field></Row>
         <Row>
-          <Field label="Latitude"><input style={inp} value={f.lat} onChange={(e) => set('lat', e.target.value)} placeholder="40.7128" /></Field>
-          <Field label="Longitude"><input style={inp} value={f.lng} onChange={(e) => set('lng', e.target.value)} placeholder="-74.0060" /></Field>
-          <Field label="Timezone"><input style={inp} value={f.timezone} onChange={(e) => set('timezone', e.target.value)} placeholder="America/New_York" /></Field>
+          <Field label="Birth place">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                style={{ ...inp, flex: 1 }}
+                value={f.place}
+                onChange={(e) => {
+                  set('place', e.target.value);
+                  setGeoFilled(false);
+                  setGeoError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    lookupPlace();
+                  }
+                }}
+                placeholder="Muskegon, MI"
+              />
+              <button type="button" onClick={lookupPlace} disabled={geoBusy} style={lookupBtn(geoBusy)}>
+                {geoBusy ? 'Searching…' : 'Find'}
+              </button>
+            </div>
+            {geoError && <Hint tone="warn">{geoError}</Hint>}
+            {geoFilled && !geoError && (
+              <Hint tone="ok">Coordinates and timezone filled from birthplace — please verify the timezone below.</Hint>
+            )}
+            {geoResults.length > 0 && (
+              <div style={resultsBox}>
+                {geoResults.map((r, i) => (
+                  <button key={i} type="button" onClick={() => pickPlace(r)} style={resultRow}>
+                    {r.display_name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </Field>
+        </Row>
+        <Row>
+          <Field label="Latitude">
+            <input style={{ ...inp, ...(latInvalid ? inpBad : null) }} value={f.lat} onChange={(e) => { set('lat', e.target.value); setGeoFilled(false); }} placeholder="43.2342 or 43N14" />
+            {latInvalid && <Hint tone="warn">Use decimal (43.2342) or chart notation (43N14).</Hint>}
+          </Field>
+          <Field label="Longitude">
+            <input style={{ ...inp, ...(lngInvalid ? inpBad : null) }} value={f.lng} onChange={(e) => { set('lng', e.target.value); setGeoFilled(false); }} placeholder="-86.2484 or 86W15" />
+            {lngInvalid && <Hint tone="warn">Use decimal (-86.2484, West is negative) or chart notation (86W15).</Hint>}
+          </Field>
+          <Field label="Timezone">
+            <input style={inp} value={f.timezone} onChange={(e) => set('timezone', e.target.value)} placeholder="America/New_York" />
+          </Field>
         </Row>
         <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, color: '#4A5568', margin: '4px 0 20px' }}>
           <input type="checkbox" checked={f.isMinor} onChange={(e) => set('isMinor', e.target.checked)} /> Subject is a minor
@@ -161,6 +306,11 @@ export function GeneratePortraitForm() {
         <button onClick={generate} disabled={busy || !ready} style={btn(busy || !ready)}>
           {busy ? 'Generating… (~1 min)' : 'Generate Draft'}
         </button>
+        {!ready && !busy && (
+          <p style={{ color: '#718096', fontSize: 13, marginTop: 10 }}>
+            To generate: add {missing.join(', ')}.
+          </p>
+        )}
         {error && <p style={{ color: '#c53030', fontSize: 14, marginTop: 16 }}>{error}</p>}
       </div>
     </div>
@@ -175,7 +325,35 @@ const inp: React.CSSProperties = {
   fontSize: 15,
   boxSizing: 'border-box',
 };
+const inpBad: React.CSSProperties = { border: '1px solid #c53030' };
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, color: '#4A5568', marginBottom: 5 };
+const resultsBox: React.CSSProperties = {
+  marginTop: 6,
+  border: '1px solid #cbd5e0',
+  borderRadius: 8,
+  background: '#fff',
+  overflow: 'hidden',
+};
+const resultRow: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  textAlign: 'left',
+  padding: '10px 13px',
+  border: 'none',
+  borderBottom: '1px solid #edf2f7',
+  background: 'transparent',
+  fontSize: 13,
+  color: '#2d3748',
+  cursor: 'pointer',
+};
+
+function Hint({ tone, children }: { tone: 'warn' | 'ok'; children: React.ReactNode }) {
+  return (
+    <p style={{ fontSize: 12.5, marginTop: 6, marginBottom: 0, color: tone === 'warn' ? '#c05621' : '#2C5530' }}>
+      {children}
+    </p>
+  );
+}
 
 function Row({ children }: { children: React.ReactNode }) {
   return <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>{children}</div>;
@@ -199,5 +377,18 @@ function btn(disabled: boolean): React.CSSProperties {
     fontSize: 16,
     fontWeight: 600,
     cursor: disabled ? 'default' : 'pointer',
+  };
+}
+function lookupBtn(busy: boolean): React.CSSProperties {
+  return {
+    padding: '0 18px',
+    borderRadius: 8,
+    border: '1px solid #2C5530',
+    background: busy ? '#edf2f7' : '#fff',
+    color: '#2C5530',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: busy ? 'default' : 'pointer',
+    whiteSpace: 'nowrap',
   };
 }
