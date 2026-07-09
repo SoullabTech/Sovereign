@@ -247,7 +247,7 @@ async function buildAstrologicalContextAddendum(birthData: BirthDataInput | unde
         location: {
           lat: birthData.location!.lat,
           lng: birthData.location!.lng,
-          timezone: birthData.location?.timezone || 'UTC',
+          timezone: birthData.location?.timezone || undefined,
         },
       };
 

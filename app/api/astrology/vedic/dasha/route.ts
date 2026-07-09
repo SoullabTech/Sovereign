@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       location: {
         lat: body.location.lat,
         lng: body.location.lng,
-        timezone: body.location.timezone || 'UTC',
+        timezone: body.location.timezone || undefined,
       },
       houseSystem: 'whole-sign',
     };
@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
       location: {
         lat,
         lng,
-        timezone: searchParams.get('timezone') || 'UTC',
+        timezone: searchParams.get('timezone') || undefined,
       },
       houseSystem: 'whole-sign',
     };

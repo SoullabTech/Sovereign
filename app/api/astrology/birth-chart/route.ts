@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
       location: {
         lat: location.lat,
         lng: location.lng,
-        timezone: location.timezone || 'UTC',
+        // Pass through as-is: defaulting to 'UTC' would misread the local wall
+        // time as UTC. Absent/invalid values trigger the calculator's
+        // longitude-approximation fallback instead.
+        timezone: location.timezone || undefined,
       },
       houseSystem: houseSystem || 'placidus',
     };

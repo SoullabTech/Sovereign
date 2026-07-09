@@ -22,7 +22,10 @@ export interface BirthData {
   location: {
     lat: number;
     lng: number;
-    timezone: string;
+    // IANA timezone of the birth place (e.g. "America/Detroit"). When absent or
+    // invalid, UTC conversion falls back to the longitude approximation (lng/15),
+    // which ignores DST and political timezone boundaries.
+    timezone?: string;
   };
   houseSystem?: HouseSystem; // Default: 'porphyry' (matches calculateBirthChart default and DB column default)
 }
@@ -612,14 +615,108 @@ function validateBirthData(birthData: BirthData): void {
 }
 
 /**
+ * Check whether a string is a timezone identifier Intl can resolve.
+ */
+export function isValidTimeZone(timeZone: unknown): timeZone is string {
+  if (!timeZone || typeof timeZone !== 'string') return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Offset (minutes east of UTC) that `timeZone` was observing at `utcDate`.
+ * Intl carries the full IANA database, including historical rules — e.g.
+ * America/Detroit in July 1956 resolves to -300 (year-round EST, no DST).
+ */
+function getTimeZoneOffsetMinutes(timeZone: string, utcDate: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(utcDate);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  const wallAsUTC = Date.UTC(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour') % 24, // hour12:false can render midnight as "24"
+    get('minute'),
+    get('second')
+  );
+  return Math.round((wallAsUTC - utcDate.getTime()) / 60000);
+}
+
+export interface BirthTimeResolution {
+  utc: Date;
+  // Which conversion path produced the result
+  source: 'iana' | 'longitude-approximation';
+  // e.g. "UTC-5" or "UTC+5:30", the offset actually applied
+  offsetLabel: string;
+}
+
+/**
+ * Resolve a local wall-clock birth time to a UTC instant.
+ *
+ * Preferred path: the IANA timezone of the birth place, with historical rules
+ * (DST, pre-standardization regional offsets). Fallback when the timezone is
+ * absent or invalid: the longitude approximation round(lng/15), which is wrong
+ * wherever political timezone boundaries or DST diverge from solar time.
+ */
+export function resolveBirthTimeUTC(
+  year: number,
+  month: number,
+  day: number,
+  hours: number,
+  minutes: number,
+  timezone: string | undefined,
+  lng: number
+): BirthTimeResolution {
+  if (isValidTimeZone(timezone)) {
+    // Fixed-point iteration: guess the instant by reading the wall time as UTC,
+    // look up the zone's offset at that instant, re-derive. A second pass
+    // settles instants near DST transitions.
+    const wallAsUTC = Date.UTC(year, month - 1, day, hours, minutes);
+    let utcMillis = wallAsUTC;
+    for (let i = 0; i < 2; i++) {
+      const offsetMin = getTimeZoneOffsetMinutes(timezone, new Date(utcMillis));
+      utcMillis = wallAsUTC - offsetMin * 60000;
+    }
+    const offsetMin = Math.round((wallAsUTC - utcMillis) / 60000);
+    const sign = offsetMin < 0 ? '-' : '+';
+    const abs = Math.abs(offsetMin);
+    const offsetLabel = `UTC${sign}${Math.floor(abs / 60)}${abs % 60 ? ':' + String(abs % 60).padStart(2, '0') : ''}`;
+    return { utc: new Date(utcMillis), source: 'iana', offsetLabel };
+  }
+
+  // Longitude approximation: standard timezone ≈ longitude / 15.
+  // Western longitudes are negative, so CST (-91°) = -6 hours from UTC.
+  const timezoneOffsetHours = Math.round(lng / 15);
+  const utc = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+  utc.setUTCHours(utc.getUTCHours() - timezoneOffsetHours);
+  return {
+    utc,
+    source: 'longitude-approximation',
+    offsetLabel: `UTC${timezoneOffsetHours >= 0 ? '+' : ''}${timezoneOffsetHours}`,
+  };
+}
+
+/**
  * Calculate a complete birth chart with precise astronomical positions
  *
  * CRITICAL: This function handles timezone conversion.
  * Birth time is assumed to be in LOCAL time at the birth location.
- * We calculate timezone offset from longitude and convert to UTC.
- *
- * Timezone offset = longitude / 15 (hours)
- * Example: Baton Rouge at -91° → -91/15 = -6h (CST)
+ * Conversion to UTC uses the IANA timezone (with historical DST rules) when
+ * provided, falling back to the longitude approximation (round(lng/15)) when
+ * the timezone is absent or invalid.
  */
 export async function calculateBirthChart(birthData: BirthData): Promise<BirthChart> {
   try {
@@ -630,27 +727,23 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const [year, month, day] = birthData.date.split('-').map(Number);
     const [hours, minutes] = birthData.time.split(':').map(Number);
 
-    // Calculate timezone offset in hours from longitude
-    // Standard timezone ≈ longitude / 15
-    // Western longitudes are negative, so CST (-91°) = -6 hours from UTC
-    const timezoneOffsetHours = Math.round(birthData.location.lng / 15);
-
-    // Create Date object: birth time is LOCAL, convert to UTC by subtracting the offset
-    // Example: 10:29 PM CST (UTC-6) → 10:29 PM - (-6) = 10:29 PM + 6h = 4:29 AM UTC next day
-    const birthDate = new Date(Date.UTC(
+    const resolution = resolveBirthTimeUTC(
       year,
-      month - 1,
+      month,
       day,
       hours,
-      minutes
-    ));
-
-    // Add timezone offset (negative for western longitudes, so this adds hours)
-    birthDate.setUTCHours(birthDate.getUTCHours() - timezoneOffsetHours);
+      minutes,
+      birthData.location.timezone,
+      birthData.location.lng
+    );
+    const birthDate = resolution.utc;
 
     const time = Astronomy.MakeTime(birthDate);
 
-    console.log(`Birth time conversion: ${year}-${month}-${day} ${hours}:${minutes} local (UTC${timezoneOffsetHours}) → ${birthDate.toISOString()} UTC`);
+    const tzSource = resolution.source === 'iana'
+      ? `iana:${birthData.location.timezone}`
+      : 'longitude-approximation';
+    console.log(`Birth time conversion: ${year}-${month}-${day} ${hours}:${minutes} local (${resolution.offsetLabel}, tz-source=${tzSource}) → ${birthDate.toISOString()} UTC`);
 
     // Calculate house cusps using selected system (default to Porphyry - best for Spiralogic)
     // Porphyry gives the "breathing" asymmetry without Placidus distortion

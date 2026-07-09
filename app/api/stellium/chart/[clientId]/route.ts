@@ -85,7 +85,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       location: {
         lat: client.birth_latitude || 0,
         lng: client.birth_longitude || 0,
-        timezone: client.birth_timezone || 'UTC',
+        timezone: client.birth_timezone || undefined,
       },
     };
 

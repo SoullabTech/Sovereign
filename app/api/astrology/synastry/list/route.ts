@@ -63,7 +63,7 @@ async function getMemberBirthData(memberId: string): Promise<BirthData | null> {
     location: {
       lat: row.birth_location_lat ?? 0,
       lng: row.birth_location_lng ?? 0,
-      timezone: row.birth_timezone ?? 'UTC',
+      timezone: row.birth_timezone ?? undefined,
     },
   };
 }
@@ -78,7 +78,7 @@ function buildBirthDataFromRaw(birth: NonNullable<SynastryRequest['a']['birth']>
     location: {
       lat: birth.lat ?? 0,
       lng: birth.lng ?? 0,
-      timezone: birth.timezone ?? 'UTC',
+      timezone: birth.timezone ?? undefined,
     },
   };
 }
