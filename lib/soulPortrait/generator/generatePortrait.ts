@@ -146,16 +146,34 @@ function assemble(input: GeneratePortraitInput, j: any): SoulPortrait {
   return portrait;
 }
 
+/** Which engine actually wrote the draft — persisted on the row; the label travels. */
+export interface GenerationProvenance {
+  provider: string;
+  model: string;
+}
+
 /**
  * Generate a Soul Portrait DRAFT from birth data. Throws on chart failure or
  * unusable model output (the caller — a practitioner tool — surfaces + retries).
+ * Returns the draft plus the provenance of the engine that wrote it.
  */
-export async function generateSoulPortrait(input: GeneratePortraitInput): Promise<SoulPortrait> {
+export async function generateSoulPortrait(
+  input: GeneratePortraitInput,
+): Promise<{ portrait: SoulPortrait; provenance: GenerationProvenance }> {
   const chart = await calculateBirthChart(input.birthData);
   const summary = chartSummaryText(chart);
 
   const llm = await getLLMProvider().generateSimple({
     tier: 'deep',
+    // Cloud-primary-labeled (settled 2026-07-09): a deliberate provider choice,
+    // not a bounded-attempt fallback. Deep-tier local inference measured
+    // ~3 tok/s on minisforum CPU — a portrait-sized generation is an 11–43 min
+    // grind. Sovereign is the destination, cloud the honest default until the
+    // cognition node lands; local-primary returns by removing this flag
+    // (+ pointing OLLAMA_BASE_URL at the node). The returned provenance must
+    // be persisted with the draft — an unlabeled cloud-served portrait is a
+    // refused state.
+    forceClaude: true,
     systemPrompt: portraitSystemPrompt({
       name: input.name,
       age: input.age,
@@ -173,5 +191,8 @@ export async function generateSoulPortrait(input: GeneratePortraitInput): Promis
   });
 
   const json = parseModelJson(llm.text || '');
-  return assemble(input, json);
+  return {
+    portrait: assemble(input, json),
+    provenance: { provider: llm.provider, model: llm.model },
+  };
 }

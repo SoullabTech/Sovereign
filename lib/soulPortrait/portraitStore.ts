@@ -33,6 +33,9 @@ export interface StoredPortrait {
   consentState: 'pending' | 'active' | 'revoked';
   publishedAt: string | null;
   immutableText: SoulPortrait;
+  /** Which engine wrote the draft (e.g. 'anthropic'/'ollama') — null on pre-provenance rows. */
+  generationProvider: string | null;
+  generationModel: string | null;
   createdAt: string;
 }
 
@@ -52,6 +55,8 @@ function rowToStored(r: any): StoredPortrait {
     consentState: r.consent_state,
     publishedAt: r.published_at ?? null,
     immutableText: typeof r.immutable_text === 'string' ? JSON.parse(r.immutable_text) : r.immutable_text,
+    generationProvider: r.generation_provider ?? null,
+    generationModel: r.generation_model ?? null,
     createdAt: r.created_at,
   };
 }
@@ -66,6 +71,9 @@ export interface CreateDraftInput {
   isMinor?: boolean;
   subjectAge?: number;
   immutableText: SoulPortrait;
+  /** Engine provenance from the generator — required for new drafts; the label travels with the row. */
+  generationProvider?: string | null;
+  generationModel?: string | null;
 }
 
 /** Insert a generated portrait as a pending, unpublished draft, owned by the caller. */
@@ -73,8 +81,9 @@ export async function createDraftPortrait(input: CreateDraftInput): Promise<Stor
   const row = await queryOne<any>(
     `INSERT INTO soul_portraits
        (slug, owner_member_id, subject_member_id, subject_person_id, subject_is_minor,
-        subject_age, portrait_kind, consent_state, immutable_text)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,'pending',$8)
+        subject_age, portrait_kind, consent_state, immutable_text,
+        generation_provider, generation_model)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9,$10)
      RETURNING *`,
     [
       input.slug,
@@ -85,6 +94,8 @@ export async function createDraftPortrait(input: CreateDraftInput): Promise<Stor
       input.subjectAge ?? null,
       modeToKind(input.mode),
       JSON.stringify(input.immutableText),
+      input.generationProvider ?? null,
+      input.generationModel ?? null,
     ],
   );
   if (!row) throw new Error('draft_insert_failed');
