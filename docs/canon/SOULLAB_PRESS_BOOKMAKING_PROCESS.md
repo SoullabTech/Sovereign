@@ -65,6 +65,53 @@ The constitution is the editorial north star: every later decision — structure
 
 ---
 
+## Editorial gates (added 2026-07-09, same CANDIDATE standing)
+
+The phases pass through gates. A gate asks one question; the work either has or hasn't earned passage. **Notice what the gates never ask: whether AI wrote something.** The editorial process asks whether the work has earned passage — a stronger standard than provenance-anxiety, and one that composes with (never replaces) the colophon's honesty about how the work came into existence.
+
+| Gate | Question | Andrea status (2026-07-09) |
+| --- | --- | --- |
+| Foundation | Is the source material verified? | ✓ Verified (fixture committed) |
+| Method | Is the interpretive method explicit? | ✓ Doorway Method established |
+| Manuscript | Does a complete manuscript exist? | ✓ 16 chapters + Year Ahead |
+| Editorial | Is the manuscript internally coherent? | Next phase |
+| Design | Does the physical form express the work? | Pending |
+| Press | Is the work ready to become a published object? | Not yet |
+
+## The three truths (never conflated)
+
+1. **Astronomical truth** — the chart corresponds to the verified birth data and ephemeris.
+2. **Literary truth** — the prose faithfully expresses the method and the lived human being.
+3. **Editorial truth** — the published object honestly attests to how it came into existence.
+
+A reader may disagree with an interpretation; they should never have reason to doubt the chart was computed correctly or wonder whether provenance was obscured. The colophon is where editorial truth lives in the physical object — part of the work's integrity, not a publishing convention.
+
+## The production record (editorial ledger)
+
+Every book carries an internal production record — preserved with the project, not necessarily printed. An editorial ledger, not a software checklist: anyone joining the project knows exactly where the work stands without reconstructing its history.
+
+```text
+BOOK STATUS — Andrea Fagan Soul Portrait (2026-07-09)
+Foundation
+  ✓ Birth data verified          ✓ Ephemeris verified
+  ✓ Source fixtures committed
+Method
+  ✓ Doorway Method               ✓ Literary methodology
+Composition
+  ✓ Complete manuscript          □ Editorial review
+  □ Developmental edit           □ Copy edit
+Design
+  □ Interior   □ Cover   □ Proof
+Publication
+  □ ISBN   □ Final approval
+```
+
+## Engineering recedes (constitutional discipline)
+
+Engineering exists to make the creative act possible; once the editorial foundation is secure, it recedes into the background. The attention shifts from building the machinery to stewarding the work itself. A session inside Phases 2–6 is an editorial session, not an engineering session — the tools go quiet and the bookmaking begins.
+
+---
+
 ## Appendix — Andrea Fagan book: Phase 1 state + Book Constitution DRAFT
 
 **Phase 1 evidence (as of 2026-07-09):**
