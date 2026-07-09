@@ -4,16 +4,17 @@
  * Room Holoflower — the room's weather, not a widget.
  *
  * Renders the CANONICAL Soullab holoflower artwork:
- *     public/holoflower-v2-transparent.png
- * the multicolor 12-petal mark (Fire / Air / Earth / Water quadrants, phase-shaded,
- * spiral center). The interview's ambient motion state gently breathes the image;
- * when an element is proposed or confirmed, a soft radial glow in that element's
- * colour warms behind it. The artwork itself is never redrawn.
+ *     public/maia-spiral-logo-alt.png
+ * the radial spiral-of-dots mark (Air/gold top · Fire/red right · Water/blue bottom ·
+ * Earth/green left — the four elemental quadrants, spiral center). The interview's
+ * ambient motion state gently breathes the image; when an element is proposed or
+ * confirmed, a soft radial glow in that element's colour warms behind it. The
+ * artwork itself is never redrawn.
  *
- * ⚠️ DO NOT replace this with a hand-drawn <svg> mandala. That recreation renders
- * muted/dark on the room's black ground and reads as off-brand — it has been
- * reverted more than once. The holoflower is a fixed brand asset: render the PNG,
- * warm it, breathe it. Never regenerate it.
+ * ⚠️ DO NOT replace this with a hand-drawn <svg> mandala, and DO NOT revert to the
+ * 12-petal `holoflower-v2` mark — both read off-brand and have been reverted before
+ * (Kelly, 2026-07-07: the spiral-of-dots is the correct holoflower). The holoflower
+ * is a fixed brand asset: render the PNG, warm it, breathe it. Never regenerate it.
  *
  * No persistence, no reads — it only renders local, ephemeral UI state passed in
  * as props.
@@ -35,6 +36,12 @@ interface RoomHoloflowerProps {
    * redrawn. Off by default, so Soullab's own room keeps the warm original.
    */
   coolTint?: boolean;
+  /**
+   * What Now? room: render the monochrome WHITE spiral (holoflower.png) instead
+   * of the multicolor mark, and skip the cool-tint wash — pure white on the navy
+   * ground. Still the fixed brand asset, never redrawn.
+   */
+  mono?: boolean;
 }
 
 // Glow colours only — the artwork carries its own petal colour. These tint the
@@ -53,7 +60,11 @@ export function RoomHoloflower({
   confirmedElements,
   size = 120,
   coolTint = false,
+  mono = false,
 }: RoomHoloflowerProps) {
+  // White What Now? room uses the monochrome spiral; Soullab's rooms keep the
+  // multicolor mark. Either way it is the fixed brand asset — never redrawn.
+  const art = mono ? '/holoflower.png' : '/maia-spiral-logo-alt.png';
   // Most recently confirmed element holds the glow; a proposal warms it faintly.
   const confirmed = confirmedElements[confirmedElements.length - 1] ?? null;
   const glowElement = confirmed ?? proposedElement ?? null;
@@ -87,23 +98,23 @@ export function RoomHoloflower({
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/holoflower-v2-transparent.png"
+        src={art}
         alt=""
         aria-hidden="true"
         width={size}
         height={size}
-        className="relative select-none"
+        className="relative select-none object-contain"
         draggable={false}
       />
-      {coolTint && (
+      {coolTint && !mono && (
         <div
           aria-hidden="true"
           className="absolute inset-0 select-none"
           style={{
             width: size,
             height: size,
-            WebkitMaskImage: 'url(/holoflower-v2-transparent.png)',
-            maskImage: 'url(/holoflower-v2-transparent.png)',
+            WebkitMaskImage: 'url(/maia-spiral-logo-alt.png)',
+            maskImage: 'url(/maia-spiral-logo-alt.png)',
             WebkitMaskSize: 'contain',
             maskSize: 'contain',
             WebkitMaskRepeat: 'no-repeat',
