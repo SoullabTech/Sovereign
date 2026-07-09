@@ -277,7 +277,12 @@ export default function WebRtcSmokeRoom() {
     // R-A5: fetch self-hosted ICE (coturn). No third-party fallback — if unconfigured,
     // proceed host-candidate-only (works same-machine/LAN; real NAT traversal needs coturn).
     try {
-      const r = await fetch(`/api/open/session-room/${roomId}/turn-credentials`);
+      // TURN minting is consent-gated (same threshold door as signaling). We already hold a valid
+      // thresholdToken here — the guard above returns early without one — so this never 403s the
+      // legitimate join/reconnect path.
+      const r = await fetch(
+        `/api/open/session-room/${roomId}/turn-credentials?threshold=${encodeURIComponent(thresholdToken ?? '')}`,
+      );
       if (r.ok) {
         const j = await r.json();
         iceServersRef.current = Array.isArray(j.iceServers) ? j.iceServers : [];
