@@ -42,6 +42,15 @@ export async function POST(request: NextRequest) {
   const bd = body?.birthData;
   const mode: PortraitMode = MODES.includes(body?.mode) ? body.mode : 'gift';
 
+  // Optional Year Ahead source: pasted 12-month transit report. Held in memory for
+  // this request only — the generator extracts transit FACTS and the raw text is
+  // never stored or forwarded (interpretive prose is Henry Seltzer / Astrograph
+  // copyright; see lib/soulPortrait/generator/transitReportParser.ts).
+  const transitReport = body?.transitReport ? String(body.transitReport) : undefined;
+  if (transitReport && transitReport.length > 300_000) {
+    return NextResponse.json({ error: 'transit report too large (300KB max)' }, { status: 400 });
+  }
+
   if (!name) return NextResponse.json({ error: 'name is required' }, { status: 400 });
   if (!bd?.date || !bd?.time || typeof bd?.location?.lat !== 'number' || typeof bd?.location?.lng !== 'number' || !bd?.location?.timezone) {
     return NextResponse.json(
@@ -73,6 +82,7 @@ export async function POST(request: NextRequest) {
       age: typeof body?.age === 'number' ? body.age : undefined,
       pronouns: body?.pronouns ? String(body.pronouns) : undefined,
       isMinor: body?.isMinor === true,
+      transitReport,
     });
 
     const stored = await createDraftPortrait({
@@ -94,6 +104,18 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     if (err?.message === 'generator_incomplete_output') {
       return NextResponse.json({ error: 'The draft came back incomplete — please try again.' }, { status: 502 });
+    }
+    if (err?.message === 'transit_report_unparseable') {
+      return NextResponse.json(
+        { error: 'No transit data found in the pasted report — check it contains lines like "Transiting Pluto in opposition with natal Jupiter" with dates, or clear the field to generate Part I only.' },
+        { status: 400 },
+      );
+    }
+    if (err?.message === 'year_ahead_incomplete_output' || String(err?.message || '').startsWith('year_ahead_manufactured_transit')) {
+      return NextResponse.json(
+        { error: 'The Year Ahead came back incomplete — please try again. (Part I was not saved; nothing was published.)' },
+        { status: 502 },
+      );
     }
     console.error('[soul-portrait/generate] error', err);
     return NextResponse.json({ error: 'Generation failed' }, { status: 500 });

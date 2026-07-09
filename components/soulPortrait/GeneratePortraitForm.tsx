@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { parseTransitReport } from '@/lib/soulPortrait/generator/transitReportParser';
 
 /**
  * Practitioner draft generator form. Collects birth data → POST /api/soul-portrait/generate
@@ -67,6 +68,7 @@ export function GeneratePortraitForm() {
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [transitReport, setTransitReport] = useState('');
   const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
   const [subjectPersonId, setSubjectPersonId] = useState<string>('');
 
@@ -149,6 +151,21 @@ export function GeneratePortraitForm() {
     setGeoFilled(true);
   }
 
+  // Live transit-data preview: the same parser the generator uses, so the
+  // practitioner sees exactly what will (and won't) be extracted. DATA only —
+  // the report's interpretive text never leaves this request.
+  const transitParse = transitReport.trim() ? parseTransitReport(transitReport) : null;
+  const transitBlocksGenerate = transitParse !== null && transitParse.transits.length === 0;
+
+  async function readReportFile(file: File | undefined) {
+    if (!file) return;
+    try {
+      setTransitReport(await file.text());
+    } catch {
+      setError('Could not read that file — paste the report text instead.');
+    }
+  }
+
   const latParsed = parseCoord(f.lat, 'lat');
   const lngParsed = parseCoord(f.lng, 'lng');
   const latInvalid = f.lat.trim() !== '' && latParsed === null;
@@ -162,6 +179,7 @@ export function GeneratePortraitForm() {
   if (latParsed === null) missing.push(latInvalid ? 'a valid latitude' : 'latitude');
   if (lngParsed === null) missing.push(lngInvalid ? 'a valid longitude' : 'longitude');
   if (!f.timezone.trim()) missing.push('timezone');
+  if (transitBlocksGenerate) missing.push('a readable transit report (or clear the Year Ahead field)');
   const ready = missing.length === 0;
 
   async function generate() {
@@ -179,6 +197,7 @@ export function GeneratePortraitForm() {
           subjectPersonId: subjectPersonId || undefined,
           age: f.age ? Number(f.age) : undefined,
           isMinor: f.isMinor,
+          transitReport: transitReport.trim() || undefined,
           birthPlace: f.place.trim() || undefined,
           birthData: {
             date: f.date,
@@ -303,8 +322,60 @@ export function GeneratePortraitForm() {
           <input type="checkbox" checked={f.isMinor} onChange={(e) => set('isMinor', e.target.checked)} /> Subject is a minor
         </label>
 
+        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 20, marginBottom: 20 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 600, color: '#1A2F24', margin: '0 0 4px' }}>
+            The Year Ahead (Part II) — optional
+          </h2>
+          <p style={{ color: '#718096', fontSize: 13, margin: '0 0 12px' }}>
+            Paste the client&apos;s 12-month transit report (Astrograph format). Only the transit
+            data is extracted — bodies, aspects, and dates. The report&apos;s interpretive text is
+            copyrighted and is discarded unread; every word of the Year Ahead is written fresh.
+          </p>
+          <Field label="Transit report text">
+            <textarea
+              style={{ ...inp, minHeight: 140, fontFamily: 'inherit', resize: 'vertical' }}
+              value={transitReport}
+              onChange={(e) => setTransitReport(e.target.value)}
+              placeholder={'Transiting Pluto in opposition with natal Jupiter\nMarch 4, 2026 until January 10, 2027\nThis transit is exact on April 2, 2026 …'}
+            />
+          </Field>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+            <label style={{ fontSize: 13, color: '#2C5530', cursor: 'pointer', textDecoration: 'underline' }}>
+              Upload a .txt file instead
+              <input
+                type="file"
+                accept=".txt,text/plain"
+                style={{ display: 'none' }}
+                onChange={(e) => readReportFile(e.target.files?.[0])}
+              />
+            </label>
+            {transitReport.trim() && (
+              <button
+                type="button"
+                onClick={() => setTransitReport('')}
+                style={{ fontSize: 13, color: '#718096', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          {transitParse && transitParse.transits.length > 0 && (
+            <Hint tone="ok">
+              {transitParse.transits.length} transit{transitParse.transits.length === 1 ? '' : 's'} detected
+              {transitParse.warnings.length > 0 ? ` (${transitParse.warnings.length} without dates)` : ''} — the
+              draft will include a Year Ahead.
+            </Hint>
+          )}
+          {transitBlocksGenerate && (
+            <Hint tone="warn">
+              No transit lines recognized — expected lines like &ldquo;Transiting Pluto in opposition with natal
+              Jupiter&rdquo; followed by dates. Fix the paste, or clear the field to generate Part I only.
+            </Hint>
+          )}
+        </div>
+
         <button onClick={generate} disabled={busy || !ready} style={btn(busy || !ready)}>
-          {busy ? 'Generating… (~1 min)' : 'Generate Draft'}
+          {busy ? `Generating… (~${transitParse ? 2 : 1} min)` : 'Generate Draft'}
         </button>
         {!ready && !busy && (
           <p style={{ color: '#718096', fontSize: 13, marginTop: 10 }}>
