@@ -120,6 +120,19 @@ And yet the chart does not let you stay tucked in. Your North Node stands in Sag
 
     // 2 ──────────────────────────────────────────────────────────────────────
     {
+      title: 'The Gathering at the Hearth',
+      subtitle: 'The shape of your whole sky',
+      body: `To know you, a person has to see the shape of your chart, not just its pieces — and your chart has a shape that astrologers stop and look at twice.
+
+Four planets stand together in your Fourth House — the house of home, roots, family, and the deep interior of a life. Your Moon is there, and Jupiter beside it; but so are Uranus and Pluto. That is not a quiet domestic corner. That is a power center. It means home, for you, has never been merely the place you rest — it is the place your life actually happens from: where your feeling nature lives (the Moon), where your generosity multiplies (Jupiter), where your originality flashes (Uranus), and where your deepest transformations have always done their work (Pluto). The kitchens and living rooms of your life have held more lightning and more alchemy than most people's grand adventures. People sense this without knowing why: being welcomed into your home is being let into the engine room.
+
+Around that gathering, the elements arrange themselves the way the rest of this portrait has described: Water leads — four of your ten planets swim in the feeling signs, which is why empathy is your first intelligence and memory your native art. Earth holds the container — the Taurus rising, the Virgo Moon — turning all that feeling into tending, craft, and rooms that work. Air gives it a bright thread of wit and community, and Fire keeps a low, long flame of quiet courage underneath. And your modalities sit in rare balance, tilted just slightly toward the mutable: you initiate when it matters, hold fast when it counts, and adapt — gracefully, endlessly — through everything between. It is the elemental signature of a life built not on force but on faithfulness.
+
+Hold the shape and the portrait becomes simple: a water-led soul, earthed by devotion, whose greatest power has always gathered at the hearth. Everything else in these pages is that one truth, seen from different rooms of the house.`,
+    },
+
+    // 3 ──────────────────────────────────────────────────────────────────────
+    {
       title: 'Soul Signature',
       subtitle: 'The keeper of the near flame',
       body: `There is a kind of person whom others instinctively trust with what matters — the keys, the story, the recipe, the grief. The chart suggests you are one of them. Your signature is care made durable: feeling that doesn't evaporate into sentiment but settles into acts, habits, rooms, and words that people can lean on.
@@ -341,7 +354,7 @@ None of this decides anything. It describes a season's weather — hearth and su
       { season: 'Feb – Apr 2027', element: 'air', invitation: 'Fewer, truer words — then say them; walk through the opening doors.' },
       { season: 'Apr – Jul 2027', element: 'aether', invitation: 'Choose what to keep; retire one illusion kindly; turn toward joy.' },
     ],
-    goldenThread: `One arc runs through the whole year, and it is the very tension your birth chart has always carried — hearth and horizon — finally moving together instead of against each other. Jupiter fills the home for twelve months while Pluto remakes the summit: the keeper's private world is blessed at exactly the moment her public purpose transforms. And Uranus square the Moon is the bridge between them — the feelings breaking surface are precisely the ones the new, truer public role will need. The year does not ask you to choose between the near flame and the wider circle. It spends twelve months teaching them to be the same fire. And when it ends, it opens not onto more work — but onto a year of play.`,
+    goldenThread: `One arc runs through the whole year, and it is the very tension your birth chart has always carried — hearth and horizon — finally moving together instead of against each other. And the sky is precise about it: your chart's power center is that four-planet gathering in the Fourth House, and this is the year Jupiter walks straight into it — the hearth's whole engine room blessed for twelve months — while Pluto crosses the Midheaven at the opposite pole: the keeper's private world filled at exactly the moment her public purpose transforms. And Uranus square the Moon is the bridge between them — the feelings breaking surface are precisely the ones the new, truer public role will need. The year does not ask you to choose between the near flame and the wider circle. It spends twelve months teaching them to be the same fire. And when it ends, it opens not onto more work — but onto a year of play.`,
     questions: [
       'If your home and your purpose stopped competing, what would a single life containing both look like?',
       'What role are you being offered this year that you keep almost accepting?',
