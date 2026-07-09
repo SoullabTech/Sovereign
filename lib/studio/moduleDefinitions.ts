@@ -73,7 +73,8 @@ export type ModuleSlug =
   | 'scheduling'
   | 'booking'
   | 'vision-studio'
-  | 'soul_portraits';
+  | 'soul_portraits'
+  | 'maia-guidance';
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
@@ -154,6 +155,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     href: '/studio/clients',
     category: 'clients',
     description: 'Manage your client relationships',
+    alwaysOn: false,
+    mode: 'practice',
+  },
+  {
+    slug: 'maia-guidance',
+    label: 'MAIA Guidance',
+    icon: Compass,
+    href: '/studio/maia-guidance',
+    category: 'clients',
+    description: 'Shape how MAIA engages within your field — tone, language, boundaries (narrows only; never overrides her safeguards)',
     alwaysOn: false,
     mode: 'practice',
   },
@@ -428,13 +439,13 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'teams', 'decisions', 'changes', 'maia', 'vault', 'vision-studio', 'soul_portraits'],
-  astrology: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'soul_portraits'],
-  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'vault', 'comms', 'soul_portraits'],
-  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'vault', 'comms', 'soul_portraits'],
-  bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'services', 'soul_portraits'],
-  groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing', 'soul_portraits'],
-  consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams', 'soul_portraits'],
+  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'vision-studio', 'soul_portraits'],
+  astrology: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'soul_portraits'],
+  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'comms', 'soul_portraits'],
+  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'comms', 'soul_portraits'],
+  bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'services', 'soul_portraits'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'comms', 'marketing', 'soul_portraits'],
+  consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'maia-guidance', 'comms', 'teams', 'soul_portraits'],
   personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools', 'tasks', 'calendar', 'vision-studio'],
 };
 

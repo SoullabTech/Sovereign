@@ -46,6 +46,17 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/patrons', public: true, notes: 'Patrons page' },
   { exact: '/portals', public: true, notes: 'Portals listing' },
   { exact: '/public-demo', public: true, notes: 'Public demo' },
+  // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
+  // redirects at the edge (next.config redirects(), which run BEFORE middleware)
+  // straight into the live room; the pitch slideshow was demoted to
+  // /now-what/pitch (public/now-what/index.html via rewrite) for prospects.
+  // The room requires auth BEFORE the door, so member identity + memory exist
+  // for the first turn and there is no 401-after-Send: an unauthenticated hit
+  // on /now-what/room redirects to /signin?next=/now-what/room (middleware
+  // 'unauthenticated' handling), then returns into the room signed in.
+  { exact: '/now-what', public: true, notes: 'Now What? entry — edge-redirects to /now-what/room before middleware; rule kept public so no double-gate if redirect ordering ever changes' },
+  { exact: '/now-what/pitch', public: true, notes: 'Now What? pitch deck (Larry Closs) — public static slideshow for prospects, out of the practice entry path' },
+  { prefix: '/now-what/room', minTier: 'free', notes: 'Now What? live room — auth required before the door (redirect to /signin?next); prevents the 401-after-first-Send interruption' },
   { exact: '/library', public: true, notes: 'Public library browse' },
   { exact: '/book-studio', public: true, notes: 'Book Studio — editorial workspace index' },
   { exact: '/book-studio/read', public: true, notes: 'Book Studio — manuscript reader' },

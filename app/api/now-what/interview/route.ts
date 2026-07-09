@@ -43,6 +43,7 @@ import { buildMemoryInfluencePlan } from '@/lib/maia/memoryOrchestrator';
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref } from '@/lib/maia/memoryLoaders';
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt } from '@/lib/maia/memoryAtomsLoader';
 import { formatPriorExchangesForPrompt, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
+import { assembledContext, renderAssembledContext, type AssembledBlock } from '@/lib/maia/context-assembly/contextAssembly';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -294,8 +295,15 @@ const PRESENCE_ENABLED = process.env.NOW_WHAT_MAIA_PRESENCE_ENABLED === '1';
  * The room holds no server session, so cross-session recall is passed an ephemeral marker
  * id (nothing excluded, nothing written).
  */
+// First embodiment of the Context Assembly interface (lib/maia/context-assembly).
+// Builds named AssembledBlocks from the SHARED loader/orchestrator layer — the same
+// primitives /maia composes — then renders them. Behavior is byte-identical to the
+// prior hand-joined string: same blocks, same order, same '\n\n' separator. The only
+// addition is provenance keys on each block, which never reach the prompt text.
+// This surface is the safest client to converge first (flag-gated, ephemeral,
+// read-only); /maia's order-sensitive addenda are the next, harder adopter.
 async function assemblePresenceContext(memberId: string, message: string): Promise<string> {
-  const blocks: string[] = [];
+  const blocks: AssembledBlock[] = [];
   try {
     const [developmental, themeSignals] = await Promise.all([
       loadRecentDevelopmentalMemories(memberId, 3),
@@ -310,11 +318,11 @@ async function assemblePresenceContext(memberId: string, message: string): Promi
       hasMemberLiveContext: false,
       hasRelationshipAnamnesis: false,
     });
-    if (memoryPlan.promptBlock) blocks.push(memoryPlan.promptBlock);
+    if (memoryPlan.promptBlock) blocks.push({ key: 'memoryInfluence', text: memoryPlan.promptBlock });
 
     const atoms = await loadMemberMemoryAtomsForPrompt(memberId);
     const atomsBlock = formatAtomsForPrompt(atoms);
-    if (atomsBlock) blocks.push(atomsBlock);
+    if (atomsBlock) blocks.push({ key: 'atoms', text: atomsBlock });
 
     const recallEnabled = await loadConversationalRecallPref(memberId);
     const prior = await loadPriorCrossSessionExchanges(memberId, 'now-what-ephemeral', 6);
@@ -324,19 +332,19 @@ async function assemblePresenceContext(memberId: string, message: string): Promi
       currentSessionTurnCount: 0,
       lastPriorSessionMinutesAgo: computeLastPriorSessionMinutesAgo(prior),
     });
-    if (recall.block) blocks.push(recall.block);
+    if (recall.block) blocks.push({ key: 'conversational', text: recall.block });
 
     console.log('[NowWhat/presence] assembled', {
       memberIdPrefix: memberId.slice(0, 8),
       developmental: developmental.length,
       atoms: atoms.length,
       priorExchanges: prior.length,
-      blockChars: blocks.join('\n\n').length,
+      blockChars: renderAssembledContext(assembledContext(blocks)).length,
     });
   } catch (err) {
     console.warn('[NowWhat/presence] assembly failed (non-fatal; degraded to base):', err);
   }
-  return blocks.join('\n\n');
+  return renderAssembledContext(assembledContext(blocks));
 }
 
 export async function POST(request: NextRequest) {

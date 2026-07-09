@@ -224,9 +224,11 @@ describe('ttsRouter sovereignty invariants', () => {
       }
     });
 
-    it('throws non-fallback TTSFallbackToOpenAI when provider is openai', async () => {
+    it('throws non-fallback TTSFallbackToOpenAI when provider is openai (in a qualified lab context)', async () => {
       process.env.MAIA_LOCAL_VOICE_ENABLED = '1';
       process.env.MAIA_TTS_PROVIDER = 'openai';
+      // openai is a non-sovereign provider — only selectable where qualified.
+      process.env.MAIA_DEPLOYMENT_CONTEXT = 'voice-quality-lab';
 
       const ttsRouter = require('../ttsRouter');
 
@@ -238,6 +240,77 @@ describe('ttsRouter sovereignty invariants', () => {
         expect(err.isFallback).toBe(false);
         expect(err.reason).toBe('openai_primary');
       }
+    });
+
+    // ── Deployment-qualification guard (R15) — behavioral proof ──
+    it('REFUSES openai selection in production-maia (fail-closed default context)', async () => {
+      process.env.MAIA_LOCAL_VOICE_ENABLED = '1';
+      process.env.MAIA_TTS_PROVIDER = 'openai';
+      delete process.env.MAIA_DEPLOYMENT_CONTEXT; // → fails closed to production-maia
+
+      const ttsRouter = require('../ttsRouter');
+
+      try {
+        await ttsRouter.synthesize({ text: 'hello', voice: 'alloy' });
+        fail('Should have thrown ProviderNotQualifiedError');
+      } catch (err: any) {
+        expect(err.name).toBe('ProviderNotQualifiedError');
+        expect(err.provider).toBe('openai');
+        expect(err.context).toBe('production-maia');
+      }
+    });
+
+    it('REFUSES sesame selection in production-maia (CI-shaping backend, not an audio provider)', async () => {
+      process.env.MAIA_LOCAL_VOICE_ENABLED = '1';
+      process.env.MAIA_TTS_PROVIDER = 'sesame';
+      delete process.env.MAIA_DEPLOYMENT_CONTEXT; // → fails closed to production-maia
+
+      const ttsRouter = require('../ttsRouter');
+
+      await expect(
+        ttsRouter.synthesize({ text: 'hello' }),
+      ).rejects.toMatchObject({
+        name: 'ProviderNotQualifiedError',
+        provider: 'sesame',
+        context: 'production-maia',
+      });
+    });
+
+    it('REFUSES pplex selection in production-maia but ALLOWS it in the lab', async () => {
+      // Production context → refused.
+      process.env.MAIA_TTS_PROVIDER = 'pplex';
+      delete process.env.MAIA_DEPLOYMENT_CONTEXT;
+      let ttsRouter = require('../ttsRouter');
+      await expect(
+        ttsRouter.synthesize({ text: 'hello' }),
+      ).rejects.toMatchObject({ name: 'ProviderNotQualifiedError', provider: 'pplex' });
+
+      // Lab context → passes the guard and dispatches to the pplex adapter.
+      jest.resetModules();
+      process.env.MAIA_DEPLOYMENT_CONTEXT = 'voice-quality-lab';
+      jest.doMock('../providers/personaplex', () => ({
+        synthesize: jest.fn().mockResolvedValue({
+          audioBuffer: Buffer.from('fake-wav'),
+          contentType: 'audio/wav',
+          provider: 'personaplex',
+        }),
+      }));
+      ttsRouter = require('../ttsRouter');
+      const result = await ttsRouter.synthesize({ text: 'hello' });
+      expect(result.provider).toBe('personaplex');
+      expect(result.reason).toBe('pplex_healthy');
+    });
+
+    it('providerOverride is subject to the same guard (Lab switch is not a bypass)', async () => {
+      // Override to a non-sovereign provider in the fail-closed production context.
+      delete process.env.MAIA_DEPLOYMENT_CONTEXT;
+      process.env.MAIA_TTS_PROVIDER = 'kokoro'; // env says a qualified provider…
+      const ttsRouter = require('../ttsRouter');
+
+      // …but the per-request override to openai must still be refused.
+      await expect(
+        ttsRouter.synthesize({ text: 'hello', providerOverride: 'openai' }),
+      ).rejects.toMatchObject({ name: 'ProviderNotQualifiedError', provider: 'openai' });
     });
 
     it('routes to kokoro when provider is explicitly kokoro', async () => {

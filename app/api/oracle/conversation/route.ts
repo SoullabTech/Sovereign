@@ -91,6 +91,7 @@ import { loadFacetState, upsertFacetState } from '@/lib/consciousness/innerGuide
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
+import { admitPersistedStateForShaping } from '@/lib/relational/developmentalStateAdmission';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 
 /** AIN v2 (soft consultation) */
@@ -1675,7 +1676,10 @@ export async function POST(request: NextRequest) {
       message,
       conversationDepth,
       voiceHint,
-      persistedState: spiralState ?? null,
+      // R16: strip persisted INFERRED developmental state (relational_phase/autonomy_streak
+      // + class) before it can shape stance/hold/brevity — that is interpretation of the
+      // person, not member-marked recognition. Behavioral facts (return_count) pass through.
+      persistedState: admitPersistedStateForShaping(spiralState ?? null),
     });
 
     console.info('[relational]', {

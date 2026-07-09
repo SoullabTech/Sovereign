@@ -23,11 +23,84 @@
 
 import * as kokoro from './providers/kokoro';
 import * as sesame from './providers/sesame';
+import * as personaplex from './providers/personaplex';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
 import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
 import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 
-export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
+export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'pplex' | 'auto';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEPLOYMENT-QUALIFICATION GUARD (Refusal R15)
+//
+// A provider may only be *selected* in a deployment context where it is
+// qualified. This is the structural gate that keeps the Voice Lab's provider
+// switcher from becoming a production egress bypass: lab may compare every
+// engine; `production-maia` may select only Stage-A-qualified (local, sovereign)
+// providers. `openai`, `pplex`, and `sesame` are NOT qualified for
+// production-maia — openai is cloud egress (governance question: docs/adr/012),
+// pplex is MLX with no x86 production backend, and the production `maia-sesame-tts`
+// service does CI text-shaping only (not audio synthesis), so selecting `sesame`
+// there would emit a buffer stamped provider:'sesame' from a non-Sesame backend —
+// a mislabeled production provider. `sesame` remains a candidate in the lab
+// (voice-quality-lab) until a verified Sesame CSM audio backend exists. Widening
+// the production-maia allow-list requires an explicit, referenced decision
+// record — not a config flip.
+//
+// Capability and gate ship together: the pplex dispatch branch below is only
+// reachable through this guard.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type DeploymentContext = 'production-maia' | 'voice-quality-lab';
+
+/**
+ * Providers a context is allowed to *select*. `auto` is always allowed — it
+ * resolves to a local provider (kokoro) in production and never widens the set.
+ */
+const QUALIFIED_PROVIDERS: Record<DeploymentContext, TTSProvider[]> = {
+  // Stage-A local/sovereign providers only. NOT openai (egress), NOT pplex (MLX),
+  // NOT sesame (prod maia-sesame-tts is CI-shaping only, not audio — mislabel risk).
+  'production-maia': ['auto', 'kokoro'],
+  // Lab compares everything.
+  'voice-quality-lab': ['auto', 'openai', 'kokoro', 'sesame', 'pplex'],
+};
+
+/**
+ * The active deployment context. FAIL-CLOSED: anything other than an explicit
+ * `voice-quality-lab` is treated as `production-maia` (the strict context), so a
+ * missing/typo'd env can never silently unlock cloud/unqualified providers.
+ */
+export function getDeploymentContext(): DeploymentContext {
+  return process.env.MAIA_DEPLOYMENT_CONTEXT === 'voice-quality-lab'
+    ? 'voice-quality-lab'
+    : 'production-maia';
+}
+
+/** Refusal signal: a provider was selected in a context where it is not qualified. */
+export class ProviderNotQualifiedError extends Error {
+  public readonly provider: TTSProvider;
+  public readonly context: DeploymentContext;
+  constructor(provider: TTSProvider, context: DeploymentContext) {
+    super(`TTS provider "${provider}" is not qualified for deployment context "${context}"`);
+    this.name = 'ProviderNotQualifiedError';
+    this.provider = provider;
+    this.context = context;
+  }
+}
+
+/**
+ * Guard: throw ProviderNotQualifiedError if `provider` may not be selected in
+ * `context`. The refusal is logged for audit before it throws.
+ */
+export function assertProviderQualified(
+  provider: TTSProvider,
+  context: DeploymentContext = getDeploymentContext(),
+): void {
+  if (!QUALIFIED_PROVIDERS[context].includes(provider)) {
+    logTtsResolve({ path: 'ttsRouter', stage: 'guard_refusal', provider, context });
+    throw new ProviderNotQualifiedError(provider, context);
+  }
+}
 
 /** Single-line JSON log for grep-friendly TTS routing proof. */
 function logTtsResolve(payload: Record<string, unknown>) {
@@ -44,6 +117,13 @@ interface TTSRequest {
   voiceArchetype?: string | null;
   /** Member's TTS provider preference (from settings) */
   ttsProviderPref?: string | null;
+  /**
+   * Admin/lab only: force a specific provider for this one request (deterministic
+   * A/B comparison in the Voice Lab). Still passes through assertProviderQualified,
+   * so it can NEVER select a provider the deployment context forbids — it is not a
+   * guard bypass. Overrides the env-configured provider when present.
+   */
+  providerOverride?: TTSProvider;
 }
 
 interface TTSResult {
@@ -67,7 +147,7 @@ export function isLocalVoiceEnabled(): boolean {
  */
 export function getConfiguredProvider(): TTSProvider {
   const provider = (process.env.MAIA_TTS_PROVIDER || 'auto').toLowerCase();
-  if (['kokoro', 'openai', 'sesame', 'auto'].includes(provider)) {
+  if (['kokoro', 'openai', 'sesame', 'pplex', 'auto'].includes(provider)) {
     return provider as TTSProvider;
   }
   return 'auto';
@@ -84,7 +164,18 @@ export function getConfiguredProvider(): TTSProvider {
  *   - Try that provider, fall back to OpenAI on failure
  */
 export async function synthesize(params: TTSRequest): Promise<TTSResult> {
-  const provider = getConfiguredProvider();
+  // A per-request providerOverride (Voice Lab) wins over the env-configured
+  // provider, but is subject to the SAME qualification guard below — the lab
+  // switcher cannot select a provider the deployment context forbids.
+  const provider = params.providerOverride ?? getConfiguredProvider();
+
+  // ── QUALIFICATION GUARD (R15): refuse selecting a provider not qualified for
+  // this deployment context. Guards the resolved provider (override or env);
+  // `auto` is always qualified and resolves to a local engine in production.
+  // Does not touch the archetype→OpenAI path below (that is ADR-012's open
+  // question). ──
+  assertProviderQualified(provider);
+
   const localEnabled = isLocalVoiceEnabled();
 
   // Determine primary provider
@@ -220,6 +311,33 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     }
   }
 
+  if (primary === 'pplex') {
+    try {
+      logTtsResolve({
+        path: 'ttsRouter',
+        stage: 'dispatch',
+        provider: 'pplex',
+        voice: params.voice || 'default',
+        element: params.voiceHint?.element,
+        memberPref,
+      });
+
+      const result = await personaplex.synthesize({
+        text: params.text,
+        voice: params.voice,
+        format: params.format,
+        speed: params.speed,
+      });
+      return { ...result, fallback: false, reason: 'pplex_healthy' };
+    } catch (err: any) {
+      const reason = err?.message?.includes('timed out') ? 'pplex_timeout'
+        : err?.message?.includes('ECONNREFUSED') ? 'pplex_unreachable'
+        : 'pplex_error';
+      console.warn(`[tts-router] PersonaPlex failed (${reason}), falling back to OpenAI: ${err?.message}`);
+      throw new TTSFallbackToOpenAI(true, reason);
+    }
+  }
+
   // OpenAI as primary (not a fallback)
   logTtsResolve({
     path: 'ttsRouter',
@@ -259,12 +377,15 @@ export class TTSFallbackToOpenAI extends Error {
 export async function healthCheckAll(): Promise<{
   localVoiceEnabled: boolean;
   provider: TTSProvider;
+  deploymentContext: DeploymentContext;
   kokoro: { healthy: boolean; url: string; error?: string; latencyMs?: number } | null;
   openai: { configured: boolean };
   sesame: { configured: boolean; url: string } | null;
+  pplex: { healthy: boolean; url: string; error?: string; latencyMs?: number } | null;
 }> {
   const localEnabled = isLocalVoiceEnabled();
   const provider = getConfiguredProvider();
+  const deploymentContext = getDeploymentContext();
 
   const kokoroHealth = localEnabled || provider === 'kokoro'
     ? await kokoro.healthCheck()
@@ -272,13 +393,22 @@ export async function healthCheckAll(): Promise<{
 
   const sesameUrl = process.env.SESAME_TTS_URL || process.env.NEXT_PUBLIC_SESAME_URL;
 
+  // PersonaPlex only probed where it can be selected (lab context or explicit
+  // pplex) — avoids adding a dead round-trip on the production path.
+  const pplexHealth =
+    deploymentContext === 'voice-quality-lab' || provider === 'pplex'
+      ? await personaplex.healthCheck()
+      : null;
+
   return {
     localVoiceEnabled: localEnabled,
     provider,
+    deploymentContext,
     kokoro: kokoroHealth,
     openai: {
       configured: Boolean(process.env.OPENAI_API_KEY),
     },
     sesame: sesameUrl ? { configured: true, url: sesameUrl } : null,
+    pplex: pplexHealth,
   };
 }

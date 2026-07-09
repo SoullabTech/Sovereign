@@ -13,9 +13,11 @@ import {
   PracticeFieldUpdate,
   PracticeFieldSnapshot,
   PracticeFieldContext,
+  FieldGuidance,
   checkPracticeFieldReadiness,
   type PracticeFieldStatus,
 } from '@/lib/types/practiceField';
+import { validateFieldGuidance, renderFieldGuidance } from '@/lib/practiceField/fieldGuidance';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // READ
@@ -120,6 +122,44 @@ async function syncStatus(fieldId: string, field: PracticeField): Promise<void> 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LAYER 4 — MAIA GUIDANCE (narrow-only field preferences; live, not snapshotted)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getFieldGuidance(
+  practitionerMemberId: string
+): Promise<FieldGuidance> {
+  const result = await query(
+    `SELECT maia_guidance FROM practice_fields WHERE practitioner_member_id = $1`,
+    [practitionerMemberId]
+  );
+  return (result.rows[0]?.maia_guidance as FieldGuidance) ?? {};
+}
+
+/**
+ * Set Layer 4 MAIA Guidance for a practitioner. NARROW-ONLY: any preference that
+ * attempts to override safeguards or widen authority is rejected — when that
+ * happens nothing is written and `violations` explains why. Creates a minimal
+ * practice_fields row if the practitioner has none yet.
+ */
+export async function setFieldGuidance(
+  practitionerMemberId: string,
+  guidance: FieldGuidance
+): Promise<{ ok: boolean; violations: string[]; saved: FieldGuidance | null }> {
+  const { ok, violations, sanitized } = validateFieldGuidance(guidance);
+  if (!ok) {
+    return { ok: false, violations, saved: null };
+  }
+  await query(
+    `INSERT INTO practice_fields (practitioner_member_id, maia_guidance)
+     VALUES ($1, $2)
+     ON CONFLICT (practitioner_member_id)
+     DO UPDATE SET maia_guidance = EXCLUDED.maia_guidance`,
+    [practitionerMemberId, JSON.stringify(sanitized)]
+  );
+  return { ok: true, violations: [], saved: sanitized };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SNAPSHOT
 // Created when a Relationship Space is formed.
 // Per FORMATION_AS_RECORD: immutable; existing spaces keep their formation version.
@@ -169,15 +209,16 @@ export async function buildPracticeFieldContext(
   const snapshot = await getSnapshotForSpace(spaceId);
   if (!snapshot) return null;
 
-  // Active Field is always current (never snapshotted) — pull from live record
+  // Active Field + Layer 4 Guidance are always current (never snapshotted) — pull live
   const liveResult = await query(
-    `SELECT pf.active_field_content
+    `SELECT pf.active_field_content, pf.maia_guidance
      FROM practice_field_snapshots pfs
      JOIN practice_fields pf ON pf.id = pfs.practice_field_id
      WHERE pfs.space_id = $1`,
     [spaceId]
   );
   const activeContent = liveResult.rows[0]?.active_field_content ?? null;
+  const guidance = (liveResult.rows[0]?.maia_guidance as FieldGuidance) ?? null;
 
   return {
     practitioner_name: practitionerName,
@@ -187,6 +228,7 @@ export async function buildPracticeFieldContext(
     active_field_content: activeContent,
     resources_available: snapshot.resources?.length > 0,
     orientation_style: (snapshot.orientation_style as any) ?? 'guided',
+    maia_guidance: guidance,
   };
 }
 
@@ -208,6 +250,13 @@ export function formatPracticeFieldContextForPrompt(ctx: PracticeFieldContext): 
   }
   if (ctx.resources_available) {
     lines.push(`Practice resources are available for contextual surfacing.`);
+  }
+  // Layer 4 — narrow-only MAIA Guidance, rendered under a framing header that
+  // subordinates it to the constitution. renderFieldGuidance sanitizes at compose
+  // (defense in depth) so no override text can reach the prompt.
+  const guidanceBlock = renderFieldGuidance(ctx.maia_guidance);
+  if (guidanceBlock) {
+    lines.push('', guidanceBlock);
   }
   return lines.join('\n');
 }

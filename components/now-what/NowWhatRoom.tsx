@@ -31,10 +31,25 @@
  *     or localStorage.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from '@/components/maia/vision-studio/RoomHoloflower';
+
+// — Threshold staging (Now What?) —
+// The arrival surfaces are staged, not listed: a display serif for the room's
+// spoken lines (ui-serif → New York on Apple devices, Georgia elsewhere — no
+// font dependency added), and a slow staggered entrance. Presentation only;
+// no interaction logic lives here. The entrance uses CSS animations rather
+// than framer-motion: CSS is clock-based, so it completes correctly even in
+// rAF-throttled background tabs (framer's ticks freeze there, leaving the
+// threshold stuck at opacity 0).
+const SERIF = { fontFamily: "ui-serif, 'New York', Georgia, 'Times New Roman', serif" } as const;
+const fadeUpStyle = (delay: number): CSSProperties => ({
+  opacity: 0,
+  animation: `nwFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`,
+});
+const NW_FADE_KEYFRAMES = `@keyframes nwFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }`;
 
 type Role = 'user' | 'assistant';
 interface Turn { role: Role; content: string; }
@@ -619,8 +634,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     // never sees the first-visit welcome flash ahead of the return prompt.
     if (fieldContext && !returnChecked) {
       return (
-        <div className="max-w-prose mx-auto px-4 py-16 flex justify-center">
-          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+        <div className="relative min-h-[92vh] flex items-center justify-center px-6 overflow-hidden">
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
         </div>
       );
     }
@@ -631,145 +647,158 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     // stays with the member ("the growth you recognize in your own life").
     if (!returning && !entered) {
       return (
-        <div className="max-w-prose mx-auto px-4 py-16 space-y-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Now What? · with Larry Closs</p>
-          <h1 className="text-2xl font-light text-slate-100">Welcome.</h1>
-          <div className="space-y-4 text-slate-300 text-base font-light leading-relaxed">
-            <p>Flourishing isn't a destination. It's a practice — one you live, day by day, long after a conversation ends.</p>
-            <p>This is where that practice continues.</p>
-            <p>It's a place to return to between our conversations. A place to notice what you're learning, work with the questions that matter, and bring fresh experience back into the conversation.</p>
-            <p className="text-slate-200">You set the rhythm.</p>
-            <p className="text-slate-200">You decide what deserves your attention.</p>
-            <p>Nothing here measures you or grades your progress. The only growth that matters is the growth you recognize in your own life.</p>
-            <p>Think of this as our coaching continuing — carried into your real, working life, one step at a time.</p>
+        <div key="nw-welcome" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
+          <style>{NW_FADE_KEYFRAMES}</style>
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+          <div className="relative w-full max-w-xl space-y-10">
+            <div style={fadeUpStyle(0)} className="flex justify-center">
+              <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+            </div>
+            <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-slate-500">Now What? · with Larry Closs</p>
+              <h1 style={SERIF} className="text-4xl sm:text-5xl font-light text-slate-100 tracking-wide">Welcome.</h1>
+            </div>
+            <div style={fadeUpStyle(0.5)} className="space-y-5 text-slate-300 text-[17px] font-light leading-[1.85]">
+              <p>Flourishing isn't a destination. It's a practice — one you live, day by day, long after a conversation ends.</p>
+              <p>This is where that practice continues.</p>
+              <p>It's a place to return to between our conversations. A place to notice what you're learning, work with the questions that matter, and bring fresh experience back into the conversation.</p>
+              <p style={SERIF} className="text-slate-100 text-lg italic">You set the rhythm.</p>
+              <p style={SERIF} className="text-slate-100 text-lg italic">You decide what deserves your attention.</p>
+              <p>Nothing here measures you or grades your progress. The only growth that matters is the growth you recognize in your own life.</p>
+              <p>Think of this as our coaching continuing — carried into your real, working life, one step at a time.</p>
+            </div>
+            <div style={fadeUpStyle(0.75)} className="text-center space-y-6 pt-2">
+              <p className="text-slate-500 text-sm font-light italic">When you're ready…</p>
+              <button
+                onClick={() => setEntered(true)}
+                className="inline-block border border-[#ffe27a]/30 text-[#ffe27a] hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300"
+              >
+                Come in
+              </button>
+            </div>
           </div>
-          <p className="text-slate-500 text-sm font-light italic pt-2">When you're ready…</p>
-          <button
-            onClick={() => setEntered(true)}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-base font-light underline underline-offset-4 transition-colors"
-          >
-            Come in.
-          </button>
-          <p className="text-slate-600 text-xs font-light pt-6 border-t border-slate-900">Larry Closs · Now What?</p>
         </div>
       );
     }
 
     return (
-      <div className="max-w-prose mx-auto px-4 py-16 space-y-10">
-        <h1 className="text-2xl font-light text-slate-100 tracking-wide">Now What?</h1>
-
-        {returning ? (
-          <div className="space-y-4">
-            <p className="text-slate-400 text-sm font-light">Last time you chose this practice:</p>
-            <p className="text-slate-200 text-base font-light border-l-2 border-slate-600 pl-4 leading-relaxed">
-              {priorPractice}
-            </p>
-            <p className="text-slate-300 text-base font-light">What happened?</p>
+      <div key="nw-arrival" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
+        <style>{NW_FADE_KEYFRAMES}</style>
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+        <div className="relative w-full max-w-xl space-y-10">
+          <div style={fadeUpStyle(0)} className="flex justify-center">
+            <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
           </div>
-        ) : (
-          <p className="text-slate-100 text-xl font-light leading-relaxed">
-            Where&apos;s your attention right now?
+          <p style={fadeUpStyle(0.2)} className="text-center text-[11px] uppercase tracking-[0.35em] text-slate-500">
+            Now What?
           </p>
-        )}
 
-        <div className="space-y-5">
-          <textarea
-            aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
-            className="w-full bg-transparent border-b border-slate-600 text-slate-100 text-base font-light leading-relaxed resize-none focus:outline-none focus:border-slate-400 placeholder:text-slate-500 py-2"
-            rows={3}
-            placeholder={returning ? 'What actually happened…' : 'In your own words…'}
-            value={arrivalAnswer}
-            onChange={e => setArrivalAnswer(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                beginFromThreshold();
-              }
-            }}
-          />
-          <button
-            onClick={beginFromThreshold}
-            disabled={!arrivalAnswer.trim() || working}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors disabled:opacity-30"
-          >
-            Begin
-          </button>
+          {returning ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">Last time you chose this practice:</p>
+              <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
+                {priorPractice}
+              </p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">What happened?</p>
+            </div>
+          ) : (
+            <h1 style={{ ...SERIF, ...fadeUpStyle(0.4) }} className="text-center text-slate-100 text-3xl sm:text-[2.75rem] font-light leading-snug">
+              Where&apos;s your attention right now?
+            </h1>
+          )}
 
-          {/* Three ways in — equal, legible. Dictate & Upload fill the draft above;
-              Discuss skips the draft and starts the conversation directly. */}
-          <div className="pt-3">
-            <p className="text-slate-500 text-xs font-light mb-3">or, another way in —</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div style={fadeUpStyle(0.65)} className="space-y-8">
+            <textarea
+              aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
+              className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
+              rows={2}
+              placeholder={returning ? 'What actually happened…' : 'In your own words…'}
+              value={arrivalAnswer}
+              onChange={e => setArrivalAnswer(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  beginFromThreshold();
+                }
+              }}
+            />
+            <div className="text-center">
               <button
-                type="button"
-                onClick={toggleMic}
-                disabled={!micSupported}
-                aria-pressed={micListening}
-                aria-label="Dictate — speak your answer aloud and it is transcribed into your draft"
-                className={`text-left border rounded-lg px-4 py-3 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                  micListening
-                    ? 'border-amber-400/60 text-amber-200'
-                    : 'border-slate-700 hover:border-slate-500 text-slate-200'
-                }`}
+                onClick={beginFromThreshold}
+                disabled={!arrivalAnswer.trim() || working}
+                className="inline-block border border-[#ffe27a]/30 text-[#ffe27a] hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300 disabled:opacity-25 disabled:cursor-not-allowed"
               >
-                <span className="block text-base font-light">{micListening ? 'Listening…' : 'Dictate'}</span>
-                <span className="block text-slate-500 text-xs font-light mt-0.5">
-                  {micSupported ? 'speak it once' : 'not available here'}
-                </span>
-              </button>
-
-              <label
-                aria-label="Upload — bring a .txt or .md note into your draft"
-                className="text-left border border-slate-700 hover:border-slate-500 text-slate-200 rounded-lg px-4 py-3 cursor-pointer transition-colors"
-              >
-                <span className="block text-base font-light">Upload</span>
-                <span className="block text-slate-500 text-xs font-light mt-0.5">bring a note</span>
-                <input
-                  type="file"
-                  accept=".txt,.md,text/plain,text/markdown"
-                  onChange={handleBringFile}
-                  className="hidden"
-                />
-              </label>
-
-              <button
-                type="button"
-                onClick={beginDiscussion}
-                aria-label="Discuss — start talking it through with MAIA without composing an answer first"
-                className="text-left border border-slate-700 hover:border-slate-500 text-slate-200 rounded-lg px-4 py-3 transition-colors"
-              >
-                <span className="block text-base font-light">Discuss</span>
-                <span className="block text-slate-500 text-xs font-light mt-0.5">talk it through</span>
+                Begin
               </button>
             </div>
-            <p className="text-slate-600 text-xs font-light mt-3 leading-relaxed">
-              Dictation depends on your browser&rsquo;s speech support. If it&rsquo;s unavailable, type or upload instead.
+
+            {/* Three ways in — quiet, equal. Dictate & Upload fill the draft above;
+                Discuss skips the draft and starts the conversation directly. */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-center gap-x-4 text-sm font-light">
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  disabled={!micSupported}
+                  aria-pressed={micListening}
+                  aria-label="Dictate — speak your answer aloud and it is transcribed into your draft"
+                  className={`transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                    micListening ? 'text-amber-200' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {micListening ? 'Listening…' : 'Dictate'}
+                </button>
+                <span aria-hidden className="text-slate-700">·</span>
+                <label
+                  aria-label="Upload — bring a .txt or .md note into your draft"
+                  className="text-slate-400 hover:text-slate-200 cursor-pointer transition-colors"
+                >
+                  Upload
+                  <input
+                    type="file"
+                    accept=".txt,.md,text/plain,text/markdown"
+                    onChange={handleBringFile}
+                    className="hidden"
+                  />
+                </label>
+                <span aria-hidden className="text-slate-700">·</span>
+                <button
+                  type="button"
+                  onClick={beginDiscussion}
+                  aria-label="Discuss — start talking it through with MAIA without composing an answer first"
+                  className="text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  Discuss
+                </button>
+              </div>
+              <p className="text-center text-slate-600 text-xs font-light leading-relaxed">
+                speak it once · bring a note · talk it through
+              </p>
+            </div>
+            {error && (
+              <p role="alert" className="text-center text-red-400 text-xs font-light">{error}</p>
+            )}
+            {bringTruncated && (
+              <p className="text-center text-slate-500 text-xs font-light">Brought in — trimmed to fit.</p>
+            )}
+          </div>
+
+          <div style={fadeUpStyle(0.9)} className="space-y-3 pt-4 text-center">
+            <button
+              onClick={() => setShowFrame(v => !v)}
+              className="text-slate-600 hover:text-slate-400 text-xs underline underline-offset-4 transition-colors"
+            >
+              {showFrame ? 'Hide' : 'What is this space?'}
+            </button>
+            {showFrame && (
+              <div className="text-left text-slate-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-slate-800 pl-4">
+                {OPENING_FRAME}
+              </div>
+            )}
+            <p className="text-slate-500 text-xs font-light leading-relaxed">
+              What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.
             </p>
           </div>
-          {error && (
-            <p role="alert" className="text-red-400 text-xs font-light">{error}</p>
-          )}
-          {bringTruncated && (
-            <p className="text-slate-500 text-xs font-light">Brought in — trimmed to fit.</p>
-          )}
-        </div>
-
-        <div className="space-y-3 pt-6">
-          <button
-            onClick={() => setShowFrame(v => !v)}
-            className="text-slate-600 hover:text-slate-400 text-xs underline underline-offset-4 transition-colors"
-          >
-            {showFrame ? 'Hide' : 'What is this space?'}
-          </button>
-          {showFrame && (
-            <div className="text-slate-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-slate-800 pl-4">
-              {OPENING_FRAME}
-            </div>
-          )}
-          <p className="text-slate-500 text-xs font-light leading-relaxed">
-            What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.
-          </p>
         </div>
       </div>
     );
