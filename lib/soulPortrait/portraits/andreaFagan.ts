@@ -16,15 +16,26 @@
  * No close outer-planet aspects to personal planets were listed, so none
  * are read (Design Law: never manufacture).
  *
- * PART II (The Year Ahead) is traced to COMPUTED transits (Jul 2026–Jul 2027,
- * monthly, platform ephemeris, orb ≤ 2°) — real hits, never fabricated:
- * Neptune trine natal Uranus + sextile MC (all year, exact Dec–Jan) · Pluto
- * trine natal North Node / Uranus (all year) · transiting Uranus trine natal
- * Uranus (exact Feb–Mar 2027) + sextile MC · Jupiter square natal Sun (Oct
- * 2026; again Mar–Jun 2027) · Saturn square natal Mercury (Nov 2026–Mar
- * 2027) · Jupiter opp. Neptune + trine Pluto (Dec–Jan) · Saturn sextile
- * Chiron (Jul–Sep 2026) · Saturn square Sun + sextile Venus (May 2027) ·
- * Saturn trine Pluto / opp. Neptune (Jun–Jul 2027).
+ * PART II (The Year Ahead) is traced to her 12-month Astrograph transit
+ * report (starting 7/8/2026) — transit DATA only (bodies, aspects, dates);
+ * all prose written fresh. The report's interpretation text is copyright
+ * Henry Seltzer / Astrograph and is NEVER copied. (An earlier in-session
+ * computed sweep was superseded by this report after its aspect labels were
+ * found buggy — the report is ground truth.) The year's majors: Jupiter
+ * through her natal 4th house all year (exact Jul 6, 2026) · Jupiter conj.
+ * natal Uranus (exact Jul 8, 2026) · Pluto conj. the Midheaven (Sep 5 –
+ * Nov 23, 2026) · Pluto opp. natal Uranus (Aug 19 – Dec 9) · Uranus square
+ * natal Moon (exact Jun 9, 2026; Dec 23 R; Mar 25, 2027) · Neptune trine
+ * natal Uranus (exact Nov 20 R; Jan 3) + sextile MC · Saturn square natal
+ * Mercury (exact Nov 6 R; Jan 12) · Jupiter conj. natal Pluto (exact Dec 13;
+ * again Jul 11, 2027) · Jupiter square natal Saturn (exact Nov 24; Dec 31 R;
+ * Jul 8, 2027) · Chiron opp. natal Neptune (exact Nov 9 R; Mar 2) · Uranus
+ * sextile natal Uranus (exact Jan 26 R; Feb 20) + trine the MC · Chiron
+ * trine natal Jupiter (exact Jul 12, 2026; Apr 24, 2027) + trine natal Moon
+ * (exact May 27, 2027) · Saturn square natal Sun (exact Apr 17, 2027) ·
+ * Saturn sextile natal Venus (exact May 18) · Saturn trine natal Pluto
+ * (exact Jul 8, 2027) · Saturn opp. natal Neptune (exact Jul 23, 2027) ·
+ * Jupiter into the natal 5th house (Jul 8, 2027 onward).
  *
  * The giver's personal opening (offeredBy / giftOpening / threshold) is
  * deliberately NOT authored here — that note is Kelly's to add in his own
@@ -238,90 +249,101 @@ When you imagine the longer table, who is not yet at it?`,
   ],
 
   // ── Part II — The Year Ahead ──────────────────────────────────────────────
+  // Transit DATA from her Astrograph 12-month report (starting 7/8/2026);
+  // all prose fresh. Seltzer interpretation text never copied.
   yearAhead: {
     title: 'The Year Ahead',
     subtitle: 'A Seasonal Spiral',
     timeframe: 'July 2026 – July 2027',
-    openingHeadline: 'The year the circle turns outward.',
-    openingTheme: `Three slow, generous currents run beneath this entire year. Neptune, newly in Aries, spends the whole of it in a flowing trine to your natal Uranus and a supportive sextile to your Aquarius Midheaven — softening and re-enchanting the part of you that faces the community. Pluto in Aquarius holds a long trine to your North Node — quiet, durable power gathering behind the road your life is already walking, the one toward shared horizons. And through the winter, Uranus in Gemini returns to the exact trine of its own natal place — the elder's Uranus return of spirit, which arrives not as disruption but as permission: to surprise people, to change your mind, to begin something.
+    openingHeadline: 'The hearth fills while the summit transforms.',
+    openingTheme: `Two great movements share this year, and they could not be more different in temperament — which is exactly the point.
 
-Against that steady background, one theme knocks repeatedly: Jupiter in Leo squares your Cancer Sun in October, and again from March through June. A square from Jupiter is not hardship — it is growth applying friendly pressure. The same question, asked in different months: will you take up the room your life has earned?`,
+The first is domestic and generous: Jupiter enters your fourth house — the house of home, roots, and belonging — in the first week of July 2026 and stays for the entire year, arriving in the same breath as an exact meeting with your natal Uranus. The hearth year: warmth, renewal, and genuine surprise arriving through the very rooms you have always tended. The second is vocational and profound: through the autumn, Pluto stands at your Midheaven — the summit of the chart, your place in the public world — while opposing your natal Uranus. What you are FOR, out there in the community, is being slowly and permanently remade.
+
+And running beneath both, all winter long, Uranus squares your Moon: feelings long kept in the pantry of the heart begin expressing themselves in ways that may genuinely surprise you. Not a crisis — a breakout. The keeper's own feelings asking, at last, for a seat at the table she sets for everyone else. Neptune, meanwhile, spends the year in flowing trine to your natal Uranus and sextile to that same Midheaven, softening the whole transformation with imagination and quiet faith.
+
+None of this decides anything. It describes a season's weather — hearth and summit at once — and the walking of it remains entirely yours.`,
     phases: [
       {
         element: 'earth',
-        title: 'Mending Made Practical',
-        timeframe: 'Late Summer – Autumn 2026 · July – October',
+        title: 'The Blessed Hearth',
+        timeframe: 'Midsummer – Early Autumn 2026 · July – September',
         transits: [
-          'Saturn sextile natal Chiron (July – September)',
-          'Jupiter trine natal Uranus and sextile the Midheaven (July)',
-          'Jupiter square natal Sun (October — first pass)',
+          'Jupiter enters the natal 4th house (exact Jul 6, 2026 — for the whole year)',
+          'Jupiter conjunct natal Uranus (exact Jul 8, 2026)',
+          'Chiron trine natal Jupiter (exact Jul 12, 2026) and trine natal Moon (July – August)',
         ],
-        body: `The year opens on solid ground. Saturn's steady hand works quietly with Chiron's old tender spot — the one about belonging in the public circle — and offers something rare: the chance to mend a long ache through ordinary, practical acts. Not catharsis; repair. Meanwhile Jupiter brightens the community corner of your sky, opening doors in exactly the places you usually hold them open for others. When October's first square to your Sun arrives, notice what it asks. It will ask again in spring.`,
-        question: 'What old ache could be tended by one practical act, repeated?',
-        practice: { label: 'Earth practice', prompt: 'Once a week, accept an invitation you would normally deflect — and let someone else set the table.' },
+        body: `The year opens at home, and opens generously. Jupiter settles into your fourth house for a full year — a season when the rooms you tend tend you back — and its first act is to touch your natal Uranus exactly: renewal arriving through the familiar, the freshening of things you thought were finished changing. At the same time, Chiron moves in gentle trine to your Moon and Jupiter — old feelings, old inherited philosophies, mending quietly rather than dramatically. Let the house be good to you. Redecorate, gather, host, rest. The foundations are being blessed before the bigger weather arrives.`,
+        question: 'What in your home — or your idea of home — is ready to be renewed rather than merely kept?',
+        practice: { label: 'Earth practice', prompt: 'Change one room, or one ritual in it, purely because it delights you — not because anyone needs it.' },
       },
       {
         element: 'fire',
-        title: 'The Flame Asked to Be Seen',
-        timeframe: 'Autumn – Early Winter · October – December',
+        title: 'The Forge at the Summit',
+        timeframe: 'Autumn – Early Winter 2026 · September – December',
         transits: [
-          'Jupiter in Leo square natal Sun (October)',
-          'Jupiter trine natal Pluto (December)',
-          'Jupiter opposite natal Neptune (December)',
+          'Pluto conjunct the Midheaven (Sep 5 – Nov 23, 2026)',
+          'Pluto opposite natal Uranus (Aug 19 – Dec 9, 2026)',
+          'Mars conjunct natal Sun (exact Sep 9) and conjunct natal Uranus (exact Sep 30)',
+          'Jupiter square natal Saturn (exact Nov 24; again Dec 31 R)',
         ],
-        body: `The low, long flame you carry is invited into the open. Jupiter's square to your Sun stretches the quiet Cancer heart toward visibility — more room, more voice, more you. By December, Jupiter's trine to your natal Pluto lends real depth of power to whatever you have begun, while its opposition to your Neptune asks for one act of discernment: generous dreams deserve daylight-testing. Say yes to the bigger table; check the fine print on the bigger promise.`,
-        question: 'Where are you still asking for a smaller life than the one being offered?',
+        body: `Then the deep work begins. Pluto — the slowest, most thorough of movers — crosses your Midheaven through the autumn: the point of the chart that names your place in the public world. This is not a small visitor. Roles that no longer fit may fall away; a truer form of what you are FOR in your community asks to be born. Mars lends the season real fire, crossing your Sun in September, and Jupiter's square to your Saturn puts friendly pressure on old structures: expand, or explain why not. The forge is hot on purpose. What is being made in it is yours.`,
+        question: 'If your place in the wider circle were being recast truer — what would you want cast into it?',
       },
       {
         element: 'water',
-        title: 'The Imaginal Tide',
+        title: 'The Feelings Break Surface',
         timeframe: 'Midwinter · December – February',
         transits: [
-          'Jupiter opposite natal Neptune (exact December – January)',
-          'Neptune trine natal Uranus (exact December – January)',
-          'Neptune sextile the Midheaven',
+          'Uranus square natal Moon (exact Dec 23, 2026 R; again Mar 25, 2027)',
+          'Jupiter conjunct natal Pluto (exact Dec 13, 2026)',
+          'Neptune trine natal Uranus (exact Jan 3, 2027) and sextile the Midheaven',
+          'Chiron opposite natal Neptune (exact Nov 9, 2026 R; again Mar 2, 2027)',
+          'Saturn square natal Mercury (exact Nov 6, 2026 R; again Jan 12, 2027)',
         ],
-        body: `Midwinter belongs to your native element. Neptune's year-long currents run strongest now, and the veil between what is and what could be grows pleasantly thin. Dreams, memory, and imagination all speak louder — a gift to the Storyteller in you, and a season to be gentle with. Your natal anchor here is superb: a Virgo Moon beside Jupiter knows how to give a dream a container. Let the tide rise; keep one hand on the practical rail.`,
-        question: 'Which dream is asking to be written down before it is asked to be real?',
+        body: `Midwinter belongs to your native element, and this year it runs deep. Uranus squares your Moon through the heart of winter: feelings long filed away under "handled" surface in new and surprising forms — restlessness at home, sudden clarity about old bonds, emotion that will not wait its turn. Let it speak; it is the truest weather of the year. Chiron's opposition to Neptune softens one long-held ideal so a truer one can form, and Saturn slows your words to a winter pace — fewer, heavier, truer. The Virgo Moon beside Jupiter in your nature knows exactly what to do with all this: give the flood a container, and it becomes a well.`,
+        question: 'Which feeling have you been managing that is asking, this winter, to simply be felt?',
         practice: { label: 'Water practice', prompt: 'Keep a small winter notebook by the bed. Mornings, three lines — not plans, just what the night left behind.' },
       },
       {
         element: 'air',
-        title: 'Fewer, Truer Words',
-        timeframe: 'Late Winter – Spring · November – April',
+        title: 'The Renewed Mind',
+        timeframe: 'Late Winter – Spring 2027 · February – April',
         transits: [
-          'Saturn square natal Mercury (November – March)',
-          'Uranus trine natal Uranus (exact February – March)',
-          'Uranus sextile the Midheaven',
+          'Uranus sextile natal Uranus (exact Jan 26 R; Feb 20, 2027)',
+          'Uranus trine the Midheaven (Dec 2, 2026 – Apr 14, 2027)',
+          'Chiron trine natal Pluto (exact Feb 15) and quintile natal Mercury (exact Feb 11)',
+          'Jupiter sextile natal Venus (exact Oct 19; Feb 6 R; Jun 16 — three passes)',
         ],
-        body: `Through the cold months, Saturn tests the voice. Words come slower, weigh more, and want editing — which, for a Cancer Mercury that has spent a lifetime choosing kindness first, is not a punishment but a graduation: the season of fewer, truer words. And just as Saturn disciplines the voice, Uranus returns to its own natal degree in friendly trine — the mind refreshed at exactly the moment the speech grows precise. What you say this spring, people will remember. Say the real thing.`,
+        body: `As the light returns, so does the spark. Uranus makes its friendly sextile to its own natal place — the elder's quickening, seminal ideas arriving as seeds of a new season of thought — while its long trine to your Midheaven quietly opens doors in the public sphere: the wake-up call that arrives as opportunity rather than upheaval. The winter's disciplined words now have somewhere to go. And threaded through the whole year, Jupiter returns three times to bless your Venus — affection, art, company, delight — as if the sky were insisting the year be enjoyed as well as survived. Say the real thing; the room is finally ready for it.`,
         question: 'What is the sentence you have been polite instead of saying?',
       },
       {
         element: 'aether',
         title: 'The Ripening',
-        timeframe: 'Late Spring – Summer 2027 · May – July',
+        timeframe: 'Late Spring – Summer 2027 · April – July',
         transits: [
-          'Jupiter and Saturn both square natal Sun (May)',
-          'Saturn sextile natal Venus (May – June)',
-          'Saturn trine natal Pluto; Saturn opposite natal Neptune (June – July)',
-          'Neptune and Pluto trine the North Node (all year, closing strong)',
+          'Saturn square natal Sun (exact Apr 17, 2027)',
+          'Chiron trine natal Jupiter (exact Apr 24) and trine natal Moon (exact May 27)',
+          'Saturn sextile natal Venus (exact May 18)',
+          'Saturn trine natal Pluto (exact Jul 8) · Saturn opposite natal Neptune (exact Jul 23)',
+          'Jupiter square natal Saturn (exact Jul 8) · Jupiter conjunct natal Pluto (exact Jul 11)',
+          'Jupiter enters the natal 5th house (Jul 8, 2027 onward)',
         ],
-        body: `The year converges. In May, Jupiter and Saturn square your Sun together — expansion and structure pressing the same question from both sides: what, of everything this year opened, will you actually keep and stand inside? Saturn's sweet sextile to Venus softens the pressure with real affection arriving through it. By midsummer, Saturn trine Pluto grants endurance to what you choose, while its opposition to Neptune retires one long illusion kindly. And beneath it all, the year's deepest currents — Neptune and Pluto flowing toward your North Node — close the spiral where your chart has always pointed: meaning, shared; the road, walked in company.`,
-        question: 'What did this year grow that deserves a permanent place?',
+        body: `The year converges. In April, Saturn squares your Sun — the season's one sober question, asked kindly: of everything this year opened, what will you actually keep and stand inside? Affection steadies you through it (Saturn's sextile to Venus), and Chiron returns to bless the Moon and Jupiter one more time — the mending that began at the hearth completing its circle. By midsummer, Saturn's trine to Pluto grants endurance to whatever you have chosen, while its opposition to Neptune retires one long illusion gently into something real. And then — the door out of the year: Jupiter crosses into your fifth house, the house of play, creativity, and joy. The hearth year ends at the threshold of a delight year. Harvest, then festival.`,
+        question: 'What did this year grow that deserves a permanent place — and what is ready to become play?',
       },
     ],
     weatherPattern: [
-      { season: 'Jul – Oct 2026', element: 'earth', invitation: 'Mend practically; accept the opened door.' },
-      { season: 'Oct – Dec 2026', element: 'fire', invitation: 'Be seen; test the big dream in daylight.' },
-      { season: 'Dec – Feb 2027', element: 'water', invitation: 'Let the tide rise; give dreams containers.' },
-      { season: 'Feb – Apr 2027', element: 'air', invitation: 'Fewer, truer words; welcome the renewed mind.' },
-      { season: 'May – Jul 2027', element: 'aether', invitation: 'Choose what to keep; walk the shared road.' },
+      { season: 'Jul – Sep 2026', element: 'earth', invitation: 'Let the house be good to you; welcome renewal through the familiar.' },
+      { season: 'Sep – Dec 2026', element: 'fire', invitation: 'Let the public role be remade truer; own the forge.' },
+      { season: 'Dec – Feb 2027', element: 'water', invitation: 'Let long-kept feelings surface; give the flood a container.' },
+      { season: 'Feb – Apr 2027', element: 'air', invitation: 'Fewer, truer words — then say them; walk through the opening doors.' },
+      { season: 'Apr – Jul 2027', element: 'aether', invitation: 'Choose what to keep; retire one illusion kindly; turn toward joy.' },
     ],
-    goldenThread:
-      'One arc runs through the whole year: the community elder emerging. Neptune, Pluto, and Uranus all feed your Aquarius Midheaven and your Sagittarian node at once — the sky spending twelve months turning the keeper of the near flame toward the wider circle. The year does not ask you to become someone new. It asks the Steward to let her stewardship be visible, the Storyteller to tell it wider, and the table to grow one seat longer than feels quite comfortable.',
+    goldenThread: `One arc runs through the whole year, and it is the very tension your birth chart has always carried — hearth and horizon — finally moving together instead of against each other. Jupiter fills the home for twelve months while Pluto remakes the summit: the keeper's private world is blessed at exactly the moment her public purpose transforms. And Uranus square the Moon is the bridge between them — the feelings breaking surface are precisely the ones the new, truer public role will need. The year does not ask you to choose between the near flame and the wider circle. It spends twelve months teaching them to be the same fire. And when it ends, it opens not onto more work — but onto a year of play.`,
     questions: [
-      'If the circle you tend became visible to your whole community, what would it look like?',
+      'If your home and your purpose stopped competing, what would a single life containing both look like?',
       'What role are you being offered this year that you keep almost accepting?',
       'Who will you let carry something for you this year — and when?',
     ],
