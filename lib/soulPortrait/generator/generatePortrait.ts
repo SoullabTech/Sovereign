@@ -19,6 +19,7 @@ import {
   type Resonance,
   type SoulPortrait,
   type PortraitMode,
+  type PortraitThemeKey,
 } from '@/lib/soulPortrait/schema';
 import { chartSummaryText, portraitSystemPrompt } from './portraitPrompt';
 
@@ -33,6 +34,8 @@ export interface GeneratePortraitInput {
   age?: number;
   pronouns?: string;
   isMinor?: boolean;
+  /** Visual theme the sender chose for the page. Presentation only; omitted → classic. */
+  theme?: PortraitThemeKey;
 }
 
 const ELEMENT_KEYS: ElementKey[] = ['fire', 'water', 'earth', 'air', 'aether'];
@@ -90,6 +93,7 @@ function assemble(input: GeneratePortraitInput, j: any): SoulPortrait {
       isMinor: input.isMinor,
     },
     mode: input.mode,
+    theme: input.theme,
     birthData: {
       date: input.birthData.date,
       time: input.birthData.time,
