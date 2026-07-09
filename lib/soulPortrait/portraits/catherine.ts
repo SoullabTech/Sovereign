@@ -18,9 +18,21 @@
  * trine Uranus · Moon sextile Mars. Three domicile planets = rare structural
  * dignity.
  *
- * PART II (The Year Ahead) PENDING her 12-month transit report — not fabricated
- * (an ad-hoc computed sweep was found unreliable on 2026-07-08; only professional
- * report DATA is admissible). Add when the report is provided.
+ * Chart pattern (per her Astrograph report): a GRAND TRINE in Fire — Sun in
+ * Aries, a Leo planet (Moon/Uranus), Jupiter in Sagittarius — "an exceptional
+ * area of talent," self-sufficiency, easy success (beware complacency).
+ *
+ * PART II (The Year Ahead) built from her Astrograph 12-month transit report
+ * (starting 7/9/2026) — transit DATA only; Seltzer interpretation text never
+ * copied. Majors: Saturn into natal 9th (teaching/higher-mind era, Apr 2026 →
+ * firm Jan 2027 for 2-3 yrs) · Neptune conjunct natal Sun (Oct 2026 – Jan 2027)
+ * · Neptune trine natal Jupiter (Aug 2026 – Mar 2027) · Pluto square natal
+ * Neptune (2026 → 2028) · Uranus square natal Pluto (2026–2027) · Uranus opp
+ * natal Jupiter (Nov 2026 – Apr 2027) · Jupiter conj natal Uranus (Aug 2026),
+ * conj natal Moon (Sep 2026; Mar–May 2027), trine natal Sun (Jun–Jul 2026),
+ * conj Ascendant + into 1st house (Nov 2026 – Jan 2027; again Jun–Jul 2027 =
+ * new 12-yr cycle) · Chiron conj natal Venus (May–Oct 2026; Mar–Jun 2027) ·
+ * Saturn square natal Saturn (Nov 2026 – Jan 2027).
  *
  * The giver's offeredBy opening is a DRAFT in the giver's register — Kelly
  * corrects `relationship` and edits in his own voice before delivery.
@@ -105,13 +117,15 @@ But that pioneering fire is not placed where you might expect. Your Sun sits in 
     {
       title: 'The Shape of Your Whole Sky',
       subtitle: 'The equinox fire, and the house at home in itself',
-      body: `Two things make your chart distinctive the moment you look at its shape.
+      body: `Three things make your chart distinctive the moment you look at its shape.
 
 The first is the equinox Sun. Zero degrees of Aries is not just "an Aries Sun" — it is the cardinal fire ignition point, the degree the whole zodiac counts from. To be born there, on the equinox, at three in the afternoon under a Leo ascendant, is to be built for initiation: cardinal fire lighting the match, fixed fire (your Leo Moon and rising) keeping it burning, and mutable fire (Jupiter in Sagittarius) carrying it toward the horizon. Fire leads your chart — five of your ten planets live in the fire signs. You are, at your core, a kindler: of projects, of people, of possibility.
 
 The second is a quieter kind of rarity: three of your planets sit in their own domicile — the sign each most naturally rules. Venus in Taurus (love and beauty at home in themselves — steady, sensual, deeply loyal). Jupiter in Sagittarius (faith and largeness of spirit, unforced). Saturn in Capricorn (mastery and discipline in their native sign — the real thing, not the performed one). A chart with three domicile planets is a chart unusually at home in itself: the loving, the believing, and the building all operate from solid ground. It means your fire is not the reckless kind. It is lit on Earth that can hold it — which is why what you begin tends to also last.
 
-And at the very front door — Pluto in Virgo, rising in your first house — stands the transformer. You do not leave rooms as you found them. Quietly, precisely, often without anyone noticing the mechanism, you change what you enter. Hold these together: a beginner's fire, lit on ground that holds, carried by a presence that transforms. That is the shape of you.`,
+And the third is the crown of it: a Grand Trine in Fire. Three of your planets — the Sun in Aries, a radiant planet in Leo, and Jupiter in Sagittarius — stand at the points of a perfect triangle across the fire signs. A Grand Trine is the mark of an exceptional, almost effortless gift in its element, and yours is in Fire: an innate, self-sufficient capacity for vitality, courage, faith, and creative spark that has simply always been there, running like a current you did not have to switch on. The one caution the old readers attach to it is the only one it needs — a gift this easy can tempt its owner toward coasting. Yours plainly never did.
+
+And at the very front door — Pluto in Virgo, rising in your first house — stands the transformer. You do not leave rooms as you found them. Quietly, precisely, often without anyone noticing the mechanism, you change what you enter. Hold these together: a beginner's fire, lit on ground that holds, crowned by an effortless fire-gift, carried by a presence that transforms. That is the shape of you.`,
     },
 
     // 3 ──────────────────────────────────────────────────────────────────────
@@ -238,7 +252,100 @@ What would it feel like to be received as fully as you give?`,
     },
   ],
 
-  // PART II — The Year Ahead: intentionally omitted. Pending Catherine's
-  // professional 12-month transit report (transit DATA only, prose fresh).
-  // Do not fabricate transits — an ad-hoc computed sweep was found unreliable.
+  // ── Part II — The Year Ahead ──────────────────────────────────────────────
+  // Transit DATA from her Astrograph 12-month report (starting 7/9/2026);
+  // all prose fresh. Seltzer interpretation text never copied.
+  yearAhead: {
+    title: 'The Year Ahead',
+    subtitle: 'A Seasonal Spiral',
+    timeframe: 'July 2026 – July 2027',
+    openingHeadline: 'The year the fire is softened, and the meaning-maker is born.',
+    openingTheme: `Something unusual is happening in your sky this year: the pioneering fire that has run your whole life is being gently, deliberately softened — and in its place a new capacity is being born, one your chart has always pointed toward but rarely had the weather to grow.
+
+Three slow movements set the tone. Neptune — the planet of dissolving, compassion, and the sacred — spends the year approaching a conjunction with your equinox Sun, the very center of you: it does not diminish the fire so much as teach it tenderness, turning the initiator toward mercy. Saturn crosses into your ninth house, the house of higher meaning and teaching, and settles in for two to three years: the years in which you build a framework of belief that is genuinely your own. And Jupiter — expansive, fortunate Jupiter — spends the heart of the year crossing your Leo ascendant and lighting up your Moon and Uranus: a bright, buoyant enlargement of the self, arriving right as Neptune asks it to grow gentler.
+
+The result is a rare and beautiful pairing: the year enlarges you and softens you at once. The fire does not go out — your Grand Trine does not permit that — but it learns, this year, to warm rather than only to ignite.`,
+    phases: [
+      {
+        element: 'fire',
+        title: 'The Self Enlarged',
+        timeframe: 'Midsummer – Early Autumn 2026 · July – September',
+        transits: [
+          'Jupiter trine natal Sun (exact Jul 1, 2026)',
+          'Jupiter trine natal Jupiter (exact Jul 9)',
+          'Jupiter conjunct natal Uranus (exact Aug 26) · trine natal Mercury (Aug 27)',
+          'Jupiter conjunct natal Moon (exact Sep 20)',
+        ],
+        body: `The year opens by feeding your strongest gift. Jupiter — the planet of expansion and good fortune — moves through the fire of your chart, trining your Sun and your own Jupiter, then lighting up the radiant Moon-Uranus heart in your twelfth house. This is your Grand Trine getting a season of wind in its sails: optimism, vitality, the golden touch on whatever you begin. Doors open easily; your natural warmth draws people; the pioneering spark that has always been yours simply burns brighter and luckier now. Begin things this season — the chart is unusually generous to beginnings made under this sky. Just remember the Grand Trine's one caution: fortune this easy is meant to be spent, not coasted on.`,
+        question: 'What has been waiting for exactly this much wind to finally begin?',
+      },
+      {
+        element: 'water',
+        title: 'The Softening',
+        timeframe: 'Autumn – Early Winter 2026 · October – January',
+        transits: [
+          'Neptune conjunct natal Sun (Oct 24, 2026 – Jan 29, 2027)',
+          'Neptune trine natal Jupiter (exact Nov 5 R; Jan 17)',
+          'Pluto square natal Neptune (2026 → 2028) · Neptune inconjunct natal Pluto',
+        ],
+        body: `Then the tide comes in. Neptune — the great dissolver, the planet of compassion and the sacred — reaches the equinox Sun at the center of you, and the fire meets water for perhaps the first time in a long while. This is not a dimming; it is a tempering. The initiator softens toward mercy; the one who begins learns to also surrender. You may feel less certain than usual, more porous, more moved by others' needs, more drawn to the spiritual than the strategic — and that is the work, not a failure of it. Neptune's trine to your Jupiter keeps the season buoyant with faith even as it loosens your grip. Hold big decisions loosely while the water is high; let yourself be softened. A more compassionate self is being born in exactly the place your identity lives.`,
+        question: 'Where is your certainty being asked to become compassion instead?',
+        practice: { label: 'Water practice', prompt: 'Keep a winter notebook: mornings, three lines of what you feel rather than what you plan. Let the water speak first.' },
+      },
+      {
+        element: 'earth',
+        title: 'The New Framework',
+        timeframe: 'Deep Winter 2026 – Early 2027 · December – February',
+        transits: [
+          'Saturn firmly into natal 9th house (Jan 5, 2027 — for 2-3 years)',
+          'Saturn square natal Saturn (Nov 2026 – Jan 2027)',
+          'Saturn conjunct natal Mercury (returns Feb 6 – Mar 15, 2027)',
+        ],
+        body: `As the visions of autumn settle, Saturn arrives to give them structure. It crosses firmly into your ninth house — the house of higher learning, philosophy, and meaning — and stays for two to three years: the season, the old readers say, of building "a framework of moral and spiritual values arising out of your own uniqueness," rather than any belief inherited or borrowed. The Saturn-square-Saturn underneath it marks a genuine turning point, a reckoning with what structure your life should now stand on. And Saturn meeting your Mercury slows the mind to a deliberate, deepening pace — fewer thoughts, truer ones, built to last. This is the winter the softened fire becomes a considered philosophy. What you conclude now, you will teach later.`,
+        question: 'What do you actually believe now — in your own words, owing nothing to who taught you?',
+      },
+      {
+        element: 'air',
+        title: 'The Great Unsettling',
+        timeframe: 'Winter – Spring 2027 · January – April',
+        transits: [
+          'Uranus opposite natal Jupiter (exact Jan 12 R; Mar 5, 2027)',
+          'Uranus square natal Pluto (exact Dec 30, 2026 R; Mar 18, 2027)',
+          'Uranus sextile natal Sun (Jan – Mar 2027)',
+        ],
+        body: `Then the awakener knocks. Uranus opposes your Jupiter and squares your Pluto — a season of restlessness and seismic shift, the sky's way of shaking loose anything you have outgrown but kept holding. Plans may change suddenly; a long-brewing need for freedom breaks the surface; something you have carried past its usefulness asks, at last, to be set down. It can feel disruptive — but the gentle sextile from Uranus to your Sun is the tell: this is a wake-up call in your favor, an opening of new horizons rather than a loss of old ground. After a winter of softening and structuring, the spring insists you also breathe, break pattern, and let the new vision in. Say yes to the freedom; it is the year clearing space for what's next.`,
+        question: 'What have you outgrown but kept holding — and what would open if you set it down?',
+      },
+      {
+        element: 'aether',
+        title: 'The Heart Healed, the Cycle Renewed',
+        timeframe: 'Spring – Summer 2027 · April – July',
+        transits: [
+          'Chiron conjunct natal Venus (returns Mar 26 – Jun 2, 2027)',
+          'Jupiter conjunct natal Moon (exact May 3) · sextile natal Mars (May 21)',
+          'Jupiter conjunct natal Ascendant + into the natal 1st house (Jun 30 – Jul 5, 2027 — a new 12-year cycle)',
+        ],
+        body: `The year closes with healing and a threshold. Chiron — the wounded healer — meets your Venus, opening a tender, rewarding season of mending around love, worth, and what you value: old relational patterns surface not to wound but to be released, and a truer way of loving and valuing yourself takes their place. And then the grace note: Jupiter returns to your Leo ascendant and crosses into your first house at the very end of the year — the opening of a fresh twelve-year cycle of expansion, beginning with you. After a year of being softened, restructured, and unsettled, the sky hands you a brand-new beginning at your own front door. The equinox soul, born to begin, is given a new spring to begin from — this time with a gentler fire and a philosophy of her own.`,
+        question: 'As the new cycle opens at your door, who is the woman you want to begin it as?',
+      },
+    ],
+    weatherPattern: [
+      { season: 'Jul – Sep 2026', element: 'fire', invitation: 'Ride the wind; begin things; spend the good fortune.' },
+      { season: 'Oct – Jan 2027', element: 'water', invitation: 'Let the fire soften toward mercy; hold decisions loosely.' },
+      { season: 'Dec – Feb 2027', element: 'earth', invitation: 'Build a philosophy that is genuinely your own.' },
+      { season: 'Jan – Apr 2027', element: 'air', invitation: 'Set down what you have outgrown; let the new vision in.' },
+      { season: 'Apr – Jul 2027', element: 'aether', invitation: 'Heal the heart; begin the new cycle as your truer self.' },
+    ],
+    goldenThread: `One arc runs through the whole year: the fire is softened, and the meaning-maker is born. For a lifetime your equinox Sun has been the one who begins — bright, cardinal, self-sufficient, crowned by an effortless Grand Trine in fire. This year the sky does something it rarely gets the chance to: Neptune reaches that Sun and teaches it tenderness; Saturn builds the softened fire into a philosophy of your own; Uranus clears out what you've outgrown; and Jupiter, having enlarged you all year, ends by opening a brand-new twelve-year cycle at your own door. You do not lose the fire — the Grand Trine forbids it. You gain the thing the fire always lacked: mercy, meaning, and the patience to warm rather than only to ignite. The beginner learns, at last, to also tend.`,
+    questions: [
+      'What is the new thing wanting to begin through you this year?',
+      'Where is your certainty being invited to become compassion?',
+      'What philosophy, entirely your own, is ready to be spoken?',
+      'As a new cycle opens, who is the self you want to begin it as?',
+    ],
+    closing: {
+      title: 'A Word for the Year',
+      body: 'Seasons do the growing; the one who was born at the turning of the year knows this better than most. Nothing in this sky decides for you — it only names the weather: a year that softens your fire without quenching it, and hands you, at its close, a fresh spring to begin from. Walk it at your own pace, let yourself be tended as you have tended others, and step through the new door already warmed.',
+    },
+  },
 };
