@@ -21,7 +21,7 @@
  */
 
 import { query, queryOne } from '@/lib/db/postgres';
-import type { SoulPortrait, PortraitMode } from '@/lib/soulPortrait/schema';
+import type { AnyPortrait, PortraitMode } from '@/lib/soulPortrait/schema';
 
 export interface StoredPortrait {
   id: string;
@@ -32,7 +32,7 @@ export interface StoredPortrait {
   portraitKind: string;
   consentState: 'pending' | 'active' | 'revoked';
   publishedAt: string | null;
-  immutableText: SoulPortrait;
+  immutableText: AnyPortrait;
   createdAt: string;
 }
 
@@ -65,7 +65,7 @@ export interface CreateDraftInput {
   mode: PortraitMode;
   isMinor?: boolean;
   subjectAge?: number;
-  immutableText: SoulPortrait;
+  immutableText: AnyPortrait;
 }
 
 /** Insert a generated portrait as a pending, unpublished draft, owned by the caller. */

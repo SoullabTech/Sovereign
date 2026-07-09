@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getPortrait } from '@/lib/soulPortrait/registry';
-import { ELEMENT_META, type SoulPortrait } from '@/lib/soulPortrait/schema';
+import { ELEMENT_META, isLiterarySoulPortrait, type AnyPortrait } from '@/lib/soulPortrait/schema';
 
 /**
  * Soul Portrait — MAIA Mentor.
@@ -60,12 +60,21 @@ function json(body: { answer: string }, init?: { status?: number; headers?: Reco
   return NextResponse.json(body, { status: init?.status ?? 200, headers: { ...NO_CACHE, ...init?.headers } });
 }
 
-function firstName(p: SoulPortrait): string {
+function firstName(p: AnyPortrait): string {
   return p.person.name.trim().split(/\s+/)[0] || p.person.name;
 }
 
 /** A compact, grounded picture of THIS portrait for the model to reflect from. */
-function buildContext(p: SoulPortrait): string {
+function buildContext(p: AnyPortrait): string {
+  // Literary (chapter-based) portraits carry their whole reading in chapters.
+  if (isLiterarySoulPortrait(p)) {
+    const lines: string[] = [];
+    for (const c of p.chapters) lines.push(`${c.title.toUpperCase()}: ${c.body}`);
+    lines.push(`FRAMING — THE DESIGN LAW YOU MUST NEVER BREAK: ${p.framing.notes.join(' ')}`);
+    const ctx = lines.join('\n');
+    return ctx.length > MAX_CONTEXT ? ctx.slice(0, MAX_CONTEXT) : ctx;
+  }
+
   const lines: string[] = [];
   lines.push(`SOUL SIGNATURE: ${p.soulSignature.headline} — ${p.soulSignature.body}`);
   lines.push('ELEMENTS (lenses on their nature, never a verdict):');
@@ -84,7 +93,7 @@ function buildContext(p: SoulPortrait): string {
   return ctx.length > MAX_CONTEXT ? ctx.slice(0, MAX_CONTEXT) : ctx;
 }
 
-function systemPrompt(p: SoulPortrait): string {
+function systemPrompt(p: AnyPortrait): string {
   const name = firstName(p);
   const minor = p.person.isMinor === true;
   const age = p.person.age ? `, who is ${p.person.age}` : '';
