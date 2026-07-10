@@ -76,3 +76,18 @@ Kelly ratified **fresh build** 2026-07-09 with this triage as an explicit precon
 **Engine reclassification (Kelly's directive):** `spiralogicEngine.ts` is formally renamed in the spec as **interpretive-layer candidate** — its *role* survives; its crown-or-balance logic does NOT get grandfathered as the single versioned rule. The replacement rule is designed against the null-rate table (~25–28% strict-null; Moon-branch divergence data) and must speak in graded language with first-class ambiguity, which the engine as written cannot do.
 
 **Upstream observation — FIXED (2026-07-09, decision-independent per Kelly):** `longitudeToZodiac` degree now rounds-then-clamps (`Math.min(Number(degree.toFixed(2)), 29.99)`), so the emitted degree can no longer escape [0°, 30°). Sign resolution (unrounded, half-open) was already correct and is unchanged. Fix verified by direct evaluation (29.9999972→29.99; 15.57→15.57; 0→0). Uncommitted, travels with this branch's working tree.
+
+## COMPLETE DISPOSITION LEDGER (added 2026-07-10 — all 12 findings exit with a stated disposition)
+
+Notation check: the triage table above covers ONLY the seven undocumented decisions (its 0 adopt / 4 relocate / 4 reject sums to eight verdicts because finding 3 split into 3a/3b). The remaining five findings were dispositioned elsewhere; recorded here so nothing exits the ledger silently:
+
+| # | Class | Disposition |
+|---|---|---|
+| 1–7 | undocumented-decision | Per triage table above (finding 6 still ⚠️ awaiting Kelly on the concept's interpretive-layer survival) |
+| 8 | engine-bug (lossy rounding, sums to 99, crown-after-round) | **Remains in the live engine — deliberately unfixed there.** Fresh `registerChart` is structurally immune (raw weights, no normalization, no crown). Fix belongs to the engine's interpretive-layer refit / renderer-consolidation crossing, NOT to a patch on a live `/journey` renderer outside a gate |
+| 9 | engine-bug (silent drop of missing/unknown-sign bodies) | Same posture as 8: live engine keeps the behavior until its refit; `registerChart` closes the class structurally via SH-11 (throws `RegistrationInputError`) |
+| 10 | spec-hole (ChartPositions undefined) | **CLOSED by SH-10** (proposed default, implemented in `registerChart`, ratification pending in the six accepts) |
+| 11 | spec-hole (out-of-vocabulary behavior unspecified) | **CLOSED by SH-11** (throw; refuse-not-repair; ratification pending) |
+| 12 | spec-hole (fingerprint + serialization undefined) | **CLOSED by SH-12** (raw weights, fire_1…air_3 keys, SHA-256 canonical fingerprint; ratification pending) |
+
+Audit rule this satisfies: a finding may be fixed, deferred-with-named-home, or superseded — but never merely absent.
