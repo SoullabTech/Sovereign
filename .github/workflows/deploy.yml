@@ -186,6 +186,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # CI is its own declared deploy lane — the Dockerfile's deploy-lane
+          # tripwire refuses token-less builds (docs/ops/DEPLOY_LANE_TOKEN.md).
+          build-args: |
+            DEPLOY_LANE_TOKEN=ci-deploy
 
   # Deploy to Staging
   # DISABLED: Waiting for self-hosted runner on Mac Studio

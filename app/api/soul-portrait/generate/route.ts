@@ -18,7 +18,7 @@ import { createDraftPortrait } from '@/lib/soulPortrait/portraitStore';
 import { subjectIsInColab } from '@/lib/soulPortrait/subjectScope';
 import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { cookies } from 'next/headers';
-import type { PortraitMode } from '@/lib/soulPortrait/schema';
+import { PORTRAIT_THEMES, type PortraitMode, type PortraitThemeKey } from '@/lib/soulPortrait/schema';
 
 const MODES: PortraitMode[] = ['self', 'parent-child', 'gift', 'legacy'];
 
@@ -41,6 +41,9 @@ export async function POST(request: NextRequest) {
   const name = String(body?.name || '').trim();
   const bd = body?.birthData;
   const mode: PortraitMode = MODES.includes(body?.mode) ? body.mode : 'gift';
+  // Sender-chosen visual theme. Unknown/missing → undefined (renders as classic).
+  const theme: PortraitThemeKey | undefined =
+    typeof body?.theme === 'string' && body.theme in PORTRAIT_THEMES ? (body.theme as PortraitThemeKey) : undefined;
 
   // Optional Year Ahead source: pasted 12-month transit report. Held in memory for
   // this request only — the generator extracts transit FACTS and the raw text is
@@ -77,6 +80,7 @@ export async function POST(request: NextRequest) {
       name,
       slug: slugify(name),
       mode,
+      theme,
       birthData: { date: bd.date, time: bd.time, location: bd.location },
       birthPlace: body?.birthPlace ? String(body.birthPlace) : undefined,
       age: typeof body?.age === 'number' ? body.age : undefined,

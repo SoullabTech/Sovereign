@@ -12,11 +12,15 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Docker build (gha cache)
+        # DEPLOY_LANE_TOKEN: CI is its own declared lane — the Dockerfile's
+        # deploy-lane tripwire refuses token-less builds so the raw production
+        # compose path fails loudly (docs/ops/DEPLOY_LANE_TOKEN.md).
         run: |
           docker buildx build \
             --progress=plain \
             --pull \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
+            --build-arg DEPLOY_LANE_TOKEN=ci-build-check \
             -t maia-sovereign:pr-${{ github.event.pull_request.number }} \
             .

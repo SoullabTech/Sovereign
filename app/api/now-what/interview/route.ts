@@ -18,6 +18,11 @@ export async function generateStaticParams() {
  * of canned follow-ups and the room was locked to one phase, producing generic,
  * could-be-anyone questions (e.g. the repeated "Where does that come from?").
  *
+ * Telos (ratified in dialogue 2026-07-10): the off-ramp is not a safety feature —
+ * it is the room's purpose. The room exists to return people to their lives; every
+ * encounter should end with life becoming larger than the room. If the room
+ * succeeds by keeping someone talking to MAIA, it has failed.
+ *
  * Governance (unchanged):
  *   - Ephemeral: this route does NOT persist anything. Evidence crosses into the
  *     field only through an explicit member gesture (the field-note route).
@@ -33,18 +38,15 @@ import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { getLLMProvider, ensureUserTerminal } from '@/lib/consciousness/LLMProvider';
 import { inferSpiralogicCell, type Element } from '@/lib/consciousness/spiralogic-core';
 
-// Stage 1 — MAIA presence (ADR-013 Proof 1). Read-only reuse of the production runtime's
-// constitutional identity + memory loaders, assembled IN-ROUTE. Deliberately NOT
-// getMaiaResponse: that path increments turn count, reads history from the DB, and writes
-// the exchange — incompatible with this room's ephemeral, client-held, no-write contract.
-// Every import below is read-only; MAIA_RUNTIME_PROMPT already embeds the memory-canon guard.
-import { MAIA_RUNTIME_PROMPT } from '@/lib/consciousness/MAIA_RUNTIME_PROMPT';
-import { buildMemoryInfluencePlan } from '@/lib/maia/memoryOrchestrator';
-import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref } from '@/lib/maia/memoryLoaders';
-import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt } from '@/lib/maia/memoryAtomsLoader';
-import { formatPriorExchangesForPrompt, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
-import { assembledContext, renderAssembledContext, type AssembledBlock } from '@/lib/maia/context-assembly/contextAssembly';
-import { getPracticeFieldById, formatFieldContextForRoom } from '@/lib/practiceField/practiceFieldService';
+// Stage 1 — MAIA presence (ADR-013 Proof 1) + field composition (Kelly directive
+// 2026-07-10), via the composition block SHARED with the vision-studio sibling route
+// (lib/maia/roomComposition.ts — one composition order, one field resolution, one
+// provenance shape; extracted so the siblings cannot drift). Deliberately NOT
+// getMaiaResponse: that path increments turn count, reads history from the DB, and
+// writes the exchange — incompatible with this room's ephemeral, client-held,
+// no-write contract. Everything composed is read-only; MAIA_RUNTIME_PROMPT already
+// embeds the memory-canon guard.
+import { composeRoomTurnPrompt, cloudRegisterPinned } from '@/lib/maia/roomComposition';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -91,7 +93,7 @@ Respond to THIS person's actual last message. Never reach for a prepared or gene
 
 1. Reflect what they actually said. Name the specific thing — in their own words or close to them. If they named two things at once, hold both.
 2. Name the live tension or need underneath it — what makes THIS moment particular for them. Stay tentative: "It sounds like...", "I'm noticing...".
-3. Offer a choice of direction and let them steer. Usually two: something practical (map the next concrete step) and something reflective (slow down and listen for what the moment is asking). Sometimes a creative angle or a specific next action fits better. Offer it — do not decide for them.
+3. Offer a choice of direction and let them steer. Usually two: something practical (map the next concrete step) and something reflective (slow down and listen for what the moment is asking). Sometimes a creative angle or a specific next action fits better — or an outward one: where this wants to be lived, a person it involves, a conversation it's asking for. Offer it — do not decide for them.
 4. Only if it genuinely fits, and only after the above, you may add a light elemental or Spiralogic touch — as color, never as a label, never as the point. If it doesn't fit, leave it out entirely.
 
 Understanding repair — this OVERRIDES the order above:
@@ -283,71 +285,6 @@ function asThreads(parsed: unknown): ProposedThread[] | null {
   return out;
 }
 
-// Stage 1 flag. Off by default → the room behaves byte-identically to 6648497e5
-// (Experiment A baseline). On → MAIA's constitutional identity + read-only memory are
-// composed OVER the room's Great-Interviewer Field Configuration, turn-only.
-const PRESENCE_ENABLED = process.env.NOW_WHAT_MAIA_PRESENCE_ENABLED === '1';
-
-/**
- * Assemble the member's read-only presence context: constitutional-memory addenda
- * (developmental influence, member-placed atoms, opt-out-gated cross-session recall).
- * Read-only and non-fatal by construction — the room persists nothing, and any failure
- * degrades silently to the base Field Configuration rather than breaking the encounter.
- * The room holds no server session, so cross-session recall is passed an ephemeral marker
- * id (nothing excluded, nothing written).
- */
-// First embodiment of the Context Assembly interface (lib/maia/context-assembly).
-// Builds named AssembledBlocks from the SHARED loader/orchestrator layer — the same
-// primitives /maia composes — then renders them. Behavior is byte-identical to the
-// prior hand-joined string: same blocks, same order, same '\n\n' separator. The only
-// addition is provenance keys on each block, which never reach the prompt text.
-// This surface is the safest client to converge first (flag-gated, ephemeral,
-// read-only); /maia's order-sensitive addenda are the next, harder adopter.
-async function assemblePresenceContext(memberId: string, message: string): Promise<string> {
-  const blocks: AssembledBlock[] = [];
-  try {
-    const [developmental, themeSignals] = await Promise.all([
-      loadRecentDevelopmentalMemories(memberId, 3),
-      loadRecentThemeSignals(memberId, 10),
-    ]);
-    const memoryPlan = buildMemoryInfluencePlan({
-      message,
-      userId: memberId,
-      conversationHistory: [],
-      recentDevelopmentalMemories: developmental,
-      recentThemeSignals: themeSignals,
-      hasMemberLiveContext: false,
-      hasRelationshipAnamnesis: false,
-    });
-    if (memoryPlan.promptBlock) blocks.push({ key: 'memoryInfluence', text: memoryPlan.promptBlock });
-
-    const atoms = await loadMemberMemoryAtomsForPrompt(memberId);
-    const atomsBlock = formatAtomsForPrompt(atoms);
-    if (atomsBlock) blocks.push({ key: 'atoms', text: atomsBlock });
-
-    const recallEnabled = await loadConversationalRecallPref(memberId);
-    const prior = await loadPriorCrossSessionExchanges(memberId, 'now-what-ephemeral', 6);
-    const recall = formatPriorExchangesForPrompt(prior, {
-      recallEnabled,
-      mode: null,
-      currentSessionTurnCount: 0,
-      lastPriorSessionMinutesAgo: computeLastPriorSessionMinutesAgo(prior),
-    });
-    if (recall.block) blocks.push({ key: 'conversational', text: recall.block });
-
-    console.log('[NowWhat/presence] assembled', {
-      memberIdPrefix: memberId.slice(0, 8),
-      developmental: developmental.length,
-      atoms: atoms.length,
-      priorExchanges: prior.length,
-      blockChars: renderAssembledContext(assembledContext(blocks)).length,
-    });
-  } catch (err) {
-    console.warn('[NowWhat/presence] assembly failed (non-fatal; degraded to base):', err);
-  }
-  return renderAssembledContext(assembledContext(blocks));
-}
-
 export async function POST(request: NextRequest) {
   try {
     const cookieSession = await getCurrentSession();
@@ -379,39 +316,27 @@ export async function POST(request: NextRequest) {
         : buildPhasePrompt(phase);
     const maxTokens = mode === 'turn' ? MAX_TOKENS_TURN : MAX_TOKENS_PROPOSE;
 
-    // Stage 1 (Proof 1): compose MAIA's constitutional identity + read-only memory OVER
-    // the room's Field Configuration. Turn-only — the live encounter; 'propose' stays a
-    // thin JSON extractor (a utility, not an encounter). Ephemeral-safe: read-only, no
-    // writes. Flag off → systemPrompt is exactly the room's own prompt, unchanged.
-    if (PRESENCE_ENABLED && mode === 'turn') {
+    // Stage 1 (Proof 1) + field composition, via the block SHARED with the
+    // vision-studio sibling (lib/maia/roomComposition.ts): MAIA's constitutional
+    // identity composes FIRST, member presence and the practitioner's field strictly
+    // between it and the room's Great-Interviewer grammar (which carries the standing
+    // hard limits LAST). Field selection: the room URL's fieldContext by slug, else
+    // the NOW_WHAT_PRACTICE_FIELD_ID room default — provenance labels which (never
+    // silent). Turn-only — 'propose' stays a thin JSON extractor. Flags off + no
+    // field → systemPrompt is exactly the room's own prompt.
+    let fieldComposed: Awaited<ReturnType<typeof composeRoomTurnPrompt>>['field'] = null;
+    if (mode === 'turn') {
       const lastMemberMessage = [...history].reverse().find((t) => t.role === 'user')?.content ?? '';
-      const presence = await assemblePresenceContext(memberId, lastMemberMessage);
-      systemPrompt = [MAIA_RUNTIME_PROMPT, presence, systemPrompt].filter(Boolean).join('\n\n');
-      console.log('[NowWhat/presence] composed', { systemPromptChars: systemPrompt.length });
-    }
-
-    // Field Context (LARRY_FIELD_SPEC Guarantee 2) — the practitioner's field
-    // enters THIS room through configuration, never through edits to MAIA's
-    // base prompt (the What Now? paper's own thesis, applied to its own room).
-    // The env id names which practice field governs this room; the render is
-    // the field's self-description (content columns) + Layer 4 guidance under
-    // the apprentice-not-imitation guardrail. Live-read: the practitioner's
-    // edit reaches the next turn. Non-fatal by construction.
-    const roomFieldId = process.env.NOW_WHAT_PRACTICE_FIELD_ID;
-    if (roomFieldId && mode === 'turn') {
-      try {
-        const field = await getPracticeFieldById(roomFieldId);
-        const rendered = formatFieldContextForRoom(field);
-        if (rendered) {
-          systemPrompt = `${systemPrompt}\n\n${rendered}`;
-          console.log('[NowWhat/field] applied', {
-            fieldIdPrefix: roomFieldId.slice(0, 8),
-            fieldChars: rendered.length,
-          });
-        }
-      } catch (err) {
-        console.warn('[NowWhat/field] load failed (non-fatal; room continues unshaped):', err);
-      }
+      const composed = await composeRoomTurnPrompt({
+        roomPrompt: systemPrompt,
+        memberId,
+        lastMemberMessage,
+        fieldContext: body?.fieldContext,
+        roomTag: 'NowWhat',
+        ephemeralSessionId: 'now-what-ephemeral',
+      });
+      systemPrompt = composed.systemPrompt;
+      fieldComposed = composed.field;
     }
 
     let messages = history.map(t => ({ role: t.role, content: t.content }));
@@ -429,8 +354,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // NOW_WHAT_CLOUD_REGISTER=1 pins this room's voice to Claude regardless of
-    // LOCAL_TIER_ENABLED's core→Ollama routing. Scoped to this route only — the
+    // NOW_WHAT_CLOUD_REGISTER=1 pins this room family's voice to Claude regardless
+    // of LOCAL_TIER_ENABLED's core→Ollama routing (see cloudRegisterPinned) — the
     // register decision for Larry's field (client-facing presence at full
     // capability), not a platform-wide routing change. Flag-gated, reversible;
     // the local-first default remains the platform posture.
@@ -439,7 +364,7 @@ export async function POST(request: NextRequest) {
       systemPrompt,
       messages,
       maxTokens,
-      forceClaude: process.env.NOW_WHAT_CLOUD_REGISTER === '1',
+      forceClaude: cloudRegisterPinned(),
     });
     const raw = (result.text ?? '').trim();
 
@@ -457,6 +382,11 @@ export async function POST(request: NextRequest) {
         reply: raw,
         cellCandidate,
         served: { provider: result.provider, model: result.model },
+        // Field provenance travels with the reply, same discipline as `served`:
+        // whether the practitioner's field was composed is answerable from the
+        // artifact, not the deploy env. null = no field in this turn's prompt;
+        // `source` names how it was selected (request slug vs room default).
+        field: fieldComposed,
       });
     }
 

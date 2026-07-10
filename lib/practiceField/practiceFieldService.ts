@@ -224,6 +224,21 @@ export async function setFieldGuidance(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LIVE FIELD BY SLUG
+// Resolves a room's opaque fieldContext identifier to the practitioner's LIVE
+// field (no snapshot — room surfaces like What Now? are ephemeral and always
+// see the field as it currently stands). Read-only. Returns the full row so
+// room surfaces render through formatFieldContextForRoom — the same render as
+// the room-default path (knowledge stance + corpus in full), never a thinner
+// sibling of it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getPracticeFieldBySlug(slug: string): Promise<PracticeField | null> {
+  const result = await query(`SELECT * FROM practice_fields WHERE field_slug = $1`, [slug]);
+  return result.rows[0] ?? null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SNAPSHOT
 // Created when a Relationship Space is formed.
 // Per FORMATION_AS_RECORD: immutable; existing spaces keep their formation version.

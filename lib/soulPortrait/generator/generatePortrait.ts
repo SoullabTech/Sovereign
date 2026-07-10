@@ -19,6 +19,7 @@ import {
   type Resonance,
   type SoulPortrait,
   type PortraitMode,
+  type PortraitThemeKey,
 } from '@/lib/soulPortrait/schema';
 import { chartSummaryText, portraitSystemPrompt } from './portraitPrompt';
 import { generateYearAhead } from './generateYearAhead';
@@ -35,6 +36,8 @@ export interface GeneratePortraitInput {
   age?: number;
   pronouns?: string;
   isMinor?: boolean;
+  /** Visual theme the sender chose for the page. Presentation only; omitted → classic. */
+  theme?: PortraitThemeKey;
   /**
    * Optional pasted 12-month transit report → Part II (Year Ahead). Only transit
    * FACTS are extracted (transitReportParser); the report's interpretive prose is
@@ -99,6 +102,7 @@ function assemble(input: GeneratePortraitInput, j: any): SoulPortrait {
       isMinor: input.isMinor,
     },
     mode: input.mode,
+    theme: input.theme,
     birthData: {
       date: input.birthData.date,
       time: input.birthData.time,

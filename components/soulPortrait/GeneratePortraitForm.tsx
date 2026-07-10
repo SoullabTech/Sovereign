@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { PORTRAIT_THEMES, DEFAULT_PORTRAIT_THEME, type PortraitThemeKey } from '@/lib/soulPortrait/schema';
 import { parseTransitReport } from '@/lib/soulPortrait/generator/transitReportParser';
 
 /**
@@ -57,6 +58,7 @@ export function GeneratePortraitForm() {
   const [f, setF] = useState({
     name: '',
     mode: 'gift',
+    theme: DEFAULT_PORTRAIT_THEME as PortraitThemeKey,
     date: '',
     time: '',
     place: '',
@@ -194,6 +196,7 @@ export function GeneratePortraitForm() {
         body: JSON.stringify({
           name: f.name.trim(),
           mode: f.mode,
+          theme: f.theme,
           subjectPersonId: subjectPersonId || undefined,
           age: f.age ? Number(f.age) : undefined,
           isMinor: f.isMinor,
@@ -262,6 +265,25 @@ export function GeneratePortraitForm() {
             </select>
           </Field>
           <Field label="Age (optional)"><input style={inp} value={f.age} onChange={(e) => set('age', e.target.value)} inputMode="numeric" placeholder="34" /></Field>
+        </Row>
+        <Row>
+          <Field label="Page theme">
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <select
+                style={{ ...inp, flex: 1 }}
+                value={f.theme}
+                onChange={(e) => set('theme', e.target.value as PortraitThemeKey)}
+              >
+                {Object.values(PORTRAIT_THEMES).map((t) => (
+                  <option key={t.key} value={t.key}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+              <ThemeSwatch themeKey={f.theme} />
+            </div>
+            <Hint tone="ok">{PORTRAIT_THEMES[f.theme].description} You can regenerate with a different theme later.</Hint>
+          </Field>
         </Row>
         <Row>
           <Field label="Birth date"><input style={inp} type="date" value={f.date} onChange={(e) => set('date', e.target.value)} /></Field>
@@ -417,6 +439,25 @@ const resultRow: React.CSSProperties = {
   color: '#2d3748',
   cursor: 'pointer',
 };
+
+/** Tiny preview of a theme (dark register): page ground, card surface, accent. */
+function ThemeSwatch({ themeKey }: { themeKey: PortraitThemeKey }) {
+  const v = PORTRAIT_THEMES[themeKey].dark;
+  const dot = (bg: string): React.CSSProperties => ({
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    background: bg,
+    border: '1px solid rgba(0,0,0,0.15)',
+  });
+  return (
+    <span style={{ display: 'flex', gap: 4, alignItems: 'center' }} aria-hidden>
+      <span style={dot(v['--sp-ground'])} />
+      <span style={dot(v['--sp-surface'])} />
+      <span style={dot(v['--sp-accent'])} />
+    </span>
+  );
+}
 
 function Hint({ tone, children }: { tone: 'warn' | 'ok'; children: React.ReactNode }) {
   return (
