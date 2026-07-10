@@ -1024,16 +1024,27 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             ))}
           </ul>
         )}
+        {/* The off-ramp is the room's telos: the exit door leads OUT — into the
+            member's own field and back into their life — never back into more
+            room. ("The room exists to return people to their lives," 2026-07-10.) */}
         <p className="text-slate-500 text-sm font-light">
-          The field holds what you authored. You may return to continue.
+          Take this back with you. The room will be here when it&apos;s been lived.
         </p>
-        <button
-          type="button"
-          onClick={() => { if (typeof window !== 'undefined') window.location.reload(); }}
-          className="text-[#ffe27a] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
-        >
-          Return to continue
-        </button>
+        <div className="flex items-center gap-6">
+          <a
+            href={`/now-what/field${fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : ''}`}
+            className="text-[#ffe27a] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
+          >
+            See your field
+          </a>
+          <button
+            type="button"
+            onClick={() => { if (typeof window !== 'undefined') window.location.reload(); }}
+            className="text-slate-600 hover:text-slate-400 text-sm underline underline-offset-4 transition-colors"
+          >
+            Begin again
+          </button>
+        </div>
       </div>
     );
   }
@@ -1430,6 +1441,17 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             >
               Bring something with you
             </button>
+            {/* Exit symmetric to the entry gesture: the threshold out of the
+                conversation and into the carry → practice → life sequence. */}
+            {turns.length >= 2 && (
+              <button
+                onClick={listenBack}
+                disabled={working}
+                className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors disabled:opacity-30"
+              >
+                Take something back with you
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {speechSupported && (
