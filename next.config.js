@@ -114,6 +114,20 @@ const nextConfig = {
     // the HTML and the browser will receive 200 instead of 308.
     async redirects() {
       return [
+        // Spelling aliases for the Now What? door — /whatnow and /what-now are
+        // what a person types from memory (the founder did, 2026-07-10). They
+        // land on the canonical entry, which then routes to the room. NOT
+        // permanent: aliases follow the entry, they don't cache-pin it.
+        {
+          source: '/whatnow',
+          destination: '/now-what',
+          permanent: false,
+        },
+        {
+          source: '/what-now',
+          destination: '/now-what',
+          permanent: false,
+        },
         // /now-what — room as entry (2026-07-08). The front door of the
         // Now What? field is the live room, not the pitch slideshow. Redirects
         // run BEFORE middleware, so the unauthenticated flow composes cleanly:
