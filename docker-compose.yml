@@ -17,6 +17,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # This file IS the local dev lane, so it declares itself. The production
+        # compose file has no default — see the deploy-lane tripwire in the
+        # Dockerfile and docs/ops/DEPLOY_LANE_TOKEN.md.
+        DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-local-dev}
     container_name: maia-sovereign
     ports:
       - "3000:3000"
@@ -132,6 +137,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder  # Uses builder stage with Prisma CLI
+      args:
+        # Local dev lane — see the maia service's build args above.
+        DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-local-dev}
 
     # Read DATABASE_URL from .env.docker
     env_file:

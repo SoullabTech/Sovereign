@@ -11,6 +11,22 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+# Deploy-lane tripwire — same mechanism as the main Dockerfile: refuse
+# out-of-lane builds loudly instead of letting a raw `docker compose ... up -d
+# --build` bypass the deploy-lane lock and pre-deploy gate quietly
+# (2026-07-10 incident). Token exported by scripts/deploy-lock.sh; forwarded
+# by docker-compose.production.yml. See docs/ops/DEPLOY_LANE_TOKEN.md.
+ARG DEPLOY_LANE_TOKEN=""
+RUN if [ -z "$DEPLOY_LANE_TOKEN" ]; then \
+      echo ""; \
+      echo "🛑 OUT-OF-LANE BUILD REFUSED — no DEPLOY_LANE_TOKEN reached this build."; \
+      echo "   Deploy through scripts/deploy-production.sh or scripts/pre-deploy-gate.sh,"; \
+      echo "   or declare a lane explicitly: --build-arg DEPLOY_LANE_TOKEN=local-dev"; \
+      echo "   (see docs/ops/DEPLOY_LANE_TOKEN.md)."; \
+      echo ""; \
+      exit 1; \
+    fi
+
 # Copy package.json for API
 COPY apps/api/package.json ./
 

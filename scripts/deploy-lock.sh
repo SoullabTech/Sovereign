@@ -91,4 +91,15 @@ acquire_deploy_lock() {
         echo "git_commit=${GIT_COMMIT:-$(git -C "$PROJECT_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)}"
     } > "$DEPLOY_LOCK_FILE"
     echo "[deploy-lock] acquired $DEPLOY_LOCK_FILE (pid $$, entry: $label)" >&2
+
+    # Lane token — proof, forwarded into the image build, that this deploy came
+    # through the lane machinery. docker-compose.production.yml passes it as the
+    # DEPLOY_LANE_TOKEN build arg (deliberately no default there) and the
+    # Dockerfiles REFUSE to build without it, so the raw
+    # `docker compose ... up -d --build` bypass (2026-07-10 incident) fails
+    # loudly instead of succeeding quietly. Constant by design: a per-deploy
+    # nonce would invalidate the docker layer cache on every deploy. This trips
+    # the QUIET bypass; typing the token by hand is an explicit, greppable act.
+    # See docs/ops/DEPLOY_LANE_TOKEN.md.
+    export DEPLOY_LANE_TOKEN="deploy-lane"
 }

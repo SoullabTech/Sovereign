@@ -133,8 +133,11 @@ EOF
 fi
 
 # Build Docker image
+# DEPLOY_LANE_TOKEN: this script IS the m4-setup lane — the Dockerfile's
+# deploy-lane tripwire refuses token-less builds (docs/ops/DEPLOY_LANE_TOKEN.md).
 echo "   Building consciousness computing Docker image..."
-docker build -t $CONSCIOUSNESS_COMPUTING_IMAGE . --platform linux/arm64
+docker build -t $CONSCIOUSNESS_COMPUTING_IMAGE . --platform linux/arm64 \
+    --build-arg DEPLOY_LANE_TOKEN=m4-setup
 
 echo "✅ Docker image built successfully"
 
