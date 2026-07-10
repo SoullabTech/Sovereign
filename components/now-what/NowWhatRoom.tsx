@@ -666,7 +666,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
               <h1 style={SERIF} className="text-4xl sm:text-5xl font-light text-slate-100 tracking-wide">Welcome.</h1>
             </div>
             <div style={fadeUpStyle(0.5)} className="space-y-5 text-slate-300 text-[17px] font-light leading-[1.85]">
-              <p>Flourishing isn't a destination. It's a practice — one you live, day by day, long after a conversation ends.</p>
+              <p>Flourishing is a practice — one you live, day by day, long after a conversation ends.</p>
               <p>This is where that practice continues.</p>
               <p>It's a place to return to between our conversations. A place to notice what you're learning, work with the questions that matter, and bring fresh experience back into the conversation.</p>
               <p style={SERIF} className="text-slate-100 text-lg italic">You set the rhythm.</p>
