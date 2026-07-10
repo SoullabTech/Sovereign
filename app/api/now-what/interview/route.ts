@@ -44,6 +44,7 @@ import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCross
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt } from '@/lib/maia/memoryAtomsLoader';
 import { formatPriorExchangesForPrompt, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
 import { assembledContext, renderAssembledContext, type AssembledBlock } from '@/lib/maia/context-assembly/contextAssembly';
+import { getPracticeFieldById, formatFieldContextForRoom } from '@/lib/practiceField/practiceFieldService';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -387,6 +388,30 @@ export async function POST(request: NextRequest) {
       const presence = await assemblePresenceContext(memberId, lastMemberMessage);
       systemPrompt = [MAIA_RUNTIME_PROMPT, presence, systemPrompt].filter(Boolean).join('\n\n');
       console.log('[NowWhat/presence] composed', { systemPromptChars: systemPrompt.length });
+    }
+
+    // Field Context (LARRY_FIELD_SPEC Guarantee 2) — the practitioner's field
+    // enters THIS room through configuration, never through edits to MAIA's
+    // base prompt (the What Now? paper's own thesis, applied to its own room).
+    // The env id names which practice field governs this room; the render is
+    // the field's self-description (content columns) + Layer 4 guidance under
+    // the apprentice-not-imitation guardrail. Live-read: the practitioner's
+    // edit reaches the next turn. Non-fatal by construction.
+    const roomFieldId = process.env.NOW_WHAT_PRACTICE_FIELD_ID;
+    if (roomFieldId && mode === 'turn') {
+      try {
+        const field = await getPracticeFieldById(roomFieldId);
+        const rendered = formatFieldContextForRoom(field);
+        if (rendered) {
+          systemPrompt = `${systemPrompt}\n\n${rendered}`;
+          console.log('[NowWhat/field] applied', {
+            fieldIdPrefix: roomFieldId.slice(0, 8),
+            fieldChars: rendered.length,
+          });
+        }
+      } catch (err) {
+        console.warn('[NowWhat/field] load failed (non-fatal; room continues unshaped):', err);
+      }
     }
 
     let messages = history.map(t => ({ role: t.role, content: t.content }));
