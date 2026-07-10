@@ -106,6 +106,13 @@ The composed block distinguishes exactly two footings:
   assume**. The arrival line handles this naturally: an unconfirmed-lately position
   just asks again.
 
+Within confirmed-current, `stated_by` carries a register distinction the composed
+block must preserve: `member_confirmed` ratifies the room's assumption ("you
+confirmed you're in Savoring week"), while `member_stated` authored new position
+information in the member's own words ("you told me you're revisiting the values
+work from the retreat" — their words, verbatim, never the system's paraphrase).
+Different epistemic acts, different footing in MAIA's voice.
+
 Composed block shape (illustrative):
 
 ```
