@@ -46,6 +46,15 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/patrons', public: true, notes: 'Patrons page' },
   { exact: '/portals', public: true, notes: 'Portals listing' },
   { exact: '/public-demo', public: true, notes: 'Public demo' },
+  // Public marketing landings (2026-07-10) — the outward faces of gated
+  // surfaces, so a share card or deck CTA never points at a login wall.
+  // Copy governed by docs/canon/MARKETING_CLAIM_DISCIPLINE.md; cards by
+  // docs/ops/SHARE_CARDS.md (PUBLIC-SECTION class). The working surfaces
+  // stay gated: /maia/vision-studio, /studio, /book-studio, /now-what/room.
+  { exact: '/vision-studio', public: true, notes: 'Vision Studio public landing — member room stays gated at /maia/vision-studio' },
+  { exact: '/soullab-studio', public: true, notes: 'Soullab Studio public landing — practitioner app stays gated at /studio' },
+  { exact: '/press', public: true, notes: 'Soullab Press public landing — editorial workspace stays founder-gated at /book-studio' },
+  { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)
   // straight into the live room; the pitch slideshow was demoted to
