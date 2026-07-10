@@ -68,12 +68,16 @@ interface CellCandidate {
   source: 'system_inferred';
 }
 
+// Spoken in FELT language, never element names — the frame directive for this
+// field: MAIA may think in elements; she speaks in how flourishing moves.
+// A client who has never heard of Spiralogic must recognize themselves in the
+// phrase. The element mapping underneath (Holoflower, confirmations) is unchanged.
 const ELEMENT_FEELING_LABEL: Record<SpiralElement, string> = {
-  Fire: 'Fire awakening',
-  Water: 'Water moving',
-  Earth: 'Earth settling',
-  Air: 'Air clarifying',
-  Aether: 'something wider gathering',
+  Fire: 'new energy trying to move',
+  Water: 'something deeper finding its flow',
+  Earth: 'something taking solid shape',
+  Air: 'a clearer way of seeing arriving',
+  Aether: 'things weaving together',
 };
 
 const ALL_ELEMENTS: SpiralElement[] = ['Fire', 'Water', 'Earth', 'Air', 'Aether'];
@@ -1330,7 +1334,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                   onClick={() => chooseElementInstead(el)}
                   className="text-slate-400 hover:text-slate-200 underline underline-offset-2 transition-colors"
                 >
-                  {el}
+                  {ELEMENT_FEELING_LABEL[el]}
                 </button>
               ))}
             </div>
