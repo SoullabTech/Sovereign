@@ -25,10 +25,10 @@ Third entry point (name it, don't demo it yet): **Leadership Team Companion** �
 |---|---|---|---|
 | 1 (2m) | Meet Michael — one profile page, "just enough humanity" | Slide or simple page | Demo asset to make |
 | 2 (2m) | The workshop, summarized. Larry: *"Between now and our next gathering, I'd like you to continue working inside Now What?"* | Slide | Demo asset to make |
-| 3 (4m) | First arrival: threshold → *"How are you entering this room today?"* → reflection → a practice emerges | **Live** — `/maia/vision-studio?program=now-what` | ✅ Deployed `8f0482623` |
+| 3 (4m) | First arrival: threshold → *"How are you entering this room today?"* → reflection → a practice emerges | **Live** — `/now-what/room?phase=fire_1&fieldContext=now-what-demo` | ✅ Live (relocated — see link correction below) |
 | 4 (3m) | Living between sessions — time passes as a 4-week timeline, not every conversation | **Seeded** — 4 weekly shared threads (see manifest) render in Larry's view; a member-side timeline view is polish | Seeded ✅ / polish open |
 | 5 (4m) | Larry's view — Questions Alive · Practices · Recognitions · Shared Reflections; *only what Michael chose to share* | **Live** — `/studio/fields/<michael-id>` (threads grouped by tag/phase) | ✅ (4-section grouping = polish pass) |
-| 6 (3m) | Return — the room opens from the practice: *"Last time you chose this practice. What happened?"* Larry asks *"Tell me what happened when you tried that morning practice"* instead of *"How have you been?"* | **Live** — return branch | ✅ Deployed |
+| 6 (3m) | Return — the room opens from the practice: *"Last time you chose this practice. What happened?"* Larry asks *"Tell me what happened when you tried that morning practice"* instead of *"How have you been?"* | **Live** — return branch (in `/now-what/room`) | ✅ Deployed |
 
 **Walkthrough credentials + links:** see seeded-data manifest below.
 
@@ -56,8 +56,10 @@ Created 2026-07-05 via SQL on minisforum. **All demo rows are fictional, labeled
 **Demo links:**
 - Demo Home (front door): `https://soullab.life/now-what/`
 - Overview deck: `https://soullab.life/now-what/overview.html`
-- Michael's room (return branch fires on arrival): `https://soullab.life/maia/vision-studio?program=now-what&phase=fire_1&fieldContext=now-what-demo`
+- Michael's room (return branch fires on arrival): `https://soullab.life/now-what/room?phase=fire_1&fieldContext=now-what-demo`
 - Larry/Kelly's facilitator view: `https://soullab.life/studio/fields/<michael-demo-id>`
+
+**Link correction (2026-07-10):** this spec originally pointed Michael's room at `/maia/vision-studio?program=now-what&…`. That link is wrong on two counts: (1) the workshop loop did ship inside Vision Studio as `8f0482623`, but was removed from that surface under the client-boundary hold (`20b991ba4`, relanded `1d644ceb6`, final revert `01d370de6` — *"isolated embodiment instead"*), and the room now lives at `/now-what/room` (`app/now-what/room/page.tsx`, `components/now-what/NowWhatRoom.tsx`) per the founder direction of 2026-07-06; (2) the vision-studio page never reads a `program` param, so the old link silently opened the Vision Field Interview — a different room with no Now What? threshold, practice commitment, or return branch. The demo front door (`/now-what/`) already links to the correct room. `program=now-what` is not a supported param anywhere; links above are canonical. No redirect was added to the vision-studio page — reintroducing a now-what branch there would re-cross the client-boundary hold the reverts established.
 
 **Namespace decision (Kelly, 2026-07-06):**
 
