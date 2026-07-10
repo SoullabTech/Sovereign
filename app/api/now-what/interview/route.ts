@@ -404,11 +404,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // NOW_WHAT_CLOUD_REGISTER=1 pins this room's voice to Claude regardless of
+    // LOCAL_TIER_ENABLED's core→Ollama routing. Scoped to this route only — the
+    // register decision for Larry's field (client-facing presence at full
+    // capability), not a platform-wide routing change. Flag-gated, reversible;
+    // the local-first default remains the platform posture.
     const result = await getLLMProvider().generateSimple({
       tier: mode === 'turn' ? 'core' : 'deep',
       systemPrompt,
       messages,
       maxTokens,
+      forceClaude: process.env.NOW_WHAT_CLOUD_REGISTER === '1',
     });
     const raw = (result.text ?? '').trim();
 

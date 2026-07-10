@@ -1207,8 +1207,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   // — Conversation: the room, recomposed. The mandala anchors the vertical axis; —
   // — the conversation flows beneath it in a comfortable measure. —
   return (
-    <div className="flex flex-col h-full max-w-[46rem] mx-auto w-full">
-      <div className="px-4 pt-8 pb-4 flex flex-col items-center gap-3">
+    <div className="relative flex flex-col h-full max-w-[46rem] mx-auto w-full">
+      <style>{NW_FADE_KEYFRAMES}</style>
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(125,175,255,0.06),transparent_70%)]" />
+      <div className="relative px-4 pt-8 pb-4 flex flex-col items-center gap-3">
         <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
             coolTint
@@ -1220,7 +1222,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           />
         </div>
         <div className="text-center">
-          <p className="text-xs uppercase tracking-widest text-slate-500">{roomTitle}</p>
+          <p className="text-[11px] uppercase tracking-[0.35em] text-slate-500">{roomTitle}</p>
           {!nowWhat && <p className="text-slate-400 text-sm font-light">{phaseLabel}</p>}
         </div>
         {turns.length >= 4 && (
@@ -1250,8 +1252,8 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       </div>
 
       {guided && turns.length === 0 && (
-        <div className="px-4 pb-6 border-b border-slate-800 text-center">
-          <p className="text-slate-300 text-base font-light leading-relaxed">
+        <div className="relative px-4 pb-6 border-b border-slate-800/70 text-center">
+          <p style={SERIF} className="text-slate-100 text-xl font-light leading-relaxed">
             {openingQuestion || "No need to have it fully formed — what's stirring? We can talk it through."}
           </p>
         </div>
@@ -1260,26 +1262,32 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         <AnimatePresence initial={false}>
           {turns.map((t, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`text-sm leading-relaxed font-light ${t.role === 'user' ? 'text-slate-200' : 'text-slate-400'}`}
+              style={{
+                ...(t.role === 'assistant' ? SERIF : {}),
+                opacity: 0,
+                animation: 'nwFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+              }}
+              className={
+                t.role === 'user'
+                  ? 'text-slate-400 text-[15px] leading-relaxed font-light'
+                  : 'text-slate-100 text-[17px] leading-[1.85] font-light'
+              }
             >
               {t.content}
-            </motion.div>
+            </div>
           ))}
           {working && (
-            <motion.div
+            <div
               key="working"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-slate-400 text-sm font-light"
+              style={{ ...SERIF, opacity: 0, animation: 'nwFadeUp 0.4s ease forwards' }}
+              className="text-slate-400 text-base font-light italic"
               aria-live="polite"
             >
               <span className="sr-only">MAIA is responding…</span>
               <span aria-hidden="true">…</span>
-            </motion.div>
+            </div>
           )}
         </AnimatePresence>
       </div>
@@ -1452,7 +1460,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             <button
               onClick={() => sendTurn(draft)}
               disabled={working || !draft.trim()}
-              className="rounded-full bg-slate-100 px-5 py-1.5 text-sm font-medium text-slate-900 transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+              className="rounded-full border border-[#ffe27a]/30 px-6 py-1.5 text-sm tracking-[0.14em] uppercase font-light text-[#ffe27a] transition-all duration-300 hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 disabled:opacity-25 disabled:cursor-not-allowed"
             >
               {working ? 'Sending…' : 'Send'}
             </button>

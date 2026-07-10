@@ -437,3 +437,6 @@ scripts/voice-ecosystem-watch-state.json
 
 # Node compile cache — Bun/Node build artifacts, regenerated per build
 node-compile-cache/
+
+# Deploy lane lock (scripts/deploy-lock.sh) — runtime artifact, never committed
+.deploy.lock
