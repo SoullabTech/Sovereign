@@ -1863,11 +1863,15 @@ export default function AstrologyPage() {
           <h2 className={`text-2xl font-serif mb-6 text-center ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
             Elemental Balancing & Current Energy Dynamics
           </h2>
+          {/* No `verdict` is passed: this page's elementalBalance state is
+              hardcoded placeholder data (see the TODO where it is set), so
+              no dominance may be claimed from it (C-fence). The former
+              "Dominant Element: X" banner — which crowned from that
+              placeholder for every member — is removed rather than wired to
+              fiction. PROPOSED disposition pending Kelly's interim decision;
+              restoring it requires real chart wiring + the versioned rule
+              (lib/spiralogic/interpretation). */}
           <ElementalBalanceDisplay balance={elementalBalance} />
-          <div className={`mt-6 text-xs text-center ${isDayMode ? 'text-stone-600' : 'text-stone-400'} italic`}>
-            <p>Dominant Element: <strong>{Object.entries(elementalBalance).reduce((a, b) => a[1] > b[1] ? a : b)[0].toUpperCase()}</strong> ·
-            Integration practices available through personalized guidance</p>
-          </div>
         </motion.div>
 
         {/* Spiralogic Elemental Mapping */}
