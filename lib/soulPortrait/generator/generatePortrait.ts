@@ -21,6 +21,8 @@ import {
   type PortraitMode,
 } from '@/lib/soulPortrait/schema';
 import { chartSummaryText, portraitSystemPrompt } from './portraitPrompt';
+import { generateYearAhead } from './generateYearAhead';
+import { parseTransitReport, type ParsedTransit } from './transitReportParser';
 
 export interface GeneratePortraitInput {
   name: string;
@@ -33,6 +35,13 @@ export interface GeneratePortraitInput {
   age?: number;
   pronouns?: string;
   isMinor?: boolean;
+  /**
+   * Optional pasted 12-month transit report → Part II (Year Ahead). Only transit
+   * FACTS are extracted (transitReportParser); the report's interpretive prose is
+   * copyright (Henry Seltzer / Astrograph) and is discarded unread — never stored,
+   * never prompted. All Year Ahead prose is written fresh.
+   */
+  transitReport?: string;
 }
 
 const ELEMENT_KEYS: ElementKey[] = ['fire', 'water', 'earth', 'air', 'aether'];
@@ -163,6 +172,18 @@ export async function generateSoulPortrait(
   const chart = await calculateBirthChart(input.birthData);
   const summary = chartSummaryText(chart);
 
+  // Parse the transit report FIRST (cheap, no model call) so an unusable report
+  // fails before any generation spend. Facts only ever leave the parser.
+  let parsedTransits: ParsedTransit[] | null = null;
+  if (input.transitReport?.trim()) {
+    const { transits, warnings } = parseTransitReport(input.transitReport);
+    if (transits.length === 0) throw new Error('transit_report_unparseable');
+    if (warnings.length) {
+      console.warn(`[soul-portrait/year-ahead] parse warnings (${warnings.length}): ${warnings.join(' · ')}`);
+    }
+    parsedTransits = transits;
+  }
+
   const llm = await getLLMProvider().generateSimple({
     tier: 'deep',
     // Cloud-primary-labeled (settled 2026-07-09): a deliberate provider choice,
@@ -191,8 +212,20 @@ export async function generateSoulPortrait(
   });
 
   const json = parseModelJson(llm.text || '');
+  const portrait = assemble(input, json);
+
+  // Part II — the Year Ahead, assembled deterministically like Part I above.
+  if (parsedTransits) {
+    portrait.yearAhead = await generateYearAhead({
+      name: input.name,
+      age: input.age,
+      isMinor: input.isMinor,
+      transits: parsedTransits,
+      natalSummary: summary,
+    });
+  }
   return {
-    portrait: assemble(input, json),
+    portrait,
     provenance: { provider: llm.provider, model: llm.model },
   };
 }
