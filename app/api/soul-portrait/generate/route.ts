@@ -18,7 +18,7 @@ import { createDraftPortrait } from '@/lib/soulPortrait/portraitStore';
 import { subjectIsInColab } from '@/lib/soulPortrait/subjectScope';
 import { resolveCurrentTeamId, COLAB_TEAM_COOKIE } from '@/lib/team/colabTeams';
 import { cookies } from 'next/headers';
-import type { PortraitMode } from '@/lib/soulPortrait/schema';
+import { PORTRAIT_THEMES, type PortraitMode, type PortraitThemeKey } from '@/lib/soulPortrait/schema';
 
 const MODES: PortraitMode[] = ['self', 'parent-child', 'gift', 'legacy'];
 
@@ -41,6 +41,18 @@ export async function POST(request: NextRequest) {
   const name = String(body?.name || '').trim();
   const bd = body?.birthData;
   const mode: PortraitMode = MODES.includes(body?.mode) ? body.mode : 'gift';
+  // Sender-chosen visual theme. Unknown/missing → undefined (renders as classic).
+  const theme: PortraitThemeKey | undefined =
+    typeof body?.theme === 'string' && body.theme in PORTRAIT_THEMES ? (body.theme as PortraitThemeKey) : undefined;
+
+  // Optional Year Ahead source: pasted 12-month transit report. Held in memory for
+  // this request only — the generator extracts transit FACTS and the raw text is
+  // never stored or forwarded (interpretive prose is Henry Seltzer / Astrograph
+  // copyright; see lib/soulPortrait/generator/transitReportParser.ts).
+  const transitReport = body?.transitReport ? String(body.transitReport) : undefined;
+  if (transitReport && transitReport.length > 300_000) {
+    return NextResponse.json({ error: 'transit report too large (300KB max)' }, { status: 400 });
+  }
 
   if (!name) return NextResponse.json({ error: 'name is required' }, { status: 400 });
   if (!bd?.date || !bd?.time || typeof bd?.location?.lat !== 'number' || typeof bd?.location?.lng !== 'number' || !bd?.location?.timezone) {
@@ -68,11 +80,13 @@ export async function POST(request: NextRequest) {
       name,
       slug: slugify(name),
       mode,
+      theme,
       birthData: { date: bd.date, time: bd.time, location: bd.location },
       birthPlace: body?.birthPlace ? String(body.birthPlace) : undefined,
       age: typeof body?.age === 'number' ? body.age : undefined,
       pronouns: body?.pronouns ? String(body.pronouns) : undefined,
       isMinor: body?.isMinor === true,
+      transitReport,
     });
 
     const stored = await createDraftPortrait({
@@ -96,6 +110,18 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     if (err?.message === 'generator_incomplete_output') {
       return NextResponse.json({ error: 'The draft came back incomplete — please try again.' }, { status: 502 });
+    }
+    if (err?.message === 'transit_report_unparseable') {
+      return NextResponse.json(
+        { error: 'No transit data found in the pasted report — check it contains lines like "Transiting Pluto in opposition with natal Jupiter" with dates, or clear the field to generate Part I only.' },
+        { status: 400 },
+      );
+    }
+    if (err?.message === 'year_ahead_incomplete_output' || String(err?.message || '').startsWith('year_ahead_manufactured_transit')) {
+      return NextResponse.json(
+        { error: 'The Year Ahead came back incomplete — please try again. (Part I was not saved; nothing was published.)' },
+        { status: 502 },
+      );
     }
     console.error('[soul-portrait/generate] error', err);
     return NextResponse.json({ error: 'Generation failed' }, { status: 500 });

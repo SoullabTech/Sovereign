@@ -18,6 +18,11 @@ export async function generateStaticParams() {
  * of canned follow-ups and the room was locked to one phase, producing generic,
  * could-be-anyone questions (e.g. the repeated "Where does that come from?").
  *
+ * Telos (ratified in dialogue 2026-07-10): the off-ramp is not a safety feature —
+ * it is the room's purpose. The room exists to return people to their lives; every
+ * encounter should end with life becoming larger than the room. If the room
+ * succeeds by keeping someone talking to MAIA, it has failed.
+ *
  * Governance (unchanged):
  *   - Ephemeral: this route does NOT persist anything. Evidence crosses into the
  *     field only through an explicit member gesture (the field-note route).
@@ -88,7 +93,7 @@ Respond to THIS person's actual last message. Never reach for a prepared or gene
 
 1. Reflect what they actually said. Name the specific thing — in their own words or close to them. If they named two things at once, hold both.
 2. Name the live tension or need underneath it — what makes THIS moment particular for them. Stay tentative: "It sounds like...", "I'm noticing...".
-3. Offer a choice of direction and let them steer. Usually two: something practical (map the next concrete step) and something reflective (slow down and listen for what the moment is asking). Sometimes a creative angle or a specific next action fits better. Offer it — do not decide for them.
+3. Offer a choice of direction and let them steer. Usually two: something practical (map the next concrete step) and something reflective (slow down and listen for what the moment is asking). Sometimes a creative angle or a specific next action fits better — or an outward one: where this wants to be lived, a person it involves, a conversation it's asking for. Offer it — do not decide for them.
 4. Only if it genuinely fits, and only after the above, you may add a light elemental or Spiralogic touch — as color, never as a label, never as the point. If it doesn't fit, leave it out entirely.
 
 Understanding repair — this OVERRIDES the order above:
