@@ -1,4 +1,5 @@
 # Spiralogic Registration Grammar — v1 Spec
+**Canonical home:** `docs/specs/SPIRALOGIC_REGISTRATION_GRAMMAR_SPEC_2026-07-09.md` on `feature/now-what-maia-presence` (main worktree) until merged to `clean-main-no-secrets`, then main is home. Every other appearance of this spec — pasted blocks, other branches, summaries — is a pointer, not an editable copy. Edits happen here only; ratifications (Q1/Q4/Q5, SQ-1..3 pending) land here first.
 **Status:** CORE DECIDED (Kelly, 2026-07-09) — Q0/Q2 authored; Q3/Q7 resolved by consequence; **Q6 RATIFIED = Option C (Kelly, 2026-07-09 — see Ratification block below)**; Q1/Q4/Q5 carry proposed defaults awaiting ratify-or-edit (Q4 simplifies at the grammar layer under C; Q5's weighting question relocates to the interpretive layer for summaries, while distribution weights remain the 1.0 default pending its own ratify).
 **Deliverable:** pure function `registerChart(positions: ChartPositions) → SpiralogicProfile` — deterministic, no LLM, fully unit-tested, **Built-unwired**.
 
