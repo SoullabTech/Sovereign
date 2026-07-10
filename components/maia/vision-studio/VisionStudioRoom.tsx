@@ -216,7 +216,14 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     const res = await apiFetch('/api/maia/vision-studio/interview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history, mode, phase }),
+      body: JSON.stringify({
+        history,
+        mode,
+        phase,
+        // The same opaque identifier the room already carries lets the server
+        // compose the practitioner's field into the turn (downstream of MAIA's own).
+        ...(fieldContext ? { fieldContext } : {}),
+      }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json?.error || 'Not available right now.');

@@ -29,6 +29,13 @@ import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { getLLMProvider, ensureUserTerminal } from '@/lib/consciousness/LLMProvider';
 import { inferSpiralogicCell, type Element } from '@/lib/consciousness/spiralogic-core';
 
+// MAIA presence + practitioner field composition, via the block SHARED with the
+// now-what sibling route (lib/maia/roomComposition.ts — one composition order, one
+// field resolution, one provenance shape; extracted so the siblings cannot drift,
+// per the addenda-channel divergence lesson). Read-only, non-fatal, turn-only —
+// this room's ephemeral no-write contract is unchanged.
+import { composeRoomTurnPrompt, cloudRegisterPinned } from '@/lib/maia/roomComposition';
+
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
 const MAX_HISTORY = 40;
@@ -318,10 +325,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Say something first.' }, { status: 400 });
     }
 
-    const systemPrompt = mode === 'propose'
+    let systemPrompt = mode === 'propose'
       ? PROPOSE_SYSTEM
       : (PHASE_PROMPTS[phase] ?? FALLBACK_PHASE_PROMPT(phase));
     const maxTokens = mode === 'turn' ? MAX_TOKENS_TURN : MAX_TOKENS_PROPOSE;
+
+    // Shared composition (see import note): MAIA's constitutional identity FIRST,
+    // member presence and the practitioner's field strictly between it and this
+    // room's phase prompt (which carries the standing hard limits LAST). Field
+    // selection: the room URL's fieldContext by slug (the Larry demo's Michael
+    // link arrives here), else the NOW_WHAT_PRACTICE_FIELD_ID room default —
+    // provenance labels which. Turn-only; flags off + no field → systemPrompt is
+    // exactly the room's own prompt.
+    let fieldComposed: Awaited<ReturnType<typeof composeRoomTurnPrompt>>['field'] = null;
+    if (mode === 'turn') {
+      const lastMemberMessage = [...history].reverse().find((t) => t.role === 'user')?.content ?? '';
+      const composed = await composeRoomTurnPrompt({
+        roomPrompt: systemPrompt,
+        memberId,
+        lastMemberMessage,
+        fieldContext: body?.fieldContext,
+        roomTag: 'VisionStudio',
+        ephemeralSessionId: 'vision-studio-ephemeral',
+      });
+      systemPrompt = composed.systemPrompt;
+      fieldComposed = composed.field;
+    }
 
     let messages = history.map(t => ({ role: t.role, content: t.content }));
     if (messages[messages.length - 1]?.role !== 'user') {
@@ -338,11 +367,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // NOW_WHAT_CLOUD_REGISTER=1 pins this room family's voice to Claude regardless
+    // of LOCAL_TIER_ENABLED's core→Ollama routing (see cloudRegisterPinned) — one
+    // register decision for the What Now? family, not a platform-wide routing change.
     const result = await getLLMProvider().generateSimple({
       tier: mode === 'turn' ? 'core' : 'deep',
       systemPrompt,
       messages,
       maxTokens,
+      forceClaude: cloudRegisterPinned(),
     });
     const raw = (result.text ?? '').trim();
 
@@ -352,7 +385,18 @@ export async function POST(request: NextRequest) {
       // This route remains read+reply only — no writes occur here or below.
       const lastMemberTurn = [...history].reverse().find((t) => t.role === 'user');
       const cellCandidate = lastMemberTurn ? await detectCellCandidate(lastMemberTurn.content) : null;
-      return NextResponse.json({ ok: true, reply: raw, cellCandidate });
+      // Provider + field provenance travel with the reply (label-travels-with-
+      // assertion; the room persists nothing, so the response IS the artifact —
+      // "what am I talking to" and "whose field was in the prompt" must be
+      // answerable from the data, not the deploy env). Same shape as the
+      // now-what sibling.
+      return NextResponse.json({
+        ok: true,
+        reply: raw,
+        cellCandidate,
+        served: { provider: result.provider, model: result.model },
+        field: fieldComposed,
+      });
     }
 
     const threads = asThreads(extractJson(raw));
