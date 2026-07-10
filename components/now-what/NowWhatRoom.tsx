@@ -294,6 +294,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         history,
         mode,
         phase,
+        // The same opaque identifier used for return detection also lets the server
+        // compose the practitioner's field into the turn (downstream of MAIA's own).
+        ...(fieldContext ? { fieldContext } : {}),
         ...(priorPractice ? { returningPractice: priorPractice } : {}),
       }),
     });

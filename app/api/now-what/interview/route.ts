@@ -46,6 +46,12 @@ import { formatPriorExchangesForPrompt, computeLastPriorSessionMinutesAgo } from
 import { assembledContext, renderAssembledContext, type AssembledBlock } from '@/lib/maia/context-assembly/contextAssembly';
 import { getPracticeFieldById, formatFieldContextForRoom } from '@/lib/practiceField/practiceFieldService';
 
+// Field composition (Kelly directive 2026-07-10): the room's fieldContext resolves to
+// the practitioner's LIVE practice field, composed as context — never instructions —
+// strictly DOWNSTREAM of MAIA's own constitutional field. Layer 4 guidance inside the
+// field is sanitized at compose (renderFieldGuidance, defense in depth).
+import { buildFieldContextBySlug, formatPracticeFieldContextForPrompt } from '@/lib/practiceField/practiceFieldService';
+
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
 const MAX_HISTORY = 40;
@@ -288,6 +294,11 @@ function asThreads(parsed: unknown): ProposedThread[] | null {
 // composed OVER the room's Great-Interviewer Field Configuration, turn-only.
 const PRESENCE_ENABLED = process.env.NOW_WHAT_MAIA_PRESENCE_ENABLED === '1';
 
+// Field-context kill-switch (default ON). Eligibility originates from the room URL's
+// fieldContext param — a member/facilitator act, mirroring the anchors model where
+// the deploy flag is a kill-switch, never the source of eligibility.
+const FIELD_CONTEXT_ENABLED = process.env.NOW_WHAT_FIELD_CONTEXT_ENABLED !== '0';
+
 /**
  * Assemble the member's read-only presence context: constitutional-memory addenda
  * (developmental influence, member-placed atoms, opt-out-gated cross-session recall).
@@ -379,15 +390,44 @@ export async function POST(request: NextRequest) {
         : buildPhasePrompt(phase);
     const maxTokens = mode === 'turn' ? MAX_TOKENS_TURN : MAX_TOKENS_PROPOSE;
 
-    // Stage 1 (Proof 1): compose MAIA's constitutional identity + read-only memory OVER
-    // the room's Field Configuration. Turn-only — the live encounter; 'propose' stays a
-    // thin JSON extractor (a utility, not an encounter). Ephemeral-safe: read-only, no
-    // writes. Flag off → systemPrompt is exactly the room's own prompt, unchanged.
-    if (PRESENCE_ENABLED && mode === 'turn') {
+    // Practitioner field composition. The room's fieldContext (an opaque URL identifier
+    // the client already carries for return detection) resolves to the practitioner's
+    // live practice field by slug. Read-only, non-fatal: an unknown slug or a load
+    // failure degrades to the room without field content, never breaks the encounter.
+    // Turn-only, like presence — 'propose' stays a thin JSON extractor.
+    const fieldSlug =
+      FIELD_CONTEXT_ENABLED && mode === 'turn' && typeof body?.fieldContext === 'string'
+        ? body.fieldContext.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64)
+        : '';
+    let fieldBlock = '';
+    let fieldComposed: { slug: string } | null = null;
+    if (fieldSlug) {
+      try {
+        const fieldCtx = await buildFieldContextBySlug(fieldSlug);
+        if (fieldCtx) {
+          fieldBlock = formatPracticeFieldContextForPrompt(fieldCtx);
+          fieldComposed = { slug: fieldSlug };
+          console.log('[NowWhat/field] composed', { slug: fieldSlug, blockChars: fieldBlock.length });
+        } else {
+          console.warn('[NowWhat/field] no field for slug (room continues without field):', fieldSlug);
+        }
+      } catch (err) {
+        console.warn('[NowWhat/field] load failed (non-fatal; room continues without field):', err);
+      }
+    }
+
+    // Stage 1 (Proof 1) + field composition: MAIA's constitutional identity composes
+    // FIRST, member presence and the practitioner's field strictly between it and the
+    // room's Great-Interviewer grammar (which carries the standing hard limits LAST) —
+    // the same order maiaVoice enforces for guidance. The practitioner's work is
+    // composed deeply but DOWNSTREAM of MAIA's own field: whenever anything beyond the
+    // room's own config is composed, the constitutional floor is composed above it.
+    // Both flags off + no field → systemPrompt is exactly the room's own prompt.
+    if (mode === 'turn' && (PRESENCE_ENABLED || fieldBlock)) {
       const lastMemberMessage = [...history].reverse().find((t) => t.role === 'user')?.content ?? '';
-      const presence = await assemblePresenceContext(memberId, lastMemberMessage);
-      systemPrompt = [MAIA_RUNTIME_PROMPT, presence, systemPrompt].filter(Boolean).join('\n\n');
-      console.log('[NowWhat/presence] composed', { systemPromptChars: systemPrompt.length });
+      const presence = PRESENCE_ENABLED ? await assemblePresenceContext(memberId, lastMemberMessage) : '';
+      systemPrompt = [MAIA_RUNTIME_PROMPT, presence, fieldBlock, systemPrompt].filter(Boolean).join('\n\n');
+      console.log('[NowWhat/presence] composed', { systemPromptChars: systemPrompt.length, field: fieldComposed?.slug ?? null });
     }
 
     // Field Context (LARRY_FIELD_SPEC Guarantee 2) — the practitioner's field
@@ -457,6 +497,10 @@ export async function POST(request: NextRequest) {
         reply: raw,
         cellCandidate,
         served: { provider: result.provider, model: result.model },
+        // Field provenance travels with the reply, same discipline as `served`:
+        // whether the practitioner's field was composed is answerable from the
+        // artifact, not the deploy env. null = no field in this turn's prompt.
+        field: fieldComposed ? { slug: fieldComposed.slug, composed: true } : null,
       });
     }
 
