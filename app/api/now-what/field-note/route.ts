@@ -150,9 +150,12 @@ export async function GET(request: NextRequest) {
       authorship: string;
       member_decision: string | null;
       spiralogic_phase: string | null;
+      can_be_shown_to_practitioner: boolean;
+      field_context: string | null;
       created_at: string;
     }>(
-      `SELECT id, title, authorship, member_decision, spiralogic_phase, created_at
+      `SELECT id, title, authorship, member_decision, spiralogic_phase,
+              can_be_shown_to_practitioner, field_context, created_at
          FROM member_field_note_threads
         WHERE member_id = $1
           AND released_at IS NULL
