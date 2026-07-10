@@ -458,17 +458,23 @@ export async function markDMRead(dmThreadId: string, memberId: string): Promise<
   );
 }
 
-export async function countUnreadDMs(memberId: string, teamId: string): Promise<number> {
+/**
+ * Unread DM count for a member. With `teamId`, scoped to that Co-Lab; without,
+ * counted across every DM thread the member belongs to (top-level badge).
+ * Membership scoping stays intact either way — `team_dm_members.member_id`
+ * restricts to threads the member is actually in.
+ */
+export async function countUnreadDMs(memberId: string, teamId?: string): Promise<number> {
   const res = await query<{ n: number }>(
     `SELECT count(*)::int AS n
        FROM team_dm_members tdm
        JOIN team_dm_messages dm ON dm.dm_thread_id = tdm.dm_thread_id
        JOIN team_dm_threads dt ON dt.id = tdm.dm_thread_id
       WHERE tdm.member_id = $1
-        AND dt.team_id = $2
+        AND ($2::uuid IS NULL OR dt.team_id = $2)
         AND dm.created_at > COALESCE(tdm.last_read_at, '1970-01-01')
         AND dm.deleted_at IS NULL`,
-    [memberId, teamId]
+    [memberId, teamId ?? null]
   );
   return res.rows[0]?.n ?? 0;
 }

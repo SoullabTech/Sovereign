@@ -404,11 +404,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // NOW_WHAT_CLOUD_REGISTER=1 pins this room's voice to Claude regardless of
+    // LOCAL_TIER_ENABLED's core→Ollama routing. Scoped to this route only — the
+    // register decision for Larry's field (client-facing presence at full
+    // capability), not a platform-wide routing change. Flag-gated, reversible;
+    // the local-first default remains the platform posture.
     const result = await getLLMProvider().generateSimple({
       tier: mode === 'turn' ? 'core' : 'deep',
       systemPrompt,
       messages,
       maxTokens,
+      forceClaude: process.env.NOW_WHAT_CLOUD_REGISTER === '1',
     });
     const raw = (result.text ?? '').trim();
 
@@ -418,7 +424,15 @@ export async function POST(request: NextRequest) {
       // This route remains read+reply only — no writes occur here or below.
       const lastMemberTurn = [...history].reverse().find((t) => t.role === 'user');
       const cellCandidate = lastMemberTurn ? await detectCellCandidate(lastMemberTurn.content) : null;
-      return NextResponse.json({ ok: true, reply: raw, cellCandidate });
+      // Provider provenance travels with the reply (label-travels-with-assertion;
+      // the room persists nothing, so the response IS the artifact — "what am I
+      // talking to" must be answerable from the data, not the deploy env).
+      return NextResponse.json({
+        ok: true,
+        reply: raw,
+        cellCandidate,
+        served: { provider: result.provider, model: result.model },
+      });
     }
 
     const threads = asThreads(extractJson(raw));

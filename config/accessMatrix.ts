@@ -466,6 +466,16 @@ export const ACCESS_RULES: AccessRule[] = [
   // Mentor/MAIA/memory OFF. Reception link = /soul-portrait/andrea/welcome.
   { exact: '/soul-portrait/andrea/welcome', public: true, notes: 'Andrea Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
   { exact: '/soul-portrait/andrea', public: true, notes: "Andrea Gift Portrait (renderer) — hand-delivered unlisted exception (author's wife); Mentor off; noindex" },
+  // Andrea Fagan — FIFTH hand-delivered Gift exception (Kelly 2026-07-08): a gift
+  // to an adult friend. SAME posture: public-unlisted, hand-delivered, noindex,
+  // Mentor/MAIA/memory OFF. No /welcome rule yet — the giver's threshold note is
+  // Kelly's to add before delivery.
+  { exact: '/soul-portrait/andrea-fagan/welcome', public: true, notes: 'Andrea Fagan Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
+  { exact: '/soul-portrait/andrea-fagan', public: true, notes: 'Andrea Fagan Gift Portrait (renderer) — hand-delivered unlisted exception (adult); Mentor off; noindex; includes computed Year Ahead' },
+  // Catherine — SIXTH hand-delivered Gift exception (Kelly 2026-07-09): adult
+  // gift, public-unlisted, noindex, Mentor/MAIA/memory OFF. Part II pending report.
+  { exact: '/soul-portrait/catherine/welcome', public: true, notes: 'Catherine Gift threshold (reception page) — hand-delivered unlisted exception; noindex' },
+  { exact: '/soul-portrait/catherine', public: true, notes: 'Catherine Gift Portrait (renderer) — hand-delivered unlisted exception (adult); Mentor off; noindex' },
   // Kelly — the author's own SELF-portrait (Kelly 2026-06-22): mode 'self', no
   // giver/threshold, no Return-to-Soullab coda. SAME posture: public-unlisted,
   // noindex, Mentor/MAIA/memory OFF. No /welcome rule (self-portrait has no threshold).

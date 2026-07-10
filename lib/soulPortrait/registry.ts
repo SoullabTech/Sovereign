@@ -17,6 +17,8 @@ import { augustenPortrait } from './portraits/augusten';
 import { katiePortrait } from './portraits/katie';
 import { sophiePortrait } from './portraits/sophie';
 import { andreaPortrait } from './portraits/andrea';
+import { andreaFaganPortrait } from './portraits/andreaFagan';
+import { catherinePortrait } from './portraits/catherine';
 import { kellyPortrait } from './portraits/kelly';
 import { nathanPortrait } from './portraits/nathan';
 import { jondiPortrait } from './portraits/jondi';
@@ -29,6 +31,8 @@ const PORTRAITS: Record<string, AnyPortrait> = {
   [katiePortrait.person.slug]: katiePortrait,
   [sophiePortrait.person.slug]: sophiePortrait,
   [andreaPortrait.person.slug]: andreaPortrait,
+  [andreaFaganPortrait.person.slug]: andreaFaganPortrait,
+  [catherinePortrait.person.slug]: catherinePortrait,
   [kellyPortrait.person.slug]: kellyPortrait,
   [nathanPortrait.person.slug]: nathanPortrait,
   [jondiPortrait.person.slug]: jondiPortrait,
