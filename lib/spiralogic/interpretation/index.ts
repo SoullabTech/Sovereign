@@ -16,6 +16,8 @@ export {
   dominanceLabel,
   dominanceSentence,
 } from './phrasing';
+export { PHASE_DISPLAY_NAMES, phaseDisplayName } from './phaseNames';
+export type { PhaseDisplayName } from './phaseNames';
 export { INTERPRETATION_VERSION } from './types';
 export type {
   DominanceGrade,

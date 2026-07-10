@@ -27,6 +27,7 @@ import type {
   CurrentPhaseInsight,
   ElementalBalanceInsight,
 } from './spiralogicReportTypes';
+import { PHASE_DISPLAY_NAMES } from '@/lib/spiralogic/interpretation';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -384,7 +385,10 @@ function assembleReport(
       return {
         house,
         element: elem,
-        stage: facetDef?.stage ?? 'vector',
+        // Vocabulary sourced from the ruled mapping only (Finding 6) — the
+        // word is never hardcoded here. (The phase-1 default for an unmapped
+        // house is a pre-existing fallback, flagged for review.)
+        stage: facetDef?.stage ?? PHASE_DISPLAY_NAMES[1],
         label: facetDef?.label ?? `House ${house}`,
         planets: planetsHere.map((p) => p.name),
         planetSigns: Object.fromEntries(planetsHere.map((p) => [p.name, p.sign])),

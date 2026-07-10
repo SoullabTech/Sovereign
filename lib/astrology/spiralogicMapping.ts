@@ -12,14 +12,25 @@
  * Spiralogic Astrology - a participatory, experiential system for conscious evolution.
  */
 
+import { PHASE_DISPLAY_NAMES, type PhaseDisplayName } from '@/lib/spiralogic/interpretation';
+
 export type SpiralogicElement = 'fire' | 'water' | 'earth' | 'air' | 'aether';
-export type SpiralogicStage = 'vector' | 'circle' | 'spiral';
+
+/**
+ * Finding 6 RULED (Kelly, 2026-07-10): vector/circle/spiral is the
+ * interpretive layer's modality-keyed display vocabulary for phases 1/2/3,
+ * defined ONCE in lib/spiralogic/interpretation (PHASE_DISPLAY_NAMES).
+ * This table no longer defines those words per house — it consumes the
+ * ruled mapping via each facet's 1|2|3 position. The former house-keyed
+ * hardcoding died at the engine refit by ruling, not omission.
+ */
+export type SpiralogicStage = PhaseDisplayName;
 
 export interface SpiralogicFacet {
   house: number;
   element: SpiralogicElement;
   facetNumber: 1 | 2 | 3; // Which facet of the element (1, 2, or 3)
-  stage: SpiralogicStage; // Vector (Intelligence), Circle (Intention), Spiral (Goal)
+  stage: SpiralogicStage; // display name from PHASE_DISPLAY_NAMES — never hardcoded here
   label: string;
   description: string;
   brainRegion: string;
@@ -36,7 +47,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 1,
     element: 'fire',
     facetNumber: 1,
-    stage: 'vector',
+    stage: PHASE_DISPLAY_NAMES[1],
     label: 'I Am / Vision / Identity',
     description: 'Self-Awareness & Identity - Experience',
     brainRegion: 'Right Prefrontal Cortex',
@@ -46,7 +57,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 5,
     element: 'fire',
     facetNumber: 2,
-    stage: 'circle',
+    stage: PHASE_DISPLAY_NAMES[2],
     label: 'Self-Expression / Creation',
     description: 'Creative Expression & Passion - Expression',
     brainRegion: 'Right Prefrontal Cortex',
@@ -56,7 +67,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 9,
     element: 'fire',
     facetNumber: 3,
-    stage: 'spiral',
+    stage: PHASE_DISPLAY_NAMES[3],
     label: 'Higher Meaning / Quest',
     description: 'Higher Purpose & Expansion - Expansion',
     brainRegion: 'Right Prefrontal Cortex',
@@ -69,7 +80,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 4,
     element: 'water',
     facetNumber: 1,
-    stage: 'vector',
+    stage: PHASE_DISPLAY_NAMES[1],
     label: 'Inner Child / Ancestry',
     description: 'Emotional Intelligence & Inner Stability - Heart',
     brainRegion: 'Right Hemisphere',
@@ -79,7 +90,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 8,
     element: 'water',
     facetNumber: 2,
-    stage: 'circle',
+    stage: PHASE_DISPLAY_NAMES[2],
     label: 'Shadow / Rebirth',
     description: 'Shadow Work & Power Mastery - Healing',
     brainRegion: 'Right Hemisphere',
@@ -89,7 +100,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 12,
     element: 'water',
     facetNumber: 3,
-    stage: 'spiral',
+    stage: PHASE_DISPLAY_NAMES[3],
     label: 'Dream / Mystic / Transcendent',
     description: 'Mysticism & Past-Life Karma - Holiness',
     brainRegion: 'Right Hemisphere',
@@ -102,7 +113,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 10,
     element: 'earth',
     facetNumber: 1,
-    stage: 'vector',
+    stage: PHASE_DISPLAY_NAMES[1],
     label: 'Mission / Purpose',
     description: 'Career, Authority & Life Mission - Mission',
     brainRegion: 'Left Hemisphere',
@@ -112,7 +123,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 2,
     element: 'earth',
     facetNumber: 2,
-    stage: 'circle',
+    stage: PHASE_DISPLAY_NAMES[2],
     label: 'Resources / Value',
     description: 'Resources & Material Stability - Means',
     brainRegion: 'Left Hemisphere',
@@ -122,7 +133,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 6,
     element: 'earth',
     facetNumber: 3,
-    stage: 'spiral',
+    stage: PHASE_DISPLAY_NAMES[3],
     label: 'Structure / Service',
     description: 'Health & Disciplined Growth - Medicine',
     brainRegion: 'Left Hemisphere',
@@ -135,7 +146,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 7,
     element: 'air',
     facetNumber: 1,
-    stage: 'vector',
+    stage: PHASE_DISPLAY_NAMES[1],
     label: 'Mirror / Relationships',
     description: 'Relationships & Balance - Connection',
     brainRegion: 'Left Prefrontal Cortex',
@@ -145,7 +156,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 11,
     element: 'air',
     facetNumber: 2,
-    stage: 'circle',
+    stage: PHASE_DISPLAY_NAMES[2],
     label: 'Tribe / Visionary Network',
     description: 'Social Influence & Collective Impact - Community',
     brainRegion: 'Left Prefrontal Cortex',
@@ -155,7 +166,7 @@ export const SPIRALOGIC_FACETS: Record<number, SpiralogicFacet> = {
     house: 3,
     element: 'air',
     facetNumber: 3,
-    stage: 'spiral',
+    stage: PHASE_DISPLAY_NAMES[3],
     label: 'Mind / Messaging',
     description: 'Communication & Learning - Consciousness',
     brainRegion: 'Left Prefrontal Cortex',

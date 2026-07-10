@@ -8,7 +8,7 @@
 export interface SpiralogicFacetReport {
   house: number;
   element: string;
-  stage: string; // vector | circle | spiral
+  stage: string; // phase display name from PHASE_DISPLAY_NAMES (lib/spiralogic/interpretation, Finding 6 ruling)
   label: string;
   planets: string[]; // planets present in this house
   planetSigns: Record<string, string>; // planet name -> sign

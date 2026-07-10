@@ -15,6 +15,7 @@ import {
   chartPositionsFromSignDegrees,
   interpretDominance,
   type DominanceVerdict,
+  type PhaseDisplayName,
 } from "@/lib/spiralogic/interpretation";
 
 // Kept (currently unconsumed here): the registration grammar's anti-fork
@@ -63,7 +64,8 @@ export interface SpiralogicEngineResult {
   activeFacets: FacetActivation[];
   currentPhase: {
     element: SpiralogicElement;
-    stage: "vector" | "circle" | "spiral";
+    /** Display name from the ruled modality-keyed mapping (Finding 6), via the facet's stage. */
+    stage: PhaseDisplayName;
     description: string;
   };
   coherencePractices: string[];
