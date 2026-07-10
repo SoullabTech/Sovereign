@@ -424,7 +424,15 @@ export async function POST(request: NextRequest) {
       // This route remains read+reply only — no writes occur here or below.
       const lastMemberTurn = [...history].reverse().find((t) => t.role === 'user');
       const cellCandidate = lastMemberTurn ? await detectCellCandidate(lastMemberTurn.content) : null;
-      return NextResponse.json({ ok: true, reply: raw, cellCandidate });
+      // Provider provenance travels with the reply (label-travels-with-assertion;
+      // the room persists nothing, so the response IS the artifact — "what am I
+      // talking to" must be answerable from the data, not the deploy env).
+      return NextResponse.json({
+        ok: true,
+        reply: raw,
+        cellCandidate,
+        served: { provider: result.provider, model: result.model },
+      });
     }
 
     const threads = asThreads(extractJson(raw));
