@@ -34,6 +34,10 @@ COMPOSE_FILE="$PROJECT_DIR/docker-compose.production.yml"
 # so concurrent deploys are structurally impossible (see scripts/deploy-lock.sh).
 source "$SCRIPT_DIR/deploy-lock.sh"
 
+# Rollback tagging — shared with pre-deploy-gate.sh so EVERY deploy path keeps
+# maia-sovereign:current/:previous/:<sha> truthful (see scripts/deploy-tag.sh).
+source "$SCRIPT_DIR/deploy-tag.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -767,23 +771,8 @@ cmd_safe_mode() {
     esac
 }
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAG-IMAGES - Tag current images for rollback capability
-# ═══════════════════════════════════════════════════════════════════════════════
-tag_images_for_rollback() {
-    local sha="$1"
-
-    # If there's already a :current, move it to :previous
-    if docker image inspect maia-sovereign:current >/dev/null 2>&1; then
-        log_info "Preserving current image as :previous for rollback..."
-        docker tag maia-sovereign:current maia-sovereign:previous 2>/dev/null || true
-    fi
-
-    # Tag the new build as :current and with its SHA
-    log_info "Tagging new image as :current and :$sha..."
-    docker tag maia-sovereign:prod maia-sovereign:current 2>/dev/null || true
-    docker tag maia-sovereign:prod "maia-sovereign:$sha" 2>/dev/null || true
-}
+# tag_images_for_rollback moved to scripts/deploy-tag.sh (sourced above) so the
+# quick pre-deploy-gate.sh deploy-maia path refreshes rollback tags too.
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
