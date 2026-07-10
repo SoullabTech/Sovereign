@@ -20,6 +20,12 @@ x-maia-build: &maia_build
   args:
     GIT_COMMIT: ${GIT_COMMIT:-unknown}
     NEXT_PUBLIC_SHOW_BETA_BADGE: ${NEXT_PUBLIC_SHOW_BETA_BADGE:-false}
+    # Deploy-lane tripwire: deliberately NO default. Only the deploy lane
+    # (scripts/deploy-lock.sh acquire_deploy_lock) exports this, so a raw
+    # `docker compose ... up -d --build` FAILS LOUDLY in the Dockerfile
+    # instead of quietly bypassing the lock / rollback tagging / pre-deploy
+    # gate (2026-07-10 incident). See docs/ops/DEPLOY_LANE_TOKEN.md.
+    DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-}
 
 x-maia-image: &maia_image maia-sovereign:prod
 
@@ -210,6 +216,9 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      args:
+        # Deploy-lane tripwire — see x-maia-build above.
+        DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-}
     image: maia-api:prod
     container_name: maia-api
     restart: unless-stopped
@@ -505,6 +514,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder
+      args:
+        # Deploy-lane tripwire — see x-maia-build above.
+        DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-}
 
     env_file:
       - .env.production

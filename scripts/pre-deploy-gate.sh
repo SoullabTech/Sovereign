@@ -41,6 +41,11 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # second concurrent deploy is refused, not raced (see scripts/deploy-lock.sh).
 source "$SCRIPT_DIR/deploy-lock.sh"
 
+# Rollback tagging — shared with deploy-production.sh so the quick path keeps
+# maia-sovereign:current/:previous/:<sha> truthful too (see scripts/deploy-tag.sh;
+# the 2026-07-10 out-of-lane deploy left :current pointing at the wrong image).
+source "$SCRIPT_DIR/deploy-tag.sh"
+
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
 # All human-facing logging goes to STDERR so that `provenance` can emit the bare
@@ -161,22 +166,34 @@ gate_all() {
 }
 
 # deploy-maia — the mechanized replacement for the quick maia-only command.
-# Runs both gates, then execs the build with a validated, EXPORTED GIT_COMMIT so
-# the operator can no longer forget the prefix. Uses --force-recreate --no-deps
-# to force the container swap (per feedback_deploy_container_provenance_gate).
+# Runs both gates, builds with a validated, EXPORTED GIT_COMMIT (so the operator
+# can no longer forget the prefix), refreshes the rollback tags, then swaps the
+# container with --force-recreate --no-deps (per
+# feedback_deploy_container_provenance_gate). Build and swap are separate steps
+# (not one `up -d --build`) so :current/:previous move only after a successful
+# build and BEFORE the new container starts — same ordering as
+# deploy-production.sh.
 cmd_deploy_maia() {
-    # Lock BEFORE the gates: the whole deploy attempt (verify + build) is one
-    # serialized lane occupancy. The fd-9 flock survives the `exec` below, so
-    # the lock is held until docker compose itself finishes.
+    # Lock BEFORE the gates: the whole deploy attempt (verify + build + tag +
+    # swap) is one serialized lane occupancy. The fd-9 flock is inherited by
+    # every child, so the lock is held until docker compose itself finishes.
     acquire_deploy_lock "pre-deploy-gate.sh deploy-maia"
     local sha
     sha="$(gate_all)"
     export GIT_COMMIT="$sha"
-    log_info "Building maia at $GIT_COMMIT (--force-recreate --no-deps) ..."
-    exec docker compose -p maia-sovereign \
+    # DEPLOY_LANE_TOKEN was exported by acquire_deploy_lock above — the compose
+    # build arg the Dockerfile's deploy-lane tripwire requires.
+    log_info "Building maia at $GIT_COMMIT ..."
+    docker compose -p maia-sovereign \
         -f "$PROJECT_DIR/docker-compose.production.yml" \
         --env-file "$PROJECT_DIR/.env.production" \
-        up -d --build --force-recreate --no-deps maia
+        build maia
+    tag_images_for_rollback "$GIT_COMMIT"
+    log_info "Swapping maia container (--force-recreate --no-deps) ..."
+    docker compose -p maia-sovereign \
+        -f "$PROJECT_DIR/docker-compose.production.yml" \
+        --env-file "$PROJECT_DIR/.env.production" \
+        up -d --force-recreate --no-deps maia
 }
 
 case "${1:-help}" in

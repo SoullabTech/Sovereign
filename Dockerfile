@@ -9,6 +9,38 @@ FROM node:20-bookworm-slim AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# ── Deploy-lane tripwire ──────────────────────────────────────────────────────
+# On 2026-07-10 a raw `docker compose ... up -d --build maia` bypassed the
+# deploy-lane lock, rollback tagging, and the pre-deploy gate — and succeeded
+# quietly. A path around a gate that succeeds quietly will be taken again, so
+# "deprecated" is now a behavior: this build REFUSES to proceed unless the
+# deploy lane vouches for it. The token is exported by acquire_deploy_lock()
+# (scripts/deploy-lock.sh) and forwarded by the compose files; each non-prod
+# compose file declares its own lane in its build args. The value is constant
+# by design (a per-deploy nonce would bust the layer cache every deploy); this
+# is a tripwire against the QUIET bypass, not a forgery-proof credential.
+# See docs/ops/DEPLOY_LANE_TOKEN.md.
+ARG DEPLOY_LANE_TOKEN=""
+RUN if [ -z "$DEPLOY_LANE_TOKEN" ]; then \
+      echo ""; \
+      echo "🛑 OUT-OF-LANE BUILD REFUSED — no DEPLOY_LANE_TOKEN reached this build."; \
+      echo ""; \
+      echo "   The raw compose command (docker compose ... up -d --build maia) is retired"; \
+      echo "   as a deploy path: it bypasses the deploy-lane lock, rollback tagging, and"; \
+      echo "   the pre-deploy gate (out-of-lane deploy incident, 2026-07-10)."; \
+      echo ""; \
+      echo "   Production (minisforum):"; \
+      echo "     scripts/pre-deploy-gate.sh deploy-maia    # quick maia-only rebuild"; \
+      echo "     scripts/deploy-production.sh deploy       # full stack + migrations + rollback tags"; \
+      echo ""; \
+      echo "   Local dev / other stacks: docker-compose.yml and docker-compose.staging.yml"; \
+      echo "   declare their lane already. To build outside any compose file, declare"; \
+      echo "   yours explicitly (a typed, greppable act — never quiet):"; \
+      echo "     docker build --build-arg DEPLOY_LANE_TOKEN=local-dev ..."; \
+      echo ""; \
+      exit 1; \
+    fi
+
 # --- deps: install full deps (build tooling lives in devDependencies) ---
 FROM base AS deps
 COPY package.json package-lock.json* ./
@@ -51,6 +83,11 @@ WORKDIR /app
 ARG GIT_COMMIT=unknown
 ARG APP_VERSION=1.0.0
 ARG BUILD_DATE=unknown
+# Lane provenance baked into the image: `docker exec maia-sovereign printenv
+# DEPLOY_LANE` shows which lane built what's running. The base-stage tripwire
+# guarantees this is never empty on a successfully built image (pre-tripwire
+# images simply lack the variable).
+ARG DEPLOY_LANE_TOKEN=""
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -59,6 +96,7 @@ ENV HOSTNAME=0.0.0.0
 ENV GIT_COMMIT=${GIT_COMMIT}
 ENV APP_VERSION=${APP_VERSION}
 ENV BUILD_DATE=${BUILD_DATE}
+ENV DEPLOY_LANE=${DEPLOY_LANE_TOKEN}
 
 # Install psql for migrations + curl for worker preflight health checks + ffmpeg for media processing
 # + pandoc and chromium for the Book Studio print render (markdown → PDF via Paged.js)
