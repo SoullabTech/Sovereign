@@ -8,7 +8,15 @@ statement (1) declares its **Layer**, (2) names its **Center of Gravity**,
 **Register rule (founder directive, 2026-07-10):** copy leads with what a thing
 **is** — a sentence never opens with a negation ("Not a…", "Nothing here…"),
 because the reader sees the negated thing first. Contrast, if needed, comes
-after the positive.
+after the positive. Sentence-initial is the test: negation as a closer, after
+the positive has landed, is emphasis; negation as an opener is
+definition-by-what-you're-not, which concedes the frame before the frame
+exists. **Boundary:** negation that *is* the claim stays ("it will say no
+dominant element rather than invent one" — refusing to invent is the feature);
+negation that *frames* the claim flips ("Soul Portrait isn't a reading" →
+lead with what it is, contrast after). Truth-layer and register-layer sit side
+by side, neither substituting: the three instruments govern *what may be
+claimed*; this governs *how a claim opens*.
 **Status:** prepared on a branch; publishing is a founder decision at merge +
 deploy. *Preparation ≠ authorization.*
 
