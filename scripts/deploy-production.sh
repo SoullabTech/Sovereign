@@ -30,6 +30,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 COMPOSE_FILE="$PROJECT_DIR/docker-compose.production.yml"
 
+# Deploy lane lock — every mutating command serializes on $PROJECT_DIR/.deploy.lock
+# so concurrent deploys are structurally impossible (see scripts/deploy-lock.sh).
+source "$SCRIPT_DIR/deploy-lock.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -371,6 +375,7 @@ cmd_setup() {
 # DEPLOY - Build and start the stack
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_deploy() {
+    acquire_deploy_lock "deploy-production.sh deploy"
     log_info "Deploying MAIA Sovereign..."
 
     cd "$PROJECT_DIR"
@@ -463,6 +468,7 @@ cmd_deploy() {
 # UPDATE - Pull latest and redeploy
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_update() {
+    acquire_deploy_lock "deploy-production.sh update"
     log_info "Updating MAIA Sovereign..."
 
     cd "$PROJECT_DIR"
@@ -538,6 +544,7 @@ cmd_update() {
 # MIGRATE - Run database migrations only
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_migrate() {
+    acquire_deploy_lock "deploy-production.sh migrate"
     log_info "Running database migrations..."
 
     cd "$PROJECT_DIR"
@@ -643,6 +650,7 @@ cmd_smoke() {
 # Two-command rollback: swap image tags, restart container
 # No rebuild required - just swap and go
 cmd_rollback() {
+    acquire_deploy_lock "deploy-production.sh rollback"
     log_info "Rolling back to previous deployment..."
 
     cd "$PROJECT_DIR"

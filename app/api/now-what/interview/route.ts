@@ -44,6 +44,7 @@ import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCross
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt } from '@/lib/maia/memoryAtomsLoader';
 import { formatPriorExchangesForPrompt, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
 import { assembledContext, renderAssembledContext, type AssembledBlock } from '@/lib/maia/context-assembly/contextAssembly';
+import { getPracticeFieldById, formatFieldContextForRoom } from '@/lib/practiceField/practiceFieldService';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -389,6 +390,30 @@ export async function POST(request: NextRequest) {
       console.log('[NowWhat/presence] composed', { systemPromptChars: systemPrompt.length });
     }
 
+    // Field Context (LARRY_FIELD_SPEC Guarantee 2) — the practitioner's field
+    // enters THIS room through configuration, never through edits to MAIA's
+    // base prompt (the What Now? paper's own thesis, applied to its own room).
+    // The env id names which practice field governs this room; the render is
+    // the field's self-description (content columns) + Layer 4 guidance under
+    // the apprentice-not-imitation guardrail. Live-read: the practitioner's
+    // edit reaches the next turn. Non-fatal by construction.
+    const roomFieldId = process.env.NOW_WHAT_PRACTICE_FIELD_ID;
+    if (roomFieldId && mode === 'turn') {
+      try {
+        const field = await getPracticeFieldById(roomFieldId);
+        const rendered = formatFieldContextForRoom(field);
+        if (rendered) {
+          systemPrompt = `${systemPrompt}\n\n${rendered}`;
+          console.log('[NowWhat/field] applied', {
+            fieldIdPrefix: roomFieldId.slice(0, 8),
+            fieldChars: rendered.length,
+          });
+        }
+      } catch (err) {
+        console.warn('[NowWhat/field] load failed (non-fatal; room continues unshaped):', err);
+      }
+    }
+
     let messages = history.map(t => ({ role: t.role, content: t.content }));
     if (messages[messages.length - 1]?.role !== 'user') {
       if (mode === 'propose') {
@@ -404,11 +429,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // NOW_WHAT_CLOUD_REGISTER=1 pins this room's voice to Claude regardless of
+    // LOCAL_TIER_ENABLED's core→Ollama routing. Scoped to this route only — the
+    // register decision for Larry's field (client-facing presence at full
+    // capability), not a platform-wide routing change. Flag-gated, reversible;
+    // the local-first default remains the platform posture.
     const result = await getLLMProvider().generateSimple({
       tier: mode === 'turn' ? 'core' : 'deep',
       systemPrompt,
       messages,
       maxTokens,
+      forceClaude: process.env.NOW_WHAT_CLOUD_REGISTER === '1',
     });
     const raw = (result.text ?? '').trim();
 
@@ -418,7 +449,15 @@ export async function POST(request: NextRequest) {
       // This route remains read+reply only — no writes occur here or below.
       const lastMemberTurn = [...history].reverse().find((t) => t.role === 'user');
       const cellCandidate = lastMemberTurn ? await detectCellCandidate(lastMemberTurn.content) : null;
-      return NextResponse.json({ ok: true, reply: raw, cellCandidate });
+      // Provider provenance travels with the reply (label-travels-with-assertion;
+      // the room persists nothing, so the response IS the artifact — "what am I
+      // talking to" must be answerable from the data, not the deploy env).
+      return NextResponse.json({
+        ok: true,
+        reply: raw,
+        cellCandidate,
+        served: { provider: result.provider, model: result.model },
+      });
     }
 
     const threads = asThreads(extractJson(raw));
