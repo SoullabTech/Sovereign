@@ -48,11 +48,13 @@ export interface ParsedTransitReport {
   warnings: string[];
 }
 
+// Full names first so the alternation prefers "September" over "Sep(t)".
 const MONTHS =
-  'January|February|March|April|May|June|July|August|September|October|November|December';
-/** "April 2, 2026" · "April 2nd 2026" · "2 April 2026" */
+  'January|February|March|April|May|June|July|August|September|October|November|December|' +
+  'Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec';
+/** "April 2, 2026" · "April 2nd 2026" · "2 April 2026" · "Apr. 2, 2026" */
 const DATE_RE = new RegExp(
-  `(?:(?:${MONTHS})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:${MONTHS})\\.?),?\\s+\\d{4}`,
+  `(?:\\b(?:${MONTHS})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:${MONTHS})\\.?),?\\s+\\d{4}`,
   'gi',
 );
 
@@ -70,6 +72,9 @@ const ASPECTS: Record<string, string> = {
   semisquare: 'semi-square',
   'semi-sextile': 'semi-sextile',
   semisextile: 'semi-sextile',
+  sesquiquadrate: 'sesquiquadrate',
+  'sesqui-square': 'sesquiquadrate',
+  sesquisquare: 'sesquiquadrate',
 };
 
 const HOUSES: Record<string, number> = {
@@ -84,9 +89,15 @@ const HOUSE_ORDINAL: Record<number, string> = {
   7: 'Seventh', 8: 'Eighth', 9: 'Ninth', 10: 'Tenth', 11: 'Eleventh', 12: 'Twelfth',
 };
 
-/** "Transiting Pluto in opposition with natal Jupiter" (with/to · natal optional) */
+/**
+ * "Transiting Pluto in opposition with natal Jupiter" (with/to · natal optional).
+ * End anchor tolerates ONLY a trailing ":" and/or a parenthesized date range
+ * ("… natal Jupiter (May 1, 2026 - December 3, 2026)") — the same tolerance
+ * INGRESS_HEADER_RE already has. The parenthetical must contain a month name so
+ * arbitrary trailing prose still fails the anchor (copyright boundary).
+ */
 const ASPECT_HEADER_RE = new RegExp(
-  `^\\s*Transiting\\s+([A-Za-z][A-Za-z ]{1,20}?)\\s+in\\s+(${Object.keys(ASPECTS).join('|')})\\s+(?:with|to)\\s+(?:your\\s+)?(?:natal\\s+)?([A-Za-z][A-Za-z -]{1,20}?)\\s*$`,
+  `^\\s*Transiting\\s+([A-Za-z][A-Za-z ]{1,20}?)\\s+in\\s+(${Object.keys(ASPECTS).join('|')})\\s+(?:with|to)\\s+(?:your\\s+)?(?:natal\\s+)?([A-Za-z][A-Za-z -]{1,20}?)\\s*:?\\s*(\\([^()]*\\b(?:${MONTHS})\\.?[^()]*\\))?\\s*:?\\s*$`,
   'i',
 );
 
@@ -210,6 +221,9 @@ export function parseTransitReport(text: string): ParsedTransitReport {
             exactDates: [],
           };
       transits.push(current);
+      // An inline parenthesized period on the header line ("(May 1, 2026 -
+      // December 3, 2026)") carries dates for this transit itself.
+      if (aspect?.[4]) attachDates(current, aspect[4]);
       collecting = true;
       continue;
     }
@@ -240,6 +254,7 @@ const ASPECT_PHRASE: Record<string, (natal: string) => string> = {
   quincunx: (n) => `in quincunx with your ${n}`,
   'semi-square': (n) => `in semi-square with your ${n}`,
   'semi-sextile': (n) => `in semi-sextile with your ${n}`,
+  sesquiquadrate: (n) => `in sesquiquadrate with your ${n}`,
 };
 
 /**

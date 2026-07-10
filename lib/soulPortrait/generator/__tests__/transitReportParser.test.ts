@@ -104,6 +104,69 @@ describe('describeTransit (deterministic phase transit strings)', () => {
   });
 });
 
+describe('parser completeness (plausible-tier gaps: G1/G2/G3/D1)', () => {
+  it('G1: recognizes sesquiquadrate headers (incl. alias spellings)', () => {
+    const { transits } = parseTransitReport(
+      'Transiting Mars in sesquiquadrate with natal Sun\nMarch 4, 2026 until May 10, 2026\n' +
+        'Transiting Venus in sesqui-square with natal Moon\nexact April 2, 2026',
+    );
+    expect(transits).toHaveLength(2);
+    expect(transits[0]).toMatchObject({ body: 'Mars', aspect: 'sesquiquadrate', natalPoint: 'Sun' });
+    expect(transits[1]).toMatchObject({ body: 'Venus', aspect: 'sesquiquadrate', natalPoint: 'Moon' });
+    expect(describeTransit(transits[0])).toBe('Mars in sesquiquadrate with your Sun');
+  });
+
+  it('G2: tolerates a trailing colon on an aspect header', () => {
+    const { transits } = parseTransitReport(
+      'Transiting Mercury in trine with natal Jupiter:\nJune 1, 2026 until July 4, 2026',
+    );
+    expect(transits).toHaveLength(1);
+    expect(transits[0]).toMatchObject({
+      body: 'Mercury',
+      aspect: 'trine',
+      natalPoint: 'Jupiter',
+      beginDate: 'June 1, 2026',
+      endDate: 'July 4, 2026',
+    });
+  });
+
+  it('G3: tolerates a parenthesized date range inline on the header, and attaches it', () => {
+    const { transits, warnings } = parseTransitReport(
+      'Transiting Pluto in opposition with natal Jupiter (May 1, 2026 - December 3, 2026)',
+    );
+    expect(transits).toHaveLength(1);
+    expect(transits[0]).toMatchObject({
+      body: 'Pluto',
+      aspect: 'opposition',
+      natalPoint: 'Jupiter',
+      beginDate: 'May 1, 2026',
+      endDate: 'December 3, 2026',
+    });
+    expect(warnings).toHaveLength(0);
+  });
+
+  it('D1: exact-date lines with abbreviated month names attach', () => {
+    const { transits } = parseTransitReport(
+      'Transiting Saturn in square with natal Moon\n' +
+        'This transit is exact on Apr 2, 2026, again (R) Sept. 8, 2026',
+    );
+    expect(transits[0].exactDates).toEqual([
+      { date: 'Apr 2, 2026', retrograde: false },
+      { date: 'Sept. 8, 2026', retrograde: true },
+    ]);
+  });
+
+  it('NEGATIVE SENTINEL: the widened anchor still rejects trailing prose (copyright boundary)', () => {
+    const r = parseTransitReport(
+      'Transiting Pluto in opposition with natal Jupiter brings a profound reckoning with belief.\n' +
+        'Transiting Pluto in opposition with natal Jupiter (a time of profound challenge)\n' +
+        'April 2, 2026 until May 3, 2026',
+    );
+    expect(r.transits).toHaveLength(0);
+    expect(JSON.stringify(r)).not.toMatch(/profound|reckoning|challenge/i);
+  });
+});
+
 describe('validateCitedTransits (Design Law: no manufactured transits)', () => {
   const { transits } = parseTransitReport(REPORT);
   const phase = (cited: string[]): YearAheadPhase => ({
