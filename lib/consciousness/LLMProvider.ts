@@ -269,56 +269,80 @@ export class MultiLLMProvider {
     // headersTimeout, false-failing the local path on every long request (the
     // Soul Portrait silent-cloud-fallback regression, 2026-07-09). undici's
     // bodyTimeout is an idle timeout between chunks, which streaming satisfies.
-    const response = await fetch(`${this.ollamaBaseUrl}/api/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: config.model,
-        prompt: `${systemPrompt}\n\nUser: ${userInput}\n\nMAIA:`,
-        stream: true,
-        options: {
-          temperature: config.temperature,
-          num_predict: config.maxTokens
-        }
-      })
-    });
+    //
+    // WALL-CLOCK DEADLINE: streaming satisfies the idle timeout indefinitely, so
+    // without an overall budget a slow local generation is UNBOUNDED (~3 tok/s ×
+    // 8k tokens ≈ 43 min — the Soul Portrait hang, 2026-07-09). The deadline is
+    // what makes the labeled llm.sovereignty_fallback reachable at all on the
+    // streaming path: on expiry the fetch aborts, the caller's catch fires, and
+    // the fallback chain decides. Default 300s = the pre-streaming effective
+    // envelope (fast/core completed within it; anything longer was never
+    // serving interactively). Tune via OLLAMA_DEADLINE_MS.
+    const deadlineMs = Number(process.env.OLLAMA_DEADLINE_MS) > 0
+      ? Number(process.env.OLLAMA_DEADLINE_MS)
+      : 300_000;
+    const abort = new AbortController();
+    const deadline = setTimeout(
+      () => abort.abort(new Error(`ollama_deadline_exceeded after ${deadlineMs}ms`)),
+      deadlineMs,
+    );
 
-    if (!response.ok || !response.body) {
-      throw new Error(`Ollama request failed: ${response.statusText}`);
-    }
-
-    // Accumulate the NDJSON stream: each line carries a `response` delta; the
-    // final line has done:true plus the eval counters. External contract is
-    // unchanged — callers still receive one complete LLMResponse.
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
     let text = '';
     let evalCount: number | undefined;
 
-    const consumeLine = (line: string) => {
-      if (!line) return;
-      const chunk = JSON.parse(line);
-      if (chunk.error) {
-        throw new Error(`Ollama error: ${chunk.error}`);
-      }
-      if (chunk.response) text += chunk.response;
-      if (chunk.done) evalCount = chunk.eval_count;
-    };
+    try {
+      const response = await fetch(`${this.ollamaBaseUrl}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: config.model,
+          prompt: `${systemPrompt}\n\nUser: ${userInput}\n\nMAIA:`,
+          stream: true,
+          options: {
+            temperature: config.temperature,
+            num_predict: config.maxTokens
+          }
+        }),
+        signal: abort.signal
+      });
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let newline;
-      while ((newline = buffer.indexOf('\n')) !== -1) {
-        consumeLine(buffer.slice(0, newline).trim());
-        buffer = buffer.slice(newline + 1);
+      if (!response.ok || !response.body) {
+        throw new Error(`Ollama request failed: ${response.statusText}`);
       }
+
+      // Accumulate the NDJSON stream: each line carries a `response` delta; the
+      // final line has done:true plus the eval counters. External contract is
+      // unchanged — callers still receive one complete LLMResponse.
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const consumeLine = (line: string) => {
+        if (!line) return;
+        const chunk = JSON.parse(line);
+        if (chunk.error) {
+          throw new Error(`Ollama error: ${chunk.error}`);
+        }
+        if (chunk.response) text += chunk.response;
+        if (chunk.done) evalCount = chunk.eval_count;
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let newline;
+        while ((newline = buffer.indexOf('\n')) !== -1) {
+          consumeLine(buffer.slice(0, newline).trim());
+          buffer = buffer.slice(newline + 1);
+        }
+      }
+      consumeLine(buffer.trim());
+    } finally {
+      clearTimeout(deadline);
     }
-    consumeLine(buffer.trim());
 
     const generationTime = Date.now() - startTime;
 

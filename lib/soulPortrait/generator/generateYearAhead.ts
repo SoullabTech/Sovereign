@@ -132,6 +132,11 @@ export async function generateYearAhead(opts: {
 
   const llm = await getLLMProvider().generateSimple({
     tier: 'deep',
+    // Cloud-primary-labeled, same settled posture as Part I (generatePortrait.ts):
+    // Part II is half of one member-facing generation — it must not burn the
+    // local deadline before falling back, and the persisted provenance label
+    // (recorded from Part I's call) must describe BOTH parts' provider.
+    forceClaude: true,
     systemPrompt: yearAheadSystemPrompt({
       name,
       age,

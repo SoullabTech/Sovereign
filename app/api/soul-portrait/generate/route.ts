@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const draft = await generateSoulPortrait({
+    const { portrait: draft, provenance } = await generateSoulPortrait({
       name,
       slug: slugify(name),
       mode,
@@ -94,9 +94,11 @@ export async function POST(request: NextRequest) {
       isMinor: body?.isMinor === true,
       subjectAge: typeof body?.age === 'number' ? body.age : undefined,
       immutableText: draft,
+      generationProvider: provenance.provider,
+      generationModel: provenance.model,
     });
 
-    console.log(`[soul-portrait/generate] draft created { id: ${stored.id}, ownerPrefix: ${memberId.slice(0, 8)} }`);
+    console.log(`[soul-portrait/generate] draft created { id: ${stored.id}, ownerPrefix: ${memberId.slice(0, 8)}, provider: ${provenance.provider}, model: ${provenance.model} }`);
     return NextResponse.json(
       { id: stored.id, slug: stored.slug, previewUrl: `/soul-portrait/preview/${stored.id}` },
       { status: 201 },

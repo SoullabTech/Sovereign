@@ -150,6 +150,46 @@ export async function getFieldGuidanceByFieldId(fieldId: string): Promise<FieldG
 }
 
 /**
+ * Full field context for a field-scoped room: the practitioner's own
+ * description of the practice (the content columns) + Layer 4 guidance.
+ * This is the "Larry Field Context" layer of the field spec's composition
+ * stack (LARRY_FIELD_SPEC Guarantee 2). The hard guardrail travels inside
+ * the block: MAIA may serve the practitioner's teachings; she never
+ * impersonates the practitioner and never reads the member THROUGH the
+ * practitioner's framework (apprentice-not-imitation; Mirror Invariant).
+ */
+export function formatFieldContextForRoom(field: PracticeField | null): string {
+  if (!field) return '';
+  const sections: string[] = [];
+  if (field.about_practice) sections.push(`About this practice: ${field.about_practice}`);
+  if (field.how_we_work_together) sections.push(`How this practice works: ${field.how_we_work_together}`);
+  if (field.how_maia_supports) sections.push(`How you (MAIA) support it here: ${field.how_maia_supports}`);
+  if (field.professional_practice) sections.push(`The practitioner: ${field.professional_practice}`);
+  const guidance = renderFieldGuidance(field.maia_guidance ?? null);
+  if (sections.length === 0 && !guidance && !field.active_field_content) return '';
+
+  const header = [
+    `[Field Context — this room belongs to a practitioner's field]`,
+    `You are MAIA inside this practitioner's field. You may draw on the field's`,
+    `self-description below to answer questions about the practice and to keep`,
+    `your accompaniment aligned with its focus. Hard lines: you are not the`,
+    `practitioner and never speak as them; you never classify the member through`,
+    `the practitioner's framework or any stage model; practices are offered as`,
+    `options, and the deeper work points back to the practitioner.`,
+  ].join('\n');
+
+  // The field's corpus, composed IN FULL — depth is the product. A room that
+  // "kind of knows" the practitioner's work is worse than one that says it
+  // doesn't. The corpus carries its own provenance + not-instructions framing
+  // in its header (steward-held until the practitioner's own authoring act).
+  const corpus = field.active_field_content
+    ? `[The field's material — composed in full]\n${field.active_field_content}`
+    : '';
+
+  return [header, sections.join('\n\n'), corpus, guidance].filter(Boolean).join('\n\n');
+}
+
+/**
  * Set Layer 4 MAIA Guidance for a practitioner. NARROW-ONLY: any preference that
  * attempts to override safeguards or widen authority is rejected — when that
  * happens nothing is written and `violations` explains why. Creates a minimal
