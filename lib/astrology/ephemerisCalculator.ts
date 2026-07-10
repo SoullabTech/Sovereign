@@ -84,7 +84,10 @@ function longitudeToZodiac(longitude: number): { sign: string; degree: number } 
 
   return {
     sign: ZODIAC_SIGNS[signIndex],
-    degree: Number(degree.toFixed(2))
+    // Round for display, then clamp: degree must stay inside [0, 30) — rounding
+    // 29.9999° up to 30.00 would emit a representation outside the sign's
+    // half-open interval (sign is already resolved from the unrounded value)
+    degree: Math.min(Number(degree.toFixed(2)), 29.99)
   };
 }
 
