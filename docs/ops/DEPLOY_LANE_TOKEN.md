@@ -87,6 +87,8 @@ workflows are unchanged:
 | Local dev (`docker-compose.yml`) | in-file default | `local-dev` |
 | Staging (`docker-compose.staging.yml`) | in-file default | `staging` |
 | M4 setup (`scripts/setup-m4-docker-server.sh`) | explicit `--build-arg` | `m4-setup` |
+| CI build check (`.github/workflows/docker-build.yml`, required PR check) | explicit `--build-arg` | `ci-build-check` |
+| CI image publish (`.github/workflows/deploy.yml`) | explicit `build-args:` | `ci-deploy` |
 | Anything else | you type it: `--build-arg DEPLOY_LANE_TOKEN=<lane>` | your call |
 
 ## What this is and is not
