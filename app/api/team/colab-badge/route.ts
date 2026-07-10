@@ -20,10 +20,16 @@ export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const [attention, dmUnread] = await Promise.all([
-    countOpenAttention(memberId),
-    countUnreadDMs(memberId),
-  ]);
-
-  return NextResponse.json({ attention, dmUnread, total: attention + dmUnread });
+  // A badge is ambient chrome, polled by every MAIA surface — it must degrade
+  // to zero rather than 500 (a failing badge once drove a client request storm).
+  try {
+    const [attention, dmUnread] = await Promise.all([
+      countOpenAttention(memberId),
+      countUnreadDMs(memberId),
+    ]);
+    return NextResponse.json({ attention, dmUnread, total: attention + dmUnread });
+  } catch (error) {
+    console.error('[colab-badge] count failed — returning empty badge:', error);
+    return NextResponse.json({ attention: 0, dmUnread: 0, total: 0, degraded: true });
+  }
 }
