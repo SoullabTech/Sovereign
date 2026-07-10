@@ -30,6 +30,10 @@ services:
       dockerfile: Dockerfile
       args:
         GIT_COMMIT: ${GIT_COMMIT:-staging}
+        # This file IS the staging lane, so it declares itself. The production
+        # compose file has no default — see the deploy-lane tripwire in the
+        # Dockerfile and docs/ops/DEPLOY_LANE_TOKEN.md.
+        DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-staging}
     image: maia-sovereign:staging
     container_name: maia-staging
     restart: unless-stopped
