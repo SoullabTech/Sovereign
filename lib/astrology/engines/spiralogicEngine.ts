@@ -10,7 +10,16 @@ import {
   type SpiralogicElement,
 } from "@/lib/astrology/spiralogicMapping";
 import type { BirthChart } from "@/lib/astrology/ephemerisCalculator";
+import {
+  BALANCED_PRACTICE_LINE,
+  chartPositionsFromSignDegrees,
+  interpretDominance,
+  type DominanceVerdict,
+} from "@/lib/spiralogic/interpretation";
 
+// Kept (currently unconsumed here): the registration grammar's anti-fork
+// equivalence pin parses this literal from source. Exporting it is bundled
+// into the wiring crossing (SQ-1) — do not export or delete it loose.
 const SIGNS_TO_ELEMENT: Record<string, SpiralogicElement> = {
   Aries: "fire",
   Leo: "fire",
@@ -31,8 +40,15 @@ export interface ElementalBalance {
   water: number;
   earth: number;
   air: number;
-  dominant: SpiralogicElement;
-  deficient: SpiralogicElement;
+  /**
+   * Interpretive claims from the single versioned dominance rule
+   * (lib/spiralogic/interpretation, C-fence). Null = no stable dominance /
+   * no unique quietest element — a valid verdict, never defaulted.
+   */
+  dominant: SpiralogicElement | null;
+  deficient: SpiralogicElement | null;
+  /** The full structured verdict (grade, moonSensitive, provenance axes). */
+  dominance?: DominanceVerdict;
 }
 
 export interface FacetActivation {
@@ -72,54 +88,41 @@ const PLANET_WEIGHTS: Record<string, number> = {
 };
 
 function calculateElementalBalance(chart: BirthChart): ElementalBalance {
-  const balance = { fire: 0, water: 0, earth: 0, air: 0 };
-
-  const planets = [
-    { name: "Sun", data: chart.sun },
-    { name: "Moon", data: chart.moon },
-    { name: "Mercury", data: chart.mercury },
-    { name: "Venus", data: chart.venus },
-    { name: "Mars", data: chart.mars },
-    { name: "Jupiter", data: chart.jupiter },
-    { name: "Saturn", data: chart.saturn },
-    { name: "Uranus", data: chart.uranus },
-    { name: "Neptune", data: chart.neptune },
-    { name: "Pluto", data: chart.pluto },
-  ];
-
-  for (const planet of planets) {
-    if (planet.data?.sign) {
-      const element = SIGNS_TO_ELEMENT[planet.data.sign];
-      if (element && element !== "aether") {
-        balance[element] += PLANET_WEIGHTS[planet.name] || 1;
-      }
-    }
+  // Distribution + dominance both come from the ratified substrate:
+  // registerChart (grammar, all weights 1.0 per Q5) via interpretDominance
+  // (the single versioned rule, C-fence). The engine's former weighted
+  // tally + always-crowning sort are retired — dominance may now be null.
+  let verdict: DominanceVerdict;
+  try {
+    verdict = interpretDominance(chartPositionsFromSignDegrees(chart));
+  } catch (error) {
+    // Refuse-not-repair propagated to this boundary: a chart the grammar
+    // cannot register totally yields absence, never a manufactured crown.
+    console.warn("[spiralogicEngine] chart could not be registered:", error);
+    return { fire: 0, water: 0, earth: 0, air: 0, dominant: null, deficient: null };
   }
 
-  // Normalize to percentages
-  const total = balance.fire + balance.water + balance.earth + balance.air;
-  if (total > 0) {
-    balance.fire = Math.round((balance.fire / total) * 100);
-    balance.water = Math.round((balance.water / total) * 100);
-    balance.earth = Math.round((balance.earth / total) * 100);
-    balance.air = Math.round((balance.air / total) * 100);
-  }
-
-  // Find dominant and deficient
-  const elements: SpiralogicElement[] = ["fire", "water", "earth", "air"];
-  const sorted = elements.sort((a, b) => balance[b] - balance[a]);
+  const weights = verdict.elementWeights;
+  const total = weights.fire + weights.water + weights.earth + weights.air;
+  const toPercent = (w: number) => (total > 0 ? Math.round((w / total) * 100) : 0);
 
   return {
-    ...balance,
-    dominant: sorted[0],
-    deficient: sorted[sorted.length - 1],
+    fire: toPercent(weights.fire),
+    water: toPercent(weights.water),
+    earth: toPercent(weights.earth),
+    air: toPercent(weights.air),
+    dominant: verdict.verdict === "none" ? null : verdict.verdict,
+    deficient: verdict.deficient,
+    dominance: verdict,
   };
 }
 
 function getCoherencePractices(balance: ElementalBalance): string[] {
   const practices: string[] = [];
 
-  // Practices to strengthen deficient element
+  // Practices to strengthen deficient element.
+  // (A null deficient/dominant matches no case — the rule declined the
+  // claim, so no element-keyed practice is manufactured.)
   switch (balance.deficient) {
     case "fire":
       practices.push("Morning sun exposure and vigorous movement");
@@ -153,6 +156,11 @@ function getCoherencePractices(balance: ElementalBalance): string[] {
     case "air":
       practices.push("Embody ideas through physical practice to ground air");
       break;
+  }
+
+  // Balanced chart (no dominant, no deficient): say so honestly.
+  if (practices.length === 0) {
+    practices.push(BALANCED_PRACTICE_LINE);
   }
 
   return practices;

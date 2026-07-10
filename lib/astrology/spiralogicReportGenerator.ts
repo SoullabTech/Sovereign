@@ -139,7 +139,11 @@ function buildChartSummary(
     lines.push('');
     lines.push('=== ELEMENTAL BALANCE ===');
     lines.push(`Fire: ${bal.fire}%  Water: ${bal.water}%  Earth: ${bal.earth}%  Air: ${bal.air}%`);
-    lines.push(`Dominant: ${bal.dominant}  |  Deficient: ${bal.deficient}`);
+    // Dominance from the single versioned rule may be null — report it as
+    // balanced/none honestly, never as a manufactured crown.
+    lines.push(
+      `Dominant: ${bal.dominant ?? 'none (balanced)'}  |  Deficient: ${bal.deficient ?? 'none'}`
+    );
   }
 
   if (transits.aspects && transits.aspects.length > 0) {
@@ -449,11 +453,14 @@ function assembleReport(
     narrative: narratives.currentPhaseNarrative,
   };
 
-  // Elemental balance insight
+  // Elemental balance insight.
+  // NOTE: no fallback crowns. The old `?? 'fire'` / `?? 'earth'` defaults
+  // invented a confident verdict from NO data — the exact anti-pattern the
+  // C-fence abolishes. Absence propagates as null; renderers say balanced.
   const bal = spiralogic?.elementalBalance;
   const elementalBalance: ElementalBalanceInsight = {
-    dominant: bal?.dominant ?? 'fire',
-    underactive: bal?.deficient ?? 'earth',
+    dominant: bal?.dominant ?? null,
+    underactive: bal?.deficient ?? null,
     percentages: {
       fire: bal?.fire ?? 25,
       water: bal?.water ?? 25,

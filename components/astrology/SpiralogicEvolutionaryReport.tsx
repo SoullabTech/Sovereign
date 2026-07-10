@@ -313,10 +313,12 @@ export function SpiralogicEvolutionaryReport({ report, memberName, onRegenerate 
           })}
         </div>
 
+        {/* Dominance may be null (the versioned rule declined the claim) —
+            render balanced/none honestly. Copy is PROPOSED pending review. */}
         <div className="text-xs p-3 border mb-4" style={{ borderColor: '#9B6B3C40', color: '#E7E2CF', fontWeight: 300 }}>
-          Dominant: <span style={{ color: '#D88A2D' }}>{report.elementalBalance.dominant}</span>
+          Dominant: <span style={{ color: '#D88A2D' }}>{report.elementalBalance.dominant ?? 'none — balanced'}</span>
           &nbsp; · &nbsp;
-          Underactive: <span style={{ color: '#9B6B3C' }}>{report.elementalBalance.underactive}</span>
+          Underactive: <span style={{ color: '#9B6B3C' }}>{report.elementalBalance.underactive ?? 'none'}</span>
         </div>
 
         {report.elementalBalance.integrationPractices.length > 0 && (
