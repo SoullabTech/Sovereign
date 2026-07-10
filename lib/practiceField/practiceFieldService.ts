@@ -166,7 +166,7 @@ export function formatFieldContextForRoom(field: PracticeField | null): string {
   if (field.how_maia_supports) sections.push(`How you (MAIA) support it here: ${field.how_maia_supports}`);
   if (field.professional_practice) sections.push(`The practitioner: ${field.professional_practice}`);
   const guidance = renderFieldGuidance(field.maia_guidance ?? null);
-  if (sections.length === 0 && !guidance) return '';
+  if (sections.length === 0 && !guidance && !field.active_field_content) return '';
 
   const header = [
     `[Field Context — this room belongs to a practitioner's field]`,
@@ -178,7 +178,15 @@ export function formatFieldContextForRoom(field: PracticeField | null): string {
     `options, and the deeper work points back to the practitioner.`,
   ].join('\n');
 
-  return [header, sections.join('\n\n'), guidance].filter(Boolean).join('\n\n');
+  // The field's corpus, composed IN FULL — depth is the product. A room that
+  // "kind of knows" the practitioner's work is worse than one that says it
+  // doesn't. The corpus carries its own provenance + not-instructions framing
+  // in its header (steward-held until the practitioner's own authoring act).
+  const corpus = field.active_field_content
+    ? `[The field's material — composed in full]\n${field.active_field_content}`
+    : '';
+
+  return [header, sections.join('\n\n'), corpus, guidance].filter(Boolean).join('\n\n');
 }
 
 /**
