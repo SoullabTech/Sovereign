@@ -57,21 +57,66 @@ interface MaiaLeftRailProps {
  * when handled. Shown when the member can act on Co-lab (founder/practitioner) OR has
  * a pending count, so pure seekers never see an empty coordination badge.
  */
+// ── Badge fetch guard (module-scoped, shared across mounts) ──────────────────
+// The badge is ambient chrome: it must be impossible for it to storm the API.
+// One in-flight request at a time, a hard floor between network calls even if
+// the component remounts rapidly, and exponential backoff while the endpoint
+// is failing (a local 500 once produced 1400+ back-to-back requests).
+// Boundary: module scope is per-tab — N open tabs are N independent pollers.
+// If this guard gets extracted for other ambient chrome, cross-tab dedup
+// belongs in a BroadcastChannel or shared worker, not here.
+const BADGE_POLL_MS = 20000;
+const BADGE_BACKOFF_MAX_MS = 5 * 60 * 1000;
+let badgeLastTotal = 0;
+let badgeLastFetchAt = 0;
+let badgeFailures = 0;
+let badgeInFlight: Promise<number> | null = null;
+
+function badgeDelay(): number {
+  if (badgeFailures === 0) return BADGE_POLL_MS;
+  return Math.min(BADGE_POLL_MS * 2 ** badgeFailures, BADGE_BACKOFF_MAX_MS);
+}
+
+function fetchColabBadge(): Promise<number> {
+  // Reuse the in-flight request; honor the poll/backoff floor across remounts.
+  if (badgeInFlight) return badgeInFlight;
+  if (Date.now() - badgeLastFetchAt < badgeDelay()) return Promise.resolve(badgeLastTotal);
+  badgeLastFetchAt = Date.now();
+  badgeInFlight = fetch('/api/team/colab-badge')
+    .then(r => {
+      if (!r.ok) throw new Error(`colab-badge ${r.status}`);
+      return r.json();
+    })
+    .then(d => {
+      badgeFailures = 0;
+      badgeLastTotal = d.total ?? 0;
+      return badgeLastTotal;
+    })
+    .catch(() => {
+      badgeFailures = Math.min(badgeFailures + 1, 10);
+      return badgeLastTotal;
+    })
+    .finally(() => { badgeInFlight = null; });
+  return badgeInFlight;
+}
+
 function ColabRailButton({ alwaysShow }: { alwaysShow: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(badgeLastTotal);
 
   useEffect(() => {
     let alive = true;
-    const load = () =>
-      fetch('/api/team/colab-badge')
-        .then(r => (r.ok ? r.json() : { total: 0 }))
-        .then(d => { if (alive) setCount(d.total ?? 0); })
-        .catch(() => {});
-    load();
-    const t = setInterval(load, 20000);
-    return () => { alive = false; clearInterval(t); };
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      fetchColabBadge().then(total => {
+        if (!alive) return;
+        setCount(total);
+        timer = setTimeout(tick, badgeDelay());
+      });
+    };
+    tick();
+    return () => { alive = false; clearTimeout(timer); };
   }, []);
 
   if (!alwaysShow && count === 0) return null;
