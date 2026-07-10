@@ -41,6 +41,10 @@ export interface PracticeField {
   id: string;
   practitioner_member_id: string;
 
+  // Stable public identifier resolving a room's fieldContext URL param to this
+  // field (migration 20260710000001). Nullable: no slug = not room-addressable.
+  field_slug: string | null;
+
   // Layer 1: Identity
   welcome_message: string | null;
   welcome_video_url: string | null;

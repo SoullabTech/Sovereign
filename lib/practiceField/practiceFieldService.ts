@@ -227,33 +227,15 @@ export async function setFieldGuidance(
 // LIVE FIELD BY SLUG
 // Resolves a room's opaque fieldContext identifier to the practitioner's LIVE
 // field (no snapshot — room surfaces like What Now? are ephemeral and always
-// see the field as it currently stands). Read-only.
+// see the field as it currently stands). Read-only. Returns the full row so
+// room surfaces render through formatFieldContextForRoom — the same render as
+// the room-default path (knowledge stance + corpus in full), never a thinner
+// sibling of it.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function buildFieldContextBySlug(
-  slug: string
-): Promise<PracticeFieldContext | null> {
-  const result = await query(
-    `SELECT pf.how_we_work_together, pf.how_maia_supports, pf.about_practice,
-            pf.active_field_content, pf.resources, pf.orientation_style,
-            pf.maia_guidance, m.name AS practitioner_name
-       FROM practice_fields pf
-       JOIN members m ON m.id = pf.practitioner_member_id
-      WHERE pf.field_slug = $1`,
-    [slug]
-  );
-  const row = result.rows[0];
-  if (!row) return null;
-  return {
-    practitioner_name: (row.practitioner_name as string) ?? 'the practitioner',
-    how_we_work_together: row.how_we_work_together ?? null,
-    how_maia_supports: row.how_maia_supports ?? null,
-    about_practice: row.about_practice ?? null,
-    active_field_content: row.active_field_content ?? null,
-    resources_available: ((row.resources as unknown[])?.length ?? 0) > 0,
-    orientation_style: (row.orientation_style as any) ?? 'guided',
-    maia_guidance: (row.maia_guidance as FieldGuidance) ?? null,
-  };
+export async function getPracticeFieldBySlug(slug: string): Promise<PracticeField | null> {
+  const result = await query(`SELECT * FROM practice_fields WHERE field_slug = $1`, [slug]);
+  return result.rows[0] ?? null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

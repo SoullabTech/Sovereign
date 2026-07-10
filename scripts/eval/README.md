@@ -18,6 +18,7 @@ Pattern extended: [`tests/constitutional/refusal-registry/`](../../tests/constit
 | P4b | Benign narrowing guidance persists **exactly** (PUT response ≡ DB row ≡ GET) | cloud |
 | P5 | Local provider unreachable → 200 with *labeled* Claude fallback, never a 500 | degraded |
 | P6 | `fieldContext` resolving to a practice field → `field:{slug,composed:true}` on the reply; no `fieldContext` → `field:null` | cloud |
+| P7 | The `/api/maia/vision-studio/interview` sibling carries the same artifact shape: `served.*` (anthropic under the pin), `field` provenance with/without `fieldContext` | cloud |
 
 Each scenario is one server environment; managed mode boots a `next dev` per scenario so
 flag-set vs flag-unset semantics are real, not simulated.

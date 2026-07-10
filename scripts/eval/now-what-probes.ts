@@ -228,6 +228,18 @@ const CARDS: Record<string, ProbeCard> = {
     ratification:
       'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
   },
+  P7: {
+    id: 'P7',
+    title: 'Vision-studio sibling route carries the same provenance discipline',
+    claim:
+      'A turn on /api/maia/vision-studio/interview carries served.provider+served.model (anthropic under the register pin), field:{slug,composed:true} when fieldContext resolves, and field:null without fieldContext — the same artifact shape as the now-what route.',
+    passingAuthorizes:
+      'The sibling route composes through the SHARED block (lib/maia/roomComposition.ts) with the same provenance discipline — the Larry demo’s Michael link (vision-studio room) is no longer a thinner sibling of the now-what room.',
+    passingDoesNotAuthorize:
+      'Anything about presence composition reaching the prompt (prompt-side only, not response-observable — Tier 2 territory), reply quality, or that the two rooms behave identically beyond the asserted artifact shape.',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
   P5: {
     id: 'P5',
     title: 'Degraded provider degrades to the spec’d behavior, never a 500',
@@ -257,9 +269,10 @@ async function sendTurn(
   cookie: string | null,
   message: string,
   fieldContext?: string,
+  route: string = '/api/now-what/interview',
 ): Promise<TurnResponse> {
   const t0 = Date.now();
-  const res = await fetch(`${baseUrl}/api/now-what/interview`, {
+  const res = await fetch(`${baseUrl}${route}`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -485,6 +498,55 @@ async function probeP6(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: s
   return { evidence };
 }
 
+async function probeP7(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const route = '/api/maia/vision-studio/interview';
+  const slug = `eval-field-${ctx.member.runId}`;
+  // Same synthetic field discipline as P6 (idempotent upsert; cleanup removes
+  // the row with the member). P6 may have created it already in this scenario.
+  await ctx.db.query(
+    `INSERT INTO practice_fields (practitioner_member_id, field_slug, about_practice)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (practitioner_member_id)
+     DO UPDATE SET field_slug = EXCLUDED.field_slug, about_practice = EXCLUDED.about_practice`,
+    [ctx.member.id, slug, 'EVAL-SYNTHETIC probe field: a practice of noticing. (Not a real practice.)'],
+  );
+  const withField = await sendTurn(
+    ctx.baseUrl,
+    ctx.cookie,
+    'I want to talk about where my practice goes next. [synthetic eval probe]',
+    slug,
+    route,
+  );
+  const evidence = [
+    `with fieldContext: status=${withField.status} served=${JSON.stringify(withField.json?.served ?? null)} field=${JSON.stringify(withField.json?.field ?? null)}`,
+  ];
+  if (withField.status !== 200) return { evidence, failure: `expected 200, got ${withField.status}` };
+  const served = withField.json?.served as { provider?: unknown; model?: unknown } | undefined;
+  if (!served || typeof served.provider !== 'string' || typeof served.model !== 'string') {
+    return { evidence, failure: `sibling turn missing served.provider/served.model: ${JSON.stringify(served ?? null)}` };
+  }
+  // This probe runs in the cloud scenario: the register pin must route the
+  // sibling through the labeled Claude path too.
+  if (served.provider !== 'anthropic') {
+    return { evidence, failure: `register pin not honored on sibling: served.provider=${served.provider}` };
+  }
+  const f = withField.json?.field as { slug?: unknown; composed?: unknown } | null;
+  if (!f || f.composed !== true || f.slug !== slug) {
+    return { evidence, failure: `expected field:{slug:'${slug}',composed:true}, got ${JSON.stringify(f)}` };
+  }
+  const without = await sendTurn(ctx.baseUrl, ctx.cookie, 'And one more thought. [synthetic eval probe]', undefined, route);
+  evidence.push(
+    `without fieldContext: status=${without.status} field=${
+      without.json && 'field' in without.json ? JSON.stringify(without.json.field) : 'MISSING(key absent)'
+    }`,
+  );
+  if (without.status !== 200) return { evidence, failure: `no-field turn expected 200, got ${without.status}` };
+  if (without.json?.field !== null) {
+    return { evidence, failure: 'sibling turn without fieldContext must carry field:null (no silent composition)' };
+  }
+  return { evidence };
+}
+
 async function probeP5(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
   const turn = await sendTurn(
     ctx.baseUrl,
@@ -518,21 +580,24 @@ const SCENARIOS: Scenario[] = [
     name: 'cloud',
     description: 'NOW_WHAT_CLOUD_REGISTER=1 with LOCAL_TIER_ENABLED=true — the register flag must route through the labeled Claude path even when the local tier is on.',
     env: { NOW_WHAT_CLOUD_REGISTER: '1', LOCAL_TIER_ENABLED: 'true' },
-    unset: ['OLLAMA_BASE_URL'],
-    probeIds: ['P1', 'P2a', 'P3', 'P4a', 'P4b', 'P6'],
+    // NOW_WHAT_PRACTICE_FIELD_ID unset: the room-default field pin must not leak
+    // in from the inherited env — P6/P7's field:null assertions require that no
+    // default field composes when fieldContext is absent.
+    unset: ['OLLAMA_BASE_URL', 'NOW_WHAT_PRACTICE_FIELD_ID'],
+    probeIds: ['P1', 'P2a', 'P3', 'P4a', 'P4b', 'P6', 'P7'],
   },
   {
     name: 'local',
     description: 'NOW_WHAT_CLOUD_REGISTER unset, LOCAL_TIER_ENABLED=true — the local-first default must actually serve from Ollama.',
     env: { LOCAL_TIER_ENABLED: 'true' },
-    unset: ['NOW_WHAT_CLOUD_REGISTER', 'OLLAMA_BASE_URL'],
+    unset: ['NOW_WHAT_CLOUD_REGISTER', 'OLLAMA_BASE_URL', 'NOW_WHAT_PRACTICE_FIELD_ID'],
     probeIds: ['P1', 'P2b'],
   },
   {
     name: 'degraded',
     description: 'LOCAL_TIER_ENABLED=true with OLLAMA_BASE_URL pointed at a dead port — the local provider is unreachable; degradation must be graceful and labeled.',
     env: { LOCAL_TIER_ENABLED: 'true', OLLAMA_BASE_URL: 'http://127.0.0.1:9' },
-    unset: ['NOW_WHAT_CLOUD_REGISTER'],
+    unset: ['NOW_WHAT_CLOUD_REGISTER', 'NOW_WHAT_PRACTICE_FIELD_ID'],
     probeIds: ['P5'],
   },
 ];
@@ -556,7 +621,12 @@ async function startServer(appRoot: string, port: number, scenario: Scenario): P
   // Mirror the repo's own dev script (`env -u DATABASE_URL next dev`): the
   // dev server resolves its DB locally, not through a baked DATABASE_URL.
   delete env.DATABASE_URL;
-  for (const k of scenario.unset) delete env[k];
+  // Unset semantics must be REAL even when the operator's .env files define the
+  // var: next dev re-reads dotenv files, but actual process env takes precedence
+  // (@next/env never overrides an existing var). An empty string is falsy at
+  // every read site ('' !== '1', `if (roomFieldId)`, `|| default`), so setting
+  // '' — not deleting — is what genuinely unsets a flag for the booted server.
+  for (const k of scenario.unset) env[k] = '';
   Object.assign(env, scenario.env);
 
   const proc = spawn('npx', ['next', 'dev', '-p', String(port)], {
@@ -750,6 +820,7 @@ async function runScenarioProbes(scenario: Scenario, ctx: ProbeCtx, results: Pro
       else if (id === 'P4b') outcome = await probeP4b(ctx);
       else if (id === 'P5') outcome = await probeP5(ctx);
       else if (id === 'P6') outcome = await probeP6(ctx);
+      else if (id === 'P7') outcome = await probeP7(ctx);
       else outcome = { evidence: [], failure: `unknown probe ${id}` };
     } catch (err) {
       outcome = { evidence: [], failure: `probe threw: ${err instanceof Error ? err.message : String(err)}` };
