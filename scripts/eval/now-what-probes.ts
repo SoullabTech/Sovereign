@@ -216,6 +216,18 @@ const CARDS: Record<string, ProbeCard> = {
     ratification:
       'RATIFIED — witnessed passing run 202607101637-b1bebe (managed local, 8/8) reviewed and ratified by Kelly 2026-07-10, per spec probe-induction rule. (Manual precedent: live 2026-07-08 proofs.)',
   },
+  P6: {
+    id: 'P6',
+    title: 'Practitioner field composes into the turn, labeled',
+    claim:
+      'A turn whose fieldContext resolves to a practice field returns field:{slug,composed:true}; a turn without fieldContext returns field:null.',
+    passingAuthorizes:
+      'Field-composition provenance travels with the reply (same discipline as served) — whether the practitioner’s field was in the prompt is answerable from the artifact, and absent fieldContext no field composes.',
+    passingDoesNotAuthorize:
+      'That the reply is GROUNDED in the field content (register/grounding is Tier 2 rubric territory), or anything about composition order beyond what code review establishes.',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
   P5: {
     id: 'P5',
     title: 'Degraded provider degrades to the spec’d behavior, never a 500',
@@ -240,7 +252,12 @@ interface TurnResponse {
   elapsedMs: number;
 }
 
-async function sendTurn(baseUrl: string, cookie: string | null, message: string): Promise<TurnResponse> {
+async function sendTurn(
+  baseUrl: string,
+  cookie: string | null,
+  message: string,
+  fieldContext?: string,
+): Promise<TurnResponse> {
   const t0 = Date.now();
   const res = await fetch(`${baseUrl}/api/now-what/interview`, {
     method: 'POST',
@@ -248,7 +265,12 @@ async function sendTurn(baseUrl: string, cookie: string | null, message: string)
       'content-type': 'application/json',
       ...(cookie ? { cookie } : {}),
     },
-    body: JSON.stringify({ mode: 'turn', phase: 'fire_1', history: [{ role: 'user', content: message }] }),
+    body: JSON.stringify({
+      mode: 'turn',
+      phase: 'fire_1',
+      history: [{ role: 'user', content: message }],
+      ...(fieldContext ? { fieldContext } : {}),
+    }),
     signal: AbortSignal.timeout(180_000),
   });
   const json = (await res.json().catch(() => null)) as Record<string, unknown> | null;
@@ -425,6 +447,44 @@ async function probeP4b(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: 
   return { evidence };
 }
 
+async function probeP6(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const slug = `eval-field-${ctx.member.runId}`;
+  // Self-contained: the eval member becomes the practitioner of an ephemeral,
+  // synthetic-labeled field. Cleanup already removes the row with the member.
+  await ctx.db.query(
+    `INSERT INTO practice_fields (practitioner_member_id, field_slug, about_practice)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (practitioner_member_id)
+     DO UPDATE SET field_slug = EXCLUDED.field_slug, about_practice = EXCLUDED.about_practice`,
+    [ctx.member.id, slug, 'EVAL-SYNTHETIC probe field: a practice of noticing. (Not a real practice.)'],
+  );
+  const withField = await sendTurn(
+    ctx.baseUrl,
+    ctx.cookie,
+    'I want to talk about where my practice goes next. [synthetic eval probe]',
+    slug,
+  );
+  const evidence = [
+    `with fieldContext: status=${withField.status} field=${JSON.stringify(withField.json?.field ?? null)}`,
+  ];
+  if (withField.status !== 200) return { evidence, failure: `expected 200, got ${withField.status}` };
+  const f = withField.json?.field as { slug?: unknown; composed?: unknown } | null;
+  if (!f || f.composed !== true || f.slug !== slug) {
+    return { evidence, failure: `expected field:{slug:'${slug}',composed:true}, got ${JSON.stringify(f)}` };
+  }
+  const without = await sendTurn(ctx.baseUrl, ctx.cookie, 'And one more thought. [synthetic eval probe]');
+  evidence.push(
+    `without fieldContext: status=${without.status} field=${
+      without.json && 'field' in without.json ? JSON.stringify(without.json.field) : 'MISSING(key absent)'
+    }`,
+  );
+  if (without.status !== 200) return { evidence, failure: `no-field turn expected 200, got ${without.status}` };
+  if (without.json?.field !== null) {
+    return { evidence, failure: 'turn without fieldContext must carry field:null (no silent composition)' };
+  }
+  return { evidence };
+}
+
 async function probeP5(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
   const turn = await sendTurn(
     ctx.baseUrl,
@@ -459,7 +519,7 @@ const SCENARIOS: Scenario[] = [
     description: 'NOW_WHAT_CLOUD_REGISTER=1 with LOCAL_TIER_ENABLED=true — the register flag must route through the labeled Claude path even when the local tier is on.',
     env: { NOW_WHAT_CLOUD_REGISTER: '1', LOCAL_TIER_ENABLED: 'true' },
     unset: ['OLLAMA_BASE_URL'],
-    probeIds: ['P1', 'P2a', 'P3', 'P4a', 'P4b'],
+    probeIds: ['P1', 'P2a', 'P3', 'P4a', 'P4b', 'P6'],
   },
   {
     name: 'local',
@@ -689,6 +749,7 @@ async function runScenarioProbes(scenario: Scenario, ctx: ProbeCtx, results: Pro
       else if (id === 'P4a') outcome = await probeP4a(ctx);
       else if (id === 'P4b') outcome = await probeP4b(ctx);
       else if (id === 'P5') outcome = await probeP5(ctx);
+      else if (id === 'P6') outcome = await probeP6(ctx);
       else outcome = { evidence: [], failure: `unknown probe ${id}` };
     } catch (err) {
       outcome = { evidence: [], failure: `probe threw: ${err instanceof Error ? err.message : String(err)}` };

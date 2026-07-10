@@ -1,0 +1,164 @@
+/**
+ * Seed the Now What? Flourishing Field (demo) — practice field content for the
+ * What Now? room's field composition (fieldContext=now-what-demo).
+ *
+ * Identity model (Representation & Claim Discipline): the field is held by a
+ * clearly-labeled DEMO practitioner identity (`larry.demo`, the michael.demo
+ * hygiene pattern), because Larry Closs has no member identity and creating one
+ * for him pre-consent would cross the representation line. The content is
+ * authored by Kelly from Larry's Now What? materials (docs/fields/larry/*) and
+ * carries that provenance in the field itself. When Larry's own authoring act
+ * replaces this, swapping the slug's holder is a one-row update.
+ *
+ * Content discipline (per FLOURISHING_NOW_WHAT_FIELD_CONCEPT.md §II, §VIII):
+ *   - the framework is offered as a lens, never unsolicited categorization
+ *   - no flourishing scores/levels/profiles, no domain assignment
+ *   - MAIA may surface Larry's teaching with provenance ("Larry writes…"),
+ *     never speaks AS him
+ * These land as Layer 4 guidance (narrow-only, validated at save and compose).
+ *
+ * Idempotent: re-running updates the same rows. Targets LOCAL dev by default;
+ * production markers are refused (deploy-time prod seeding goes through
+ * Kelly's gate, like every prod act).
+ *
+ * Usage: npx tsx scripts/seed/seed-flourishing-field.ts [--database-url <dsn>] [--slug now-what-demo]
+ */
+
+import { createRequire } from 'node:module';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const APP_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+const PROD_MARKERS = ['soullab.life', '192.168.0.104', 'minisforum'];
+
+const DEMO_USERNAME = 'larry.demo';
+const DEMO_NAME = 'Larry Closs (Demo)';
+
+const FIELD_CONTENT = {
+  welcome_message:
+    'Welcome. This room holds your Now What? practice between our conversations — ' +
+    'a place to keep the thread alive, in your own words.',
+  about_practice:
+    "Larry Closs's Now What? practice rests on one central claim: flourishing is not a " +
+    'destination — it is a practice. The work integrates executive leadership with positive ' +
+    'psychology, cultivated across five practice domains: attention, relationships, meaning, ' +
+    'contribution, and presence. Larry works with leaders, facilitators, clients, and students ' +
+    'through coaching, workshops, and cohort work. ' +
+    '(Demo field — authored by Kelly Nezat from Larry’s Now What? materials, 2026-07-10, ' +
+    'pending Larry’s own authoring act.)',
+  how_we_work_together:
+    'The atomic unit of this work is the practice loop, not the session: an encounter with ' +
+    'Larry → the person chooses one practice (one domain, one experiment) → lives it between ' +
+    'sessions → reflects privately with MAIA → carries what mattered back to the next ' +
+    'conversation. Between encounters, this room keeps the practice thread alive. Not living ' +
+    'a practice is information about the practice or the season — never a failure of the person.',
+  how_maia_supports:
+    "MAIA is the member's own companion between encounters — not Larry's chatbot, and never a " +
+    "substitute for him. She may surface Larry's authored teaching with provenance " +
+    '("Larry writes…", "Larry’s practice offers…") but never speaks as him. The Now What? ' +
+    'framework is offered as an invitation when the member reaches for it — never as ' +
+    'unsolicited categorization. There are no flourishing scores, levels, or assessments, ' +
+    'ever: recognition asks what became visible through living, not how flourishing someone is.',
+  professional_practice:
+    'Larry Closs — executive coach and consultant developing an approach that integrates ' +
+    'executive leadership with positive psychology, serving leaders, facilitators, clients, ' +
+    'and students. (Demo declaration, pending Larry’s own.)',
+  orientation_style: 'guided',
+  maia_guidance: {
+    preferred_language:
+      'flourishing-practice vocabulary — the five domains (attention, relationships, meaning, ' +
+      'contribution, presence) as lenses the member may pick up, never labels applied to them',
+    boundaries: [
+      'never assign a domain to what the member shares — offer the lens only when they reach for it',
+      "no flourishing scores, levels, profiles, or 'you're strongest in…' statements",
+    ],
+    forbidden_engagements: [
+      'do not simulate Larry or speak as him — surface his teaching only with provenance',
+      'no flourishing assessments of any kind',
+    ],
+  },
+};
+
+function parseArgs(argv: string[]) {
+  let databaseUrl =
+    process.env.SEED_DATABASE_URL ||
+    process.env.DATABASE_URL ||
+    'postgresql://soullab@localhost:5432/maia_consciousness';
+  let slug = 'now-what-demo';
+  for (let i = 2; i < argv.length; i++) {
+    if (argv[i] === '--database-url') databaseUrl = argv[++i];
+    else if (argv[i] === '--slug') slug = argv[++i];
+    else throw new Error(`unknown flag: ${argv[i]}`);
+  }
+  for (const marker of PROD_MARKERS) {
+    if (databaseUrl.includes(marker)) {
+      throw new Error(
+        `REFUSED: database "${databaseUrl}" targets production (${marker}). ` +
+          'Prod seeding is a deploy-time act behind the deploy gate.',
+      );
+    }
+  }
+  return { databaseUrl, slug };
+}
+
+async function main() {
+  const { databaseUrl, slug } = parseArgs(process.argv);
+  const req = createRequire(join(APP_ROOT, 'package.json'));
+  const { Client } = req('pg');
+  const db = new Client({ connectionString: databaseUrl });
+  await db.connect();
+  try {
+    // Demo practitioner identity — labeled, tester=true (structural analytics
+    // exclusion), password sign-in impossible (sentinel non-hex hash).
+    const member = await db.query(
+      `INSERT INTO members (passkey, username, password_hash, name, email, onboarded, onboarding_step, tester)
+       VALUES ('SOULLAB-DEMO-LARRY', $1, '!DEMO-NO-PASSWORD-LOGIN!', $2, 'larry.demo@synthetic.invalid', true, 'complete', true)
+       ON CONFLICT (username) DO UPDATE SET name = EXCLUDED.name, tester = true
+       RETURNING id`,
+      [DEMO_USERNAME, DEMO_NAME],
+    );
+    const practitionerId = member.rows[0].id as string;
+
+    const field = await db.query(
+      `INSERT INTO practice_fields (
+         practitioner_member_id, field_slug, welcome_message, about_practice,
+         how_we_work_together, how_maia_supports, professional_practice,
+         orientation_style, maia_guidance
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       ON CONFLICT (practitioner_member_id) DO UPDATE SET
+         field_slug = EXCLUDED.field_slug,
+         welcome_message = EXCLUDED.welcome_message,
+         about_practice = EXCLUDED.about_practice,
+         how_we_work_together = EXCLUDED.how_we_work_together,
+         how_maia_supports = EXCLUDED.how_maia_supports,
+         professional_practice = EXCLUDED.professional_practice,
+         orientation_style = EXCLUDED.orientation_style,
+         maia_guidance = EXCLUDED.maia_guidance
+       RETURNING id, field_slug`,
+      [
+        practitionerId,
+        slug,
+        FIELD_CONTENT.welcome_message,
+        FIELD_CONTENT.about_practice,
+        FIELD_CONTENT.how_we_work_together,
+        FIELD_CONTENT.how_maia_supports,
+        FIELD_CONTENT.professional_practice,
+        FIELD_CONTENT.orientation_style,
+        JSON.stringify(FIELD_CONTENT.maia_guidance),
+      ],
+    );
+    console.log(
+      `seeded: practitioner ${DEMO_USERNAME} (${practitionerId.slice(0, 8)}…) · ` +
+        `field ${field.rows[0].id} · slug '${field.rows[0].field_slug}'`,
+    );
+    console.log('removal: DELETE FROM practice_fields WHERE practitioner_member_id = (SELECT id FROM members WHERE username = \'larry.demo\'); DELETE FROM members WHERE username = \'larry.demo\';');
+  } finally {
+    await db.end();
+  }
+}
+
+main().catch((err) => {
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exit(1);
+});
