@@ -1865,8 +1865,10 @@ export default function AstrologyPage() {
           </h2>
           <ElementalBalanceDisplay balance={elementalBalance} />
           <div className={`mt-6 text-xs text-center ${isDayMode ? 'text-stone-600' : 'text-stone-400'} italic`}>
-            <p>Dominant Element: <strong>{Object.entries(elementalBalance).reduce((a, b) => a[1] > b[1] ? a : b)[0].toUpperCase()}</strong> ·
-            Integration practices available through personalized guidance</p>
+            {/* Dominance line hidden (Kelly, 2026-07-10): elementalBalance is hardcoded on both
+                paths (default state + post-chart TODO), so the crown was fiction for every member.
+                Dominance language returns only via the versioned interpretive rule (C-fence). */}
+            <p>Integration practices available through personalized guidance</p>
           </div>
         </motion.div>
 
