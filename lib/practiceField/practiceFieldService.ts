@@ -136,6 +136,20 @@ export async function getFieldGuidance(
 }
 
 /**
+ * Layer 4 guidance by practice-field id — for field-scoped rooms (e.g. the
+ * What Now? room) that know their FIELD rather than their practitioner.
+ * Same live-read semantics as getFieldGuidance: guidance is never snapshotted,
+ * so a practitioner's edit reaches every room in the field immediately.
+ */
+export async function getFieldGuidanceByFieldId(fieldId: string): Promise<FieldGuidance> {
+  const result = await query(
+    `SELECT maia_guidance FROM practice_fields WHERE id = $1`,
+    [fieldId]
+  );
+  return (result.rows[0]?.maia_guidance as FieldGuidance) ?? {};
+}
+
+/**
  * Set Layer 4 MAIA Guidance for a practitioner. NARROW-ONLY: any preference that
  * attempts to override safeguards or widen authority is rejected — when that
  * happens nothing is written and `violations` explains why. Creates a minimal
