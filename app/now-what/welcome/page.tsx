@@ -27,7 +27,7 @@ export default function NowWhatWelcomePage() {
     <PublicSectionLanding
       section="now-what"
       paragraphs={[
-        'Not a course. Not a feed. A live room where you bring the actual thing — the decision, the overwhelm, the question that keeps coming back — and work with it until a next real step appears.',
+        'A live room where you bring the actual thing — the decision, the overwhelm, the question that keeps coming back — and work with it until a next real step appears.',
         'You speak; MAIA listens and works with you — plainly, without scripts or diagnosis. When the step is clear, the room lets you go. The point is your life, not the session.',
         'Private by design: self-hosted, consent-first, nothing sold, nothing farmed.',
       ]}

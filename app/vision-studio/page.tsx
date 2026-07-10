@@ -26,7 +26,7 @@ export default function VisionStudioLandingPage() {
       paragraphs={[
         'Some work does not fit in a task list. A book, a practice, a body of research, a question you have carried for years — work that unfolds over a lifetime and asks to be returned to, not managed.',
         'The Vision Studio is a room inside MAIA where that work has a home. You bring the vision as it actually stands — forming, stalled, changing — and work with it in conversation, at your own pace, on your own terms.',
-        'Nothing here optimizes you. MAIA holds the space; the authorship stays yours.',
+        'MAIA holds the space; the pace and the authorship stay yours.',
       ]}
       ctas={[
         { label: 'Begin with MAIA', href: '/signin', primary: true },

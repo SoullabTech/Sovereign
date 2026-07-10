@@ -5,6 +5,10 @@
 **Instrument set:** `docs/canon/MARKETING_CLAIM_DISCIPLINE.md` — every outward
 statement (1) declares its **Layer**, (2) names its **Center of Gravity**,
 (3) passes the **Failure Test**.
+**Register rule (founder directive, 2026-07-10):** copy leads with what a thing
+**is** — a sentence never opens with a negation ("Not a…", "Nothing here…"),
+because the reader sees the negated thing first. Contrast, if needed, comes
+after the positive.
 **Status:** prepared on a branch; publishing is a founder decision at merge +
 deploy. *Preparation ≠ authorization.*
 
@@ -20,7 +24,7 @@ say the same thing. Body copy is audited paragraph by paragraph below.
 |---|---|---|---|
 | "Some work does not fit in a task list…" | — (framing, no capability claim) | Reader's own experience | Survives trivially |
 | "The Vision Studio is a room inside MAIA where that work has a home… work with it in conversation, at your own pace, on your own terms." | **Live** — `/maia/vision-studio` exists as a member room; conversation is the live mechanism (room composition shared block, PR #579 merged) | The room existing and conversation working — both Live | Strip Designed/Vision: room + conversation remain. **Survives** |
-| "Nothing here optimizes you. MAIA holds the space; the authorship stays yours." | **Live** (posture claim, answerable to the Oath/Invariants, not to a feature) | The sovereignty architecture that already governs runtime | Survives — this is a constraint we enforce, not a capability we promise |
+| "MAIA holds the space; the pace and the authorship stay yours." | **Live** (posture claim, answerable to the Oath/Invariants, not to a feature) | The sovereignty architecture that already governs runtime | Survives — this is a constraint we enforce, not a capability we promise |
 
 Deliberately **not** claimed: memory synthesis, progress tracking, "MAIA
 remembers your vision across years" (episodic substrate is not Live).
@@ -31,7 +35,7 @@ remembers your vision across years" (episodic substrate is not Live).
 |---|---|---|---|
 | "For practitioners… sessions, relationships, and a growing field of practice." | **Live** — session rooms, caseload/clients modules, studio fields all exist in the gated app | Audience naming; capabilities named generically | Survives |
 | "Hold sessions, keep faith with the people you work alongside, and let years of practice accumulate into a field you can actually see and steward." | **Live** — sessions live; Relationship Memory v1 deployed; `/studio/fields` views exist. "Years of practice accumulate" is what the member does over time, not a synthesis claim | Sessions + fields being real workspaces | Strip Designed/Vision: sessions, relationships, field views remain. **Survives** |
-| "Built sovereign: self-hosted, consent-first, no data middlemen…" | **Live** — architecture facts (minisforum, local Postgres, consent gates) | The infrastructure as it runs today | Survives |
+| "Built sovereign: self-hosted, consent-first, direct to the people you serve. Your practice — and your clients' trust — stays yours." | **Live** — architecture facts (minisforum, local Postgres, consent gates) | The infrastructure as it runs today | Survives |
 
 ## /press — "Publishing the Living Work"
 
@@ -39,7 +43,7 @@ remembers your vision across years" (episodic substrate is not Live).
 |---|---|---|---|
 | "Most publishing starts with a market. Soullab Press starts with a life…" | — (stance) | Editorial posture, not capability | Survives |
 | "The first works are **taking shape now** — Soul Portraits given as gifts, and books grown from years of practice." | **Live** (Soul Portraits — generated and gifted) + **Designed, in forward voice** (books — literary generator exists but is unmerged; no published catalog) | The forming-state itself is the claim; the tense carries the layer | Strip Designed: "Soul Portraits given as gifts" stands alone and true. **Survives** |
-| "Not content. Records of encounter — made to be held and given." | — (stance) | Editorial posture | Survives |
+| "Records of encounter — made to be held and given." | — (stance) | Editorial posture | Survives |
 
 Deliberately **not** claimed: a catalog, titles, dates, "available now."
 This is the page most at risk of drift as Press matures — **re-tag on revision,
@@ -49,7 +53,7 @@ do not smooth** (canon drift check).
 
 | Claim | Layer | Center of gravity | Failure test |
 |---|---|---|---|
-| "Not a course. Not a feed. A live room where you bring the actual thing… until a next real step appears." | **Live** — the room is prod-verified (What Now? field live 07-09; composition witnessed 07-10) | The room being live | Survives |
+| "A live room where you bring the actual thing… until a next real step appears." | **Live** — the room is prod-verified (What Now? field live 07-09; composition witnessed 07-10) | The room being live | Survives |
 | "You speak; MAIA listens and works with you — plainly, without scripts or diagnosis." | **Live** — describes the live conversational mechanism; "without diagnosis" is a vow (Oath), enforced not promised | Live room + standing constraint | Survives |
 | "When the step is clear, the room lets you go. The point is your life, not the session." | **Live** — off-ramps (closing gesture + field timeline) built and verified 07-10, PR #577 merged + deployed | The off-ramp telos being real | Strip Designed/Vision: closing gesture exists. **Survives** |
 | "Private by design: self-hosted, consent-first, nothing sold, nothing farmed." | **Live** — architecture facts | Infrastructure as deployed | Survives |

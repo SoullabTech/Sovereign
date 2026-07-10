@@ -27,7 +27,7 @@ export default function SoullabStudioLandingPage() {
       paragraphs={[
         'For practitioners — coaches, therapists, teachers, guides — whose work generates something worth tending: sessions, relationships, and a growing field of practice.',
         'The Studio is where that work lives. Hold sessions, keep faith with the people you work alongside, and let years of practice accumulate into a field you can actually see and steward.',
-        'Built sovereign: self-hosted, consent-first, no data middlemen. Your practice — and your clients’ trust — never becomes someone else’s asset.',
+        'Built sovereign: self-hosted, consent-first, direct to the people you serve. Your practice — and your clients’ trust — stays yours.',
       ]}
       ctas={[
         { label: 'Sign in', href: '/signin', primary: true },

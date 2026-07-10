@@ -26,7 +26,7 @@ export default function PressLandingPage() {
       paragraphs={[
         'Most publishing starts with a market. Soullab Press starts with a life: work that was lived before it was written.',
         'The first works are taking shape now — Soul Portraits given as gifts, and books grown from years of practice. Each is made slowly, for a person or a readership we can name.',
-        'Not content. Records of encounter — made to be held and given.',
+        'Records of encounter — made to be held and given.',
       ]}
       ctas={[{ label: 'About Soullab', href: '/', primary: true }]}
     />
