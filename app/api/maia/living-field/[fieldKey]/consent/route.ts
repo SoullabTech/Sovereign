@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
+import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -16,7 +17,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { fieldKey: string } }
 ) {
-  const memberId = request.headers.get('x-member-id')
+  const memberId = probeAuthPosture(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
@@ -41,7 +42,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { fieldKey: string } }
 ) {
-  const memberId = request.headers.get('x-member-id')
+  const memberId = probeAuthPosture(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
@@ -92,7 +93,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { fieldKey: string } }
 ) {
-  const memberId = request.headers.get('x-member-id')
+  const memberId = probeAuthPosture(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }

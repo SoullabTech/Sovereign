@@ -38,6 +38,7 @@ import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalSer
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
+import { probeAuthPosture } from '@/lib/auth/authPostureProbe';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -348,6 +349,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
+    probeAuthPosture(req); // [auth-posture] Phase 0 — log-only, high-traffic sample point
     const observerMemberId = userId || req.headers.get('x-member-id') || session?.id;
     if (observerMemberId && message && orchestratorResult.text) {
       observeRelationalContent(observerMemberId, message, orchestratorResult.text);
