@@ -14,10 +14,13 @@
 
 At current scale the sovereignty risk is not throughput — it is **data loss** in a solo-operated self-hosted stack holding members' most intimate material. Highest-leverage infrastructure work available:
 - Encrypted **offsite** Postgres backups with **tested restores** (a backup that has never been restored is a hope, not a backup).
+- **Key custody** — the solo-operator gap: if the encryption key lives only on the node it protects, or only in the founder's head, the backup is unrecoverable in exactly the scenarios it exists for. Escrow: a sealed offline copy (printed or hardware token, physically separate from the node), with Nathan as eventual second custodian as his ramp matures. A backup nobody can decrypt is the same hope as one never restored.
 - Basic monitoring/alerting on the minisforum stack.
 - A documented recovery runbook — which doubles as Nathan curriculum (support function must know what recovery looks like).
 
 Cost: a weekend. Not gated on funding.
+
+**Doctrine boundary, stated so it never becomes a drift finding**: *offsite encrypted backups under founder-held keys are within data-locality doctrine; a cloud-hosted live database is not.* The constitution prohibits a cloud **database** — live, queryable member data under a provider's control — not encrypted-at-rest copies under sovereign keys on rented storage.
 
 ## Stage 1 — H1 opens: use the already-ratified split posture
 

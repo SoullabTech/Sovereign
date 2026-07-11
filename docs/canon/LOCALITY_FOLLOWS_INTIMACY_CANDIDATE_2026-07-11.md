@@ -32,6 +32,7 @@ Consequences:
 - Context assembly (ADR-013 jurisdiction) is the single enforcement point; per-call-site discipline is Grade-C and prohibited as the primary mechanism.
 - Provenance labels must survive derivation: an embedding, summary, or affinity row computed from sacred-class data inherits the class (the F2 fix — purging affinity rows derived from sealed atoms — is this principle already enforced one axis over).
 - "Provably free" means testable: the assembly seam exposes what entered a prompt, so a refusal test can assert the absence of intimacy-class inputs on cloud-bound paths. Candidate refusal-registry entry once implemented.
+- **Rented inference is not an exception**: Stage-2-style bare-metal rental falls under the same composition rule. "No-retention, contractually clean" governs the provider *relationship*; the intimacy-class input check governs what may enter the prompt at all — rental and cloud alike.
 
 ## 4. What this doctrine does NOT authorize
 
