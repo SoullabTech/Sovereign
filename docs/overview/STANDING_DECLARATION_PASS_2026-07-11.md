@@ -116,11 +116,11 @@ Rows with `A ? B` carry a genuine tiebreaker (TB) for Kelly; all others are prop
 | SPIRALOGIC_REGISTRATION_GRAMMAR_2026-07-09.md | Working | as-built extraction; supersession banner (§2) still applies — SPEC variant governs |
 | ATTENTION_SUBSTRATE_GENERALIZATION_2026-06-06.md | Candidate | proposed spec |
 | COLAB_ATTENTION_LAYER_SPEC_2026-06-06.md | Candidate | proposed spec, "nothing Live yet" |
-| SESSION_ROOM_JOIN_TOKEN_DESIGN_2026-06-14.md | Candidate | "design locked — no code yet" (note: census shows join-token ENFORCED in the open room; consider Working) |
+| SESSION_ROOM_JOIN_TOKEN_DESIGN_2026-06-14.md | Ratified | consistency rule (counsel catch 2026-07-11): enforced-live docs stamp Ratified, same test as DEPLOY_POSTURE — census shows join-tokens enforced (403 without threshold proof). Stamp INCLUDES one-line body correction of the now-false "no code yet" claim ("since built — enforced live, census 2026-07-11") |
 | spiral-patterns-spec.md | Candidate | uncited product spec |
 | PSYCHE_ENGAGEMENT_LAYER_SPEC.md | Candidate | draft; "canons remain prior" |
 
-**Open tiebreakers for the red-line (8)**: MAIA_AS_MIRROR_INFRASTRUCTURE · MAIA_ASK_LAYER · FRAMEWORK_ACCESS_MAP · MEMORY_SERVICE_STATUS_MATRIX · SOUL_PORTRAIT_DEPLOY_POSTURE · CONVERSATIONAL_KEEP_IOS_SMOKE_TEST · SESSION_ROOM_VIDEO_SPEC · SESSION_ROOM_JOIN_TOKEN_DESIGN. Three of the reader's original ten were resolved by census facts (annotated in place).
+**Open tiebreakers for the red-line (7)**: MAIA_AS_MIRROR_INFRASTRUCTURE · MAIA_ASK_LAYER · FRAMEWORK_ACCESS_MAP · MEMORY_SERVICE_STATUS_MATRIX · SOUL_PORTRAIT_DEPLOY_POSTURE · CONVERSATIONAL_KEEP_IOS_SMOKE_TEST · SESSION_ROOM_VIDEO_SPEC. Three of the reader's original ten were resolved by census facts (annotated in place); SESSION_ROOM_JOIN_TOKEN_DESIGN resolved by the enforced-live consistency rule (counsel catch, 2026-07-11) — Kelly confirms or flips at the red-line. **Consistency rule for the whole table**: a document the code currently enforces stamps Ratified; if its body contains claims the census has since falsified, the stamp includes a one-line body correction.
 
 ## 6. Execution mechanics (after red-line)
 
