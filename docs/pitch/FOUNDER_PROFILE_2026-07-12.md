@@ -7,9 +7,11 @@
 
 ## Founder Overview
 
+> *"I have spent much of my life exploring the mystery of what it means to become fully human and accompanying others in their own journeys of healing, meaning, and transformation."*
+
 Kelly Nezat is the founder of Soullab and architect of MAIA (Multi-Archetypal Intelligence Architecture), a sovereignty-first relational intelligence platform exploring how technology can participate in human development while preserving human meaning, authorship, agency, and soul.
 
-For more than four decades, Kelly has devoted his life to understanding the mystery of human transformation and what it means to become fully human.
+For more than four decades, Kelly has been engaged in an ongoing exploration of human transformation and what it means to become fully human.
 
 Beginning his study of Jungian psychology at the age of seventeen, his work has unfolded through a lifelong exploration of depth psychology, archetypal studies, shamanic traditions, ritual, mystical experience, alchemy, body-centered therapies, consciousness studies, and transformational healing practices.
 
@@ -17,7 +19,7 @@ Kelly holds a degree in psychology, pursued advanced studies in clinical and dev
 
 Throughout this work, he has integrated diverse approaches including somatic methodologies, guided journeywork, NLP, hypnotherapy, energy healing, spiritual healing, and depth-oriented transformational practices.
 
-At heart, Kelly describes his work as that of a **shamanic alchemist** — a practitioner devoted to understanding how psyche, body, spirit, nature, and consciousness participate in the lifelong process of human becoming.
+Kelly describes his work as standing at the intersection of depth psychology, mystical experience, shamanic practice, and human development. Over time, he has come to think of his vocation as that of a **shamanic alchemist** — a mystic and shamanic guide exploring how psyche, body, spirit, nature, and consciousness participate in the lifelong process of human becoming.
 
 This inquiry gave rise to four interconnected bodies of work:
 
@@ -26,7 +28,7 @@ This inquiry gave rise to four interconnected bodies of work:
 - **Soullab®** — a developmental practice, press, and community dedicated to helping individuals discover and embody the unique path life is asking them to live.
 - **MAIA** — an exploration of how emerging intelligence technologies might be designed in service to human sovereignty, discernment, reflection, and authentic becoming.
 
-Underlying all three is a single recognition:
+Through these decades of work, a recognition gradually took shape:
 
 > Human beings are fundamentally symbolic, archetypal, embodied, relational, and spiritual beings. The essential challenge of our time is not artificial intelligence itself, but humanity's relationship to consciousness, meaning, and authorship.
 
