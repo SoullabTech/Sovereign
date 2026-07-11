@@ -7,7 +7,7 @@
 1. **Personal note from Kelly** — short, his voice, why Mark. Doubles as raw material for the deck's founder-story slot.
 2. ***Elemental Alchemy*** — physical copy. The artifact that says "35 years, not a startup pivot."
 3. **Member account invite** — formation before business. He journals, keeps, hits a refusal — *then* hears why.
-4. **Ordered reading path** (Wave 1) — opens with the drill-log exhibit: before he reads a claim, he sees what a claim costs.
+4. **Ordered reading path** (Wave 1 — DRAFTED 07-12: `MARK_READING_PATH_2026-07-12.md`) — opens with the drill-log exhibit: before he reads a claim, he sees what a claim costs. Companions drafted same pass: `MARK_DEMO_PROTOCOL_2026-07-12.md` (Package 3 item 9), `MARK_GOVERNANCE_ONE_PAGER_2026-07-12.md` (Package 2 item 7). All three pending Kelly's red-line.
 
 ## Package 2 — Day 1 (the presentation)
 5. **The deck** — live-sparse, rendered from signed ground (post-sitting + red-line).
