@@ -34,6 +34,7 @@
 - "Shadow work platform," "personality analysis," "AI therapist/diagnosis," or any clinical framing — prohibited by constitution, not just unbuilt.
 - Anything implying products for minors — no teen surface exists or is claimed.
 - "Fully local AI" — provenance honesty: frontier inference is cloud (labeled); *data* is sovereign. Never perform locality theater.
+- "The AI that cures AI psychosis" / "immune to the companion trap" / "the healthy alternative" — the seductive upgrade of a true claim into an overclaim. The honest form: **"designed to refuse sycophancy, substitution, and engagement capture — here's the code that does it."** *Architected against* is provable; *immune* is hubris — the ELIZA lesson is that knowing how the mirror works didn't protect the man who built it. Overclaiming immunity to delusion is precisely the failure mode being indicted.
 
 ## The three tests before anything leaves your mouth
 

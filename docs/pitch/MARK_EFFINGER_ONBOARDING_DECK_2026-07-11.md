@@ -57,7 +57,8 @@ What Now? proved a complete authored field. Generalized: creators author *enviro
 
 ### 13. Who it's for — and who it's NOT for
 For: members doing real developmental work; practitioners ready to author rather than broadcast; readers of the Press. **Not for**: engagement seekers, parasocial-companion consumers, anyone wanting an AI to do their becoming for them, growth-hack coaching businesses.
-*Speaker note: a named anti-market signals discipline to a business developer more than any TAM figure.*
+**The three named villains, and the invariant that forecloses each**: *sycophancy* (agreement that feels like understanding — foreclosed: never-persuade, mirror integrity) · *substitution* (the mirror replacing the people in your life — foreclosed: support-not-substitute, graduated obsolescence) · *engagement capture* ("15 minutes becomes an hour, not because anything was wrong but because everything was right" — foreclosed: never optimize engagement, no emotional capture).
+*Speaker note: a named anti-market signals discipline more than any TAM figure. The ELIZA video Mark sent is the corroborating witness — the most articulate critique of AI companionship arrives independently at this constitution's conclusions; the mirror only works when what it shows returns to the people in your life. The market weather is turning toward fear of exactly these failure modes, and MAIA is the product that can show, in code, that it was built on the right side before the fear existed. And the humble register is mandatory: "architected against," never "immune" — see the claim card's never-say list.*
 
 ### 14. The far horizon (VISION, stamped as such)
 Member-sovereign hardware — intelligence travels to member devices; the platform never enters the capex race. The constitution as exportable standard — deployments inherit safeguards, may only narrow *(candidate)*; matured, a certification architecture for other systems.
