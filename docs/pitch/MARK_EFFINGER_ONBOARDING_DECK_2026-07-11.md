@@ -1,89 +1,85 @@
 # SOULLAB — Full Professional Accounting for Mark Effinger
-## Business Developer / Coach / Consultant Onboarding
+## Business Developer / Coach / Consultant Onboarding — v2 (four-movement architecture)
 
-**Status**: INTERNAL ONBOARDING DRAFT — built on the 2026-07-11 census evidence base (pre-ratification; Kelly's pass pending). Governed by `docs/canon/MARKETING_CLAIM_DISCIPLINE.md`. Every capability slide carries its stamp: **LIVE** (running in production or on the deploy path, code-witnessed) / **DESIGNED** (specced, gated, deliberately withheld) / **VISION** (held direction). The line that governs everything outward: *"We do not tell tomorrow's story as if it were today's."*
+**Status**: INTERNAL ONBOARDING DRAFT — built on the 2026-07-11 census evidence base. Several items Mark should hear as settled (locality doctrine, governance mode, census corrections) are **committed-but-unratified**; they are marked *candidate* below, same discipline as everywhere else. Kelly red-lines before Mark sees any of it.
+**Design principle**: *the claim discipline isn't a constraint on the pitch — it IS the pitch.* Honest and inspiring stop being in tension when honesty is the differentiator.
+**Format note**: speaker notes carry the live-voice version; slide text is self-explanatory for standalone reading. Kelly chooses the register before the deck regenerates.
+**`[KELLY SUPPLIES]`** marks facts only the founder can provide — biography, pricing intent, cohort status. Nothing in those slots is asserted here.
 
 ---
 
-### Slide 1 — What this is
-**Soullab: a sovereign developmental environment.** MAIA is a consciousness companion — not a chatbot, not a productivity tool — architected so that a person's development happens while their authorship never moves. Self-hosted, constitutionally governed, built by a founder who wrote the ethics into the schema, not the marketing.
+## MOVEMENT I — Why This Exists (the founder story, ~4 slides)
 
-*Speaker note: One sentence Mark should be able to say in his sleep: "Every AI tool synthesizes FOR the person; MAIA is architected so the person's authorship structurally cannot be displaced."*
+### 1. The person before the product
+`[KELLY SUPPLIES: the practice-years figure and the arc — decades of non-AI developmental methodology before a line of code; the reluctant technologist who turned to technology only when scale demanded it.]`
+*Speaker note: this movement earns emotional buy-in before any product claim is made. No claims here need stamps because they're biography — but they must be Kelly's own words.*
 
-### Slide 2 — The thesis (and why it's a moat)
+### 2. The problem, stated without softening
+The AI industry optimizes engagement and extracts authority. People seeking wisdom — creatives, practitioners, anyone doing real inner work — need the inverse: a system structurally incapable of displacing their authorship.
+
+### 3. The thesis sentence
 **Development happens while authorship never moves.**
-- Memory is member-gestured, never harvested. Meaning is never attached silently. Authority moves only upward through the member's own authored experience (Sovereignty Invariant 16, ratified).
-- The moat is **certifiable sovereignty**: we can *prove* it, because proving it means showing code that refuses to interpret. Competitors would have to show theirs doing the opposite of what their engagement metrics demand.
-- This week the system audited itself against its constitution, found two live violations of its own consent promises, and closed them before anyone asked. That audit trail is a sales asset no one else in this market can manufacture.
+Not a slogan — an architectural fact, enforced in schema, verified this week by audit.
 
-### Slide 3 — Who it serves (Center of Gravity)
-- **Members**: people seeking wisdom and self-access rather than output — journaling (voice/type/upload), ideas, kept memories, a Living Field of self-authored meaning. **LIVE**
-- **Practitioners**: coaches, guides, facilitators who've cycled through externalized-authority frameworks and want to author *environments* rather than content. First practitioner fields exist (Larry, Jondi). **LIVE (reference implementations)**
-- **Readers/creatives**: Soullab Press — an LLC, registered with the Library of Congress — the publishing expression of the same thesis. **LIVE (imprint standing attested)**
+### 4. What Soullab is
+A sovereign developmental environment: MAIA (consciousness companion), the Studio (practitioner world), the fields (authored environments of development), and Soullab Press (the same thesis in print). Self-hosted, constitutionally governed.
 
-### Slide 4 — What is LIVE today (the honest inventory, census-witnessed 2026-07-11)
-- **MAIA conversation**: three modes (Talk/Care/Note), three processing tiers, multi-voice epistemic substrate running under production traffic.
-- **Consent-gated memory**: member-kept atoms with a two-axis consent model (what MAIA may use, what may resurface); breakthrough marking; Daily Anchor with structural consent (proven by refusal test).
-- **Sanctuary Mode**: sessions that leave no memory — enforced in code, recently hardened.
-- **The member arc surfaces**: Journal (dream/day, voice + upload), Ideas (MAIA reads only when asked), Keeps, Living Field (versioned, consent-tracked), What Now? room (ephemeral encounter; nothing persists without a member gesture).
-- **Practitioner world**: Studio (clients, sessions, calendar, Decisions, Changes), Practice Fields with consent-gated invites, Personal Portal (same tools, self-directed).
-- **Community**: Commons, Circles with role- and consent-scoped membership.
-- **Soul Portraits**: ten hand-authored, individually consented portraits live; the Mentor experience on one.
-- **Soullab Press**: Book Studio + render engine (one text → print/EPUB/PDF); *Elemental Alchemy* flagship.
+## MOVEMENT II — The Honest Accounting (what IS, ~6 slides)
 
-*Speaker note: every bullet here has a file-and-line receipt in the System Census. That's the standard Mark inherits: if a reader asks to see X, X exists.*
+### 5. The vocabulary Mark inherits (teach it as you present)
+**LIVE** — running, code-witnessed, receipt available. **DESIGNED** — specced, gated, deliberately withheld. **VISION** — held direction, named honestly. The ladder never collapses. The Failure Test governs: *if a reader asks to see X, does X exist?*
 
-### Slide 5 — What is DESIGNED (built or specced, deliberately withheld)
-- **Soul Portrait generation** — the pipeline exists on a branch; withheld until it enters through spec + consent + provenance labeling. The restraint is the feature.
-- **Episodic memory** ("MAIA remembers a life unfolding") — substrate built, wire-up frozen until conditions are met. This is the single biggest claim-unlock in the pipeline: it converts continuity language from aspiration to Live.
-- **Field generalization** — What Now? proved a complete authored field; the Practice Field Editor and Program Catalog (spec authorized) are the path from three hand-built fields to practitioner-authored fields at scale.
-- **Derived interpretation on request** — the Ideas "Ask MAIA" pattern generalized: meaning computed in the member's presence, never stamped silently.
+### 6. LIVE — the constitutional core
+The Oath → Canon's 11 Absolute Prohibitions (never persuade, never optimize engagement, never manufacture lack…) → 16 Sovereignty Invariants → Direction of Authority (ratified): authority moves only upward through the member's own authored experience. Enforced at the conductor, in the schema, by refusal tests.
 
-*Speaker note: "deliberately withheld pending explicit go" is the actual posture found in the code. Mark can say it with a straight face because it's literally written in the deploy gates.*
+### 7. LIVE — the member arc
+Journaling (dream/day; voice, typed, uploaded) · Ideas (MAIA reads only when asked) · Keeps with a two-axis consent model (what MAIA may use / what may resurface) · Living Field (versioned, consent-tracked, self-authored) · What Now? (ephemeral encounter — nothing persists without a member gesture) · Sanctuary Mode (sessions that leave no memory) · Commons & Circles · Studio + Practice Fields with consent-gated invites · ten hand-authored Soul Portraits · Soullab Press: LLC, Library of Congress registration, flagship title, one-text-many-formats engine.
 
-### Slide 6 — The VISION horizon (held, named, unconfused with today)
-- **Fields as the creative unit**: practitioners as field authors — a creator economy inverted; creators author environments of development, not content feeds, and members always leave with what's theirs.
-- **Member-sovereign hardware**: intelligence travels to the member's own devices; the platform never enters the industry's capex race because its value was never in the model.
-- **The constitution as exportable standard**: the inheritance chain (deployments inherit safeguards, may only narrow) matured into a certification architecture for *other* systems.
+### 8. THE PROOF SLIDE — the week of 2026-07-07
+The system audited itself against its own constitution: a full census (every surface stamped, file-and-line receipts), a docs reconciliation (drift total across hundreds of documents: **two**), and a constitutional trace. It found two live violations of its most intimate promises — and closed them before anyone asked. Verification standard: **proof by absence** — Sanctuary proven by refusal, recovery proven by cold restore from escrow alone, consent proven by SQL predicates that exclude.
+*Speaker note: no one else in this industry can show a business developer their claims verified this way. This is the most inspiring slide because it is the most honest one.*
 
-### Slide 7 — The four-horizon roadmap (ruled 2026-07-11)
-- **H0 (this month)**: seal the foundation — ratification of the audit, reliability infrastructure (encrypted, escrowed, restore-tested backups), auth-posture review.
-- **H1 (≈ quarter) — LEADS**: deepen the mirror — portrait generation, episodic memory, interpretation-on-request. Deep work, bounded approvals, executable by the current team.
-- **H2 (≈ two quarters) — gated on team capacity**: field generalization and the practitioner economy. The gate is operational: support capacity must exist before the support surface opens.
-- **H3 (year+)**: portable sovereignty.
+### 9. Deliberately withheld (restraint as posture, not absence)
+All generation and person-level synthesis awaits explicit go — portrait generation exists on a branch and does not ship; interpretation is never stamped silently; the deploy gates carry the withholding in writing. The restraint is the feature Mark learns to sell.
 
-### Slide 8 — Business state, plainly
-- **Stage**: private beta; invite-gated; paywall wired (Stripe) but launch posture deliberate.
-- **Revenue design**: membership tiers (explorer/companion/practitioner language), Founding Studio Program for early practitioners, Press as a second product line with its own economics (gift books, flagship title, developmental publishing thesis).
-- **Team**: Kelly (founder — build + final authority on all claims and gates), Nathan (partner, ramping into member/client support), Mark (business development — this deck), plus AI-assisted derivation under a documented governance mode.
-- **Infrastructure economics**: self-hosted, near-zero marginal cost at current scale; spend is staged by four named triggers, not by funding. The platform may never need to buy GPUs — dollars go to reliability, product doors, and trust infrastructure.
+### 10. Business state, plainly
+Private beta, invite-gated; paywall wired (Stripe), launch posture deliberate. Team: Kelly (founder — build + final authority on every claim and gate), Nathan (partner, ramping into member/client support), Mark (business development), AI-assisted derivation under a documented governance mode *(candidate)*. Infrastructure: self-hosted, near-zero marginal cost; spend staged by four named triggers, not by funding *(candidate)*.
+`[KELLY SUPPLIES: intended tier/pricing model — the interim adapter is honest about no billing writes; Mark needs the intent even if unratified. Beta cohort status/counts, stamped.]`
 
-*Speaker note: no user counts, revenue figures, or growth claims appear in this deck because none are ratified for external use. Mark gets actuals from Kelly directly, with their stamps.*
+## MOVEMENT III — The Becoming (Designed and Vision, ~5 slides)
 
-### Slide 9 — How we speak (Mark's operating discipline)
-- **Three instruments** govern every outward claim: the Live/Designed/Vision ladder, Center of Gravity (whose story is it), and the Failure Test (*if a reader asks to see X, does X exist?*).
-- **Positive-first copy**: lead with what it IS, never with negation.
-- **The house verification standard**: claims are proven by refusals and absences — what the system *won't* do is the product. Learn to sell restraint.
-- **What this buys Mark**: he will never be caught inflating, because the discipline catches it first. In a market about to drown in AI overclaim lawsuits and trust collapse, "our claims survive audit" is the positioning.
+### 11. The four horizons (ruled 2026-07-11)
+**H0 · this month** — seal the foundation: ratification, escrowed + restore-tested backups, auth-posture review. **H1 · ~quarter · LEADS** — deepen the mirror: portrait generation, episodic memory ("MAIA remembers alongside you" becomes *claimable*), interpretation-on-request. **H2 · ~two quarters · gated on team capacity** — field generalization: practitioners as field authors. **H3 · year+** — portable sovereignty.
 
-### Slide 10 — How decisions work here (so Mark is never surprised)
-- **Governance mode**: derivation is delegated (to agent sessions, to advisors, eventually to Mark's analyses); **ratification never leaves the founder**. Every gate, claim, and canon change is Kelly's signature.
-- **Practical meaning for Mark**: propose freely, package evidence well, expect fast bounded decisions — and never treat a favorable analysis as a green light. Dispositions are named to be executed.
-- **Pace truth**: the founder's ratification bandwidth is the system's rate limiter, by design. Mark's highest-leverage habit: bring decisions in red-line-ready form.
+### 12. The inverted creator economy (H2 — Mark's eventual pipeline)
+What Now? proved a complete authored field. Generalized: creators author *environments of development*, not content feeds — and the crossing ledger guarantees members leave with what's theirs. The supply side is the market: practitioners who've cycled through externalized-authority frameworks.
 
-### Slide 11 — Where Mark plugs in (proposed, for discussion)
-1. **Practitioner pipeline** (H1-compatible, highest leverage now): the supply side is the market — practitioners who want to author fields. Founding Studio Program is the vehicle; Larry/Jondi are the proof stories (case studies exist, claim-stamped).
-2. **Press go-to-market**: the imprint has standing (LLC, Library of Congress), a flagship, and a category thesis ("developmental publishing") no one else occupies.
-3. **Narrative stewardship**: the case-study library and claim discipline give Mark a differentiated story — he owns telling it without breaking it.
-4. **Partnership surface** (H2-prep): identify the practitioner networks, publishers, and communities whose trust standards match ours — the list matters more than the volume.
+### 13. Who it's for — and who it's NOT for
+For: members doing real developmental work; practitioners ready to author rather than broadcast; readers of the Press. **Not for**: engagement seekers, parasocial-companion consumers, anyone wanting an AI to do their becoming for them, growth-hack coaching businesses.
+*Speaker note: a named anti-market signals discipline to a business developer more than any TAM figure.*
 
-### Slide 12 — First 30 days (proposed)
-- Week 1: Read the Codex evidence base (System Census, the Canon, the Case Study Library). Experience MAIA as a member — including Sanctuary Mode and a refusal or two. *You cannot sell restraint you haven't felt.*
-- Week 2: Sessions with Kelly on the claim discipline + the two fields (Larry's, Jondi's) as living demos.
-- Week 3: Draft the practitioner-pipeline plan against the Founding Studio Program; red-line with Kelly.
-- Week 4: First outreach under the discipline — every message something the Failure Test would pass.
+### 14. The far horizon (VISION, stamped as such)
+Member-sovereign hardware — intelligence travels to member devices; the platform never enters the capex race. The constitution as exportable standard — deployments inherit safeguards, may only narrow *(candidate)*; matured, a certification architecture for other systems.
 
-### Slide 13 — The close
-This is the rare company where the deepest engineering fact and the best marketing sentence are the same sentence: **the person's authorship cannot be displaced — and we can prove it.** Everything Mark builds on top of that is compounding, because nothing underneath it is borrowed from the future.
+### 15. Why the moat holds
+Certifiable sovereignty compounds: every quarter of restraint deepens the one asset competitors cannot copy without abandoning their business model — code that refuses, and the audit trail proving it.
 
+## MOVEMENT IV — Mark's Mandate (~4 slides)
+
+### 16. The operating reality, stated plainly
+Sole builder; a governed derivation apparatus; ratification never leaves the founder *(candidate — but live practice)*; support function ramping (Nathan); infrastructure staged by triggers. Pace truth: the founder's ratification bandwidth is the system's rate limiter, by design. Mark's highest-leverage habit: bring decisions red-line-ready.
+
+### 17. Mark's lanes (proposed, for discussion)
+1. **Partnership pathways** — practitioner networks, institutions, publishers whose trust standards match ours (Tsai CITY pattern). 2. **Practitioner pipeline** — Founding Studio Program as vehicle; the first two practitioner fields as proof stories (case studies exist, claim-stamped). 3. **Funding narrative** — built on the evidence base: "our claims survive audit" as the positioning. 4. **Press go-to-market** — an imprint with real standing and an unoccupied category: developmental publishing.
+
+### 18. The one rule
+**Every outward claim carries its stamp.** Teaching example: this platform's own pitch-deck audit found exactly one unstamped line ("patterns across time") — caught by the discipline, corrected by disposition. That's how seriously it's held, and it's Mark's protection: he will never be caught inflating, because the discipline catches it first.
+Companion artifact: the **"What We Say" claim card** — one page, carried into every external conversation.
+
+### 19. 90-day mutual expectations
+`[KELLY SUPPLIES: what Mark owes the practice / what the practice owes Mark — drafted together in week 2.]`
+Proposed skeleton — 30: absorb (evidence base, MAIA as member including refusals, the two fields as demos). 60: first red-line-ready proposals (pipeline plan, partnership shortlist). 90: first outreach under the discipline, every message Failure-Test-clean; joint review of what the stamps did to conversion — the honest-marketing hypothesis gets *measured*.
+
+### 20. The close
+The rare company where the deepest engineering fact and the best marketing sentence are the same sentence: **the person's authorship cannot be displaced — and we can prove it.** Everything built on top compounds, because nothing underneath is borrowed from the future.
 *Welcome, Mark. The evidence base is open — check anything.*
