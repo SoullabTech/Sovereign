@@ -7,7 +7,7 @@
  * Spec: docs/specs/PRACTICE_FIELD_SPEC.md
  */
 
-import { query } from '@/lib/db/postgres';
+import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import {
   PracticeField,
   PracticeFieldUpdate,
@@ -56,68 +56,135 @@ export async function upsertPracticeField(
 ): Promise<PracticeField> {
   const existing = await getPracticeField(practitionerMemberId);
 
-  if (!existing) {
-    const result = await query(
-      `INSERT INTO practice_fields (
-        practitioner_member_id, welcome_message, welcome_video_url, about_practice,
-        how_we_work_together, how_maia_supports, professional_practice,
-        orientation_style, resources, active_field_content
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-      RETURNING *`,
-      [
-        practitionerMemberId,
-        update.welcome_message ?? null,
-        update.welcome_video_url ?? null,
-        update.about_practice ?? null,
-        update.how_we_work_together ?? null,
-        update.how_maia_supports ?? null,
-        update.professional_practice ?? null,
-        update.orientation_style ?? 'guided',
-        JSON.stringify(update.resources ?? []),
-        update.active_field_content ?? null,
-      ]
-    );
-    const field = result.rows[0] as PracticeField;
-    await syncStatus(field.id, field);
-    return getPracticeField(practitionerMemberId) as Promise<PracticeField>;
-  }
+  await transaction(async (client) => {
+    let field: PracticeField;
 
-  const merged = { ...existing, ...update };
-  const result = await query(
-    `UPDATE practice_fields SET
-      welcome_message = $2, welcome_video_url = $3, about_practice = $4,
-      how_we_work_together = $5, how_maia_supports = $6, professional_practice = $7,
-      orientation_style = $8, resources = $9, active_field_content = $10,
-      active_field_updated_at = CASE WHEN $10 IS DISTINCT FROM active_field_content
-        THEN NOW() ELSE active_field_updated_at END
-    WHERE practitioner_member_id = $1
-    RETURNING *`,
-    [
-      practitionerMemberId,
-      merged.welcome_message ?? null,
-      merged.welcome_video_url ?? null,
-      merged.about_practice ?? null,
-      merged.how_we_work_together ?? null,
-      merged.how_maia_supports ?? null,
-      merged.professional_practice ?? null,
-      merged.orientation_style ?? 'guided',
-      JSON.stringify(merged.resources ?? []),
-      merged.active_field_content ?? null,
-    ]
-  );
-  const updated = result.rows[0] as PracticeField;
-  await syncStatus(updated.id, updated);
+    if (!existing) {
+      const result = await client.query(
+        `INSERT INTO practice_fields (
+          practitioner_member_id, welcome_message, welcome_video_url, about_practice,
+          how_we_work_together, how_maia_supports, professional_practice,
+          orientation_style, resources, active_field_content
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        RETURNING *`,
+        [
+          practitionerMemberId,
+          update.welcome_message ?? null,
+          update.welcome_video_url ?? null,
+          update.about_practice ?? null,
+          update.how_we_work_together ?? null,
+          update.how_maia_supports ?? null,
+          update.professional_practice ?? null,
+          update.orientation_style ?? 'guided',
+          JSON.stringify(update.resources ?? []),
+          update.active_field_content ?? null,
+        ]
+      );
+      field = result.rows[0] as PracticeField;
+    } else {
+      const merged = { ...existing, ...update };
+      const result = await client.query(
+        `UPDATE practice_fields SET
+          welcome_message = $2, welcome_video_url = $3, about_practice = $4,
+          how_we_work_together = $5, how_maia_supports = $6, professional_practice = $7,
+          orientation_style = $8, resources = $9, active_field_content = $10,
+          active_field_updated_at = CASE WHEN $10 IS DISTINCT FROM active_field_content
+            THEN NOW() ELSE active_field_updated_at END
+        WHERE practitioner_member_id = $1
+        RETURNING *`,
+        [
+          practitionerMemberId,
+          merged.welcome_message ?? null,
+          merged.welcome_video_url ?? null,
+          merged.about_practice ?? null,
+          merged.how_we_work_together ?? null,
+          merged.how_maia_supports ?? null,
+          merged.professional_practice ?? null,
+          merged.orientation_style ?? 'guided',
+          JSON.stringify(merged.resources ?? []),
+          merged.active_field_content ?? null,
+        ]
+      );
+      field = result.rows[0] as PracticeField;
+    }
+
+    const finalField = await syncStatus(client, field);
+    await writeRevision(client, finalField, practitionerMemberId);
+  });
+
   return getPracticeField(practitionerMemberId) as Promise<PracticeField>;
 }
 
 /** Compute and persist the correct status. Called after every update. */
-async function syncStatus(fieldId: string, field: PracticeField): Promise<void> {
+async function syncStatus(
+  client: TransactionClient,
+  field: PracticeField
+): Promise<PracticeField> {
   const readiness = checkPracticeFieldReadiness(field);
   const status: PracticeFieldStatus = readiness.is_live ? 'live' : 'pending';
   const reason = readiness.is_live ? null : `Missing: ${readiness.missing.join(', ')}`;
-  await query(
-    `UPDATE practice_fields SET status = $2, status_reason = $3 WHERE id = $1`,
-    [fieldId, status, reason]
+  const result = await client.query(
+    `UPDATE practice_fields SET status = $2, status_reason = $3 WHERE id = $1 RETURNING *`,
+    [field.id, status, reason]
+  );
+  return result.rows[0] as PracticeField;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REVISIONS — append-only version history (Larry's Studio §3.1, the spine)
+// Every save records a revision in the SAME transaction as the field write.
+// The steward baseline is revision 1 (backfilled by migration 20260710000002);
+// the practitioner's first authenticated edit becomes revision 2 — the handoff
+// is in the record forever. No-op saves (layers identical to the latest
+// revision) are skipped so debounced autosaves don't flood the history.
+// The table itself refuses UPDATE/DELETE; rollback is a future revision that
+// restores earlier layers, never mutation of history.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The authored field state a revision preserves. field_slug is excluded:
+ *  it is room addressing, not authored content. */
+function revisionLayers(field: PracticeField): string {
+  return JSON.stringify({
+    welcome_message: field.welcome_message ?? null,
+    welcome_video_url: field.welcome_video_url ?? null,
+    about_practice: field.about_practice ?? null,
+    how_we_work_together: field.how_we_work_together ?? null,
+    how_maia_supports: field.how_maia_supports ?? null,
+    professional_practice: field.professional_practice ?? null,
+    orientation_style: field.orientation_style ?? null,
+    resources: field.resources ?? [],
+    active_field_content: field.active_field_content ?? null,
+    maia_guidance: field.maia_guidance ?? null,
+    status: field.status ?? null,
+  });
+}
+
+async function writeRevision(
+  client: TransactionClient,
+  field: PracticeField,
+  savedBy: string,
+  note: string | null = null
+): Promise<void> {
+  // The field-row write earlier in this transaction holds the row lock, so
+  // concurrent saves serialize and MAX+1 cannot collide. The NOT EXISTS guard
+  // skips the insert when the latest revision already holds identical layers.
+  await client.query(
+    `INSERT INTO practice_field_revisions
+       (practice_field_id, revision_number, layers, saved_by, note)
+     SELECT $1,
+            COALESCE((SELECT MAX(revision_number)
+                        FROM practice_field_revisions
+                       WHERE practice_field_id = $1), 0) + 1,
+            $2::jsonb, $3, $4
+     WHERE NOT EXISTS (
+       SELECT 1 FROM practice_field_revisions r
+        WHERE r.practice_field_id = $1
+          AND r.revision_number = (SELECT MAX(revision_number)
+                                     FROM practice_field_revisions r2
+                                    WHERE r2.practice_field_id = $1)
+          AND r.layers = $2::jsonb
+     )`,
+    [field.id, revisionLayers(field), savedBy, note]
   );
 }
 
@@ -213,13 +280,24 @@ export async function setFieldGuidance(
   if (!ok) {
     return { ok: false, violations, saved: null };
   }
-  await query(
-    `INSERT INTO practice_fields (practitioner_member_id, maia_guidance)
-     VALUES ($1, $2)
-     ON CONFLICT (practitioner_member_id)
-     DO UPDATE SET maia_guidance = EXCLUDED.maia_guidance`,
-    [practitionerMemberId, JSON.stringify(sanitized)]
-  );
+  // Layer 4 guidance is field content: its saves leave the same append-only
+  // revision trace as every other field write (Larry's Studio §3.1).
+  await transaction(async (client) => {
+    const result = await client.query(
+      `INSERT INTO practice_fields (practitioner_member_id, maia_guidance)
+       VALUES ($1, $2)
+       ON CONFLICT (practitioner_member_id)
+       DO UPDATE SET maia_guidance = EXCLUDED.maia_guidance
+       RETURNING *`,
+      [practitionerMemberId, JSON.stringify(sanitized)]
+    );
+    await writeRevision(
+      client,
+      result.rows[0] as PracticeField,
+      practitionerMemberId,
+      'Layer 4 MAIA guidance update'
+    );
+  });
   return { ok: true, violations: [], saved: sanitized };
 }
 
