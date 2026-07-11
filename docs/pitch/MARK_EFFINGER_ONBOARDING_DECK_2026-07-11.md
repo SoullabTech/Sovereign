@@ -3,7 +3,8 @@
 
 **Status**: INTERNAL ONBOARDING DRAFT — built on the 2026-07-11 census evidence base. Several items Mark should hear as settled (locality doctrine, governance mode, census corrections) are **committed-but-unratified**; they are marked *candidate* below, same discipline as everywhere else. Kelly red-lines before Mark sees any of it.
 **Design principle**: *the claim discipline isn't a constraint on the pitch — it IS the pitch.* Honest and inspiring stop being in tension when honesty is the differentiator.
-**Format note**: speaker notes carry the live-voice version; slide text is self-explanatory for standalone reading. Kelly chooses the register before the deck regenerates.
+**Render decision (2026-07-11, pending Kelly's confirmation)**: **live** — sparse slides under Kelly's voice; no standalone deck is built or maintained. Mark's study artifacts are this source document + the claim card, which carry the receipts inline. The rendered thing is downstream of the claim-controlled thing — the hierarchy itself is day-one teaching.
+**Sequencing**: Kelly's ratification sitting happens BEFORE the red-line — several *candidate* markers below (locality doctrine, governance mode, census corrections) flip to *ratified* at the sitting, upgrading this deck for zero additional work. Red-line after; regenerate the sparse Gamma from the signed source.
 **`[KELLY SUPPLIES]`** marks facts only the founder can provide — biography, pricing intent, cohort status. Nothing in those slots is asserted here.
 
 ---
@@ -36,8 +37,8 @@ The Oath → Canon's 11 Absolute Prohibitions (never persuade, never optimize en
 Journaling (dream/day; voice, typed, uploaded) · Ideas (MAIA reads only when asked) · Keeps with a two-axis consent model (what MAIA may use / what may resurface) · Living Field (versioned, consent-tracked, self-authored) · What Now? (ephemeral encounter — nothing persists without a member gesture) · Sanctuary Mode (sessions that leave no memory) · Commons & Circles · Studio + Practice Fields with consent-gated invites · ten hand-authored Soul Portraits · Soullab Press: LLC, Library of Congress registration, flagship title, one-text-many-formats engine.
 
 ### 8. THE PROOF SLIDE — the week of 2026-07-07
-The system audited itself against its own constitution: a full census (every surface stamped, file-and-line receipts), a docs reconciliation (drift total across hundreds of documents: **two**), and a constitutional trace. It found two live violations of its most intimate promises — and closed them before anyone asked. Verification standard: **proof by absence** — Sanctuary proven by refusal, recovery proven by cold restore from escrow alone, consent proven by SQL predicates that exclude.
-*Speaker note: no one else in this industry can show a business developer their claims verified this way. This is the most inspiring slide because it is the most honest one.*
+The system audited itself against its own constitution: a full census (every surface stamped, file-and-line receipts), a docs reconciliation (drift total across hundreds of documents: **two**), and a constitutional trace. Where code fell short of promise, the gaps were **found, closed, and verified — before anyone asked**. Verification standard: **proof by absence** — the sacred mode proven by refusal, recovery proven by cold restore from escrow alone, consent proven by SQL predicates that exclude.
+*Speaker note: carry the pattern (found → closed → verified), not the specifics — the violation details live in the census Mark can read later, and the deck shouldn't hand him internals more repeatable than the discipline they demonstrate. No one else in this industry can show a business developer their claims verified this way; this is the most inspiring slide because it is the most honest one.*
 
 ### 9. Deliberately withheld (restraint as posture, not absence)
 All generation and person-level synthesis awaits explicit go — portrait generation exists on a branch and does not ship; interpretation is never stamped silently; the deploy gates carry the withholding in writing. The restraint is the feature Mark learns to sell.

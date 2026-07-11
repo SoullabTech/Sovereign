@@ -2,6 +2,7 @@
 
 **Carry this into every external conversation.** One page. When in doubt, say less and offer the receipt.
 **Status**: DRAFT pending Kelly's red-line; stamps reflect the 2026-07-11 census (pre-ratification).
+**Versioning clause — this card's truth changes at every sitting.** The card carries a date and evidence ref like everything else in this house, and **every ratification sitting includes a ten-second card review as a standing agenda item**: what shipped since the last version moves lines between sections (e.g., the day consented episodic memory ships, "remembers alongside you, with your consent" moves from never-say-adjacent to say-with-stamp). A stale card drifts into overcaution or overclaim; a dated card teaches the deepest lesson it carries — **claims have timestamps**.
 
 ## Say freely (LIVE — receipts exist)
 
