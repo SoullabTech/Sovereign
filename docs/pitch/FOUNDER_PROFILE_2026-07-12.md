@@ -13,7 +13,7 @@ For more than four decades, Kelly has devoted his life to understanding the myst
 
 Beginning his study of Jungian psychology at the age of seventeen, his work has unfolded through a lifelong exploration of depth psychology, archetypal studies, shamanic traditions, ritual, mystical experience, alchemy, body-centered therapies, consciousness studies, and transformational healing practices.
 
-Kelly holds a degree in psychology, pursued advanced studies in clinical and developmental psychology, and completed a two-year practicum through the Mind/Body Medical Institute at Beth Israel Deaconess Medical Center, a Harvard Medical School teaching hospital. Over more than 39 years of private practice, he has accompanied thousands of individuals through processes of healing, meaning-making, spiritual development, and personal transformation.
+Kelly holds a degree in psychology, pursued advanced studies in clinical and developmental psychology, and completed a two-year practicum through the Mind/Body Medical Institute at Beth Israel Deaconess Medical Center, a Harvard Medical School teaching hospital. Over more than 39 years of private practice, he has accompanied individuals, couples, and groups through **thousands of sessions** devoted to healing, meaning-making, spiritual development, and personal transformation.
 
 Throughout this work, he has integrated diverse approaches including somatic methodologies, guided journeywork, NLP, hypnotherapy, energy healing, spiritual healing, and depth-oriented transformational practices.
 
@@ -32,7 +32,9 @@ Underlying all three is a single recognition:
 
 *(This paragraph is the constitutional thesis statement beneath Soullab and MAIA — elevate it typographically in decks and materials.)*
 
-Kelly's work represents a continuous forty-two-year inquiry into these questions and their implications for human flourishing in an age of intelligent technologies.
+Kelly's work represents a forty-two-year inquiry into consciousness, meaning, transformation, and the sacred dimensions of human life — one that eventually encountered a new civilizational medium and asked: *how might intelligent technologies participate in human becoming without eclipsing the human capacities for wonder, meaning, soul, and authentic authorship that make such becoming possible?*
+
+**Claim-precision note (standing, 2026-07-12)**: "thousands of sessions" / "thousands of hours" are the defensible formulations — never "thousands of individuals." Every claim in this document is precisely true even where a broader claim would sound more impressive; that discipline *is* the credibility, here as everywhere in the house.
 
 ---
 
