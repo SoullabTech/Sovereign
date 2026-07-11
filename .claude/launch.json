@@ -13,6 +13,20 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "what-now-presence",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/soullab/MAIA-SOVEREIGN && export DATABASE_URL='postgresql://soullab@localhost:5432/maia_consciousness' NOW_WHAT_MAIA_PRESENCE_ENABLED=1 && exec ./node_modules/.bin/next dev -p 3000"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "voice-lab",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/soullab/MAIA-SOVEREIGN && export OPENAI_API_KEY=$(grep -E '^OPENAI_API_KEY=' .env.production | head -1 | cut -d= -f2-) && SESAME_TTS_URL=http://127.0.0.1:8890 SESAME_TIMEOUT_MS=90000 MAIA_DEPLOYMENT_CONTEXT=voice-quality-lab PORT=3000 exec npm run dev"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

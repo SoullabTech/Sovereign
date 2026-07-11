@@ -437,3 +437,12 @@ scripts/voice-ecosystem-watch-state.json
 
 # Node compile cache — Bun/Node build artifacts, regenerated per build
 node-compile-cache/
+
+# Admin Voice Lab evaluation store (lab-only, not tracked)
+.voice-lab/
+
+# Machine-generated test/temp caches — never commit (regenerated per run).
+# Loose in the tree and previously un-ignored: a stray `git add -A` would sweep
+# these (and any other uncommitted edits) into a commit.
+jest_dx/
+tsx-501/

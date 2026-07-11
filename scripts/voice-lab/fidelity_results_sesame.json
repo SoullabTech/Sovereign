@@ -1,0 +1,58 @@
+{
+  "model": "small.en",
+  "threshold": 0.9,
+  "providers": {
+    "sesame": {
+      "gate_pass": true,
+      "mean_fidelity": 1.0,
+      "min_fidelity": 1.0,
+      "rows": [
+        {
+          "passage": "greeting",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Welcome back, it's good to see you again.",
+          "gen_ms": 4243,
+          "stt_ms": 1115,
+          "provenance_ok": true
+        },
+        {
+          "passage": "reflective",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Take a moment before answering.  Notice what is already present.",
+          "gen_ms": 17450,
+          "stt_ms": 1095,
+          "provenance_ok": true
+        },
+        {
+          "passage": "support",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "That sounds difficult. We don't have to rush toward an answer.",
+          "gen_ms": 5573,
+          "stt_ms": 1113,
+          "provenance_ok": true
+        },
+        {
+          "passage": "curiosity",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "what feels most alive for you right now.",
+          "gen_ms": 6214,
+          "stt_ms": 1028,
+          "provenance_ok": true
+        },
+        {
+          "passage": "celebration",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "something important has shifted since we last spoke.",
+          "gen_ms": 6813,
+          "stt_ms": 1046,
+          "provenance_ok": true
+        }
+      ]
+    }
+  }
+}

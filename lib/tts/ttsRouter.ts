@@ -118,10 +118,12 @@ interface TTSRequest {
   /** Member's TTS provider preference (from settings) */
   ttsProviderPref?: string | null;
   /**
-   * Admin/lab only: force a specific provider for this one request (deterministic
-   * A/B comparison in the Voice Lab). Still passes through assertProviderQualified,
-   * so it can NEVER select a provider the deployment context forbids — it is not a
-   * guard bypass. Overrides the env-configured provider when present.
+   * Force a specific provider for this one request. Two legitimate callers:
+   * the Voice Lab (deterministic A/B comparison) and the Sanctuary containment
+   * gate (force local `kokoro` so sanctuary speech never resolves to cloud).
+   * Still passes through assertProviderQualified, so it can NEVER select a
+   * provider the deployment context forbids — it is not a guard bypass.
+   * Overrides the env-configured provider when present.
    */
   providerOverride?: TTSProvider;
 }

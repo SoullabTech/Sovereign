@@ -40,6 +40,7 @@ interface EvaluationRecord {
   scenarioId?: string;
   scores: Record<string, number>; // { trust, presence, warmth, attunement, ... }
   notes?: string;
+  confidence?: string; // 'high' | 'medium' | 'low' — rater confidence in this rating
   provenance?: { fallback?: boolean; reason?: string; latencyMs?: number };
 }
 
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
     scenarioId: body.scenarioId,
     scores: body.scores as Record<string, number>,
     notes: body.notes,
+    confidence: body.confidence,
     provenance: body.provenance,
   };
 
@@ -118,13 +120,14 @@ export async function GET(req: NextRequest) {
         return set;
       }, new Set<string>()),
     );
-    const header = ['ts', 'sessionId', 'evaluator', 'blindLabel', 'requestedProvider', 'provider', 'voice', 'passageId', 'scenarioId', ...dims, 'notes'];
+    const header = ['ts', 'sessionId', 'evaluator', 'blindLabel', 'requestedProvider', 'provider', 'voice', 'passageId', 'scenarioId', ...dims, 'confidence', 'notes'];
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const rows = records.map((r) =>
       [
         r.ts, r.sessionId, r.evaluator, r.blindLabel ?? '', r.requestedProvider, r.provider,
         r.voice ?? '', r.passageId ?? '', r.scenarioId ?? '',
         ...dims.map((d) => r.scores?.[d] ?? ''),
+        r.confidence ?? '',
         r.notes ?? '',
       ].map(esc).join(','),
     );

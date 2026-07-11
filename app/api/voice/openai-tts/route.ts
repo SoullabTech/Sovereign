@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       format?: "mp3" | "wav" | "opus" | "aac" | "flac";
       speed?: number;
       instructions?: string;  // MAIA vocal intent — passed to gpt-4o-mini-tts instructions field
+      sanctuary?: boolean;    // Sanctuary session: local synthesis only, never cloud egress
     };
 
     const text = body?.text?.trim();
@@ -108,6 +109,47 @@ export async function POST(req: NextRequest) {
 
     if (text.length > 4096) {
       return jsonError("Text too long (max 4096 chars for TTS)", 400, { requestId });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SANCTUARY CONTAINMENT GATE
+    // Sanctuary speech never leaves the machine: local synthesis only.
+    // If local TTS is unavailable the turn degrades to text — never to
+    // cloud egress. Sanctuary may lose voice before it loses containment.
+    // (CLAUDE.md → Sanctuary Mode §1/§6.)
+    // ═══════════════════════════════════════════════════════════════════
+    if (body?.sanctuary === true) {
+      try {
+        const result = await ttsRouter.synthesize({
+          text,
+          format: format as any,
+          speed,
+          providerOverride: 'kokoro',
+        });
+        console.log(`[openai-tts:${requestId}] SANCTUARY provider=${result.provider} bytes=${result.audioBuffer.length}`);
+        return new Response(new Uint8Array(result.audioBuffer), {
+          status: 200,
+          headers: {
+            "Content-Type": result.contentType,
+            "Content-Length": result.audioBuffer.length.toString(),
+            "Cache-Control": "no-store",
+            "X-Request-Id": requestId,
+            "X-TTS-Provider": result.provider,
+            "X-Sanctuary-Contained": "1",
+          },
+        });
+      } catch (e: any) {
+        console.warn(JSON.stringify({
+          tag: 'sanctuary.tts.local_unavailable',
+          requestId,
+          reason: e?.message ?? 'unknown',
+          note: 'Sanctuary TTS degrades to text-only — cloud egress refused',
+        }));
+        return jsonError('Sanctuary sessions use local voice only; local TTS unavailable', 503, {
+          requestId,
+          policy: 'sanctuary-local-only',
+        });
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════════

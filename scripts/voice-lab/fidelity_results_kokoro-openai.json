@@ -1,0 +1,110 @@
+{
+  "model": "small.en",
+  "threshold": 0.9,
+  "providers": {
+    "kokoro": {
+      "gate_pass": true,
+      "mean_fidelity": 1.0,
+      "min_fidelity": 1.0,
+      "rows": [
+        {
+          "passage": "greeting",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Welcome back, it's good to see you again.",
+          "gen_ms": 503,
+          "stt_ms": 1159,
+          "provenance_ok": true
+        },
+        {
+          "passage": "reflective",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Take a moment before answering, notice what is already present.",
+          "gen_ms": 676,
+          "stt_ms": 1072,
+          "provenance_ok": true
+        },
+        {
+          "passage": "support",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "That sounds difficult, we don't have to rush toward an answer.",
+          "gen_ms": 614,
+          "stt_ms": 1100,
+          "provenance_ok": true
+        },
+        {
+          "passage": "curiosity",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "What feels most alive for you right now?",
+          "gen_ms": 475,
+          "stt_ms": 1052,
+          "provenance_ok": true
+        },
+        {
+          "passage": "celebration",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Something important has shifted since we last spoke.",
+          "gen_ms": 743,
+          "stt_ms": 1011,
+          "provenance_ok": true
+        }
+      ]
+    },
+    "openai": {
+      "gate_pass": true,
+      "mean_fidelity": 1.0,
+      "min_fidelity": 1.0,
+      "rows": [
+        {
+          "passage": "greeting",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Welcome back.  It's good to see you again.",
+          "gen_ms": 2186,
+          "stt_ms": 1086,
+          "provenance_ok": true
+        },
+        {
+          "passage": "reflective",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Take a moment before answering, notice what is already present.",
+          "gen_ms": 3182,
+          "stt_ms": 1104,
+          "provenance_ok": true
+        },
+        {
+          "passage": "support",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "That sounds difficult. We don't have to rush toward an answer.",
+          "gen_ms": 1886,
+          "stt_ms": 1126,
+          "provenance_ok": true
+        },
+        {
+          "passage": "curiosity",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "What feels most alive for you right now?",
+          "gen_ms": 1974,
+          "stt_ms": 1015,
+          "provenance_ok": true
+        },
+        {
+          "passage": "celebration",
+          "fidelity": 1.0,
+          "pass": true,
+          "heard": "Something important has shifted since we last spoke.",
+          "gen_ms": 1111,
+          "stt_ms": 1035,
+          "provenance_ok": true
+        }
+      ]
+    }
+  }
+}

@@ -9,9 +9,21 @@ import type { ReactNode } from 'react';
  * as a reader companion, separate doorway.
  */
 
+// Founder-gated editorial workspace. Share preview stays deliberately generic
+// (no manuscript titles / editorial content); the protected card image comes
+// from the colocated opengraph-image.tsx.
 export const metadata = {
-  title: 'The Book Studio · Soullab Press',
-  description: 'Editorial workspace for Elemental Alchemy.',
+  title: 'Soullab Press — Private Workspace',
+  description: 'This protected editorial workspace is available only to authorized participants.',
+  openGraph: {
+    title: 'Soullab Press — Private Workspace',
+    description: 'This protected editorial workspace is available only to authorized participants.',
+  },
+  twitter: {
+    card: 'summary_large_image' as const,
+    title: 'Soullab Press — Private Workspace',
+    description: 'This protected editorial workspace is available only to authorized participants.',
+  },
 };
 
 const NAV = [

@@ -49,6 +49,15 @@ const PROVIDER_ROLE: Record<Provider, ProviderRole> = {
   openai: 'passage', kokoro: 'passage', sesame: 'passage', pplex: 'conversational',
 };
 
+// Candidacy: a sovereign *candidate* (could ship) vs a *reference* yardstick (never can).
+// OpenAI is cloud → Stage-A-disqualified by R15 → it may be COMPARED to calibrate the ear,
+// but it can never become a production voice. Marked distinctly so a strong reference score
+// is never mistaken for a shippable option. See VOICE_FUNCTION_TAXONOMY_2026-07-07.md.
+type Candidacy = 'sovereign' | 'reference';
+const PROVIDER_CANDIDACY: Record<Provider, Candidacy> = {
+  openai: 'reference', kokoro: 'sovereign', sesame: 'sovereign', pplex: 'sovereign',
+};
+
 const DEFAULT_VOICE: Record<Provider, string> = {
   openai: 'alloy',
   kokoro: 'af_kore',
@@ -69,13 +78,37 @@ interface Provenance {
   latencyMs: number;
 }
 
-const AVAIL_META: Record<Avail, { dot: string; text: string; word: string }> = {
-  up: { dot: 'bg-emerald-400', text: 'text-emerald-300', word: 'available' },
-  down: { dot: 'bg-red-500', text: 'text-red-300', word: 'unreachable' },
+// Declared operational disposition — what we EXPECT this provider to be doing.
+// Combined with the live probe (avail) it produces an honest REASON, not just red/green.
+// Rules that keep it truthful: (1) observation always wins for "running" — a provider
+// observed up shows running regardless of disposition; (2) disposition only EXPLAINS a
+// not-running state; (3) a 'serving' provider that is down surfaces as a real ERROR
+// (unexpected outage is never hidden behind "stopped"/"waiting").
+type Disposition = 'serving' | 'stopped' | 'awaiting';
+const PROVIDER_DISPOSITION: Record<Provider, Disposition> = {
+  openai: 'serving',   // reference reader, running
+  kokoro: 'serving',   // sovereign candidate, running
+  pplex: 'stopped',    // intentionally shut down (freed ~9GB); role-disqualified anyway
+  sesame: 'serving',   // genuine csm-1b now running on :8890 (Llama-3.2 granted 2026-07-07)
+};
+
+type OpState = 'running' | 'stopped' | 'waiting' | 'error' | 'no-key' | 'checking';
+const OP_META: Record<OpState, { dot: string; text: string; word: string; reason?: string }> = {
+  running:  { dot: 'bg-emerald-400', text: 'text-emerald-300', word: 'running' },
+  stopped:  { dot: 'bg-neutral-500', text: 'text-neutral-400', word: 'stopped', reason: 'intentionally offline' },
+  waiting:  { dot: 'bg-amber-400', text: 'text-amber-300', word: 'waiting', reason: 'awaiting Meta approval' },
+  error:    { dot: 'bg-red-500', text: 'text-red-300', word: 'error', reason: 'unexpectedly down' },
   'no-key': { dot: 'bg-neutral-500', text: 'text-neutral-400', word: 'no key' },
-  unknown: { dot: 'bg-amber-400', text: 'text-amber-300', word: 'no signal' },
   checking: { dot: 'bg-neutral-600 animate-pulse', text: 'text-neutral-400', word: 'checking…' },
 };
+
+function opState(p: Provider, a: Avail): OpState {
+  if (a === 'checking') return 'checking';
+  if (a === 'up') return 'running';        // observation wins — never claim down when reachable
+  if (a === 'no-key') return 'no-key';
+  const d = PROVIDER_DISPOSITION[p];       // a is 'down' | 'unknown' → explain the reason
+  return d === 'stopped' ? 'stopped' : d === 'awaiting' ? 'waiting' : 'error';
+}
 
 export default function VoiceLabPage() {
   const [pwd, setPwd] = useState('');
@@ -94,6 +127,7 @@ export default function VoiceLabPage() {
   });
   const [locked, setLocked] = useState<Provider | null>(null);
   const [blind, setBlind] = useState(true);
+  const [randomPassage, setRandomPassage] = useState(true);
 
   // Live availability
   const [avail, setAvail] = useState<Record<Provider, Avail>>({
@@ -112,6 +146,7 @@ export default function VoiceLabPage() {
   // Scoring
   const [scores, setScores] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState('');
+  const [confidence, setConfidence] = useState<'high' | 'medium' | 'low' | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [sessionCount, setSessionCount] = useState(0);
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -172,7 +207,7 @@ export default function VoiceLabPage() {
   }, [hasPwd, refreshHealth, refreshTotal]);
 
   // ── Synthesis ─────────────────────────────────────────────────────────────
-  async function synthesize(provider: Provider) {
+  async function synthesize(provider: Provider, text: string) {
     setBusy(true);
     setError(null);
     setAudioUrl(null);
@@ -181,7 +216,7 @@ export default function VoiceLabPage() {
       const res = await adminFetch('/api/admin/voice-lab/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, voice: DEFAULT_VOICE[provider] || undefined, text: passage.text, speed }),
+        body: JSON.stringify({ provider, voice: DEFAULT_VOICE[provider] || undefined, text, speed }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -203,14 +238,18 @@ export default function VoiceLabPage() {
     if (busy) return;
     if (!drawPool.length) { setError('No available provider in the draw — check the status strip above.'); return; }
     const provider = (locked && drawPool.includes(locked)) ? locked : drawPool[Math.floor(Math.random() * drawPool.length)];
+    // Randomize passage too (methodology: don't let the rater anticipate the order).
+    const chosen = randomPassage ? PASSAGES[Math.floor(Math.random() * PASSAGES.length)] : passage;
+    setPassageId(chosen.id);
     setDrawn(provider);
     setRevealed(!blind);
     setScores({});
     setNotes('');
+    setConfidence(null);
     setSaveMsg(null);
-    void synthesize(provider);
+    void synthesize(provider, chosen.text);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy, drawPool, locked, blind, passageId, speed]);
+  }, [busy, drawPool, locked, blind, randomPassage, passage, speed]);
 
   const replay = useCallback(() => {
     const el = audioRef.current;
@@ -232,6 +271,7 @@ export default function VoiceLabPage() {
         passageId,
         scores,
         notes,
+        confidence: confidence ?? undefined,
         provenance: provenance
           ? { fallback: provenance.fallback, reason: provenance.reason, latencyMs: provenance.latencyMs }
           : undefined,
@@ -324,19 +364,24 @@ export default function VoiceLabPage() {
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {PROVIDERS.map((p) => {
               const a = avail[p];
-              const m = AVAIL_META[a];
+              const s = opState(p, a);
+              const m = OP_META[s];
               return (
-                <div key={p} className={`rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 ${a === 'up' ? '' : 'opacity-80'}`}>
+                <div key={p} className={`rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 ${s === 'running' ? '' : 'opacity-80'}`}>
                   <div className="flex items-center gap-2">
                     <span className={`h-2 w-2 rounded-full ${m.dot}`} />
                     <span className="text-sm font-medium">{PROVIDER_LABEL[p]}</span>
                   </div>
                   <div className={`mt-1 text-[11px] ${m.text}`}>
                     {m.word}
-                    {a === 'up' && latency[p] != null && <span className="text-neutral-600"> · {latency[p]}ms</span>}
+                    {s === 'running' && latency[p] != null && <span className="text-neutral-600"> · {latency[p]}ms</span>}
                   </div>
+                  {m.reason && <div className="mt-0.5 text-[10px] text-neutral-500">{m.reason}</div>}
                   {PROVIDER_ROLE[p] === 'conversational' && (
                     <div className="mt-0.5 text-[10px] text-amber-300/80">conversational · not a passage reader</div>
+                  )}
+                  {PROVIDER_CANDIDACY[p] === 'reference' && (
+                    <div className="mt-0.5 text-[10px] text-sky-300/80">reference · not a sovereign candidate</div>
                   )}
                 </div>
               );
@@ -386,10 +431,16 @@ export default function VoiceLabPage() {
         <div className={card + ' space-y-4'}>
           <div className="flex items-center justify-between">
             <div className={label}>2 · Draw</div>
-            <label className="flex items-center gap-2 text-xs text-neutral-400">
-              <input type="checkbox" checked={blind} onChange={(e) => setBlind(e.target.checked)} className="accent-indigo-500" />
-              Blind draw
-            </label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-xs text-neutral-400">
+                <input type="checkbox" checked={randomPassage} onChange={(e) => setRandomPassage(e.target.checked)} className="accent-indigo-500" />
+                Random passage
+              </label>
+              <label className="flex items-center gap-2 text-xs text-neutral-400">
+                <input type="checkbox" checked={blind} onChange={(e) => setBlind(e.target.checked)} className="accent-indigo-500" />
+                Blind draw
+              </label>
+            </div>
           </div>
           <div>
             <div className={label}>Providers in the pool</div>
@@ -402,9 +453,10 @@ export default function VoiceLabPage() {
                   <button key={p} disabled={convo} onClick={() => setEnabled((s) => ({ ...s, [p]: !s[p] }))}
                     title={convo ? 'Conversational engine — not scored on fixed passages' : undefined}
                     className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${convo ? 'border-neutral-800 text-neutral-600 opacity-50 cursor-not-allowed' : on ? 'border-neutral-500 bg-neutral-800 text-neutral-100' : 'border-neutral-800 text-neutral-600'} ${on && !isUp && !convo ? 'line-through decoration-red-500/60' : ''}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${AVAIL_META[avail[p]].dot}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${OP_META[opState(p, avail[p])].dot}`} />
                     {PROVIDER_LABEL[p]}
                     {convo && <span className="ml-1 rounded bg-amber-500/15 px-1 text-[9px] text-amber-300">convo</span>}
+                    {PROVIDER_CANDIDACY[p] === 'reference' && <span className="ml-1 rounded bg-sky-500/15 px-1 text-[9px] text-sky-300">ref</span>}
                   </button>
                 );
               })}
@@ -488,10 +540,21 @@ export default function VoiceLabPage() {
                   </div>
                 ))}
               </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-sm text-neutral-300">confidence</span>
+                <div className="flex gap-1">
+                  {(['high', 'medium', 'low'] as const).map((c) => (
+                    <button key={c} onClick={() => setConfidence(c)}
+                      className={`h-8 rounded-md border px-2.5 text-xs capitalize transition-colors ${confidence === c ? 'border-sky-400 bg-sky-500/20 text-sky-100' : 'border-neutral-700 text-neutral-500 hover:border-neutral-500'}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
-              placeholder="Notes — spoken reflection, felt sense, what you noticed…"
+              placeholder="What, if anything, drew your attention?"
               className={'w-full ' + field} />
 
             <div className="flex items-center gap-3">

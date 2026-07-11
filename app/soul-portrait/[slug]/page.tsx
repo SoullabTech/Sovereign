@@ -25,10 +25,17 @@ export async function generateMetadata({
   const { slug } = await params;
   const portrait = getPortrait(slug);
   if (!portrait) return { title: 'Soul Portrait' };
+  const title = `${portrait.person.name} — A Spiralogic Soul Portrait`;
+  const description =
+    'A human-centered, symbolic soul portrait — patterns to work with, never a prediction.';
+  // openGraph/twitter text so the share card reads as this portrait, not the
+  // inherited root Soullab card. The card image itself is supplied by the
+  // colocated opengraph-image.tsx, which Next.js injects automatically.
   return {
-    title: `${portrait.person.name} — A Spiralogic Soul Portrait`,
-    description:
-      'A human-centered, symbolic soul portrait — patterns to work with, never a prediction.',
+    title,
+    description,
+    openGraph: { title, description, type: 'profile' },
+    twitter: { card: 'summary_large_image', title, description },
     robots: { index: false, follow: false },
   };
 }

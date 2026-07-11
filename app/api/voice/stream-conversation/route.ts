@@ -184,7 +184,32 @@ async function synthesizeWithFallback(
     openaiVoice: openaiVoice ?? 'alloy',
     kokoroVoice: kokoroVoice || null,
     localEnabled: process.env.MAIA_LOCAL_VOICE_ENABLED === '1',
+    sanctuary: options.sanctuary,
   }));
+
+  // ── SANCTUARY CONTAINMENT GATE: sanctuary speech never leaves the machine ──
+  // Local providers only (PersonaPlex above is local; Kokoro here). If local
+  // synthesis fails, the turn degrades to text-only — never to cloud egress.
+  // Sanctuary may lose voice before it loses containment.
+  // (CLAUDE.md → Sanctuary Mode §1/§6.)
+  if (options.sanctuary) {
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'sanctuary_local_only' }));
+    try {
+      const kokoroInput = options.ssml ?? text;
+      const result = await ttsRouter.synthesize({
+        text: kokoroInput,
+        voice: kokoroVoice,
+        format: 'mp3',
+        speed: options.speed,
+        voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+        providerOverride: 'kokoro',
+      });
+      return { audio: result.audioBuffer.toString('base64'), format: 'mp3', source: 'kokoro' };
+    } catch (err) {
+      console.warn(`[TTS] Sanctuary: local TTS unavailable — degrading to text-only, no cloud egress: ${err instanceof Error ? err.message : err}`);
+      return null;
+    }
+  }
 
   // ── Member chose "local" → Kokoro only, no cloud fallback ──
   if (memberProvider === 'local') {

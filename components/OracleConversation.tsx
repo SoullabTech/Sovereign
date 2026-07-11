@@ -1781,6 +1781,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               speed: voiceSettings.speed,
               model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
               ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
+              // Sanctuary containment: server refuses cloud TTS, local only
+              sanctuary: isSanctuary,
             },
             responseType: 'arraybuffer',
           }),
@@ -1866,6 +1868,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             speed: voiceSettings.speed,
             model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
             ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
+            // Sanctuary containment: server refuses cloud TTS, local only
+            sanctuary: isSanctuary,
           })
         });
 
@@ -2217,7 +2221,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setIsResponding(false);
       setIsAudioPlaying(false);
     }
-  }, [startAudioAnalysis, stopAudioAnalysis, voiceSettings]);
+  }, [startAudioAnalysis, stopAudioAnalysis, voiceSettings, isSanctuary]);
 
   const maiaReady = true; // OpenAI TTS is always ready
 
@@ -6529,7 +6533,9 @@ I'm not sure what I'm feeling yet.`;
           text: cleanText,
           voice: voiceSettings.voice,
           speed: voiceSettings.speed,
-          model: voiceSettings.model
+          model: voiceSettings.model,
+          // Sanctuary containment: server refuses cloud TTS, local only
+          sanctuary: isSanctuary,
         })
       });
 
@@ -6561,7 +6567,7 @@ I'm not sure what I'm feeling yet.`;
       setIsResponding(false);
       setIsAudioPlaying(false);
     }
-  }, [agentConfig.voice]);
+  }, [agentConfig.voice, isSanctuary]);
 
   const handleStopSpeaking = useCallback(() => {
     if (audioRef.current) {
