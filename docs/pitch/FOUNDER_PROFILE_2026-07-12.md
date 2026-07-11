@@ -43,6 +43,19 @@ Kelly's work represents a continuous forty-two-year inquiry into these questions
 
 **42+ years** in the Jungian lineage (from age 17) → **39+ years** of clients in private practice → **34 years** of Spiralogic → **one year** writing beside the campfire → the book on a shelf.
 
+## Purpose (the vocation beneath the arc — pick the register at red-line)
+
+The layer under everything, including the Recognition:
+
+> **To reveal the sacred within the ordinary and the mystical within the mundane.**
+
+From this purpose, in order, emerged: Jungian psychology (language for psyche and symbol) → shamanic practice (direct encounter with mystery) → healing work (accompanying transformation) → Spiralogic (mapping human becoming) → *Elemental Alchemy* (articulating the journey) → **MAIA (asking whether technology can participate in this revelation without eclipsing it)**.
+
+Register options (facts constant, container per surface — Kelly picks at red-line):
+- *Authentic/full*: "My purpose is to be a mystic and shamanic guide, initiating sacred ceremony and transformational experiences that awaken wonder and remembrance, helping create a world in which the sacred is revealed within the ordinary and the mystical is recognized within the mundane."
+- *Founder/public*: "My life's work is to serve as a mystic, shamanic guide, and alchemist of human transformation — cultivating experiences of wonder, meaning, and sacred encounter that help reveal the extraordinary hidden within ordinary life."
+- *Simplest*: "I am devoted to helping reveal the sacred within the ordinary and the mystical within everyday life."
+
 ## Founder-story arc (Movement I of any deck)
 
-**Recognition** (root, age 17 onward): humans are symbolic, archetypal, embodied, relational, spiritual — the essential challenge is humanity's relationship to consciousness, meaning, and authorship. → **Foundation**: four decades accompanying transformation. → **Turn**: emerging technologies entering the territories of meaning, identity, and authorship required a fundamentally different architecture. → **Vow**: if technology participates in human becoming, it serves soul, sovereignty, and flourishing — never replaces them (published anchor: the Icarus material, *Elemental Alchemy*, © 2024 — the vow predates the product). → **Landing**: Spiralogic, Soullab, and MAIA — three expressions of one lifelong inquiry. *Not a healer who became interested in AI: one continuous path encountering a new civilizational medium.*
+**Purpose** (the vocation, beneath everything) → **Recognition** (root, age 17 onward): humans are symbolic, archetypal, embodied, relational, spiritual — the essential challenge is humanity's relationship to consciousness, meaning, and authorship. → **Foundation**: four decades accompanying transformation. → **Turn**: emerging technologies entering the territories of meaning, identity, and authorship required a fundamentally different architecture. → **Vow**: if technology participates in human becoming, it serves soul, sovereignty, and flourishing — never replaces them (published anchor: the Icarus material, *Elemental Alchemy*, © 2024 — the vow predates the product). → **Landing**: Spiralogic, Soullab, and MAIA — three expressions of one lifelong inquiry. *Not a healer who became interested in AI: one continuous path encountering a new civilizational medium.*
