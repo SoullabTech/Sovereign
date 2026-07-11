@@ -43,6 +43,11 @@ Gates that precede this horizon regardless of sequencing: the identity cut (prog
 
 The constitutional apparatus, consent substrate, claim discipline, and front-door pattern all exist — census-proven. Genuinely missing: engineering capacity to lift freezes in order without leapfrog; the teen sitting before Horizon 2 admits minors; and Kelly's ratification bandwidth — the system's actual rate limiter, which the Steward model (Cat 1, held) exists to eventually distribute.
 
-## The fork (awaiting Kelly)
+## The fork — RESOLVED 2026-07-11: Horizon 1 leads; Nathan's ramp gates Horizon 2
 
-Does **Horizon 2 lead** (generalization outward — fields, practitioners, catalog) or **Horizon 1** (deepening the mirror — memory, derivation, portraiture)? Both are designed. The ruling is Kelly's; the evidence-base considerations are recorded in the session log of 2026-07-11.
+The resolution is operational, not (only) market-strategic. The real constraint model: one person is the entire build *and* ratification function, with Nathan ramping toward member/client support. Generalization (H2) doesn't just cost build time — it creates *support surface area* (practitioner onboarding, field-authoring questions, crossing-consent confusion at scale), and that load lands on exactly the function Nathan is growing into. Therefore:
+
+- **H1 leads**: portraiture, episodic memory, derivation-on-request — deep work executable solo against a frozen, ratified base, each a bounded ratification.
+- **H2 opens when Nathan can absorb the human side of generalization.** His learning curve *is* the H2 timeline — a cleaner gate than any date. The reference-implementation lane (Larry's/Jondi's fields, manual path) advances H2 evidence meanwhile without opening the support surface.
+- **Nathan's curriculum = the member arc**: the census/trace documents, read in the arc order, are the first artifacts making *sacred refusal vs. system failure* legible to someone who isn't Kelly. When the Codex composes, a support-facing companion is cut from it (per surface: what members see / what persists / what refusals are by design) — Nathan's textbook and the support runbook in one.
+- **Governance mode**: see `docs/canon/DERIVATION_DELEGATED_RATIFICATION_RESERVED_CANDIDATE_2026-07-11.md` — ratification is protected above build and teaching; an unratified evidence base decays as the tree moves.
