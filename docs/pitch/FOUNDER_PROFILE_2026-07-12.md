@@ -56,6 +56,14 @@ From this purpose, in order, emerged: Jungian psychology (language for psyche an
 
 Everything that has emerged through the work — healing practice, Spiralogic, *Elemental Alchemy*, Soullab, and MAIA — can be understood as different expressions of this single vocation. Purpose answers *why have I spent my life doing this*; Recognition answers *what did I come to understand*. This is a lineage document, not a biography: the record of a single inquiry unfolding through different forms over four decades.
 
+Underlying this entire body of work is a single vocational question:
+
+> **Can technology participate in the revelation of human becoming without eclipsing the very capacities for wonder, meaning, soul, and consciousness that make such revelation possible?**
+
+MAIA represents one response to that question. (The original, mystical form — *whether technology can participate in the revelation without eclipsing it* — is kept above for surfaces that can carry it.)
+
+And this is why the constitutional architecture is not caution but **vocational fidelity**: the Mirror Invariant, the refusal to author meaning, participant sovereignty, capability governance, graduated obsolescence, recommendation ≠ decision ≠ execution — each is what a lifelong steward of revelation builds when handed a medium that could eclipse it.
+
 Register options (facts constant, container per surface — Kelly picks at red-line):
 - *Authentic/full*: "My purpose is to be a mystic and shamanic guide, initiating sacred ceremony and transformational experiences that awaken wonder and remembrance, helping create a world in which the sacred is revealed within the ordinary and the mystical is recognized within the mundane."
 - *Founder/public*: "My life's work is to serve as a mystic, shamanic guide, and alchemist of human transformation — cultivating experiences of wonder, meaning, and sacred encounter that help reveal the extraordinary hidden within ordinary life."
@@ -63,4 +71,4 @@ Register options (facts constant, container per surface — Kelly picks at red-l
 
 ## Founder-story arc (Movement I of any deck)
 
-**Purpose** (the vocation, beneath everything) → **Recognition** (root, age 17 onward): humans are symbolic, archetypal, embodied, relational, spiritual — the essential challenge is humanity's relationship to consciousness, meaning, and authorship. → **Foundation**: four decades accompanying transformation. → **Turn**: emerging technologies entering the territories of meaning, identity, and authorship required a fundamentally different architecture. → **Vow**: if technology participates in human becoming, it serves soul, sovereignty, and flourishing — never replaces them (published anchor: the Icarus material, *Elemental Alchemy*, © 2024 — the vow predates the product). → **Landing**: Spiralogic, *Elemental Alchemy*, Soullab, and MAIA — four expressions of one lifelong inquiry. *Not a healer who later became interested in AI, but a lifelong explorer of consciousness encountering a new civilizational medium.*
+**Purpose** (the vocation, beneath everything) → **Recognition** (root, age 17 onward): humans are symbolic, archetypal, embodied, relational, spiritual — the essential challenge is humanity's relationship to consciousness, meaning, and authorship. → **Foundation**: four decades accompanying transformation. → **Turn**: emerging technologies entering the territories of meaning, identity, and authorship required a fundamentally different architecture. → **Vow**: *technology may participate in revelation but must never eclipse it* — if it participates in human becoming, it serves soul, sovereignty, and flourishing, never replaces them (published anchor: the Icarus material, *Elemental Alchemy*, © 2024 — the vow predates the product). → **Landing**: Spiralogic, *Elemental Alchemy*, Soullab, and MAIA — four expressions of one lifelong inquiry. *Not a healer who later became interested in AI, but a lifelong explorer of consciousness encountering a new civilizational medium.*
