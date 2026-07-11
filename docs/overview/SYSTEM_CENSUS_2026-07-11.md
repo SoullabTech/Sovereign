@@ -1,8 +1,10 @@
 # SOULLAB SYSTEM CENSUS — 2026-07-11
 
-**Ref**: `fcef6ff4a` on `feature/now-what-maia-presence` (95 uncommitted paths in tree at census time).
-**Method**: read-only, findings-only, no fixes. Derived from code first, docs second. Every stamp names its evidence.
-**Standing header**: findings bind to this ref. Nothing in this document is ratified until Kelly's pass. This is the Codex's evidence base, not the Codex.
+**Ref**: `92026feaf` on `feature/now-what-maia-presence` — the **freeze commit**.
+**Provenance**: readers ran against the working tree at `fcef6ff4a` + 95 uncommitted paths; that tree was then committed verbatim as `92026feaf`, so every finding is reproducible by checking out the freeze commit. Two audit items were closed pre-ratification in the follow-up commit `a61d6d1c1` (see §6); those two rows describe post-freeze state and name their commit.
+**Delta discipline**: any development on this branch after `a61d6d1c1` invalidates affected stamps; record deltas against this document rather than silently re-reading.
+**Method**: read-only census, findings-only; remediation commits are recorded, not silently absorbed. Derived from code first, docs second. Every stamp names its evidence.
+**Standing header**: findings bind to the ref stated per row. Nothing in this document is ratified until Kelly's pass. This is the Codex's evidence base, not the Codex.
 
 **Stamp vocabulary** (repo-level — "wired-live" means wired into live request paths *in code at this ref*; it does not assert production runtime behavior, which this census did not probe):
 
@@ -62,7 +64,7 @@ Not re-derived this session; carried from the committed record (CLAUDE.md sessio
 | **Session history** (`/sessions`) | LIVE | Scribe/Witness history — solo / practitioner / third-chair containers, sealed/learning memory policy in UI. |
 | **Studio Session Room** (scribe companion) | LIVE | `app/studio/session-room` — idle→recording→review with consent gate + memory policy. |
 | **Open Session Room** (WebRTC) | LIVE, transport-only (Phase A) | `app/open/session-room/[roomId]`; join-token required — 403 "threshold proof required" without it; `authorizeRoomEntry` re-checks the consent row on **every** request; role server-derived; TURN credentials self-hosted coturn HMAC, **fails closed** (503) rather than third-party relay. No recording, no transcript, no memory write. |
-| **Dream/Day Journal** | LIVE | `app/journal/` + `quick_journal_entries`; voice + typed + upload capture (`app/api/journal/quick/{audio,audio-file}`). Raw audio double-gated: paid tier (402) + explicit `storage_consent.audioServer` (default-deny 403). Dream is a content mode, not a separate route. **Audit item on the text path — §6.1.** |
+| **Dream/Day Journal** | LIVE | `app/journal/` + `quick_journal_entries`; voice + typed + upload capture (`app/api/journal/quick/{audio,audio-file}`). Raw audio double-gated: paid tier (402) + explicit `storage_consent.audioServer` (default-deny 403). Dream is a content mode, not a separate route. Text→memory bridge **consent-gated as of `a61d6d1c1`** (`storage_consent.journalMemoryBridge`, default-deny) — §6.1. |
 | **Field Lab** | LIVE, tester-gated at the crossing | `app/maia/field-lab/` — "bounded experimental ecology, NOT a beta-features showcase"; only persistence is the field-note crossing (`isMemberTester` checked at save); member free to leave with nothing. |
 
 ### 2.2 Reflection
@@ -73,7 +75,7 @@ Not re-derived this session; carried from the committed record (CLAUDE.md sessio
 | **Decisions** | LIVE | `app/studio/decisions/` → `studio_decisions`, practitioner-scoped (401 without `getCurrentPractitioner`), AI council/mentor consult against field signals. Available personally via the Personal Portal lever (§3.3). |
 | **Changes** | LIVE | `app/studio/changes/` → `studio_changes` + `change_iterations` + `change_experiences` + `change_experiments`; ownership `practitioner_id OR member_id` (CHECK constraint) — the schema itself admits personal use. |
 | **Reflections** | LIVE ×3 (one name, three surfaces) | `app/dashboard/reflections` (journal/anchor), `app/oracle/reflections` (divination), `app/labtools/reflections` (capsule browser). Unrelated implementations sharing a name — Codex must not present them as one feature. |
-| **Shadow Work** | **STUB** | `app/dashboard/shadow` UI reachable; `app/api/consciousness/shadow-work/route.ts` serves flow steps and **persists nothing** ("In a full implementation, this would save to database"). Not a working surface. §6.4. |
+| **Shadow Work** | **HONESTY-GATED** (as of `a61d6d1c1`) | Was worse than STUB: the page at freeze rendered **fabricated per-member data** (invented integration percentages and last-engaged dates) over no data source — it never called any API. Converted to an honest threshold per the Comms doctrine; the flow-serving API (`app/api/consciousness/shadow-work`, persists nothing) remains, sole other caller `ShadowWorkGuide.tsx`. §6.4. |
 
 ### 2.3 Recognition (member-declared, never synthesized)
 
@@ -190,15 +192,16 @@ Neuropod portable field companion (MVP scope doc; hardware) · Member-Sovereign 
 
 ## 6. Constitutional Audit List (inputs to the member-arc trace, session 3)
 
-1. **Journal text auto-bridges into episodic memory + capsules on save** (`app/api/journal/quick/list` POST → `bridgeToEpisodicMemory` + `bridgeToCapsule`) with no separate consent flag — audio has an explicit consent gate; text does not. Examine against the consent-for-memory vow.
-2. **Ideas' Sanctuary check is a placeholder** returning `false` — Sanctuary sessions would not currently exclude idea writes.
-3. **`shouldPersistKeep` guard is unwired substrate** — defined + tested in `sanctuaryGuards.ts`, but the `app/api/library/keep` route it protects does not exist; zero callers.
-4. **Shadow Work UI implies function that doesn't exist** — reachable UI over a stateless API. Either an honest empty-state (per the Comms doctrine) or removal; current state risks the no-static-UI-claim-without-verified-state rule.
+1. **CLOSED pre-ratification @ `a61d6d1c1`** — journal text auto-bridged into episodic memory + capsules on save with no consent flag (audio was gated; text was not — a live, unconsented write path on the platform's most intimate surface). Now default-deny behind `storage_consent.journalMemoryBridge`, mirroring the audio consent surface. **Open remainder: the member-facing toggle in `AccountSettings.tsx` (which already carries the storage-consent section) must ship before this deploys — gate + UI together, per the anchor-gate precedent. Until the toggle exists, the bridge is off for all members.** Session 3 verifies rather than discovers.
+2. **Ideas' Sanctuary check is a placeholder** returning `false` — narrow exposure (idea reads fire only on explicit "Ask MAIA", so the missing check already sits behind a consent gesture). Open.
+3. **`shouldPersistKeep` guard is unwired substrate** — defined + tested in `sanctuaryGuards.ts`, but the `app/api/library/keep` route it protects does not exist; zero exposure. Open.
+4. **CLOSED pre-ratification @ `a61d6d1c1`** — Shadow Work rendered fabricated per-member data (invented integration levels and dates, no data source; the page never called any API). Converted to an honest threshold per the Comms doctrine: nothing recorded, nothing implied, doorway to the journal.
 5. **"Infinite fields" must be claimed as Designed** — hardcoded 3-entry registry (§2.6).
 6. Studio caseload TODO action stubs; practitioner agreements/billing scaffold — fine as-is, but the Codex must not stamp them Live.
 7. **Docs-reconciliation item**: Participation-Without-Foreclosure §10 holds **7** held directions; the memory/record says 10. Reconcile in session 2.
 8. Known from record: `WISDOM_IS_RECOVERED.md` cited by an earlier spec does not exist in the repo.
 9. Pattern-level: **Sanctuary enforcement is strong on the main conversation spine, patchy on peripheral write paths** (items 1–3 are one species).
+10. **Recorded absence: no age or minor-related gating exists anywhere at this ref.** The census surfaced consent gates, tier gates, tester gates, jurisdiction row-scoping, and one founder gate — no age gate, no minor-mode, no guardian-consent surface. If teen environments are in the platform's intended scope, this is a constitutional question, not a feature gap: a consent architecture calibrated for adults does not automatically transfer to minors (Invariant 14's ask-don't-assume applies to developmental stage as much as culture). Until ruled on, teen surfaces stamp **Vision-tier, constitutionally open** — the Codex must not imply readiness.
 
 ---
 
