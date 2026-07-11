@@ -23,12 +23,23 @@
 
 ## 2. Key custody — read this before you need it
 
-**Losing the private key = losing every offsite backup.** It is the single point of failure in this design, on purpose (that's what encryption means).
+**Losing the private key = losing every offsite backup.** It is the single point of failure in this design, on purpose (that's what encryption means). The solo-operator trap this section exists to prevent: if the key lives only on the node it protects, or only in Kelly's head, the backup is unrecoverable in exactly the disaster scenarios it exists for.
 
-Must be true at all times:
-1. Private key + passphrase live on Mac Studio at `~/.maia-backup/` (`chmod 600/700`).
-2. A copy of `maia-backup-private.asc` **and** the contents of `passphrase.txt` are in Kelly's password manager (or printed + stored physically). **Kelly: if you haven't done this yet, do it today.**
-3. The private key is **never** copied to minisforum or any cloud destination.
+**The escrow sheet.** A printable recovery sheet — key material, passphrase, and the exact restore commands — lives at Mac Studio **`~/.maia-backup/MAIA-BACKUP-ESCROW-SHEET.txt`** (deliberately outside the repo; never commit it). That sheet + any one encrypted artifact is sufficient to recover everything on a machine that has never held the key — **proven 2026-07-11** (drill log §7). Anyone holding the sheet can decrypt member data: store copies like master keys.
+
+**Custody ledger — Kelly fills in the physical locations and keeps this table true:**
+
+| Copy | Where | Status |
+|---|---|---|
+| Working key | Mac Studio `~/.maia-backup/` (keyring + `maia-backup-private.asc` + `passphrase.txt`, chmod 600/700) | ✅ exists |
+| Password manager | Kelly's vault: private key file + passphrase as separate entries | ☐ Kelly: do today |
+| Printed sheet #1 | _______________ (physically separate from minisforum — not the same room/building) | ☐ |
+| Printed sheet #2 / hardware token (optional, recommended) | _______________ (e.g. YubiKey via `keytocard` — instructions on the sheet — or second print at another site) | ☐ |
+
+Rules that must stay true:
+1. The private key is **never** copied to minisforum or any cloud destination — those hold ciphertext only.
+2. At least one escrow copy exists outside the building minisforum lives in.
+3. **Nathan becomes second custodian as his support ramp matures**: he gets his own escrow copy and runs a restore drill (§3c) himself — custody is demonstrated by a PASS, not by possession.
 
 To re-import the key on a fresh machine:
 ```bash
@@ -140,6 +151,8 @@ The scripts already ping these when set (and `<url>/fail` on failure). If a job 
 
 ## 6. Offsite destination & retention policy
 
+**Doctrine boundary (per `docs/strategy/INFRA_STAGING_FOUR_TRIGGERS_2026-07-11.md`, Stage 0 — stated so this never becomes a drift finding):** *offsite encrypted backups under founder-held keys are within data-locality doctrine; a cloud-hosted live database is not.* The constitution prohibits a cloud **database** — live, queryable member data under a provider's control — not encrypted-at-rest copies under sovereign keys on rented storage. Everything this pipeline ships is ciphertext only the §2 key can open.
+
 **Retention (policy of record):**
 | Copy | Where | Keep |
 |---|---|---|
@@ -156,3 +169,4 @@ The scripts already ping these when set (and `<url>/fail` on failure). If a job 
 | Date | Artifact | Result | Notes |
 |---|---|---|---|
 | 2026-07-11 | `maia_20260711T193337Z.dump.gpg` | **PASS** | First end-to-end proof: minisforum → Mac Studio → scratch pgvector:pg16; 82/142/5/587 exact match; spot check 82 non-empty passkeys. |
+| 2026-07-11 | `maia_20260711T193337Z.dump.gpg` | **PASS** (escrow drill) | Restore using ONLY the escrow sheet + artifact in a fresh keyring that had never held the key: key + passphrase read off the sheet, 297 MB decrypted, 82/142/5/587 exact. Keyring, plaintext, container destroyed after. |
