@@ -16,9 +16,9 @@
 
 ## Package 3 — Weeks 1–2 (working kit)
 8. **Case Study Library** — his story inventory.
-9. **Demo protocol** with the demo-persona rule — before his first external conversation, not after.
-10. **Representation-authority note** — say-freely / needs-stamp / never.
-11. **90-day mutual expectations** — drafted *with* him, week 2.
+9. **Demo protocol** with the demo-persona rule — before his first external conversation, not after. **PRIORITY REORDERED (07-11 night): FIRST in Wave 1**, not first-among-equals — Mark's texts name a potential CAA-level client-and-channel contact, so the first demo may come sooner and higher-visibility than planned; a first demo done wrong (live navigation of real material, an unstamped number, a member story) is exactly the consent risk this document exists to prevent.
+10. **Representation-authority note** — say-freely / needs-stamp / never. Carries the early-named distinction: *internal vision is his to roam; outward claims carry stamps.*
+11. **90-day mutual expectations** — drafted *with* him, week 2. **Agenda additions (07-11)**: the 501c3/hybrid-revenue structural question (Kelly's to weigh, not the kit's to answer) · a clean conflict-of-interest / attention-split line (his AI-company board seat + consulting practice; how channel introductions get structured — representation discipline applied to the commercial relationship, not distrust) · the vocabulary conversation: his *Her*/ELIZA "AI companion/therapist" reference points aim at the right market through the wrong frame — the early, warm reframe is "that's the audience, and here's why we say it differently: the difference is the whole moat."
 
 ## Package 4 — As ratified or supplied
 12. **Metrics pack** (claim-stamped, sitting-refreshed) · **pricing intent** · **cohort status** — `[KELLY SUPPLIES]`.
