@@ -20,6 +20,15 @@ The week of 2026-07-07 demonstrated the mode at full scale: a grounding census, 
 1. **Evidence outlives sessions.** Derivations are committed documents bound to refs, not conversation state.
 2. **The founder's bandwidth is the declared rate limiter.** Ratification is protected above building — building can pause and resume; an unratified evidence base decays as the tree moves.
 3. **The Steward model** (Cat 1, held) is the eventual distribution path for ratification load; until it matures, this invariant is the honest description of how authority works here.
+4. **Derivation converged on a house verification standard**: proof-by-absence — a claim is verified by what the system can do *without* the thing whose absence is being tested. Sanctuary proven by a refusal (R08); recovery proven by a cold restore using only the escrow sheet on a machine that never held the key; consent gates proven by SQL predicates that exclude, not by promises to filter. It is the hostile-fork test applied everywhere: what would have to be true for this claim to survive the worst case. New verification designs should take this shape by default.
+
+## The ratification-debt ceiling (standing rule)
+
+Evidence accumulating faster than ratification is how a claim-disciplined system develops an **unratified shadow canon** — the apparatus's own drift lesson applied to itself. Therefore:
+
+> **When the sitting queue holds N bounded items awaiting the founder (N = 4 until re-ratified), derivation capacity redirects from producing new evidence to packaging the existing queue for the fastest possible pass. No new derivation threads spawn until the queue rules.**
+
+Threads already in flight finish on their own clock; their outputs join the *next* queue, not the current one. Packaging (condensing, cross-referencing, red-line-readying) is always permitted — it reduces ratification cost rather than adding to it. First invocation: 2026-07-11, spawn freeze declared with four items queued and two threads in flight.
 
 ## What this does NOT authorize
 
