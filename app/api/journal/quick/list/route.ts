@@ -222,14 +222,38 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [QuickJournal] ${entryType} entry saved for user ${userId}`);
 
-    // Bridge to episodic memory for resonance search (fire-and-forget)
-    if (content.trim().length >= 10) {
-      bridgeToEpisodicMemory(userId, entryType, content).catch(() => {});
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONSENT GATE — journal text enters MAIA memory only by standing opt-in.
+    // storage_consent.journalMemoryBridge (member_settings JSONB), default-deny:
+    // same consent surface the audio path uses (storage_consent.audioServer).
+    // The journal entry itself always saves; only the memory bridges are gated.
+    // ─────────────────────────────────────────────────────────────────────────
+    let memoryBridgeConsented = false;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const settingsRes: any = await query(
+        `SELECT storage_consent
+         FROM member_settings
+         WHERE member_id = $1
+         LIMIT 1`,
+        [userId]
+      );
+      const settingsRow = Array.isArray(settingsRes) ? settingsRes[0] : settingsRes?.rows?.[0];
+      const storageConsent = (settingsRow?.storage_consent as Record<string, boolean>) || {};
+      memoryBridgeConsented = storageConsent.journalMemoryBridge === true;
+    } catch {
+      // Consent unknown → treat as not granted
     }
 
-    // Bridge to capsule layer so oracle context holds this entry (fire-and-forget)
-    if (content.trim().length >= 10) {
+    if (memoryBridgeConsented && content.trim().length >= 10) {
+      // Bridge to episodic memory for resonance search (fire-and-forget)
+      bridgeToEpisodicMemory(userId, entryType, content).catch(() => {});
+      // Bridge to capsule layer so oracle context holds this entry (fire-and-forget)
       bridgeToCapsule(userId, entry.id, entryType, content).catch(() => {});
+    } else if (content.trim().length >= 10) {
+      console.log(
+        `[QuickJournal] Memory bridge skipped (no journalMemoryBridge consent) for user ${userId}`
+      );
     }
 
     return NextResponse.json({
