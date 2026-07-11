@@ -37,7 +37,9 @@ System-side: stay on the boring stack (Postgres, Caddy, single node → warm sta
 
 The member-sovereign horizon (Cat 1) means endgame infrastructure is **trust infrastructure** — provenance attestation, key management, sync — not a datacenter. If intelligence travels to member hardware (Neuropod, home nodes), the scaling curve flattens permanently: members bring their own compute. The platform never enters the industry's capex race because its value was never in the model.
 
-## §Doctrine — the fork that shapes Stage 2 (awaiting Kelly)
+## §Doctrine — the fork that shapes Stage 2
+
+**PROMOTED**: the doctrine now lives as its own candidate — `docs/canon/LOCALITY_FOLLOWS_INTIMACY_CANDIDATE_2026-07-11.md` — with the intimacy-class registry (3 rows, grows only by ratification) and the composition rule (class attaches to data, propagates through pipelines, enforced at context assembly; coupled to ADR-013). The analysis below is retained as this document's original derivation.
 
 **Question**: must deep-tier eventually be fully local, or is honestly-labeled cloud frontier acceptable indefinitely (local reserved for memory/CORE)?
 
