@@ -1,6 +1,26 @@
 # DECISION MEMO — Journal Bridge Meaning-Writes (2026-07-11)
 
-**Status**: DECISION MEMO — awaiting Kelly's ruling. Session 3's trace composes against whatever is decided here.
+**Status**: RESOLVED BY REFRAME — see postscript. The interpretation-tradeoff framing below is retained for lineage; the operative analysis is the postscript's.
+
+## Postscript (same day): the reframe that collapsed the decision
+
+On review, these writes are not interpretation at all — **they are constants**. Every dream is water; every dream is significance 7; everything else is 5; all intensity is 0.5. No member content is read. That moves the finding out of the Mirror Invariant's genuine-tradeoff territory ("may the system author interpretation?") into the **Shadow Work species: fabricated data presented as real** — which already has a landed doctrine from the census closures: *fabricated values are removed — not consented to, not surfaced, not preserved as hypothesis.*
+
+Disposition executed as **strip to provenance-only** ("found by trace, closed pre-composition"; readers B and C had already bound to `831a0ca24`):
+- Episodic bridge no longer authors `significance`/`emotional_intensity`; the columns are NOT NULL so the uniform schema default applies — a uniform value carries no differential ranking signal. Ranking falls back to recency and member-declared markers (Keeps, breakthroughs), which are the signals that *are* member-authored.
+- Capsule bridge `signals` reduced to `{ entryType }` — restating the member's own mode choice, nothing else. The hardcoded `element: 'water'` — system-invented elemental identity on a path that can return to the member as "your element," the most direct Spiralogic-specific violation the trace found — is removed.
+
+**Held direction (correctly open)**: whether MAIA may ever *derive* salience/elemental readings from actual content. If that opens, the Ideas ask-first pattern is the presumptive shape, entering via spec + consent axis + provenance labeling.
+
+**Doctrinal sentence for the trace**: *consent-to-bridge ≠ consent-to-interpret* — though this fix needed only the fabricated-data precedent, not that sentence.
+
+**Two carries for the Codex from the same reader**:
+1. The load-bearing negative finding: `spiralogic_phase` on field-note threads is member-supplied workshop position, NOT content inference — claim discipline proven at the exact place it's most tempting to violate.
+2. New vocabulary without a constitutional home: **position vs. meaning** (system-inferred structural position in the prompt by design, vs. system-authored semantic meaning, prohibited). Belongs near the Claim-Type Floor (Invariant 13); flagged for a future sitting.
+
+---
+
+*Original memo below, retained for lineage:*
 **Ref**: evidence read at `831a0ca24`. One page; the trace document will carry the full context.
 
 ---

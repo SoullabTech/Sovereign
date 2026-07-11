@@ -45,20 +45,25 @@ async function bridgeToEpisodicMemory(
       // Non-fatal: text fallback still works for resonance
     }
 
+    // Provenance-only write: significance/emotional_intensity are NOT
+    // authored here. They were previously stamped as constants (dream=7,
+    // else 5, intensity 0.5) — fabricated salience, not derived from
+    // anything the member said. The columns are NOT NULL so the uniform
+    // schema default applies to every row; a uniform value carries no
+    // differential ranking signal. If salience is ever derived for real,
+    // it enters via a spec + consent axis, not a capture-time stamp.
+    // (Trace finding 2026-07-11; closed pre-composition.)
     await query(
       `INSERT INTO episodic_memories
         (user_id, episode_id, experience_title, experience_description,
-         experience_context, significance, emotional_intensity,
-         semantic_vector, timestamp)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW())`,
+         experience_context, semantic_vector, timestamp)
+      VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW())`,
       [
         userId,
         episodeId,
         title,
         content.trim(),
         `quick_journal_${entryType}`,
-        entryType === 'dream' ? 7 : 5,
-        0.5,
         semanticVector ? JSON.stringify(semanticVector) : '[]',
       ]
     );
@@ -86,15 +91,19 @@ async function bridgeToCapsule(
       ? `Dream: ${firstLine}`
       : `Journal: ${firstLine}`;
 
+    // Provenance-only signals: entryType restates what the member chose
+    // (dream vs day vs handwriting) — nothing more. The previous stamp
+    // assigned `element: 'water'` to every dream: system-invented
+    // elemental identity on member material, on a path that feeds oracle
+    // context. Fabricated meaning is removed, not consented to.
+    // (Trace finding 2026-07-11; closed pre-composition.)
     await createCapsule({
       userId,
       sourceType: 'journal',
       sourceId: entryId,
       title,
       summary: content.trim().slice(0, 1200),
-      signals: isDream
-        ? { element: 'water', tone: 'dream' }
-        : { tone: 'reflection' },
+      signals: { entryType },
       tags: ['auto-captured', entryType],
       draft: true,
     });
