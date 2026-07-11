@@ -558,6 +558,16 @@ export async function applyAtomGesture(
   if (result.rows.length === 0) {
     throw new Error(`applyAtomGesture: atom not found for member ${memberId}, atom ${atomId}`);
   }
+
+  // Reconcile the living-field affinity index with the new consent state:
+  // the indexer purges rows for sealed atoms and (re)indexes opened ones.
+  // Fire-and-forget, same posture as the keepSource wiring.
+  if (gesture.kind === 'set_return_preference') {
+    import('@/lib/maia/living-field/indexAtom').then(({ indexAtomAffinities }) => {
+      indexAtomAffinities(atomId, memberId);
+    }).catch(() => {});
+  }
+
   return rowToAtom(result.rows[0]);
 }
 

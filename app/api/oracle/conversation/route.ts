@@ -1732,7 +1732,23 @@ export async function POST(request: NextRequest) {
 
     let keepIntent: KeepIntent | null = null;
 
-    if (CONVERSATIONAL_KEEP_ENABLED) {
+    // ── SANCTUARY GUARD (interim; structural fix specced separately) ──
+    // Sanctuary invariant 6: nothing from a Sanctuary session may be
+    // saved, extracted, or converted into long-term memory — INCLUDING
+    // by member request during the session. The client threads
+    // `sanctuary` in the request body (same flag the orchestrator spine
+    // honors); when active, the entire keep sidecar (filing, gestures,
+    // offers) is skipped — no atoms, no idea blocks, no offers to keep.
+    // Absent/unknown flag → not sanctuary (continuity default).
+    // (Trace GAP 1, 2026-07-11: this route wrote long-term atoms with no
+    // sanctuary check. Closed pre-composition; server-side source of
+    // truth is the specced structural fix.)
+    const sanctuaryActive = (parsed as any).sanctuary === true;
+    if (sanctuaryActive && CONVERSATIONAL_KEEP_ENABLED) {
+      console.log('[conv-keep] sanctuary active — keep sidecar skipped (nothing persists)');
+    }
+
+    if (CONVERSATIONAL_KEEP_ENABLED && !sanctuaryActive) {
       try {
         // Client-supplied runtime state (optional; defaults safe if absent)
         const keepRuntime = (parsed as any).keepRuntimeState ?? {};

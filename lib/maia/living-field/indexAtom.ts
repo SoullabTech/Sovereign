@@ -7,6 +7,14 @@
  * Constitutional constraints enforced here:
  * - protected / archived status → skip
  * - sacred_protected register (primary or array) → skip
+ * - return_preference consent gate: only atoms the member has opened to
+ *   ambient surfacing (contextual_doorway / ritual_review_opt_in) may
+ *   carry affinity rows. A sealed (member_pulled) atom gets its rows
+ *   PURGED, not just skipped — so calling this after a
+ *   set_return_preference gesture reconciles the index either direction.
+ *   (Trace finding F2, 2026-07-11: affinity rows from sealed atoms were
+ *   feeding gathering/encounter views, bypassing the two-axis consent
+ *   model. Closed pre-composition.)
  */
 
 import { query } from '@/lib/db/postgres'
@@ -44,6 +52,18 @@ export async function indexAtomAffinities(
     if (atom.status === 'protected' || atom.status === 'archived') return
     if (atom.primary_register === 'sacred_protected') return
     if ((atom.registers ?? []).includes('sacred_protected')) return
+
+    // 2b. Consent gate (F2): only member-opened atoms may hold affinity
+    // rows. Sealed / unknown → purge any existing rows and stop.
+    const OPEN_PREFERENCES = ['contextual_doorway', 'ritual_review_opt_in']
+    if (!OPEN_PREFERENCES.includes(atom.return_preference ?? '')) {
+      await query(
+        `DELETE FROM living_field_affinities
+          WHERE atom_id = $1 AND member_id = $2`,
+        [atomId, memberId]
+      )
+      return
+    }
 
     // 3. Compute affinities
     const affinities = mapAtomToFields({
