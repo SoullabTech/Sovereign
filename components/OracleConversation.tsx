@@ -4034,15 +4034,15 @@ I'm not sure what I'm feeling yet.`;
         break;
       case 'open_ideas':
         sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/dashboard/ideas';
+        window.location.href = '/maia/ideas';
         break;
       case 'open_decisions':
         sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/dashboard/decisions';
+        window.location.href = '/studio/decisions';
         break;
       case 'open_changes':
         sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/dashboard/changes';
+        window.location.href = '/studio/changes';
         break;
       // 🌐 WORLD DOORWAYS: Experiential spaces
       // Set nav teardown flag BEFORE hard navigation so conversation restores on return.
