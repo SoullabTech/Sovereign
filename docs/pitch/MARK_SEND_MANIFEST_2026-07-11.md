@@ -3,11 +3,16 @@
 **Status**: STAGED — what Mark actually receives, in what sequence, and what he deliberately doesn't. The order teaches the house's hierarchy: *experience before explanation, explanation before materials, materials before numbers.*
 **Three decisions Kelly's**: physical book yes/no (recommended yes) · account-before-deck vs Kelly-framed first session · the welcome note (only Kelly can write it). **One scheduling fact**: is day 1 dated, or does it float until the sitting clears? Dated → the sitting inherits a deadline; floating → packages fire in order as gates open.
 
-## Package 1 — Welcome (pre–day 1)
-1. **Personal note from Kelly** — short, his voice, why Mark. Doubles as raw material for the deck's founder-story slot.
-2. ***Elemental Alchemy*** — physical copy. The artifact that says "35 years, not a startup pivot."
-3. **Member account invite** — formation before business. He journals, keeps, hits a refusal — *then* hears why.
-4. **Ordered reading path** (Wave 1 — DRAFTED 07-12: `MARK_READING_PATH_2026-07-12.md`) — opens with the drill-log exhibit: before he reads a claim, he sees what a claim costs. Companions drafted same pass: `MARK_DEMO_PROTOCOL_2026-07-12.md` (Package 3 item 9), `MARK_GOVERNANCE_ONE_PAGER_2026-07-12.md` (Package 2 item 7). All three pending Kelly's red-line.
+## Package 1 — Welcome (pre–first-meeting) — REVISED 07-12 for the warm context
+
+**Context correction**: Mark is not a cold consultant receiving an introduction packet — the resonance already exists ("MAIA is real and timely"; the ELIZA send; the brother register). The package is therefore a **container, not a pitch**: it gives shape, boundaries, and shared language to enthusiasm that's already moving. The explicit not-ask in the brief matters *more* in this register, not less — enthusiastic people volunteer themselves into undefined roles; the brief's boundaries protect the friendship and the work.
+
+1. **Personal note from Kelly** — short, his voice, acknowledging the existing relationship. Suggested sentence: *"We've already had many rich conversations — this brief simply gathers the work into one place so we have a common map for our discussion."*
+2. **The Executive Brief** (`MARK_EFFINGER_EXECUTIVE_BRIEF_2026-07-12.md`) — not to convince; to orient. Send-ready version (slot resolved, internal headers stripped) produced after Kelly's red-line.
+3. **Member account invite** — now leaning YES pre-meeting (stability confirmed against the census record; and this is precisely the contained-channel expansion the founder posture allows: trusted individuals, never public). He journals, keeps, hits a refusal — *then* the meeting discusses what he felt.
+4. ***Elemental Alchemy*** — mention in the note that a copy is coming; physical copy mailed or handed at the meeting.
+
+**Held for day 1 and after (unchanged)**: claim card + governance one-pager (handed in person), demo protocol before any external showing, reading path + lineage document as week-one depth (`MARK_READING_PATH_2026-07-12.md`, `MARK_DEMO_PROTOCOL_2026-07-12.md`, `MARK_GOVERNANCE_ONE_PAGER_2026-07-12.md` — all drafted, pending red-line). Sequencing holds even for the enchanted — *especially* for the enchanted.
 
 ## Package 2 — Day 1 (the presentation)
 5. **The deck** — live-sparse, rendered from signed ground (post-sitting + red-line).
