@@ -21,17 +21,9 @@ set -euo pipefail
 echo "🔒 Sovereignty pre-commit check..."
 
 # Branch guard — only commit on approved branches.
+# Allowlist is the shared single source of truth (also read by pre-push).
 BRANCH="$(git branch --show-current)"
-case "$BRANCH" in
-  main|clean-main-no-secrets|phase4.6-reflective-agentics|feature/*|fix/*|chore/*) ;;
-  *)
-    echo ""
-    echo "🚫 COMMIT BLOCKED: branch '$BRANCH' not allowed"
-    echo "   Allowed: main | clean-main-no-secrets | feature/* | fix/* | chore/*"
-    echo ""
-    exit 1
-    ;;
-esac
+scripts/check-branch-allowed.sh COMMIT "$BRANCH"
 echo "✅ Branch guard: committing to '$BRANCH' (allowed)"
 
 export GIT_PRE_COMMIT=1
@@ -72,14 +64,12 @@ else
   echo "✅ sovereignty checks installed → pre-commit"
 fi
 
-# ── Pre-push: secrets + large files ─────────────────────────────────────────
-cat > "$HOOKS_DIR/pre-push" << 'HOOK'
-#!/usr/bin/env bash
-set -euo pipefail
-scripts/check-no-secrets.sh
-scripts/check-no-large-staged-files.sh
-HOOK
+# ── Pre-push: branch guard + secrets + large files ──────────────────────────
+# Body is versioned at .githooks/pre-push (branch allowlist shared with
+# pre-commit via scripts/check-branch-allowed.sh) — installed verbatim so
+# there is exactly one copy to maintain.
+cp "$(git rev-parse --show-toplevel)/.githooks/pre-push" "$HOOKS_DIR/pre-push"
 chmod +x "$HOOKS_DIR/pre-push"
-echo "✅ pre-push hook installed"
+echo "✅ pre-push hook installed (branch guard + secrets + large files)"
 
 echo "✅ git hooks installed (worktree-safe, beads-compatible)"
