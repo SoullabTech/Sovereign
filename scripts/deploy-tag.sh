@@ -14,10 +14,15 @@
 #   tag_images_for_rollback "$GIT_COMMIT"
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Retention: how many <sha> rollback tags to keep (newest by image creation
-# time). Each image is ~35-42 GB; on 2026-07-12 nineteen stale SHA tags filled
-# minisforum's 937 GB disk to 100% and broke an in-flight deploy at metadata
-# write. Tags whose image ID matches :current/:previous are never removed.
+# Retention contract: keep the newest RETAIN_SHA_TAGS <sha> tags (by image
+# creation time), while ALWAYS preserving any SHA tag whose image ID matches
+# :current or :previous. This is a bound, not an exact count — more than N
+# tags may legitimately survive when older tags point at protected rollback
+# images. Do NOT "fix" that by pruning to an exact N; the protection is the
+# point (a SHA tag is how a rollback image is identified).
+# Why this exists: each image is ~35-42 GB; on 2026-07-12 nineteen stale SHA
+# tags filled minisforum's 937 GB disk to 100% and broke an in-flight deploy
+# at metadata write.
 RETAIN_SHA_TAGS="${RETAIN_SHA_TAGS:-3}"
 
 # Repo name is overridable ONLY so the prune logic can be simulated against a
@@ -49,6 +54,11 @@ tag_images_for_rollback() {
 # (:prod/:current/:previous) are excluded from the listing, and any SHA tag
 # whose image ID matches :current or :previous is kept regardless of age.
 # Every removed tag is named in the log (irreversible command → name the target).
+# Scope note: this bounds ROLLBACK-TAG growth only. Removing a tag does not
+# necessarily reclaim disk (shared layers, build cache, dangling images stay);
+# the pre-deploy disk gate is the backstop for total storage. Deliberately no
+# `docker system prune` here — broad reclaim needs explicit authorization,
+# never a quiet side effect of deploying.
 prune_old_sha_tags() {
     local repo="$MAIA_IMAGE_REPO"
     local retain="$RETAIN_SHA_TAGS"

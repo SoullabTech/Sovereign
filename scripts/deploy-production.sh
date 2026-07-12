@@ -421,6 +421,10 @@ cmd_deploy() {
     export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
 
+    # Disk preflight — refuse BEFORE the storage-expanding build (a full-disk
+    # build dies at metadata write after minutes and can exit 0 through ssh).
+    "$SCRIPT_DIR/pre-deploy-gate.sh" disk
+
     # Build image first (never rebuild while down!)
     docker compose -f "$COMPOSE_FILE" build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
@@ -502,6 +506,10 @@ cmd_update() {
     export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
     export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
+
+    # Disk preflight — refuse BEFORE the storage-expanding build (a full-disk
+    # build dies at metadata write after minutes and can exit 0 through ssh).
+    "$SCRIPT_DIR/pre-deploy-gate.sh" disk
 
     # Build image first (never rebuild while down!)
     docker compose -f "$COMPOSE_FILE" build \

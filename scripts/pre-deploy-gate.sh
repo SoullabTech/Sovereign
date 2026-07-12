@@ -158,6 +158,13 @@ gate_colab() {
 # fails at metadata write AFTER many minutes of building — and on 2026-07-12
 # that failure exited 0 through the ssh pipeline and read as success. Refusing
 # before the build is the only loud version of this failure.
+# Floor validated against minisforum 2026-07-12: 937 GB disk, ~519 GB free at
+# steady state (images ~313 GB incl. pre-retention stale tags, build cache
+# ~150 GB). Peak build footprint = one new ~42 GB image held ALONGSIDE the old
+# one, plus incremental buildkit-cache growth — so 60 GB covers the maximum
+# temporary footprint with margin. With SHA-tag retention active, a routine
+# deploy sits hundreds of GB above the floor and cannot become permanently
+# blocked by it.
 # ───────────────────────────────────────────────────────────────────────────────
 gate_disk() {
     local free_kb free_gb
