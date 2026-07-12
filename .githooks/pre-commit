@@ -3,6 +3,9 @@ set -euo pipefail
 
 echo "🔒 Sovereignty pre-commit check..."
 
+# Branch guard — allowlist shared with pre-push via scripts/check-branch-allowed.sh
+scripts/check-branch-allowed.sh COMMIT "$(git branch --show-current)"
+
 # 1. No Supabase
 npm run check:no-supabase
 SUPABASE_EXIT=$?
