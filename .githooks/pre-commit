@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# ⚠️ NOT the hook that runs. scripts/setup-githooks.sh writes its own pre-commit
+# body into $(git rev-parse --git-common-dir)/hooks — THAT is what executes, and
+# its check list diverges from this file. Do not trust this file as the live
+# gate; branch allowlist source of truth is scripts/check-branch-allowed.sh.
 set -euo pipefail
 
 echo "🔒 Sovereignty pre-commit check..."
