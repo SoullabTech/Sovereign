@@ -5,6 +5,12 @@
 
 ---
 
+## The brief (the readable thing itself)
+
+| Artifact | Role | Status |
+|---|---|---|
+| [MARK_EFFINGER_EXECUTIVE_BRIEF_2026-07-12.md](MARK_EFFINGER_EXECUTIVE_BRIEF_2026-07-12.md) | **The self-contained ~20-minute read for a busy consultant** — exec summary, founder short-form, stamped platform inventory, business plainly, mandate, the five operating rules, the close | Committed — pending red-line; 1 `[KELLY SUPPLIES]` slot |
+
 ## The spine (read these two first, in this order)
 
 | Artifact | Role | Status |
