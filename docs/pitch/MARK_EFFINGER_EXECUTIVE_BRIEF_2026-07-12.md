@@ -34,7 +34,7 @@ Production relational intelligence (MAIA: three modes, three tiers, self-hosted)
 
 ## 2. Why this market, now (the consulting lens)
 
-As intelligence becomes abundant, the scarce assets become: **trust architecture** (provable, not claimed), **governance maturity** (the LIVE/DESIGNED/VISION discipline below), **provenance** (who authored what, enforceable), and **relationship quality without capture** (support that doesn't monetize dependency). The mainstream conversation is moving toward these concerns on its own schedule; when it arrives, most products will be repositioning. This one will be producing receipts. In July 2026 the platform audited itself against its own constitution, published the findings — including its own gaps — and closed them before anyone asked. That audit trail cannot be manufactured retroactively, which is precisely what makes it valuable.
+As intelligence becomes abundant, the scarce assets become: **trust architecture** (provable, not claimed), **disclosure maturity** (the LIVE/DESIGNED/VISION discipline below), **provenance** (who authored what, enforceable), and **relationship quality without capture** (support that doesn't monetize dependency). The mainstream conversation is moving toward these concerns on its own schedule; when it arrives, most products will be repositioning. This one will be producing receipts. In July 2026 the platform audited itself against its own constitution, published the findings — including its own gaps — and closed them before anyone asked. That audit trail cannot be manufactured retroactively, which is precisely what makes it valuable.
 
 ## 3. The founder (short form)
 
@@ -56,13 +56,15 @@ His guiding question: *Can technology participate in human becoming without ecli
 
 - **Stage**: private beta, invite-gated; payment infrastructure wired (Stripe); launch posture deliberate.
 - **Revenue design**: membership tiers · Founding Studio Program for early practitioners · Press as a second product line. `[KELLY SUPPLIES: intended pricing model + beta-cohort status, stamped]`
-- **Team**: Kelly (founder — build + final authority on all claims and gates) · Nathan (partner, ramping member/client support) · you (this brief) · AI-assisted derivation under a documented, ratified governance model.
-- **Cost structure**: self-hosted, near-zero marginal cost at current scale; infrastructure spend staged by four named triggers, not by funding. The platform's value resides in architecture and governance rather than model ownership.
+- **Team**: Kelly (founder — build + final authority on all claims and gates) · Nathan (partner, ramping member/client support) · you (this brief) · AI-assisted derivation under a documented, ratified decision discipline.
+- **Cost structure**: self-hosted, near-zero marginal cost at current scale; infrastructure spend staged by four named triggers, not by funding. The platform's value resides in its architecture and safeguards rather than model ownership.
 - **No numbers appear in this brief** because none are ratified for external use — the discipline working, not information withheld. Actuals come from Kelly, stamped.
 
 ## 6. The ask, in detail
 
 **Proposed role** (final form drafted with you, week 2): strategic advisor · business-development partner · practitioner-channel architect · partnership introducer.
+
+**What is not being asked**: investment, an operating role, or an equity commitment at this stage. If those conversations ever arise, they come after the 90-day period, on their own terms.
 
 **Success in the first 90 days** (targets set together; the shape is): a defined number of practitioner conversations opened through the Founding Studio Program · qualified partnership introductions where trust standards align · positioning refinements that hold up under the claim discipline · the 90-day mutual-expectations agreement itself (agenda already includes entity/revenue structure questions, conflict-of-interest lines given your board and consulting commitments, and channel-introduction protocol).
 
