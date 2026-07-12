@@ -78,12 +78,15 @@
  * ─────────────────────────────────────────────────────────────────────
  */
 
+// Avoid phrasings that can be heard as suicide-screening questions
+// ("stay with your life", "remain here" ≈ "what would keep you alive").
+// Presence language must not be mistakable for crisis language.
 const PROMPTS = [
-  "What would help you stay with your life today?",
+  "What would help you feel more anchored today?",
   "What feels quietly present right now?",
   "What would make today feel more inhabited?",
   "What have you been meaning to return to?",
-  "What would help you remain here today?",
+  "What would help you stay grounded today?",
 ];
 
 export function promptForDate(isoDate: string): string {
