@@ -11,13 +11,13 @@
 
 Kelly Nezat is the founder of Soullab and architect of MAIA (Multi-Archetypal Intelligence Architecture), a sovereignty-first relational intelligence platform exploring how technology can participate in human development while preserving human meaning, authorship, agency, and soul.
 
-For more than four decades, Kelly has been engaged in an ongoing exploration of human transformation and what it means to become fully human.
+For more than four decades, Kelly has explored the question of what it means to become fully human and has accompanied others in processes of healing, meaning-making, and transformation.
 
 Beginning his study of Jungian psychology at the age of seventeen, his work has unfolded through a lifelong exploration of depth psychology, archetypal studies, shamanic traditions, ritual, mystical experience, alchemy, body-centered therapies, consciousness studies, and transformational healing practices.
 
 Kelly holds a degree in psychology, pursued advanced studies in clinical and developmental psychology, and completed a two-year practicum through the Mind/Body Medical Institute at Beth Israel Deaconess Medical Center, a Harvard Medical School teaching hospital. Over more than 39 years of private practice, he has accompanied individuals, couples, and groups through **thousands of sessions** devoted to healing, meaning-making, spiritual development, and personal transformation.
 
-Throughout this work, he has integrated diverse approaches including somatic methodologies, guided journeywork, NLP, hypnotherapy, energy healing, spiritual healing, and depth-oriented transformational practices.
+Throughout this work, he has integrated somatic approaches, guided journeywork, hypnotherapy, depth psychology, spiritual healing traditions, and other transformational methodologies.
 
 Kelly describes his work as standing at the intersection of depth psychology, mystical experience, shamanic practice, and human development. Over time, he has come to think of his vocation as that of a **shamanic alchemist** — a mystic and shamanic guide exploring how psyche, body, spirit, nature, and consciousness participate in the lifelong process of human becoming.
 
@@ -43,8 +43,29 @@ Kelly's work represents a forty-two-year inquiry into consciousness, meaning, tr
 ## Register calibration (facts constant; container per audience)
 
 - **Internal / authentic**: shamanic alchemist · mystic and healer · guide in human transformation.
-- **Professional / diligence-facing**: founder, Soullab · author, *Elemental Alchemy* · human development practitioner · depth psychological and shamanic practitioner · researcher and guide in consciousness studies.
+- **Professional / diligence-facing**: founder, Soullab · author, *Elemental Alchemy* · human development practitioner · depth psychological and shamanic practitioner · researcher and guide in consciousness studies. **Ordering rule for public materials**: lead with founder/author/practitioner; the shamanic-alchemist framing arrives later in the text as lived description ("sometimes describes his vocation as…"), never in the headline — it polarizes before the architecture is understood.
 - **Never**: psychotherapist · "clinical practice" as a self-description · any credential not listed above (standing rule: no PhD, no licensure implication).
+
+## The founder thesis (elevate in large type in decks)
+
+> **Technology may participate in revelation, but it must never eclipse it.**
+
+Everything derives from this line: sovereignty, the Mirror Invariant, recommendation ≠ decision, the refusal to author meaning, graduated obsolescence. It is the governance explained in one sentence.
+
+Candidate founder sentence (Kelly picks at sign — the layer beneath even the purpose statement):
+> *The work of my life has been to explore how human beings become more fully themselves — and whether emerging technologies can support that process without replacing the human capacities from which meaning itself arises.*
+
+## Short-form bio (derived; use verbatim where space is short)
+
+Kelly Nezat is the founder of Soullab and architect of MAIA, a sovereignty-first relational intelligence platform exploring how technology can participate in human development while preserving meaning, agency, and human authorship.
+
+For more than four decades, Kelly has explored the question of what it means to become fully human through the lenses of depth psychology, Jungian thought, shamanic traditions, consciousness studies, and transformational practice. Over nearly forty years in private practice, he has accompanied individuals and groups through thousands of sessions devoted to healing, meaning-making, and personal transformation.
+
+His work gave rise to Spiralogic™, the framework articulated in his book *Elemental Alchemy: The Art of Living a Phenomenal Life*, as well as Soullab and MAIA.
+
+Underlying this work is a central recognition: human beings are fundamentally symbolic, archetypal, embodied, relational, and spiritual beings. The essential challenge of our time is therefore not artificial intelligence itself, but humanity's relationship to consciousness, meaning, and authorship.
+
+Kelly's guiding question has become: *Can technology participate in human becoming without eclipsing the capacities for wonder, soul, meaning, and authentic authorship that make such becoming possible?*
 
 ## The number ladder (all narrative surfaces use this order)
 
@@ -69,7 +90,7 @@ MAIA represents one response to that question. (The original, mystical form — 
 And this is why the constitutional architecture is not caution but **vocational fidelity**: the Mirror Invariant, the refusal to author meaning, participant sovereignty, capability governance, graduated obsolescence, recommendation ≠ decision ≠ execution — each is what a lifelong steward of revelation builds when handed a medium that could eclipse it.
 
 Register options (facts constant, container per surface — Kelly picks at red-line):
-- *Authentic/full*: "My purpose is to be a mystic and shamanic guide, initiating sacred ceremony and transformational experiences that awaken wonder and remembrance, helping create a world in which the sacred is revealed within the ordinary and the mystical is recognized within the mundane."
+- *Authentic/full*: "My life's work has increasingly taken the form of serving as a mystic and shamanic guide — initiating sacred ceremony and transformational experiences that awaken wonder and remembrance, helping create a world in which the sacred is revealed within the ordinary and the mystical is recognized within the mundane." *(discovered, not proclaimed)*
 - *Founder/public*: "My life's work is to serve as a mystic, shamanic guide, and alchemist of human transformation — cultivating experiences of wonder, meaning, and sacred encounter that help reveal the extraordinary hidden within ordinary life."
 - *Simplest*: "I am devoted to helping reveal the sacred within the ordinary and the mystical within everyday life."
 
