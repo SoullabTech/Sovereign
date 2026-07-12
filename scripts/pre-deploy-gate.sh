@@ -24,12 +24,25 @@
 #   scripts/pre-deploy-gate.sh colab          # run boundary verifier, block on fail
 #   scripts/pre-deploy-gate.sh all            # both gates, no build
 #   scripts/pre-deploy-gate.sh deploy-maia    # both gates, then quick maia-only build
+#                                               of whatever is currently checked out
+#   scripts/pre-deploy-gate.sh deploy-maia-at [<branch>]
+#                                             # acquire the lane lock FIRST, then
+#                                               fetch/checkout/reset to origin/<branch>
+#                                               (default clean-main-no-secrets) INSIDE
+#                                               the lock, then gates + build + swap.
+#                                               This is the canonical quick deploy:
+#                                               the checkout mutation can never move
+#                                               under another holder's in-flight build
+#                                               (2026-07-12 contention hole).
 #
 # ── Escape hatches (explicit, loud, never silent) ─────────────────────────────
 #   FIRST_DEPLOY=1        — allow Co-Lab gate to skip when no container exists yet
 #   COLAB_VERIFIER_CMD    — override the verifier command (used by the gate's own
 #                           self-test; also lets you run against a local DB)
 #   MIN_COLAB_CHECKS=31   — floor on passing checks (raise when new checks ship)
+#   DEPLOY_SYNC_FORCE=1   — let deploy-maia-at discard a DIRTY deploy checkout
+#                           (default is to refuse: a dirty prod checkout means
+#                           someone hand-edited it — inspect before discarding)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
@@ -154,23 +167,59 @@ gate_all() {
     echo "$sha"
 }
 
-# deploy-maia — the mechanized replacement for the quick maia-only command.
-# Runs both gates, builds with a validated, EXPORTED GIT_COMMIT (so the operator
-# can no longer forget the prefix), refreshes the rollback tags, then swaps the
-# container with --force-recreate --no-deps (per
+# sync_repo_to_branch — move the deploy checkout to origin/<branch>, INSIDE the
+# already-held lane lock. This closes the 2026-07-12 contention hole: the old
+# canonical command ran `git pull` in the ssh line BEFORE this script executed,
+# so session B's pull could advance the shared checkout while session A's build
+# was still reading it as docker build context. Called only after
+# acquire_deploy_lock, so the mutation is part of the serialized lane occupancy.
+#
+# `reset --hard origin/<branch>` (not `pull`) so a diverged local branch can't
+# leave the tree somewhere other than origin's tip. Self-update is safe: git
+# replaces files by unlinking + writing new inodes, so this running script keeps
+# reading its pre-sync content from the open fd; the synced version runs next time.
+sync_repo_to_branch() {
+    local branch="$1"
+    # -uno: only TRACKED modifications refuse — reset --hard never touches
+    # untracked files, so they are not at risk and must not block the lane.
+    if [ -n "$(git -C "$PROJECT_DIR" status --porcelain --untracked-files=no 2>/dev/null)" ]; then
+        if [ "${DEPLOY_SYNC_FORCE:-0}" = "1" ]; then
+            log_warn "Deploy checkout is DIRTY; DEPLOY_SYNC_FORCE=1 — discarding local changes."
+        else
+            log_block "Deploy checkout at $PROJECT_DIR is DIRTY — refusing to reset it."
+            log_block "Someone hand-edited the deploy checkout; inspect before discarding:"
+            log_block "  git -C $PROJECT_DIR status"
+            log_block "Re-run with DEPLOY_SYNC_FORCE=1 to discard local changes deliberately."
+            return 1
+        fi
+    fi
+    log_info "Syncing checkout to origin/$branch (inside the deploy-lane lock) ..."
+    git -C "$PROJECT_DIR" fetch origin "$branch" >&2
+    git -C "$PROJECT_DIR" checkout "$branch" >&2
+    git -C "$PROJECT_DIR" reset --hard "origin/$branch" >&2
+    if [ -n "${GIT_COMMIT:-}" ]; then
+        log_warn "Ignoring inherited GIT_COMMIT=$GIT_COMMIT — provenance resolves from the synced tree."
+        unset GIT_COMMIT
+    fi
+    log_ok "Checkout now at $(git -C "$PROJECT_DIR" rev-parse --short HEAD) (origin/$branch)"
+}
+
+# Shared gate → build → tag → swap driver. Caller MUST already hold the lane
+# lock. Runs both gates, builds with a validated, EXPORTED GIT_COMMIT (so the
+# operator can no longer forget the prefix), refreshes the rollback tags, then
+# swaps the container with --force-recreate --no-deps (per
 # feedback_deploy_container_provenance_gate). Build and swap are separate steps
 # (not one `up -d --build`) so :current/:previous move only after a successful
 # build and BEFORE the new container starts — same ordering as
 # deploy-production.sh.
-cmd_deploy_maia() {
-    # Lock BEFORE the gates: the whole deploy attempt (verify + build + tag +
-    # swap) is one serialized lane occupancy. The fd-9 flock is inherited by
-    # every child, so the lock is held until docker compose itself finishes.
-    acquire_deploy_lock "pre-deploy-gate.sh deploy-maia"
+run_gates_and_build() {
     local sha
     sha="$(gate_all)"
     export GIT_COMMIT="$sha"
-    # DEPLOY_LANE_TOKEN was exported by acquire_deploy_lock above — the compose
+    # Provenance is resolved AFTER any locked sync, from the tree actually being
+    # built; refresh the lock-holder record so a refused second deploy names it.
+    record_deploy_lock_commit "$sha"
+    # DEPLOY_LANE_TOKEN was exported by acquire_deploy_lock — the compose
     # build arg the Dockerfile's deploy-lane tripwire requires.
     log_info "Building maia at $GIT_COMMIT ..."
     docker compose -p maia-sovereign \
@@ -185,20 +234,45 @@ cmd_deploy_maia() {
         up -d --force-recreate --no-deps maia
 }
 
+# deploy-maia — gates + build of whatever is currently checked out. Performs NO
+# repo mutation: use it when you have deliberately positioned the tree (e.g. a
+# specific commit). Lock BEFORE the gates: the whole deploy attempt is one
+# serialized lane occupancy; the fd-9 flock is inherited by every child, so the
+# lock is held until docker compose itself finishes.
+cmd_deploy_maia() {
+    acquire_deploy_lock "pre-deploy-gate.sh deploy-maia"
+    run_gates_and_build
+}
+
+# deploy-maia-at [<branch>] — the canonical quick deploy. Lock FIRST, then the
+# repo-state mutation (fetch/checkout/reset) happens inside the critical
+# section, then gates + build + tag + swap. A concurrent invocation is refused
+# by acquire_deploy_lock BEFORE it can touch the working tree.
+cmd_deploy_maia_at() {
+    local branch="${1:-clean-main-no-secrets}"
+    acquire_deploy_lock "pre-deploy-gate.sh deploy-maia-at $branch"
+    sync_repo_to_branch "$branch"
+    run_gates_and_build
+}
+
 case "${1:-help}" in
     provenance) gate_provenance ;;
     colab)      gate_colab ;;
     all)        gate_all >/dev/null ;;   # SHA already logged to stderr; suppress stdout echo
     deploy-maia) cmd_deploy_maia ;;
+    deploy-maia-at) cmd_deploy_maia_at "${2:-}" ;;
     *)
         echo "Pre-Deploy Gate — Construction Gate as structure, not discipline"
         echo ""
-        echo "Usage: $0 <provenance|colab|all|deploy-maia>"
+        echo "Usage: $0 <provenance|colab|all|deploy-maia|deploy-maia-at [<branch>]>"
         echo ""
-        echo "  provenance   Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
-        echo "  colab        Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"
-        echo "  all          Run both gates (no build)"
-        echo "  deploy-maia  Run both gates, then quick maia-only build with validated GIT_COMMIT"
+        echo "  provenance      Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
+        echo "  colab           Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"
+        echo "  all             Run both gates (no build)"
+        echo "  deploy-maia     Both gates, then quick maia-only build of the CURRENT checkout"
+        echo "  deploy-maia-at  Lane lock FIRST, then fetch/checkout/reset to origin/<branch>"
+        echo "                  (default clean-main-no-secrets) inside the lock, then gates+build."
+        echo "                  Canonical quick deploy — never mutate the checkout outside it."
         exit 0
         ;;
 esac

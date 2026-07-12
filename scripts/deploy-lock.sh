@@ -103,3 +103,19 @@ acquire_deploy_lock() {
     # See docs/ops/DEPLOY_LANE_TOKEN.md.
     export DEPLOY_LANE_TOKEN="deploy-lane"
 }
+
+# Update the recorded git_commit in the holder info AFTER a locked repo sync,
+# so the lock file names the tree actually being built rather than the pre-sync
+# HEAD captured at acquire time (deploy-maia-at moves the checkout under the
+# lock, then calls this with the freshly resolved SHA). Rewriting the file is
+# safe while held: flock binds to the open fd/inode, not the file's content.
+record_deploy_lock_commit() {
+    local sha="$1"
+    [ -s "$DEPLOY_LOCK_FILE" ] || return 0
+    local rest
+    rest="$(grep -v '^git_commit=' "$DEPLOY_LOCK_FILE" 2>/dev/null || true)"
+    {
+        printf '%s\n' "$rest"
+        echo "git_commit=$sha"
+    } > "$DEPLOY_LOCK_FILE"
+}
