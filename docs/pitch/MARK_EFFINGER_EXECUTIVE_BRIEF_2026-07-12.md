@@ -25,8 +25,8 @@ Production relational intelligence (MAIA: three modes, three tiers, self-hosted)
 2. **Open partnership pathways** whose trust standards match ours.
 3. **Steward the narrative** under a claim discipline that is your protection as much as ours.
 
-> **"Every AI product in this market claims values; Soullab can prove them."**
-> **"The person's authorship cannot be displaced — and we can prove it."**
+> **"Every AI product in this market claims values; Soullab can demonstrate them."**
+> **"The person's authorship cannot be displaced."**
 
 *— If Page One is enough, skip to §6 (the ask, in detail). The rest is depth on demand.*
 
@@ -38,9 +38,9 @@ As intelligence becomes abundant, the scarce assets become: **trust architecture
 
 ## 3. The founder (short form)
 
-Kelly Nezat is the founder of Soullab and architect of MAIA, a sovereignty-first relational intelligence platform exploring how technology can participate in human development while preserving meaning, agency, and human authorship.
+Kelly Nezat is the founder of Soullab and architect of MAIA, a sovereignty-first relational intelligence platform exploring how technology can participate in human development while preserving meaning, agency, and human dignity.
 
-For more than four decades, Kelly has explored the question of what it means to become fully human through the lenses of depth psychology, Jungian thought, shamanic traditions, consciousness studies, and transformational practice. Over nearly forty years in private practice, he has accompanied individuals and groups through thousands of sessions devoted to healing, meaning-making, and personal transformation. His work gave rise to Spiralogic™, the framework articulated in *Elemental Alchemy: The Art of Living a Phenomenal Life* (Soullab Press — LLC, Library of Congress), as well as Soullab and MAIA.
+For more than four decades, Kelly has explored the question of what it means to become fully human — through depth psychology, Jungian thought, shamanic traditions, consciousness studies, and transformational practice — accompanying individuals and groups through thousands of sessions devoted to healing, meaning-making, and transformation. His work gave rise to Spiralogic™, the framework articulated in *Elemental Alchemy: The Art of Living a Phenomenal Life* (Soullab Press — LLC, Library of Congress), as well as Soullab and MAIA.
 
 His guiding question: *Can technology participate in human becoming without eclipsing the capacities for wonder, soul, meaning, and authentic authorship that make such becoming possible?*
 
@@ -48,7 +48,7 @@ His guiding question: *Can technology participate in human becoming without ecli
 
 **LIVE** — running today, every item carrying a file-level receipt in the system census: MAIA conversation (production traffic, self-hosted; no cloud databases, no third party between members and their data) · consent-gated memory (member chooses what AI may use and what may resurface; defaults private) · Sanctuary Mode · journaling, Ideas (AI reads only on request), Keeps, Living Field · practitioner Studio (clients, sessions, scheduling, Decisions, Changes) with consent-gated Practice Fields · Commons and Circles · Soullab Press with full render pipeline (one text → print/EPUB/PDF).
 
-**DESIGNED — deliberately withheld** (restraint as strategy): portrait generation (built, gated behind consent + provenance) · episodic long-term memory (built substrate; the largest claim-unlock in the pipeline) · self-serve practitioner field authoring (pattern proven live, generalization designed). Nothing ships before its consent architecture does.
+**DESIGNED — deliberately withheld**: portrait generation (built, gated behind consent + provenance) · episodic long-term memory (built substrate; a major future capability pending governance and consent completion) · self-serve practitioner field authoring (pattern proven in operation, generalization designed). **Nothing ships before its consent architecture does.**
 
 **VISION — named, never sold as today**: practitioners authoring *environments of development* rather than content feeds (an inverted creator economy where members always leave with what's theirs) · member-owned hardware · the constitution as an exportable certification standard.
 
@@ -57,16 +57,16 @@ His guiding question: *Can technology participate in human becoming without ecli
 - **Stage**: private beta, invite-gated; payment infrastructure wired (Stripe); launch posture deliberate.
 - **Revenue design**: membership tiers · Founding Studio Program for early practitioners · Press as a second product line. `[KELLY SUPPLIES: intended pricing model + beta-cohort status, stamped]`
 - **Team**: Kelly (founder — build + final authority on all claims and gates) · Nathan (partner, ramping member/client support) · you (this brief) · AI-assisted derivation under a documented, ratified governance model.
-- **Cost structure**: self-hosted, near-zero marginal cost at current scale; infrastructure spend staged by four named triggers, not by funding. The platform may never enter the GPU capex race — its value was never in the model.
+- **Cost structure**: self-hosted, near-zero marginal cost at current scale; infrastructure spend staged by four named triggers, not by funding. The platform's value resides in architecture and governance rather than model ownership.
 - **No numbers appear in this brief** because none are ratified for external use — the discipline working, not information withheld. Actuals come from Kelly, stamped.
 
 ## 6. The ask, in detail
 
 **Proposed role** (final form drafted with you, week 2): strategic advisor · business-development partner · practitioner-channel architect · partnership introducer.
 
-**Success in the first 90 days** (targets set together; the shape is): a defined number of practitioner conversations opened through the Founding Studio Program · qualified partnership introductions where trust standards align · positioning refinements that survive the claim audit · the 90-day mutual-expectations agreement itself (agenda already includes entity/revenue structure questions, conflict-of-interest lines given your board and consulting commitments, and channel-introduction protocol).
+**Success in the first 90 days** (targets set together; the shape is): a defined number of practitioner conversations opened through the Founding Studio Program · qualified partnership introductions where trust standards align · positioning refinements that hold up under the claim discipline · the 90-day mutual-expectations agreement itself (agenda already includes entity/revenue structure questions, conflict-of-interest lines given your board and consulting commitments, and channel-introduction protocol).
 
-**Your first 30 days**: Week 1 — experience MAIA as a member, including Sanctuary Mode and a refusal (*you cannot sell restraint you haven't felt*), plus the ordered reading path. Week 2 — claim-discipline sessions with Kelly; the two reference fields as living demos; draft the 90-day agreement together. Week 3 — practitioner-pipeline plan, red-lined. Week 4 — first outreach, every message audit-clean.
+**Your first 30 days**: Week 1 — experience MAIA as a member, including Sanctuary Mode and a refusal (*you cannot sell restraint you haven't felt*), plus the ordered reading path. Week 2 — claim-discipline sessions with Kelly; the two reference practitioner fields in operation; draft the 90-day agreement together. Week 3 — practitioner-pipeline plan, red-lined. Week 4 — first outreach, every message evidence-based.
 
 ## 7. How this house operates (five rules, no surprises)
 
@@ -84,7 +84,7 @@ His guiding question: *Can technology participate in human becoming without ecli
 
 ## 9. The close
 
-You've seen freeware, freemium, D2C, B2B, and the AI market from a board seat. What's rare here: **the platform's deepest engineering fact and its best marketing sentence are the same sentence** — *the person's authorship cannot be displaced, and we can prove it.* As trust becomes the scarce asset in this market, the product built on provable refusals — with the audit trail to show they're real — is positioned exactly where the market is heading. Everything in this brief is verifiable today.
+You've seen freeware, freemium, D2C, B2B, and the AI market from a board seat. What's rare here: **the platform's deepest engineering fact and its best marketing sentence are the same sentence** — *the person's authorship cannot be displaced, and we can prove it.* As trust becomes the scarce asset in this market, a product built on verifiable refusals is positioned exactly where the market is heading. Everything in this brief can be checked today.
 
 ---
 
