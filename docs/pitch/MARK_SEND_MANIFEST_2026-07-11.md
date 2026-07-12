@@ -7,7 +7,12 @@
 
 **Context correction**: Mark is not a cold consultant receiving an introduction packet — the resonance already exists ("MAIA is real and timely"; the ELIZA send; the brother register). The package is therefore a **container, not a pitch**: it gives shape, boundaries, and shared language to enthusiasm that's already moving. The explicit not-ask in the brief matters *more* in this register, not less — enthusiastic people volunteer themselves into undefined roles; the brief's boundaries protect the friendship and the work.
 
-1. **Personal note from Kelly** — short, his voice, acknowledging the existing relationship. Suggested sentence: *"We've already had many rich conversations — this brief simply gathers the work into one place so we have a common map for our discussion."*
+1. **Personal note from Kelly** — FINAL (Kelly, 07-12), send verbatim:
+   > Mark,
+   > Here are some opening insights I put together that I hope will help give you a deeper and more essential read on our current state of the union and projected roadmap.
+   > No need to go through everything before we meet. Think of this simply as a common map and orientation for our ongoing conversation.
+   > Looking forward to seeing you and continuing the exploration.
+   > Kelly
 2. **The Executive Brief** (`MARK_EFFINGER_EXECUTIVE_BRIEF_2026-07-12.md`) — not to convince; to orient. Send-ready version (slot resolved, internal headers stripped) produced after Kelly's red-line.
 3. **Member account invite** — now leaning YES pre-meeting (stability confirmed against the census record; and this is precisely the contained-channel expansion the founder posture allows: trusted individuals, never public). He journals, keeps, hits a refusal — *then* the meeting discusses what he felt.
 4. ***Elemental Alchemy*** — mention in the note that a copy is coming; physical copy mailed or handed at the meeting.
