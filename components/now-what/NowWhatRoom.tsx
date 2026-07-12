@@ -168,6 +168,23 @@ const CLOSURE_QUESTION = 'Before we pause — what surprised you in what you jus
 interface Props {
   phase?: string;
   fieldContext?: string;
+  /** Program door within the field (catalog spec) — scopes the position block only. */
+  program?: string;
+}
+
+// — Program position (arrival payload; rides the field-note room-load GET) —
+interface ArrivalPositionPayload {
+  focalPoint: string;
+  statedBy: 'member_confirmed' | 'member_stated' | 'practitioner_seeded';
+  footing: 'confirmed-current' | 'assumed-from-last-known';
+  confirmedAt: string | null;
+}
+interface ProgramArrivalPayload {
+  programSlug: string;
+  programTitle: string | null;
+  cohortFocalPoint: string | null;
+  position: ArrivalPositionPayload | null;
+  engagements: { programSlug: string; title: string | null; focalPoint: string }[];
 }
 
 /**
@@ -175,7 +192,7 @@ interface Props {
  * client experience lives in its own namespace and does not modify framework
  * surfaces. It may earn its way into shared architecture through observation.
  */
-export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
+export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) {
   const nowWhat = true;
   const [roomPhase, setRoomPhase] = useState<RoomPhase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -209,6 +226,17 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   // entered is the member's "Come in" — the welcome orients, it is never a wall.
   const [returnChecked, setReturnChecked] = useState(false);
   const [entered, setEntered] = useState(false);
+
+  // — Program position (the room shows its anchoring instead of asking to be
+  //   trusted). todayProgram = the door they came through, or the engagement
+  //   they named at the generic door. Dismissing the arrival line writes
+  //   NOTHING — enrollment happens only on affirmation. —
+  const [programArrival, setProgramArrival] = useState<ProgramArrivalPayload | null>(null);
+  const [todayProgram, setTodayProgram] = useState<string | undefined>(program);
+  const [anchorDismissed, setAnchorDismissed] = useState(false);
+  const [anchorCorrecting, setAnchorCorrecting] = useState(false);
+  const [anchorDraft, setAnchorDraft] = useState('');
+  const [anchorBusy, setAnchorBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string>(`vs-${Date.now()}`);
 
@@ -274,12 +302,18 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch(`/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}`);
+        const programParam = program ? `&program=${encodeURIComponent(program)}` : '';
+        const res = await apiFetch(
+          `/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}${programParam}`,
+        );
         if (res.ok) {
           const json = await res.json().catch(() => ({}));
           const threads: { title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
           const practice = threads.find(t => t.spiralogic_phase === 'practice');
           if (practice && !cancelled) setPriorPractice(practice.title);
+          // Arrival payload (program position) rides the same load — null when
+          // the field declares no anchoring; the line simply does not render.
+          if (json?.arrival && !cancelled) setProgramArrival(json.arrival);
         }
       } catch {
         // Quiet fallback: no return context — the room simply begins fresh.
@@ -288,7 +322,87 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       }
     })();
     return () => { cancelled = true; };
-  }, [nowWhat, fieldContext]);
+  }, [nowWhat, fieldContext, program]);
+
+  // Re-resolve the arrival payload for an engagement named at the generic door.
+  async function loadArrivalFor(programSlug: string) {
+    if (!fieldContext) return;
+    try {
+      const res = await apiFetch(
+        `/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}&program=${encodeURIComponent(programSlug)}`,
+      );
+      if (res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json?.arrival) { setProgramArrival(json.arrival); setAnchorDismissed(false); }
+      }
+    } catch {
+      // Quiet fallback — orientation is a nicety, never a blocker.
+    }
+  }
+
+  // — Position gestures. Confirm and correct write; dismiss writes NOTHING
+  //   (zero residue — a forwarded link opened by a non-participant leaves no
+  //   trace). Depart hard-clears; the copy says exactly what it does. —
+  async function postPositionGesture(gesture: Record<string, unknown>): Promise<boolean> {
+    if (!fieldContext || anchorBusy) return false;
+    setAnchorBusy(true);
+    try {
+      const res = await apiFetch('/api/now-what/program-position', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldContext,
+          ...(todayProgram ? { program: todayProgram } : {}),
+          ...gesture,
+        }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      setAnchorBusy(false);
+    }
+  }
+
+  async function confirmPosition() {
+    const focalPoint = programArrival?.cohortFocalPoint;
+    if (!focalPoint) return;
+    const ok = await postPositionGesture({ confirm: true });
+    if (ok) {
+      setProgramArrival(prev => prev ? {
+        ...prev,
+        position: { focalPoint, statedBy: 'member_confirmed', footing: 'confirmed-current', confirmedAt: new Date().toISOString() },
+      } : prev);
+      setAnchorCorrecting(false);
+    }
+  }
+
+  async function statePosition() {
+    const text = anchorDraft.trim().slice(0, 300);
+    if (!text) return;
+    const ok = await postPositionGesture({ focalPoint: text });
+    if (ok) {
+      setProgramArrival(prev => prev ? {
+        ...prev,
+        position: { focalPoint: text, statedBy: 'member_stated', footing: 'confirmed-current', confirmedAt: new Date().toISOString() },
+      } : prev);
+      setAnchorCorrecting(false);
+      setAnchorDraft('');
+    }
+  }
+
+  async function departPosition() {
+    const ok = await postPositionGesture({ depart: true });
+    if (ok) {
+      const departedSlug = programArrival?.programSlug;
+      setProgramArrival(prev => prev ? {
+        ...prev,
+        position: null,
+        engagements: prev.engagements.filter(e => e.programSlug !== departedSlug),
+      } : prev);
+      setAnchorDismissed(true);
+    }
+  }
 
   async function callInterview(history: Turn[], mode: 'turn' | 'propose') {
     const res = await apiFetch('/api/now-what/interview', {
@@ -301,6 +415,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         // The same opaque identifier used for return detection also lets the server
         // compose the practitioner's field into the turn (downstream of MAIA's own).
         ...(fieldContext ? { fieldContext } : {}),
+        // Today's program (door-entered or member-named): scopes the position
+        // block only — the whole field stays composed either way.
+        ...(todayProgram ? { program: todayProgram } : {}),
         ...(priorPractice ? { returningPractice: priorPractice } : {}),
       }),
     });
@@ -699,6 +816,140 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <p style={fadeUpStyle(0.2)} className="text-center text-[11px] uppercase tracking-[0.35em] text-slate-500">
             Now What?
           </p>
+
+          {/* — The room shows its anchoring instead of asking to be trusted.
+              Three outcomes: confirm (writes), correct in own words (writes,
+              verbatim), dismiss (writes NOTHING — enrollment only on
+              affirmation). Departure is the same gesture in reverse; its copy
+              says exactly what it does, no confirmation friction. — */}
+          {programArrival && !anchorDismissed && (
+            <div style={fadeUpStyle(0.3)} className="space-y-4 text-center border border-slate-800/70 rounded-xl px-5 py-5">
+              {programArrival.position?.footing === 'confirmed-current' ? (
+                <>
+                  <p className="text-slate-400 text-sm font-light leading-relaxed">
+                    {programArrival.programTitle ? (
+                      <>Working from the <span className="text-slate-200">{programArrival.programTitle}</span> — </>
+                    ) : (
+                      <>Working from — </>
+                    )}
+                    <span style={SERIF} className="text-slate-200 italic">{programArrival.position.focalPoint}</span>
+                  </p>
+                  <button
+                    onClick={departPosition}
+                    disabled={anchorBusy}
+                    className="text-slate-600 hover:text-slate-400 text-xs underline underline-offset-4 transition-colors disabled:opacity-40"
+                  >
+                    I&apos;ve finished this
+                  </button>
+                  <p className="text-slate-700 text-[11px] font-light leading-relaxed">
+                    This clears your position here; the door is open whenever you return.
+                  </p>
+                </>
+              ) : programArrival.cohortFocalPoint ? (
+                <>
+                  <p style={SERIF} className="text-slate-300 text-base font-light leading-relaxed">
+                    This room holds Larry&apos;s work
+                    {programArrival.programTitle ? (
+                      <> — you&apos;ve come in through the <span className="text-slate-100">{programArrival.programTitle}</span>,</>
+                    ) : (
+                      <> —</>
+                    )}{' '}
+                    current focus: <span className="text-slate-100 italic">{programArrival.cohortFocalPoint}</span>.
+                  </p>
+                  <p className="text-slate-400 text-sm font-light">Is that where you are?</p>
+                  {anchorCorrecting ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        aria-label="Where you actually are, in your own words"
+                        className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-sm font-light focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-2 text-center transition-colors"
+                        placeholder="Where are you, in your own words…"
+                        value={anchorDraft}
+                        maxLength={300}
+                        onChange={e => setAnchorDraft(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); statePosition(); } }}
+                      />
+                      <div className="flex items-center justify-center gap-x-4 text-xs font-light">
+                        <button
+                          onClick={statePosition}
+                          disabled={!anchorDraft.trim() || anchorBusy}
+                          className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                        >
+                          That&apos;s where I am
+                        </button>
+                        <span aria-hidden className="text-slate-700">·</span>
+                        <button
+                          onClick={() => { setAnchorCorrecting(false); setAnchorDraft(''); }}
+                          className="text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                          Back
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-x-4 text-sm font-light">
+                      <button
+                        onClick={confirmPosition}
+                        disabled={anchorBusy}
+                        className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                      >
+                        Yes, that&apos;s where I am
+                      </button>
+                      <span aria-hidden className="text-slate-700">·</span>
+                      <button
+                        onClick={() => setAnchorCorrecting(true)}
+                        className="text-slate-400 hover:text-slate-200 transition-colors"
+                      >
+                        I&apos;m somewhere else
+                      </button>
+                      <span aria-hidden className="text-slate-700">·</span>
+                      <button
+                        onClick={() => setAnchorDismissed(true)}
+                        aria-label="Not now — nothing is saved"
+                        className="text-slate-600 hover:text-slate-400 transition-colors"
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  )}
+                  {programArrival.position && programArrival.position.footing === 'assumed-from-last-known' && (
+                    <p className="text-slate-600 text-xs font-light leading-relaxed">
+                      Last time you said: <span className="italic">{programArrival.position.focalPoint}</span>
+                    </p>
+                  )}
+                </>
+              ) : null}
+
+              {/* Generic door: offer only what the MEMBER has declared — never
+                  the full catalog as an assignment. Listing is not asking. */}
+              {!todayProgram && programArrival.engagements.filter(e => e.programSlug !== 'general').length > 0 && (
+                <div className="pt-2 space-y-2 border-t border-slate-800/60">
+                  <p className="text-slate-500 text-xs font-light leading-relaxed">
+                    You&apos;ve been working from{' '}
+                    {programArrival.engagements.filter(e => e.programSlug !== 'general').map(e => e.title ?? e.programSlug).join(' and ')}.
+                    Which are you bringing today — or something else?
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-light">
+                    {programArrival.engagements.filter(e => e.programSlug !== 'general').map(e => (
+                      <button
+                        key={e.programSlug}
+                        onClick={() => { setTodayProgram(e.programSlug); loadArrivalFor(e.programSlug); }}
+                        className="text-slate-400 hover:text-slate-200 transition-colors"
+                      >
+                        {e.title ?? e.programSlug}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setAnchorDismissed(true)}
+                      className="text-slate-600 hover:text-slate-400 transition-colors"
+                    >
+                      Something else
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {returning ? (
             <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">

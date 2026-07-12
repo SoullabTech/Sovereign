@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
+import { resolveArrival } from '@/lib/practiceField/programPositionService';
 
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface ProposalDecision {
@@ -164,7 +165,22 @@ export async function GET(request: NextRequest) {
         LIMIT 200`,
       [memberId, fieldContext],
     );
-    return NextResponse.json({ threads: res.rows });
+
+    // Program-position arrival payload rides this existing room-load call —
+    // no new public read surface (catalog spec §6). Non-fatal: an arrival
+    // resolution failure never blocks the member's own threads. `program`
+    // names the door they came through; absent = the field-level door.
+    // null arrival = unknown field / no catalog — the room renders no line.
+    let arrival = null;
+    if (fieldContext) {
+      try {
+        arrival = await resolveArrival(fieldContext, request.nextUrl.searchParams.get('program'), memberId);
+      } catch (err) {
+        console.warn('[NowWhat/field-note] arrival resolution failed (non-fatal):', err);
+      }
+    }
+
+    return NextResponse.json({ threads: res.rows, arrival });
   } catch (err: any) {
     console.error('[NowWhat/field-note] GET error:', err?.message || err);
     return NextResponse.json({ error: 'Could not load your threads right now.' }, { status: 500 });

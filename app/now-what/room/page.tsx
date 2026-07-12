@@ -10,6 +10,9 @@
  * Query params:
  *   phase        — Spiralogic arc phase for the guided conversation (default fire_1)
  *   fieldContext — opaque field identifier (drives return detection + facilitator grouping)
+ *   program      — program door within the field (catalog spec: the retreat link
+ *                  carries the retreat door). Scopes the position block only;
+ *                  the whole field stays composed either way.
  */
 
 import { useSearchParams } from 'next/navigation';
@@ -20,10 +23,11 @@ function NowWhatRoomInner() {
   const params = useSearchParams();
   const phase = params?.get('phase') ?? 'fire_1';
   const fieldContext = params?.get('fieldContext') ?? undefined;
+  const program = params?.get('program') ?? undefined;
 
   return (
     <div className="min-h-screen bg-[#062a42] text-slate-200">
-      <NowWhatRoom phase={phase} fieldContext={fieldContext} />
+      <NowWhatRoom phase={phase} fieldContext={fieldContext} program={program} />
     </div>
   );
 }
