@@ -1721,7 +1721,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               <span className="text-slate-400 group-hover:text-slate-200 text-sm underline underline-offset-2 transition-colors">
                 Bring something with you
               </span>
-              <span className="block text-slate-500 text-[11px] font-light mt-0.5">
+              <span className="block text-slate-400 text-xs font-light mt-1">
                 paste a note or a journal page — start from what you&apos;re carrying
               </span>
             </button>
@@ -1736,7 +1736,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                 <span className="text-slate-400 group-hover:text-slate-200 text-sm underline underline-offset-2 transition-colors">
                   Take something back with you
                 </span>
-                <span className="block text-slate-500 text-[11px] font-light mt-0.5">
+                <span className="block text-slate-400 text-xs font-light mt-1">
                   close the session: choose what to keep — a practice, a question
                 </span>
               </button>
