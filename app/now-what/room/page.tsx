@@ -18,16 +18,34 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { NowWhatRoom } from '@/components/now-what/NowWhatRoom';
+import { NowWhatShell, NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 
 function NowWhatRoomInner() {
   const params = useSearchParams();
   const phase = params?.get('phase') ?? 'fire_1';
   const fieldContext = params?.get('fieldContext') ?? undefined;
   const program = params?.get('program') ?? undefined;
+  // Session fact only (shell rider 2): signed in before, or not.
+  const session = useMemberSession();
 
   return (
     <div className="min-h-screen bg-[#062a42] text-slate-200">
-      <NowWhatRoom phase={phase} fieldContext={fieldContext} program={program} />
+      {session === 'out' && (
+        // The threshold: sign-in met at the door, in the field's register —
+        // not as a red API error inside a room that half-opened.
+        <NowWhatThreshold
+          roomName="Session room"
+          line="Sit with MAIA. Bring the actual thing — work with it until a next real step appears."
+          fieldContext={fieldContext}
+        />
+      )}
+      {session === 'in' && (
+        <>
+          {/* Shell recedes mid-session (quiet): the room stays a room. */}
+          <NowWhatShell current="Session room" fieldContext={fieldContext} variant="quiet" />
+          <NowWhatRoom phase={phase} fieldContext={fieldContext} program={program} />
+        </>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { SECTIONS } from '@/lib/og/ogCard';
 import { PublicSectionLanding } from '@/components/landing/PublicSectionLanding';
 
 /**
- * Public landing for What Now?. Deliberately additive: /now-what keeps its
+ * Public landing for Now What?. Deliberately additive: /now-what keeps its
  * room-as-entry edge redirect (2026-07-08 decision — a person here to
  * practice lands in the practice), and the prospect deck stays at
  * /now-what/pitch. This page is the outward face a share card or deck CTA
