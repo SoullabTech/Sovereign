@@ -47,6 +47,14 @@ type RoomDef = {
   key: string;
   name: string;
   line: string;
+  /**
+   * Plain-language explanation for the word-index (founder direction
+   * 2026-07-13: "we need to explain these better or they won't understand
+   * them"). Member register, always visible — no tooltips, no hidden
+   * handles. Each one answers: what is this room, and when would I use it?
+   * Claim discipline applies: every sentence must be true of the code today.
+   */
+  explain: string;
   route: string | null; // null = not yet open; never guessed
   carriesContext?: boolean;
   primary?: boolean; // arc ruling 2026-07-12: Session room = every arc's
@@ -65,6 +73,8 @@ const OPEN_ROOMS: RoomDef[] = [
     key: 'room',
     name: 'Session room',
     line: 'Sit with MAIA. Bring the actual thing — work with it until a next real step appears.',
+    explain:
+      'This is where the work happens. Bring something real — a decision, a question, a stuck place — and talk it through with MAIA until a next real step appears. At the end, you choose what to keep; nothing is saved without your say-so.',
     route: '/now-what/room',
     carriesContext: true,
     primary: true,
@@ -73,6 +83,8 @@ const OPEN_ROOMS: RoomDef[] = [
     key: 'field',
     name: 'Your field',
     line: 'The threads, practices, and offerings you authored here — in your own words.',
+    explain:
+      'Everything you chose to keep from your sessions collects here — threads, practices, offerings — in your own words, dated, never interpreted or scored. Visit it to see what your work has been teaching you.',
     route: '/now-what/field',
     carriesContext: true,
   },
@@ -80,6 +92,8 @@ const OPEN_ROOMS: RoomDef[] = [
     key: 'position',
     name: 'Where you are',
     line: 'If you came in through a program, this shows where you stand in it — as you declared it.',
+    explain:
+      'If you’re part of a program — coaching, a course, a group — this shows the place in it you last confirmed or stated, in your words. Nothing is tracked or worked out about you; until you say where you are, this room is simply empty.',
     route: '/now-what/position',
     carriesContext: true,
   },
@@ -87,6 +101,8 @@ const OPEN_ROOMS: RoomDef[] = [
     key: 'next',
     name: 'What may be next',
     line: 'Held open, not prescribed.',
+    explain:
+      'Not recommendations — no one here decides your next step. This room holds the practices you chose to live and the door back to the session room, where what comes next actually emerges.',
     route: '/now-what/next',
     carriesContext: true,
   },
@@ -94,6 +110,8 @@ const OPEN_ROOMS: RoomDef[] = [
     key: 'questions',
     name: "Questions you're living",
     line: 'The ones you named, kept warm.',
+    explain:
+      'Some questions aren’t ready to be answered — they need to not get lost. When a session ends with a question still alive and you choose to keep it, it waits here in your exact words until you’re ready to bring it back.',
     route: '/now-what/questions',
     carriesContext: true,
   },
@@ -104,8 +122,22 @@ const OPEN_ROOMS: RoomDef[] = [
 // onto generated content. Their function stays HOLD pending the episodic,
 // meaning-write, provenance, and member-pull gates.
 const PROTECTED_ROOMS: RoomDef[] = [
-  { key: 'themes', name: 'Themes', line: 'Patterns you pull, never pushed.', route: '/now-what/themes' },
-  { key: 'reflections', name: 'Reflections', line: "MAIA's mirror, only when you ask.", route: '/now-what/reflections' },
+  {
+    key: 'themes',
+    name: 'Themes',
+    line: 'Patterns you pull, never pushed.',
+    explain:
+      'Not open yet — on purpose. One day you’ll be able to ask MAIA to look across what you’ve kept and reflect patterns back, only when you ask. Step in to read why it isn’t running yet.',
+    route: '/now-what/themes',
+  },
+  {
+    key: 'reflections',
+    name: 'Reflections',
+    line: "MAIA's mirror, only when you ask.",
+    explain:
+      'Not open yet — on purpose. This will be a room you intentionally enter and ask for reflection — never a judgment running in the background. Step in to read why it isn’t running yet.',
+    route: '/now-what/reflections',
+  },
 ];
 
 type Viewer = 'member' | 'practitioner';
@@ -325,26 +357,40 @@ function EnvironmentMapInner({ viewer }: { viewer: Viewer }) {
       {/* ————— the rooms, in words (secondary index) ————— */}
       <section aria-label="The rooms, in words" className="relative mt-10 space-y-2" style={{ animation: 'nwFadeUp 0.6s ease 320ms both' }}>
         <h2 className="text-[11px] uppercase tracking-[0.3em] text-slate-500 pb-2">The rooms, in words</h2>
+        {/* Each room explains itself in plain language (founder direction
+            2026-07-13) — always visible, never a tooltip. The one-line
+            register stays on the drawing; the index is where a first-time
+            member learns what each room actually is. */}
         {OPEN_ROOMS.map((r) => (
           <a
             key={r.key}
             href={`${r.route}${r.carriesContext ? ctx : ''}`}
-            className="group flex items-baseline gap-3 py-2 border-b border-slate-800/60 hover:border-slate-600 transition-colors"
+            className="group block py-3 border-b border-slate-800/60 hover:border-slate-600 transition-colors"
           >
-            <span className="text-slate-100 text-sm font-light whitespace-nowrap">{r.name}</span>
-            <span className="text-slate-500 text-xs font-light flex-1 truncate">{r.line}</span>
-            <span className="text-xs whitespace-nowrap" style={{ color: accent }}>{enterWord}</span>
+            <span className="flex items-baseline gap-3">
+              <span className="text-slate-100 text-sm font-light whitespace-nowrap">{r.name}</span>
+              <span className="flex-1" />
+              <span className="text-xs whitespace-nowrap" style={{ color: accent }}>{enterWord}</span>
+            </span>
+            <span className="block text-slate-500 text-xs font-light leading-relaxed mt-1.5 max-w-xl">
+              {r.explain}
+            </span>
           </a>
         ))}
         {PROTECTED_ROOMS.map((r) => (
           <a
             key={r.key}
             href={`${r.route}${ctx}`}
-            className="group flex items-baseline gap-3 py-2 border-b border-slate-800/40 hover:border-slate-600 transition-colors"
+            className="group block py-3 border-b border-slate-800/40 hover:border-slate-600 transition-colors"
           >
-            <span className="text-slate-400 text-sm font-light whitespace-nowrap">{r.name}</span>
-            <span className="text-slate-600 text-xs font-light flex-1 truncate">{r.line}</span>
-            <span className="text-slate-500 text-[10px] uppercase tracking-widest whitespace-nowrap">taking shape · read why</span>
+            <span className="flex items-baseline gap-3">
+              <span className="text-slate-400 text-sm font-light whitespace-nowrap">{r.name}</span>
+              <span className="flex-1" />
+              <span className="text-slate-500 text-[10px] uppercase tracking-widest whitespace-nowrap">taking shape · read why</span>
+            </span>
+            <span className="block text-slate-600 text-xs font-light leading-relaxed mt-1.5 max-w-xl">
+              {r.explain}
+            </span>
           </a>
         ))}
       </section>
