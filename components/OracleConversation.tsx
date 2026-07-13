@@ -4,7 +4,7 @@
 // 🔖 BUILD_STAMP: 2026-06-02_ios_playback_watchdog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users, Bookmark } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -964,6 +964,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
     return false;
   });
+
+  // 📌 "Keep this moment" — member-marked episodic moments (slice 2, 2026-07-13).
+  // Keyed by message.id. Presence of an entry means that message is currently
+  // kept; episodeId is required to undo. Absolute Sanctuary boundary: this
+  // gesture must never render, and its handlers must never fire, while
+  // isSanctuary is true (see render guard + handleKeepMoment/handleUnmarkMoment).
+  const [keptMoments, setKeptMoments] = useState<Record<string, { episodeId: string }>>({});
 
   // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior (default OFF for beta)
   const [interruptEnabled, setInterruptEnabled] = useState(() => {
@@ -8071,6 +8078,60 @@ I'm not sure what I'm feeling yet.`;
                       }
                     };
 
+                    // 📌 "Keep this moment" — member-authored words only. Absolute
+                    // Sanctuary boundary: independently refuse here even though the
+                    // render guard below already hides the affordance in Sanctuary —
+                    // defense-in-depth per CLAUDE.md.
+                    const handleKeepMoment = async (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (isSanctuary) return;
+                      if (keptMoments[message.id]) return;
+                      const verbatimText = message.text ?? message.content ?? '';
+                      if (!verbatimText) return;
+                      try {
+                        const res = await apiFetch('/api/sovereign/episodes/mark', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            verbatimText,
+                            sourceSessionId: sessionId,
+                          }),
+                        });
+                        if (!res.ok) {
+                          toast.error('Could not keep this moment', { duration: 2000, position: 'bottom-center' });
+                          return;
+                        }
+                        const data = await res.json();
+                        setKeptMoments(prev => ({ ...prev, [message.id]: { episodeId: data.episode.episodeId } }));
+                      } catch {
+                        toast.error('Could not keep this moment', { duration: 2000, position: 'bottom-center' });
+                      }
+                    };
+
+                    const handleUnmarkMoment = async (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (isSanctuary) return;
+                      const kept = keptMoments[message.id];
+                      if (!kept) return;
+                      try {
+                        const res = await apiFetch(
+                          `/api/sovereign/episodes/mark?episodeId=${encodeURIComponent(kept.episodeId)}`,
+                          { method: 'DELETE' },
+                        );
+                        if (!res.ok) {
+                          toast.error('Could not undo', { duration: 2000, position: 'bottom-center' });
+                          return;
+                        }
+                        setKeptMoments(prev => {
+                          const next = { ...prev };
+                          delete next[message.id];
+                          return next;
+                        });
+                      } catch {
+                        toast.error('Could not undo', { duration: 2000, position: 'bottom-center' });
+                      }
+                    };
+
                     return (
                     <motion.div
                       key={message.id?.trim() || `msg-${message.role}-${typeof message.timestamp === 'string' ? message.timestamp : (message.timestamp?.toISOString?.() ?? 'no-ts')}-${index}`}
@@ -8116,6 +8177,32 @@ I'm not sure what I'm feeling yet.`;
                               <Users className="w-3 h-3" />
                               <span>Offer</span>
                             </button>
+                          )}
+                          {/* 📌 Keep this moment — member-authored messages only, sovereign
+                              placement covers only what the member placed. Never rendered
+                              during a Sanctuary session (absolute boundary, CLAUDE.md). */}
+                          {message.role === 'user' && !isSanctuary && (
+                            keptMoments[message.id] ? (
+                              <div className="flex items-center gap-1.5 text-emerald-400/80">
+                                <CheckCircle className="w-3 h-3" />
+                                <span>Kept.</span>
+                                <button
+                                  onClick={handleUnmarkMoment}
+                                  className="underline decoration-dotted hover:text-emerald-300 transition-colors"
+                                >
+                                  Undo
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={handleKeepMoment}
+                                className="flex items-center gap-1 text-maia-spice-400/60 hover:text-maia-spice-400 transition-colors"
+                                aria-label="Keep this moment — saves your exact words"
+                              >
+                                <Bookmark className="w-3 h-3" />
+                                <span>Keep this moment</span>
+                              </button>
+                            )
                           )}
                           <div className="flex items-center gap-1 text-maia-spice-400">
                             <Copy className="w-3 h-3" />
