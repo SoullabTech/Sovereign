@@ -21,6 +21,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { NowWhatShell, NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 
 interface Thread {
   id: string;
@@ -52,6 +53,8 @@ function FieldInner() {
   const fieldContext = params?.get('fieldContext') ?? undefined;
   const [threads, setThreads] = useState<Thread[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Session fact only (shell rider 2): signed in before, or not.
+  const session = useMemberSession();
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +74,17 @@ function FieldInner() {
 
   const roomHref = `/now-what/room${fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : ''}`;
 
+  if (session === 'out') {
+    return (
+      <NowWhatThreshold
+        roomName="Your field"
+        line="Everything you chose to keep — threads, practices, offerings — in your own words."
+        fieldContext={fieldContext}
+      />
+    );
+  }
+  if (session === 'unknown') return null;
+
   // Group by month, newest first (threads arrive newest-first from the API).
   const groups: { month: string; items: Thread[] }[] = [];
   for (const t of threads ?? []) {
@@ -81,6 +95,8 @@ function FieldInner() {
   }
 
   return (
+    <>
+    <NowWhatShell current="Your field" fieldContext={fieldContext} />
     <div className="max-w-prose mx-auto px-4 py-12 space-y-10">
       <div className="space-y-2">
         <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Your field</p>
@@ -143,6 +159,7 @@ function FieldInner() {
         </p>
       </div>
     </div>
+    </>
   );
 }
 
