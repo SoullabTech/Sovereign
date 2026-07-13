@@ -136,6 +136,8 @@ export type PromptBlockSummary = {
     wuxing: boolean;
     /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
     conversational: boolean;
+    /** Phase 2 episodic recall block (member-marked significant moments). */
+    episodic: boolean;
   };
 };
 
@@ -183,6 +185,8 @@ export type MaiaRuntimeContextInputs = {
     wuxing?: string;
     /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
     conversational?: string;
+    /** Phase 2 episodic recall block (member-marked significant moments). */
+    episodic?: string;
   };
 };
 
@@ -285,7 +289,8 @@ function summarizePromptBlock(
     (addenda.studio?.length ?? 0) +
     (addenda.knowledgeGate?.length ?? 0) +
     (addenda.wuxing?.length ?? 0) +
-    (addenda.conversational?.length ?? 0);
+    (addenda.conversational?.length ?? 0) +
+    (addenda.episodic?.length ?? 0);
 
   return {
     chars,
@@ -299,6 +304,7 @@ function summarizePromptBlock(
       knowledgeGate: !!addenda.knowledgeGate,
       wuxing: !!addenda.wuxing,
       conversational: !!addenda.conversational,
+      episodic: !!addenda.episodic,
     },
   };
 }

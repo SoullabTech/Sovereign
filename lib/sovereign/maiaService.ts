@@ -1209,6 +1209,16 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`💬 [FAST] Conversational recall addendum applied (${conversationalRecallAddendum.length} chars)`);
   }
 
+  // 📖 EPISODIC RECALL (Phase 2, substrate lane only): member-marked significant
+  // moments with provenance grounding. Built by lib/maia/episodicRecallBlock.ts;
+  // suppression rules (opt-out / Sanctuary / empty / non-recent) applied at the
+  // route level. Member-marked, never system-inferred by significance. Does
+  // NOT open Themes/Reflections. See docs/specs/EPISODIC_LAYER_PHASE_2_SPEC_2026-07-13.md.
+  const episodicRecallAddendum = (meta as any)?.episodicRecallAddendum as string | undefined;
+  if (episodicRecallAddendum) {
+    console.log(`📖 [FAST] Episodic recall addendum applied (${episodicRecallAddendum.length} chars)`);
+  }
+
   // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
   // atoms the member chose to keep, plus witnessed practitioner observations rendered
   // with epistemic framing ("a practitioner observed…"). Built by the route via
@@ -1257,7 +1267,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1537,6 +1547,9 @@ async function corePathResponse(
     // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges. Injected
     // inside buildMaiaWisePrompt via safeAddendum iteration. See spec §IX.
     conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
+    // 📖 EPISODIC RECALL (Phase 2, substrate lane only): member-marked significant
+    // moments. Injected via appendAllContextAddenda. See EPISODIC_LAYER_PHASE_2_SPEC_2026-07-13.md.
+    episodicRecallAddendum: (meta as any)?.episodicRecallAddendum as string | undefined,
     // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
     // atoms + witnessed practitioner observations. Injected via appendAllContextAddenda.
     atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
@@ -2148,6 +2161,13 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md). Field is
         // set here for forward-compat with the eventual DEEP addenda repair.
         conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
+        // 📖 EPISODIC RECALL (Phase 2, substrate lane only): member-marked significant
+        // moments. Reaches the DEEP-repair path too — buildMaiaComprehensivePrompt
+        // appends MaiaContext addenda via appendAllContextAddenda (maiaVoice.ts). Note:
+        // this is the DEEP-repair path only; the DEEP-primary consciousnessOrchestrator
+        // path (§II.C of ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md) remains unwired —
+        // observability-only there, per mission scope (do not fix in this diff).
+        episodicRecallAddendum: (meta as any)?.episodicRecallAddendum as string | undefined,
         // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): now injected
         // for DEEP repair too — buildMaiaComprehensivePrompt appends MaiaContext addenda
         // via appendAllContextAddenda (maiaVoice.ts), so this field reaches the prompt.
@@ -2799,7 +2819,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         memoryOrchestrator: !!m.memoryInfluenceAddendum,
         forwardReadiness: !!m.forwardReadinessAddendum,
         studio: !!m.studioAddendum,
-        episodic: false, // layer not wired
+        episodic: !!m.episodicRecallAddendum, // Phase 2, 2026-07-13 — member-marked moments
         dreams: false,   // layer not wired
       };
       const evidenceProviders = [
@@ -2810,6 +2830,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         available.memberWeb && 'memberWeb',
         available.knowledgeGate && 'knowledgeGate',
         available.memoryOrchestrator && 'memoryOrchestrator',
+        available.episodic && 'episodicRecall',
       ].filter(Boolean);
       console.log('[MAIA] context-inventory', {
         conversationId: sessionId,
