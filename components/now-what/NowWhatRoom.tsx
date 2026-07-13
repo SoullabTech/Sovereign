@@ -1395,7 +1395,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                         <button
                           onClick={() => { handleDecision(t, 'keep'); }}
                           className="text-slate-400 hover:text-slate-200 underline underline-offset-2"
-                        >carry</button>
+                        >keep</button>
                         <button
                           onClick={() => setRevising(r => ({ ...r, [t.title]: t.title }))}
                           className="text-slate-500 hover:text-slate-300 underline underline-offset-2"
@@ -1406,7 +1406,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                         >leave</button>
                       </>
                     )}
-                    {kept && <span className="text-slate-500 italic">carried</span>}
+                    {kept && <span className="text-slate-500 italic">kept</span>}
                     {rev === '' && (
                       <button
                         onClick={() => setRevising(r => { const n = { ...r }; delete n[t.title]; return n; })}
@@ -1417,7 +1417,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                       <button
                         onClick={() => { handleDecision(t, 'revise', rev); }}
                         className="text-slate-400 hover:text-slate-200 underline underline-offset-2"
-                      >carry revised</button>
+                      >keep revised</button>
                     )}
                   </div>
                   {/* Share toggle — only shown when thread is carried (kept or carry-revised) */}
@@ -1466,7 +1466,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
         {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
 
         <div className="border-t border-slate-900 pt-4 text-slate-600 text-xs font-light leading-relaxed space-y-1">
-          <p>What you carry enters your own Living Field — private by default.</p>
+          <p>What you keep enters your own Living Field — private by default.</p>
           <p>Sharing a thread with your practitioner is a separate choice, per thread; nothing is shared unless you check it.</p>
           <p>Only what you authored or affirmed. Not a record of this conversation. Nothing the system concluded about you.</p>
         </div>
@@ -1477,13 +1477,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
             disabled={saving}
             className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
           >
-            {saving ? 'Saving…' : 'Carry what I chose'}
+            {saving ? 'Saving…' : 'Keep what I chose'}
           </button>
           <button
             onClick={() => carry({ proposals: [], created: [] })}
             className="text-slate-600 hover:text-slate-400 text-sm underline underline-offset-4 transition-colors"
           >
-            Leave without carrying
+            Leave without keeping
           </button>
         </div>
       </div>
@@ -1517,7 +1517,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
             disabled={working}
             className="text-slate-500 hover:text-slate-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
           >
-            Listen back
+            Keep — listen back
           </button>
         )}
         <style jsx>{`
@@ -1705,41 +1705,40 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           }}
         />
         <div className="flex flex-wrap justify-between items-center mt-3 gap-3">
-          <div className="flex items-center gap-4">
-            <span className="text-slate-500 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
-            {/* Poetry needs a caption (ruling 2026-07-13): each doctrine-
-                register gesture keeps its sentence and gains a plain-function
-                line beneath it. Captions promise ONLY what is live — the
-                bring panel takes pasted text or a .txt/.md file (no kept-
-                thread picker exists yet, so none is promised), and captions
-                render at legible size (a whispered caption on a whispered
-                label would be the failure family eating its own fix). */}
-            <button
-              onClick={() => setShowBring(v => !v)}
-              className="text-left transition-colors group"
-            >
-              <span className="text-slate-400 group-hover:text-slate-200 text-sm underline underline-offset-2 transition-colors">
-                Bring something with you
-              </span>
-              <span className="block text-slate-400 text-xs font-light mt-1">
-                paste a note or a journal page — start from what you&apos;re carrying
-              </span>
-            </button>
-            {/* Exit symmetric to the entry gesture: the threshold out of the
-                conversation and into the carry → practice → life sequence. */}
-            {turns.length >= 2 && (
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
+            <span className="text-slate-500 text-xs hidden sm:inline pt-0.5">Enter to send · Shift+Enter for newline</span>
+            {/* YPO-grade rule (founder, 2026-07-13): a busy CEO understands
+                every action in three seconds. Function words lead; the
+                doctrine language is flavor, never interface. The captions
+                below are the ruling's exact words — do not "clean up" either
+                gesture back to the doctrine phrase alone: the founder, twice
+                while informed, could not find keeping when it read that way. */}
+            <div className="flex flex-col items-start gap-0.5">
               <button
-                onClick={listenBack}
-                disabled={working}
-                className="text-left transition-colors group disabled:opacity-30"
+                onClick={() => setShowBring(v => !v)}
+                className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors"
               >
-                <span className="text-slate-400 group-hover:text-slate-200 text-sm underline underline-offset-2 transition-colors">
-                  Take something back with you
-                </span>
-                <span className="block text-slate-400 text-xs font-light mt-1">
-                  close the session: choose what to keep — a practice, a question
-                </span>
+                Bring something with you
               </button>
+              <span className="text-slate-400 text-xs font-light">
+                Start this session from a saved thread or a note.
+              </span>
+            </div>
+            {/* Exit symmetric to the entry gesture: the threshold out of the
+                conversation and into the keep → practice → life sequence. */}
+            {turns.length >= 2 && (
+              <div className="flex flex-col items-start gap-0.5">
+                <button
+                  onClick={listenBack}
+                  disabled={working}
+                  className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors disabled:opacity-30"
+                >
+                  Keep — take something back with you
+                </button>
+                <span className="text-slate-400 text-xs font-light">
+                  End the session. Save what matters. Pick a practice. Name a question.
+                </span>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
