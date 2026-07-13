@@ -99,7 +99,7 @@ function FieldInner() {
   // BETWEEN the boxes; the content lives IN them. Same glass vocabulary as
   // the map's chambers, so learning one page is learning all of them.
   const panel =
-    'relative rounded-xl border border-slate-500/40 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-6';
+    'relative rounded-xl border border-slate-600/50 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-6';
 
   return (
     <>
@@ -132,7 +132,7 @@ function FieldInner() {
 
       {/* Box 2 — what have I kept: the field itself */}
       <div className={panel} style={{ animation: 'nwfFadeUp 0.55s ease 120ms both' }}>
-        <h2 className="text-[11px] uppercase tracking-[0.3em] text-slate-500 mb-4">Kept</h2>
+        <h2 className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">Kept</h2>
 
         {error && <p role="alert" className="text-red-400 text-sm font-light">{error}</p>}
 
@@ -148,7 +148,7 @@ function FieldInner() {
         )}
 
         {groups.map((group) => (
-          <div key={group.month} className="space-y-3 not-first:mt-6">
+          <div key={group.month} className="space-y-3 [&:not(:first-child)]:mt-6">
             <p className="text-slate-500 text-xs uppercase tracking-widest">{group.month}</p>
             <ul className="space-y-4">
               {group.items.map(t => (
@@ -179,7 +179,7 @@ function FieldInner() {
         className="relative rounded-xl border p-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[0_0_50px_rgba(255,226,122,0.07)]"
         style={{ borderColor: 'rgba(255,226,122,0.4)', animation: 'nwfFadeUp 0.55s ease 240ms both' }}
       >
-        <h2 className="text-[11px] uppercase tracking-[0.3em] text-slate-500 mb-3">Now</h2>
+        <h2 className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-3">Now</h2>
         <div className="flex flex-wrap items-center gap-5">
           <a
             href={roomHref}
