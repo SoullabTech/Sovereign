@@ -78,6 +78,53 @@ function shape(row: MarkedEpisodeRow) {
 }
 
 /**
+ * GET — the member's own marked moments, newest first ("Marked Moments" room,
+ * authorized 2026-07-13 as the instrument the lived-week witness requires:
+ * "do people naturally return to their marks?" needs a place to return to).
+ *
+ * Member-scoped by construction: memberId comes from the credential and is the
+ * only key used — no parameter can name another member. Returns ONLY what the
+ * member placed: episodeId (needed to unmark), verbatim text, date, source
+ * pointers. Interpretive columns are NULL by CHECK constraint and are not
+ * selected. This is a mirror of the member's placements, nothing more.
+ *
+ * 200 { moments: [...] }, 401 if no member.
+ */
+export async function GET(request: NextRequest) {
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
+  }
+
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const result = await query<MarkedEpisodeRow>(
+      `SELECT id, episode_id, verbatim_text, marked_by_member,
+              source_turn_id, source_session_id, created_at
+         FROM episodic_memories
+        WHERE user_id = $1 AND marked_by_member = TRUE
+        ORDER BY created_at DESC
+        LIMIT 200`,
+      [memberId],
+    );
+
+    // Discoverable log marker. Count only, never content.
+    console.log(
+      `[MAIA/sovereign] episodic moments listed { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+        `count: ${result.rows.length} }`,
+    );
+
+    return NextResponse.json({ moments: result.rows.map(shape) });
+  } catch (err) {
+    console.error('[episodes/mark] GET error:', err);
+    return NextResponse.json({ error: 'Failed to load moments' }, { status: 500 });
+  }
+}
+
+/**
  * POST — preserve a member-marked moment, verbatim.
  *
  * Body: { verbatimText: string; sourceTurnId?: string; sourceSessionId?: string }
