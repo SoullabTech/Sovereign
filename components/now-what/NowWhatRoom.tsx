@@ -779,7 +779,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
             </div>
             <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
-              <p className="text-[11px] uppercase tracking-[0.35em] text-slate-500">Now What? · with Larry Closs</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-[#ffe27a]">Now What? · with Larry Closs</p>
               <h1 style={SERIF} className="text-4xl sm:text-5xl font-light text-slate-100 tracking-wide">Welcome.</h1>
             </div>
             <div style={fadeUpStyle(0.5)} className="space-y-5 text-slate-300 text-[17px] font-light leading-[1.85]">
@@ -813,7 +813,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           <div style={fadeUpStyle(0)} className="flex justify-center">
             <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
           </div>
-          <p style={fadeUpStyle(0.2)} className="text-center text-[11px] uppercase tracking-[0.35em] text-slate-500">
+          <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#ffe27a]">
             Now What?
           </p>
 
@@ -1491,7 +1491,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           />
         </div>
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-[0.35em] text-slate-500">{roomTitle}</p>
+          <p className={`text-xs uppercase tracking-[0.35em] ${nowWhat ? 'text-[#ffe27a]/80' : 'text-slate-500'}`}>{roomTitle}</p>
           {!nowWhat && <p className="text-slate-400 text-sm font-light">{phaseLabel}</p>}
         </div>
         {turns.length >= 4 && (

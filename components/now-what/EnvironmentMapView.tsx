@@ -238,7 +238,7 @@ function EnvironmentMapInner({ viewer }: { viewer: Viewer }) {
 
       <header className="relative flex flex-col items-center text-center pt-10 pb-6 space-y-3">
         <p
-          className="text-xs uppercase tracking-[0.45em]"
+          className="text-sm uppercase tracking-[0.45em]"
           style={{ color: accent, animation: 'nwFadeUp 0.55s ease both' }}
         >
           {isPractitioner ? 'Now What? — your environment' : 'Now What?'}
