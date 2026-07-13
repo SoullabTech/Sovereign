@@ -18,8 +18,19 @@
  * - `pointer-events: none` — purely informational; never blocks clicks or
  *   interferes with any page's own header/controls beneath it (incl. admin /
  *   substrate / debug diagnostics).
- * - Respects `env(safe-area-inset-top)` so it clears the iOS notch in the PWA /
- *   Capacitor build.
+ * - Anchored top-RIGHT, not top-center: pages center their wordmarks in the
+ *   header (e.g. "Now What?" on /now-what/map), and a centered badge occludes
+ *   the name at every viewport width — violating the name-legibility ruling
+ *   (PR #598: "the environment's name always reads"). The right corner stays
+ *   clear of centered titles and of the top-left back/nav affordances.
+ * - `z-30`, deliberately below page chrome (e.g. /maia's header bar, z-60),
+ *   toasts (z-50), and modals: a maturity watermark floats over the canvas,
+ *   never over attention or interaction surfaces. On surfaces whose own
+ *   chrome occupies the top-right corner, the chrome wins and the badge
+ *   yields — it must never visually cover a control (the account chip on
+ *   /maia sits exactly there).
+ * - Respects `env(safe-area-inset-top)` / `env(safe-area-inset-right)` so it
+ *   clears the iOS notch in the PWA / Capacitor build.
  * - Persistent / non-dismissable by design: beta status is an honest claim about
  *   the platform's maturity, in keeping with the representation discipline
  *   (docs/canon/MARKETING_CLAIM_DISCIPLINE.md).
@@ -31,8 +42,11 @@ export function BetaBanner() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-[9999] flex justify-center"
-      style={{ paddingTop: "calc(env(safe-area-inset-top) + 6px)" }}
+      className="pointer-events-none fixed right-0 top-0 z-30 flex justify-end"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top) + 6px)",
+        paddingRight: "calc(env(safe-area-inset-right) + 10px)",
+      }}
     >
       <div
         role="note"
