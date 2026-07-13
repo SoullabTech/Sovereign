@@ -1714,14 +1714,18 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               Bring something with you
             </button>
             {/* Exit symmetric to the entry gesture: the threshold out of the
-                conversation and into the carry → practice → life sequence. */}
+                conversation and into the carry → practice → life sequence.
+                The label leads with its function word: the founder, twice,
+                could not find keeping while this link was on screen — the
+                doctrine phrase alone reads as leaving, not keeping (founder
+                copy ruling, 2026-07-13). Doctrine stays; "Keep" names it. */}
             {turns.length >= 2 && (
               <button
                 onClick={listenBack}
                 disabled={working}
                 className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors disabled:opacity-30"
               >
-                Take something back with you
+                Keep — take something back with you
               </button>
             )}
           </div>
