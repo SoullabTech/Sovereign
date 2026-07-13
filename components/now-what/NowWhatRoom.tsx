@@ -1720,7 +1720,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               >
                 Bring something with you
               </button>
-              <span className="text-slate-500 text-[11px] font-light">
+              <span className="text-slate-400 text-xs font-light">
                 Start this session from a saved thread or a note.
               </span>
             </div>
@@ -1735,7 +1735,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                 >
                   Keep — take something back with you
                 </button>
-                <span className="text-slate-500 text-[11px] font-light">
+                <span className="text-slate-400 text-xs font-light">
                   End the session. Save what matters. Pick a practice. Name a question.
                 </span>
               </div>
