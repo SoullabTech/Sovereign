@@ -22,6 +22,13 @@ export async function generateStaticParams() {
  * "declined" telemetry write. Enrollment happens only on affirmation (§5):
  * no residue from anyone who didn't affirmatively cross.
  *
+ * GET ?fieldContext=<slug> — THIS member's own declared positions in one
+ *   field ("Where you are" room, completion slice 2026-07-13). Member-scoped
+ *   by construction: memberId comes from the session credential and is the
+ *   only key used — there is no parameter that can name another member.
+ *   Returns facts + footing only: never a sequence position, percentage,
+ *   or any inferred placement. Empty = empty; absence is rendered honestly.
+ *
  * Auth: session credential only (cookie session or x-session-token), 401
  * before any read or write — same posture as the sibling now-what routes.
  * There is NO practitioner read of positions here or anywhere (catalog §8).
@@ -35,9 +42,63 @@ import {
   GENERAL_PROGRAM,
   sanitizeSlug,
   getCohortDefault,
+  getMemberPositions,
+  computeFooting,
   upsertPosition,
   deletePosition,
 } from '@/lib/practiceField/programPositionService';
+
+export async function GET(request: NextRequest) {
+  try {
+    // 401-first: identity before any read.
+    const cookieSession = await getCurrentSession();
+    const memberId = cookieSession?.memberId ?? (await getMemberIdFromRequest(request));
+    if (!memberId) {
+      return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+    }
+
+    const fieldSlug = sanitizeSlug(request.nextUrl.searchParams.get('fieldContext'));
+    if (!fieldSlug) {
+      return NextResponse.json({ error: 'fieldContext is required.' }, { status: 422 });
+    }
+    const field = await getPracticeFieldBySlug(fieldSlug);
+    if (!field) {
+      return NextResponse.json({ error: 'No such field here.' }, { status: 404 });
+    }
+
+    // Only rows this member holds. Programs the member never entered do not
+    // appear (the P8b fence, applied to the room): listing is not offering.
+    const rows = await getMemberPositions(fieldSlug, memberId);
+    const positions: {
+      programSlug: string;
+      programTitle: string | null;
+      focalPoint: string;
+      statedBy: string;
+      footing: string;
+      confirmedAt: string | Date | null;
+    }[] = [];
+    for (const row of rows) {
+      const cohort = await getCohortDefault(fieldSlug, row.program_slug);
+      positions.push({
+        programSlug: row.program_slug,
+        programTitle: cohort?.programTitle ?? (row.program_slug === GENERAL_PROGRAM ? null : row.program_slug),
+        focalPoint: row.focal_point,
+        statedBy: row.stated_by,
+        footing: cohort ? computeFooting(row, cohort.setAt) : 'assumed-from-last-known',
+        confirmedAt: row.member_confirmed_at,
+      });
+    }
+
+    console.info(
+      '[NowWhat/position] read',
+      JSON.stringify({ memberIdPrefix: memberId.slice(0, 8), fieldSlug, count: positions.length }),
+    );
+    return NextResponse.json({ positions });
+  } catch (err: any) {
+    console.error('[NowWhat/position] GET error:', err?.message || err);
+    return NextResponse.json({ error: 'Not available right now. Try again in a moment.' }, { status: 500 });
+  }
+}
 
 const MAX_FOCAL_POINT = 300;
 const ALLOWED_KEYS = new Set(['fieldContext', 'program', 'confirm', 'focalPoint', 'depart']);
