@@ -128,9 +128,14 @@ function BuildingMap({ viewer, fieldContext }: { viewer: Viewer; fieldContext?: 
   const corridor = 'rgba(148,163,184,0.25)';
 
   return (
+    /* pointer-events-auto is LOAD-BEARING: app/icon-fix.css sets
+       `svg { pointer-events: none }` globally (a Safari icon patch), which
+       silently killed every chamber door on this map — the building looked
+       clickable (hover styles, cursor) but no click could land. Any
+       interactive SVG in this codebase must opt back in exactly like this. */
     <svg
       viewBox="0 0 700 585"
-      className="w-full h-auto"
+      className="w-full h-auto pointer-events-auto"
       role="img"
       aria-label="Map of the Now What? environment: the session room at the center; your field, where you are, questions you're living, and what may be next open around it; themes and reflections still taking shape"
     >

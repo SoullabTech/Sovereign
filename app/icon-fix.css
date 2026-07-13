@@ -8,6 +8,11 @@ svg[class*="lucide"] {
 }
 
 /* Fix for Safari SVG rendering issues - Allow button SVGs to be clickable */
+/* ⚠️ TRAP (found 2026-07-13): this global makes EVERY svg click-through,
+   including interactive ones — it silently killed the Now What? map's
+   chamber links (they looked clickable, no click could land). Any svg that
+   carries links or handlers MUST opt back in with `pointer-events-auto`
+   (see components/now-what/EnvironmentMapView.tsx). Do not widen this rule. */
 svg {
   pointer-events: none;
 }
