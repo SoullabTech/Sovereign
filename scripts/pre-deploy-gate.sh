@@ -19,11 +19,18 @@
 #             step; now a hard precondition of the deploy path itself
 #             (see docs/ops/COLAB_RELEASE_GATE.md).
 #
+#   Gate 3 — Disk space : / must have at least MIN_FREE_DISK_GB free (default
+#             60 GB — one ~40 GB image + build headroom). On 2026-07-12 a full
+#             disk killed a build at metadata write after 733s, and the failure
+#             exited 0 through the ssh pipeline (false-exit-0 trap) — a refusal
+#             BEFORE the build is the only loud version of this failure.
+#
 # ── Usage ──────────────────────────────────────────────────────────────────────
 #   scripts/pre-deploy-gate.sh provenance     # validate + echo resolved SHA (stdout)
 #   scripts/pre-deploy-gate.sh colab          # run boundary verifier, block on fail
-#   scripts/pre-deploy-gate.sh all            # both gates, no build
-#   scripts/pre-deploy-gate.sh deploy-maia    # both gates, then quick maia-only build
+#   scripts/pre-deploy-gate.sh disk           # check free disk on /, block on fail
+#   scripts/pre-deploy-gate.sh all            # all gates, no build
+#   scripts/pre-deploy-gate.sh deploy-maia    # all gates, then quick maia-only build
 #                                               of whatever is currently checked out
 #   scripts/pre-deploy-gate.sh deploy-maia-at [<branch>]
 #                                             # acquire the lane lock FIRST, then
@@ -40,6 +47,7 @@
 #   COLAB_VERIFIER_CMD    — override the verifier command (used by the gate's own
 #                           self-test; also lets you run against a local DB)
 #   MIN_COLAB_CHECKS=31   — floor on passing checks (raise when new checks ship)
+#   MIN_FREE_DISK_GB=60   — floor on free space for / before building
 #   DEPLOY_SYNC_FORCE=1   — let deploy-maia-at discard a DIRTY deploy checkout
 #                           (default is to refuse: a dirty prod checkout means
 #                           someone hand-edited it — inspect before discarding)
@@ -70,6 +78,7 @@ log_block()   { echo -e "${RED}[gate:BLOCK]${NC} $1" >&2; }
 
 MIN_COLAB_CHECKS="${MIN_COLAB_CHECKS:-31}"
 CONTAINER="${MAIA_CONTAINER:-maia-sovereign}"
+MIN_FREE_DISK_GB="${MIN_FREE_DISK_GB:-60}"
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Gate 1 — Provenance
@@ -157,11 +166,49 @@ gate_colab() {
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
+# Gate 3 — Disk space
+# One image is ~35-42 GB and the build needs headroom on top. A full-disk build
+# fails at metadata write AFTER many minutes of building — and on 2026-07-12
+# that failure exited 0 through the ssh pipeline and read as success. Refusing
+# before the build is the only loud version of this failure.
+# Floor validated against minisforum 2026-07-12: 937 GB disk, ~519 GB free at
+# steady state (images ~313 GB incl. pre-retention stale tags, build cache
+# ~150 GB). Peak build footprint = one new ~42 GB image held ALONGSIDE the old
+# one, plus incremental buildkit-cache growth — so 60 GB covers the maximum
+# temporary footprint with margin. With SHA-tag retention active, a routine
+# deploy sits hundreds of GB above the floor and cannot become permanently
+# blocked by it.
+# ───────────────────────────────────────────────────────────────────────────────
+gate_disk() {
+    local free_kb free_gb
+    free_kb="$(df -Pk / | awk 'NR==2 {print $4}')"
+    if [ -z "$free_kb" ]; then
+        log_block "Could not read free space for / (df -Pk / gave no usable row). Treating as a BLOCK (unverifiable)."
+        return 1
+    fi
+    free_gb=$(( free_kb / 1024 / 1024 ))
+
+    if [ "$free_gb" -lt "$MIN_FREE_DISK_GB" ]; then
+        log_block "Only ${free_gb} GB free on / — floor is ${MIN_FREE_DISK_GB} GB (one ~40 GB image + build headroom)."
+        log_block "A full-disk build dies at metadata write after minutes of building, and the failure can exit 0"
+        log_block "through the ssh pipeline (false-exit-0 trap). Refusing BEFORE the build instead."
+        log_block "Reclaim space: stale maia-sovereign:<sha> rollback tags are pruned automatically at tag time"
+        log_block "(prune_old_sha_tags in scripts/deploy-tag.sh, RETAIN_SHA_TAGS newest kept) — if disk is full"
+        log_block "anyway, run 'docker images maia-sovereign' + 'docker rmi <named stale tags>' and 'docker builder prune'."
+        return 1
+    fi
+
+    log_ok "Disk: ${free_gb} GB free on / (floor ${MIN_FREE_DISK_GB} GB)"
+    return 0
+}
+
+# ───────────────────────────────────────────────────────────────────────────────
 # Composite + deploy driver
 # ───────────────────────────────────────────────────────────────────────────────
 gate_all() {
     local sha
     sha="$(gate_provenance)"   # exits non-zero (set -e) if provenance blocks
+    gate_disk
     gate_colab
     log_ok "All pre-deploy gates passed for $sha."
     echo "$sha"
@@ -258,18 +305,20 @@ cmd_deploy_maia_at() {
 case "${1:-help}" in
     provenance) gate_provenance ;;
     colab)      gate_colab ;;
+    disk)       gate_disk ;;
     all)        gate_all >/dev/null ;;   # SHA already logged to stderr; suppress stdout echo
     deploy-maia) cmd_deploy_maia ;;
     deploy-maia-at) cmd_deploy_maia_at "${2:-}" ;;
     *)
         echo "Pre-Deploy Gate — Construction Gate as structure, not discipline"
         echo ""
-        echo "Usage: $0 <provenance|colab|all|deploy-maia|deploy-maia-at [<branch>]>"
+        echo "Usage: $0 <provenance|colab|disk|all|deploy-maia|deploy-maia-at [<branch>]>"
         echo ""
         echo "  provenance      Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
         echo "  colab           Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"
-        echo "  all             Run both gates (no build)"
-        echo "  deploy-maia     Both gates, then quick maia-only build of the CURRENT checkout"
+        echo "  disk            Block unless / has >= MIN_FREE_DISK_GB (default 60) GB free"
+        echo "  all             Run all gates (no build)"
+        echo "  deploy-maia     All gates, then quick maia-only build of the CURRENT checkout"
         echo "  deploy-maia-at  Lane lock FIRST, then fetch/checkout/reset to origin/<branch>"
         echo "                  (default clean-main-no-secrets) inside the lock, then gates+build."
         echo "                  Canonical quick deploy — never mutate the checkout outside it."

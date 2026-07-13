@@ -240,6 +240,120 @@ const CARDS: Record<string, ProbeCard> = {
     ratification:
       'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
   },
+  // ── Program position (P7a–d v1 spec §8 · P8a–g catalog spec §7) ──
+  // All enter PENDING per the induction rule. P7b/P7c/P8a/P8c/P8d assert the
+  // COMPOSED PROMPT (string-witnessed) — their runners land when a witness
+  // channel for prompt composition exists; the cards are registered now so the
+  // suite carries the full acceptance surface of the combined build.
+  P7a: {
+    id: 'P7a',
+    title: 'Unauthenticated position POST refused before any write',
+    claim: 'POST /api/now-what/program-position without a session → 401, zero rows.',
+    passingAuthorizes:
+      'Position rows cannot be created anonymously; refusal happens at the auth boundary (401-first), with zero residue.',
+    passingDoesNotAuthorize: 'Anything about authenticated write correctness or other routes’ auth.',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
+  P7b: {
+    id: 'P7b',
+    title: 'Member statement wins over practitioner seed in the composed block',
+    claim:
+      'With a practitioner_seeded position and a differing cohort default, a member POST correction makes the composed block carry the member’s words, not the practitioner default.',
+    passingAuthorizes: 'The asymmetry rule is real in the prompt: the member’s confirmed position wins for their room.',
+    passingDoesNotAuthorize: 'Any claim about how MAIA voices the position (Tier 2), or practitioner seeding UX (unbuilt).',
+    ratification:
+      'PENDING — runner deferred (requires composed-prompt witnessing); first witnessed manual pass ratifies per the induction rule.',
+  },
+  P7c: {
+    id: 'P7c',
+    title: 'Stale confirmation composes as assumed-from-last-known, never confirmed',
+    claim:
+      'A confirmation older than the cohort default’s focal_point_set_at composes the assumed-from-last-known block (string-witnessed), never the confirmed form.',
+    passingAuthorizes: 'Epistemic footing is real: neither the stale confirmation nor the new default is silently assumed.',
+    passingDoesNotAuthorize: 'Any claim that MAIA actually asks well (Tier 2 register territory).',
+    ratification:
+      'PENDING — runner deferred (requires composed-prompt witnessing); first witnessed manual pass ratifies per the induction rule.',
+  },
+  P7d: {
+    id: 'P7d',
+    title: 'Widening the position POST body rejected with zero residue',
+    claim: 'A POST carrying unknown fields → 422, and zero rows are written.',
+    passingAuthorizes: 'The guidance-boundary pattern holds on this route: refuse whole, no partial write.',
+    passingDoesNotAuthorize: 'That every conceivable widening is caught, or anything about the composed prompt.',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
+  P8a: {
+    id: 'P8a',
+    title: 'Program-scoped positions never leak across doors',
+    claim:
+      'Same member, two programs, two differing positions: each door’s composed block carries its own program’s position, never the other’s.',
+    passingAuthorizes: 'Positions are per-engagement rows, not member state — “any/all” is real.',
+    passingDoesNotAuthorize: 'Anything about cross-program synthesis (which is forbidden, not deferred).',
+    ratification:
+      'PENDING — runner deferred (requires composed-prompt witnessing); first witnessed manual pass ratifies per the induction rule.',
+  },
+  P8b: {
+    id: 'P8b',
+    title: 'Generic-door offering lists only member-declared engagements',
+    claim:
+      'The arrival payload’s engagements array contains programs the member confirmed/stated — never a program they never entered, never a practitioner seed.',
+    passingAuthorizes:
+      'The generic door offers what the MEMBER declared, not the catalog as an assignment; no fact about the member they did not place.',
+    passingDoesNotAuthorize: 'Anything about how the offer renders in the room UI.',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
+  P8c: {
+    id: 'P8c',
+    title: 'Dormancy composes as silence, never as standing questions',
+    claim:
+      'One confirmed-current + one stale position → the composed block carries the confirmed engagement and NOTHING for the stale one (string-witnessed absence).',
+    passingAuthorizes: 'Stale engagements decay to silence unless the member raises them — no enrollment management by politeness.',
+    passingDoesNotAuthorize: 'Anything about the stale program’s own door (where ask-footing legitimately renders).',
+    ratification:
+      'PENDING — runner deferred (requires composed-prompt witnessing); first witnessed manual pass ratifies per the induction rule.',
+  },
+  P8d: {
+    id: 'P8d',
+    title: 'No-advancement invariant: sequences orient, never route',
+    claim:
+      'With a full focal_points sequence authored and a member confirmed mid-sequence, no composed output contains next-stage prompting language.',
+    passingAuthorizes: 'The regression fence around “orientation, not routing” holds in the prompt.',
+    passingDoesNotAuthorize: 'That the model never improvises advancement language (Tier 2 watches the reply side).',
+    ratification:
+      'PENDING — runner deferred (requires composed-prompt witnessing); first witnessed manual pass ratifies per the induction rule.',
+  },
+  P8e: {
+    id: 'P8e',
+    title: 'Opening the door writes nothing (the forwarded-link case)',
+    claim:
+      'Loading arrival (GET with fieldContext+program) leaves zero position rows — enrollment happens only on affirmation.',
+    passingAuthorizes: 'No residue from anyone who didn’t affirmatively cross; decline/dismiss genuinely sends nothing.',
+    passingDoesNotAuthorize: 'Anything about the client’s dismiss path specifically (it sends no request at all by design).',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
+  P8f: {
+    id: 'P8f',
+    title: 'Departure is one gesture and total; re-arrival re-enrolls cleanly',
+    claim:
+      'depart:true → row hard-deleted, zero residue, engagement gone from the generic-door offer; a later confirm re-creates it cleanly.',
+    passingAuthorizes: 'Exit is as one-gesture and member-owned as entry — closed = gone, no churn ledger, no reactivation flow.',
+    passingDoesNotAuthorize: 'Anything about departure copy in the UI, or dormancy semantics (P8c).',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
+  P8g: {
+    id: 'P8g',
+    title: 'Exactly-one gesture: zero or multiple gestures → 422, zero residue',
+    claim: 'A POST with none, or more than one, of confirm/focalPoint/depart → 422 and no write.',
+    passingAuthorizes: 'The gesture grammar is enforced at the boundary — ambiguous requests are refused whole.',
+    passingDoesNotAuthorize: 'Anything about which single-gesture writes succeed (P8f territory).',
+    ratification:
+      'PENDING — first witnessed manual pass ratifies this probe (spec probe-induction rule); a reviewed passing run serves as the witness.',
+  },
   P5: {
     id: 'P5',
     title: 'Degraded provider degrades to the spec’d behavior, never a 500',
@@ -547,6 +661,210 @@ async function probeP7(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: s
   return { evidence };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Program-position probes (P7a/P7d/P8b/P8e/P8f/P8g — deterministic, API-level;
+// the composed-prompt siblings P7b/P7c/P8a/P8c/P8d await a witness channel)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function postPosition(
+  baseUrl: string,
+  cookie: string | null,
+  body: Record<string, unknown>,
+): Promise<{ status: number; json: Record<string, unknown> | null }> {
+  const res = await fetch(`${baseUrl}/api/now-what/program-position`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(60_000),
+  });
+  return { status: res.status, json: (await res.json().catch(() => null)) as Record<string, unknown> | null };
+}
+
+async function getArrival(
+  ctx: ProbeCtx,
+  slug: string,
+  program?: string,
+): Promise<{ status: number; arrival: Record<string, unknown> | null }> {
+  const res = await fetch(
+    `${ctx.baseUrl}/api/now-what/field-note?fieldContext=${encodeURIComponent(slug)}${
+      program ? `&program=${encodeURIComponent(program)}` : ''
+    }`,
+    { headers: { cookie: ctx.cookie }, signal: AbortSignal.timeout(60_000) },
+  );
+  const json = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+  return { status: res.status, arrival: (json?.arrival as Record<string, unknown> | null) ?? null };
+}
+
+async function allPositionRows(ctx: ProbeCtx, fieldSlug: string): Promise<number> {
+  const r = await ctx.db.query('SELECT count(*)::int AS n FROM field_program_positions WHERE field_slug = $1', [fieldSlug]);
+  return (r.rows[0]?.n as number) ?? 0;
+}
+
+async function memberPositionRows(ctx: ProbeCtx, fieldSlug: string): Promise<Array<Record<string, unknown>>> {
+  const r = await ctx.db.query(
+    'SELECT program_slug, focal_point, stated_by, member_confirmed_at FROM field_program_positions WHERE field_slug = $1 AND member_id = $2 ORDER BY program_slug',
+    [fieldSlug, ctx.member.id],
+  );
+  return r.rows as Array<Record<string, unknown>>;
+}
+
+/** Seed the eval member's ephemeral field with a focal point + a two-program catalog. */
+async function ensurePositionCatalog(ctx: ProbeCtx): Promise<string> {
+  const slug = `eval-field-${ctx.member.runId}`;
+  await ctx.db.query(
+    `INSERT INTO practice_fields (practitioner_member_id, field_slug, about_practice, current_focal_point, focal_point_set_at)
+     VALUES ($1, $2, $3, $4, NOW())
+     ON CONFLICT (practitioner_member_id)
+     DO UPDATE SET field_slug = EXCLUDED.field_slug,
+                   current_focal_point = EXCLUDED.current_focal_point,
+                   focal_point_set_at = NOW()`,
+    [ctx.member.id, slug, 'EVAL-SYNTHETIC probe field: a practice of noticing. (Not a real practice.)', 'Noticing (eval synthetic)'],
+  );
+  const programs: Array<[string, string, string]> = [
+    ['eval-retreat', 'Eval Deep Dive Retreat', 'Descent (eval synthetic)'],
+    ['eval-course', 'Eval Flourishing Course', 'Savoring (eval synthetic)'],
+  ];
+  for (const [program, title, focal] of programs) {
+    await ctx.db.query(
+      `INSERT INTO field_programs (field_slug, program_slug, kind, title, focal_points, current_focal_point, focal_point_set_at)
+       VALUES ($1, $2, 'retreat', $3, '["preparation","descent","return"]', $4, NOW())
+       ON CONFLICT (field_slug, program_slug)
+       DO UPDATE SET current_focal_point = EXCLUDED.current_focal_point, focal_point_set_at = NOW()`,
+      [slug, program, title, focal],
+    );
+  }
+  return slug;
+}
+
+/** Remove synthetic catalog + position rows (field_programs carries no member FK; positions must go before member cleanup). */
+async function cleanupPositionCatalog(ctx: ProbeCtx, slug: string): Promise<void> {
+  await ctx.db.query('DELETE FROM field_program_positions WHERE field_slug = $1', [slug]);
+  await ctx.db.query('DELETE FROM field_programs WHERE field_slug = $1', [slug]);
+}
+
+async function probeP7a(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const slug = await ensurePositionCatalog(ctx);
+  const post = await postPosition(ctx.baseUrl, null, { fieldContext: slug, program: 'eval-retreat', confirm: true });
+  const rows = await allPositionRows(ctx, slug);
+  const evidence = [`unauth POST status=${post.status}`, `rows for field after=${rows}`];
+  if (post.status !== 401) return { evidence, failure: `expected 401, got ${post.status}` };
+  if (rows !== 0) return { evidence, failure: 'residue: position rows exist after an unauthenticated POST' };
+  return { evidence };
+}
+
+async function probeP7d(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const slug = await ensurePositionCatalog(ctx);
+  const post = await postPosition(ctx.baseUrl, ctx.cookie, {
+    fieldContext: slug,
+    program: 'eval-retreat',
+    confirm: true,
+    widened_field: 'should be refused whole',
+  });
+  const rows = await allPositionRows(ctx, slug);
+  const evidence = [`widened POST status=${post.status}`, `error=${JSON.stringify(post.json?.error ?? null)}`, `rows after=${rows}`];
+  if (post.status !== 422) return { evidence, failure: `expected 422, got ${post.status}` };
+  if (rows !== 0) return { evidence, failure: 'residue: a widened POST wrote a row' };
+  return { evidence };
+}
+
+async function probeP8g(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const slug = await ensurePositionCatalog(ctx);
+  const none = await postPosition(ctx.baseUrl, ctx.cookie, { fieldContext: slug, program: 'eval-retreat' });
+  const two = await postPosition(ctx.baseUrl, ctx.cookie, {
+    fieldContext: slug,
+    program: 'eval-retreat',
+    confirm: true,
+    focalPoint: 'two gestures at once',
+  });
+  const rows = await allPositionRows(ctx, slug);
+  const evidence = [`zero-gesture status=${none.status}`, `two-gesture status=${two.status}`, `rows after=${rows}`];
+  if (none.status !== 422) return { evidence, failure: `zero gestures: expected 422, got ${none.status}` };
+  if (two.status !== 422) return { evidence, failure: `two gestures: expected 422, got ${two.status}` };
+  if (rows !== 0) return { evidence, failure: 'residue: an ambiguous POST wrote a row' };
+  return { evidence };
+}
+
+async function probeP8e(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const slug = await ensurePositionCatalog(ctx);
+  const door = await getArrival(ctx, slug, 'eval-retreat');
+  const rows = await allPositionRows(ctx, slug);
+  const evidence = [
+    `GET status=${door.status}`,
+    `arrival=${door.arrival ? `{programSlug:${door.arrival.programSlug},cohortFocalPoint:${door.arrival.cohortFocalPoint}}` : 'null'}`,
+    `rows after=${rows}`,
+  ];
+  if (door.status !== 200) return { evidence, failure: `expected 200, got ${door.status}` };
+  if (!door.arrival || door.arrival.cohortFocalPoint !== 'Descent (eval synthetic)') {
+    return { evidence, failure: 'arrival payload missing or wrong — the door did not announce its anchoring' };
+  }
+  if (rows !== 0) return { evidence, failure: 'residue: opening the door wrote a position row (forwarded-link case broken)' };
+  return { evidence };
+}
+
+async function probeP8b(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const slug = await ensurePositionCatalog(ctx);
+  // Member declares ONE engagement; a practitioner seed exists for the other.
+  const confirm = await postPosition(ctx.baseUrl, ctx.cookie, { fieldContext: slug, program: 'eval-retreat', confirm: true });
+  await ctx.db.query(
+    `INSERT INTO field_program_positions (field_slug, program_slug, member_id, focal_point, stated_by)
+     VALUES ($1, 'eval-course', $2, 'Seeded (eval synthetic)', 'practitioner_seeded')
+     ON CONFLICT (field_slug, program_slug, member_id) DO NOTHING`,
+    [slug, ctx.member.id],
+  );
+  const generic = await getArrival(ctx, slug);
+  const engagements = Array.isArray(generic.arrival?.engagements)
+    ? (generic.arrival!.engagements as Array<{ programSlug: string }>)
+    : [];
+  const slugs = engagements.map((e) => e.programSlug);
+  const evidence = [`confirm status=${confirm.status}`, `generic-door engagements=${JSON.stringify(slugs)}`];
+  // Cleanup before verdict so a failure never strands rows against member cleanup.
+  await ctx.db.query('DELETE FROM field_program_positions WHERE field_slug = $1', [slug]);
+  if (confirm.status !== 200) return { evidence, failure: `confirm: expected 200, got ${confirm.status}` };
+  if (!slugs.includes('eval-retreat')) return { evidence, failure: 'member-declared engagement missing from the offer' };
+  if (slugs.includes('eval-course')) {
+    return { evidence, failure: 'practitioner-seeded program appeared in the offer — a fact the member never placed' };
+  }
+  return { evidence };
+}
+
+async function probeP8f(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
+  const slug = await ensurePositionCatalog(ctx);
+  try {
+    const confirm1 = await postPosition(ctx.baseUrl, ctx.cookie, { fieldContext: slug, program: 'eval-retreat', confirm: true });
+    const after1 = await memberPositionRows(ctx, slug);
+    const depart = await postPosition(ctx.baseUrl, ctx.cookie, { fieldContext: slug, program: 'eval-retreat', depart: true });
+    const after2 = await memberPositionRows(ctx, slug);
+    const generic = await getArrival(ctx, slug);
+    const offered = Array.isArray(generic.arrival?.engagements)
+      ? (generic.arrival!.engagements as Array<{ programSlug: string }>).map((e) => e.programSlug)
+      : [];
+    const confirm2 = await postPosition(ctx.baseUrl, ctx.cookie, { fieldContext: slug, program: 'eval-retreat', confirm: true });
+    const after3 = await memberPositionRows(ctx, slug);
+    const evidence = [
+      `confirm status=${confirm1.status} rows=${JSON.stringify(after1)}`,
+      `depart status=${depart.status} departed=${JSON.stringify(depart.json?.departed ?? null)} rows=${after2.length}`,
+      `generic-door offer after departure=${JSON.stringify(offered)}`,
+      `re-confirm status=${confirm2.status} rows=${JSON.stringify(after3)}`,
+    ];
+    if (confirm1.status !== 200 || after1.length !== 1 || after1[0].stated_by !== 'member_confirmed') {
+      return { evidence, failure: 'confirm did not create exactly one member_confirmed row' };
+    }
+    if (depart.status !== 200 || depart.json?.departed !== true) {
+      return { evidence, failure: `depart: expected 200 departed:true, got ${depart.status}` };
+    }
+    if (after2.length !== 0) return { evidence, failure: 'residue: row survived departure (closed must = gone)' };
+    if (offered.includes('eval-retreat')) {
+      return { evidence, failure: 'departed engagement still listed at the generic door' };
+    }
+    if (confirm2.status !== 200 || after3.length !== 1) {
+      return { evidence, failure: 're-arrival did not re-enroll cleanly' };
+    }
+    return { evidence };
+  } finally {
+    await cleanupPositionCatalog(ctx, slug);
+  }
+}
+
 async function probeP5(ctx: ProbeCtx): Promise<{ evidence: string[]; failure?: string }> {
   const turn = await sendTurn(
     ctx.baseUrl,
@@ -584,7 +902,10 @@ const SCENARIOS: Scenario[] = [
     // in from the inherited env — P6/P7's field:null assertions require that no
     // default field composes when fieldContext is absent.
     unset: ['OLLAMA_BASE_URL', 'NOW_WHAT_PRACTICE_FIELD_ID'],
-    probeIds: ['P1', 'P2a', 'P3', 'P4a', 'P4b', 'P6', 'P7'],
+    // Position probes are provider-independent; they ride this scenario so one
+    // managed server covers them. Order: residue checks (P7a/P7d/P8g/P8e)
+    // before the writing probes (P8b/P8f), which clean up after themselves.
+    probeIds: ['P1', 'P2a', 'P3', 'P4a', 'P4b', 'P6', 'P7', 'P7a', 'P7d', 'P8g', 'P8e', 'P8b', 'P8f'],
   },
   {
     name: 'local',
@@ -821,6 +1142,12 @@ async function runScenarioProbes(scenario: Scenario, ctx: ProbeCtx, results: Pro
       else if (id === 'P5') outcome = await probeP5(ctx);
       else if (id === 'P6') outcome = await probeP6(ctx);
       else if (id === 'P7') outcome = await probeP7(ctx);
+      else if (id === 'P7a') outcome = await probeP7a(ctx);
+      else if (id === 'P7d') outcome = await probeP7d(ctx);
+      else if (id === 'P8b') outcome = await probeP8b(ctx);
+      else if (id === 'P8e') outcome = await probeP8e(ctx);
+      else if (id === 'P8f') outcome = await probeP8f(ctx);
+      else if (id === 'P8g') outcome = await probeP8g(ctx);
       else outcome = { evidence: [], failure: `unknown probe ${id}` };
     } catch (err) {
       outcome = { evidence: [], failure: `probe threw: ${err instanceof Error ? err.message : String(err)}` };

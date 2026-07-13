@@ -16,6 +16,8 @@
  *   MAIA_RUNTIME_PROMPT   — constitutional floor, FIRST
  *   presence              — member's read-only constitutional-memory addenda
  *   field                 — the practitioner's field, as context never instructions
+ *   position              — where the MEMBER declared they stand in the program
+ *                           (program-position spec; absent if the field is absent)
  *   roomPrompt            — the room's own Field Configuration; carries the
  *                           standing hard limits LAST
  *
@@ -58,6 +60,7 @@ import {
   getPracticeFieldBySlug,
   formatFieldContextForRoom,
 } from '@/lib/practiceField/practiceFieldService';
+import { composeProgramPositionBlock } from '@/lib/practiceField/programPositionService';
 
 /**
  * NOW_WHAT_CLOUD_REGISTER=1 pins this room family's voice to Claude regardless
@@ -220,15 +223,42 @@ export async function composeRoomTurnPrompt(opts: {
   lastMemberMessage: string;
   /** Raw request value; sanitized here. */
   fieldContext?: unknown;
+  /** Raw request value (program door / member-named engagement); sanitized downstream. */
+  program?: unknown;
   /** Log-marker family, e.g. 'NowWhat' | 'VisionStudio'. */
   roomTag: string;
   /** Ephemeral marker id for cross-session recall (nothing excluded, nothing written). */
   ephemeralSessionId: string;
 }): Promise<ComposedRoomPrompt> {
-  const { roomPrompt, memberId, lastMemberMessage, fieldContext, roomTag, ephemeralSessionId } = opts;
+  const { roomPrompt, memberId, lastMemberMessage, fieldContext, program, roomTag, ephemeralSessionId } = opts;
   const presenceEnabled = process.env.NOW_WHAT_MAIA_PRESENCE_ENABLED === '1';
 
   const { block: fieldBlock, provenance } = await resolveFieldBlock(fieldContext, roomTag);
+
+  // Program position (NOW_WHAT_PROGRAM_POSITION_SPEC + catalog spec): composed
+  // strictly downstream of the field and only when the field composed —
+  // position without program is not composed (v1 §6). Context, not
+  // instruction; read-only and non-fatal like everything else here.
+  let positionBlock = '';
+  if (fieldBlock && provenance?.slug) {
+    try {
+      const composed = await composeProgramPositionBlock(
+        provenance.slug,
+        typeof program === 'string' ? program : null,
+        memberId,
+      );
+      positionBlock = composed.block;
+      if (positionBlock) {
+        console.log(`[${roomTag}/position] composed`, {
+          program: composed.programSlug,
+          footing: composed.footing,
+          blockChars: positionBlock.length,
+        });
+      }
+    } catch (err) {
+      console.warn(`[${roomTag}/position] load failed (non-fatal; room continues without position):`, err);
+    }
+  }
 
   if (!presenceEnabled && !fieldBlock) {
     return { systemPrompt: roomPrompt, field: null };
@@ -237,7 +267,7 @@ export async function composeRoomTurnPrompt(opts: {
   const presence = presenceEnabled
     ? await assemblePresenceContext(memberId, lastMemberMessage, roomTag, ephemeralSessionId)
     : '';
-  const systemPrompt = [MAIA_RUNTIME_PROMPT, presence, fieldBlock, roomPrompt]
+  const systemPrompt = [MAIA_RUNTIME_PROMPT, presence, fieldBlock, positionBlock, roomPrompt]
     .filter(Boolean)
     .join('\n\n');
   console.log(`[${roomTag}/presence] composed`, {
