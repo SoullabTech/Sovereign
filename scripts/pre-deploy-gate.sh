@@ -69,14 +69,25 @@ MIN_FREE_DISK_GB="${MIN_FREE_DISK_GB:-60}"
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Gate 1 — Provenance
-# Resolve GIT_COMMIT (env override wins, else git). Refuse empty / "unknown".
-# On success: echo the resolved SHA to STDOUT (only), exit 0.
+# Resolve GIT_COMMIT from the checkout itself; env is honored only when git is
+# unavailable, and BLOCKED when it contradicts the checkout. A stale export
+# lingering in the operator's shell (from an earlier deploy, before a git pull)
+# must never outvote HEAD — that bakes new code under an old SHA and both
+# self-report channels (printenv + /api/health) inherit the lie.
+# Refuse empty / "unknown". On success: echo the resolved SHA to STDOUT (only).
 # ───────────────────────────────────────────────────────────────────────────────
 gate_provenance() {
-    local sha="${GIT_COMMIT:-}"
-    if [ -z "$sha" ]; then
-        sha="$(git -C "$PROJECT_DIR" rev-parse --short HEAD 2>/dev/null || true)"
+    local head_sha env_sha="${GIT_COMMIT:-}" sha
+    head_sha="$(git -C "$PROJECT_DIR" rev-parse --short HEAD 2>/dev/null || true)"
+
+    if [ -n "$head_sha" ] && [ -n "$env_sha" ] && [ "$env_sha" != "$head_sha" ]; then
+        log_block "GIT_COMMIT env ($env_sha) contradicts the checkout HEAD ($head_sha)."
+        log_block "A stale export would bake this build under the wrong SHA. Unset it:"
+        log_block "  unset GIT_COMMIT   # then re-run; the gate derives it from HEAD"
+        return 1
     fi
+
+    sha="${head_sha:-$env_sha}"
 
     if [ -z "$sha" ] || [ "$sha" = "unknown" ]; then
         log_block "GIT_COMMIT resolves to '${sha:-<empty>}' — refusing to bake unprovenanced image."

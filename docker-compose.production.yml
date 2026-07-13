@@ -105,7 +105,11 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
-      GIT_COMMIT: ${GIT_COMMIT:-unknown}
+      # GIT_COMMIT is deliberately NOT set here. The image bakes it via the
+      # build arg (Dockerfile ENV), pinning the self-report to the code the
+      # image was actually built from. A runtime override here would re-stamp
+      # the container at every `up` from whatever shell runs it — letting a
+      # correctly-provenanced image report "unknown" or a stale SHA.
       # HOST MARKER: Identifies which physical machine is running this stack.
       # Change to "mac-studio" when running on the M4, "minisforum" on the Linux server.
       # Appears in every [voice] server log line and in SSE complete events for comparison.
