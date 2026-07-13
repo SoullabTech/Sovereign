@@ -90,18 +90,19 @@ export function NowWhatShell({
     // Quiet ≠ invisible (walk finding 2026-07-12: the founder couldn't see
     // the exit — the arc ruling requires a VISIBLE way out of every room).
     // The wordmark stays amber like every other door in the environment;
-    // quietness comes from size and emptiness, not from hiding the handle.
+    // quietness comes from emptiness, not from shrinking the name below
+    // legibility (founder direction 2026-07-13: the labels were too faint).
     return (
       <div className="max-w-prose mx-auto px-4 pt-5 flex items-center justify-between">
         <a
           href={mapHref}
-          className="flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] opacity-85 hover:opacity-100 transition-opacity"
+          className="flex items-center gap-2 text-sm uppercase tracking-[0.3em] hover:opacity-80 transition-opacity"
           style={{ color: ACCENT }}
         >
-          <HoloMark size={15} className="opacity-90" />
+          <HoloMark size={18} />
           Now What?
         </a>
-        <span className="text-[11px] font-light text-slate-500">{current}</span>
+        <span className="text-xs font-light text-slate-400">{current}</span>
       </div>
     );
   }
@@ -114,10 +115,10 @@ export function NowWhatShell({
     <div className="max-w-2xl mx-auto px-4 pt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
       <a
         href={mapHref}
-        className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] hover:opacity-80 transition-opacity"
+        className="flex items-center gap-2 text-sm uppercase tracking-[0.3em] hover:opacity-80 transition-opacity"
         style={{ color: ACCENT }}
       >
-        <HoloMark size={18} />
+        <HoloMark size={20} />
         Now What?
       </a>
       <span className="flex-1" />
@@ -189,7 +190,7 @@ export function NowWhatThreshold({
           />
         </div>
         <p
-          className="text-xs uppercase tracking-[0.45em]"
+          className="text-sm uppercase tracking-[0.45em]"
           style={{ color: ACCENT, animation: 'nwtFadeUp 0.55s ease 80ms both' }}
         >
           Now What?
