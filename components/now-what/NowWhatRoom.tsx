@@ -35,6 +35,7 @@ import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from '@/components/maia/vision-studio/RoomHoloflower';
+import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
 
 // — Threshold staging (Now What?) —
 // The arrival surfaces are staged, not listed: a display serif for the room's
@@ -58,7 +59,7 @@ interface ProposedThread { title: string; reflection: string; groundedIn: string
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread { title: string; origin: 'maia_proposed' | 'member_authored'; }
 interface CarryPayload {
-  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean }[];
+  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean; kind?: ThreadKind }[];
   created: { title: string; shareWithPractitioner: boolean }[];
 }
 interface CellCandidate {
@@ -716,13 +717,18 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
 
   function collectPayload(): CarryPayload {
     const proposals = proposed.map(t => {
+      // The kind travels with the member's keep gesture so a question kept
+      // under "Questions still alive" persists AS a question (ruling
+      // 2026-07-13). The save route stores only kind === 'question'; other
+      // kinds stay unpersisted behind their gates.
+      const kind = t.kind;
       const rev = revising[t.title];
       if (rev !== undefined) {
         if (rev === '') return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
         // For a revised thread, the sharing key is the revised title the member chose.
-        return { title: t.title, decision: 'revise' as Decision, revisedTitle: rev, shareWithPractitioner: !!shared[rev] };
+        return { title: t.title, decision: 'revise' as Decision, revisedTitle: rev, shareWithPractitioner: !!shared[rev], kind };
       }
-      if (authored.some(a => a.title === t.title)) return { title: t.title, decision: 'keep' as Decision, shareWithPractitioner: !!shared[t.title] };
+      if (authored.some(a => a.title === t.title)) return { title: t.title, decision: 'keep' as Decision, shareWithPractitioner: !!shared[t.title], kind };
       return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
     });
     const trimmed = newThread.trim();
@@ -1056,6 +1062,17 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
             <p className="text-slate-500 text-xs font-light leading-relaxed">
               What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.
             </p>
+            {/* Per-room trust copy (ruling 2026-07-13) — claims scoped to THIS
+                environment's store paths, all true by construction of the
+                field-note and position routes. */}
+            <div className="text-left pt-2">
+              <RoomTrustCopy
+                holds="A live conversation, and — at its end — only what you explicitly choose to carry into your field: threads, a practice, an offering, a question."
+                doesNotHold="Your field receives nothing you didn't choose. No categories, no elemental scores, no grades — and dismissing anything writes nothing at all."
+                whoSees="The conversation is yours. What you carry is visible to your practitioner only thread-by-thread, only when you explicitly mark it — never by default."
+                control="Keep, revise, discard, or split every proposal. If you're in a program, confirm or restate your position in your own words, or depart — departure erases it entirely."
+              />
+            </div>
           </div>
         </div>
       </div>

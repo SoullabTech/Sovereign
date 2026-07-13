@@ -22,6 +22,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatShell, NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
+import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
 
 interface Thread {
   id: string;
@@ -78,7 +79,7 @@ function FieldInner() {
     return (
       <NowWhatThreshold
         roomName="Your field"
-        line="Everything you chose to keep — threads, practices, offerings — in your own words."
+        line="The threads, practices, and offerings you authored here — in your own words."
         fieldContext={fieldContext}
       />
     );
@@ -124,9 +125,12 @@ function FieldInner() {
           What you have carried, in your own words.
         </h1>
         <p className="text-slate-400 text-sm font-light leading-relaxed">
-          Every line here is something you authored or chose to keep — threads, practices,
-          offerings. Nothing is interpreted, scored, or summarized. What it adds up to is
-          yours to recognize.
+          Every line here is something you authored or chose to keep in this
+          environment — threads, practices, offerings. Nothing is interpreted,
+          scored, or summarized. What it adds up to is yours to recognize.
+          {/* Claim scope (ruling 2026-07-13): this field holds what came through
+              THIS environment's rooms — it is not the canonical archive of
+              everything kept anywhere in Soullab, and must not claim to be. */}
         </p>
       </div>
 
@@ -193,6 +197,13 @@ function FieldInner() {
           </p>
         </div>
       </div>
+
+      <RoomTrustCopy
+        holds="The threads, practices, and offerings you authored or chose to keep in this environment — verbatim, dated, grouped only by month."
+        doesNotHold="No interpretation, scores, or summaries — and not everything you have ever kept in Soullab: this field holds what came through this environment's rooms."
+        whoSees="You. A thread is visible to your practitioner only if you explicitly shared it when you kept it — sharing is per-thread and never automatic."
+        control="Everything here exists because of your own gesture. Nothing new is written by opening this room."
+      />
 
       <p className="relative text-slate-600 text-sm font-light italic pt-2">
         Nothing here rushes you.
