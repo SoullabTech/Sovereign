@@ -8192,6 +8192,16 @@ I'm not sure what I'm feeling yet.`;
                                 >
                                   Undo
                                 </button>
+                                {/* Quiet door to the member's own review of what they
+                                    kept — same entry grammar as the anchor page's
+                                    "earlier". Holding language only (copy guard). */}
+                                <span aria-hidden className="text-emerald-400/40">·</span>
+                                <a
+                                  href="/maia/moments"
+                                  className="underline decoration-dotted hover:text-emerald-300 transition-colors"
+                                >
+                                  Your moments
+                                </a>
                               </div>
                             ) : (
                               <button
