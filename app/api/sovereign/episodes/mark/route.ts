@@ -22,11 +22,17 @@
  *     episodic_member_marked_requires_verbatim enforces the
  *     verbatim<->marked biconditional at the database as a backstop.
  *
- * SCOPE OF THIS DIFF (named honestly — what is NOT yet built)
- *   - No Sanctuary guard yet. A moment marked from a Sanctuary session must
- *     NEVER persist (absolute boundary, CLAUDE.md). This route is unwired to any
- *     UI gesture; wiring it to a live gesture REQUIRES a Sanctuary check at the
- *     call site first. Do not wire this to the UI before that gate exists.
+ * SANCTUARY GUARD (slice 2, 2026-07-13)
+ *   - The live gesture (member-facing "Keep this moment" affordance in
+ *     components/OracleConversation.tsx) does NOT render at all when a
+ *     Sanctuary session is active, and independently refuses client-side
+ *     before calling this route — defense-in-depth, per CLAUDE.md's absolute
+ *     Sanctuary boundary. This route itself still performs no sanctuary
+ *     awareness of its own (it has no session-state input); the guard lives
+ *     entirely at the call site, same as every other Sanctuary-scoped write
+ *     in this codebase.
+ *   - Sovereign placement includes removal: the member who marked a moment
+ *     may also unmark it. See DELETE below.
  *   - This is the write path only. It does NOT govern recall. Whether marked
  *     moments resurface in the prompt is a separate consent gated by
  *     members.episodic_recall_enabled (read-path). Marking and recalling are
@@ -69,6 +75,53 @@ function shape(row: MarkedEpisodeRow) {
     sourceSessionId: row.source_session_id,
     createdAt: row.created_at,
   };
+}
+
+/**
+ * GET — the member's own marked moments, newest first ("Marked Moments" room,
+ * authorized 2026-07-13 as the instrument the lived-week witness requires:
+ * "do people naturally return to their marks?" needs a place to return to).
+ *
+ * Member-scoped by construction: memberId comes from the credential and is the
+ * only key used — no parameter can name another member. Returns ONLY what the
+ * member placed: episodeId (needed to unmark), verbatim text, date, source
+ * pointers. Interpretive columns are NULL by CHECK constraint and are not
+ * selected. This is a mirror of the member's placements, nothing more.
+ *
+ * 200 { moments: [...] }, 401 if no member.
+ */
+export async function GET(request: NextRequest) {
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
+  }
+
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const result = await query<MarkedEpisodeRow>(
+      `SELECT id, episode_id, verbatim_text, marked_by_member,
+              source_turn_id, source_session_id, created_at
+         FROM episodic_memories
+        WHERE user_id = $1 AND marked_by_member = TRUE
+        ORDER BY created_at DESC
+        LIMIT 200`,
+      [memberId],
+    );
+
+    // Discoverable log marker. Count only, never content.
+    console.log(
+      `[MAIA/sovereign] episodic moments listed { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+        `count: ${result.rows.length} }`,
+    );
+
+    return NextResponse.json({ moments: result.rows.map(shape) });
+  } catch (err) {
+    console.error('[episodes/mark] GET error:', err);
+    return NextResponse.json({ error: 'Failed to load moments' }, { status: 500 });
+  }
 }
 
 /**
@@ -147,5 +200,68 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('[episodes/mark] POST error:', err);
     return NextResponse.json({ error: 'Failed to mark episode' }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE — unmark a member-marked moment. Sovereign placement includes
+ * removal: the member who placed the mark is the only one who can lift it.
+ *
+ * Body or query param: { episodeId: string }
+ *
+ * Hard-deletes the row (not a soft flag) — member-scoped by construction via
+ * `WHERE episode_id = $1 AND user_id = $2 AND marked_by_member = TRUE`, so a
+ * member can only ever remove their own marked rows. Zero residue: nothing of
+ * the moment remains once removed.
+ *
+ * 200 on success, 400 if episodeId missing, 401 if no member, 404 if no
+ * matching owned row (we do not leak whether the id exists for someone else).
+ */
+export async function DELETE(request: NextRequest) {
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
+  }
+
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let episodeId: unknown = request.nextUrl.searchParams.get('episodeId');
+    if (!episodeId) {
+      try {
+        const body = (await request.json()) as { episodeId?: unknown };
+        episodeId = body?.episodeId;
+      } catch {
+        // No JSON body — episodeId may have arrived via query param only.
+      }
+    }
+
+    if (typeof episodeId !== 'string' || episodeId.length === 0) {
+      return NextResponse.json({ error: 'episodeId is required' }, { status: 400 });
+    }
+
+    const result = await query<{ episode_id: string }>(
+      `DELETE FROM episodic_memories
+       WHERE episode_id = $1 AND user_id = $2 AND marked_by_member = TRUE
+       RETURNING episode_id`,
+      [episodeId, memberId],
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    // Discoverable log marker. Never content, never the verbatim text.
+    console.log(
+      `[MAIA/sovereign] episodic moment unmarked { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+        `episodeId: ${episodeId} }`,
+    );
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[episodes/mark] DELETE error:', err);
+    return NextResponse.json({ error: 'Failed to unmark episode' }, { status: 500 });
   }
 }

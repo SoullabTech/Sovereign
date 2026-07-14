@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { CANONICAL_FIELD_KEYS } from '@/lib/maia/living-field/canonicalFieldKeys'
+import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
 
 function getMemberId(request: NextRequest): string | null {
   return (
-    request.headers.get('x-member-id') ||
+    probeAuthPosture(request) ||
     request.nextUrl.searchParams.get('memberId') ||
     null
   )

@@ -18,6 +18,7 @@ import { query } from '@/lib/db/postgres'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildEncounterContext, formatGatheredMaterial } from '@/lib/maia/living-field/encounterContext'
 import { CANONICAL_FIELD_KEYS } from '@/lib/maia/living-field/canonicalFieldKeys'
+import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -128,7 +129,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { fieldKey: string } }
 ) {
-  const memberId = request.headers.get('x-member-id')
+  const memberId = probeAuthPosture(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
@@ -293,7 +294,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { fieldKey: string } }
 ) {
-  const memberId = request.headers.get('x-member-id')
+  const memberId = probeAuthPosture(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }

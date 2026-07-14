@@ -252,3 +252,90 @@ export async function loadConversationalRecallPref(userId: string): Promise<bool
     return true; // graceful: default-on
   }
 }
+
+/**
+ * Episodic memory — member-marked significant moments (Phase 2).
+ *
+ * Authority: docs/specs/EPISODIC_LAYER_PHASE_2_SPEC_2026-07-13.md
+ *            database/migrations/20260531000001_episodic_member_marked_provenance.sql
+ *
+ * DOCTRINE (load-bearing, carried forward from the provenance migration):
+ *   "Episodic memory preserves member-marked significance. It does not
+ *    manufacture significance." This loader selects ONLY rows where
+ *    marked_by_member = TRUE. It never orders or filters by significance,
+ *    emotional_intensity, or breakthrough_level — those columns stay NULL
+ *    for member-marked rows and are never read by this loader.
+ *
+ * Excludes:
+ *   - any row with marked_by_member = FALSE (legacy/system-authored rows,
+ *     ~0 callers today, but structurally excluded regardless)
+ *
+ * Graceful: returns [] on missing input or DB error.
+ */
+export type MarkedEpisodeSnapshot = {
+  episode_id: string;
+  verbatim_text: string;
+  source_turn_id: string | null;
+  source_session_id: string | null;
+  created_at: Date;
+};
+
+export async function loadRecentMarkedEpisodes(
+  userId: string,
+  limit: number = 5,
+): Promise<MarkedEpisodeSnapshot[]> {
+  if (!userId) return [];
+  try {
+    const result = await query<{
+      episode_id: string;
+      verbatim_text: string;
+      source_turn_id: string | null;
+      source_session_id: string | null;
+      created_at: Date;
+    }>(
+      `SELECT episode_id, verbatim_text, source_turn_id, source_session_id, created_at
+       FROM episodic_memories
+       WHERE user_id = $1
+         AND marked_by_member = TRUE
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [userId, limit],
+    );
+    return result.rows.map((r) => ({
+      episode_id: r.episode_id,
+      verbatim_text: r.verbatim_text ?? '',
+      source_turn_id: r.source_turn_id,
+      source_session_id: r.source_session_id,
+      created_at: r.created_at,
+    }));
+  } catch (err) {
+    console.warn('[memoryLoaders] loadRecentMarkedEpisodes failed (non-fatal):', err);
+    return [];
+  }
+}
+
+/**
+ * Episodic recall preference — checks members.episodic_recall_enabled.
+ *
+ * Phase 2 consent gate (Option 3 — default-on with opt-out), mirroring
+ * loadConversationalRecallPref exactly. The column already exists
+ * (added by database/migrations/20260531000001_episodic_member_marked_provenance.sql,
+ * §5) — this loader is the first reader of it.
+ *
+ * Graceful: returns true (default) on missing input or DB error so the
+ * conversation never blocks on preference lookup.
+ */
+export async function loadEpisodicRecallPref(userId: string): Promise<boolean> {
+  if (!userId) return true;
+  try {
+    const result = await query<{ episodic_recall_enabled: boolean | null }>(
+      `SELECT episodic_recall_enabled FROM members WHERE id = $1 LIMIT 1`,
+      [userId],
+    );
+    if (result.rows.length === 0) return true; // member not found → default-on
+    return result.rows[0].episodic_recall_enabled !== false;
+  } catch (err) {
+    console.warn('[memoryLoaders] loadEpisodicRecallPref failed (non-fatal):', err);
+    return true; // graceful: default-on
+  }
+}
