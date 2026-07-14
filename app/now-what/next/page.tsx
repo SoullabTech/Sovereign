@@ -66,7 +66,7 @@ function NextInner() {
     return (
       <NowWhatThreshold
         roomName="What may be next"
-        line="Held open, not prescribed."
+        line="The practices you chose to live — held open, not prescribed."
         fieldContext={fieldContext}
       />
     );
@@ -89,14 +89,18 @@ function NextInner() {
         {/* Box 1 — orientation */}
         <div className={panel} style={{ animation: 'nwnFadeUp 0.55s ease both' }}>
           <p className="text-xs uppercase tracking-[0.35em] mb-2" style={{ color: '#ffe27a' }}>What may be next</p>
+          {/* YPO-grade rule (founder, 2026-07-14 sweep): function words lead
+              the header; the doctrine sentence stays, demoted to flavor inside
+              the body. Positive-first: the negation now lands after the
+              positive subject, as emphasis. */}
           <h1 className="text-slate-100 text-2xl font-extralight tracking-wide mb-2">
-            Held open, not prescribed.
+            The practices you chose, and the door to your next step.
           </h1>
           <p className="text-slate-400 text-sm font-light leading-relaxed">
-            No one here announces your next step — not MAIA, not the program,
-            not this page. What may be next emerges when you sit with the actual
-            thing, and the only version of it this room shows is the one you
-            already chose: the practices you committed to live.
+            What may be next emerges when you sit with the actual thing — and the
+            only version of it this room shows is the one you already chose: the
+            practices you committed to live. Held open, not prescribed: no one
+            here announces your next step — not MAIA, not the program, not this page.
           </p>
         </div>
 
@@ -145,7 +149,7 @@ function NextInner() {
               className="rounded-full border px-6 py-2.5 text-sm transition-all hover:shadow-[0_0_30px_rgba(255,226,122,0.3)]"
               style={{ color: '#ffe27a', borderColor: 'rgba(255,226,122,0.45)' }}
             >
-              Sit with what may be next →
+              Start a session →
             </a>
             <p className="text-slate-500 text-xs font-light">
               The session room is where a next real step appears — pulled by you, never pushed.
