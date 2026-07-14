@@ -1707,11 +1707,23 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
         <div className="flex flex-wrap justify-between items-center mt-3 gap-3">
           <div className="flex items-center gap-4">
             <span className="text-slate-500 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
+            {/* Poetry needs a caption (ruling 2026-07-13): each doctrine-
+                register gesture keeps its sentence and gains a plain-function
+                line beneath it. Captions promise ONLY what is live — the
+                bring panel takes pasted text or a .txt/.md file (no kept-
+                thread picker exists yet, so none is promised), and captions
+                render at legible size (a whispered caption on a whispered
+                label would be the failure family eating its own fix). */}
             <button
               onClick={() => setShowBring(v => !v)}
-              className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors"
+              className="text-left transition-colors group"
             >
-              Bring something with you
+              <span className="text-slate-400 group-hover:text-slate-200 text-sm underline underline-offset-2 transition-colors">
+                Bring something with you
+              </span>
+              <span className="block text-slate-400 text-xs font-light mt-1">
+                paste a note or a journal page — start from what you&apos;re carrying
+              </span>
             </button>
             {/* Exit symmetric to the entry gesture: the threshold out of the
                 conversation and into the carry → practice → life sequence. */}
@@ -1719,9 +1731,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               <button
                 onClick={listenBack}
                 disabled={working}
-                className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors disabled:opacity-30"
+                className="text-left transition-colors group disabled:opacity-30"
               >
-                Take something back with you
+                <span className="text-slate-400 group-hover:text-slate-200 text-sm underline underline-offset-2 transition-colors">
+                  Take something back with you
+                </span>
+                <span className="block text-slate-400 text-xs font-light mt-1">
+                  close the session: choose what to keep — a practice, a question
+                </span>
               </button>
             )}
           </div>

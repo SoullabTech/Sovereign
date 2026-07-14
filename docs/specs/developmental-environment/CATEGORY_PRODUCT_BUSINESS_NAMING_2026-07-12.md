@@ -149,6 +149,41 @@ canon at the sitting; recorded here because it emerged from the naming work.)
   category-defining, internal north-star language until n≥2.
 - *"We do not tell tomorrow's story as if it were today's"* governs all of these.
 
+## External legibility evidence (accumulate here; one line per sighting)
+
+Unprompted external reads of the category — the one validation internal convergence
+cannot manufacture. Only *independent* sightings count (an observer who was handed the
+vocabulary doesn't qualify).
+
+- **2026-07-13** — external counsel (no access to this record's vocabulary) independently
+  described the platform as `developmental environments → practitioner worlds → living
+  wisdom ecosystem`, and reached for the same features (graph, seasons, authoring) —
+  notably *without* their constitutional constraints. Kelly's read: the features are
+  obvious; **the constitution is the invention**. Category legible from outside; refusal
+  architecture not — which is consistent with it being the moat.
+  **Strategic corollary (same episode)**: that counsel is the industry's default playbook —
+  what every competitor in this space is hearing (build the graph, surface the patterns,
+  name the seasons, ship fast). The delta between the counsel and the house method is
+  therefore the differentiation itself: same features, constrained — member-pulled,
+  self-placed, gate-sequenced, walk-verified. The counsel proposed the moat everyone
+  will have; the record holds the moat no one else will.
+  **Provenance correction (2026-07-13, same day, Kelly)**: the counsel did NOT come from
+  an outside party — it came from the house's *internal council*. The entry was filed as
+  the first *external* sighting before this was known. What survives regardless of origin:
+  the counsel operated without the record's vocabulary and still converged on
+  environments → worlds → ecosystem, and reached for the features without their
+  constraints ("the constitution is the invention" holds). What is downgraded: this is
+  **context-free internal legibility, not external legibility** — by this section's own
+  admission rule it counts as a qualified sighting only if the council demonstrably lacked
+  the vocabulary, and it cannot count as market/outside validation. The column still
+  awaits its first genuinely external entry — someone *unprompted* (a practitioner, an
+  investor, a stranger) describing the category back unbidden; the discriminating
+  variable is who prompted the generator, never the register of the output. The
+  instrument's honest name going forward: **competitor proxy** — repeatable on demand
+  ("what is everyone else building"), triaged against the record; never a market
+  sighting. Open: council composition (people / AI dialogues / mixed) is not yet on
+  the record — one sentence from Kelly settles the weight.
+
 ## Open item
 
 **Manuscripts.ai** appeared in Kelly's unification list and is not recorded anywhere in
