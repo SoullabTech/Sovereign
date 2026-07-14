@@ -41,7 +41,12 @@ const WIDENING_PATTERNS: readonly RegExp[] = [
   /\b(?:jailbreak|dan\s+mode|developer\s+mode)\b/i,
 ];
 
-function isWidening(s: string): boolean {
+/**
+ * Exported for every surface that accepts practitioner-authored free text
+ * (guidance, program lessons, material descriptions): one widening check,
+ * one doctrine. Narrowing language never matches.
+ */
+export function isWidening(s: string): boolean {
   return WIDENING_PATTERNS.some((re) => re.test(s));
 }
 
