@@ -39,8 +39,10 @@ function ThemesInner() {
           <p className="text-xs uppercase tracking-[0.35em] mb-2" style={{ color: '#8fa0b8' }}>
             Themes · taking shape
           </p>
+          {/* YPO-grade sweep 2026-07-14: function words lead the headline;
+              the doctrine phrase stays as its closing clause. */}
           <h1 className="text-slate-100 text-2xl font-extralight tracking-wide mb-2">
-            Patterns you pull, never pushed.
+            See what repeats in what you kept — patterns you pull, never pushed.
           </h1>
           <p className="text-slate-400 text-sm font-light leading-relaxed">
             This room will let you ask MAIA to look across the material you have
