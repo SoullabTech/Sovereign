@@ -2053,6 +2053,23 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     try {
       console.log(`🧠 Consulting Claude for ${consultationType} enhancement...`);
 
+      // 📖💬 Recall addenda pass-through — closes §II.C of
+      // ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md for the consultation lane, the
+      // only prompt seam on DEEP-primary (the local orchestrator draft has no
+      // prompt seam by construction — it weaves templates, it does not read a
+      // system prompt). Same consent-gated blocks the FAST/CORE prompts carry:
+      // member-marked episodic moments, prior cross-session exchanges, and
+      // member-placed atoms. Empty for sanctuary turns and members without
+      // recall material — the route-level gates upstream decide what is here.
+      const consultationRecallAddenda = [
+        (meta as any)?.conversationalRecallAddendum,
+        (meta as any)?.episodicRecallAddendum,
+        (meta as any)?.atomsAddendum,
+      ].filter(Boolean).join('\n\n');
+      if (consultationRecallAddenda) {
+        console.log('[MAIA] deep-consultation recall-addenda', { chars: consultationRecallAddenda.length });
+      }
+
       const consultation = await consultClaudeForConsciousness({
         userInput: input,
         maiaInitialResponse: maiaInitialResponse + cognitiveScaffoldingNote + knowledgeFieldNote, // 🧠 Inject scaffolding + knowledge field into context for Claude
@@ -2061,6 +2078,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
           maiaResponse: ex.maiaResponse || ''
         })),
         consultationType,
+        contextAddenda: consultationRecallAddenda || undefined,
         sessionMetadata: {
           turnCount: effectiveHistory.length + 1,
           relationshipDepth: conversationContext.profile.relationshipDepth,
