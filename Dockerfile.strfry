@@ -5,12 +5,29 @@
 # and jq to parse JSON from stdin/stdout.
 #
 # strfry is based on Alpine Linux — use apk, not apt-get.
+#
+# Base image is pinned by digest (upstream publishes only a `latest` tag, and
+# the 2026-07 `latest` drifted to a non-root default user, which broke apk and
+# with it every full-stack deploy). The digest below is the multi-arch OCI
+# index (linux/amd64 + linux/arm64) that `latest` resolved to on 2026-07-13.
+# To bump: docker pull ghcr.io/hoytech/strfry:latest, take the reported
+# digest, update here, and verify `docker build -f Dockerfile.strfry .` locally.
 
-FROM ghcr.io/hoytech/strfry:latest
+FROM ghcr.io/hoytech/strfry@sha256:14aff3fa46a8cc8f6d640e736678b187cb26ffad71be3dca06c43976eb07a9aa
 
+# Upstream image defaults to uid 1000 (strfry); apk needs root
+USER root
 RUN apk add --no-cache curl jq
 
 # Ensure write policy script is executable at build time
 # (it is also mounted as a volume in docker-compose)
 COPY scripts/nostr-write-policy.sh /app/scripts/nostr-write-policy.sh
 RUN chmod +x /app/scripts/nostr-write-policy.sh
+
+# Deliberately NOT restoring `USER strfry` here: production has always run
+# this container as root (pre-drift base images defaulted to root), and the
+# LMDB files in the nostr_relay_data volume are root-owned (witnessed on
+# minisforum 2026-07-13: data.mdb/lock.mdb 644 root:root). Switching to
+# uid 1000 would build green and then crash the relay at deploy.
+# To de-privilege later: one-time `chown -R 1000:1000` on the volume's
+# /app/strfry-db contents, then replace this stanza with `USER strfry`.
