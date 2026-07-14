@@ -74,7 +74,9 @@ export type ModuleSlug =
   | 'booking'
   | 'vision-studio'
   | 'soul_portraits'
-  | 'maia-guidance';
+  | 'maia-guidance'
+  | 'materials'
+  | 'programs';
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
@@ -165,6 +167,26 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     href: '/studio/maia-guidance',
     category: 'clients',
     description: 'Shape how MAIA engages within your field — tone, language, boundaries (narrows only; never overrides her safeguards)',
+    alwaysOn: false,
+    mode: 'practice',
+  },
+  {
+    slug: 'materials',
+    label: 'Materials',
+    icon: FolderOpen,
+    href: '/studio/materials',
+    category: 'clients',
+    description: 'Upload and organize your writings, recordings, and worksheets — you ratify what MAIA may draw on',
+    alwaysOn: false,
+    mode: 'practice',
+  },
+  {
+    slug: 'programs',
+    label: 'Programs',
+    icon: DoorOpen,
+    href: '/studio/programs',
+    category: 'clients',
+    description: 'Build your courses, workshops, and trainings — steps, materials, practices',
     alwaysOn: false,
     mode: 'practice',
   },
@@ -439,13 +461,13 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'vision-studio', 'soul_portraits'],
-  astrology: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'soul_portraits'],
-  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'comms', 'soul_portraits'],
-  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'vault', 'comms', 'soul_portraits'],
-  bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'services', 'soul_portraits'],
-  groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'comms', 'marketing', 'soul_portraits'],
-  consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'maia-guidance', 'comms', 'teams', 'soul_portraits'],
+  generalist: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'materials', 'programs', 'vault', 'vision-studio', 'soul_portraits'],
+  astrology: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'materials', 'programs', 'vault', 'soul_portraits'],
+  therapy: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'materials', 'programs', 'vault', 'comms', 'soul_portraits'],
+  clinician: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'caseload', 'calendar', 'teams', 'decisions', 'changes', 'maia', 'maia-guidance', 'materials', 'programs', 'vault', 'comms', 'soul_portraits'],
+  bodywork: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'materials', 'programs', 'services', 'soul_portraits'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'scheduling', 'booking', 'calendar', 'decisions', 'changes', 'maia', 'maia-guidance', 'materials', 'programs', 'comms', 'marketing', 'soul_portraits'],
+  consultant: ['clients', 'portal', 'sessions', 'scheduling', 'booking', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'maia-guidance', 'materials', 'programs', 'comms', 'teams', 'soul_portraits'],
   personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools', 'tasks', 'calendar', 'vision-studio'],
 };
 
