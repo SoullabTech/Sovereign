@@ -21,6 +21,7 @@ interface MinePortrait {
   subjectName: string | null;
   subjectPersonId: string | null;
   consentState: string;
+  published: boolean;
   createdAt: string;
   previewUrl: string;
 }
@@ -68,7 +69,7 @@ export default function StudioSoulPortraitsPage() {
           </Link>
         </div>
         <p className="text-slate-400 text-sm mb-7">
-          Private drafts for your review. Nothing here is published or shared with a client.
+          Your portraits, newest first. Drafts stay private until you send them.
         </p>
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -95,9 +96,11 @@ export default function StudioSoulPortraitsPage() {
             >
               <div>
                 <div className="text-base font-semibold text-slate-100">
-                  {p.subjectName || 'Unlinked draft'}
+                  {p.subjectName || 'Untitled portrait'}
                 </div>
-                <div className="text-xs text-slate-400 mt-0.5">Draft · {formatDate(p.createdAt)}</div>
+                <div className="text-xs text-slate-400 mt-0.5">
+                  {p.published ? <span className="text-emerald-400">Sent</span> : 'Draft'} · {formatDate(p.createdAt)}
+                </div>
               </div>
               <div className="flex gap-4 shrink-0 text-sm">
                 <Link href={p.previewUrl} className="text-amber-300">

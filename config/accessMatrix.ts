@@ -451,6 +451,12 @@ export const ACCESS_RULES: AccessRule[] = [
   // -------------------------------------------------------------------------
   // Soul Portrait — Path B, Gate 1 (see docs/architecture/SOUL_PORTRAIT_PATH_B_SPEC.md §2)
   // -------------------------------------------------------------------------
+  // Gate 4 delivery surface (2026-07-16): generated portraits SENT by a
+  // practitioner render here for non-members. Public at the middleware layer
+  // ONLY — the real gates live in the route: published_at IS NOT NULL AND
+  // ledger consent-liveness (isPortraitConsentLive), else 404. The un-guessable
+  // slug is defense-in-depth, never the gate. noindex; no Mentor/MAIA/memory.
+  { prefix: '/soul-portrait/view/', public: true, notes: 'Delivered Soul Portraits (Gate 4) — consent-gated in-route; middleware passes, ledger decides' },
   // Augusten = the single family-held exception: public-unlisted (loads without
   // auth, noindex). These EXACT rules win over the prefix below — the matcher
   // runs the exact pass before the prefix pass — so the exception is explicit
