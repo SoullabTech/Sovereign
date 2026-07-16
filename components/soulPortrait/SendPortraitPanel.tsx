@@ -65,7 +65,9 @@ export function SendPortraitPanel({
       setSentUrl(data.url);
       if (data.emailed) {
         setEmailedTo(email.trim());
-        setResendNote(`Email sent to ${email.trim()}.`);
+        setResendNote(
+          `Email accepted for delivery to ${email.trim()}. If it doesn't appear within a few minutes, ask them to check Spam or Promotions — or share the link directly.`,
+        );
       } else if (email.trim()) {
         setError(data.emailError ? `The email failed to send: ${data.emailError}` : 'The email failed to send — the link above still works.');
       }
