@@ -36,6 +36,7 @@ export function SendPortraitPanel({
   );
   const [emailedTo, setEmailedTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [resendNote, setResendNote] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const needsAttestation = !alreadyPublished && !sentUrl;
@@ -43,6 +44,7 @@ export function SendPortraitPanel({
   async function send() {
     setSending(true);
     setError(null);
+    setResendNote(null);
     try {
       const res = await fetch(`/api/soul-portrait/${encodeURIComponent(portraitSlug)}/send`, {
         method: 'POST',
@@ -61,8 +63,12 @@ export function SendPortraitPanel({
         return;
       }
       setSentUrl(data.url);
-      if (data.emailed) setEmailedTo(email.trim());
-      else if (email.trim() && data.emailError) setError(`Link created, but the email failed: ${data.emailError}`);
+      if (data.emailed) {
+        setEmailedTo(email.trim());
+        setResendNote(`Email sent to ${email.trim()}.`);
+      } else if (email.trim()) {
+        setError(data.emailError ? `The email failed to send: ${data.emailError}` : 'The email failed to send — the link above still works.');
+      }
     } catch {
       setError('Send failed — check your connection and try again.');
     } finally {
@@ -170,6 +176,8 @@ export function SendPortraitPanel({
                   {sending ? 'Sending…' : 'Send email'}
                 </button>
               </div>
+              {resendNote && <div style={{ color: '#9FD8A8', fontSize: 13, marginTop: 10 }}>{resendNote}</div>}
+              {error && <div style={{ color: '#E8A0A0', fontSize: 13, marginTop: 10 }}>{error}</div>}
             </div>
           </div>
         ) : (
