@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as Astronomy from 'astronomy-engine';
+import { calculateAsteroidPositionsNBody, type AsteroidPositions } from '@/lib/astrology/asteroidNBody';
 
 // Zodiac signs in order
 const ZODIAC_SIGNS = [
@@ -292,17 +293,25 @@ function calculateTransitPositions(date: Date): Transit[] {
   }
 
   // ========================================================================
-  // CHIRON
+  // CHIRON + ASTEROIDS — perturbed N-body integration (primary), linear
+  // mean-motion stubs below as fallback. See lib/astrology/asteroidNBody.ts.
   // ========================================================================
+  let asteroidNBody: AsteroidPositions | null = null;
   try {
-    const chironLon = calculateChironApprox(date);
+    asteroidNBody = calculateAsteroidPositionsNBody(date);
+  } catch (error) {
+    console.error('[Transits] N-body asteroid path failed; falling back to mean-motion stubs:', error);
+  }
+
+  try {
+    const chironLon = asteroidNBody?.chiron.longitude ?? calculateChironApprox(date);
     const { sign, degree } = longitudeToZodiac(chironLon);
     transits.push({
       planet: 'Chiron',
       sign,
       degree,
       longitude: Number(chironLon.toFixed(4)),
-      retrograde: false, // Simplified - would need velocity check
+      retrograde: asteroidNBody?.chiron.retrograde ?? false,
     });
   } catch (error) {
     console.error('[Transits] Error calculating Chiron:', error);
@@ -329,14 +338,14 @@ function calculateTransitPositions(date: Date): Transit[] {
 
   // Ceres
   try {
-    const ceresLon = calculateCeresApprox(date);
+    const ceresLon = asteroidNBody?.ceres.longitude ?? calculateCeresApprox(date);
     const { sign, degree } = longitudeToZodiac(ceresLon);
     transits.push({
       planet: 'Ceres',
       sign,
       degree,
       longitude: Number(ceresLon.toFixed(4)),
-      retrograde: false,
+      retrograde: asteroidNBody?.ceres.retrograde ?? false,
     });
   } catch (error) {
     console.error('[Transits] Error calculating Ceres:', error);
@@ -344,14 +353,14 @@ function calculateTransitPositions(date: Date): Transit[] {
 
   // Pallas
   try {
-    const pallasLon = calculatePallasApprox(date);
+    const pallasLon = asteroidNBody?.pallas.longitude ?? calculatePallasApprox(date);
     const { sign, degree } = longitudeToZodiac(pallasLon);
     transits.push({
       planet: 'Pallas',
       sign,
       degree,
       longitude: Number(pallasLon.toFixed(4)),
-      retrograde: false,
+      retrograde: asteroidNBody?.pallas.retrograde ?? false,
     });
   } catch (error) {
     console.error('[Transits] Error calculating Pallas:', error);
@@ -359,14 +368,14 @@ function calculateTransitPositions(date: Date): Transit[] {
 
   // Juno
   try {
-    const junoLon = calculateJunoApprox(date);
+    const junoLon = asteroidNBody?.juno.longitude ?? calculateJunoApprox(date);
     const { sign, degree } = longitudeToZodiac(junoLon);
     transits.push({
       planet: 'Juno',
       sign,
       degree,
       longitude: Number(junoLon.toFixed(4)),
-      retrograde: false,
+      retrograde: asteroidNBody?.juno.retrograde ?? false,
     });
   } catch (error) {
     console.error('[Transits] Error calculating Juno:', error);
@@ -374,14 +383,14 @@ function calculateTransitPositions(date: Date): Transit[] {
 
   // Vesta
   try {
-    const vestaLon = calculateVestaApprox(date);
+    const vestaLon = asteroidNBody?.vesta.longitude ?? calculateVestaApprox(date);
     const { sign, degree } = longitudeToZodiac(vestaLon);
     transits.push({
       planet: 'Vesta',
       sign,
       degree,
       longitude: Number(vestaLon.toFixed(4)),
-      retrograde: false,
+      retrograde: asteroidNBody?.vesta.retrograde ?? false,
     });
   } catch (error) {
     console.error('[Transits] Error calculating Vesta:', error);
