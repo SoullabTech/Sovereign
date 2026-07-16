@@ -90,8 +90,10 @@ function QuestionsInner() {
           <p className="text-xs uppercase tracking-[0.35em] mb-2" style={{ color: '#ffe27a' }}>
             Questions you&apos;re living
           </p>
+          {/* YPO-grade sweep 2026-07-14: function words lead; "kept warm"
+              stays as the closing flavor rather than the whole headline. */}
           <h1 className="text-slate-100 text-2xl font-extralight tracking-wide mb-2">
-            The ones you named, kept warm.
+            The questions you kept, waiting for you — kept warm.
           </h1>
           <p className="text-slate-400 text-sm font-light leading-relaxed">
             A question worth living doesn&apos;t need an answer yet — it needs to not

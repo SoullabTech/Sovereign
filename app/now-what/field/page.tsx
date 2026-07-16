@@ -122,7 +122,7 @@ function FieldInner() {
       <div className={panel} style={{ animation: 'nwfFadeUp 0.55s ease both' }}>
         <p className="text-xs uppercase tracking-[0.35em] mb-2" style={{ color: '#ffe27a' }}>Your field</p>
         <h1 className="text-slate-100 text-2xl font-extralight tracking-wide mb-2">
-          What you have carried, in your own words.
+          What you kept, in your own words.
         </h1>
         <p className="text-slate-400 text-sm font-light leading-relaxed">
           Every line here is something you authored or chose to keep in this
@@ -146,8 +146,8 @@ function FieldInner() {
 
         {threads !== null && threads.length === 0 && (
           <p className="text-slate-400 text-sm font-light leading-relaxed">
-            Nothing here yet. The field fills only through your own gestures — what you
-            carry from the room is what accumulates.
+            Your field fills only through your own gestures — what you keep at the
+            end of a session collects here, in your words. Nothing is here yet.
           </p>
         )}
 
