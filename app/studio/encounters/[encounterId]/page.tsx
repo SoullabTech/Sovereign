@@ -23,6 +23,10 @@ import {
   TrendingUp,
   Eye,
   EyeOff,
+  Copy,
+  Check,
+  DoorOpen,
+  RefreshCw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -43,6 +47,19 @@ interface Participant {
   id: string;
   display_name: string;
   role: string;
+}
+
+interface RoomLink {
+  participantId: string;
+  displayName: string;
+  role: string;
+  thresholdPath: string;
+}
+
+interface RoomConsent {
+  participantId: string;
+  joined: boolean;
+  recordConsented: boolean;
 }
 
 interface TranscriptTurn {
@@ -171,6 +188,10 @@ export default function EncounterWorkspacePage() {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [generatingLayer, setGeneratingLayer] = useState<string | null>(null);
+  const [roomLinks, setRoomLinks] = useState<RoomLink[]>([]);
+  const [roomConsents, setRoomConsents] = useState<RoomConsent[]>([]);
+  const [copiedParticipant, setCopiedParticipant] = useState<string | null>(null);
+  const [refreshingConsent, setRefreshingConsent] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -197,6 +218,47 @@ export default function EncounterWorkspacePage() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
+
+  // ── Session Room (native) ─────────────────────────────────────────────────
+  // Tokens are stateless with a 7-day TTL, so minting on page view never
+  // invalidates a link already sent — it just issues a fresh door key.
+
+  const refreshConsents = useCallback(async () => {
+    setRefreshingConsent(true);
+    try {
+      const res = await apiFetch(`/api/studio/encounters/${encounterId}/threshold`);
+      if (res.ok) {
+        const data = await res.json();
+        setRoomConsents(data.participants ?? []);
+      }
+    } finally {
+      setRefreshingConsent(false);
+    }
+  }, [encounterId]);
+
+  useEffect(() => {
+    if (participants.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const res = await apiFetch(`/api/studio/encounters/${encounterId}/threshold`, { method: 'POST' });
+      if (!res.ok || cancelled) return;
+      const data = await res.json();
+      if (!cancelled) setRoomLinks(data.links ?? []);
+      refreshConsents();
+    })();
+    return () => { cancelled = true; };
+  }, [participants.length, encounterId, refreshConsents]);
+
+  async function copyInvite(link: RoomLink) {
+    const url = `${window.location.origin}${link.thresholdPath}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedParticipant(link.participantId);
+      setTimeout(() => setCopiedParticipant(null), 2000);
+    } catch {
+      window.prompt('Copy this invite link:', url);
+    }
+  }
 
   // ── Moment actions ────────────────────────────────────────────────────────
 
@@ -385,6 +447,68 @@ export default function EncounterWorkspacePage() {
                 );
               })}
             </div>
+
+            {participants.length > 0 && roomLinks.length > 0 && (
+              <div className="bg-slate-900/60 border border-amber-500/30 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs text-amber-400/90 uppercase tracking-wider flex items-center gap-1.5">
+                    <DoorOpen className="w-3.5 h-3.5" />
+                    Session Room
+                  </h3>
+                  <button
+                    onClick={refreshConsents}
+                    disabled={refreshingConsent}
+                    className="text-slate-500 hover:text-slate-300 transition-colors"
+                    title="Refresh who has arrived"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${refreshingConsent ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {roomLinks.map(link => {
+                    const consent = roomConsents.find(c => c.participantId === link.participantId);
+                    const arrived = consent?.joined ?? false;
+                    const isPractitioner = link.role === 'practitioner';
+                    return (
+                      <div key={link.participantId} className="flex items-center gap-3 bg-slate-800/60 rounded-lg px-3 py-2.5">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm text-slate-200">{link.displayName}</span>
+                          <span className="ml-2 text-xs text-slate-500">{link.role}</span>
+                        </div>
+                        <span className={`text-xs ${arrived ? 'text-emerald-400' : 'text-slate-500'}`}>
+                          {arrived ? '✓ arrived' : 'waiting'}
+                        </span>
+                        {isPractitioner ? (
+                          <a
+                            href={link.thresholdPath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-medium rounded-lg transition-colors"
+                          >
+                            <DoorOpen className="w-3.5 h-3.5" />
+                            Enter Room
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => copyInvite(link)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-lg transition-colors"
+                          >
+                            {copiedParticipant === link.participantId
+                              ? <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              : <Copy className="w-3.5 h-3.5" />}
+                            {copiedParticipant === link.participantId ? 'Copied' : 'Copy Invite'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-slate-500 mt-3">
+                  Send each person their own invite — everyone consents on their own device before the room opens.
+                  Links stay good for 7 days.
+                </p>
+              </div>
+            )}
 
             {participants.length > 0 && (
               <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
