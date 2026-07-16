@@ -281,7 +281,20 @@ export async function middleware(req: NextRequest) {
           return response;
         }
 
-        // Page routes redirect to sign in with incident stamp
+        // Page routes redirect to sign in with incident stamp.
+        // Now What? routes go to the ENVIRONMENT'S OWN door (Kelly ruling
+        // 2026-07-16, independent arrival): an invited client must meet
+        // their practitioner's world, not the platform's generic auth card.
+        // next carries the full original URL (path + query) so the arc
+        // (fieldContext/program) survives the round-trip.
+        if (pathname.startsWith('/now-what')) {
+          const original = pathname + (req.nextUrl.search || '');
+          url.pathname = '/now-what/arrive';
+          url.search = '';
+          url.searchParams.set('next', original);
+          url.searchParams.set('rid', rid);
+          return NextResponse.redirect(url);
+        }
         url.pathname = '/signin';
         url.searchParams.set('next', pathname);
         url.searchParams.set('reason', 'no_session_cookie');
