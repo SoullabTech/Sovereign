@@ -116,6 +116,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
     emailed = result.success;
     if (!result.success) emailError = result.error;
+    // Provider evidence trail: "accepted" = Resend returned a message id; delivery
+    // status lives in Resend's event log, retrievable by this id.
+    console.log('[soul-portrait/send] email', {
+      accepted: result.success,
+      id: result.id ?? null,
+      provider: result.provider,
+      ...(result.error ? { error: result.error } : {}),
+    });
   }
 
   return NextResponse.json({
