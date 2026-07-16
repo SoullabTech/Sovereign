@@ -929,7 +929,12 @@ services:
   # self-hosted coturn — NO SFU in the 1:1 media path ("no unnecessary intermediary in the
   # Encounter field"). This service now owns the 3478 router-forward (was LiveKit's).
   # Constitutional basis: NATIVE_SESSION_ROOM_PHASE1_SPEC §6; refusal R-A5 (self-hosted-only ICE).
-  # SECRET: --static-auth-secret comes from TURN_STATIC_AUTH_SECRET (.env.production), never a file.
+  # SECRET: --static-auth-secret comes from TURN_STATIC_AUTH_SECRET, never a file. NOTE:
+  # `command:` is interpolated at COMPOSE PARSE TIME, which reads `.env` (or the shell) — NOT
+  # `env_file:`. The TURN_* values must therefore live in `.env` on the deploy host (they also
+  # live in .env.production for the app's env_file — keep the two in sync). The `:?` guards
+  # below make any compose invocation FAIL LOUDLY when they are missing, instead of silently
+  # starting coturn with an empty secret (observed 2026-07-06→16: relay auth dead for 10 days).
   # Deploy notes: coturn is behind NAT — add `--external-ip=<PUBLIC_IP>/192.168.0.104` at deploy;
   # router-forward 3478 (TCP+UDP) AND the 49160-49200/udp relay range to 192.168.0.104.
   coturn:
@@ -941,7 +946,7 @@ services:
     # denied-peer rules — observed 2026-07-05). coturn's own docs recommend host mode.
     network_mode: host
     logging: *default_logging
-    command: ["-c", "/etc/coturn/turnserver.conf", "--static-auth-secret=${TURN_STATIC_AUTH_SECRET}", "--external-ip=${TURN_EXTERNAL_IP}"]
+    command: ["-c", "/etc/coturn/turnserver.conf", "--static-auth-secret=${TURN_STATIC_AUTH_SECRET:?must be set in .env (compose parse-time env) — see coturn notes above}", "--external-ip=${TURN_EXTERNAL_IP:?must be set in .env (compose parse-time env) — see coturn notes above}"]
     volumes:
       - ./config/turnserver.conf:/etc/coturn/turnserver.conf:ro
     security_opt:
