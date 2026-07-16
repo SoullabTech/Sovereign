@@ -96,6 +96,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         subject: `A Soul Portrait for ${subjectName}`,
         bodyText: [
           `A Soul Portrait has been prepared for ${subjectName}.`,
+          `This portrait was created as a reflection and offering for you. There is no right way to engage it.`,
           personalNote ? `\n${personalNote}\n` : '',
           `Read it here, in your own time:\n${url}`,
           `\nThis link is private and unlisted — it was made for you.`,
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         bodyHtml: `
           <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; color: #2a2a2a; line-height: 1.6;">
             <p>A Soul Portrait has been prepared for <strong>${escapeHtml(subjectName)}</strong>.</p>
+            <p>This portrait was created as a reflection and offering for you. There is no right way to engage it.</p>
             ${personalNote ? `<blockquote style="border-left: 3px solid #C9A227; margin: 16px 0; padding: 4px 16px; color: #444;">${escapeHtml(personalNote)}</blockquote>` : ''}
             <p style="margin: 28px 0;">
               <a href="${url}" style="background: #1A2F24; color: #EAF2EC; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Read your Soul Portrait</a>
