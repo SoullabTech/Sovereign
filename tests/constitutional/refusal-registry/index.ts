@@ -24,6 +24,7 @@
  *   R14  System never authors member identity/becoming at the emission boundary
  *   R15  production-maia ttsRouter selects only Stage-A-qualified local providers
  *   R16  persisted inferred developmental state cannot shape relational stance un-admitted
+ *   R17  system-inferred themes cannot reach Circle-visible pulse output
  */
 
 // NOTE: explicit .ts extensions so this runs under both `tsx` and Node's native
@@ -46,8 +47,9 @@ import { check as r13 } from './refusal-13-vision-studio-no-elemental-persistenc
 import { check as r14 } from './refusal-14-identity-predicate-guard.ts';
 import { check as r15 } from './refusal-15-tts-provider-qualification-guard.ts';
 import { check as r16 } from './refusal-16-developmental-state-shaping-guard.ts';
+import { check as r17 } from './refusal-17-circle-pulse-no-inferred-themes.ts';
 
-const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, rA5, r13, r14, r15, r16];
+const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, rA5, r13, r14, r15, r16, r17];
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';

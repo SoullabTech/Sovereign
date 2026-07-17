@@ -1,81 +1,29 @@
 /**
- * Field Pulse Service — Anonymized theme aggregation across circle members
+ * Field Pulse Service — circle field state from circle-native activity
  *
- * The field does not expose individual member themes.
- * It surfaces qualitative patterns only when 2+ members share a theme.
- * No counts. No percentages. Only atmosphere.
+ * SOVEREIGNTY CORRECTION (2026-07-17, Kelly ruling R5/R12):
+ * System-inferred member themes (member_theme_signals) are SUSPENDED from the
+ * field pulse. Inferred material may support private tentative reflection, but
+ * it may not enter a shared field without explicit member ratification and
+ * collective eligibility. The pulse now derives only from circle-native,
+ * already-governed inputs: inquiries and shared activity.
+ * Do not reintroduce member_theme_signals here without a ratified collective
+ * eligibility pathway. See:
+ * docs/architecture/CIRCLES_FIELD_PULSE_CONTAINMENT_PLAN_2026-07-17.md
  */
 
-import { query, queryOne } from '@/lib/db/postgres';
-import { THEME_ELEMENT_MAP } from '@/lib/consciousness/participatoryReality';
-import type { ParticipatoryTheme } from '@/lib/consciousness/participatoryReality';
+import { queryOne } from '@/lib/db/postgres';
 import type { CircleState, FieldSignal, FieldPhase } from './types';
-
-// ── Qualitative Language Map ──────────────────────────────────
-// Each element has two description variants. Pick one randomly per request
-// to prevent the UI from feeling mechanical.
-
-const SIGNAL_DESCRIPTIONS: Record<string, [string, string]> = {
-  water: [
-    'A water pattern is present',
-    'Themes of memory and return are surfacing',
-  ],
-  fire: [
-    'Fire energy is moving through',
-    'Themes of alignment and action are present',
-  ],
-  earth: [
-    'Earth is grounding this field',
-    'Themes of acceptance and reality are present',
-  ],
-  air: [
-    'Air currents are moving',
-    'Themes of choice and navigation are present',
-  ],
-  aether: [
-    'The field itself is shifting',
-    'Something larger is moving through',
-  ],
-};
-
-function descriptionForElement(element: string): string {
-  const pair = SIGNAL_DESCRIPTIONS[element] ?? SIGNAL_DESCRIPTIONS.aether;
-  return pair[Math.random() < 0.5 ? 0 : 1];
-}
 
 // ── Full Pulse (for circle detail page) ──────────────────────
 
 export async function getCirclePulse(
   circleId: string,
-  windowDays = 14
+  _windowDays = 14
 ): Promise<CircleState> {
-  // 1. Theme aggregation — only themes shared by 2+ distinct members
-  const themeResult = await query<{
-    theme: ParticipatoryTheme;
-    member_count: string;
-  }>(
-    `SELECT mts.theme, COUNT(DISTINCT mts.member_id) AS member_count
-     FROM member_theme_signals mts
-     JOIN circle_memberships cm
-       ON cm.member_id = mts.member_id
-       AND cm.circle_id = $1
-       AND cm.status = 'active'
-     WHERE mts.detected_at > NOW() - ($2 || ' days')::INTERVAL
-     GROUP BY mts.theme
-     HAVING COUNT(DISTINCT mts.member_id) >= 2
-     ORDER BY COUNT(*) DESC
-     LIMIT 3`,
-    [circleId, String(windowDays)]
-  );
-
-  const signals: FieldSignal[] = themeResult.rows.map((row) => {
-    const element = THEME_ELEMENT_MAP[row.theme] ?? 'aether';
-    return {
-      description: descriptionForElement(element),
-      element,
-      _themeKey: row.theme,
-    };
-  });
+  // 1. Theme signals: intentionally empty — inferred-theme aggregation removed
+  //    (see sovereignty correction note above).
+  const signals: FieldSignal[] = [];
 
   // 2. Check for active inquiry
   const activeInquiry = await queryOne<{
