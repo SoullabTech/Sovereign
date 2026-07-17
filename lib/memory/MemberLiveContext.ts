@@ -483,8 +483,12 @@ export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
       }).join('\n')
     : null;
 
+  // Epistemic label correction (2026-07-17, Kelly ruling R4): these themes are
+  // SYSTEM-INFERRED keyword detections, not member self-observations. They must
+  // read as candidate recurrence — never as recognized, confirmed, or
+  // member-known — until the member ratifies them.
   const themesSection = themesLines
-    ? `\nParticipatory Themes (self-observed, recurring):\n${themesLines}\n`
+    ? `\nCandidate recurrence — system-noticed, not yet confirmed by the member (treat as tentative questions, never as facts about the member):\n${themesLines}\n`
     : '';
 
   let fieldConditionBlock = '';
