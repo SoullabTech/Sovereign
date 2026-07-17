@@ -10,6 +10,17 @@ All three surfaces are **practitioner-facing**, wear MAIA's name, run on the sha
 
 **Prerequisite for ALL conversions (build once, first):** a posture channel on the canonical route — `posture` field validated against `MaiaPosture` (`lib/maia/presence/postures.ts`), carrying (a) the posture prompt addendum, (b) a **hard memory-write suppression flag** (sanctuary-grade, enforced at the route, not by prompt), (c) server-side object context fetch from `place.objectId` (never trusting client-supplied content), (d) practitioner-ownership auth for studio postures.
 
+**Kelly's ruling on the enforcement shape (2026-07-17):** suppression must be enforced **below the prompt layer** — never a prompt instruction like "do not write memory in this posture." The posture contract declares an enforceable memory policy, and **the server — not the component — enforces it**:
+
+```ts
+memoryPolicy: {
+  read:  'none' | 'member-authorized' | 'container-scoped';
+  write: 'none' | 'member-memory' | 'container-scoped';
+}
+```
+
+Concretely: the canonical route resolves the posture's `memoryPolicy` server-side and gates `MemoryWritebackService.writeBack`, atoms writes, `conversation_turns` inserts, and semantic-vector inserts on `write`, and the memory loaders on `read` — the same structural pattern Sanctuary already proves. Kelly's decision rule for tool-vs-posture: *"A function belongs to MAIA when relationship, continuity, and dialogue are essential to it. A bounded transformation may remain a tool."* — do not turn every intelligent function into a posture. And for SessionReviewChat specifically: *"The client's transcript is not raw material for the practitioner's AI memory"* — its conversion additionally requires authenticated/authorized transcript access (PR #622), zero write by default, an explicit client-words vs practitioner-reflections distinction, container-scoped provenance, and explicit consent rules for any later "keep."
+
 ---
 
 ## 1. `MentorPanel` (Decisions) — proposed posture: `decision-witness`

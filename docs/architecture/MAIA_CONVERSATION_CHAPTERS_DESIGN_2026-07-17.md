@@ -1,9 +1,21 @@
 # Conversation Chapters — Cross-Day Continuity Design Note
 
-**Status:** DESIGN ONLY — no implementation authorized. Prepared under Kelly's Ruling 1 (2026-07-17):
+**Status:** **APPROVED (Kelly, 2026-07-17)** with one refinement — implementation permitted only AFTER the security patch (PR #622) and the real-auth presence walk, and it must remain read-only with no new memory use. Governing sentences:
 > *A conversation may close. The relationship does not.*
+> *Conversation chapters organize encounters. They do not divide the relationship.*
 
 One continuing MAIA relationship, expressed through conversation chapters. Not one endless visible transcript; not a stranger each morning.
+
+**Kelly's refinement — human-facing chapter list.** The chapter list must not look like a technical session log. Structure it as a person would name days:
+
+```text
+Today
+Yesterday
+Tuesday, July 14
+Sunday, July 12
+```
+
+Member-authored titles (or responsibly generated ones) may come later; **never generate psychological interpretations as chapter titles.** This resolves open question 1 below (date-first, humanly phrased; no first-line hints in v1). Kelly also confirmed: no artificial "close conversation" ritual yet, and the system must stop deleting or unnecessarily orphaning the member's local access to previous chapters (§Smallest-viable item 3).
 
 ## The six concepts, kept distinct
 
