@@ -431,6 +431,28 @@ type ConversationBody = {
 };
 
 export async function POST(request: NextRequest) {
+  // ═══════════════════════════════════════════════════════════════════════
+  // LANE DISABLED — Sanctuary S2 (Kelly ruling K4, 2026-07-17).
+  // This legacy lane persists full conversation content (storeSessionPattern,
+  // storeCMLayerSignal) with NO Sanctuary gate — the route has no sanctuary
+  // handling at all. Production evidence: zero traffic in 60 days (agent_runs
+  // origin_route, runtime_events route_id), no live dependency. Per ruling:
+  // hard-refuse rather than patch with a client-asserted boolean. Refusal
+  // R19 (tests/constitutional/refusal-registry) proves this guard is first.
+  // Re-enabling requires the S5 governed write context, not removing this
+  // block. Incident context: SANC-20260614-01.
+  // ═══════════════════════════════════════════════════════════════════════
+  console.log('[ORACLE-LANE] refused — lane disabled (Sanctuary S2, ruling K4 2026-07-17)');
+  return NextResponse.json(
+    {
+      error: 'This conversation lane is disabled.',
+      reason: 'Legacy route retired pending Sanctuary-governed persistence (S2, 2026-07-17).',
+      use: '/api/sovereign/app/maia',
+    },
+    { status: 410 }
+  );
+
+  // Unreachable below — retained for the S5 redesign decision (delete vs revive).
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;

@@ -1,7 +1,7 @@
 import type { RefusalCheck } from './harness';
 
 /**
- * Refusal 18 — Sanctuary content cannot reach the empirically-escaped stores.
+ * Refusal 21 — Sanctuary content cannot reach the empirically-escaped stores.
  *
  * Incident SANC-20260614-01: five sanctuary requests persisted full content to
  * conversation_turns, agent_runs, integration_passes, and the session's
@@ -21,7 +21,7 @@ import type { RefusalCheck } from './harness';
 const GUARD = 'contentWritable\\(';
 
 export const check: RefusalCheck = {
-  id: 'R18',
+  id: 'R21',
   refusal: 'Sanctuary turn content cannot be persisted by the escaped stores (boundary-enforced, fail closed)',
   grade: 'A-minus',
   enforcedBy: 'lib/sanctuary/turnPosture.ts guard required by TurnsStore, corpusCallosumService, sessionManager',
