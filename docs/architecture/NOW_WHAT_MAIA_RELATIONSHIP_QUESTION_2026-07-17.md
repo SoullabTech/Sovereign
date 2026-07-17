@@ -1,6 +1,15 @@
-# Now What? × MAIA — The Relationship Architecture Question
+# Now What? × MAIA — Relationship Architecture (RATIFIED MODEL)
 
-**Status:** QUESTION FOR RULING — no implementation. Prepared under Kelly's Ruling 3 (2026-07-17): isolation is preserved and governed; this document frames the *future* model. The question is not "does global MAIA enter Now What?" but:
+**Status:** **RATIFIED by Kelly (2026-07-17)** — doc-only; no implementation changes authorized by this ratification. The working model is:
+
+> **Member-sovereign continuity with container-bounded learning.**
+>
+> - Authorized member continuity may flow into Now What? as **read-only context**.
+> - **Nothing flows back** into general MAIA memory automatically.
+> - Larry (or any practitioner) receives **no broader member-memory access by implication**.
+> - Any export, keeping, practitioner sharing, or cross-container learning requires **explicit member authorization**.
+
+This ratifies the built asymmetry (facts §2 below) as intentional: the read-only inflow is the "authorized member continuity" leg; the field-note gesture is the existing grammar for member-authorized crossings. The presence-layer exclusion of `/now-what/*` stands. The original four-model analysis is preserved below as the record of how the ruling was reached; the framing question it answered:
 
 > **Which MAIA relationship is present in a practitioner-created environment, and whose continuity governs it?**
 
