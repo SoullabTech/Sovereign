@@ -12,6 +12,7 @@ import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSign
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
+import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
 import { logAgentRun } from '@/lib/services/corpusCallosumService';
 
 // =============================================================================
@@ -665,6 +666,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 🚪 PLACE (House Presence, 2026-07-17): facts-only current-room context.
+    // Arrives ONLY inside a member-sent message body; validated to a strict
+    // allowlist of declarative fields (lib/maia/presence/place.ts). Renders a
+    // present-tense orientation block that explicitly forbids inferring why
+    // the member is there. Invalid/absent place → no block, never an error.
+    const placeContextValidated = validatePlaceContext((body as any)?.place);
+    const placeAddendum = placeContextValidated ? buildPlaceAddendum(placeContextValidated) : undefined;
+    if (placeAddendum) {
+      console.log(`🚪 [Route] place context applied: ${placeContextValidated!.placeId} (${placeContextValidated!.route})`);
+    }
+
     // 🏢 STUDIO SURFACE: Build prompt addendum when running inside Soullab Studio
     const surfaceMode = (meta as any)?.surface as string | undefined;
     const studioCtx = (meta as any)?.studioContext as { surface?: string; clientId?: string; pathname?: string } | undefined;
@@ -1047,6 +1059,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
           episodicRecallAddendum, // 📖 Phase 2 — member-marked moments (episodic layer, substrate lane only)
+          placeAddendum, // 🚪 House Presence — facts-only current-room orientation
         },
       }),
       SOVEREIGN_TIMEOUT_MS,

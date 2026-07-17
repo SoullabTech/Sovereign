@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -466,6 +467,14 @@ function ChangeChain({ changeId, parentChange, childChanges }: { changeId: strin
 export default function ChangeDetailPage() {
   const params = useParams();
   const changeId = params?.id as string;
+  // 🚪 House Presence: declarative place facts (id only — never contents).
+  useMaiaPlace({
+    placeId: 'changes',
+    placeName: 'Changes',
+    purpose: 'A room for noticing and reflecting on transitions over time.',
+    objectType: 'change',
+    objectId: changeId,
+  });
   const [change, setChange] = useState<ChangeRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [consulting, setConsulting] = useState(false);
