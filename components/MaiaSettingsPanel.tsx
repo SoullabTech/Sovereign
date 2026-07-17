@@ -8,7 +8,6 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { ClaudeCodeSettingsToggle } from '@/components/ui/ClaudeCodeIndicator';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
-import { useMaiaPresence } from '@/lib/contexts/MaiaPresenceContext';
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
 // Voice settings now managed by VoiceSettingsPanel → /api/settings/voice (no localStorage)
@@ -74,7 +73,6 @@ const DEFAULT_SETTINGS: MaiaSettings = {
 };
 
 export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
-  const { ambientMode, witnessMode, toggleAmbientMode, toggleWitnessMode } = useMaiaPresence();
   const { currentVersion, checkForUpdate, applyUpdate, isChecking, lastCheckResult } = useUpdate();
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [originalSettings, setOriginalSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
@@ -406,53 +404,11 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
 
           {activeTab === 'advanced' && (
             <div className="space-y-6">
-              {/* 🎙️ Ambient Voice Mode */}
-              <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-base font-medium text-purple-300 mb-1">🎙️ Ambient Voice Mode</h3>
-                    <p className="text-xs text-purple-200/60 leading-relaxed">
-                      MAIA as ambient presence - voice persists across all pages, always available
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={ambientMode}
-                      onChange={toggleAmbientMode}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                  </label>
-                </div>
-                {ambientMode && (
-                  <div className="mt-3 pt-3 border-t border-purple-500/20">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm text-purple-200">Witness Mode</label>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={witnessMode}
-                          onChange={toggleWitnessMode}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
-                      </label>
-                    </div>
-                    <p className="text-xs text-purple-200/50">
-                      MAIA proactively offers reflections when patterns emerge
-                    </p>
-                  </div>
-                )}
-                {ambientMode && (
-                  <div className="mt-3 p-3 bg-purple-500/5 rounded border border-purple-500/20">
-                    <p className="text-xs text-purple-200/70 leading-relaxed">
-                      💡 <strong>Tip:</strong> With ambient mode, MAIA's voice mini-player appears bottom-right on all pages. Click to expand controls or say "Hey MAIA" to speak.
-                    </p>
-                  </div>
-                )}
-              </div>
-
+              {/* Ambient/Witness toggles removed (House Presence, 2026-07-17):
+                  they toggled a provider that was never mounted, and "witness
+                  mode" promised proactive reflections — behavior the presence
+                  constitution forbids. MAIA is now quietly reachable in every
+                  governed room via the global handle; no setting required. */}
               <div>
                 <label className="flex items-center gap-2 mb-2">
                   <input
