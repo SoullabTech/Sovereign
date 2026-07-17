@@ -102,6 +102,39 @@ Concepts explicitly separated (do not conflate):
 4. **Another governed model** Kelly names.
 No option was implemented. The rotation's meaning is a relationship decision, not infrastructure.
 
-## Verification evidence (running)
+## Verification evidence (2026-07-17)
 
-- See Phase 9/10 section of final deliverable. `npm test` scoped runs + `npm run typecheck` (baseline ~755 pre-existing errors — narrow-scope discipline per memory).
+**Automated:** 75/75 jest tests green (`lib/maia/presence/__tests__/place.test.ts`, `lib/sovereign/__tests__/platformKnowledgeWiring.test.ts`, `lib/sovereign/__tests__/platformKnowledge.test.ts`). `npm run typecheck`: **0 errors**. `npm run check:no-supabase`: clean.
+
+**Live dev-server walkthrough** (fabricated member in localStorage; dev DB absent, so API-backed content shows load errors — presence layer is independent of that):
+| Route | Expected | Actual |
+|---|---|---|
+| `/guides` (member) | quiet handle renders | ✅ handle present |
+| `/now-what` → `/arrive` | NO presence (isolation) | ✅ absent |
+| `/signin` (post sign-out redirect) | NO presence (ungoverned) | ✅ absent |
+| `/maia/moments` (member) | handle; open → sheet with same conversation; place label | ✅ sheet opened, OracleConversation greeted ("I'm here when you're ready"), header shows "· Marked Moments"; screenshot captured in session |
+| Escape key | sheet closes, stays mounted, handle returns | ✅ `sheetStillMounted: true, sheetHidden: true, handleBack: true` |
+| Moments header | explicit "← MAIA" destination | ✅ renders and navigates |
+| Console | no errors | ✅ none |
+
+**Not walkable locally** (needs a real authenticated member — Kelly's walk): `/maia` full-surface suppression live (covered by `isFullConversationRoute` unit test + code path), place block appearing in a production prompt (`🚪 [Route] place context applied` / `🏠 [House Knowledge]` log markers are greppable post-deploy), cross-room transcript continuity under real auth, mobile behavior.
+
+**Commits** (branch `feature/practitioner-program-platform`):
+`40b8a8c5c` refactor: establish canonical MAIA presence provider · `bb4e3ceb3` feat: mount persistent MAIA surface in member shell · `ea5022bb8` fix: preserve MAIA state across house navigation · `0dd8462e6` feat: add facts-only room context and wire platform knowledge into MAIA · `16364112c` test: verify MAIA house presence and continuity
+
+## Continuity matrix (honest claims only)
+
+| Event | Visible transcript | Conversation identity | Server memory |
+|---|---|---|---|
+| Sheet close/reopen | **Survives live** (kept mounted) | same | untouched |
+| Client route change (governed↔governed) | **Survives live** (provider persists) | same | untouched |
+| Route to ungoverned room / full surface and back | Survives via same-day rehydrate (localStorage+PG) — invisible seam, not live state | same | untouched |
+| Sheet ↔ /maia full page | Shared identity + persistence, NOT shared live React state — rehydrate on surface switch | same | untouched |
+| Refresh / new tab | Survives via rehydrate | same | untouched |
+| Browser restart | Survives via rehydrate (localStorage intact) or PG restore | same | untouched |
+| Daily boundary | **Does not survive visibly** (rotation orphans thread — PENDING Kelly ruling, Phase 7) | rotates | **survives** (atoms, spiral state, anamnesis) |
+| Explicit session close | n/a — no such gesture exists today (option 3 in Phase 7) | — | — |
+
+## Privacy & non-monitoring proof
+
+**What is sent:** exactly one optional `place` object — `{placeId, placeName, route, purpose?, objectType?, objectId?}` — and only inside the POST body of a message the member sends. **When:** at send time; the pathname is read at that moment. **Structurally unavailable:** there is no route-change listener that transmits, no timer, no click/scroll/dwell capture anywhere in `lib/maia/presence/` or `components/maia/presence/`; server-side `validatePlaceContext` drops every non-allowlisted field, so even a tampered client cannot smuggle behavioral data into the prompt; the PLACE block text itself instructs MAIA never to infer why the member is there; room registration (`useMaiaPlace`) writes only to React state. Unauthenticated routes render children only — no member state exists in the layer. Sanctuary, consent, sealed-learning, and practitioner/client boundaries: untouched (no changes to any memory write path).
