@@ -31,7 +31,12 @@ class AuditLogger {
   constructor() {
     this.logDir = process.env.AUDIT_LOG_DIR || './audit-logs';
     this.currentLogFile = this.getLogFilePath();
-    this.ensureLogDirectory();
+    // Fire-and-forget warm-up; must never become an unhandled rejection at
+    // module load (in the production container this rejected with EACCES on
+    // every boot until 2026-07-17). The write path re-ensures per entry.
+    this.ensureLogDirectory().catch((error) => {
+      console.error('[AUDIT CRITICAL] Audit log directory unavailable:', error);
+    });
   }
 
   async logAudit(entry: AuditLogEntry): Promise<void> {
@@ -70,6 +75,10 @@ class AuditLogger {
     }) + '\n';
 
     await this.ensureLogDirectory();
+    // Recompute per write: the constructor-time value freezes the boot date,
+    // so a container running past midnight would keep appending to the old
+    // day's file.
+    this.currentLogFile = this.getLogFilePath();
     await fs.appendFile(this.currentLogFile, logLine, 'utf-8');
 
     this.lastHash = serializedEntry.hash;
