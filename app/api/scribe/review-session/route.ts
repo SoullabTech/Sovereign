@@ -90,13 +90,21 @@ async function authorizeTranscriptReview(
     return deny(memberId, 'not_owner_or_nonexistent', NextResponse.json(NOT_FOUND_BODY, { status: 404 }));
   }
 
-  // Consent: a declined session is not reviewable, even by its owner. The
-  // caller is the verified owner here, so naming the condition leaks nothing
-  // to outsiders (they never reach this branch).
-  if (session.consent_status === 'declined') {
+  // Consent — DENY BY DEFAULT, allowlist of affirmative states only.
+  // Transcript review is permitted solely when consent_status === 'confirmed':
+  // the same allowlist the sibling transcript/mark/partial-summary/action-items
+  // routes enforce, and the state every transcript-bearing session necessarily
+  // holds (transcript WRITES are themselves gated on 'confirmed', so a session
+  // with reviewable content has passed affirmative consent). 'pending',
+  // 'declined', and any absent/legacy/unknown value are all denied. Verified
+  // against production 2026-07-17: every existing session is 'confirmed', so
+  // this tightening blocks no legitimate review. The caller is the verified
+  // owner here, so the neutral copy leaks nothing to outsiders (they never
+  // reach this branch).
+  if (session.consent_status !== 'confirmed') {
     return deny(
       memberId,
-      'consent_declined',
+      'consent_not_confirmed',
       NextResponse.json(
         { success: false, error: 'Review is not available for this session' },
         { status: 403 },

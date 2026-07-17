@@ -161,17 +161,36 @@ describe('POST authorization', () => {
     expect(nonexistentBody).toEqual(unauthorizedBody);
   });
 
-  it('missing consent (declined) → denied even for the owner, transcript never loaded', async () => {
+  it.each([
+    ['pending', 'pending'],
+    ['declined', 'declined'],
+    ['absent (null)', null],
+    ['absent (undefined)', undefined],
+    ['legacy "accepted"', 'accepted'],
+    ['unknown "revoked"', 'revoked'],
+    ['empty string', ''],
+  ])(
+    'consent allowlist: %s → denied even for the owner, transcript never loaded',
+    async (_label, consentStatus) => {
+      // DENY BY DEFAULT: only the affirmative 'confirmed' state permits review.
+      mockGetMemberIdFromRequest.mockResolvedValue(OWNER);
+      mockVerifySessionOwnership.mockResolvedValue(ownedSession({ consent_status: consentStatus }));
+      const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'q' }));
+      const body = await res.json();
+      expect(res.status).toBe(403);
+      expect(body).toEqual({ success: false, error: 'Review is not available for this session' });
+      expect(mockBuildPrompt).not.toHaveBeenCalled();
+      expect(mockLogAudit).toHaveBeenCalledWith(
+        expect.objectContaining({ result: 'failure', reason: 'consent_not_confirmed' }),
+      );
+    },
+  );
+
+  it('consent allowlist: confirmed → allowed (the only affirmative state)', async () => {
     mockGetMemberIdFromRequest.mockResolvedValue(OWNER);
-    mockVerifySessionOwnership.mockResolvedValue(ownedSession({ consent_status: 'declined' }));
+    mockVerifySessionOwnership.mockResolvedValue(ownedSession({ consent_status: 'confirmed' }));
     const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'q' }));
-    const body = await res.json();
-    expect(res.status).toBe(403);
-    expect(body).toEqual({ success: false, error: 'Review is not available for this session' });
-    expect(mockBuildPrompt).not.toHaveBeenCalled();
-    expect(mockLogAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ result: 'failure', reason: 'consent_declined' }),
-    );
+    expect(res.status).toBe(200);
   });
 
   it('malformed session id → 404 shape, denied before any identity or DB work', async () => {
