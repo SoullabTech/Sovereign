@@ -22,8 +22,18 @@
  * member-marked row MUST carry non-empty verbatim, and a non-marked row MUST
  * keep the verbatim channel NULL (no system text smuggled through).
  *
- * Self-seeding (creates a synthetic member), self-cleaning (deletes everything
- * it wrote in a finally block), re-runnable, server-independent.
+ * Self-seeding (creates a synthetic member AND a synthetic owned session —
+ * required since the provenance ruling of 2026-07-17: the route refuses any
+ * mark whose sourceSessionId does not resolve to a session owned by the
+ * authenticated member), self-cleaning (deletes everything it wrote in a
+ * finally block), re-runnable, server-independent.
+ *
+ * KNOWN BASELINE BREAKAGE (2026-07-17, pre-dates the provenance ruling): the
+ * direct-invocation auth path used here (bare x-member-id header) no longer
+ * authenticates — getMemberIdFromRequest requires a verified auth_sessions
+ * credential and calls cookies(), which throws outside a request scope. Until
+ * that is repaired (separate task), sections [1]-[3]'s handler calls fail at
+ * auth; the direct-SQL CHECK-constraint proofs still run.
  *
  * Run:
  *   node --env-file=.env.local --import tsx scripts/verify-episodic-mark.ts
@@ -162,6 +172,15 @@ async function main(): Promise<void> {
       [memberId, `EPISODIC-MARK-TEST-${tag}`, `episodic_mark_test_${tag}`, 'test-not-a-real-hash'],
     );
 
+    // ---- seed the owned source session the provenance contract requires ----
+    // (an ordinary continuity/standard session owned by the synthetic member;
+    // a fabricated session id would now be refused with 403 R18)
+    await query(
+      `INSERT INTO maia_sessions (id, member_id, mode, privacy_mode)
+       VALUES ($1, $2, 'continuity', 'standard')`,
+      [sourceSessionId, memberId],
+    );
+
     // ======================================================================
     console.log('\n[1] Real handler — authenticated mark of a hostile string');
     // ======================================================================
@@ -295,6 +314,7 @@ async function main(): Promise<void> {
   } finally {
     // ---- teardown: remove everything this run created ----
     await query(`DELETE FROM episodic_memories WHERE user_id = $1`, [memberId]);
+    await query(`DELETE FROM maia_sessions WHERE id = $1`, [sourceSessionId]);
     await query(`DELETE FROM members WHERE id = $1`, [memberId]);
   }
 
