@@ -25,6 +25,7 @@
  *   R15  production-maia ttsRouter selects only Stage-A-qualified local providers
  *   R16  persisted inferred developmental state cannot shape relational stance un-admitted
  *   R17  system-inferred themes cannot reach Circle-visible pulse output
+ *   R19  legacy oracle conversation lane hard-refuses (disabled, S2)
  *   R18  an episodic mark cannot be persisted from a Sanctuary session, nor without
  *        resolvable member-owned source provenance
  */
@@ -50,6 +51,7 @@ import { check as r14 } from './refusal-14-identity-predicate-guard.ts';
 import { check as r15 } from './refusal-15-tts-provider-qualification-guard.ts';
 import { check as r16 } from './refusal-16-developmental-state-shaping-guard.ts';
 import { check as r17 } from './refusal-17-circle-pulse-no-inferred-themes.ts';
+import { check as r19 } from './refusal-19-oracle-lane-disabled.ts';
 import { check as r18 } from './refusal-18-episodic-mark-sanctuary-guard.ts';
 
 const CHECKS: RefusalCheck[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, rA5, r13, r14, r15, r16, r17, r18];
