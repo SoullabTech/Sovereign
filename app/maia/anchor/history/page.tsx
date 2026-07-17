@@ -117,12 +117,15 @@ export default function AnchorHistoryPage() {
     >
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#f8f7f5]/80 border-b border-stone-200/40">
         <div className="max-w-2xl mx-auto px-6 py-5 flex items-center gap-5">
+          {/* Explicit return — deep links and refreshes have no history to go
+              "back" to, so the way home is a real destination, not history. */}
           <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 text-stone-700 hover:text-stone-900 hover:-translate-x-0.5 transition-all"
-            aria-label="Back"
+            onClick={() => router.push('/maia/anchor')}
+            className="p-2 -ml-2 flex items-center gap-1.5 text-stone-700 hover:text-stone-900 hover:-translate-x-0.5 transition-all"
+            aria-label="Back to your anchor"
           >
             <ArrowLeft className="w-5 h-5" strokeWidth={2} />
+            <span className="text-[13px]">Anchor</span>
           </button>
           <div className="h-4 w-px bg-stone-300/60" />
           <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">
