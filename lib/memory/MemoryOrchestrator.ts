@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { PrismaClient } from '@prisma/client';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { generateLocalEmbedding } from './embeddings';
 import { RelationshipContextStore, type RelationshipContext } from './stores/RelationshipContextStore';
 import { TurnsStore } from './stores/TurnsStore';
@@ -601,6 +602,7 @@ export class MemoryOrchestrator {
    * Store new conversation turn for future context
    */
   async updateSessionMemory(
+    posture: TurnPosture,
     userId: string,
     userMessage: string,
     assistantResponse: string,
@@ -614,7 +616,7 @@ export class MemoryOrchestrator {
 
     try {
       // Persist to database for cross-session recall
-      await TurnsStore.addExchange(userId, sessionId, userMessage, assistantResponse);
+      await TurnsStore.addExchange(posture, userId, sessionId, userMessage, assistantResponse);
       console.log(`[MEMORY] Stored exchange for user ${userId}`);
     } catch (error) {
       console.error('Session memory update error:', error);
