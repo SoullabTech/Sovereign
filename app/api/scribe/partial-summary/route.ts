@@ -12,47 +12,86 @@ export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getMemberIdFromRequest, verifySessionOwnership } from '@/lib/scribe/scribeAuth';
+import { getMemberIdFromRequest, verifySessionOwnership, isValidUUID } from '@/lib/scribe/scribeAuth';
+import { logAudit } from '@/lib/security/auditLog';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
+
+// This route returns transcript-derived content (summary of scribe_transcript_entries
+// + scribe_markers). Identity + ownership gating was already in place; the
+// 2026-07-17 security pass (sibling of PR #622) added audit logging on
+// grant/denial and a UUID pre-check. Audit entries carry identifiers only —
+// never transcript contents. The not-found body is identical for nonexistent
+// and unowned sessions, so the response never confirms a session exists.
 
 export async function POST(request: NextRequest) {
   try {
-    // Auth: Get member ID from session
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json(
-        { error: 'Authentication required', code: 'AUTH_REQUIRED' },
-        { status: 401 }
-      );
-    }
-
     // Parse request body
     const body = await request.json();
     const { sessionId, minutes = 5 } = body;
 
-    if (!sessionId) {
+    if (!sessionId || typeof sessionId !== 'string') {
       return NextResponse.json(
         { error: 'Session ID required', code: 'MISSING_SESSION_ID' },
         { status: 400 }
       );
     }
 
-    // Verify ownership
-    const session = await verifySessionOwnership(sessionId, memberId);
-    if (!session) {
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const audit = (userId: string, result: 'success' | 'failure', reason?: string) =>
+      logAudit({
+        timestamp: new Date(),
+        userId,
+        action: 'access',
+        resource: 'scribe_transcript',
+        resourceId: sessionId,
+        ipAddress,
+        userAgent,
+        result,
+        ...(reason ? { reason } : {}),
+        metadata: { endpoint: 'partial-summary:POST' },
+      }).catch(() => {}); // audit failure must not mask the denial
+
+    // Auth: Get member ID from session
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      await audit('anonymous', 'failure', 'unauthenticated');
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
+    // Malformed ids are denied before any DB work, same shape as unauthorized.
+    if (!isValidUUID(sessionId)) {
+      await audit(memberId, 'failure', 'malformed_session_id');
       return NextResponse.json(
         { error: 'Session not found or not owned by member', code: 'SESSION_NOT_FOUND' },
         { status: 404 }
       );
     }
 
-    // Check consent
+    // Verify ownership
+    const session = await verifySessionOwnership(sessionId, memberId);
+    if (!session) {
+      await audit(memberId, 'failure', 'not_owner_or_nonexistent');
+      return NextResponse.json(
+        { error: 'Session not found or not owned by member', code: 'SESSION_NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    // Check consent — the caller is the verified owner here, so naming the
+    // condition leaks nothing to outsiders (they never reach this branch).
     if (session.consent_status !== 'confirmed') {
+      await audit(memberId, 'failure', 'consent_not_confirmed');
       return NextResponse.json(
         { error: 'Consent not confirmed', code: 'CONSENT_REQUIRED' },
         { status: 400 }
       );
     }
+
+    await audit(memberId, 'success');
 
     // Calculate the time window
     const cutoffTime = new Date(Date.now() - minutes * 60 * 1000);
