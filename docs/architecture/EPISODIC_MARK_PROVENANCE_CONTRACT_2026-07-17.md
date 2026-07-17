@@ -1,8 +1,38 @@
-# Episodic Mark Provenance Contract — Decision Note (read-only)
+# Episodic Mark Provenance Contract — Decision Note
 
 **Date:** 2026-07-17
-**Status:** DECISION PENDING — Kelly ruling required. This note authorizes nothing.
+**Status:** **RULED — Option A/C approved (Kelly, 2026-07-17).** Implemented in
+PR #625. Sections below preserve the decision context and the future
+typed-source direction.
 **Scope:** the API contract of `POST /api/sovereign/episodes/mark` only.
+
+## The ruling
+
+> No durable episodic mark may be written without a resolvable source.
+
+For the present API, the only valid source is an authenticated member-owned
+session. `sourceSessionId` is required; its absence is a **Sanctuary-boundary
+refusal** (403, R17), not ordinary field validation. Nonexistent, malformed,
+and cross-member sources receive one indistinguishable governed denial —
+nothing reveals whether an inaccessible session exists.
+
+The typed-source union (below) is the preserved future direction: migrate
+mechanically from `sourceSessionId: string` to
+`source: { type: 'session', sessionId }` when — and not before — a second
+legitimate origin type exists. Each future source type must define its own
+authentication, authorization, provenance, Sanctuary policy, and deletion
+behavior. Unused variants are NOT implemented now.
+
+Classification discipline: the episodic-mark API now requires authoritative
+source-session provenance and refuses Sanctuary-origin writes before
+persistence. **Repository-wide Sanctuary write-incapacity remains governed by
+the broader Sanctuary audit** — `episodic_memories` has other writers
+(journal/quick, memory/ingest, sessionProcessor, summary worker,
+EpisodicMemoryService) outside this route's jurisdiction.
+
+---
+
+*Original decision packet (context for the ruling):*
 
 ## The problem
 
@@ -95,5 +125,6 @@ forward-compatible with B: `sourceSessionId: string` migrates mechanically to
 manufacture variants no caller inhabits — the same premature-scaffolding drift
 the six-category typology exists to refuse.
 
-**Not implemented in the R17 guard PR** — per ruling, this is a separate
-contract-hardening decision.
+*(Superseded by the ruling above: Kelly approved A/C the same day and directed
+the contract hardening into PR #625, since the missing-field bypass prevented
+the PR's stated boundary from being complete.)*

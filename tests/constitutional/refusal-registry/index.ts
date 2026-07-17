@@ -24,7 +24,8 @@
  *   R14  System never authors member identity/becoming at the emission boundary
  *   R15  production-maia ttsRouter selects only Stage-A-qualified local providers
  *   R16  persisted inferred developmental state cannot shape relational stance un-admitted
- *   R17  a moment from a Sanctuary session cannot be persisted as an episodic mark
+ *   R17  an episodic mark cannot be persisted from a Sanctuary session, nor without
+ *        resolvable member-owned source provenance
  */
 
 // NOTE: explicit .ts extensions so this runs under both `tsx` and Node's native

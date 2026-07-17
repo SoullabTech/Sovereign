@@ -9,10 +9,11 @@
  *   - tests/constitutional/refusal-registry/refusal-17-*.ts  (source-level)
  *   - app/api/sovereign/episodes/mark/__tests__/sanctuaryGuard.test.ts
  *     (route runtime with mocked db)
- * This script closes the remaining gap: it proves the guard's SQL — extracted
- * VERBATIM from the route source, so drift is impossible — evaluates correctly
- * against the real schema (maia_sessions TEXT member_id nullable;
- * member_sessions UUID member_id NOT NULL).
+ * This script closes the remaining gap: it proves the resolution SQL —
+ * extracted VERBATIM from the route source, so drift is impossible — computes
+ * both verdicts (owned allowlist + is_sanctuary) correctly against the real
+ * schema (maia_sessions TEXT member_id nullable; member_sessions UUID
+ * member_id NOT NULL). The route writes only on (owned=true, sanctuary=false).
  *
  * Everything runs inside one transaction that is ALWAYS rolled back: no row
  * seeded here survives, in any database this is pointed at.
@@ -41,18 +42,20 @@ interface Case {
   label: string;
   sessionId: string;
   memberId: string;
-  expect: boolean;
+  /** expected (owned, is_sanctuary) — write proceeds only on (true, false) */
+  expect: { owned: boolean; sanctuary: boolean };
 }
 
 const CASES: Case[] = [
-  { label: "own maia_sessions.mode='sanctuary' → refuse", sessionId: S('live-mode'), memberId: MEMBER, expect: true },
-  { label: "own maia_sessions.privacy_mode='sanctuary' → refuse", sessionId: S('live-privacy'), memberId: MEMBER, expect: true },
-  { label: "own member_sessions.mode='sanctuary' (finalized) → refuse", sessionId: S('finalized'), memberId: MEMBER, expect: true },
-  { label: 'NULL-owner (anonymous) sanctuary session → refuse (errs toward refusal)', sessionId: S('anon'), memberId: MEMBER, expect: true },
-  { label: 'own ordinary session → permit', sessionId: S('ordinary'), memberId: MEMBER, expect: false },
-  { label: "ANOTHER member's sanctuary session → does not refuse (no cross-member oracle)", sessionId: S('cross-sanctuary'), memberId: MEMBER, expect: false },
-  { label: "ANOTHER member's ordinary session → same as nonexistent", sessionId: S('cross-ordinary'), memberId: MEMBER, expect: false },
-  { label: 'nonexistent session → permit (opaque pointer, governed behavior)', sessionId: S('ghost'), memberId: MEMBER, expect: false },
+  { label: "own maia_sessions.mode='sanctuary' → owned, sanctuary → refuse", sessionId: S('live-mode'), memberId: MEMBER, expect: { owned: true, sanctuary: true } },
+  { label: "own maia_sessions.privacy_mode='sanctuary' → owned, sanctuary → refuse", sessionId: S('live-privacy'), memberId: MEMBER, expect: { owned: true, sanctuary: true } },
+  { label: "own member_sessions.mode='sanctuary' (finalized) → owned, sanctuary → refuse", sessionId: S('finalized'), memberId: MEMBER, expect: { owned: true, sanctuary: true } },
+  { label: 'NULL-owner (anonymous) sanctuary session → owned, sanctuary → refuse (errs toward refusal)', sessionId: S('anon'), memberId: MEMBER, expect: { owned: true, sanctuary: true } },
+  { label: 'own ordinary session → owned, not sanctuary → PERMIT (the only writing shape)', sessionId: S('ordinary'), memberId: MEMBER, expect: { owned: true, sanctuary: false } },
+  { label: 'NULL-owner ordinary session → owned, not sanctuary → permit (anonymous-start stays markable)', sessionId: S('anon-ordinary'), memberId: MEMBER, expect: { owned: true, sanctuary: false } },
+  { label: "ANOTHER member's sanctuary session → NOT owned → governed denial (no cross-member oracle)", sessionId: S('cross-sanctuary'), memberId: MEMBER, expect: { owned: false, sanctuary: false } },
+  { label: "ANOTHER member's ordinary session → NOT owned → same denial as nonexistent", sessionId: S('cross-ordinary'), memberId: MEMBER, expect: { owned: false, sanctuary: false } },
+  { label: 'nonexistent session → NOT owned → same denial as cross-member', sessionId: S('ghost'), memberId: MEMBER, expect: { owned: false, sanctuary: false } },
 ];
 
 async function main() {
@@ -85,8 +88,9 @@ async function main() {
     );
     await client.query(
       `INSERT INTO maia_sessions (id, member_id, mode, privacy_mode)
-       VALUES ($1, $2, 'continuity', 'standard')`,
-      [S('cross-ordinary'), OTHER],
+       VALUES ($1, $2, 'continuity', 'standard'),
+              ($3, NULL, 'continuity', 'standard')`,
+      [S('cross-ordinary'), OTHER, S('anon-ordinary')],
     );
     await client.query(
       `INSERT INTO member_sessions (member_id, session_id, mode)
@@ -97,11 +101,17 @@ async function main() {
 
     for (const c of CASES) {
       const r = await client.query(GUARD_SQL, [c.sessionId, c.memberId]);
-      const got = r.rows[0]?.is_sanctuary === true;
-      if (got === c.expect) {
+      const got = {
+        owned: r.rows[0]?.owned === true,
+        sanctuary: r.rows[0]?.is_sanctuary === true,
+      };
+      if (got.owned === c.expect.owned && got.sanctuary === c.expect.sanctuary) {
         console.log(`✅ PASS  ${c.label}`);
       } else {
-        console.log(`❌ FAIL  ${c.label}  (expected is_sanctuary=${c.expect}, got ${got})`);
+        console.log(
+          `❌ FAIL  ${c.label}  (expected owned=${c.expect.owned}/sanctuary=${c.expect.sanctuary}, ` +
+            `got owned=${got.owned}/sanctuary=${got.sanctuary})`,
+        );
         failed++;
       }
     }
