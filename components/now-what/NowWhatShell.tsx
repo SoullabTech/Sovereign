@@ -219,11 +219,11 @@ export function NowWhatThreshold({
           style={{ animation: 'nwtFadeUp 0.55s ease 320ms both' }}
         >
           <a
-            href={`/signin${next ? `?next=${next}` : ''}`}
+            href={`/now-what/arrive${next ? `?next=${next}` : ''}`}
             className="rounded-full border px-6 py-2 text-sm transition-all hover:shadow-[0_0_30px_rgba(255,226,122,0.25)]"
             style={{ color: ACCENT, borderColor: 'rgba(255,226,122,0.4)' }}
           >
-            Sign in to enter
+            Enter
           </a>
           <a
             href={`/now-what/map${ctx}`}
