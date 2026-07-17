@@ -22,15 +22,32 @@
  *     episodic_member_marked_requires_verbatim enforces the
  *     verbatim<->marked biconditional at the database as a backstop.
  *
- * SANCTUARY GUARD (slice 2, 2026-07-13)
+ * SANCTUARY GUARD (slice 2, 2026-07-13; server-side 2026-07-17)
  *   - The live gesture (member-facing "Keep this moment" affordance in
  *     components/OracleConversation.tsx) does NOT render at all when a
  *     Sanctuary session is active, and independently refuses client-side
- *     before calling this route — defense-in-depth, per CLAUDE.md's absolute
- *     Sanctuary boundary. This route itself still performs no sanctuary
- *     awareness of its own (it has no session-state input); the guard lives
- *     entirely at the call site, same as every other Sanctuary-scoped write
- *     in this codebase.
+ *     before calling this route.
+ *   - Defense-in-depth (R17, grade B): POST additionally resolves the source
+ *     session's sanctuary state server-side via sourceSessionId —
+ *     maia_sessions (mode/privacy_mode, written at session start) OR
+ *     member_sessions (mode, written at finalization) — and refuses the write
+ *     with 403 before any INSERT if either says sanctuary. Sanctuary
+ *     invariant 6 is absolute: the refusal holds even for an explicit member
+ *     request. Mirrors the SessionSummaryStore precedent (summaryText forced
+ *     null when isSanctuary) and the MemberLiveContext read-skips.
+ *   - The lookup is ownership-scoped to the authenticated member (see the
+ *     inline OWNERSHIP SCOPING note): another member's session id — sanctuary
+ *     or not — behaves exactly like a nonexistent one, so cross-member ids
+ *     cannot alter the refusal outcome and cannot probe whether another
+ *     member's session exists.
+ *   - STATUS (ruled 2026-07-17): episodic marks with resolvable
+ *     source-session provenance are now refused server-side when the source
+ *     is Sanctuary. Provenance-less mark requests remain a KNOWN BYPASS and
+ *     require a separate API-contract ruling — an absolute container boundary
+ *     cannot ultimately depend on an optional caller-supplied field. Do not
+ *     describe this boundary as complete or structurally absolute while
+ *     sourceSessionId remains optional. Decision note:
+ *     docs/architecture/EPISODIC_MARK_PROVENANCE_CONTRACT_2026-07-17.md
  *   - Sovereign placement includes removal: the member who marked a moment
  *     may also unmark it. See DELETE below.
  *   - This is the write path only. It does NOT govern recall. Whether marked
@@ -175,6 +192,60 @@ export async function POST(request: NextRequest) {
       typeof sourceTurnId === 'string' && sourceTurnId.length > 0 ? sourceTurnId : null;
     const sessionId =
       typeof sourceSessionId === 'string' && sourceSessionId.length > 0 ? sourceSessionId : null;
+
+    // SANCTUARY GUARD (R17) — resolve the source session's sanctuary state and
+    // refuse BEFORE any write. Invariant 6 is absolute: nothing from a
+    // Sanctuary session may be converted into long-term memory, including by
+    // member request during the session. Both session tables are consulted so
+    // the guard holds mid-session (maia_sessions, written at session start)
+    // and after finalization (member_sessions). A resolution error propagates
+    // to the catch (fail-closed: no refusal check, no write).
+    //
+    // OWNERSHIP SCOPING — the lookup is constrained to the authenticated
+    // member wherever the schema carries ownership:
+    //   - member_sessions.member_id is NOT NULL → strict member_id = $2.
+    //   - maia_sessions.member_id is nullable (anonymous/guest sessions) →
+    //     member_id = $2 OR member_id IS NULL. Unattributed sessions still
+    //     refuse: for Sanctuary the guard must err toward refusal, and an
+    //     unowned row cannot be tied to any other member, so including it
+    //     leaks nothing about anyone.
+    // Consequence (deliberate): another member's session — sanctuary or not —
+    // resolves exactly like a nonexistent session (the write proceeds, the
+    // pointer stays opaque). Cross-member ids therefore cannot flip the
+    // refusal outcome, cannot launder provenance through someone else's
+    // session, and cannot be used as an existence oracle on other members'
+    // sessions.
+    if (sessionId !== null) {
+      const sanctuary = await query<{ is_sanctuary: boolean }>(
+        `SELECT
+           EXISTS (SELECT 1 FROM maia_sessions
+                    WHERE id = $1
+                      AND (member_id = $2 OR member_id IS NULL)
+                      AND (mode = 'sanctuary' OR privacy_mode = 'sanctuary'))
+           OR
+           EXISTS (SELECT 1 FROM member_sessions
+                    WHERE session_id = $1
+                      AND member_id = $2::uuid
+                      AND mode = 'sanctuary')
+           AS is_sanctuary`,
+        [sessionId, memberId],
+      );
+      if (sanctuary.rows[0]?.is_sanctuary === true) {
+        // Metadata only (session id, member prefix) — never content.
+        console.log(
+          `[MAIA/sovereign] episodic mark refused (sanctuary) { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+            `sessionId: ${sessionId} }`,
+        );
+        return NextResponse.json(
+          {
+            error:
+              'Sanctuary sessions are not remembered. A moment from a Sanctuary session cannot be kept — this boundary is absolute and holds even at your request.',
+            refusal: 'R17',
+          },
+          { status: 403 },
+        );
+      }
+    }
 
     // Six columns. Nothing interpretive. Every omitted interpretive column stays
     // NULL (the meaning the system refuses to author); every omitted vector
