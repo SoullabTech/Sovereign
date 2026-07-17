@@ -453,7 +453,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
           const isActive = pathname?.startsWith('/now-what') ?? false;
           return (
             <button
-              onClick={() => router.push('/now-what/guide')}
+              onClick={() => router.push('/now-what')}
               className={`
                 group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
                 ${isActive
