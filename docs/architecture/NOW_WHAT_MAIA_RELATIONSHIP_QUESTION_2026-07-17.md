@@ -9,7 +9,20 @@
 > - Larry (or any practitioner) receives **no broader member-memory access by implication**.
 > - Any export, keeping, practitioner sharing, or cross-container learning requires **explicit member authorization**.
 
-This ratifies the built asymmetry (facts §2 below) as intentional: the read-only inflow is the "authorized member continuity" leg; the field-note gesture is the existing grammar for member-authorized crossings. The presence-layer exclusion of `/now-what/*` stands. The original four-model analysis is preserved below as the record of how the ruling was reached; the framing question it answered:
+This ratifies the built asymmetry (facts §2 below) as intentional — **a membrane, not a wall**: neither full isolation nor unrestricted integration. The read-only inflow is the "authorized member continuity" leg (Kelly: do not remove it automatically — it may be exactly what makes the environment feel continuous — but it must be named and governed, which this ratification does); the field-note gesture is the existing grammar for member-authorized crossings. Two further clarifications from the ruling: the environment may use Larry's *program knowledge* without that ever implying Larry's *personal access* to the member's memory or conversation; and any practitioner-visible material requires its own separate consent rule.
+
+```text
+Member MAIA continuity
+          ↓ authorized read
+     Now What? container
+          ✕ automatic write-back
+          ✕ practitioner visibility by default
+```
+
+Constitutional sentence (Kelly, 2026-07-17):
+> *The member may carry themselves into a room without surrendering the room to the rest of the house.*
+
+The presence-layer exclusion of `/now-what/*` stands. The original four-model analysis is preserved below as the record of how the ruling was reached; the framing question it answered:
 
 > **Which MAIA relationship is present in a practitioner-created environment, and whose continuity governs it?**
 
