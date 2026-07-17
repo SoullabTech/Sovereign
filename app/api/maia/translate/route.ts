@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { translateInsightAcrossSystems } from '@/lib/sovereign/wisdomTranslation';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
@@ -67,9 +68,12 @@ export async function POST(request: NextRequest) {
     });
 
     // Persist as a conversation turn (survives refresh, appears in transcripts)
+    // SANCTUARY (S1): posture resolved from the request body; a sanctuary
+    // translation is shown but never persisted (store refuses, fail closed).
+    const turnPosture = TurnPosture.resolve(body);
     let turnId: string | null = null;
     try {
-      turnId = await TurnsStore.addTranslation({
+      turnId = await TurnsStore.addTranslation(turnPosture, {
         userId: memberId,
         sessionId,
         content: result.translatedText,

@@ -37,7 +37,7 @@ export const check: RefusalCheck = {
 
     const handler = io.grep('export async function POST', [ROUTE]);
     const bodyRead = io.grep('request\\.json\\(', [ROUTE]);
-    const writers = io.grep('storeSessionPattern|storeCMLayerSignal', [ROUTE]);
+    const writers = io.grep('storeSessionPattern\\(|storeCMLayerSignal\\(', [ROUTE]).filter((l) => !/import /.test(l));
     const refusalLine = lineOf(refusal);
     const handlerLine = lineOf(handler);
 

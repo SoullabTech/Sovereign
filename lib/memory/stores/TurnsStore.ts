@@ -6,6 +6,7 @@
  */
 
 import { query } from '../../db/postgres';
+import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
 
 export interface TurnMeta {
   kind?: 'normal' | 'translation';
@@ -79,8 +80,14 @@ export const TurnsStore = {
 
   /**
    * Store a new turn
+   *
+   * SANCTUARY (S1, boundary-enforced): posture REQUIRED; sanctuary or
+   * missing/forged posture refuses the write (fail closed, metadata-only log).
    */
-  async addTurn(turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<string | null> {
+  async addTurn(posture: TurnPosture, turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<string | null> {
+    if (!contentWritable(posture, 'TurnsStore.addTurn', turn.sessionId)) {
+      return null;
+    }
     // Note: meta and parent_turn_id are not in the production schema — omitted
     const result = await query<{ id: string }>(
       `
@@ -104,7 +111,7 @@ export const TurnsStore = {
    * parentTurnId: Valid UUID FK to parent turn (used for DB threading)
    * parentLocalId: Client-side ID when parent not yet persisted (stored in meta only)
    */
-  async addTranslation(opts: {
+  async addTranslation(posture: TurnPosture, opts: {
     userId: string;
     sessionId?: string;
     content: string;
@@ -125,7 +132,7 @@ export const TurnsStore = {
       ...(opts.parentLocalId ? { parentLocalId: opts.parentLocalId } : {}),
     };
 
-    return this.addTurn({
+    return this.addTurn(posture, {
       userId: opts.userId,
       sessionId: opts.sessionId,
       role: 'assistant',
@@ -138,6 +145,12 @@ export const TurnsStore = {
   /**
    * Store a user message and assistant response pair.
    *
+   * SANCTUARY (S1, boundary-enforced): `posture` is REQUIRED and must be a
+   * TurnPosture resolved at the serving boundary. Sanctuary posture — or a
+   * missing/forged posture (fail closed) — refuses the write here at the
+   * store, regardless of caller behavior. The refusal log carries metadata
+   * only. See lib/sanctuary/turnPosture.ts and incident SANC-20260614-01.
+   *
    * Uses two sequential INSERTs so created_at timestamps differ by at least
    * one clock tick — guarantees user < assistant ordering when sorted by
    * (created_at ASC, seq ASC).
@@ -147,12 +160,16 @@ export const TurnsStore = {
    * Omitting exchangeId falls back to the original non-idempotent behaviour.
    */
   async addExchange(
+    posture: TurnPosture,
     userId: string,
     sessionId: string | undefined,
     userMessage: string,
     assistantResponse: string,
     exchangeId?: string
   ): Promise<void> {
+    if (!contentWritable(posture, 'TurnsStore.addExchange', sessionId)) {
+      return;
+    }
     if (!exchangeId) {
       console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
     }

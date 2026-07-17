@@ -77,6 +77,7 @@ import {
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+import { TurnPosture } from '../sanctuary/turnPosture';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
@@ -1383,6 +1384,8 @@ async function corePathResponse(
   if (isSanctuary) {
     console.log('🛡️ [CORE] Sanctuary mode active - skipping all memory recall');
   }
+  // SANCTUARY (S1): per-turn posture for every content writer on this path.
+  const turnPosture = TurnPosture.resolve(meta);
 
   // ⚡ LATENCY FIX: Run independent DB queries in parallel instead of sequentially.
   // Previously these ran one after another (~200-500ms each = 1-2s total).
@@ -2336,6 +2339,9 @@ function finalizeMemberFacingText(
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
   const startTime = Date.now();
+  // SANCTUARY (S1): per-turn posture, resolved once for this request and
+  // passed to every content writer (turns store, corpus callosum trace).
+  const turnPosture = TurnPosture.resolve(meta);
 
   // increment turn count for this session and get the authoritative count
   // NOTE: Using session.turn_count (not history.length) to avoid cap from limited history
@@ -3035,7 +3041,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
-          await TurnsStore.addExchange(effectiveUserId, sessionId, input, text);
+          await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text);
           console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);
@@ -3449,7 +3455,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             // 🔥 Elemental parallel processing (the real corpus callosum!)
             elementalAgents: elementalAgents,
             elementalSynthesis: elementalSynthesis,
-          });
+          }, turnPosture);
 
           const elementalCount = traceResult.elementalRunIds?.length ?? 0;
           if (traceResult.integrationId) {
