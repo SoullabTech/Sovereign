@@ -22,25 +22,44 @@
  * member-marked row MUST carry non-empty verbatim, and a non-marked row MUST
  * keep the verbatim channel NULL (no system text smuggled through).
  *
- * Self-seeding (creates a synthetic member AND a synthetic owned session —
+ * Self-seeding (creates a synthetic member, a synthetic owned session —
  * required since the provenance ruling of 2026-07-17: the route refuses any
  * mark whose sourceSessionId does not resolve to a session owned by the
- * authenticated member), self-cleaning (deletes everything it wrote in a
- * finally block), re-runnable, server-independent.
+ * authenticated member — AND a synthetic auth_sessions credential), self-
+ * cleaning (deletes everything it wrote in a finally block), re-runnable,
+ * server-independent.
  *
- * KNOWN BASELINE BREAKAGE (2026-07-17, pre-dates the provenance ruling): the
- * direct-invocation auth path used here (bare x-member-id header) no longer
- * authenticates — getMemberIdFromRequest requires a verified auth_sessions
- * credential and calls cookies(), which throws outside a request scope. Until
- * that is repaired (separate task), sections [1]-[3]'s handler calls fail at
- * auth; the direct-SQL CHECK-constraint proofs still run.
+ * AUTH (repaired 2026-07-17): getMemberIdFromRequest authenticates only a
+ * VERIFIED auth_sessions credential; a bare x-member-id header is an
+ * unverified claim, honored only when it matches the session's member. It
+ * also reads cookies() from next/headers, which throws outside a Next
+ * request scope. So this script (a) seeds an auth_sessions row for the
+ * synthetic member and sends its token via x-session-token, and (b) invokes
+ * the handler inside a real request scope — workAsyncStorage +
+ * workUnitAsyncStorage populated via the same createRequestStoreForAPI
+ * factory Next's own app-route module uses — so cookies() resolves instead
+ * of throwing. Section [4] proves the refusals this hardening introduces:
+ * bare-claim 401, claim-mismatch 401, and the R18 provenance 403s.
  *
  * Run:
  *   node --env-file=.env.local --import tsx scripts/verify-episodic-mark.ts
+ *   # or, naming the database explicitly:
+ *   DATABASE_URL="postgresql://soullab@localhost:5432/maia_consciousness" \
+ *     npx tsx scripts/verify-episodic-mark.ts
  */
+
+// MUST be first: installs globalThis.AsyncLocalStorage (Next's own baseline
+// module, run by the server runtime before anything else). Next's async-storage
+// modules capture that global at load time — without this, they load a fake
+// storage that throws "AsyncLocalStorage accessed in runtime where it is not
+// available" on first use under plain tsx.
+import 'next/dist/server/node-environment-baseline';
 
 import { randomUUID } from 'crypto';
 import { NextRequest } from 'next/server';
+import { workAsyncStorage } from 'next/dist/server/app-render/work-async-storage.external';
+import { workUnitAsyncStorage } from 'next/dist/server/app-render/work-unit-async-storage.external';
+import { createRequestStoreForAPI } from 'next/dist/server/async-storage/request-store';
 import { POST } from '@/app/api/sovereign/episodes/mark/route';
 import { query } from '@/lib/db/postgres';
 
@@ -59,12 +78,38 @@ function show(s: unknown): string {
   return `${JSON.stringify(s)} (len ${typeof s === 'string' ? s.length : 'n/a'})`;
 }
 
-function markRequest(memberId: string, body: unknown): NextRequest {
-  return new NextRequest(URL, {
+/**
+ * Invoke a route handler inside a genuine Next request scope, so request APIs
+ * (cookies() in getMemberIdFromRequest) resolve instead of throwing "called
+ * outside a request scope". The request store comes from the SAME factory
+ * Next's app-route module uses at runtime (createRequestStoreForAPI, phase
+ * 'action'); the work store carries only the fields cookies() consults
+ * (route / forceStatic / dynamicShouldError).
+ */
+function runInRequestScope<T>(req: NextRequest, fn: () => Promise<T>): Promise<T> {
+  const requestStore = createRequestStoreForAPI(
+    req,
+    req.nextUrl,
+    undefined as never, // implicitTags — stored, never consulted on this path
+    undefined,
+    undefined,
+  );
+  const workStore = {
+    route: '/api/sovereign/episodes/mark',
+    forceStatic: false,
+    dynamicShouldError: false,
+  } as never;
+  return workAsyncStorage.run(workStore, () => workUnitAsyncStorage.run(requestStore, fn));
+}
+
+/** POST to the real handler with the given auth headers, inside a request scope. */
+function mark(body: unknown, headers: Record<string, string>): Promise<Response> {
+  const req = new NextRequest(URL, {
     method: 'POST',
-    headers: { 'x-member-id': memberId, 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify(body),
   });
+  return runInRequestScope(req, () => POST(req));
 }
 
 /**
@@ -155,6 +200,9 @@ async function main(): Promise<void> {
 
   const memberId = randomUUID();
   const tag = Date.now();
+  // Verified credential for the synthetic member (varchar(64) column; 49 chars).
+  const sessionToken = `epimark-test-${randomUUID()}`;
+  const authed = { 'x-session-token': sessionToken, 'x-member-id': memberId };
 
   // A deliberately hostile string. If ANY byte changes, fidelity is broken.
   const verbatim =
@@ -172,6 +220,15 @@ async function main(): Promise<void> {
       [memberId, `EPISODIC-MARK-TEST-${tag}`, `episodic_mark_test_${tag}`, 'test-not-a-real-hash'],
     );
 
+    // ---- seed the verified auth_sessions credential the auth layer requires ----
+    // (bare x-member-id no longer authenticates; see header. Short-lived on
+    // purpose — even if teardown were skipped, the token dies in 15 minutes.)
+    await query(
+      `INSERT INTO auth_sessions (member_id, session_token, expires_at)
+       VALUES ($1, $2, NOW() + INTERVAL '15 minutes')`,
+      [memberId, sessionToken],
+    );
+
     // ---- seed the owned source session the provenance contract requires ----
     // (an ordinary continuity/standard session owned by the synthetic member;
     // a fabricated session id would now be refused with 403 R18)
@@ -184,7 +241,7 @@ async function main(): Promise<void> {
     // ======================================================================
     console.log('\n[1] Real handler — authenticated mark of a hostile string');
     // ======================================================================
-    const res = await POST(markRequest(memberId, { verbatimText: verbatim, sourceTurnId, sourceSessionId }));
+    const res = await mark({ verbatimText: verbatim, sourceTurnId, sourceSessionId }, authed);
     const json: any = await res.json();
 
     check('POST returns 201', res.status === 201, `got ${res.status}: ${JSON.stringify(json)}`);
@@ -264,7 +321,7 @@ async function main(): Promise<void> {
     console.log('\n[3] Backstops — app-layer guard + DB CHECK biconditional');
     // ======================================================================
     // App layer: a whitespace-only mark is not a mark.
-    const emptyRes = await POST(markRequest(memberId, { verbatimText: '   \t\n  ' }));
+    const emptyRes = await mark({ verbatimText: '   \t\n  ', sourceSessionId }, authed);
     check('whitespace-only verbatim rejected with 400 (app layer)', emptyRes.status === 400, `got ${emptyRes.status}`);
 
     const after = await query<any>(
@@ -311,16 +368,55 @@ async function main(): Promise<void> {
       console.log(`          (unexpected code ${e?.code} ${e?.constraint ?? ''})`);
     }
     check('CHECK allows non-marked row with NULL verbatim (legacy shape)', okC);
+
+    // ======================================================================
+    console.log('\n[4] Refusals — verified credential + provenance (R18)');
+    // ======================================================================
+    const validBody = { verbatimText: 'a real sentence', sourceTurnId, sourceSessionId };
+
+    // Auth: a bare x-member-id claim (the pre-hardening transport) is NOT a
+    // credential — no auth_sessions token, no member, 401.
+    const bareClaim = await mark(validBody, { 'x-member-id': memberId });
+    check('bare x-member-id without session token → 401', bareClaim.status === 401, `got ${bareClaim.status}`);
+
+    // Auth: a valid token whose x-member-id claim names a DIFFERENT member is
+    // a possible impersonation — rejected, not silently resolved either way.
+    const mismatch = await mark(validBody, { 'x-session-token': sessionToken, 'x-member-id': randomUUID() });
+    check('valid token with mismatched x-member-id claim → 401', mismatch.status === 401, `got ${mismatch.status}`);
+
+    // Provenance: a mark that names NO source session is refused (403 R18) —
+    // without provenance the Sanctuary boundary cannot be enforced at all.
+    const noProv = await mark({ verbatimText: 'a real sentence', sourceTurnId }, authed);
+    const noProvJson: any = await noProv.json();
+    check('mark without sourceSessionId → 403', noProv.status === 403, `got ${noProv.status}`);
+    check('  …and carries refusal R18', noProvJson?.refusal === 'R18', `got ${JSON.stringify(noProvJson)}`);
+
+    // Provenance: a fabricated session id resolves like a nonexistent or
+    // cross-member session — the same governed denial (403 R18).
+    const ghost = await mark({ ...validBody, sourceSessionId: `sess_${randomUUID()}` }, authed);
+    const ghostJson: any = await ghost.json();
+    check('mark citing an unowned/nonexistent session → 403', ghost.status === 403, `got ${ghost.status}`);
+    check('  …and carries refusal R18', ghostJson?.refusal === 'R18', `got ${JSON.stringify(ghostJson)}`);
+
+    // None of the refused attempts wrote anything.
+    const finalCount = await query<any>(
+      `SELECT count(*)::int AS n FROM episodic_memories WHERE user_id = $1 AND marked_by_member = TRUE`,
+      [memberId],
+    );
+    check('refused attempts wrote nothing (still exactly 1 mark)', finalCount.rows[0]?.n === 1, `got ${finalCount.rows[0]?.n}`);
   } finally {
     // ---- teardown: remove everything this run created ----
     await query(`DELETE FROM episodic_memories WHERE user_id = $1`, [memberId]);
+    await query(`DELETE FROM auth_sessions WHERE member_id = $1`, [memberId]);
     await query(`DELETE FROM maia_sessions WHERE id = $1`, [sourceSessionId]);
     await query(`DELETE FROM members WHERE id = $1`, [memberId]);
   }
 
   console.log('\n────────────────────────────────────────');
   if (failures === 0) {
-    console.log('ALL CHECKS PASSED — verbatim fidelity, interpretive abstention, source preservation.');
+    console.log(
+      'ALL CHECKS PASSED — verbatim fidelity, interpretive abstention, source preservation, auth + R18 provenance refusals.',
+    );
   } else {
     console.log(`${failures} CHECK(S) FAILED.`);
   }
