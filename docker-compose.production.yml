@@ -106,6 +106,9 @@ services:
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
+      # Audit trail (lib/security/auditLog.ts) — node-writable, volume-backed
+      # so entries survive container swaps on deploy.
+      AUDIT_LOG_DIR: /app/data/audit-logs
       # HOST MARKER: Identifies which physical machine is running this stack.
       # Change to "mac-studio" when running on the M4, "minisforum" on the Linux server.
       # Appears in every [voice] server log line and in SSE complete events for comparison.
@@ -170,6 +173,9 @@ services:
       - ./Community-Commons:/app/Community-Commons:ro
       # Practitioner file vault - persistent storage for uploaded files
       - vault_data:/app/data/vault
+      # Security audit trail - must survive container swaps (deploys recreate
+      # the container; an image-local audit dir would silently reset each time)
+      - audit_data:/app/data/audit-logs
       # Voice notes storage - persisted across container restarts
       - voice_notes_data:/app/storage/voice-notes
       # Media Studio storage - sovereign local media pipeline
@@ -1011,6 +1017,8 @@ volumes:
   whisper-hf-cache:
     driver: local
   vault_data:
+    driver: local
+  audit_data:
     driver: local
   voice_notes_data:
     driver: local

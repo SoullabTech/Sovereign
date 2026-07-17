@@ -139,6 +139,10 @@ COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 # Create media storage directory owned by node (volume mounts inherit this)
 RUN mkdir -p /app/data/media && chown -R node:node /app/data/media
 
+# Audit trail (lib/security/auditLog.ts) — must be writable by the node user;
+# without this every audit write fails EACCES and the trail is silently empty.
+RUN mkdir -p /app/data/audit-logs && chown -R node:node /app/data/audit-logs
+
 # Create vault storage directory with world-writable permissions.
 # 0777 (not chown node) because userns-remapped Docker maps the container's uid=1000
 # to a DIFFERENT host uid than 1000, so ownership is unpredictable across hosts.
