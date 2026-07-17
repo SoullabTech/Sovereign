@@ -12,6 +12,7 @@ import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { BetaBanner } from "@/components/BetaBanner";
 import BugReportButton from "@/components/bugs/BugReportButton";
+import { MaiaPresence } from "@/components/maia/presence/MaiaPresence";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -201,7 +202,13 @@ export default function RootLayout({
             <AethericConsciousnessProvider>
               <FeatureTooltipProvider>
                 <MobileRouteGuard>
-                  {children}
+                  {/* Canonical MAIA relationship layer — mounted exactly once.
+                      Renders a quiet handle + conversation sheet on governed
+                      member rooms only; children pass through untouched
+                      everywhere else. See components/maia/presence/MaiaPresence.tsx */}
+                  <MaiaPresence>
+                    {children}
+                  </MaiaPresence>
                 </MobileRouteGuard>
               </FeatureTooltipProvider>
             </AethericConsciousnessProvider>
