@@ -12,7 +12,7 @@ typed-source direction.
 
 For the present API, the only valid source is an authenticated member-owned
 session. `sourceSessionId` is required; its absence is a **Sanctuary-boundary
-refusal** (403, R17), not ordinary field validation. Nonexistent, malformed,
+refusal** (403, R18), not ordinary field validation. Nonexistent, malformed,
 and cross-member sources receive one indistinguishable governed denial —
 nothing reveals whether an inaccessible session exists.
 
@@ -36,7 +36,7 @@ EpisodicMemoryService) outside this route's jurisdiction.
 
 ## The problem
 
-The server-side Sanctuary guard (R17, grade B) refuses any episodic mark whose
+The server-side Sanctuary guard (R18, grade B) refuses any episodic mark whose
 `sourceSessionId` resolves to a Sanctuary session. But `sourceSessionId` is
 **optional**:
 
@@ -49,12 +49,12 @@ Optional boundary enforcement
 An absolute container boundary (Sanctuary invariant 6) cannot ultimately depend
 on an optional field supplied by the caller. A direct caller that omits the
 field gives the server nothing to resolve, and the write proceeds. This is the
-**known bypass**, named in the route header, in R17's
+**known bypass**, named in the route header, in R18's
 `passingDoesNotAuthorize`, and in the runtime test
 `app/api/sovereign/episodes/mark/__tests__/sanctuaryGuard.test.ts`
 ("the KNOWN BYPASS, named").
 
-R17 stays **grade B** until provenance-less writes are impossible or
+R18 stays **grade B** until provenance-less writes are impossible or
 independently classifiable as non-Sanctuary.
 
 ## Current caller reality (surveyed 2026-07-17)
@@ -96,7 +96,7 @@ Every durable episodic object knows where it came from, even when the origin is
 not a live session. Non-session origins carry a **server-classifiable**
 provenance type instead of an omitted field — provenance-less writes become
 *impossible*, and non-session writes become *independently classifiable as
-non-Sanctuary* (the two conditions under which R17 may be re-graded).
+non-Sanctuary* (the two conditions under which R18 may be re-graded).
 
 - **Cost now**: contract redesign + client change for a variant space with
   exactly one inhabited variant. The other two variants would be speculative
@@ -116,7 +116,7 @@ stated as boundary rather than validation error.
 
 **Adopt A/C now** (require the field; state the refusal in Sanctuary-boundary
 language, not just "400 missing field" — that is C's framing on A's
-mechanics). Zero caller impact, closes the bypass, allows R17 re-grade.
+mechanics). Zero caller impact, closes the bypass, allows R18 re-grade.
 
 **Adopt B's shape when — and not before — a second origin type becomes real**
 (e.g. member-authored import ships). Requiring `sourceSessionId` today is

@@ -174,7 +174,7 @@ async function main(): Promise<void> {
 
     // ---- seed the owned source session the provenance contract requires ----
     // (an ordinary continuity/standard session owned by the synthetic member;
-    // a fabricated session id would now be refused with 403 R17)
+    // a fabricated session id would now be refused with 403 R18)
     await query(
       `INSERT INTO maia_sessions (id, member_id, mode, privacy_mode)
        VALUES ($1, $2, 'continuity', 'standard')`,
