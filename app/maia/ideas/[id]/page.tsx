@@ -27,6 +27,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -155,6 +156,14 @@ export default function IdeaWorkspacePage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const ideaId = params?.id as string;
+  // 🚪 House Presence: declarative place facts (id only — never contents).
+  useMaiaPlace({
+    placeId: 'ideas',
+    placeName: 'Ideas',
+    purpose: 'A room for capturing and developing emerging thoughts.',
+    objectType: 'idea',
+    objectId: ideaId,
+  });
 
   const [idea, setIdea] = useState<Idea | null>(null);
   const [blocks, setBlocks] = useState<Block[]>([]);

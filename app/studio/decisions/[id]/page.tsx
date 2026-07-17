@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -492,6 +493,14 @@ function ContinueDecisionForm({
 export default function DecisionDetailPage() {
   const params = useParams();
   const decisionId = params?.id as string;
+  // 🚪 House Presence: declarative place facts (id only — never contents).
+  useMaiaPlace({
+    placeId: 'decisions',
+    placeName: 'Decisions',
+    purpose: 'A room for naming and reflecting on decisions.',
+    objectType: 'decision',
+    objectId: decisionId,
+  });
   const [decision, setDecision] = useState<DecisionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [consulting, setConsulting] = useState(false);
