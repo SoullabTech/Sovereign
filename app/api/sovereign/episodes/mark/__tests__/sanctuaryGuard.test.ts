@@ -1,8 +1,8 @@
 /**
  * Runtime route tests — episodic mark Sanctuary guard + provenance
- * requirement (R17).
+ * requirement (R18).
  *
- * Companion to tests/constitutional/refusal-registry/refusal-17-*.ts (source-
+ * Companion to tests/constitutional/refusal-registry/refusal-18-*.ts (source-
  * level) and scripts/verify-episodic-sanctuary-guard.ts (real-DB SQL
  * semantics). This file proves the ROUTE's runtime behavior with the db and
  * auth boundaries mocked.
@@ -10,7 +10,7 @@
  * GOVERNING RULE (ruled 2026-07-17): no durable episodic mark may be written
  * without a resolvable source. For the present API the only valid source is
  * an authenticated member-owned, non-Sanctuary session. Missing provenance is
- * a Sanctuary-boundary refusal (403, R17), not ordinary validation.
+ * a Sanctuary-boundary refusal (403, R18), not ordinary validation.
  *
  * The query mock does not blindly return canned rows: before evaluating, it
  * asserts the resolution SQL still carries the exact predicates whose
@@ -146,26 +146,26 @@ describe('provenance requirement — no durable mark without a resolvable source
   // provenance-less mark is now refused and can never reach
   // episodic_memories. Permanent constitutional assertion — if it fails, the
   // provenance contract has been silently reopened.
-  test('missing sourceSessionId → 403 R17, no queries at all, no insert', async () => {
+  test('missing sourceSessionId → 403 R18, no queries at all, no insert', async () => {
     const { res, json } = await post({ verbatimText: VERBATIM });
     expect(res.status).toBe(403);
-    expect(json.refusal).toBe('R17');
+    expect(json.refusal).toBe('R18');
     expect(json.error).toMatch(/provenance/i);
     expect(queryMock).not.toHaveBeenCalled();
     expect(insertCalls).toHaveLength(0);
   });
 
-  test('empty-string sourceSessionId → 403 R17, no insert', async () => {
+  test('empty-string sourceSessionId → 403 R18, no insert', async () => {
     const { res, json } = await post({ verbatimText: VERBATIM, sourceSessionId: '' });
     expect(res.status).toBe(403);
-    expect(json.refusal).toBe('R17');
+    expect(json.refusal).toBe('R18');
     expect(insertCalls).toHaveLength(0);
   });
 
-  test('malformed (non-string) sourceSessionId → 403 R17, no insert', async () => {
+  test('malformed (non-string) sourceSessionId → 403 R18, no insert', async () => {
     const { res, json } = await post({ verbatimText: VERBATIM, sourceSessionId: 12345 });
     expect(res.status).toBe(403);
-    expect(json.refusal).toBe('R17');
+    expect(json.refusal).toBe('R18');
     expect(insertCalls).toHaveLength(0);
   });
 });
@@ -175,7 +175,7 @@ describe('Sanctuary refusal — own session, all three sanctuary signals', () =>
     maiaSessions = [{ id: 's1', member_id: MEMBER, mode: 'sanctuary', privacy_mode: 'standard' }];
     const { res, json } = await post({ verbatimText: VERBATIM, sourceSessionId: 's1' });
     expect(res.status).toBe(403);
-    expect(json.refusal).toBe('R17');
+    expect(json.refusal).toBe('R18');
     expect(insertCalls).toHaveLength(0);
   });
 
@@ -183,7 +183,7 @@ describe('Sanctuary refusal — own session, all three sanctuary signals', () =>
     maiaSessions = [{ id: 's2', member_id: MEMBER, mode: 'continuity', privacy_mode: 'sanctuary' }];
     const { res, json } = await post({ verbatimText: VERBATIM, sourceSessionId: 's2' });
     expect(res.status).toBe(403);
-    expect(json.refusal).toBe('R17');
+    expect(json.refusal).toBe('R18');
     expect(insertCalls).toHaveLength(0);
   });
 
@@ -191,7 +191,7 @@ describe('Sanctuary refusal — own session, all three sanctuary signals', () =>
     memberSessions = [{ session_id: 's3', member_id: MEMBER, mode: 'sanctuary' }];
     const { res, json } = await post({ verbatimText: VERBATIM, sourceSessionId: 's3' });
     expect(res.status).toBe(403);
-    expect(json.refusal).toBe('R17');
+    expect(json.refusal).toBe('R18');
     expect(insertCalls).toHaveLength(0);
   });
 
@@ -247,7 +247,7 @@ describe('unresolvable sources — one indistinguishable governed denial', () =>
 
     for (const { res, json } of [nonexistent, crossSanctuary, crossOrdinary]) {
       expect(res.status).toBe(403);
-      expect(json.refusal).toBe('R17');
+      expect(json.refusal).toBe('R18');
       expect(insertCalls).toHaveLength(0);
     }
     // Identical bodies → no existence oracle: a caller cannot distinguish

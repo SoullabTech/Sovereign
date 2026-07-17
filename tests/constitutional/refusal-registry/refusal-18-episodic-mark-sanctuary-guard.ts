@@ -1,7 +1,7 @@
 import type { RefusalCheck } from './harness';
 
 /**
- * Refusal 17 — a moment from a Sanctuary session cannot be persisted as an
+ * Refusal 18 — a moment from a Sanctuary session cannot be persisted as an
  * episodic mark, and no episodic mark may be written without resolvable
  * source-session provenance.
  *
@@ -57,7 +57,7 @@ const FINALIZED_SESSION_PREDICATE =
 const HARD_REFUSAL = /status:\s*403/;
 
 export const check: RefusalCheck = {
-  id: 'R17',
+  id: 'R18',
   refusal:
     'an episodic mark cannot be persisted from a Sanctuary session, nor without resolvable member-owned source provenance',
   grade: 'A-minus',

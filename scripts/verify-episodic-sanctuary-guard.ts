@@ -1,12 +1,12 @@
 /**
- * Verify — episodic mark Sanctuary guard SQL semantics (R17) against a REAL
+ * Verify — episodic mark Sanctuary guard SQL semantics (R18) against a REAL
  * database.
  *
  *   npx tsx scripts/verify-episodic-sanctuary-guard.ts
  *   (DATABASE_URL respected; defaults to the local sovereign PostgreSQL)
  *
  * Companion to:
- *   - tests/constitutional/refusal-registry/refusal-17-*.ts  (source-level)
+ *   - tests/constitutional/refusal-registry/refusal-18-*.ts  (source-level)
  *   - app/api/sovereign/episodes/mark/__tests__/sanctuaryGuard.test.ts
  *     (route runtime with mocked db)
  * This script closes the remaining gap: it proves the resolution SQL —
@@ -72,8 +72,8 @@ async function main() {
     // Temp members (member_sessions.member_id is a NOT NULL FK). Rolled back.
     await client.query(
       `INSERT INTO members (id, passkey, username, password_hash, name)
-       VALUES ($1, $3 || '-a', $3 || '-a', 'x', 'R17 Verify A'),
-              ($2, $3 || '-b', $3 || '-b', 'x', 'R17 Verify B')`,
+       VALUES ($1, $3 || '-a', $3 || '-a', 'x', 'R18 Verify A'),
+              ($2, $3 || '-b', $3 || '-b', 'x', 'R18 Verify B')`,
       [MEMBER, OTHER, `r17-verify-${MEMBER.slice(0, 8)}`],
     );
 

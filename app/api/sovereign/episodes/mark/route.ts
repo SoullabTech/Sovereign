@@ -31,9 +31,9 @@
  *     written without a resolvable source. For the present API the only valid
  *     source is an authenticated member-owned session. sourceSessionId is
  *     therefore REQUIRED, and its absence is a Sanctuary-boundary refusal
- *     (403, R17) — not ordinary field validation — because without provenance
+ *     (403, R18) — not ordinary field validation — because without provenance
  *     the container boundary cannot be enforced at all.
- *   - Server-side resolution (R17): POST resolves sourceSessionId against
+ *   - Server-side resolution (R18): POST resolves sourceSessionId against
  *     maia_sessions (mode/privacy_mode, written at session start) OR
  *     member_sessions (mode, written at finalization). The write proceeds
  *     ONLY when the session resolves as owned by the authenticated member and
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
  *   - sourceTurnId:    provenance pointer to the marked turn (optional).
  *
  * 201 with the stored episode, 400 on empty/invalid verbatim, 401 if no
- * member, 403 (refusal R17) on missing/unresolvable provenance or a Sanctuary
+ * member, 403 (refusal R18) on missing/unresolvable provenance or a Sanctuary
  * source.
  */
 export async function POST(request: NextRequest) {
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
     const sessionId =
       typeof sourceSessionId === 'string' && sourceSessionId.length > 0 ? sourceSessionId : null;
 
-    // PROVENANCE REQUIREMENT (R17, ruled 2026-07-17) — no durable episodic
+    // PROVENANCE REQUIREMENT (R18, ruled 2026-07-17) — no durable episodic
     // mark may be written without a resolvable source. For the present API the
     // only valid source is an authenticated member-owned session. A missing,
     // empty, or non-string sourceSessionId is a Sanctuary-boundary refusal,
@@ -216,13 +216,13 @@ export async function POST(request: NextRequest) {
         {
           error:
             'Episodic marks require source-session provenance. A durable mark must name the session it came from — without that, the boundaries that protect what is and is not remembered cannot be enforced.',
-          refusal: 'R17',
+          refusal: 'R18',
         },
         { status: 403 },
       );
     }
 
-    // SANCTUARY GUARD (R17) — resolve the source session's sanctuary state and
+    // SANCTUARY GUARD (R18) — resolve the source session's sanctuary state and
     // refuse BEFORE any write. Invariant 6 is absolute: nothing from a
     // Sanctuary session may be converted into long-term memory, including by
     // member request during the session. Both session tables are consulted so
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
         {
           error:
             'Sanctuary sessions are not remembered. A moment from a Sanctuary session cannot be kept — this boundary is absolute and holds even at your request.',
-          refusal: 'R17',
+          refusal: 'R18',
         },
         { status: 403 },
       );
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
         {
           error:
             'This moment could not be traced to one of your sessions. Episodic marks require source-session provenance that resolves to a session of yours.',
-          refusal: 'R17',
+          refusal: 'R18',
         },
         { status: 403 },
       );
