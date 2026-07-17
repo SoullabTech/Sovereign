@@ -39,7 +39,7 @@
  * workUnitAsyncStorage populated via the same createRequestStoreForAPI
  * factory Next's own app-route module uses — so cookies() resolves instead
  * of throwing. Section [4] proves the refusals this hardening introduces:
- * bare-claim 401, claim-mismatch 401, and the R17 provenance 403s.
+ * bare-claim 401, claim-mismatch 401, and the R18 provenance 403s.
  *
  * Run:
  *   node --env-file=.env.local --import tsx scripts/verify-episodic-mark.ts
@@ -370,7 +370,7 @@ async function main(): Promise<void> {
     check('CHECK allows non-marked row with NULL verbatim (legacy shape)', okC);
 
     // ======================================================================
-    console.log('\n[4] Refusals — verified credential + provenance (R17)');
+    console.log('\n[4] Refusals — verified credential + provenance (R18)');
     // ======================================================================
     const validBody = { verbatimText: 'a real sentence', sourceTurnId, sourceSessionId };
 
@@ -384,19 +384,19 @@ async function main(): Promise<void> {
     const mismatch = await mark(validBody, { 'x-session-token': sessionToken, 'x-member-id': randomUUID() });
     check('valid token with mismatched x-member-id claim → 401', mismatch.status === 401, `got ${mismatch.status}`);
 
-    // Provenance: a mark that names NO source session is refused (403 R17) —
+    // Provenance: a mark that names NO source session is refused (403 R18) —
     // without provenance the Sanctuary boundary cannot be enforced at all.
     const noProv = await mark({ verbatimText: 'a real sentence', sourceTurnId }, authed);
     const noProvJson: any = await noProv.json();
     check('mark without sourceSessionId → 403', noProv.status === 403, `got ${noProv.status}`);
-    check('  …and carries refusal R17', noProvJson?.refusal === 'R17', `got ${JSON.stringify(noProvJson)}`);
+    check('  …and carries refusal R18', noProvJson?.refusal === 'R18', `got ${JSON.stringify(noProvJson)}`);
 
     // Provenance: a fabricated session id resolves like a nonexistent or
-    // cross-member session — the same governed denial (403 R17).
+    // cross-member session — the same governed denial (403 R18).
     const ghost = await mark({ ...validBody, sourceSessionId: `sess_${randomUUID()}` }, authed);
     const ghostJson: any = await ghost.json();
     check('mark citing an unowned/nonexistent session → 403', ghost.status === 403, `got ${ghost.status}`);
-    check('  …and carries refusal R17', ghostJson?.refusal === 'R17', `got ${JSON.stringify(ghostJson)}`);
+    check('  …and carries refusal R18', ghostJson?.refusal === 'R18', `got ${JSON.stringify(ghostJson)}`);
 
     // None of the refused attempts wrote anything.
     const finalCount = await query<any>(
@@ -415,7 +415,7 @@ async function main(): Promise<void> {
   console.log('\n────────────────────────────────────────');
   if (failures === 0) {
     console.log(
-      'ALL CHECKS PASSED — verbatim fidelity, interpretive abstention, source preservation, auth + R17 provenance refusals.',
+      'ALL CHECKS PASSED — verbatim fidelity, interpretive abstention, source preservation, auth + R18 provenance refusals.',
     );
   } else {
     console.log(`${failures} CHECK(S) FAILED.`);
