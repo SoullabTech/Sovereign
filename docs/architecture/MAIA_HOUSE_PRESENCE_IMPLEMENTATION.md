@@ -66,6 +66,13 @@ Foundation **approved as correct structural direction. Do NOT deploy yet.** Stat
 6. **Real-auth walk:** mandatory before completion; protocol ready: [MAIA_PRESENCE_REAL_AUTH_WALK_PROTOCOL.md](./MAIA_PRESENCE_REAL_AUTH_WALK_PROTOCOL.md). Blocked on sequence step ① and an authentic member session.
 7. **No additional building** beyond the walk + the three notes until a new ruling.
 
+## Kelly's second-round rulings (2026-07-17, "Security Before Continuity")
+
+- **Security precedence:** `/api/scribe/review-session` auth fix is an ISOLATED branch + PR (`fix/scribe-review-session-auth` off `clean-main-no-secrets`), mixed with nothing. Prepared, not merged, awaiting Kelly.
+- **Chapters:** approved in principle — *"Conversation chapters organize encounters. They do not divide the relationship."* Daily chapters retained; quiet member-initiated "Earlier" surface; no historical transcripts auto-loaded into prompts; no auto-surfacing yesterday. **Queued behind:** security patch → deploy sequence → real-auth walk.
+- **Mentor surfaces:** NO conversion until canonical MAIA has a **server-enforced, write-suppressed posture**. `MentorChat` = first permitted candidate after that exists. One-shot artifact generators: evaluate as **bounded tools**, not auto-renamed postures. `SessionReviewChat`: last, blocked on transcript security + consent + provenance + structural zero-write guarantees.
+- **Now What?:** model RATIFIED — *member-sovereign continuity with container-bounded learning* (read-only inflow authorized; nothing flows back automatically; no practitioner access by implication; all crossings member-authorized). Architecture note updated; no implementation.
+
 ## Risks
 
 - OracleConversation is heavy; sheet uses lazy `next/dynamic` mount on first open (no cost until summoned). Kept mounted afterward — memory footprint of one conversation instance persists across the session (accepted; it's the relationship).
