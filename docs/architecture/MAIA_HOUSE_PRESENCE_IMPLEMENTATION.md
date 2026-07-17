@@ -54,13 +54,17 @@ Every load-bearing audit anchor re-verified 2026-07-17. Corrections:
 - `lib/contexts/MaiaPresenceContext.tsx` — DELETED (dead abstraction); `components/MaiaSettingsPanel.tsx` — remove dead ambient/witness toggles
 - Tests: `lib/maia/presence/__tests__/*`, `lib/sovereign/__tests__/platformKnowledgeWiring.test.ts`
 
-## Decisions required (Kelly) — running list
+## Kelly's rulings (2026-07-17) — RECEIVED
 
-1. Cross-day session semantics (Phase 7 options doc — implementation STOPPED).
-2. Disposition of `MentorChat` / `MentorPanel` / `SessionReviewChat` (unify-as-posture vs rename-as-tool, per surface).
-3. Now What? isolation: keep excluded from global presence, or govern it.
-4. Deploy ordering: PR #621 (compass fix) before this reaches production (R-B rider).
-5. Overlay conversation ships text-first (voice reachable at `/maia`) — confirm or extend voice to sheet.
+Foundation **approved as correct structural direction. Do NOT deploy yet.** Status language: *the canonical MAIA house-presence foundation is implemented and locally verified; deployment, real-member verification, cross-day continuity, and specialized-assistant reconciliation remain open.*
+
+1. **Cross-day:** *"A conversation may close. The relationship does not."* One relationship, conversation chapters. NO implementation — design note delivered: [MAIA_CONVERSATION_CHAPTERS_DESIGN_2026-07-17.md](./MAIA_CONVERSATION_CHAPTERS_DESIGN_2026-07-17.md).
+2. **Mentor surfaces:** *"Rooms may shape her posture but may not create another identity."* Target = postures, converted one at a time after per-surface behavioral comparison. NO removal/merge yet — reconciliation package delivered: [MENTOR_SURFACE_RECONCILIATION_2026-07-17.md](./MENTOR_SURFACE_RECONCILIATION_2026-07-17.md). Ideas composer + HelpHub stay bounded tools, never presented as relational assistants.
+3. **Now What?:** isolation PRESERVED, documented as intentional and governed (registry comment + this note). No general-MAIA memory inside; no Now What? material outside. Future relationship model = separate constitutional question, delivered: [NOW_WHAT_MAIA_RELATIONSHIP_QUESTION_2026-07-17.md](./NOW_WHAT_MAIA_RELATIONSHIP_QUESTION_2026-07-17.md). No implementation until ruled.
+4. **Voice:** global overlay ships TEXT-FIRST (as built). No microphone/ambient/auto-listening in the overlay. Voice stays in the full MAIA room until lived use + explicit consent/accessibility/interruption design.
+5. **Deploy sequence (epistemic integrity — MAIA must not describe a house the member cannot encounter):** ① merge+deploy PR #621 → ② verify rail in production → ③ rebase this branch → ④ rerun tests/typecheck → ⑤ verify house answers against the DEPLOYED house → ⑥ real-auth walk → ⑦ Kelly's approval before merge/deploy of presence work.
+6. **Real-auth walk:** mandatory before completion; protocol ready: [MAIA_PRESENCE_REAL_AUTH_WALK_PROTOCOL.md](./MAIA_PRESENCE_REAL_AUTH_WALK_PROTOCOL.md). Blocked on sequence step ① and an authentic member session.
+7. **No additional building** beyond the walk + the three notes until a new ruling.
 
 ## Risks
 

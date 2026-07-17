@@ -39,7 +39,13 @@ export interface GoverendRoom {
 /**
  * Governed member rooms. Longest routePrefix wins when several match.
  * NOT listed (deliberately):
- * - `/now-what/*` — founder-directed isolated container (pending Kelly ruling)
+ * - `/now-what/*` — INTENTIONAL, GOVERNED isolation (Kelly Ruling 3,
+ *   2026-07-17): no general member MAIA memory inside Now What?, no Now What?
+ *   material outside its container. The future relationship model (whose MAIA
+ *   is present in a practitioner-created environment, and whose continuity
+ *   governs it) is a separate constitutional question — see
+ *   docs/architecture/NOW_WHAT_MAIA_RELATIONSHIP_QUESTION_2026-07-17.md.
+ *   Do not add these routes without that ruling.
  * - public/marketing/auth/onboarding surfaces — no member relationship there
  * - practitioner admin surfaces (labtools, stellium, founder) — not member rooms
  */
