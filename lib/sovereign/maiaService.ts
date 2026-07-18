@@ -78,6 +78,7 @@ import { persistDecision, type Candidate } from '../services/decisionPersistence
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
 import { TurnPosture } from '../sanctuary/turnPosture';
+import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
@@ -2342,6 +2343,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // SANCTUARY (S1): per-turn posture, resolved once for this request and
   // passed to every content writer (turns store, corpus callosum trace).
   const turnPosture = TurnPosture.resolve(meta);
+  // S5: record the resolved posture server-side (content-free) so writers and
+  // audits can verify against a record instead of call-chain arguments.
+  recordConsentState({
+    requestId: randomUUID(),
+    posture: turnPosture,
+    memberId: (meta as any)?.userId ?? null,
+    sessionId,
+  });
 
   // increment turn count for this session and get the authoritative count
   // NOTE: Using session.turn_count (not history.length) to avoid cap from limited history

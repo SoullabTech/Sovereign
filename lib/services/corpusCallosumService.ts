@@ -123,8 +123,9 @@ export async function logAgentRun(input: AgentRunInput, posture: TurnPosture): P
         input_summary, output_text, output_json,
         latency_ms, status, error,
         confidence, intensity, inhibited_by, meta,
-        origin_route, processing_profile
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        origin_route, processing_profile,
+        posture_at_creation
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, 'normal')
       RETURNING id`,
       [
         input.sessionId,
@@ -182,8 +183,9 @@ export async function logIntegrationPass(input: IntegrationPassInput, posture: T
         tensions_named, reconciliations, paradoxes_held,
         final_text, coherence_score, depth_score, confidence,
         elemental_mode, meta,
-        origin_route, processing_profile
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        origin_route, processing_profile,
+        posture_at_creation
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 'normal')
       RETURNING id`,
       [
         input.sessionId,

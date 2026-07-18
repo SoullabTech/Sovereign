@@ -5,8 +5,34 @@
  * This provides the "what did we just talk about" continuity.
  */
 
+import { randomUUID } from 'crypto';
 import { query } from '../../db/postgres';
 import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
+import { Provenance } from '../../provenance/provenance';
+
+/**
+ * S5: mint turn provenance server-side, at the store, from the boundary-
+ * resolved TurnPosture. The DB mint gate (s5_require_minted_provenance)
+ * refuses any conversation_turns INSERT that lacks this — no layer trusts a
+ * caller. Returns null (refusing the write) if minting fails.
+ */
+function mintTurnProvenance(
+  posture: TurnPosture,
+  role: 'user' | 'assistant',
+  turnId: string,
+  sessionId: string | null | undefined
+): Provenance | null {
+  return Provenance.mint(
+    posture,
+    {
+      createdBy: role === 'user' ? 'member' : 'maia',
+      generatedBy: role === 'user' ? 'member-utterance' : 'synthesis',
+      sourceContainer: 'personal',
+      source: { type: 'turn', turnId, sessionId: sessionId ?? null },
+    },
+    'TurnsStore'
+  );
+}
 
 export interface TurnMeta {
   kind?: 'normal' | 'translation';
@@ -88,11 +114,16 @@ export const TurnsStore = {
     if (!contentWritable(posture, 'TurnsStore.addTurn', turn.sessionId)) {
       return null;
     }
+    const turnRef = randomUUID();
+    const provenance = mintTurnProvenance(posture, turn.role, turnRef, turn.sessionId);
+    if (!provenance) {
+      return null; // mint refused — no durable object without provenance (S5)
+    }
     // Note: meta and parent_turn_id are not in the production schema — omitted
     const result = await query<{ id: string }>(
       `
-      INSERT INTO conversation_turns (user_id, session_id, role, content)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO conversation_turns (user_id, session_id, role, content, posture_at_creation, provenance)
+      VALUES ($1, $2, $3, $4, 'normal', $5::jsonb)
       RETURNING id
       `,
       [
@@ -100,6 +131,7 @@ export const TurnsStore = {
         turn.sessionId ?? null,
         turn.role,
         turn.content,
+        JSON.stringify(provenance.toJson()),
       ]
     );
     return result.rows[0]?.id ?? null;
@@ -174,20 +206,28 @@ export const TurnsStore = {
       console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
     }
     const eid = exchangeId ?? null;
+    // S5: provenance minted here, per turn, from the boundary-resolved posture.
+    // The exchange id (or a per-call reference) is the typed source's turnId.
+    const turnRef = exchangeId ?? randomUUID();
+    const userProvenance = mintTurnProvenance(posture, 'user', turnRef, sessionId);
+    const assistantProvenance = mintTurnProvenance(posture, 'assistant', turnRef, sessionId);
+    if (!userProvenance || !assistantProvenance) {
+      return; // mint refused — no durable object without provenance (S5)
+    }
     // User turn first (seq=0) — use clock_timestamp() so each INSERT gets its
     // own wall-clock value even inside the same transaction.
     await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
-       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp())
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
+       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp(), 'normal', $5::jsonb)
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
-      [userId, sessionId ?? null, userMessage, eid]
+      [userId, sessionId ?? null, userMessage, eid, JSON.stringify(userProvenance.toJson())]
     );
     // Assistant turn second (seq=1) — clock_timestamp() will be strictly later
     await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
-       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp())
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
+       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp(), 'normal', $5::jsonb)
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
-      [userId, sessionId ?? null, assistantResponse, eid]
+      [userId, sessionId ?? null, assistantResponse, eid, JSON.stringify(assistantProvenance.toJson())]
     );
   },
 

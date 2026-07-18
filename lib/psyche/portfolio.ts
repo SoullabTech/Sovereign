@@ -374,12 +374,14 @@ export async function keepSource(
        member_id, source_type, source_id, title, body,
        primary_register, registers, elemental_lenses, thread_ids,
        status,
-       kept_at, last_touched_at
+       kept_at, last_touched_at,
+       posture_at_creation, generated_by
      ) VALUES (
        $1, $2, $3, $4, $5,
        $6, $7, $8, $9,
        'active',
-       NOW(), NOW()
+       NOW(), NOW(),
+       'normal', 'member-gesture'
      )
      RETURNING ${ATOM_COLUMNS}`,
     [

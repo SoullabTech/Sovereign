@@ -306,8 +306,9 @@ export async function POST(request: NextRequest) {
     // defaults to []. verbatim_text is inserted raw (no trim/normalize).
     const result = await query<MarkedEpisodeRow>(
       `INSERT INTO episodic_memories
-         (user_id, episode_id, verbatim_text, marked_by_member, source_turn_id, source_session_id)
-       VALUES ($1, $2, $3, TRUE, $4, $5)
+         (user_id, episode_id, verbatim_text, marked_by_member, source_turn_id, source_session_id,
+          posture_at_creation)
+       VALUES ($1, $2, $3, TRUE, $4, $5, 'normal')
        RETURNING id, episode_id, verbatim_text, marked_by_member,
                  source_turn_id, source_session_id, created_at`,
       [memberId, randomUUID(), verbatimText, turnId, sessionId],
