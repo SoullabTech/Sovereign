@@ -41,19 +41,19 @@ const BUCKETS: Array<{
   {
     key: 'available_today',
     heading: 'Available Today',
-    definition: 'Available and working in the platform now.',
+    definition: 'Available and working in the platform today.',
     intro: null,
   },
   {
     key: 'architected_for_release',
     heading: 'Architected for Release',
-    definition: 'Designed or partially implemented, but not yet a complete public experience.',
+    definition: 'Designed and partially implemented, but not yet a complete public experience.',
     intro: 'These capabilities have designs, substrates, and clear integration paths. They have not yet crossed the release gate. The distinction matters.',
   },
   {
     key: 'research',
     heading: 'Research',
-    definition: 'An active field of inquiry, not a released capability.',
+    definition: 'An active field of inquiry rather than a released capability.',
     intro: 'These are active investigations. We believe they matter enough to explore publicly, but they have not yet earned the status of deployed capabilities. We distinguish research from production intentionally.',
   },
 ];
