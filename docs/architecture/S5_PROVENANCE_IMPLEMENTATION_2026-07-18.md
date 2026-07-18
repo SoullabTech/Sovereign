@@ -165,6 +165,24 @@ exit 99, nostr relay healthy with LMDB mtime advancing.
 > of the platform itself rather than conventions expected of its callers.*
 >
 > *This was the moment trust became infrastructure.*
+>
+> — and its companion (Kelly, on reviewing the deployment evidence): *This was the
+> moment memory became constitutional.*
+
+**Historical paragraph (Kelly, 2026-07-18, recorded verbatim):**
+
+> *On July 18, 2026, S5 Foundation entered production. Provenance minting, restore
+> governance, and constitutional memory became enforceable properties of the platform
+> itself. For the first time, MAIA could structurally account for why it knew what it
+> knew, under what conditions memory could persist, and under what conditions forgotten
+> content could return. Trust became infrastructure, and memory became constitutional.*
+
+Kelly's post-deployment framing, recorded: **"S5 Foundation is complete and live. Not
+S5 itself — but the foundation upon which the rest of S5 can now safely be built."**
+Updated grades: S5 Foundation A · Evidence Discipline A · Governance A · Operational
+Maturity A- · Completion B+ · **Overall S5: A-**. The developmental sequence he named:
+early phases asked *Can I remember?* — S5 asked *Should I remember?* — future phases
+may ask *How can remembering become wisdom?*
 
 Kelly's updated grades: Architecture A · Governance A · Evidence A- · Operationality A- ·
 Completion B+ · **Overall S5: A-** (from B-/C+). Completion held back by the remaining
