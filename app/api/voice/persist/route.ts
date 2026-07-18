@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { recordConsentState } from '@/lib/provenance/consentState';
 import { ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { cookies } from 'next/headers';
 
@@ -56,6 +57,14 @@ export async function POST(request: NextRequest) {
     // Determine effective user ID
     const effectiveUserId = userId || `anon:${sessionId || 'unknown'}`;
     const effectiveSessionId = sessionId || `voice-${Date.now()}`;
+
+    // S5: content-free server record of the resolved posture for this request.
+    recordConsentState({
+      requestId: globalThis.crypto.randomUUID(),
+      posture: turnPosture,
+      memberId: effectiveUserId,
+      sessionId: effectiveSessionId,
+    });
 
     // Ensure session exists
     await ensureSession(effectiveSessionId);

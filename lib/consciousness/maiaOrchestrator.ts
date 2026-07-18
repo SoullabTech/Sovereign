@@ -31,6 +31,7 @@ import { retrieveForMode, formatForPrompt, type RetrievalResult } from '@/lib/ai
 import { computeFacetDecision, type FacetDecisionPacket } from '@/lib/consciousness/FacetDecisionLoop';
 import { logAgentRun, logIntegrationPass } from '@/lib/services/corpusCallosumService';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { recordConsentState } from '@/lib/provenance/consentState';
 
 // ─── Recall Quality Helpers ───────────────────────────────────────────────────
 function clamp01(n: number) {
@@ -372,6 +373,9 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   // SANCTUARY (S1): per-turn posture, resolved once at this boundary and
   // passed to every content writer below (corpus callosum logs carry content).
   const turnPosture = TurnPosture.resolve(meta);
+  // S5: content-free server record of the resolved posture for this request.
+  // globalThis.crypto works in both Node and Edge bundles (node:crypto does not).
+  recordConsentState({ requestId: globalThis.crypto.randomUUID(), posture: turnPosture, memberId: userId ?? null });
 
   let memoryBundle: MemoryBundle | null = null;
   let memoryContext = '';
