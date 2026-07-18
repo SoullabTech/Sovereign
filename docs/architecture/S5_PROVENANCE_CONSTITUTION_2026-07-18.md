@@ -1,5 +1,13 @@
 # The Provenance Constitution — S5 — 2026-07-18
 
+> *Under what conditions may intelligence arise from relationship?*
+> *The system can only reflect safely if it first knows exactly what it is allowed
+> to remember.*
+
+*(Phase III epigraph, Kelly 2026-07-18. S5 is not ultimately about provenance —
+provenance is the mechanism. The question is what conditions make intelligence
+trustworthy. Candidate principle RC6: **trust precedes intelligence.**)*
+
 **Status**: CANON-CANDIDATE. Commissioned by Kelly at the closure of incident
 SANC-20260614-01: *"Stop feature development. Design provenance as if it were a
 constitutional substrate for every future platform running on AIN OS."* This paper is

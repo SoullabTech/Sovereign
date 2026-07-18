@@ -160,6 +160,29 @@ collision with ratified R1–R15; formal placement at red-line/sitting):
 | RC3 | *Duplicate content lanes constitute constitutional debt.* (session-history jsonb so classified: temporary compatibility layer → eventual retirement; no new consumers; not removed immediately) | Provenance Constitution §5 |
 | RC4 | *Sanctuary is violated whenever the relationship appears altered by what was promised would not remain.* | What Sanctuary Actually Means §6 |
 | RC5 | *AIN may only learn from what has chosen to teach it.* | AIN Boundaries §6 |
+| RC6 | *Trust precedes intelligence.* (alternate form: *Intelligence may only arise within the boundaries of trust.*) — added by Kelly 2026-07-18 as the week's discovered principle; form to be chosen at red-line | this register |
+
+**Kelly's second-pass evaluation of the candidates (2026-07-18, recorded)**: RC1
+"almost certainly foundational — without it, systems tend toward historical
+revisionism" · RC2 strongly agreed, preserves trust · RC3 "debt against sovereignty —
+not necessarily bugs, not necessarily emergencies" · RC4 "may become one of the most
+important findings of this entire phase — shifts Sanctuary from storage problem to
+relational phenomenon" · RC5 "may ultimately become one of the defining principles of
+AIN."
+
+**S5 reframing (Kelly)**: S5 is ultimately not about provenance — provenance is the
+mechanism. The deeper question: *what conditions make intelligence trustworthy?*
+
+**Phase III epigraph (dual, ratified as the phase's header)**:
+> *Under what conditions may intelligence arise from relationship?*
+> *The system can only reflect safely if it first knows exactly what it is allowed
+> to remember.*
+
+**Closing re-description (Kelly)**: a week ago — "a sophisticated continuity and
+relational platform"; tonight — "**an emerging constitutionally governed relational
+intelligence**." Noted property: the platform increasingly seems capable of
+discovering its own assumptions and correcting itself — more reflective and more
+governable, not merely more intelligent.
 
 **Paper-review outcomes also recorded**: Sanctuary UI copy change agreed — preferred
 candidate *"While Sanctuary is active, what is spoken here is not carried forward"*;
