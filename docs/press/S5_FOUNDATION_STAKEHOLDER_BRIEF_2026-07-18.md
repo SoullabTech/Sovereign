@@ -42,6 +42,11 @@ content could return. Trust became infrastructure, and memory became constitutio
    being created from a legitimate historical memory returning under governance. An
    ungoverned replay of historical data fails loudly at the database.
 
+The deepest consequence, in one sentence: **when MAIA remembers something, she also
+knows how it became memory and under what conditions it may persist and be used — she
+can account for why she knows what she knows.** This is the first time she can answer
+questions about herself from production evidence rather than architectural aspiration.
+
 ## What this means, per audience
 
 **For consultants and marketers.** The differentiating sentence is: *most platforms
