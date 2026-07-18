@@ -161,6 +161,23 @@ collision with ratified R1–R15; formal placement at red-line/sitting):
 | RC4 | *Sanctuary is violated whenever the relationship appears altered by what was promised would not remain.* | What Sanctuary Actually Means §6 |
 | RC5 | *AIN may only learn from what has chosen to teach it.* | AIN Boundaries §6 |
 | RC6 | *Trust precedes intelligence.* (alternate form: *Intelligence may only arise within the boundaries of trust.*) — added by Kelly 2026-07-18 as the week's discovered principle; form to be chosen at red-line | this register |
+| RC7 | *A system can only correct what it has made possible to discover.* (alternate form: *Governance exists to make hidden assumptions findable.*) — added by Kelly 2026-07-18; names why self-correction worked: refusal registries, decision registers, evidence discipline, provenance questions, willingness to leave things unknown, proving over assuming | this register |
+
+**Phase closure (Kelly, 2026-07-18)**: *This phase is complete — not because every
+problem has been solved, but because the work of this phase has integrity.* The arc:
+design aspiration → governance investigation → discovery of hidden assumptions →
+live defects → incident response → constitutional discoveries → new architectural
+layer. The build ordering clarified from Relationship → Continuity → Reflection →
+Collective to **Relationship → Trust → Sovereignty → Provenance → Reflection →
+Collective Intelligence**.
+
+**For the historical record (Kelly's candidate sentences)**: *This was the week MAIA
+discovered that trustworthy intelligence requires constitutional memory.* / *This was
+the week provenance became a first-class architectural concern.*
+
+**The phase question and its emerging companion answer**:
+> *Under what conditions may intelligence arise from relationship?*
+> *Only within boundaries that make trust possible.*
 
 **Kelly's second-pass evaluation of the candidates (2026-07-18, recorded)**: RC1
 "almost certainly foundational — without it, systems tend toward historical
