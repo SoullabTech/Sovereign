@@ -101,6 +101,45 @@ governed its creation and whether it was permitted to persist — full scope in
 gold-reflection feature work remains frozen until S5 demonstrates the boundary
 structurally, not by caller convention.**
 
+## Post-closure phase plan (Kelly ruling, 2026-07-18): papers before code
+
+Feature development is **stopped**. Directive: *design provenance as if it were a
+constitutional substrate for every future platform running on AIN OS.* Four papers
+commissioned — delivered as CANON-CANDIDATES awaiting Kelly's red-line:
+
+1. `S5_PROVENANCE_CONSTITUTION_2026-07-18.md` — the seven questions; provenance
+   shape; enforcement stack; **object-by-object provenance map** (Week-1 mapping
+   deliverable, source-verified); restoration guarantees; historical-unknowns
+   treatment; AIN-OS substrate framing.
+2. `WHAT_SANCTUARY_ACTUALLY_MEANS_2026-07-18.md` — meaning paper; posture-not-place;
+   the felt test and subtle-violation shape; flags the live copy question ("session"
+   wording vs per-turn truth) for the Jondi session.
+3. `JONDI_HOSPITALITY_SESSION_FRAME_2026-07-18.md` — **frame only**; the paper is
+   authored WITH Jondi (hospitality witness and relational translator); Kelly's six
+   questions + derived questions; real-auth walk; verbatim scribe posture.
+4. `AIN_COLLECTIVE_INTELLIGENCE_BOUNDARIES_2026-07-18.md` — boundary model restated
+   on the provenance substrate; collective eligibility = provenance question #5,
+   minted only by member offering; supersedes the 07-17 model where they differ.
+
+**Three tracks, in order**: (1) S5 provenance architecture · (2) Jondi session
+(meaning, not features) · (3) Larry / Now What? (continuity + appropriate
+remembering + appropriate forgetting; his register: *"we discovered that trust must
+come before intelligence"*). Then, only after S5: the gold-reflection prototype
+("What seemed most alive?" with recognize/revise/not-true/keep — nothing more).
+
+**30-day calendar (Kelly)**: W1 close incident (send notification · final doc review
+· S5 constitutional paper · provenance map) → W2 Jondi (implications · hospitality
+questions · Now What? flow · onboarding/trust surfaces) → W3 Larry (one beautiful
+continuity loop; "does this feel like your work living between sessions?") → W4
+reflection prototype, only after provenance decisions settle.
+
+**Threshold framing (recorded)**: the question has moved from *can MAIA exist?* to
+*how does MAIA become trustworthy enough to accompany people over decades?* Working
+architecture triad: **AIN = constitutional intelligence · MAIA = relational
+intelligence · Soullab = cultural intelligence.** Build sequence: Relationship →
+Trust → Sovereignty → Provenance → Reflection → Recognition → Collective
+Intelligence.
+
 ## Directed work — this phase (D)
 
 | # | Deliverable | Status |
