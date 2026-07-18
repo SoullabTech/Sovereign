@@ -140,6 +140,38 @@ ssh soullab@minisforum 'docker logs maia-sovereign --since 1h 2>&1 | grep "PROVE
 Expected after deploy: new turns show `normal | true`; historical rows remain
 `unknown-historical`; zero `[PROVENANCE] mint failed` markers under ordinary traffic.
 
+## 5a. Deployment evidence — 2026-07-18 (Kelly ruling: merge approved → deployed → verified)
+
+PR #631 merged as `07d1f1503`; deployed via the FULL path (`scripts/deploy-production.sh
+deploy`) — which also served as the **first end-to-end witness of the repaired
+full-deploy lane** since the strfry digest-pin fix (#611): all-services build green, no
+exit 99, nostr relay healthy with LMDB mtime advancing.
+
+| Check (§4) | Result |
+|---|---|
+| Migration applied in production | `Applied 1 new migrations (423 total)`; all 7 `s5_*` triggers live |
+| Provenance of the deploy itself | `GIT_COMMIT=07d1f1503` · `DEPLOY_LANE=deploy-lane` · rollback tags refreshed (`current` + per-SHA) |
+| LAN / public path | `192.168.0.104` · `https://soullab.life/api/health` 200, `version: 07d1f1503`, uptime 49s |
+| Historical backfill in production | 37,839 turns `unknown-historical` · 142 atoms `unattributed-historical` — matches the rehearsal copy exactly |
+| Incident manifest | SANC-20260614-01 seeded: 1 manifest, 3 scopes |
+| Live minting (real route probe) | 2 turns via `POST /api/conversation/turns`: `posture=normal`, all six provenance keys present; consent-state row recorded `normal`; probe deleted, zero residue |
+| Refusals under ordinary traffic | 0 `[PROVENANCE]` markers (as expected) |
+| **R20 disposable restore proof (production-generated artifacts)** | Fresh prod dump → disposable DB on minisforum → attested fixture F → data-only dump containing F → sovereignty deletion (manifest + tombstone) → disaster wipe → **governed restore: F refused** (`reason=tombstone id_prefix=285e4eee-80b manifest=2663ad87-… txid=221017`), **37,839/37,839 production rows restored intact**, all artifacts destroyed |
+
+**Register note (Kelly, 2026-07-18, recorded verbatim):**
+
+> *July 2026 marked the transition from aspirational provenance to enforceable
+> provenance. Historical replay, forgetting, and legitimacy became structural concerns
+> of the platform itself rather than conventions expected of its callers.*
+>
+> *This was the moment trust became infrastructure.*
+
+Kelly's updated grades: Architecture A · Governance A · Evidence A- · Operationality A- ·
+Completion B+ · **Overall S5: A-** (from B-/C+). Completion held back by the remaining
+object families and async lanes (§3) — the phase shifts from
+*Uncertainty → Discovery → Architecture* to *Foundation → Propagation → Completion*.
+Gold reflection remains frozen.
+
 ## 5. Design test compliance (constitution §10)
 
 1. Seven questions answerable at creation, server-side — **yes** for turns/atoms
