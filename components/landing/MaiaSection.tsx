@@ -47,7 +47,7 @@ export function MaiaSection() {
               A relational intelligence for human flourishing
             </h2>
             <p className="mt-4 text-base text-white/50 leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-              She supports personal growth, creativity, meaningful work, relationships, and
+              MAIA supports personal growth, creativity, meaningful work, relationships, and
               communities by helping people remain connected to what matters most across time.
             </p>
             <p
@@ -94,7 +94,7 @@ export function MaiaSection() {
                 className="text-white/75 text-base sm:text-lg font-extralight italic leading-relaxed mb-8"
                 style={{ fontFamily: "'Crimson Pro', serif" }}
               >
-                From personal transformation to collective experiences, MAIA helps meaningful
+                From personal growth to living communities, MAIA helps meaningful
                 relationships endure across time.
               </p>
 
