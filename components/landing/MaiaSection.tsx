@@ -119,9 +119,9 @@ export function MaiaSection() {
             </div>
           </SectionReveal>
 
-          {/* Right: Holoflower card */}
+          {/* Right: free-floating holoflower */}
           <SectionReveal delay={0.15}>
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+            <div className="relative p-6">
               {/* Violet aura */}
               <div className="pointer-events-none absolute inset-0">
                 <div
@@ -144,7 +144,7 @@ export function MaiaSection() {
 
               <div className="relative mx-auto mt-2 flex h-[340px] w-full max-w-[420px] items-center justify-center">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-75">
+                  <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-90">
                     <Image
                       src="/holoflower-studio-transparent.png"
                       alt="The Holoflower — Soullab's elemental mandala, slowly turning"
@@ -155,10 +155,9 @@ export function MaiaSection() {
                     />
                   </div>
                 </div>
-                <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
               </div>
 
-              <div className="mt-6">
+              <div className="mt-6 text-center">
                 <div className="text-sm font-medium text-white">Soullab</div>
                 <div className="mt-1 text-sm text-white/70">
                   A living environment for practice, community, and inner guidance.
