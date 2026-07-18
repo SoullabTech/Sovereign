@@ -59,6 +59,8 @@ Featured card at the top of the client-work section (above "Earlier work"): *Now
 
 **⚠️ Representation flag (client-representation governance):** this publicly names Larry with biographical facts (career transition + Harvard credential) supplied by Kelly, unverifiable from the repo. Before deploy, Kelly confirms (a) the facts as phrased, (b) Larry is comfortable with this public representation. Larry's register on the platform is experiential, never constitutional — this card keeps to that.
 
+**Second card (Kelly directive, same day): Wisdom Keeper — a living practice field, "With Jondi Whitis · In development."** Cards now sit two-up in a grid. Jondi facts sourced from her own words on record (18+ years EFT/energy medicine; "The People's Teacher"; practitioner self-awareness as core value); "Wisdom Keeper" is the field's working name per Kelly's directive. Register: in-development, experiential, zero capability claims. **Same representation flag applies:** Kelly confirms phrasing + Jondi's comfort with public naming before deploy.
+
 ## 3. FLAGGED, NOT CHANGED — needs your facts
 
 - **Elemental Alchemy: "available June 1, 2026"** — it is July 18. If the book shipped, the copy should say *available now*; if delayed, it should say the true state. I could not verify from the repo, so I changed nothing. **This stale date is the second thing a careful visitor notices.**

@@ -14,28 +14,53 @@ export function PastSitesSection() {
           <p className="text-white/35 text-center text-[11px] tracking-[0.3em] uppercase mb-3">
             Current build &amp; focus
           </p>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 mb-16">
-            <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
-              <h3
-                className="text-white/90 text-xl sm:text-2xl font-extralight tracking-wide"
-                style={{ fontFamily: "'Crimson Pro', serif" }}
+          <div className="grid lg:grid-cols-2 gap-6 mb-16">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+              <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
+                <h3
+                  className="text-white/90 text-xl sm:text-2xl font-extralight tracking-wide"
+                  style={{ fontFamily: "'Crimson Pro', serif" }}
+                >
+                  Now What? — a flourishing platform
+                </h3>
+                <span className="text-white/25 text-[11px] tracking-widest uppercase">
+                  With Larry Closs · In active build
+                </span>
+              </div>
+              <p
+                className="text-white/50 text-sm sm:text-base leading-relaxed font-light"
+                style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
               >
-                Now What? — a flourishing platform
-              </h3>
-              <span className="text-white/25 text-[11px] tracking-widest uppercase">
-                With Larry Closs · In active build
-              </span>
+                Built with Larry Closs — a CEO transitioning to executive coach for those seeking
+                to flourish, drawing on his study in Harvard&rsquo;s positive psychology certification
+                program. Now What? is a developmental environment for people who have achieved much
+                and are asking what comes next — with Larry&rsquo;s practice, presence, and
+                accompaniment at its center.
+              </p>
             </div>
-            <p
-              className="text-white/50 text-sm sm:text-base leading-relaxed font-light"
-              style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
-            >
-              Built with Larry Closs — a CEO transitioning to executive coach for those seeking
-              to flourish, drawing on his study in Harvard&rsquo;s positive psychology certification
-              program. Now What? is a developmental environment for people who have achieved much
-              and are asking what comes next — with Larry&rsquo;s practice, presence, and
-              accompaniment at its center.
-            </p>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+              <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
+                <h3
+                  className="text-white/90 text-xl sm:text-2xl font-extralight tracking-wide"
+                  style={{ fontFamily: "'Crimson Pro', serif" }}
+                >
+                  Wisdom Keeper — a living practice field
+                </h3>
+                <span className="text-white/25 text-[11px] tracking-widest uppercase">
+                  With Jondi Whitis · In development
+                </span>
+              </div>
+              <p
+                className="text-white/50 text-sm sm:text-base leading-relaxed font-light"
+                style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
+              >
+                In development with Jondi Whitis — EFT master teacher with eighteen-plus years in
+                energy medicine, known to her students as the People&rsquo;s Teacher. The Wisdom
+                Keeper field gathers her method, discernment, and practitioner self-awareness into
+                a living environment, so that what she has spent decades learning to see can keep
+                teaching.
+              </p>
+            </div>
           </div>
         </SectionReveal>
         <SectionReveal>
