@@ -9,7 +9,6 @@ export const dynamic = 'force-dynamic';
  * POST: Save a conversation turn pair (user + assistant)
  */
 
-import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
@@ -106,7 +105,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const exchangeId = randomUUID();
+    const exchangeId = globalThis.crypto.randomUUID();
     recordConsentState({ requestId: exchangeId, posture, memberId: userId, sessionId });
     await TurnsStore.addExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
 

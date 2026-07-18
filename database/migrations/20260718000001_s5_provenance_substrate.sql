@@ -39,7 +39,23 @@ CREATE INDEX IF NOT EXISTS idx_runtime_consent_state_session
   WHERE session_id IS NOT NULL;
 
 COMMENT ON TABLE runtime_consent_state IS
-'S5: per-request posture record, resolved server-side at the serving boundary. Content-free by constitution. Consumers verify posture against this record rather than trusting call-chain arguments.';
+'S5: per-request posture record, resolved server-side at the serving boundary. Content-free by constitution. Consumers verify posture against this record rather than trusting call-chain arguments. Lifecycle: immutable once minted (trigger-enforced); first write wins on retry (ON CONFLICT DO NOTHING on unique request_id); no automatic pruning (audit substrate); included in backups (content-free, safe to restore).';
+
+-- Lifecycle rule: a consent-state record is IMMUTABLE once minted. Retries are
+-- idempotent (unique request_id + ON CONFLICT DO NOTHING = first write wins);
+-- correcting a record is not a thing — a different resolution is a different
+-- request. Deletion is not blocked (retention/GC remains an operator act).
+CREATE OR REPLACE FUNCTION s5_consent_state_immutable() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION '[PROVENANCE] consent-state is immutable — UPDATE refused (request_id prefix %)',
+    left(OLD.request_id, 12);
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS s5_consent_state_immutable_trigger ON runtime_consent_state;
+CREATE TRIGGER s5_consent_state_immutable_trigger
+  BEFORE UPDATE ON runtime_consent_state
+  FOR EACH ROW EXECUTE FUNCTION s5_consent_state_immutable();
 
 -- ----------------------------------------------------------------------------
 -- 2. Deletion manifests, scopes, and tombstones — restorable-deletion
@@ -126,6 +142,7 @@ DECLARE
   row_id TEXT;
   row_session TEXT;
   row_created TIMESTAMPTZ;
+  hit_manifest UUID;
 BEGIN
   -- to_jsonb(NEW) keeps the function valid across lanes regardless of exact
   -- column sets (a missing key yields NULL rather than a runtime error).
@@ -133,17 +150,22 @@ BEGIN
   row_session := to_jsonb(NEW) ->> 'session_id';
   row_created := (to_jsonb(NEW) ->> 'created_at')::timestamptz;
 
-  IF EXISTS (
-    SELECT 1 FROM provenance_tombstones
-    WHERE object_kind = TG_TABLE_NAME AND object_id = row_id
-  ) THEN
-    RAISE WARNING '[PROVENANCE] restore refused — tombstoned % row dropped (id=%)',
-      TG_TABLE_NAME, left(row_id, 12);
-    RETURN NULL;  -- drop the row; never abort the surrounding restore
+  -- Refusal evidence is content-free but COMPLETE: manifest id, table, reason,
+  -- row-id prefix, txid, timestamp — a refused resurrection must be
+  -- distinguishable from a successful write in the postgres log alone.
+  -- Tables are schema-qualified: restore sessions run with an EMPTY
+  -- search_path (pg_dump emits set_config('search_path','',false)), and this
+  -- trigger must work exactly there (found by the merge-gate rehearsal).
+  SELECT manifest_id INTO hit_manifest FROM public.provenance_tombstones
+    WHERE object_kind = TG_TABLE_NAME AND object_id = row_id LIMIT 1;
+  IF hit_manifest IS NOT NULL THEN
+    RAISE WARNING '[PROVENANCE] restore refused — reason=tombstone table=% id_prefix=% manifest=% txid=% at=%',
+      TG_TABLE_NAME, left(row_id, 12), hit_manifest, txid_current(), clock_timestamp();
+    RETURN NULL;  -- idempotent suppression is intentional here ONLY (restore path);
+                  -- ordinary unattested writes hard-fail via the mint gates below
   END IF;
 
-  IF EXISTS (
-    SELECT 1 FROM deletion_manifest_scopes s
+  SELECT s.manifest_id INTO hit_manifest FROM public.deletion_manifest_scopes s
     WHERE s.table_name = TG_TABLE_NAME
       AND (s.session_id IS NULL OR s.session_id = row_session)
       AND (s.window_start IS NULL OR row_created >= s.window_start)
@@ -151,9 +173,10 @@ BEGIN
       -- a scope with only NULLs cannot exist (table CHECK), so this cannot
       -- swallow unscoped rows
       AND (s.session_id IS NOT NULL OR s.window_start IS NOT NULL)
-  ) THEN
-    RAISE WARNING '[PROVENANCE] restore refused — % row inside deletion-manifest scope dropped (id=%)',
-      TG_TABLE_NAME, left(row_id, 12);
+    LIMIT 1;
+  IF hit_manifest IS NOT NULL THEN
+    RAISE WARNING '[PROVENANCE] restore refused — reason=manifest-scope table=% id_prefix=% manifest=% txid=% at=%',
+      TG_TABLE_NAME, left(row_id, 12), hit_manifest, txid_current(), clock_timestamp();
     RETURN NULL;
   END IF;
 
@@ -216,8 +239,19 @@ END $$;
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION s5_require_minted_provenance() RETURNS trigger AS $$
 BEGIN
+  -- Governed-restore lane: a restore REPLAYS rows, it does not mint them.
+  -- Historical (unknown-historical) rows may re-enter ONLY when the session
+  -- has declared the governed restore lane (set by scripts/restore-governed.sh;
+  -- tombstone/scope filtering still applies via s5_refuse_tombstoned).
+  -- Consequence, deliberate: an UNGOVERNED restore of any dump containing
+  -- historical rows fails loudly at the first such row — the governed path is
+  -- structurally unavoidable for historical dumps, not merely procedural.
+  IF NEW.posture_at_creation = 'unknown-historical'
+     AND current_setting('s5.restore_lane', true) = 'governed' THEN
+    RETURN NEW;
+  END IF;
   IF NEW.posture_at_creation IS DISTINCT FROM 'normal' THEN
-    RAISE EXCEPTION '[PROVENANCE] mint failed — % INSERT refused: posture % is not writable (sanctuary never persists; unknown-historical is never minted anew)',
+    RAISE EXCEPTION '[PROVENANCE] mint failed — % INSERT refused: posture % is not writable (sanctuary never persists; unknown-historical is never minted anew outside the governed restore lane)',
       TG_TABLE_NAME, COALESCE(NEW.posture_at_creation, 'NULL');
   END IF;
   IF NEW.provenance IS NULL
@@ -281,6 +315,12 @@ END $$;
 -- historical truth, never a new mint).
 CREATE OR REPLACE FUNCTION s5_require_atom_attestation() RETURNS trigger AS $$
 BEGIN
+  -- Governed-restore lane: replay of historical atoms, same rule as turns.
+  IF NEW.posture_at_creation = 'unknown-historical'
+     AND NEW.generated_by = 'unattributed-historical'
+     AND current_setting('s5.restore_lane', true) = 'governed' THEN
+    RETURN NEW;
+  END IF;
   IF NEW.posture_at_creation IS DISTINCT FROM 'normal' THEN
     RAISE EXCEPTION '[PROVENANCE] mint failed — member_memory_atoms INSERT refused: posture % is not writable',
       COALESCE(NEW.posture_at_creation, 'NULL');

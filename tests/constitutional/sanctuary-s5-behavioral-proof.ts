@@ -150,6 +150,20 @@ async function main() {
   }
   assert('D2: atom INSERT claiming unattributed-historical generation refused', atomUnattestedRefused);
 
+  // ── PROOF C+ — malformed provenance (present but incomplete) ───────────────
+  console.log('\nPROOF C+ — malformed provenance refused');
+  let malformedRefused = false;
+  try {
+    await query(
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, posture_at_creation, provenance)
+       VALUES ($1, $2, 'user', 'malformed provenance attempt', 'normal',
+         '{"createdBy":"member","generatedBy":"member-utterance"}'::jsonb)`,
+      [USER, SESSION]);
+  } catch (err) {
+    malformedRefused = err instanceof Error && err.message.includes('[PROVENANCE] mint failed');
+  }
+  assert('C2: provenance missing constitutional keys refused (partial forge)', malformedRefused);
+
   // ── PROOF E — consent-state record ─────────────────────────────────────────
   console.log('\nPROOF E — consent-state record');
   const reqId = randomUUID();
@@ -159,6 +173,14 @@ async function main() {
   assert('E1: recorded posture resolvable by request id', recorded === 'normal', String(recorded));
   const absent = await resolveRecordedPosture(randomUUID());
   assert('E2: unknown request id resolves to null (fail closed), never normal', absent === null);
+
+  let immutableRefused = false;
+  try {
+    await query(`UPDATE runtime_consent_state SET posture = 'sanctuary' WHERE request_id = $1`, [reqId]);
+  } catch (err) {
+    immutableRefused = err instanceof Error && err.message.includes('consent-state is immutable');
+  }
+  assert('E3: consent-state record immutable once minted (UPDATE refused)', immutableRefused);
 
   // ── Cleanup — proof fixtures only ──────────────────────────────────────────
   await query(`DELETE FROM provenance_tombstones WHERE manifest_id = $1`, [manifestId]);

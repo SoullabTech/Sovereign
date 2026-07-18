@@ -5,7 +5,6 @@
  * This provides the "what did we just talk about" continuity.
  */
 
-import { randomUUID } from 'crypto';
 import { query } from '../../db/postgres';
 import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
 import { Provenance } from '../../provenance/provenance';
@@ -114,7 +113,8 @@ export const TurnsStore = {
     if (!contentWritable(posture, 'TurnsStore.addTurn', turn.sessionId)) {
       return null;
     }
-    const turnRef = randomUUID();
+    // globalThis.crypto works in both Node and Edge bundles (node:crypto does not).
+    const turnRef = globalThis.crypto.randomUUID();
     const provenance = mintTurnProvenance(posture, turn.role, turnRef, turn.sessionId);
     if (!provenance) {
       return null; // mint refused — no durable object without provenance (S5)
@@ -208,7 +208,7 @@ export const TurnsStore = {
     const eid = exchangeId ?? null;
     // S5: provenance minted here, per turn, from the boundary-resolved posture.
     // The exchange id (or a per-call reference) is the typed source's turnId.
-    const turnRef = exchangeId ?? randomUUID();
+    const turnRef = exchangeId ?? globalThis.crypto.randomUUID();
     const userProvenance = mintTurnProvenance(posture, 'user', turnRef, sessionId);
     const assistantProvenance = mintTurnProvenance(posture, 'assistant', turnRef, sessionId);
     if (!userProvenance || !assistantProvenance) {

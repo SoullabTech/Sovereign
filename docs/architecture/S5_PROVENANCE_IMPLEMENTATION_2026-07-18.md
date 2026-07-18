@@ -1,7 +1,12 @@
 # S5 Provenance Substrate — Implementation Record — 2026-07-18
 
-**Status**: BUILT + locally proven (branch `feature/s5-provenance`); NOT deployed. Deploy
-requires the FULL path (`scripts/deploy-production.sh`) — this ships a schema migration.
+**Status**: BUILT + merge-gate rehearsed (branch `feature/s5-provenance`); NOT deployed.
+Deploy requires the FULL path (`scripts/deploy-production.sh`) — this ships a schema
+migration. **Merge-gate proofs A–E all PASS on a production-shaped disposable copy** —
+see [`S5_MERGE_GATE_REHEARSAL_2026-07-18.md`](S5_MERGE_GATE_REHEARSAL_2026-07-18.md),
+including the two defects the rehearsal found and fixed (empty-search_path trigger
+breakage; governed restore lane for historical replay). Per Kelly's ruling this PR is
+**S5 Foundation — Provenance Minting and Restore Governance**, not S5 complete.
 
 **Governs**: the implementation half of
 [`S5_PROVENANCE_CONSTITUTION_2026-07-18.md`](S5_PROVENANCE_CONSTITUTION_2026-07-18.md)
@@ -57,7 +62,11 @@ reflective intelligence features until S5 is complete.*
 - `scripts/restore-governed.sh` — THE restore path: preserves the governance tables
   across a full restore, re-applies them, sweeps tombstoned/scoped rows, requires
   `RESTORE_AUTHORIZED_BY`, reports counts only. Member-only scopes are refused LOUDLY
-  (per-object tombstones required for member deletions).
+  (per-object tombstones required for member deletions). Declares the **governed
+  restore lane** (`SET s5.restore_lane = 'governed'`) — the only condition under which
+  the mint gates admit historical replay, so an ungoverned raw replay of a historical
+  dump fails loudly at the database itself. Supports `RESTORE_DB_URL` for host-postgres
+  stacks and rehearsals against disposable copies.
 - `scripts/restore-db.sh` — refuses by default; explicit
   `I_UNDERSTAND_THIS_RESTORE_IS_UNGOVERNED=yes` override for non-sovereign data only.
 

@@ -34,6 +34,9 @@ set -euo pipefail
 CONTAINER_NAME="${POSTGRES_CONTAINER:-maia-postgres}"
 DB_NAME="${DB_NAME:-maia_consciousness}"
 DB_USER="${DB_USER:-soullab}"
+# RESTORE_DB_URL: run against a host-reachable postgres URL instead of docker
+# exec (dev stacks, rehearsals against disposable copies). Production omits it.
+RESTORE_DB_URL="${RESTORE_DB_URL:-}"
 
 DUMP_FILE="${1:-}"
 
@@ -43,16 +46,25 @@ fail() { echo "❌ $1" >&2; exit 1; }
 [ -f "$DUMP_FILE" ] || fail "Dump file not found: $DUMP_FILE"
 [ -n "${RESTORE_AUTHORIZED_BY:-}" ] || fail "R20: a restore is a constitutional event. Set RESTORE_AUTHORIZED_BY to the authorizing ruling/actor (recorded, content-free)."
 
-PSQL=(docker exec -i "$CONTAINER_NAME" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME")
+if [ -n "$RESTORE_DB_URL" ]; then
+  PSQL=(psql -v ON_ERROR_STOP=1 "$RESTORE_DB_URL")
+else
+  PSQL=(docker exec -i "$CONTAINER_NAME" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME")
+fi
 
 echo "🔐 Governed restore starting (R20)"
 echo "   dump: $DUMP_FILE"
 echo "   authorized by: $RESTORE_AUTHORIZED_BY"
 
 # ── 1. Preserve the deletion-governance tables ────────────────────────────────
-PRESERVE_FILE="$(mktemp /tmp/s5-governance-preserve.XXXXXX.sql)"
+PRESERVE_FILE="$(mktemp /tmp/s5-governance-preserve.XXXXXX)"
 echo "📥 Preserving deletion manifests/scopes/tombstones → $PRESERVE_FILE"
-docker exec "$CONTAINER_NAME" pg_dump -U "$DB_USER" -d "$DB_NAME" \
+if [ -n "$RESTORE_DB_URL" ]; then
+  PG_DUMP=(pg_dump "$RESTORE_DB_URL")
+else
+  PG_DUMP=(docker exec "$CONTAINER_NAME" pg_dump -U "$DB_USER" -d "$DB_NAME")
+fi
+"${PG_DUMP[@]}" \
   --data-only --column-inserts --on-conflict-do-nothing \
   -t deletion_manifests -t deletion_manifest_scopes -t provenance_tombstones \
   > "$PRESERVE_FILE" 2>/dev/null || {
@@ -61,10 +73,14 @@ docker exec "$CONTAINER_NAME" pg_dump -U "$DB_USER" -d "$DB_NAME" \
   }
 
 # ── 2. Restore the dump ───────────────────────────────────────────────────────
-echo "📦 Restoring dump..."
+# The session declares the governed restore lane FIRST: the S5 mint gates admit
+# historical (unknown-historical) rows only under this declaration, so an
+# ungoverned replay of a historical dump fails loudly at the database itself.
+echo "📦 Restoring dump (governed lane declared)..."
+LANE_SQL="SET s5.restore_lane = 'governed';"
 case "$DUMP_FILE" in
-  *.gz) gunzip -c "$DUMP_FILE" | "${PSQL[@]}" >/dev/null ;;
-  *)    "${PSQL[@]}" < "$DUMP_FILE" >/dev/null ;;
+  *.gz) { echo "$LANE_SQL"; gunzip -c "$DUMP_FILE"; } | "${PSQL[@]}" >/dev/null ;;
+  *)    { echo "$LANE_SQL"; cat "$DUMP_FILE"; } | "${PSQL[@]}" >/dev/null ;;
 esac
 
 # ── 3. Re-apply preserved governance rows ─────────────────────────────────────

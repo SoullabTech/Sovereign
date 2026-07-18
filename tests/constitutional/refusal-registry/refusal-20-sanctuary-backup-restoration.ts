@@ -24,14 +24,22 @@ import type { RefusalCheck } from './harness';
  * The known incident (SANC-20260614-01) is seeded as the first first-class
  * deletion manifest with its exact predicates (session + window per lane).
  *
- * Residual (named, not hidden): an operator running raw psql from outside the
- * repo against a full schema-replacing dump bypasses both layers until the
- * sweep is run. That path is governed operationally (founder-present restore),
- * not structurally. Hence grade B, not A.
+ * Restore-lane strengthening (merge-gate rehearsal, 2026-07-18): the mint
+ * gates admit historical (unknown-historical) rows ONLY when the session has
+ * declared the governed restore lane (SET s5.restore_lane = 'governed', set
+ * exclusively by restore-governed.sh). Consequence: an UNGOVERNED raw replay
+ * of any dump containing historical rows now fails loudly at the database —
+ * the governed path is structurally unavoidable for historical dumps, proven
+ * live on a production-shaped copy.
+ *
+ * Residual (named, not hidden): a full SCHEMA-REPLACING restore replays data
+ * before pg_dump recreates the triggers, so that one path still depends on the
+ * governed script's post-restore sweep. Hence grade B, not yet A.
  *
  * Behavioral demonstration: tests/constitutional/sanctuary-s5-behavioral-proof.ts
- * (PROOF B tombstone refusal, PROOF C scope refusal) — run with DATABASE_URL
- * against the local dev stack, never production.
+ * (PROOF B tombstone refusal, PROOF C scope refusal) + the Proof D governed
+ * restore rehearsal (S5_MERGE_GATE_REHEARSAL_2026-07-18.md) — run with
+ * DATABASE_URL against the local dev stack, never production.
  */
 
 const MIGRATION = 'database/migrations/20260718000001_s5_provenance_substrate.sql';

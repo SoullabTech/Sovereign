@@ -11,7 +11,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { recordConsentState } from '@/lib/provenance/consentState';
-import { randomUUID } from 'crypto';
 import { ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { cookies } from 'next/headers';
 
@@ -61,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // S5: content-free server record of the resolved posture for this request.
     recordConsentState({
-      requestId: randomUUID(),
+      requestId: globalThis.crypto.randomUUID(),
       posture: turnPosture,
       memberId: effectiveUserId,
       sessionId: effectiveSessionId,
