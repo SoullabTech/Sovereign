@@ -125,7 +125,7 @@ export function MaiaSection() {
                   <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-75">
                     <Image
                       src="/holoflower-studio-transparent.png"
-                      alt="Holoflower"
+                      alt="The Holoflower — Soullab's elemental mandala, slowly turning"
                       fill
                       sizes="(max-width: 1024px) 420px, 420px"
                       className="object-contain"
@@ -189,9 +189,9 @@ export function MaiaSection() {
             </button>
 
             <p className="text-white/60 leading-relaxed text-center text-base mb-6" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-              MAIA is the first companion built on AIN OS — our constitutional operating environment
-              for trustworthy human-AI relationships. Rather than teaching every application how to behave
-              independently, AIN OS provides shared relational commitments that MAIA inherits by design.
+              MAIA is built on AIN OS, our underlying architecture for trustworthy human-AI
+              relationships. It provides shared commitments around consent, continuity, provenance,
+              and stewardship so these principles do not have to be rebuilt each time.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-6">

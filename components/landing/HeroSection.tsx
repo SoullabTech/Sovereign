@@ -77,7 +77,7 @@ export function HeroSection() {
             <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-60">
               <Image
                 src="/holoflower.png"
-                alt="Holoflower"
+                alt="The Holoflower — Soullab's elemental mandala, slowly turning"
                 fill
                 sizes="(max-width: 640px) 280px, (max-width: 1024px) 340px, 400px"
                 className="object-contain"
