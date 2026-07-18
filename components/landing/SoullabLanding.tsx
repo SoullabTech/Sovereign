@@ -4,7 +4,6 @@ import { LandingNav } from './LandingNav';
 import { HeroSection } from './HeroSection';
 import { MaiaSection } from './MaiaSection';
 import { ResearchSection } from './ResearchSection';
-import { ProjectsSection } from './ProjectsSection';
 import { PortfolioSection } from './PortfolioSection';
 import { BookAnnouncement } from './BookAnnouncement';
 import { PastSitesSection } from './PastSitesSection';
@@ -27,7 +26,6 @@ export function SoullabLanding() {
         <InquirySection />
         <PortfolioSection />
         <BookAnnouncement />
-        <ProjectsSection />
         <AskSection />
         <PastSitesSection />
         <CovenantSection />

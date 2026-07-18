@@ -9,20 +9,12 @@ import { SectionReveal } from './SectionReveal';
 
 const PRINCIPLES = [
   {
-    title: 'Memory with consent',
-    body: 'Your reflections are held only with your awareness and agreement. Sanctuary Mode means some conversations are never stored. There is no stealth memory.',
-  },
-  {
     title: 'Continuity without surveillance',
     body: 'MAIA remembers what matters across time — not everything. The goal is coherence, not capture.',
   },
   {
     title: 'Informed, not authoritative',
     body: 'Grounded in psychology, philosophy, and wisdom traditions from across cultures and generations — without claiming authority over your meaning.',
-  },
-  {
-    title: 'Sovereignty over engagement',
-    body: 'MAIA is not designed to capture attention or create dependence. It is designed to return you, more fully, to your own life.',
   },
   {
     title: 'Honest about what\'s built',
