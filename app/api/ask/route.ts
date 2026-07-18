@@ -154,13 +154,18 @@ export async function POST(req: NextRequest) {
     // Hard clamp input length
     const message = raw.slice(0, MAX_INPUT_LENGTH);
 
+    // Claude is the primary public voice (Kelly ruling 2026-07-18); Ollama remains
+    // the fallback inside generateSimple if Claude is unavailable.
     const llmResponse = await getLLMProvider().generateSimple({
       tier: 'core',
       systemPrompt: LANDING_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: message }],
       maxTokens: 512,
       temperature: 0.5,
+      forceClaude: true,
     });
+
+    console.info(`[ASK] served provider=${llmResponse.provider} model=${llmResponse.model}`);
 
     const answer = llmResponse.text || 'I didn\'t catch that — could you rephrase?';
 
