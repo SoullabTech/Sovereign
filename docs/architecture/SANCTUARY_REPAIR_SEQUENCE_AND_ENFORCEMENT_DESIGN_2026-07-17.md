@@ -126,9 +126,63 @@ route (S2), any deletion of escaped data (rank 7 — Kelly authorization require
 **Branch/PR discipline**: isolated branch off `clean-main-no-secrets`, same as PR #626;
 stops at open PR.
 
+## Part 4 — S5 Charter (ratified by Kelly, 2026-07-17, at incident closure)
+
+S1–S3 shipped and the incident closed technically; S5 is now **the next architectural
+priority, before any gold-reflection work resumes**. Its mission is broader than more
+Sanctuary checks:
+
+> **Make every durable object able to prove what governed its creation and whether it
+> was permitted to persist.**
+
+Minimum architecture:
+
+```text
+Per-turn posture
+        ↓
+Server-authoritative provenance
+        ↓
+Derived persistence policy
+        ↓
+Store-boundary enforcement
+        ↓
+Restorable deletion guarantees
+```
+
+S5 scope (ratified list):
+- authoritative `postureAtCreation` on turns
+- immutable turn-level source provenance
+- typed provenance for atoms, marks, summaries, themes, and derived objects
+  (no untyped "came from nowhere" durable state — the R14 typed-source union)
+- **no provenance-less durable writes** anywhere
+- restoration tombstones or deletion manifests
+- **R20 enforcement during backup restoration** (restore filtering / protected backup
+  classes — converts R20 from Proposed to demonstrated)
+- migration behavior for historical objects with unknown provenance
+- prevention of client policy forgery (extend the TurnPosture nominal-class pattern
+  to server-side resolution via `runtime_consent_state`)
+- observability without content logging (extend the metadata-only refusal-marker
+  idiom)
+
+Constitutional sentences now foundational (recorded verbatim):
+
+> *Sanctuary is not a session property. Sanctuary is a per-turn posture.*
+>
+> *No durable object may be written without knowing what governed its creation.*
+>
+> *Deletion is not complete if restoration can silently resurrect what sovereignty
+> required the system to forget.*
+>
+> *The system can only reflect safely if it first knows exactly what it is allowed to
+> remember.*
+
+Gold-reflection work remains frozen until S5 can demonstrate that boundary
+**structurally — not merely by caller convention**.
+
 ## Stop
 
-Per the workstream's stop conditions, Workstream B halts here: evidence report
-delivered (B1), ranked sequence (Part 1), enforcement design (Part 2), first-defect
-isolated proposal (Part 3). Implementation of S1 awaits Kelly's go; the escaped-data
-deletion (rank 7) and member notification are Kelly's decisions (evidence report §6).
+Workstream B's original stop conditions were met (B1 evidence, Part 1 sequence,
+Part 2 design, Part 3 proposal); S1–S3 subsequently shipped under rulings K2/K4/K5,
+the escaped data was deleted (K3) and contaminated backups destroyed (K6). What
+remains: the member notification send (founder's act) and the S5 phase chartered
+above.

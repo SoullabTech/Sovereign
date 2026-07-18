@@ -64,6 +64,17 @@ we've changed — reply to this message or reach me directly at [contact].
 
 ---
 
+## Send qualities (Kelly ruling): direct acknowledgment · exact facts · completed
+repair · responsibility without dramatization. Not legalistic, not defensive.
+Channel: the most personal appropriate one.
+
+## Post-send record (fill in after delivery — nothing else goes here)
+
+- Delivery date and channel:
+- Delivery succeeded:
+- Member responded:
+- Requested follow-up:
+
 ## Fact-check anchors (for Kelly's independent verification, not part of the message)
 
 - Date/window/counts: `SANCTUARY_PRODUCTION_EVIDENCE_2026-07-17.md` §1

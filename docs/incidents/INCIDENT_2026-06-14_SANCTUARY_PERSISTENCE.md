@@ -3,9 +3,17 @@
 **Classification**: Privacy and sovereignty incident (internal unauthorized retention).
 Not evidenced as external disclosure. **Incident ID**: `SANC-20260614-01`.
 
-**STATUS: CLOSED (technical remediation) — 2026-07-17.** Remaining open item: member
-notification (prepared, awaiting Kelly's fact-check and send — see
-`MEMBER_NOTIFICATION_DRAFT_SANC-20260614-01.md`). Severity classification (Kelly,
+**STATUS (final ruling, Kelly 2026-07-17)**:
+> **SANC-20260614-01 — Technical remediation complete; member disclosure pending
+> founder review and delivery.**
+
+Technical closure and relational closure are distinct. This incident is not fully
+closed from a relationship perspective until the member has been informed. The
+notification is prepared (`MEMBER_NOTIFICATION_DRAFT_SANC-20260614-01.md`); the send
+is the founder's act. After sending, record in that document only: delivery date and
+channel; whether delivery succeeded; whether the member responded; any requested
+follow-up. The member's response is not to be copied into broad technical
+documentation unless necessary. Severity classification (Kelly,
 2026-07-17): **Severity: Medium · Exposure: Limited · Members affected: 1 ·
 Cross-member exposure: none evidenced · Human review: none evidenced · Promise
 violation: confirmed.** The serious element is not scale but the discrepancy:

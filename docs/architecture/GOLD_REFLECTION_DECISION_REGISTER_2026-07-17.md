@@ -79,7 +79,27 @@ authorized**; its eligibility gates are listed under D-items.
 | K7 | Notification — **all technical send-gates met**; draft updated to state plainly that backups were destroyed. Remaining: Kelly's independent fact-check + placeholders + channel; **the send is Kelly's act**. Affected member = id prefix `ce284751` (identity resolved operationally, not written in docs). |
 | K8 | S5 provenance — **queued as next architectural priority**. Constitutional sentence recorded: *Sanctuary is not a session property. Sanctuary is a per-turn posture.* R20 added as Proposed refusal (sanctuary content may never survive backup restoration) with enforcement (deletion manifests / tombstones / restore filtering / protected backup classes) as an S5 deliverable. Incident severity recorded: Medium / Limited / 1 member / no cross-member or human-review evidence / promise violation confirmed. |
 
-**Incident SANC-20260614-01: CLOSED (technical remediation) 2026-07-17.** Open: K7 send (Kelly), S5 phase. **All gold-reflection feature work remains frozen** per Kelly: *"The system can only reflect safely if it first knows exactly what it is allowed to remember."* The sovereignty layer precedes the gold-reflection layer.
+**Final ruling (Kelly, 2026-07-17)**: *SANC-20260614-01 — Technical remediation
+complete; member disclosure pending founder review and delivery.* Technical closure ≠
+relational closure; the incident is not fully closed until the member is informed.
+Covenant gates on #626/#629/#630 cleared post-merge (class-a + rollback checkboxes;
+all three now PASS).
+
+**Constitutional sentences recorded as foundational (R-canon candidates for the next
+sitting)**:
+1. *Sanctuary is not a session property. Sanctuary is a per-turn posture.*
+2. *No durable object may be written without knowing what governed its creation.*
+3. *Deletion is not complete if restoration can silently resurrect what sovereignty
+   required the system to forget.*
+4. *The system can only reflect safely if it first knows exactly what it is allowed
+   to remember.*
+
+**Open**: K7 send (founder's act; post-send record template in the notification doc)
+· **S5 phase chartered** (mission: make every durable object able to prove what
+governed its creation and whether it was permitted to persist — full scope in
+`SANCTUARY_REPAIR_SEQUENCE_AND_ENFORCEMENT_DESIGN_2026-07-17.md` Part 4). **All
+gold-reflection feature work remains frozen until S5 demonstrates the boundary
+structurally, not by caller convention.**
 
 ## Directed work — this phase (D)
 
