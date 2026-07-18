@@ -12,6 +12,34 @@ export function PastSitesSection() {
       <div className="max-w-4xl mx-auto">
         <SectionReveal>
           <p className="text-white/35 text-center text-[11px] tracking-[0.3em] uppercase mb-3">
+            Current build &amp; focus
+          </p>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 mb-16">
+            <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
+              <h3
+                className="text-white/90 text-xl sm:text-2xl font-extralight tracking-wide"
+                style={{ fontFamily: "'Crimson Pro', serif" }}
+              >
+                Now What? — a flourishing platform
+              </h3>
+              <span className="text-white/25 text-[11px] tracking-widest uppercase">
+                With Larry Closs · In active build
+              </span>
+            </div>
+            <p
+              className="text-white/50 text-sm sm:text-base leading-relaxed font-light"
+              style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
+            >
+              Built with Larry Closs — a CEO transitioning to executive coach for those seeking
+              to flourish, drawing on his study in Harvard&rsquo;s positive psychology certification
+              program. Now What? is a developmental environment for people who have achieved much
+              and are asking what comes next — with Larry&rsquo;s practice, presence, and
+              accompaniment at its center.
+            </p>
+          </div>
+        </SectionReveal>
+        <SectionReveal>
+          <p className="text-white/35 text-center text-[11px] tracking-[0.3em] uppercase mb-3">
             Earlier work
           </p>
           <h2

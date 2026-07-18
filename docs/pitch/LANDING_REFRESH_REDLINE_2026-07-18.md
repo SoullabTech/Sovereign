@@ -53,6 +53,12 @@ File: `components/landing/InquirySection.tsx`, placed after *What it is like*, b
 
 **Claim-discipline check**: the section makes inquiry claims, not capability claims — its center of gravity is the question we are actually living (true), not features. Failure test: if a College director reads it and then uses MAIA, nothing in the section over-promises what they'll meet. **Your sentence is used verbatim — confirm you want it public.** No sentence-initial negation.
 
+## 2b. ADDED (Kelly directive, same day) — "Current build & focus: Now What?" card
+
+Featured card at the top of the client-work section (above "Earlier work"): *Now What? — a flourishing platform*, "With Larry Closs · In active build." Body names Larry as a CEO transitioning to executive coach for those seeking to flourish, drawing on his study in Harvard's positive psychology certification program. Claim register: "in active build" (Designed) — zero outcome claims, zero platform-capability claims.
+
+**⚠️ Representation flag (client-representation governance):** this publicly names Larry with biographical facts (career transition + Harvard credential) supplied by Kelly, unverifiable from the repo. Before deploy, Kelly confirms (a) the facts as phrased, (b) Larry is comfortable with this public representation. Larry's register on the platform is experiential, never constitutional — this card keeps to that.
+
 ## 3. FLAGGED, NOT CHANGED — needs your facts
 
 - **Elemental Alchemy: "available June 1, 2026"** — it is July 18. If the book shipped, the copy should say *available now*; if delayed, it should say the true state. I could not verify from the repo, so I changed nothing. **This stale date is the second thing a careful visitor notices.**
