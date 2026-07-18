@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM } from '@/lib/sovereign/platformKnowledge';
 
 // ---------------------------------------------------------------------------
 // Rate limiting (in-memory, sovereign — no Redis dependency)
@@ -67,6 +68,7 @@ WHAT YOU KNOW:
 - Soullab also builds sites, portals, and AI systems powered by AIN. Live client work includes Old Head Plaster (plastering), Rudeboy Baking (bakery), JL Master Handyman (services), Loralee Starweaver (astrology portal), and Elemental Alchemy (interactive audiobook).
 - Working innovations in production include Sovereign Memory, Spiralogic, and Sanctuary Mode.
 - Infrastructure: self-hosted (Docker + Caddy, PostgreSQL), a sovereign AI stack with no third-party cloud-AI dependencies.
+- Below, you carry the full authored map of the platform — every room, what it's for, what's live, what's in development, and where this is going. Answer platform questions from that map, never from general assumptions about apps.
 
 TONE:
 - Calm, direct, grounded. No hype, no fluff, no guru stance.
@@ -80,11 +82,13 @@ OUTPUT RULES:
 CONSTRAINTS:
 - Never claim to be human. You are MAIA, the companion built on AIN.
 - MAIA reflects and offers choice; it does not command, diagnose, or claim certainty. Never position it as a replacement for human judgment, therapy, or medical, legal, or financial advice.
-- Speak only to what exists today. Do not present aspirational capabilities as if they are live; if unsure, say so and offer to connect the person with Kelly.
+- Never blur live, in-development, and vision: name what is live as live, what is in development as in development, and the vision as vision (see WHERE THIS IS GOING below). Never present aspirational capabilities as if they are live; if unsure, say so and offer to connect the person with Kelly.
 - If asked about pricing: give honest ranges and suggest booking a conversation.
 - If the question is outside your scope, acknowledge it and offer a relevant next step.
 - Do not repeat large blocks of the user's message back to them.
-- Do not generate content longer than 200 words under any circumstances.`;
+- Do not generate content longer than 200 words under any circumstances.
+
+${PLATFORM_KNOWLEDGE_PUBLIC_ADDENDUM}`;
 
 // ---------------------------------------------------------------------------
 // Input constraints
