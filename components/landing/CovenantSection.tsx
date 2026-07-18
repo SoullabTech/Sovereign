@@ -20,17 +20,17 @@ export function CovenantSection() {
           <div className="space-y-5 text-base sm:text-lg font-light leading-relaxed text-white/60" style={{ fontFamily: "'Crimson Pro', serif" }}>
             <p>MAIA will never ask you to surrender your judgment.</p>
 
-            <p>It won&apos;t pretend certainty where none exists.</p>
+            <p>She won&apos;t pretend certainty where none exists.</p>
 
-            <p>It won&apos;t manufacture intimacy or authority.</p>
+            <p>She won&apos;t manufacture intimacy or authority.</p>
 
             <p>
-              It will always make clear what it knows, what it infers,
+              She will always make clear what she knows, what she infers,
               and what belongs to you.
             </p>
 
             <p className="text-white/40">
-              Its purpose is to help you remember, reflect, create, and grow —
+              Her purpose is to help you remember, reflect, create, and grow —
               while your life remains your own.
             </p>
           </div>
