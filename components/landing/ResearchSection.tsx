@@ -35,21 +35,25 @@ const PRINCIPLES = [
 const BUCKETS: Array<{
   key: PublicBucket;
   heading: string;
+  definition: string;
   intro: string | null;
 }> = [
   {
     key: 'available_today',
     heading: 'Available Today',
+    definition: 'Available and working in the platform now.',
     intro: null,
   },
   {
     key: 'architected_for_release',
     heading: 'Architected for Release',
+    definition: 'Designed or partially implemented, but not yet a complete public experience.',
     intro: 'These capabilities have designs, substrates, and clear integration paths. They have not yet crossed the release gate. The distinction matters.',
   },
   {
     key: 'research',
     heading: 'Research',
+    definition: 'An active field of inquiry, not a released capability.',
     intro: 'These are active investigations. We believe they matter enough to explore publicly, but they have not yet earned the status of deployed capabilities. We distinguish research from production intentionally.',
   },
 ];
@@ -170,6 +174,12 @@ export function ResearchSection() {
                           >
                             {bucket.heading}
                           </h3>
+                          <p
+                            className="text-white/50 text-sm mb-2"
+                            style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
+                          >
+                            {bucket.definition}
+                          </p>
                           {bucket.intro && (
                             <p
                               className="text-white/35 text-sm leading-relaxed max-w-2xl"

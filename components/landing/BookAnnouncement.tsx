@@ -29,7 +29,7 @@ export function BookAnnouncement() {
 
             <div className="text-center lg:text-left">
               <p className="text-amber-200/55 text-[11px] tracking-[0.3em] uppercase mb-5">
-                Upcoming from Soullab Press
+                From Soullab Press
               </p>
               <h2
                 className="text-4xl sm:text-5xl font-extralight tracking-wide text-amber-50 mb-3"
@@ -38,7 +38,7 @@ export function BookAnnouncement() {
                 Elemental Alchemy
               </h2>
               <p className="text-amber-200/65 text-sm sm:text-base font-light italic mb-7">
-                by Kelly Nezat &middot; available June 1, 2026
+                by Kelly Nezat &middot; available now in Kindle, paperback, and hardcover
               </p>
               <div
                 className="text-white/75 text-lg sm:text-xl leading-relaxed font-light max-w-xl mx-auto lg:mx-0 mb-8 space-y-4"

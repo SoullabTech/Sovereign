@@ -11,6 +11,7 @@ import { PastSitesSection } from './PastSitesSection';
 import { AskSection } from './AskSection';
 import { ContactSection } from './ContactSection';
 import { NarrativeSection } from './NarrativeSection';
+import { InquirySection } from './InquirySection';
 import { CovenantSection } from './CovenantSection';
 import { AskWidget } from './AskWidget';
 
@@ -23,6 +24,7 @@ export function SoullabLanding() {
         <MaiaSection />
         <ResearchSection />
         <NarrativeSection />
+        <InquirySection />
         <PortfolioSection />
         <BookAnnouncement />
         <ProjectsSection />
