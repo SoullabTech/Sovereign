@@ -45,6 +45,16 @@ export function HeroSection() {
           We build for the soul.
         </motion.p>
 
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.75, ease: 'easeOut' }}
+          className="mt-3 text-base sm:text-lg md:text-xl font-extralight italic text-white/50"
+          style={{ fontFamily: "'Crimson Pro', serif" }}
+        >
+          We study what carries transformation forward.
+        </motion.p>
+
         {/* Luminous holoflower — focal centerpiece */}
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
