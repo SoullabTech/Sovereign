@@ -106,7 +106,7 @@ Source-verified against the live schema during the 2026-07-17 audits.
 | Object | Answers today (verified) | Missing | S5 target |
 |---|---|---|---|
 | **Conversation turns** | who (user_id), source (session_id) | posture, typed source, restore policy | `postureAtCreation` per turn; the incident's lane, first priority |
-| **Session history jsonb** (`maia_sessions.conversation_history`) | timestamps only | everything else; a shadow content lane | either inherits turn provenance or is retired into the turns lane — a duplicate content lane with weaker provenance should not survive S5 |
+| **Session history jsonb** (`maia_sessions.conversation_history`) | timestamps only | everything else; a shadow content lane | **Classified constitutional debt** (Kelly, 2026-07-18): temporary compatibility layer → eventual retirement. Not removed immediately; no new consumers; retired when the turns lane covers its remaining readers. Ruling candidate RC3: *duplicate content lanes constitute constitutional debt.* |
 | **Episodic marks** | **exemplary**: `marked_by_member`, byte-exact verbatim, `source_turn_id`/`source_session_id`, interpretive columns NULL; server-side sanctuary guard (PR #625) | posture recorded explicitly (currently inferred by guard) | the model the rest of the system converges toward |
 | **Memory atoms** | `provenance` jsonb, `facilitator_id`, `epistemological_status` (observed…claimed), `member_response_status` (confirmed/rejected/modified) | **no session linkage at all** (permanently unattributable historically), no posture, untyped source | typed `source` union; posture; the historical corpus becomes `unattributed` explicitly (§7) |
 | **Quotes (candidates)** | writes nothing — proposes only | n/a while stateless | if a kept-quote object ever exists, it is born under this constitution |
@@ -144,6 +144,8 @@ The existing corpus predates this constitution. The honest treatment:
 - Historical objects receive `generatedBy: 'unattributed-historical'` /
   `postureAtCreation: 'unknown-historical'` **explicitly** — never a silently
   backfilled "normal." Unknown is a truthful answer; fabricated certainty is not.
+  Formalized (Kelly, 2026-07-18, ruling candidate RC1): **Unknown provenance is
+  itself provenance.**
 - Unattributed objects are **permanently ineligible for collective use** and for any
   future surface that requires posture proof. They may continue serving the member
   they belong to (their continuity should not be punished for the system's past),

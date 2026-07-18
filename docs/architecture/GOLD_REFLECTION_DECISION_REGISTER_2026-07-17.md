@@ -140,6 +140,43 @@ intelligence · Soullab = cultural intelligence.** Build sequence: Relationship 
 Trust → Sovereignty → Provenance → Reflection → Recognition → Collective
 Intelligence.
 
+## Kelly's assessment and ruling candidates (2026-07-18, paper review)
+
+**Phase framing (recorded)**: Phase I — *Can continuity exist?* → Yes. Phase II —
+*What may continuity become?* → *Not everything that can be remembered should be
+remembered* (completed with the incident). **Phase III (now beginning) —
+Constitutional Intelligence: under what conditions may intelligence arise from
+relationship?** = S5. Closing characterization: *the week MAIA stopped becoming a
+memory system and started becoming a constitutionally governed relational
+intelligence.*
+
+**Ruling candidates from the papers** (Kelly's formulations, numbered RC to avoid
+collision with ratified R1–R15; formal placement at red-line/sitting):
+
+| # | Candidate (verbatim) | Recorded in |
+|---|---|---|
+| RC1 | *Unknown provenance is itself provenance.* | Provenance Constitution §7 |
+| RC2 | *Historical unattributed objects remain permanently collective-ineligible.* | Provenance Constitution §7 / AIN Boundaries §1.2 |
+| RC3 | *Duplicate content lanes constitute constitutional debt.* (session-history jsonb so classified: temporary compatibility layer → eventual retirement; no new consumers; not removed immediately) | Provenance Constitution §5 |
+| RC4 | *Sanctuary is violated whenever the relationship appears altered by what was promised would not remain.* | What Sanctuary Actually Means §6 |
+| RC5 | *AIN may only learn from what has chosen to teach it.* | AIN Boundaries §6 |
+
+**Paper-review outcomes also recorded**: Sanctuary UI copy change agreed — preferred
+candidate *"While Sanctuary is active, what is spoken here is not carried forward"*;
+final wording via Jondi session, then its own small PR. Jondi frame gains question 7:
+*At what moments did MAIA stop feeling like a host and start feeling like a system?*
+
+**Platform assessment (Kelly)**: overall **A** — Relationship A · Governance A ·
+Incident Response A · Hospitality A- · Reflection Readiness B+ · Collective
+Intelligence B+ · Provenance B+/A- trajectory. "Not because it is finished. Because
+it now increasingly understands what it is, what it is not, what it may remember,
+what it may forget, and what conditions must exist before intelligence becomes
+trustworthy."
+
+**Remaining founder acts (unchanged)**: (1) send the member notification — *"I would
+not delay this long"*; (2) red-line the four papers, which are founding decisions,
+not design decisions.
+
 ## Directed work — this phase (D)
 
 | # | Deliverable | Status |

@@ -109,6 +109,11 @@ And its inverse, the violation-shape to design against:
 > member noticing, weeks later, that MAIA seems to *know them differently* in a way
 > only the Sanctuary conversation explains.
 
+Kelly's constitutional formulation of this test (2026-07-18, ruling candidate RC4):
+
+> **Sanctuary is violated whenever the relationship appears altered by what was
+> promised would not remain.**
+
 That second shape is why derived artifacts matter as much as transcripts, and why
 provenance (the companion paper) is Sanctuary's real enforcement substrate: the only
 way to guarantee nothing downstream carries the exchange is for every downstream
@@ -123,7 +128,13 @@ Sanctuary toggle's placement and language honor the gravity of the gesture; whet
 "this session won't be remembered" is the right sentence now that the truth is
 per-exchange rather than per-session. That last one is a live copy question: the UI
 words say "session," the constitution now says "posture" — the words may need to
-follow.
+follow. Kelly agrees the change is needed (2026-07-18) and offered candidates,
+preferring the more human of the two:
+
+> *While Sanctuary is active, what is spoken here is not carried forward.*
+
+(Alternative: *Exchanges held in Sanctuary are not remembered.*) Final wording routes
+through the Jondi session; the copy change ships afterward as its own small PR.
 
 ## 8. Closing
 

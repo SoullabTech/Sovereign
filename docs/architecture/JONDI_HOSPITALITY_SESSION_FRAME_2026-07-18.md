@@ -30,6 +30,9 @@ before any new feature is built on top of it.
 4. What should MAIA never carry?
 5. What would make someone feel deeply safe?
 6. What would make someone feel subtly violated?
+7. At what moments did MAIA stop feeling like a host and start feeling like a
+   system? *(added by Kelly 2026-07-18 — ask it during and after the walks, not
+   only in conversation)*
 
 ## 3. Derived questions (offered, not required — from this week's findings)
 

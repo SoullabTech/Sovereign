@@ -118,6 +118,11 @@ differentiator is not that AIN learns from many lives — everyone claims that. 
 that AIN can prove, object by object, that every life it learned from chose to
 teach it.
 
+Kelly elevated this to a constitutional formulation (2026-07-18, ruling candidate
+RC5):
+
+> **AIN may only learn from what has chosen to teach it.**
+
 ## 7. Open rulings carried forward
 
 Cohort threshold N (≥20 proposed; 2 ruled inadequate; parameters deferred until a
