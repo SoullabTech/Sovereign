@@ -66,9 +66,10 @@ export function MaiaSection() {
 
               <div className="space-y-3.5 border-l border-white/10 pl-5 mb-8">
                 {[
+                  ['A host who knows the house', 'Soullab is a house of rooms — journal, changes, decisions, ideas, astrology, a next step when you\'re unsure. Conversation is the hallway: MAIA knows every room and helps you find your way, without ever taking over your path.'],
                   ['Speaks in modes', 'Talk for dialogue, Care for counsel, Note for capturing what matters — so the relationship fits the moment.'],
-                  ['Memory with consent', 'Sanctuary Mode lets you speak freely with nothing retained. There is no stealth memory.'],
-                  ['Oriented to your sovereignty', 'Not built to capture attention or create dependence. Built to amplify what is already yours.'],
+                  ['Memory with consent', 'What you choose to keep becomes continuity; reflection builds instead of starting over. Sanctuary Mode lets you speak freely with nothing retained. There is no stealth memory.'],
+                  ['Oriented to your sovereignty', 'Not built to capture attention or create dependence. Built to return your life outward into the world — never deeper into the app.'],
                 ].map(([title, body]) => (
                   <div key={title}>
                     <p className="text-sm font-medium text-white/80" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>{title}</p>
