@@ -25,6 +25,7 @@ import {
   _resetStagedReviewState,
   SIMPLE_MAX_TURNS,
   CHUNK_TURNS,
+  PROMPT_VERSION,
   TRUNCATION_MARKER,
   DIGEST_TRUNCATION_NOTE,
   type StagedInput,
@@ -440,5 +441,39 @@ describe('digest honesty at the token cap (session map completeness, prod 2026-0
     expect(res.status).toBe('complete');
     expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks + 1);
     expect(findSynth().messages[0].content).not.toContain(DIGEST_TRUNCATION_NOTE.trim());
+  });
+});
+
+describe('digest calibration (Kelly recommendation-first pass, 2026-07-19)', () => {
+  // Reference case: 373-turn prod session, 10 chunks — all 10 first calls
+  // capped at 750, ~8 continuations capped too. The selected limit is pinned
+  // so it cannot drift without a deliberate test change, and the cap change
+  // is pinned to a cache-version bump (the cache key omits maxTokens, so a
+  // cap change without a version bump would keep serving stale digests).
+  const isDigest = (p: any) =>
+    typeof p?.systemPrompt === 'string' && p.systemPrompt.includes('ONE segment');
+
+  it('every digest call — first and continuation — requests the calibrated 1500-token cap', async () => {
+    const turns = makeTurns(160); // 4 chunks
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params) && params.messages.length === 3)
+        return { text: ' tail', metadata: { stopReason: 'end_turn' } };
+      if (isDigest(params))
+        return { text: 'head', metadata: { stopReason: 'max_tokens' } };
+      return { text: 'the review', metadata: { stopReason: 'end_turn' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    const digestCalls = mockGenerateSimple.mock.calls.map(c => c[0] as any).filter(isDigest);
+    expect(digestCalls.length).toBeGreaterThan(0);
+    for (const call of digestCalls) expect(call.maxTokens).toBe(1500);
+  });
+
+  it('the cap change ships with the cache-invalidating version bump (sr-staged-v5)', () => {
+    expect(PROMPT_VERSION).toBe('sr-staged-v5');
+  });
+
+  it('chunk size is unchanged by the calibration — 40 turns per chunk', () => {
+    expect(CHUNK_TURNS).toBe(40);
   });
 });
