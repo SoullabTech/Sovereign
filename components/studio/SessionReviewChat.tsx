@@ -12,6 +12,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
@@ -471,16 +472,7 @@ ${body
 
   const hasReviewContent = messages.some(m => m.role === 'assistant' && m.id !== '1');
 
-  return (
-    <>
-      {/* Backdrop for expanded reading mode */}
-      {expanded && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40"
-          onClick={() => setExpanded(false)}
-          aria-hidden="true"
-        />
-      )}
+  const card = (
     <div
       className={`bg-[#1e1e38] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col ${
         expanded ? 'fixed inset-2 md:inset-8 z-50' : ''
@@ -761,6 +753,26 @@ ${body
         />
       )}
     </div>
-    </>
   );
+
+  // Expanded mode must escape the room layout entirely: the review card sits
+  // inside a framer-motion ancestor whose transform makes `position: fixed`
+  // resolve against the animated container, clipping the overlay (prod walk
+  // 2026-07-19). A portal to document.body restores true viewport positioning.
+  // `expanded` only becomes true from a client-side click, so the portal
+  // branch never runs during SSR.
+  if (expanded) {
+    return createPortal(
+      <>
+        <div
+          className="fixed inset-0 bg-black/60 z-40"
+          onClick={() => setExpanded(false)}
+          aria-hidden="true"
+        />
+        {card}
+      </>,
+      document.body
+    );
+  }
+  return card;
 }
