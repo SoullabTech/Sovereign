@@ -469,11 +469,47 @@ describe('digest calibration (Kelly recommendation-first pass, 2026-07-19)', () 
     for (const call of digestCalls) expect(call.maxTokens).toBe(1500);
   });
 
-  it('the cap change ships with the cache-invalidating version bump (sr-staged-v5)', () => {
-    expect(PROMPT_VERSION).toBe('sr-staged-v5');
+  it('the calibration ships with the cache-invalidating version bump (sr-staged-v6)', () => {
+    expect(PROMPT_VERSION).toBe('sr-staged-v6');
   });
 
   it('chunk size is unchanged by the calibration — 40 turns per chunk', () => {
     expect(CHUNK_TURNS).toBe(40);
+  });
+});
+
+describe('lens grammar in staged synthesis (Spiralogic calibration pass, 2026-07-19)', () => {
+  const isDigest = (p: any) =>
+    typeof p?.systemPrompt === 'string' && p.systemPrompt.includes('ONE segment');
+
+  it('question-mode synthesis carries the full Spiralogic lens instructions, not just the bare lens line', async () => {
+    const turns = makeTurns(160);
+    mockGenerateSimple.mockResolvedValue({ text: 'the review', metadata: { stopReason: 'end_turn' } });
+    const res = await runStagedReview(
+      input(turns, { mode: 'question', lens: 'spiralogic', question: 'What moved in this session?' }),
+      hashTranscript(turns)
+    );
+    expect(res.status).toBe('complete');
+    const synthCall = mockGenerateSimple.mock.calls.map(c => c[0] as any).filter(p => !isDigest(p)).pop();
+    const user = synthCall.messages[0].content as string;
+    expect(user).toContain('Active lens: SPIRALOGIC.');
+    // The lens grammar itself — a coined term must arrive with its definition.
+    expect(user).toContain('Spiralogic lens');
+    expect(user).toContain('elemental imbalance');
+    expect(user).toContain('living question');
+  });
+
+  it('fixed views keep the bare lens marker — their view systems govern the reading', async () => {
+    const turns = makeTurns(160);
+    mockGenerateSimple.mockResolvedValue({ text: 'the review', metadata: { stopReason: 'end_turn' } });
+    const res = await runStagedReview(
+      input(turns, { mode: 'overview', lens: 'spiralogic' }),
+      hashTranscript(turns)
+    );
+    expect(res.status).toBe('complete');
+    const synthCall = mockGenerateSimple.mock.calls.map(c => c[0] as any).filter(p => !isDigest(p)).pop();
+    const user = synthCall.messages[0].content as string;
+    expect(user).toContain('Active lens: SPIRALOGIC.');
+    expect(user).not.toContain('elemental imbalance');
   });
 });
