@@ -5,6 +5,7 @@ import { buildComprehensiveVoicePrompt, buildAdaptiveVoicePrompt, type Comprehen
 import { awarenessLanguageAdapter, type AwarenessLevel } from '../consciousness/awareness-language-adapter';
 import { type RelationshipMemoryContext, formatRelationshipMemoryForPrompt } from '../memory/RelationshipMemoryService';
 import { buildSelfAwareContext } from '../consciousness/maiaArchitectureContext';
+import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 
 export interface MaiaContext {
   sessionId: string;
@@ -59,6 +60,9 @@ export interface MaiaContext {
   // 🧠 SELF-AWARENESS: Enable MAIA to explain her own architecture
   selfAwareMode?: boolean;
   selfAwarenessDetail?: 'minimal' | 'standard' | 'comprehensive';
+  // 🚪 PLACE (House Presence): facts-only current-room orientation.
+  // Built server-side from a validated body.place; never behavioral.
+  placeAddendum?: string;
   // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
   epistemicPathAddendum?: string;
   // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 of 3-pass pipeline)
@@ -100,6 +104,12 @@ export interface MaiaContext {
   // with provenance grounding. System-retrieved continuity tier; lower authority
   // than member-placed (atoms/anchor). See docs/specs/CONVERSATIONAL_LAYER_PHASE_2_SPEC_2026-05-24.md.
   conversationalRecallAddendum?: string;
+  // 📖 EPISODIC RECALL (Phase 2, 2026-07-13): Member-marked significant moments,
+  // rendered verbatim with date provenance. No synthesis, no significance
+  // inference (member-marked only — see episodicRecallBlock.ts doctrine).
+  // Substrate lane only; does NOT open the Themes/Reflections rooms. See
+  // docs/specs/EPISODIC_LAYER_PHASE_2_SPEC_2026-07-13.md.
+  episodicRecallAddendum?: string;
   // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
   // atoms the member chose to keep, plus witnessed practitioner observations rendered
   // with epistemic framing. Higher authority than system-retrieved conversational
@@ -388,6 +398,7 @@ type AddendumSpec = {
 };
 
 const ADDENDA_SPECS: readonly AddendumSpec[] = [
+  { field: 'placeAddendum',                   log: () => `🚪 [Place] Current-room orientation injected` },
   { field: 'relationshipModeAddendum',        log: v => `💫 [Relationship] Mode: ${v.split('\n')[0]}` },
   { field: 'governorAddendum',                log: () => `🌀 [Governor] Posture guidance injected` },
   { field: 'guestContextAddendum',            log: () => `👤 [Guest] Context limitation note injected` },
@@ -408,6 +419,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'consultationAddendum',            log: () => `🏛️ [Consultation] Council insights injected` },
   { field: 'fieldWisdomAddendum',             log: () => `🌀 [Field Wisdom] Collective intelligence injected` },
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
+  { field: 'episodicRecallAddendum',          log: v => `📖 [Episodic Recall] Member-marked moments injected (${v.length} chars)` },
   { field: 'atomsAddendum',                   log: v => `🧬 [Atoms] Member-placed portfolio + practitioner observations injected (${v.length} chars)` },
 ];
 
@@ -486,6 +498,14 @@ export function appendAllContextAddenda(context: MaiaContext, prompt: string): s
   // after which MAIA may truthfully confirm a keep ONLY when the substrate confirms it.
   // Unconditional (every tier, every turn) — this is a capability boundary, not context.
   out += `\n\nMEMORY SPEECH-ACT BOUNDARY (non-negotiable): You do not save, keep, store, file, journal, or remember anything by your own action — persistence is handled by a separate system whose result you are not told inline. Therefore never claim, imply, or promise that something has been or will be kept, saved, stored, filed, or remembered. Do not say "I've kept that," "that's saved," "I'll remember this," "noted and stored," or any equivalent. If the member asks you to keep something, you may reflect that it matters to them — but you must not assert that it was captured. A promise the system cannot confirm is a broken covenant, not a courtesy.`;
+
+  // 🏠 HOUSE KNOWLEDGE — the authored platform map (identity, areas,
+  // relationships, orientation, limits). Wired 2026-07-17 under Kelly's
+  // House Presence directive (Phase 5) at exactly the seam the file's own
+  // header specifies. Distinct from personal memory: this is what the house
+  // contains, never what this member has done in it.
+  out += `\n\n${PLATFORM_KNOWLEDGE_ADDENDUM}`;
+  console.log('🏠 [House Knowledge] authored platform map applied');
 
   // Platform knowledge boundary — what MAIA may claim about features vs. account state.
   out += `\n\n${PLATFORM_KNOWLEDGE_BOUNDARY}`;

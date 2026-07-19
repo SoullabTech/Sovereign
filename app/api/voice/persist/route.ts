@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { recordConsentState } from '@/lib/provenance/consentState';
 import { ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { cookies } from 'next/headers';
 
@@ -35,11 +37,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Skip persistence for Sanctuary mode
+    // Skip persistence for Sanctuary mode (route-level early return; the
+    // stores below ALSO refuse via TurnPosture — defense in depth, S1)
     if (isSanctuary) {
       console.log('[VoicePersist] Sanctuary mode - skipping persistence');
       return NextResponse.json({ success: true, sanctuary: true });
     }
+    const turnPosture = TurnPosture.resolve({ sanctuary: isSanctuary });
 
     // Get session ID from cookie or use client-provided one
     const cookieStore = await cookies();
@@ -54,12 +58,21 @@ export async function POST(request: NextRequest) {
     const effectiveUserId = userId || `anon:${sessionId || 'unknown'}`;
     const effectiveSessionId = sessionId || `voice-${Date.now()}`;
 
+    // S5: content-free server record of the resolved posture for this request.
+    recordConsentState({
+      requestId: globalThis.crypto.randomUUID(),
+      posture: turnPosture,
+      memberId: effectiveUserId,
+      sessionId: effectiveSessionId,
+    });
+
     // Ensure session exists
     await ensureSession(effectiveSessionId);
 
     // Save both user and assistant messages as a pair if both present
     if (userMessage && assistantMessage) {
       await TurnsStore.addExchange(
+        turnPosture,
         effectiveUserId,
         effectiveSessionId,
         userMessage,
@@ -77,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
     // Save individual turns if only one is provided
     else if (userMessage) {
-      await TurnsStore.addTurn({
+      await TurnsStore.addTurn(turnPosture, {
         userId: effectiveUserId,
         sessionId: effectiveSessionId,
         role: 'user',
@@ -86,7 +99,7 @@ export async function POST(request: NextRequest) {
       console.log(`[VoicePersist] Saved user voice turn for ${effectiveUserId}`);
     }
     else if (assistantMessage) {
-      await TurnsStore.addTurn({
+      await TurnsStore.addTurn(turnPosture, {
         userId: effectiveUserId,
         sessionId: effectiveSessionId,
         role: 'assistant',

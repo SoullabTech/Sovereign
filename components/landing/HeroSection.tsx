@@ -45,6 +45,16 @@ export function HeroSection() {
           We build for the soul.
         </motion.p>
 
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.75, ease: 'easeOut' }}
+          className="mt-3 text-base sm:text-lg md:text-xl font-extralight italic text-white/50"
+          style={{ fontFamily: "'Crimson Pro', serif" }}
+        >
+          We study what carries transformation forward.
+        </motion.p>
+
         {/* Luminous holoflower — focal centerpiece */}
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
@@ -77,7 +87,7 @@ export function HeroSection() {
             <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-60">
               <Image
                 src="/holoflower.png"
-                alt="Holoflower"
+                alt="The Holoflower — Soullab's elemental mandala, slowly turning"
                 fill
                 sizes="(max-width: 640px) 280px, (max-width: 1024px) 340px, 400px"
                 className="object-contain"

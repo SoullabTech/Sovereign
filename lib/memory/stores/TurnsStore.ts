@@ -6,6 +6,32 @@
  */
 
 import { query } from '../../db/postgres';
+import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
+import { Provenance } from '../../provenance/provenance';
+
+/**
+ * S5: mint turn provenance server-side, at the store, from the boundary-
+ * resolved TurnPosture. The DB mint gate (s5_require_minted_provenance)
+ * refuses any conversation_turns INSERT that lacks this — no layer trusts a
+ * caller. Returns null (refusing the write) if minting fails.
+ */
+function mintTurnProvenance(
+  posture: TurnPosture,
+  role: 'user' | 'assistant',
+  turnId: string,
+  sessionId: string | null | undefined
+): Provenance | null {
+  return Provenance.mint(
+    posture,
+    {
+      createdBy: role === 'user' ? 'member' : 'maia',
+      generatedBy: role === 'user' ? 'member-utterance' : 'synthesis',
+      sourceContainer: 'personal',
+      source: { type: 'turn', turnId, sessionId: sessionId ?? null },
+    },
+    'TurnsStore'
+  );
+}
 
 export interface TurnMeta {
   kind?: 'normal' | 'translation';
@@ -79,13 +105,25 @@ export const TurnsStore = {
 
   /**
    * Store a new turn
+   *
+   * SANCTUARY (S1, boundary-enforced): posture REQUIRED; sanctuary or
+   * missing/forged posture refuses the write (fail closed, metadata-only log).
    */
-  async addTurn(turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<string | null> {
+  async addTurn(posture: TurnPosture, turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<string | null> {
+    if (!contentWritable(posture, 'TurnsStore.addTurn', turn.sessionId)) {
+      return null;
+    }
+    // globalThis.crypto works in both Node and Edge bundles (node:crypto does not).
+    const turnRef = globalThis.crypto.randomUUID();
+    const provenance = mintTurnProvenance(posture, turn.role, turnRef, turn.sessionId);
+    if (!provenance) {
+      return null; // mint refused — no durable object without provenance (S5)
+    }
     // Note: meta and parent_turn_id are not in the production schema — omitted
     const result = await query<{ id: string }>(
       `
-      INSERT INTO conversation_turns (user_id, session_id, role, content)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO conversation_turns (user_id, session_id, role, content, posture_at_creation, provenance)
+      VALUES ($1, $2, $3, $4, 'normal', $5::jsonb)
       RETURNING id
       `,
       [
@@ -93,6 +131,7 @@ export const TurnsStore = {
         turn.sessionId ?? null,
         turn.role,
         turn.content,
+        JSON.stringify(provenance.toJson()),
       ]
     );
     return result.rows[0]?.id ?? null;
@@ -104,7 +143,7 @@ export const TurnsStore = {
    * parentTurnId: Valid UUID FK to parent turn (used for DB threading)
    * parentLocalId: Client-side ID when parent not yet persisted (stored in meta only)
    */
-  async addTranslation(opts: {
+  async addTranslation(posture: TurnPosture, opts: {
     userId: string;
     sessionId?: string;
     content: string;
@@ -125,7 +164,7 @@ export const TurnsStore = {
       ...(opts.parentLocalId ? { parentLocalId: opts.parentLocalId } : {}),
     };
 
-    return this.addTurn({
+    return this.addTurn(posture, {
       userId: opts.userId,
       sessionId: opts.sessionId,
       role: 'assistant',
@@ -138,6 +177,12 @@ export const TurnsStore = {
   /**
    * Store a user message and assistant response pair.
    *
+   * SANCTUARY (S1, boundary-enforced): `posture` is REQUIRED and must be a
+   * TurnPosture resolved at the serving boundary. Sanctuary posture — or a
+   * missing/forged posture (fail closed) — refuses the write here at the
+   * store, regardless of caller behavior. The refusal log carries metadata
+   * only. See lib/sanctuary/turnPosture.ts and incident SANC-20260614-01.
+   *
    * Uses two sequential INSERTs so created_at timestamps differ by at least
    * one clock tick — guarantees user < assistant ordering when sorted by
    * (created_at ASC, seq ASC).
@@ -147,30 +192,42 @@ export const TurnsStore = {
    * Omitting exchangeId falls back to the original non-idempotent behaviour.
    */
   async addExchange(
+    posture: TurnPosture,
     userId: string,
     sessionId: string | undefined,
     userMessage: string,
     assistantResponse: string,
     exchangeId?: string
   ): Promise<void> {
+    if (!contentWritable(posture, 'TurnsStore.addExchange', sessionId)) {
+      return;
+    }
     if (!exchangeId) {
       console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
     }
     const eid = exchangeId ?? null;
+    // S5: provenance minted here, per turn, from the boundary-resolved posture.
+    // The exchange id (or a per-call reference) is the typed source's turnId.
+    const turnRef = exchangeId ?? globalThis.crypto.randomUUID();
+    const userProvenance = mintTurnProvenance(posture, 'user', turnRef, sessionId);
+    const assistantProvenance = mintTurnProvenance(posture, 'assistant', turnRef, sessionId);
+    if (!userProvenance || !assistantProvenance) {
+      return; // mint refused — no durable object without provenance (S5)
+    }
     // User turn first (seq=0) — use clock_timestamp() so each INSERT gets its
     // own wall-clock value even inside the same transaction.
     await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
-       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp())
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
+       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp(), 'normal', $5::jsonb)
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
-      [userId, sessionId ?? null, userMessage, eid]
+      [userId, sessionId ?? null, userMessage, eid, JSON.stringify(userProvenance.toJson())]
     );
     // Assistant turn second (seq=1) — clock_timestamp() will be strictly later
     await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
-       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp())
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
+       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp(), 'normal', $5::jsonb)
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
-      [userId, sessionId ?? null, assistantResponse, eid]
+      [userId, sessionId ?? null, assistantResponse, eid, JSON.stringify(assistantProvenance.toJson())]
     );
   },
 

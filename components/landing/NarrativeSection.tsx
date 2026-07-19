@@ -23,10 +23,10 @@ export function NarrativeSection() {
 
             <p>MAIA doesn&apos;t diagnose you.</p>
 
-            <p>It doesn&apos;t rush to solve you.</p>
+            <p>She doesn&apos;t rush to solve you.</p>
 
             <p className="text-white/55">
-              It remembers what you&apos;ve chosen to remember, notices threads across
+              She remembers what you&apos;ve chosen to remember, notices threads across
               conversations, and asks questions that help you see your own life more clearly.
             </p>
 

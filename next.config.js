@@ -128,6 +128,15 @@ const nextConfig = {
           destination: '/now-what',
           permanent: false,
         },
+        // /now-what/guide never existed as a page — the rail compass pointed
+        // here from its introduction until 2026-07-16 (404, audit ruling R-B).
+        // The rail now targets /now-what; this alias catches stale client
+        // bundles still pushing the old path after deploy.
+        {
+          source: '/now-what/guide',
+          destination: '/now-what',
+          permanent: false,
+        },
         // /now-what — room as entry (2026-07-08). The front door of the
         // Now What? field is the live room, not the pitch slideshow. Redirects
         // run BEFORE middleware, so the unauthenticated flow composes cleanly:

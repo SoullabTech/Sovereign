@@ -44,11 +44,19 @@ export function MaiaSection() {
               className="mt-4 text-3xl sm:text-4xl font-extralight tracking-wide text-white"
               style={{ fontFamily: "'Crimson Pro', serif" }}
             >
-              A companion for your whole life
+              A relational intelligence for human flourishing
             </h2>
             <p className="mt-4 text-base text-white/50 leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-              MAIA helps you think more clearly, relate more deeply, and cultivate your own wisdom — not replace it.
-              Not a chatbot. A companion for reflection, guidance, and continuity.
+              MAIA supports personal growth, creativity, meaningful work, relationships,
+              communities, and collective experiences by helping people remain connected to
+              what matters most across time.
+            </p>
+            <p
+              className="mt-5 text-base sm:text-lg font-extralight italic leading-relaxed text-white/60"
+              style={{ fontFamily: "'Crimson Pro', serif" }}
+            >
+              The experiences that shape our lives are important. The relationships that carry
+              them forward may be even more so.
             </p>
           </div>
         </SectionReveal>
@@ -58,17 +66,23 @@ export function MaiaSection() {
           {/* Left: MAIA experiential */}
           <SectionReveal>
             <div className="flex flex-col justify-center">
+              <p className="text-base text-white/50 leading-relaxed mb-6" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
+                Rather than replacing human connection, MAIA exists to support it — helping
+                individuals, groups, and communities preserve continuity, reflection, and meaning
+                as life unfolds.
+              </p>
               <p className="text-base text-white/50 leading-relaxed mb-8" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
                 Governed by an irreducible oath — consent, containment, non-manipulation, continuity.
-                MAIA offers reflection and choice, never command or diagnosis. It is built to return you,
+                MAIA offers reflection and choice, never command or diagnosis. She is built to return you,
                 more fully, to your own life.
               </p>
 
               <div className="space-y-3.5 border-l border-white/10 pl-5 mb-8">
                 {[
+                  ['A host who knows the house', 'Soullab is a house of rooms — journal, changes, decisions, ideas, astrology, a next step when you\'re unsure. Conversation is the hallway: MAIA knows every room and helps you find your way, without ever taking over your path.'],
                   ['Speaks in modes', 'Talk for dialogue, Care for counsel, Note for capturing what matters — so the relationship fits the moment.'],
-                  ['Memory with consent', 'Sanctuary Mode lets you speak freely with nothing retained. There is no stealth memory.'],
-                  ['Oriented to your sovereignty', 'Not built to capture attention or create dependence. Built to amplify what is already yours.'],
+                  ['Memory with consent', 'What you choose to keep becomes continuity; reflection builds instead of starting over. Sanctuary Mode lets you speak freely with nothing retained. There is no stealth memory.'],
+                  ['Oriented to your sovereignty', 'Not built to capture attention or create dependence. Built to return your life outward into the world — never deeper into the app.'],
                 ].map(([title, body]) => (
                   <div key={title}>
                     <p className="text-sm font-medium text-white/80" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>{title}</p>
@@ -76,6 +90,14 @@ export function MaiaSection() {
                   </div>
                 ))}
               </div>
+
+              <p
+                className="text-white/75 text-base sm:text-lg font-extralight italic leading-relaxed mb-8"
+                style={{ fontFamily: "'Crimson Pro', serif" }}
+              >
+                From personal growth to living communities, MAIA helps meaningful
+                relationships endure across time.
+              </p>
 
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <Link
@@ -97,9 +119,9 @@ export function MaiaSection() {
             </div>
           </SectionReveal>
 
-          {/* Right: Holoflower card */}
+          {/* Right: free-floating holoflower */}
           <SectionReveal delay={0.15}>
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+            <div className="relative p-6">
               {/* Violet aura */}
               <div className="pointer-events-none absolute inset-0">
                 <div
@@ -122,10 +144,10 @@ export function MaiaSection() {
 
               <div className="relative mx-auto mt-2 flex h-[340px] w-full max-w-[420px] items-center justify-center">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-75">
+                  <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-90">
                     <Image
                       src="/holoflower-studio-transparent.png"
-                      alt="Holoflower"
+                      alt="The Holoflower — Soullab's elemental mandala, slowly turning"
                       fill
                       sizes="(max-width: 1024px) 420px, 420px"
                       className="object-contain"
@@ -133,10 +155,9 @@ export function MaiaSection() {
                     />
                   </div>
                 </div>
-                <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
               </div>
 
-              <div className="mt-6">
+              <div className="mt-6 text-center">
                 <div className="text-sm font-medium text-white">Soullab</div>
                 <div className="mt-1 text-sm text-white/70">
                   A living environment for practice, community, and inner guidance.
@@ -189,9 +210,9 @@ export function MaiaSection() {
             </button>
 
             <p className="text-white/60 leading-relaxed text-center text-base mb-6" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-              MAIA is the first companion built on AIN OS — our constitutional operating environment
-              for trustworthy human-AI relationships. Rather than teaching every application how to behave
-              independently, AIN OS provides shared relational commitments that MAIA inherits by design.
+              MAIA is built on AIN OS, our underlying architecture for trustworthy human-AI
+              relationships. It provides shared commitments around consent, continuity, provenance,
+              and stewardship so these principles do not have to be rebuilt each time.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-6">

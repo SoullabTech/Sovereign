@@ -332,6 +332,10 @@ export async function POST(request: NextRequest) {
         memberId,
         lastMemberMessage,
         fieldContext: body?.fieldContext,
+        // Program door / member-named engagement: scopes the position block
+        // only (the whole field stays composed either way) — orientation,
+        // never routing.
+        program: body?.program,
         roomTag: 'NowWhat',
         ephemeralSessionId: 'now-what-ephemeral',
       });

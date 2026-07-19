@@ -35,6 +35,7 @@ import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from '@/components/maia/vision-studio/RoomHoloflower';
+import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
 
 // — Threshold staging (Now What?) —
 // The arrival surfaces are staged, not listed: a display serif for the room's
@@ -58,7 +59,7 @@ interface ProposedThread { title: string; reflection: string; groundedIn: string
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread { title: string; origin: 'maia_proposed' | 'member_authored'; }
 interface CarryPayload {
-  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean }[];
+  proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean; kind?: ThreadKind }[];
   created: { title: string; shareWithPractitioner: boolean }[];
 }
 interface CellCandidate {
@@ -168,6 +169,23 @@ const CLOSURE_QUESTION = 'Before we pause — what surprised you in what you jus
 interface Props {
   phase?: string;
   fieldContext?: string;
+  /** Program door within the field (catalog spec) — scopes the position block only. */
+  program?: string;
+}
+
+// — Program position (arrival payload; rides the field-note room-load GET) —
+interface ArrivalPositionPayload {
+  focalPoint: string;
+  statedBy: 'member_confirmed' | 'member_stated' | 'practitioner_seeded';
+  footing: 'confirmed-current' | 'assumed-from-last-known';
+  confirmedAt: string | null;
+}
+interface ProgramArrivalPayload {
+  programSlug: string;
+  programTitle: string | null;
+  cohortFocalPoint: string | null;
+  position: ArrivalPositionPayload | null;
+  engagements: { programSlug: string; title: string | null; focalPoint: string }[];
 }
 
 /**
@@ -175,7 +193,7 @@ interface Props {
  * client experience lives in its own namespace and does not modify framework
  * surfaces. It may earn its way into shared architecture through observation.
  */
-export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
+export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) {
   const nowWhat = true;
   const [roomPhase, setRoomPhase] = useState<RoomPhase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -209,6 +227,17 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
   // entered is the member's "Come in" — the welcome orients, it is never a wall.
   const [returnChecked, setReturnChecked] = useState(false);
   const [entered, setEntered] = useState(false);
+
+  // — Program position (the room shows its anchoring instead of asking to be
+  //   trusted). todayProgram = the door they came through, or the engagement
+  //   they named at the generic door. Dismissing the arrival line writes
+  //   NOTHING — enrollment happens only on affirmation. —
+  const [programArrival, setProgramArrival] = useState<ProgramArrivalPayload | null>(null);
+  const [todayProgram, setTodayProgram] = useState<string | undefined>(program);
+  const [anchorDismissed, setAnchorDismissed] = useState(false);
+  const [anchorCorrecting, setAnchorCorrecting] = useState(false);
+  const [anchorDraft, setAnchorDraft] = useState('');
+  const [anchorBusy, setAnchorBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<string>(`vs-${Date.now()}`);
 
@@ -274,12 +303,18 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch(`/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}`);
+        const programParam = program ? `&program=${encodeURIComponent(program)}` : '';
+        const res = await apiFetch(
+          `/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}${programParam}`,
+        );
         if (res.ok) {
           const json = await res.json().catch(() => ({}));
           const threads: { title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
           const practice = threads.find(t => t.spiralogic_phase === 'practice');
           if (practice && !cancelled) setPriorPractice(practice.title);
+          // Arrival payload (program position) rides the same load — null when
+          // the field declares no anchoring; the line simply does not render.
+          if (json?.arrival && !cancelled) setProgramArrival(json.arrival);
         }
       } catch {
         // Quiet fallback: no return context — the room simply begins fresh.
@@ -288,7 +323,87 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
       }
     })();
     return () => { cancelled = true; };
-  }, [nowWhat, fieldContext]);
+  }, [nowWhat, fieldContext, program]);
+
+  // Re-resolve the arrival payload for an engagement named at the generic door.
+  async function loadArrivalFor(programSlug: string) {
+    if (!fieldContext) return;
+    try {
+      const res = await apiFetch(
+        `/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}&program=${encodeURIComponent(programSlug)}`,
+      );
+      if (res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json?.arrival) { setProgramArrival(json.arrival); setAnchorDismissed(false); }
+      }
+    } catch {
+      // Quiet fallback — orientation is a nicety, never a blocker.
+    }
+  }
+
+  // — Position gestures. Confirm and correct write; dismiss writes NOTHING
+  //   (zero residue — a forwarded link opened by a non-participant leaves no
+  //   trace). Depart hard-clears; the copy says exactly what it does. —
+  async function postPositionGesture(gesture: Record<string, unknown>): Promise<boolean> {
+    if (!fieldContext || anchorBusy) return false;
+    setAnchorBusy(true);
+    try {
+      const res = await apiFetch('/api/now-what/program-position', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldContext,
+          ...(todayProgram ? { program: todayProgram } : {}),
+          ...gesture,
+        }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      setAnchorBusy(false);
+    }
+  }
+
+  async function confirmPosition() {
+    const focalPoint = programArrival?.cohortFocalPoint;
+    if (!focalPoint) return;
+    const ok = await postPositionGesture({ confirm: true });
+    if (ok) {
+      setProgramArrival(prev => prev ? {
+        ...prev,
+        position: { focalPoint, statedBy: 'member_confirmed', footing: 'confirmed-current', confirmedAt: new Date().toISOString() },
+      } : prev);
+      setAnchorCorrecting(false);
+    }
+  }
+
+  async function statePosition() {
+    const text = anchorDraft.trim().slice(0, 300);
+    if (!text) return;
+    const ok = await postPositionGesture({ focalPoint: text });
+    if (ok) {
+      setProgramArrival(prev => prev ? {
+        ...prev,
+        position: { focalPoint: text, statedBy: 'member_stated', footing: 'confirmed-current', confirmedAt: new Date().toISOString() },
+      } : prev);
+      setAnchorCorrecting(false);
+      setAnchorDraft('');
+    }
+  }
+
+  async function departPosition() {
+    const ok = await postPositionGesture({ depart: true });
+    if (ok) {
+      const departedSlug = programArrival?.programSlug;
+      setProgramArrival(prev => prev ? {
+        ...prev,
+        position: null,
+        engagements: prev.engagements.filter(e => e.programSlug !== departedSlug),
+      } : prev);
+      setAnchorDismissed(true);
+    }
+  }
 
   async function callInterview(history: Turn[], mode: 'turn' | 'propose') {
     const res = await apiFetch('/api/now-what/interview', {
@@ -301,6 +416,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         // The same opaque identifier used for return detection also lets the server
         // compose the practitioner's field into the turn (downstream of MAIA's own).
         ...(fieldContext ? { fieldContext } : {}),
+        // Today's program (door-entered or member-named): scopes the position
+        // block only — the whole field stays composed either way.
+        ...(todayProgram ? { program: todayProgram } : {}),
         ...(priorPractice ? { returningPractice: priorPractice } : {}),
       }),
     });
@@ -599,13 +717,18 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
 
   function collectPayload(): CarryPayload {
     const proposals = proposed.map(t => {
+      // The kind travels with the member's keep gesture so a question kept
+      // under "Questions still alive" persists AS a question (ruling
+      // 2026-07-13). The save route stores only kind === 'question'; other
+      // kinds stay unpersisted behind their gates.
+      const kind = t.kind;
       const rev = revising[t.title];
       if (rev !== undefined) {
         if (rev === '') return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
         // For a revised thread, the sharing key is the revised title the member chose.
-        return { title: t.title, decision: 'revise' as Decision, revisedTitle: rev, shareWithPractitioner: !!shared[rev] };
+        return { title: t.title, decision: 'revise' as Decision, revisedTitle: rev, shareWithPractitioner: !!shared[rev], kind };
       }
-      if (authored.some(a => a.title === t.title)) return { title: t.title, decision: 'keep' as Decision, shareWithPractitioner: !!shared[t.title] };
+      if (authored.some(a => a.title === t.title)) return { title: t.title, decision: 'keep' as Decision, shareWithPractitioner: !!shared[t.title], kind };
       return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
     });
     const trimmed = newThread.trim();
@@ -662,7 +785,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
               <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
             </div>
             <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
-              <p className="text-[11px] uppercase tracking-[0.35em] text-slate-500">Now What? · with Larry Closs</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-[#ffe27a]">Now What? · with Larry Closs</p>
               <h1 style={SERIF} className="text-4xl sm:text-5xl font-light text-slate-100 tracking-wide">Welcome.</h1>
             </div>
             <div style={fadeUpStyle(0.5)} className="space-y-5 text-slate-300 text-[17px] font-light leading-[1.85]">
@@ -696,9 +819,143 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           <div style={fadeUpStyle(0)} className="flex justify-center">
             <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
           </div>
-          <p style={fadeUpStyle(0.2)} className="text-center text-[11px] uppercase tracking-[0.35em] text-slate-500">
+          <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#ffe27a]">
             Now What?
           </p>
+
+          {/* — The room shows its anchoring instead of asking to be trusted.
+              Three outcomes: confirm (writes), correct in own words (writes,
+              verbatim), dismiss (writes NOTHING — enrollment only on
+              affirmation). Departure is the same gesture in reverse; its copy
+              says exactly what it does, no confirmation friction. — */}
+          {programArrival && !anchorDismissed && (
+            <div style={fadeUpStyle(0.3)} className="space-y-4 text-center border border-slate-800/70 rounded-xl px-5 py-5">
+              {programArrival.position?.footing === 'confirmed-current' ? (
+                <>
+                  <p className="text-slate-400 text-sm font-light leading-relaxed">
+                    {programArrival.programTitle ? (
+                      <>Working from the <span className="text-slate-200">{programArrival.programTitle}</span> — </>
+                    ) : (
+                      <>Working from — </>
+                    )}
+                    <span style={SERIF} className="text-slate-200 italic">{programArrival.position.focalPoint}</span>
+                  </p>
+                  <button
+                    onClick={departPosition}
+                    disabled={anchorBusy}
+                    className="text-slate-600 hover:text-slate-400 text-xs underline underline-offset-4 transition-colors disabled:opacity-40"
+                  >
+                    I&apos;ve finished this
+                  </button>
+                  <p className="text-slate-700 text-[11px] font-light leading-relaxed">
+                    This clears your position here; the door is open whenever you return.
+                  </p>
+                </>
+              ) : programArrival.cohortFocalPoint ? (
+                <>
+                  <p style={SERIF} className="text-slate-300 text-base font-light leading-relaxed">
+                    This room holds Larry&apos;s work
+                    {programArrival.programTitle ? (
+                      <> — you&apos;ve come in through the <span className="text-slate-100">{programArrival.programTitle}</span>,</>
+                    ) : (
+                      <> —</>
+                    )}{' '}
+                    current focus: <span className="text-slate-100 italic">{programArrival.cohortFocalPoint}</span>.
+                  </p>
+                  <p className="text-slate-400 text-sm font-light">Is that where you are?</p>
+                  {anchorCorrecting ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        aria-label="Where you actually are, in your own words"
+                        className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-sm font-light focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-2 text-center transition-colors"
+                        placeholder="Where are you, in your own words…"
+                        value={anchorDraft}
+                        maxLength={300}
+                        onChange={e => setAnchorDraft(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); statePosition(); } }}
+                      />
+                      <div className="flex items-center justify-center gap-x-4 text-xs font-light">
+                        <button
+                          onClick={statePosition}
+                          disabled={!anchorDraft.trim() || anchorBusy}
+                          className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                        >
+                          That&apos;s where I am
+                        </button>
+                        <span aria-hidden className="text-slate-700">·</span>
+                        <button
+                          onClick={() => { setAnchorCorrecting(false); setAnchorDraft(''); }}
+                          className="text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                          Back
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-x-4 text-sm font-light">
+                      <button
+                        onClick={confirmPosition}
+                        disabled={anchorBusy}
+                        className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                      >
+                        Yes, that&apos;s where I am
+                      </button>
+                      <span aria-hidden className="text-slate-700">·</span>
+                      <button
+                        onClick={() => setAnchorCorrecting(true)}
+                        className="text-slate-400 hover:text-slate-200 transition-colors"
+                      >
+                        I&apos;m somewhere else
+                      </button>
+                      <span aria-hidden className="text-slate-700">·</span>
+                      <button
+                        onClick={() => setAnchorDismissed(true)}
+                        aria-label="Not now — nothing is saved"
+                        className="text-slate-600 hover:text-slate-400 transition-colors"
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  )}
+                  {programArrival.position && programArrival.position.footing === 'assumed-from-last-known' && (
+                    <p className="text-slate-600 text-xs font-light leading-relaxed">
+                      Last time you said: <span className="italic">{programArrival.position.focalPoint}</span>
+                    </p>
+                  )}
+                </>
+              ) : null}
+
+              {/* Generic door: offer only what the MEMBER has declared — never
+                  the full catalog as an assignment. Listing is not asking. */}
+              {!todayProgram && programArrival.engagements.filter(e => e.programSlug !== 'general').length > 0 && (
+                <div className="pt-2 space-y-2 border-t border-slate-800/60">
+                  <p className="text-slate-500 text-xs font-light leading-relaxed">
+                    You&apos;ve been working from{' '}
+                    {programArrival.engagements.filter(e => e.programSlug !== 'general').map(e => e.title ?? e.programSlug).join(' and ')}.
+                    Which are you bringing today — or something else?
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-light">
+                    {programArrival.engagements.filter(e => e.programSlug !== 'general').map(e => (
+                      <button
+                        key={e.programSlug}
+                        onClick={() => { setTodayProgram(e.programSlug); loadArrivalFor(e.programSlug); }}
+                        className="text-slate-400 hover:text-slate-200 transition-colors"
+                      >
+                        {e.title ?? e.programSlug}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setAnchorDismissed(true)}
+                      className="text-slate-600 hover:text-slate-400 transition-colors"
+                    >
+                      Something else
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {returning ? (
             <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
@@ -805,6 +1062,17 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             <p className="text-slate-500 text-xs font-light leading-relaxed">
               What you carry stays private in your own field. Sharing with your practitioner is a separate, explicit choice — off by default.
             </p>
+            {/* Per-room trust copy (ruling 2026-07-13) — claims scoped to THIS
+                environment's store paths, all true by construction of the
+                field-note and position routes. */}
+            <div className="text-left pt-2">
+              <RoomTrustCopy
+                holds="A live conversation, and — at its end — only what you explicitly choose to carry into your field: threads, a practice, an offering, a question."
+                doesNotHold="Your field receives nothing you didn't choose. No categories, no elemental scores, no grades — and dismissing anything writes nothing at all."
+                whoSees="The conversation is yours. What you carry is visible to your practitioner only thread-by-thread, only when you explicitly mark it — never by default."
+                control="Keep, revise, discard, or split every proposal. If you're in a program, confirm or restate your position in your own words, or depart — departure erases it entirely."
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1127,7 +1395,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                         <button
                           onClick={() => { handleDecision(t, 'keep'); }}
                           className="text-slate-400 hover:text-slate-200 underline underline-offset-2"
-                        >carry</button>
+                        >keep</button>
                         <button
                           onClick={() => setRevising(r => ({ ...r, [t.title]: t.title }))}
                           className="text-slate-500 hover:text-slate-300 underline underline-offset-2"
@@ -1138,7 +1406,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                         >leave</button>
                       </>
                     )}
-                    {kept && <span className="text-slate-500 italic">carried</span>}
+                    {kept && <span className="text-slate-500 italic">kept</span>}
                     {rev === '' && (
                       <button
                         onClick={() => setRevising(r => { const n = { ...r }; delete n[t.title]; return n; })}
@@ -1149,7 +1417,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
                       <button
                         onClick={() => { handleDecision(t, 'revise', rev); }}
                         className="text-slate-400 hover:text-slate-200 underline underline-offset-2"
-                      >carry revised</button>
+                      >keep revised</button>
                     )}
                   </div>
                   {/* Share toggle — only shown when thread is carried (kept or carry-revised) */}
@@ -1198,7 +1466,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
         {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
 
         <div className="border-t border-slate-900 pt-4 text-slate-600 text-xs font-light leading-relaxed space-y-1">
-          <p>What you carry enters your own Living Field — private by default.</p>
+          <p>What you keep enters your own Living Field — private by default.</p>
           <p>Sharing a thread with your practitioner is a separate choice, per thread; nothing is shared unless you check it.</p>
           <p>Only what you authored or affirmed. Not a record of this conversation. Nothing the system concluded about you.</p>
         </div>
@@ -1209,13 +1477,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             disabled={saving}
             className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
           >
-            {saving ? 'Saving…' : 'Carry what I chose'}
+            {saving ? 'Saving…' : 'Keep what I chose'}
           </button>
           <button
             onClick={() => carry({ proposals: [], created: [] })}
             className="text-slate-600 hover:text-slate-400 text-sm underline underline-offset-4 transition-colors"
           >
-            Leave without carrying
+            Leave without keeping
           </button>
         </div>
       </div>
@@ -1240,7 +1508,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           />
         </div>
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-[0.35em] text-slate-500">{roomTitle}</p>
+          <p className={`text-xs uppercase tracking-[0.35em] ${nowWhat ? 'text-[#ffe27a]/80' : 'text-slate-500'}`}>{roomTitle}</p>
           {!nowWhat && <p className="text-slate-400 text-sm font-light">{phaseLabel}</p>}
         </div>
         {turns.length >= 4 && (
@@ -1249,7 +1517,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
             disabled={working}
             className="text-slate-500 hover:text-slate-300 text-xs underline underline-offset-2 transition-colors disabled:opacity-40"
           >
-            Listen back
+            Keep — listen back
           </button>
         )}
         <style jsx>{`
@@ -1437,24 +1705,40 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext }: Props) {
           }}
         />
         <div className="flex flex-wrap justify-between items-center mt-3 gap-3">
-          <div className="flex items-center gap-4">
-            <span className="text-slate-500 text-xs hidden sm:inline">Enter to send · Shift+Enter for newline</span>
-            <button
-              onClick={() => setShowBring(v => !v)}
-              className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors"
-            >
-              Bring something with you
-            </button>
-            {/* Exit symmetric to the entry gesture: the threshold out of the
-                conversation and into the carry → practice → life sequence. */}
-            {turns.length >= 2 && (
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
+            <span className="text-slate-500 text-xs hidden sm:inline pt-0.5">Enter to send · Shift+Enter for newline</span>
+            {/* YPO-grade rule (founder, 2026-07-13): a busy CEO understands
+                every action in three seconds. Function words lead; the
+                doctrine language is flavor, never interface. The captions
+                below are the ruling's exact words — do not "clean up" either
+                gesture back to the doctrine phrase alone: the founder, twice
+                while informed, could not find keeping when it read that way. */}
+            <div className="flex flex-col items-start gap-0.5">
               <button
-                onClick={listenBack}
-                disabled={working}
-                className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors disabled:opacity-30"
+                onClick={() => setShowBring(v => !v)}
+                className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors"
               >
-                Take something back with you
+                Bring something with you
               </button>
+              <span className="text-slate-400 text-xs font-light">
+                Start this session from a saved thread or a note.
+              </span>
+            </div>
+            {/* Exit symmetric to the entry gesture: the threshold out of the
+                conversation and into the keep → practice → life sequence. */}
+            {turns.length >= 2 && (
+              <div className="flex flex-col items-start gap-0.5">
+                <button
+                  onClick={listenBack}
+                  disabled={working}
+                  className="text-slate-400 hover:text-slate-200 text-sm underline underline-offset-2 transition-colors disabled:opacity-30"
+                >
+                  Keep — take something back with you
+                </button>
+                <span className="text-slate-400 text-xs font-light">
+                  End the session. Save what matters. Pick a practice. Name a question.
+                </span>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">

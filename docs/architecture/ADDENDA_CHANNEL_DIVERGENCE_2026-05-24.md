@@ -111,3 +111,35 @@ This closure note covers what was wired. It does not claim what was not wired. T
 ### Sequencing context
 
 This work unblocks **gate 1** of the priority-thread sequence (per `CLAUDE.md` priority thread). Gates 2–4 (consent toggle / engagement-shape clarification / production verification) remain ahead of episodic spec opening.
+
+## §IX. Closure (2026-07-13) — §V step 4 complete: DEEP-primary audited, consultation lane wired
+
+Per Kelly's directive 2026-07-13 (*"wire episodic memory fully"*), the §II.C audit was executed. Findings and actions:
+
+### Audit result: DEEP-primary anatomy
+
+`consciousnessOrchestrator.processRequest` (`lib/orchestration/consciousness-orchestrator.ts:1011`) forwards only `{sessionId, userId, sessionHistory}` into `orchestrateResponse`, discarding all addenda. The 10-stage pipeline it runs (witness → recall → retrieve → analyze → elemental → quest → enhance → reciprocal → observe → synthesize) produces its draft by **template weaving** (`synthesize` → `weaveResponse`), not by reading a system prompt. Stage 7 (`enhanceWithAI` → `aiBridge.generateEnhancedSynthesis`) consumes structured streams, not a prompt string. **There is no prompt seam in the local draft machine by construction.** Wiring MaiaContext addenda into it would require redesigning the orchestrator, not attaching to it — out of scope, and the machine sits Cat-4-adjacent in the six-category typology.
+
+### What WAS wired (this cut)
+
+The **Claude consultation lane** (`consultClaudeForConsciousness`, `lib/consciousness/claudeConsciousnessService.ts`) is the only real prompt seam on DEEP-primary — it builds a `systemPrompt` and calls `MultiLLMProvider.generate`. It is env-gated OFF by default (`MAIA_USE_CLAUDE_CONSULTATION !== 'true'`), but it is the one path where a future member turn could generate without member memory. Closed:
+
+1. `ConsciousnessConsultationRequest.contextAddenda?: string` — new optional field; the service never loads memory itself, callers' consent gates decide what arrives.
+2. `consultClaudeForConsciousness` appends the addenda to the consultation system prompt under a `MEMBER MEMORY CONTEXT` header (grounding-only framing; content boundaries live inside the blocks).
+3. The DEEP call site in `lib/sovereign/maiaService.ts` (STEP 3) composes `conversationalRecallAddendum + episodicRecallAddendum + atomsAddendum` from meta and passes them through. Discoverable log marker: `[MAIA] deep-consultation recall-addenda { chars }`.
+
+### Honest label (label travels)
+
+- **Wired ≠ surfacing**: `agent_runs` shows **zero DEEP turns in the last 7 days of production** (CORE 645, FAST 198), and the consultation lane is env-disabled. This wire is reachability-complete and traffic-dormant. No "DEEP live" claim is authorized by this cut; the claim it does authorize is: *no prompt seam remains, on any tier, where a member turn can generate without its consent-gated recall blocks.*
+- **§V step 5 (atoms)** — closed previously: `atomsAddendum` is on `MaiaContext`, in the FAST template, in `ADDENDA_SPECS`, and production `prompt_block_layers` shows `atoms: true` rows.
+- **§V step 6 (production verification)** — closed for conversational 2026-07-13 via durable `runtime_events` evidence (5 distinct member prefixes / 30 days, FAST+CORE). Episodic awaits its first witness (zero marked moments exist in production as of this writing).
+
+### Deliberately NOT wired (documented, not skipped)
+
+- **Local orchestrator draft** — no prompt seam exists (above). Recall reaches DEEP output today via the repair/regeneration path (§VIII item 3), which is where DEEP responses that fail Socratic validation are actually regenerated.
+- **`/api/between/chat`** — Tier-2 live-secondary per `MAIA_ROUTE_AUTHORITY_MAP.md` with an observe-only edit policy, zero `agent_runs` rows in the current window, and an unresolved consent question (surfacing personal member-marked moments in the BETWEEN container is a sovereign-placement ruling, not a wiring decision). Requires Kelly's ruling before any recall wiring.
+- **Dormant routes** (`/api/sovereign/app/maia` root, `/api/oracle/conversation`) — superseded headers explicitly forbid new wiring; patches there do not reach live traffic.
+
+### Discipline maintained
+
+The `origin_route` label `/api/sovereign/app/maia` in `agent_runs` (468 rows/72h) originates from the **list route's own meta stamp** (`list/route.ts:235`), not from the dormant root route — verified this cut before concluding no hidden unwired ingress exists. The canonical live chat ingress remains `/api/sovereign/app/maia/list`, which carries conversational + episodic + atoms in prompt with durable telemetry.

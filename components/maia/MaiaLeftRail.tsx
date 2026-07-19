@@ -180,10 +180,10 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    // living-field is a full page (/maia/living-field), not an in-shell world panel —
-    // navigate to it directly. onWorldChange would open an empty Context panel because
-    // no contextual panel is registered for it.
-    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library' || id === 'vision-studio' || id === 'living-field') {
+    // living-field and anchor are full pages (/maia/living-field, /maia/anchor), not
+    // in-shell world panels — navigate to them directly. onWorldChange would open an
+    // empty Context panel because no contextual panel is registered for them.
+    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library' || id === 'vision-studio' || id === 'living-field' || id === 'anchor') {
       router.push(route);
     } else {
       // If we're in a boundary, world clicks need router navigation
@@ -453,7 +453,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
           const isActive = pathname?.startsWith('/now-what') ?? false;
           return (
             <button
-              onClick={() => router.push('/now-what/guide')}
+              onClick={() => router.push('/now-what')}
               className={`
                 group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
                 ${isActive

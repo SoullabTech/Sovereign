@@ -12,6 +12,7 @@ import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSign
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
+import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
 import { logAgentRun } from '@/lib/services/corpusCallosumService';
 
 // =============================================================================
@@ -109,7 +110,7 @@ import { parseFilingInstruction, applyConversationalKeepResult, type FilingInstr
 // this filename is misleading — it serves the chat path.
 // Reference implementation: app/api/between/chat/route.ts lines 1847–1885.
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
-import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref } from '@/lib/maia/memoryLoaders';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref, loadRecentMarkedEpisodes, loadEpisodicRecallPref } from '@/lib/maia/memoryLoaders';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
@@ -117,6 +118,9 @@ import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, ty
 // 💬 Phase 2 — Conversational recall (wire site correction per spec §IX, 2026-05-24).
 // Live route wire — replaces oracle/conversation/route.ts which receives no real traffic.
 import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
+// 📖 Episodic Phase 2 — member-marked moments (substrate lane only; does NOT
+// open Themes/Reflections). Mirrors the conversational Phase 2 wire pattern.
+import { formatMarkedEpisodesForPrompt, summarizeMarkedEpisodesForLog } from '@/lib/maia/episodicRecallBlock';
 // 🔐 De-frag step 3 — runtime contract: every getMaiaResponse() call must pass through this
 import { buildMaiaRuntimeContext, formatRuntimeContextForResponse } from '@/lib/maia/maiaRuntimeContext';
 // 🔐 De-frag step 5 — provider health guard: throws before generation, never soft-returns
@@ -662,6 +666,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 🚪 PLACE (House Presence, 2026-07-17): facts-only current-room context.
+    // Arrives ONLY inside a member-sent message body; validated to a strict
+    // allowlist of declarative fields (lib/maia/presence/place.ts). Renders a
+    // present-tense orientation block that explicitly forbids inferring why
+    // the member is there. Invalid/absent place → no block, never an error.
+    const placeContextValidated = validatePlaceContext((body as any)?.place);
+    const placeAddendum = placeContextValidated ? buildPlaceAddendum(placeContextValidated) : undefined;
+    if (placeAddendum) {
+      console.log(`🚪 [Route] place context applied: ${placeContextValidated!.placeId} (${placeContextValidated!.route})`);
+    }
+
     // 🏢 STUDIO SURFACE: Build prompt addendum when running inside Soullab Studio
     const surfaceMode = (meta as any)?.surface as string | undefined;
     const studioCtx = (meta as any)?.studioContext as { surface?: string; clientId?: string; pathname?: string } | undefined;
@@ -754,6 +769,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // by maiaService.ts via meta.conversationalRecallAddendum.
     let conversationalRecallAddendum: string | undefined;
     let priorExchangesCount = 0;
+    // 📖 Episodic Phase 2 — member-marked moments (substrate lane only). Block is
+    // built inside the if-block below, consumed by maiaService.ts via
+    // meta.episodicRecallAddendum. Does NOT open Themes/Reflections.
+    let episodicRecallAddendum: string | undefined;
+    let markedEpisodesCount = 0;
     // 🧬 Developmental layer — declared outside the memory-orchestrator try block
     // so the count is in scope when buildMemoryHealth() reads it below. Prior bug:
     // loader ran every turn and orchestrator used the rows, but health input was
@@ -850,6 +870,32 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.warn('[MAIA] conversational-block error (non-fatal):', err);
         }
 
+        // 📖 Episodic Phase 2 — member-marked moments only (never significance/
+        // emotional_intensity/breakthrough_level inference). Suppression rules
+        // (opt-out / Sanctuary / empty / non-recent) live in the formatter;
+        // emission is logged here for production verification. Sanctuary path
+        // is structurally blocked above by allowCrossSessionMemory, but mode is
+        // passed explicitly as defense-in-depth.
+        try {
+          const episodicRecallEnabled = await loadEpisodicRecallPref(userId);
+          const markedEpisodes = await loadRecentMarkedEpisodes(userId, 5);
+          markedEpisodesCount = markedEpisodes.length;
+          const episodicRecall = formatMarkedEpisodesForPrompt(markedEpisodes, {
+            recallEnabled: episodicRecallEnabled,
+            mode: isSanctuary ? 'Sanctuary' : null,
+          });
+          if (episodicRecall.block) {
+            episodicRecallAddendum = episodicRecall.block;
+          }
+          console.log('[MAIA] episodic-block', {
+            candidateCount: markedEpisodes.length,
+            ...summarizeMarkedEpisodesForLog(episodicRecall),
+            userId: userId.slice(0, 8) + '...',
+          });
+        } catch (err) {
+          console.warn('[MAIA] episodic-block error (non-fatal):', err);
+        }
+
         const readiness = detectForwardReadiness(message);
         if (readiness.ready) {
           console.log('[MAIA/sovereign] forward-readiness', {
@@ -898,6 +944,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       // 'ok' here means "the substrate carried candidate material this turn." Whether
       // that material actually reached the prompt is a separate signal.
       conversational: { count: priorExchangesCount },
+      // 📖 Episodic layer (Phase 2, 2026-07-13): count is the retriever's
+      // member-marked candidate count (does NOT distinguish emitted from
+      // suppressed — emission detail lives in the [MAIA] episodic-block log
+      // line). 'ok' here means "the member has marked moments this turn."
+      episodic: { count: markedEpisodesCount },
       // 🧬 Developmental layer (wire site fix, 2026-05-26). loadRecentDevelopmentalMemories
       // runs every turn (line ~682) and the orchestrator uses the rows; the binding from
       // loader → health was missing, causing runtime_events.memory_layers.developmental to
@@ -936,6 +987,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         // 💬 Phase 2 — conversational recall observability (PROMPT_BLOCK_CHARS sums this).
         // Emission detail lives in [MAIA] conversational-block log line above.
         conversational: conversationalRecallAddendum,
+        // 📖 Phase 2 — episodic recall observability. Emission detail lives in
+        // the [MAIA] episodic-block log line above.
+        episodic: episodicRecallAddendum,
       },
     });
 
@@ -1004,6 +1058,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           atomsAddendum,               // 🧬 Layer 5 — member-placed portfolio atoms
           atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
+          episodicRecallAddendum, // 📖 Phase 2 — member-marked moments (episodic layer, substrate lane only)
+          placeAddendum, // 🚪 House Presence — facts-only current-room orientation
         },
       }),
       SOVEREIGN_TIMEOUT_MS,

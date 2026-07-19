@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Branch guard — an invalid branch name must not reach the remote at all.
+# The commit hook blocks commits on disallowed branches, but without this
+# guard a blocked commit could still push an (empty) bad branch to origin.
+# Validates the REMOTE ref of every push (that name is what lands on origin).
+# Allowlist lives in scripts/check-branch-allowed.sh (shared with pre-commit).
+ZERO_SHA="0000000000000000000000000000000000000000"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ -z "$remote_ref" ]; then continue; fi
+  # Deletions are always allowed — removing a bad remote branch is cleanup.
+  if [ "$local_sha" = "$ZERO_SHA" ]; then continue; fi
+  case "$remote_ref" in
+    refs/heads/*)
+      scripts/check-branch-allowed.sh PUSH "${remote_ref#refs/heads/}"
+      ;;
+  esac
+done
+
+scripts/check-no-secrets.sh
+scripts/check-no-large-staged-files.sh

@@ -4,7 +4,7 @@
 // 🔖 BUILD_STAMP: 2026-06-02_ios_playback_watchdog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users, Bookmark } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -168,6 +168,8 @@ import { voiceLock } from '@/lib/services/VoiceLock';
 import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
+import { useRouter } from 'next/navigation';
+import type { MaiaPlaceContext } from '@/lib/maia/presence/place';
 // REMOVED: Supabase persistence - now using sovereign PostgreSQL via /api/conversation/turns
 // import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
@@ -447,6 +449,10 @@ interface OracleConversationProps {
   // Ask MAIA — orientation + Knowledge Field stance (controlled from parent)
   askMode?: boolean;
   onAskModeChange?: (active: boolean) => void;
+  // 🚪 PLACE — facts-only current-room context (House Presence, 2026-07-17).
+  // Travels ONLY inside a message the member sends; never transmitted on
+  // route change, and never derived from behavior. See lib/maia/presence/place.ts.
+  placeContext?: MaiaPlaceContext;
 }
 
 interface ConversationMessage {
@@ -585,7 +591,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   fieldEnergyState,
   askMode: askModeProp,
   onAskModeChange: onAskModeChangeProp,
+  placeContext,
 }) => {
+  // Client router — doorway navigation must be client-side so the canonical
+  // MaiaPresence provider (and this conversation, when it is the global
+  // instance) survives the move. Full-document loads are the teardown the
+  // House Presence correction removes.
+  const router = useRouter();
   // Build telemetry — observability without ambient claim.
   // Console log always runs (inspectable). Visible strip only on explicit opt-in:
   //   ?debug=build (or ?debug=1) | localStorage.maia_debug_build='1' | window.__maiaShowBuildStamp()
@@ -964,6 +976,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
     return false;
   });
+
+  // 📌 "Keep this moment" — member-marked episodic moments (slice 2, 2026-07-13).
+  // Keyed by message.id. Presence of an entry means that message is currently
+  // kept; episodeId is required to undo. Absolute Sanctuary boundary: this
+  // gesture must never render, and its handlers must never fire, while
+  // isSanctuary is true (see render guard + handleKeepMoment/handleUnmarkMoment).
+  const [keptMoments, setKeptMoments] = useState<Record<string, { episodeId: string }>>({});
 
   // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior (default OFF for beta)
   const [interruptEnabled, setInterruptEnabled] = useState(() => {
@@ -4018,13 +4037,16 @@ I'm not sure what I'm feeling yet.`;
   }, [handleCaptureSpirit]);
 
   // 🚪 RELATIONAL ROUTING: Doorway action handler
+  // House Presence (2026-07-17): doorways use the client router, not
+  // window.location.href — a full-document load tore down the entire React
+  // tree (including the canonical MaiaPresence provider). Client navigation
+  // keeps the relationship mounted; the room takes the screen, MAIA remains.
   const handleDoorwayAction = useCallback((action: MaiaUiAction) => {
     setLastDoorwayTimestamp(Date.now());
     setDoorwayDismissedAt(Date.now());
     switch (action.type) {
       case 'open_journal':
-        sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/journal';
+        router.push('/journal');
         break;
       case 'open_reflection':
         // Use existing capture spirit flow
@@ -4033,31 +4055,23 @@ I'm not sure what I'm feeling yet.`;
         }
         break;
       case 'open_ideas':
-        sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/dashboard/ideas';
+        router.push('/maia/ideas');
         break;
       case 'open_decisions':
-        sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/dashboard/decisions';
+        router.push('/studio/decisions');
         break;
       case 'open_changes':
-        sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/dashboard/changes';
+        router.push('/studio/changes');
         break;
       // 🌐 WORLD DOORWAYS: Experiential spaces
-      // Set nav teardown flag BEFORE hard navigation so conversation restores on return.
-      // window.location.href is a full page load — React cleanup won't fire reliably,
-      // so we must set the flag explicitly here.
       case 'enter_patterns':
-        sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/worlds/patterns';
+        router.push('/worlds/patterns');
         break;
       case 'enter_journey':
-        sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/worlds/journey';
+        router.push('/worlds/journey');
         break;
     }
-  }, []);
+  }, [router]);
 
   // Update captured capsule (quick edits)
   const handleUpdateCapsule = useCallback(async (updates: Partial<CapsuleDTO>) => {
@@ -4714,6 +4728,10 @@ I'm not sure what I'm feeling yet.`;
           // 🏢 STUDIO SURFACE: When running inside Soullab Studio
           surface: surface ?? 'maia',
           studioContext: studioContext ?? undefined,
+
+          // 🚪 PLACE — facts-only current-room context. Sent ONLY here, inside
+          // a message the member chose to send. Route changes transmit nothing.
+          place: placeContext ?? undefined,
 
           // Field presence regulation — signals oracle to apply regulation arc
           fieldMode: fieldMode ?? false,
@@ -8071,6 +8089,60 @@ I'm not sure what I'm feeling yet.`;
                       }
                     };
 
+                    // 📌 "Keep this moment" — member-authored words only. Absolute
+                    // Sanctuary boundary: independently refuse here even though the
+                    // render guard below already hides the affordance in Sanctuary —
+                    // defense-in-depth per CLAUDE.md.
+                    const handleKeepMoment = async (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (isSanctuary) return;
+                      if (keptMoments[message.id]) return;
+                      const verbatimText = message.text ?? message.content ?? '';
+                      if (!verbatimText) return;
+                      try {
+                        const res = await apiFetch('/api/sovereign/episodes/mark', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            verbatimText,
+                            sourceSessionId: sessionId,
+                          }),
+                        });
+                        if (!res.ok) {
+                          toast.error('Could not keep this moment', { duration: 2000, position: 'bottom-center' });
+                          return;
+                        }
+                        const data = await res.json();
+                        setKeptMoments(prev => ({ ...prev, [message.id]: { episodeId: data.episode.episodeId } }));
+                      } catch {
+                        toast.error('Could not keep this moment', { duration: 2000, position: 'bottom-center' });
+                      }
+                    };
+
+                    const handleUnmarkMoment = async (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (isSanctuary) return;
+                      const kept = keptMoments[message.id];
+                      if (!kept) return;
+                      try {
+                        const res = await apiFetch(
+                          `/api/sovereign/episodes/mark?episodeId=${encodeURIComponent(kept.episodeId)}`,
+                          { method: 'DELETE' },
+                        );
+                        if (!res.ok) {
+                          toast.error('Could not undo', { duration: 2000, position: 'bottom-center' });
+                          return;
+                        }
+                        setKeptMoments(prev => {
+                          const next = { ...prev };
+                          delete next[message.id];
+                          return next;
+                        });
+                      } catch {
+                        toast.error('Could not undo', { duration: 2000, position: 'bottom-center' });
+                      }
+                    };
+
                     return (
                     <motion.div
                       key={message.id?.trim() || `msg-${message.role}-${typeof message.timestamp === 'string' ? message.timestamp : (message.timestamp?.toISOString?.() ?? 'no-ts')}-${index}`}
@@ -8116,6 +8188,42 @@ I'm not sure what I'm feeling yet.`;
                               <Users className="w-3 h-3" />
                               <span>Offer</span>
                             </button>
+                          )}
+                          {/* 📌 Keep this moment — member-authored messages only, sovereign
+                              placement covers only what the member placed. Never rendered
+                              during a Sanctuary session (absolute boundary, CLAUDE.md). */}
+                          {message.role === 'user' && !isSanctuary && (
+                            keptMoments[message.id] ? (
+                              <div className="flex items-center gap-1.5 text-emerald-400/80">
+                                <CheckCircle className="w-3 h-3" />
+                                <span>Kept.</span>
+                                <button
+                                  onClick={handleUnmarkMoment}
+                                  className="underline decoration-dotted hover:text-emerald-300 transition-colors"
+                                >
+                                  Undo
+                                </button>
+                                {/* Quiet door to the member's own review of what they
+                                    kept — same entry grammar as the anchor page's
+                                    "earlier". Holding language only (copy guard). */}
+                                <span aria-hidden className="text-emerald-400/40">·</span>
+                                <a
+                                  href="/maia/moments"
+                                  className="underline decoration-dotted hover:text-emerald-300 transition-colors"
+                                >
+                                  Your moments
+                                </a>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={handleKeepMoment}
+                                className="flex items-center gap-1 text-maia-spice-400/60 hover:text-maia-spice-400 transition-colors"
+                                aria-label="Keep this moment — saves your exact words"
+                              >
+                                <Bookmark className="w-3 h-3" />
+                                <span>Keep this moment</span>
+                              </button>
+                            )
                           )}
                           <div className="flex items-center gap-1 text-maia-spice-400">
                             <Copy className="w-3 h-3" />
@@ -8501,8 +8609,7 @@ I'm not sure what I'm feeling yet.`;
         onViewInLab={() => {
           setShowCapturePanel(false);
           if (capturedCapsule) {
-            sessionStorage.setItem('maia_nav_teardown', 'true');
-            window.location.href = `/labtools/reflections/${capturedCapsule.id}`;
+            router.push(`/labtools/reflections/${capturedCapsule.id}`);
           }
         }}
       />
@@ -8658,8 +8765,7 @@ I'm not sure what I'm feeling yet.`;
         isOpen={showLabDrawer}
         onClose={() => setShowLabDrawer(false)}
         onNavigate={(path) => {
-          sessionStorage.setItem('maia_nav_teardown', 'true');
-          window.location.href = path;
+          router.push(path);
           setShowLabDrawer(false);
         }}
         onAction={async (action) => {
@@ -9141,8 +9247,7 @@ I'm not sure what I'm feeling yet.`;
             onClick={() => {
               clearReturnPath();
               setReturnPathState(null);
-              sessionStorage.setItem('maia_nav_teardown', 'true');
-              window.location.href = returnPath.path;
+              router.push(returnPath.path);
             }}
             className="flex items-center gap-2 px-1.5 py-0.5 hover:opacity-90 transition-opacity"
           >
