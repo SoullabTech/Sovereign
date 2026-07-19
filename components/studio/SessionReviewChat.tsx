@@ -46,7 +46,18 @@ interface SessionReviewChatProps {
   segmentCount: number;
   duration: number;
   caseId?: string | null;
+  /**
+   * Whether Parent Update applies to this session source. Default false:
+   * Parent Update is an rl_session-scoped artifact and must NOT appear merely
+   * because a review exists (it fails closed with session_not_found on scribe
+   * sessions). Only a caller whose session source + policy explicitly support
+   * it passes true. Future: a deliberate practitioner workflow with its own
+   * consent/recipient/provenance policy.
+   */
+  parentUpdateSupported?: boolean;
 }
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ---------------------------------------------------------------------------
 // Primary deliverables — always available once a session has content.
@@ -102,7 +113,7 @@ const LENS_PROMPTS: Record<ReviewLens, typeof CORE_PROMPTS> = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }: SessionReviewChatProps) {
+export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, parentUpdateSupported = false }: SessionReviewChatProps) {
   const durationMin = Math.floor(duration / 60);
   const durationSec = Math.floor(duration % 60);
   const hasContent = segmentCount > 0;
@@ -160,53 +171,91 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
       const nextQ = questionCount + 1;
       setQuestionCount(nextQ);
 
-      try {
-        const response = await apiFetch('/api/scribe/review-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reviewedSessionId,
-            currentSessionId: `studio-review-${reviewedSessionId}`,
-            question,
-            questionNumber: nextQ,
-            lens: activeLens,
-            clientName: clientNameRef.current,
-          }),
+      // One message bubble per request, updated in place: a long session shows
+      // truthful progress ("N of M segments read…") that resolves into the
+      // final answer, instead of a spinner then a generic error.
+      const msgId = `sr-${Date.now()}`;
+      const upsert = (content: string) =>
+        setMessages(prev => {
+          const idx = prev.findIndex(m => m.id === msgId);
+          if (idx === -1) return [...prev, { id: msgId, role: 'assistant' as const, content, timestamp: new Date() }];
+          const copy = prev.slice();
+          copy[idx] = { ...copy[idx], content };
+          return copy;
         });
 
-        const data = await response.json();
+      const deadline = Date.now() + 6 * 60 * 1000; // honest cap for very long sessions
+      let pollDelay = 2500;
 
-        if (data._meta && !transcriptQuality) {
-          setTranscriptQuality({
-            phantomRemoved: data._meta.phantomPrefixRemoved || null,
-            sampled: data._meta.segmentsSampled < data._meta.segmentCount,
-            segmentCount: data._meta.segmentCount,
-            segmentsSampled: data._meta.segmentsSampled,
-          });
-        }
+      try {
+        // Poll loop: the server runs long reviews as a background job and
+        // returns 202 {status:'processing'} until the artifact is ready.
+        // Distinct terminal states — processing, failed(stage), provider
+        // failure, load failure, connection loss — are never collapsed.
+        while (true) {
+          let data: any;
+          try {
+            const response = await apiFetch('/api/scribe/review-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reviewedSessionId,
+                currentSessionId: `studio-review-${reviewedSessionId}`,
+                question,
+                questionNumber: nextQ,
+                lens: activeLens,
+                clientName: clientNameRef.current,
+              }),
+            });
+            data = await response.json();
+          } catch (netErr) {
+            console.error('[SessionReview] connection', netErr);
+            upsert('The connection dropped while loading the review. Your session is safe — please try again.');
+            break;
+          }
 
-        const assistantMessage: ReviewMessage = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: data.success
-            ? data.response
-            : data.phase === 'generation'
+          if (data._meta && !transcriptQuality && data._meta.segmentCount !== undefined) {
+            setTranscriptQuality({
+              phantomRemoved: data._meta.phantomPrefixRemoved || null,
+              sampled: (data._meta.segmentsSampled ?? data._meta.segmentCount) < data._meta.segmentCount,
+              segmentCount: data._meta.segmentCount,
+              segmentsSampled: data._meta.segmentsSampled ?? data._meta.segmentCount,
+            });
+          }
+
+          if (data.status === 'processing') {
+            const done = data.progress?.done ?? 0;
+            const total = data.progress?.total ?? '…';
+            upsert(`Reviewing the full session — ${done} of ${total} segments read…`);
+            if (Date.now() > deadline) {
+              upsert('This review is taking longer than expected and may still be finishing in the background. Please try again in a moment.');
+              break;
+            }
+            await sleep(pollDelay);
+            pollDelay = Math.min(pollDelay + 1000, 6000);
+            continue;
+          }
+
+          if (data.status === 'failed') {
+            const where = data.stage === 'digest'
+              ? 'while reading part of the session'
+              : 'while drawing the parts together';
+            upsert(`I couldn't complete this review ${where}, so I did not produce a partial one. Your session is safe — please try again.`);
+            break;
+          }
+
+          if (data.success) {
+            upsert(data.response);
+            break;
+          }
+
+          upsert(
+            data.phase === 'generation'
               ? `I couldn't generate that just now — the language model was briefly unavailable. Your session is safe; please try again in a moment.${data.error ? ` (${data.error})` : ''}`
-              : `I wasn't able to load the session data.${data.error ? ` (${data.error})` : ' Please try again.'}`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      } catch (err) {
-        console.error('[SessionReview]', err);
-        setMessages(prev => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: 'Connection error. Please check the server is running and try again.',
-            timestamp: new Date(),
-          },
-        ]);
+              : `I wasn't able to load the session data.${data.error ? ` (${data.error})` : ' Please try again.'}`
+          );
+          break;
+        }
       } finally {
         setIsLoading(false);
       }
@@ -373,7 +422,7 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
               {lens}
             </button>
           ))}
-          {hasContent && (
+          {hasContent && parentUpdateSupported && (
             <button
               onClick={() => setParentUpdateOpen(true)}
               className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-xs bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/25 transition-colors"
@@ -519,13 +568,15 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
         )}
       </div>
 
-      {/* Parent Update Drawer */}
-      <ParentUpdateDrawer
-        sessionId={reviewedSessionId}
-        clientName={clientName}
-        isOpen={parentUpdateOpen}
-        onClose={() => setParentUpdateOpen(false)}
-      />
+      {/* Parent Update Drawer — only mounted for supported session sources */}
+      {parentUpdateSupported && (
+        <ParentUpdateDrawer
+          sessionId={reviewedSessionId}
+          clientName={clientName}
+          isOpen={parentUpdateOpen}
+          onClose={() => setParentUpdateOpen(false)}
+        />
+      )}
     </div>
   );
 }

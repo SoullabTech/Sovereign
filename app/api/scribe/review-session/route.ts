@@ -1,11 +1,27 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = false;
 export const runtime = 'nodejs';
-export const maxDuration = 90;
+// Long sessions run as a background job (see stagedReview); the POST itself
+// returns fast (cached / processing / failed), so this bound only needs to
+// cover the SIMPLE single-call path for sub-threshold sessions. Modestly
+// raised from 90 as immediate stabilization — it is not the architectural fix.
+export const maxDuration = 120;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
-import { buildSessionReviewPrompt, getCompletedSessionData, formatSessionForDisplay } from '@/lib/scribe/sessionReviewMode';
+import {
+  buildSessionReviewPrompt,
+  getCompletedSessionData,
+  formatSessionForDisplay,
+  loadReviewTurns,
+} from '@/lib/scribe/sessionReviewMode';
+import {
+  getOrStartReview,
+  hashTranscript,
+  isLongSession,
+  type ReviewMode,
+  type StagedInput,
+} from '@/lib/scribe/stagedReview';
 import {
   getMemberIdFromRequest,
   verifySessionOwnership,
@@ -13,6 +29,47 @@ import {
   type ScribeSession,
 } from '@/lib/scribe/scribeAuth';
 import { logAudit } from '@/lib/security/auditLog';
+
+function clientMeta(req: NextRequest) {
+  return {
+    ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+    userAgent: req.headers.get('user-agent') || 'unknown',
+  };
+}
+
+/**
+ * Write a single transcript-access GRANT row. Kept separate from
+ * authorizeTranscriptReview so the staged path can log exactly ONE grant per
+ * review (at job start) rather than one per poll.
+ */
+async function logReviewGrant(
+  req: NextRequest,
+  sessionId: string,
+  endpoint: 'review-session:POST' | 'review-session:GET',
+  memberId: string,
+): Promise<void> {
+  const { ipAddress, userAgent } = clientMeta(req);
+  await logAudit({
+    timestamp: new Date(),
+    userId: memberId,
+    action: 'access',
+    resource: 'scribe_transcript',
+    resourceId: sessionId,
+    ipAddress,
+    userAgent,
+    result: 'success',
+    metadata: { endpoint },
+  }).catch(() => {});
+}
+
+/** Map the practitioner's request to a staged synthesis mode. */
+function deriveReviewMode(question: string): ReviewMode {
+  const q = question.toLowerCase();
+  if (/layered overview|overview of this session/.test(q)) return 'overview';
+  if (/structured outline|outline of this session/.test(q)) return 'outline';
+  if (/key insights|insights and themes/.test(q)) return 'insights';
+  return 'question';
+}
 
 // ─── AUTHORIZATION (security patch, 2026-07-17) ──────────────────────────────
 // This route returns client-session transcript content. Before this patch it
@@ -40,9 +97,9 @@ async function authorizeTranscriptReview(
   req: NextRequest,
   sessionId: string,
   endpoint: 'review-session:POST' | 'review-session:GET',
+  opts?: { auditSuccess?: boolean },
 ): Promise<AuthzResult> {
-  const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const userAgent = req.headers.get('user-agent') || 'unknown';
+  const { ipAddress, userAgent } = clientMeta(req);
 
   const deny = async (
     memberId: string | null,
@@ -112,17 +169,19 @@ async function authorizeTranscriptReview(
     );
   }
 
-  await logAudit({
-    timestamp: new Date(),
-    userId: memberId,
-    action: 'access',
-    resource: 'scribe_transcript',
-    resourceId: sessionId,
-    ipAddress,
-    userAgent,
-    result: 'success',
-    metadata: { endpoint },
-  }).catch(() => {});
+  if (opts?.auditSuccess !== false) {
+    await logAudit({
+      timestamp: new Date(),
+      userId: memberId,
+      action: 'access',
+      resource: 'scribe_transcript',
+      resourceId: sessionId,
+      ipAddress,
+      userAgent,
+      result: 'success',
+      metadata: { endpoint },
+    }).catch(() => {});
+  }
 
   return { ok: true, memberId, session };
 }
@@ -145,15 +204,97 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const authz = await authorizeTranscriptReview(req, reviewedSessionId, 'review-session:POST');
+    // Authorize + ownership (+ audit DENIALS). Success audit is deferred: the
+    // staged path logs exactly one grant at job start, so polling never inflates
+    // the audit trail. The simple path logs its grant explicitly below.
+    const authz = await authorizeTranscriptReview(req, reviewedSessionId, 'review-session:POST', {
+      auditSuccess: false,
+    });
     if (!authz.ok) return authz.response;
 
-    // Logged only after authorization — the id no longer appears in logs for
-    // unauthenticated probes (the audit log records those instead).
     console.log(`🔍 Session Review: ${reviewedSessionId} | Q${questionNumber || 1} | lens=${lens || 'core'} | member=${authz.memberId.slice(0, 8)}…`);
 
-    // Phase 1 — load the session content. A failure here means the data could not be
-    // loaded (session missing / transcript lookup failed), distinct from a model failure.
+    // Load the full transcript once. A failure here is a load failure (session
+    // missing / transcript lookup failed), distinct from a model failure.
+    let loaded: Awaited<ReturnType<typeof loadReviewTurns>>;
+    try {
+      loaded = await loadReviewTurns(reviewedSessionId);
+    } catch (loadError: any) {
+      console.error('❌ Session review load error:', loadError);
+      return NextResponse.json(
+        { success: false, phase: 'load', error: loadError.message || 'Failed to load session data' },
+        { status: 500 }
+      );
+    }
+
+    const turnCount = loaded.turns.length;
+
+    // ── LONG SESSION → staged map-reduce, run as a background job ────────────
+    // Preserves the whole encounter (no sampling away the middle) and never
+    // blocks a single HTTP request on the full generation.
+    if (isLongSession(turnCount)) {
+      const transcriptHash = hashTranscript(loaded.turns);
+      const stagedInput: StagedInput = {
+        sessionId: reviewedSessionId,
+        turns: loaded.turns,
+        markersText: loaded.markersText,
+        mode: deriveReviewMode(question),
+        question,
+        lens: lens || 'core',
+        clientName: clientName || null,
+        sessionMeta: {
+          container: loaded.session.container,
+          durationMin: loaded.session.durationMin,
+          startedAt: loaded.session.startedAt,
+          title: loaded.session.title,
+        },
+      };
+
+      const status = getOrStartReview(stagedInput, transcriptHash);
+
+      // One grant per generation: only when THIS request started the job.
+      if (status.started) {
+        await logReviewGrant(req, reviewedSessionId, 'review-session:POST', authz.memberId);
+        console.log(`[SessionReview] staged job started: ${turnCount} turns, ${status.status === 'processing' ? status.progress.total : '?'} segments`);
+      }
+
+      if (status.status === 'processing') {
+        return NextResponse.json(
+          {
+            success: false,
+            status: 'processing',
+            stage: 'reviewing',
+            progress: status.progress,
+            _meta: { staged: true, totalSegments: turnCount },
+          },
+          { status: 202 }
+        );
+      }
+      if (status.status === 'failed') {
+        return NextResponse.json(
+          {
+            success: false,
+            status: 'failed',
+            stage: status.stage,
+            error: status.reason,
+            _meta: { staged: true, totalSegments: turnCount, failedChunks: status.failedChunks },
+          },
+          { status: 503 }
+        );
+      }
+      // complete
+      return NextResponse.json({
+        success: true,
+        response: status.result,
+        reviewedSessionId,
+        questionNumber: questionNumber || 1,
+        _meta: { staged: true, segmentCount: turnCount, chunks: status.chunks },
+      });
+    }
+
+    // ── SIMPLE SESSION → single-call path (unchanged behavior) ───────────────
+    await logReviewGrant(req, reviewedSessionId, 'review-session:POST', authz.memberId);
+
     let prompt: string;
     let meta: Awaited<ReturnType<typeof buildSessionReviewPrompt>>['meta'];
     try {
@@ -177,16 +318,10 @@ export async function POST(req: NextRequest) {
 
     console.log(`[SessionReview] ${meta.segmentCount} segments, sampled=${meta.segmentsSampled}, phantom=${meta.phantomPrefixRemoved ? 'stripped' : 'none'}`);
 
-    // Phase 2 — generate the review. A failure here is a model/provider failure; the
-    // session data already loaded, so the UI must not claim it "couldn't load the data".
     let responseText: string;
     try {
       const llmResponse = await getLLMProvider().generateSimple({
         tier: 'core',
-        // Session Review is a long-context clinical/practitioner synthesis (often
-        // hundreds of turns). The local core model is too slow (~197s on a 373-turn
-        // review) and too shallow for this surface, so this route opts out of
-        // LOCAL_TIER_ENABLED and uses Claude. Ordinary core/fast routes stay local-first.
         forceClaude: true,
         systemPrompt: '', // prompt is self-contained
         messages: [{ role: 'user', content: prompt }],
