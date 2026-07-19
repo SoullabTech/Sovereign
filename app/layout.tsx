@@ -12,12 +12,13 @@ import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { BetaBanner } from "@/components/BetaBanner";
 import BugReportButton from "@/components/bugs/BugReportButton";
+import { MaiaPresence } from "@/components/maia/presence/MaiaPresence";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Soullab — We build for the soul",
-  description: "Consciousness AI and relational intelligence systems. We built AIN — the engine that brings soul to any app, site, or platform.",
+  description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time.",
   manifest: "/manifest.json",
   metadataBase: new URL("https://soullab.life"),
   openGraph: {
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
     url: "https://soullab.life",
     siteName: "Soullab",
     title: "Soullab — We build for the soul",
-    description: "Consciousness AI and relational intelligence systems. Sovereign infrastructure. Private by design.",
+    description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time. Through MAIA, practitioner worlds, and living communities, we seek to support relationships of care, wisdom, and service while returning people more fully to their own lives.",
     images: [
       {
         url: "/og-image.png",
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Soullab — We build for the soul",
-    description: "Consciousness AI and relational intelligence systems. Sovereign infrastructure. Private by design.",
+    description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time.",
     images: ["/og-image.png"],
   },
   appleWebApp: {
@@ -201,7 +202,13 @@ export default function RootLayout({
             <AethericConsciousnessProvider>
               <FeatureTooltipProvider>
                 <MobileRouteGuard>
-                  {children}
+                  {/* Canonical MAIA relationship layer — mounted exactly once.
+                      Renders a quiet handle + conversation sheet on governed
+                      member rooms only; children pass through untouched
+                      everywhere else. See components/maia/presence/MaiaPresence.tsx */}
+                  <MaiaPresence>
+                    {children}
+                  </MaiaPresence>
                 </MobileRouteGuard>
               </FeatureTooltipProvider>
             </AethericConsciousnessProvider>

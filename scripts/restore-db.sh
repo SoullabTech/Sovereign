@@ -3,6 +3,19 @@
 # Restore from compressed database backup with safety checks
 set -euo pipefail
 
+# ── R20 (Sanctuary S5): raw restores are ungoverned and refused ──────────────
+# "Deletion is not complete if restoration can silently resurrect what
+#  sovereignty required the system to forget."
+# This script does not consume deletion manifests/tombstones, so it can
+# resurrect sovereignty-deleted content. Use scripts/restore-governed.sh.
+if [ "${I_UNDERSTAND_THIS_RESTORE_IS_UNGOVERNED:-}" != "yes" ]; then
+    echo "❌ R20: raw restore refused — this path does not honor deletion manifests/tombstones."
+    echo "   Use: RESTORE_AUTHORIZED_BY=<ruling ref> scripts/restore-governed.sh <dump.sql.gz>"
+    echo "   (Founder override for non-sovereign data only:"
+    echo "    I_UNDERSTAND_THIS_RESTORE_IS_UNGOVERNED=yes $0 <dump>)"
+    exit 1
+fi
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'

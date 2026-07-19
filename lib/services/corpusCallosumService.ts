@@ -29,6 +29,7 @@
  */
 
 import { query, queryOne } from '../db/postgres';
+import { TurnPosture, contentWritable } from '../sanctuary/turnPosture';
 
 // =============================================================================
 // TYPES
@@ -107,7 +108,13 @@ export type IntegrationPassInput = {
  * - MAIA response generation
  * - Socratic validation
  */
-export async function logAgentRun(input: AgentRunInput): Promise<string | null> {
+export async function logAgentRun(input: AgentRunInput, posture: TurnPosture): Promise<string | null> {
+  // SANCTUARY (S1, boundary-enforced): agent_runs rows carry content
+  // (input_summary/output_text). Sanctuary or missing posture refuses the
+  // write here at the service, regardless of caller. SANC-20260614-01.
+  if (!contentWritable(posture, 'corpusCallosum.logAgentRun', input?.sessionId)) {
+    return null;
+  }
   try {
     const result = await queryOne<{ id: string }>(
       `INSERT INTO agent_runs (
@@ -116,8 +123,9 @@ export async function logAgentRun(input: AgentRunInput): Promise<string | null> 
         input_summary, output_text, output_json,
         latency_ms, status, error,
         confidence, intensity, inhibited_by, meta,
-        origin_route, processing_profile
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        origin_route, processing_profile,
+        posture_at_creation
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, 'normal')
       RETURNING id`,
       [
         input.sessionId,
@@ -161,7 +169,12 @@ export async function logAgentRun(input: AgentRunInput): Promise<string | null> 
  * Call this after generating the final response to record how
  * different agent outputs were combined.
  */
-export async function logIntegrationPass(input: IntegrationPassInput): Promise<string | null> {
+export async function logIntegrationPass(input: IntegrationPassInput, posture: TurnPosture): Promise<string | null> {
+  // SANCTUARY (S1, boundary-enforced): integration_passes rows carry content
+  // (inputs/final_text). Same refusal contract as logAgentRun.
+  if (!contentWritable(posture, 'corpusCallosum.logIntegrationPass', input?.sessionId)) {
+    return null;
+  }
   try {
     const result = await queryOne<{ id: string }>(
       `INSERT INTO integration_passes (
@@ -170,8 +183,9 @@ export async function logIntegrationPass(input: IntegrationPassInput): Promise<s
         tensions_named, reconciliations, paradoxes_held,
         final_text, coherence_score, depth_score, confidence,
         elemental_mode, meta,
-        origin_route, processing_profile
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        origin_route, processing_profile,
+        posture_at_creation
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 'normal')
       RETURNING id`,
       [
         input.sessionId,
@@ -300,7 +314,7 @@ function elementToEpistemicMode(element: string): EpistemicMode {
  * - Elemental agents as parallel agent runs (the REAL corpus callosum!)
  * - Integration pass combining all
  */
-export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promise<{
+export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace, posture: TurnPosture): Promise<{
   atlasRunId: string | null;
   maiaRunId: string | null;
   elementalRunIds: string[];
@@ -334,7 +348,7 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
       status: 'ok',
       originRoute: trace.originRoute,
       processingProfile: trace.processingProfile,
-    });
+    }, posture);
 
     if (atlasRunId) {
       agentRunIds.push(atlasRunId);
@@ -368,7 +382,7 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
       },
       originRoute: trace.originRoute,
       processingProfile: trace.processingProfile,
-    });
+    }, posture);
 
     if (maiaRunId) {
       agentRunIds.push(maiaRunId);
@@ -398,7 +412,7 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
       status: 'ok',
       originRoute: trace.originRoute,
       processingProfile: trace.processingProfile,
-    });
+    }, posture);
 
     if (wisdomRunId) {
       agentRunIds.push(wisdomRunId);
@@ -437,7 +451,7 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
         },
         originRoute: trace.originRoute,
         processingProfile: trace.processingProfile,
-      });
+      }, posture);
 
       if (runId) {
         elementalRunIds.push(runId);
@@ -499,7 +513,7 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
       },
       originRoute: trace.originRoute,
       processingProfile: trace.processingProfile,
-    });
+    }, posture);
 
     if (integrationId) {
       console.log(`🌉 [CorpusCallosum] Integration pass logged: ${inputs.length} agents bridged`);

@@ -65,7 +65,9 @@ export const ACCESS_RULES: AccessRule[] = [
   // 'unauthenticated' handling), then returns into the room signed in.
   { exact: '/now-what', public: true, notes: 'Now What? entry — edge-redirects to /now-what/room before middleware; rule kept public so no double-gate if redirect ordering ever changes' },
   { exact: '/now-what/pitch', public: true, notes: 'Now What? pitch deck (Larry Closs) — public static slideshow for prospects, out of the practice entry path' },
-  { prefix: '/now-what/room', minTier: 'free', notes: 'Now What? live room — auth required before the door (redirect to /signin?next); prevents the 401-after-first-Send interruption' },
+  { prefix: '/now-what/room', minTier: 'free', notes: 'Now What? live room — auth required before the door; unauthenticated now-what traffic redirects to /now-what/arrive (the environment’s own door, Kelly ruling 2026-07-16), not generic /signin' },
+  { exact: '/now-what/arrive', public: true, notes: 'Now What? independent arrival — signup/signin in the environment’s register; the invitation is the gate (/begin stays AIN’s universal door)' },
+  { exact: '/api/now-what/register', public: true, notes: 'Now What? independent signup API — creates member + session; email-uniqueness prevents account forking' },
   { exact: '/library', public: true, notes: 'Public library browse' },
   { exact: '/book-studio', public: true, notes: 'Book Studio — editorial workspace index' },
   { exact: '/book-studio/read', public: true, notes: 'Book Studio — manuscript reader' },
@@ -451,6 +453,12 @@ export const ACCESS_RULES: AccessRule[] = [
   // -------------------------------------------------------------------------
   // Soul Portrait — Path B, Gate 1 (see docs/architecture/SOUL_PORTRAIT_PATH_B_SPEC.md §2)
   // -------------------------------------------------------------------------
+  // Gate 4 delivery surface (2026-07-16): generated portraits SENT by a
+  // practitioner render here for non-members. Public at the middleware layer
+  // ONLY — the real gates live in the route: published_at IS NOT NULL AND
+  // ledger consent-liveness (isPortraitConsentLive), else 404. The un-guessable
+  // slug is defense-in-depth, never the gate. noindex; no Mentor/MAIA/memory.
+  { prefix: '/soul-portrait/view/', public: true, notes: 'Delivered Soul Portraits (Gate 4) — consent-gated in-route; middleware passes, ledger decides' },
   // Augusten = the single family-held exception: public-unlisted (loads without
   // auth, noindex). These EXACT rules win over the prefix below — the matcher
   // runs the exact pass before the prefix pass — so the exception is explicit

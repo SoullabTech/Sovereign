@@ -100,16 +100,16 @@ const OPEN_ROOMS: RoomDef[] = [
   {
     key: 'next',
     name: 'What may be next',
-    line: 'Held open, not prescribed.',
+    line: 'The practices you chose to live — held open, not prescribed.',
     explain:
-      'Not recommendations — no one here decides your next step. This room holds the practices you chose to live and the door back to the session room, where what comes next actually emerges.',
+      'The practices you chose to live, and the door back to the session room — where what comes next actually emerges. No one here decides your next step, and nothing is recommended.',
     route: '/now-what/next',
     carriesContext: true,
   },
   {
     key: 'questions',
     name: "Questions you're living",
-    line: 'The ones you named, kept warm.',
+    line: 'The questions you chose to keep — named by you, kept warm.',
     explain:
       'Some questions aren’t ready to be answered — they need to not get lost. When a session ends with a question still alive and you choose to keep it, it waits here in your exact words until you’re ready to bring it back.',
     route: '/now-what/questions',
@@ -265,7 +265,7 @@ function BuildingMap({ viewer, fieldContext }: { viewer: Viewer; fieldContext?: 
           stroke={accent} strokeOpacity="0.45" strokeWidth="1.5"
         />
         <text x="183" y="66" textAnchor="middle" fontSize="14" fill="#f1f5f9" fontWeight="300">Questions you&apos;re living</text>
-        <text x="183" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">the ones you named, kept warm</text>
+        <text x="183" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">questions you chose to keep</text>
         <text x="183" y="110" textAnchor="middle" fontSize="10.5" fill={accent} letterSpacing="1.5">{enterLabel}</text>
       </a>
 
@@ -277,7 +277,7 @@ function BuildingMap({ viewer, fieldContext }: { viewer: Viewer; fieldContext?: 
           stroke={accent} strokeOpacity="0.45" strokeWidth="1.5"
         />
         <text x="517" y="66" textAnchor="middle" fontSize="14" fill="#f1f5f9" fontWeight="300">What may be next</text>
-        <text x="517" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">held open, not prescribed</text>
+        <text x="517" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">the practices you chose</text>
         <text x="517" y="110" textAnchor="middle" fontSize="10.5" fill={accent} letterSpacing="1.5">{enterLabel}</text>
       </a>
 

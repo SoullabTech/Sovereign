@@ -328,13 +328,25 @@ export async function composeProgramPositionBlock(
   fieldSlug: string,
   todayProgramSlugRaw: string | null | undefined,
   memberId: string,
-): Promise<{ block: string; footing: PositionFooting | null; programSlug: string }> {
+): Promise<{
+  block: string;
+  footing: PositionFooting | null;
+  programSlug: string;
+  /**
+   * The step this turn composed around: the member's own declared focal point
+   * when one exists, else the cohort default. Lets the caller attach the
+   * practitioner-authored lesson context for that step (ADR 2026-07-14 §G) —
+   * null when nothing composed.
+   */
+  focalPoint: string | null;
+}> {
   const todaySlug = sanitizeSlug(todayProgramSlugRaw) || GENERAL_PROGRAM;
   const cohort = await getCohortDefault(fieldSlug, todaySlug);
   const position = await getPosition(fieldSlug, todaySlug, memberId);
 
   const parts: string[] = [];
   let footing: PositionFooting | null = null;
+  const focalPoint = position?.focal_point ?? cohort?.focalPoint ?? null;
 
   const label = cohort?.programTitle ? ` — ${cohort.programTitle}` : '';
 
@@ -387,7 +399,7 @@ export async function composeProgramPositionBlock(
     );
   }
 
-  if (parts.length === 0) return { block: '', footing: null, programSlug: todaySlug };
+  if (parts.length === 0) return { block: '', footing: null, programSlug: todaySlug, focalPoint: null };
 
   // Hard line, carried inside the block (P8d regression fence): the position
   // orients the conversation; it is never an agenda. No advancement language.
@@ -397,5 +409,5 @@ export async function composeProgramPositionBlock(
       `never compare programs into a developmental read.`,
   );
 
-  return { block: parts.join('\n\n'), footing, programSlug: todaySlug };
+  return { block: parts.join('\n\n'), footing, programSlug: todaySlug, focalPoint };
 }

@@ -89,6 +89,46 @@ export function PortfolioSection() {
             );
           })}
         </div>
+
+        {/* AIN OS — the development environment beneath the studios */}
+        <SectionReveal delay={0.3}>
+          <a
+            href="#maia"
+            className="group block rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 mt-6 hover:border-white/20 hover:bg-white/[0.05] transition-all duration-300"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div
+                className="w-3 h-3 rounded-full shrink-0 mt-1"
+                style={{ backgroundColor: '#8F7BD8' }}
+              />
+              <span className="text-white/25 text-[11px] tracking-widest uppercase">
+                The environment beneath the studios
+              </span>
+            </div>
+            <h3 className="text-lg font-medium text-white mb-2 group-hover:text-maia-spice-400 transition-colors">
+              AIN OS — Development Environment
+            </h3>
+            <p className="text-white/45 text-sm leading-relaxed mb-4 max-w-3xl" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
+              The development environment beneath everything on this page. Developmental worlds
+              like Now What? and the Wisdom Keeper field are authored on AIN OS, inheriting its
+              commitments — consent, continuity, provenance, stewardship — rather than rebuilding
+              them each time.
+            </p>
+            <div className="flex items-center flex-wrap gap-2">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-maia-spice-500/15 text-maia-spice-400 border-maia-spice-500/20">
+                In Dev
+              </span>
+              {['Foundation', 'Field Authoring', 'Consent-Governed'].map(tag => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] text-white/30 border border-white/8 bg-white/[0.02]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </a>
+        </SectionReveal>
       </div>
     </section>
   );

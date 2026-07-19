@@ -2,6 +2,7 @@
 import { query } from '@/lib/db';
 import { randomUUID } from 'crypto';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnPosture, contentWritable } from '@/lib/sanctuary/turnPosture';
 
 export type ConversationExchange = {
   timestamp: string;
@@ -57,6 +58,16 @@ export async function addConversationExchange(
   maiaResponse: string,
   meta?: Record<string, unknown>
 ): Promise<void> {
+  // SANCTUARY (S1): resolve the per-turn posture from the request-derived meta
+  // and guard BOTH content lanes this function writes — the session-level
+  // conversation_history jsonb (the lane that escaped in SANC-20260614-01) and
+  // conversation_turns. The posture governing this turn is the posture in
+  // force when the turn occurred; the session's stored mode is not consulted.
+  const posture = TurnPosture.resolve(meta);
+  if (!contentWritable(posture, 'sessionManager.addConversationExchange', sessionId)) {
+    return;
+  }
+
   const exchange: ConversationExchange = {
     timestamp: new Date().toISOString(),
     userMessage,
@@ -78,7 +89,7 @@ export async function addConversationExchange(
   const userId = (meta?.userId as string) || (meta?.memberId as string);
   if (userId) {
     try {
-      await TurnsStore.addExchange(userId, sessionId, userMessage, maiaResponse);
+      await TurnsStore.addExchange(posture, userId, sessionId, userMessage, maiaResponse);
     } catch (err) {
       // Non-blocking: don't break the conversation if turns storage fails
       console.warn('[SessionManager] Failed to persist turns:', err);

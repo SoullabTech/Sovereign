@@ -2,6 +2,7 @@
 import { randomUUID } from 'crypto';
 import { incrementTurnCount, addConversationExchange, getConversationHistory } from './sessionManager';
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
+import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
@@ -76,6 +77,8 @@ import {
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+import { TurnPosture } from '../sanctuary/turnPosture';
+import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
@@ -1198,6 +1201,14 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`▶️ [FAST] Forward-readiness addendum applied`);
   }
 
+  // 🚪 PLACE (House Presence): facts-only current-room orientation, built by
+  // the route from a validated body.place. Present-tense facts only — the
+  // block itself forbids inferring why the member is there.
+  const placeAddendum = (meta as any)?.placeAddendum as string | undefined;
+  if (placeAddendum) {
+    console.log(`🚪 [FAST] Place addendum applied`);
+  }
+
   // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges with
   // provenance grounding. Built by lib/maia/conversationalRecallBlock.ts;
   // suppression rules (opt-out / Sanctuary / empty / session-resumption)
@@ -1267,7 +1278,9 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${PLATFORM_KNOWLEDGE_ADDENDUM}
+
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1372,6 +1385,8 @@ async function corePathResponse(
   if (isSanctuary) {
     console.log('🛡️ [CORE] Sanctuary mode active - skipping all memory recall');
   }
+  // SANCTUARY (S1): per-turn posture for every content writer on this path.
+  const turnPosture = TurnPosture.resolve(meta);
 
   // ⚡ LATENCY FIX: Run independent DB queries in parallel instead of sequentially.
   // Previously these ran one after another (~200-500ms each = 1-2s total).
@@ -1544,6 +1559,9 @@ async function corePathResponse(
     consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
     // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
     fieldWisdomAddendum: (meta as any)?.fieldWisdomAddendum as string | undefined,
+    // 🚪 PLACE (House Presence): facts-only current-room orientation. Injected
+    // via appendAllContextAddenda (first in ADDENDA_SPECS order).
+    placeAddendum: (meta as any)?.placeAddendum as string | undefined,
     // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges. Injected
     // inside buildMaiaWisePrompt via safeAddendum iteration. See spec §IX.
     conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,
@@ -2340,6 +2358,17 @@ function finalizeMemberFacingText(
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
   const startTime = Date.now();
+  // SANCTUARY (S1): per-turn posture, resolved once for this request and
+  // passed to every content writer (turns store, corpus callosum trace).
+  const turnPosture = TurnPosture.resolve(meta);
+  // S5: record the resolved posture server-side (content-free) so writers and
+  // audits can verify against a record instead of call-chain arguments.
+  recordConsentState({
+    requestId: randomUUID(),
+    posture: turnPosture,
+    memberId: (meta as any)?.userId ?? null,
+    sessionId,
+  });
 
   // increment turn count for this session and get the authoritative count
   // NOTE: Using session.turn_count (not history.length) to avoid cap from limited history
@@ -3039,7 +3068,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
-          await TurnsStore.addExchange(effectiveUserId, sessionId, input, text);
+          await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text);
           console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);
@@ -3453,7 +3482,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             // 🔥 Elemental parallel processing (the real corpus callosum!)
             elementalAgents: elementalAgents,
             elementalSynthesis: elementalSynthesis,
-          });
+          }, turnPosture);
 
           const elementalCount = traceResult.elementalRunIds?.length ?? 0;
           if (traceResult.integrationId) {

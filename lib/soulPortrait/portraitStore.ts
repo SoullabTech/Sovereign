@@ -30,6 +30,7 @@ export interface StoredPortrait {
   subjectMemberId: string | null;
   subjectPersonId: string | null;
   portraitKind: string;
+  subjectIsMinor: boolean;
   consentState: 'pending' | 'active' | 'revoked';
   publishedAt: string | null;
   immutableText: SoulPortrait;
@@ -52,6 +53,7 @@ function rowToStored(r: any): StoredPortrait {
     subjectMemberId: r.subject_member_id ?? null,
     subjectPersonId: r.subject_person_id ?? null,
     portraitKind: r.portrait_kind,
+    subjectIsMinor: r.subject_is_minor === true,
     consentState: r.consent_state,
     publishedAt: r.published_at ?? null,
     immutableText: typeof r.immutable_text === 'string' ? JSON.parse(r.immutable_text) : r.immutable_text,
@@ -131,7 +133,12 @@ export async function listOwnedPortraits(ownerMemberId: string): Promise<StoredP
   return res.rows.map(rowToStored);
 }
 
-/** A portrait plus the display name of its linked studio_people subject (if any). */
+/**
+ * A portrait plus a display name for its subject: the linked studio_people
+ * record when one exists, otherwise the name written into the portrait itself
+ * (immutable_text.person.name — required at generation, so every generated
+ * draft has one). Null only for legacy rows missing both.
+ */
 export interface StoredPortraitWithSubject extends StoredPortrait {
   subjectName: string | null;
 }
@@ -156,5 +163,43 @@ export async function listOwnedPortraitsWithSubject(
       ORDER BY sp.created_at DESC`,
     [ownerMemberId],
   );
-  return res.rows.map((r) => ({ ...rowToStored(r), subjectName: r.subject_name ?? null }));
+  return res.rows.map((r) => {
+    const stored = rowToStored(r);
+    return { ...stored, subjectName: r.subject_name ?? stored.immutableText?.person?.name ?? null };
+  });
+}
+
+// ── Gate 4 — publish + delivery read ────────────────────────────────────────
+
+/**
+ * Publish a portrait the caller owns: stamps `published_at` (arming Gate 2's
+ * write-once trigger on immutable_text). Owner-scoped like every write here.
+ * Idempotent — an already-published portrait keeps its original timestamp.
+ * Publishing does NOT record consent; callers pair this with the consent
+ * ledger write (lib/soulPortrait/consentRecord.ts).
+ */
+export async function publishOwnedPortrait(id: string, ownerMemberId: string): Promise<StoredPortrait | null> {
+  const row = await queryOne<any>(
+    `UPDATE soul_portraits
+        SET published_at = COALESCE(published_at, NOW()), updated_at = NOW()
+      WHERE id = $1 AND owner_member_id = $2
+      RETURNING *`,
+    [id, ownerMemberId],
+  );
+  return row ? rowToStored(row) : null;
+}
+
+/**
+ * DELIVERY READ — the one deliberate exception to owner-scoping, for the
+ * recipient-facing route (/soul-portrait/view/[slug]). It is narrow by
+ * construction: only PUBLISHED rows resolve, and the route MUST additionally
+ * gate on ledger consent-liveness (isPortraitConsentLive) before rendering —
+ * the un-guessable slug is defense-in-depth, never the gate (Path B invariant).
+ */
+export async function getDeliveredPortraitBySlug(slug: string): Promise<StoredPortrait | null> {
+  const row = await queryOne<any>(
+    `SELECT * FROM soul_portraits WHERE slug = $1 AND published_at IS NOT NULL`,
+    [slug],
+  );
+  return row ? rowToStored(row) : null;
 }

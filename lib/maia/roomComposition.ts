@@ -61,6 +61,7 @@ import {
   formatFieldContextForRoom,
 } from '@/lib/practiceField/practiceFieldService';
 import { composeProgramPositionBlock } from '@/lib/practiceField/programPositionService';
+import { composeLessonContext } from '@/lib/practiceField/programAuthoringService';
 
 /**
  * NOW_WHAT_CLOUD_REGISTER=1 pins this room family's voice to Claude regardless
@@ -240,6 +241,7 @@ export async function composeRoomTurnPrompt(opts: {
   // position without program is not composed (v1 §6). Context, not
   // instruction; read-only and non-fatal like everything else here.
   let positionBlock = '';
+  let lessonBlock = '';
   if (fieldBlock && provenance?.slug) {
     try {
       const composed = await composeProgramPositionBlock(
@@ -255,6 +257,25 @@ export async function composeRoomTurnPrompt(opts: {
           blockChars: positionBlock.length,
         });
       }
+      // Lesson context (PRACTITIONER_PROGRAM_PLATFORM_ADR §G): the
+      // practitioner-authored enrichment of the step this turn composed
+      // around — RATIFIED materials only, re-checked at read time; strictly
+      // downstream of the position block and only when a position composed.
+      // Absence composes as absence.
+      if (positionBlock && composed.focalPoint) {
+        lessonBlock = await composeLessonContext(
+          provenance.slug,
+          composed.programSlug,
+          composed.focalPoint,
+        );
+        if (lessonBlock) {
+          console.log(`[${roomTag}/lesson] composed`, {
+            program: composed.programSlug,
+            step: composed.focalPoint,
+            blockChars: lessonBlock.length,
+          });
+        }
+      }
     } catch (err) {
       console.warn(`[${roomTag}/position] load failed (non-fatal; room continues without position):`, err);
     }
@@ -267,7 +288,7 @@ export async function composeRoomTurnPrompt(opts: {
   const presence = presenceEnabled
     ? await assemblePresenceContext(memberId, lastMemberMessage, roomTag, ephemeralSessionId)
     : '';
-  const systemPrompt = [MAIA_RUNTIME_PROMPT, presence, fieldBlock, positionBlock, roomPrompt]
+  const systemPrompt = [MAIA_RUNTIME_PROMPT, presence, fieldBlock, positionBlock, lessonBlock, roomPrompt]
     .filter(Boolean)
     .join('\n\n');
   console.log(`[${roomTag}/presence] composed`, {

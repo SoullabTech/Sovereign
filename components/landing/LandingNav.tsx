@@ -8,7 +8,6 @@ const navLinks = [
   { label: 'AIN + MAIA', href: '#maia' },
   { label: 'Innovations', href: '#research' },
   { label: 'Portfolio', href: '#portfolio' },
-  { label: 'Roadmap', href: '#projects' },
   { label: 'Contact', href: '#contact' },
 ];
 

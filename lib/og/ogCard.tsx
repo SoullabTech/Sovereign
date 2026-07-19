@@ -186,7 +186,10 @@ export const SECTIONS = {
     accent: SOULLAB_AMBER,
   },
   'now-what': {
-    eyebrow: 'What Now?',
+    // Product name ratified "Now What?" (Kelly, 2026-07-12) — this eyebrow
+    // was the last public "What Now?" instance; link-preview caches may show
+    // the old card until they re-crawl.
+    eyebrow: 'Now What?',
     title: 'Flourishing in the Midst of a Busy Life',
     subtitle: 'A place to meet what is actually happening, and find the next real step.',
     accent: '#3A7CA5',

@@ -11,6 +11,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { recordConsentState } from '@/lib/provenance/consentState';
 
 // GET: Retrieve conversation history
 export async function GET(request: NextRequest) {
@@ -85,9 +88,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userMessage, assistantMessage, userId, sessionId, isSanctuary } = body;
 
-    // Sanctuary mode: Don't store anything
-    if (isSanctuary) {
-      console.log('[CONVERSATION] Sanctuary mode - not storing turn');
+    // S5: posture resolved server-side at this boundary and recorded
+    // (content-free). The store — not this route — enforces refusal; the
+    // pre-S5 raw INSERT here bypassed the S1 gate entirely.
+    const posture = TurnPosture.resolve({ sanctuary: isSanctuary });
+
+    if (posture.sanctuary) {
+      console.log('[CONVERSATION] Sanctuary posture - not storing turn');
       return NextResponse.json({ success: true, sanctuary: true });
     }
 
@@ -98,18 +105,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert both turns in a transaction
-    const insertSql = `
-      INSERT INTO conversation_turns (user_id, session_id, role, content)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id
-    `;
-
-    // Insert user message
-    await query(insertSql, [userId, sessionId || null, 'user', userMessage]);
-
-    // Insert assistant message
-    await query(insertSql, [userId, sessionId || null, 'assistant', assistantMessage]);
+    const exchangeId = globalThis.crypto.randomUUID();
+    recordConsentState({ requestId: exchangeId, posture, memberId: userId, sessionId });
+    await TurnsStore.addExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
 
     console.log(`[CONVERSATION] Stored turn pair for user ${userId.slice(0, 8)}...`);
 

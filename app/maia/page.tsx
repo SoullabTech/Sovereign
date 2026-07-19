@@ -15,6 +15,8 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
+import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
 import { WisdomJourneyDashboard } from '@/components/maya/WisdomJourneyDashboard';
@@ -433,30 +435,26 @@ function MAIAPageContent() {
       // Load user data first (needed for session registration)
       const initialData = await getInitialUserData();
 
-      // Get or create persistent sessionId - resets daily for fresh conversations
-      const existingSessionId = localStorage.getItem('maia_session_id');
-      const lastSessionDate = localStorage.getItem('maia_session_date');
-      const todayDate = new Date().toDateString();
-
-      // Check if this is a new day - if so, start fresh
-      const isNewDay = lastSessionDate !== todayDate;
-
-      if (existingSessionId && !isNewDay) {
-        setSessionId(existingSessionId);
-        console.log('💫 [MAIA] Restored session:', existingSessionId);
+      // Get or create persistent sessionId via the CANONICAL identity module
+      // (lib/maia/presence/conversationIdentity) — the same module the global
+      // MaiaPresence provider uses, so the full page and the presence sheet
+      // can never mint competing sessions. Daily rotation semantics unchanged.
+      const priorSessionId = localStorage.getItem('maia_session_id');
+      const identity = getOrCreateMaiaSessionId();
+      if (identity && !identity.isNew) {
+        setSessionId(identity.sessionId);
+        console.log('💫 [MAIA] Restored session:', identity.sessionId);
         // Touch the session to update last_activity_at (non-blocking)
         apiFetch('/api/maia/session/start', {
           method: 'POST',
           body: JSON.stringify({
-            sessionId: existingSessionId,
+            sessionId: identity.sessionId,
             memberId: initialData?.id,
           }),
         }).catch(() => {}); // Ignore errors for touch
-      } else {
+      } else if (identity) {
         // New day or no session - create fresh session and clear old conversation
-        const newSessionId = `session_${Date.now()}`;
-        localStorage.setItem('maia_session_id', newSessionId);
-        localStorage.setItem('maia_session_date', todayDate);
+        const newSessionId = identity.sessionId;
         setSessionId(newSessionId);
 
         // Register session with backend (non-blocking but important for finalize)
@@ -479,8 +477,8 @@ function MAIAPageContent() {
         });
 
         // Clear old conversation from localStorage for clean slate
-        if (existingSessionId) {
-          localStorage.removeItem(`maia_conversation_${existingSessionId}`);
+        if (priorSessionId && priorSessionId !== newSessionId) {
+          localStorage.removeItem(`maia_conversation_${priorSessionId}`);
           console.log('🌅 [MAIA] New day - cleared old conversation, starting fresh');
         }
         console.log('✨ [MAIA] Created new session:', newSessionId);
@@ -750,6 +748,7 @@ function MAIAPageContent() {
                   initialAction={searchParams?.get('action') || undefined}
                   askMode={askMode}
                   onAskModeChange={setAskMode}
+                  placeContext={placeFromPathname('/maia') ?? undefined}
                 />
               </MaiaCenterField>
             </SwipeNavigation>
@@ -1470,6 +1469,7 @@ function MAIAPageContent() {
               onCloseSessionSelector={() => setShowSessionSelector(false)}
               onSessionActiveChange={setHasActiveSession}
               initialAction={searchParams?.get('action') || undefined}
+              placeContext={placeFromPathname('/maia') ?? undefined}
             />
 
             {/* Claude Code's Living Presence - MOVED to bottom menu bar to free mobile screen space */}
