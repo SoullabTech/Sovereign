@@ -30,6 +30,10 @@
 import crypto from 'crypto';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import type { ReviewTurn } from '@/lib/scribe/sessionReviewMode';
+import {
+  isSingleSpeakerTranscript,
+  SINGLE_SPEAKER_ATTRIBUTION_GUARD,
+} from '@/lib/scribe/attributionGuard';
 
 // ── Tunables ────────────────────────────────────────────────────────────────
 /** At or below this turn count, the route uses the simple single-prompt path. */
@@ -41,7 +45,7 @@ export const MAP_CONCURRENCY = 4;
 /** Retries per chunk digest before the whole review fails. */
 export const CHUNK_RETRIES = 2;
 /** Bump when prompts change so stale cached artifacts are not reused. */
-export const PROMPT_VERSION = 'sr-staged-v1';
+export const PROMPT_VERSION = 'sr-staged-v2';
 
 const DIGEST_MAX_TOKENS = 750;
 const SYNTH_MAX_TOKENS = 3000;
@@ -210,7 +214,8 @@ Anchor claims to timestamps like [12:34]. Use the speakers' own words. If the se
 
 async function digestChunk(
   chunk: ReviewTurn[],
-  chunkIndex: number
+  chunkIndex: number,
+  singleSpeaker: boolean
 ): Promise<ChunkDigest> {
   const transcript = formatChunkTranscript(chunk);
   const user = `Segment ${chunkIndex + 1} — turns ${chunk[0].index}–${chunk[chunk.length - 1].index}, time ${chunk[0].tsLabel}–${chunk[chunk.length - 1].tsLabel}:\n\n${transcript}\n\nProduce the structured digest for this segment.`;
@@ -222,7 +227,7 @@ async function digestChunk(
         {
           tier: 'core',
           forceClaude: true,
-          systemPrompt: DIGEST_SYSTEM,
+          systemPrompt: DIGEST_SYSTEM + (singleSpeaker ? SINGLE_SPEAKER_ATTRIBUTION_GUARD : ''),
           messages: [{ role: 'user', content: user }],
           maxTokens: DIGEST_MAX_TOKENS,
           temperature: 0.4,
@@ -327,7 +332,8 @@ Label every interpretive claim's epistemic status (Said / Observed / Tentative).
 
 async function synthesize(
   digests: ChunkDigest[],
-  input: StagedInput
+  input: StagedInput,
+  singleSpeaker: boolean
 ): Promise<string> {
   const lensLine = `Active lens: ${input.lens.toUpperCase()}.`;
   const digestBlock = digests
@@ -364,7 +370,7 @@ ${synthesisInstruction(input.mode, input.question, input.clientName)}`;
     {
       tier: 'core',
       forceClaude: true,
-      systemPrompt: viewSystem(input.mode),
+      systemPrompt: viewSystem(input.mode) + (singleSpeaker ? SINGLE_SPEAKER_ATTRIBUTION_GUARD : ''),
       messages: [{ role: 'user', content: user }],
       maxTokens: SYNTH_MAX_TOKENS,
       temperature: input.mode === 'overview' ? 0.5 : 0.7,
@@ -412,6 +418,9 @@ export async function runStagedReview(
   const chunks = chunkTurns(input.turns);
   const total = chunks.length;
   let done = 0;
+  // Provenance-derived: true while recordings are one undiarized stream; turns
+  // off by itself once diarization yields distinct labels (see attributionGuard).
+  const singleSpeaker = isSingleSpeakerTranscript(input.turns.map(t => t.speaker));
 
   const digests: ChunkDigest[] = new Array(total);
   const failedChunks: number[] = [];
@@ -427,7 +436,7 @@ export async function runStagedReview(
       return;
     }
     try {
-      const d = await digestChunk(chunk, i);
+      const d = await digestChunk(chunk, i, singleSpeaker);
       digestCache.set(dk, d);
       digests[i] = d;
     } catch {
@@ -451,7 +460,7 @@ export async function runStagedReview(
   // REDUCE — generate the requested view from the session map.
   onProgress?.(total, total, input.mode);
   try {
-    const result = await synthesize(digests, input);
+    const result = await synthesize(digests, input, singleSpeaker);
     const ak = artifactKey(input, transcriptHash);
     artifactCache.set(ak, { result, chunks: total });
     return { status: 'complete', result, chunks: total };

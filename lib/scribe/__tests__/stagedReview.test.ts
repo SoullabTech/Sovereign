@@ -27,6 +27,7 @@ import {
   CHUNK_TURNS,
   type StagedInput,
 } from '../stagedReview';
+import { isSingleSpeakerTranscript } from '../attributionGuard';
 import type { ReviewTurn } from '../sessionReviewMode';
 
 function makeTurns(n: number): ReviewTurn[] {
@@ -37,6 +38,11 @@ function makeTurns(n: number): ReviewTurn[] {
     tsLabel: `${Math.floor(i / 60)}:${String(i % 60).padStart(2, '0')}`,
     startMs: i * 1000,
   }));
+}
+
+/** Current production reality: one undiarized stream → one speaker label. */
+function makeUndiarizedTurns(n: number): ReviewTurn[] {
+  return makeTurns(n).map(t => ({ ...t, speaker: 'Speaker 1' }));
 }
 
 function input(turns: ReviewTurn[], overrides: Partial<StagedInput> = {}): StagedInput {
@@ -176,6 +182,48 @@ describe('runStagedReview', () => {
       c => typeof c[0]?.systemPrompt === 'string' && c[0].systemPrompt.includes('building a view of a COMPLETE session')
     );
     expect(synthCalled).toBe(false);
+  });
+});
+
+describe('single-undiarized-stream attribution guard (Kelly ruling, 2026-07-19)', () => {
+  // Inferred dialogue must never be presented as captured attribution: when
+  // the transcript carries no speaker distinctions, every prompt (each digest
+  // and the synthesis) instructs inference-honest phrasing.
+
+  it('provenance detector: derived from the transcript, not a constant', () => {
+    expect(isSingleSpeakerTranscript(['Speaker 1', 'Speaker 1', 'Speaker 1'])).toBe(true);
+    expect(isSingleSpeakerTranscript(['unknown', 'unknown'])).toBe(true);
+    // Diarized transcript (Native Session Room Phase B) → guard off, no code change.
+    expect(isSingleSpeakerTranscript(['practitioner', 'client'])).toBe(false);
+    // Empty transcript has no attribution to qualify.
+    expect(isSingleSpeakerTranscript([])).toBe(false);
+  });
+
+  it('single-speaker session: EVERY digest and the synthesis carry the guard', async () => {
+    const turns = makeUndiarizedTurns(160); // 4 chunks → staged
+    const res = await runStagedReview(input(turns, { mode: 'elemental' }), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    expect(mockGenerateSimple.mock.calls.length).toBeGreaterThan(0);
+    for (const call of mockGenerateSimple.mock.calls) {
+      const sys = call[0].systemPrompt as string;
+      expect(sys).toContain('single undiarized stream');
+      expect(sys).toContain('INFERENCE from conversational structure');
+    }
+    // The guard binds to the epistemic-label discipline: cross-participant
+    // attribution is at most Tentative.
+    const synth = mockGenerateSimple.mock.calls.find(c =>
+      (c[0].systemPrompt as string).includes('ELEMENTAL')
+    );
+    expect(synth![0].systemPrompt).toContain('at most Tentative — never Said');
+  });
+
+  it('diarized (multi-speaker) session: NO prompt carries the guard', async () => {
+    const turns = makeTurns(160);
+    const res = await runStagedReview(input(turns, { mode: 'overview' }), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    for (const call of mockGenerateSimple.mock.calls) {
+      expect(call[0].systemPrompt as string).not.toContain('single undiarized stream');
+    }
   });
 });
 
