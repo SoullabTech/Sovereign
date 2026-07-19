@@ -99,6 +99,62 @@ describe('runStagedReview', () => {
     expect(mockGenerateSimple).toHaveBeenCalledTimes(chunks + 1);
   });
 
+  it('the elemental view asks for the developmental core (MAIA lens)', async () => {
+    const turns = makeTurns(160);
+    await runStagedReview(input(turns, { mode: 'elemental' }), hashTranscript(turns));
+    const synthCall = mockGenerateSimple.mock.calls.find(
+      c => typeof c[0]?.systemPrompt === 'string' && c[0].systemPrompt.includes('ELEMENTAL')
+    );
+    expect(synthCall).toBeDefined();
+    const prompt = synthCall![0].messages[0].content as string;
+    for (const marker of ['Center of Gravity', 'Developmental Edge', 'Living Question', 'Unintegrated Material', 'Fire', 'Aether']) {
+      expect(prompt).toContain(marker);
+    }
+  });
+
+  it('reports phase transitions: reading → the requested view', async () => {
+    const turns = makeTurns(200);
+    const phases: string[] = [];
+    await runStagedReview(input(turns, { mode: 'elemental' }), hashTranscript(turns), (_d, _t, phase) => {
+      if (phases[phases.length - 1] !== phase) phases.push(phase);
+    });
+    expect(phases[0]).toBe('reading');
+    expect(phases[phases.length - 1]).toBe('elemental');
+  });
+
+  it('the 2nd and 3rd views reuse the cached session map (digests), paying one synth call each', async () => {
+    const turns = makeTurns(200); // 5 chunks
+    const hash = hashTranscript(turns);
+    const nChunks = chunkTurns(turns).length;
+    await runStagedReview(input(turns, { mode: 'overview' }), hash); // 5 digests + 1 synth
+    const afterFirst = mockGenerateSimple.mock.calls.length;
+    expect(afterFirst).toBe(nChunks + 1);
+    // second view: digests are cached → only ONE new synthesis call
+    await runStagedReview(input(turns, { mode: 'elemental' }), hash);
+    expect(mockGenerateSimple.mock.calls.length).toBe(afterFirst + 1);
+    // third view: same
+    await runStagedReview(input(turns, { mode: 'organizational' }), hash);
+    expect(mockGenerateSimple.mock.calls.length).toBe(afterFirst + 2);
+  });
+
+  it('a stalled synthesis call times out → failed(synthesis), not an infinite hang', async () => {
+    const turns = makeTurns(160); // 4 chunks → staged
+    // Digests resolve; synthesis never resolves (simulates the prod stall).
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      const isDigest = typeof params?.systemPrompt === 'string' && params.systemPrompt.includes('ONE segment');
+      if (isDigest) return { text: 'digest ok' };
+      return new Promise(() => {}); // synthesis hangs forever
+    });
+    jest.useFakeTimers();
+    const p = runStagedReview(input(turns), hashTranscript(turns));
+    // let the digests resolve, then trip the synthesis timeout
+    await jest.advanceTimersByTimeAsync(200_000);
+    const res = await p;
+    jest.useRealTimers();
+    expect(res.status).toBe('failed');
+    if (res.status === 'failed') expect(res.stage).toBe('synthesis');
+  });
+
   it('a chunk that fails after retries → failed(digest), and NO synthesis runs', async () => {
     const turns = makeTurns(120 + 40); // >threshold → staged; 4 chunks
     // Fail ONE specific chunk (the one covering turns 0–39) on every attempt,
@@ -117,7 +173,7 @@ describe('runStagedReview', () => {
     }
     // synthesis system prompt is distinctive — assert it was NEVER called
     const synthCalled = mockGenerateSimple.mock.calls.some(
-      c => typeof c[0]?.systemPrompt === 'string' && c[0].systemPrompt.includes('synthesizing a review')
+      c => typeof c[0]?.systemPrompt === 'string' && c[0].systemPrompt.includes('building a view of a COMPLETE session')
     );
     expect(synthCalled).toBe(false);
   });
