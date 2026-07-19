@@ -1459,7 +1459,7 @@ function SettingsContent() {
                 </div>
               </div>
               <p className="text-xs text-slate-500 mb-3">
-                Use your preferred video room. Session Room will stay alongside it for notes, transcript, and preparation.
+                Use your preferred video room. Session Studio will stay alongside it for notes, transcript, and preparation.
               </p>
               <div className="flex gap-2">
                 <input

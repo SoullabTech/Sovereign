@@ -59,7 +59,7 @@ export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
   { placeId: 'studio', placeName: 'Studio', routePrefix: '/studio', purpose: 'A workspace where practitioners develop their practice, programs, and projects.' },
   { placeId: 'decisions', placeName: 'Decisions', routePrefix: '/studio/decisions', purpose: 'A room for naming and reflecting on decisions.' },
   { placeId: 'changes', placeName: 'Changes', routePrefix: '/studio/changes', purpose: 'A room for noticing and reflecting on transitions over time.' },
-  { placeId: 'session-room', placeName: 'Session Room', routePrefix: '/studio/session-room', purpose: 'A live room for one-to-one sessions.' },
+  { placeId: 'session-room', placeName: 'Session Studio', routePrefix: '/studio/session-room', purpose: 'A live room for one-to-one sessions.' },
   { placeId: 'encounters', placeName: 'Encounters', routePrefix: '/studio/encounters', purpose: 'Records of live session encounters.' },
   { placeId: 'soul-portrait', placeName: 'Soul Portrait', routePrefix: '/soul-portrait', purpose: 'A member\'s soul portrait, offered individually with consent.' },
   { placeId: 'home', placeName: 'Home', routePrefix: '/home', purpose: 'The member landing threshold.' },

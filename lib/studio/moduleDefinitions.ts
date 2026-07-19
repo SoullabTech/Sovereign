@@ -391,7 +391,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   },
   {
     slug: 'scribe',
-    label: 'Session Room',
+    label: 'Session Studio',
     icon: Mic,
     href: '/studio/session-room',
     category: 'tools',

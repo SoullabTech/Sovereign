@@ -217,7 +217,7 @@ export default function StudioHome() {
                       href="/studio/session-room"
                       className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/25 hover:bg-amber-500/25 transition-colors"
                     >
-                      <DoorOpen className="w-4 h-4" /> Enter Session Room
+                      <DoorOpen className="w-4 h-4" /> Enter Session Studio
                     </Link>
                   </div>
                   {/* The prep itself, surfaced inline — the existing engine, finally on the threshold */}

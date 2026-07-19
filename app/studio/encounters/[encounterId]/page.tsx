@@ -453,7 +453,7 @@ export default function EncounterWorkspacePage() {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs text-amber-400/90 uppercase tracking-wider flex items-center gap-1.5">
                     <DoorOpen className="w-3.5 h-3.5" />
-                    Session Room
+                    Session Studio
                   </h3>
                   <button
                     onClick={refreshConsents}

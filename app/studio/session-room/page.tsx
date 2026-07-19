@@ -588,7 +588,7 @@ ${insightsSection}
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                 <Radio className="w-8 h-8 text-amber-400" />
               </div>
-              <h1 className="text-2xl font-semibold text-white">Session Room</h1>
+              <h1 className="text-2xl font-semibold text-white">Session Studio</h1>
               <p className="text-slate-400 text-sm mt-1">
                 Live session companion — record, mark moments, text MAIA, review with structured notes
               </p>

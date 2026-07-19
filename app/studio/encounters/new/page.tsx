@@ -144,7 +144,7 @@ export default function NewEncounterPage() {
 
           <div>
             <label className="block text-sm text-slate-300 mb-2" htmlFor="invitee">
-              Who is joining? <span className="text-slate-500">(optional — opens a live Session Room)</span>
+              Who is joining? <span className="text-slate-500">(optional — opens a live Session Studio)</span>
             </label>
             <input
               id="invitee"

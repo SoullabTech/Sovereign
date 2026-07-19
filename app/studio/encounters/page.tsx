@@ -90,14 +90,14 @@ export default function EncountersPage() {
             <Radio className="w-10 h-10 text-slate-600 mx-auto mb-4" />
             <p className="text-slate-300 font-medium">No encounters yet</p>
             <p className="text-slate-500 text-sm mt-2 max-w-sm mx-auto">
-              Encounters are created when you finish a session recording. Start a session in the Session Room to begin.
+              Encounters are created when you finish a session recording. Start a session in the Session Studio to begin.
             </p>
             <button
               onClick={() => router.push('/studio/session-room')}
               className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-sm hover:bg-amber-500/25 transition-all"
             >
               <Radio className="w-4 h-4" />
-              Go to Session Room
+              Go to Session Studio
             </button>
           </div>
         ) : (

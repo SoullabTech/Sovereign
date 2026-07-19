@@ -127,7 +127,7 @@ export function RecordingBanner() {
         className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
       >
         <Radio className="w-3 h-3" />
-        Open Session Room
+        Open Session Studio
       </Link>
     </div>
   );
