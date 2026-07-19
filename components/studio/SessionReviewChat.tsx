@@ -23,6 +23,10 @@ import {
   AlertTriangle,
   UserPlus,
   X,
+  Download,
+  Printer,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { ParentUpdateDrawer } from '@/components/studio/ParentUpdateDrawer';
@@ -151,6 +155,9 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, p
   // distinction in a review is inferred, not captured. Server-derived from the
   // transcript itself — dual-track diarization removes the notice naturally.
   const [singleSpeakerSource, setSingleSpeakerSource] = useState(false);
+  // Reading mode: the card is height-capped for the room layout; expanded mode
+  // lifts it to a full-viewport overlay so long reviews can be read in place.
+  const [expanded, setExpanded] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -163,6 +170,95 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, p
   useEffect(() => {
     if (nameEditing) nameInputRef.current?.focus();
   }, [nameEditing]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExpanded(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded]);
+
+  // ---------------------------------------------------------------------------
+  // Export — download / print. The provenance notices (speaker attribution,
+  // transcript quality) MUST travel with any exported artifact: an export that
+  // strips them would read as more certain than the review it came from.
+  // ---------------------------------------------------------------------------
+
+  const buildExportParts = useCallback(() => {
+    const notices: string[] = [];
+    if (singleSpeakerSource) {
+      notices.push(
+        'Speaker attribution: not available — this session was recorded as a single undiarized stream. Distinctions between participants in the review may be inferred from context, not captured.'
+      );
+    }
+    if (transcriptQuality?.phantomRemoved) {
+      notices.push('Transcript cleaned: repeated phrase removed from segments.');
+    }
+    if (transcriptQuality?.sampled) {
+      notices.push(
+        `Long session — using ${transcriptQuality.segmentsSampled} of ${transcriptQuality.segmentCount} segments (head + sampled middle + tail).`
+      );
+    }
+    const meta = [
+      `Duration: ${durationMin}m ${durationSec}s (${segmentCount} turns)`,
+      clientName ? `Client: ${clientName}` : null,
+      `Exported: ${new Date().toLocaleString()}`,
+    ].filter(Boolean) as string[];
+    // The transient status line (id '1') is UI chrome, not review content.
+    const body = messages.filter(m => m.id !== '1');
+    return { meta, notices, body };
+  }, [messages, singleSpeakerSource, transcriptQuality, clientName, durationMin, durationSec, segmentCount]);
+
+  const handleDownload = useCallback(() => {
+    const { meta, notices, body } = buildExportParts();
+    const md = [
+      '# Session Review — MAIA',
+      '',
+      ...meta.map(l => `> ${l}`),
+      ...(notices.length ? ['', ...notices.map(n => `> ⚠ ${n}`)] : []),
+      '',
+      ...body.map(m => (m.role === 'user' ? `## Question\n\n${m.content}` : m.content)),
+    ].join('\n');
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `session-review-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [buildExportParts]);
+
+  const handlePrint = useCallback(() => {
+    const { meta, notices, body } = buildExportParts();
+    const esc = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const w = window.open('', '_blank', 'width=800,height=900');
+    if (!w) return; // popup blocked — nothing to clean up
+    w.document.write(`<!doctype html><html><head><title>Session Review — MAIA</title>
+<style>
+  body { font-family: Georgia, 'Times New Roman', serif; color: #1a1a2e; max-width: 46rem; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.55; }
+  h1 { font-size: 1.4rem; border-bottom: 1px solid #ccc; padding-bottom: .5rem; }
+  .meta { color: #555; font-size: .85rem; }
+  .notice { background: #fdf6e3; border-left: 3px solid #d4a017; padding: .5rem .75rem; font-size: .85rem; margin: .5rem 0; }
+  .q { font-weight: bold; margin-top: 1.5rem; color: #0b6e63; }
+  .a { white-space: pre-wrap; margin-top: .5rem; }
+  @media print { body { margin: 0 auto; } }
+</style></head><body>
+<h1>Session Review — MAIA</h1>
+${meta.map(l => `<div class="meta">${esc(l)}</div>`).join('')}
+${notices.map(n => `<div class="notice">⚠ ${esc(n)}</div>`).join('')}
+${body
+  .map(m =>
+    m.role === 'user' ? `<div class="q">Question: ${esc(m.content)}</div>` : `<div class="a">${esc(m.content)}</div>`
+  )
+  .join('')}
+</body></html>`);
+    w.document.close();
+    w.focus();
+    w.print();
+  }, [buildExportParts]);
 
   // ---------------------------------------------------------------------------
   // Model call (POST) — syntheses. clientName is read live from the ref so a
@@ -373,16 +469,62 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, p
   const currentPrompts = LENS_PROMPTS[activeLens];
   const [parentUpdateOpen, setParentUpdateOpen] = useState(false);
 
+  const hasReviewContent = messages.some(m => m.role === 'assistant' && m.id !== '1');
+
   return (
-    <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col" style={{ maxHeight: '680px' }}>
+    <>
+      {/* Backdrop for expanded reading mode */}
+      {expanded && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40"
+          onClick={() => setExpanded(false)}
+          aria-hidden="true"
+        />
+      )}
+    <div
+      className={`bg-[#1e1e38] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col ${
+        expanded ? 'fixed inset-2 md:inset-8 z-50' : ''
+      }`}
+      style={expanded ? undefined : { maxHeight: '680px' }}
+    >
       {/* Header + Lens tabs */}
       <div className="px-4 py-3 border-b border-slate-800/50">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-4 h-4 text-teal-400" />
           <span className="text-sm font-medium text-white">Review with MAIA</span>
 
+          {/* Read in full / download / print — the review is a deliverable the
+              practitioner takes with them, not only a pane they scroll */}
+          <div className="ml-auto flex items-center gap-0.5">
+            {hasReviewContent && (
+              <>
+                <button
+                  onClick={handleDownload}
+                  className="p-1.5 text-slate-500 hover:text-teal-300 transition-colors"
+                  title="Download review (Markdown)"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="p-1.5 text-slate-500 hover:text-teal-300 transition-colors"
+                  title="Print review (or save as PDF)"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className="p-1.5 text-slate-500 hover:text-teal-300 transition-colors"
+              title={expanded ? 'Exit full view (Esc)' : 'Read in full view'}
+            >
+              {expanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
           {/* Optional client name — added after the content is seen */}
-          <div className="ml-auto flex items-center gap-1">
+          <div className="flex items-center gap-1">
             {nameEditing ? (
               <div className="flex items-center gap-1">
                 <input
@@ -619,5 +761,6 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, p
         />
       )}
     </div>
+    </>
   );
 }
