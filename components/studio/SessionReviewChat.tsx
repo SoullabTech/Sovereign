@@ -18,7 +18,6 @@ import {
   Sparkles,
   FileText,
   ListTree,
-  Lightbulb,
   ScrollText,
   ArrowRight,
   AlertTriangle,
@@ -66,15 +65,17 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // the model — the others are model syntheses (POST).
 // ---------------------------------------------------------------------------
 
+// Progressive disclosure: recognition → meaning → organization → evidence.
+const OVERVIEW_PROMPT = 'Provide an overview of this session for fast recognition.';
 const DELIVERABLES: Array<{
   label: string;
   icon: typeof FileText;
   prompt?: string;
   kind?: 'transcript';
 }> = [
-  { label: 'Overview', icon: FileText, prompt: 'Provide a layered overview of this session.' },
-  { label: 'Outline', icon: ListTree, prompt: 'Give me a structured outline of this session — the main sections and how it moved from beginning to end.' },
-  { label: 'Insights', icon: Lightbulb, prompt: 'What are the key insights and themes from this session?' },
+  { label: 'Overview', icon: FileText, prompt: OVERVIEW_PROMPT },
+  { label: 'Elemental & Psychological', icon: Sparkles, prompt: 'Give an elemental and psychological reading of this session.' },
+  { label: 'Organizational', icon: ListTree, prompt: 'Give the organizational practitioner view of this session — what to carry forward and follow up.' },
   { label: 'Transcript', icon: ScrollText, kind: 'transcript' },
 ];
 
@@ -226,7 +227,18 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, p
           if (data.status === 'processing') {
             const done = data.progress?.done ?? 0;
             const total = data.progress?.total ?? '…';
-            upsert(`Reviewing the full session — ${done} of ${total} segments read…`);
+            const phase = data.progress?.phase ?? 'reading';
+            const label =
+              phase === 'reading'
+                ? `Reading the session — ${done} of ${total} sections…`
+                : phase === 'overview'
+                  ? 'Building the overview…'
+                  : phase === 'elemental'
+                    ? 'Reading elemental and psychological patterns…'
+                    : phase === 'organizational'
+                      ? 'Organizing practitioner follow-through…'
+                      : 'Working through your question…';
+            upsert(label);
             if (Date.now() > deadline) {
               upsert('This review is taking longer than expected and may still be finishing in the background. Please try again in a moment.');
               break;
@@ -309,7 +321,7 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, p
   useEffect(() => {
     if (hasContent && !hasAutoOverview.current) {
       hasAutoOverview.current = true;
-      sendToMaia('Provide a layered overview of this session.');
+      sendToMaia(OVERVIEW_PROMPT);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasContent]);
