@@ -19,12 +19,20 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { subscribe, unsubscribe, publish, type SignalMessage } from '@/lib/webrtc/signalRelay';
 import { authorizeRoomEntry } from '@/lib/encounters/roomDoor';
+import { createRateLimiter, clientIp } from '@/lib/http/rateLimit';
+
+// Defense-in-depth per-IP throttle. Signaling is already consent-gated below, so this guards the
+// remaining surface: rapid SSE reconnect churn and floods of validly-signed publishes. Generous
+// enough never to touch a legitimate ICE negotiation burst; a shared budget across GET + POST.
+const limited = createRateLimiter(300, 60_000);
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ roomId: string }> }) {
   const { roomId } = await params;
   const url = new URL(request.url);
   const peerId = url.searchParams.get('peerId');
   if (!peerId) return new Response('peerId required', { status: 400 });
+
+  if (limited(clientIp(request), Date.now())) return new Response('rate_limited', { status: 429 });
 
   const threshold = url.searchParams.get('threshold');
   if (!threshold) return new Response('threshold proof required', { status: 403 });
@@ -80,6 +88,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ roomId: string }> }) {
   const { roomId } = await params;
+
+  if (limited(clientIp(request), Date.now())) {
+    return Response.json({ error: 'rate_limited' }, { status: 429 });
+  }
+
   let body: SignalMessage & { threshold?: string };
   try {
     body = await request.json();
