@@ -11,20 +11,56 @@ const navLinks = [
   { label: 'Contact', href: '#contact' },
 ];
 
+const showBetaChip = process.env.NEXT_PUBLIC_SHOW_BETA_BADGE === 'true';
+
+/**
+ * Small beta indicator rendered inside the nav chrome. On the landing page
+ * this replaces the global BetaBanner (which yields here — its fixed top-right
+ * position would overlap the Enter MAIA control; see components/BetaBanner.tsx).
+ */
+function BetaChip() {
+  if (!showBetaChip) return null;
+  return (
+    <span
+      role="note"
+      aria-label="This platform is in beta"
+      className="hidden min-[360px]:inline-flex select-none items-center gap-1.5 rounded-full border border-amber-400/25 bg-[#1A1513]/70 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-amber-200/80"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" aria-hidden="true" />
+      Beta
+    </span>
+  );
+}
+
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
+    // The page scrolls the window on mobile, but a global landscape rule makes
+    // <main> the scroll container on desktop — listen to both so the backdrop
+    // engages regardless of which one is actually scrolling.
+    const mainEl = document.querySelector('main');
+    const onScroll = () =>
+      setScrolled(window.scrollY > 16 || (mainEl ? mainEl.scrollTop > 16 : false));
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    mainEl?.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      mainEl?.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   const handleNavClick = (href: string) => {
     setMobileOpen(false);
     const id = href.replace('#', '');
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -39,7 +75,7 @@ export function LandingNav() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={scrollToTop}
             className="flex items-center gap-3 group"
           >
             <img src="/soullab-logo.png" alt="Soullab" className="w-8 h-8 rounded-full" />
@@ -62,7 +98,8 @@ export function LandingNav() {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-3">
+            <BetaChip />
             <Link
               href="/enter"
               className="inline-flex items-center rounded-lg px-5 py-2 bg-maia-spice-500/10 text-maia-spice-400 hover:bg-maia-spice-500/20 text-sm font-medium transition-colors"
@@ -72,7 +109,8 @@ export function LandingNav() {
           </div>
 
           {/* Mobile toggle */}
-          <div className="flex md:hidden items-center gap-3">
+          <div className="flex md:hidden items-center gap-2.5">
+            <BetaChip />
             <Link
               href="/enter"
               className="inline-flex items-center rounded-lg px-4 py-2 bg-maia-spice-500/10 text-maia-spice-400 text-sm font-medium"

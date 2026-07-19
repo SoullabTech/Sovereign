@@ -1,3 +1,7 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 /**
  * BetaBanner — platform-wide beta watermark.
  *
@@ -29,6 +33,12 @@
  *   chrome occupies the top-right corner, the chrome wins and the badge
  *   yields — it must never visually cover a control (the account chip on
  *   /maia sits exactly there).
+ * - The public landing page ("/") applies that yield rule fully: its nav's
+ *   Enter MAIA control occupies the top-right at every width and the nav is
+ *   transparent until scrolled, so the floating badge would visually cover
+ *   the control. The landing nav renders its own equivalent beta chip inside
+ *   the nav chrome (components/landing/LandingNav.tsx), keeping the honest
+ *   beta claim visible; this component stands down on that route only.
  * - Respects `env(safe-area-inset-top)` / `env(safe-area-inset-right)` so it
  *   clears the iOS notch in the PWA / Capacitor build.
  * - Persistent / non-dismissable by design: beta status is an honest claim about
@@ -36,7 +46,14 @@
  *   (docs/canon/MARKETING_CLAIM_DISCIPLINE.md).
  */
 export function BetaBanner() {
+  const pathname = usePathname();
+
   if (process.env.NEXT_PUBLIC_SHOW_BETA_BADGE !== "true") {
+    return null;
+  }
+
+  // Landing page: the nav's own beta chip carries the claim (see above).
+  if (pathname === "/") {
     return null;
   }
 
