@@ -45,7 +45,7 @@ export const MAP_CONCURRENCY = 4;
 /** Retries per chunk digest before the whole review fails. */
 export const CHUNK_RETRIES = 2;
 /** Bump when prompts change so stale cached artifacts are not reused. */
-export const PROMPT_VERSION = 'sr-staged-v3';
+export const PROMPT_VERSION = 'sr-staged-v4';
 
 const DIGEST_MAX_TOKENS = 750;
 const SYNTH_MAX_TOKENS = 3000;
@@ -74,6 +74,20 @@ export const TRUNCATION_MARKER =
   '\n\n— *This review was truncated at the length limit. Ask a narrower question, or use the Overview / Elemental / Organizational views.*';
 const CONTINUE_INSTRUCTION =
   'Your previous message stopped mid-output because it hit the length limit. Continue EXACTLY from where you stopped — do not repeat anything already written, do not restart, and do not add any preamble. Just continue.';
+/**
+ * A chunk digest that stops at 'max_tokens' silently loses the tail of its
+ * segment — and DIGEST_SYSTEM's heading order puts decisions/commitments,
+ * unresolved threads, and marked moments last, so the loss is systematically
+ * biased against exactly the facts the views are built from. Continue once per
+ * chunk (unlike synthesis, this cost multiplies by chunk count); if the digest
+ * still cannot finish, DIGEST_TRUNCATION_NOTE is appended so the session map
+ * names what it is missing instead of reading as complete. (Prod 2026-07-19:
+ * 8 of 10 chunk digests in a 373-turn session stopped at the cap.)
+ */
+const DIGEST_CONTINUATIONS = 1;
+/** Appended to a chunk digest that could not finish within the length limit. */
+export const DIGEST_TRUNCATION_NOTE =
+  '\n\n[This segment digest hit the length limit and is incomplete — late-segment decisions, unresolved threads, and marked moments may be missing.]';
 
 class LLMTimeoutError extends Error {
   constructor(label: string, ms: number) {
@@ -237,6 +251,7 @@ async function digestChunk(
 ): Promise<ChunkDigest> {
   const transcript = formatChunkTranscript(chunk);
   const user = `Segment ${chunkIndex + 1} — turns ${chunk[0].index}–${chunk[chunk.length - 1].index}, time ${chunk[0].tsLabel}–${chunk[chunk.length - 1].tsLabel}:\n\n${transcript}\n\nProduce the structured digest for this segment.`;
+  const systemPrompt = DIGEST_SYSTEM + (singleSpeaker ? SINGLE_SPEAKER_ATTRIBUTION_GUARD : '');
 
   let lastErr: unknown;
   for (let attempt = 0; attempt <= CHUNK_RETRIES; attempt++) {
@@ -245,7 +260,7 @@ async function digestChunk(
         {
           tier: 'core',
           forceClaude: true,
-          systemPrompt: DIGEST_SYSTEM + (singleSpeaker ? SINGLE_SPEAKER_ATTRIBUTION_GUARD : ''),
+          systemPrompt,
           messages: [{ role: 'user', content: user }],
           maxTokens: DIGEST_MAX_TOKENS,
           temperature: 0.4,
@@ -253,13 +268,52 @@ async function digestChunk(
         DIGEST_TIMEOUT_MS,
         `digest chunk ${chunkIndex}`
       );
-      const text = (res.text || '').trim();
+      let text = (res.text || '').trim();
       if (!text) throw new Error('empty digest');
+      let stopReason = res.metadata?.stopReason;
+
+      // Same honesty rule as synthesize(): 'max_tokens' means the map lost the
+      // tail of this segment. Continue in place (bounded); if it still cannot
+      // finish, the digest says so instead of reading as complete.
+      for (let c = 1; stopReason === 'max_tokens' && c <= DIGEST_CONTINUATIONS; c++) {
+        console.warn(`[SessionReview] digest chunk ${chunkIndex} hit max_tokens, continuing (${c}/${DIGEST_CONTINUATIONS})`);
+        try {
+          const cont = await callLLMWithTimeout(
+            {
+              tier: 'core',
+              forceClaude: true,
+              systemPrompt,
+              messages: [
+                { role: 'user', content: user },
+                { role: 'assistant', content: text },
+                { role: 'user', content: CONTINUE_INSTRUCTION },
+              ],
+              maxTokens: DIGEST_MAX_TOKENS,
+              temperature: 0.4,
+            },
+            DIGEST_TIMEOUT_MS,
+            `digest chunk ${chunkIndex} continuation ${c}`
+          );
+          text += cont.text || '';
+          stopReason = cont.metadata?.stopReason;
+        } catch (err) {
+          // The partial digest is real map content; retrying the whole chunk
+          // would pay the full call again for facts already captured. Keep it
+          // and let the note carry the honesty.
+          console.error(`[SessionReview] digest chunk ${chunkIndex} continuation failed:`, err);
+          stopReason = 'max_tokens';
+          break;
+        }
+      }
+      if (stopReason === 'max_tokens') {
+        text = text.trimEnd() + DIGEST_TRUNCATION_NOTE;
+      }
+
       return {
         chunkIndex,
         turnRange: [chunk[0].index, chunk[chunk.length - 1].index],
         timeRange: [chunk[0].tsLabel, chunk[chunk.length - 1].tsLabel],
-        digest: text,
+        digest: text.trim(),
       };
     } catch (err) {
       lastErr = err;

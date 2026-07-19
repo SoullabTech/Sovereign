@@ -26,6 +26,7 @@ import {
   SIMPLE_MAX_TURNS,
   CHUNK_TURNS,
   TRUNCATION_MARKER,
+  DIGEST_TRUNCATION_NOTE,
   type StagedInput,
 } from '../stagedReview';
 import { isSingleSpeakerTranscript } from '../attributionGuard';
@@ -354,5 +355,90 @@ describe('honest completeness at the token cap (prod walk 2026-07-19)', () => {
     expect(res.truncated).toBe(false);
     expect(res.result).not.toContain('truncated at the length limit');
     expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks + 1);
+  });
+});
+
+describe('digest honesty at the token cap (session map completeness, prod 2026-07-19)', () => {
+  // Prod session d9f25ee4: 8 of 10 chunk digests stopped at DIGEST_MAX_TOKENS,
+  // silently dropping segment tails — biased against the last DIGEST_SYSTEM
+  // headings (decisions, unresolved, marked moments). The map layer must be
+  // continued or say what it is missing.
+  const isDigest = (p: any) =>
+    typeof p?.systemPrompt === 'string' && p.systemPrompt.includes('ONE segment');
+  const isCont = (p: any) => p?.messages?.length === 3;
+  const findSynth = () =>
+    mockGenerateSimple.mock.calls.map(c => c[0] as any).find(p => !isDigest(p));
+
+  it('a max_tokens digest is continued once and the joined digest reaches the session map', async () => {
+    const turns = makeTurns(160); // 4 chunks
+    const nChunks = chunkTurns(turns).length;
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params) && isCont(params))
+        return { text: ' Decisions: the tail facts.', metadata: { stopReason: 'end_turn' } };
+      if (isDigest(params))
+        return { text: 'Chronology: the head facts.', metadata: { stopReason: 'max_tokens' } };
+      return { text: 'the review', metadata: { stopReason: 'end_turn' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    if (res.status !== 'complete') return;
+    expect(res.truncated).toBe(false);
+    // per chunk: one digest + exactly one continuation; then one synthesis
+    expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks * 2 + 1);
+    // the continuation replays the SAME digest system prompt and carries the partial
+    const cont = mockGenerateSimple.mock.calls
+      .map(c => c[0] as any)
+      .find(p => isDigest(p) && isCont(p));
+    expect(cont.messages.map((m: any) => m.role)).toEqual(['user', 'assistant', 'user']);
+    expect(cont.messages[1].content).toBe('Chronology: the head facts.');
+    expect(cont.messages[2].content).toMatch(/continue exactly/i);
+    // the synthesis reads the joined digest, not the truncated head — and no note
+    const synth = findSynth();
+    expect(synth.messages[0].content).toContain('Chronology: the head facts. Decisions: the tail facts.');
+    expect(synth.messages[0].content).not.toContain(DIGEST_TRUNCATION_NOTE.trim());
+  });
+
+  it('still at the cap after the single continuation → the digest names its truncation in the map', async () => {
+    const turns = makeTurns(160); // 4 chunks
+    const nChunks = chunkTurns(turns).length;
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params)) return { text: 'partial digest', metadata: { stopReason: 'max_tokens' } };
+      return { text: 'the review', metadata: { stopReason: 'end_turn' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    // bounded: exactly ONE continuation per chunk, never more
+    expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks * 2 + 1);
+    expect(findSynth().messages[0].content).toContain(DIGEST_TRUNCATION_NOTE.trim());
+  });
+
+  it('a digest continuation failure keeps the partial digest with the note — not a chunk failure', async () => {
+    const turns = makeTurns(160); // 4 chunks
+    const nChunks = chunkTurns(turns).length;
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params) && isCont(params)) throw new Error('provider blip');
+      if (isDigest(params)) return { text: 'partial digest', metadata: { stopReason: 'max_tokens' } };
+      return { text: 'the review', metadata: { stopReason: 'end_turn' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    // the partial digest is kept and marked — NOT failed(digest), NOT a full-chunk retry
+    expect(res.status).toBe('complete');
+    expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks * 2 + 1);
+    const synth = findSynth();
+    expect(synth.messages[0].content).toContain('partial digest');
+    expect(synth.messages[0].content).toContain(DIGEST_TRUNCATION_NOTE.trim());
+  });
+
+  it('an end_turn digest makes exactly one call — no continuation, no note', async () => {
+    const turns = makeTurns(160); // 4 chunks
+    const nChunks = chunkTurns(turns).length;
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params)) return { text: 'a complete digest', metadata: { stopReason: 'end_turn' } };
+      return { text: 'the review', metadata: { stopReason: 'end_turn' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks + 1);
+    expect(findSynth().messages[0].content).not.toContain(DIGEST_TRUNCATION_NOTE.trim());
   });
 });
