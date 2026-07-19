@@ -99,6 +99,19 @@ describe('runStagedReview', () => {
     expect(mockGenerateSimple).toHaveBeenCalledTimes(chunks + 1);
   });
 
+  it('the elemental view asks for the developmental core (MAIA lens)', async () => {
+    const turns = makeTurns(160);
+    await runStagedReview(input(turns, { mode: 'elemental' }), hashTranscript(turns));
+    const synthCall = mockGenerateSimple.mock.calls.find(
+      c => typeof c[0]?.systemPrompt === 'string' && c[0].systemPrompt.includes('ELEMENTAL')
+    );
+    expect(synthCall).toBeDefined();
+    const prompt = synthCall![0].messages[0].content as string;
+    for (const marker of ['Center of Gravity', 'Developmental Edge', 'Living Question', 'Unintegrated Material', 'Fire', 'Aether']) {
+      expect(prompt).toContain(marker);
+    }
+  });
+
   it('reports phase transitions: reading → the requested view', async () => {
     const turns = makeTurns(200);
     const phases: string[] = [];

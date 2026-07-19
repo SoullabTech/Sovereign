@@ -291,13 +291,23 @@ function synthesisInstruction(mode: ReviewMode, question: string, clientName: st
 - unresolved material;
 - specific moments worth returning to (with [mm:ss]).`;
     case 'elemental':
-      return `Produce the Elemental & Psychological reading of ${who}. Cover, where the material supports each:
+      return `Produce the Elemental & Developmental reading of ${who} — the layer that is uniquely MAIA's: the shape of this person's becoming.
+
+## Session Field (elemental currents — where the material supports each)
 - Fire — desire, agency, purpose, conflict, transformation;
 - Water — emotion, relationship, vulnerability, grief, attachment;
 - Earth — body, reality, resources, structure, practical needs;
 - Air — beliefs, narratives, questions, insight, mental patterns;
-- Aether / Field — meaning, coherence, emergence, deeper pattern.
-Alongside: emotional and relational dynamics, psychological patterns, tensions and polarities, protective strategies or defenses, developmental movement, archetypal material where supported, and areas of aliveness vs areas needing care. Label every claim's epistemic status (Said / Observed / Tentative).`;
+- Aether / Field — meaning, coherence, emergence, deeper pattern, identity transition.
+Alongside: emotional and relational dynamics, psychological patterns, tensions and polarities, protective strategies or defenses, developmental movement, archetypal material where supported, and areas of aliveness vs areas needing care.
+
+## Developmental Core (name each in one line, only if the session earns it)
+- **Center of Gravity** — what the session was actually organized around (its theme; e.g. "entanglement and individuation").
+- **Developmental Edge** — the growth edge, phrased as the question the person is working ("Can I remain connected to opportunity without surrendering myself?").
+- **Living Question** — the open question they are living now ("Who am I when I no longer organize around X?").
+- **Unintegrated Material** — what remains split off or unmetabolized (a part, a grief, a truth not yet owned).
+
+Label every interpretive claim's epistemic status (Said / Observed / Tentative). Never present a Tentative developmental reading as fact — these are offerings the practitioner integrates, not diagnoses. Where the session does not support one of the Developmental Core items, say so rather than inventing it.`;
     case 'organizational':
       return `Produce the Organizational / Practitioner view of ${who}:
 - themes to carry forward;
