@@ -30,6 +30,7 @@
 import crypto from 'crypto';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import type { ReviewTurn } from '@/lib/scribe/sessionReviewMode';
+import { getLensInstructions } from '@/lib/scribe/sessionReviewMode';
 import {
   isSingleSpeakerTranscript,
   SINGLE_SPEAKER_ATTRIBUTION_GUARD,
@@ -49,8 +50,11 @@ export const CHUNK_RETRIES = 2;
  * when output caps change: the cache key does not include maxTokens, so a cap
  * change silently keeps serving digests shaped by the old cap (v4→v5: raised
  * DIGEST_MAX_TOKENS, invalidating note-laden 750-cap digests).
+ * v5→v6: question-mode synthesis now carries the full lens instructions
+ * (getLensInstructions) instead of the bare "Active lens: X." line — digest
+ * prompts are unchanged, but the key is shared, so digests regenerate once.
  */
-export const PROMPT_VERSION = 'sr-staged-v5';
+export const PROMPT_VERSION = 'sr-staged-v6';
 
 /**
  * 750 was too small for dense chunks: in a 373-turn prod session (2026-07-19,
@@ -424,7 +428,13 @@ async function synthesize(
   input: StagedInput,
   singleSpeaker: boolean
 ): Promise<{ text: string; truncated: boolean }> {
-  const lensLine = `Active lens: ${input.lens.toUpperCase()}.`;
+  // Question mode is where the lens actually governs the reading, so it gets
+  // the full lens grammar. The fixed views (overview/elemental/organizational)
+  // have their own view systems and keep the bare marker line.
+  const lensLine =
+    input.mode === 'question'
+      ? `Active lens: ${input.lens.toUpperCase()}.\n\n${getLensInstructions(input.lens)}`
+      : `Active lens: ${input.lens.toUpperCase()}.`;
   const digestBlock = digests
     .map(
       d =>

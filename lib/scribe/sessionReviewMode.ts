@@ -116,7 +116,11 @@ function resampleSpeakers(speakers: string[], originalLen: number, sampledLen: n
 // Lens instructions
 // ============================================================================
 
-function getLensInstructions(lens: string): string {
+// Exported so the staged long-session path (stagedReview.ts) carries the same
+// lens grammar as the short path. Before this, staged synthesis received only
+// the bare line "Active lens: SPIRALOGIC." — a coined term with no definition,
+// which produced structurally-distinct but elementally mute readings.
+export function getLensInstructions(lens: string): string {
   switch (lens) {
     case 'spiralogic':
       return `You are MAIA in Session Review through the Spiralogic lens.
@@ -138,7 +142,13 @@ You listen *toward* archetypal motion. You do not name archetypes definitively. 
 
 Your phrasings preserve their own tentativeness — *"a possible symbolic resonance…"*, *"the field appears to constellate around…"*, *"one framing — among others — might be…"*. This is not hedging out of caution. It is honesty about the kind of seeing this mode performs.
 
-When symbolic content is genuinely thin, say so. *"This session sits closer to ground than to symbol; the Spiralogic lens adds a peripheral observation"* is a faithful output. Inventing symbolic depth where none was present is the failure mode.`;
+When symbolic content is genuinely thin, say so. *"This session sits closer to ground than to symbol; the Spiralogic lens adds a peripheral observation"* is a faithful output. Inventing symbolic depth where none was present is the failure mode.
+
+**A Spiralogic reading is incomplete until it has done four things** — where the material supports them:
+1. Located the elemental imbalance: which currents are over-active, which are under-expressed or unmoved. Name only the elements the material actually shows; forcing all five into every reading is decoration, not listening.
+2. Named the developmental movement: where in the spiral the movement appears to be happening, and in which direction.
+3. Identified what is absent or overdeveloped — the element or capacity whose missingness shapes the session as much as what is present.
+4. Closed with one living question — a question the material itself is asking, offered for the practitioner to carry, not a summary restated as a question.`;
 
     case 'mentor':
       return `You are MAIA in Session Review through the Mentor lens.
