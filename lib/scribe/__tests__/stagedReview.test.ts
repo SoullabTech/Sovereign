@@ -25,6 +25,7 @@ import {
   _resetStagedReviewState,
   SIMPLE_MAX_TURNS,
   CHUNK_TURNS,
+  TRUNCATION_MARKER,
   type StagedInput,
 } from '../stagedReview';
 import { isSingleSpeakerTranscript } from '../attributionGuard';
@@ -269,5 +270,85 @@ describe('cache + job dedup via getOrStartReview', () => {
     mockGenerateSimple.mockResolvedValue({ text: 'ok now' });
     const retry = getOrStartReview(input(turns), hash);
     expect(retry.started).toBe(true);
+  });
+});
+
+describe('honest completeness at the token cap (prod walk 2026-07-19)', () => {
+  // Discriminators mirror the real prompts: digests vs synthesis vs continuation.
+  const isDigest = (p: any) =>
+    typeof p?.systemPrompt === 'string' && p.systemPrompt.includes('ONE segment');
+  const isContinuation = (p: any) => p?.messages?.length === 3;
+
+  it('a max_tokens synthesis is continued to completion → complete, no marker', async () => {
+    const turns = makeTurns(160); // 4 chunks
+    const nChunks = chunkTurns(turns).length;
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params)) return { text: 'digest ok' };
+      if (isContinuation(params)) return { text: ' finished the table.', metadata: { stopReason: 'end_turn' } };
+      return { text: 'The **14-year-old girl', metadata: { stopReason: 'max_tokens' } };
+    });
+    const res = await runStagedReview(
+      input(turns, { mode: 'question', question: 'What did the session hold?' }),
+      hashTranscript(turns)
+    );
+    expect(res.status).toBe('complete');
+    if (res.status !== 'complete') return;
+    expect(res.result).toBe('The **14-year-old girl finished the table.');
+    expect(res.truncated).toBe(false);
+    // digests + first synthesis + exactly one continuation
+    expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks + 2);
+    // the continuation carries the partial as an assistant turn + an explicit continue instruction
+    const cont = mockGenerateSimple.mock.calls.map(c => c[0] as any).find(isContinuation);
+    expect(cont.messages.map((m: any) => m.role)).toEqual(['user', 'assistant', 'user']);
+    expect(cont.messages[1].content).toBe('The **14-year-old girl');
+    expect(cont.messages[2].content).toMatch(/continue exactly/i);
+  });
+
+  it('still at the cap after bounded continuations → honest marker + truncated flag, never silent', async () => {
+    const turns = makeTurns(160); // 4 chunks
+    const nChunks = chunkTurns(turns).length;
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params)) return { text: 'digest ok' };
+      return { text: 'partial ', metadata: { stopReason: 'max_tokens' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    if (res.status !== 'complete') return;
+    expect(res.truncated).toBe(true);
+    expect(res.result).toContain('truncated at the length limit');
+    expect(res.result.endsWith(TRUNCATION_MARKER.trim())).toBe(true);
+    // bounded: digests + first synthesis + SYNTH_CONTINUATIONS continuations, then stop
+    expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks + 3);
+  });
+
+  it('a continuation failure keeps the partial artifact and marks it truncated', async () => {
+    const turns = makeTurns(160);
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params)) return { text: 'digest ok' };
+      if (isContinuation(params)) throw new Error('provider blip');
+      return { text: 'partial work', metadata: { stopReason: 'max_tokens' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    if (res.status !== 'complete') return;
+    expect(res.truncated).toBe(true);
+    expect(res.result.startsWith('partial work')).toBe(true);
+    expect(res.result).toContain('truncated at the length limit');
+  });
+
+  it('a normal end_turn synthesis is untouched: no continuation, no marker, truncated=false', async () => {
+    const turns = makeTurns(160);
+    const nChunks = chunkTurns(turns).length;
+    mockGenerateSimple.mockImplementation(async (params: any) => {
+      if (isDigest(params)) return { text: 'digest ok' };
+      return { text: 'a complete review', metadata: { stopReason: 'end_turn' } };
+    });
+    const res = await runStagedReview(input(turns), hashTranscript(turns));
+    expect(res.status).toBe('complete');
+    if (res.status !== 'complete') return;
+    expect(res.result).toBe('a complete review');
+    expect(res.truncated).toBe(false);
+    expect(res.result).not.toContain('truncated at the length limit');
+    expect(mockGenerateSimple).toHaveBeenCalledTimes(nChunks + 1);
   });
 });

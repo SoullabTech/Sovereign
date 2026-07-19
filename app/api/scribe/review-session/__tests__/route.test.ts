@@ -301,6 +301,40 @@ describe('recording-provenance flag (_meta.singleSpeakerSource, audit 2026-07-19
   });
 });
 
+describe('simple-path honest completeness (max_tokens)', () => {
+  // The simple path answers a synchronous request, so instead of continuing the
+  // generation it appends the explicit truncation marker and flags _meta.
+  it('a max_tokens stop appends the truncation marker and sets _meta.truncated', async () => {
+    mockGetMemberIdFromRequest.mockResolvedValue(OWNER);
+    mockVerifySessionOwnership.mockResolvedValue(ownedSession());
+    mockGenerateSimple.mockResolvedValueOnce({
+      text: 'REVIEW TEXT that stops mid-table: The **14-year-old girl',
+      metadata: { stopReason: 'max_tokens' },
+    });
+    const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'overview' }));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.response).toContain('The **14-year-old girl');
+    expect(body.response).toContain('truncated at the length limit');
+    expect(body._meta.truncated).toBe(true);
+  });
+
+  it('a normal end_turn stop is served unmarked with _meta.truncated=false', async () => {
+    mockGetMemberIdFromRequest.mockResolvedValue(OWNER);
+    mockVerifySessionOwnership.mockResolvedValue(ownedSession());
+    mockGenerateSimple.mockResolvedValueOnce({
+      text: 'REVIEW TEXT',
+      metadata: { stopReason: 'end_turn' },
+    });
+    const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'overview' }));
+    const body = await res.json();
+    expect(body.response).toBe('REVIEW TEXT');
+    expect(body.response).not.toContain('truncated at the length limit');
+    expect(body._meta.truncated).toBe(false);
+  });
+});
+
 describe('GET authorization (returns the full formatted transcript)', () => {
   it('unauthenticated → 401 without transcript', async () => {
     mockGetMemberIdFromRequest.mockResolvedValue(null);

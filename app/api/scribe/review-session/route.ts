@@ -19,6 +19,7 @@ import {
   getOrStartReview,
   hashTranscript,
   isLongSession,
+  TRUNCATION_MARKER,
   type ReviewMode,
   type StagedInput,
 } from '@/lib/scribe/stagedReview';
@@ -295,7 +296,7 @@ export async function POST(req: NextRequest) {
         response: status.result,
         reviewedSessionId,
         questionNumber: questionNumber || 1,
-        _meta: { staged: true, segmentCount: turnCount, chunks: status.chunks, singleSpeakerSource },
+        _meta: { staged: true, segmentCount: turnCount, chunks: status.chunks, singleSpeakerSource, truncated: status.truncated },
       });
     }
 
@@ -326,6 +327,7 @@ export async function POST(req: NextRequest) {
     console.log(`[SessionReview] ${meta.segmentCount} segments, sampled=${meta.segmentsSampled}, phantom=${meta.phantomPrefixRemoved ? 'stripped' : 'none'}`);
 
     let responseText: string;
+    let truncated = false;
     try {
       const llmResponse = await getLLMProvider().generateSimple({
         tier: 'core',
@@ -336,6 +338,15 @@ export async function POST(req: NextRequest) {
         temperature: 0.7,
       });
       responseText = llmResponse.text;
+      // No false completeness: a 'max_tokens' stop means the review ends
+      // mid-thought. This path answers a synchronous request (no background job
+      // to absorb continuation latency), so instead of continuing the
+      // generation it says so honestly. The staged path continues in place.
+      if (llmResponse.metadata?.stopReason === 'max_tokens') {
+        console.warn('[SessionReview] simple-path review truncated at max_tokens');
+        responseText = responseText.trimEnd() + TRUNCATION_MARKER;
+        truncated = true;
+      }
     } catch (genError: any) {
       console.error('❌ Session review generation error:', genError);
       return NextResponse.json(
@@ -351,7 +362,7 @@ export async function POST(req: NextRequest) {
       questionNumber: questionNumber || 1,
       // Route-level provenance (from the full transcript) wins over the
       // builder's, which sees the same data — spread order makes that explicit.
-      _meta: { ...meta, singleSpeakerSource },
+      _meta: { ...meta, singleSpeakerSource, truncated },
     });
   } catch (error: any) {
     console.error('❌ Session review error:', error);
