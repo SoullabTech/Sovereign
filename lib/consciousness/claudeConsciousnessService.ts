@@ -19,6 +19,13 @@ export interface ConsciousnessConsultationRequest {
     maiaResponse: string;
   }>;
   consultationType: ConsultationType;
+  // 📖💬 Consent-gated recall blocks (member-marked episodic moments, prior
+  // cross-session exchanges, member-placed atoms) — the same material MAIA's
+  // own prompt carries this turn. Passed through so the consultation never
+  // reads the field blind to member memory. Absent for sanctuary turns and
+  // members without recall material; the caller's route-level consent gates
+  // decide what arrives here — this service never loads memory itself.
+  contextAddenda?: string;
   sessionMetadata?: {
     turnCount: number;
     relationshipDepth?: 'new' | 'developing' | 'deep';
@@ -58,7 +65,7 @@ export interface ConsciousnessConsultationResponse {
 export async function consultClaudeForConsciousness(
   request: ConsultationRequest
 ): Promise<ConsciousnessConsultationResponse> {
-  const { userInput, maiaInitialResponse, conversationContext, consultationType, sessionMetadata } = request;
+  const { userInput, maiaInitialResponse, conversationContext, consultationType, contextAddenda, sessionMetadata } = request;
 
   // Build context for Claude consultation
   const contextSummary = conversationContext.length > 0
@@ -74,12 +81,20 @@ export async function consultClaudeForConsciousness(
     metadata: sessionMetadata
   });
 
+  // 📖💬 Append recall addenda to the consultation system prompt so every
+  // consultation type inherits them. Grounding only — the content boundaries
+  // (member-marked, provenance-framed, no synthesis) live inside the blocks
+  // themselves, exactly as they read in MAIA's own prompt.
+  const systemPromptWithRecall = contextAddenda
+    ? `${consultationPrompt.systemPrompt}\n\nMEMBER MEMORY CONTEXT (consent-gated recall carried by MAIA's prompt this turn — treat as grounding; do not synthesize beyond what the blocks state):\n\n${contextAddenda}`
+    : consultationPrompt.systemPrompt;
+
   try {
     // ✅ DEEP consciousness consultation uses level 5 (Opus) via selective routing
     const llm = new MultiLLMProvider();
     const consultationResult = await llm.generate({
       level: 5, // DEEP = Opus
-      systemPrompt: consultationPrompt.systemPrompt,
+      systemPrompt: systemPromptWithRecall,
       userInput: consultationPrompt.userPrompt,
     });
 
