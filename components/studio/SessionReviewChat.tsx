@@ -44,6 +44,14 @@ interface ReviewMessage {
 
 type ReviewLens = 'core' | 'spiralogic' | 'mentor';
 
+// How each lens changes MAIA's reading — shown as tooltip + caption so the
+// lens row reads as "how MAIA answers", not as another document tab.
+const LENS_DESCRIPTIONS: Record<ReviewLens, string> = {
+  core: 'Developmental synthesis — central tensions and what the session was actually about',
+  spiralogic: 'Elemental and field-oriented reading — symbolic movement, spiral location',
+  mentor: 'Practical guidance — how to hold this person in the next session',
+};
+
 interface SessionReviewChatProps {
   reviewedSessionId: string;
   segmentCount: number;
@@ -574,6 +582,7 @@ ${body
             <button
               key={lens}
               onClick={() => setActiveLens(lens)}
+              title={LENS_DESCRIPTIONS[lens]}
               className={`px-3 py-1 rounded text-xs capitalize transition-colors ${
                 activeLens === lens
                   ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
@@ -593,6 +602,7 @@ ${body
             </button>
           )}
         </div>
+        <p className="mt-1.5 text-[11px] text-slate-500">{LENS_DESCRIPTIONS[activeLens]}</p>
       </div>
 
       {/* Primary deliverables — always available once there is content */}
