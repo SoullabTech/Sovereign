@@ -44,10 +44,23 @@ export const CHUNK_TURNS = 40;
 export const MAP_CONCURRENCY = 4;
 /** Retries per chunk digest before the whole review fails. */
 export const CHUNK_RETRIES = 2;
-/** Bump when prompts change so stale cached artifacts are not reused. */
-export const PROMPT_VERSION = 'sr-staged-v4';
+/**
+ * Bump when prompts change so stale cached artifacts are not reused — and also
+ * when output caps change: the cache key does not include maxTokens, so a cap
+ * change silently keeps serving digests shaped by the old cap (v4→v5: raised
+ * DIGEST_MAX_TOKENS, invalidating note-laden 750-cap digests).
+ */
+export const PROMPT_VERSION = 'sr-staged-v5';
 
-const DIGEST_MAX_TOKENS = 750;
+/**
+ * 750 was too small for dense chunks: in a 373-turn prod session (2026-07-19,
+ * post-#652) all 10 first calls capped and ~8 of 10 continuations capped too,
+ * so most of the session map carried DIGEST_TRUNCATION_NOTE — dense 40-turn
+ * chunks genuinely need more than 1500 tokens. At 1500, first call + one
+ * continuation gives 3000 of headroom; the honesty check below still guards
+ * whatever ceiling remains. Cost bound per review: chunks × cap × ≤2 calls.
+ */
+const DIGEST_MAX_TOKENS = 1500;
 const SYNTH_MAX_TOKENS = 3000;
 /**
  * Per-call timeouts. generateSimple has no timeout of its own, so without these
