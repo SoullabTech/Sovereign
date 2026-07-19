@@ -45,7 +45,7 @@ export const MAP_CONCURRENCY = 4;
 /** Retries per chunk digest before the whole review fails. */
 export const CHUNK_RETRIES = 2;
 /** Bump when prompts change so stale cached artifacts are not reused. */
-export const PROMPT_VERSION = 'sr-staged-v2';
+export const PROMPT_VERSION = 'sr-staged-v3';
 
 const DIGEST_MAX_TOKENS = 750;
 const SYNTH_MAX_TOKENS = 3000;
@@ -314,7 +314,17 @@ function synthesisInstruction(mode: ReviewMode, question: string, clientName: st
 - unresolved material;
 - specific moments worth returning to (with [mm:ss]).`;
     case 'elemental':
+      // The Developmental Core comes FIRST — it is the essential section, and a
+      // generation that runs long must lose the tail, never the Core. (Sitting
+      // 2026-07-19: with the Core last, a capped Elemental view cut exactly the
+      // layer the view exists for.)
       return `Produce the Elemental & Developmental reading of ${who} — the layer that is uniquely MAIA's: the shape of this person's becoming.
+
+## Developmental Core (open with this; name each in one line, only if the session earns it)
+- **Center of Gravity** — what the session was actually organized around (its theme; e.g. "entanglement and individuation").
+- **Developmental Edge** — the growth edge, phrased as the question the person is working ("Can I remain connected to opportunity without surrendering myself?").
+- **Living Question** — the open question they are living now ("Who am I when I no longer organize around X?").
+- **Unintegrated Material** — what remains split off or unmetabolized (a part, a grief, a truth not yet owned).
 
 ## Session Field (elemental currents — where the material supports each)
 - Fire — desire, agency, purpose, conflict, transformation;
@@ -323,12 +333,6 @@ function synthesisInstruction(mode: ReviewMode, question: string, clientName: st
 - Air — beliefs, narratives, questions, insight, mental patterns;
 - Aether / Field — meaning, coherence, emergence, deeper pattern, identity transition.
 Alongside: emotional and relational dynamics, psychological patterns, tensions and polarities, protective strategies or defenses, developmental movement, archetypal material where supported, and areas of aliveness vs areas needing care.
-
-## Developmental Core (name each in one line, only if the session earns it)
-- **Center of Gravity** — what the session was actually organized around (its theme; e.g. "entanglement and individuation").
-- **Developmental Edge** — the growth edge, phrased as the question the person is working ("Can I remain connected to opportunity without surrendering myself?").
-- **Living Question** — the open question they are living now ("Who am I when I no longer organize around X?").
-- **Unintegrated Material** — what remains split off or unmetabolized (a part, a grief, a truth not yet owned).
 
 Label every interpretive claim's epistemic status (Said / Observed / Tentative). Never present a Tentative developmental reading as fact — these are offerings the practitioner integrates, not diagnoses. Where the session does not support one of the Developmental Core items, say so rather than inventing it.`;
     case 'organizational':
