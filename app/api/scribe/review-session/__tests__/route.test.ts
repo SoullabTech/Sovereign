@@ -42,6 +42,19 @@ jest.mock('@/lib/security/auditLog', () => ({
 }));
 jest.mock('@/lib/scribe/sessionReviewMode', () => ({
   buildSessionReviewPrompt: (...a: unknown[]) => mockBuildPrompt(...a),
+  // Small transcript → the route takes the SIMPLE (single-call) path, so these
+  // authorization tests exercise buildSessionReviewPrompt + generateSimple as
+  // before. The staged long-session path has its own suite (stagedReview.test).
+  loadReviewTurns: jest.fn(async () => ({
+    session: { id: SESSION_ID, container: 'practitioner', title: null, startedAt: new Date('2026-07-17'), durationMin: 60, memoryPolicy: 'sealed' },
+    turns: [
+      { index: 0, speaker: 'practitioner', text: 'hello', tsLabel: '0:00', startMs: 0 },
+      { index: 1, speaker: 'client', text: 'hi', tsLabel: '0:05', startMs: 5000 },
+    ],
+    markersText: 'No markers placed.',
+    assembled: true,
+    phantomRemoved: null,
+  })),
   getCompletedSessionData: jest.fn(async () => ({
     sessionId: SESSION_ID,
     startTime: '2026-07-17T00:00:00Z',
