@@ -55,6 +55,7 @@ import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
+import { TranscriptImportPanel, type ImportedSessionInfo } from '@/components/studio/TranscriptImportPanel';
 import { AudioSourcesStatus } from '@/components/studio/AudioSourcesStatus';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -478,6 +479,20 @@ export default function SessionRoomPage() {
       duration: session.duration_seconds,
       assembledTurns: session.assembled_turns,
       hasAssembled: session.has_assembled,
+    });
+  }, []);
+
+  // Session Studio Step 1: a freshly imported transcript goes straight into
+  // review (recognition precedes identification), and the past-sessions list
+  // is invalidated so it refetches with the new session included.
+  const openImportedReview = useCallback((session: ImportedSessionInfo) => {
+    setPastSessions([]);
+    setHistoryReviewId(session.id);
+    setHistoryReviewMeta({
+      segmentCount: session.segmentCount,
+      duration: session.durationSeconds,
+      assembledTurns: 0,
+      hasAssembled: false,
     });
   }, []);
 
@@ -961,7 +976,7 @@ ${insightsSection}
               {' '}All transcription runs locally.
             </p>
 
-            {/* Past sessions */}
+            {/* Past sessions + transcript import */}
             <div className="mt-8 border-t border-slate-800/50 pt-6">
               <button
                 onClick={togglePastSessions}
@@ -1059,6 +1074,9 @@ ${insightsSection}
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Session Studio Step 1 — bring an existing transcript into review */}
+              <TranscriptImportPanel onImported={openImportedReview} />
             </div>
           </motion.div>
         )}
