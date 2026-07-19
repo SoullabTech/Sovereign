@@ -117,6 +117,10 @@ describe('runStagedReview', () => {
     for (const marker of ['Center of Gravity', 'Developmental Edge', 'Living Question', 'Unintegrated Material', 'Fire', 'Aether']) {
       expect(prompt).toContain(marker);
     }
+    // The Core must come FIRST: a generation that hits the length limit loses
+    // the tail, and the tail must never be the essential section (sitting 07-19).
+    expect(prompt.indexOf('Developmental Core')).toBeLessThan(prompt.indexOf('Session Field'));
+    expect(prompt.indexOf('Unintegrated Material')).toBeLessThan(prompt.indexOf('Fire —'));
   });
 
   it('reports phase transitions: reading → the requested view', async () => {
