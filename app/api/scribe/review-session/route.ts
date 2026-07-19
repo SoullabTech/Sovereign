@@ -22,6 +22,7 @@ import {
   type ReviewMode,
   type StagedInput,
 } from '@/lib/scribe/stagedReview';
+import { isSingleSpeakerTranscript } from '@/lib/scribe/attributionGuard';
 import {
   getMemberIdFromRequest,
   verifySessionOwnership,
@@ -229,6 +230,12 @@ export async function POST(req: NextRequest) {
 
     const turnCount = loaded.turns.length;
 
+    // Recording provenance (audit 2026-07-19): current captures are one
+    // undiarized stream, so reviews can only INFER a second participant. The
+    // client shows an evidence notice when this is true. Derived from the
+    // transcript, not a flag — dual-track diarization turns it off naturally.
+    const singleSpeakerSource = isSingleSpeakerTranscript(loaded.turns.map(t => t.speaker));
+
     // ── LONG SESSION → staged map-reduce, run as a background job ────────────
     // Preserves the whole encounter (no sampling away the middle) and never
     // blocks a single HTTP request on the full generation.
@@ -265,7 +272,7 @@ export async function POST(req: NextRequest) {
             status: 'processing',
             stage: 'reviewing',
             progress: status.progress,
-            _meta: { staged: true, totalSegments: turnCount },
+            _meta: { staged: true, totalSegments: turnCount, singleSpeakerSource },
           },
           { status: 202 }
         );
@@ -277,7 +284,7 @@ export async function POST(req: NextRequest) {
             status: 'failed',
             stage: status.stage,
             error: status.reason,
-            _meta: { staged: true, totalSegments: turnCount, failedChunks: status.failedChunks },
+            _meta: { staged: true, totalSegments: turnCount, singleSpeakerSource, failedChunks: status.failedChunks },
           },
           { status: 503 }
         );
@@ -288,7 +295,7 @@ export async function POST(req: NextRequest) {
         response: status.result,
         reviewedSessionId,
         questionNumber: questionNumber || 1,
-        _meta: { staged: true, segmentCount: turnCount, chunks: status.chunks },
+        _meta: { staged: true, segmentCount: turnCount, chunks: status.chunks, singleSpeakerSource },
       });
     }
 
@@ -342,7 +349,9 @@ export async function POST(req: NextRequest) {
       response: responseText,
       reviewedSessionId,
       questionNumber: questionNumber || 1,
-      _meta: meta,
+      // Route-level provenance (from the full transcript) wins over the
+      // builder's, which sees the same data — spread order makes that explicit.
+      _meta: { ...meta, singleSpeakerSource },
     });
   } catch (error: any) {
     console.error('❌ Session review error:', error);

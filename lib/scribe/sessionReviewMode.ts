@@ -6,6 +6,10 @@
 import { query } from '@/lib/db/postgres';
 import { cleanTranscriptTexts } from './transcriptCleaner';
 import { repairTranscriptTexts } from './transcriptRepair';
+import {
+  isSingleSpeakerTranscript,
+  SINGLE_SPEAKER_ATTRIBUTION_GUARD,
+} from './attributionGuard';
 import { getAssembledTranscript, type AssembledTurn } from '@/lib/supervision/transcriptAssembler';
 
 // ============================================================================
@@ -38,6 +42,8 @@ export interface ReviewBuildResult {
     clientName: string | null;
     assembled: boolean;
     assembledTurnCount: number;
+    /** Provenance: transcript carries no speaker distinctions (undiarized). */
+    singleSpeakerSource: boolean;
   };
 }
 
@@ -424,6 +430,9 @@ export async function buildSessionReviewPrompt(
   let sampledTexts: string[];
   let sampledTs: string[];
   let rawSpeakers: string[];
+  // Full (unsampled) speaker labels — the provenance signal for the
+  // single-undiarized-stream guard must see the whole session, not a sample.
+  let fullSpeakers: string[] = [];
   let phantomRemoved: string | null = null;
   let sampled = false;
 
@@ -438,7 +447,8 @@ export async function buildSessionReviewPrompt(
       const ss = segSec % 60;
       return `${mm}:${String(ss).padStart(2, '0')}`;
     });
-    const allSpeakers = assembledTurns.map(t => t.speaker);
+    const allSpeakers = assembledTurns.map(t => t.speaker || 'unknown');
+    fullSpeakers = allSpeakers;
 
     // Conservative chunk-boundary fragment repair (read-time, not stored)
     const repaired = repairTranscriptTexts(allTexts);
@@ -479,6 +489,7 @@ export async function buildSessionReviewPrompt(
       return `${mm}:${String(ss).padStart(2, '0')}`;
     });
     const rawSpeakers_ = rawRows.map((r: any) => (r.speaker as string) || 'unknown');
+    fullSpeakers = rawSpeakers_;
 
     const { texts: cleanedTexts, phantomRemoved: pr } = cleanTranscriptTexts(rawTexts);
     phantomRemoved = pr;
@@ -524,6 +535,11 @@ export async function buildSessionReviewPrompt(
     : '';
 
   // 8. Build prompt
+  // Kelly ruling 2026-07-19: inferred dialogue must never be presented as
+  // captured attribution. Gate is provenance-derived from the full speaker
+  // labels, not a constant — diarized transcripts get no guard.
+  const singleSpeakerSource = isSingleSpeakerTranscript(fullSpeakers);
+  const attributionNote = singleSpeakerSource ? SINGLE_SPEAKER_ATTRIBUTION_GUARD : '';
   const lensInstructions = getLensInstructions(lens);
   const sessionLabel = clientName
     ? `Session with ${clientName}`
@@ -553,7 +569,7 @@ ${formattedMarkers}
 
 ## Transcript
 ${formattedTranscript ? '\n' + formattedTranscript : '\n[No transcript available — transcript may not have been enabled for this session]'}
-
+${attributionNote}
 # Question ${context.questionNumber}
 
 ${questionInstruction}
@@ -585,6 +601,7 @@ Your reflection:`;
       clientName,
       assembled,
       assembledTurnCount,
+      singleSpeakerSource,
     },
   };
 }
