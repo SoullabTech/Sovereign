@@ -178,7 +178,13 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, p
       if (e.key === 'Escape') setExpanded(false);
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Lock the page behind the overlay; restore whatever was there before.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [expanded]);
 
   // ---------------------------------------------------------------------------
