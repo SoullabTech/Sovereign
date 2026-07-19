@@ -62,12 +62,12 @@ async function logReviewGrant(
   }).catch(() => {});
 }
 
-/** Map the practitioner's request to a staged synthesis mode. */
+/** Map the practitioner's request to a staged review view. */
 function deriveReviewMode(question: string): ReviewMode {
   const q = question.toLowerCase();
-  if (/layered overview|overview of this session/.test(q)) return 'overview';
-  if (/structured outline|outline of this session/.test(q)) return 'outline';
-  if (/key insights|insights and themes/.test(q)) return 'insights';
+  if (/overview/.test(q)) return 'overview';
+  if (/elemental|psychological/.test(q)) return 'elemental';
+  if (/organizational|practitioner view|follow-through|carry forward/.test(q)) return 'organizational';
   return 'question';
 }
 
