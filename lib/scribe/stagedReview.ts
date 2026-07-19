@@ -59,6 +59,21 @@ const SYNTH_MAX_TOKENS = 3000;
  */
 const DIGEST_TIMEOUT_MS = 60_000;
 const SYNTH_TIMEOUT_MS = 120_000;
+/**
+ * When a synthesis stops at the token cap (stop reason 'max_tokens'), it is
+ * continued in place — up to this many follow-up calls — instead of serving a
+ * review that ends mid-sentence with no indication. If it still hits the cap
+ * after the last continuation, TRUNCATION_MARKER is appended and the artifact
+ * is flagged truncated. Raising SYNTH_MAX_TOKENS alone is not a fix: without
+ * this check any cap reintroduces silent false completeness. (Prod walk
+ * 2026-07-19: a 373-turn free-question review ended mid-table.)
+ */
+const SYNTH_CONTINUATIONS = 2;
+/** Appended to any review artifact that could not finish within the length limit. */
+export const TRUNCATION_MARKER =
+  '\n\n— *This review was truncated at the length limit. Ask a narrower question, or use the Overview / Elemental / Organizational views.*';
+const CONTINUE_INSTRUCTION =
+  'Your previous message stopped mid-output because it hit the length limit. Continue EXACTLY from where you stopped — do not repeat anything already written, do not restart, and do not add any preamble. Just continue.';
 
 class LLMTimeoutError extends Error {
   constructor(label: string, ms: number) {
@@ -72,13 +87,16 @@ async function callLLMWithTimeout(
   params: Parameters<ReturnType<typeof getLLMProvider>['generateSimple']>[0],
   timeoutMs: number,
   label: string
-): Promise<{ text: string }> {
+): Promise<{ text: string; metadata?: { stopReason?: string } }> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new LLMTimeoutError(label, timeoutMs)), timeoutMs);
   });
   try {
-    return (await Promise.race([getLLMProvider().generateSimple(params), timeout])) as { text: string };
+    return (await Promise.race([getLLMProvider().generateSimple(params), timeout])) as {
+      text: string;
+      metadata?: { stopReason?: string };
+    };
   } finally {
     if (timer) clearTimeout(timer);
   }
@@ -119,7 +137,7 @@ export interface ReviewProgress {
 }
 
 export type ReviewStatus =
-  | { status: 'complete'; result: string; chunks: number }
+  | { status: 'complete'; result: string; chunks: number; truncated: boolean }
   | { status: 'processing'; progress: ReviewProgress }
   | { status: 'failed'; stage: 'digest' | 'synthesis'; reason: string; failedChunks?: number[] };
 
@@ -334,7 +352,7 @@ async function synthesize(
   digests: ChunkDigest[],
   input: StagedInput,
   singleSpeaker: boolean
-): Promise<string> {
+): Promise<{ text: string; truncated: boolean }> {
   const lensLine = `Active lens: ${input.lens.toUpperCase()}.`;
   const digestBlock = digests
     .map(
@@ -378,22 +396,63 @@ ${synthesisInstruction(input.mode, input.question, input.clientName)}`;
     SYNTH_TIMEOUT_MS,
     `synthesis (${input.mode})`
   );
-  const text = (res.text || '').trim();
-  if (!text) throw new Error('empty synthesis');
-  console.log(`[SessionReview] synthesis done: mode=${input.mode} in ${Date.now() - startedAt}ms, ${text.length} chars`);
-  return text;
+  let text = res.text || '';
+  if (!text.trim()) throw new Error('empty synthesis');
+  let stopReason = res.metadata?.stopReason;
+
+  // No false completeness: 'max_tokens' means the artifact ends mid-thought.
+  // Continue it in place (bounded); if it still cannot finish, say so honestly.
+  for (let c = 1; stopReason === 'max_tokens' && c <= SYNTH_CONTINUATIONS; c++) {
+    console.warn(`[SessionReview] synthesis hit max_tokens: mode=${input.mode}, continuing (${c}/${SYNTH_CONTINUATIONS})`);
+    try {
+      const cont = await callLLMWithTimeout(
+        {
+          tier: 'core',
+          forceClaude: true,
+          // Same system prompt as the original call, attribution guard included.
+          systemPrompt: viewSystem(input.mode) + (singleSpeaker ? SINGLE_SPEAKER_ATTRIBUTION_GUARD : ''),
+          messages: [
+            { role: 'user', content: user },
+            { role: 'assistant', content: text },
+            { role: 'user', content: CONTINUE_INSTRUCTION },
+          ],
+          maxTokens: SYNTH_MAX_TOKENS,
+          temperature: input.mode === 'overview' ? 0.5 : 0.7,
+        },
+        SYNTH_TIMEOUT_MS,
+        `synthesis continuation ${c} (${input.mode})`
+      );
+      text += cont.text || '';
+      stopReason = cont.metadata?.stopReason;
+    } catch (err) {
+      // The partial artifact is real, complete-so-far work; discarding it here
+      // would trade an honest partial for nothing. Keep it and mark it.
+      console.error('[SessionReview] synthesis continuation failed:', err);
+      stopReason = 'max_tokens';
+      break;
+    }
+  }
+
+  const truncated = stopReason === 'max_tokens';
+  if (truncated) {
+    text = text.trimEnd() + TRUNCATION_MARKER;
+  }
+  text = text.trim();
+  console.log(`[SessionReview] synthesis done: mode=${input.mode} in ${Date.now() - startedAt}ms, ${text.length} chars, truncated=${truncated}`);
+  return { text, truncated };
 }
 
 // ── Caches + job registry (in-process) ───────────────────────────────────────
 
 const digestCache = new Map<string, ChunkDigest>();
-const artifactCache = new Map<string, { result: string; chunks: number }>();
+const artifactCache = new Map<string, { result: string; chunks: number; truncated: boolean }>();
 
 interface Job {
   state: 'processing' | 'complete' | 'failed';
   progress: ReviewProgress;
   result?: string;
   chunks?: number;
+  truncated?: boolean;
   failure?: { stage: 'digest' | 'synthesis'; reason: string; failedChunks?: number[] };
 }
 const jobs = new Map<string, Job>();
@@ -460,10 +519,10 @@ export async function runStagedReview(
   // REDUCE — generate the requested view from the session map.
   onProgress?.(total, total, input.mode);
   try {
-    const result = await synthesize(digests, input, singleSpeaker);
+    const { text: result, truncated } = await synthesize(digests, input, singleSpeaker);
     const ak = artifactKey(input, transcriptHash);
-    artifactCache.set(ak, { result, chunks: total });
-    return { status: 'complete', result, chunks: total };
+    artifactCache.set(ak, { result, chunks: total, truncated });
+    return { status: 'complete', result, chunks: total, truncated };
   } catch (err) {
     return {
       status: 'failed',
@@ -488,12 +547,20 @@ export function getOrStartReview(
   const ak = artifactKey(input, transcriptHash);
 
   const cached = artifactCache.get(ak);
-  if (cached) return { status: 'complete', result: cached.result, chunks: cached.chunks, started: false };
+  if (cached) {
+    return { status: 'complete', result: cached.result, chunks: cached.chunks, truncated: cached.truncated, started: false };
+  }
 
   const existing = jobs.get(ak);
   if (existing) {
     if (existing.state === 'complete') {
-      return { status: 'complete', result: existing.result!, chunks: existing.chunks ?? 0, started: false };
+      return {
+        status: 'complete',
+        result: existing.result!,
+        chunks: existing.chunks ?? 0,
+        truncated: existing.truncated ?? false,
+        started: false,
+      };
     }
     if (existing.state === 'failed') {
       jobs.delete(ak);
@@ -515,7 +582,8 @@ export function getOrStartReview(
         job.state = 'complete';
         job.result = outcome.result;
         job.chunks = outcome.chunks;
-        console.log(`[SessionReview] job complete: ${input.sessionId.slice(0, 8)}… mode=${input.mode} (${outcome.chunks} segments)`);
+        job.truncated = outcome.truncated;
+        console.log(`[SessionReview] job complete: ${input.sessionId.slice(0, 8)}… mode=${input.mode} (${outcome.chunks} segments, truncated=${outcome.truncated})`);
       } else if (outcome.status === 'failed') {
         job.state = 'failed';
         job.failure = { stage: outcome.stage, reason: outcome.reason, failedChunks: outcome.failedChunks };
