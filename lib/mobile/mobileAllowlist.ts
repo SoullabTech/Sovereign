@@ -146,7 +146,6 @@ export const WEB_ONLY_PREFIXES = [
   '/maia/soul-consciousness',
   '/maia/training',
   '/maia/stewardship',
-  '/maia/field-dashboard',
   '/consciousness-lab',
   '/consciousness-monitor',
   '/pfi-monitor',

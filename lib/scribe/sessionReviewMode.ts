@@ -6,6 +6,10 @@
 import { query } from '@/lib/db/postgres';
 import { cleanTranscriptTexts } from './transcriptCleaner';
 import { repairTranscriptTexts } from './transcriptRepair';
+import {
+  isSingleSpeakerTranscript,
+  SINGLE_SPEAKER_ATTRIBUTION_GUARD,
+} from './attributionGuard';
 import { getAssembledTranscript, type AssembledTurn } from '@/lib/supervision/transcriptAssembler';
 
 // ============================================================================
@@ -38,6 +42,8 @@ export interface ReviewBuildResult {
     clientName: string | null;
     assembled: boolean;
     assembledTurnCount: number;
+    /** Provenance: transcript carries no speaker distinctions (undiarized). */
+    singleSpeakerSource: boolean;
   };
 }
 
@@ -110,7 +116,11 @@ function resampleSpeakers(speakers: string[], originalLen: number, sampledLen: n
 // Lens instructions
 // ============================================================================
 
-function getLensInstructions(lens: string): string {
+// Exported so the staged long-session path (stagedReview.ts) carries the same
+// lens grammar as the short path. Before this, staged synthesis received only
+// the bare line "Active lens: SPIRALOGIC." — a coined term with no definition,
+// which produced structurally-distinct but elementally mute readings.
+export function getLensInstructions(lens: string): string {
   switch (lens) {
     case 'spiralogic':
       return `You are MAIA in Session Review through the Spiralogic lens.
@@ -132,7 +142,13 @@ You listen *toward* archetypal motion. You do not name archetypes definitively. 
 
 Your phrasings preserve their own tentativeness — *"a possible symbolic resonance…"*, *"the field appears to constellate around…"*, *"one framing — among others — might be…"*. This is not hedging out of caution. It is honesty about the kind of seeing this mode performs.
 
-When symbolic content is genuinely thin, say so. *"This session sits closer to ground than to symbol; the Spiralogic lens adds a peripheral observation"* is a faithful output. Inventing symbolic depth where none was present is the failure mode.`;
+When symbolic content is genuinely thin, say so. *"This session sits closer to ground than to symbol; the Spiralogic lens adds a peripheral observation"* is a faithful output. Inventing symbolic depth where none was present is the failure mode.
+
+**A Spiralogic reading is incomplete until it has done four things** — where the material supports them:
+1. Located the elemental imbalance: which currents are over-active, which are under-expressed or unmoved. Name only the elements the material actually shows; forcing all five into every reading is decoration, not listening.
+2. Named the developmental movement: where in the spiral the movement appears to be happening, and in which direction.
+3. Identified what is absent or overdeveloped — the element or capacity whose missingness shapes the session as much as what is present.
+4. Closed with one living question — a question the material itself is asking, offered for the practitioner to carry, not a summary restated as a question.`;
 
     case 'mentor':
       return `You are MAIA in Session Review through the Mentor lens.
@@ -229,6 +245,148 @@ Important: treat ANY repeated or fragmented speech pattern in the transcript as 
 // Main prompt builder
 // ============================================================================
 
+// ============================================================================
+// Full-transcript loader (no sampling) — feeds the staged long-session path.
+// buildSessionReviewPrompt keeps its own sampling loader for the simple path;
+// this one returns EVERY turn so staged synthesis can preserve the whole
+// session instead of discarding its middle.
+// ============================================================================
+
+export interface ReviewTurn {
+  index: number;
+  speaker: string;
+  text: string;
+  /** "mm:ss" from session start */
+  tsLabel: string;
+  startMs: number;
+}
+
+export interface LoadedReview {
+  session: {
+    id: string;
+    container: string;
+    title: string | null;
+    startedAt: Date;
+    durationMin: number;
+    memoryPolicy: string | null;
+  };
+  turns: ReviewTurn[];
+  markersText: string;
+  assembled: boolean;
+  phantomRemoved: string | null;
+}
+
+function msToLabel(ms: number): string {
+  const sec = Math.max(0, Math.floor(ms / 1000));
+  const mm = Math.floor(sec / 60);
+  const ss = sec % 60;
+  return `${mm}:${String(ss).padStart(2, '0')}`;
+}
+
+/**
+ * Load the complete ordered transcript for a scribe session — assembled turns
+ * when available, raw scribe_transcript_entries otherwise. No sampling: the
+ * caller (staged review) is responsible for chunking the full set.
+ */
+export async function loadReviewTurns(sessionId: string): Promise<LoadedReview> {
+  const sessionResult = await query(
+    `SELECT id, container, title, started_at, ended_at, is_active, memory_policy
+     FROM scribe_sessions WHERE id = $1`,
+    [sessionId]
+  );
+  if (sessionResult.rows.length === 0) {
+    throw new Error(`Scribe session ${sessionId} not found`);
+  }
+  const session = sessionResult.rows[0];
+  const startedAt = new Date(session.started_at);
+  const endedAt = session.ended_at ? new Date(session.ended_at) : new Date();
+  const durationMin = Math.round((endedAt.getTime() - startedAt.getTime()) / 60000);
+
+  let turns: ReviewTurn[] = [];
+  let assembled = false;
+  let phantomRemoved: string | null = null;
+
+  try {
+    const supervisionLookup = await query<{ id: string }>(
+      `SELECT id FROM supervision_sessions
+       WHERE metadata->>'scribeSessionId' = $1 LIMIT 1`,
+      [sessionId]
+    );
+    if (supervisionLookup.rows.length > 0) {
+      const assembledTurns = await getAssembledTranscript(supervisionLookup.rows[0].id);
+      if (assembledTurns && assembledTurns.length > 0) {
+        assembled = true;
+        const repaired = repairTranscriptTexts(assembledTurns.map(t => t.text));
+        turns = assembledTurns.map((t, i) => ({
+          index: i,
+          speaker: t.speaker || 'unknown',
+          text: repaired.texts[i] ?? t.text,
+          tsLabel: msToLabel(t.startMs),
+          startMs: t.startMs,
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn('[SessionReview] loadReviewTurns assembled lookup failed, falling back:', err);
+    turns = [];
+    assembled = false;
+  }
+
+  if (!assembled) {
+    // participant_label carries document-supplied speaker labels for imported
+    // transcripts (Session Studio Step 1) — supplied evidence, preferred over
+    // the identity enum. Live-captured entries have no label, so this is a
+    // no-op for them.
+    const transcriptResult = await query(
+      `SELECT COALESCE(NULLIF(participant_label, ''), speaker) AS speaker, content, spoken_at
+       FROM scribe_transcript_entries
+       WHERE session_id = $1 ORDER BY spoken_at ASC`,
+      [sessionId]
+    );
+    const rows = transcriptResult.rows;
+    const cleaned = cleanTranscriptTexts(rows.map((r: any) => (r.content as string) || ''));
+    phantomRemoved = cleaned.phantomRemoved;
+    turns = rows.map((r: any, i: number) => {
+      const startMs = new Date(r.spoken_at).getTime() - startedAt.getTime();
+      return {
+        index: i,
+        speaker: (r.speaker as string) || 'unknown',
+        text: cleaned.texts[i] ?? ((r.content as string) || ''),
+        tsLabel: msToLabel(startMs),
+        startMs,
+      };
+    });
+  }
+
+  const markersResult = await query(
+    `SELECT marker_type, note, marked_at
+     FROM scribe_markers WHERE session_id = $1 ORDER BY marked_at ASC`,
+    [sessionId]
+  );
+  const markersText =
+    markersResult.rows
+      .map((m: any) => {
+        const ts = msToLabel(new Date(m.marked_at).getTime() - startedAt.getTime());
+        return `[${ts}] ${m.marker_type}${m.note ? ` — ${m.note}` : ''}`;
+      })
+      .join('\n') || 'No markers placed.';
+
+  return {
+    session: {
+      id: session.id,
+      container: session.container,
+      title: session.title,
+      startedAt,
+      durationMin,
+      memoryPolicy: session.memory_policy ?? null,
+    },
+    turns,
+    markersText,
+    assembled,
+    phantomRemoved,
+  };
+}
+
 export async function buildSessionReviewPrompt(
   context: SessionReviewContext,
   userQuestion: string
@@ -286,6 +444,9 @@ export async function buildSessionReviewPrompt(
   let sampledTexts: string[];
   let sampledTs: string[];
   let rawSpeakers: string[];
+  // Full (unsampled) speaker labels — the provenance signal for the
+  // single-undiarized-stream guard must see the whole session, not a sample.
+  let fullSpeakers: string[] = [];
   let phantomRemoved: string | null = null;
   let sampled = false;
 
@@ -300,7 +461,8 @@ export async function buildSessionReviewPrompt(
       const ss = segSec % 60;
       return `${mm}:${String(ss).padStart(2, '0')}`;
     });
-    const allSpeakers = assembledTurns.map(t => t.speaker);
+    const allSpeakers = assembledTurns.map(t => t.speaker || 'unknown');
+    fullSpeakers = allSpeakers;
 
     // Conservative chunk-boundary fragment repair (read-time, not stored)
     const repaired = repairTranscriptTexts(allTexts);
@@ -320,9 +482,11 @@ export async function buildSessionReviewPrompt(
     // Since sampleSegments returns indices from head/mid/tail, we replicate its logic for speakers.
     rawSpeakers = resampleSpeakers(allSpeakers, allTexts.length, sampledTexts.length);
   } else {
-    // Fallback path: raw scribe_transcript_entries
+    // Fallback path: raw scribe_transcript_entries. participant_label carries
+    // document-supplied labels for imported transcripts (supplied evidence);
+    // live entries have none, so COALESCE is a no-op for them.
     const transcriptResult = await query(
-      `SELECT speaker, content, spoken_at
+      `SELECT COALESCE(NULLIF(participant_label, ''), speaker) AS speaker, content, spoken_at
        FROM scribe_transcript_entries
        WHERE session_id = $1
        ORDER BY spoken_at ASC`,
@@ -341,6 +505,7 @@ export async function buildSessionReviewPrompt(
       return `${mm}:${String(ss).padStart(2, '0')}`;
     });
     const rawSpeakers_ = rawRows.map((r: any) => (r.speaker as string) || 'unknown');
+    fullSpeakers = rawSpeakers_;
 
     const { texts: cleanedTexts, phantomRemoved: pr } = cleanTranscriptTexts(rawTexts);
     phantomRemoved = pr;
@@ -386,6 +551,11 @@ export async function buildSessionReviewPrompt(
     : '';
 
   // 8. Build prompt
+  // Kelly ruling 2026-07-19: inferred dialogue must never be presented as
+  // captured attribution. Gate is provenance-derived from the full speaker
+  // labels, not a constant — diarized transcripts get no guard.
+  const singleSpeakerSource = isSingleSpeakerTranscript(fullSpeakers);
+  const attributionNote = singleSpeakerSource ? SINGLE_SPEAKER_ATTRIBUTION_GUARD : '';
   const lensInstructions = getLensInstructions(lens);
   const sessionLabel = clientName
     ? `Session with ${clientName}`
@@ -415,7 +585,7 @@ ${formattedMarkers}
 
 ## Transcript
 ${formattedTranscript ? '\n' + formattedTranscript : '\n[No transcript available — transcript may not have been enabled for this session]'}
-
+${attributionNote}
 # Question ${context.questionNumber}
 
 ${questionInstruction}
@@ -447,6 +617,7 @@ Your reflection:`;
       clientName,
       assembled,
       assembledTurnCount,
+      singleSpeakerSource,
     },
   };
 }

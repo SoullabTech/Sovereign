@@ -126,10 +126,17 @@ export const UPCOMING_PROJECTS: UpcomingProject[] = [
   },
 ];
 
+// Public honesty ledger buckets (Live / Designed / Research claim discipline).
+// Assignments are governed by docs/canon/MARKETING_CLAIM_DISCIPLINE.md —
+// a capability is 'available_today' only with production runtime evidence.
+export type PublicBucket = 'available_today' | 'architected_for_release' | 'research';
+
 export interface Innovation {
   title: string;
   description: string;
   category: 'core-intelligence' | 'relational-safety' | 'developmental-continuity' | 'knowledge-modality' | 'infrastructure';
+  publicBucket: PublicBucket;
+  statusLabel?: string;
 }
 
 export const INNOVATIONS: Innovation[] = [
@@ -138,79 +145,94 @@ export const INNOVATIONS: Innovation[] = [
     title: 'Awareness-Level Routing',
     description: 'MAIA adapts its responses to the depth, complexity, and developmental level of the moment, meeting people where they are without flattening nuance or overreaching.',
     category: 'core-intelligence',
+    publicBucket: 'available_today',
   },
   {
     title: 'Dialectical Scaffold',
     description: 'Rather than forcing premature certainty, MAIA can hold tension between perspectives and help insight emerge through structured contrast, paradox, and integrative reasoning.',
     category: 'core-intelligence',
+    publicBucket: 'architected_for_release',
   },
   {
     title: '4-Phase Relational Sequencing',
     description: 'Conversations unfold through a relational sequence that helps MAIA recognize what kind of response is needed next — attunement, clarification, reflection, or forward movement.',
     category: 'core-intelligence',
+    publicBucket: 'architected_for_release',
   },
   {
     title: 'AIN Relational Field Intelligence',
     description: 'The intelligence beneath relating — a field-level awareness that holds turns, sessions, and emerging spaces in coherent relation, prior to any specific feature or response. The condition that makes everything else possible.',
     category: 'core-intelligence',
+    publicBucket: 'research',
   },
   // — Relational Safety —
   {
     title: 'Relational Safeguards',
     description: 'MAIA is governed by explicit relational safeguards that protect consent, boundaries, privacy, and user sovereignty, especially in emotionally sensitive or developmentally important exchanges.',
     category: 'relational-safety',
+    publicBucket: 'available_today',
   },
   {
     title: 'Sanctuary Mode',
     description: 'Sanctuary Mode creates a more protected conversational environment, reducing extraction and preserving the sense of privacy, trust, and psychological safety needed for deeper work.',
     category: 'relational-safety',
+    publicBucket: 'available_today',
   },
   // — Developmental Continuity —
   {
     title: 'Spiral State Persistence',
     description: 'MAIA tracks developmental movement across time, allowing the system to remember where a person is in process and respond with continuity rather than treating every exchange as isolated.',
     category: 'developmental-continuity',
+    publicBucket: 'available_today',
   },
   {
     title: 'Spiralogic Governor',
     description: 'A governing developmental framework helps MAIA stay oriented to process, pacing, and human complexity so responses remain coherent, grounded, and evolution-sensitive.',
     category: 'developmental-continuity',
+    publicBucket: 'available_today',
   },
   {
     title: 'MAIA Mentor',
     description: 'MAIA walks members through the full arc of their work — idea, development, design, distribution — without becoming the author of it. Continuous mentorship across stages, not a one-shot assistant.',
     category: 'developmental-continuity',
+    publicBucket: 'architected_for_release',
   },
   // — Knowledge & Modality —
   {
     title: 'Knowledge Field',
     description: 'Knowledge appears contextually as the conversation enters it. Rather than dumping information, MAIA surfaces the right domains, concepts, and cross-disciplinary bridges when they become relevant.',
     category: 'knowledge-modality',
+    publicBucket: 'architected_for_release',
   },
   {
     title: 'Care Lens System',
     description: 'MAIA can interpret the same moment through different care lenses — therapeutic, developmental, symbolic, practical, or spiritual — so the response matches the real need of the exchange.',
     category: 'knowledge-modality',
+    publicBucket: 'architected_for_release',
   },
   {
     title: 'Relational Context Bridge',
     description: 'The lens you brought in the morning is still present in the evening. MAIA stabilizes a way of seeing across turns and across surfaces, so members don’t have to re-explain themselves to be understood.',
     category: 'knowledge-modality',
+    publicBucket: 'architected_for_release',
   },
   // — Infrastructure —
   {
     title: 'Sovereign Infrastructure',
     description: 'Built on a sovereignty-first architecture, MAIA is designed for privacy, consent, and controlled data boundaries rather than extractive engagement models.',
     category: 'infrastructure',
+    publicBucket: 'available_today',
   },
   {
     title: 'White-Label Engine',
     description: 'The MAIA engine can be adapted for practitioners, organizations, and specialized environments, making it possible to deploy the architecture within distinct brands and relational contexts.',
     category: 'infrastructure',
+    publicBucket: 'architected_for_release',
   },
   {
     title: 'Multi-Modal Voice',
     description: 'MAIA is designed for voice as well as text, supporting more natural conversational flow, emotional nuance, and accessible interaction across different user settings.',
     category: 'infrastructure',
+    publicBucket: 'available_today',
   },
 ];

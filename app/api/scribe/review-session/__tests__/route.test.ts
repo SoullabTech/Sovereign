@@ -30,6 +30,18 @@ const mockBuildPrompt = jest.fn(async () => ({
   meta: { segmentCount: 2, segmentsSampled: false, phantomPrefixRemoved: false },
 }));
 const mockGenerateSimple = jest.fn(async () => ({ text: 'REVIEW TEXT' }));
+// Default: a diarized 2-speaker transcript. Tests override per-case to pin the
+// single-undiarized-stream provenance flag.
+const mockLoadReviewTurns = jest.fn(async () => ({
+  session: { id: SESSION_ID, container: 'practitioner', title: null, startedAt: new Date('2026-07-17'), durationMin: 60, memoryPolicy: 'sealed' },
+  turns: [
+    { index: 0, speaker: 'practitioner', text: 'hello', tsLabel: '0:00', startMs: 0 },
+    { index: 1, speaker: 'client', text: 'hi', tsLabel: '0:05', startMs: 5000 },
+  ],
+  markersText: 'No markers placed.',
+  assembled: true,
+  phantomRemoved: null,
+}));
 
 jest.mock('@/lib/scribe/scribeAuth', () => ({
   getMemberIdFromRequest: (...a: unknown[]) => mockGetMemberIdFromRequest(...a),
@@ -42,6 +54,10 @@ jest.mock('@/lib/security/auditLog', () => ({
 }));
 jest.mock('@/lib/scribe/sessionReviewMode', () => ({
   buildSessionReviewPrompt: (...a: unknown[]) => mockBuildPrompt(...a),
+  // Small transcript → the route takes the SIMPLE (single-call) path, so these
+  // authorization tests exercise buildSessionReviewPrompt + generateSimple as
+  // before. The staged long-session path has its own suite (stagedReview.test).
+  loadReviewTurns: (...a: unknown[]) => mockLoadReviewTurns(...(a as [])),
   getCompletedSessionData: jest.fn(async () => ({
     sessionId: SESSION_ID,
     startTime: '2026-07-17T00:00:00Z',
@@ -239,6 +255,83 @@ describe('POST authorization', () => {
     );
     // The question (which may contain client material) is never logged.
     expect(JSON.stringify(successEntry)).not.toContain('secret client content');
+  });
+});
+
+describe('recording-provenance flag (_meta.singleSpeakerSource, audit 2026-07-19)', () => {
+  // The review UI shows a "speaker attribution not available" notice gated on
+  // this flag — provenance-derived from the transcript, never a constant.
+  const singleSpeakerLoad = (turnCount: number) => ({
+    session: { id: SESSION_ID, container: 'practitioner', title: null, startedAt: new Date('2026-07-17'), durationMin: 60, memoryPolicy: 'sealed' },
+    turns: Array.from({ length: turnCount }, (_, i) => ({
+      index: i, speaker: 'Speaker 1', text: `turn ${i}`, tsLabel: `0:${String(i).padStart(2, '0')}`, startMs: i * 1000,
+    })),
+    markersText: 'No markers placed.',
+    assembled: true,
+    phantomRemoved: null,
+  });
+
+  beforeEach(() => {
+    mockGetMemberIdFromRequest.mockResolvedValue(OWNER);
+    mockVerifySessionOwnership.mockResolvedValue(ownedSession());
+  });
+
+  it('undiarized transcript (simple path) → _meta.singleSpeakerSource true', async () => {
+    mockLoadReviewTurns.mockResolvedValueOnce(singleSpeakerLoad(2) as never);
+    const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'overview' }));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body._meta.singleSpeakerSource).toBe(true);
+  });
+
+  it('diarized transcript (simple path) → _meta.singleSpeakerSource false', async () => {
+    const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'overview' }));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body._meta.singleSpeakerSource).toBe(false);
+  });
+
+  it('undiarized long session (staged path) → flag present on the processing response', async () => {
+    mockLoadReviewTurns.mockResolvedValueOnce(singleSpeakerLoad(130) as never); // >120 → staged
+    const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'overview' }));
+    const body = await res.json();
+    expect(res.status).toBe(202);
+    expect(body._meta.staged).toBe(true);
+    expect(body._meta.singleSpeakerSource).toBe(true);
+  });
+});
+
+describe('simple-path honest completeness (max_tokens)', () => {
+  // The simple path answers a synchronous request, so instead of continuing the
+  // generation it appends the explicit truncation marker and flags _meta.
+  it('a max_tokens stop appends the truncation marker and sets _meta.truncated', async () => {
+    mockGetMemberIdFromRequest.mockResolvedValue(OWNER);
+    mockVerifySessionOwnership.mockResolvedValue(ownedSession());
+    mockGenerateSimple.mockResolvedValueOnce({
+      text: 'REVIEW TEXT that stops mid-table: The **14-year-old girl',
+      metadata: { stopReason: 'max_tokens' },
+    });
+    const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'overview' }));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.response).toContain('The **14-year-old girl');
+    expect(body.response).toContain('truncated at the length limit');
+    expect(body._meta.truncated).toBe(true);
+  });
+
+  it('a normal end_turn stop is served unmarked with _meta.truncated=false', async () => {
+    mockGetMemberIdFromRequest.mockResolvedValue(OWNER);
+    mockVerifySessionOwnership.mockResolvedValue(ownedSession());
+    mockGenerateSimple.mockResolvedValueOnce({
+      text: 'REVIEW TEXT',
+      metadata: { stopReason: 'end_turn' },
+    });
+    const res = await POST(postReq({ reviewedSessionId: SESSION_ID, question: 'overview' }));
+    const body = await res.json();
+    expect(body.response).toBe('REVIEW TEXT');
+    expect(body.response).not.toContain('truncated at the length limit');
+    expect(body._meta.truncated).toBe(false);
   });
 });
 

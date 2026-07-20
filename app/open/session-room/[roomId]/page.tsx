@@ -277,7 +277,12 @@ export default function WebRtcSmokeRoom() {
     // R-A5: fetch self-hosted ICE (coturn). No third-party fallback — if unconfigured,
     // proceed host-candidate-only (works same-machine/LAN; real NAT traversal needs coturn).
     try {
-      const r = await fetch(`/api/open/session-room/${roomId}/turn-credentials`);
+      // TURN minting is consent-gated (same threshold door as signaling). We already hold a valid
+      // thresholdToken here — the guard above returns early without one — so this never 403s the
+      // legitimate join/reconnect path.
+      const r = await fetch(
+        `/api/open/session-room/${roomId}/turn-credentials?threshold=${encodeURIComponent(thresholdToken ?? '')}`,
+      );
       if (r.ok) {
         const j = await r.json();
         iceServersRef.current = Array.isArray(j.iceServers) ? j.iceServers : [];
@@ -358,7 +363,14 @@ export default function WebRtcSmokeRoom() {
     addLog('left cleanly');
   }, [post, addLog]);
 
-  useEffect(() => () => { esRef.current?.close(); pcRef.current?.close(); }, []);
+  // Unmount cleanup. `leave()` stops the mic on the intentional exit; this covers the OTHER exits
+  // (tab close, back nav, route change) where leave() never runs — otherwise localStream tracks
+  // keep the mic hot (browser recording indicator stays on) after the room is gone.
+  useEffect(() => () => {
+    esRef.current?.close();
+    pcRef.current?.close();
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+  }, []);
 
   const Row = ({ k, v }: { k: string; v: string }) => (
     <div className="flex justify-between gap-4 py-1 border-b border-neutral-800">

@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
         s.transcript_enabled,
         s.client_id,
         pc.name AS client_name,
+        s.summary->>'clientLabel'                                              AS client_label,
         EXTRACT(EPOCH FROM (COALESCE(s.ended_at, s.started_at) - s.started_at))::int AS duration_seconds,
         COUNT(DISTINCT t.id)::int                                              AS segment_count,
         COUNT(DISTINCT m.id)::int                                              AS marker_count,
