@@ -67,6 +67,12 @@ interface SessionReviewChatProps {
    * consent/recipient/provenance policy.
    */
   parentUpdateSupported?: boolean;
+  /**
+   * Previously saved display label for this session ("with Cece"), restored
+   * from summary.clientLabel via the sessions list. A continuity aid in the
+   * practitioner's own words — never a client record or identity link.
+   */
+  initialClientName?: string | null;
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -127,13 +133,13 @@ const LENS_PROMPTS: Record<ReviewLens, typeof CORE_PROMPTS> = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, parentUpdateSupported = false }: SessionReviewChatProps) {
+export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, parentUpdateSupported = false, initialClientName = null }: SessionReviewChatProps) {
   const durationMin = Math.floor(duration / 60);
   const durationSec = Math.floor(duration % 60);
   const hasContent = segmentCount > 0;
 
   // Client name is optional metadata, added after the content is seen.
-  const [clientName, setClientName] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string | null>(initialClientName);
   const [nameEditing, setNameEditing] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const clientNameRef = useRef<string | null>(null);
@@ -470,12 +476,29 @@ ${body
     [input, isLoading, sendToMaia]
   );
 
+  // Persist the label so it survives leaving the review (summary.clientLabel).
+  // Fire-and-forget: the in-review experience never blocks on the save, and a
+  // failed save degrades to today's behavior (label lives for this visit only).
+  const persistLabel = useCallback(
+    (label: string | null) => {
+      apiFetch('/api/scribe/session-label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: reviewedSessionId, label }),
+      }).catch(() => {
+        console.warn('[SessionReview] label save failed — kept for this visit only');
+      });
+    },
+    [reviewedSessionId]
+  );
+
   const commitName = useCallback(() => {
     const trimmed = nameInput.trim();
     setClientName(trimmed === '' ? null : trimmed);
+    persistLabel(trimmed === '' ? null : trimmed);
     setNameInput('');
     setNameEditing(false);
-  }, [nameInput]);
+  }, [nameInput, persistLabel]);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -557,7 +580,7 @@ ${body
                 with {clientName}
                 <X
                   className="w-3 h-3 hover:text-rose-400"
-                  onClick={e => { e.stopPropagation(); setClientName(null); }}
+                  onClick={e => { e.stopPropagation(); setClientName(null); persistLabel(null); }}
                 />
               </button>
             ) : (

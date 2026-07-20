@@ -55,6 +55,7 @@ import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
+import { TranscriptImportPanel, type ImportedSessionInfo } from '@/components/studio/TranscriptImportPanel';
 import { AudioSourcesStatus } from '@/components/studio/AudioSourcesStatus';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -81,6 +82,8 @@ interface PastSession {
   title: string | null;
   client_id: string | null;
   client_name: string | null;
+  /** Practitioner's saved display label (summary.clientLabel) — a name, not a client link. */
+  client_label: string | null;
   started_at: string;
   ended_at: string | null;
   memory_policy: string;
@@ -208,7 +211,7 @@ export default function SessionRoomPage() {
   const [pastSessionsLoading, setPastSessionsLoading] = useState(false);
   const [pastSessionsOpen, setPastSessionsOpen] = useState(false);
   const [historyReviewId, setHistoryReviewId] = useState<string | null>(null);
-  const [historyReviewMeta, setHistoryReviewMeta] = useState<{ segmentCount: number; duration: number; assembledTurns: number; hasAssembled: boolean }>({ segmentCount: 0, duration: 0, assembledTurns: 0, hasAssembled: false });
+  const [historyReviewMeta, setHistoryReviewMeta] = useState<{ segmentCount: number; duration: number; assembledTurns: number; hasAssembled: boolean; clientLabel: string | null }>({ segmentCount: 0, duration: 0, assembledTurns: 0, hasAssembled: false, clientLabel: null });
 
   // Booking picker (practitioner only)
   const [bookings, setBookings] = useState<BookingOption[]>([]);
@@ -478,6 +481,22 @@ export default function SessionRoomPage() {
       duration: session.duration_seconds,
       assembledTurns: session.assembled_turns,
       hasAssembled: session.has_assembled,
+      clientLabel: session.client_label ?? null,
+    });
+  }, []);
+
+  // Session Room threshold (Step 1): a freshly imported transcript goes straight into
+  // review (recognition precedes identification), and the past-sessions list
+  // is invalidated so it refetches with the new session included.
+  const openImportedReview = useCallback((session: ImportedSessionInfo) => {
+    setPastSessions([]);
+    setHistoryReviewId(session.id);
+    setHistoryReviewMeta({
+      segmentCount: session.segmentCount,
+      duration: session.durationSeconds,
+      assembledTurns: 0,
+      hasAssembled: false,
+      clientLabel: null,
     });
   }, []);
 
@@ -961,7 +980,7 @@ ${insightsSection}
               {' '}All transcription runs locally.
             </p>
 
-            {/* Past sessions */}
+            {/* Past sessions + transcript import */}
             <div className="mt-8 border-t border-slate-800/50 pt-6">
               <button
                 onClick={togglePastSessions}
@@ -993,6 +1012,9 @@ ${insightsSection}
                           const durMin = Math.floor(s.duration_seconds / 60);
                           const durSec = s.duration_seconds % 60;
                           const label = s.client_name || s.title || `${s.container.charAt(0).toUpperCase() + s.container.slice(1)} session`;
+                          // Saved display label ("with Cece") — shown alongside, never replacing
+                          // a real client link's name. Absent label → exactly the old rendering.
+                          const withLabel = !s.client_name && s.client_label ? s.client_label : null;
                           const eligibility = getReviewEligibility(s);
                           const statusBadge = getSessionStatusBadge(s);
                           return (
@@ -1001,7 +1023,10 @@ ${insightsSection}
                               className="flex items-center gap-3 p-3 bg-[#1e1e38] border border-slate-800/50 rounded-xl"
                             >
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-white truncate">{label}</p>
+                                <p className="text-sm text-white truncate">
+                                  {label}
+                                  {withLabel && <span className="text-slate-400"> — with {withLabel}</span>}
+                                </p>
                                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                   <span className="text-xs text-slate-500">
                                     {startDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
@@ -1059,6 +1084,9 @@ ${insightsSection}
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Session Room threshold (Step 1) — bring an existing transcript into review */}
+              <TranscriptImportPanel onImported={openImportedReview} />
             </div>
           </motion.div>
         )}
@@ -1084,6 +1112,7 @@ ${insightsSection}
                 reviewedSessionId={historyReviewId}
                 segmentCount={historyReviewMeta.segmentCount || historyReviewMeta.assembledTurns}
                 duration={historyReviewMeta.duration}
+                initialClientName={historyReviewMeta.clientLabel}
               />
             ) : (
               <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-6 text-center">
