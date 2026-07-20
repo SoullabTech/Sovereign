@@ -4,7 +4,10 @@
  * Room Holoflower — the room's weather, not a widget.
  *
  * Renders the CANONICAL Soullab holoflower artwork:
- *     public/maia-spiral-logo-alt.png
+ *     public/holoflower-studio-transparent.png
+ * (same spiral-of-dots art as maia-spiral-logo-alt.png, but with a TRANSPARENT
+ * background — the logo-alt file has opaque white baked in, which renders as a
+ * white square on the dark room ground; Kelly flagged it 2026-07-19)
  * the radial spiral-of-dots mark (Air/gold top · Fire/red right · Water/blue bottom ·
  * Earth/green left — the four elemental quadrants, spiral center). The interview's
  * ambient motion state gently breathes the image; when an element is proposed or
@@ -64,7 +67,7 @@ export function RoomHoloflower({
 }: RoomHoloflowerProps) {
   // White What Now? room uses the monochrome spiral; Soullab's rooms keep the
   // multicolor mark. Either way it is the fixed brand asset — never redrawn.
-  const art = mono ? '/holoflower.png' : '/maia-spiral-logo-alt.png';
+  const art = mono ? '/holoflower.png' : '/holoflower-studio-transparent.png';
   // Most recently confirmed element holds the glow; a proposal warms it faintly.
   const confirmed = confirmedElements[confirmedElements.length - 1] ?? null;
   const glowElement = confirmed ?? proposedElement ?? null;
@@ -113,8 +116,8 @@ export function RoomHoloflower({
           style={{
             width: size,
             height: size,
-            WebkitMaskImage: 'url(/maia-spiral-logo-alt.png)',
-            maskImage: 'url(/maia-spiral-logo-alt.png)',
+            WebkitMaskImage: 'url(/holoflower-studio-transparent.png)',
+            maskImage: 'url(/holoflower-studio-transparent.png)',
             WebkitMaskSize: 'contain',
             maskSize: 'contain',
             WebkitMaskRepeat: 'no-repeat',
