@@ -17,7 +17,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, BookOpen, Settings, ArrowLeft, Orbit } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SpiralogicEvolutionaryReport } from '@/components/astrology/SpiralogicEvolutionaryReport';
 import { FieldOrientationHeader } from '@/components/astrology/FieldOrientationHeader';
 import type { SpiralogicEvolutionaryReportData } from '@/lib/astrology/spiralogicReportTypes';
@@ -150,12 +149,6 @@ export default function AstrologyPage() {
   // useBirthChart hook — loads from server profile first, then localStorage
   // This ensures members with server-saved birth data always see their chart
   const { birthData: hookBirthData, isLoading: hookLoading, isComplete } = useBirthChart();
-  const [elementalBalance, setElementalBalance] = useState({
-    fire: 0.28,
-    water: 0.38,
-    earth: 0.18,
-    air: 0.16,
-  });
 
   // Alien patterns (Steinbrecher) — detected from chart
   const [alienPatterns, setAlienPatterns] = useState<AlienPattern[]>([]);
@@ -494,15 +487,6 @@ export default function AstrologyPage() {
           midheaven: result.data.midheaven,
           houses: result.data.houses,
           aspects: result.data.aspects,
-        });
-
-        // Calculate elemental balance from chart
-        // TODO: Make this more sophisticated
-        setElementalBalance({
-          fire: 0.25,
-          water: 0.30,
-          earth: 0.20,
-          air: 0.25,
         });
 
         // Capture alien patterns from API
@@ -1847,30 +1831,11 @@ export default function AstrologyPage() {
         )}
 
         {/* Elemental Balance - The living signature */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-          className={`rounded-2xl p-8 mb-12 backdrop-blur-md transition-all duration-500
-            ${isDayMode
-              ? 'bg-white/40 border border-stone-200/40'
-              : 'bg-black/20 border border-stone-700/20'
-            }`}
-          style={{
-            boxShadow: `0 8px 32px ${isDayMode ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.3)'}`,
-          }}
-        >
-          <h2 className={`text-2xl font-serif mb-6 text-center ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
-            Elemental Balancing & Current Energy Dynamics
-          </h2>
-          <ElementalBalanceDisplay balance={elementalBalance} />
-          <div className={`mt-6 text-xs text-center ${isDayMode ? 'text-stone-600' : 'text-stone-400'} italic`}>
-            {/* Dominance line hidden (Kelly, 2026-07-10): elementalBalance is hardcoded on both
-                paths (default state + post-chart TODO), so the crown was fiction for every member.
-                Dominance language returns only via the versioned interpretive rule (C-fence). */}
-            <p>Integration practices available through personalized guidance</p>
-          </div>
-        </motion.div>
+        {/* Elemental balance card removed (audit F-08, 2026-07-20): values were
+            hardcoded on both paths (default state + post-chart TODO) — fabricated
+            rendering. The card returns only when driven by the deterministic spine
+            (Journey Framework step 2), same condition as the hidden dominance line
+            (Kelly, 2026-07-10). */}
 
         {/* Spiralogic Elemental Mapping */}
         <motion.div

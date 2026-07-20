@@ -7,18 +7,12 @@
  * Your life as a living field. The spine of the system.
  */
 
-import { Suspense, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DepthBoundary } from '@/components/maia/DepthBoundary';
 import { emitWorldEvent } from '@/lib/telemetry/worldTelemetry';
-
-const ContinuityView = dynamic(
-  () => import('@/components/consciousness/ContinuityView'),
-  { ssr: false },
-);
 
 export default function JourneyWorld() {
   const router = useRouter();
@@ -59,18 +53,9 @@ export default function JourneyWorld() {
         </p>
       </div>
 
-      {/* World content */}
-      <div className="max-w-2xl mx-auto px-6">
-        <Suspense
-          fallback={
-            <div className="text-white/20 text-sm italic text-center py-20">
-              Gathering your arc&hellip;
-            </div>
-          }
-        >
-          <ContinuityView />
-        </Suspense>
-      </div>
+      {/* Spiral-state rendering unsurfaced (audit F-01, 2026-07-20): inferred
+          position (element/phase/motion) may not render as member-facing fact
+          without disclosure + consent. Returns only through that architecture. */}
 
       {/* Perceptual horizon */}
       <div className="max-w-2xl mx-auto px-6">

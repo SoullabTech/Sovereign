@@ -55,7 +55,6 @@ import { useUpdate } from '@/components/providers/UpdateProvider';
 import { Settings } from 'lucide-react';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
 import { NostrMessagingSection } from '@/components/nostr/NostrMessagingSection';
-import ContinuityView from '@/components/consciousness/ContinuityView';
 import PatternLedger from '@/components/consciousness/PatternLedger';
 import RecurringThemesCard from '@/components/consciousness/RecurringThemesCard';
 import { MemoryConsentSection } from '@/components/settings/MemoryConsentSection';
@@ -108,7 +107,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'memory-consent' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'connections' | 'data' | 'portals' | 'messaging' | 'scheduling';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'memory-consent' | 'patterns' | 'notifications' | 'privacy' | 'connections' | 'data' | 'portals' | 'messaging' | 'scheduling';
 
 interface PractitionerProject {
   id: string;
@@ -160,7 +159,8 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
   { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
   { id: 'memory-consent', label: 'Memory & Consent', icon: History },
-  { id: 'continuity', label: 'Continuity', icon: Sparkles },
+  // 'continuity' section unsurfaced (audit F-02, 2026-07-20): inferred spiral
+  // state may not render as "Your Current Position" without disclosure + consent.
   { id: 'patterns', label: 'Patterns', icon: BookOpen },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
@@ -2837,14 +2837,6 @@ export function AccountSettings() {
             {activeSection === 'data-privacy' && renderDataPrivacy()}
             {activeSection === 'sovereignty' && renderSovereignty()}
             {activeSection === 'memory-consent' && <MemoryConsentSection />}
-            {activeSection === 'continuity' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-white">Your Current Position</h2>
-                </div>
-                <ContinuityView />
-              </div>
-            )}
             {activeSection === 'patterns' && (
               <div className="space-y-6">
                 <div>
