@@ -482,7 +482,7 @@ export default function SessionRoomPage() {
     });
   }, []);
 
-  // Session Studio Step 1: a freshly imported transcript goes straight into
+  // Session Room threshold (Step 1): a freshly imported transcript goes straight into
   // review (recognition precedes identification), and the past-sessions list
   // is invalidated so it refetches with the new session included.
   const openImportedReview = useCallback((session: ImportedSessionInfo) => {
@@ -1075,7 +1075,7 @@ ${insightsSection}
                 )}
               </AnimatePresence>
 
-              {/* Session Studio Step 1 — bring an existing transcript into review */}
+              {/* Session Room threshold (Step 1) — bring an existing transcript into review */}
               <TranscriptImportPanel onImported={openImportedReview} />
             </div>
           </motion.div>

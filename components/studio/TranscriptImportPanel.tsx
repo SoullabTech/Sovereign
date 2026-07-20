@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * TranscriptImportPanel — Session Studio Step 1: "Add a transcript".
- * Spec: docs/architecture/SESSION_STUDIO_UNIFIED_ENVIRONMENT_2026-07-19.md
+ * TranscriptImportPanel — Session Room threshold (Step 1): "Add a transcript".
+ * Spec: docs/architecture/SESSION_ROOM_THRESHOLD_2026-07-19.md
  *
  * Paste or upload (.txt) an existing transcript → creates an UNASSIGNED
  * completed session → hands the caller the new session so it can enter the

@@ -1,6 +1,6 @@
 // lib/scribe/transcriptImport.ts
-// Session Studio Step 1 — transcript paste/upload parser.
-// Spec: docs/architecture/SESSION_STUDIO_UNIFIED_ENVIRONMENT_2026-07-19.md
+// Session Room threshold (Step 1) — transcript paste/upload parser.
+// Spec: docs/architecture/SESSION_ROOM_THRESHOLD_2026-07-19.md
 //
 // Attribution discipline: this parser NEVER invents speaker attribution.
 // Labels present in the document are preserved verbatim (they are supplied

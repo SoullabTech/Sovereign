@@ -5,8 +5,8 @@ export const runtime = 'nodejs';
 /**
  * POST /api/scribe/import-transcript
  *
- * Session Studio Step 1 — "Add a transcript" threshold path.
- * Spec: docs/architecture/SESSION_STUDIO_UNIFIED_ENVIRONMENT_2026-07-19.md
+ * Session Room threshold (Step 1) — "Add a transcript" threshold path.
+ * Spec: docs/architecture/SESSION_ROOM_THRESHOLD_2026-07-19.md
  *
  * Creates an UNASSIGNED, completed scribe session from pasted or .txt
  * transcript text and stores its turns, so the material enters the same

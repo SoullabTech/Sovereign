@@ -1,4 +1,4 @@
-// Session Studio Step 1 — transcript import parser.
+// Session Room threshold (Step 1) — transcript import parser.
 // The load-bearing property throughout: attribution is preserved when
 // supplied and NEVER invented when absent.
 
