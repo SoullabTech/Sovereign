@@ -333,8 +333,12 @@ export async function loadReviewTurns(sessionId: string): Promise<LoadedReview> 
   }
 
   if (!assembled) {
+    // participant_label carries document-supplied speaker labels for imported
+    // transcripts (Session Studio Step 1) — supplied evidence, preferred over
+    // the identity enum. Live-captured entries have no label, so this is a
+    // no-op for them.
     const transcriptResult = await query(
-      `SELECT speaker, content, spoken_at
+      `SELECT COALESCE(NULLIF(participant_label, ''), speaker) AS speaker, content, spoken_at
        FROM scribe_transcript_entries
        WHERE session_id = $1 ORDER BY spoken_at ASC`,
       [sessionId]
@@ -478,9 +482,11 @@ export async function buildSessionReviewPrompt(
     // Since sampleSegments returns indices from head/mid/tail, we replicate its logic for speakers.
     rawSpeakers = resampleSpeakers(allSpeakers, allTexts.length, sampledTexts.length);
   } else {
-    // Fallback path: raw scribe_transcript_entries
+    // Fallback path: raw scribe_transcript_entries. participant_label carries
+    // document-supplied labels for imported transcripts (supplied evidence);
+    // live entries have none, so COALESCE is a no-op for them.
     const transcriptResult = await query(
-      `SELECT speaker, content, spoken_at
+      `SELECT COALESCE(NULLIF(participant_label, ''), speaker) AS speaker, content, spoken_at
        FROM scribe_transcript_entries
        WHERE session_id = $1
        ORDER BY spoken_at ASC`,
