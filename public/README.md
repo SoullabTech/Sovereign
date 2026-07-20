@@ -7,7 +7,22 @@ This directory contains all logo and icon assets for the MAIA Sovereign applicat
 | File | Size | Purpose |
 |------|------|---------|
 | `maia-spiral-logo.png` | 228KB | Primary spiral logo for general use |
-| `maia-spiral-logo-alt.png` | 382KB | Alternative version of spiral logo |
+| `maia-spiral-logo-alt.png` | 382KB | ⚠️ Legacy — same art as below, but with an **opaque white background baked in**. Do not use on dark surfaces. |
+| `holoflower-studio-transparent.png` | — | **Canonical transparent dark-surface holoflower** (spiral-of-dots, true alpha). Use this for any dark room/studio surface. |
+
+### Holoflower asset provenance
+
+Two files carry the identical spiral-of-dots artwork and are easy to confuse:
+
+- `holoflower-studio-transparent.png` = canonical transparent dark-surface asset.
+- `maia-spiral-logo-alt.png` = legacy asset with baked white background (its alpha
+  channel exists but every background pixel is opaque white). On a dark ground it
+  renders as a floating white square — this regression has shipped before
+  (flagged 2026-07-19 on `/maia/vision-studio`). Do not use it on dark surfaces,
+  and do not use it as a CSS mask (the opaque background masks the full square).
+
+The artwork itself is a fixed brand asset: reference it, tint it, animate it —
+never redraw it in code. See `components/maia/vision-studio/RoomHoloflower.tsx`.
 
 ## 🖥️ Web Browser Icons
 
