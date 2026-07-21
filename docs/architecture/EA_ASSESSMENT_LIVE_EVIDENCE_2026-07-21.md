@@ -66,11 +66,29 @@ What it renders: the **book-companion hub** for *Elemental Alchemy — The Ancie
 
 **Net effect on the decision options:** unchanged in kind, but the AMEND path is smaller than the first witness implied — the hub needs (at most) one CTA phrase change; the surgical target is the assessment's results screen and its scoring model. GATE/UNPUBLISH likewise narrows: gating the assessment route alone suffices; the book hub can stay live as-is.
 
-## Open questions
+## Open questions — RESOLVED during gate deployment (2026-07-21)
 
-1. **Unauthenticated reachability:** screenshot was taken in an incognito window; whether the assessment renders without sign-in is unverified (LAN hairpin-NAT prevents external-path verification from the dev machine — verify from cellular or an external host).
-2. Whether results persist anywhere (member record, localStorage, analytics) or are ephemeral to the session — not yet audited.
-3. Whether the "Explore Fire Chapters" routing filters content visibility elsewhere in the EA hub.
+1. **Unauthenticated reachability: NO.** Verified against the live production container: an unauthenticated request to the assessment route returns `307 → /signin?next=…&reason=no_session_cookie`. Anonymous visitors never reached the identity result; the founder's incognito screenshot carried a signed-in session. This lowers the severity of the historical exposure (members only, not the public).
+2. **Persistence: localStorage only.** The page wrote `elemental-assessment-result` to the browser's localStorage; no server-side persistence, no other consumer of that key anywhere in the codebase. Gating the page fully contains the result.
+3. **"Explore Fire Chapters" routing: cosmetic.** The `?element=` parameter decorates; it does not filter or partition hub content (second witness, above).
+
+## GATE DEPLOYED AND VERIFIED — evidence (2026-07-21)
+
+Ruling executed: **GATE now, AMEND properly.** [PR #670](https://github.com/SoullabTech/Sovereign/pull/670) (`fix/gate-ea-assessment`, commit `76b2fcb2d`) merged as `269748eb2`; deployed via `pre-deploy-gate.sh deploy-maia` (deploy-lane lock held throughout; rollback tags `:previous` preserved, `:current` + `:269748eb2` tagged).
+
+| Check | Result |
+|---|---|
+| Container freshness | Created 2026-07-21T16:49:56Z ✅ |
+| LAN IP (router forward target) | `192.168.0.104` ✅ |
+| Provenance | `GIT_COMMIT=269748eb2`, `DEPLOY_LANE=deploy-lane` ✅ |
+| Health | `{"health":"ok", "version":"269748eb2", database ok}` ✅ |
+| Gated route (unauthenticated) | 307 → signin (never reaches any content) ✅ |
+| Gated route (member content, prerendered in image) | holding copy ✅ · "without defining who you are" ✅ · hub link ✅ · **zero** refused strings (dominant / discover-your-element / yogic / Elemental Balance) ✅ |
+| Hub | untouched by the commit (no diff); serving as before ✅ |
+| Logs (post-swap) | no errors ✅ |
+| Tests | 6/6 jest (register + preservation assertions) ✅ |
+
+**Status: the live constitutional mismatch is closed.** The assessment is now `preserved but unavailable` — original page intact at `cd03493c9`, scoring module untouched, hub live. Rollback = single revert or `:previous` tag.
 
 ---
 
