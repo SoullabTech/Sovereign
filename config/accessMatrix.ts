@@ -193,6 +193,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // MAIA Interface (core) — all depth, open to all
   { exact: '/maia', minTier: 'free', notes: 'MAIA main interface' },
+  { exact: '/maia/reflection', minTier: 'free', notes: 'Developmental reflection — member-only (beta v0)' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
   { exact: '/maia/field-dashboard', minTier: 'free', notes: 'Field dashboard' },
