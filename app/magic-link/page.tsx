@@ -23,7 +23,9 @@ function MagicLinkContent() {
 
   const handleSignIn = () => {
     if (!token) {
-      router.push('/magic-link-error?reason=no_token');
+      // /magic-link-error was removed (5cf5c9f86); all token errors route to
+      // /signin?link=<reason>, same as the API route's error redirects.
+      router.push('/signin?link=no_token');
       return;
     }
     setStatus('loading');
@@ -38,7 +40,7 @@ function MagicLinkContent() {
       <div className="text-center">
         <p className="text-white text-lg font-light mb-6">That link appears to be incomplete.</p>
         <button
-          onClick={() => router.push('/magic-link-error?reason=no_token')}
+          onClick={() => router.push('/signin?link=no_token')}
           className="px-6 py-3 rounded-xl bg-white/85 text-teal-950 font-semibold"
         >
           Request a new link
