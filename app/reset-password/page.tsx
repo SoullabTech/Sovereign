@@ -7,6 +7,20 @@ import { Lock, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { apiUrl } from '@/lib/http/apiBase';
 
+// Soullab Core navy surface system (docs/canon/SOULLAB_THEME.md) — matches
+// UnifiedAuth (/signin). No teal: that scheme is retired.
+const CARD_STYLE: React.CSSProperties = {
+  background: 'linear-gradient(165deg, rgba(15, 29, 50, 0.8), rgba(10, 22, 40, 0.6))',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(30, 58, 95, 0.5)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(30, 58, 95, 0.3)',
+};
+const INPUT_CLASS =
+  'w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-3 text-base text-white caret-white placeholder:text-slate-500 outline-none focus:border-maia-navy-600 transition-all';
+const PRIMARY_BTN =
+  'w-full rounded-xl bg-maia-navy-700 hover:bg-maia-navy-600 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg';
+
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -120,7 +134,7 @@ function ResetPasswordContent() {
           <div className="w-16 h-16 mx-auto mb-4">
             <Holoflower size="lg" glowIntensity="medium" animate={true} />
           </div>
-          <p className="text-teal-800/70">Validating reset link...</p>
+          <p className="text-slate-400">Validating reset link...</p>
         </div>
       );
     }
@@ -129,12 +143,12 @@ function ResetPasswordContent() {
       return (
         <div className="space-y-6">
           <div className="flex justify-center">
-            <AlertCircle className="w-10 h-10 text-teal-600" />
+            <AlertCircle className="w-10 h-10 text-amber-400/80" />
           </div>
-          <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
+          <h2 className="text-xl font-semibold text-white text-center tracking-tight">
             Link Expired
           </h2>
-          <p className="text-teal-700/80 text-sm text-center">
+          <p className="text-slate-400 text-sm text-center">
             {error}
           </p>
           <button
@@ -142,7 +156,7 @@ function ResetPasswordContent() {
               setError('');
               setMode('request');
             }}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+            className={PRIMARY_BTN}
           >
             Request New Reset Link
           </button>
@@ -156,17 +170,17 @@ function ResetPasswordContent() {
           <div className="flex justify-center">
             <CheckCircle className="w-10 h-10 text-emerald-500" />
           </div>
-          <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
+          <h2 className="text-xl font-semibold text-white text-center tracking-tight">
             {token ? 'Password Reset Complete' : 'Check Your Email'}
           </h2>
-          <p className="text-teal-700/80 text-sm text-center">
+          <p className="text-slate-400 text-sm text-center">
             {token
               ? 'Your password has been updated. You can now sign in.'
               : 'If an account exists with this email, we\'ve sent a reset link.'}
           </p>
           <button
             onClick={() => router.push('/signin')}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+            className={PRIMARY_BTN}
           >
             Go to Sign In
           </button>
@@ -178,18 +192,18 @@ function ResetPasswordContent() {
       return (
         <div className="space-y-6">
           <div className="flex justify-center">
-            <Mail className="w-10 h-10 text-teal-600" />
+            <Mail className="w-10 h-10 text-slate-400" />
           </div>
-          <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
+          <h2 className="text-xl font-semibold text-white text-center tracking-tight">
             Reset Your Password
           </h2>
-          <p className="text-teal-700/80 text-sm text-center">
+          <p className="text-slate-400 text-sm text-center">
             Enter your email and we'll send you a reset link.
           </p>
 
           <form onSubmit={handleRequestReset} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-teal-800 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
                 Email Address
               </label>
               <input
@@ -197,14 +211,14 @@ function ResetPasswordContent() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                className={INPUT_CLASS}
                 placeholder="your@email.com"
                 required
               />
             </div>
 
             {error && (
-              <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40">
+              <div className="rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 text-sm text-amber-300/90">
                 {error}
               </div>
             )}
@@ -214,7 +228,7 @@ function ResetPasswordContent() {
               disabled={isSubmitting || !email.trim()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className={PRIMARY_BTN}
             >
               {isSubmitting ? 'Sending...' : 'Send Reset Link'}
             </motion.button>
@@ -222,7 +236,7 @@ function ResetPasswordContent() {
             <button
               type="button"
               onClick={() => router.push('/signin')}
-              className="w-full text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+              className="w-full text-sm font-medium text-slate-500 hover:text-slate-300 transition"
             >
               Back to Sign In
             </button>
@@ -235,20 +249,20 @@ function ResetPasswordContent() {
     return (
       <div className="space-y-6">
         <div className="flex justify-center">
-          <Lock className="w-10 h-10 text-emerald-600" />
+          <Lock className="w-10 h-10 text-slate-400" />
         </div>
-        <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
+        <h2 className="text-xl font-semibold text-white text-center tracking-tight">
           Set New Password
         </h2>
         {memberName && (
-          <p className="text-teal-700/80 text-sm text-center">
+          <p className="text-slate-400 text-sm text-center">
             Welcome back, {memberName}
           </p>
         )}
 
         <form onSubmit={handleResetPassword} className="space-y-4">
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-teal-800 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
               New Password
             </label>
             <input
@@ -256,7 +270,7 @@ function ResetPasswordContent() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+              className={INPUT_CLASS}
               placeholder="At least 6 characters"
               required
               minLength={6}
@@ -264,7 +278,7 @@ function ResetPasswordContent() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-teal-800 mb-2">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
               Confirm Password
             </label>
             <input
@@ -272,14 +286,14 @@ function ResetPasswordContent() {
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+              className={INPUT_CLASS}
               placeholder="Confirm your password"
               required
             />
           </div>
 
           {error && (
-            <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 text-sm text-amber-300/90">
               {error}
             </div>
           )}
@@ -289,7 +303,7 @@ function ResetPasswordContent() {
             disabled={isSubmitting || !password || !confirmPassword}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className={PRIMARY_BTN}
           >
             {isSubmitting ? 'Resetting...' : 'Reset Password'}
           </motion.button>
@@ -299,7 +313,7 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-4">
       {/* Sacred Holoflower */}
       <div className="mb-4 z-10 relative w-full flex justify-center">
         <div className="w-40 h-40 flex items-center justify-center">
@@ -312,12 +326,8 @@ function ResetPasswordContent() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="rounded-2xl p-8 border max-w-md w-full shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
-        style={{
-          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.25)',
-        }}
+        className="rounded-2xl p-8 max-w-md w-full"
+        style={CARD_STYLE}
       >
         {renderContent()}
       </motion.div>
@@ -334,11 +344,11 @@ function ResetPasswordContent() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-4">
       <div className="w-40 h-40 flex items-center justify-center">
         <Holoflower size="xl" glowIntensity="low" animate={true} />
       </div>
-      <p className="text-teal-800/70 mt-4">Loading...</p>
+      <p className="text-slate-400 mt-4">Loading...</p>
     </div>
   );
 }
