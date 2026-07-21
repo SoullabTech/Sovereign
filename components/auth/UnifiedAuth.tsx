@@ -64,6 +64,10 @@ function UnifiedAuthInner() {
   const preVerified = searchParams?.get('verified') === 'true';
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
+  // Magic-link failures land here as /signin?link=<reason> (no_token, expired,
+  // already_used, invalid, invalid_token, failed). All reasons collapse into one
+  // calm acknowledgment — codes stay in the URL for diagnostics, never on screen.
+  const brokenLinkParam = searchParams?.get('link') || '';
 
   const [phase, setPhase] = useState<Phase>(preVerified ? 'name' : usernameParam ? 'password' : 'email');
   const [email, setEmail] = useState(emailParam);
@@ -434,7 +438,11 @@ function UnifiedAuthInner() {
           ) : (
             <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Welcome</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">Enter your email to continue.</p>
+              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
+                {brokenLinkParam
+                  ? 'That sign-in link is incomplete or no longer valid. Enter your email and we’ll send you a new one.'
+                  : 'Enter your email to continue.'}
+              </p>
               {errorBlock}
               <form onSubmit={sendCode} className="space-y-3">
                 <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={INPUT_CLASS} />
