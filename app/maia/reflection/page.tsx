@@ -127,7 +127,7 @@ export default function ReflectionPage() {
       <div className="text-center space-y-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/holoflower-v2-transparent.png"
+          src="/holoflower-studio-transparent.png"
           alt=""
           className="w-20 h-20 mx-auto opacity-90"
         />
@@ -376,7 +376,7 @@ export default function ReflectionPage() {
   return shell(
     <div className="text-center space-y-8">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/holoflower-v2-transparent.png" alt="" className="w-16 h-16 mx-auto opacity-80" />
+      <img src="/holoflower-studio-transparent.png" alt="" className="w-16 h-16 mx-auto opacity-80" />
       <h2 className="text-xl font-light">Kept, in your words.</h2>
       <p className="text-white/60 leading-relaxed max-w-md mx-auto">
         {returnWeeks
