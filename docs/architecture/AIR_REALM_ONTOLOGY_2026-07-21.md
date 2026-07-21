@@ -41,7 +41,13 @@ document says so and recommends one.
 
 ## Part I — The ladder: what is understanding? (agenda 5)
 
-The capability depends on distinguishing five things that ordinary language collapses:
+The capability depends on distinguishing five things that ordinary language collapses.
+
+*(Register note, added 2026-07-21 after the distance review: the definitions below are candidate
+interpretation offered for ratification — not established fact about how humans work. Where the
+prose sounds declarative, read it as proposal; the record should not speak with more certainty
+than the inquiry. Kelly's R1 ratified the ladder itself; the surrounding explanatory prose
+remains interpretive scaffolding.)*
 
 **Information** — difference that can be transmitted without the receiver changing it. A schedule, a
 fact, a diagnosis. Transmission is sufficient. Machines do this well; it is the only rung that
@@ -49,8 +55,8 @@ fact, a diagnosis. Transmission is sufficient. Machines do this well; it is the 
 
 **Understanding** — information integrated into a person's existing world such that they can act on
 it, anticipate with it, and restate it in their own words. Understanding cannot be transmitted —
-only *occasioned*. It requires the receiver's own structure. This is why explanation so often fails:
-it delivers information and assumes the rest.
+only *occasioned*. It requires the receiver's own structure — which may be why explanation so
+often fails: it delivers information and assumes the rest.
 
 **Meaning** — understanding connected to what matters. "I understand what you said" becomes "I know
 what this means *for me* / *for us*." Meaning is value-laden placement in a life. It cannot be

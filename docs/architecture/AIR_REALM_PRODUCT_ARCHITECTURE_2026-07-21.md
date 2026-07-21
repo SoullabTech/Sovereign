@@ -55,7 +55,11 @@ Layer 3  SURFACES              (existing rooms; no new room in v0)
 
 ### Layer 1 — Restraint Context (answers Q5 and Q6: yes, restraint becomes a first-class object)
 
-A per-turn, deterministically assembled governance object — data, not model discretion:
+A per-turn, deterministically assembled governance object — data, not model discretion. The
+sketch below is an **illustrative, non-authoritative representation of the candidate *shape*,
+not a designed object**: the field names and structure are rhetorical convenience for this
+document, decided nowhere. Prompt 8 designs the real thing; this shows only what kind of thing
+it is. *(Register amended 2026-07-21: a typed sketch reads as a decision even when it isn't.)*
 
 ```text
 RestraintContext {

@@ -162,10 +162,17 @@ not the default.
   own act (asking "what have I released?" shows verbatim entries, narrated plainly, no
   invitation to re-adopt). The member owns their history; MAIA just genuinely stops using it.
 - **Does MAIA remember forgetting?** MAIA remembers *that* it agreed to forget — the boundary,
-  not the content. If the member later re-raises the released thing themselves, MAIA receives it
-  as new material with old provenance available ("you released something like this in June —
-  want it back, or is this new?" — asked once, only because silently resurrecting *or* silently
-  double-tracking would both be dishonest).
+  not the content, and **not any similarity trace**. The release boundary retains no summary, no
+  keywords, no embedding, no emotional category (Kelly's constraint, header above) — which means
+  MAIA structurally *cannot* notice that new material "resembles" something released; resemblance
+  detection would require exactly the retained semantics the boundary forbids. The recognition
+  belongs entirely to the member: if they say "this might be what I let go of in June," their own
+  record opens at their ask. MAIA's only permitted knowledge is bare and non-semantic — that
+  releases have occurred — and it surfaces only in response to the member's own wondering ("You
+  have released things before. Does this feel related, or entirely new?"), never as an unprompted
+  observation. *(Amended 2026-07-21 after the distance review: the earlier text had MAIA saying
+  "you released something like this in June," which required a retained semantic trace and
+  contradicted the release boundary. Release integrity wins; the member performs the recognition.)*
 - **What emotional experience should accompany release?** Lightness. The register is completion,
   not deletion: "some meanings were only needed for a season." Never condolence, never "growth,"
   never a summary of what the released thing meant — meaning-extraction at the exit is the last
