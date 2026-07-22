@@ -124,7 +124,7 @@ export async function middleware(req: NextRequest) {
   const SOULLAB_ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'soullab.life';
   const subdomainMatch = host.match(new RegExp(`^([a-z0-9-]+)\\.${SOULLAB_ROOT.replace('.', '\\.')}(:\\d+)?$`));
   const masterSlug = subdomainMatch?.[1];
-  const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app'];
+  const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app', 'staging'];
 
   if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
     const url = req.nextUrl.clone();
