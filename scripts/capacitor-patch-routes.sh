@@ -520,6 +520,7 @@ MOBILE_EXCLUDED_DIRS=(
     "app/commons/join"
     # MAIA advanced tools (web-only)
     "app/maia/labtools"
+    "app/maia/prototype"
     "app/maia/community"
     "app/maia/realtime-monitor"
     "app/maia/soul-consciousness"
