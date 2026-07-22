@@ -6845,7 +6845,7 @@ I'm not sure what I'm feeling yet.`;
   // DIAGNOSTIC LOGGING - Removed to reduce console noise and improve performance
 
   return (
-    <div className="oracle-conversation min-h-screen bg-soul-background overflow-hidden">
+    <div className="oracle-conversation h-full min-h-0 bg-soul-background overflow-hidden">
       {/* iOS Audio Enable Button - Required for TTS on iOS Safari */}
       {needsIOSAudioPermission && (
         <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center">
@@ -8026,11 +8026,11 @@ I'm not sure what I'm feeling yet.`;
         }`}
              style={{
                height: showChatInterface
-                 ? 'calc(100vh - 300px)'
-                 : 'calc(100vh - 320px)',
+                 ? 'calc(100dvh - 300px)'
+                 : 'calc(100dvh - 320px)',
                maxHeight: showChatInterface
-                 ? 'calc(100vh - 300px)'
-                 : 'calc(100vh - 320px)',
+                 ? 'calc(100dvh - 300px)'
+                 : 'calc(100dvh - 320px)',
                bottom: showChatInterface ? '260px' : '220px',
                overflow: 'hidden'
              }}>

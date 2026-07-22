@@ -221,7 +221,10 @@ export function MaiaShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e]">
+    // Definite-height shell: h-dvh (not min-h-screen) so the height chain
+    // resolves down to the conversation surface — restores the single
+    // bounded scroll owner lost in the spatial-shell migration (SMCC F1/F2).
+    <div className="h-dvh overflow-hidden bg-[#1a1a2e]">
       <MaiaTopBar
         explorerName={explorerName}
         isVoiceMode={isVoiceMode}
@@ -251,8 +254,16 @@ export function MaiaShell({
 
       {/* Center field — offset for rail and top bar */}
       <main
-        className="ml-14 mt-12 transition-all duration-300"
-        style={{ marginRight: rightPanelOpen ? '20rem' : 0 }}
+        className="ml-14 mt-12 overflow-hidden transition-all duration-300"
+        style={{
+          marginRight: rightPanelOpen ? '20rem' : 0,
+          // Inline height+minHeight: the definite-height chain (SMCC F1/F2).
+          // minHeight must be inline to beat the legacy global
+          // `#__next, main { min-height: 100vh }` (globals.css) that otherwise
+          // re-dissolves the chain.
+          height: 'calc(100dvh - 3rem)',
+          minHeight: 'calc(100dvh - 3rem)',
+        }}
       >
         {children}
       </main>

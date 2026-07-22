@@ -106,7 +106,10 @@ export function SwipeNavigation({ currentPage, children }: SwipeNavigationProps)
 
   return (
     <motion.div
-      className="min-h-screen"
+      // h-full (not min-h-screen): this wrapper sits inside the shell's
+      // definite-height <main>; min-height alone gives percentage children
+      // nothing to resolve against and re-breaks the height chain (SMCC F1/F2).
+      className="h-full"
       onPan={(event, info) => {
         // Prevent swipe navigation when user is selecting text
         const target = event.target as HTMLElement;
