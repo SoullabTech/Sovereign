@@ -124,12 +124,16 @@ export function MaiaCenterField({ children }: MaiaCenterFieldProps) {
         {children}
       </div>
 
-      {/* SOULLAB Logo - Bottom Center */}
+      {/* SOULLAB brand — visible on desktop (md+); hidden on mobile for a calmer
+          first-encounter surface (Lane-2 mobile visual hierarchy). The sr-only
+          heading preserves the page's semantic <h1> on mobile (no a11y
+          regression), and `md:hidden` on it prevents a duplicate <h1> on desktop. */}
+      <h1 className="sr-only md:hidden">Soullab</h1>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1, duration: 0.8 }}
-        className="absolute bottom-2 left-0 right-0 flex justify-center z-50 pointer-events-none"
+        className="absolute bottom-2 left-0 right-0 hidden md:flex justify-center z-50 pointer-events-none"
       >
         <div className="flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md border border-amber-500/20 rounded-full pointer-events-auto">
           <img src="/logo_flower 2.png" alt="Holoflower" className="w-6 h-6 opacity-100" />

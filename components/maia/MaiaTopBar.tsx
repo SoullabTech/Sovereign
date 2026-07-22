@@ -65,7 +65,8 @@ export function MaiaTopBar({
       {/* Left: MAIA wordmark + behavior indicator */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <img src="/logo_flower 2.png" alt="MAIA" className="w-5 h-5 opacity-90" />
+          {/* Wordmark only — the living center holoflower is the sole holoflower
+              on the surface. Presence, not a repeated logo. */}
           <span className="text-sm font-light text-[#D4B896]/80 tracking-wider">MAIA</span>
         </div>
         {behavior !== 'default' && (
