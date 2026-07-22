@@ -10,10 +10,13 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Home } from 'lucide-react';
 import { MaiaTopBar } from './MaiaTopBar';
 import { MaiaLeftRail } from './MaiaLeftRail';
 import { MaiaRightPanelHost } from './MaiaRightPanelHost';
+import { MaiaHouseSheet } from './MaiaHouseSheet';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
+import { useSession } from '@/lib/hooks/useSession';
 import { onVoiceNavigate } from '@/lib/maia/voiceNavigationBridge';
 import type { MaiaWorldId, MaiaBehavior } from '@/lib/navigation/types';
 import type { ConversationInsight } from '@/lib/maia/cognitionEvents';
@@ -39,6 +42,13 @@ interface MaiaShellProps {
   /** Ask MAIA — orientation + Knowledge Field stance */
   askMode?: boolean;
   onAskModeChange?: (active: boolean) => void;
+  /**
+   * Arrival mode (Step 3) — first-visit only. The rail and chrome recede so
+   * a newcomer meets one invitation, nothing competing. The House doorway
+   * remains, so the whole world is one tap away. Returning members render
+   * with arrivalMode=false — their surface is unchanged.
+   */
+  arrivalMode?: boolean;
   children: React.ReactNode;
 }
 
@@ -60,12 +70,15 @@ export function MaiaShell({
   onModeChange,
   askMode,
   onAskModeChange,
+  arrivalMode = false,
   children,
 }: MaiaShellProps) {
   const router = useRouter();
+  const { isAdmin, isPractitioner } = useSession();
   const [activeWorld, setActiveWorld] = useState<MaiaWorldId>('maia');
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [userPinnedPanel, setUserPinnedPanel] = useState(false);
+  const [houseOpen, setHouseOpen] = useState(false);
 
   // --- Calm mode ---
   const { isVoiceFlowing, isSanctuary } = useVoiceState();
@@ -233,29 +246,59 @@ export function MaiaShell({
         onOpenAccount={onOpenAccount}
       />
 
-      <MaiaLeftRail
-        activeWorld={activeWorld}
-        calmMode={calmMode}
-        calmCeiling={calmCeiling}
-        worldHints={worldHints}
-        onWorldChange={handleWorldChange}
-        onOpenAccount={onOpenAccount}
-        onCaptureSpirit={() => onLabAction('capture-spirit')}
-        activeMode={activeMode}
-        onModeChange={onModeChange}
-        isVoiceInput={isVoiceMode}
-        onToggleInputMode={onToggleInputMode}
-        askMode={askMode}
-        onAskModeChange={onAskModeChange}
-      />
+      {/* Arrival (Step 3): a newcomer meets one invitation — the rail recedes.
+          Returning members (arrivalMode=false) keep the rail exactly as before. */}
+      {!arrivalMode && (
+        <MaiaLeftRail
+          activeWorld={activeWorld}
+          calmMode={calmMode}
+          calmCeiling={calmCeiling}
+          worldHints={worldHints}
+          onWorldChange={handleWorldChange}
+          onOpenAccount={onOpenAccount}
+          onCaptureSpirit={() => onLabAction('capture-spirit')}
+          activeMode={activeMode}
+          onModeChange={onModeChange}
+          isVoiceInput={isVoiceMode}
+          onToggleInputMode={onToggleInputMode}
+          askMode={askMode}
+          onAskModeChange={onAskModeChange}
+        />
+      )}
 
-      {/* Center field — offset for rail and top bar */}
+      {/* Center field — offset for rail and top bar (no rail offset in Arrival) */}
       <main
-        className="ml-14 mt-12 transition-all duration-300"
+        className={`mt-12 transition-all duration-300 ${arrivalMode ? 'ml-0' : 'ml-14'}`}
         style={{ marginRight: rightPanelOpen ? '20rem' : 0 }}
       >
         {children}
       </main>
+
+      {/* The House — one quiet doorway to the whole world. Present in both
+          modes: it is the sole doorway in Arrival, and an added doorway for
+          returning members (who also keep the rail). Never announces itself. */}
+      <button
+        onClick={() => setHouseOpen(true)}
+        className={`
+          group fixed bottom-20 left-1/2 z-[85] flex -translate-x-1/2 items-center gap-2
+          rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-md
+          transition-all duration-500 hover:border-white/20 hover:bg-black/40
+          ${calmMode && !calmCeiling ? 'opacity-0 hover:opacity-100' : 'opacity-70 hover:opacity-100'}
+        `}
+        title="The House — your places and practices"
+        aria-label="Open The House"
+      >
+        <Home className="h-4 w-4 text-[#c9a54e]" strokeWidth={1.5} />
+        <span className="text-[13px] text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+          The House
+        </span>
+      </button>
+
+      <MaiaHouseSheet
+        open={houseOpen}
+        onClose={() => setHouseOpen(false)}
+        isFounder={isAdmin || isPractitioner}
+      />
 
       <MaiaRightPanelHost
         isOpen={rightPanelOpen}

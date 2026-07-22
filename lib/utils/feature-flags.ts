@@ -34,6 +34,7 @@ export interface FeatureFlags {
   arrivalPrototype: boolean;            // DEV-ONLY: Premium Arrival prototype at /maia/prototype (Package 2; founder/dev-gated, web-only)
   arrivalSignin: boolean;               // Arrival remodel Step 1: re-toned sign-in (UnifiedAuth) — PRESENTATION ONLY; per-device founder preview → default-on when broadened
   arrivalField: boolean;                // Arrival remodel Step 2: navy field + on-field Spectral conversation (MaiaCenterField + scoped CSS) — PRESENTATION ONLY; staged founder → cohort → all
+  arrivalEntry: boolean;                // Arrival remodel Step 3: first-visit-only clean Arrival (rail/chrome recede) + The House doorway. Gated by explicit 'maia_has_arrived' marker — returning members unchanged.
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -64,6 +65,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   arrivalPrototype: false,             // Off — dev-only prototype; enable via flag + founder/dev to view /maia/prototype
   arrivalSignin: true,                 // ON — fully transitioned sign-in/signup re-tone (default). Flag retained as a kill-switch (set false to revert).
   arrivalField: true,                  // ON — navy field conversation (default). Flag retained as a kill-switch (set false to revert).
+  arrivalEntry: true,                  // ON — first-visit clean Arrival + The House doorway (default). Only affects members with no 'maia_has_arrived' marker; kill-switch to revert.
 };
 
 /**
