@@ -350,7 +350,7 @@ export default function PressManuscriptRoom() {
       <div style={paper} className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <img
-            src="/holoflower-v2-transparent.png"
+            src="/holoflower-studio-transparent.png"
             alt="Soullab"
             className="w-12 h-12 mx-auto mb-5 opacity-90"
           />
@@ -371,9 +371,9 @@ export default function PressManuscriptRoom() {
   if (!active || preview) {
     return (
       <div style={paper} className="min-h-screen">
-        <main className="max-w-xl mx-auto px-6 py-24">
+        <main className="max-w-2xl mx-auto px-6 py-24">
           <img
-            src="/holoflower-v2-transparent.png"
+            src="/holoflower-studio-transparent.png"
             alt="Soullab"
             className="w-12 h-12 mb-5 opacity-90"
           />
@@ -508,9 +508,9 @@ export default function PressManuscriptRoom() {
   return (
     <div style={paper} className="min-h-screen">
       <header className="border-b border-[#4A4238]">
-        <div className="max-w-2xl mx-auto px-6 pt-10 pb-0">
+        <div className="max-w-3xl mx-auto px-6 pt-10 pb-0">
           <div className="flex items-center gap-2.5 mb-1">
-            <img src="/holoflower-v2-transparent.png" alt="Soullab" className="w-6 h-6 opacity-90" />
+            <img src="/holoflower-studio-transparent.png" alt="Soullab" className="w-6 h-6 opacity-90" />
             <p className="text-[12px] tracking-[0.25em] uppercase opacity-50">Soullab Press</p>
           </div>
           <h1 className="text-2xl mb-6">{title}</h1>
@@ -540,7 +540,7 @@ export default function PressManuscriptRoom() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-14">
+      <main className="max-w-3xl mx-auto px-6 py-14">
         {tab === 'manuscript' && (
           <div>
             <p className="text-[14px] opacity-60 mb-10">
