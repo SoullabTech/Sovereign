@@ -373,6 +373,20 @@ function MAIAPageContent() {
   const [askMode, setAskMode] = useState(false); // Ask MAIA — orientation + Knowledge Field stance
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  // Arrival (Step 3): a member's first-ever visit meets a clean surface (rail
+  // recedes) until they cross into conversation. Default true = the returning
+  // surface (SSR-safe, no flash for the majority). Gated by an EXPLICIT marker
+  // — the member's own act of having arrived — never inferred readiness.
+  const [hasArrived, setHasArrived] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem('maia_has_arrived')) return;      // already crossed
+    setHasArrived(false);                                       // first visit → Arrival
+  }, []);
+  const markArrived = useCallback(() => {
+    setHasArrived(true);
+    try { localStorage.setItem('maia_has_arrived', String(Date.now())); } catch { /* private mode */ }
+  }, []);
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showWeekZeroOnboarding, setShowWeekZeroOnboarding] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -722,6 +736,7 @@ function MAIAPageContent() {
             onModeChange={setMaiaMode}
             askMode={askMode}
             onAskModeChange={setAskMode}
+            arrivalMode={featureFlags.arrivalEntry && !hasArrived}
           >
             {/* Center field — voice-reactive atmosphere wrapping OracleConversation */}
             <SwipeNavigation currentPage="maia">
@@ -744,7 +759,12 @@ function MAIAPageContent() {
                   onShowChatInterfaceChange={setShowChatInterface}
                   showSessionSelector={showSessionSelector}
                   onCloseSessionSelector={() => setShowSessionSelector(false)}
-                  onSessionActiveChange={setHasActiveSession}
+                  onSessionActiveChange={(active: boolean) => {
+                    setHasActiveSession(active);
+                    // Crossing into conversation is the threshold: the newcomer
+                    // has arrived. Chrome returns for subsequent visits.
+                    if (active) markArrived();
+                  }}
                   initialAction={searchParams?.get('action') || undefined}
                   askMode={askMode}
                   onAskModeChange={setAskMode}
