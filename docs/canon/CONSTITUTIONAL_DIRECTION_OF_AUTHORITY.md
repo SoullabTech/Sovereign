@@ -105,6 +105,18 @@ Concretely:
 
 The person develops. MAIA holds the walls.
 
+### The initiation boundary — clarifying "surface"
+
+The permission above to "surface a prior recognition" is bounded by the direction of authority: it governs *what may cause a recognition to surface*, not only who authors its content.
+
+> **Recognition may arise from the member's request or present movement; it may never arise from system initiative alone.**
+
+*Present movement* includes consented, responsive recall within a live encounter (e.g. conversational atoms feeding present Reflection). It does **not** include notifications, ambient cards, scheduled resurfacing, or claims that "MAIA noticed" something while the member was absent. The first sentence is constitutional; this clarification protects the live atoms and Daily Anchor paths from being misread as ambient.
+
+**Binding implementation implication:** wiring any dormant pattern-reflection or push-delivery capability to surface recognition *outside a member-occasioned encounter* requires a new constitutional reconciliation before implementation. This does not outlaw such systems; it prevents them from silently crossing from storage or computation into unsolicited recognition.
+
+*Clarificatory amendment, 2026-07-21 — names a boundary already present in canon and implementation; revokes no active permission. Grounded in the Recognition Initiation Canon Audit: textual provenance plus a full live-surfacing and outbound-delivery sweep found recognition arises only from member request or consented present-movement — ambient paths present in the product: 0 (two dormant, ambient-capable systems noted: `PatternReflectionService`, unwired web-push). Audit record: `docs/specs/BOOK_STUDIO_SOULBOOK_EXPLORATION_2026-07-13.md` §0.6. Phenomenological companion cross-referenced: Invariant 16.*
+
 ---
 
 ## The design test
@@ -157,5 +169,7 @@ Proposed by founder directive (2026-07-01). Per `CONSTITUTIONAL_AUDIT_PROCESS.md
 **Re-audit — 2026-07-01.** Both findings resolved; both items **hold**; no contradictions, no residual adjustments.
 
 **Ratified — 2026-07-01**, by founder directive, as one constitutional package with the placement of `RECOGNITION_INTEGRITY.md` into `MAIA_SOVEREIGNTY_INVARIANTS.md` as **Invariant 16** — the sibling this backbone depends on for its phenomenological-recognition boundary. That dependency is now grounded: both are load-bearing together. Audit-trail commits kept distinct (propose → reconcile → place Invariant 16 → ratify).
+
+**Clarificatory amendment — 2026-07-21 (founder ruling).** Added *The initiation boundary — clarifying "surface"* (§ "MAIA's role"): *"Recognition may arise from the member's request or present movement; it may never arise from system initiative alone."* Clarificatory, not restrictive — names direction already present in canon and implementation; revokes no permission. Reconciled against line 101, Invariant 11 (its system-inferred ranking applies only *within* a member-triggered recall), Invariant 16 (emotional-effect / quiet-states clauses), `RECOGNITION_INTEGRITY.md` ("surface continuity more proactively" named as pressure to refuse), and verified live behavior via the Recognition Initiation Canon Audit (ambient paths present in the product: 0; audit record in `docs/specs/BOOK_STUDIO_SOULBOOK_EXPLORATION_2026-07-13.md` §0.6). Cross-referenced from Invariant 16.
 
 *A proposal becomes constitutional through reconciliation — not because it is compelling.*
