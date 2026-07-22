@@ -25,6 +25,9 @@
 /* Living Mandala CSS foundation */
 @import '../styles/living-mandala.css';
 
+/* Arrival remodel Step 2 — navy field conversation (flag: arrivalField) */
+@import './styles/arrival-field.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
