@@ -56,9 +56,9 @@ const config: CapacitorConfig = {
       enabled: true,
     },
     SplashScreen: {
-      launchShowDuration: 3000,
-      backgroundColor: "#1A1513",
-      showSpinner: true,
+      launchShowDuration: 1600,
+      backgroundColor: "#030814",
+      showSpinner: false,
       spinnerColor: "#6366f1"
     },
     HealthKit: {
