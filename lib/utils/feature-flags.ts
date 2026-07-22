@@ -33,6 +33,7 @@ export interface FeatureFlags {
   astrologerPresenceLayer: boolean;     // Astrologer field-presence brief + state model (lib/symbolic/presence/astrologicalMaia.ts); module-level only until route wiring
   arrivalPrototype: boolean;            // DEV-ONLY: Premium Arrival prototype at /maia/prototype (Package 2; founder/dev-gated, web-only)
   arrivalSignin: boolean;               // Arrival remodel Step 1: re-toned sign-in (UnifiedAuth) — PRESENTATION ONLY; per-device founder preview → default-on when broadened
+  arrivalField: boolean;                // Arrival remodel Step 2: navy field + on-field Spectral conversation (MaiaCenterField + scoped CSS) — PRESENTATION ONLY; staged founder → cohort → all
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -62,6 +63,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   astrologerPresenceLayer: false,      // Off — module-level only; enable after route wiring + birth-data lookup + state persistence
   arrivalPrototype: false,             // Off — dev-only prototype; enable via flag + founder/dev to view /maia/prototype
   arrivalSignin: true,                 // ON — fully transitioned sign-in/signup re-tone (default). Flag retained as a kill-switch (set false to revert).
+  arrivalField: true,                  // ON — navy field conversation (default). Flag retained as a kill-switch (set false to revert).
 };
 
 /**

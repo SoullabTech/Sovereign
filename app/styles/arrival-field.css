@@ -1,0 +1,46 @@
+/* ==========================================================================
+   Arrival field (remodel Step 2, flag: arrivalField) — conversation on the field
+   Scoped under .arrival-field (set by MaiaCenterField when the flag is on).
+   MAIA speaks in gold Spectral directly on the navy field; the member's line
+   sits quiet, muted, right-aligned. Presentation only — no markup changes.
+   ========================================================================== */
+
+/* MAIA's words — gold serif on the field (maia-spice-500) */
+.arrival-field [data-role="assistant"] .text-dune-amber,
+.arrival-field [data-role="assistant"] .text-dune-amber * {
+  color: #f59e0b !important;
+}
+.arrival-field [data-role="assistant"] .text-dune-amber {
+  font-family: 'Spectral', Georgia, serif !important;
+  font-size: clamp(16px, 2.3vw, 21px) !important;
+  font-weight: 300 !important;
+  line-height: 1.75 !important;
+}
+
+/* The member's line — quiet, right-aligned, on-field */
+.arrival-field [data-role="user"] {
+  max-width: 80%;
+  margin-left: auto !important;
+  text-align: right;
+}
+.arrival-field [data-role="user"] .text-dune-amber,
+.arrival-field [data-role="user"] .text-dune-amber * {
+  color: #b9adc6 !important;
+}
+.arrival-field [data-role="user"] .text-dune-amber {
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  font-weight: 400 !important;
+}
+
+/* The navy field is dark enough — retire the heavy warm-stone text shadow */
+.arrival-field [data-role="assistant"],
+.arrival-field [data-role="user"] {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Speaker labels recede on the field */
+.arrival-field [data-role="user"] .text-dune-sand,
+.arrival-field [data-role="assistant"] .text-dune-sand {
+  opacity: 0.45;
+}
