@@ -92,12 +92,14 @@ export default function PressManuscriptRoom() {
   const [draftText, setDraftText] = useState('');
   const [preview, setPreview] = useState<PreviewSection[] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const [sectionCursor, setSectionCursor] = useState(0);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [cardIdx, setCardIdx] = useState(0);
   const [extracting, setExtracting] = useState(false);
   const [recogNote, setRecogNote] = useState<string | null>(null);
+  const [keepError, setKeepError] = useState(false);
 
   const [newCollectionName, setNewCollectionName] = useState('');
   const [openCollection, setOpenCollection] = useState<string | null>(null);
@@ -140,6 +142,7 @@ export default function PressManuscriptRoom() {
   // ---- Upload flow -------------------------------------------------------
   const requestPreview = async () => {
     if (!draftTitle.trim() || !draftText.trim()) return;
+    setSaveError(false);
     setSaving(true);
     try {
       const res = await apiFetch('/api/sovereign/manuscripts', {
@@ -174,6 +177,9 @@ export default function PressManuscriptRoom() {
       await loadList();
       setActive(data.id);
       setTab('manuscript');
+    } catch {
+      // Preview is preserved so the member can retry the save.
+      setSaveError(true);
     } finally {
       setSaving(false);
     }
@@ -217,6 +223,7 @@ export default function PressManuscriptRoom() {
   const currentCard = candidates[cardIdx] ?? null;
 
   const advance = () => {
+    setKeepError(false);
     if (cardIdx + 1 < candidates.length) {
       setCardIdx(cardIdx + 1);
     } else if (sectionCursor + 1 < sections.length) {
@@ -231,13 +238,23 @@ export default function PressManuscriptRoom() {
 
   const keepCurrent = async () => {
     if (!active || !currentCard) return;
-    const res = await apiFetch(`/api/sovereign/manuscripts/${active}/keeps`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sectionId: currentCard.sectionId, text: currentCard.text }),
-    });
-    if (res.ok && active) await loadDetail(active);
-    advance();
+    setKeepError(false);
+    try {
+      const res = await apiFetch(`/api/sovereign/manuscripts/${active}/keeps`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sectionId: currentCard.sectionId, text: currentCard.text }),
+      });
+      if (!res.ok) {
+        // A failed keep must not read as a successful pass — hold the card for retry.
+        setKeepError(true);
+        return;
+      }
+      if (active) await loadDetail(active);
+      advance();
+    } catch {
+      setKeepError(true);
+    }
   };
 
   // ---- Collections flow --------------------------------------------------
@@ -440,6 +457,9 @@ export default function PressManuscriptRoom() {
                   </div>
                 ))}
               </div>
+              {saveError && (
+                <p className="text-[13px] opacity-70 mb-4">Could not save. Please try again.</p>
+              )}
               <div className="flex gap-4">
                 <button
                   onClick={() => setPreview(null)}
@@ -555,6 +575,11 @@ export default function PressManuscriptRoom() {
                     Pass
                   </button>
                 </div>
+                {keepError && (
+                  <p className="text-center text-[13px] opacity-70 mt-6">
+                    Could not keep this line.
+                  </p>
+                )}
                 <p className="text-center text-[12px] opacity-30 mt-10">
                   {sectionCursor + 1} of {sections.length} sections
                 </p>
