@@ -31,6 +31,8 @@ export interface FeatureFlags {
   knowledgeFieldLayer: boolean;         // Phase 1: 12-domain knowledge field prompt injection on domain detection
   maiaIdeasDecisionRecognition: boolean; // MAIA-mediated Decision/Change recognition in Ideas threads
   astrologerPresenceLayer: boolean;     // Astrologer field-presence brief + state model (lib/symbolic/presence/astrologicalMaia.ts); module-level only until route wiring
+  arrivalPrototype: boolean;            // DEV-ONLY: Premium Arrival prototype at /maia/prototype (Package 2; founder/dev-gated, web-only)
+  arrivalSignin: boolean;               // Arrival remodel Step 1: re-toned sign-in (UnifiedAuth) — PRESENTATION ONLY; per-device founder preview → default-on when broadened
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -58,6 +60,8 @@ const DEFAULT_FLAGS: FeatureFlags = {
   knowledgeFieldLayer: false,          // Off — Phase 1: enable after oracle route wired + tested
   maiaIdeasDecisionRecognition: false, // Off — MAIA-mediated Decision/Change recognition; enable after real-thread test
   astrologerPresenceLayer: false,      // Off — module-level only; enable after route wiring + birth-data lookup + state persistence
+  arrivalPrototype: false,             // Off — dev-only prototype; enable via flag + founder/dev to view /maia/prototype
+  arrivalSignin: true,                 // ON — fully transitioned sign-in/signup re-tone (default). Flag retained as a kill-switch (set false to revert).
 };
 
 /**
