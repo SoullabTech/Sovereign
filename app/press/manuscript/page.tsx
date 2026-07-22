@@ -23,11 +23,21 @@ import { apiFetch } from '@/lib/http/apiBase';
  *   - Segmentation is member-confirmed before save; headings editable, cuts
  *     removable — chapter boundaries are structure, structure is authorship.
  *
- * Aesthetic: cream paper, quiet serif, wide margins, slow. Deliberately light-
- * only — a literary environment, not a dashboard.
+ * Aesthetic: Soullab Press canonical palette (espresso ground, warm cream
+ * text, deep-amber accent — see PRESS below), quiet serif, wide margins, slow.
+ * A literary environment, not a dashboard.
  */
 
 const SERIF = 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif';
+
+// Soullab Press canonical palette (matches the public Press landing):
+// espresso ground, warm cream text, deep-amber accent (#C9A227 from ogCard).
+const PRESS = {
+  bg: 'linear-gradient(135deg,#1A1513 0%,#241C18 60%,#1A1513 100%)',
+  text: '#F3EDE4',
+  accent: '#C9A227',
+  ink: '#1A1513',
+} as const;
 
 interface ManuscriptSummary {
   id: string;
@@ -325,7 +335,7 @@ export default function PressManuscriptRoom() {
   const pageEstimate = (chars: number) => Math.max(1, Math.round(chars / 1800));
 
   // =======================================================================
-  const paper = { background: '#faf7f1', color: '#2e2a24', fontFamily: SERIF } as const;
+  const paper = { background: PRESS.bg, color: PRESS.text, fontFamily: SERIF } as const;
 
   if (loading) {
     return (
@@ -339,6 +349,11 @@ export default function PressManuscriptRoom() {
     return (
       <div style={paper} className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
+          <img
+            src="/holoflower-studio-transparent.png"
+            alt="Soullab"
+            className="w-12 h-12 mx-auto mb-5 opacity-90"
+          />
           <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Soullab Press</p>
           <p className="text-[15px] leading-relaxed opacity-70">
             The Manuscript Room holds your own words, so it opens only to you.{' '}
@@ -356,7 +371,12 @@ export default function PressManuscriptRoom() {
   if (!active || preview) {
     return (
       <div style={paper} className="min-h-screen">
-        <main className="max-w-xl mx-auto px-6 py-24">
+        <main className="max-w-2xl mx-auto px-6 py-24">
+          <img
+            src="/holoflower-studio-transparent.png"
+            alt="Soullab"
+            className="w-12 h-12 mb-5 opacity-90"
+          />
           <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Soullab Press</p>
           <h1 className="text-3xl leading-snug mb-4">
             Discover the books already living within your work.
@@ -372,7 +392,7 @@ export default function PressManuscriptRoom() {
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
                 placeholder="Title of your manuscript"
-                className="w-full bg-transparent border-b border-[#d8d2c6] py-2 text-lg outline-none placeholder:opacity-40"
+                className="w-full bg-transparent border-b border-[#4A4238] py-2 text-lg outline-none placeholder:opacity-40"
                 style={{ fontFamily: SERIF }}
               />
               <textarea
@@ -380,7 +400,7 @@ export default function PressManuscriptRoom() {
                 onChange={(e) => setDraftText(e.target.value)}
                 placeholder="Paste your manuscript here…"
                 rows={12}
-                className="w-full bg-white/60 border border-[#e4ddd0] rounded-sm p-4 text-[14px] leading-relaxed outline-none placeholder:opacity-40"
+                className="w-full bg-black/20 border border-[#4A4238] rounded-sm p-4 text-[14px] leading-relaxed outline-none placeholder:opacity-40"
                 style={{ fontFamily: SERIF }}
               />
               <div className="flex items-center gap-6">
@@ -396,7 +416,7 @@ export default function PressManuscriptRoom() {
                 <button
                   onClick={requestPreview}
                   disabled={saving || !draftTitle.trim() || !draftText.trim()}
-                  className="ml-auto px-6 py-2.5 bg-[#2e2a24] text-[#faf7f1] text-[14px] tracking-wide disabled:opacity-30"
+                  className="ml-auto px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
                 >
                   {saving ? '…' : 'Upload Manuscript'}
                 </button>
@@ -412,7 +432,7 @@ export default function PressManuscriptRoom() {
               <p className="text-[12px] opacity-50 mb-8">Saved as your words, as you wrote them.</p>
               <div className="space-y-3 mb-10">
                 {preview.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 border-b border-[#eee7da] pb-2">
+                  <div key={i} className="flex items-center gap-3 border-b border-[#3a322b] pb-2">
                     <span className="text-[12px] opacity-40 w-8">{i + 1}</span>
                     <input
                       value={s.heading ?? ''}
@@ -470,7 +490,7 @@ export default function PressManuscriptRoom() {
                 <button
                   onClick={saveManuscript}
                   disabled={saving}
-                  className="ml-auto px-6 py-2.5 bg-[#2e2a24] text-[#faf7f1] text-[14px] tracking-wide disabled:opacity-30"
+                  className="ml-auto px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
                 >
                   {saving ? '…' : 'Save manuscript'}
                 </button>
@@ -487,9 +507,12 @@ export default function PressManuscriptRoom() {
 
   return (
     <div style={paper} className="min-h-screen">
-      <header className="border-b border-[#e8e1d3]">
-        <div className="max-w-2xl mx-auto px-6 pt-10 pb-0">
-          <p className="text-[12px] tracking-[0.25em] uppercase opacity-50 mb-1">Soullab Press</p>
+      <header className="border-b border-[#4A4238]">
+        <div className="max-w-3xl mx-auto px-6 pt-10 pb-0">
+          <div className="flex items-center gap-2.5 mb-1">
+            <img src="/holoflower-studio-transparent.png" alt="Soullab" className="w-6 h-6 opacity-90" />
+            <p className="text-[12px] tracking-[0.25em] uppercase opacity-50">Soullab Press</p>
+          </div>
           <h1 className="text-2xl mb-6">{title}</h1>
           <nav className="flex flex-wrap gap-x-8 gap-y-2 text-[12px] tracking-[0.15em] uppercase">
             {(
@@ -506,7 +529,7 @@ export default function PressManuscriptRoom() {
                 onClick={() => setTab(t)}
                 className={`pb-3 border-b-2 transition-colors ${
                   tab === t
-                    ? 'border-[#2e2a24] opacity-90'
+                    ? 'border-[#C9A227] opacity-100'
                     : 'border-transparent opacity-40 hover:opacity-70'
                 }`}
               >
@@ -517,7 +540,7 @@ export default function PressManuscriptRoom() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-14">
+      <main className="max-w-3xl mx-auto px-6 py-14">
         {tab === 'manuscript' && (
           <div>
             <p className="text-[14px] opacity-60 mb-10">
@@ -526,7 +549,7 @@ export default function PressManuscriptRoom() {
             </p>
             <div className="space-y-4 mb-14">
               {sections.map((s) => (
-                <div key={s.id} className="flex items-baseline gap-4 border-b border-[#eee7da] pb-3">
+                <div key={s.id} className="flex items-baseline gap-4 border-b border-[#3a322b] pb-3">
                   <span className="text-[12px] opacity-40 w-8">{s.position + 1}</span>
                   <span className="text-[16px]">{sectionLabel(s.heading, s.position)}</span>
                   <span className="ml-auto text-[12px] opacity-40">{pageEstimate(s.chars)} pp</span>
@@ -539,7 +562,7 @@ export default function PressManuscriptRoom() {
                 setSectionCursor(0);
                 fetchCandidates(0);
               }}
-              className="px-8 py-3 bg-[#2e2a24] text-[#faf7f1] text-[14px] tracking-wide"
+              className="px-8 py-3 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide"
             >
               Begin Exploration
             </button>
@@ -564,13 +587,13 @@ export default function PressManuscriptRoom() {
                 <div className="flex justify-center gap-6">
                   <button
                     onClick={keepCurrent}
-                    className="px-10 py-3 bg-[#2e2a24] text-[#faf7f1] text-[14px] tracking-wide"
+                    className="px-10 py-3 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide"
                   >
                     Keep
                   </button>
                   <button
                     onClick={advance}
-                    className="px-10 py-3 border border-[#d8d2c6] text-[14px] tracking-wide opacity-70"
+                    className="px-10 py-3 border border-[#4A4238] text-[14px] tracking-wide opacity-70"
                   >
                     Pass
                   </button>
@@ -617,7 +640,7 @@ export default function PressManuscriptRoom() {
                               if (e.target.value) placeKeep(k.id, e.target.value, 'place');
                               e.target.value = '';
                             }}
-                            className="bg-transparent border border-[#e4ddd0] rounded-sm px-1 py-0.5"
+                            className="bg-transparent border border-[#4A4238] rounded-sm px-1 py-0.5"
                             aria-label="Place into collection"
                           >
                             <option value="">place into…</option>
@@ -647,7 +670,7 @@ export default function PressManuscriptRoom() {
                 value={newCollectionName}
                 onChange={(e) => setNewCollectionName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && createCollection()}
-                className="flex-1 bg-transparent border-b border-[#d8d2c6] py-2 text-lg outline-none"
+                className="flex-1 bg-transparent border-b border-[#4A4238] py-2 text-lg outline-none"
                 style={{ fontFamily: SERIF }}
                 aria-label="New collection name"
               />
@@ -666,7 +689,7 @@ export default function PressManuscriptRoom() {
             ) : (
               <div className="space-y-8">
                 {collections.map((c) => (
-                  <div key={c.id} className="border-b border-[#eee7da] pb-6">
+                  <div key={c.id} className="border-b border-[#3a322b] pb-6">
                     <button
                       onClick={() => setOpenCollection(openCollection === c.id ? null : c.id)}
                       className="text-[18px]"
@@ -748,7 +771,7 @@ export default function PressManuscriptRoom() {
             <button
               onClick={exportMarkdown}
               disabled={keeps.length === 0}
-              className="px-8 py-3 bg-[#2e2a24] text-[#faf7f1] text-[14px] tracking-wide disabled:opacity-30"
+              className="px-8 py-3 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
             >
               Download as Markdown
             </button>
