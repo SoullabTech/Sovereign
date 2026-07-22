@@ -957,9 +957,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This is separate from messages - history can be restored but greeting shows until activation
   const [hasActivated, setHasActivated] = useState(false);
 
-  // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
-  const [composerDraft, setComposerDraft] = useState<string>('');
-
   // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
   // When true: no content retention, no patterns formed, just presence
   const [isSanctuary, setIsSanctuary] = useState(() => {
@@ -3517,16 +3514,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       console.log('📓 [Journal→MAIA] Received:', ce.detail?.type);
 
-      // 1) Fill the composer immediately (user sees it)
-      setComposerDraft(text);
-
-      // 2) Ensure chat UI is visible
+      // Show the chat UI, then auto-send after a tiny tick so it settles.
+      // (SMCC Phase 1: composer pre-fill removed — it never displayed; the send
+      //  uses `text` directly. Restoring the visual pre-fill is a separate follow-up.)
       setShowChatInterface(true);
 
-      // 3) Auto-send after a tiny tick so the UI settles
       setTimeout(() => {
         handleTextMessage(text);
-        setComposerDraft(''); // Clear after send
       }, 150);
     };
 
@@ -3672,16 +3666,12 @@ I'm not sure what I'm noticing yet.`;
 Not sure what I'm supposed to notice here.`;
       }
 
-      // 1) Fill the composer immediately
-      setComposerDraft(text);
-
-      // 2) Show chat interface
+      // Show chat interface, then auto-send after UI settles.
+      // (SMCC Phase 1: composer pre-fill removed — it never displayed.)
       setShowChatInterface(true);
 
-      // 3) Auto-send after UI settles
       setTimeout(() => {
         handleTextMessage(text);
-        setComposerDraft('');
       }, 150);
     };
 
@@ -3703,16 +3693,12 @@ ${content}
 
 I'm not sure what I'm feeling yet.`;
 
-      // 1) Fill the composer immediately
-      setComposerDraft(text);
-
-      // 2) Show chat interface
+      // Show chat interface, then auto-send after UI settles.
+      // (SMCC Phase 1: composer pre-fill removed — it never displayed.)
       setShowChatInterface(true);
 
-      // 3) Auto-send after UI settles
       setTimeout(() => {
         handleTextMessage(text);
-        setComposerDraft('');
       }, 150);
     };
 
@@ -8540,7 +8526,6 @@ I'm not sure what I'm feeling yet.`;
                     ref={textInputRef}
                     value={draftMessage}
                     onChange={setDraftMessage}
-                    externalValue={composerDraft}
                     disabled={isProcessing}
                     isProcessing={isProcessing}
                     enableVoiceInChat={enableVoiceInChat}
@@ -9130,7 +9115,6 @@ I'm not sure what I'm feeling yet.`;
           // Frame as a reflection invitation so MAIA guides the user through it
           const framedPrompt = `I'd like to sit with this question: ${promptText}`;
           setDraftMessage(framedPrompt);
-          setComposerDraft(framedPrompt);
           setShowPromptPicker(false);
           setHasActivated(true); // Skip welcome screen
 
@@ -9171,7 +9155,6 @@ I'm not sure what I'm feeling yet.`;
           // Optionally start conversation with the check-in context
           const contextMessage = `I'm arriving today feeling ${checkin.state.label.toLowerCase()} (${checkin.state.description.toLowerCase()}).${checkin.note ? ` ${checkin.note}` : ''}`;
           setDraftMessage(contextMessage);
-          setComposerDraft(contextMessage);
           setTimeout(() => textInputRef.current?.focus?.(), 100);
         }}
       />
@@ -9185,7 +9168,6 @@ I'm not sure what I'm feeling yet.`;
           // Start conversation with element discovery result
           const contextMessage = `I just discovered my dominant element is ${result.dominant} with ${result.secondary} as secondary. Help me understand what this means for my journey.`;
           setDraftMessage(contextMessage);
-          setComposerDraft(contextMessage);
           setTimeout(() => textInputRef.current?.focus?.(), 100);
         }}
       />

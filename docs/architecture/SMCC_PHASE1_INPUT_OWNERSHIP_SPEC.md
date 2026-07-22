@@ -39,3 +39,45 @@ The smallest change that removes the fault:
 - **Device (Kelly runs — iPhone Safari, definition of done):** type continuously 60s *during a real streamed reply* → no text loss/revert, caret stable, keyboard stays open; autocorrect/predictive/emoji work; send; draft persists while MAIA is responding.
 
 **Do not proceed to Phase 2 until the device test passes.**
+
+---
+
+## Appendix A — Usage map (pre-implementation gate, required by Kelly)
+
+### Structural facts (each verified by grep/read)
+1. **`<ModernTextInput` has exactly ONE consumer:** `OracleConversation.tsx:8539`. **No external consumer.** The other input components (`HybridInput`, `ChatGPTStyleInput`, `EmbeddedMAIAChat`, and the unrouted `OracleConversationInterface` — which uses its own `inputText` state, `:58`) are independent and do not touch this contract.
+2. `draftMessage` / `composerDraft` are declared and read **only** in `OracleConversation.tsx`. No `localStorage`/`sessionStorage` persistence; no cross-file leakage.
+3. **No tests/fixtures** reference either (grep of test dirs = empty).
+4. The forwarded ref (`textInputRef`) is used **only** for `.focus()` (a Phase 2 concern) — never to read or mutate the value.
+5. Voice transcripts (`handleVoiceTranscript` `:5801`) auto-send via `handleTextMessage`; they do **not** write the draft.
+
+### Every occurrence, classified
+| Line(s) | Code | Classification |
+|---|---|---|
+| `677` | `const [draftMessage,setDraftMessage]=useState('')` | **Authoritative state** |
+| `8541` | `value={draftMessage}` | Authoritative (controlled value) |
+| `8542` | `onChange={setDraftMessage}` | Authoritative (user typing) |
+| `8549` | `setDraftMessage('')` | Authoritative (clear-on-send) |
+| `9132 / 9173 / 9187` | `setDraftMessage(prompt/context)` | Authoritative (prefill: SoulPrompt / DailyCheckin / ElementDiscovery) |
+| `961` | `const [composerDraft,setComposerDraft]=useState('')` | **Legacy duplicate** |
+| `8543` | `externalValue={composerDraft}` | **Legacy duplicate / dead** — `valueProp ?? externalValue`, and `draftMessage` (`''`) is never nullish, so `externalValue` can never win |
+| `3521 / 3676 / 3707` | `setComposerDraft(text)` in `journalAskMaia` / `innerLandsAskMaia` / `domainAskMaia` events | **Legacy duplicate — DEAD DISPLAY**: "fill composer (user sees it)" never renders (see `8543`); the send is unaffected (uses `handleTextMessage(text)` directly) |
+| `3529 / 3684 / 3715` | `setComposerDraft('')` | Legacy duplicate (clears a dead value) |
+| `9133 / 9174 / 9188` | `setComposerDraft(...)` | **Legacy duplicate** — redundant; display already carried by the paired `setDraftMessage` |
+| `ModernTextInput:84` | `const [value,setValue]=useState(initialValue)` | **Derived display fighting authoritative state = the F3 fault** |
+| `ModernTextInput:184-189` | value↔prop sync effect (`value` in deps) | **F3 fault** (remove) |
+| `ModernTextInput:219` | `setValue('')` on submit | Derived (remove; parent clears via `8549`) |
+
+### Behavior audit — is anything lost?
+- **Send / clear:** submit value flows from the input (→ becomes the controlled prop value) + parent `setDraftMessage('')`. **Preserved.**
+- **Prefill (3 flows):** driven by `setDraftMessage`; the paired `setComposerDraft` is redundant. **Preserved.**
+- **Auto-send events (journal / inner-lands / domain):** functional send **preserved** (`handleTextMessage(text)`). The `setComposerDraft(text)` "user sees it" pre-fill is **already non-functional** — dropping it preserves current behavior, **no change**. *(The intended visual pre-fill has never worked due to the `??` precedence bug; RESTORING it — by setting `draftMessage` — would be a behavior change and is **explicitly out of Phase 1 scope**. Flagged as a follow-up, not done here.)*
+- **Voice / mode-switch / sub-rooms / refs / tests:** none consume the draft in a way affected by consolidation.
+
+### Verdict: **GATE SATISFIED**
+One parent-owned `draftMessage` replaces both with **zero behavior removed**. `composerDraft` is a legacy duplicate whose only unique effect (the auto-send visual pre-fill) is already dead.
+
+### Resulting Phase 1 edit set (input ownership only)
+- **OracleConversation.tsx** — delete `composerDraft` state (`961`) and `externalValue={composerDraft}` (`8543`); remove the redundant `setComposerDraft` in prefill (`9133/9174/9188`) and the dead `setComposerDraft` set/clear in the 3 auto-send events (`3521/3529/3676/3684/3707/3715`). Keep `draftMessage` as the single controlled draft; keep `setDraftMessage('')` on send.
+- **ModernTextInput.tsx** — fully controlled: remove internal `value` state (`84`), `initialValue` (`80`), the sync effect (`184-189`), and `setValue('')` in submit; `<textarea value={valueProp ?? ''}>`; `handleInputChange` → `onChange` only; `handleSubmit` → `onSubmit(valueProp)` (parent clears); `adjustHeight` keyed off the value prop; drop the `externalValue` prop. Add a `compositionstart/end` no-write guard (defense-in-depth).
+- **No** geometry, focus, scroll, or amplitude changes. **No** Phase 3 optimization.

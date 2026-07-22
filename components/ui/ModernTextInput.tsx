@@ -41,7 +41,6 @@ interface ModernTextInputProps {
   currentPhase?: string;
   relationshipDepth?: 'new' | 'developing' | 'deep' | 'profound';
   mode?: 'normal' | 'patient' | 'session'; // MAIA mode: normal=dialogue, patient=counsel, session=scribe
-  externalValue?: string; // Alias for value (used by OracleConversation)
   /** Transient submit-error banner shown above input. Parent owns the value
    *  and clears it (typically on next keystroke or after a timeout). Surfaces
    *  cases where a submit didn't produce a visible MAIA reply. */
@@ -72,16 +71,18 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   currentPhase,
   relationshipDepth = 'new',
   mode = 'normal',
-  externalValue,
   submitError,
   onClearSubmitError
 }, ref) => {
-  // Support both value and externalValue props
-  const initialValue = valueProp ?? externalValue ?? '';
+  // Fully controlled: the parent owns the draft. The textarea value derives
+  // directly from the `value` prop — no internal mirror and no reconciliation
+  // effect. That dual source of truth was the F3 keyboard-drop fault: a lagged
+  // parent frame overwrote the field mid-keystroke, aborting WebKit composition.
+  const value = valueProp ?? '';
 
   // Scribe/session mode allows unlimited input for full transcript uploads
   const maxLength = mode === 'session' ? undefined : maxLengthProp;
-  const [value, setValue] = useState(initialValue);
+  const isComposingRef = useRef(false);
   const [isFocused, setIsFocused] = useState(false);
   const [showTools, setShowTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -180,14 +181,6 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     }
   };
 
-  // Sync external value (support both valueProp and externalValue)
-  useEffect(() => {
-    const extVal = valueProp ?? externalValue;
-    if (extVal !== undefined && extVal !== value) {
-      setValue(extVal);
-    }
-  }, [valueProp, externalValue, value]);
-
   // Auto-resize textarea
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -204,9 +197,12 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    // No-write during IME composition: propagating intermediate values would
+    // update the controlled value mid-composition and can abort the IME on
+    // WebKit. compositionEnd flushes the final text.
+    if (isComposingRef.current) return;
     // Allow unlimited input in scribe mode (maxLength undefined)
     if (!maxLength || newValue.length <= maxLength) {
-      setValue(newValue);
       onChange?.(newValue);
       // Clear any visible submit-error banner as soon as the user begins typing again.
       if (submitError) onClearSubmitError?.();
@@ -215,12 +211,14 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
 
   const handleSubmit = () => {
     if (value.trim() && !disabled && !isProcessing && !enableVoiceInput) {
+      // Parent owns the draft and clears it on submit; no internal reset.
       onSubmit?.(value.trim());
-      setValue('');
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter confirms an IME candidate during composition — it is not a send.
+    if (isComposingRef.current || e.nativeEvent.isComposing) return;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -459,6 +457,15 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               value={value}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onCompositionStart={() => { isComposingRef.current = true; }}
+              onCompositionEnd={(e) => {
+                isComposingRef.current = false;
+                const v = e.currentTarget.value;
+                if (!maxLength || v.length <= maxLength) {
+                  onChange?.(v);
+                  if (submitError) onClearSubmitError?.();
+                }
+              }}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder={isRecording ? 'Listening...' : getIntimatePlaceholder()}
