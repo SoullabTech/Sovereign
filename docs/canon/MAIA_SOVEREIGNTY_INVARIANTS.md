@@ -324,6 +324,8 @@ If not, it does not align with mission.
 
 **Relation:** Extends Invariant 4 (No Emotional Capture Optimization) and Invariant 6 (Mirror Integrity) into the domain of *continuity and memory*. Full canon: `RECOGNITION_INTEGRITY.md`. Governs the *phenomenological* sense of recognition; the *structural* Recognition layer is named in `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`. Placed here (load-bearing) 2026-07-01, concurrent with ratification of that backbone.
 
+**Initiation boundary (cross-reference):** *what may cause recognition to surface* — *"Recognition may arise from the member's request or present movement; it may never arise from system initiative alone"* — is governed by `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` (§ "The initiation boundary," clarificatory amendment 2026-07-21). Invariant 16 governs the *integrity and felt sense* of recognition; that boundary governs its *initiation*. Complementary, not duplicative — this invariant's "frequency / intensity / foregrounding" and "quiet states remain quiet" clauses are what the boundary rests on.
+
 ---
 
 ## The Constitutional Sentence
