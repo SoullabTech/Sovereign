@@ -141,6 +141,7 @@ export const WEB_ONLY_PREFIXES = [
   '/book-studio',         // Desktop authoring environment (manuscript/illustration tools)
   '/team',                // Desktop practitioner collaboration (channels, DMs, admin)
   '/maia/labtools',
+  '/maia/prototype',      // DEV-ONLY: Premium Arrival prototype (Package 2)
   '/maia/community',
   '/maia/realtime-monitor',
   '/maia/soul-consciousness',
