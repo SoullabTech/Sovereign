@@ -339,6 +339,11 @@ export default function PressManuscriptRoom() {
     return (
       <div style={paper} className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
+          <img
+            src="/holoflower-v2-transparent.png"
+            alt="Soullab"
+            className="w-12 h-12 mx-auto mb-5 opacity-90"
+          />
           <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Soullab Press</p>
           <p className="text-[15px] leading-relaxed opacity-70">
             The Manuscript Room holds your own words, so it opens only to you.{' '}
@@ -357,6 +362,11 @@ export default function PressManuscriptRoom() {
     return (
       <div style={paper} className="min-h-screen">
         <main className="max-w-xl mx-auto px-6 py-24">
+          <img
+            src="/holoflower-v2-transparent.png"
+            alt="Soullab"
+            className="w-12 h-12 mb-5 opacity-90"
+          />
           <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Soullab Press</p>
           <h1 className="text-3xl leading-snug mb-4">
             Discover the books already living within your work.
@@ -489,7 +499,10 @@ export default function PressManuscriptRoom() {
     <div style={paper} className="min-h-screen">
       <header className="border-b border-[#e8e1d3]">
         <div className="max-w-2xl mx-auto px-6 pt-10 pb-0">
-          <p className="text-[12px] tracking-[0.25em] uppercase opacity-50 mb-1">Soullab Press</p>
+          <div className="flex items-center gap-2.5 mb-1">
+            <img src="/holoflower-v2-transparent.png" alt="Soullab" className="w-6 h-6 opacity-90" />
+            <p className="text-[12px] tracking-[0.25em] uppercase opacity-50">Soullab Press</p>
+          </div>
           <h1 className="text-2xl mb-6">{title}</h1>
           <nav className="flex flex-wrap gap-x-8 gap-y-2 text-[12px] tracking-[0.15em] uppercase">
             {(
