@@ -274,31 +274,35 @@ export function MaiaShell({
         {children}
       </main>
 
-      {/* The House — one quiet doorway to the whole world. Present in both
-          modes: it is the sole doorway in Arrival, and an added doorway for
-          returning members (who also keep the rail). Never announces itself. */}
-      <button
-        onClick={() => setHouseOpen(true)}
-        className={`
-          group fixed bottom-20 left-1/2 z-[85] flex -translate-x-1/2 items-center gap-2
-          rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-md
-          transition-all duration-500 hover:border-white/20 hover:bg-black/40
-          ${calmMode && !calmCeiling ? 'opacity-0 hover:opacity-100' : 'opacity-70 hover:opacity-100'}
-        `}
-        title="The House — your places and practices"
-        aria-label="Open The House"
-      >
-        <Home className="h-4 w-4 text-[#c9a54e]" strokeWidth={1.5} />
-        <span className="text-[13px] text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-          The House
-        </span>
-      </button>
+      {/* The House — the newcomer's ONE doorway while the rail is receded.
+          Never shown to returning members: they keep the rail, which already
+          holds every place, so a floating House pill would only compete. */}
+      {arrivalMode && (
+        <>
+          <button
+            onClick={() => setHouseOpen(true)}
+            className={`
+              group fixed bottom-20 left-1/2 z-[85] flex -translate-x-1/2 items-center gap-2
+              rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-md
+              transition-all duration-500 hover:border-white/20 hover:bg-black/40
+              ${calmMode && !calmCeiling ? 'opacity-0 hover:opacity-100' : 'opacity-70 hover:opacity-100'}
+            `}
+            title="The House — your places and practices"
+            aria-label="Open The House"
+          >
+            <Home className="h-4 w-4 text-[#c9a54e]" strokeWidth={1.5} />
+            <span className="text-[13px] text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+              The House
+            </span>
+          </button>
 
-      <MaiaHouseSheet
-        open={houseOpen}
-        onClose={() => setHouseOpen(false)}
-        isFounder={isAdmin || isPractitioner}
-      />
+          <MaiaHouseSheet
+            open={houseOpen}
+            onClose={() => setHouseOpen(false)}
+            isFounder={isAdmin || isPractitioner}
+          />
+        </>
+      )}
 
       <MaiaRightPanelHost
         isOpen={rightPanelOpen}

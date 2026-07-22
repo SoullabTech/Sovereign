@@ -65,7 +65,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   arrivalPrototype: false,             // Off — dev-only prototype; enable via flag + founder/dev to view /maia/prototype
   arrivalSignin: true,                 // ON — fully transitioned sign-in/signup re-tone (default). Flag retained as a kill-switch (set false to revert).
   arrivalField: true,                  // ON — navy field conversation (default). Flag retained as a kill-switch (set false to revert).
-  arrivalEntry: true,                  // ON — first-visit clean Arrival + The House doorway (default). Only affects members with no 'maia_has_arrived' marker; kill-switch to revert.
+  arrivalEntry: false,                 // OFF — first-visit Arrival + House doorway held back pending redesign (Kelly 2026-07-22: House doorway did not read as an improvement on the returning surface). Flip true to re-enable newcomer-only Arrival.
 };
 
 /**
