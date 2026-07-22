@@ -26,6 +26,7 @@ import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import { getFeatureFlag } from '@/lib/features/flags';
+import { isFeatureEnabled } from '@/lib/utils/feature-flags';
 
 const CARD_STYLE: React.CSSProperties = {
   background: 'linear-gradient(165deg, rgba(15, 29, 50, 0.8), rgba(10, 22, 40, 0.6))',
@@ -40,6 +41,17 @@ const PRIMARY_BTN =
   'w-full rounded-xl bg-maia-navy-700 hover:bg-maia-navy-600 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg';
 const OUTLINE_BTN =
   'w-full rounded-xl border border-maia-navy-700/50 bg-maia-navy-850/40 px-4 py-3 text-center text-sm font-medium text-slate-200 hover:bg-maia-navy-700/50 disabled:opacity-50 transition-all';
+
+// Arrival remodel — deep-navy glass on the navy cosmos field. Plum lives ONLY in the atmospheric bloom, never on the surfaces
+// (brand direction 2026-07-22: Cosmos=navy · Presence=plum glow · Meaning=holoflower — navy foundation, holoflower is the jewel). Presentation only; flag-gated.
+const ARRIVAL_CARD_STYLE: React.CSSProperties = {
+  // Deep-navy glass with a few percent of plum warmth in the tint/border/highlight — candlelight against the navy, felt not seen.
+  background: 'linear-gradient(165deg, rgba(27, 31, 57, 0.75), rgba(18, 19, 43, 0.58))',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(84, 80, 136, 0.30)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.34), 0 2px 8px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(146, 128, 188, 0.14)',
+};
 
 function deriveUsername(email: string): string {
   const base = (email.split('@')[0] || 'soul').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
@@ -76,6 +88,18 @@ function UnifiedAuthInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
+  const arrivalSignin = isFeatureEnabled('arrivalSignin'); // Arrival remodel — fully transitioned (default on; flag is a kill-switch). Presentation only.
+  // Arrival remodel — navy cosmos + subtle plum atmosphere; the controls stay the original navy (plum reverted per brand
+  // direction 2026-07-22: navy foundation, plum only as the bloom). Only card + field + holoflower + copy differ. Presentation only.
+  const cardStyle = arrivalSignin ? ARRIVAL_CARD_STYLE : CARD_STYLE;
+  const inputCls = INPUT_CLASS;
+  const primaryBtn = PRIMARY_BTN;
+  const outlineBtn = OUTLINE_BTN;
+  const dividerCls = 'bg-maia-navy-700/30';
+  const hairlineCls = 'border-maia-navy-700/30';
+  const oauthChrome = 'bg-maia-navy-850/50 hover:bg-maia-navy-700/60 border-maia-navy-700/60';
+  const appleBorder = 'border-maia-navy-700/60';
+  const codeInputCls = 'w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-4 text-center text-2xl tracking-[0.5em] text-white placeholder:text-slate-600 outline-none focus:border-maia-navy-600 transition-all';
 
   const biometricLabel = useMemo(() => biometricAuth.getBiometricName(), []);
   const nativeOAuthEnabled = getFeatureFlag('NATIVE_OAUTH');
@@ -366,14 +390,14 @@ function UnifiedAuthInner() {
   ) : null;
 
   return (
-    <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-4 py-10">
+    <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-4 py-10" style={arrivalSignin ? { background: 'radial-gradient(58% 40% at 50% 12%, rgba(124,94,170,0.16), rgba(90,70,150,0.05) 40%, transparent 60%), linear-gradient(180deg, #071426 0%, #050f1f 52%, #030814 100%)' } : undefined}>
       <div className="mb-12">
         <div className="w-28 h-28 mx-auto">
-          <Holoflower size="xl" glowIntensity="medium" animate={true} theme="dark" />
+          <Holoflower size="xl" glowIntensity={arrivalSignin ? 'low' : 'medium'} animate={true} theme="dark" variant={arrivalSignin ? 'spectrum' : undefined} crisp={arrivalSignin} />
         </div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded-3xl p-8 max-w-sm w-full" style={CARD_STYLE}>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded-3xl p-8 max-w-sm w-full" style={cardStyle}>
         <AnimatePresence mode="wait">
           {phase === 'password' ? (
             <motion.div key="password" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -385,12 +409,12 @@ function UnifiedAuthInner() {
               </p>
               {errorBlock}
               <form onSubmit={signInWithPassword} className="space-y-3">
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoComplete="username" className={INPUT_CLASS} />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoComplete="username" className={inputCls} />
                 <div className="relative">
-                  <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPasswordText ? 'text' : 'password'} placeholder="Password" autoComplete="current-password" className={`${INPUT_CLASS} pr-12`} />
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPasswordText ? 'text' : 'password'} placeholder="Password" autoComplete="current-password" className={`${inputCls} pr-12`} />
                   <button type="button" onClick={() => setShowPasswordText(!showPasswordText)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300" tabIndex={-1}>{showPasswordText ? 'Hide' : 'Show'}</button>
                 </div>
-                <button type="submit" disabled={isLoading || !username || !password} className={PRIMARY_BTN}>{isLoading ? 'Signing in…' : 'Sign in'}</button>
+                <button type="submit" disabled={isLoading || !username || !password} className={primaryBtn}>{isLoading ? 'Signing in…' : 'Sign in'}</button>
               </form>
               <div className="mt-5 text-center">
                 <button type="button" onClick={() => { setPhase('email'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">← Back to email</button>
@@ -404,8 +428,8 @@ function UnifiedAuthInner() {
               </p>
               {errorBlock}
               <form onSubmit={completeSignup} className="space-y-3">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={INPUT_CLASS} />
-                <button type="submit" disabled={isLoading} className={PRIMARY_BTN}>{isLoading ? 'Entering…' : 'Enter MAIA'}</button>
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={inputCls} />
+                <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter MAIA'}</button>
               </form>
               <p className="mt-4 text-xs text-slate-500/80 text-center leading-relaxed">You’ll return with an emailed code{bioAvailable ? ` or ${biometricLabel}` : ''} — no password needed.</p>
             </motion.div>
@@ -414,8 +438,8 @@ function UnifiedAuthInner() {
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em]">Enter code</h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 leading-relaxed">We sent a 6-digit code to <span className="text-slate-200">{email}</span>.</p>
               {errorBlock}
-              <input value={code} onChange={(e) => onCodeChange(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} autoFocus placeholder="••••••" className="w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-4 text-center text-2xl tracking-[0.5em] text-white placeholder:text-slate-600 outline-none focus:border-maia-navy-600 transition-all" />
-              <button type="button" disabled={isLoading || code.length < 6} onClick={() => verifyCode(code)} className={`${PRIMARY_BTN} mt-4`}>{isLoading ? 'Verifying…' : 'Verify'}</button>
+              <input value={code} onChange={(e) => onCodeChange(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} autoFocus placeholder="••••••" className={codeInputCls} />
+              <button type="button" disabled={isLoading || code.length < 6} onClick={() => verifyCode(code)} className={`${primaryBtn} mt-4`}>{isLoading ? 'Verifying…' : 'Verify'}</button>
               <div className="mt-5 flex items-center justify-center gap-4 text-xs text-slate-500">
                 <button type="button" onClick={() => sendCode()} disabled={isLoading} className="hover:text-slate-300 transition-colors">Resend code</button>
                 <span className="text-slate-700">·</span>
@@ -433,28 +457,28 @@ function UnifiedAuthInner() {
             </motion.div>
           ) : (
             <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center">Welcome</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">Enter your email to continue.</p>
+              <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center" style={arrivalSignin ? { fontFamily: 'Spectral, Georgia, serif' } : undefined}>{arrivalSignin ? 'Welcome.' : 'Welcome'}</h1>
+              <p className={`text-sm font-light mb-6 text-center leading-relaxed ${arrivalSignin ? 'text-slate-300/95' : 'text-slate-300/80'}`}>{arrivalSignin ? 'Sign in to enter.' : 'Enter your email to continue.'}</p>
               {errorBlock}
               <form onSubmit={sendCode} className="space-y-3">
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={INPUT_CLASS} />
-                <button type="submit" disabled={isLoading || !email} className={PRIMARY_BTN}>{isLoading ? 'Sending…' : 'Continue'}</button>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={inputCls} />
+                <button type="submit" disabled={isLoading || !email} className={primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
               </form>
 
               {bioAvailable && (
-                <button type="button" onClick={continueWithBiometric} disabled={isLoading} className={`${OUTLINE_BTN} mt-3`}>
+                <button type="button" onClick={continueWithBiometric} disabled={isLoading} className={`${outlineBtn} mt-3`}>
                   Continue with {biometricLabel}
                 </button>
               )}
 
               <div className="mt-6 flex items-center gap-3">
-                <div className="flex-1 h-px bg-maia-navy-700/30" />
+                <div className={`flex-1 h-px ${dividerCls}`} />
                 <span className="text-xs text-slate-500 uppercase tracking-wide">or</span>
-                <div className="flex-1 h-px bg-maia-navy-700/30" />
+                <div className={`flex-1 h-px ${dividerCls}`} />
               </div>
 
               <div className="mt-4 flex justify-center gap-3">
-                <button type="button" onClick={handleGoogle} title="Continue with Google" className="w-11 h-11 rounded-xl bg-maia-navy-850/50 hover:bg-maia-navy-700/60 border border-maia-navy-700/60 flex items-center justify-center transition-all">
+                <button type="button" onClick={handleGoogle} title="Continue with Google" className={`w-11 h-11 rounded-xl border ${oauthChrome} flex items-center justify-center transition-all`}>
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -462,14 +486,14 @@ function UnifiedAuthInner() {
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                 </button>
-                <button type="button" onClick={handleApple} title="Continue with Apple" className="w-11 h-11 rounded-xl bg-black/50 hover:bg-black/70 border border-maia-navy-700/60 flex items-center justify-center transition-all">
+                <button type="button" onClick={handleApple} title="Continue with Apple" className={`w-11 h-11 rounded-xl bg-black/50 hover:bg-black/70 border ${appleBorder} flex items-center justify-center transition-all`}>
                   <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                 </button>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-maia-navy-700/30 text-center">
+              <div className={`mt-6 pt-4 border-t ${hairlineCls} text-center`}>
                 <button type="button" onClick={() => { setPhase('password'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Use a password instead</button>
               </div>
             </motion.div>

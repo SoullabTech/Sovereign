@@ -11,6 +11,7 @@ interface HoloflowerProps {
   theme?: 'light' | 'dark'; // for light or dark backgrounds
   className?: string;
   customColor?: string; // for dynamic color changes based on mode
+  crisp?: boolean; // crisp mode — drops the white halo/contrast glow; keeps a soft depth shadow (for the sign-in surface)
 }
 
 const sizeMap = {
@@ -41,7 +42,8 @@ export function Holoflower({
   variant = 'single',
   theme = 'dark',
   className = '',
-  customColor
+  customColor,
+  crisp = false
 }: HoloflowerProps) {
   const sizes = sizeMap[size];
   const glow = glowMap[glowIntensity];
@@ -54,20 +56,24 @@ export function Holoflower({
   const dropShadow = theme === 'light'
     ? 'drop-shadow(0 0 10px rgba(90, 122, 111, 0.35)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.06))'
     : 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))';
+  // crisp mode: keep the multicolor dots sharp — no white halo, just a soft depth shadow.
+  const imgFilter = crisp ? 'drop-shadow(0 2px 10px rgba(0, 0, 0, 0.5))' : dropShadow;
 
   return (
     <div className={`${sizes.container} relative flex items-center justify-center ${className}`} style={{ background: 'transparent', boxShadow: 'none', border: 'none', outline: 'none', overflow: 'visible' }}>
 
-      {/* Subtle light glow for contrast */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div
-          className={`${sizes.glow} rounded-full`}
-          style={{
-            background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 50%, transparent 70%)',
-            filter: `blur(${parseInt(sizes.blur)}px)`,
-          }}
-        />
-      </div>
+      {/* Subtle light glow for contrast — omitted in crisp mode (it hazes the multicolor holoflower) */}
+      {!crisp && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className={`${sizes.glow} rounded-full`}
+            style={{
+              background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+              filter: `blur(${parseInt(sizes.blur)}px)`,
+            }}
+          />
+        </div>
+      )}
 
       {/* Radiant glow - enhanced */}
       {animate ? (
@@ -123,7 +129,7 @@ export function Holoflower({
             alt="Soullab"
             className={`${sizes.image} object-contain`}
             style={{
-              filter: dropShadow,
+              filter: imgFilter,
             }}
           />
         </motion.div>
@@ -134,7 +140,7 @@ export function Holoflower({
             alt="Soullab"
             className={`${sizes.image} object-contain`}
             style={{
-              filter: dropShadow,
+              filter: imgFilter,
             }}
           />
         </div>
