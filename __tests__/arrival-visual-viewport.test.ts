@@ -92,14 +92,20 @@ describe('overflow safety net — nothing becomes permanently unreachable', () =
 });
 
 describe('scope — this fix must not have grown', () => {
-  it('adds no dvh/svh/vh-based sizing to the fixed field', () => {
-    const outerRegion = SRC.slice(
-      SRC.indexOf('function useVisualViewportBox'),
-      SRC.indexOf('{/* Compact header')
+  it('the keyboard-tracking mechanism itself uses no dvh/svh/vh sizing', () => {
+    // The real invariant: `top`/`height` — the values that track the
+    // keyboard — must come from visualViewport, never a vh-family unit.
+    // (A `calc(...vh)` DOES legitimately appear elsewhere in this same
+    // style block now, as a static cosmetic offset — see the reachability
+    // fix below — so this asserts the specific properties, not the region.)
+    const styleBlock = SRC.slice(
+      SRC.indexOf('style={{', SRC.indexOf('className="fixed left-0 right-0')),
+      SRC.indexOf('}}', SRC.indexOf('className="fixed left-0 right-0'))
     );
-    // The pre-existing `-mt-[8vh]` cosmetic framing offset further down the
-    // file is untouched by this fix and out of this region on purpose.
-    expect(outerRegion).not.toMatch(/\d(vh|dvh|svh)\b/);
+    const topLine = styleBlock.match(/top:\s*[^,]+,/)![0];
+    const heightLine = styleBlock.match(/height:\s*[^,]+,/)![0];
+    expect(topLine).not.toMatch(/\d(vh|dvh|svh)\b/);
+    expect(heightLine).not.toMatch(/\d(vh|dvh|svh)\b/);
   });
 
   it('does not touch Arrival ownership — no new render conditions or props', () => {
@@ -113,5 +119,69 @@ describe('scope — this fix must not have grown', () => {
 
   it('does not touch the conversation surface', () => {
     expect(SRC).not.toMatch(/oracle-conversation|bg-soul-background/);
+  });
+});
+
+/**
+ * Reachability fix — follow-up to #713/#704.
+ *
+ * BUG (found and reproduced in-browser, not just reasoned about): the field
+ * used `justify-content: safe center` together with a `-mt-[8vh]` negative
+ * margin on its content wrapper, inside an `overflow-y-auto` container.
+ * `safe center` is supposed to fall back to top-alignment when content
+ * overflows, so nothing becomes unreachable — but a negative margin defeats
+ * that: it pulls the item's border box to a coordinate ABOVE the container's
+ * own top edge, and `scrollTop` cannot go negative to reach it. Reproduced
+ * directly: at a short (keyboard-open-sized) container, the top content
+ * rendered at -70px and stayed there at scrollTop 0, with the container's
+ * own maxScrollTop capped well short of reaching it — i.e. permanently
+ * unreachable by any amount of scrolling. That is the #704 crop, reintroduced
+ * through a different mechanism, on the PR that fixed #704.
+ *
+ * FIX: the same "lifted above dead-centre" framing is expressed entirely as
+ * padding on the scroll container instead of a margin on the scrolled
+ * content — paddingTop reserves the 54px header's height so the `safe`
+ * fallback's top-aligned content starts visible at scrollTop 0, and
+ * paddingBottom carries the old margin's ~8vh lift plus that 54px, so the
+ * centered (fits-fine) geometry is unchanged. No negative margin exists in
+ * the scrollable coordinate space in either case. Verified in-browser at a
+ * 180px container (landscape phone + keyboard): top content visible at
+ * scrollTop 0 (not -70px), full content reachable by scrolling to
+ * maxScrollTop, fits-case position unchanged from before this fix.
+ */
+describe('reachability fix — nothing in the scrollable region has a negative margin', () => {
+  it('the content wrapper carries no negative margin', () => {
+    const wrapper = SRC.match(/<div className="([^"]*max-w-\[560px\][^"]*)"/);
+    expect(wrapper).not.toBeNull();
+    expect(wrapper![1]).not.toMatch(/-mt-\[/);
+  });
+
+  it('the lift is expressed as container padding, not a content margin', () => {
+    const styleBlock = SRC.slice(
+      SRC.indexOf('style={{', SRC.indexOf('className="fixed left-0 right-0')),
+      SRC.indexOf('}}', SRC.indexOf('className="fixed left-0 right-0'))
+    );
+    expect(styleBlock).toMatch(/paddingTop:\s*'54px'/);
+    expect(styleBlock).toMatch(/paddingBottom:\s*'calc\(54px \+ 8vh\)'/);
+  });
+
+  it('the 54px reserved at the top matches the header\'s own height', () => {
+    const header = SRC.match(/className="absolute inset-x-0 top-0[^"]*\bh-\[(\d+)px\][^"]*"/);
+    expect(header).not.toBeNull();
+    expect(header![1]).toBe('54');
+  });
+
+  it('no element in the field carries a negative top-margin utility class', () => {
+    // Broader sweep than the wrapper check above — catches a negative
+    // margin reintroduced on any other element inside the portal, not only
+    // the one this bug originally lived on. Comments are stripped first:
+    // this file's own explanation of the bug names the old `-mt-[8vh]`
+    // class in prose, which isn't live code and shouldn't trip the check.
+    const fieldBody = SRC
+      .slice(SRC.indexOf('return createPortal('), SRC.indexOf('document.body\n  );'))
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+    expect(fieldBody).not.toMatch(/-m[tybe]?-\[/);
+    expect(fieldBody).not.toMatch(/\bnegative-m/);
   });
 });

@@ -121,7 +121,31 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
         // the very top of the content unreachable, even with overflow:auto.
         // Unsupported browsers ignore the value and get top-alignment, which
         // is the safe direction to fail in (no crop), not a wrong one.
+        //
+        // REACHABILITY FIX: `safe center`'s fallback only works if the item
+        // has no negative margin. This container previously relied on the
+        // content wrapper's `-mt-[8vh]` for its "lifted above dead-centre"
+        // framing — but a negative margin inside an `overflow-y:auto` box
+        // pulls the item's border box above the container's own top edge,
+        // i.e. to a negative coordinate. `scrollTop` cannot go negative, so
+        // that content became permanently unreachable by scroll whenever it
+        // didn't fit (measured: top-marker at -70px, scrollTop stuck at 0) —
+        // reproducing the exact #704 crop this field exists to prevent, just
+        // by a different mechanism. The lift is now expressed entirely as
+        // container padding instead:
+        //  - paddingTop reserves the 54px header's height, so the `safe`
+        //    fallback's top-aligned content starts below the header, not
+        //    underneath it, and is visible at scrollTop: 0 immediately.
+        //  - paddingBottom carries the old margin's ~8vh lift PLUS the 54px
+        //    paddingTop, so the centered (fits-fine) geometry this produces
+        //    is pixel-identical to the previous negative-margin version —
+        //    verified algebraically: border-box top reduces to the same
+        //    (containerHeight - contentHeight - 8vh) / 2 in both versions.
+        // No negative margin exists anywhere in the scrollable coordinate
+        // space now, in either the fits or overflow case.
         justifyContent: 'safe center',
+        paddingTop: '54px',
+        paddingBottom: 'calc(54px + 8vh)',
         // Opaque field so the arrival reads as ONE contained composition,
         // covering the scattered conversation layers + chrome behind it.
         // Matches the approved mockup: violet bloom over warm near-black.
@@ -176,9 +200,11 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
       </div>
 
       {/* One contained field — everything stacked and attached, max readable
-          width. Lifted off dead-centre so the jewel sits higher in the frame
-          and the composition reads as arriving rather than resting. */}
-      <div className="-mt-[8vh] flex w-full max-w-[560px] flex-col items-center">
+          width. The "lifted off dead-centre" framing now lives entirely in
+          the parent's padding (see the paddingTop/paddingBottom comment
+          above) — this wrapper carries no margin, so nothing here can push
+          content to an unreachable negative scroll coordinate. */}
+      <div className="flex w-full max-w-[560px] flex-col items-center">
         {/* Greeting */}
         <h1
           className="text-center text-[clamp(28px,5vw,42px)] font-light leading-[1.1] text-maia-spice-500"
