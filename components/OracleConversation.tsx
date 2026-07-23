@@ -6921,7 +6921,19 @@ I'm not sure what I'm feeling yet.`;
   // DIAGNOSTIC LOGGING - Removed to reduce console noise and improve performance
 
   return (
-    <div className="oracle-conversation min-h-screen bg-soul-background overflow-hidden">
+    // GEOMETRY INVARIANT (#703): this shell must NOT be the containing block for
+    // its position:fixed descendants. `bg-soul-background` animates `filter`
+    // (hearthlight), and a non-`none` filter makes an element the containing
+    // block for every fixed descendant — same rule as `transform`. The shell is
+    // min-h-screen (100vh) but starts 48px below the viewport top, so its box
+    // overhangs the bottom by 48px; "fixed" children then resolved against
+    // 48…100vh+48 instead of the viewport. Measured: composer `bottom: 44px`
+    // landed at 100vh + 4, i.e. 4px below the visible bottom, on every device.
+    // The breathing moves to a background layer that owns nothing positioned.
+    // `relative` is safe here: position:relative does not establish a containing
+    // block for fixed descendants — only transform/filter/perspective/contain do.
+    <div className="oracle-conversation relative min-h-screen overflow-hidden">
+      <div className="bg-soul-background absolute inset-0 pointer-events-none" aria-hidden="true" />
       {/* iOS Audio Enable Button - Required for TTS on iOS Safari */}
       {needsIOSAudioPermission && (
         <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center">
@@ -8137,12 +8149,19 @@ I'm not sure what I'm feeling yet.`;
             : 'sm:w-[calc(100%-1.5rem)] md:w-[640px] lg:w-[700px] opacity-70'
         }`}
              style={{
-               height: showChatInterface
-                 ? 'calc(100vh - 300px)'
-                 : 'calc(100vh - 320px)',
-               maxHeight: showChatInterface
-                 ? 'calc(100vh - 300px)'
-                 : 'calc(100vh - 320px)',
+               // GEOMETRY INVARIANT (#703): this box is defined by its CLEARANCES,
+               // not by a computed height. It begins below the jewel (the `top-44`
+               // class) and ends above the composer (`bottom` here). Height follows.
+               //
+               // It used to set top AND height AND bottom. With all three specified
+               // on a fixed element, CSS ignores `bottom` — so the composer
+               // clearance never applied, and the two disagreed: at 932px, top+bottom
+               // implies 496px while `calc(100vh - 300px)` gave 632px. The measured
+               // result was a 57px overlap of the transcript by the composer, on
+               // every device, because 100vh cancels out of both expressions.
+               //
+               // Dropping height/maxHeight makes the clearance authoritative and
+               // correct at any viewport height without arithmetic to keep in sync.
                bottom: showChatInterface ? '260px' : '220px',
                overflow: 'hidden'
              }}>

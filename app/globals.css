@@ -255,7 +255,17 @@
     }
   }
 
-  /* Apply breathing to soul-background */
+  /* Apply breathing to soul-background.
+     GEOMETRY INVARIANT (#703): this animation must never run on an element that
+     has position:fixed descendants. `hearthlight` animates `filter`, and a
+     non-`none` filter makes that element the containing block for every fixed
+     descendant — the same rule as `transform`. When it ran on the conversation
+     shell, "fixed" stopped meaning viewport-fixed: the shell is min-h-screen
+     (100vh) but begins 48px below the viewport top, so its box overhangs the
+     bottom by 48px and every fixed child resolved against 48…100vh+48.
+     Measured consequence: the composer's `bottom: 44px` landed at 100vh + 4.
+     It breathes on a background layer instead — which is what the name says it
+     is for, and what the "Apply breathing to soul-background" intent meant. */
   .bg-soul-background {
     animation: hearthlight 14s ease-in-out infinite;
   }
