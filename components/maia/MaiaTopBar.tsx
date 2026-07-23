@@ -88,14 +88,19 @@ export function MaiaTopBar({
           screen, competing a few hundred pixels apart. The wordmark alone is
           enough to say whose room this is.
 
-          Hidden below `sm`. Centring is a wide-screen affordance: the doorway
-          label and the utility cluster are fixed-width, so the free middle
-          shrinks with the viewport and vanishes around 436px. At 375px the
-          centred wordmark printed straight through the Voice control. It is
-          `pointer-events-none`, so the collision was silent — it looked like a
-          rendering glitch rather than a blocked tap, which is worse. The House
-          and the SOULLAB lockup already say whose room this is on a phone. */}
-      <div className="pointer-events-none absolute inset-x-0 hidden justify-center sm:flex">
+          Hidden below 480px. The doorway label and the utility cluster are
+          fixed-width, so the free middle shrinks with the viewport: measured,
+          the wordmark starts overlapping the Voice control at about 436px, and
+          at 375px it printed straight through it. Because this element is
+          `pointer-events-none` the overlap was silent — it read as a rendering
+          glitch rather than a blocked tap, which is the worse failure.
+
+          480 is the measured threshold plus a margin, NOT a stock breakpoint —
+          `sm` (640) also avoids the collision but needlessly strips the wordmark
+          from every tablet and narrow window between 480 and 640. If the doorway
+          label or the utility cluster ever gets wider, re-measure: the number
+          that matters is where the middle runs out, not a design-system step. */}
+      <div className="pointer-events-none absolute inset-x-0 hidden justify-center min-[480px]:flex">
         <span className="text-sm font-light tracking-wider text-[#D4B896]/80">MAIA</span>
       </div>
 
