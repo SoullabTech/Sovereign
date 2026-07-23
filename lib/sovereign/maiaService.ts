@@ -2361,10 +2361,19 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // SANCTUARY (S1): per-turn posture, resolved once for this request and
   // passed to every content writer (turns store, corpus callosum trace).
   const turnPosture = TurnPosture.resolve(meta);
+  // One exchange identity per member action, minted at the boundary and shared
+  // by every persistence path in this request: addConversationExchange (which
+  // reaches conversation_turns via sessionManager) and the direct
+  // TurnsStore.addExchange in the tail. Both used to write the same exchange
+  // with exchange_id NULL, and ON CONFLICT (exchange_id, seq) cannot fire on
+  // NULL — so one member action persisted as two exchanges (four rows).
+  const exchangeId = randomUUID();
   // S5: record the resolved posture server-side (content-free) so writers and
   // audits can verify against a record instead of call-chain arguments.
+  // Shares the exchange id so the consent record and the persisted turns
+  // correlate by one identifier.
   recordConsentState({
-    requestId: randomUUID(),
+    requestId: exchangeId,
     posture: turnPosture,
     memberId: (meta as any)?.userId ?? null,
     sessionId,
@@ -2457,6 +2466,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             const text = fieldSafety.message ?? "Let's take the safest next step together.";
             await addConversationExchange(sessionId, input, text, {
               ...meta,
+              exchangeId,
               fieldRouting: fieldSafety.fieldRouting,
               fieldWorkSafe: false,
               processingProfile: 'FAST',
@@ -2810,6 +2820,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           // Store conversation and return early
           await addConversationExchange(sessionId, input, rcnText, {
             ...meta,
+            exchangeId,
             processingProfile: 'RCN',
             rcnIntent: rcnResult.intent,
             rcnCorpusType: rcnResult.corpusType,
@@ -3028,6 +3039,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // Store conversation exchange (session-scoped)
     await addConversationExchange(sessionId, input, text, {
       ...meta,
+      exchangeId,
       processingProfile,
       processingTimeMs,
       consciousnessData: consciousnessData || undefined,
@@ -3068,7 +3080,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
-          await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text);
+          await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text, exchangeId);
           console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);

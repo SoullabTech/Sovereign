@@ -89,7 +89,15 @@ export async function addConversationExchange(
   const userId = (meta?.userId as string) || (meta?.memberId as string);
   if (userId) {
     try {
-      await TurnsStore.addExchange(posture, userId, sessionId, userMessage, maiaResponse);
+      // One exchange identity per member action. Callers that also write the
+      // same exchange directly (maiaService, /api/voice/persist) pass their
+      // request-scoped id through meta, so the store's
+      // ON CONFLICT (exchange_id, seq) guard collapses the second write instead
+      // of persisting the exchange twice. Without an id the guard is inert —
+      // a partial index cannot fire on NULL — which is how one member action
+      // became four rows on 2026-07-23.
+      const exchangeId = typeof meta?.exchangeId === 'string' ? meta.exchangeId : undefined;
+      await TurnsStore.addExchange(posture, userId, sessionId, userMessage, maiaResponse, exchangeId);
     } catch (err) {
       // Non-blocking: don't break the conversation if turns storage fails
       console.warn('[SessionManager] Failed to persist turns:', err);
