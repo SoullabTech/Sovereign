@@ -8171,7 +8171,7 @@ I'm not sure what I'm feeling yet.`;
                   turns still scroll up behind the jewel as they should; only the
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
-                <div className="space-y-3 pt-[10.5rem] pb-36 md:pt-[12rem] md:pb-24">
+                <div className="space-y-3 pt-[10.5rem] pb-40 md:pt-[12rem] md:pb-28">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
@@ -8563,15 +8563,25 @@ I'm not sure what I'm feeling yet.`;
             >
               <button
                 onClick={() => setShowVoiceText(!showVoiceText)}
-                /* A utility, not a peer of the conversation. It was a
-                   backdrop-blurred pill at 60% white — the eye read MAIA, then
-                   Hide Text, then the words, which puts a toggle ahead of the
-                   thing it toggles. Chrome removed, type down a step, contrast
-                   halved; it surfaces on hover when wanted. */
-                className="px-2 py-1 rounded-full text-[11px] font-medium
-                         text-white/30 hover:text-white/70 transition-colors"
+                /* An icon, not a labelled utility. Softening the pill helped
+                   but the words still read as application chrome in a surface
+                   where everything else is architectural — it was the one
+                   element that announced "app" rather than "place". The eye
+                   went MAIA, Hide Text, conversation: a toggle ahead of the
+                   thing it toggles.
+
+                   The name lives in title/aria rather than on screen, the way
+                   the House doorway carries its own. 44x44 so it stays reachable
+                   at the size it now occupies visually. */
+                className="flex h-11 w-11 items-center justify-center rounded-full
+                         text-white/25 hover:text-white/70 transition-colors"
+                title={showVoiceText ? 'Hide the transcript' : 'Show the transcript'}
+                aria-label={showVoiceText ? 'Hide the transcript' : 'Show the transcript'}
+                aria-pressed={showVoiceText}
               >
-                {showVoiceText ? 'Hide Text' : 'Show Text'}
+                {showVoiceText
+                  ? <EyeOff className="h-4 w-4" strokeWidth={1.75} />
+                  : <Eye className="h-4 w-4" strokeWidth={1.75} />}
               </button>
             </div>
           )}
