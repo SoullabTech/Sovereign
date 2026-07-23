@@ -76,12 +76,31 @@ export function MaiaTopBar({
         )}
       </div>
 
-      {/* Right: MAIA, then utilities */}
+      {/* MAIA — centred on the bar itself, not on whatever space the flanking
+          clusters happen to leave. Absolutely positioned so the name holds the
+          middle no matter how wide the doorway label or the utility cluster get;
+          in a flex run it drifted with them and sat centred only by luck at some
+          widths. `pointer-events-none` so it never intercepts a tap meant for a
+          control beneath it.
+
+          No holoflower here. The jewel belongs to the field and to the SOULLAB
+          lockup below — repeating it in the bar put two of the same mark on one
+          screen, competing a few hundred pixels apart. The wordmark alone is
+          enough to say whose room this is.
+
+          Hidden below `sm`. Centring is a wide-screen affordance: the doorway
+          label and the utility cluster are fixed-width, so the free middle
+          shrinks with the viewport and vanishes around 436px. At 375px the
+          centred wordmark printed straight through the Voice control. It is
+          `pointer-events-none`, so the collision was silent — it looked like a
+          rendering glitch rather than a blocked tap, which is worse. The House
+          and the SOULLAB lockup already say whose room this is on a phone. */}
+      <div className="pointer-events-none absolute inset-x-0 hidden justify-center sm:flex">
+        <span className="text-sm font-light tracking-wider text-[#D4B896]/80">MAIA</span>
+      </div>
+
+      {/* Right: utilities */}
       <div className="flex items-center gap-1">
-        <div className="mr-2 flex items-center gap-2">
-          <img src="/logo_flower 2.png" alt="MAIA" className="w-5 h-5 opacity-90" />
-          <span className="text-sm font-light text-[#D4B896]/80 tracking-wider">MAIA</span>
-        </div>
         {/* Voice / Text toggle */}
         <button
           onClick={onToggleInputMode}
