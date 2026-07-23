@@ -82,7 +82,51 @@ Mic works. Browser works. Apple's service declines.
 **Unconfirmed** until someone checks that setting on the device — this is the leading
 cause consistent with the error code, not a proven one.
 
-### B — iOS 26.6, Chrome (`CriOS/150`): `aborted`
+### B — CORRECTED: Chrome on iOS **works**
+
+**An earlier revision of this document claimed "Chrome on iOS does not support the Web
+Speech API." That was wrong.** It generalized a single `aborted` event into a
+browser-wide capability claim, reasoning from general knowledge rather than from the
+telemetry. Retracted.
+
+Measured — three complete CriOS chains:
+
+```
+sessions rij5hvig · 9bmy6qkq · z5m6xrb6   (all CriOS/150)
+voice_mic_granted → voice_listening_started → voice_audio_started
+  → voice_speech_started → voice_transcribe_result ×N → voice_recognition_ended
+```
+
+`aborted` does not indicate missing support. In the Web Speech API it means recognition
+ended before producing a result — typically a programmatic `.abort()`/`.stop()`, a
+navigation, or the member stopping the mic. One such event is not evidence about the
+browser's capability.
+
+### Consequence — the failure is Safari-build-specific, same device, same permissions
+
+| browser | outcome |
+|---|---|
+| Chrome (CriOS/150) | **works** — 3 complete chains |
+| Safari 26.6 | **works** — complete chain, final transcript |
+| Safari 26.5.2 | **fails ×3** — `service-not-allowed` at start |
+
+Microphone granted in every case (`iPhone Microphone`, 1 audio track). So:
+
+- it is **not** a device-level permission problem;
+- it is **not** a general iPhone 16 limitation;
+- it is **not** a hardware problem;
+- MAIA's broader voice flow is working;
+- **Safari 26.5.2 is the outlier.**
+
+Dictation-off survives only as a possible *device-specific* explanation, never the general
+one — Chrome completing the path on the same phone rules dictation out as the cause there.
+
+**Cheapest next confirmation:** retry Safari on that same phone after a full Safari
+restart (swipe it away from the app switcher, not just background it). If Safari still
+fails while Chrome succeeds, that is a clean same-device, same-permission,
+browser-specific reproduction.
+
+### B (superseded reading) — iOS 26.6, Chrome (`CriOS/150`): `aborted`
 
 ```
 voice_transcribe_error  error:"aborted"        session 0dasssb6  14:17:20.073Z
