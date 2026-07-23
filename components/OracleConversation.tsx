@@ -431,6 +431,19 @@ interface OracleConversationProps {
   onCloseSessionSelector?: () => void; // Notify parent to close session selector
   onSessionActiveChange?: (active: boolean) => void; // Notify parent of session active state
   onMessageAdded?: (message: ConversationMessage) => void;
+  /**
+   * Fires the moment the member's own words are committed to the conversation —
+   * spoken or typed, treated identically. This is expression, NOT activation:
+   * opening the mic or the chat panel does not fire it. Called on every member
+   * turn; consumers that care about the first one must be idempotent.
+   *
+   * Fired at the message-commit points, deliberately NOT at the entry of
+   * handleTextMessage / handleVoiceTranscript. Those entries sit above their
+   * guards, so firing there would count MAIA's own voice returning through the
+   * mic, empty transcripts, duplicates, and bare mode commands as the member
+   * having spoken. Keep this call below the guards.
+   */
+  onMemberExpression?: () => void;
   onSessionEnd?: (reason?: string) => void;
   initialAction?: string; // Action to trigger on mount (e.g., 'choose-guide', 'show-current-elder')
   // Scribe session discussion mode
@@ -582,6 +595,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onCloseSessionSelector,
   onSessionActiveChange,
   onMessageAdded,
+  onMemberExpression,
   onSessionEnd,
   initialAction,
   scribeSessionId,
@@ -1484,6 +1498,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
+  const onMemberExpressionRef = useRef(onMemberExpression); // Ref so firing sites don't take a dep on the callback
   const activatingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Safety timeout for stuck activating state
   const handleCaptureSpiritRef = useRef<(() => void) | null>(null); // Ref for capture spirit handler (for event dispatch)
   const didConsumeSeedRef = useRef(false); // One-shot guard for seed prompt consumption
@@ -1513,6 +1528,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     onMessageAddedRef.current = onMessageAdded;
   }, [onMessageAdded]);
+
+  // Keep onMemberExpression ref updated
+  useEffect(() => {
+    onMemberExpressionRef.current = onMemberExpression;
+  }, [onMemberExpression]);
 
   // Dynamic holoflower size based on window width
   useEffect(() => {
@@ -4338,6 +4358,8 @@ I'm not sure what I'm feeling yet.`;
     };
     setMessages(prev => appendMessageCapped(prev, userMessage));
     onMessageAddedRef.current?.(userMessage);
+    // The member has spoken. Typed turns and non-streaming voice turns both land here.
+    onMemberExpressionRef.current?.();
 
     // Process message for Field Protocol if recording
     if (isFieldRecording) {
@@ -6405,6 +6427,9 @@ I'm not sure what I'm feeling yet.`;
         // Build once, use for both UI state and API payload (avoids stale closure)
         const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
         setMessages(nextMessagesForApi);
+        // The member has spoken. Streaming voice commits its own user message and
+        // never routes through handleTextMessage, so it must announce separately.
+        onMemberExpressionRef.current?.();
 
         // Set processing states
         // NOTE: Do NOT set isAudioPlaying(true) here — it should only be true

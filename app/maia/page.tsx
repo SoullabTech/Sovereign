@@ -383,9 +383,29 @@ function MAIAPageContent() {
     if (localStorage.getItem('maia_has_arrived')) return;      // already crossed
     setHasArrived(false);                                       // first visit → Arrival
   }, []);
+  // Ruling (Kelly, 2026-07-22):
+  //
+  //   A person is no longer arriving once they have spoken into the relationship.
+  //
+  // Activation is not expression. The invitation click is the member answering
+  // MAIA's greeting — "I am willing to begin" — not the start of conversation.
+  // Someone who activates, explores The House, and leaves is still arriving, and
+  // meets the ceremony again next visit. Nor does arrival wait on MAIA's reply:
+  // a member who speaks and closes the laptop before an answer has still crossed.
+  //
+  // ⚠️ Do NOT wire activation controls to this — not the jewel, not the mic, and
+  // not the forthcoming "I'm ready" button. Wiring any of them here silently
+  // collapses the ruling back to option A.
+  //
+  // Fired on every member turn, so it must be idempotent AND write-once: the marker
+  // records when arrival happened, not when the member last spoke.
   const markArrived = useCallback(() => {
     setHasArrived(true);
-    try { localStorage.setItem('maia_has_arrived', String(Date.now())); } catch { /* private mode */ }
+    try {
+      if (!localStorage.getItem('maia_has_arrived')) {
+        localStorage.setItem('maia_has_arrived', String(Date.now()));
+      }
+    } catch { /* private mode */ }
   }, []);
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showWeekZeroOnboarding, setShowWeekZeroOnboarding] = useState(false);
@@ -759,12 +779,8 @@ function MAIAPageContent() {
                   onShowChatInterfaceChange={setShowChatInterface}
                   showSessionSelector={showSessionSelector}
                   onCloseSessionSelector={() => setShowSessionSelector(false)}
-                  onSessionActiveChange={(active: boolean) => {
-                    setHasActiveSession(active);
-                    // Crossing into conversation is the threshold: the newcomer
-                    // has arrived. Chrome returns for subsequent visits.
-                    if (active) markArrived();
-                  }}
+                  onSessionActiveChange={setHasActiveSession}
+                  onMemberExpression={markArrived}
                   initialAction={searchParams?.get('action') || undefined}
                   askMode={askMode}
                   onAskModeChange={setAskMode}
