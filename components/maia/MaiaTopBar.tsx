@@ -8,7 +8,7 @@
  * Never fully disappears — always reassuringly present.
  */
 
-import { HelpCircle, User, Mic, MessageSquare } from 'lucide-react';
+import { User } from 'lucide-react';
 import type { MaiaBehavior } from '@/lib/navigation/types';
 
 const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = {
@@ -21,24 +21,17 @@ const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = 
 interface MaiaTopBarProps {
   explorerName: string;
   /** true = voice mode, false = text mode */
-  isVoiceMode: boolean;
   behavior: MaiaBehavior;
   calmMode: boolean;
   calmCeiling: boolean;
-  /** Toggle between voice and text input */
-  onToggleInputMode: () => void;
-  onOpenHelp: () => void;
   onOpenAccount: () => void;
 }
 
 export function MaiaTopBar({
   explorerName,
-  isVoiceMode,
   behavior,
   calmMode,
   calmCeiling,
-  onToggleInputMode,
-  onOpenHelp,
   onOpenAccount,
 }: MaiaTopBarProps) {
   const behaviorInfo = BEHAVIOR_LABELS[behavior];
@@ -54,7 +47,7 @@ export function MaiaTopBar({
   return (
     <header
       className={`
-        fixed top-0 left-14 right-0 h-12 bg-[#0f0d0b]/90 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-[70]
+        fixed top-0 left-0 right-0 h-12 bg-[#0f0d0b]/90 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-[70]
         flex items-center justify-between px-4
         transition-opacity duration-500 ease-out
         ${opacityClass}
@@ -62,12 +55,13 @@ export function MaiaTopBar({
       `}
       style={{ paddingTop: 'max(env(safe-area-inset-top), 0px)' }}
     >
-      {/* Left: MAIA wordmark + behavior indicator */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <img src="/logo_flower 2.png" alt="MAIA" className="w-5 h-5 opacity-90" />
-          <span className="text-sm font-light text-[#D4B896]/80 tracking-wider">MAIA</span>
-        </div>
+      {/* Left: reserved for The House.
+          The House owns the upper-left anchor — the shell renders the doorway
+          there as a fixed element, and this bar yields the corner to it. The
+          ordering is not cosmetic: the House contains MAIA, not the reverse.
+          The House is orientation; MAIA is relationship. Only the behavior
+          indicator rides along here, and it sits clear of the doorway. */}
+      <div className="flex items-center gap-3 pl-[8.5rem]">
         {behavior !== 'default' && (
           <span className={`text-[10px] font-light tracking-wide uppercase ${behaviorInfo.color}`}>
             {behaviorInfo.label}
@@ -75,32 +69,43 @@ export function MaiaTopBar({
         )}
       </div>
 
-      {/* Right: utilities */}
+      {/* MAIA — centred on the bar itself, not on whatever space the flanking
+          clusters happen to leave. Absolutely positioned so the name holds the
+          middle no matter how wide the doorway label or the utility cluster get;
+          in a flex run it drifted with them and sat centred only by luck at some
+          widths. `pointer-events-none` so it never intercepts a tap meant for a
+          control beneath it.
+
+          No holoflower here. The jewel belongs to the field and to the SOULLAB
+          lockup below — repeating it in the bar put two of the same mark on one
+          screen, competing a few hundred pixels apart. The wordmark alone is
+          enough to say whose room this is.
+
+          Shown at every width. It was gated at min-[480px] because the Voice/Text
+          switch made this cluster 199px wide and the wordmark printed straight
+          through it below ~436px. That switch now lives beside the composer, the
+          cluster is ~63px narrower, and the collision is gone — measured, not
+          assumed. The gate went with the cause.
+
+          If anything is ever added back to either flanking cluster, re-measure
+          the free middle rather than reaching for a breakpoint: what matters is
+          where the middle runs out, not a design-system step. */}
+      <div className="pointer-events-none absolute inset-x-0 flex justify-center">
+        <span className="text-sm font-light tracking-wider text-[#D4B896]/80">MAIA</span>
+      </div>
+
+      {/* Right: utilities.
+
+          The Voice/Text switch used to live here and has moved to the composer
+          row (founder ruling, 2026-07-23). It is contextual to input, not global
+          identity — and at 199px this cluster was what pushed the centred MAIA
+          wordmark off small screens. Both return paths already exist beside the
+          input they govern: a Voice switch in the composer row, and a 44x44
+          keyboard toggle in VoiceInteractionBar for the way back.
+
+          Keep this cluster to identity and global utilities. Anything that acts
+          on the composer belongs next to the composer. */}
       <div className="flex items-center gap-1">
-        {/* Voice / Text toggle */}
-        <button
-          onClick={onToggleInputMode}
-          className={`h-8 flex items-center gap-1.5 px-2 rounded-lg transition-all ${
-            isVoiceMode
-              ? 'text-[#D4B896]/70 bg-[#D4B896]/5'
-              : 'text-blue-400/70 bg-blue-400/5'
-          } hover:opacity-100`}
-          title={isVoiceMode ? 'Switch to text' : 'Switch to voice'}
-        >
-          {isVoiceMode ? <Mic className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-          <span className="text-[10px] font-light tracking-wide">
-            {isVoiceMode ? 'Voice' : 'Text'}
-          </span>
-        </button>
-
-        <button
-          onClick={onOpenHelp}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all"
-          title="Help"
-        >
-          <HelpCircle className="w-4 h-4" />
-        </button>
-
         <button
           onClick={onOpenAccount}
           className="h-8 flex items-center gap-2 pl-1 pr-2 rounded-lg text-stone-300 hover:text-[#D4B896] hover:bg-[#D4B896]/5 transition-all"

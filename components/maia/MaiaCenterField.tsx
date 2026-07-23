@@ -143,11 +143,21 @@ export function MaiaCenterField({ children }: MaiaCenterFieldProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1, duration: 0.8 }}
-        className="absolute bottom-2 left-0 right-0 flex justify-center z-50 pointer-events-none"
+        /* A signature, not a control. It sat 8px under the composer, close
+           enough to read as part of the input group — the eye grouped it with
+           Ask MAIA and the send controls rather than with the page. Pushed down
+           so the composer closes as one complete object and SOULLAB becomes the
+           quiet foundation beneath it. */
+        className="absolute bottom-0 left-0 right-0 flex justify-center z-50 pointer-events-none pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-6"
       >
-        <div className="flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md border border-amber-500/20 rounded-full pointer-events-auto">
-          <img src="/logo_flower 2.png" alt="Holoflower" className="w-6 h-6 opacity-100" />
-          <h1 className="text-lg font-light text-amber-300/90 tracking-wider">SOULLAB</h1>
+        {/* Lighter than it was: the bordered, glowing pill read as a button
+            waiting to be pressed. Border and blur removed, mark and wordmark a
+            step smaller, amber softened. MAIA centred at the top and SOULLAB
+            centred at the bottom now carry the same weight as each other —
+            presence above, world below, neither shouting. */}
+        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full pointer-events-auto">
+          <img src="/logo_flower 2.png" alt="Holoflower" className="w-5 h-5 opacity-80" />
+          <h1 className="text-base font-light text-amber-300/70 tracking-wider">SOULLAB</h1>
         </div>
       </motion.div>
     </div>

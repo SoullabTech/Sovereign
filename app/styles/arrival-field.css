@@ -23,10 +23,23 @@
    it. Hierarchy comes from size, alignment and the label — never from hue.
    Size raised from 13px after member feedback; rem so it scales with the
    member's own OS / browser text-size setting. */
+/* Member turns sit in the SAME column as MAIA's — left, not floated right.
+   (Founder ruling, 2026-07-23: "hello should not be in right side.")
+
+   The right-float was chat-app convention: two speakers on opposing sides of a
+   ledger. That reads as correspondence, not conversation, and it cost real
+   legibility here — the right-aligned turn and its centred speaker label
+   collided with the jewel, and a short line like "hello" ended up stranded in
+   open space with nothing beneath it.
+
+   One column, one reading line. Speaker is carried by the label and by MAIA's
+   amber, which is what the comment above already says: hierarchy comes from
+   size, alignment and the label — never from hue. Alignment now says
+   "the same conversation" rather than "the other party". */
 .arrival-field [data-role="user"] {
-  max-width: 80%;
-  margin-left: auto !important;
-  text-align: right;
+  max-width: 100%;
+  margin-left: 0 !important;
+  text-align: left;
 }
 .arrival-field [data-role="user"] .text-dune-amber {
   font-size: clamp(1rem, 2.4vw, 1.125rem) !important; /* 16 -> 18px */

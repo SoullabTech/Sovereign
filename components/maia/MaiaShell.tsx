@@ -49,6 +49,19 @@ interface MaiaShellProps {
    * with arrivalMode=false — their surface is unchanged.
    */
   arrivalMode?: boolean;
+  /**
+   * The House's deliberate return to Arrival. Invoked by the member, never by
+   * the system. Opens the room for this session only — it must NOT clear the
+   * durable first-crossing marker. Returning to Arrival is opening a room, not
+   * undoing an initiation.
+   */
+  onReturnToArrival?: () => void;
+  /**
+   * Whether the return affordance should appear at all. False while Arrival is
+   * already on screen (there is nothing to return to) and false when the
+   * arrivalEntry kill-switch is off (there is no room to open).
+   */
+  canReturnToArrival?: boolean;
   children: React.ReactNode;
 }
 
@@ -71,6 +84,8 @@ export function MaiaShell({
   askMode,
   onAskModeChange,
   arrivalMode = false,
+  onReturnToArrival,
+  canReturnToArrival = false,
   children,
 }: MaiaShellProps) {
   const router = useRouter();
@@ -79,6 +94,16 @@ export function MaiaShell({
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [userPinnedPanel, setUserPinnedPanel] = useState(false);
   const [houseOpen, setHouseOpen] = useState(false);
+
+  // The Arrival composition renders in a portal outside this tree, so its quiet
+  // base doorway cannot call setHouseOpen directly. It announces the intent and
+  // the shell — which owns the sheet — answers. Without this listener the
+  // arrival doorway dispatches into the void and reads as decorative.
+  useEffect(() => {
+    const openHouse = () => setHouseOpen(true);
+    window.addEventListener('openMaiaHouse', openHouse);
+    return () => window.removeEventListener('openMaiaHouse', openHouse);
+  }, []);
 
   // --- Calm mode ---
   const { isVoiceFlowing, isSanctuary } = useVoiceState();
@@ -237,67 +262,110 @@ export function MaiaShell({
     <div className="min-h-screen bg-[#1a1a2e]">
       <MaiaTopBar
         explorerName={explorerName}
-        isVoiceMode={isVoiceMode}
         behavior={behavior}
         calmMode={calmMode}
         calmCeiling={calmCeiling}
-        onToggleInputMode={onToggleInputMode}
-        onOpenHelp={onOpenHelp}
         onOpenAccount={onOpenAccount}
       />
 
-      {/* Arrival (Step 3): a newcomer meets one invitation — the rail recedes.
-          Returning members (arrivalMode=false) keep the rail exactly as before. */}
-      {!arrivalMode && (
-        <MaiaLeftRail
-          activeWorld={activeWorld}
-          calmMode={calmMode}
-          calmCeiling={calmCeiling}
-          worldHints={worldHints}
-          onWorldChange={handleWorldChange}
-          onOpenAccount={onOpenAccount}
-          onCaptureSpirit={() => onLabAction('capture-spirit')}
-          activeMode={activeMode}
-          onModeChange={onModeChange}
-          isVoiceInput={isVoiceMode}
-          onToggleInputMode={onToggleInputMode}
-          askMode={askMode}
-          onAskModeChange={onAskModeChange}
-        />
-      )}
+      {/* THE RAIL IS RETIRED — founder ruling, 2026-07-22.
+       *
+       *   The House is the solution to platform complexity. MAIA is the primary
+       *   relationship. The House contains the places. The member should not
+       *   encounter the platform as a rail of product features.
+       *
+       * The House previously failed this ruling by being added ALONGSIDE the
+       * rail rather than replacing it: eleven destinations stayed permanently
+       * exposed while the House offered the same places again, so the member met
+       * the product's internal map before they met the place.
+       *
+       * Every destination the rail carried is registered in lib/navigation/maiaNav
+       * and is reachable through The House, under the same visibility rules — the
+       * registry is the single source, so nothing became unreachable and no
+       * permission changed. The rail component itself is left in the tree for the
+       * founder/steward surfaces that still mount it directly.
+       *
+       * ⚠️ Do not reintroduce a permanent multi-icon rail here, and do not add a
+       * chevron rail beside the House. Disclosure belongs INSIDE the House.
+       */}
 
-      {/* Center field — offset for rail and top bar (no rail offset in Arrival) */}
+      {/* Center field — the conversation is the surface; nothing is offset for
+          navigation any more, because there is no navigation column. */}
       <main
-        className={`mt-12 transition-all duration-300 ${arrivalMode ? 'ml-0' : 'ml-14'}`}
+        className="mt-12 transition-all duration-300"
         style={{ marginRight: rightPanelOpen ? '20rem' : 0 }}
       >
         {children}
       </main>
 
-      {/* The House — one quiet doorway to the whole world. Present in both
-          modes: it is the sole doorway in Arrival, and an added doorway for
-          returning members (who also keep the rail). Never announces itself. */}
-      <button
-        onClick={() => setHouseOpen(true)}
-        className={`
-          group fixed bottom-20 left-1/2 z-[85] flex -translate-x-1/2 items-center gap-2
-          rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-md
-          transition-all duration-500 hover:border-white/20 hover:bg-black/40
-          ${calmMode && !calmCeiling ? 'opacity-0 hover:opacity-100' : 'opacity-70 hover:opacity-100'}
-        `}
-        title="The House — your places and practices"
-        aria-label="Open The House"
-      >
-        <Home className="h-4 w-4 text-[#c9a54e]" strokeWidth={1.5} />
-        <span className="text-[13px] text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-          The House
-        </span>
-      </button>
+      {/* The House — THE doorway. Now the only permanent navigation on the
+          conversation surface: MAIA, and one way into the places.
+
+          GEOMETRY IS LOAD-BEARING. This must render at the SAME box as the
+          Arrival composition's doorway, because Arrival and conversation swap
+          beneath a member who should never have to re-find the way out. The
+          container mirrors MaiaArrivalField's header exactly — h-[54px],
+          px-4 md:px-6 — and the button mirrors its button — -ml-1, h-11, px-2,
+          no pill. That yields an identical box in both states:
+
+              desktop  x=20  y=5  114x44
+              mobile   x=12  y=5  114x44
+
+          A previous pass placed this at `left-3 top-14` and asserted in a
+          comment that it matched Arrival. It did not: measured, it sat at
+          (12,56) 124x44 — a 51px jump and a 10px width change every time
+          Arrival gave way to conversation. Do not re-anchor this to the top bar
+          height or to a `top-*` offset; anchor it to the same header box, and
+          verify by measuring the bounding box in both states, not by reading
+          this comment.
+
+          Hidden while Arrival is on screen — Arrival carries its own doorway at
+          these coordinates. One House, one renderer, one doorway. */}
+      {!arrivalMode && (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[54px] items-center px-4 md:px-6">
+          <button
+            onClick={() => setHouseOpen(true)}
+            className={`
+              group pointer-events-auto -ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2
+              text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none
+              ${calmMode && !calmCeiling ? 'opacity-60 hover:opacity-100' : 'opacity-100'}
+            `}
+            title="The House — your places and practices"
+            aria-label="Open The House"
+          >
+            <Home className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+            {/* The label is revealed, not removed. The icon alone is the resting
+                state — after a few uses a doorway does not need to say its own
+                name, and the permanent label was the widest thing in the bar,
+                which is what crowded MAIA off small screens.
+
+                Revealed on hover AND on keyboard focus: hover-only would hide
+                the name from anyone navigating by keyboard, who needs it most.
+                Width animates rather than the label appearing/disappearing, so
+                nothing beside it jumps. `aria-label` on the button carries the
+                name unconditionally, so screen readers never depend on hover. */}
+            <span
+              className="max-w-0 overflow-hidden whitespace-nowrap text-[15px] leading-none opacity-0 transition-all duration-300 group-hover:max-w-[8rem] group-hover:opacity-100 group-focus-visible:max-w-[8rem] group-focus-visible:opacity-100"
+              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              aria-hidden="true"
+            >
+              The House
+            </span>
+          </button>
+        </div>
+      )}
 
       <MaiaHouseSheet
         open={houseOpen}
         onClose={() => setHouseOpen(false)}
         isFounder={isAdmin || isPractitioner}
+        onOpenHelp={onOpenHelp}
+        onOpenAccount={() => { setHouseOpen(false); onOpenAccount(); }}
+        onReturnToArrival={
+          canReturnToArrival && onReturnToArrival
+            ? () => { setHouseOpen(false); onReturnToArrival(); }
+            : undefined
+        }
       />
 
       <MaiaRightPanelHost

@@ -201,6 +201,7 @@ import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
 import RelationalDoorway from '@/components/maia/RelationalDoorway';
 import WorldDoorway from '@/components/maia/WorldDoorway';
 import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
+import { MaiaArrivalField } from './maia/MaiaArrivalField';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
@@ -430,6 +431,32 @@ interface OracleConversationProps {
   onCloseSessionSelector?: () => void; // Notify parent to close session selector
   onSessionActiveChange?: (active: boolean) => void; // Notify parent of session active state
   onMessageAdded?: (message: ConversationMessage) => void;
+  /**
+   * Fires the moment the member's own words are committed to the conversation —
+   * spoken or typed, treated identically. This is expression, NOT activation:
+   * opening the mic or the chat panel does not fire it. Called on every member
+   * turn; consumers that care about the first one must be idempotent.
+   *
+   * Fired at the message-commit points, deliberately NOT at the entry of
+   * handleTextMessage / handleVoiceTranscript. Those entries sit above their
+   * guards, so firing there would count MAIA's own voice returning through the
+   * mic, empty transcripts, duplicates, and bare mode commands as the member
+   * having spoken. Keep this call below the guards.
+   */
+  onMemberExpression?: () => void;
+  /**
+   * Whether the Arrival composition is ACTUALLY rendering for this member right
+   * now — a first-time member who has never crossed, or a member who invoked a
+   * deliberate return from The House. Computed once in app/maia/page.tsx and
+   * passed down; this component never recomputes it.
+   *
+   * ⚠️ Do NOT substitute `featureFlags.arrivalEntry` here. That flag is default-ON
+   * for everyone, so keying the renderer to it showed the first-visit ceremony to
+   * RETURNING members on every fresh session — the "first visit only" ruling never
+   * actually held — while also suppressing their transcript greeting. Arrival must
+   * depend on whether this member should meet it, not on whether it is enabled.
+   */
+  shouldRenderArrival?: boolean;
   onSessionEnd?: (reason?: string) => void;
   initialAction?: string; // Action to trigger on mount (e.g., 'choose-guide', 'show-current-elder')
   // Scribe session discussion mode
@@ -581,6 +608,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onCloseSessionSelector,
   onSessionActiveChange,
   onMessageAdded,
+  onMemberExpression,
+  shouldRenderArrival = false,
   onSessionEnd,
   initialAction,
   scribeSessionId,
@@ -1483,6 +1512,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
+  const onMemberExpressionRef = useRef(onMemberExpression); // Ref so firing sites don't take a dep on the callback
   const activatingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Safety timeout for stuck activating state
   const handleCaptureSpiritRef = useRef<(() => void) | null>(null); // Ref for capture spirit handler (for event dispatch)
   const didConsumeSeedRef = useRef(false); // One-shot guard for seed prompt consumption
@@ -1512,6 +1542,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     onMessageAddedRef.current = onMessageAdded;
   }, [onMessageAdded]);
+
+  // Keep onMemberExpression ref updated
+  useEffect(() => {
+    onMemberExpressionRef.current = onMemberExpression;
+  }, [onMemberExpression]);
 
   // Dynamic holoflower size based on window width
   useEffect(() => {
@@ -3233,7 +3268,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Only initialize with greeting if messages weren't already restored from storage
       // (prevents the greeting from overwriting an existing conversation on same-session navigation)
-      if (!sessionRestoredRef.current) {
+      //
+      // ARRIVAL OWNS THE CEREMONIAL GREETING — but only when Arrival is actually
+      // on screen. When the arrival composition is the entry surface it has
+      // already greeted the member by name, above the jewel. Seeding the same
+      // greeting into the transcript made MAIA appear to greet twice — once
+      // ceremonially, then again as a chat turn the instant the field cleared.
+      //
+      // This guard reads `shouldRenderArrival`, NOT `featureFlags.arrivalEntry`.
+      // The flag is default-ON for every member; only a first-time member or one
+      // returning deliberately from The House actually meets Arrival. Keying the
+      // suppression to the flag silenced the transcript greeting for returning
+      // members, whose surface is the greeting — it is the only welcome they get.
+      if (!sessionRestoredRef.current && !shouldRenderArrival) {
         setMessages([greetingMessage]);
       }
       localStorage.setItem('lastSessionDate', new Date().toISOString());
@@ -4328,6 +4375,8 @@ I'm not sure what I'm feeling yet.`;
     };
     setMessages(prev => appendMessageCapped(prev, userMessage));
     onMessageAddedRef.current?.(userMessage);
+    // The member has spoken. Typed turns and non-streaming voice turns both land here.
+    onMemberExpressionRef.current?.();
 
     // Process message for Field Protocol if recording
     if (isFieldRecording) {
@@ -6395,6 +6444,9 @@ I'm not sure what I'm feeling yet.`;
         // Build once, use for both UI state and API payload (avoids stale closure)
         const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
         setMessages(nextMessagesForApi);
+        // The member has spoken. Streaming voice commits its own user message and
+        // never routes through handleTextMessage, so it must announce separately.
+        onMemberExpressionRef.current?.();
 
         // Set processing states
         // NOTE: Do NOT set isAudioPlaying(true) here — it should only be true
@@ -7003,9 +7055,21 @@ I'm not sure what I'm feeling yet.`;
         </div>
       )}
 
-      {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
+      {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower)
+       *
+       * `shouldRenderArrival ||` is load-bearing for the deliberate return. The
+       * rest of this gate describes a member who has not yet started talking, so
+       * on a first visit it is satisfied anyway. But a member who returns from
+       * The House HAS already activated and already has a transcript — without
+       * this term the return set every piece of state correctly (the rail
+       * receded, the doorway moved) and then rendered nothing, because the one
+       * composition it was supposed to open sat inside a branch reserved for
+       * people who had never spoken.
+       *
+       * Arrival still yields the moment the member speaks: markArrived clears
+       * arrivalInvoked, which makes shouldRenderArrival false again. */}
       <AnimatePresence>
-        {!hasActivated && !isProcessing && !isResponding && (() => {
+        {(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (() => {
           // Derive memberStyleProfile from beta_user preferences (if stored)
           const betaUser = safeJsonParse<Record<string, unknown>>(
             typeof window !== 'undefined' ? localStorage.getItem('beta_user') : null
@@ -7039,6 +7103,30 @@ I'm not sure what I'm feeling yet.`;
 
           // Debug log removed - was causing console spam on every re-render
           // To debug greeting logic, use: console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
+
+          // Arrival remodel: render the ONE contained arrival composition
+          // instead of the scattered greeting overlay. This returns early by
+          // design — the legacy z-40 overlay below is never mounted while the
+          // arrival field is active, so exactly one Arrival renderer exists at a
+          // time rather than a composed field layered over the legacy arrival
+          // still running underneath it.
+          //
+          // Gated on shouldRenderArrival, the same value that drives greeting
+          // suppression above, so the renderer and the suppression can never
+          // disagree about whether Arrival is on screen.
+          if (shouldRenderArrival) {
+            return (
+              <MaiaArrivalField
+                greeting={welcomeGreeting.greeting}
+                subtext={welcomeGreeting.subtext}
+                userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
+                onSend={(text) => handleTextMessage(text)}
+                onActivate={() => setHasActivated(true)}
+                onOpenHouse={() => window.dispatchEvent(new CustomEvent('openMaiaHouse'))}
+                onKeep={() => window.dispatchEvent(new CustomEvent('labAction', { detail: { action: 'capture-spirit' } }))}
+              />
+            );
+          }
 
           return (
           <motion.div
@@ -7256,7 +7344,7 @@ I'm not sure what I'm feeling yet.`;
       {/* 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed State Container */}
       {/* Breathing entrainment, color transitions, field expansion based on state */}
       {/* NO cognitive UI - the experience itself induces the transformation */}
-      <div className="fixed top-28 sm:top-20 left-1/2 -translate-x-1/2 z-[25]">
+      <div className="fixed top-16 sm:top-14 left-1/2 -translate-x-1/2 z-[25]">
         <TransformationalPresence
           currentState={realtimeMode as PresenceState}
           onStateChange={(newState, transition) => {
@@ -8072,8 +8160,18 @@ I'm not sure what I'm feeling yet.`;
                  touchAction: 'pan-y'
                }}>
             <AnimatePresence>
+              {/* Top padding on the list below clears the jewel. The holoflower
+                  is an overlay occupying roughly the first 224px of this field,
+                  so without it the first turn started underneath: the speaker
+                  label landed at y=192, printing over the flower and through the
+                  "Tap to Speak" caption. Measured, not guessed — the flower's
+                  box is 112..224 on a 375px surface.
+
+                  Padding rather than a margin on the first message, so later
+                  turns still scroll up behind the jewel as they should; only the
+                  resting position of the transcript changes. */}
               {messages.length > 0 && (
-                <div className="space-y-3 pb-52 md:pb-32">
+                <div className="space-y-3 pt-[10.5rem] pb-48 md:pt-[12rem] md:pb-60">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
@@ -8167,11 +8265,23 @@ I'm not sure what I'm feeling yet.`;
                       onClick={handleCopyMessage}
                       style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5)' }}
                     >
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-2">
-                          <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
-                            {message.role === 'user' ? (userName || 'You') : assistantName}
-                          </div>
+                          {/* Only MAIA is named. A member does not need to be told
+                              their own name above their own words — with both
+                              labelled, "Demo Practitioner / hello" carried more
+                              chrome than message, and a long display name wrapped
+                              to two lines above a one-word turn.
+
+                              Naming one voice is enough to tell two apart: labelled
+                              is MAIA, unlabelled is you. Alignment no longer carries
+                              speaker (both turns share a column), so the label does
+                              — which is why MAIA's stays. */}
+                          {message.role !== 'user' && (
+                            <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
+                              {assistantName}
+                            </div>
+                          )}
                           {/* 🚪 AIN: Knowledge Gate source well indicator (admin-only, suppressed in Sanctuary) */}
                           {showDiagnostics && message.role === 'oracle' && !isSanctuary && message.ainState && (
                             <SourceHalo
@@ -8453,10 +8563,25 @@ I'm not sure what I'm feeling yet.`;
             >
               <button
                 onClick={() => setShowVoiceText(!showVoiceText)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium bg-black/20 backdrop-blur-md
-                         text-white/60 hover:text-white/80 transition-all"
+                /* An icon, not a labelled utility. Softening the pill helped
+                   but the words still read as application chrome in a surface
+                   where everything else is architectural — it was the one
+                   element that announced "app" rather than "place". The eye
+                   went MAIA, Hide Text, conversation: a toggle ahead of the
+                   thing it toggles.
+
+                   The name lives in title/aria rather than on screen, the way
+                   the House doorway carries its own. 44x44 so it stays reachable
+                   at the size it now occupies visually. */
+                className="flex h-11 w-11 items-center justify-center rounded-full
+                         text-white/25 hover:text-white/70 transition-colors"
+                title={showVoiceText ? 'Hide the transcript' : 'Show the transcript'}
+                aria-label={showVoiceText ? 'Hide the transcript' : 'Show the transcript'}
+                aria-pressed={showVoiceText}
               >
-                {showVoiceText ? 'Hide Text' : 'Show Text'}
+                {showVoiceText
+                  ? <EyeOff className="h-4 w-4" strokeWidth={1.75} />
+                  : <Eye className="h-4 w-4" strokeWidth={1.75} />}
               </button>
             </div>
           )}
@@ -8522,7 +8647,12 @@ I'm not sure what I'm feeling yet.`;
 
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
-              <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" style={{ bottom: 'calc(2.5rem + env(safe-area-inset-bottom, 0px))' }}>
+              <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
+                   lockup, close enough that the eye grouped the signature with the
+                   input controls. The extra ~24px lets the composer close as one
+                   complete object and leaves SOULLAB reading as the page's quiet
+                   footer rather than another button in the row. */
+                style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px))' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   {/* 📚 ASK MAIA chip — orientation + Knowledge Field stance toggle */}
@@ -8532,11 +8662,21 @@ I'm not sure what I'm feeling yet.`;
                         setAskMode(!askMode);
                         console.log('[Ask MAIA]', !askMode ? 'activated' : 'deactivated');
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                      /* Quieter by ruling (2026-07-23): a secondary affordance,
+                         not a prominent pill. It was a bordered, blue-tinted
+                         chip that read as heavy as the composer beneath it.
+                         Borderless and low-contrast at rest; the ACTIVE state
+                         still reads clearly, because the member needs to know
+                         this turn is being answered from the Knowledge Field
+                         rather than the relational default. Lower visual weight,
+                         not lower agency — the capability is unchanged: still
+                         single-turn, still forces Knowledge Field injection,
+                         still invokes the orientation stance. */
+                      className={`flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-colors ${
                         askMode
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-400/40'
-                          : 'bg-black/20 text-white/30 border border-white/8 hover:text-white/50 hover:border-white/15'
-                      } backdrop-blur-md`}
+                          ? 'text-blue-300/90'
+                          : 'text-white/30 hover:text-white/60'
+                      }`}
                       title={askMode ? 'Ask MAIA active — clarity + knowledge mode' : 'Ask MAIA — switch to orientation mode'}
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8544,6 +8684,36 @@ I'm not sure what I'm feeling yet.`;
                               d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
                       <span>Ask MAIA</span>
+                    </button>
+
+                    {/* Input-mode switch — relocated from the top bar (founder
+                        ruling, 2026-07-23). It is contextual to input, not global
+                        identity, so it belongs beside the composer it governs and
+                        inside the thumb zone rather than ~780px away at the top of
+                        a phone screen. Vacating the top-right cluster is also what
+                        gives the centred MAIA wordmark room on mobile.
+
+                        Deliberately icon-first and secondary: this row already
+                        carries Ask MAIA, tools, the dictation mic and the bug
+                        reporter. It must not become a second pill competing with
+                        the composer, so it is borderless and low-contrast until
+                        hovered.
+
+                        NOT the same control as the mic to its right: this changes
+                        the interaction MODE; the mic dictates into the field. And
+                        not placed in ModernTextInput — that component is shared,
+                        and other surfaces have no mode to switch.
+
+                        The return path already exists: in voice mode
+                        VoiceInteractionBar renders a 44x44 keyboard toggle. */}
+                    <button
+                      onClick={() => setShowChatInterface(false)}
+                      className="ml-auto flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
+                      title="Switch to voice — speak with MAIA instead of typing"
+                      aria-label="Switch to voice mode"
+                    >
+                      <Mic className="h-3.5 w-3.5" strokeWidth={2} />
+                      <span>Voice</span>
                     </button>
                   </div>
                   <ModernTextInput
@@ -8637,6 +8807,33 @@ I'm not sure what I'm feeling yet.`;
       )}
 
 
+
+      {/* Escape hatch — TOP LEVEL, deliberately.
+          This was nested inside {voiceEnabled && ( {!showChatInterface && ( ...
+          several levels deep, which meant it shared the fate of the very region
+          it exists to recover: when that subtree did not render, a member was
+          left with a transcript and NO way to speak or type at all. A control
+          whose job is to restore input cannot be gated by the same condition
+          that removed it.
+
+          Rendered whenever the full composer is absent, regardless of voice
+          availability, so there is always one route back to text. */}
+      {!showChatInterface && (
+        <div
+          className="fixed left-0 right-0 z-below-nav flex justify-center"
+          style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <button
+            onClick={() => setShowChatInterface(true)}
+            className="pointer-events-auto flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-xs font-medium text-white/40 transition-colors hover:text-white/70"
+            title="Switch to text — type to MAIA instead of speaking"
+            aria-label="Switch to text mode"
+          >
+            <MessageCircle className="h-4 w-4" strokeWidth={2} />
+            <span>Text</span>
+          </button>
+        </div>
+      )}
 
       {/* Unified Voice Interaction Bar — state display, transcript, keyboard */}
       {isMounted && voiceEnabled && !showChatInterface && (
