@@ -958,6 +958,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This is separate from messages - history can be restored but greeting shows until activation
   const [hasActivated, setHasActivated] = useState(false);
 
+  // 🎤 Why voice failed to start, in member-facing words, for surfaces that
+  // cannot show the global toaster (see the Arrival field). Null = no failure.
+  const [voiceStartError, setVoiceStartError] = useState<string | null>(null);
+
   // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
   const [composerDraft, setComposerDraft] = useState<string>('');
 
@@ -3947,6 +3951,236 @@ I'm not sure what I'm feeling yet.`;
     }
   }, [audioEnabled]);
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // Voice activation by tapping the holoflower.
+  //
+  // Extracted verbatim from the legacy greeting overlay's inline onClick so the
+  // Arrival jewel (MaiaArrivalField) and the legacy holoflower share ONE
+  // implementation. The jewel rendered as a <button aria-label="Tap the flower
+  // to speak"> but was passed no handler, so it announced a speaking affordance
+  // it could not fulfil — inert for pointer users, and still announced to
+  // screen readers after the visible label was removed.
+  //
+  // Every platform path is preserved as-is: the Safari-PWA state machine, the
+  // synchronous iOS audio warm, the streaming-audio unlock, tap-to-interrupt,
+  // the 5s activation safety timeout, and the getUserMedia error taxonomy. A
+  // thinner jewel-only handler would have worked on desktop and failed silently
+  // on iOS/PWA — the same broken promise in a subtler form.
+  //
+  // Deliberately NOT wrapped in useCallback: the original was an inline arrow
+  // recreated every render, so every value it closes over was always current.
+  // A dependency array here would risk stale reads (a stale `isMuted` inverts
+  // the start/stop toggle). Identity churn is harmless — neither call site is
+  // memoized.
+  //
+  // `e` is optional: the legacy overlay passes the MouseEvent; the jewel calls
+  // it with no argument.
+  const handleHoloflowerVoiceTap = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    // Clear any previous failure so a retry does not read as still-broken.
+    setVoiceStartError(null);
+    // PR 10 diagnostic: first marker in the voice trace.
+    // If this never appears in the on-screen overlay when the user
+    // taps the holoflower, the click event isn't reaching here at
+    // all (event wiring / pointer-events / overlay z-index issue).
+    pushVoiceDebug('🎯 holoflower tap');
+    console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted, isPwaVoice, pwaState: isPwaVoice ? pwaVoice.state : 'N/A' });
+
+    // 🎤 PWA STATE MACHINE PATH: For Safari PWA, delegate to state machine
+    // PWA uses isMuted as source of truth (user intent), not isListening (technical state)
+    if (isPwaVoice) {
+      if (pwaVoice.isMuted) {
+        // User wants to start speaking
+        await pwaVoice.userWantsToStart();
+      } else {
+        // User wants to stop
+        pwaVoice.userWantsToStop();
+        setIsMuted(true);
+        setIsListening(false);
+      }
+      return; // PWA flow handled entirely by state machine
+    }
+
+    // === NON-PWA PATH (iOS native / other browsers) ===
+
+    // 🔥 iOS FIX: Warm audio element SYNCHRONOUSLY before any await
+    // iOS Safari requires audio element creation + play in the SAME synchronous event handler
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS && !iosWarmedAudioRef.current) {
+      console.log('📱 [iOS] SYNC warming audio element on click');
+      try {
+        const audio = new Audio();
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+        (audio as any).playsInline = true;
+        audio.volume = 1.0;
+        audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+        // MUST call play() synchronously in the click handler
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          console.log('✅ [iOS] Audio element warmed and ready');
+        }).catch(err => {
+          console.warn('⚠️ [iOS] Warm play failed:', err);
+        });
+        iosWarmedAudioRef.current = audio;
+      } catch (err) {
+        console.warn('⚠️ [iOS] Failed to create warmed audio:', err);
+      }
+    }
+
+    // Enable audio context (can be async now that audio element is warmed)
+    await enableAudio();
+
+    // 🔥 iOS Safari: Unlock the streaming voice audio element
+    // This MUST be called from user gesture for TTS to work on iOS
+    try {
+      await unlockStreamingAudio();
+      console.log('✅ [iOS] Streaming audio unlocked');
+    } catch (err) {
+      console.warn('⚠️ [iOS] Streaming audio unlock failed:', err);
+    }
+
+    // 🔥 FIX: Use isMuted as source of truth for toggle - isListening can desync on iOS
+    // isMuted=true means user wants to be muted → tap means START listening
+    // isMuted=false means user is actively listening → tap means STOP listening
+    if (voiceMicRef.current) {
+      if (isMuted) {
+        // TAP-TO-INTERRUPT: If MAIA is speaking, stop her and start listening
+        let isInterrupt = false;
+        if (isAudioPlayingRef.current || isRespondingRef.current) {
+          console.log('🛑 [INTERRUPT] User tapped while MAIA speaking - stopping playback');
+          isInterrupt = true;
+
+          // Stop MAIA's voice stream and playback
+          stopStreamingVoice();
+
+          // Reset state flags immediately
+          isAudioPlayingRef.current = false;
+          isRespondingRef.current = false;
+          setIsResponding(false);
+          setIsAudioPlaying(false);
+
+          // Brief visual feedback
+          toast('✋ Interrupted', { duration: 1000 });
+
+          // Small delay to let audio cleanup complete before starting mic
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        // Start listening
+        console.log('[voice] startListening called', {
+          isMuted,
+          isListening,
+          showChatInterface,
+          hasVoiceMicRef: !!voiceMicRef.current,
+          hasVoiceSession: !!voiceSession,
+          isInterrupt,
+        });
+        toast('🎤 Activating voice...', { duration: 2000 });
+        // 📋 Once-per-session micro-toast: remind user of tap-to-talk default
+        if (!hasShownVoiceReentryToastRef.current) {
+          hasShownVoiceReentryToastRef.current = true;
+          setTimeout(() => {
+            toast('👆 Tap-to-talk · hands-free resets when you mute', { duration: 3000 });
+          }, 2200); // Show after "Activating voice" toast fades
+        }
+        setIsMuted(false);
+        setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
+        // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
+
+        // 🛡️ SAFETY TIMEOUT: Clear activating state if mic doesn't confirm within 5 seconds
+        if (activatingTimeoutRef.current) {
+          clearTimeout(activatingTimeoutRef.current);
+        }
+        activatingTimeoutRef.current = setTimeout(() => {
+          console.warn('⚠️ [voice] Mic activation timeout - clearing stuck state');
+          setIsActivating(false);
+          setIsMuted(true);
+          activatingTimeoutRef.current = null;
+          toast.error('🎤 Mic failed to start. Tap again to retry.', { duration: 3000 });
+          // Same reason as the catch below: on Arrival the toast is not visible,
+          // and a silent timeout would leave "Starting…" collapsing back to
+          // "Tap to speak" with no explanation.
+          setVoiceStartError('Mic failed to start. Tap again to retry, or type below.');
+        }, 5000);
+
+        // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
+        // 🔥 FIX: Pass interrupt flag when interrupting MAIA
+        try {
+          await voiceSession.methods.startListening(isInterrupt ? 'user_interrupt' : 'user_gesture');
+          console.log('[voice] startListening resolved OK');
+          // Don't set isListening here - handleRecordingStateChange will do it when mic is confirmed
+        } catch (error: any) {
+          // Clear safety timeout since we're handling the error
+          if (activatingTimeoutRef.current) {
+            clearTimeout(activatingTimeoutRef.current);
+            activatingTimeoutRef.current = null;
+          }
+          const name = error?.name || 'UnknownError';
+          const msg = error?.message || String(error);
+          console.error('[voice] startListening FAILED', name, msg, error);
+
+          // IMPORTANT: do NOT switch to text automatically.
+          // Keep the user in voice mode and show what to do.
+          setIsActivating(false);
+          setIsListening(false);
+          setIsMuted(true);
+
+          // Surface the failure where the member is actually looking. The toasts
+          // below are the app-wide mechanism, but on the Arrival surface the
+          // toaster renders collapsed at x=-1 and beneath the field's z-[90]
+          // portal, so a member who is denied the mic sees the jewel quietly
+          // give up and nothing else. This state is rendered inside
+          // MaiaArrivalField; the toasts are left untouched for every other
+          // surface, where they are visible and already the convention.
+          setVoiceStartError(
+            name === 'NotAllowedError' || name === 'PermissionDeniedError'
+              ? 'Microphone blocked. Allow mic access in your browser settings, then tap again — or type below.'
+              : name === 'NotFoundError' || msg === 'MICROPHONE_UNAVAILABLE'
+                ? 'No microphone found. Check your input device, then tap again — or type below.'
+                : msg === 'VOICE_UNAVAILABLE'
+                  ? 'Voice is unavailable in this browser. You can type below.'
+                  : 'Voice could not start. Tap again, or type below.'
+          );
+
+          if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+            toast.error('🎤 Microphone blocked. Click lock icon → Site settings → Microphone: Allow, then refresh.', { duration: 8000 });
+            return;
+          }
+
+          if (name === 'NotFoundError') {
+            toast.error('🎤 No mic detected. Chrome may be set to a disconnected device. Check chrome://settings/content/microphone', { duration: 8000 });
+            return;
+          }
+
+          if (msg === 'VOICE_UNAVAILABLE') {
+            toast.error('🎤 Voice unavailable. Check browser compatibility (Chrome/Safari recommended).', { duration: 5000 });
+            return;
+          }
+
+          if (msg === 'MICROPHONE_UNAVAILABLE') {
+            toast.error('🎤 No mic devices found. Check macOS System Settings → Privacy → Microphone → Chrome ON', { duration: 8000 });
+            return;
+          }
+
+          toast.error(`🎤 Voice failed: ${name} - ${msg}`, { duration: 5000 });
+        }
+      } else {
+        // Stop listening - user explicitly exiting voice mode
+        console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
+        setIsMuted(true);
+        // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
+        voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
+        console.log('✅ Voice stopped successfully (user exit mode)');
+      }
+    } else {
+      console.warn('⚠️ Voice ref not available');
+      toast.error('⚠️ Voice component not mounted!');
+    }
+  };
+
   // Stream text word by word as Maia speaks
   const streamText = useCallback(async (fullText: string, messageId: string) => {
     const words = fullText.split(' ');
@@ -5857,6 +6091,14 @@ I'm not sure what I'm feeling yet.`;
     // transcript rejected during a typed turn cannot flip this back to voice.
     lastSendWasVoiceRef.current = true;
 
+    // 🌸 ARRIVAL THRESHOLD: an accepted transcript is the member's own speech, so
+    // this is the point where Arrival has earned the right to clear — after the
+    // feedback and duplicate guards, never on the jewel tap itself. Tapping only
+    // opens the mic; speaking is the expression. Doing this on the tap would drop
+    // the member into an empty conversation while permission was still pending,
+    // and on failure would strand them there with nothing said.
+    setHasActivated(true);
+
     // 🌊 LIQUID AI - Track speech end with transcript for rhythm analysis
     rhythmTrackerRef.current?.onSpeechEnd(t);
 
@@ -7052,8 +7294,25 @@ I'm not sure what I'm feeling yet.`;
                 greeting={welcomeGreeting.greeting}
                 subtext={welcomeGreeting.subtext}
                 userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
-                onSend={(text) => handleTextMessage(text)}
+                // Typing is expression, so it crosses the threshold too. Without
+                // setHasActivated the gate above ({!hasActivated && !isProcessing
+                // && !isResponding}) re-satisfies the moment the response
+                // finishes, and Arrival re-covers the conversation the member
+                // just started — their words and MAIA's reply both hidden behind
+                // this field. The voice path is fixed at the transcript instead
+                // (it never passes through onSend).
+                onSend={(text) => { setHasActivated(true); handleTextMessage(text); }}
                 onActivate={() => setHasActivated(true)}
+                // Voice entry. Deliberately does NOT call onActivate: tapping is
+                // not yet expression, so Arrival stays until the member actually
+                // speaks, at which point the transcript sets isProcessing and
+                // this whole block unmounts on its own. Clearing Arrival on the
+                // tap would drop the member into an empty conversation while the
+                // mic was still warming.
+                onTapJewel={handleHoloflowerVoiceTap}
+                isListening={isListening}
+                isActivating={isActivating}
+                voiceError={voiceStartError}
                 onOpenHouse={() => window.dispatchEvent(new CustomEvent('openMaiaHouse'))}
                 onKeep={() => window.dispatchEvent(new CustomEvent('labAction', { detail: { action: 'capture-spirit' } }))}
               />
@@ -7302,188 +7561,7 @@ I'm not sure what I'm feeling yet.`;
               pointerEvents: 'auto',
               willChange: 'auto'
             }}
-            onClick={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              // PR 10 diagnostic: first marker in the voice trace.
-              // If this never appears in the on-screen overlay when the user
-              // taps the holoflower, the click event isn't reaching here at
-              // all (event wiring / pointer-events / overlay z-index issue).
-              pushVoiceDebug('🎯 holoflower tap');
-              console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted, isPwaVoice, pwaState: isPwaVoice ? pwaVoice.state : 'N/A' });
-
-              // 🎤 PWA STATE MACHINE PATH: For Safari PWA, delegate to state machine
-              // PWA uses isMuted as source of truth (user intent), not isListening (technical state)
-              if (isPwaVoice) {
-                if (pwaVoice.isMuted) {
-                  // User wants to start speaking
-                  await pwaVoice.userWantsToStart();
-                } else {
-                  // User wants to stop
-                  pwaVoice.userWantsToStop();
-                  setIsMuted(true);
-                  setIsListening(false);
-                }
-                return; // PWA flow handled entirely by state machine
-              }
-
-              // === NON-PWA PATH (iOS native / other browsers) ===
-
-              // 🔥 iOS FIX: Warm audio element SYNCHRONOUSLY before any await
-              // iOS Safari requires audio element creation + play in the SAME synchronous event handler
-              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-              if (isIOS && !iosWarmedAudioRef.current) {
-                console.log('📱 [iOS] SYNC warming audio element on click');
-                try {
-                  const audio = new Audio();
-                  audio.setAttribute('playsinline', '');
-                  audio.setAttribute('webkit-playsinline', '');
-                  (audio as any).playsInline = true;
-                  audio.volume = 1.0;
-                  audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
-                  // MUST call play() synchronously in the click handler
-                  audio.play().then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    console.log('✅ [iOS] Audio element warmed and ready');
-                  }).catch(err => {
-                    console.warn('⚠️ [iOS] Warm play failed:', err);
-                  });
-                  iosWarmedAudioRef.current = audio;
-                } catch (err) {
-                  console.warn('⚠️ [iOS] Failed to create warmed audio:', err);
-                }
-              }
-
-              // Enable audio context (can be async now that audio element is warmed)
-              await enableAudio();
-
-              // 🔥 iOS Safari: Unlock the streaming voice audio element
-              // This MUST be called from user gesture for TTS to work on iOS
-              try {
-                await unlockStreamingAudio();
-                console.log('✅ [iOS] Streaming audio unlocked');
-              } catch (err) {
-                console.warn('⚠️ [iOS] Streaming audio unlock failed:', err);
-              }
-
-              // 🔥 FIX: Use isMuted as source of truth for toggle - isListening can desync on iOS
-              // isMuted=true means user wants to be muted → tap means START listening
-              // isMuted=false means user is actively listening → tap means STOP listening
-              if (voiceMicRef.current) {
-                if (isMuted) {
-                  // TAP-TO-INTERRUPT: If MAIA is speaking, stop her and start listening
-                  let isInterrupt = false;
-                  if (isAudioPlayingRef.current || isRespondingRef.current) {
-                    console.log('🛑 [INTERRUPT] User tapped while MAIA speaking - stopping playback');
-                    isInterrupt = true;
-
-                    // Stop MAIA's voice stream and playback
-                    stopStreamingVoice();
-
-                    // Reset state flags immediately
-                    isAudioPlayingRef.current = false;
-                    isRespondingRef.current = false;
-                    setIsResponding(false);
-                    setIsAudioPlaying(false);
-
-                    // Brief visual feedback
-                    toast('✋ Interrupted', { duration: 1000 });
-
-                    // Small delay to let audio cleanup complete before starting mic
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                  }
-                  // Start listening
-                  console.log('[voice] startListening called', {
-                    isMuted,
-                    isListening,
-                    showChatInterface,
-                    hasVoiceMicRef: !!voiceMicRef.current,
-                    hasVoiceSession: !!voiceSession,
-                    isInterrupt,
-                  });
-                  toast('🎤 Activating voice...', { duration: 2000 });
-                  // 📋 Once-per-session micro-toast: remind user of tap-to-talk default
-                  if (!hasShownVoiceReentryToastRef.current) {
-                    hasShownVoiceReentryToastRef.current = true;
-                    setTimeout(() => {
-                      toast('👆 Tap-to-talk · hands-free resets when you mute', { duration: 3000 });
-                    }, 2200); // Show after "Activating voice" toast fades
-                  }
-                  setIsMuted(false);
-                  setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
-                  // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
-
-                  // 🛡️ SAFETY TIMEOUT: Clear activating state if mic doesn't confirm within 5 seconds
-                  if (activatingTimeoutRef.current) {
-                    clearTimeout(activatingTimeoutRef.current);
-                  }
-                  activatingTimeoutRef.current = setTimeout(() => {
-                    console.warn('⚠️ [voice] Mic activation timeout - clearing stuck state');
-                    setIsActivating(false);
-                    setIsMuted(true);
-                    activatingTimeoutRef.current = null;
-                    toast.error('🎤 Mic failed to start. Tap again to retry.', { duration: 3000 });
-                  }, 5000);
-
-                  // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
-                  // 🔥 FIX: Pass interrupt flag when interrupting MAIA
-                  try {
-                    await voiceSession.methods.startListening(isInterrupt ? 'user_interrupt' : 'user_gesture');
-                    console.log('[voice] startListening resolved OK');
-                    // Don't set isListening here - handleRecordingStateChange will do it when mic is confirmed
-                  } catch (error: any) {
-                    // Clear safety timeout since we're handling the error
-                    if (activatingTimeoutRef.current) {
-                      clearTimeout(activatingTimeoutRef.current);
-                      activatingTimeoutRef.current = null;
-                    }
-                    const name = error?.name || 'UnknownError';
-                    const msg = error?.message || String(error);
-                    console.error('[voice] startListening FAILED', name, msg, error);
-
-                    // IMPORTANT: do NOT switch to text automatically.
-                    // Keep the user in voice mode and show what to do.
-                    setIsActivating(false);
-                    setIsListening(false);
-                    setIsMuted(true);
-
-                    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-                      toast.error('🎤 Microphone blocked. Click lock icon → Site settings → Microphone: Allow, then refresh.', { duration: 8000 });
-                      return;
-                    }
-
-                    if (name === 'NotFoundError') {
-                      toast.error('🎤 No mic detected. Chrome may be set to a disconnected device. Check chrome://settings/content/microphone', { duration: 8000 });
-                      return;
-                    }
-
-                    if (msg === 'VOICE_UNAVAILABLE') {
-                      toast.error('🎤 Voice unavailable. Check browser compatibility (Chrome/Safari recommended).', { duration: 5000 });
-                      return;
-                    }
-
-                    if (msg === 'MICROPHONE_UNAVAILABLE') {
-                      toast.error('🎤 No mic devices found. Check macOS System Settings → Privacy → Microphone → Chrome ON', { duration: 8000 });
-                      return;
-                    }
-
-                    toast.error(`🎤 Voice failed: ${name} - ${msg}`, { duration: 5000 });
-                  }
-                } else {
-                  // Stop listening - user explicitly exiting voice mode
-                  console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
-                  setIsMuted(true);
-                  // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
-                  voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
-                  console.log('✅ Voice stopped successfully (user exit mode)');
-                }
-              } else {
-                console.warn('⚠️ Voice ref not available');
-                toast.error('⚠️ Voice component not mounted!');
-              }
-            }}
+            onClick={handleHoloflowerVoiceTap}
           >
         {/* Holoflower container - smaller, upper-left, visible but not dominating */}
         <div className="flex items-center justify-center"

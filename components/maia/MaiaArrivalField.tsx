@@ -39,11 +39,25 @@ export interface MaiaArrivalFieldProps {
   onOpenHouse: () => void;
   /** Save the moment — the existing "capture the spirit" gesture. */
   onKeep?: () => void;
-  /** Tap the jewel to begin voice, if wired. Optional. */
-  onTapJewel?: () => void;
+  /**
+   * Start voice. Required: the jewel is labeled "Tap to speak" and must do that.
+   * If a caller cannot supply this, remove the label and the button role together
+   * rather than shipping an affordance the product does not fulfil.
+   */
+  onTapJewel: () => void;
+  /** Mic is live — the member is being heard. */
+  isListening?: boolean;
+  /** Permission/device acquisition in flight; not yet listening. */
+  isActivating?: boolean;
+  /**
+   * Why voice could not start, in member-facing words. Rendered in place because
+   * the global toaster is not visible over this field. Text entry stays
+   * available underneath — a mic failure must never become a dead end.
+   */
+  voiceError?: string | null;
 }
 
-export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend, onActivate, onOpenHouse, onKeep, onTapJewel }: MaiaArrivalFieldProps) {
+export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend, onActivate, onOpenHouse, onKeep, onTapJewel, isListening = false, isActivating = false, voiceError = null }: MaiaArrivalFieldProps) {
   const [draft, setDraft] = useState('');
   // Portal to <body>: OracleConversation renders inside MaiaCenterField's z-10
   // stacking context, which would trap this field beneath the top bar (z-70)
@@ -110,13 +124,22 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
         </p>
 
         {/* Jewel — holds the center, directly beneath the invitation.
-            Voice behavior preserved; the redundant "Tap to speak" instruction
-            was removed so nothing competes with the one primary action below. */}
+            Tapping it starts voice: onTapJewel runs the same handler as the
+            legacy holoflower, so the two surfaces cannot drift.
+
+            The label is state-bearing, not decoration. It reuses the copy the
+            main holoflower already uses (OracleConversation: isListening ?
+            'Listening' : 'Tap to Speak') so both surfaces read the same, and
+            adds 'Starting…' for the gap between the tap and a live mic —
+            without it the jewel would claim to be listening while permission
+            was still pending. On failure the handler clears both flags, so the
+            label falls back to "Tap to speak" rather than stranding the member
+            in a state that looks active while nothing is happening. */}
         <button
           type="button"
           onClick={onTapJewel}
           className="group mt-7 flex flex-col items-center focus:outline-none"
-          aria-label="Tap the flower to speak"
+          aria-label={isListening ? 'Listening — tap to stop' : 'Tap the flower to speak'}
         >
           <motion.img
             src="/logo_flower 2.png"
@@ -126,7 +149,28 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
             animate={{ scale: [1, 1.02, 1] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           />
+          <span
+            aria-live="polite"
+            className={`mt-4 text-[10.5px] font-semibold uppercase tracking-[0.28em] transition-colors duration-200 ${
+              isListening ? 'text-emerald-300/80' : 'text-[rgba(220,210,235,0.42)]'
+            }`}
+          >
+            {isListening ? 'Listening' : isActivating ? 'Starting…' : 'Tap to speak'}
+          </span>
         </button>
+
+        {/* Voice failure, said plainly, on the surface the member is looking at.
+            Every message ends by pointing at the composer below, so a denied mic
+            is a fork in the road rather than a dead end. */}
+        {voiceError && (
+          <p
+            role="status"
+            className="mt-3 max-w-[26rem] text-center text-[12.5px] leading-snug text-[#e0b3b3]"
+            style={{ fontFamily: SERIF }}
+          >
+            {voiceError}
+          </p>
+        )}
 
         {/* The one invitation. Nothing on this screen may compete with it —
             Arrival Principle 3. Board weight: bordered, gold, generous.
