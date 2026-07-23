@@ -63,9 +63,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1.2, // Allow slight zoom for Safari accessibility
-  minimumScale: 0.9, // Allow slight zoom out
-  userScalable: true, // Safari-friendly: allow controlled scaling
+  // Accessibility: never cap zoom. Members with low vision must be able to
+  // magnify to at least 200% (WCAG 1.4.4). A 1.2 ceiling meant someone who
+  // could not read the text could not enlarge it either.
+  maximumScale: 5,
+  minimumScale: 0.9,
+  userScalable: true,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },

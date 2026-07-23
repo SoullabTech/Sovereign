@@ -21,18 +21,12 @@ import { useVoiceState } from '@/lib/maia/voiceStateContext';
 import { isFeatureEnabled } from '@/lib/utils/feature-flags';
 
 /**
- * Arrival remodel Step 2 (flag: arrivalField) — navy cosmos field.
- * Presentation only: same layers, same particles, same voice reactivity;
- * only the base field shifts warm-stone → navy with a subtle plum bloom
- * and amber floor. Read after mount so SSR always renders the classic field
- * (flag defaults off; localStorage flip is a per-device preview).
+ * The base field stays the ORIGINAL warm gradient. A static navy base was tried
+ * (Step 2) and reverted at founder direction: it flattened the living field —
+ * the atmosphere is meant to shift with who is speaking (listening / processing /
+ * responding drive the glow below), and a hard cosmos base dampened that read.
+ * The `arrival-field` class remains only to scope typography, never the field.
  */
-const ARRIVAL_FIELD_BACKGROUND = [
-  'radial-gradient(58% 40% at 50% 12%, rgba(124,94,170,0.12), transparent 62%)',
-  'radial-gradient(120% 60% at 50% 120%, rgba(245,158,11,0.10), transparent 55%)',
-  'radial-gradient(110% 72% at 50% 10%, #0B1A30 0%, #071426 45%, #030814 100%)',
-].join(', ');
-
 /** Respect prefers-reduced-motion for accessibility */
 function usePrefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
@@ -101,12 +95,9 @@ export function MaiaCenterField({ children }: MaiaCenterFieldProps) {
 
   return (
     <div
-      className={`h-full relative overflow-hidden flex flex-col ${
-        arrivalField
-          ? 'arrival-field'
-          : 'bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950'
+      className={`h-full relative overflow-hidden flex flex-col bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950 ${
+        arrivalField ? 'arrival-field' : ''
       }`}
-      style={arrivalField ? { background: ARRIVAL_FIELD_BACKGROUND } : undefined}
     >
       {/* Atmospheric Particles — voice-reactive (disabled for reduced motion) */}
       {!reducedMotion && (
