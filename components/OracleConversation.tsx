@@ -8171,7 +8171,7 @@ I'm not sure what I'm feeling yet.`;
                   turns still scroll up behind the jewel as they should; only the
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
-                <div className="space-y-3 pt-[10.5rem] pb-40 md:pt-[12rem] md:pb-28">
+                <div className="space-y-3 pt-[10.5rem] pb-48 md:pt-[12rem] md:pb-60">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
