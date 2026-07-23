@@ -20,6 +20,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
+import { Home } from 'lucide-react';
 
 const SERIF = 'Spectral, Georgia, serif';
 
@@ -74,10 +75,20 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
           'radial-gradient(66% 42% at 50% 16%, rgba(150,95,205,0.42), rgba(110,70,180,0.12) 34%, transparent 60%), linear-gradient(180deg,#1b1614 0%,#141010 46%,#0b0908 100%)',
       }}
     >
-      {/* Compact header — nav in the header only, does not dominate the field.
-          The House deliberately does NOT appear here: there is exactly one
-          House doorway, quiet, at the base of the composition. */}
-      <div className="absolute inset-x-0 top-0 flex h-[54px] items-center justify-end px-4 md:px-6">
+      {/* Compact header — a solid bar spanning the full width, so the top of
+          the field reads as one edge rather than chrome floating on the bloom.
+          The House lives here as a quiet icon at the upper left: still exactly
+          ONE doorway, moved from the base of the composition. */}
+      <div className="absolute inset-x-0 top-0 z-10 flex h-[54px] items-center justify-between bg-[#0a0807] px-4 md:px-6">
+        <button
+          type="button"
+          onClick={onOpenHouse}
+          title="The House"
+          aria-label="Open The House"
+          className="flex items-center text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none"
+        >
+          <Home className="h-[19px] w-[19px]" strokeWidth={1.5} />
+        </button>
         <div className="flex items-center gap-3 text-[#b7ad9c]">
           {onKeep && (
             <button type="button" onClick={onKeep} title="Keep this moment" aria-label="Keep this moment"
@@ -94,8 +105,10 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
         </div>
       </div>
 
-      {/* One contained field — everything stacked and attached, max readable width */}
-      <div className="flex w-full max-w-[560px] flex-col items-center">
+      {/* One contained field — everything stacked and attached, max readable
+          width. Lifted off dead-centre so the jewel sits higher in the frame
+          and the composition reads as arriving rather than resting. */}
+      <div className="-mt-[8vh] flex w-full max-w-[560px] flex-col items-center">
         {/* Greeting */}
         <h1
           className="text-center text-[clamp(28px,5vw,42px)] font-light leading-[1.1] text-maia-spice-500"
@@ -115,7 +128,7 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
         <button
           type="button"
           onClick={onTapJewel}
-          className="group mt-7 flex flex-col items-center focus:outline-none"
+          className="group mt-5 flex flex-col items-center focus:outline-none"
           aria-label="Tap the flower to speak"
         >
           <motion.img
@@ -167,15 +180,8 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
           </button>
         </form>
 
-        {/* The House — the single quiet doorway, at the base of the composition */}
-        <button
-          type="button"
-          onClick={onOpenHouse}
-          className="mt-6 text-[12.5px] text-[rgba(220,210,235,0.5)] transition-colors hover:text-[rgba(220,210,235,0.8)] focus:outline-none"
-          style={{ fontFamily: SERIF }}
-        >
-          The House &#x2304;
-        </button>
+        {/* The House now lives as the icon at the upper left — deliberately not
+            repeated here, so the composition still offers exactly one doorway. */}
       </div>
     </motion.div>,
     document.body
