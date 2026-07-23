@@ -40,11 +40,9 @@ export interface MaiaArrivalFieldProps {
   onOpenHouse: () => void;
   /** Save the moment — the existing "capture the spirit" gesture. */
   onKeep?: () => void;
-  /** Tap the jewel to begin voice, if wired. Optional. */
-  onTapJewel?: () => void;
 }
 
-export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend, onActivate, onOpenHouse, onKeep, onTapJewel }: MaiaArrivalFieldProps) {
+export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend, onActivate, onOpenHouse, onKeep }: MaiaArrivalFieldProps) {
   const [draft, setDraft] = useState('');
   // Portal to <body>: OracleConversation renders inside MaiaCenterField's z-10
   // stacking context, which would trap this field beneath the top bar (z-70)
@@ -123,23 +121,19 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
         </p>
 
         {/* Jewel — holds the center, directly beneath the invitation.
-            Voice behavior preserved; the redundant "Tap to speak" instruction
-            was removed so nothing competes with the one primary action below. */}
-        <button
-          type="button"
-          onClick={onTapJewel}
-          className="group mt-5 flex flex-col items-center focus:outline-none"
-          aria-label="Tap the flower to speak"
-        >
-          <motion.img
-            src="/logo_flower 2.png"
-            alt="MAIA"
-            className="h-[clamp(140px,26vw,184px)] w-[clamp(140px,26vw,184px)] object-contain"
-            style={{ filter: 'drop-shadow(0 0 26px rgba(150,95,205,0.40))' }}
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </button>
+            Deliberately NOT interactive here: voice belongs to the conversation,
+            not the threshold (Kelly ruling). It was previously a button with an
+            onTapJewel handler the parent never passed and a "Tap the flower to
+            speak" aria-label — an affordance that promised voice and did
+            nothing. Presence, not a control. */}
+        <motion.img
+          src="/logo_flower 2.png"
+          alt="MAIA"
+          className="mt-5 h-[clamp(140px,26vw,184px)] w-[clamp(140px,26vw,184px)] object-contain"
+          style={{ filter: 'drop-shadow(0 0 26px rgba(150,95,205,0.40))' }}
+          animate={{ scale: [1, 1.02, 1] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        />
 
         {/* The one invitation. Nothing on this screen may compete with it —
             Arrival Principle 3. Board weight: bordered, gold, generous.
