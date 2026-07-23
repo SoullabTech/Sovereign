@@ -1319,6 +1319,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
       // Clear messages (UI display)
       setMessages([]);
+      lastSyncedCountRef.current = 0; // fresh thread — resync from the start
       // Clear historical messages (API context) - truly fresh start
       historicalMessagesRef.current = [];
       // Reset activation state to show welcome screen
@@ -2900,6 +2901,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           sessionRestoredRef.current = true;
           setHasActivated(true);
           setMessages(loadedMessages);
+          // Mark the restored thread as ALREADY synced. Without this the sync
+          // effect starts from 0, treats the whole restored transcript as new,
+          // and re-POSTs it to /api/conversation/turns on every mount — the
+          // insert has no idempotency key, so the stored thread grew on every
+          // refresh and came back multiplied on the next restore.
+          lastSyncedCountRef.current = loadedMessages.length;
           console.log(`💾 [Context] Restored ${loadedMessages.length} messages to UI`);
         } else {
           console.log(`💾 [Context] Only greeting messages found — UI starts fresh`);
@@ -5782,6 +5789,7 @@ I'm not sure what I'm feeling yet.`;
 
       // Clear previous conversation for fresh start with seeded prompt
       setMessages([]);
+      lastSyncedCountRef.current = 0; // fresh thread — resync from the start
       historicalMessagesRef.current = []; // Clear API context too
       if (typeof window !== 'undefined' && sessionId) {
         const storageKey = `maia_conversation_${sessionId}`;
@@ -6628,6 +6636,7 @@ I'm not sure what I'm feeling yet.`;
     // 🧹 Clear previous conversation when starting a new session
     console.log('🧹 Clearing previous conversation for fresh session start');
     setMessages([]);
+    lastSyncedCountRef.current = 0; // fresh thread — resync from the start
     historicalMessagesRef.current = []; // Clear API context too
     sessionRestoredRef.current = false; // Allow greeting to run for fresh session
     sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
@@ -6753,6 +6762,7 @@ I'm not sure what I'm feeling yet.`;
     setSavedSessionData(null);
     // 🧹 Clear previous conversation messages
     setMessages([]);
+    lastSyncedCountRef.current = 0; // fresh thread — resync from the start
     historicalMessagesRef.current = []; // Clear API context too
     sessionRestoredRef.current = false; // Allow greeting to run for fresh session
     sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
@@ -8033,10 +8043,10 @@ I'm not sure what I'm feeling yet.`;
 
       {/* Message flow - Star Wars crawl: text flows from beneath holoflower */}
       {(showChatInterface || (!showChatInterface && showVoiceText)) && messages.length > 0 && (
-        <div className={`fixed top-44 sm:top-52 md:top-60 lg:top-64 z-30 transition-all duration-500 left-16 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 ${
+        <div className={`fixed top-44 sm:top-52 md:top-60 lg:top-64 z-30 transition-all duration-500 left-[60px] right-1 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 ${
           showChatInterface
-            ? 'sm:w-[calc(100%-2rem)] md:w-[600px] lg:w-[680px] xl:w-[720px] opacity-100'
-            : 'sm:w-[calc(100%-2rem)] md:w-[520px] lg:w-[560px] opacity-70'
+            ? 'sm:w-[calc(100%-1.5rem)] md:w-[720px] lg:w-[820px] xl:w-[880px] opacity-100'
+            : 'sm:w-[calc(100%-1.5rem)] md:w-[640px] lg:w-[700px] opacity-70'
         }`}
              style={{
                height: showChatInterface
@@ -8231,7 +8241,7 @@ I'm not sure what I'm feeling yet.`;
                           </div>
                         </div>
                       </div>
-                      <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                      <div className="text-lg sm:text-xl md:text-2xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
                           <FormattedMessage
                             text={message.text}
@@ -9120,6 +9130,7 @@ I'm not sure what I'm feeling yet.`;
         onSelectPrompt={(promptText) => {
           // Clear previous conversation for fresh start with new prompt
           setMessages([]);
+          lastSyncedCountRef.current = 0; // fresh thread — resync from the start
           historicalMessagesRef.current = []; // Clear API context too
           if (typeof window !== 'undefined' && sessionId) {
             const storageKey = `maia_conversation_${sessionId}`;
