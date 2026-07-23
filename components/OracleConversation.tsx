@@ -8630,35 +8630,6 @@ I'm not sure what I'm feeling yet.`;
                 </button>
               </div>
 
-              {/* Inbound half of the mode switch.
-                  The composer row carries "Voice" (text -> voice); this carries
-                  "Text" (voice -> text). Both halves must exist or the switch is
-                  a one-way door: removing the top-bar toggle without this left
-                  no member-facing route back to the ModernTextInput composer,
-                  and with it the Ask MAIA stance. VoiceInteractionBar's keyboard
-                  button is NOT this control — it opens its own inline field, a
-                  different composer with no Ask MAIA chip.
-
-                  Sits in the thumb zone, just above the voice bar, and matches
-                  the composer-row switch in weight so the two read as one
-                  control that moves with the mode. */}
-              {!showChatInterface && (
-                <div
-                  className="fixed left-0 right-0 z-below-nav flex justify-center"
-                  style={{ bottom: 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' }}
-                >
-                  <button
-                    onClick={() => setShowChatInterface(true)}
-                    className="pointer-events-auto flex min-h-[32px] items-center gap-1.5 rounded-full px-3 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
-                    title="Switch to text — type to MAIA instead of speaking"
-                    aria-label="Switch to text mode"
-                  >
-                    <MessageCircle className="h-3.5 w-3.5" strokeWidth={2} />
-                    <span>Text</span>
-                  </button>
-                </div>
-              )}
-
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
               <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" style={{ bottom: 'calc(2.5rem + env(safe-area-inset-bottom, 0px))' }}>
@@ -8816,6 +8787,33 @@ I'm not sure what I'm feeling yet.`;
       )}
 
 
+
+      {/* Escape hatch — TOP LEVEL, deliberately.
+          This was nested inside {voiceEnabled && ( {!showChatInterface && ( ...
+          several levels deep, which meant it shared the fate of the very region
+          it exists to recover: when that subtree did not render, a member was
+          left with a transcript and NO way to speak or type at all. A control
+          whose job is to restore input cannot be gated by the same condition
+          that removed it.
+
+          Rendered whenever the full composer is absent, regardless of voice
+          availability, so there is always one route back to text. */}
+      {!showChatInterface && (
+        <div
+          className="fixed left-0 right-0 z-below-nav flex justify-center"
+          style={{ bottom: 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <button
+            onClick={() => setShowChatInterface(true)}
+            className="pointer-events-auto flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-xs font-medium text-white/40 transition-colors hover:text-white/70"
+            title="Switch to text — type to MAIA instead of speaking"
+            aria-label="Switch to text mode"
+          >
+            <MessageCircle className="h-4 w-4" strokeWidth={2} />
+            <span>Text</span>
+          </button>
+        </div>
+      )}
 
       {/* Unified Voice Interaction Bar — state display, transcript, keyboard */}
       {isMounted && voiceEnabled && !showChatInterface && (
