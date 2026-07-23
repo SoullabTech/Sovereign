@@ -39,10 +39,16 @@ Two consequences:
    `voice_audio_started` in the failing sessions — the recognizer is refused at start, not
    mid-stream. The microphone is granted in both cases (`iPhone Microphone`, 1 audio
    track), so this is **not** a mic-permission problem.
-2. **"Listening but not hearing" is the UI asserting a false state.** The flower shows
-   `LISTENING` while recognition has already errored. It is not waiting for the member's
-   voice — it was refused before it began. The interface is not merely silent about the
-   failure; it is actively claiming a state that is not true.
+2. **This is a false state transition, not missing recovery copy.** The flower enters or
+   remains in `LISTENING` even though recognition was refused *before listening began* —
+   there is no `voice_listening_started` in these sessions at all. The interface is not
+   merely silent about a failure; it performs a state transition that never occurred.
+
+   The distinction matters for the fix. "Missing recovery copy" would be satisfied by
+   adding a message beside a spinner. It is not enough here: the state itself is wrong,
+   and the member is being told MAIA is listening when MAIA was refused. Adding an
+   explanation while leaving `LISTENING` on screen would leave the interface still
+   asserting something untrue.
 
 Dictation-disabled remains possible but is now the weaker branch: if Dictation were off at
 the device level, the 26.6 session could not have succeeded — *unless* these are two
@@ -104,6 +110,19 @@ Safari UA.
 | `voice_audio_no_speech` | 1 |
 
 The three errors are the two causes above. This is not a widespread capture failure.
+
+## Acceptance test (tracked as #706)
+
+```
+On service-not-allowed:
+- LISTENING must not remain visible
+- the UI must transition to an error/recovery state
+- the member must receive a plain-language remedy
+- telemetry must still emit the original failure event
+```
+
+Each error must be **forced**, not reasoned about — dictation disabled on a real device,
+and MAIA opened in CriOS.
 
 ## The actual product defect
 
