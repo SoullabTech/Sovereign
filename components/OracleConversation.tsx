@@ -189,6 +189,7 @@ import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
+import { MaiaArrivalField } from './maia/MaiaArrivalField';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand } from '@/lib/services/conversationEssenceExtractor';
@@ -7029,6 +7030,22 @@ I'm not sure what I'm feeling yet.`;
 
           // Debug log removed - was causing console spam on every re-render
           // To debug greeting logic, use: console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
+
+          // Arrival remodel (flag arrivalEntry): render the ONE contained
+          // arrival composition instead of the scattered greeting overlay.
+          if (featureFlags.arrivalEntry) {
+            return (
+              <MaiaArrivalField
+                greeting={welcomeGreeting.greeting}
+                subtext={welcomeGreeting.subtext}
+                userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
+                onSend={(text) => handleTextMessage(text)}
+                onActivate={() => setHasActivated(true)}
+                onOpenHouse={() => window.dispatchEvent(new CustomEvent('openMaiaHouse'))}
+                onKeep={() => window.dispatchEvent(new CustomEvent('labAction', { detail: { action: 'capture-spirit' } }))}
+              />
+            );
+          }
 
           return (
           <motion.div
