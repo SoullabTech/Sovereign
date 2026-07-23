@@ -557,6 +557,19 @@ const FormattedMessage: React.FC<{
   return <span>{cleanedText}</span>;
 };
 
+// Shadow petal wedge geometry, derived from the petal ID so the shape is stable
+// across re-renders. Previously used inline Math.random(), which re-cut every wedge
+// on every render of the parent.
+const shadowPetalClipPath = (petalId: string): string => {
+  let hash = 0;
+  for (let i = 0; i < petalId.length; i++) {
+    hash = (hash * 31 + petalId.charCodeAt(i)) | 0;
+  }
+  const a = Math.abs(hash) % 101;
+  const b = Math.abs(Math.trunc(hash / 101)) % 101;
+  return `polygon(50% 50%, ${a}% 0%, ${b}% 100%)`;
+};
+
 export const OracleConversation: React.FC<OracleConversationProps> = ({
   userId,
   userName,
@@ -8013,13 +8026,11 @@ I'm not sure what I'm feeling yet.`;
       {shadowPetals.length > 0 && (
         <div className="fixed inset-0 pointer-events-none flex items-center justify-center">
           <div className="relative" style={{ width: 400, height: 400 }}>
-            {shadowPetals.map(petalId => (
+            {shadowPetals.map((petalId, i) => (
               <div
-                key={petalId}
+                key={`${petalId}-${i}`}
                 className="absolute inset-0 bg-black/20 rounded-full"
-                style={{
-                  clipPath: `polygon(50% 50%, ${Math.random() * 100}% 0%, ${Math.random() * 100}% 100%)`
-                }}
+                style={{ clipPath: shadowPetalClipPath(petalId) }}
               />
             ))}
           </div>
