@@ -78,19 +78,25 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
           The House lives here as a quiet icon at the upper left: still exactly
           ONE doorway, moved from the base of the composition. */}
       <div className="absolute inset-x-0 top-0 z-10 flex h-[54px] items-center justify-between bg-[#0a0807] px-4 md:px-6">
+        {/* The doorway. Icon + label, 44px tall, matching MaiaShell's doorway
+            exactly so it does not move or change shape when Arrival gives way to
+            conversation. It was a bare 19x19 glyph — under half the 44px minimum,
+            and it is the only way out of Arrival, so a missed tap is a trapped
+            member. Same reasoning as the send arrow. */}
         <button
           type="button"
           onClick={onOpenHouse}
-          title="The House"
+          title="The House — your places and practices"
           aria-label="Open The House"
-          className="flex items-center text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none"
+          className="-ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2 text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none"
         >
-          <Home className="h-[19px] w-[19px]" strokeWidth={1.5} />
+          <Home className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+          <span className="text-[15px] leading-none" style={{ fontFamily: SERIF }}>The House</span>
         </button>
         <div className="flex items-center gap-3 text-[#b7ad9c]">
           {onKeep && (
             <button type="button" onClick={onKeep} title="Keep this moment" aria-label="Keep this moment"
-              className="text-[rgba(230,169,74,0.85)] transition-colors hover:text-[#e6a94a] focus:outline-none">
+              className="flex h-11 w-11 items-center justify-center text-[rgba(230,169,74,0.85)] transition-colors hover:text-[#e6a94a] focus:outline-none">
               <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.6">
                 <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
               </svg>

@@ -244,6 +244,42 @@ export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   VISION_STUDIO_RAIL_ITEM,
 ];
 
+// --- The House: primary places ---
+
+/**
+ * The four places the House offers first.
+ *
+ * The House greets in verbs — what the member came to do — not in product
+ * names. Everything else lives behind "More places". This is the whole of the
+ * member's visible navigation: one doorway, four primary places, one drawer.
+ *
+ * Each primary entry points at an existing world rather than inventing a route,
+ * so there is still exactly one source of truth for where a place lives. Change
+ * a mapping here and the House changes; no component hardcodes a destination.
+ *
+ * All four resolve to un-gated worlds, so an ordinary (non-founder) member can
+ * actually reach every primary place.
+ */
+export interface HousePrimaryPlace {
+  id: 'continue' | 'reflect' | 'create' | 'belong';
+  /** The verb the member sees. */
+  label: string;
+  /** The world this verb opens. */
+  worldId: MaiaWorldId;
+  /** What this place is for, in the member's terms. */
+  blurb: string;
+}
+
+export const HOUSE_PRIMARY: HousePrimaryPlace[] = [
+  { id: 'continue', label: 'Continue', worldId: 'maia',         blurb: 'Pick up where you left off' },
+  { id: 'reflect',  label: 'Reflect',  worldId: 'journal',      blurb: 'Sit with something in writing' },
+  { id: 'create',   label: 'Create',   worldId: 'ideas',        blurb: 'Follow a thought that is starting' },
+  { id: 'belong',   label: 'Belong',   worldId: 'living-field', blurb: 'Gather with lived experience' },
+];
+
+/** World IDs claimed by the primary four — everything else falls to "More places". */
+export const HOUSE_PRIMARY_WORLD_IDS: MaiaWorldId[] = HOUSE_PRIMARY.map((p) => p.worldId);
+
 /** Left rail width in pixels — used for content padding in boundary layouts */
 export const RAIL_WIDTH_PX = 56; // w-14 = 3.5rem = 56px at 16px base
 

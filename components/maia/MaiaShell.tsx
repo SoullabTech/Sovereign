@@ -271,54 +271,61 @@ export function MaiaShell({
         onOpenAccount={onOpenAccount}
       />
 
-      {/* Arrival (Step 3): a newcomer meets one invitation — the rail recedes.
-          Returning members (arrivalMode=false) keep the rail exactly as before. */}
-      {!arrivalMode && (
-        <MaiaLeftRail
-          activeWorld={activeWorld}
-          calmMode={calmMode}
-          calmCeiling={calmCeiling}
-          worldHints={worldHints}
-          onWorldChange={handleWorldChange}
-          onOpenAccount={onOpenAccount}
-          onCaptureSpirit={() => onLabAction('capture-spirit')}
-          activeMode={activeMode}
-          onModeChange={onModeChange}
-          isVoiceInput={isVoiceMode}
-          onToggleInputMode={onToggleInputMode}
-          askMode={askMode}
-          onAskModeChange={onAskModeChange}
-        />
-      )}
+      {/* THE RAIL IS RETIRED — founder ruling, 2026-07-22.
+       *
+       *   The House is the solution to platform complexity. MAIA is the primary
+       *   relationship. The House contains the places. The member should not
+       *   encounter the platform as a rail of product features.
+       *
+       * The House previously failed this ruling by being added ALONGSIDE the
+       * rail rather than replacing it: eleven destinations stayed permanently
+       * exposed while the House offered the same places again, so the member met
+       * the product's internal map before they met the place.
+       *
+       * Every destination the rail carried is registered in lib/navigation/maiaNav
+       * and is reachable through The House, under the same visibility rules — the
+       * registry is the single source, so nothing became unreachable and no
+       * permission changed. The rail component itself is left in the tree for the
+       * founder/steward surfaces that still mount it directly.
+       *
+       * ⚠️ Do not reintroduce a permanent multi-icon rail here, and do not add a
+       * chevron rail beside the House. Disclosure belongs INSIDE the House.
+       */}
 
-      {/* Center field — offset for rail and top bar (no rail offset in Arrival) */}
+      {/* Center field — the conversation is the surface; nothing is offset for
+          navigation any more, because there is no navigation column. */}
       <main
-        className={`mt-12 transition-all duration-300 ${arrivalMode ? 'ml-0' : 'ml-14'}`}
+        className="mt-12 transition-all duration-300"
         style={{ marginRight: rightPanelOpen ? '20rem' : 0 }}
       >
         {children}
       </main>
 
-      {/* The House — one quiet doorway to the whole world. Never announces itself.
+      {/* The House — THE doorway. Now the only permanent navigation on the
+          conversation surface: MAIA, and one way into the places.
 
-          Hidden while Arrival is on screen: the Arrival composition carries its
-          own doorway (upper-left), so rendering this one too put TWO "Open The
-          House" buttons on the same surface. One House, one renderer, one
-          doorway — the doorway belongs to whichever surface the member is in. */}
+          Upper-left, matching the Arrival composition's doorway exactly, so the
+          member learns one location once and it never moves beneath them. The
+          bottom-centre floating pill is retired: it sat over the composer on
+          mobile and read as a utility control rather than a threshold.
+
+          Hidden while Arrival is on screen — the Arrival composition carries its
+          own doorway at the same coordinates. One House, one renderer, one
+          doorway: the doorway belongs to whichever surface the member is in. */}
       {!arrivalMode && (
       <button
         onClick={() => setHouseOpen(true)}
         className={`
-          group fixed bottom-20 left-1/2 z-[85] flex -translate-x-1/2 items-center gap-2
-          rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-md
+          group fixed left-3 top-14 z-[85] flex h-11 min-w-[44px] items-center gap-2
+          rounded-full border border-white/10 bg-black/30 px-3 backdrop-blur-md
           transition-all duration-500 hover:border-white/20 hover:bg-black/40
-          ${calmMode && !calmCeiling ? 'opacity-0 hover:opacity-100' : 'opacity-70 hover:opacity-100'}
+          ${calmMode && !calmCeiling ? 'opacity-60 hover:opacity-100' : 'opacity-80 hover:opacity-100'}
         `}
         title="The House — your places and practices"
         aria-label="Open The House"
       >
-        <Home className="h-4 w-4 text-[#c9a54e]" strokeWidth={1.5} />
-        <span className="text-[13px] text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+        <Home className="h-[18px] w-[18px] shrink-0 text-[#c9a54e]" strokeWidth={1.5} />
+        <span className="text-[15px] leading-none text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
           The House
         </span>
       </button>
