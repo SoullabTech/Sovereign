@@ -165,10 +165,20 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
               swallowed the member's first words. Rendering the existing glyph
               as type="submit" restores both Enter and tap-to-send without
               adding a new visual element. */}
+          {/* The glyph's own box is ~10x24px, far under the 44px minimum — and
+              this is the only tap-to-send control on the composer, which is the
+              only place a member can author their first words here (the jewel is
+              presence; "I'm ready" crosses the threshold without speech). A
+              missed tap is a missed arrival.
+
+              The ::before pseudo gives it a 44x44 hit area and adds no layout,
+              being absolutely positioned, so the glyph stays 10x24 at 16px and
+              the composition is untouched. The quiet target grows; the visible
+              arrow is deliberately NOT enlarged into a button. */}
           <button
             type="submit"
             aria-label="Send"
-            className="text-[rgba(230,169,74,0.7)] transition-colors hover:text-[rgba(230,169,74,1)] focus:outline-none"
+            className="relative text-[rgba(230,169,74,0.7)] transition-colors hover:text-[rgba(230,169,74,1)] focus:outline-none before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
           >
             ◍
           </button>
