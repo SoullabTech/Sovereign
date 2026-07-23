@@ -24,7 +24,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DoorOpen, Settings, User } from 'lucide-react';
+import { DoorOpen, HelpCircle, Settings, User } from 'lucide-react';
 import { MAIA_WORLDS, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import {
   badgeDelay,
@@ -67,11 +67,13 @@ interface MaiaHouseSheetProps {
    * utilities never read as another world of MAIA.
    */
   onOpenAccount?: () => void;
+  /** Opens the help sheet. Moved out of the top bar (ruling 2026-07-23). */
+  onOpenHelp?: () => void;
 }
 
 const SERIF = 'Spectral, Georgia, serif';
 
-export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, onOpenAccount }: MaiaHouseSheetProps) {
+export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, onOpenAccount, onOpenHelp }: MaiaHouseSheetProps) {
   const router = useRouter();
 
   // Close on Escape — the House never traps you.
@@ -255,6 +257,18 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
                     <span className={ROW_ICON}><Settings className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
                     <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Settings</span>
                   </button>
+                  {/* Help joins the utilities rather than sitting in the top bar.
+                      Same reasoning as the rail: the bar is for identity and the
+                      House holds the places. Help is somewhere you go, not part
+                      of who you are — and the top-right cluster is the one that
+                      crowds the centred wordmark, so every row moved down here
+                      buys back width. */}
+                  {onOpenHelp && (
+                    <button onClick={() => { onClose(); onOpenHelp(); }} className={ROW}>
+                      <span className={ROW_ICON}><HelpCircle className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
+                      <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Help</span>
+                    </button>
+                  )}
                 </div>
               </section>
             </div>

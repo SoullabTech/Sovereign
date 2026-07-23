@@ -8,7 +8,7 @@
  * Never fully disappears — always reassuringly present.
  */
 
-import { HelpCircle, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import type { MaiaBehavior } from '@/lib/navigation/types';
 
 const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = {
@@ -24,7 +24,6 @@ interface MaiaTopBarProps {
   behavior: MaiaBehavior;
   calmMode: boolean;
   calmCeiling: boolean;
-  onOpenHelp: () => void;
   onOpenAccount: () => void;
 }
 
@@ -33,7 +32,6 @@ export function MaiaTopBar({
   behavior,
   calmMode,
   calmCeiling,
-  onOpenHelp,
   onOpenAccount,
 }: MaiaTopBarProps) {
   const behaviorInfo = BEHAVIOR_LABELS[behavior];
@@ -108,14 +106,6 @@ export function MaiaTopBar({
           Keep this cluster to identity and global utilities. Anything that acts
           on the composer belongs next to the composer. */}
       <div className="flex items-center gap-1">
-        <button
-          onClick={onOpenHelp}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all"
-          title="Help"
-        >
-          <HelpCircle className="w-4 h-4" />
-        </button>
-
         <button
           onClick={onOpenAccount}
           className="h-8 flex items-center gap-2 pl-1 pr-2 rounded-lg text-stone-300 hover:text-[#D4B896] hover:bg-[#D4B896]/5 transition-all"

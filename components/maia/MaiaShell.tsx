@@ -265,7 +265,6 @@ export function MaiaShell({
         behavior={behavior}
         calmMode={calmMode}
         calmCeiling={calmCeiling}
-        onOpenHelp={onOpenHelp}
         onOpenAccount={onOpenAccount}
       />
 
@@ -360,6 +359,7 @@ export function MaiaShell({
         open={houseOpen}
         onClose={() => setHouseOpen(false)}
         isFounder={isAdmin || isPractitioner}
+        onOpenHelp={onOpenHelp}
         onOpenAccount={() => { setHouseOpen(false); onOpenAccount(); }}
         onReturnToArrival={
           canReturnToArrival && onReturnToArrival
