@@ -334,7 +334,11 @@ export function AcademySheet({
   };
 
   return (
-    <AnimatePresence>
+    <>
+      {/* Each overlay below owns its own AnimatePresence. They must be siblings,
+          not children of one — AnimatePresence keys children by `child.key || ""`,
+          so unkeyed sibling overlays would all collapse to the same "" key. */}
+      <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -510,6 +514,7 @@ export function AcademySheet({
           </motion.div>
         </>
       )}
+      </AnimatePresence>
 
       {/* Inner Lands Explorer - Full screen overlay */}
       <AnimatePresence>
@@ -831,6 +836,6 @@ export function AcademySheet({
           );
         })()}
       </AnimatePresence>
-    </AnimatePresence>
+    </>
   );
 }
