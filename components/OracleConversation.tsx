@@ -7344,7 +7344,7 @@ I'm not sure what I'm feeling yet.`;
       {/* 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed State Container */}
       {/* Breathing entrainment, color transitions, field expansion based on state */}
       {/* NO cognitive UI - the experience itself induces the transformation */}
-      <div className="fixed top-28 sm:top-20 left-1/2 -translate-x-1/2 z-[25]">
+      <div className="fixed top-16 sm:top-14 left-1/2 -translate-x-1/2 z-[25]">
         <TransformationalPresence
           currentState={realtimeMode as PresenceState}
           onStateChange={(newState, transition) => {
@@ -8171,7 +8171,7 @@ I'm not sure what I'm feeling yet.`;
                   turns still scroll up behind the jewel as they should; only the
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
-                <div className="space-y-3 pt-[13.5rem] pb-52 md:pt-[15rem] md:pb-32">
+                <div className="space-y-3 pt-[10.5rem] pb-52 md:pt-[12rem] md:pb-32">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
