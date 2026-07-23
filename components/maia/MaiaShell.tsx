@@ -262,11 +262,9 @@ export function MaiaShell({
     <div className="min-h-screen bg-[#1a1a2e]">
       <MaiaTopBar
         explorerName={explorerName}
-        isVoiceMode={isVoiceMode}
         behavior={behavior}
         calmMode={calmMode}
         calmCeiling={calmCeiling}
-        onToggleInputMode={onToggleInputMode}
         onOpenHelp={onOpenHelp}
         onOpenAccount={onOpenAccount}
       />

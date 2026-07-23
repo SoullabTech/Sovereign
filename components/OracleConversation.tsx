@@ -8160,8 +8160,18 @@ I'm not sure what I'm feeling yet.`;
                  touchAction: 'pan-y'
                }}>
             <AnimatePresence>
+              {/* Top padding on the list below clears the jewel. The holoflower
+                  is an overlay occupying roughly the first 224px of this field,
+                  so without it the first turn started underneath: the speaker
+                  label landed at y=192, printing over the flower and through the
+                  "Tap to Speak" caption. Measured, not guessed — the flower's
+                  box is 112..224 on a 375px surface.
+
+                  Padding rather than a margin on the first message, so later
+                  turns still scroll up behind the jewel as they should; only the
+                  resting position of the transcript changes. */}
               {messages.length > 0 && (
-                <div className="space-y-3 pb-52 md:pb-32">
+                <div className="space-y-3 pt-[13.5rem] pb-52 md:pt-[15rem] md:pb-32">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
@@ -8608,6 +8618,35 @@ I'm not sure what I'm feeling yet.`;
                 </button>
               </div>
 
+              {/* Inbound half of the mode switch.
+                  The composer row carries "Voice" (text -> voice); this carries
+                  "Text" (voice -> text). Both halves must exist or the switch is
+                  a one-way door: removing the top-bar toggle without this left
+                  no member-facing route back to the ModernTextInput composer,
+                  and with it the Ask MAIA stance. VoiceInteractionBar's keyboard
+                  button is NOT this control — it opens its own inline field, a
+                  different composer with no Ask MAIA chip.
+
+                  Sits in the thumb zone, just above the voice bar, and matches
+                  the composer-row switch in weight so the two read as one
+                  control that moves with the mode. */}
+              {!showChatInterface && (
+                <div
+                  className="fixed left-0 right-0 z-below-nav flex justify-center"
+                  style={{ bottom: 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' }}
+                >
+                  <button
+                    onClick={() => setShowChatInterface(true)}
+                    className="pointer-events-auto flex min-h-[32px] items-center gap-1.5 rounded-full px-3 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
+                    title="Switch to text — type to MAIA instead of speaking"
+                    aria-label="Switch to text mode"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" strokeWidth={2} />
+                    <span>Text</span>
+                  </button>
+                </div>
+              )}
+
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
               <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" style={{ bottom: 'calc(2.5rem + env(safe-area-inset-bottom, 0px))' }}>
@@ -8620,11 +8659,21 @@ I'm not sure what I'm feeling yet.`;
                         setAskMode(!askMode);
                         console.log('[Ask MAIA]', !askMode ? 'activated' : 'deactivated');
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                      /* Quieter by ruling (2026-07-23): a secondary affordance,
+                         not a prominent pill. It was a bordered, blue-tinted
+                         chip that read as heavy as the composer beneath it.
+                         Borderless and low-contrast at rest; the ACTIVE state
+                         still reads clearly, because the member needs to know
+                         this turn is being answered from the Knowledge Field
+                         rather than the relational default. Lower visual weight,
+                         not lower agency — the capability is unchanged: still
+                         single-turn, still forces Knowledge Field injection,
+                         still invokes the orientation stance. */
+                      className={`flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-colors ${
                         askMode
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-400/40'
-                          : 'bg-black/20 text-white/30 border border-white/8 hover:text-white/50 hover:border-white/15'
-                      } backdrop-blur-md`}
+                          ? 'text-blue-300/90'
+                          : 'text-white/30 hover:text-white/60'
+                      }`}
                       title={askMode ? 'Ask MAIA active — clarity + knowledge mode' : 'Ask MAIA — switch to orientation mode'}
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8632,6 +8681,36 @@ I'm not sure what I'm feeling yet.`;
                               d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
                       <span>Ask MAIA</span>
+                    </button>
+
+                    {/* Input-mode switch — relocated from the top bar (founder
+                        ruling, 2026-07-23). It is contextual to input, not global
+                        identity, so it belongs beside the composer it governs and
+                        inside the thumb zone rather than ~780px away at the top of
+                        a phone screen. Vacating the top-right cluster is also what
+                        gives the centred MAIA wordmark room on mobile.
+
+                        Deliberately icon-first and secondary: this row already
+                        carries Ask MAIA, tools, the dictation mic and the bug
+                        reporter. It must not become a second pill competing with
+                        the composer, so it is borderless and low-contrast until
+                        hovered.
+
+                        NOT the same control as the mic to its right: this changes
+                        the interaction MODE; the mic dictates into the field. And
+                        not placed in ModernTextInput — that component is shared,
+                        and other surfaces have no mode to switch.
+
+                        The return path already exists: in voice mode
+                        VoiceInteractionBar renders a 44x44 keyboard toggle. */}
+                    <button
+                      onClick={() => setShowChatInterface(false)}
+                      className="ml-auto flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
+                      title="Switch to voice — speak with MAIA instead of typing"
+                      aria-label="Switch to voice mode"
+                    >
+                      <Mic className="h-3.5 w-3.5" strokeWidth={2} />
+                      <span>Voice</span>
                     </button>
                   </div>
                   <ModernTextInput

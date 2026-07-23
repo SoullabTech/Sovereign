@@ -8,7 +8,7 @@
  * Never fully disappears — always reassuringly present.
  */
 
-import { HelpCircle, User, Mic, MessageSquare } from 'lucide-react';
+import { HelpCircle, User } from 'lucide-react';
 import type { MaiaBehavior } from '@/lib/navigation/types';
 
 const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = {
@@ -21,23 +21,18 @@ const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = 
 interface MaiaTopBarProps {
   explorerName: string;
   /** true = voice mode, false = text mode */
-  isVoiceMode: boolean;
   behavior: MaiaBehavior;
   calmMode: boolean;
   calmCeiling: boolean;
-  /** Toggle between voice and text input */
-  onToggleInputMode: () => void;
   onOpenHelp: () => void;
   onOpenAccount: () => void;
 }
 
 export function MaiaTopBar({
   explorerName,
-  isVoiceMode,
   behavior,
   calmMode,
   calmCeiling,
-  onToggleInputMode,
   onOpenHelp,
   onOpenAccount,
 }: MaiaTopBarProps) {
@@ -88,40 +83,31 @@ export function MaiaTopBar({
           screen, competing a few hundred pixels apart. The wordmark alone is
           enough to say whose room this is.
 
-          Hidden below 480px. The doorway label and the utility cluster are
-          fixed-width, so the free middle shrinks with the viewport: measured,
-          the wordmark starts overlapping the Voice control at about 436px, and
-          at 375px it printed straight through it. Because this element is
-          `pointer-events-none` the overlap was silent — it read as a rendering
-          glitch rather than a blocked tap, which is the worse failure.
+          Shown at every width. It was gated at min-[480px] because the Voice/Text
+          switch made this cluster 199px wide and the wordmark printed straight
+          through it below ~436px. That switch now lives beside the composer, the
+          cluster is ~63px narrower, and the collision is gone — measured, not
+          assumed. The gate went with the cause.
 
-          480 is the measured threshold plus a margin, NOT a stock breakpoint —
-          `sm` (640) also avoids the collision but needlessly strips the wordmark
-          from every tablet and narrow window between 480 and 640. If the doorway
-          label or the utility cluster ever gets wider, re-measure: the number
-          that matters is where the middle runs out, not a design-system step. */}
-      <div className="pointer-events-none absolute inset-x-0 hidden justify-center min-[480px]:flex">
+          If anything is ever added back to either flanking cluster, re-measure
+          the free middle rather than reaching for a breakpoint: what matters is
+          where the middle runs out, not a design-system step. */}
+      <div className="pointer-events-none absolute inset-x-0 flex justify-center">
         <span className="text-sm font-light tracking-wider text-[#D4B896]/80">MAIA</span>
       </div>
 
-      {/* Right: utilities */}
-      <div className="flex items-center gap-1">
-        {/* Voice / Text toggle */}
-        <button
-          onClick={onToggleInputMode}
-          className={`h-8 flex items-center gap-1.5 px-2 rounded-lg transition-all ${
-            isVoiceMode
-              ? 'text-[#D4B896]/70 bg-[#D4B896]/5'
-              : 'text-blue-400/70 bg-blue-400/5'
-          } hover:opacity-100`}
-          title={isVoiceMode ? 'Switch to text' : 'Switch to voice'}
-        >
-          {isVoiceMode ? <Mic className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-          <span className="text-[10px] font-light tracking-wide">
-            {isVoiceMode ? 'Voice' : 'Text'}
-          </span>
-        </button>
+      {/* Right: utilities.
 
+          The Voice/Text switch used to live here and has moved to the composer
+          row (founder ruling, 2026-07-23). It is contextual to input, not global
+          identity — and at 199px this cluster was what pushed the centred MAIA
+          wordmark off small screens. Both return paths already exist beside the
+          input they govern: a Voice switch in the composer row, and a 44x44
+          keyboard toggle in VoiceInteractionBar for the way back.
+
+          Keep this cluster to identity and global utilities. Anything that acts
+          on the composer belongs next to the composer. */}
+      <div className="flex items-center gap-1">
         <button
           onClick={onOpenHelp}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all"
