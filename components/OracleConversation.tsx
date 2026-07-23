@@ -201,6 +201,7 @@ import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
 import RelationalDoorway from '@/components/maia/RelationalDoorway';
 import WorldDoorway from '@/components/maia/WorldDoorway';
 import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
+import { MaiaArrivalField } from './maia/MaiaArrivalField';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
@@ -3226,7 +3227,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Only initialize with greeting if messages weren't already restored from storage
       // (prevents the greeting from overwriting an existing conversation on same-session navigation)
-      if (!sessionRestoredRef.current) {
+      //
+      // ARRIVAL OWNS THE CEREMONIAL GREETING. When the arrival composition is
+      // the entry surface it has already greeted the member by name, above the
+      // jewel. Seeding the same greeting into the transcript made MAIA appear
+      // to greet twice — once ceremonially, then again as a chat turn the
+      // instant the field cleared. This guard is deliberately narrow: it is
+      // scoped to the flag that decides whether MaiaArrivalField renders, so
+      // every other entry path keeps its greeting exactly as before. The
+      // conversation now opens empty, and MAIA speaks once the member does.
+      if (!sessionRestoredRef.current && !featureFlags.arrivalEntry) {
         setMessages([greetingMessage]);
       }
       localStorage.setItem('lastSessionDate', new Date().toISOString());
@@ -7029,6 +7039,26 @@ I'm not sure what I'm feeling yet.`;
 
           // Debug log removed - was causing console spam on every re-render
           // To debug greeting logic, use: console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
+
+          // Arrival remodel (flag arrivalEntry): render the ONE contained
+          // arrival composition instead of the scattered greeting overlay.
+          // This returns early by design — the legacy z-40 overlay below is
+          // never mounted while the arrival field is active, so exactly one
+          // Arrival renderer exists at a time rather than a composed field
+          // layered over the legacy arrival still running underneath it.
+          if (featureFlags.arrivalEntry) {
+            return (
+              <MaiaArrivalField
+                greeting={welcomeGreeting.greeting}
+                subtext={welcomeGreeting.subtext}
+                userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
+                onSend={(text) => handleTextMessage(text)}
+                onActivate={() => setHasActivated(true)}
+                onOpenHouse={() => window.dispatchEvent(new CustomEvent('openMaiaHouse'))}
+                onKeep={() => window.dispatchEvent(new CustomEvent('labAction', { detail: { action: 'capture-spirit' } }))}
+              />
+            );
+          }
 
           return (
           <motion.div

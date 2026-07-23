@@ -80,6 +80,16 @@ export function MaiaShell({
   const [userPinnedPanel, setUserPinnedPanel] = useState(false);
   const [houseOpen, setHouseOpen] = useState(false);
 
+  // The Arrival composition renders in a portal outside this tree, so its quiet
+  // base doorway cannot call setHouseOpen directly. It announces the intent and
+  // the shell — which owns the sheet — answers. Without this listener the
+  // arrival doorway dispatches into the void and reads as decorative.
+  useEffect(() => {
+    const openHouse = () => setHouseOpen(true);
+    window.addEventListener('openMaiaHouse', openHouse);
+    return () => window.removeEventListener('openMaiaHouse', openHouse);
+  }, []);
+
   // --- Calm mode ---
   const { isVoiceFlowing, isSanctuary } = useVoiceState();
   const [calmMode, setCalmMode] = useState(false);
