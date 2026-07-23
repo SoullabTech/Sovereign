@@ -24,6 +24,7 @@ import {
   NotebookPen,
   Compass,
   Sprout,
+  Bookmark,
 } from 'lucide-react';
 
 import type {
@@ -186,6 +187,61 @@ export const VISION_STUDIO_RAIL_ITEM: MaiaRailItem = {
   audience: 'founder',
 };
 
+// --- Destinations recovered from the retired rail (2026-07-22) ---
+//
+// These were only ever reachable through MaiaLeftRail, hardcoded as router.push
+// targets and never registered here. When the rail left the member surface they
+// were orphaned — reachable by URL and by nothing else. Removing the rail was
+// easy; this is the part that wasn't.
+//
+// A registry-to-registry orphan check cannot catch this class of loss: it
+// compares the House against this file and is structurally blind to routes that
+// were never in it. Enumerate the retired surface's actual navigation calls.
+//
+// Member language is the product's own name for each, not an interpretation.
+
+// NOT HERE: Now What? (/now-what).
+//
+// RULING (Kelly, 2026-07-22): Now What? is a CLIENT BUILD on AIN OS, not a
+// native room of MAIA. It belongs with Larry's implementation and future client
+// platforms — separate sovereign experiences that happen to share a substrate:
+//
+//   AIN OS
+//   ├── MAIA
+//   ├── Now What?
+//   ├── future client platforms
+//   └── Soullab experiences
+//
+// Placing it in the House as a World, a Room, or a utility would blur MAIA (the
+// host) with an application running beside it. It read as "odd beside Account
+// and Settings" precisely because it was crossing a platform boundary, not
+// because it sat in the wrong group. Its participants reach it inside that
+// platform, not through this House.
+//
+// Its absence is a CORRECTNESS CONDITION, not a missing feature. It is asserted
+// negatively in the House verification harness rather than encoded here as an
+// exclusion object — the registry models what exists, not what is withheld.
+
+export const KEEPS_RAIL_ITEM: MaiaRailItem = {
+  id: 'keeps',
+  label: 'Keeps',
+  icon: Bookmark,
+  route: '/maia/keep-capture',
+  classification: 'studio',
+  tooltip: 'Moments you have held onto',
+  isBoundaryTransition: true,
+};
+
+export const COLAB_RAIL_ITEM: MaiaRailItem = {
+  id: 'colab',
+  label: 'Co-lab',
+  icon: Users,
+  route: '/team/for-you',
+  classification: 'studio',
+  tooltip: 'Shared work and conversation',
+  isBoundaryTransition: true,
+};
+
 // --- Utility Items (top bar + bottom of rail) ---
 
 export const MAIA_UTILITIES: MaiaUtilityItem[] = [
@@ -242,43 +298,30 @@ export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   COMMUNITY_LIBRARY_RAIL_ITEM,
   // Un-gated 2026-07 (beta): consent threshold shipped; audience: 'founder' scopes to founder members.
   VISION_STUDIO_RAIL_ITEM,
+  // Recovered from the retired rail. Keeps is open to every member; Co-lab is
+  // ungated here because its visibility is CONDITIONAL rather than audience-
+  // based (founder/practitioner OR a pending count) — see isColabVisible in
+  // lib/navigation/colabBadge. Audience gating alone cannot express that rule.
+  KEEPS_RAIL_ITEM,
+  COLAB_RAIL_ITEM,
 ];
 
-// --- The House: primary places ---
-
-/**
- * The four places the House offers first.
- *
- * The House greets in verbs — what the member came to do — not in product
- * names. Everything else lives behind "More places". This is the whole of the
- * member's visible navigation: one doorway, four primary places, one drawer.
- *
- * Each primary entry points at an existing world rather than inventing a route,
- * so there is still exactly one source of truth for where a place lives. Change
- * a mapping here and the House changes; no component hardcodes a destination.
- *
- * All four resolve to un-gated worlds, so an ordinary (non-founder) member can
- * actually reach every primary place.
- */
-export interface HousePrimaryPlace {
-  id: 'continue' | 'reflect' | 'create' | 'belong';
-  /** The verb the member sees. */
-  label: string;
-  /** The world this verb opens. */
-  worldId: MaiaWorldId;
-  /** What this place is for, in the member's terms. */
-  blurb: string;
-}
-
-export const HOUSE_PRIMARY: HousePrimaryPlace[] = [
-  { id: 'continue', label: 'Continue', worldId: 'maia',         blurb: 'Pick up where you left off' },
-  { id: 'reflect',  label: 'Reflect',  worldId: 'journal',      blurb: 'Sit with something in writing' },
-  { id: 'create',   label: 'Create',   worldId: 'ideas',        blurb: 'Follow a thought that is starting' },
-  { id: 'belong',   label: 'Belong',   worldId: 'living-field', blurb: 'Gather with lived experience' },
-];
-
-/** World IDs claimed by the primary four — everything else falls to "More places". */
-export const HOUSE_PRIMARY_WORLD_IDS: MaiaWorldId[] = HOUSE_PRIMARY.map((p) => p.worldId);
+// --- No activity taxonomy here, deliberately ---
+//
+// RULING (Kelly, 2026-07-22): the House grammar is Your Center · Worlds · Rooms.
+// Continue / Reflect / Create / Belong were drafted and REJECTED as the
+// organizing grammar.
+//
+// Not because the words are bad — they are good words — but because they answer
+// the wrong question. Opening the House asks "where am I?", not "what kind of
+// activity is this?" Structure answers where; language answers what you can do.
+// Reflect/Create/Belong classify activities: that is a taxonomy, however
+// friendly. The rail did not fail because it was a rail; it failed because it
+// was a taxonomy. Replacing one taxonomy with another would not have solved
+// anything.
+//
+// Those verbs remain welcome as orientation COPY inside a section. They must
+// not become the hierarchy. Do not reintroduce a HOUSE_PRIMARY-style mapping.
 
 /** Left rail width in pixels — used for content padding in boundary layouts */
 export const RAIL_WIDTH_PX = 56; // w-14 = 3.5rem = 56px at 16px base

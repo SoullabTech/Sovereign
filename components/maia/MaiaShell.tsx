@@ -304,37 +304,51 @@ export function MaiaShell({
       {/* The House — THE doorway. Now the only permanent navigation on the
           conversation surface: MAIA, and one way into the places.
 
-          Upper-left, matching the Arrival composition's doorway exactly, so the
-          member learns one location once and it never moves beneath them. The
-          bottom-centre floating pill is retired: it sat over the composer on
-          mobile and read as a utility control rather than a threshold.
+          GEOMETRY IS LOAD-BEARING. This must render at the SAME box as the
+          Arrival composition's doorway, because Arrival and conversation swap
+          beneath a member who should never have to re-find the way out. The
+          container mirrors MaiaArrivalField's header exactly — h-[54px],
+          px-4 md:px-6 — and the button mirrors its button — -ml-1, h-11, px-2,
+          no pill. That yields an identical box in both states:
 
-          Hidden while Arrival is on screen — the Arrival composition carries its
-          own doorway at the same coordinates. One House, one renderer, one
-          doorway: the doorway belongs to whichever surface the member is in. */}
+              desktop  x=20  y=5  114x44
+              mobile   x=12  y=5  114x44
+
+          A previous pass placed this at `left-3 top-14` and asserted in a
+          comment that it matched Arrival. It did not: measured, it sat at
+          (12,56) 124x44 — a 51px jump and a 10px width change every time
+          Arrival gave way to conversation. Do not re-anchor this to the top bar
+          height or to a `top-*` offset; anchor it to the same header box, and
+          verify by measuring the bounding box in both states, not by reading
+          this comment.
+
+          Hidden while Arrival is on screen — Arrival carries its own doorway at
+          these coordinates. One House, one renderer, one doorway. */}
       {!arrivalMode && (
-      <button
-        onClick={() => setHouseOpen(true)}
-        className={`
-          group fixed left-3 top-14 z-[85] flex h-11 min-w-[44px] items-center gap-2
-          rounded-full border border-white/10 bg-black/30 px-3 backdrop-blur-md
-          transition-all duration-500 hover:border-white/20 hover:bg-black/40
-          ${calmMode && !calmCeiling ? 'opacity-60 hover:opacity-100' : 'opacity-80 hover:opacity-100'}
-        `}
-        title="The House — your places and practices"
-        aria-label="Open The House"
-      >
-        <Home className="h-[18px] w-[18px] shrink-0 text-[#c9a54e]" strokeWidth={1.5} />
-        <span className="text-[15px] leading-none text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-          The House
-        </span>
-      </button>
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[54px] items-center px-4 md:px-6">
+          <button
+            onClick={() => setHouseOpen(true)}
+            className={`
+              pointer-events-auto -ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2
+              text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none
+              ${calmMode && !calmCeiling ? 'opacity-60 hover:opacity-100' : 'opacity-100'}
+            `}
+            title="The House — your places and practices"
+            aria-label="Open The House"
+          >
+            <Home className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+            <span className="text-[15px] leading-none" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+              The House
+            </span>
+          </button>
+        </div>
       )}
 
       <MaiaHouseSheet
         open={houseOpen}
         onClose={() => setHouseOpen(false)}
         isFounder={isAdmin || isPractitioner}
+        onOpenAccount={() => { setHouseOpen(false); onOpenAccount(); }}
         onReturnToArrival={
           canReturnToArrival && onReturnToArrival
             ? () => { setHouseOpen(false); onReturnToArrival(); }

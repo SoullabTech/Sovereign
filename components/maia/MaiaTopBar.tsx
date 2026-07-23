@@ -54,7 +54,7 @@ export function MaiaTopBar({
   return (
     <header
       className={`
-        fixed top-0 left-14 right-0 h-12 bg-[#0f0d0b]/90 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-[70]
+        fixed top-0 left-0 right-0 h-12 bg-[#0f0d0b]/90 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-[70]
         flex items-center justify-between px-4
         transition-opacity duration-500 ease-out
         ${opacityClass}
@@ -62,12 +62,13 @@ export function MaiaTopBar({
       `}
       style={{ paddingTop: 'max(env(safe-area-inset-top), 0px)' }}
     >
-      {/* Left: MAIA wordmark + behavior indicator */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <img src="/logo_flower 2.png" alt="MAIA" className="w-5 h-5 opacity-90" />
-          <span className="text-sm font-light text-[#D4B896]/80 tracking-wider">MAIA</span>
-        </div>
+      {/* Left: reserved for The House.
+          The House owns the upper-left anchor — the shell renders the doorway
+          there as a fixed element, and this bar yields the corner to it. The
+          ordering is not cosmetic: the House contains MAIA, not the reverse.
+          The House is orientation; MAIA is relationship. Only the behavior
+          indicator rides along here, and it sits clear of the doorway. */}
+      <div className="flex items-center gap-3 pl-[8.5rem]">
         {behavior !== 'default' && (
           <span className={`text-[10px] font-light tracking-wide uppercase ${behaviorInfo.color}`}>
             {behaviorInfo.label}
@@ -75,8 +76,12 @@ export function MaiaTopBar({
         )}
       </div>
 
-      {/* Right: utilities */}
+      {/* Right: MAIA, then utilities */}
       <div className="flex items-center gap-1">
+        <div className="mr-2 flex items-center gap-2">
+          <img src="/logo_flower 2.png" alt="MAIA" className="w-5 h-5 opacity-90" />
+          <span className="text-sm font-light text-[#D4B896]/80 tracking-wider">MAIA</span>
+        </div>
         {/* Voice / Text toggle */}
         <button
           onClick={onToggleInputMode}

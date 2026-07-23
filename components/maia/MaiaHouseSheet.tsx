@@ -24,15 +24,26 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, DoorOpen } from 'lucide-react';
+import { DoorOpen, Settings, User } from 'lucide-react';
+import { MAIA_WORLDS, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import {
-  MAIA_WORLDS,
-  getVisibleBoundaries,
-  HOUSE_PRIMARY,
-  HOUSE_PRIMARY_WORLD_IDS,
-  type HousePrimaryPlace,
-} from '@/lib/navigation/maiaNav';
-import type { MaiaRailItem, MaiaWorldId } from '@/lib/navigation/types';
+  badgeDelay,
+  colabLabel,
+  fetchColabBadge,
+  isColabVisible,
+  lastColabTotal,
+} from '@/lib/navigation/colabBadge';
+import type { MaiaRailItem } from '@/lib/navigation/types';
+
+// One row shape for every place, so nothing in the House renders at a different
+// scale than anything else. (The verb-taxonomy pass introduced exactly that
+// inversion — secondary places larger than primary ones.)
+const ROW =
+  'group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none';
+const ROW_ICON =
+  'flex h-9 w-9 shrink-0 items-center justify-center text-[#c9a54e] transition-colors group-hover:text-[#e3c368]';
+const ROW_LABEL = 'block text-[17px] leading-snug text-slate-100';
+const ROW_BLURB = 'mt-1 block text-[15px] leading-snug text-slate-400';
 
 interface MaiaHouseSheetProps {
   open: boolean;
@@ -50,11 +61,17 @@ interface MaiaHouseSheetProps {
    * untouched by this path.
    */
   onReturnToArrival?: () => void;
+  /**
+   * Opens the account panel. The rail used to carry Account and Settings at its
+   * foot; with the rail gone the House holds them — below a divider, so member
+   * utilities never read as another world of MAIA.
+   */
+  onOpenAccount?: () => void;
 }
 
 const SERIF = 'Spectral, Georgia, serif';
 
-export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: MaiaHouseSheetProps) {
+export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, onOpenAccount }: MaiaHouseSheetProps) {
   const router = useRouter();
 
   // Close on Escape — the House never traps you.
@@ -65,37 +82,44 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: 
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  // The primary four, resolved against the canonical world registry so the
-  // House never hardcodes a destination.
-  const primary = HOUSE_PRIMARY
-    .map((p) => ({ p, world: MAIA_WORLDS.find((w) => w.id === p.worldId) }))
-    .filter((x): x is { p: HousePrimaryPlace; world: MaiaRailItem } => Boolean(x.world));
+  const center = MAIA_WORLDS.find((w) => w.id === 'maia');
+  const worlds = MAIA_WORLDS.filter((w) => w.id !== 'maia');
+  const rooms = getVisibleBoundaries(isFounder);
 
-  // Everything the primary four did not claim. The rail is gone, so this drawer
-  // is the ONLY remaining route to these places — nothing may be dropped here.
-  const morePlaces: MaiaRailItem[] = [
-    ...MAIA_WORLDS.filter((w) => !HOUSE_PRIMARY_WORLD_IDS.includes(w.id as MaiaWorldId)),
-    ...getVisibleBoundaries(isFounder),
-  ];
-
-  const [moreOpen, setMoreOpen] = useState(false);
-  // Collapse the drawer whenever the House closes, so it always reopens in its
-  // quiet state rather than remembering an expanded list.
-  useEffect(() => { if (!open) setMoreOpen(false); }, [open]);
+  // Co-lab's visibility is conditional on live state, not on membership class,
+  // so the registry's audience field cannot express it. Rule preserved verbatim
+  // from the rail: visible when the member can ACT on Co-lab, or has a pending
+  // count. A pure seeker never sees an empty coordination badge.
+  const [colabCount, setColabCount] = useState(lastColabTotal());
+  useEffect(() => {
+    if (!open) return; // only poll while the House is actually on screen
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      fetchColabBadge().then((total) => {
+        if (!alive) return;
+        setColabCount(total);
+        timer = setTimeout(tick, badgeDelay());
+      });
+    };
+    tick();
+    return () => { alive = false; clearTimeout(timer); };
+  }, [open]);
+  const showColab = isColabVisible(isFounder, colabCount);
 
   const enter = (route: string) => {
     onClose();
     router.push(route);
   };
 
-  const Place = ({ item }: { item: MaiaRailItem }) => {
+  const Place = ({ item, label }: { item: MaiaRailItem; label?: string }) => {
     const Icon = item.icon;
     return (
       <button
         onClick={() => enter(item.route)}
-        className="group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
+        className={ROW}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center text-[#c9a54e] transition-colors group-hover:text-[#e3c368]">
+        <span className={ROW_ICON}>
           <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </span>
         {/* Legibility floor (founder ruling §9): place names 17px, helper 15px.
@@ -104,16 +128,45 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: 
             they are least oriented. `truncate` is gone with it: a place whose
             description is cut mid-word cannot do the job of orienting anyone. */}
         <span className="min-w-0">
-          <span className="block text-[17px] leading-snug text-slate-100" style={{ fontFamily: SERIF }}>
-            {item.label}
+          <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>
+            {label ?? item.label}
           </span>
           {item.tooltip && (
-            <span className="mt-1 block text-[15px] leading-snug text-slate-400">
+            <span className={ROW_BLURB}>
               {item.tooltip}
             </span>
           )}
         </span>
       </button>
+    );
+  };
+
+  const GroupHeading = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="mb-1.5 px-4 text-[10.5px] font-medium uppercase tracking-[0.22em] text-slate-500">
+      {children}
+    </h3>
+  );
+
+  const Group = ({
+    title, items, colabCount: cc, showColab: sc,
+  }: { title: string; items: MaiaRailItem[]; colabCount?: number; showColab?: boolean }) => {
+    // Co-lab is filtered by its live rule, not by audience. Everything else in
+    // the registry is already audience-filtered upstream.
+    const visible = items.filter((i) => (i.id === 'colab' ? sc !== false : true));
+    if (visible.length === 0) return null;
+    return (
+      <section className="mb-6">
+        <GroupHeading>{title}</GroupHeading>
+        <div className="flex flex-col">
+          {visible.map((item) => (
+            <Place
+              key={item.id}
+              item={item}
+              label={item.id === 'colab' ? colabLabel(cc ?? 0) : undefined}
+            />
+          ))}
+        </div>
+      </section>
     );
   };
 
@@ -158,99 +211,52 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: 
             </div>
 
             <div className="px-1.5">
+              {/* YOUR CENTER — where the member already is, and the way back to
+                  the threshold. Not a category of activity: a location. */}
               <section className="mb-6">
-                {/* The primary four. No heading — a house does not label its own
-                    rooms "PRIMARY". These are simply what is offered first. */}
+                <GroupHeading>Your Center</GroupHeading>
                 <div className="flex flex-col">
-                  {primary.map(({ p, world }) => {
-                    const Icon = world.icon;
-                    return (
-                      <button
-                        key={p.id}
-                        onClick={() => enter(world.route)}
-                        className="group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
-                      >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center text-[#c9a54e] transition-colors group-hover:text-[#e3c368]">
-                          <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-[17px] leading-snug text-slate-100" style={{ fontFamily: SERIF }}>
-                            {p.label}
-                          </span>
-                          <span className="mt-1 block text-[15px] leading-snug text-slate-400">
-                            {p.blurb}
-                          </span>
-                        </span>
-                      </button>
-                    );
-                  })}
-
+                  {center && <Place item={center} />}
                   {/* The deliberate return. A place among places — not a reset,
                       not a settings toggle. The member may open this room as
                       often as they like; nothing they have crossed is undone. */}
                   {onReturnToArrival && (
-                      <button
-                        onClick={onReturnToArrival}
-                        className="group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
-                      >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center text-[#c9a54e] transition-colors group-hover:text-[#e3c368]">
-                          <DoorOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                    <button
+                      onClick={onReturnToArrival}
+                      className={ROW}
+                    >
+                      <span className={ROW_ICON}>
+                        <DoorOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>
+                          Return to Arrival
                         </span>
-                        <span className="min-w-0">
-                          <span className="block text-[17px] leading-snug text-slate-100" style={{ fontFamily: SERIF }}>
-                            Return to Arrival
-                          </span>
-                          <span className="mt-1 block text-[15px] leading-snug text-slate-400">
-                            Begin again at the threshold
-                          </span>
-                        </span>
-                      </button>
-                    )}
+                        <span className={ROW_BLURB}>Begin again at the threshold</span>
+                      </span>
+                    </button>
+                  )}
                 </div>
               </section>
 
-              {/* More places — everything the primary four did not claim.
-                  Closed by default: the House offers a few things well before it
-                  offers everything. With the rail gone this drawer is the only
-                  remaining route to these destinations, so it is a disclosure,
-                  never a filter. */}
-              {morePlaces.length > 0 && (
-                <section className="mb-2">
-                  <button
-                    onClick={() => setMoreOpen((v) => !v)}
-                    aria-expanded={moreOpen}
-                    aria-controls="house-more-places"
-                    className="group flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
-                  >
-                    <span className="text-[17px] text-slate-300" style={{ fontFamily: SERIF }}>
-                      More places
-                    </span>
-                    <span className="text-[15px] text-slate-500">{morePlaces.length}</span>
-                    <ChevronDown
-                      className={`ml-auto h-4 w-4 text-slate-500 transition-transform duration-300 ${moreOpen ? 'rotate-180' : ''}`}
-                      strokeWidth={1.5}
-                    />
-                  </button>
+              <Group title="Worlds" items={worlds} />
+              <Group title="Rooms" items={rooms} colabCount={colabCount} showColab={showColab} />
 
-                  <AnimatePresence initial={false}>
-                    {moreOpen && (
-                      <motion.div
-                        id="house-more-places"
-                        key="house-more-places"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: 'easeOut' }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex flex-col pt-1">
-                          {morePlaces.map((item) => <Place key={item.id} item={item} />)}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </section>
-              )}
+              {/* Below the line: the member's own account, not a place in MAIA.
+                  Separated so utilities never read as another world. */}
+              <div className="mx-4 mb-4 mt-1 border-t border-white/[0.07]" />
+              <section className="mb-2">
+                <div className="flex flex-col">
+                  <button onClick={onOpenAccount} className={ROW}>
+                    <span className={ROW_ICON}><User className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
+                    <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Account</span>
+                  </button>
+                  <button onClick={() => enter('/account/settings')} className={ROW}>
+                    <span className={ROW_ICON}><Settings className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
+                    <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Settings</span>
+                  </button>
+                </div>
+              </section>
             </div>
           </motion.div>
         </>

@@ -17,6 +17,7 @@ import { MAIA_WORLDS, MAIA_UTILITIES, getBoundaryFromPathname, getVisibleBoundar
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
 import { useSession } from '@/lib/hooks/useSession';
 import type { MaiaWorldId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/types';
+import { badgeDelay, fetchColabBadge, lastColabTotal } from '@/lib/navigation/colabBadge';
 
 /** MAIA communication mode — how the member enters the conversation */
 export type MaiaMode = 'normal' | 'patient' | 'session';
@@ -65,45 +66,15 @@ interface MaiaLeftRailProps {
 // Boundary: module scope is per-tab — N open tabs are N independent pollers.
 // If this guard gets extracted for other ambient chrome, cross-tab dedup
 // belongs in a BroadcastChannel or shared worker, not here.
-const BADGE_POLL_MS = 20000;
-const BADGE_BACKOFF_MAX_MS = 5 * 60 * 1000;
-let badgeLastTotal = 0;
-let badgeLastFetchAt = 0;
-let badgeFailures = 0;
-let badgeInFlight: Promise<number> | null = null;
-
-function badgeDelay(): number {
-  if (badgeFailures === 0) return BADGE_POLL_MS;
-  return Math.min(BADGE_POLL_MS * 2 ** badgeFailures, BADGE_BACKOFF_MAX_MS);
-}
-
-function fetchColabBadge(): Promise<number> {
-  // Reuse the in-flight request; honor the poll/backoff floor across remounts.
-  if (badgeInFlight) return badgeInFlight;
-  if (Date.now() - badgeLastFetchAt < badgeDelay()) return Promise.resolve(badgeLastTotal);
-  badgeLastFetchAt = Date.now();
-  badgeInFlight = fetch('/api/team/colab-badge')
-    .then(r => {
-      if (!r.ok) throw new Error(`colab-badge ${r.status}`);
-      return r.json();
-    })
-    .then(d => {
-      badgeFailures = 0;
-      badgeLastTotal = d.total ?? 0;
-      return badgeLastTotal;
-    })
-    .catch(() => {
-      badgeFailures = Math.min(badgeFailures + 1, 10);
-      return badgeLastTotal;
-    })
-    .finally(() => { badgeInFlight = null; });
-  return badgeInFlight;
-}
+// Extracted to lib/navigation/colabBadge (2026-07-22) so the House and this rail
+// share ONE guard. The module scope is load-bearing: the poll floor and backoff
+// hold across mounts AND across surfaces, so offering Co-lab in two places does
+// not double the request rate.
 
 function ColabRailButton({ alwaysShow }: { alwaysShow: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [count, setCount] = useState(badgeLastTotal);
+  const [count, setCount] = useState(lastColabTotal());
 
   useEffect(() => {
     let alive = true;
