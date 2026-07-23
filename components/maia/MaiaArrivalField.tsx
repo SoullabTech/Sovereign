@@ -88,10 +88,20 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
           onClick={onOpenHouse}
           title="The House — your places and practices"
           aria-label="Open The House"
-          className="-ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2 text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none"
+          className="group -ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2 text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none"
         >
           <Home className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
-          <span className="text-[15px] leading-none" style={{ fontFamily: SERIF }}>The House</span>
+          {/* Label revealed on hover/focus, exactly as the shell doorway does.
+              These two must stay identical — the doorway is one place to the
+              member even though two components render it. Change both or
+              neither, and verify by measuring, not by reading. */}
+          <span
+            className="max-w-0 overflow-hidden whitespace-nowrap text-[15px] leading-none opacity-0 transition-all duration-300 group-hover:max-w-[8rem] group-hover:opacity-100 group-focus-visible:max-w-[8rem] group-focus-visible:opacity-100"
+            style={{ fontFamily: SERIF }}
+            aria-hidden="true"
+          >
+            The House
+          </span>
         </button>
         <div className="flex items-center gap-3 text-[#b7ad9c]">
           {onKeep && (

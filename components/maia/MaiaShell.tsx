@@ -329,7 +329,7 @@ export function MaiaShell({
           <button
             onClick={() => setHouseOpen(true)}
             className={`
-              pointer-events-auto -ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2
+              group pointer-events-auto -ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2
               text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none
               ${calmMode && !calmCeiling ? 'opacity-60 hover:opacity-100' : 'opacity-100'}
             `}
@@ -337,7 +337,21 @@ export function MaiaShell({
             aria-label="Open The House"
           >
             <Home className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
-            <span className="text-[15px] leading-none" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+            {/* The label is revealed, not removed. The icon alone is the resting
+                state — after a few uses a doorway does not need to say its own
+                name, and the permanent label was the widest thing in the bar,
+                which is what crowded MAIA off small screens.
+
+                Revealed on hover AND on keyboard focus: hover-only would hide
+                the name from anyone navigating by keyboard, who needs it most.
+                Width animates rather than the label appearing/disappearing, so
+                nothing beside it jumps. `aria-label` on the button carries the
+                name unconditionally, so screen readers never depend on hover. */}
+            <span
+              className="max-w-0 overflow-hidden whitespace-nowrap text-[15px] leading-none opacity-0 transition-all duration-300 group-hover:max-w-[8rem] group-hover:opacity-100 group-focus-visible:max-w-[8rem] group-focus-visible:opacity-100"
+              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              aria-hidden="true"
+            >
               The House
             </span>
           </button>
