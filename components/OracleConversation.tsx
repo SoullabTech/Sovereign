@@ -8171,7 +8171,7 @@ I'm not sure what I'm feeling yet.`;
                   turns still scroll up behind the jewel as they should; only the
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
-                <div className="space-y-3 pt-[10.5rem] pb-52 md:pt-[12rem] md:pb-32">
+                <div className="space-y-3 pt-[10.5rem] pb-36 md:pt-[12rem] md:pb-24">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
@@ -8265,7 +8265,7 @@ I'm not sure what I'm feeling yet.`;
                       onClick={handleCopyMessage}
                       style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5)' }}
                     >
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-2">
                           {/* Only MAIA is named. A member does not need to be told
                               their own name above their own words — with both
@@ -8563,8 +8563,13 @@ I'm not sure what I'm feeling yet.`;
             >
               <button
                 onClick={() => setShowVoiceText(!showVoiceText)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium bg-black/20 backdrop-blur-md
-                         text-white/60 hover:text-white/80 transition-all"
+                /* A utility, not a peer of the conversation. It was a
+                   backdrop-blurred pill at 60% white — the eye read MAIA, then
+                   Hide Text, then the words, which puts a toggle ahead of the
+                   thing it toggles. Chrome removed, type down a step, contrast
+                   halved; it surfaces on hover when wanted. */
+                className="px-2 py-1 rounded-full text-[11px] font-medium
+                         text-white/30 hover:text-white/70 transition-colors"
               >
                 {showVoiceText ? 'Hide Text' : 'Show Text'}
               </button>
@@ -8637,7 +8642,7 @@ I'm not sure what I'm feeling yet.`;
                    input controls. The extra ~24px lets the composer close as one
                    complete object and leaves SOULLAB reading as the page's quiet
                    footer rather than another button in the row. */
-                style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
+                style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px))' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   {/* 📚 ASK MAIA chip — orientation + Knowledge Field stance toggle */}
@@ -8806,7 +8811,7 @@ I'm not sure what I'm feeling yet.`;
       {!showChatInterface && (
         <div
           className="fixed left-0 right-0 z-below-nav flex justify-center"
-          style={{ bottom: 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' }}
+          style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
             onClick={() => setShowChatInterface(true)}
