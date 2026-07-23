@@ -476,8 +476,13 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               autoCapitalize="sentences"
               spellCheck={false}
               data-form-type="other"
+              // text-[16px], not text-sm (14px): iOS Safari auto-zooms the
+              // page on focus for any input under 16px, and zoom is never
+              // capped app-wide (accessibility — see app/layout.tsx), so
+              // raising the field's own font-size is the only fix that
+              // doesn't also block a member's own zoom.
               className={`w-full min-h-[40px] max-h-[120px] bg-transparent border-none outline-none resize-none
-                       text-sm leading-relaxed placeholder:text-white/40 transition-colors pr-12
+                       text-[16px] leading-relaxed placeholder:text-white/40 transition-colors pr-12
                        ${enableVoiceInput || isRecording
                          ? 'text-blue-300 cursor-not-allowed'
                          : 'text-white/90'

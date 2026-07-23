@@ -165,7 +165,12 @@ export function VoiceInteractionBar({
                 onChange={(e) => setTextValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
-                className="flex-1 bg-maia-navy-800/80 text-stone-200 text-sm rounded-full px-4 py-2
+                // text-[16px], not text-sm (14px): iOS Safari auto-zooms on
+                // focus below 16px, and zoom is never capped app-wide
+                // (accessibility — see app/layout.tsx), so raising the
+                // field's own font-size is the only fix that doesn't also
+                // block a member's own zoom.
+                className="flex-1 bg-maia-navy-800/80 text-stone-200 text-[16px] rounded-full px-4 py-2
                            placeholder-stone-600 border border-white/10 focus:outline-none
                            focus:border-maia-spice-500/40 transition-colors"
               />

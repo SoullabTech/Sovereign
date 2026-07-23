@@ -255,7 +255,12 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Message MAIA…"
-            className="min-w-0 flex-1 bg-transparent text-[15px] text-slate-100 placeholder:text-[#9a9182] focus:outline-none"
+            // 16px, not 15px: iOS Safari auto-zooms the page on focus for
+            // any input under 16px. The project deliberately never caps
+            // zoom (userScalable: true, app/layout.tsx — WCAG 1.4.4), so
+            // this can't be suppressed that way; 16px is the only fix that
+            // doesn't also block a member's own zoom.
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-slate-100 placeholder:text-[#9a9182] focus:outline-none"
             style={{ fontFamily: SERIF }}
           />
           {/* Real submit control. The form has one text input and previously no
