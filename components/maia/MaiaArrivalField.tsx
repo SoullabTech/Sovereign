@@ -24,6 +24,48 @@ import { Home } from 'lucide-react';
 
 const SERIF = 'Spectral, Georgia, serif';
 
+/**
+ * GEOMETRY INVARIANT (#704): with the software keyboard open, the complete
+ * Arrival focal object remains visible within the usable VISUAL viewport,
+ * without device-specific offsets.
+ *
+ * `position: fixed; inset: 0` pins a box to the LAYOUT viewport, which iOS
+ * does not shrink when the keyboard opens. When the focused composer input
+ * scrolls into view above the keyboard, `visualViewport.offsetTop` becomes
+ * nonzero — but a fixed box tracks the layout viewport, not the visual one,
+ * so it does not move with that scroll. The top of the box (the holoflower)
+ * scrolls out of the visible window above it. That is the measured crop.
+ *
+ * `window.visualViewport` is the platform API built for exactly this: it
+ * tracks the actually-visible rectangle, independent of keyboard, URL-bar
+ * collapse, or pinch-zoom, and fires `resize`/`scroll` as it changes. This is
+ * feature detection, not UA parsing — it has shipped in iOS Safari (and
+ * WKWebView, so Chrome-on-iOS too) since iOS 13, which covers the observed
+ * fleet. Browsers without it fall back to the old inset-0 behavior; the
+ * effect below simply never updates the box away from that default.
+ */
+function useVisualViewportBox() {
+  const [box, setBox] = useState(() => ({
+    top: 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  }));
+
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return; // no API — box stays at the SSR-safe fallback above
+    const update = () => setBox({ top: vv.offsetTop, height: vv.height });
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+
+  return box;
+}
+
 export interface MaiaArrivalFieldProps {
   greeting: string;          // e.g. "Good evening, Kelly"
   subtext: string;           // e.g. "I'm here when you're ready — just tell me what you need."
@@ -49,6 +91,7 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
   // and rail (z-80). Portaling escapes it so the arrival reads as one field.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const viewportBox = useVisualViewportBox();
 
   const send = (text: string) => {
     const t = text.trim();
@@ -64,8 +107,21 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16, scale: 0.98 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed inset-0 z-[90] flex flex-col items-center justify-center px-5"
+      className="fixed left-0 right-0 z-[90] flex flex-col items-center overflow-y-auto px-5"
       style={{
+        // GEOMETRY INVARIANT (#704): top/height come from the VISUAL viewport,
+        // not `inset-0`/100%, so the field tracks the keyboard-reduced visible
+        // area instead of the static layout viewport. See useVisualViewportBox.
+        top: viewportBox.top,
+        height: viewportBox.height,
+        // `safe center`: centers the content when it fits, but falls back
+        // toward the start rather than clipping it off-screen when the
+        // available height is too short to fit everything (a small keyboard
+        // + landscape phone) — the plain `center` keyword can otherwise make
+        // the very top of the content unreachable, even with overflow:auto.
+        // Unsupported browsers ignore the value and get top-alignment, which
+        // is the safe direction to fail in (no crop), not a wrong one.
+        justifyContent: 'safe center',
         // Opaque field so the arrival reads as ONE contained composition,
         // covering the scattered conversation layers + chrome behind it.
         // Matches the approved mockup: violet bloom over warm near-black.
