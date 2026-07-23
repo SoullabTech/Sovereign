@@ -1,0 +1,127 @@
+# Voice capture — "MAIA can't hear me on iPhone" (2026-07-23)
+
+**Diagnosed from production telemetry. Nothing patched.**
+
+Not undiagnosed, and not a layout bug. `lib/voice/voiceDiagnostics.ts` already instruments
+the full Web Speech lifecycle (`granted → listening_started → audio_started →
+speech_started → result|error → ended`) and ships it to `/api/telemetry/client`. The
+answer was already in production logs.
+
+## Two distinct failures, two devices
+
+### A — Safari **26.5.2** vs **26.6** on iOS 18.7: `service-not-allowed`
+
+**The discriminator is the Safari build, not the device model and not Safari-vs-Chrome.**
+Same account, same page, same day, iOS 18.7 in both cases:
+
+**`Version/26.6` — session `v2px3o6m`, 14:20:09→14:20:16Z — full success**
+
+```
+voice_mic_granted        audioTracks:1  trackLabel:"iPhone Microphone"
+voice_listening_started
+voice_audio_started
+voice_transcribe_result  isFinal:false  ×8
+voice_speech_started
+voice_transcribe_result  isFinal:true      ← final transcript delivered
+voice_recognition_ended
+```
+
+**`Version/26.5.2` — sessions `j3iu7q56`, `9zkqdnc2`, `psew2984` — fails identically ×3**
+
+```
+voice_mic_granted        audioTracks:1  trackLabel:"iPhone Microphone"
+voice_transcribe_error   error:"service-not-allowed"
+```
+
+Two consequences:
+
+1. **The failure precedes listening.** No `voice_listening_started`, no
+   `voice_audio_started` in the failing sessions — the recognizer is refused at start, not
+   mid-stream. The microphone is granted in both cases (`iPhone Microphone`, 1 audio
+   track), so this is **not** a mic-permission problem.
+2. **"Listening but not hearing" is the UI asserting a false state.** The flower shows
+   `LISTENING` while recognition has already errored. It is not waiting for the member's
+   voice — it was refused before it began. The interface is not merely silent about the
+   failure; it is actively claiming a state that is not true.
+
+Dictation-disabled remains possible but is now the weaker branch: if Dictation were off at
+the device level, the 26.6 session could not have succeeded — *unless* these are two
+different physical phones (Pro Max vs 16) both on iOS 18.7 with different Safari builds,
+which is likely. `service-not-allowed` with the mic granted fits either.
+
+**Two tests that separate them, in order:**
+1. iPhone 16 → Settings → General → Keyboard → **Enable Dictation**. If off, enable and
+   retry.
+2. If already on → **update that phone to Safari 26.6**.
+
+Either way telemetry answers within seconds: a working attempt emits
+`voice_listening_started`.
+
+### A (original reading) — iOS 18.7, Safari: `service-not-allowed`
+
+```
+voice_transcribe_error  error:"service-not-allowed"  session jnjwie6f  14:12:47Z
+voice_transcribe_error  error:"service-not-allowed"  session wojgkrar  14:14:41Z
+ua: iPhone; CPU iPhone OS 18_7 … Version/26.5.2 Mobile
+```
+
+`service-not-allowed` is **not** a mic-permission failure — that is `not-allowed`. It
+means the speech-recognition *service* refused. On iOS, `webkitSpeechRecognition` is
+backed by Apple's dictation service, so the leading cause is **Dictation disabled on the
+device** (Settings → General → Keyboard → Enable Dictation), or Siri & Dictation blocked
+under Screen Time restrictions.
+
+Mic works. Browser works. Apple's service declines.
+
+**Unconfirmed** until someone checks that setting on the device — this is the leading
+cause consistent with the error code, not a proven one.
+
+### B — iOS 26.6, Chrome (`CriOS/150`): `aborted`
+
+```
+voice_transcribe_error  error:"aborted"        session 0dasssb6  14:17:20.073Z
+voice_audio_no_speech   cycleCount:1 limit:2   session 0dasssb6  14:17:20.078Z
+ua: iPhone; CPU iPhone OS 26_6_0 … CriOS/150.0.7871.113
+```
+
+Chrome on iOS does not support the Web Speech API. Recognition starts against the WebKit
+shell and immediately aborts. **The same device works in Safari** — three complete chains
+(`listening_started → audio_started → speech_started`) minutes earlier under the iOS 26.6
+Safari UA.
+
+## Baseline — voice is working broadly
+
+6h of production telemetry:
+
+| event | count |
+|---|---|
+| `voice_transcribe_result` | 74 |
+| `voice_mic_granted` | 7 |
+| `voice_listening_started` | 5 |
+| `voice_audio_started` | 5 |
+| `voice_speech_started` | 4 |
+| `voice_transcribe_error` | **3** |
+| `voice_audio_no_speech` | 1 |
+
+The three errors are the two causes above. This is not a widespread capture failure.
+
+## The actual product defect
+
+**The app knows exactly why it failed and tells the member nothing.** Both error codes are
+captured, typed, and shipped to telemetry — and the member sees a flower that silently
+never hears them. Each has a precise, actionable remedy that never reaches the person
+holding the phone:
+
+| error | what the member should be told |
+|---|---|
+| `service-not-allowed` | Dictation is off for this device — enable it in Settings |
+| `aborted` / no API in CriOS | Voice needs Safari on iPhone — open this page in Safari |
+
+Smallest patch: map those two codes to a member-facing message at the point of failure in
+`components/voice/ContinuousConversation.tsx`. **Not applied.**
+
+## Verification before any code
+
+On the affected iPhone: Settings → General → Keyboard → **Enable Dictation**. If it is
+off, turning it on should restore voice immediately — which confirms cause A before
+anyone writes a line.
