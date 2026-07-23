@@ -8267,9 +8267,21 @@ I'm not sure what I'm feeling yet.`;
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
-                            {message.role === 'user' ? (userName || 'You') : assistantName}
-                          </div>
+                          {/* Only MAIA is named. A member does not need to be told
+                              their own name above their own words — with both
+                              labelled, "Demo Practitioner / hello" carried more
+                              chrome than message, and a long display name wrapped
+                              to two lines above a one-word turn.
+
+                              Naming one voice is enough to tell two apart: labelled
+                              is MAIA, unlabelled is you. Alignment no longer carries
+                              speaker (both turns share a column), so the label does
+                              — which is why MAIA's stays. */}
+                          {message.role !== 'user' && (
+                            <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
+                              {assistantName}
+                            </div>
+                          )}
                           {/* 🚪 AIN: Knowledge Gate source well indicator (admin-only, suppressed in Sanctuary) */}
                           {showDiagnostics && message.role === 'oracle' && !isSanctuary && message.ainState && (
                             <SourceHalo
