@@ -8655,37 +8655,36 @@ I'm not sure what I'm feeling yet.`;
                 style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px))' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
-                  {/* 📚 ASK MAIA chip — orientation + Knowledge Field stance toggle */}
-                  <div className="flex items-center gap-2 px-2 pb-2">
-                    <button
-                      onClick={() => {
-                        setAskMode(!askMode);
-                        console.log('[Ask MAIA]', !askMode ? 'activated' : 'deactivated');
-                      }}
-                      /* Quieter by ruling (2026-07-23): a secondary affordance,
-                         not a prominent pill. It was a bordered, blue-tinted
-                         chip that read as heavy as the composer beneath it.
-                         Borderless and low-contrast at rest; the ACTIVE state
-                         still reads clearly, because the member needs to know
-                         this turn is being answered from the Knowledge Field
-                         rather than the relational default. Lower visual weight,
-                         not lower agency — the capability is unchanged: still
-                         single-turn, still forces Knowledge Field injection,
-                         still invokes the orientation stance. */
-                      className={`flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-colors ${
-                        askMode
-                          ? 'text-blue-300/90'
-                          : 'text-white/30 hover:text-white/60'
-                      }`}
-                      title={askMode ? 'Ask MAIA active — clarity + knowledge mode' : 'Ask MAIA — switch to orientation mode'}
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                      <span>Ask MAIA</span>
-                    </button>
+                  {/* The composer row no longer carries an "Ask MAIA" chip.
+                      RULING (Kelly, 2026-07-23): remove the label and let MAIA
+                      decide. The whole surface is already MAIA; a control naming
+                      the actor rather than the behaviour, sitting directly above
+                      "What's on your mind?", asked the member to answer a
+                      question the interface never posed.
 
+                      What this does and does not change:
+                      - The Knowledge Field still surfaces on its own. The
+                        inference path in app/api/oracle/conversation/route.ts
+                        injects it whenever hasKnowledgeDomainSignal() fires.
+                      - The ORIENTATION STANCE ("direct answer first, no
+                        reflective preamble") is now unreachable from the member
+                        surface, because askMode is what invoked it and nothing
+                        sets askMode any more.
+
+                      The stance was deliberately NOT wired to the inference in
+                      its place. detectKnowledgeDomains() is substring keyword
+                      matching, not intent classification — good enough to decide
+                      "should knowledge be available" (additive), unfit to decide
+                      "should MAIA drop the reflective stance" (subtractive, and
+                      wrong at exactly the wrong moment: "I've been sitting with
+                      a lot of grief" contains domain keywords). Restoring a
+                      direct-answer mode wants a stance-capable signal first, and
+                      a name describing the behaviour rather than the actor.
+
+                      askMode plumbing is left intact and inert on purpose: it
+                      documents the capability and keeps restoration a one-file
+                      change. It is not dead code by accident. */}
+                  <div className="flex items-center gap-2 px-2 pb-2">
                     {/* Input-mode switch — relocated from the top bar (founder
                         ruling, 2026-07-23). It is contextual to input, not global
                         identity, so it belongs beside the composer it governs and
@@ -8693,10 +8692,10 @@ I'm not sure what I'm feeling yet.`;
                         a phone screen. Vacating the top-right cluster is also what
                         gives the centred MAIA wordmark room on mobile.
 
-                        Deliberately icon-first and secondary: this row already
-                        carries Ask MAIA, tools, the dictation mic and the bug
-                        reporter. It must not become a second pill competing with
-                        the composer, so it is borderless and low-contrast until
+                        Deliberately icon-first and secondary: this row also
+                        carries tools, the dictation mic and the bug reporter.
+                        It must not become a second pill competing with the
+                        composer, so it is borderless and low-contrast until
                         hovered.
 
                         NOT the same control as the mic to its right: this changes
