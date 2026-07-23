@@ -444,6 +444,19 @@ interface OracleConversationProps {
    * having spoken. Keep this call below the guards.
    */
   onMemberExpression?: () => void;
+  /**
+   * Whether the Arrival composition is ACTUALLY rendering for this member right
+   * now — a first-time member who has never crossed, or a member who invoked a
+   * deliberate return from The House. Computed once in app/maia/page.tsx and
+   * passed down; this component never recomputes it.
+   *
+   * ⚠️ Do NOT substitute `featureFlags.arrivalEntry` here. That flag is default-ON
+   * for everyone, so keying the renderer to it showed the first-visit ceremony to
+   * RETURNING members on every fresh session — the "first visit only" ruling never
+   * actually held — while also suppressing their transcript greeting. Arrival must
+   * depend on whether this member should meet it, not on whether it is enabled.
+   */
+  shouldRenderArrival?: boolean;
   onSessionEnd?: (reason?: string) => void;
   initialAction?: string; // Action to trigger on mount (e.g., 'choose-guide', 'show-current-elder')
   // Scribe session discussion mode
@@ -596,6 +609,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onSessionActiveChange,
   onMessageAdded,
   onMemberExpression,
+  shouldRenderArrival = false,
   onSessionEnd,
   initialAction,
   scribeSessionId,
@@ -3255,15 +3269,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Only initialize with greeting if messages weren't already restored from storage
       // (prevents the greeting from overwriting an existing conversation on same-session navigation)
       //
-      // ARRIVAL OWNS THE CEREMONIAL GREETING. When the arrival composition is
-      // the entry surface it has already greeted the member by name, above the
-      // jewel. Seeding the same greeting into the transcript made MAIA appear
-      // to greet twice — once ceremonially, then again as a chat turn the
-      // instant the field cleared. This guard is deliberately narrow: it is
-      // scoped to the flag that decides whether MaiaArrivalField renders, so
-      // every other entry path keeps its greeting exactly as before. The
-      // conversation now opens empty, and MAIA speaks once the member does.
-      if (!sessionRestoredRef.current && !featureFlags.arrivalEntry) {
+      // ARRIVAL OWNS THE CEREMONIAL GREETING — but only when Arrival is actually
+      // on screen. When the arrival composition is the entry surface it has
+      // already greeted the member by name, above the jewel. Seeding the same
+      // greeting into the transcript made MAIA appear to greet twice — once
+      // ceremonially, then again as a chat turn the instant the field cleared.
+      //
+      // This guard reads `shouldRenderArrival`, NOT `featureFlags.arrivalEntry`.
+      // The flag is default-ON for every member; only a first-time member or one
+      // returning deliberately from The House actually meets Arrival. Keying the
+      // suppression to the flag silenced the transcript greeting for returning
+      // members, whose surface is the greeting — it is the only welcome they get.
+      if (!sessionRestoredRef.current && !shouldRenderArrival) {
         setMessages([greetingMessage]);
       }
       localStorage.setItem('lastSessionDate', new Date().toISOString());
@@ -7038,9 +7055,21 @@ I'm not sure what I'm feeling yet.`;
         </div>
       )}
 
-      {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
+      {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower)
+       *
+       * `shouldRenderArrival ||` is load-bearing for the deliberate return. The
+       * rest of this gate describes a member who has not yet started talking, so
+       * on a first visit it is satisfied anyway. But a member who returns from
+       * The House HAS already activated and already has a transcript — without
+       * this term the return set every piece of state correctly (the rail
+       * receded, the doorway moved) and then rendered nothing, because the one
+       * composition it was supposed to open sat inside a branch reserved for
+       * people who had never spoken.
+       *
+       * Arrival still yields the moment the member speaks: markArrived clears
+       * arrivalInvoked, which makes shouldRenderArrival false again. */}
       <AnimatePresence>
-        {!hasActivated && !isProcessing && !isResponding && (() => {
+        {(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (() => {
           // Derive memberStyleProfile from beta_user preferences (if stored)
           const betaUser = safeJsonParse<Record<string, unknown>>(
             typeof window !== 'undefined' ? localStorage.getItem('beta_user') : null
@@ -7075,13 +7104,17 @@ I'm not sure what I'm feeling yet.`;
           // Debug log removed - was causing console spam on every re-render
           // To debug greeting logic, use: console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
 
-          // Arrival remodel (flag arrivalEntry): render the ONE contained
-          // arrival composition instead of the scattered greeting overlay.
-          // This returns early by design — the legacy z-40 overlay below is
-          // never mounted while the arrival field is active, so exactly one
-          // Arrival renderer exists at a time rather than a composed field
-          // layered over the legacy arrival still running underneath it.
-          if (featureFlags.arrivalEntry) {
+          // Arrival remodel: render the ONE contained arrival composition
+          // instead of the scattered greeting overlay. This returns early by
+          // design — the legacy z-40 overlay below is never mounted while the
+          // arrival field is active, so exactly one Arrival renderer exists at a
+          // time rather than a composed field layered over the legacy arrival
+          // still running underneath it.
+          //
+          // Gated on shouldRenderArrival, the same value that drives greeting
+          // suppression above, so the renderer and the suppression can never
+          // disagree about whether Arrival is on screen.
+          if (shouldRenderArrival) {
             return (
               <MaiaArrivalField
                 greeting={welcomeGreeting.greeting}

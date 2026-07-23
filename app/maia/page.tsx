@@ -36,6 +36,7 @@ import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
 import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
+import { deriveShouldRenderArrival, readHasArrivedBefore, recordFirstArrival } from '@/lib/maia/arrivalState';
 import { MaiaShell } from '@/components/maia/MaiaShell';
 import { MaiaModalManager } from '@/components/maia/MaiaModalManager';
 import { AccountDropdown } from '@/components/maia/AccountDropdown';
@@ -373,16 +374,41 @@ function MAIAPageContent() {
   const [askMode, setAskMode] = useState(false); // Ask MAIA — orientation + Knowledge Field stance
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
-  // Arrival (Step 3): a member's first-ever visit meets a clean surface (rail
-  // recedes) until they cross into conversation. Default true = the returning
-  // surface (SSR-safe, no flash for the majority). Gated by an EXPLICIT marker
-  // — the member's own act of having arrived — never inferred readiness.
-  const [hasArrived, setHasArrived] = useState(true);
+  // Arrival state — TWO states, deliberately not one.
+  //
+  // Ruling (Kelly, 2026-07-22):
+  //
+  //   Returning to Arrival is opening a room, not undoing an initiation.
+  //
+  // Collapsing these into a single boolean is the ambiguity this model exists to
+  // prevent: it would make "the member is looking at Arrival right now" and "the
+  // member has never crossed before" the same fact, so a deliberate return would
+  // have to erase the first crossing to render the room.
+  //
+  //   hasArrivedBefore — DURABLE. The first crossing, persisted in localStorage
+  //                      under 'maia_has_arrived'. Written once, never cleared.
+  //   arrivalInvoked   — TEMPORARY. The member asked for Arrival in this session,
+  //                      via The House. Never persisted; dies with the tab.
+  //
+  // Default hasArrivedBefore=true is the SSR-safe returning surface: the majority
+  // never sees a flash of Arrival before the marker is read.
+  const [hasArrivedBefore, setHasArrivedBefore] = useState(true);
+  const [arrivalInvoked, setArrivalInvoked] = useState(false);
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (localStorage.getItem('maia_has_arrived')) return;      // already crossed
-    setHasArrived(false);                                       // first visit → Arrival
+    setHasArrivedBefore(readHasArrivedBefore());
   }, []);
+  // The one calculated truth. Every consumer — the shell's receding rail, the
+  // greeting suppression, the renderer itself — reads THIS, never the raw flag.
+  // A first-time member and a member who deliberately returned meet the same room.
+  const shouldRenderArrival = deriveShouldRenderArrival({
+    arrivalEntryEnabled: featureFlags.arrivalEntry,
+    hasArrivedBefore,
+    arrivalInvoked,
+  });
+  // The House's deliberate return. Opens the room; leaves the first-crossing
+  // marker exactly as it was. A member who returns and leaves again is still
+  // someone who has arrived before.
+  const returnToArrival = useCallback(() => setArrivalInvoked(true), []);
   // Ruling (Kelly, 2026-07-22):
   //
   //   A person is no longer arriving once they have spoken into the relationship.
@@ -400,12 +426,12 @@ function MAIAPageContent() {
   // Fired on every member turn, so it must be idempotent AND write-once: the marker
   // records when arrival happened, not when the member last spoke.
   const markArrived = useCallback(() => {
-    setHasArrived(true);
-    try {
-      if (!localStorage.getItem('maia_has_arrived')) {
-        localStorage.setItem('maia_has_arrived', String(Date.now()));
-      }
-    } catch { /* private mode */ }
+    setHasArrivedBefore(true);
+    // Speaking ends an invoked return the same way it ends a first arrival: the
+    // room gives way to conversation. Without this, a member who deliberately
+    // returned would stay on the Arrival surface while talking.
+    setArrivalInvoked(false);
+    recordFirstArrival();
   }, []);
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showWeekZeroOnboarding, setShowWeekZeroOnboarding] = useState(false);
@@ -756,7 +782,9 @@ function MAIAPageContent() {
             onModeChange={setMaiaMode}
             askMode={askMode}
             onAskModeChange={setAskMode}
-            arrivalMode={featureFlags.arrivalEntry && !hasArrived}
+            arrivalMode={shouldRenderArrival}
+            onReturnToArrival={returnToArrival}
+            canReturnToArrival={featureFlags.arrivalEntry && !shouldRenderArrival}
           >
             {/* Center field — voice-reactive atmosphere wrapping OracleConversation */}
             <SwipeNavigation currentPage="maia">
@@ -781,6 +809,7 @@ function MAIAPageContent() {
                   onCloseSessionSelector={() => setShowSessionSelector(false)}
                   onSessionActiveChange={setHasActiveSession}
                   onMemberExpression={markArrived}
+                  shouldRenderArrival={shouldRenderArrival}
                   initialAction={searchParams?.get('action') || undefined}
                   askMode={askMode}
                   onAskModeChange={setAskMode}

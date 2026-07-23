@@ -49,6 +49,19 @@ interface MaiaShellProps {
    * with arrivalMode=false — their surface is unchanged.
    */
   arrivalMode?: boolean;
+  /**
+   * The House's deliberate return to Arrival. Invoked by the member, never by
+   * the system. Opens the room for this session only — it must NOT clear the
+   * durable first-crossing marker. Returning to Arrival is opening a room, not
+   * undoing an initiation.
+   */
+  onReturnToArrival?: () => void;
+  /**
+   * Whether the return affordance should appear at all. False while Arrival is
+   * already on screen (there is nothing to return to) and false when the
+   * arrivalEntry kill-switch is off (there is no room to open).
+   */
+  canReturnToArrival?: boolean;
   children: React.ReactNode;
 }
 
@@ -71,6 +84,8 @@ export function MaiaShell({
   askMode,
   onAskModeChange,
   arrivalMode = false,
+  onReturnToArrival,
+  canReturnToArrival = false,
   children,
 }: MaiaShellProps) {
   const router = useRouter();
@@ -284,9 +299,13 @@ export function MaiaShell({
         {children}
       </main>
 
-      {/* The House — one quiet doorway to the whole world. Present in both
-          modes: it is the sole doorway in Arrival, and an added doorway for
-          returning members (who also keep the rail). Never announces itself. */}
+      {/* The House — one quiet doorway to the whole world. Never announces itself.
+
+          Hidden while Arrival is on screen: the Arrival composition carries its
+          own doorway (upper-left), so rendering this one too put TWO "Open The
+          House" buttons on the same surface. One House, one renderer, one
+          doorway — the doorway belongs to whichever surface the member is in. */}
+      {!arrivalMode && (
       <button
         onClick={() => setHouseOpen(true)}
         className={`
@@ -303,11 +322,17 @@ export function MaiaShell({
           The House
         </span>
       </button>
+      )}
 
       <MaiaHouseSheet
         open={houseOpen}
         onClose={() => setHouseOpen(false)}
         isFounder={isAdmin || isPractitioner}
+        onReturnToArrival={
+          canReturnToArrival && onReturnToArrival
+            ? () => { setHouseOpen(false); onReturnToArrival(); }
+            : undefined
+        }
       />
 
       <MaiaRightPanelHost

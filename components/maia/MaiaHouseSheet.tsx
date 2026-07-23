@@ -16,6 +16,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DoorOpen } from 'lucide-react';
 import { MAIA_WORLDS, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import type { MaiaRailItem } from '@/lib/navigation/types';
 
@@ -24,11 +25,22 @@ interface MaiaHouseSheetProps {
   onClose: () => void;
   /** Founder/practitioner — surfaces steward rooms in the registry. */
   isFounder: boolean;
+  /**
+   * The deliberate return to Arrival. Omitted when there is nothing to return
+   * to — Arrival is already on screen, or the arrivalEntry kill-switch is off —
+   * in which case the affordance does not render at all.
+   *
+   * This is what makes Arrival member-invoked rather than a one-time event the
+   * member passes through once and can never see again. It opens the room; it
+   * does not reset the member's history. The durable first-crossing marker is
+   * untouched by this path.
+   */
+  onReturnToArrival?: () => void;
 }
 
 const SERIF = 'Spectral, Georgia, serif';
 
-export function MaiaHouseSheet({ open, onClose, isFounder }: MaiaHouseSheetProps) {
+export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: MaiaHouseSheetProps) {
   const router = useRouter();
 
   // Close on Escape — the House never traps you.
@@ -127,7 +139,37 @@ export function MaiaHouseSheet({ open, onClose, isFounder }: MaiaHouseSheetProps
             </div>
 
             <div className="px-1.5">
-              {center && <Group title="Your Center" items={[center]} />}
+              {(center || onReturnToArrival) && (
+                <section className="mb-6">
+                  <h3 className="mb-1.5 px-4 text-[10.5px] font-medium uppercase tracking-[0.22em] text-slate-500">
+                    Your Center
+                  </h3>
+                  <div className="flex flex-col">
+                    {center && <Place key={center.id} item={center} />}
+                    {/* The deliberate return. A place among places — not a reset,
+                        not a settings toggle. The member may open this room as
+                        often as they like; nothing they have crossed is undone. */}
+                    {onReturnToArrival && (
+                      <button
+                        onClick={onReturnToArrival}
+                        className="group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center text-[#c9a54e] transition-colors group-hover:text-[#e3c368]">
+                          <DoorOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-[15px] leading-tight text-slate-100" style={{ fontFamily: SERIF }}>
+                            Return to Arrival
+                          </span>
+                          <span className="mt-0.5 block truncate text-[12px] leading-snug text-slate-400/80">
+                            Begin again at the threshold
+                          </span>
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </section>
+              )}
               <Group title="Worlds" items={worlds} />
               <Group title="Rooms" items={rooms} />
             </div>
