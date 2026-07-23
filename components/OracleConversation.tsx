@@ -8632,7 +8632,12 @@ I'm not sure what I'm feeling yet.`;
 
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
-              <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" style={{ bottom: 'calc(2.5rem + env(safe-area-inset-bottom, 0px))' }}>
+              <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
+                   lockup, close enough that the eye grouped the signature with the
+                   input controls. The extra ~24px lets the composer close as one
+                   complete object and leaves SOULLAB reading as the page's quiet
+                   footer rather than another button in the row. */
+                style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   {/* 📚 ASK MAIA chip — orientation + Knowledge Field stance toggle */}
