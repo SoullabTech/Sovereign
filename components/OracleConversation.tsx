@@ -958,6 +958,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This is separate from messages - history can be restored but greeting shows until activation
   const [hasActivated, setHasActivated] = useState(false);
 
+  // Has this member crossed the threshold before? Defaults to TRUE so a
+  // returning member never sees a flash of ceremony before the marker is read.
+  // Only an explicit absence of the marker opens the Arrival field.
+  const [hasArrivedBefore, setHasArrivedBefore] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setHasArrivedBefore(!!localStorage.getItem('maia_has_arrived'));
+  }, []);
+
   // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
   const [composerDraft, setComposerDraft] = useState<string>('');
 
@@ -4175,6 +4184,18 @@ I'm not sure what I'm feeling yet.`;
     // 🎯 Mark as activated when user sends a message - hides welcome screen
     setHasActivated(true);
 
+    // Arrival completes when expression begins — not on activation, not on
+    // opening the mic or The House, not when MAIA finishes speaking. Text and
+    // voice both converge here (handleVoiceTranscript delegates to this after
+    // its empty/ghost-transcript guards), so one idempotent write serves both
+    // paths rather than two that can drift. Takes effect from the next visit;
+    // this session has already crossed the threshold.
+    try {
+      if (!localStorage.getItem('maia_has_arrived')) {
+        localStorage.setItem('maia_has_arrived', String(Date.now()));
+      }
+    } catch { /* private mode — the ceremony simply repeats, which is safe */ }
+
     // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): typed turn — the mic must NOT
     // auto-re-arm after MAIA's response. Typed input is not voice re-consent.
     lastSendWasVoiceRef.current = false;
@@ -7033,7 +7054,7 @@ I'm not sure what I'm feeling yet.`;
 
           // Arrival remodel (flag arrivalEntry): render the ONE contained
           // arrival composition instead of the scattered greeting overlay.
-          if (featureFlags.arrivalEntry) {
+          if (featureFlags.arrivalEntry && !hasArrivedBefore) {
             return (
               <MaiaArrivalField
                 greeting={welcomeGreeting.greeting}
