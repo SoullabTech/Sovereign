@@ -203,6 +203,15 @@ import WorldDoorway from '@/components/maia/WorldDoorway';
 import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import { MaiaArrivalField } from './maia/MaiaArrivalField';
 import type { MaiaUiAction } from '@/lib/types/ai';
+
+/**
+ * The one thing a member is told when voice will not start. Names the closed
+ * door and the open one, and nothing else — no error taxonomy, no browser
+ * settings walkthrough. Kept at module scope so every failure path says the
+ * same sentence.
+ */
+const VOICE_START_FAILED_MESSAGE = 'Microphone access isn’t available. You can type below instead.';
+
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
@@ -958,8 +967,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This is separate from messages - history can be restored but greeting shows until activation
   const [hasActivated, setHasActivated] = useState(false);
 
-  // 🎤 Why voice failed to start, in member-facing words, for surfaces that
+  // 🎤 Whether voice failed to start, in member-facing words, for surfaces that
   // cannot show the global toaster (see the Arrival field). Null = no failure.
+  //
+  // Deliberately ONE message for every failure mode. The taxonomy behind it
+  // (NotAllowedError vs NotFoundError vs VOICE_UNAVAILABLE) is diagnostic, not
+  // something to hand the member: it names browser mechanics they did not ask
+  // about and cannot always act on. The failure the member actually needs is
+  // "voice isn't available, here is the other door". The specific cause still
+  // reaches the console trace and the toasts on surfaces that show them.
   const [voiceStartError, setVoiceStartError] = useState<string | null>(null);
 
   // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
@@ -4103,7 +4119,7 @@ I'm not sure what I'm feeling yet.`;
           // Same reason as the catch below: on Arrival the toast is not visible,
           // and a silent timeout would leave "Starting…" collapsing back to
           // "Tap to speak" with no explanation.
-          setVoiceStartError('Mic failed to start. Tap again to retry, or type below.');
+          setVoiceStartError(VOICE_START_FAILED_MESSAGE);
         }, 5000);
 
         // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
@@ -4135,15 +4151,7 @@ I'm not sure what I'm feeling yet.`;
           // give up and nothing else. This state is rendered inside
           // MaiaArrivalField; the toasts are left untouched for every other
           // surface, where they are visible and already the convention.
-          setVoiceStartError(
-            name === 'NotAllowedError' || name === 'PermissionDeniedError'
-              ? 'Microphone blocked. Allow mic access in your browser settings, then tap again — or type below.'
-              : name === 'NotFoundError' || msg === 'MICROPHONE_UNAVAILABLE'
-                ? 'No microphone found. Check your input device, then tap again — or type below.'
-                : msg === 'VOICE_UNAVAILABLE'
-                  ? 'Voice is unavailable in this browser. You can type below.'
-                  : 'Voice could not start. Tap again, or type below.'
-          );
+          setVoiceStartError(VOICE_START_FAILED_MESSAGE);
 
           if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
             toast.error('🎤 Microphone blocked. Click lock icon → Site settings → Microphone: Allow, then refresh.', { duration: 8000 });

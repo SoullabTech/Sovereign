@@ -201,11 +201,19 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
               button, so implicit submission never fired and Enter silently
               swallowed the member's first words. Rendering the existing glyph
               as type="submit" restores both Enter and tap-to-send without
-              adding a new visual element. */}
+              adding a new visual element.
+
+              The glyph's own box is ~10x24px — far under the 44px minimum, and
+              this control is load-bearing: when the mic is unavailable the field
+              tells the member to type instead, so an unhittable send button
+              turns the fallback into a second dead end. The ::before pseudo
+              gives it a 44x44 hit area without changing what is drawn: it is
+              absolutely positioned, so it adds no layout and the composition
+              above is untouched. The quiet target grows; the glyph does not. */}
           <button
             type="submit"
             aria-label="Send"
-            className="text-[rgba(230,169,74,0.7)] transition-colors hover:text-[rgba(230,169,74,1)] focus:outline-none"
+            className="relative text-[rgba(230,169,74,0.7)] transition-colors hover:text-[rgba(230,169,74,1)] focus:outline-none before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
           >
             ◍
           </button>
