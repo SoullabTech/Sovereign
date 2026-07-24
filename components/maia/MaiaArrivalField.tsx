@@ -24,6 +24,48 @@ import { Home } from 'lucide-react';
 
 const SERIF = 'Spectral, Georgia, serif';
 
+/**
+ * GEOMETRY INVARIANT (#704): with the software keyboard open, the complete
+ * Arrival focal object remains visible within the usable VISUAL viewport,
+ * without device-specific offsets.
+ *
+ * `position: fixed; inset: 0` pins a box to the LAYOUT viewport, which iOS
+ * does not shrink when the keyboard opens. When the focused composer input
+ * scrolls into view above the keyboard, `visualViewport.offsetTop` becomes
+ * nonzero — but a fixed box tracks the layout viewport, not the visual one,
+ * so it does not move with that scroll. The top of the box (the holoflower)
+ * scrolls out of the visible window above it. That is the measured crop.
+ *
+ * `window.visualViewport` is the platform API built for exactly this: it
+ * tracks the actually-visible rectangle, independent of keyboard, URL-bar
+ * collapse, or pinch-zoom, and fires `resize`/`scroll` as it changes. This is
+ * feature detection, not UA parsing — it has shipped in iOS Safari (and
+ * WKWebView, so Chrome-on-iOS too) since iOS 13, which covers the observed
+ * fleet. Browsers without it fall back to the old inset-0 behavior; the
+ * effect below simply never updates the box away from that default.
+ */
+function useVisualViewportBox() {
+  const [box, setBox] = useState(() => ({
+    top: 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  }));
+
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return; // no API — box stays at the SSR-safe fallback above
+    const update = () => setBox({ top: vv.offsetTop, height: vv.height });
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+
+  return box;
+}
+
 export interface MaiaArrivalFieldProps {
   greeting: string;          // e.g. "Good evening, Kelly"
   subtext: string;           // e.g. "I'm here when you're ready — just tell me what you need."
@@ -49,6 +91,7 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
   // and rail (z-80). Portaling escapes it so the arrival reads as one field.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const viewportBox = useVisualViewportBox();
 
   const send = (text: string) => {
     const t = text.trim();
@@ -64,8 +107,45 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16, scale: 0.98 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed inset-0 z-[90] flex flex-col items-center justify-center px-5"
+      className="fixed left-0 right-0 z-[90] flex flex-col items-center overflow-y-auto px-5"
       style={{
+        // GEOMETRY INVARIANT (#704): top/height come from the VISUAL viewport,
+        // not `inset-0`/100%, so the field tracks the keyboard-reduced visible
+        // area instead of the static layout viewport. See useVisualViewportBox.
+        top: viewportBox.top,
+        height: viewportBox.height,
+        // `safe center`: centers the content when it fits, but falls back
+        // toward the start rather than clipping it off-screen when the
+        // available height is too short to fit everything (a small keyboard
+        // + landscape phone) — the plain `center` keyword can otherwise make
+        // the very top of the content unreachable, even with overflow:auto.
+        // Unsupported browsers ignore the value and get top-alignment, which
+        // is the safe direction to fail in (no crop), not a wrong one.
+        //
+        // REACHABILITY FIX: `safe center`'s fallback only works if the item
+        // has no negative margin. This container previously relied on the
+        // content wrapper's `-mt-[8vh]` for its "lifted above dead-centre"
+        // framing — but a negative margin inside an `overflow-y:auto` box
+        // pulls the item's border box above the container's own top edge,
+        // i.e. to a negative coordinate. `scrollTop` cannot go negative, so
+        // that content became permanently unreachable by scroll whenever it
+        // didn't fit (measured: top-marker at -70px, scrollTop stuck at 0) —
+        // reproducing the exact #704 crop this field exists to prevent, just
+        // by a different mechanism. The lift is now expressed entirely as
+        // container padding instead:
+        //  - paddingTop reserves the 54px header's height, so the `safe`
+        //    fallback's top-aligned content starts below the header, not
+        //    underneath it, and is visible at scrollTop: 0 immediately.
+        //  - paddingBottom carries the old margin's ~8vh lift PLUS the 54px
+        //    paddingTop, so the centered (fits-fine) geometry this produces
+        //    is pixel-identical to the previous negative-margin version —
+        //    verified algebraically: border-box top reduces to the same
+        //    (containerHeight - contentHeight - 8vh) / 2 in both versions.
+        // No negative margin exists anywhere in the scrollable coordinate
+        // space now, in either the fits or overflow case.
+        justifyContent: 'safe center',
+        paddingTop: '54px',
+        paddingBottom: 'calc(54px + 8vh)',
         // Opaque field so the arrival reads as ONE contained composition,
         // covering the scattered conversation layers + chrome behind it.
         // Matches the approved mockup: violet bloom over warm near-black.
@@ -120,9 +200,11 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
       </div>
 
       {/* One contained field — everything stacked and attached, max readable
-          width. Lifted off dead-centre so the jewel sits higher in the frame
-          and the composition reads as arriving rather than resting. */}
-      <div className="-mt-[8vh] flex w-full max-w-[560px] flex-col items-center">
+          width. The "lifted off dead-centre" framing now lives entirely in
+          the parent's padding (see the paddingTop/paddingBottom comment
+          above) — this wrapper carries no margin, so nothing here can push
+          content to an unreachable negative scroll coordinate. */}
+      <div className="flex w-full max-w-[560px] flex-col items-center">
         {/* Greeting */}
         <h1
           className="text-center text-[clamp(28px,5vw,42px)] font-light leading-[1.1] text-maia-spice-500"
@@ -173,7 +255,12 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Message MAIA…"
-            className="min-w-0 flex-1 bg-transparent text-[15px] text-slate-100 placeholder:text-[#9a9182] focus:outline-none"
+            // 16px, not 15px: iOS Safari auto-zooms the page on focus for
+            // any input under 16px. The project deliberately never caps
+            // zoom (userScalable: true, app/layout.tsx — WCAG 1.4.4), so
+            // this can't be suppressed that way; 16px is the only fix that
+            // doesn't also block a member's own zoom.
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-slate-100 placeholder:text-[#9a9182] focus:outline-none"
             style={{ fontFamily: SERIF }}
           />
           {/* Real submit control. The form has one text input and previously no
