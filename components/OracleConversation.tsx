@@ -3,6 +3,7 @@
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
 // 🔖 BUILD_STAMP: 2026-06-02_ios_playback_watchdog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, VolumeX, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users, Bookmark } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
@@ -8176,8 +8177,25 @@ I'm not sure what I'm feeling yet.`;
           ?debugScroll=1 only; never renders for members. Prints the real
           visualViewport/scroll numbers so a physical-device screenshot
           carries evidence, not a guess about timing. Remove once the
-          actual failing transition is captured with numbers. */}
-      {scrollDebugEnabled && (
+          actual failing transition is captured with numbers.
+
+          PORTALED to document.body — NOT rendered in place. This div sits
+          inside an ancestor (`.flex-1.relative.z-10.overflow-hidden`) that
+          establishes its own stacking context at z-10. `position: fixed`
+          escapes the LAYOUT containing block (still positions correctly
+          against the real viewport) but does NOT escape the STACKING
+          CONTEXT chain — z-index is still resolved against the nearest
+          positioned ancestor with a z-index, so no z-index value inside
+          that z-10 layer, however high, can out-paint a sibling z-90 layer
+          (Arrival) at the root. Confirmed live: without the portal this
+          strip was correctly positioned (top:52, right rect, opacity:1,
+          visibility:visible) but was still invisible on screen, painted
+          UNDER Arrival's z-90 overlay. Portaling to document.body renders
+          it as a root-level sibling instead, where z-index: 99999 is
+          finally compared against Arrival's z-90 directly. Worth noting
+          for #735 — the same trap likely affects real (non-debug) content
+          in this z-10 layer, not just this diagnostic. */}
+      {scrollDebugEnabled && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -8202,7 +8220,8 @@ I'm not sure what I'm feeling yet.`;
           {scrollDebugLog.map((line, i) => (
             <div key={i} style={{ opacity: 1 - i * 0.08 }}>{line}</div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 🔧 PWA DEBUG STRIP - Shows state machine state on Safari PWA (remove after debugging) */}
