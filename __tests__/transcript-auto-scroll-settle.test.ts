@@ -304,3 +304,167 @@ describe('scope guards', () => {
     expect(SRC).toMatch(/bottom: showChatInterface \? '260px' : '220px',/);
   });
 });
+
+/**
+ * Visibility-aware pause/resume — founder review, round 2. The settle poll
+ * runs on requestAnimationFrame, which browsers throttle heavily once
+ * `document.hidden` is true. A member backgrounding Safari mid-reply
+ * (switching apps, checking a notification) is routine, not an edge case —
+ * without visibility awareness, hidden wall-clock time silently eats
+ * AUTO_SCROLL_MAX_WAIT_MS, timing the operation out — abandoning the
+ * final-rest check — before the tab is ever foregrounded again. Traced
+ * live: this tool's own Browser pane reports document.visibilityState as
+ * permanently "hidden," reproducing a 16-real-second stall from a 3-second
+ * budget — a confound in that test harness, but a genuine lifecycle hole
+ * in the mechanism regardless of what exposed it.
+ *
+ * Five acceptance cases (founder spec):
+ *   1. Foreground operation settles and corrects normally (unchanged —
+ *      covered by the correction-branch describe block above).
+ *   2. App backgrounds mid-operation, returns, then performs a fresh
+ *      final-rest check.
+ *   3. User scrolls after returning, so correction aborts.
+ *   4. A newer automatic scroll supersedes the paused operation.
+ *   5. No listener or polling loop survives after completion or unmount.
+ */
+describe('visibility-aware pause/resume — PAUSED/RESUMED as explicit lifecycle events', () => {
+  it('pausing cancels the pending frame and logs PAUSED, without touching generation or ownerScrollAt', () => {
+    // "I would not simply track visible frames indefinitely... generation
+    // and ownerScrollAt are untouched, so ownership survives the pause."
+    const block = beginAutoScrollBlock();
+    const handlerStart = block.indexOf('const handleVisibilityChange = () => {');
+    const hiddenBranchEnd = block.indexOf('// Resuming.', handlerStart);
+    const hiddenBranch = block.slice(handlerStart, hiddenBranchEnd);
+    expect(hiddenBranch).toMatch(/if \(document\.hidden\) \{/);
+    expect(hiddenBranch).toMatch(/cancelAnimationFrame\(rafId\);/);
+    expect(hiddenBranch).toMatch(/AUTO-SCROLL-SETTLE-PAUSED\(hidden\)/);
+    expect(hiddenBranch).not.toMatch(/autoScrollGenerationRef|ownerScrollAt =/);
+  });
+
+  it('a background sync that triggers beginAutoScroll while already hidden pauses immediately, without wasting a poll tick', () => {
+    const block = beginAutoScrollBlock();
+    const finalCheckIdx = block.lastIndexOf("if (typeof document !== 'undefined' && document.hidden) {");
+    expect(finalCheckIdx).toBeGreaterThan(-1);
+    const finalBlock = block.slice(finalCheckIdx, finalCheckIdx + 200);
+    expect(finalBlock).toMatch(/AUTO-SCROLL-SETTLE-PAUSED\(hidden\)/);
+    expect(finalBlock).toMatch(/\} else \{\s*\n\s*startWindow\(\);/);
+  });
+
+  it('resuming verifies ownership BEFORE starting a fresh window — superseded and user-intent both checked', () => {
+    // Acceptance cases 3 & 4: a newer auto-scroll or a genuine gesture
+    // during the hidden window must be respected on resume, not silently
+    // overridden by blindly restarting.
+    const block = beginAutoScrollBlock();
+    const handlerStart = block.indexOf('const handleVisibilityChange = () => {');
+    const resumingIdx = block.indexOf('// Resuming.', handlerStart);
+    const startWindowCallIdx = block.indexOf('startWindow();', resumingIdx);
+    const resumeBranch = block.slice(resumingIdx, startWindowCallIdx);
+    expect(resumeBranch).toMatch(/if \(isSuperseded\(\)\) \{/);
+    expect(resumeBranch).toMatch(/if \(isUserIntent\(\)\) \{/);
+    // Ownership checks must come BEFORE the RESUMED log + startWindow call.
+    const supersededIdx = resumeBranch.indexOf('isSuperseded()');
+    const userIntentIdx = resumeBranch.indexOf('isUserIntent()');
+    const resumedLogIdx = resumeBranch.indexOf('AUTO-SCROLL-SETTLE-RESUMED');
+    expect(supersededIdx).toBeLessThan(resumedLogIdx);
+    expect(userIntentIdx).toBeLessThan(resumedLogIdx);
+  });
+
+  it('a superseded resume aborts as (superseded), a genuine-gesture resume aborts as (user-intent) — not one merged reason', () => {
+    const block = beginAutoScrollBlock();
+    const handlerStart = block.indexOf('const handleVisibilityChange = () => {');
+    const resumingIdx = block.indexOf('// Resuming.', handlerStart);
+    const startWindowCallIdx = block.indexOf('startWindow();', resumingIdx);
+    const resumeBranch = block.slice(resumingIdx, startWindowCallIdx);
+    expect(resumeBranch).toMatch(/AUTO-SCROLL-SETTLE-ABORTED\(superseded\)/);
+    expect(resumeBranch).toMatch(/AUTO-SCROLL-SETTLE-ABORTED\(user-intent\)/);
+  });
+
+  it('a successful resume logs RESUMED, then starts a genuinely fresh window (fresh startedAt/quietSince), not a continuation of the old one', () => {
+    // Acceptance case 2. "begin a fresh bounded settle check against the
+    // current geometry" — startWindow() resets startedAt/lastTop/quietSince
+    // from `now`, so hidden wall-clock time is excluded from the budget,
+    // and the resumed window gets the FULL AUTO_SCROLL_MAX_WAIT_MS, not a
+    // remainder.
+    const block = beginAutoScrollBlock();
+    const startWindowStart = block.indexOf('const startWindow = () => {');
+    const startWindowEnd = block.indexOf('\n    };', startWindowStart) + '\n    };'.length;
+    const startWindowBlock = block.slice(startWindowStart, startWindowEnd);
+    expect(startWindowBlock).toMatch(/startedAt = now0;/);
+    expect(startWindowBlock).toMatch(/lastTop = -1;/);
+    expect(startWindowBlock).toMatch(/quietSince = now0;/);
+    expect(startWindowBlock).toMatch(/rafId = requestAnimationFrame\(poll\);/);
+
+    const handlerStart = block.indexOf('const handleVisibilityChange = () => {');
+    const resumedLogIdx = block.indexOf('AUTO-SCROLL-SETTLE-RESUMED', handlerStart);
+    const startWindowCallIdx = block.indexOf('startWindow();', resumedLogIdx - 20);
+    expect(startWindowCallIdx).toBeGreaterThan(resumedLogIdx);
+  });
+
+  it('the max-wait ceiling is documented as PER WINDOW, not a global ceiling spanning pause/resume cycles', () => {
+    expect(SRC).toMatch(/Hard ceiling PER SETTLE WINDOW/);
+    expect(SRC).toMatch(/a backgrounded-then-foregrounded operation\s*\n\s*\/\/ resumes into a FRESH window/);
+  });
+});
+
+describe('cleanup — no listener or polling loop survives (acceptance case 5)', () => {
+  it('cleanup() cancels any pending rAF AND removes the visibilitychange listener', () => {
+    const block = beginAutoScrollBlock();
+    const cleanupStart = block.indexOf('const cleanup = () => {');
+    const cleanupEnd = block.indexOf('\n    };', cleanupStart) + '\n    };'.length;
+    const cleanupBlock = block.slice(cleanupStart, cleanupEnd);
+    expect(cleanupBlock).toMatch(/cancelAnimationFrame\(rafId\);/);
+    expect(cleanupBlock).toMatch(/document\.removeEventListener\('visibilitychange', handleVisibilityChange\);/);
+  });
+
+  it('every terminal exit (superseded, user-intent, timeout, settled, corrected) calls cleanup() before returning', () => {
+    const block = beginAutoScrollBlock();
+    const pollStart = block.indexOf('const poll = () => {');
+    const pollEnd = block.indexOf('\n    };', pollStart) + '\n    };'.length;
+    const pollBlock = block.slice(pollStart, pollEnd);
+    // Every `return;` in poll() must be preceded by a cleanup() call on
+    // one of the two immediately preceding lines — the only exception is
+    // the "still quiet, keep polling" branch, which deliberately does NOT
+    // clean up (the operation is still in flight).
+    const stanzas = pollBlock.split('return;').slice(0, -1);
+    const keepsPollingStanza = stanzas.find(s => s.includes('rafId = requestAnimationFrame(poll);'));
+    const terminalStanzas = stanzas.filter(s => s !== keepsPollingStanza);
+    expect(terminalStanzas.length).toBeGreaterThanOrEqual(5); // superseded x2, user-intent x2, timeout, settled/corrected
+    terminalStanzas.forEach(stanza => {
+      const lastLines = stanza.trimEnd().split('\n').slice(-4).join('\n');
+      expect(lastLines).toMatch(/cleanup\(\);/);
+    });
+  });
+
+  it('cleanup() only clears the shared autoScrollActiveCleanupRef if it is still THIS operation\'s own cleanup', () => {
+    // A stale operation's cleanup() firing late (e.g. its own final poll
+    // tick, racing a resize renewal that already replaced it) must not
+    // clobber the newer operation's registration.
+    const block = beginAutoScrollBlock();
+    const cleanupStart = block.indexOf('const cleanup = () => {');
+    const cleanupEnd = block.indexOf('\n    };', cleanupStart) + '\n    };'.length;
+    const cleanupBlock = block.slice(cleanupStart, cleanupEnd);
+    expect(cleanupBlock).toMatch(/if \(autoScrollActiveCleanupRef\.current === cleanup\) \{/);
+    expect(cleanupBlock).toMatch(/autoScrollActiveCleanupRef\.current = null;/);
+  });
+
+  it('a component-unmount effect calls whatever cleanup is currently registered, so a PAUSED (no pending poll) operation cannot leak', () => {
+    // The critical case: a PAUSED operation has no scheduled rAF, so
+    // nothing would otherwise ever run again to notice the component is
+    // gone. This effect is the only thing that can reach it.
+    const start = SRC.indexOf('// Unmount safety net for beginAutoScroll');
+    const end = SRC.indexOf('}, []);', start) + '}, []);'.length;
+    const block = SRC.slice(start, end);
+    expect(block).toMatch(/useEffect\(\(\) => \{/);
+    expect(block).toMatch(/return \(\) => \{\s*\n\s*autoScrollActiveCleanupRef\.current\?\.\(\);/);
+    expect(block).toMatch(/\}, \[\]\);/);
+  });
+
+  it('if the transcript element itself is gone mid-poll (unmounted), poll cleans up rather than looping forever', () => {
+    const block = beginAutoScrollBlock();
+    const elCheckIdx = block.indexOf('if (!el) {');
+    const elCheckEnd = block.indexOf('\n      }', elCheckIdx) + '\n      }'.length;
+    const elCheckBlock = block.slice(elCheckIdx, elCheckEnd);
+    expect(elCheckBlock).toMatch(/cleanup\(\);/);
+    expect(elCheckBlock).toMatch(/autoScrollActiveRef\.current = false;/);
+  });
+});
