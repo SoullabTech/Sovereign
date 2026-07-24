@@ -81,6 +81,12 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/book-studio/drafts/', minTier: 'free', notes: 'Book Studio — imported drafts (founder-gated in layout)' },
   { prefix: '/api/book-studio/', minTier: 'free', notes: 'Book Studio — drafts API (auth required)' },
 
+  // Internal diagnostics — founder-gated in layout via requireFounder().
+  // Mapped explicitly so the route never depends on the permissive
+  // unmapped-route default (ACCESS_CONTROL_MODE, #717). It was publicly served
+  // in production until 2026-07-24 for exactly that reason.
+  { exact: '/voice-controller-test', minTier: 'free', notes: 'VoiceController Phase 1 smoke-test harness — founder-gated in layout; mapped so it never relies on the permissive unmapped default (#717)' },
+
   // Trust & Stewardship (public - builds trust during consideration)
   { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },
   { exact: '/maia/membership', public: true, notes: 'Membership tiers & pricing — public browse; checkout action auth-gates client-side' },
