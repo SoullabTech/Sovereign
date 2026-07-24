@@ -8382,7 +8382,29 @@ I'm not sure what I'm feeling yet.`;
                   turns still scroll up behind the jewel as they should; only the
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
-                <div className="space-y-3 pt-[10.5rem] pb-48 md:pt-[12rem] md:pb-60">
+                <div
+                  className="space-y-3 pt-[10.5rem] pb-48 md:pt-[12rem] md:pb-60 min-h-full flex flex-col justify-end md:block md:min-h-0"
+                  /* MOBILE BOTTOM-ANCHOR (Issue 1, second mechanism — independent of
+                     the scroll-resettle guard fix). Even a perfectly-working
+                     scroll-to-bottom cannot move content down when
+                     scrollHeight <= clientHeight — there is no scroll range.
+                     A short reply then just sits at its natural top-anchored
+                     position, which reads fine on a tall desktop viewport but
+                     as "stuck near the top with a gap before the composer" on
+                     a keyboard-shrunk mobile one.
+
+                     min-height (not height): a flex column with
+                     justify-content:flex-end and a FIXED height can hide
+                     overflowing content at the top once messages exceed the
+                     available space (a known flex/overflow interaction). With
+                     min-height, once content grows past 100% the box simply
+                     grows past it too — there's no leftover space left to push
+                     to the top, so normal document order and normal
+                     overflow-y:auto scrolling on the parent container take
+                     over exactly as before. Desktop explicitly reverts to
+                     plain block flow (md:block md:min-h-0) — this only
+                     changes behavior below the md breakpoint. */
+                >
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
