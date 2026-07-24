@@ -40,6 +40,22 @@ Per this project's own rule: *grep establishes inventory; runtime establishes tr
 a single page; that was true of the *mobileAllowlist* subset only. Enumerated against real
 pages, the unmapped set is 77.
 
+> ### ⚠️ The 65 are CANDIDATES, NOT FINDINGS
+>
+> Exactly one route in this document has been graded at runtime
+> (`/voice-controller-test` — 200, unauthenticated, now gated by this PR).
+> **The other 76 have not.** A row with "no gate found" means *a grep over the page and
+> its ancestor layouts did not match a known auth idiom*. It does **not** mean the route
+> is unprotected.
+>
+> The current evidence cannot yet distinguish among:
+> intentionally public pages · authenticated member pages · founder/internal tools ·
+> obsolete routes · **pages protected by mechanisms this static sweep did not detect** ·
+> genuinely exposed routes.
+>
+> Anyone citing "65 exposed routes" is misreading this document. The correct sentence is
+> **"65 routes require adjudication."**
+
 ## Distinguishing categories (as requested)
 
 - **Allowlist entries with no page** — the 6 from the House-map pass (`/history`,
