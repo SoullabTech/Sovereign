@@ -97,10 +97,15 @@ describe('intrinsic content measurement — structurally excludes the reserve', 
 
 describe('recomputation triggers — content changes AND viewport changes', () => {
   it('re-observes on mount/unmount of the transcript via a ResizeObserver on the intrinsic node', () => {
+    // The observer callback also renews the auto-scroll settle mechanism
+    // (see transcript-auto-scroll-settle.test.ts) — it's a block body now,
+    // not a single-expression arrow, but recomputeContentOverflow() still
+    // runs unconditionally on every resize.
     const start = SRC.indexOf('// Re-observe whenever the transcript mounts/unmounts');
     const end = SRC.indexOf('}, [messages.length > 0]);', start) + '}, [messages.length > 0]);'.length;
     const block = SRC.slice(start, end);
-    expect(block).toMatch(/new ResizeObserver\(\(\) => recomputeContentOverflow\(\)\)/);
+    expect(block).toMatch(/new ResizeObserver\(\(\) => \{/);
+    expect(block).toMatch(/recomputeContentOverflow\(\);/);
     expect(block).toMatch(/observer\.observe\(intrinsic\)/);
     expect(block).toMatch(/return \(\) => observer\.disconnect\(\);/);
   });

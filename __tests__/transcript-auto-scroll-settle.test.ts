@@ -87,11 +87,15 @@ describe('beginAutoScroll — operation ownership', () => {
     expect(block).toMatch(/messagesEndRef\.current\?\.scrollIntoView\(\{ behavior \}\)/);
   });
 
-  it('ownership requires BOTH the generation and the user-scroll snapshot to be unchanged', () => {
+  it('ownership loss is checked as two separate conditions, not one combined boolean', () => {
+    // Superseded by the founder review split (see the abort-branch describe
+    // block below for the full rationale): a single stillOwnsPosition()
+    // boolean could not distinguish "a newer operation took over" from
+    // "the member actually touched the transcript" in the abort log.
     const block = beginAutoScrollBlock();
-    expect(block).toMatch(
-      /const stillOwnsPosition = \(\) =>\s*\n\s*autoScrollGenerationRef\.current === generation && lastUserScrollAtRef\.current === ownerScrollAt;/
-    );
+    expect(block).toMatch(/const isSuperseded = \(\) => autoScrollGenerationRef\.current !== generation;/);
+    expect(block).toMatch(/const isUserIntent = \(\) => lastUserScrollAtRef\.current !== ownerScrollAt;/);
+    expect(block).not.toMatch(/stillOwnsPosition/);
   });
 });
 
@@ -123,31 +127,59 @@ describe('beginAutoScroll — quiet-interval polling', () => {
 });
 
 describe('beginAutoScroll — abort branch (the essential mirror case)', () => {
+  it('checks supersession and user-intent as two DISTINCT reasons, not one combined boolean', () => {
+    // Founder review: a newer programmatic operation is not user intent —
+    // conflating them would make the diagnostic record falsely claim a
+    // member touched the transcript when ownership merely passed to a
+    // newer automatic scroll (e.g. a content-resize renewal).
+    const block = beginAutoScrollBlock();
+    expect(block).toMatch(/const isSuperseded = \(\) => autoScrollGenerationRef\.current !== generation;/);
+    expect(block).toMatch(/const isUserIntent = \(\) => lastUserScrollAtRef\.current !== ownerScrollAt;/);
+  });
+
   it('checks ownership at the top of every poll frame, before reading geometry', () => {
     const block = beginAutoScrollBlock();
     const pollStart = block.indexOf('const poll = () => {');
-    const firstCheck = block.indexOf('if (!stillOwnsPosition())', pollStart);
+    const firstCheck = block.indexOf('if (isSuperseded())', pollStart);
     const geometryRead = block.indexOf('el.scrollTop', pollStart);
     expect(firstCheck).toBeGreaterThan(pollStart);
     expect(firstCheck).toBeLessThan(geometryRead);
   });
 
-  it('re-checks ownership again after the quiet interval, not just once at the start', () => {
+  it('re-checks BOTH reasons again after the quiet interval, not just once at the start', () => {
     const block = beginAutoScrollBlock();
-    const abortChecks = block.match(/if \(!stillOwnsPosition\(\)\) \{/g) || [];
-    expect(abortChecks.length).toBeGreaterThanOrEqual(2);
+    const supersededChecks = block.match(/if \(isSuperseded\(\)\) \{/g) || [];
+    const userIntentChecks = block.match(/if \(isUserIntent\(\)\) \{/g) || [];
+    expect(supersededChecks.length).toBeGreaterThanOrEqual(2);
+    expect(userIntentChecks.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('logs AUTO-SCROLL-SETTLE-ABORTED(user-intent) on abort, distinct from the timeout/correction logs', () => {
+  it('a superseded exit does NOT clear autoScrollActiveRef — a newer operation already owns it', () => {
     const block = beginAutoScrollBlock();
+    const supersededIdx = block.indexOf('if (isSuperseded()) {');
+    const supersededBranch = block.slice(supersededIdx, block.indexOf('AUTO-SCROLL-SETTLE-ABORTED(superseded)', supersededIdx) + 60);
+    expect(supersededBranch).not.toMatch(/autoScrollActiveRef\.current = false/);
+  });
+
+  it('a user-intent exit DOES clear autoScrollActiveRef — this operation is really done', () => {
+    const block = beginAutoScrollBlock();
+    const userIntentIdx = block.indexOf('if (isUserIntent()) {');
+    const userIntentBranch = block.slice(userIntentIdx, block.indexOf('AUTO-SCROLL-SETTLE-ABORTED(user-intent)', userIntentIdx) + 60);
+    expect(userIntentBranch).toMatch(/autoScrollActiveRef\.current = false;/);
+  });
+
+  it('logs AUTO-SCROLL-SETTLE-ABORTED(superseded) and (user-intent) as distinct log lines', () => {
+    const block = beginAutoScrollBlock();
+    expect(block).toMatch(/AUTO-SCROLL-SETTLE-ABORTED\(superseded\)/);
     expect(block).toMatch(/AUTO-SCROLL-SETTLE-ABORTED\(user-intent\)/);
   });
 
-  it('does not scrollTo (correct) anywhere in the abort path', () => {
+  it('does not scrollTo (correct) anywhere in either abort path', () => {
     const block = beginAutoScrollBlock();
-    const abortIdx = block.indexOf("pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');");
-    const nextLines = block.slice(abortIdx, abortIdx + 60);
-    expect(nextLines).not.toMatch(/el\.scrollTo/);
+    const supersededIdx = block.indexOf("pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(superseded)');");
+    const userIntentIdx = block.indexOf("pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');");
+    expect(block.slice(supersededIdx, supersededIdx + 60)).not.toMatch(/el\.scrollTo/);
+    expect(block.slice(userIntentIdx, userIntentIdx + 60)).not.toMatch(/el\.scrollTo/);
   });
 });
 
@@ -209,12 +241,47 @@ describe('call sites — both existing programmatic bottom-scrolls route through
     expect(block).not.toMatch(/scrollIntoView/);
   });
 
-  it('no new call site bypasses beginAutoScroll — exactly two call sites in the whole file', () => {
+  it('the content-resize ResizeObserver renews an ALREADY-active operation, never starts a fresh one', () => {
+    // Founder review: a typewriter/streaming reply can keep growing after
+    // the settle poll already gave up on AUTO_SCROLL_MAX_WAIT_MS. Renewal
+    // must be gated on autoScrollActiveRef — unconditionally calling
+    // beginAutoScroll on every resize would yank a member who scrolled
+    // away on purpose while unrelated content resized (the #739/#741
+    // defect, reintroduced).
+    const start = SRC.indexOf('const observer = new ResizeObserver(() => {');
+    const end = SRC.indexOf('});', start) + '});'.length;
+    const block = SRC.slice(start, end);
+    expect(block).toMatch(/if \(autoScrollActiveRef\.current\) \{/);
+    expect(block).toMatch(/beginAutoScroll\('auto', 'content-resize-renew'\);/);
+  });
+
+  it('exactly three call sites in the whole file: messages effect, resize resettle, content-resize renewal', () => {
     // The regex requires an immediate '(' after the name, so the
     // definition itself ("beginAutoScroll = (...) => {") does not match —
-    // only the two actual invocations do.
+    // only the three actual invocations do.
     const calls = SRC.match(/beginAutoScroll\(/g) || [];
-    expect(calls.length).toBe(2);
+    expect(calls.length).toBe(3);
+  });
+});
+
+describe('autoScrollActiveRef — ownership flag for renewal', () => {
+  it('is set true at the start of every beginAutoScroll operation', () => {
+    const block = beginAutoScrollBlock();
+    const generationIdx = block.indexOf('const generation = ++autoScrollGenerationRef.current;');
+    const activeIdx = block.indexOf('autoScrollActiveRef.current = true;');
+    expect(activeIdx).toBeGreaterThan(generationIdx);
+    expect(activeIdx).toBeLessThan(block.indexOf('messagesEndRef.current?.scrollIntoView'));
+  });
+
+  it('is cleared on timeout and on a real correction/settle — every exit that is NOT a supersession', () => {
+    const block = beginAutoScrollBlock();
+    const timeoutIdx = block.indexOf('AUTO-SCROLL-SETTLE-TIMEOUT');
+    const timeoutBranch = block.slice(Math.max(0, timeoutIdx - 120), timeoutIdx);
+    expect(timeoutBranch).toMatch(/autoScrollActiveRef\.current = false;/);
+
+    const correctionIdx = block.indexOf('if (gap > BOTTOM_EPSILON_PX)');
+    const preCorrection = block.slice(block.lastIndexOf('\n', correctionIdx - 40), correctionIdx);
+    expect(preCorrection).toMatch(/autoScrollActiveRef\.current = false;/);
   });
 });
 

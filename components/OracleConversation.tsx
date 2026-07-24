@@ -3396,13 +3396,28 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // changes to the SAME node (new turns, streaming text growing in place
   // without changing the `messages` array reference, images loading)
   // without needing to reattach on every message.
+  //
+  // RENEWAL (auto-scroll settle verification): a typewriter/streaming
+  // reply can keep growing this node's height after beginAutoScroll's own
+  // settle poll already gave up on AUTO_SCROLL_MAX_WAIT_MS — the content
+  // wasn't done changing yet, so the last "final rest position" check
+  // never happened against its true final geometry. Every height change
+  // here renews (not starts) the operation: guarded by
+  // `autoScrollActiveRef`, so this only re-fires an ALREADY-active
+  // auto-scroll, never yanks a member who scrolled away on purpose while
+  // unrelated content elsewhere happened to resize.
   useEffect(() => {
     const intrinsic = messageContentIntrinsicRef.current;
     if (!intrinsic || typeof ResizeObserver === 'undefined') {
       recomputeContentOverflow();
       return;
     }
-    const observer = new ResizeObserver(() => recomputeContentOverflow());
+    const observer = new ResizeObserver(() => {
+      recomputeContentOverflow();
+      if (autoScrollActiveRef.current) {
+        beginAutoScroll('auto', 'content-resize-renew');
+      }
+    });
     observer.observe(intrinsic);
     recomputeContentOverflow();
     return () => observer.disconnect();
@@ -3522,19 +3537,31 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // (pointerdown/touchstart/wheel, via `lastUserScrollAtRef`) is recorded
   // before it settles.
   const autoScrollGenerationRef = useRef(0);
+  // Whether SOME beginAutoScroll operation currently owns the scroll
+  // position (has started, hasn't yet settled/corrected/aborted/timed
+  // out). Read by the ResizeObserver below to decide whether a
+  // content-height change should renew the in-flight operation — never to
+  // start a brand-new one, which could yank a member who scrolled away on
+  // purpose (the exact defect #739/#741 already fixed once).
+  const autoScrollActiveRef = useRef(false);
   const BOTTOM_EPSILON_PX = 4;
   // How long scrollTop must be unchanged before a programmatic scroll is
   // considered settled — long enough to ride out one elastic-overscroll
   // bounce, short enough not to delay the correction noticeably.
   const AUTO_SCROLL_QUIET_MS = 100;
-  // Hard ceiling so a scroll that never quiets (e.g. content still
-  // streaming in) can't poll forever — give up rather than force a
-  // correction against numbers that were still mid-flight.
+  // Hard ceiling PER OPERATION so a scroll that never quiets can't poll
+  // forever. Not a global ceiling across renewals — a typewriter/streaming
+  // reply that's still growing renews via the ResizeObserver below, and
+  // each renewal gets its own fresh window. Only a reply that is BOTH
+  // still growing AND outpaces this ceiling on every single renewal would
+  // ever hit it without a correction — give up rather than force one
+  // against numbers that were still mid-flight.
   const AUTO_SCROLL_MAX_WAIT_MS = 3000;
 
   const beginAutoScroll = (behavior: ScrollBehavior, label: string) => {
     const generation = ++autoScrollGenerationRef.current;
     const ownerScrollAt = lastUserScrollAtRef.current;
+    autoScrollActiveRef.current = true;
     messagesEndRef.current?.scrollIntoView({ behavior });
     pushScrollDebug(`AUTO-SCROLL-START(${label})`);
 
@@ -3542,13 +3569,26 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     let lastTop = -1;
     let quietSince = startedAt;
 
-    // A newer auto-scroll (new message, new resize) or a genuine user
-    // gesture has taken ownership since this operation began.
-    const stillOwnsPosition = () =>
-      autoScrollGenerationRef.current === generation && lastUserScrollAtRef.current === ownerScrollAt;
+    // Two DISTINCT reasons an operation can lose ownership — kept as
+    // separate checks (not one combined boolean) so the abort log tells
+    // the truth about which one fired. A newer beginAutoScroll call
+    // (new message, new resize, or a renewal below) is NOT member intent;
+    // conflating them would make the diagnostic record falsely claim a
+    // member touched the transcript when ownership merely passed to a
+    // newer automatic scroll. Only a genuine pointerdown/touchstart/wheel
+    // (via lastUserScrollAtRef, #741) is user intent.
+    const isSuperseded = () => autoScrollGenerationRef.current !== generation;
+    const isUserIntent = () => lastUserScrollAtRef.current !== ownerScrollAt;
 
     const poll = () => {
-      if (!stillOwnsPosition()) {
+      // A superseding operation already set autoScrollActiveRef itself —
+      // this stale poll must not touch it on the way out.
+      if (isSuperseded()) {
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(superseded)');
+        return;
+      }
+      if (isUserIntent()) {
+        autoScrollActiveRef.current = false;
         pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');
         return;
       }
@@ -3563,6 +3603,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       pushScrollDebug(`gap=${Math.round(gap)}`, { throttle: true });
 
       if (now - startedAt > AUTO_SCROLL_MAX_WAIT_MS) {
+        autoScrollActiveRef.current = false;
         pushScrollDebug(`AUTO-SCROLL-SETTLE-TIMEOUT(gap=${Math.round(gap)})`);
         return;
       }
@@ -3573,10 +3614,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Quiet. The quiet interval itself is time in which a newer
       // operation or a genuine gesture could have taken over — re-check
       // ownership once more before deciding whether to correct.
-      if (!stillOwnsPosition()) {
+      if (isSuperseded()) {
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(superseded)');
+        return;
+      }
+      if (isUserIntent()) {
+        autoScrollActiveRef.current = false;
         pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');
         return;
       }
+      autoScrollActiveRef.current = false;
       if (gap > BOTTOM_EPSILON_PX) {
         el.scrollTo({ top: el.scrollHeight - el.clientHeight, behavior: 'auto' });
         pushScrollDebug(`AUTO-SCROLL-SETTLED-CORRECTED(gap=${Math.round(gap)})`);
