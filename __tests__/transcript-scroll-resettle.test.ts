@@ -156,23 +156,53 @@ describe('recency + source guard — a scroll-away is not a permanent veto', () 
 });
 
 describe('lastUserScrollAtRef — sourced from genuine gestures, not programmatic scroll', () => {
-  it('is updated on touchstart and wheel, not on the scroll event itself', () => {
+  function markUserScrollIntentBlock(): string {
+    const start = SRC.indexOf('const markUserScrollIntent = (source: string');
+    const end = SRC.indexOf('\n  };', start) + '\n  };'.length;
+    return SRC.slice(start, end);
+  }
+
+  it('is updated via markUserScrollIntent on pointerdown, touchstart, AND wheel — not on the scroll event', () => {
     const block = scrollContainerBlock();
-    expect(block).toMatch(/onTouchStart=\{\(\) => \{/);
-    expect(block).toMatch(/onWheel=\{\(\) => \{/);
-    // Both handlers set the same ref.
+    expect(block).toMatch(/onPointerDown=\{\(e\) => \{/);
+    expect(block).toMatch(/onTouchStart=\{\(e\) => \{/);
+    expect(block).toMatch(/onWheel=\{\(e\) => \{/);
+    const pointerBlock = block.slice(block.indexOf('onPointerDown'), block.indexOf('onTouchStart'));
     const touchBlock = block.slice(block.indexOf('onTouchStart'), block.indexOf('onWheel'));
     const wheelBlock = block.slice(block.indexOf('onWheel'));
-    expect(touchBlock).toMatch(/lastUserScrollAtRef\.current = Date\.now\(\);/);
-    expect(wheelBlock).toMatch(/lastUserScrollAtRef\.current = Date\.now\(\);/);
+    expect(pointerBlock).toMatch(/markUserScrollIntent\('pointerdown', e\.target\)/);
+    expect(touchBlock).toMatch(/markUserScrollIntent\('touchstart', e\.target\)/);
+    expect(wheelBlock).toMatch(/markUserScrollIntent\('wheel', e\.target\)/);
   });
 
   it('the onScroll handler itself does not write lastUserScrollAtRef (would count our own scrollIntoView as user intent)', () => {
     const block = scrollContainerBlock();
     const onScrollStart = block.indexOf('onScroll={');
-    const onScrollEnd = block.indexOf('onTouchStart');
+    const onScrollEnd = block.indexOf('onPointerDown');
     const onScrollBlock = block.slice(onScrollStart, onScrollEnd);
     expect(onScrollBlock).not.toMatch(/lastUserScrollAtRef/);
+  });
+
+  it('markUserScrollIntent writes the timestamp unconditionally, before the debug-only early return', () => {
+    // Device evidence: scrollAwayMs=1784921085077 (a raw Date.now(), not
+    // an elapsed time) proved lastUserScrollAtRef never left its default
+    // 0 — the recency mechanism was defective regardless of debugScroll.
+    // The timestamp write must not be gated behind the diagnostic flag.
+    const block = markUserScrollIntentBlock();
+    const writeIdx = block.indexOf('lastUserScrollAtRef.current = Date.now();');
+    const guardIdx = block.indexOf('if (!scrollDebugEnabled) return;');
+    expect(writeIdx).toBeGreaterThan(-1);
+    expect(guardIdx).toBeGreaterThan(-1);
+    expect(writeIdx).toBeLessThan(guardIdx);
+  });
+
+  it('logs a USER-SCROLL-INTENT marker comparing event.target against the ref (ownership-mismatch diagnostic)', () => {
+    const block = markUserScrollIntentBlock();
+    expect(block).toMatch(/USER-SCROLL-INTENT\(\$\{source\}, sameElement=\$\{sameElement\}\)/);
+    expect(block).toMatch(/const sameElement = targetEl === refEl;/);
+    // Reads event.target (where the gesture started), not currentTarget
+    // (always the listener's own node) — the actual diagnostic value.
+    expect(block).toMatch(/target: EventTarget \| null/);
   });
 });
 

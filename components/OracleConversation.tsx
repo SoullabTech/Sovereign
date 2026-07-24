@@ -3462,6 +3462,42 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // settling correctly. Tune if device evidence calls for it.
   const RECENT_USER_SCROLL_MS = 10_000;
 
+  // DIAGNOSTIC MARKER (2026-07-24 follow-up, physical-device defect).
+  // Device evidence showed `scrollAwayMs=1784921085077` — a raw
+  // `Date.now()` value, proving `lastUserScrollAtRef` never left its
+  // default `0` on physical iOS. Every resize check therefore read
+  // "infinitely stale," and the recent-scroll-away branch was
+  // unreachable: not a verified guard, a defective one. No `SKIPPED` line
+  // ever appeared in that device session.
+  //
+  // This marker must appear in the debug log for a gesture to be
+  // trusted — if a later SKIPPED/RESETTLED line has no preceding
+  // USER-SCROLL-INTENT line, the timestamp still isn't being set. Logs
+  // `event.target` (where the gesture actually started) against
+  // `transcriptScrollElRef.current` (the element onScroll/box() geometry
+  // is read from) — structurally these are the same JSX node here, so
+  // `sameElement` should read `true`; if it doesn't, that's the wrapper/
+  // nested-scroll-owner mismatch to chase. `pointerdown` is the primary
+  // mobile signal (fires on contact, before Safari's own gesture/momentum
+  // recognition can intervene); `touchstart`/`wheel` remain as a
+  // cross-check and the desktop/trackpad path respectively.
+  const markUserScrollIntent = (source: string, target: EventTarget | null) => {
+    lastUserScrollAtRef.current = Date.now();
+    if (!scrollDebugEnabled) return;
+    const refEl = transcriptScrollElRef.current;
+    const targetEl = target instanceof HTMLElement ? target : null;
+    const sameElement = targetEl === refEl;
+    const targetGeom = targetEl
+      ? `st=${Math.round(targetEl.scrollTop)},sh=${Math.round(targetEl.scrollHeight)},ch=${Math.round(targetEl.clientHeight)}`
+      : 'no-target';
+    const refGeom = refEl
+      ? `st=${Math.round(refEl.scrollTop)},sh=${Math.round(refEl.scrollHeight)},ch=${Math.round(refEl.clientHeight)}`
+      : 'no-ref';
+    pushScrollDebug(
+      `USER-SCROLL-INTENT(${source}, sameElement=${sameElement}) | target(${targetGeom}) ref(${refGeom})`
+    );
+  };
+
   useEffect(() => {
     const vv = typeof window !== 'undefined' ? window.visualViewport : null;
     if (!vv) return;
@@ -8420,17 +8456,25 @@ I'm not sure what I'm feeling yet.`;
                    el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_THRESHOLD_PX;
                  pushScrollDebug('onScroll', { throttle: true });
                }}
-               onTouchStart={() => {
+               onPointerDown={(e) => {
+                 // Primary mobile signal — fires on contact, before
+                 // Safari's own gesture/momentum recognition can
+                 // intervene. touchstart below is a cross-check, not
+                 // the sole source, after device evidence showed the
+                 // recency timestamp never being set in practice.
+                 markUserScrollIntent('pointerdown', e.target);
+               }}
+               onTouchStart={(e) => {
                  // Recency marker for a GENUINE member gesture, distinct
                  // from the `scroll` event above — which also fires for
                  // our own programmatic `scrollIntoView` calls and would
                  // otherwise make every auto-correction look like fresh
                  // member intent to scroll away.
-                 lastUserScrollAtRef.current = Date.now();
+                 markUserScrollIntent('touchstart', e.target);
                }}
-               onWheel={() => {
-                 // Desktop equivalent of onTouchStart above.
-                 lastUserScrollAtRef.current = Date.now();
+               onWheel={(e) => {
+                 // Desktop/trackpad equivalent of the two above.
+                 markUserScrollIntent('wheel', e.target);
                }}>
             <AnimatePresence>
               {/* Top padding on the list below clears the jewel. The holoflower
