@@ -4,7 +4,7 @@
 // 🔖 BUILD_STAMP: 2026-06-02_ios_playback_watchdog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users, Bookmark } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, VolumeX, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users, Bookmark } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -8724,15 +8724,55 @@ I'm not sure what I'm feeling yet.`;
 
                         The return path already exists: in voice mode
                         VoiceInteractionBar renders a 44x44 keyboard toggle. */}
-                    <button
-                      onClick={() => setShowChatInterface(false)}
-                      className="ml-auto flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
-                      title="Switch to voice — speak with MAIA instead of typing"
-                      aria-label="Switch to voice mode"
-                    >
-                      <Mic className="h-3.5 w-3.5" strokeWidth={2} />
-                      <span>Voice</span>
-                    </button>
+                    <div className="ml-auto flex items-center gap-1">
+                      {/* Voice-RESPONSE mute — separate control from the
+                          input-mode switch to its right, and easy to
+                          conflate with it: this one decides whether MAIA's
+                          reply includes spoken audio; the input-mode switch
+                          decides whether the member is speaking or typing.
+                          Same enableVoiceInChat state a hidden desktop-only
+                          pill in MaiaTopBar and a ModernTextInput tools-menu
+                          item already read/write (mobile-audit correction,
+                          2026-07-24 — this control was previously reachable
+                          on mobile ONLY by opening the "+" tools menu, which
+                          can't show current state at a glance). Placed here,
+                          not in the top bar, for the same reason the
+                          input-mode switch moved here: it acts on the
+                          composer, so it belongs beside the composer —
+                          "Keep this cluster to identity and global
+                          utilities" (top-bar comment, unchanged by this). */}
+                      <button
+                        onClick={() => {
+                          const newValue = !enableVoiceInChat;
+                          setEnableVoiceInChat(newValue);
+                          localStorage.setItem('enableVoiceInChat', JSON.stringify(newValue));
+                          console.log('🔊 Voice responses toggled:', newValue ? 'ON' : 'OFF');
+                        }}
+                        className={`md:hidden flex min-w-[44px] min-h-[44px] items-center justify-center rounded-full transition-colors ${
+                          enableVoiceInChat
+                            ? 'text-amber-400 hover:text-amber-300'
+                            : 'text-white/30 hover:text-white/50'
+                        }`}
+                        title={enableVoiceInChat ? 'MAIA will speak aloud — tap to go text-only' : 'MAIA is text-only — tap to enable her voice'}
+                        aria-label={enableVoiceInChat ? 'Disable voice responses' : 'Enable voice responses'}
+                        aria-pressed={enableVoiceInChat}
+                      >
+                        {enableVoiceInChat ? (
+                          <Volume2 className="h-4 w-4" strokeWidth={2} />
+                        ) : (
+                          <VolumeX className="h-4 w-4" strokeWidth={2} />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setShowChatInterface(false)}
+                        className="flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
+                        title="Switch to voice — speak with MAIA instead of typing"
+                        aria-label="Switch to voice mode"
+                      >
+                        <Mic className="h-3.5 w-3.5" strokeWidth={2} />
+                        <span>Voice</span>
+                      </button>
+                    </div>
                   </div>
                   <ModernTextInput
                     ref={textInputRef}
