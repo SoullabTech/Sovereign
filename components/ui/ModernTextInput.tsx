@@ -481,7 +481,12 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               // capped app-wide (accessibility — see app/layout.tsx), so
               // raising the field's own font-size is the only fix that
               // doesn't also block a member's own zoom.
-              className={`w-full min-h-[40px] max-h-[120px] bg-transparent border-none outline-none resize-none
+              // max-h matches the 200px JS growth cap (line ~196) — both
+              // introduced together in commit 5ad91b44a, but the CSS value
+              // was 120px against a JS comment reading "expanded for
+              // mobile" (200px). The mismatch silently capped visible
+              // growth at 120px; 200px was the stated intent.
+              className={`w-full min-h-[40px] max-h-[200px] bg-transparent border-none outline-none resize-none
                        text-[16px] leading-relaxed placeholder:text-white/40 transition-colors pr-12
                        ${enableVoiceInput || isRecording
                          ? 'text-blue-300 cursor-not-allowed'
