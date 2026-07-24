@@ -3373,15 +3373,38 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This is a stale-scroll correction, not another keyboard-offset fix —
   // the `bottom: 260px` geometry itself is untouched.
   //
-  // GUARD: only re-settle if the member was already at/near the bottom
-  // before the resize — tracked continuously via onScroll below rather
-  // than measured at resize time, because by the time `resize` fires the
-  // container may already reflect the *new* geometry, which would make a
-  // measurement taken then say "still near bottom" even when the member
-  // had deliberately scrolled up and the resize just happened to land
-  // near their position.
+  // GUARD, corrected after device evidence (2026-07-24): the first version
+  // of this guard tracked only a boolean ("was the member near the bottom
+  // last time onScroll fired"), with no expiry. Device logs showed this
+  // boolean going false once — from a single scroll-up — and then staying
+  // false for 5+ minutes across THREE separate keyboard open/close cycles,
+  // silently skipping every one of them. A "measure fresh instead of
+  // trusting the stale ref" fix would NOT have helped: the container's own
+  // geometry (scrollTop/scrollHeight/clientHeight) doesn't change when the
+  // keyboard opens or closes — only visualViewport does — so a fresh read
+  // at resize time reaches the exact same "not near bottom" verdict the
+  // stale ref already had. The real question isn't stale-vs-fresh
+  // geometry; it's whether an old scroll-away should stay authoritative
+  // forever. It shouldn't: a DELIBERATE, RECENT scroll-up (reading back
+  // through history) must still be respected — but it must not become a
+  // permanent veto on every future keyboard transition, indefinitely,
+  // regardless of how much time or how many keyboard cycles pass.
+  //
+  // So this now tracks two independent things: current position
+  // (`wasNearBottomRef`, via onScroll, unchanged) and *when the member
+  // last actually touched the scroll surface themselves*
+  // (`lastUserScrollAtRef`, via touchstart/wheel — NOT the `scroll` event
+  // itself, since our own `scrollIntoView` calls also fire `scroll` and
+  // must not be mistaken for member intent). A scroll-away only blocks
+  // correction while it's both currently away from bottom AND recent.
   const wasNearBottomRef = useRef(true);
   const NEAR_BOTTOM_THRESHOLD_PX = 60;
+  const lastUserScrollAtRef = useRef(0);
+  // Heuristic, not a proven-optimal value: long enough to cover "member is
+  // actively reading back through history while typing," short enough that
+  // an old scroll-away from minutes ago stops blocking new replies from
+  // settling correctly. Tune if device evidence calls for it.
+  const RECENT_USER_SCROLL_MS = 10_000;
 
   useEffect(() => {
     const vv = typeof window !== 'undefined' ? window.visualViewport : null;
@@ -3391,15 +3414,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     const resettle = () => {
       pendingFrame = null;
-      if (!wasNearBottomRef.current) {
-        pushScrollDebug('vv-resize-SKIPPED(not-near-bottom)');
+      const scrollAwayMs = Date.now() - lastUserScrollAtRef.current;
+      const recentDeliberateScrollAway = !wasNearBottomRef.current && scrollAwayMs < RECENT_USER_SCROLL_MS;
+      if (recentDeliberateScrollAway) {
+        pushScrollDebug(`vv-resize-SKIPPED(recent-user-scroll-away, ${scrollAwayMs}ms)`);
         return;
       }
       // behavior: 'auto', not 'smooth' — this fires alongside the keyboard's
       // own show/hide animation, and a competing smooth scroll produces
       // visible bounce. Smooth stays reserved for genuinely new messages.
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-      pushScrollDebug('vv-resize-RESETTLED(auto)');
+      pushScrollDebug(`vv-resize-RESETTLED(auto, scrollAwayMs=${scrollAwayMs})`);
     };
 
     const handleViewportResize = () => {
@@ -8332,6 +8357,18 @@ I'm not sure what I'm feeling yet.`;
                  wasNearBottomRef.current =
                    el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_THRESHOLD_PX;
                  pushScrollDebug('onScroll', { throttle: true });
+               }}
+               onTouchStart={() => {
+                 // Recency marker for a GENUINE member gesture, distinct
+                 // from the `scroll` event above — which also fires for
+                 // our own programmatic `scrollIntoView` calls and would
+                 // otherwise make every auto-correction look like fresh
+                 // member intent to scroll away.
+                 lastUserScrollAtRef.current = Date.now();
+               }}
+               onWheel={() => {
+                 // Desktop equivalent of onTouchStart above.
+                 lastUserScrollAtRef.current = Date.now();
                }}>
             <AnimatePresence>
               {/* Top padding on the list below clears the jewel. The holoflower
