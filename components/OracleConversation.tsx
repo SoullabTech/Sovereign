@@ -3323,6 +3323,55 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Re-settle the transcript after keyboard-driven viewport changes.
+  //
+  // BUG: the effect above only re-runs on `messages` changes. If a reply
+  // streams in while the keyboard is open, it settles against that
+  // moment's (keyboard-constrained) container height. When the keyboard
+  // later closes, `bottom: 260px` (line ~8165) resolves against the taller
+  // closed-keyboard viewport and the container grows — but nothing re-runs
+  // the scroll, so the old "bottom" position is now short of the real
+  // bottom, stranding the reply near the top with dead space beneath it.
+  // This is a stale-scroll correction, not another keyboard-offset fix —
+  // the `bottom: 260px` geometry itself is untouched.
+  //
+  // GUARD: only re-settle if the member was already at/near the bottom
+  // before the resize — tracked continuously via onScroll below rather
+  // than measured at resize time, because by the time `resize` fires the
+  // container may already reflect the *new* geometry, which would make a
+  // measurement taken then say "still near bottom" even when the member
+  // had deliberately scrolled up and the resize just happened to land
+  // near their position.
+  const wasNearBottomRef = useRef(true);
+  const NEAR_BOTTOM_THRESHOLD_PX = 60;
+
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return;
+
+    let pendingFrame: number | null = null;
+
+    const resettle = () => {
+      pendingFrame = null;
+      if (!wasNearBottomRef.current) return;
+      // behavior: 'auto', not 'smooth' — this fires alongside the keyboard's
+      // own show/hide animation, and a competing smooth scroll produces
+      // visible bounce. Smooth stays reserved for genuinely new messages.
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    };
+
+    const handleViewportResize = () => {
+      if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
+      pendingFrame = requestAnimationFrame(resettle);
+    };
+
+    vv.addEventListener('resize', handleViewportResize);
+    return () => {
+      vv.removeEventListener('resize', handleViewportResize);
+      if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
+    };
+  }, []);
+
   // Smooth audio level changes for accessibility (prevents flashing from sudden spikes)
   useEffect(() => {
     const smoothingFactor = 0.3; // Lower = smoother, slower response
@@ -8177,6 +8226,15 @@ I'm not sure what I'm feeling yet.`;
                  WebkitOverflowScrolling: 'touch',
                  overscrollBehavior: 'contain',
                  touchAction: 'pan-y'
+               }}
+               onScroll={(e) => {
+                 // Continuously tracks proximity to bottom so the
+                 // visualViewport-resize re-settle effect above knows the
+                 // member's intent going into a keyboard-driven resize,
+                 // not just the geometry after it.
+                 const el = e.currentTarget;
+                 wasNearBottomRef.current =
+                   el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_THRESHOLD_PX;
                }}>
             <AnimatePresence>
               {/* Top padding on the list below clears the jewel. The holoflower
