@@ -58,33 +58,50 @@ function messageListWrapperBlock(): string {
   return SRC.slice(start, end);
 }
 
+// The className attribute value only — excludes the prose comment that
+// documents the pb-48/md:pb-60 history, which would otherwise false-match
+// any regex just checking whether those strings appear anywhere nearby.
+function messageListWrapperClassName(): string {
+  const block = messageListWrapperBlock();
+  const classStart = block.indexOf('className="') + 'className="'.length;
+  const classEnd = block.indexOf('"', classStart);
+  return block.slice(classStart, classEnd);
+}
+
 describe('mobile bottom-anchor — short conversations settle at the bottom', () => {
   it('the message-list wrapper uses min-h-full, not h-full (avoids trapping overflow)', () => {
-    const block = messageListWrapperBlock();
+    const block = messageListWrapperClassName();
     expect(block).toMatch(/\bmin-h-full\b/);
     expect(block).not.toMatch(/(?<!min-)h-full\b/);
   });
 
   it('is a flex column bottom-anchored below the md breakpoint', () => {
-    const block = messageListWrapperBlock();
+    const block = messageListWrapperClassName();
     expect(block).toMatch(/\bflex\b/);
     expect(block).toMatch(/\bflex-col\b/);
     expect(block).toMatch(/\bjustify-end\b/);
   });
 
   it('explicitly reverts to plain block flow on desktop (md:block md:min-h-0)', () => {
-    const block = messageListWrapperBlock();
+    const block = messageListWrapperClassName();
     expect(block).toMatch(/\bmd:block\b/);
     expect(block).toMatch(/\bmd:min-h-0\b/);
   });
 
-  it('preserves the existing padding/spacing classes (no regression to #703/#709 top clearance)', () => {
-    const block = messageListWrapperBlock();
-    expect(block).toMatch(/space-y-3/);
+  it('preserves the top clearance classes (no regression to #703/#709)', () => {
+    const block = messageListWrapperClassName();
     expect(block).toMatch(/pt-\[10\.5rem\]/);
-    expect(block).toMatch(/pb-48/);
     expect(block).toMatch(/md:pt-\[12rem\]/);
-    expect(block).toMatch(/md:pb-60/);
+  });
+
+  it('no longer carries a constant pb-48/md:pb-60 — that became a conditional reserve (see transcript-reserve-overflow.test.ts)', () => {
+    // Superseded by the founder-reserve-vs-breathing-gap split: a constant
+    // reserve on this wrapper double-reserves footer clearance once
+    // justify-end is already bottom-anchoring short conversations. space-y-3
+    // moved with the messages into their own intrinsic-content wrapper.
+    const block = messageListWrapperClassName();
+    expect(block).not.toMatch(/\bpb-48\b/);
+    expect(block).not.toMatch(/\bmd:pb-60\b/);
   });
 });
 
