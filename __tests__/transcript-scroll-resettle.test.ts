@@ -9,20 +9,43 @@
  * this fix) resolves against the taller closed-keyboard viewport and the
  * container grows — but nothing re-runs the scroll, so the stale
  * scrollTop leaves the reply stranded near the top with dead space
- * beneath it. Device-confirmed via a still sequence: keyboard open ->
- * reply arrives -> keyboard dismissed via the QuickType checkmark -> reply
- * remains scrolled high with room to spare below it.
+ * beneath it.
  *
- * This is a stale-scroll correction, not another keyboard-offset fix like
- * #722/#713 — no positioning geometry changes here.
+ * GUARD, corrected after device evidence: the first version tracked only
+ * a boolean ("was the member near the bottom last time onScroll fired"),
+ * with no expiry. A real device capture showed this boolean going false
+ * once — from a single scroll-up — then staying false for 5+ minutes
+ * across THREE separate keyboard open/close cycles, silently skipping
+ * every one of them (`vv-resize-SKIPPED` fired three times over +293s,
+ * +295s, +312s, with identical box geometry each time). Switching to a
+ * "measure fresh instead of trusting the ref" approach would NOT have
+ * fixed this: the container's own scrollTop/scrollHeight/clientHeight do
+ * not change when the keyboard opens or closes — only visualViewport
+ * does — so a fresh read at resize time reaches the exact same
+ * "not near bottom" verdict the stale ref already had. The real question
+ * is whether an old scroll-away should stay authoritative forever. It
+ * should not.
  *
- * GUARD: re-settling only happens if the member was already at/near the
- * bottom, tracked continuously via onScroll (not measured at resize time,
- * since by then the container may already reflect the new geometry).
+ * ACCEPTANCE CONDITION: a deliberate, RECENT scroll-away must still be
+ * respected (reading back through history while typing shouldn't get
+ * yanked to the bottom), but it must not permanently disable
+ * keyboard-resize correction across later keyboard cycles once it goes
+ * stale.
+ *
+ * MECHANISM FOR THE FIX: two independent signals instead of one boolean —
+ * current position (`wasNearBottomRef`, via `onScroll`, unchanged) and
+ * *when the member last actually touched the scroll surface themselves*
+ * (`lastUserScrollAtRef`, via `touchstart`/`wheel` — deliberately NOT the
+ * `scroll` event, since programmatic `scrollIntoView` calls also fire
+ * `scroll` and must not be mistaken for member intent). A scroll-away
+ * only blocks correction while BOTH conditions hold: still away from
+ * bottom, AND that state is recent.
  *
  * SCOPE: OracleConversation.tsx only. No change to bottom: 260px/220px,
  * the composer, voice controls, or #722's VoiceInteractionBar keyboard
- * inset logic.
+ * inset logic. Independent of the separate mobile bottom-anchor layout
+ * fix (different branch, different mechanism, different acceptance
+ * condition).
  */
 
 import { readFileSync } from 'fs';
@@ -80,21 +103,7 @@ describe('visualViewport resize listener — re-settles bottom-anchored transcri
   it('uses behavior: "auto" for the resize correction, not "smooth"', () => {
     const block = resettleEffectBlock();
     expect(block).toMatch(/messagesEndRef\.current\?\.scrollIntoView\(\{ behavior: 'auto' \}\)/);
-    // The whole block should have exactly one scrollIntoView call, and it
-    // must not be the smooth variant reserved for genuinely new messages.
     expect(block).not.toMatch(/behavior: 'smooth'/);
-  });
-
-  it('does not re-settle when the member was not near the bottom', () => {
-    const block = resettleEffectBlock();
-    // Matches both the original single-line guard and the diagnostic
-    // build's multi-line form (guard + debug breadcrumb + return) — the
-    // invariant under test is that a non-near-bottom state exits before
-    // calling scrollIntoView, not the exact line shape.
-    const guardIndex = block.search(/if \(!wasNearBottomRef\.current\)/);
-    expect(guardIndex).toBeGreaterThan(-1);
-    const guardBlock = block.slice(guardIndex, block.indexOf('return;', guardIndex) + 'return;'.length);
-    expect(guardBlock).toMatch(/return;$/);
   });
 
   it('removes the listener and cancels any pending frame on cleanup', () => {
@@ -111,24 +120,78 @@ describe('visualViewport resize listener — re-settles bottom-anchored transcri
   });
 });
 
-describe('near-bottom tracking — continuous, not measured at resize time', () => {
-  it('defines a 40-80px tolerance threshold', () => {
-    expect(SRC).toMatch(/NEAR_BOTTOM_THRESHOLD_PX = (4[0-9]|5[0-9]|6[0-9]|7[0-9]|80);/);
+describe('recency + source guard — a scroll-away is not a permanent veto', () => {
+  it('only skips when the scroll-away is BOTH not-near-bottom AND recent', () => {
+    const block = resettleEffectBlock();
+    expect(block).toMatch(
+      /const recentDeliberateScrollAway = !wasNearBottomRef\.current && scrollAwayMs < RECENT_USER_SCROLL_MS;/
+    );
+    expect(block).toMatch(/if \(recentDeliberateScrollAway\) \{/);
   });
 
+  it('computes scrollAwayMs from a real elapsed-time measurement, not a fixed flag', () => {
+    const block = resettleEffectBlock();
+    expect(block).toMatch(/const scrollAwayMs = Date\.now\(\) - lastUserScrollAtRef\.current;/);
+  });
+
+  it('resettles (does not skip) once the scroll-away goes stale, even with wasNearBottomRef still false', () => {
+    // The literal defect this branch fixes: three keyboard cycles over 5+
+    // minutes all skipped on an old scroll-away. The guard's condition
+    // must include a time bound, or a stale false blocks forever.
+    expect(SRC).toMatch(/RECENT_USER_SCROLL_MS = 10_000;/);
+    const block = resettleEffectBlock();
+    // The skip branch must return early; the fallthrough (stale or
+    // already-near-bottom) must reach scrollIntoView unconditionally.
+    const skipIdx = block.indexOf('if (recentDeliberateScrollAway) {');
+    const returnIdx = block.indexOf('return;', skipIdx);
+    const afterSkipBlock = block.slice(returnIdx, block.indexOf('scrollIntoView'));
+    expect(afterSkipBlock).not.toMatch(/if \(!wasNearBottomRef\.current\)/); // no second unconditional veto
+  });
+
+  it('does not conflate the recency threshold with the near-bottom pixel threshold', () => {
+    // Two independent constants for two independent signals.
+    expect(SRC).toMatch(/NEAR_BOTTOM_THRESHOLD_PX = (4[0-9]|5[0-9]|6[0-9]|7[0-9]|80);/);
+    expect(SRC).toMatch(/RECENT_USER_SCROLL_MS = 10_000;/);
+  });
+});
+
+describe('lastUserScrollAtRef — sourced from genuine gestures, not programmatic scroll', () => {
+  it('is updated on touchstart and wheel, not on the scroll event itself', () => {
+    const block = scrollContainerBlock();
+    expect(block).toMatch(/onTouchStart=\{\(\) => \{/);
+    expect(block).toMatch(/onWheel=\{\(\) => \{/);
+    // Both handlers set the same ref.
+    const touchBlock = block.slice(block.indexOf('onTouchStart'), block.indexOf('onWheel'));
+    const wheelBlock = block.slice(block.indexOf('onWheel'));
+    expect(touchBlock).toMatch(/lastUserScrollAtRef\.current = Date\.now\(\);/);
+    expect(wheelBlock).toMatch(/lastUserScrollAtRef\.current = Date\.now\(\);/);
+  });
+
+  it('the onScroll handler itself does not write lastUserScrollAtRef (would count our own scrollIntoView as user intent)', () => {
+    const block = scrollContainerBlock();
+    const onScrollStart = block.indexOf('onScroll={');
+    const onScrollEnd = block.indexOf('onTouchStart');
+    const onScrollBlock = block.slice(onScrollStart, onScrollEnd);
+    expect(onScrollBlock).not.toMatch(/lastUserScrollAtRef/);
+  });
+});
+
+describe('near-bottom tracking — continuous, not measured at resize time', () => {
   it('the scroll container updates wasNearBottomRef via onScroll, not state', () => {
     const block = scrollContainerBlock();
     expect(block).toMatch(/onScroll=\{/);
     expect(block).toMatch(
       /wasNearBottomRef\.current =\s*\n?\s*el\.scrollHeight - el\.scrollTop - el\.clientHeight <= NEAR_BOTTOM_THRESHOLD_PX/
     );
-    // A ref write, not a setState call — must not trigger a re-render on
-    // every scroll tick.
     expect(block).not.toMatch(/setWasNearBottom/);
   });
 
   it('defaults to true (first open / empty transcript still auto-settles)', () => {
     expect(SRC).toMatch(/const wasNearBottomRef = useRef\(true\);/);
+  });
+
+  it('lastUserScrollAtRef defaults to 0 (no recent scroll at mount, so an initial away-from-bottom is never treated as recent)', () => {
+    expect(SRC).toMatch(/const lastUserScrollAtRef = useRef\(0\);/);
   });
 });
 
@@ -144,5 +207,13 @@ describe('scope guards', () => {
   it('does not introduce any new position: fixed geometry', () => {
     const block = resettleEffectBlock();
     expect(block).not.toMatch(/position:\s*['"]?fixed/);
+  });
+
+  it('does not touch the mobile bottom-anchor layout question (separate branch)', () => {
+    // justify-end/flex-end exist elsewhere in this file for unrelated UI —
+    // scoped to the scroll container and its resettle effect specifically,
+    // where a bottom-anchor layout change would actually land.
+    expect(scrollContainerBlock()).not.toMatch(/justify-content:\s*flex-end|justify-end/);
+    expect(resettleEffectBlock()).not.toMatch(/justify-content:\s*flex-end|justify-end/);
   });
 });
