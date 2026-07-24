@@ -3318,9 +3318,46 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
+  // ---- TEMPORARY DIAGNOSTIC (Issue 1 follow-up, #731) ----
+  // #731 shipped the re-settle mechanism below and it did NOT resolve the
+  // reported gap on physical device (Safari and Chrome-for-iOS, repeated
+  // across separate windows). Rather than guess a second fix from more
+  // screenshots, this prints a short rolling log of the actual viewport
+  // and scroll numbers directly on screen, gated behind ?debugScroll=1 so
+  // it never renders for members. Remove once the real failing transition
+  // is captured with numbers instead of inferred from a gap in a photo.
+  const scrollDebugEnabled =
+    typeof window !== 'undefined' && window.location.search.includes('debugScroll');
+  const [scrollDebugLog, setScrollDebugLog] = useState<string[]>([]);
+  const scrollDebugStartRef = useRef<number>(
+    typeof performance !== 'undefined' ? performance.now() : 0
+  );
+  const scrollDebugLastPushRef = useRef(0);
+  const transcriptScrollElRef = useRef<HTMLDivElement>(null);
+
+  const pushScrollDebug = (label: string, opts: { throttle?: boolean } = {}) => {
+    if (!scrollDebugEnabled) return;
+    const now = typeof performance !== 'undefined' ? performance.now() : 0;
+    if (opts.throttle && now - scrollDebugLastPushRef.current < 150) return;
+    scrollDebugLastPushRef.current = now;
+    const t = Math.round(now - scrollDebugStartRef.current);
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    const el = transcriptScrollElRef.current;
+    const gap = el ? el.scrollHeight - el.scrollTop - el.clientHeight : null;
+    const line =
+      `+${t}ms ${label} | vv(top=${vv ? Math.round(vv.offsetTop) : '?'},h=${vv ? Math.round(vv.height) : '?'}) ` +
+      `box(st=${el ? Math.round(el.scrollTop) : '?'},sh=${el ? Math.round(el.scrollHeight) : '?'},` +
+      `ch=${el ? Math.round(el.clientHeight) : '?'},gap=${gap !== null ? Math.round(gap) : '?'}) ` +
+      `nearBottom=${wasNearBottomRef.current}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- diagnostic only, intentionally reads refs
+    setScrollDebugLog(prev => [line, ...prev].slice(0, 10));
+  };
+
   // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    pushScrollDebug(`messages-effect(count=${messages.length}, smooth)`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   // Re-settle the transcript after keyboard-driven viewport changes.
@@ -3353,14 +3390,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     const resettle = () => {
       pendingFrame = null;
-      if (!wasNearBottomRef.current) return;
+      if (!wasNearBottomRef.current) {
+        pushScrollDebug('vv-resize-SKIPPED(not-near-bottom)');
+        return;
+      }
       // behavior: 'auto', not 'smooth' — this fires alongside the keyboard's
       // own show/hide animation, and a competing smooth scroll produces
       // visible bounce. Smooth stays reserved for genuinely new messages.
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      pushScrollDebug('vv-resize-RESETTLED(auto)');
     };
 
     const handleViewportResize = () => {
+      pushScrollDebug('vv-resize-fired');
       if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
       pendingFrame = requestAnimationFrame(resettle);
     };
@@ -3370,6 +3412,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       vv.removeEventListener('resize', handleViewportResize);
       if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Smooth audio level changes for accessibility (prevents flashing from sudden spikes)
@@ -8129,6 +8172,39 @@ I'm not sure what I'm feeling yet.`;
           the trace when voice fails. Remove once Android voice is stable. */}
       <VoiceDebugOverlay />
 
+      {/* 🔧 SCROLL DEBUG STRIP — temporary, Issue 1 follow-up (#731).
+          ?debugScroll=1 only; never renders for members. Prints the real
+          visualViewport/scroll numbers so a physical-device screenshot
+          carries evidence, not a guess about timing. Remove once the
+          actual failing transition is captured with numbers. */}
+      {scrollDebugEnabled && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 52,
+            left: 4,
+            right: 4,
+            zIndex: 99999,
+            fontSize: 9,
+            lineHeight: 1.35,
+            fontFamily: 'monospace',
+            color: '#5eead4',
+            background: 'rgba(0,0,0,0.8)',
+            borderRadius: 6,
+            padding: '4px 6px',
+            maxHeight: 130,
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            wordBreak: 'break-all',
+          }}
+        >
+          {scrollDebugLog.length === 0 && <div>debugScroll active — waiting for events…</div>}
+          {scrollDebugLog.map((line, i) => (
+            <div key={i} style={{ opacity: 1 - i * 0.08 }}>{line}</div>
+          ))}
+        </div>
+      )}
+
       {/* 🔧 PWA DEBUG STRIP - Shows state machine state on Safari PWA (remove after debugging) */}
       {isPwaVoice && (
         <div
@@ -8221,6 +8297,7 @@ I'm not sure what I'm feeling yet.`;
             </div>
           )}
           <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-hide"
+               ref={transcriptScrollElRef}
                style={{
                  scrollBehavior: 'smooth',
                  WebkitOverflowScrolling: 'touch',
@@ -8235,6 +8312,7 @@ I'm not sure what I'm feeling yet.`;
                  const el = e.currentTarget;
                  wasNearBottomRef.current =
                    el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_THRESHOLD_PX;
+                 pushScrollDebug('onScroll', { throttle: true });
                }}>
             <AnimatePresence>
               {/* Top padding on the list below clears the jewel. The holoflower

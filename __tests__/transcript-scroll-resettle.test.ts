@@ -87,7 +87,14 @@ describe('visualViewport resize listener — re-settles bottom-anchored transcri
 
   it('does not re-settle when the member was not near the bottom', () => {
     const block = resettleEffectBlock();
-    expect(block).toMatch(/if \(!wasNearBottomRef\.current\) return;/);
+    // Matches both the original single-line guard and the diagnostic
+    // build's multi-line form (guard + debug breadcrumb + return) — the
+    // invariant under test is that a non-near-bottom state exits before
+    // calling scrollIntoView, not the exact line shape.
+    const guardIndex = block.search(/if \(!wasNearBottomRef\.current\)/);
+    expect(guardIndex).toBeGreaterThan(-1);
+    const guardBlock = block.slice(guardIndex, block.indexOf('return;', guardIndex) + 'return;'.length);
+    expect(guardBlock).toMatch(/return;$/);
   });
 
   it('removes the listener and cancels any pending frame on cleanup', () => {
