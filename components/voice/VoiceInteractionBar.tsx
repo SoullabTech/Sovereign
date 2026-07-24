@@ -32,7 +32,18 @@ function useKeyboardBottomInset(): number {
 
     const update = () => {
       const keyboardTop = vv.offsetTop + vv.height;
-      setInset(Math.max(0, window.innerHeight - keyboardTop));
+      const rawInset = window.innerHeight - keyboardTop;
+      // Dev-only diagnostic: rawInset going negative means offsetTop+height
+      // exceeded innerHeight, which shouldn't happen for any real keyboard
+      // or viewport state. The Math.max clamp below already protects
+      // production behavior; this just surfaces an unusual visualViewport
+      // reading during development instead of silently swallowing it.
+      if (process.env.NODE_ENV === 'development' && rawInset < 0) {
+        console.warn('[VoiceInteractionBar] unexpected negative keyboard inset', {
+          rawInset, offsetTop: vv.offsetTop, height: vv.height, innerHeight: window.innerHeight,
+        });
+      }
+      setInset(Math.max(0, rawInset));
     };
 
     update();

@@ -79,7 +79,19 @@ describe('recalculates without remount', () => {
     // calls setInset once, rather than deriving the next value from the
     // previous — so closing the keyboard restores 0 without special-casing.
     const updateBody = hookBody().slice(hookBody().indexOf('const update'));
-    expect(updateBody).toMatch(/setInset\(Math\.max\(0, window\.innerHeight - keyboardTop\)\)/);
+    expect(updateBody).toMatch(/const rawInset = window\.innerHeight - keyboardTop;/);
+    expect(updateBody).toMatch(/setInset\(Math\.max\(0, rawInset\)\)/);
+  });
+
+  it('dev-only: warns on a negative raw inset without affecting production behavior', () => {
+    const updateBody = hookBody().slice(hookBody().indexOf('const update'));
+    expect(updateBody).toMatch(/process\.env\.NODE_ENV === 'development' && rawInset < 0/);
+    expect(updateBody).toMatch(/console\.warn\(/);
+    // The warning is diagnostic only — setInset always clamps regardless
+    // of NODE_ENV, so this can't change what actually renders.
+    expect(updateBody.indexOf('setInset(Math.max(0, rawInset))')).toBeGreaterThan(
+      updateBody.indexOf("console.warn(")
+    );
   });
 
   it('the resting (keyboard-closed) state is 0 — bottom: 0 is unchanged', () => {
