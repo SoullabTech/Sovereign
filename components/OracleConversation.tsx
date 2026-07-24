@@ -3411,9 +3411,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // Auto-scroll to latest message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    beginAutoScroll('smooth', `messages-effect(count=${messages.length})`);
     recomputeContentOverflow();
-    pushScrollDebug(`messages-effect(count=${messages.length}, smooth)`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
@@ -3498,6 +3497,96 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     );
   };
 
+  // Auto-scroll settle verification — fourth, independent mechanism of
+  // Issue 1 (2026-07-24 texting-experience audit). Separate from the
+  // recency guard above (#739/#741) and the bottom-anchor layout (#740/
+  // #742) — different failure, different fix, no shared code beyond
+  // reading the same refs.
+  //
+  // EVIDENCE (physical device, iOS): a programmatic scrollIntoView that
+  // correctly reaches the bottom can drift away from it afterward, with no
+  // resize and no content-size change to explain the drift —
+  // `gap=-13 -> gap=4 -> gap=82`, settling 82px short of true bottom.
+  // Elastic/rubber-band overscroll is the leading explanation, especially
+  // given the negative-gap overshoot before the positive-gap undershoot —
+  // but the fix does not depend on proving that cause. It verifies the
+  // actual resting position after a programmatic bottom-scroll and
+  // corrects once if short.
+  //
+  // NOT a general "whenever scrolling stops, force bottom" observer — that
+  // would override a member's own intentional scroll-away. This only
+  // watches scrolls this code itself initiated (tracked via
+  // `autoScrollGenerationRef`, an operation token so an older debounce
+  // can't correct after a newer message, resize, or scroll has taken
+  // ownership) and aborts as soon as a genuine user gesture
+  // (pointerdown/touchstart/wheel, via `lastUserScrollAtRef`) is recorded
+  // before it settles.
+  const autoScrollGenerationRef = useRef(0);
+  const BOTTOM_EPSILON_PX = 4;
+  // How long scrollTop must be unchanged before a programmatic scroll is
+  // considered settled — long enough to ride out one elastic-overscroll
+  // bounce, short enough not to delay the correction noticeably.
+  const AUTO_SCROLL_QUIET_MS = 100;
+  // Hard ceiling so a scroll that never quiets (e.g. content still
+  // streaming in) can't poll forever — give up rather than force a
+  // correction against numbers that were still mid-flight.
+  const AUTO_SCROLL_MAX_WAIT_MS = 3000;
+
+  const beginAutoScroll = (behavior: ScrollBehavior, label: string) => {
+    const generation = ++autoScrollGenerationRef.current;
+    const ownerScrollAt = lastUserScrollAtRef.current;
+    messagesEndRef.current?.scrollIntoView({ behavior });
+    pushScrollDebug(`AUTO-SCROLL-START(${label})`);
+
+    const startedAt = typeof performance !== 'undefined' ? performance.now() : 0;
+    let lastTop = -1;
+    let quietSince = startedAt;
+
+    // A newer auto-scroll (new message, new resize) or a genuine user
+    // gesture has taken ownership since this operation began.
+    const stillOwnsPosition = () =>
+      autoScrollGenerationRef.current === generation && lastUserScrollAtRef.current === ownerScrollAt;
+
+    const poll = () => {
+      if (!stillOwnsPosition()) {
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');
+        return;
+      }
+      const el = transcriptScrollElRef.current;
+      if (!el) return;
+      const now = typeof performance !== 'undefined' ? performance.now() : 0;
+      if (el.scrollTop !== lastTop) {
+        lastTop = el.scrollTop;
+        quietSince = now;
+      }
+      const gap = el.scrollHeight - el.clientHeight - el.scrollTop;
+      pushScrollDebug(`gap=${Math.round(gap)}`, { throttle: true });
+
+      if (now - startedAt > AUTO_SCROLL_MAX_WAIT_MS) {
+        pushScrollDebug(`AUTO-SCROLL-SETTLE-TIMEOUT(gap=${Math.round(gap)})`);
+        return;
+      }
+      if (now - quietSince < AUTO_SCROLL_QUIET_MS) {
+        requestAnimationFrame(poll);
+        return;
+      }
+      // Quiet. The quiet interval itself is time in which a newer
+      // operation or a genuine gesture could have taken over — re-check
+      // ownership once more before deciding whether to correct.
+      if (!stillOwnsPosition()) {
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');
+        return;
+      }
+      if (gap > BOTTOM_EPSILON_PX) {
+        el.scrollTo({ top: el.scrollHeight - el.clientHeight, behavior: 'auto' });
+        pushScrollDebug(`AUTO-SCROLL-SETTLED-CORRECTED(gap=${Math.round(gap)})`);
+      } else {
+        pushScrollDebug(`AUTO-SCROLL-SETTLED(gap=${Math.round(gap)})`);
+      }
+    };
+    requestAnimationFrame(poll);
+  };
+
   useEffect(() => {
     const vv = typeof window !== 'undefined' ? window.visualViewport : null;
     if (!vv) return;
@@ -3515,8 +3604,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // behavior: 'auto', not 'smooth' — this fires alongside the keyboard's
       // own show/hide animation, and a competing smooth scroll produces
       // visible bounce. Smooth stays reserved for genuinely new messages.
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-      pushScrollDebug(`vv-resize-RESETTLED(auto, scrollAwayMs=${scrollAwayMs})`);
+      beginAutoScroll('auto', `vv-resize(scrollAwayMs=${scrollAwayMs})`);
     };
 
     const handleViewportResize = () => {

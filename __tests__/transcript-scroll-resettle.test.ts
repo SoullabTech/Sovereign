@@ -75,9 +75,13 @@ function scrollContainerBlock(): string {
 }
 
 describe('existing message-triggered auto-scroll — unchanged', () => {
-  it('still fires smooth scrollIntoView keyed only on [messages]', () => {
+  it('still fires a smooth auto-scroll keyed only on [messages]', () => {
+    // #739/#741's own scrollIntoView call moved inside the shared
+    // beginAutoScroll helper (see transcript-auto-scroll-settle.test.ts) —
+    // this pins that the messages effect still requests 'smooth', not that
+    // scrollIntoView is called directly from this effect body.
     const block = messagesEffectBlock();
-    expect(block).toMatch(/messagesEndRef\.current\?\.scrollIntoView\(\{ behavior: 'smooth' \}\)/);
+    expect(block).toMatch(/beginAutoScroll\('smooth', `messages-effect\(count=\$\{messages\.length\}\)`\)/);
     expect(block).toMatch(/\}, \[messages\]\);/);
   });
 });
@@ -100,10 +104,13 @@ describe('visualViewport resize listener — re-settles bottom-anchored transcri
     expect(block).toMatch(/pendingFrame = requestAnimationFrame\(resettle\)/);
   });
 
-  it('uses behavior: "auto" for the resize correction, not "smooth"', () => {
+  it('uses "auto" for the resize correction, not "smooth"', () => {
+    // Same relocation as the messages-effect pin above: the scrollIntoView
+    // call itself now lives inside beginAutoScroll (auto-scroll-settle
+    // mechanism); this pins that the resize path still requests 'auto'.
     const block = resettleEffectBlock();
-    expect(block).toMatch(/messagesEndRef\.current\?\.scrollIntoView\(\{ behavior: 'auto' \}\)/);
-    expect(block).not.toMatch(/behavior: 'smooth'/);
+    expect(block).toMatch(/beginAutoScroll\('auto', `vv-resize\(scrollAwayMs=\$\{scrollAwayMs\}\)`\)/);
+    expect(block).not.toMatch(/beginAutoScroll\('smooth'/);
   });
 
   it('removes the listener and cancels any pending frame on cleanup', () => {
