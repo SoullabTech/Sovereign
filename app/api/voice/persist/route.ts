@@ -58,9 +58,16 @@ export async function POST(request: NextRequest) {
     const effectiveUserId = userId || `anon:${sessionId || 'unknown'}`;
     const effectiveSessionId = sessionId || `voice-${Date.now()}`;
 
+    // One exchange identity per member action, shared by both writers below —
+    // the direct TurnsStore.addExchange and addConversationExchange, which
+    // reaches the same table via sessionManager. Without it both write the
+    // exchange with exchange_id NULL and the store's
+    // ON CONFLICT (exchange_id, seq) guard cannot fire.
+    const exchangeId = globalThis.crypto.randomUUID();
+
     // S5: content-free server record of the resolved posture for this request.
     recordConsentState({
-      requestId: globalThis.crypto.randomUUID(),
+      requestId: exchangeId,
       posture: turnPosture,
       memberId: effectiveUserId,
       sessionId: effectiveSessionId,
@@ -76,7 +83,8 @@ export async function POST(request: NextRequest) {
         effectiveUserId,
         effectiveSessionId,
         userMessage,
-        assistantMessage
+        assistantMessage,
+        exchangeId
       );
 
       // Also add to session manager for compatibility
@@ -84,6 +92,7 @@ export async function POST(request: NextRequest) {
         type: 'voice',
         mode: 'talk',
         userId: effectiveUserId,
+        exchangeId,
       });
 
       console.log(`[VoicePersist] Saved voice exchange for user ${effectiveUserId}, session ${effectiveSessionId}`);
