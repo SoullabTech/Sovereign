@@ -3354,9 +3354,65 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setScrollDebugLog(prev => [line, ...prev].slice(0, 10));
   };
 
+  // MOBILE BOTTOM-ANCHOR RESERVE (Issue 1, third mechanism — independent of
+  // the scroll-resettle guard (#739/#741) and the bottom-anchor layout
+  // itself (#740)).
+  //
+  // #740 correctly bottom-anchors short conversations, but its trailing
+  // `pb-48`/`md:pb-60` (192px/240px) is a founder rule (commit fbf7a7295,
+  // 2026-07-23: "the conversation must never end inside the footer's
+  // airspace") sized for a long thread scrolled to its true end. Once
+  // `justify-end` also owns the short-conversation case, that same reserve
+  // becomes an unconditional gap between the newest message and the
+  // composer even when there's no long thread to protect against — not a
+  // bug, a rule applied to a case it wasn't sized for.
+  //
+  // FIX: the reserve is conditional, not constant. Long/overflowing
+  // content keeps the full founder reserve at the natural scroll end.
+  // Short/non-overflowing content gets a small breathing gap instead. The
+  // reserve moves from wrapper padding (always applied) to a trailing flex
+  // child rendered only when earned (see the JSX below).
+  //
+  // CRITICAL: `contentOverflows` is measured against INTRINSIC content
+  // height — the messages alone, via `messageContentIntrinsicRef`, which
+  // never includes the reserve div. Measuring against a container whose
+  // own scrollHeight already contains the reserve would let the reserve
+  // prove its own necessity (reserve adds height -> now "overflows" ->
+  // reserve stays applied -> ...) or flip-flop at the boundary.
+  const OVERFLOW_EPSILON_PX = 4;
+  const [contentOverflows, setContentOverflows] = useState(false);
+  const messageContentIntrinsicRef = useRef<HTMLDivElement>(null);
+
+  const recomputeContentOverflow = () => {
+    const intrinsic = messageContentIntrinsicRef.current;
+    const viewport = transcriptScrollElRef.current;
+    if (!intrinsic || !viewport) return;
+    const overflows = intrinsic.scrollHeight > viewport.clientHeight + OVERFLOW_EPSILON_PX;
+    setContentOverflows(prev => (prev === overflows ? prev : overflows));
+  };
+
+  // Re-observe whenever the transcript mounts/unmounts (messages.length
+  // flips 0<->positive) — the observer then tracks all further height
+  // changes to the SAME node (new turns, streaming text growing in place
+  // without changing the `messages` array reference, images loading)
+  // without needing to reattach on every message.
+  useEffect(() => {
+    const intrinsic = messageContentIntrinsicRef.current;
+    if (!intrinsic || typeof ResizeObserver === 'undefined') {
+      recomputeContentOverflow();
+      return;
+    }
+    const observer = new ResizeObserver(() => recomputeContentOverflow());
+    observer.observe(intrinsic);
+    recomputeContentOverflow();
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length > 0]);
+
   // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    recomputeContentOverflow();
     pushScrollDebug(`messages-effect(count=${messages.length}, smooth)`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
@@ -3429,6 +3485,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     const handleViewportResize = () => {
       pushScrollDebug('vv-resize-fired');
+      // The keyboard opening/closing changes the SCROLL VIEWPORT's own
+      // clientHeight, which is one of contentOverflow's two inputs — a
+      // conversation that fit before the keyboard opened may no longer
+      // fit (or vice versa) purely from that height change, independent
+      // of any message content change.
+      recomputeContentOverflow();
       if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
       pendingFrame = requestAnimationFrame(resettle);
     };
@@ -8383,7 +8445,7 @@ I'm not sure what I'm feeling yet.`;
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
                 <div
-                  className="space-y-3 pt-[10.5rem] pb-48 md:pt-[12rem] md:pb-60 min-h-full flex flex-col justify-end md:block md:min-h-0"
+                  className="pt-[10.5rem] md:pt-[12rem] min-h-full flex flex-col justify-end md:block md:min-h-0"
                   /* MOBILE BOTTOM-ANCHOR (Issue 1, second mechanism — independent of
                      the scroll-resettle guard fix). Even a perfectly-working
                      scroll-to-bottom cannot move content down when
@@ -8403,8 +8465,19 @@ I'm not sure what I'm feeling yet.`;
                      overflow-y:auto scrolling on the parent container take
                      over exactly as before. Desktop explicitly reverts to
                      plain block flow (md:block md:min-h-0) — this only
-                     changes behavior below the md breakpoint. */
+                     changes behavior below the md breakpoint.
+
+                     The trailing reserve used to live here as pb-48/md:pb-60
+                     padding, applied unconditionally. It now lives as a
+                     conditional flex child below (see contentOverflows) —
+                     padding on THIS element would sit outside the flex
+                     content box, permanently reserved regardless of overflow
+                     state; a flex child participates in what justify-end
+                     actually packs, so a short conversation's small reserve
+                     sits right after the last message, not stacked on top of
+                     a second, larger reserve it doesn't need. */
                 >
+                <div ref={messageContentIntrinsicRef} className="space-y-3">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
@@ -8776,6 +8849,28 @@ I'm not sure what I'm feeling yet.`;
                   })()}
                   {/* Scroll anchor */}
                   <div ref={messagesEndRef} />
+                </div>
+                {/* Trailing reserve — conditional, not the old constant pb-48/
+                    md:pb-60. Long/overflowing content (scrolled to its true
+                    end) keeps the full founder reserve (commit fbf7a7295:
+                    "the conversation must never end inside the footer's
+                    airspace"). Short/non-overflowing content — where
+                    justify-end above is already doing the bottom-anchoring —
+                    gets a small breathing gap instead, so the newest message
+                    settles close to the composer rather than carrying a
+                    reserve sized for a scroll distance that doesn't exist
+                    here. Desktop keeps md:h-60 in both branches: it reverts
+                    to plain block flow (md:block above) where this fix does
+                    not apply, so its spacing is intentionally unchanged
+                    either way. */}
+                <div
+                  aria-hidden="true"
+                  className={
+                    contentOverflows
+                      ? 'h-48 md:h-60 shrink-0'
+                      : 'h-6 md:h-60 shrink-0'
+                  }
+                />
                 </div>
               )}
             </AnimatePresence>
