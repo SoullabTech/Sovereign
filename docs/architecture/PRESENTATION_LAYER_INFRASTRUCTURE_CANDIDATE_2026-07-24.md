@@ -162,15 +162,42 @@ Before any consumer is considered successfully migrated:
 
 ## 9. Risks
 
-- **iOS viewport semantics are still evolving and inconsistently implemented across WebKit versions.** A shared hook centralizes today's understanding of `visualViewport` behavior — it also centralizes today's *blind spots*. A bug in the shared hook would now affect every consumer at once, where today's fragmentation at least limits blast radius to one component per bug. Mitigation: the migration sequence in §6 proves the shared hook against the most-scrutinized existing consumer before widening.
-- **Desktop is unmeasured.** All evidence gathered so far is iOS/WebKit-specific (`visualViewport` keyboard behavior, WebKit stacking-context quirks). Nothing here has been checked against desktop Chrome/Firefox/Safari, where none of these problems may exist at all. A shared mechanism must not silently change desktop behavior that currently works.
-- **Nested scroll containers** — the transcript already has its own internal `overflow-y-auto` scroll container distinct from the page-level geometry `visualViewport` describes. A shared inset value describes "how much of the *screen* is keyboard"; it does not by itself resolve stale-scroll-position problems inside a nested scrollable region (that's exactly what #731's correction-pattern effect does, and why it's a different *kind* of mechanism from the other two — see §2a). Claim A does not subsume #731's problem class; it only removes duplicate *measurement*, not duplicate *response logic*.
+**Framing correction (Kelly, 2026-07-24): the real risk is not "desktop breaks because of mobile."** Both claims are *shared infrastructure with platform-specific outputs*, not shared behavior — designed correctly, this should reduce desktop-specific bugs (by eliminating N independent implementations of the same fact) rather than introduce them. Desktop and mobile use the same vocabulary; what differs is which values/layers are actually present, not how either is ordered or interpreted. For the keyboard inset specifically: desktop browser and iPhone-with-keyboard-hidden both resolve to `0px`; only iPhone-with-keyboard-visible resolves to a nonzero value. No consumer needs to know *which platform* produced the number — it just reads the value.
+
+The actual risk is **scope creep in what the infrastructure is allowed to own**. The inset provider and the layer registry must only ever answer two narrow questions — *"how much keyboard is visible?"* and *"what layer should this render into?"* — and never grow into owning application behavior that belongs to individual components:
+
+- ❌ Keyboard provider starts auto-scrolling transcripts.
+- ❌ Layer registry starts deciding *when* Arrival appears.
+- ❌ Shared hook begins managing focus.
+
+Those stay with the owning component. §5 above already draws this boundary ("explicitly does not own... whether a given surface reacts to the keyboard, or how"), but it's worth stating as a standing discipline rather than a one-time note: **introduce shared ownership for shared facts, never centralize behaviors that belong to individual components.**
+
+**Safeguard to adopt before any migration**: establish the invariant that **desktop behavior must be byte-for-byte unchanged when `keyboardInset === 0`.** If the provider reports zero inset, the application renders exactly as it does today. This gives every migrated consumer a concrete, cheap regression target (diff against `keyboardInset === 0` output) and makes "did I introduce infrastructure or did I change behavior" a checkable question instead of a judgment call.
+
+With that framing, the remaining risks are about *implementation* correctness, not architectural direction:
+
+- **iOS viewport semantics are still evolving and inconsistently implemented across WebKit versions.** A shared hook centralizes today's understanding of `visualViewport` behavior — it also centralizes today's *blind spots*. A bug in the shared hook would now affect every consumer at once, where today's fragmentation at least limits blast radius to one component per bug. Mitigation: the migration sequence in §6 proves the shared hook against the most-scrutinized existing consumer before widening, and the zero-inset invariant above catches any accidental desktop regression immediately.
+- **Nested scroll containers** — the transcript already has its own internal `overflow-y-auto` scroll container distinct from the page-level geometry `visualViewport` describes. A shared inset value describes "how much of the *screen* is keyboard"; it does not by itself resolve stale-scroll-position problems inside a nested scrollable region (that's exactly what #731's correction-pattern effect does, and why it's a different *kind* of mechanism from the other two — see §2a). Claim A does not subsume #731's problem class; it only removes duplicate *measurement*, not duplicate *response logic* — reinforcing the scope boundary above, not contradicting it.
 - **SSR/hydration.** Every current `visualViewport` consumer already guards with `typeof window !== 'undefined'`. A shared hook/context must preserve this exactly — a context provider that reads `window` during a server render would break more surfaces at once than today's per-component guards ever could.
 - **Accidental changes to Arrival's ownership.** `MaiaArrivalField` already portals to `document.body` for a documented, correct reason. Any Claim B migration must preserve that portal's *purpose* (escaping the z-10 trap) even if its *mechanism* changes (e.g. moving to a named "arrival" layer instead of an ad hoc z-90) — a careless migration could accidentally re-nest Arrival inside a stacking context it was deliberately extracted from, silently reintroducing a bug that's currently fixed.
 
 ---
 
-## 10. Disposition
+## 10. Relationship to Issue 1 (Kelly, 2026-07-24)
+
+**This proposal is a much narrower question than what Issue 1 actually needs answered.** Issue 1's goal is scoped precisely as: *the latest MAIA response should sit as close as possible to the top of the composer, with no unnecessary dead space between them.* That does not require a `KeyboardInsetProvider` to answer. It requires identifying which specific component is adding the dead space. The candidate owners are few and enumerable:
+
+- the transcript container's bottom padding,
+- the scroll anchor offset,
+- the composer's reserved height,
+- the keyboard inset being applied twice by two different mechanisms,
+- or a `scrollIntoView` target leaving an extra safety margin.
+
+If it's one of those, the fix is likely a few lines, not new infrastructure. Issue 1 stays scoped exactly as planned before this proposal existed: instrument the viewport and transcript → measure the gap with the keyboard open → identify which component owns the extra space → remove only that space. **Only if that investigation finds multiple components independently adding bottom inset does this proposal become justified by evidence** rather than by architectural taste. Solve the visible problem first; generalize only if the measurements show the problem is fundamentally architectural.
+
+---
+
+## 11. Disposition
 
 **Candidate only.** Do not begin implementation. Awaiting:
 1. Issue 1's actual diagnosis from the #734/#737 instrumentation — which may confirm, partially confirm, or have nothing to do with this fragmentation.
