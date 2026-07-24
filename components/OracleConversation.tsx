@@ -8654,13 +8654,21 @@ I'm not sure what I'm feeling yet.`;
                       ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       : 'bg-black/20 text-white/40 border border-white/10'
                   } backdrop-blur-md hover:bg-opacity-30`}
-                  title={enableVoiceInChat ? 'Voice responses enabled' : 'Voice responses disabled'}
+                  title={enableVoiceInChat ? 'MAIA will speak aloud — tap to go text-only' : 'MAIA is text-only — tap to enable her voice'}
+                  aria-pressed={enableVoiceInChat}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                           d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                   </svg>
-                  <span>{enableVoiceInChat ? 'Voice On' : 'Voice Off'}</span>
+                  {/* "MAIA voice", not "Voice" — the same bare word is also
+                      used (correctly, for a different thing) on the input-
+                      mode switch beside the composer. Two controls both
+                      just saying "Voice" is exactly the ambiguity this
+                      wording fix exists to remove; naming whose voice
+                      applies everywhere the state is exposed, desktop
+                      included, not only on the new mobile control. */}
+                  <span>MAIA voice: {enableVoiceInChat ? 'On' : 'Off'}</span>
                 </button>
               </div>
 
@@ -8748,7 +8756,7 @@ I'm not sure what I'm feeling yet.`;
                           localStorage.setItem('enableVoiceInChat', JSON.stringify(newValue));
                           console.log('🔊 Voice responses toggled:', newValue ? 'ON' : 'OFF');
                         }}
-                        className={`md:hidden flex min-w-[44px] min-h-[44px] items-center justify-center rounded-full transition-colors ${
+                        className={`md:hidden flex min-h-[44px] items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-colors ${
                           enableVoiceInChat
                             ? 'text-amber-400 hover:text-amber-300'
                             : 'text-white/30 hover:text-white/50'
@@ -8762,15 +8770,28 @@ I'm not sure what I'm feeling yet.`;
                         ) : (
                           <VolumeX className="h-4 w-4" strokeWidth={2} />
                         )}
+                        {/* Explicit text, not icon-only — a glanceable icon
+                            alone still asks the member to remember what it
+                            means. "MAIA voice", not "Voice", for the same
+                            de-conflation reason as the desktop pill below:
+                            this is a different question from the "Speak"
+                            button immediately to the right of it. */}
+                        <span>MAIA voice: {enableVoiceInChat ? 'On' : 'Off'}</span>
                       </button>
+                      {/* Input-mode switch, renamed from the bare, ambiguous
+                          "Voice" to "Speak" — a verb naming the action this
+                          button performs (switch to speaking), so it can no
+                          longer be misread as the "MAIA voice" control
+                          immediately to its left. Icon/onClick/behavior
+                          unchanged. */}
                       <button
                         onClick={() => setShowChatInterface(false)}
                         className="flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
-                        title="Switch to voice — speak with MAIA instead of typing"
-                        aria-label="Switch to voice mode"
+                        title="Speak instead of typing"
+                        aria-label="Switch to speaking"
                       >
                         <Mic className="h-3.5 w-3.5" strokeWidth={2} />
-                        <span>Voice</span>
+                        <span>Speak</span>
                       </button>
                     </div>
                   </div>
