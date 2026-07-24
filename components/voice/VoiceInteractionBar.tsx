@@ -1,10 +1,62 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Keyboard, Send, X } from 'lucide-react';
 
 export type VoiceInteractionState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'recovering';
+
+/**
+ * GEOMETRY (Defect A — device-confirmed 2026-07-24, physical Safari):
+ * this bar is `position: fixed; bottom: 0`, which tracks the LAYOUT
+ * viewport — iOS does not shrink that for the software keyboard, so the
+ * bar stayed pinned to the bottom of a viewport the keyboard no longer
+ * occupies, floating above it with a gap. `window.visualViewport` reports
+ * the actually-visible rectangle instead.
+ *
+ * This is the bar's OWN geometry, not Arrival's (#713): Arrival sizes a
+ * full-screen field from `{top, height}`; this bar only needs a single
+ * `bottom` inset, since it's anchored bottom/left/right and sized by its
+ * own content. The keyboard's top edge — and so this bar's target `bottom`
+ * offset — is `visualViewport.offsetTop + visualViewport.height`, NOT
+ * `visualViewport.height` alone: the visible rectangle can itself be
+ * offset within the layout viewport (e.g. the OS scrolling a focused
+ * field into view), so `offsetTop` is not assumed to be 0.
+ */
+function useKeyboardBottomInset(): number {
+  const [inset, setInset] = useState(0);
+
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return; // no API — inset stays 0, the pre-existing behavior
+
+    const update = () => {
+      const keyboardTop = vv.offsetTop + vv.height;
+      const rawInset = window.innerHeight - keyboardTop;
+      // Dev-only diagnostic: rawInset going negative means offsetTop+height
+      // exceeded innerHeight, which shouldn't happen for any real keyboard
+      // or viewport state. The Math.max clamp below already protects
+      // production behavior; this just surfaces an unusual visualViewport
+      // reading during development instead of silently swallowing it.
+      if (process.env.NODE_ENV === 'development' && rawInset < 0) {
+        console.warn('[VoiceInteractionBar] unexpected negative keyboard inset', {
+          rawInset, offsetTop: vv.offsetTop, height: vv.height, innerHeight: window.innerHeight,
+        });
+      }
+      setInset(Math.max(0, rawInset));
+    };
+
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+
+  return inset;
+}
 
 interface VoiceInteractionBarProps {
   voiceState: VoiceInteractionState;
@@ -93,6 +145,7 @@ export function VoiceInteractionBar({
   const [showTextInput, setShowTextInput] = useState(false);
   const [textValue, setTextValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const keyboardInset = useKeyboardBottomInset();
 
   const handleKeyboardToggle = useCallback(() => {
     setShowTextInput((v) => {
@@ -125,8 +178,22 @@ export function VoiceInteractionBar({
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-50 bg-maia-navy-900/95 backdrop-blur-md border-t border-white/5 ${className}`}
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)', pointerEvents: 'auto' }}
+      className={`fixed left-0 right-0 z-50 bg-maia-navy-900/95 backdrop-blur-md border-t border-white/5 ${className}`}
+      style={{
+        // Docks directly above the keyboard instead of floating above it
+        // (see useKeyboardBottomInset). `bottom: 0` is still the resting
+        // value when the keyboard is closed (inset is 0), so nothing
+        // changes there.
+        bottom: keyboardInset,
+        // Safe-area handling applies exactly once: the home-indicator
+        // clearance only means anything at rest (`bottom: 0`) — once the
+        // keyboard is open, `keyboardInset` already accounts for the full
+        // gap to the visible viewport's edge, so stacking a full safe-area
+        // allowance on top of it would double-count. A flat 12px keeps the
+        // same minimum breathing room in both states without stacking.
+        paddingBottom: keyboardInset > 0 ? 12 : 'max(env(safe-area-inset-bottom), 12px)',
+        pointerEvents: 'auto',
+      }}
     >
       {/* Transcript row — fades in while listening */}
       <AnimatePresence>
