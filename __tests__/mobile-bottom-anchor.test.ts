@@ -97,9 +97,19 @@ describe('scope guards', () => {
     expect(scrollContainerBlock).not.toMatch(/flex-col/);
   });
 
-  it('does not touch the #731/#739 near-bottom guard mechanism', () => {
-    expect(SRC).not.toMatch(/lastUserScrollAtRef/);
-    expect(SRC).not.toMatch(/RECENT_USER_SCROLL_MS/);
+  it('does not modify the #731/#739 near-bottom guard mechanism (may coexist, must not overlap)', () => {
+    // #739 may or may not be merged into this branch depending on merge
+    // order — assert non-interference rather than absence, so this test
+    // is meaningful either way. If #739's guard is present, it must be
+    // untouched by this branch's edits (no bottom-anchor-specific
+    // conditionals wrapping it, no shared variable names).
+    if (SRC.includes('lastUserScrollAtRef')) {
+      expect(SRC).toMatch(/const lastUserScrollAtRef = useRef\(0\);/);
+      expect(SRC).toMatch(/const recentDeliberateScrollAway = !wasNearBottomRef\.current && scrollAwayMs < RECENT_USER_SCROLL_MS;/);
+    }
+    // Either way, this branch's own wrapper block must not reference the
+    // guard's variables — the two mechanisms are independent.
+    expect(messageListWrapperBlock()).not.toMatch(/lastUserScrollAtRef|RECENT_USER_SCROLL_MS|wasNearBottomRef/);
   });
 
   it('does not change the #703/#709 bottom clearance geometry', () => {
