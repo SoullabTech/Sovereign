@@ -14,20 +14,51 @@ import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { recordConsentState } from '@/lib/provenance/consentState';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
-// GET: Retrieve conversation history
+/**
+ * SECURITY (2026-07-24): the subject of every read and write on this route is the
+ * AUTHENTICATED member, never a client-supplied `userId`.
+ *
+ * Before this change both handlers took `userId` from the request (query on GET,
+ * body on POST) with no credential at all. Member UUIDs are exposed to clients
+ * (e.g. as `senderId`), so any caller could read another member's conversation
+ * history and write turns into it — cross-member exfiltration and false-memory
+ * injection. Confirmed against production 2026-07-24: `GET ?userId=<uuid>` returned
+ * 200, and `POST {}` reached body validation (400) instead of 401.
+ *
+ * A client-supplied `userId` is now accepted only as a CLAIM: it must match the
+ * authenticated member, and a mismatch is rejected rather than silently preferred —
+ * the same posture as `getMemberIdFromRequest` itself.
+ */
+function claimMatchesOrNull(claim: string | null | undefined, memberId: string): boolean {
+  if (!claim) return true;
+  if (claim === memberId) return true;
+  console.warn('[CONVERSATION] userId claim does not match authenticated member — rejecting');
+  return false;
+}
+
+// GET: Retrieve conversation history (authenticated member only)
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('sessionId');
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
       return NextResponse.json(
-        { success: false, error: 'userId required' },
-        { status: 400 }
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
       );
     }
+
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId');
+
+    if (!claimMatchesOrNull(searchParams.get('userId'), memberId)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+    const userId = memberId;
 
     // Build query based on provided params
     let sql: string;
@@ -82,11 +113,29 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Save a conversation turn pair
+// POST: Save a conversation turn pair (authenticated member only)
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate BEFORE parsing or writing content.
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const { userMessage, assistantMessage, userId, sessionId, isSanctuary } = body;
+    const { userMessage, assistantMessage, sessionId, isSanctuary } = body;
+
+    if (!claimMatchesOrNull(body?.userId, memberId)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+    // The durable-write subject is the authenticated member. Never the body.
+    const userId = memberId;
 
     // S5: posture resolved server-side at this boundary and recorded
     // (content-free). The store — not this route — enforces refusal; the
@@ -98,9 +147,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, sanctuary: true });
     }
 
-    if (!userId || !userMessage || !assistantMessage) {
+    if (!userMessage || !assistantMessage) {
       return NextResponse.json(
-        { success: false, error: 'userId, userMessage, and assistantMessage required' },
+        { success: false, error: 'userMessage and assistantMessage required' },
         { status: 400 }
       );
     }

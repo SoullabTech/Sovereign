@@ -12,22 +12,52 @@ import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { recordConsentState } from '@/lib/provenance/consentState';
 import { ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { cookies } from 'next/headers';
 
+/**
+ * SECURITY (2026-07-24): the durable-write subject is the AUTHENTICATED member.
+ *
+ * This route previously performed no authentication at all and took `userId`
+ * straight from the request body, falling back to a synthesised `anon:<sessionId>`
+ * identity. It writes durable turns (TurnsStore.addExchange + addConversationExchange),
+ * so any caller could inject transcript content into another member's memory.
+ * Confirmed against production 2026-07-24: `POST {}` returned 400 (body validation),
+ * not 401 — no credential was required to reach the write path.
+ *
+ * The `anon:` fallback is removed with it: unauthenticated voice capture does not
+ * persist. That is a deliberate narrowing — see #721. If anonymous voice persistence
+ * is wanted later it needs its own consented, non-member-scoped lane, not an
+ * identity synthesised from a client-supplied session id.
+ */
 export async function POST(request: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
   try {
+    // Authenticate BEFORE parsing or writing content.
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       userMessage,
       assistantMessage,
-      userId,
       sessionId: clientSessionId,
       isSanctuary = false
     } = body;
+
+    // A body `userId` is a claim, not an identity: honoured only if it agrees.
+    if (body?.userId && body.userId !== memberId) {
+      console.warn('[VoicePersist] userId claim does not match authenticated member — rejecting');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // Validate required fields
     if (!userMessage && !assistantMessage) {
@@ -51,11 +81,12 @@ export async function POST(request: NextRequest) {
     const sessionId = sessionCookie?.value || clientSessionId;
 
     if (!sessionId) {
-      console.warn('[VoicePersist] No session ID available - generating anonymous session');
+      console.warn('[VoicePersist] No session ID available - using a request-scoped session id');
     }
 
-    // Determine effective user ID
-    const effectiveUserId = userId || `anon:${sessionId || 'unknown'}`;
+    // The write subject is the authenticated member — never the body, and never a
+    // synthesised `anon:` identity (see the security note above).
+    const effectiveUserId = memberId;
     const effectiveSessionId = sessionId || `voice-${Date.now()}`;
 
     // One exchange identity per member action, shared by both writers below —
