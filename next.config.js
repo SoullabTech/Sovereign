@@ -1,15 +1,29 @@
 const { execSync } = require('child_process');
 
-// Capture git SHA at build time — surfaced as NEXT_PUBLIC_BUILD_SHA in the client
-let BUILD_SHA = 'dev';
-let BUILD_DATE = new Date().toISOString().slice(0, 10);
-try {
-  BUILD_SHA = execSync('git rev-parse --short HEAD', { stdio: ['pipe', 'pipe', 'ignore'] })
-    .toString()
-    .trim();
-} catch {
-  // Not a git repo or git unavailable — keep 'dev'
+// Build identity captured at BUILD TIME. next.config eval happens once, when
+// `next build` / `next dev` starts — never per-request — so these are honest
+// build-time values, not a runtime clock. Surfaced to the client as
+// NEXT_PUBLIC_BUILD_* and read by BUILD_STAMP in lib/http/apiBase.ts.
+// Truthful by construction: if git is unavailable the values read 'UNSTAMPED',
+// never a fabricated SHA.
+function gitOr(cmd, fallback) {
+  try {
+    return execSync(cmd, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim() || fallback;
+  } catch {
+    return fallback;
+  }
 }
+const BUILD_SHA = gitOr('git rev-parse --short HEAD', 'UNSTAMPED');
+const BUILD_BRANCH = gitOr('git rev-parse --abbrev-ref HEAD', 'UNSTAMPED');
+// Full ISO timestamp of when this build / dev-server started (build time).
+const BUILD_TIME = new Date().toISOString();
+const BUILD_DATE = BUILD_TIME.slice(0, 10);
+// Explicit build mode: the fast-lane launcher sets NEXT_PUBLIC_BUILD_MODE;
+// otherwise derive from Capacitor flags, else 'web'.
+const BUILD_MODE =
+  process.env.NEXT_PUBLIC_BUILD_MODE ||
+  process.env.CAPACITOR_MODE ||
+  (process.env.CAPACITOR_BUILD ? 'capacitor' : 'web');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -23,6 +37,9 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_BUILD_SHA: BUILD_SHA,
     NEXT_PUBLIC_BUILD_DATE: BUILD_DATE,
+    NEXT_PUBLIC_BUILD_BRANCH: BUILD_BRANCH,
+    NEXT_PUBLIC_BUILD_TIME: BUILD_TIME,
+    NEXT_PUBLIC_BUILD_MODE: BUILD_MODE,
   },
   typescript: {
     // Use core tsconfig for build - real ship entrypoints (app/**, components, hooks)
