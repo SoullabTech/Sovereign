@@ -24,6 +24,8 @@ import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { VoiceDebugOverlay } from './voice/VoiceDebugOverlay';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+// 🔁 Recovery seam (Pattern A) — honest delivery state for member turns.
+import { markFailed, markRetrying, clearDelivery, stripDelivery, type DeliveryStatus, type DeliveryFailureReason } from '@/lib/maia/deliveryStatus';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
@@ -506,6 +508,11 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+  // 🔁 Recovery seam (Pattern A) — delivery state of a member turn. LIVE state only;
+  // stripped before persistence (see lib/maia/deliveryStatus.ts). The bubble already
+  // represents authorship; this records whether delivery completed.
+  deliveryStatus?: DeliveryStatus;
+  failureReason?: DeliveryFailureReason;
   // Phase 1.5B — attached keep affordance for this message (null when absent)
   keepIntent?: KeepIntent | null;
   // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
@@ -2964,8 +2971,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     const storageKey = `maia_conversation_${sessionId}`;
 
-    // Keep only the most recent 50 messages to avoid localStorage bloat
-    const messagesToStore = messages.slice(-50);
+    // Keep only the most recent 50 messages to avoid localStorage bloat.
+    // 🔁 Recovery seam: strip delivery markers — they are live UI state only
+    // (Kelly ruling 2026-07-24: preserved "as long as conversation state remains
+    // mounted"), so a reload can't resurrect a stuck "Sending…" or stale marker.
+    const messagesToStore = stripDelivery(messages.slice(-50));
 
     // STEP 1: Save to localStorage immediately (sync, instant)
     try {
@@ -4438,7 +4448,7 @@ I'm not sure what I'm feeling yet.`;
   }, [messages, userName]);
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
-  const handleTextMessage = useCallback(async (text: string, attachments?: File[]) => {
+  const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
@@ -4567,61 +4577,81 @@ I'm not sure what I'm feeling yet.`;
       return;
     }
 
-    // ✅ CRITICAL FIX: Check if message already exists before adding (prevents duplicates)
-    const isDuplicate = messages.some(msg =>
-      msg.role === 'user' &&
-      msg.text === cleanedText &&
-      (Date.now() - new Date(msg.timestamp).getTime()) < 2000
-    );
+    // 🔁 RECOVERY SEAM (Pattern A): a resend reuses the member's existing turn —
+    // no second bubble, no re-authored duplicate. The member already completed the
+    // act of sending; only delivery failed. `targetMessageId` is the turn we track.
+    const targetMessageId = retryOf ?? `msg-${Date.now()}`;
+    // Only set on a fresh send (undefined on resend — the turn already exists in
+    // `messages`). Declared here, not inside the else block below, because
+    // nextMessagesForApi (built further down) needs it regardless of branch —
+    // a block-scoped const there is invisible outside the if/else and throws
+    // ReferenceError on every send, retry or not.
+    let userMessage: ConversationMessage | undefined;
 
-    if (isDuplicate) {
-      console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
-      // Still continue processing - we just don't add it to UI again
-      // But we shouldn't call the API either, so return here
-      return;
-    }
+    if (retryOf) {
+      // Resend of an already-authored turn: mark it in-flight, append nothing.
+      setMessages(prev => markRetrying(prev, retryOf));
+    } else {
+      // ✅ CRITICAL FIX: Check if message already exists before adding (prevents duplicates)
+      const isDuplicate = messages.some(msg =>
+        msg.role === 'user' &&
+        msg.text === cleanedText &&
+        (Date.now() - new Date(msg.timestamp).getTime()) < 2000
+      );
 
-    // Add user message immediately with source tag
-    const userMessage: ConversationMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      text: cleanedText,
-      timestamp: new Date(),
-      source: 'user'
-    };
-    setMessages(prev => appendMessageCapped(prev, userMessage));
-    onMessageAddedRef.current?.(userMessage);
-    // The member has spoken. Typed turns and non-streaming voice turns both land here.
-    onMemberExpressionRef.current?.();
+      if (isDuplicate) {
+        console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
+        // Still continue processing - we just don't add it to UI again
+        // But we shouldn't call the API either, so return here
+        return;
+      }
 
-    // Process message for Field Protocol if recording
-    if (isFieldRecording) {
-      processFieldMessage({
-        content: text,
-        timestamp: new Date(),
-        speaker: 'user'
-      });
-    }
-
-    // 📝 SCRIBE MODE: Record text consultations (practitioner asking MAIA for help)
-    if (isScribing) {
-      console.log('📝 [Scribe Mode] Recording practitioner consultation:', cleanedText.substring(0, 50) + '...');
-      recordConsultation('user', cleanedText);
-      // Continue to process and get MAIA response (unlike voice, text chat is active)
-    }
-
-    // Save user message to long-term memory (dual-save to memories + Akashic Records)
-    if (oracleAgentId) {
-      saveConversationMemory({
-        oracleAgentId,
-        content: text,
-        memoryType: 'conversation',
-        sourceType: 'text',
-        sessionId,
-        userId,
+      // Add user message immediately with source tag
+      userMessage = {
+        id: targetMessageId,
         role: 'user',
-        conversationMode: realtimeMode
-      }).catch(err => console.error('Failed to save user message:', err));
+        text: cleanedText,
+        timestamp: new Date(),
+        source: 'user'
+      };
+      setMessages(prev => appendMessageCapped(prev, userMessage!));
+      onMessageAddedRef.current?.(userMessage);
+      // The member has spoken. Typed turns and non-streaming voice turns both land here.
+      onMemberExpressionRef.current?.();
+    }
+
+    // On a resend these once-per-turn side-effects already fired on the first
+    // attempt; re-running would double-save to memory / re-record the consultation.
+    if (!retryOf) {
+      // Process message for Field Protocol if recording
+      if (isFieldRecording) {
+        processFieldMessage({
+          content: text,
+          timestamp: new Date(),
+          speaker: 'user'
+        });
+      }
+
+      // 📝 SCRIBE MODE: Record text consultations (practitioner asking MAIA for help)
+      if (isScribing) {
+        console.log('📝 [Scribe Mode] Recording practitioner consultation:', cleanedText.substring(0, 50) + '...');
+        recordConsultation('user', cleanedText);
+        // Continue to process and get MAIA response (unlike voice, text chat is active)
+      }
+
+      // Save user message to long-term memory (dual-save to memories + Akashic Records)
+      if (oracleAgentId) {
+        saveConversationMemory({
+          oracleAgentId,
+          content: text,
+          memoryType: 'conversation',
+          sourceType: 'text',
+          sessionId,
+          userId,
+          role: 'user',
+          conversationMode: realtimeMode
+        }).catch(err => console.error('Failed to save user message:', err));
+      }
     }
 
     // 🧠 BARDIC MEMORY: Background pattern recognition (Air serving Fire)
@@ -4842,8 +4872,12 @@ I'm not sure what I'm feeling yet.`;
         console.log('🧠 [Identity] Explorer ID generated on-the-fly:', effectiveExplorerId);
       }
 
-      // Build local array that includes the new user message (state update is async)
-      const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+      // Build local array that includes the new user message (state update is async).
+      // On a resend userMessage is undefined — the turn already exists in `messages`
+      // (it was appended on the original attempt), so there's nothing to append here.
+      const nextMessagesForApi = userMessage
+        ? appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES)
+        : messages;
 
       // MAIA speaks through sovereign API - working consciousness system
       // apiUrl() wraps the endpoint for iOS/Capacitor builds to point to production server
@@ -5018,6 +5052,9 @@ I'm not sure what I'm feeling yet.`;
         // Surface a small banner above the input so the user isn't left with
         // a cleared input and a presence-fallback reply that visually mimics MAIA.
         setInputSubmitError("Network unreachable — replying in presence mode. Try again when back online.");
+        // 🔁 Recovery seam: the turn didn't reach MAIA — mark it not-delivered so the
+        // member can Resend. (C1 presence-mode fallback below is intentionally untouched.)
+        setMessages(prev => markFailed(prev, targetMessageId, 'network'));
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
           mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
@@ -5070,6 +5107,8 @@ I'm not sure what I'm feeling yet.`;
           if (errData?.error === 'MAINTENANCE_MODE') {
             console.log('[OracleConversation] Maintenance mode active:', errData.message);
             setInputSubmitError("MAIA is in maintenance mode. Your message hasn't been sent.");
+            // 🔁 Recovery seam: not delivered — offer Resend once maintenance clears.
+            setMessages(prev => markFailed(prev, targetMessageId, 'maintenance'));
             const maintenanceMessage: ConversationMessage = {
               id: `maintenance-${Date.now()}`,
               role: 'oracle',
@@ -5092,6 +5131,12 @@ I'm not sure what I'm feeling yet.`;
         // SERVER ERROR FALLBACK: Use presence mode instead of showing error
         console.log('[OracleConversation] Server error - using presence fallback');
         setInputSubmitError(`Server returned ${response.status}. Replying in presence mode — try again.`);
+        // 🔁 Recovery seam: not delivered — mark for Resend, or 'auth' for a real 401
+        // response so the bubble offers "Sign in to continue" instead of a bare Resend
+        // (a resend without signing in would just 401 again). Response.ok being false
+        // for a 401 never throws, so the outer catch's message-string 401 check never
+        // sees this case — it has to be tagged here. (C1 fallback below untouched.)
+        setMessages(prev => markFailed(prev, targetMessageId, response.status === 401 ? 'auth' : 'server'));
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
           mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
@@ -5116,6 +5161,12 @@ I'm not sure what I'm feeling yet.`;
         }
         return;
       }
+
+      // 🔁 Recovery seam: server accepted this turn — clear the in-flight retry marker.
+      // clearDelivery acts ONLY on a 'retrying' turn (ownership contract in the helper),
+      // so a first send is a no-op and a late resolver can never erase a newer attempt's
+      // 'failed' marker.
+      setMessages(prev => clearDelivery(prev, targetMessageId));
 
       // Check if streaming response (voice mode)
       const isVoiceMode = !showChatInterface;
@@ -5996,6 +6047,11 @@ I'm not sure what I'm feeling yet.`;
         errorText = 'You need to sign in to continue our conversation.';
       }
 
+      // 🔁 Recovery seam: the turn didn't reach MAIA. Mark it not-delivered; a 401
+      // gets an honest "Sign in to continue" path in the bubble footer, everything
+      // else gets Resend. The member's words stay exactly where they authored them.
+      setMessages(prev => markFailed(prev, targetMessageId, error?.message?.includes('401') ? 'auth' : 'error'));
+
       const errorMessage: ConversationMessage = {
         id: `msg-${Date.now()}-error`,
         role: 'oracle',
@@ -6038,6 +6094,21 @@ I'm not sure what I'm feeling yet.`;
       setCurrentMotionState('idle');
     }
   }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent]);
+
+  // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
+  // Reuses the member's existing bubble (retryOf); never creates a second turn.
+  // The ref guards against concurrent duplicate retries from rapid taps — the
+  // visible "Sending…" state disables the control, this makes it correct under races.
+  const retryingIdsRef = useRef<Set<string>>(new Set());
+  const handleResend = useCallback((messageId: string) => {
+    if (retryingIdsRef.current.has(messageId)) return; // a retry is already in flight
+    const target = messages.find(m => m.id === messageId);
+    const payload = target?.text ?? '';
+    if (!payload.trim()) return;
+    retryingIdsRef.current.add(messageId);
+    Promise.resolve(handleTextMessage(payload, undefined, messageId))
+      .finally(() => { retryingIdsRef.current.delete(messageId); });
+  }, [messages, handleTextMessage]);
 
   // ==================== SEED PROMPT PROCESSOR ====================
   // Process pending seed prompt once handleTextMessage is available
@@ -8711,6 +8782,41 @@ I'm not sure what I'm feeling yet.`;
                           message.text
                         )}
                       </div>
+
+                      {/* 🔁 Recovery seam (Pattern A) — honest delivery state for the
+                          member's own turn. The turn stays exactly where it was authored;
+                          only its delivery is in question. The C1 presence-mode fallback
+                          is intentionally left untouched and may still appear above. */}
+                      {message.role === 'user' && message.deliveryStatus === 'retrying' && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-dune-sand/60">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Sending…</span>
+                        </div>
+                      )}
+                      {message.role === 'user' && message.deliveryStatus === 'failed' && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-dune-sand/70">
+                          <span className="text-amber-500/70">Not delivered</span>
+                          <span aria-hidden className="text-dune-sand/30">·</span>
+                          {message.failureReason === 'auth' ? (
+                            <a
+                              href="/signin"
+                              onClick={(e) => e.stopPropagation()}
+                              className="underline decoration-dotted text-maia-spice-400/80 hover:text-maia-spice-400 transition-colors"
+                            >
+                              Sign in to continue
+                            </a>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleResend(message.id); }}
+                              className="inline-flex items-center gap-1 underline decoration-dotted text-maia-spice-400/80 hover:text-maia-spice-400 transition-colors"
+                              aria-label="Resend this message"
+                            >
+                              <CornerUpLeft className="w-3 h-3" />
+                              Resend
+                            </button>
+                          )}
+                        </div>
+                      )}
 
                       {/* MAIA Feedback Widget with Opus Gold Seal - only for MAIA responses */}
                       {message.role === 'oracle' && message.turnId && (
