@@ -12,7 +12,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Home } from 'lucide-react';
 import { MaiaTopBar } from './MaiaTopBar';
-import { MaiaLeftRail } from './MaiaLeftRail';
+// MaiaLeftRail is deliberately NOT imported — see the rail note in the render.
+// The component still exists for admin/dev surfaces; the member surface has no rail.
 import { MaiaRightPanelHost } from './MaiaRightPanelHost';
 import { MaiaHouseSheet } from './MaiaHouseSheet';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
@@ -271,29 +272,22 @@ export function MaiaShell({
         onOpenAccount={onOpenAccount}
       />
 
-      {/* Arrival (Step 3): a newcomer meets one invitation — the rail recedes.
-          Returning members (arrivalMode=false) keep the rail exactly as before. */}
-      {!arrivalMode && (
-        <MaiaLeftRail
-          activeWorld={activeWorld}
-          calmMode={calmMode}
-          calmCeiling={calmCeiling}
-          worldHints={worldHints}
-          onWorldChange={handleWorldChange}
-          onOpenAccount={onOpenAccount}
-          onCaptureSpirit={() => onLabAction('capture-spirit')}
-          activeMode={activeMode}
-          onModeChange={onModeChange}
-          isVoiceInput={isVoiceMode}
-          onToggleInputMode={onToggleInputMode}
-          askMode={askMode}
-          onAskModeChange={onAskModeChange}
-        />
-      )}
+      {/* The feature rail is GONE from the member surface.
+          Ruling (Kelly, 2026-07-22): "The House replaces the exposed feature
+          navigation." The rail was an implementation artifact — a column of
+          product icons that let a member infer the platform's architecture
+          instead of meeting a place. It is not gated, collapsed, or hidden
+          behind a chevron here; its navigational responsibility has moved to
+          The House entirely. MaiaLeftRail.tsx is retained for admin/dev
+          surfaces, but no ordinary member renders it.
 
-      {/* Center field — offset for rail and top bar (no rail offset in Arrival) */}
+          Architectural test: if The House disappeared, everything would break.
+          If the rail disappeared, nothing would — which is what makes The House
+          canonical rather than merely present. */}
+
+      {/* Center field — no rail to offset for; only the top bar. */}
       <main
-        className={`mt-12 transition-all duration-300 ${arrivalMode ? 'ml-0' : 'ml-14'}`}
+        className="mt-12 transition-all duration-300"
         style={{ marginRight: rightPanelOpen ? '20rem' : 0 }}
       >
         {children}
@@ -306,22 +300,17 @@ export function MaiaShell({
           House" buttons on the same surface. One House, one renderer, one
           doorway — the doorway belongs to whichever surface the member is in. */}
       {!arrivalMode && (
-      <button
-        onClick={() => setHouseOpen(true)}
-        className={`
-          group fixed bottom-20 left-1/2 z-[85] flex -translate-x-1/2 items-center gap-2
-          rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-md
-          transition-all duration-500 hover:border-white/20 hover:bg-black/40
-          ${calmMode && !calmCeiling ? 'opacity-0 hover:opacity-100' : 'opacity-70 hover:opacity-100'}
-        `}
-        title="The House — your places and practices"
-        aria-label="Open The House"
-      >
-        <Home className="h-4 w-4 text-[#c9a54e]" strokeWidth={1.5} />
-        <span className="text-[13px] text-slate-200" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-          The House
-        </span>
-      </button>
+        <button
+          onClick={() => setHouseOpen(true)}
+          className="group fixed left-4 top-3 z-[85] flex items-center gap-2 rounded-full px-2 py-1.5 text-[#c9a54e] transition-colors duration-300 hover:bg-white/[0.06] hover:text-[#e3c368] focus-visible:bg-white/[0.08] focus-visible:outline-none md:left-6"
+          title="The House"
+          aria-label="Open The House"
+        >
+          <Home className="h-[18px] w-[18px]" strokeWidth={1.5} />
+          <span className="text-[13px] text-[#e8e2d6]" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+            The House
+          </span>
+        </button>
       )}
 
       <MaiaHouseSheet
@@ -333,6 +322,7 @@ export function MaiaShell({
             ? () => { setHouseOpen(false); onReturnToArrival(); }
             : undefined
         }
+        onOpenAccount={onOpenAccount}
       />
 
       <MaiaRightPanelHost

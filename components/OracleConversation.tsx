@@ -8652,6 +8652,10 @@ I'm not sure what I'm feeling yet.`;
                       localStorage.setItem('enableVoiceInChat', JSON.stringify(newValue));
                       console.log('🔊 Voice responses toggled:', newValue ? 'ON' : 'OFF');
                     }}
+                    // Ask MAIA mode, recovered from the retired rail — same state,
+                    // same callback, now owned by the composer instead of the rail.
+                    askMode={askMode}
+                    onAskModeChange={setAskMode}
                     onFileUpload={(files) => {
                       const fileNames = files.map(f => f.name).join(', ');
                       handleTextMessage(`Please analyze these files: ${fileNames}`, files);

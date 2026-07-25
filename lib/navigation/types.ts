@@ -39,7 +39,15 @@ export type MaiaWorldId =
   | 'living-field'
   | 'encounters';
 
-export type BoundaryId = 'studio' | 'book-studio' | 'circles' | 'astrology' | 'labtools' | 'community-library' | 'vision-studio';
+export type BoundaryId =
+  | 'studio' | 'book-studio' | 'circles' | 'astrology' | 'labtools' | 'community-library' | 'vision-studio'
+  // Recovered from the retired rail (2026-07-22). The rail was the only way to
+  // reach these; once it left the member surface they had to become House
+  // destinations or be orphaned.
+  //
+  // 'now-what' is deliberately NOT here — Now What? is a client build on AIN OS,
+  // not a native MAIA room. See the ruling note in maiaNav.ts.
+  | 'keeps' | 'colab';
 
 export type MaiaRailItemId = MaiaWorldId | BoundaryId;
 

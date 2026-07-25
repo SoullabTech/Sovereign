@@ -11,6 +11,7 @@ import {
   VolumeX,
   Plus,
   Sparkles,
+  BookOpen,
   Image as ImageIcon,
   FileText,
   MoreHorizontal,
@@ -48,6 +49,12 @@ interface ModernTextInputProps {
   submitError?: string | null;
   /** Called when the user dismisses or clears the submit error (e.g. by typing). */
   onClearSubmitError?: () => void;
+  /** Ask MAIA mode — orientation + knowledge-field stance. Recovered from the
+   *  retired rail: it was a rail-only toggle, so removing the rail orphaned the
+   *  capability. It now lives here, composer-owned, with the same on/off
+   *  semantics and a visible active state (matching the Voice Response toggle). */
+  askMode?: boolean;
+  onAskModeChange?: (active: boolean) => void;
 }
 
 export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputProps>(({
@@ -74,7 +81,9 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   mode = 'normal',
   externalValue,
   submitError,
-  onClearSubmitError
+  onClearSubmitError,
+  askMode = false,
+  onAskModeChange,
 }, ref) => {
   // Support both value and externalValue props
   const initialValue = valueProp ?? externalValue ?? '';
@@ -285,6 +294,30 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
                     <div className="text-left">
                       <div className="text-white/90 font-medium">Soul Prompts</div>
                       <div className="text-white/50 text-xs">Elemental inquiry guides</div>
+                    </div>
+                  </button>
+                )}
+
+                {/* Ask MAIA — orientation + knowledge-field mode. A persistent
+                    toggle with a visible active state, exactly as the rail
+                    carried it; it simply lives with the conversation now. */}
+                {onAskModeChange && (
+                  <button
+                    onClick={() => { onAskModeChange(!askMode); setShowTools(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors"
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      askMode ? 'bg-blue-500/20' : 'bg-gray-500/20'
+                    }`}>
+                      <BookOpen className={`w-4 h-4 ${askMode ? 'text-blue-300' : 'text-white/50'}`} />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-white/90 font-medium">
+                        Ask MAIA{askMode ? ' · on' : ''}
+                      </div>
+                      <div className="text-white/50 text-xs">
+                        {askMode ? 'Clarity + knowledge mode' : 'Orientation + knowledge field'}
+                      </div>
                     </div>
                   </button>
                 )}

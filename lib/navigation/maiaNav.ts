@@ -8,6 +8,7 @@
 import {
   Flame,
   Layers,
+  Bookmark,
   BookOpen,
   Lightbulb,
   Library,
@@ -186,6 +187,72 @@ export const VISION_STUDIO_RAIL_ITEM: MaiaRailItem = {
   audience: 'founder',
 };
 
+// --- Destinations recovered from the retired rail (2026-07-22) ---
+//
+// These three were only ever reachable through MaiaLeftRail. When the rail left
+// the member surface, they would have been orphaned — reachable by URL and by
+// nothing else. Removing the rail was easy; this is the part that wasn't.
+// Member language is the product's own name for each, not an interpretation.
+
+// NOT HERE: Now What? (/now-what).
+//
+// RULING (Kelly, 2026-07-22): Now What? is a CLIENT BUILD on AIN OS, not a
+// native room of MAIA. It belongs with Larry's implementation and future client
+// platforms — separate sovereign experiences that happen to share a substrate:
+//
+//   AIN OS
+//   ├── MAIA
+//   ├── Now What?
+//   ├── future client platforms
+//   └── Soullab experiences
+//
+// Placing it in the House as a World, a Room, or a utility would blur MAIA (the
+// host) with an application running beside it. It read as "odd beside Account
+// and Settings" precisely because it was crossing a platform boundary, not
+// because it sat in the wrong group. Its participants reach it inside that
+// platform, not through this House.
+//
+// Keep client platforms outside MAIA's native ontology.
+
+export const KEEPS_RAIL_ITEM: MaiaRailItem = {
+  id: 'keeps',
+  label: 'Keeps',
+  icon: Bookmark,
+  route: '/maia/keep-capture',
+  classification: 'studio',
+  tooltip: 'Moments you have held onto',
+  isBoundaryTransition: true,
+};
+
+export const COLAB_RAIL_ITEM: MaiaRailItem = {
+  id: 'colab',
+  label: 'Co-lab',
+  icon: Users,
+  route: '/team/for-you',
+  classification: 'studio',
+  tooltip: 'Shared work and conversation',
+  isBoundaryTransition: true,
+};
+
+// --- No activity taxonomy here, deliberately ---
+//
+// RULING (Kelly, 2026-07-22): the House grammar is Your Center · Worlds · Rooms.
+// Reflect / Create / Belong were drafted and REJECTED as the organizing grammar.
+//
+// Not because the words are bad — they are good words — but because they answer
+// the wrong question. Opening the House asks "where am I?", not "what kind of
+// activity is this?" Reflect/Create/Belong classify activities: that is a
+// taxonomy, however friendly. The rail did not fail because it was a rail; it
+// failed because it was a taxonomy. Replacing one taxonomy with another would
+// not have solved anything.
+//
+// Your Center · Worlds · Rooms describes the STRUCTURE of the place, not the
+// meaning of its contents — so the arguments simply disappear: no ruling needed
+// on whether Astrology is "Reflect" or "Create", or whether Studio is "Belong".
+//
+// Those words survive as COPY, not architecture — a room may say "a place to
+// reflect" in its own description. They must not become headings again.
+
 // --- Utility Items (top bar + bottom of rail) ---
 
 export const MAIA_UTILITIES: MaiaUtilityItem[] = [
@@ -242,6 +309,10 @@ export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   COMMUNITY_LIBRARY_RAIL_ITEM,
   // Un-gated 2026-07 (beta): consent threshold shipped; audience: 'founder' scopes to founder members.
   VISION_STUDIO_RAIL_ITEM,
+  // Recovered from the retired rail — without these the House would be the only
+  // navigation and would not contain everything the rail reached.
+  KEEPS_RAIL_ITEM,
+  COLAB_RAIL_ITEM,
 ];
 
 /** Left rail width in pixels — used for content padding in boundary layouts */

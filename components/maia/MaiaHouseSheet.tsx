@@ -13,7 +13,7 @@
  * data, no persistence, no inference; opening the House is a member act.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DoorOpen } from 'lucide-react';
@@ -36,11 +36,21 @@ interface MaiaHouseSheetProps {
    * untouched by this path.
    */
   onReturnToArrival?: () => void;
+  /**
+   * Open the Account panel. Account is not a route — there is no /account page,
+   * and the nav registry declares it as `action: 'open-account'`. The House
+   * invokes it rather than navigating, so the capability is represented as it
+   * actually exists. Omitted when no account affordance is available.
+   */
+  onOpenAccount?: () => void;
 }
 
 const SERIF = 'Spectral, Georgia, serif';
 
-export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: MaiaHouseSheetProps) {
+/** Where the member last went, written by their own act of going. */
+const LAST_PLACE_KEY = 'maia_last_place';
+
+export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, onOpenAccount }: MaiaHouseSheetProps) {
   const router = useRouter();
 
   // Close on Escape — the House never traps you.
@@ -55,7 +65,29 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: 
   const worlds = MAIA_WORLDS.filter((w) => w.id !== 'maia');
   const rooms = getVisibleBoundaries(isFounder);
 
-  const enter = (route: string) => {
+  // "Where you were" is EVIDENCE, never inference: the last place the member
+  // actually entered, written by their own act of going there. No prediction,
+  // no ranking, no readiness score — the member could reconstruct it themselves.
+  //
+  // "Places you keep" is deliberately ABSENT: no gesture exists by which a
+  // member marks a place, so the heading would be an empty ontology. A heading
+  // appears only when evidence exists. If that gesture is ever built, this is
+  // where its section belongs.
+  const [lastPlaceId, setLastPlaceId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    try { setLastPlaceId(localStorage.getItem(LAST_PLACE_KEY)); } catch { /* private mode */ }
+  }, [open]);
+  const lastPlace = lastPlaceId
+    ? [...worlds, ...rooms].find((p) => p.id === lastPlaceId) ?? null
+    : null;
+
+  const enter = (route: string, id?: string) => {
+    // Only real places are remembered. Returning to centre is not "somewhere
+    // you were" — it is coming home, and the House already always offers it.
+    if (id && id !== 'maia') {
+      try { localStorage.setItem(LAST_PLACE_KEY, id); } catch { /* private mode */ }
+    }
     onClose();
     router.push(route);
   };
@@ -64,7 +96,7 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: 
     const Icon = item.icon;
     return (
       <button
-        onClick={() => enter(item.route)}
+        onClick={() => enter(item.route, item.id)}
         className="group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center text-[#c9a54e] transition-colors group-hover:text-[#e3c368]">
@@ -146,6 +178,26 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: 
                   </h3>
                   <div className="flex flex-col">
                     {center && <Place key={center.id} item={center} />}
+                    {/* Where you were — a fact, not a suggestion. Appears only
+                        once the member has actually gone somewhere. */}
+                    {lastPlace && (
+                      <button
+                        onClick={() => enter(lastPlace.route, lastPlace.id)}
+                        className="group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center text-[#c9a54e] transition-colors group-hover:text-[#e3c368]">
+                          <lastPlace.icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-[15px] leading-tight text-slate-100" style={{ fontFamily: SERIF }}>
+                            {lastPlace.label}
+                          </span>
+                          <span className="mt-0.5 block truncate text-[12px] leading-snug text-slate-400/80">
+                            Where you were
+                          </span>
+                        </span>
+                      </button>
+                    )}
                     {/* The deliberate return. A place among places — not a reset,
                         not a settings toggle. The member may open this room as
                         often as they like; nothing they have crossed is undone. */}
@@ -172,6 +224,37 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival }: 
               )}
               <Group title="Worlds" items={worlds} />
               <Group title="Rooms" items={rooms} />
+
+              {/* Utilities — not rooms. Account and Settings are things you
+                  adjust, not places you go, so they sit below the line, quiet
+                  and small. Keeping them here is what stopped them being
+                  orphaned when the rail left the member surface. */}
+              <div className="mt-2 border-t border-white/[0.07] pt-3">
+                <div className="flex items-center gap-5 px-4 pb-1">
+                  {/* Account is a PANEL, not a page — there is no /account
+                      route, and the registry says so (action: 'open-account').
+                      The House invokes the capability as it actually exists
+                      rather than forcing it into navigation because the House
+                      prefers navigating. Settings genuinely is a page, so it
+                      routes. Represent the capability honestly. */}
+                  {onOpenAccount && (
+                    <button
+                      onClick={() => { onClose(); onOpenAccount(); }}
+                      className="text-[12.5px] text-slate-400 transition-colors hover:text-slate-200 focus-visible:text-slate-200 focus:outline-none"
+                      style={{ fontFamily: SERIF }}
+                    >
+                      Account
+                    </button>
+                  )}
+                  <button
+                    onClick={() => enter('/account/settings')}
+                    className="text-[12.5px] text-slate-400 transition-colors hover:text-slate-200 focus-visible:text-slate-200 focus:outline-none"
+                    style={{ fontFamily: SERIF }}
+                  >
+                    Settings
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
         </>
