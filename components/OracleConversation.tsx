@@ -7569,6 +7569,44 @@ I'm not sure what I'm feeling yet.`;
 
       {/* ⏰ Start Session Button - Moved to header banner */}
 
+      {/* 🔖 KEEP — always-visible, conversation-level action flanking the jewel.
+          Keep is a primary MAIA verb; the per-message "Keep this moment"
+          affordance is hover-only and therefore undiscoverable on mobile, where
+          hover does not exist. This persistent bookmark opens the EXISTING Keep
+          capture flow (handleCaptureSpirit → /api/capsules/from-chat-window →
+          CaptureSpiritPanel) — NO second persistence model, and nothing is saved
+          on tap (the panel opens for the member to choose). Placed in the top
+          "identity + global utilities" zone, not above/inside the composer.
+          Hidden in Sanctuary: handleCaptureSpirit does not itself guard
+          isSanctuary, so we refuse to even OFFER Keep during a Sanctuary session
+          (defense-in-depth, mirroring the inline keep and the CLAUDE.md Sanctuary
+          absolute boundary). 44x44 touch target; visible glyph is smaller.
+
+          Rendered as the exact COMPLEMENT of the arrival/greeting block above
+          (same shouldRenderArrival / !hasActivated condition): that composition
+          renders its OWN Keep affordance, so showing ours simultaneously would
+          put two bookmarks on screen at once. Gating this to "arrival not shown"
+          keeps exactly one always-visible Keep in every state — the arrival Keep
+          before activation, this one throughout the live conversation (the very
+          surface Kelly flagged as missing it). */}
+      {!isSanctuary &&
+        !(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (
+        <div
+          className="fixed left-4 md:left-20 z-below-nav"
+          style={{ top: 'max(env(safe-area-inset-top, 0px) + 2rem, 7rem)' }}
+        >
+          <button
+            type="button"
+            onClick={handleCaptureSpirit}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-maia-spice-400/60 backdrop-blur-sm transition-colors hover:bg-white/5 hover:text-maia-spice-400"
+            title="Keep something from this conversation"
+            aria-label="Keep something from this conversation"
+          >
+            <Bookmark className="h-5 w-5" strokeWidth={2} />
+          </button>
+        </div>
+      )}
+
       {/* 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed State Container */}
       {/* Breathing entrainment, color transitions, field expansion based on state */}
       {/* NO cognitive UI - the experience itself induces the transformation */}
