@@ -8,6 +8,8 @@
 
 The point is not "remove OpenAI." The point is that *no* provider is load-bearing for who MAIA is. Substrate inference (chat, embedding, TTS, STT) is one conditional manifestation pathway, swappable at will, governed by policy. `check:no-openai` is the first *implementation* of that policy, not the policy itself — the same guard generalizes to any provider we later need to constrain.
 
+**Companion document:** [`OPTIMIZATION_TOOLING_GOVERNANCE.md`](./OPTIMIZATION_TOOLING_GOVERNANCE.md) governs *what kinds of optimization are legitimate, and where their constitutional boundaries lie* — a different question from this document's *who may enter the runtime, and under what conditions*. The two complement rather than overlap; neither grants runtime standing the other withholds. See the constitutional map at the end of this document.
+
 ## The policy
 
 Every provider sits in exactly one tier, and each tier grants explicit capabilities. **A provider may only receive the data classes its tier authorizes.**
@@ -50,3 +52,15 @@ The allowlist is retired in this sequence (each step verified before the next):
 **Already closed:** STT (local faster-whisper, `dfde99697`) · episodic embeddings (local `nomic-embed-text`, `acd6cbd74`).
 
 When the allowlist reaches zero, OpenAI drops out of the policy entirely and the tier structure remains as standing constitutional infrastructure for whatever providers come next.
+
+---
+
+## See also — constitutional map
+
+The governing layer reads as a set of complementary questions, not independent documents:
+
+- **[Provider Governance](./PROVIDER_GOVERNANCE.md)** *(canon)* — *who* may enter the runtime, and under what conditions.
+- **[Optimization Tooling Governance](./OPTIMIZATION_TOOLING_GOVERNANCE.md)** *(canon)* — *what* optimization authority is legitimate, and where its boundaries lie.
+- **[Attention-Salience Principle](../ux/ATTENTION_SALIENCE_PRINCIPLE_CANDIDATE_2026-07-26.md)** *(candidate — not yet ratified)* — *how* interaction should present decisions.
+- **Voice Interaction Architecture** *(Cat-1 candidate, sealed — not yet ratified)* — the technical architecture implementing these principles.
+- **[Multi-Model Session Mode](../ai/MULTI_MODEL_SESSION_MODE.md)** — the development lane within which these tools operate.
