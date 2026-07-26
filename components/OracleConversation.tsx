@@ -3406,24 +3406,52 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // changes to the SAME node (new turns, streaming text growing in place
   // without changing the `messages` array reference, images loading)
   // without needing to reattach on every message.
+  //
+  // RENEWAL (auto-scroll settle verification): a typewriter/streaming
+  // reply can keep growing this node's height after beginAutoScroll's own
+  // settle poll already gave up on AUTO_SCROLL_MAX_WAIT_MS — the content
+  // wasn't done changing yet, so the last "final rest position" check
+  // never happened against its true final geometry. Every height change
+  // here renews (not starts) the operation: guarded by
+  // `autoScrollActiveRef`, so this only re-fires an ALREADY-active
+  // auto-scroll, never yanks a member who scrolled away on purpose while
+  // unrelated content elsewhere happened to resize.
   useEffect(() => {
     const intrinsic = messageContentIntrinsicRef.current;
     if (!intrinsic || typeof ResizeObserver === 'undefined') {
       recomputeContentOverflow();
       return;
     }
-    const observer = new ResizeObserver(() => recomputeContentOverflow());
+    const observer = new ResizeObserver(() => {
+      recomputeContentOverflow();
+      if (autoScrollActiveRef.current) {
+        beginAutoScroll('auto', 'content-resize-renew');
+      }
+    });
     observer.observe(intrinsic);
     recomputeContentOverflow();
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length > 0]);
 
+  // Unmount safety net for beginAutoScroll's visibilitychange listener. A
+  // PAUSED operation has no pending poll tick — nothing would otherwise
+  // ever run again to notice the component is gone and remove the
+  // document-level listener. This runs once, on true unmount, and reaches
+  // whichever operation's cleanup is currently registered via the shared
+  // autoScrollActiveCleanupRef, regardless of which call site (messages
+  // effect, resize resettle, content-resize renewal) started it.
+  useEffect(() => {
+    return () => {
+      autoScrollActiveCleanupRef.current?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Auto-scroll to latest message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    beginAutoScroll('smooth', `messages-effect(count=${messages.length})`);
     recomputeContentOverflow();
-    pushScrollDebug(`messages-effect(count=${messages.length}, smooth)`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
@@ -3508,6 +3536,229 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     );
   };
 
+  // Auto-scroll settle verification — fourth, independent mechanism of
+  // Issue 1 (2026-07-24 texting-experience audit). Separate from the
+  // recency guard above (#739/#741) and the bottom-anchor layout (#740/
+  // #742) — different failure, different fix, no shared code beyond
+  // reading the same refs.
+  //
+  // EVIDENCE (physical device, iOS): a programmatic scrollIntoView that
+  // correctly reaches the bottom can drift away from it afterward, with no
+  // resize and no content-size change to explain the drift —
+  // `gap=-13 -> gap=4 -> gap=82`, settling 82px short of true bottom.
+  // Elastic/rubber-band overscroll is the leading explanation, especially
+  // given the negative-gap overshoot before the positive-gap undershoot —
+  // but the fix does not depend on proving that cause. It verifies the
+  // actual resting position after a programmatic bottom-scroll and
+  // corrects once if short.
+  //
+  // NOT a general "whenever scrolling stops, force bottom" observer — that
+  // would override a member's own intentional scroll-away. This only
+  // watches scrolls this code itself initiated (tracked via
+  // `autoScrollGenerationRef`, an operation token so an older debounce
+  // can't correct after a newer message, resize, or scroll has taken
+  // ownership) and aborts as soon as a genuine user gesture
+  // (pointerdown/touchstart/wheel, via `lastUserScrollAtRef`) is recorded
+  // before it settles.
+  const autoScrollGenerationRef = useRef(0);
+  // Whether SOME beginAutoScroll operation currently owns the scroll
+  // position (has started, hasn't yet settled/corrected/aborted/timed
+  // out). Read by the ResizeObserver below to decide whether a
+  // content-height change should renew the in-flight operation — never to
+  // start a brand-new one, which could yank a member who scrolled away on
+  // purpose (the exact defect #739/#741 already fixed once).
+  const autoScrollActiveRef = useRef(false);
+  // Founder review, round 2: the settle poll runs on requestAnimationFrame,
+  // which browsers throttle heavily once `document.hidden` is true (a
+  // member backgrounding Safari mid-reply — switching apps, checking a
+  // notification — is routine, not an edge case). Without visibility
+  // awareness, hidden wall-clock time silently eats the operation's
+  // AUTO_SCROLL_MAX_WAIT_MS budget, so it can time out — abandoning the
+  // final-rest check — before the tab is ever foregrounded again. This ref
+  // lets the component-level unmount effect below reach whichever
+  // operation's cleanup is currently live, so its `visibilitychange`
+  // listener can't outlive the component even if it unmounts while paused
+  // (no poll tick would otherwise ever run again to notice).
+  const autoScrollActiveCleanupRef = useRef<(() => void) | null>(null);
+  const BOTTOM_EPSILON_PX = 4;
+  // How long scrollTop must be unchanged before a programmatic scroll is
+  // considered settled — long enough to ride out one elastic-overscroll
+  // bounce, short enough not to delay the correction noticeably.
+  const AUTO_SCROLL_QUIET_MS = 100;
+  // Hard ceiling PER SETTLE WINDOW — not per operation-lifetime. A
+  // typewriter/streaming reply that's still growing renews via the
+  // ResizeObserver below, and a backgrounded-then-foregrounded operation
+  // resumes into a FRESH window (see AUTO-SCROLL-SETTLE-RESUMED) — each
+  // window gets its own budget. Only a reply that is BOTH still changing
+  // AND outpaces this ceiling on every single window would ever hit it
+  // without a correction — give up rather than force one against numbers
+  // that were still mid-flight.
+  const AUTO_SCROLL_MAX_WAIT_MS = 3000;
+
+  const beginAutoScroll = (behavior: ScrollBehavior, label: string) => {
+    const generation = ++autoScrollGenerationRef.current;
+    const ownerScrollAt = lastUserScrollAtRef.current;
+    autoScrollActiveRef.current = true;
+    messagesEndRef.current?.scrollIntoView({ behavior });
+    pushScrollDebug(`AUTO-SCROLL-START(${label})`);
+
+    // Two DISTINCT reasons an operation can lose ownership — kept as
+    // separate checks (not one combined boolean) so the abort log tells
+    // the truth about which one fired. A newer beginAutoScroll call
+    // (new message, new resize, or a renewal) is NOT member intent;
+    // conflating them would make the diagnostic record falsely claim a
+    // member touched the transcript when ownership merely passed to a
+    // newer automatic scroll. Only a genuine pointerdown/touchstart/wheel
+    // (via lastUserScrollAtRef, #741) is user intent.
+    const isSuperseded = () => autoScrollGenerationRef.current !== generation;
+    const isUserIntent = () => lastUserScrollAtRef.current !== ownerScrollAt;
+
+    let rafId: number | null = null;
+    let startedAt = 0;
+    let lastTop = -1;
+    let quietSince = 0;
+
+    const cleanup = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      // Only clear the shared handle if it's still ours — a newer
+      // operation's cleanup must not be clobbered by a stale one finishing
+      // late (e.g. this poll's own final tick, running after a resize
+      // renewal already replaced it).
+      if (autoScrollActiveCleanupRef.current === cleanup) {
+        autoScrollActiveCleanupRef.current = null;
+      }
+    };
+    autoScrollActiveCleanupRef.current = cleanup;
+
+    const poll = () => {
+      rafId = null;
+      // A superseding operation already set autoScrollActiveRef itself —
+      // this stale poll must not touch it on the way out.
+      if (isSuperseded()) {
+        cleanup();
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(superseded)');
+        return;
+      }
+      if (isUserIntent()) {
+        cleanup();
+        autoScrollActiveRef.current = false;
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');
+        return;
+      }
+      const el = transcriptScrollElRef.current;
+      if (!el) {
+        // Component unmounted mid-operation — nothing left to correct.
+        cleanup();
+        autoScrollActiveRef.current = false;
+        return;
+      }
+      const now = typeof performance !== 'undefined' ? performance.now() : 0;
+      if (el.scrollTop !== lastTop) {
+        lastTop = el.scrollTop;
+        quietSince = now;
+      }
+      const gap = el.scrollHeight - el.clientHeight - el.scrollTop;
+      pushScrollDebug(`gap=${Math.round(gap)}`, { throttle: true });
+
+      if (now - startedAt > AUTO_SCROLL_MAX_WAIT_MS) {
+        cleanup();
+        autoScrollActiveRef.current = false;
+        pushScrollDebug(`AUTO-SCROLL-SETTLE-TIMEOUT(gap=${Math.round(gap)})`);
+        return;
+      }
+      if (now - quietSince < AUTO_SCROLL_QUIET_MS) {
+        rafId = requestAnimationFrame(poll);
+        return;
+      }
+      // Quiet. The quiet interval itself is time in which a newer
+      // operation or a genuine gesture could have taken over — re-check
+      // ownership once more before deciding whether to correct.
+      if (isSuperseded()) {
+        cleanup();
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(superseded)');
+        return;
+      }
+      if (isUserIntent()) {
+        cleanup();
+        autoScrollActiveRef.current = false;
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');
+        return;
+      }
+      cleanup();
+      autoScrollActiveRef.current = false;
+      if (gap > BOTTOM_EPSILON_PX) {
+        el.scrollTo({ top: el.scrollHeight - el.clientHeight, behavior: 'auto' });
+        pushScrollDebug(`AUTO-SCROLL-SETTLED-CORRECTED(gap=${Math.round(gap)})`);
+      } else {
+        pushScrollDebug(`AUTO-SCROLL-SETTLED(gap=${Math.round(gap)})`);
+      }
+    };
+
+    // Starts (or restarts, on resume) a fresh bounded settle window —
+    // its own startedAt/quietSince, its own AUTO_SCROLL_MAX_WAIT_MS
+    // budget. Hidden time is never counted against it because this is
+    // only called while the document is visible.
+    const startWindow = () => {
+      const now0 = typeof performance !== 'undefined' ? performance.now() : 0;
+      startedAt = now0;
+      lastTop = -1;
+      quietSince = now0;
+      rafId = requestAnimationFrame(poll);
+    };
+
+    // PAUSE/RESUME — a visibility transition is a meaningful lifecycle
+    // event, represented explicitly (not folded into the timeout math).
+    // While hidden: cancel the pending frame, log, and do nothing else —
+    // generation and ownerScrollAt are untouched, so ownership survives
+    // the pause. While resuming: verify ownership FIRST (a newer operation
+    // or a genuine gesture may have taken over while backgrounded — cases
+    // this same isSuperseded()/isUserIntent() pair already covers), then
+    // start a fresh window against whatever the geometry is right now.
+    const handleVisibilityChange = () => {
+      if (typeof document === 'undefined') return;
+      if (document.hidden) {
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        pushScrollDebug('AUTO-SCROLL-SETTLE-PAUSED(hidden)');
+        return;
+      }
+      // Resuming.
+      if (isSuperseded()) {
+        cleanup();
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(superseded)');
+        return;
+      }
+      if (isUserIntent()) {
+        cleanup();
+        autoScrollActiveRef.current = false;
+        pushScrollDebug('AUTO-SCROLL-SETTLE-ABORTED(user-intent)');
+        return;
+      }
+      pushScrollDebug('AUTO-SCROLL-SETTLE-RESUMED(visible)');
+      startWindow();
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    // If a background sync/push somehow triggers this while already
+    // hidden, don't waste a poll tick — go straight to paused.
+    if (typeof document !== 'undefined' && document.hidden) {
+      pushScrollDebug('AUTO-SCROLL-SETTLE-PAUSED(hidden)');
+    } else {
+      startWindow();
+    }
+  };
+
   useEffect(() => {
     const vv = typeof window !== 'undefined' ? window.visualViewport : null;
     if (!vv) return;
@@ -3525,8 +3776,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // behavior: 'auto', not 'smooth' — this fires alongside the keyboard's
       // own show/hide animation, and a competing smooth scroll produces
       // visible bounce. Smooth stays reserved for genuinely new messages.
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-      pushScrollDebug(`vv-resize-RESETTLED(auto, scrollAwayMs=${scrollAwayMs})`);
+      beginAutoScroll('auto', `vv-resize(scrollAwayMs=${scrollAwayMs})`);
     };
 
     const handleViewportResize = () => {
