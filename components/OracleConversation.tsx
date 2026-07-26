@@ -4581,6 +4581,12 @@ I'm not sure what I'm feeling yet.`;
     // no second bubble, no re-authored duplicate. The member already completed the
     // act of sending; only delivery failed. `targetMessageId` is the turn we track.
     const targetMessageId = retryOf ?? `msg-${Date.now()}`;
+    // Only set on a fresh send (undefined on resend — the turn already exists in
+    // `messages`). Declared here, not inside the else block below, because
+    // nextMessagesForApi (built further down) needs it regardless of branch —
+    // a block-scoped const there is invisible outside the if/else and throws
+    // ReferenceError on every send, retry or not.
+    let userMessage: ConversationMessage | undefined;
 
     if (retryOf) {
       // Resend of an already-authored turn: mark it in-flight, append nothing.
@@ -4601,14 +4607,14 @@ I'm not sure what I'm feeling yet.`;
       }
 
       // Add user message immediately with source tag
-      const userMessage: ConversationMessage = {
+      userMessage = {
         id: targetMessageId,
         role: 'user',
         text: cleanedText,
         timestamp: new Date(),
         source: 'user'
       };
-      setMessages(prev => appendMessageCapped(prev, userMessage));
+      setMessages(prev => appendMessageCapped(prev, userMessage!));
       onMessageAddedRef.current?.(userMessage);
       // The member has spoken. Typed turns and non-streaming voice turns both land here.
       onMemberExpressionRef.current?.();
@@ -4866,8 +4872,12 @@ I'm not sure what I'm feeling yet.`;
         console.log('🧠 [Identity] Explorer ID generated on-the-fly:', effectiveExplorerId);
       }
 
-      // Build local array that includes the new user message (state update is async)
-      const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+      // Build local array that includes the new user message (state update is async).
+      // On a resend userMessage is undefined — the turn already exists in `messages`
+      // (it was appended on the original attempt), so there's nothing to append here.
+      const nextMessagesForApi = userMessage
+        ? appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES)
+        : messages;
 
       // MAIA speaks through sovereign API - working consciousness system
       // apiUrl() wraps the endpoint for iOS/Capacitor builds to point to production server
@@ -5121,8 +5131,12 @@ I'm not sure what I'm feeling yet.`;
         // SERVER ERROR FALLBACK: Use presence mode instead of showing error
         console.log('[OracleConversation] Server error - using presence fallback');
         setInputSubmitError(`Server returned ${response.status}. Replying in presence mode — try again.`);
-        // 🔁 Recovery seam: not delivered — mark for Resend. (C1 fallback below untouched.)
-        setMessages(prev => markFailed(prev, targetMessageId, 'server'));
+        // 🔁 Recovery seam: not delivered — mark for Resend, or 'auth' for a real 401
+        // response so the bubble offers "Sign in to continue" instead of a bare Resend
+        // (a resend without signing in would just 401 again). Response.ok being false
+        // for a 401 never throws, so the outer catch's message-string 401 check never
+        // sees this case — it has to be tagged here. (C1 fallback below untouched.)
+        setMessages(prev => markFailed(prev, targetMessageId, response.status === 401 ? 'auth' : 'server'));
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
           mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
