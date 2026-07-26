@@ -31,6 +31,10 @@ export interface FallbackEvent {
   latencyMs?: number;
   audioBytes?: number;
   textLength?: number;
+  /** Provenance (Phase 0): why the provider was selected — configured_default | archetype_rule | explicit_request. */
+  selectionReason?: string;
+  /** Provenance (Phase 0): classified cause when a fallback occurred — provider_unavailable | local_failure | consent_policy | none. */
+  fallbackReason?: string;
   meta?: Record<string, unknown>;
 }
 
@@ -68,7 +72,11 @@ export function logFallbackEvent(evt: FallbackEvent): void {
       evt.latencyMs || null,
       evt.audioBytes || null,
       evt.textLength || null,
-      evt.meta || {},
+      {
+        ...(evt.meta || {}),
+        ...(evt.selectionReason ? { selectionReason: evt.selectionReason } : {}),
+        ...(evt.fallbackReason ? { fallbackReason: evt.fallbackReason } : {}),
+      },
     ]
   ).catch((e) => {
     // Swallow — sovereignty accounting should never break the voice
