@@ -9518,6 +9518,14 @@ I'm not sure what I'm feeling yet.`;
               // for the relational tone. Single-fire; the callback only
               // triggers once per session per the child's noSpeechFallbackFiredRef.
               console.warn('🛑 [OracleConversation] onVoiceUnavailable:', reason);
+              // Clear the listening state HERE rather than relying on
+              // handleRecordingStateChange. For 'service-not-allowed' on Safari
+              // 26.5.2 the recogniser's `onend` never fires — measured: the
+              // failing production sessions emitted voice_mic_granted and
+              // voice_transcribe_error with no voice_recognition_ended — so the
+              // mic-truth channel that normally clears this never arrives and
+              // the surface keeps showing LISTENING after recognition is dead.
+              setIsListening(false);
               setIsHandsFreeMode(false);
               setShowChatInterface(true);
               toast(userMessage, { duration: 10000 });

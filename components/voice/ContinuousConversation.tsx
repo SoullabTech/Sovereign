@@ -588,11 +588,36 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         console.warn(`⚠️ Network error in speech recognition (${networkErrorCount.current}/2), will retry once`);
         // Network errors will be retried by the auto-restart mechanism with exponential backoff
-      } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      } else if (event.error === 'not-allowed') {
+        // GENUINE microphone denial: the member (or the OS) refused mic access.
+        // Kept distinct from 'service-not-allowed' below — they are different
+        // failures with different remedies, and conflating them told members
+        // their microphone was blocked when it demonstrably was not.
         console.error('🚫 Microphone permission denied');
         // Stop listening permanently if permission denied
         setIsListening(false);
-        // Note: onError is not defined in props, removed the call
+      } else if (event.error === 'service-not-allowed') {
+        // The RECOGNITION SERVICE was refused — not the microphone. Observed
+        // 2026-07-23 on Safari 26.5.2 / iOS 18.7, where voice_mic_granted fires
+        // with a live audio track and recognition is then refused at start.
+        // Safari 26.6 and Chrome complete the same path on the same phone.
+        //
+        // Load-bearing: `onend` NEVER FIRES for this error on that build. The
+        // three failing production sessions emitted only voice_mic_granted and
+        // voice_transcribe_error — no voice_recognition_ended. So the usual
+        // onRecordingStateChange(false) → parent setIsListening(false) path
+        // never runs, and the parent stays in LISTENING forever while
+        // recognition is already dead. Clearing local state here is not enough;
+        // the parent must be told explicitly.
+        console.error(
+          '🚫 Speech recognition service refused (service-not-allowed) — microphone was granted; this is not a permission denial'
+        );
+        setIsListening(false);
+        onVoiceUnavailable?.({
+          reason: 'service-not-allowed',
+          userMessage:
+            "Voice couldn't start in this browser. Try opening MAIA in Chrome, or updating Safari.",
+        });
       } else if (event.error === 'aborted') {
         // Aborted is normal when stopping/restarting - don't log as error
         console.log('⏹️ Recognition aborted (normal during restart)');
