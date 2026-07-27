@@ -363,6 +363,15 @@ async function ingest(options: {
           originalFormat: 'pdf',
           ingested_by: 'ingestPdfSources.ts',
           chunking_version: 'v1',
+          // Reproducibility: expected_chunk_count is only meaningful relative
+          // to the chunker that produced it.
+          chunking_params: {
+            algorithm: 'char-window/paragraph-break',
+            target_size: CONFIG.CHUNK_TARGET_SIZE,
+            min_size: CONFIG.CHUNK_MIN_SIZE,
+            max_size: CONFIG.CHUNK_MAX_SIZE,
+            overlap: CONFIG.CHUNK_OVERLAP,
+          },
         },
         expectedChunkCount: expectedChunks,
         identityValid: true,

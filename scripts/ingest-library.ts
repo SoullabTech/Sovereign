@@ -305,7 +305,17 @@ async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; sk
         author,
         filePath: filePath,
         checksum,
-        meta: { original_filename: filename },
+        meta: {
+          original_filename: filename,
+          // Reproducibility: expected_chunk_count is only meaningful relative
+          // to the chunker that produced it.
+          chunking_params: {
+            algorithm: 'chunkText@lib/ain/knowledge/ChunkingService',
+            max_tokens: CHUNK_MAX_TOKENS,
+            overlap_tokens: CHUNK_OVERLAP_TOKENS,
+            min_chunk_tokens: CHUNK_MIN_TOKENS,
+          },
+        },
         expectedChunkCount: textChunks.length,
         identityValid: true,
       });

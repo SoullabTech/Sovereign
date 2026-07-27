@@ -359,6 +359,16 @@ async function ingest(options: {
           folder: file.folder,
           ingested_by: 'ingestTxtSources.ts',
           chunking_version: 'v1',
+          // Reproducibility: expected_chunk_count is only meaningful relative
+          // to the chunker that produced it. A later audit must not mistake a
+          // changed chunker for an incomplete historical ingest.
+          chunking_params: {
+            algorithm: 'char-window/paragraph-break',
+            target_size: CONFIG.CHUNK_TARGET_SIZE,
+            min_size: CONFIG.CHUNK_MIN_SIZE,
+            max_size: CONFIG.CHUNK_MAX_SIZE,
+            overlap: CONFIG.CHUNK_OVERLAP,
+          },
         },
         expectedChunkCount: expectedChunks,
         identityValid: true,

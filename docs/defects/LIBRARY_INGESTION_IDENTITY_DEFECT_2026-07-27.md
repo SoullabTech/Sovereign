@@ -54,7 +54,13 @@ Of **2,228** sources: **731 (33%) junk titles** (leading punctuation/emoji or <4
 
 The corpus's upstream, the Obsidian AIN vault, is live and growing (7,451 notes on the Mac Studio iCloud vault, edited 2026-07-27). But production's copy (`/home/soullab/AIN` on minisforum, bind-mounted to `/app/data/ain-vault` and **read live** by the flag-enabled field-context adapter) is frozen at **2026-01-23 with 559 files** — the same date `vault_symbols` went stale, i.e. the last vault sync. Full resolution of "MAIA's relationship to the vault" therefore has three layers: identity-valid ingestion (this defect) · corpus recency (last library ingest 2026-04-26) · source recency (vault copy frozen 2026-01-23).
 
-**Architectural ruling (founder, 2026-07-27) — Vault → Library is an explicit publication boundary, not a synchronization problem**: Vault = personal working environment; Library = explicitly published or explicitly ingested corpus; movement from Vault to Library is an **intentional act with provenance**. Automatic synchronization is refused — it would turn a private thinking space into retrievable material, an authorship and consent boundary, not an engineering tradeoff. Under this ruling the January snapshot is not primarily a sync bug: it is evidence that the prior implementation never distinguished working thought from retrievable knowledge. No sync mechanism is to be built.
+**Architectural ruling (founder, 2026-07-27) — Vault → Library is an explicit publication boundary, not a synchronization problem.** Exact ruling text (founder, session of 2026-07-27):
+
+> Vault = personal working environment.
+> Library = explicitly published or explicitly ingested corpus.
+> Movement from Vault → Library is an intentional act with provenance.
+
+*Paraphrase of the surrounding ruling (authoritative source: the same 2026-07-27 session ruling):* automatic synchronization is refused — turning a private thinking space into retrievable material is an authorship and consent boundary, not an engineering tradeoff; under this ruling the January snapshot is not primarily a sync bug but evidence that the prior implementation never clearly distinguished working thought from retrievable knowledge. No sync mechanism is to be built.
 
 ## Containment (current facts, no action taken)
 
@@ -63,6 +69,23 @@ The corpus's upstream, the Obsidian AIN vault, is live and growing (7,451 notes 
 - **Recommended holds (await founder ruling, no DB mutation performed)**:
   - Source `5c20ee56` (full book, derived from the founder **working master**, not the published edition): reconciliation input for founder-canon ingestion only — never ratify as canon itself; quarantine from any future general-library retrieval.
   - Source `58c87fb5` (note fragment): quarantine pending reconciliation, per existing ruling — its "book-shaped" title must not be allowed to masquerade as the work.
+
+## Remediation status (2026-07-27)
+
+Remediation architecture **accepted** (founder, 2026-07-27); PR #760 authorized to proceed through **formal review**. Merge and production execution **not yet authorized**. Production sequence after merge authorization, each step separately evidenced (founder-stated):
+
+1. Confirm the exact merged SHA.
+2. Apply the additive migration.
+3. Generate and preserve the BEFORE audit.
+4. Run repair in dry-run mode.
+5. Review dry-run totals and unresolved rows.
+6. Explicitly authorize `--execute`.
+7. Execute the repair.
+8. Generate the AFTER audit.
+9. Verify retrieval exclusion and ingest-status behavior.
+10. Record the production evidence and close — or narrow — the defect.
+
+Repair-tool invariants (founder-stated): repairs only from exact checksum-matched sources; ambiguous or still-invalid cases remain **unchanged** and appear in an explicit unresolved section; `evaluated = already_valid + repairable + unresolved`; `executed_repairs <= repairable`. No founder-canon ingestion begins as a consequence of this remediation.
 
 ## Relationship to the founder-canon spec
 
