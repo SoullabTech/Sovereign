@@ -7,9 +7,12 @@ const BUILD_MODE = (process.env.CAPACITOR_MODE || 'beta') as 'dev' | 'beta' | 'p
 
 const isProdLike = BUILD_MODE === 'beta' || BUILD_MODE === 'prod';
 
-// Dev server config (only used in dev mode)
+// Dev server config (only used in dev mode).
+// The URL is env-overridable so the fast-lane launcher can point the on-device
+// WebView at whatever LAN IP this machine actually has (the hardcoded default is
+// retained for backward compatibility). See scripts/mobile-fast-lane.sh.
 const devServer = {
-  url: 'http://192.168.4.210:3000',
+  url: process.env.CAPACITOR_DEV_SERVER_URL || 'http://192.168.4.210:3000',
   cleartext: true,
   androidScheme: 'http' as const,
 };

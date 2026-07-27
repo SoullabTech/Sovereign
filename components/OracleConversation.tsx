@@ -24,6 +24,8 @@ import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { VoiceDebugOverlay } from './voice/VoiceDebugOverlay';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+// 🔁 Recovery seam (Pattern A) — honest delivery state for member turns.
+import { markFailed, markRetrying, clearDelivery, stripDelivery, type DeliveryStatus, type DeliveryFailureReason } from '@/lib/maia/deliveryStatus';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
@@ -446,6 +448,22 @@ interface OracleConversationProps {
    */
   onMemberExpression?: () => void;
   /**
+   * #736: the non-writing exit from Arrival. Fired on "I'm ready" — the
+   * member crossing the threshold WITHOUT authoring speech (MaiaArrivalField's
+   * own onActivate contract). Upstream this is deliberately NOT markArrived:
+   * activation is not expression (ruling, 2026-07-22), so the parent clears
+   * only session-temporary arrival state (crossArrivalWithoutSpeech), which
+   * flips shouldRenderArrival false without writing the durable first-crossing
+   * marker — a member who crosses without speaking still meets the ceremony
+   * next visit.
+   *
+   * Without this, "I'm ready" only set local hasActivated — which the render
+   * gate ignores while shouldRenderArrival is true — so the affordance fired,
+   * set its state, and the z-[90] layer stayed mounted. The deliberate-return
+   * guard (`shouldRenderArrival ||`) stays intact.
+   */
+  onArrivalCrossed?: () => void;
+  /**
    * Whether the Arrival composition is ACTUALLY rendering for this member right
    * now — a first-time member who has never crossed, or a member who invoked a
    * deliberate return from The House. Computed once in app/maia/page.tsx and
@@ -506,6 +524,11 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+  // 🔁 Recovery seam (Pattern A) — delivery state of a member turn. LIVE state only;
+  // stripped before persistence (see lib/maia/deliveryStatus.ts). The bubble already
+  // represents authorship; this records whether delivery completed.
+  deliveryStatus?: DeliveryStatus;
+  failureReason?: DeliveryFailureReason;
   // Phase 1.5B — attached keep affordance for this message (null when absent)
   keepIntent?: KeepIntent | null;
   // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
@@ -610,6 +633,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onSessionActiveChange,
   onMessageAdded,
   onMemberExpression,
+  onArrivalCrossed,
   shouldRenderArrival = false,
   onSessionEnd,
   initialAction,
@@ -2964,8 +2988,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     const storageKey = `maia_conversation_${sessionId}`;
 
-    // Keep only the most recent 50 messages to avoid localStorage bloat
-    const messagesToStore = messages.slice(-50);
+    // Keep only the most recent 50 messages to avoid localStorage bloat.
+    // 🔁 Recovery seam: strip delivery markers — they are live UI state only
+    // (Kelly ruling 2026-07-24: preserved "as long as conversation state remains
+    // mounted"), so a reload can't resurrect a stuck "Sending…" or stale marker.
+    const messagesToStore = stripDelivery(messages.slice(-50));
 
     // STEP 1: Save to localStorage immediately (sync, instant)
     try {
@@ -4438,7 +4465,7 @@ I'm not sure what I'm feeling yet.`;
   }, [messages, userName]);
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
-  const handleTextMessage = useCallback(async (text: string, attachments?: File[]) => {
+  const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
@@ -4567,61 +4594,81 @@ I'm not sure what I'm feeling yet.`;
       return;
     }
 
-    // ✅ CRITICAL FIX: Check if message already exists before adding (prevents duplicates)
-    const isDuplicate = messages.some(msg =>
-      msg.role === 'user' &&
-      msg.text === cleanedText &&
-      (Date.now() - new Date(msg.timestamp).getTime()) < 2000
-    );
+    // 🔁 RECOVERY SEAM (Pattern A): a resend reuses the member's existing turn —
+    // no second bubble, no re-authored duplicate. The member already completed the
+    // act of sending; only delivery failed. `targetMessageId` is the turn we track.
+    const targetMessageId = retryOf ?? `msg-${Date.now()}`;
+    // Only set on a fresh send (undefined on resend — the turn already exists in
+    // `messages`). Declared here, not inside the else block below, because
+    // nextMessagesForApi (built further down) needs it regardless of branch —
+    // a block-scoped const there is invisible outside the if/else and throws
+    // ReferenceError on every send, retry or not.
+    let userMessage: ConversationMessage | undefined;
 
-    if (isDuplicate) {
-      console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
-      // Still continue processing - we just don't add it to UI again
-      // But we shouldn't call the API either, so return here
-      return;
-    }
+    if (retryOf) {
+      // Resend of an already-authored turn: mark it in-flight, append nothing.
+      setMessages(prev => markRetrying(prev, retryOf));
+    } else {
+      // ✅ CRITICAL FIX: Check if message already exists before adding (prevents duplicates)
+      const isDuplicate = messages.some(msg =>
+        msg.role === 'user' &&
+        msg.text === cleanedText &&
+        (Date.now() - new Date(msg.timestamp).getTime()) < 2000
+      );
 
-    // Add user message immediately with source tag
-    const userMessage: ConversationMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      text: cleanedText,
-      timestamp: new Date(),
-      source: 'user'
-    };
-    setMessages(prev => appendMessageCapped(prev, userMessage));
-    onMessageAddedRef.current?.(userMessage);
-    // The member has spoken. Typed turns and non-streaming voice turns both land here.
-    onMemberExpressionRef.current?.();
+      if (isDuplicate) {
+        console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
+        // Still continue processing - we just don't add it to UI again
+        // But we shouldn't call the API either, so return here
+        return;
+      }
 
-    // Process message for Field Protocol if recording
-    if (isFieldRecording) {
-      processFieldMessage({
-        content: text,
-        timestamp: new Date(),
-        speaker: 'user'
-      });
-    }
-
-    // 📝 SCRIBE MODE: Record text consultations (practitioner asking MAIA for help)
-    if (isScribing) {
-      console.log('📝 [Scribe Mode] Recording practitioner consultation:', cleanedText.substring(0, 50) + '...');
-      recordConsultation('user', cleanedText);
-      // Continue to process and get MAIA response (unlike voice, text chat is active)
-    }
-
-    // Save user message to long-term memory (dual-save to memories + Akashic Records)
-    if (oracleAgentId) {
-      saveConversationMemory({
-        oracleAgentId,
-        content: text,
-        memoryType: 'conversation',
-        sourceType: 'text',
-        sessionId,
-        userId,
+      // Add user message immediately with source tag
+      userMessage = {
+        id: targetMessageId,
         role: 'user',
-        conversationMode: realtimeMode
-      }).catch(err => console.error('Failed to save user message:', err));
+        text: cleanedText,
+        timestamp: new Date(),
+        source: 'user'
+      };
+      setMessages(prev => appendMessageCapped(prev, userMessage!));
+      onMessageAddedRef.current?.(userMessage);
+      // The member has spoken. Typed turns and non-streaming voice turns both land here.
+      onMemberExpressionRef.current?.();
+    }
+
+    // On a resend these once-per-turn side-effects already fired on the first
+    // attempt; re-running would double-save to memory / re-record the consultation.
+    if (!retryOf) {
+      // Process message for Field Protocol if recording
+      if (isFieldRecording) {
+        processFieldMessage({
+          content: text,
+          timestamp: new Date(),
+          speaker: 'user'
+        });
+      }
+
+      // 📝 SCRIBE MODE: Record text consultations (practitioner asking MAIA for help)
+      if (isScribing) {
+        console.log('📝 [Scribe Mode] Recording practitioner consultation:', cleanedText.substring(0, 50) + '...');
+        recordConsultation('user', cleanedText);
+        // Continue to process and get MAIA response (unlike voice, text chat is active)
+      }
+
+      // Save user message to long-term memory (dual-save to memories + Akashic Records)
+      if (oracleAgentId) {
+        saveConversationMemory({
+          oracleAgentId,
+          content: text,
+          memoryType: 'conversation',
+          sourceType: 'text',
+          sessionId,
+          userId,
+          role: 'user',
+          conversationMode: realtimeMode
+        }).catch(err => console.error('Failed to save user message:', err));
+      }
     }
 
     // 🧠 BARDIC MEMORY: Background pattern recognition (Air serving Fire)
@@ -4842,8 +4889,12 @@ I'm not sure what I'm feeling yet.`;
         console.log('🧠 [Identity] Explorer ID generated on-the-fly:', effectiveExplorerId);
       }
 
-      // Build local array that includes the new user message (state update is async)
-      const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+      // Build local array that includes the new user message (state update is async).
+      // On a resend userMessage is undefined — the turn already exists in `messages`
+      // (it was appended on the original attempt), so there's nothing to append here.
+      const nextMessagesForApi = userMessage
+        ? appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES)
+        : messages;
 
       // MAIA speaks through sovereign API - working consciousness system
       // apiUrl() wraps the endpoint for iOS/Capacitor builds to point to production server
@@ -5018,6 +5069,9 @@ I'm not sure what I'm feeling yet.`;
         // Surface a small banner above the input so the user isn't left with
         // a cleared input and a presence-fallback reply that visually mimics MAIA.
         setInputSubmitError("Network unreachable — replying in presence mode. Try again when back online.");
+        // 🔁 Recovery seam: the turn didn't reach MAIA — mark it not-delivered so the
+        // member can Resend. (C1 presence-mode fallback below is intentionally untouched.)
+        setMessages(prev => markFailed(prev, targetMessageId, 'network'));
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
           mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
@@ -5070,6 +5124,8 @@ I'm not sure what I'm feeling yet.`;
           if (errData?.error === 'MAINTENANCE_MODE') {
             console.log('[OracleConversation] Maintenance mode active:', errData.message);
             setInputSubmitError("MAIA is in maintenance mode. Your message hasn't been sent.");
+            // 🔁 Recovery seam: not delivered — offer Resend once maintenance clears.
+            setMessages(prev => markFailed(prev, targetMessageId, 'maintenance'));
             const maintenanceMessage: ConversationMessage = {
               id: `maintenance-${Date.now()}`,
               role: 'oracle',
@@ -5092,6 +5148,12 @@ I'm not sure what I'm feeling yet.`;
         // SERVER ERROR FALLBACK: Use presence mode instead of showing error
         console.log('[OracleConversation] Server error - using presence fallback');
         setInputSubmitError(`Server returned ${response.status}. Replying in presence mode — try again.`);
+        // 🔁 Recovery seam: not delivered — mark for Resend, or 'auth' for a real 401
+        // response so the bubble offers "Sign in to continue" instead of a bare Resend
+        // (a resend without signing in would just 401 again). Response.ok being false
+        // for a 401 never throws, so the outer catch's message-string 401 check never
+        // sees this case — it has to be tagged here. (C1 fallback below untouched.)
+        setMessages(prev => markFailed(prev, targetMessageId, response.status === 401 ? 'auth' : 'server'));
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
           mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
@@ -5116,6 +5178,12 @@ I'm not sure what I'm feeling yet.`;
         }
         return;
       }
+
+      // 🔁 Recovery seam: server accepted this turn — clear the in-flight retry marker.
+      // clearDelivery acts ONLY on a 'retrying' turn (ownership contract in the helper),
+      // so a first send is a no-op and a late resolver can never erase a newer attempt's
+      // 'failed' marker.
+      setMessages(prev => clearDelivery(prev, targetMessageId));
 
       // Check if streaming response (voice mode)
       const isVoiceMode = !showChatInterface;
@@ -5996,6 +6064,11 @@ I'm not sure what I'm feeling yet.`;
         errorText = 'You need to sign in to continue our conversation.';
       }
 
+      // 🔁 Recovery seam: the turn didn't reach MAIA. Mark it not-delivered; a 401
+      // gets an honest "Sign in to continue" path in the bubble footer, everything
+      // else gets Resend. The member's words stay exactly where they authored them.
+      setMessages(prev => markFailed(prev, targetMessageId, error?.message?.includes('401') ? 'auth' : 'error'));
+
       const errorMessage: ConversationMessage = {
         id: `msg-${Date.now()}-error`,
         role: 'oracle',
@@ -6038,6 +6111,21 @@ I'm not sure what I'm feeling yet.`;
       setCurrentMotionState('idle');
     }
   }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent]);
+
+  // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
+  // Reuses the member's existing bubble (retryOf); never creates a second turn.
+  // The ref guards against concurrent duplicate retries from rapid taps — the
+  // visible "Sending…" state disables the control, this makes it correct under races.
+  const retryingIdsRef = useRef<Set<string>>(new Set());
+  const handleResend = useCallback((messageId: string) => {
+    if (retryingIdsRef.current.has(messageId)) return; // a retry is already in flight
+    const target = messages.find(m => m.id === messageId);
+    const payload = target?.text ?? '';
+    if (!payload.trim()) return;
+    retryingIdsRef.current.add(messageId);
+    Promise.resolve(handleTextMessage(payload, undefined, messageId))
+      .finally(() => { retryingIdsRef.current.delete(messageId); });
+  }, [messages, handleTextMessage]);
 
   // ==================== SEED PROMPT PROCESSOR ====================
   // Process pending seed prompt once handleTextMessage is available
@@ -7349,7 +7437,16 @@ I'm not sure what I'm feeling yet.`;
                 subtext={welcomeGreeting.subtext}
                 userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
                 onSend={(text) => handleTextMessage(text)}
-                onActivate={() => setHasActivated(true)}
+                onActivate={() => {
+                  // #736: hasActivated alone cannot exit — the gate above is a
+                  // disjunction and ignores it while shouldRenderArrival is
+                  // true. onArrivalCrossed clears the parent's session-scoped
+                  // arrival state so the non-writing crossing actually
+                  // dismisses Arrival (without writing the durable marker —
+                  // activation is not expression).
+                  setHasActivated(true);
+                  onArrivalCrossed?.();
+                }}
                 onOpenHouse={() => window.dispatchEvent(new CustomEvent('openMaiaHouse'))}
                 onKeep={() => window.dispatchEvent(new CustomEvent('labAction', { detail: { action: 'capture-spirit' } }))}
               />
@@ -7568,6 +7665,44 @@ I'm not sure what I'm feeling yet.`;
       )}
 
       {/* ⏰ Start Session Button - Moved to header banner */}
+
+      {/* 🔖 KEEP — always-visible, conversation-level action flanking the jewel.
+          Keep is a primary MAIA verb; the per-message "Keep this moment"
+          affordance is hover-only and therefore undiscoverable on mobile, where
+          hover does not exist. This persistent bookmark opens the EXISTING Keep
+          capture flow (handleCaptureSpirit → /api/capsules/from-chat-window →
+          CaptureSpiritPanel) — NO second persistence model, and nothing is saved
+          on tap (the panel opens for the member to choose). Placed in the top
+          "identity + global utilities" zone, not above/inside the composer.
+          Hidden in Sanctuary: handleCaptureSpirit does not itself guard
+          isSanctuary, so we refuse to even OFFER Keep during a Sanctuary session
+          (defense-in-depth, mirroring the inline keep and the CLAUDE.md Sanctuary
+          absolute boundary). 44x44 touch target; visible glyph is smaller.
+
+          Rendered as the exact COMPLEMENT of the arrival/greeting block above
+          (same shouldRenderArrival / !hasActivated condition): that composition
+          renders its OWN Keep affordance, so showing ours simultaneously would
+          put two bookmarks on screen at once. Gating this to "arrival not shown"
+          keeps exactly one always-visible Keep in every state — the arrival Keep
+          before activation, this one throughout the live conversation (the very
+          surface Kelly flagged as missing it). */}
+      {!isSanctuary &&
+        !(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (
+        <div
+          className="fixed left-4 md:left-20 z-below-nav"
+          style={{ top: 'max(env(safe-area-inset-top, 0px) + 2rem, 7rem)' }}
+        >
+          <button
+            type="button"
+            onClick={handleCaptureSpirit}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-maia-spice-400/60 backdrop-blur-sm transition-colors hover:bg-white/5 hover:text-maia-spice-400"
+            title="Keep something from this conversation"
+            aria-label="Keep something from this conversation"
+          >
+            <Bookmark className="h-5 w-5" strokeWidth={2} />
+          </button>
+        </div>
+      )}
 
       {/* 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed State Container */}
       {/* Breathing entrainment, color transitions, field expansion based on state */}
@@ -8712,6 +8847,41 @@ I'm not sure what I'm feeling yet.`;
                         )}
                       </div>
 
+                      {/* 🔁 Recovery seam (Pattern A) — honest delivery state for the
+                          member's own turn. The turn stays exactly where it was authored;
+                          only its delivery is in question. The C1 presence-mode fallback
+                          is intentionally left untouched and may still appear above. */}
+                      {message.role === 'user' && message.deliveryStatus === 'retrying' && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-dune-sand/60">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Sending…</span>
+                        </div>
+                      )}
+                      {message.role === 'user' && message.deliveryStatus === 'failed' && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-dune-sand/70">
+                          <span className="text-amber-500/70">Not delivered</span>
+                          <span aria-hidden className="text-dune-sand/30">·</span>
+                          {message.failureReason === 'auth' ? (
+                            <a
+                              href="/signin"
+                              onClick={(e) => e.stopPropagation()}
+                              className="underline decoration-dotted text-maia-spice-400/80 hover:text-maia-spice-400 transition-colors"
+                            >
+                              Sign in to continue
+                            </a>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleResend(message.id); }}
+                              className="inline-flex items-center gap-1 underline decoration-dotted text-maia-spice-400/80 hover:text-maia-spice-400 transition-colors"
+                              aria-label="Resend this message"
+                            >
+                              <CornerUpLeft className="w-3 h-3" />
+                              Resend
+                            </button>
+                          )}
+                        </div>
+                      )}
+
                       {/* MAIA Feedback Widget with Opus Gold Seal - only for MAIA responses */}
                       {message.role === 'oracle' && message.turnId && (
                         <div className="mt-3">
@@ -9025,9 +9195,23 @@ I'm not sure what I'm feeling yet.`;
                 </button>
               </div>
 
-              {/* Compact text input area - mobile-first, fixed at bottom */}
+              {/* Compact text input area - mobile-first, fixed at bottom
+
+                  #735 — single composer ownership. While Arrival owns the
+                  viewport (z-[90], its own composer), this underlying row is
+                  mounted but unreachable: elementFromPoint at its controls
+                  resolves to Arrival, so it reads as a false affordance
+                  through Arrival's translucent field. `invisible`
+                  (visibility:hidden) removes it from painting, hit-testing,
+                  focus order and the accessibility tree WITHOUT unmounting —
+                  the draft lives in parent state (draftMessage) but unmount/
+                  remount would still churn focus + effects. Keyed on
+                  shouldRenderArrival ONLY, never the legacy-greeting branch:
+                  during the z-40 welcome overlay this composer is exactly how
+                  the member starts typing. Do NOT fix by raising z-index —
+                  Arrival owns the threshold; two live composers is the bug. */}
               {showChatInterface && (
-              <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
+              <div className={`fixed left-14 right-0 sm:inset-x-0 z-below-nav ${shouldRenderArrival ? 'invisible' : ''}`} /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
                    lockup, close enough that the eye grouped the signature with the
                    input controls. The extra ~24px lets the composer close as one
                    complete object and leaves SOULLAB reading as the page's quiet
@@ -9252,7 +9436,12 @@ I'm not sure what I'm feeling yet.`;
           availability, so there is always one route back to text. */}
       {!showChatInterface && (
         <div
-          className="fixed left-0 right-0 z-below-nav flex justify-center"
+          /* #735: hidden (not unmounted) while Arrival owns the viewport.
+             This does not strand anyone — the escape hatch exists for "the
+             composer subtree didn't render", and during Arrival the member
+             HAS a composer: Arrival's own. Beneath the z-[90] field this
+             button is unreachable anyway; showing it is a false affordance. */
+          className={`fixed left-0 right-0 z-below-nav flex justify-center ${shouldRenderArrival ? 'invisible' : ''}`}
           style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
@@ -9267,8 +9456,18 @@ I'm not sure what I'm feeling yet.`;
         </div>
       )}
 
-      {/* Unified Voice Interaction Bar — state display, transcript, keyboard */}
+      {/* Unified Voice Interaction Bar — state display, transcript, keyboard
+
+          #735: wrapped, not conditionally unmounted, while Arrival owns the
+          viewport. VoiceInteractionBar keeps its slide-out text draft in LOCAL
+          state (textValue) — unmounting would destroy an in-progress draft if
+          the member invokes Return to Arrival mid-thought. visibility:hidden
+          inherits into the bar's fixed-position root, removing it from
+          painting, hit-testing, focus and the accessibility tree while React
+          state survives. The wrapper itself has zero layout footprint (the
+          child is position:fixed). */}
       {isMounted && voiceEnabled && !showChatInterface && (
+        <div className={shouldRenderArrival ? 'invisible' : undefined}>
         <VoiceInteractionBar
           voiceState={voiceInteractionState}
           interimTranscript={interimTranscript}
@@ -9280,6 +9479,7 @@ I'm not sure what I'm feeling yet.`;
           onInterrupt={handleVoiceInterrupt}
           onTextSubmit={(text) => handleTextMessage(text)}
         />
+        </div>
       )}
 
       {/* Voice Selection Menu - Popup from bottom */}

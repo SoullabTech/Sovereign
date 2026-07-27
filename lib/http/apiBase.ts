@@ -19,12 +19,25 @@ const FALLBACK_API_BASE_URL = 'https://soullab.life';
 // trapping the WebView in "thinking" forever.
 const NATIVE_HTTP_TIMEOUT_MS = 30_000;
 
-// Build information stamp - populated during build or defaults
+// Build identity — inlined at BUILD TIME by next.config.js (NEXT_PUBLIC_BUILD_*).
+// Truthful by construction: an un-inlined value reads 'UNSTAMPED', never a
+// fabricated 'dev' SHA and never a runtime `new Date()` (which would report the
+// moment the page was opened, not the moment the build was produced). An
+// unstamped build must LOOK unstamped. The commit/timestamp/version keys are
+// retained for the existing AccountSettings consumer.
+const UNSTAMPED = 'UNSTAMPED';
 export const BUILD_STAMP = {
-  commit: process.env.NEXT_PUBLIC_GIT_COMMIT || 'dev',
-  timestamp: process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString(),
+  commit: process.env.NEXT_PUBLIC_BUILD_SHA || UNSTAMPED,
+  branch: process.env.NEXT_PUBLIC_BUILD_BRANCH || UNSTAMPED,
+  // Full ISO timestamp captured when the build / dev-server started — NOT per-request.
+  timestamp: process.env.NEXT_PUBLIC_BUILD_TIME || UNSTAMPED,
+  buildMode: process.env.NEXT_PUBLIC_BUILD_MODE || UNSTAMPED,
   version: process.env.NEXT_PUBLIC_VERSION || '1.1.0',
-};
+  // The API target explicitly pinned at build time. 'UNSET' means the build did
+  // not pin a target and apiBaseUrl() will use its runtime fallback — the
+  // diagnostics surface (/diag) flags this loudly.
+  apiTargetDeclared: process.env.NEXT_PUBLIC_API_BASE_URL || 'UNSET',
+} as const;
 
 /**
  * Get the API base URL - bulletproof for Capacitor

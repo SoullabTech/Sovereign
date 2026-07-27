@@ -139,13 +139,77 @@ describe('Journey 3 — deliberate return', () => {
   });
 });
 
+describe('Journey 4 — crossing without speech (#736, "I\'m ready")', () => {
+  it('a first-visit member who taps "I\'m ready" leaves Arrival this session', () => {
+    expect(deriveShouldRenderArrival({
+      arrivalEntryEnabled: true, hasArrivedBefore: false, arrivalInvoked: false,
+      crossedWithoutSpeech: true,
+    })).toBe(false);
+  });
+
+  it('THE RULING: activation is not expression — the durable marker is NOT written', () => {
+    // The member crossed without speaking. Nothing durable was recorded...
+    expect(deriveShouldRenderArrival({
+      arrivalEntryEnabled: true, hasArrivedBefore: false, arrivalInvoked: false,
+      crossedWithoutSpeech: true,
+    })).toBe(false);
+    expect(store[ARRIVAL_MARKER_KEY]).toBeUndefined();
+    expect(readHasArrivedBefore()).toBe(false);
+
+    // ...so a fresh session (crossedWithoutSpeech dies with the tab) meets the
+    // ceremony again. Someone who activates, explores, and leaves is still
+    // arriving.
+    expect(deriveShouldRenderArrival({
+      arrivalEntryEnabled: true, hasArrivedBefore: false, arrivalInvoked: false,
+    })).toBe(true);
+  });
+
+  it('an invoked return ends the same way when crossed without speech', () => {
+    store[ARRIVAL_MARKER_KEY] = '1000';
+    // crossArrivalWithoutSpeech clears arrivalInvoked alongside setting crossed:
+    expect(deriveShouldRenderArrival({
+      arrivalEntryEnabled: true, hasArrivedBefore: true, arrivalInvoked: false,
+      crossedWithoutSpeech: true,
+    })).toBe(false);
+    // Opening a room, not undoing an initiation — marker untouched:
+    expect(store[ARRIVAL_MARKER_KEY]).toBe('1000');
+  });
+
+  it('the deliberate return outranks a prior same-session crossing', () => {
+    // "I'm ready", then later this session: The House → Return to Arrival.
+    // #736 adds an exit; it must never subtract the member-invoked entry.
+    expect(deriveShouldRenderArrival({
+      arrivalEntryEnabled: true, hasArrivedBefore: false, arrivalInvoked: true,
+      crossedWithoutSpeech: true,
+    })).toBe(true);
+    expect(deriveShouldRenderArrival({
+      arrivalEntryEnabled: true, hasArrivedBefore: true, arrivalInvoked: true,
+      crossedWithoutSpeech: true,
+    })).toBe(true);
+  });
+
+  it('omitting the input preserves every pre-#736 derivation', () => {
+    for (const hasArrivedBefore of [true, false]) {
+      for (const arrivalInvoked of [true, false]) {
+        const legacy = deriveShouldRenderArrival({
+          arrivalEntryEnabled: true, hasArrivedBefore, arrivalInvoked,
+        });
+        expect(legacy).toBe(!hasArrivedBefore || arrivalInvoked);
+      }
+    }
+  });
+});
+
 describe('Kill-switch', () => {
   it('arrivalEntry=false suppresses Arrival on every path', () => {
     for (const hasArrivedBefore of [true, false]) {
       for (const arrivalInvoked of [true, false]) {
-        expect(deriveShouldRenderArrival({
-          arrivalEntryEnabled: false, hasArrivedBefore, arrivalInvoked,
-        })).toBe(false);
+        for (const crossedWithoutSpeech of [true, false, undefined]) {
+          expect(deriveShouldRenderArrival({
+            arrivalEntryEnabled: false, hasArrivedBefore, arrivalInvoked,
+            crossedWithoutSpeech,
+          })).toBe(false);
+        }
       }
     }
   });

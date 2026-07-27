@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getDeliveredPortraitBySlug } from '@/lib/soulPortrait/portraitStore';
 import { isPortraitConsentLive } from '@/lib/soulPortrait/consentAccess';
 import { SoulPortraitRenderer } from '@/components/soulPortrait/SoulPortraitRenderer';
+import { SoulPortraitColophon } from '@/components/soulPortrait/SoulPortraitColophon';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,15 @@ export const dynamic = 'force-dynamic';
  *   2. ledger consent-liveness    (revoke in the ledger kills the page instantly)
  * The un-guessable slug is defense-in-depth, never the gate.
  *
- * The gift stays finished: no Mentor, no MAIA, no memory, no signup funnel.
+ * The gift stays finished: no Mentor, no MAIA, no memory, no signup funnel, no capture.
  * Unlisted + noindex — a hand-delivered door, not a marketing page.
+ *
+ * After the portrait is unquestionably complete, this surface — never the renderer —
+ * appends a quiet colophon (SoulPortraitColophon) that names its origin and offers one
+ * door onward, the way a printed book closes on a plain imprint page. A second gift,
+ * not the tail of the first: no "sign up", no "unlock", nothing implying the portrait
+ * was incomplete without joining. The portrait reads whole even if the reader never
+ * clicks. (Founder ruling — Kelly, 2026-07-24.)
  */
 
 export async function generateMetadata({
@@ -51,5 +59,10 @@ export default async function DeliveredSoulPortraitPage({
   const live = await isPortraitConsentLive(portrait.id);
   if (!live) notFound();
 
-  return <SoulPortraitRenderer portrait={portrait.immutableText} />;
+  return (
+    <>
+      <SoulPortraitRenderer portrait={portrait.immutableText} />
+      <SoulPortraitColophon />
+    </>
+  );
 }
