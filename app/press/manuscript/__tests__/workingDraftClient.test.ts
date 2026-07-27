@@ -195,6 +195,74 @@ describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)'
     expect(saver.hasPending()).toBe(false);
   });
 
+  it('beginExclusive waits for an in-flight save, then blocks autosaves until release', async () => {
+    const calls: string[] = [];
+    const gates: Array<() => void> = [];
+    const save = jest.fn((content: string): Promise<SaveResult> => {
+      calls.push(content);
+      const d = deferred<SaveResult>();
+      gates.push(() => d.resolve({ kind: 'ok', revisionCount: null, updatedAt: null }));
+      return d.promise;
+    });
+    const saver = createDraftSaver(save, { onState() {} });
+
+    saver.queue('a');
+    saver.flush(); // save('a') in flight
+    expect(calls).toEqual(['a']);
+
+    // Checkpoint/restore asks for the lane — must not resolve while 'a' is writing.
+    let acquired = false;
+    const ex = saver.beginExclusive().then(() => {
+      acquired = true;
+    });
+    await flush();
+    expect(acquired).toBe(false);
+
+    gates[0](); // 'a' finishes
+    await ex;
+    expect(acquired).toBe(true);
+
+    // While the lane is held, a new edit + flush must NOT start a save.
+    saver.queue('b');
+    saver.flush();
+    await flush();
+    expect(calls).toEqual(['a']); // blocked by the exclusive hold
+
+    // Releasing with content typed during the hold persists it, in order.
+    saver.endExclusive({ persisted: 'checkpoint-content' });
+    await flush();
+    expect(calls).toEqual(['a', 'b']);
+    gates[1]?.();
+    await saver.whenIdle();
+  });
+
+  it('endExclusive({flushPending:false}) discards edits made during the write (restore wins)', async () => {
+    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, updatedAt: null }));
+    const saver = createDraftSaver(save, { onState() {} });
+
+    await saver.beginExclusive(); // nothing in flight → resolves immediately
+    saver.queue('typed-during-restore');
+    saver.endExclusive({ flushPending: false });
+    await saver.whenIdle();
+
+    expect(save).not.toHaveBeenCalled();
+    expect(saver.hasPending()).toBe(false);
+  });
+
+  it('endExclusive({persisted}) drops an unchanged queue instead of re-saving it', async () => {
+    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, updatedAt: null }));
+    const saver = createDraftSaver(save, { onState() {} });
+
+    saver.queue('same');
+    await saver.beginExclusive();
+    // The exclusive write persisted 'same'; nothing new typed since.
+    saver.endExclusive({ persisted: 'same' });
+    await saver.whenIdle();
+
+    expect(save).not.toHaveBeenCalled(); // no redundant autosave PUT
+    expect(saver.hasPending()).toBe(false);
+  });
+
   it('a failed save keeps content pending and reports error — never a false "saved"', async () => {
     const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'error' }));
     const states: SaverState[] = [];

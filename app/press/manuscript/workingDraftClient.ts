@@ -202,8 +202,28 @@ export interface DraftSaver {
   flush(): void;
   /** True while there is content queued that has not been persisted. */
   hasPending(): boolean;
-  /** Resolves when no save is in flight (used by checkpoint/restore to serialize). */
+  /**
+   * Resolves when no write is currently in the save lane. NOTE: this is
+   * "nothing is writing right now", NOT "everything is persisted" — after a
+   * failed save, content stays pending (see hasPending). Prefer beginExclusive
+   * for checkpoint/restore, which additionally BLOCKS new autosaves.
+   */
   whenIdle(): Promise<void>;
+  /**
+   * Take the save lane exclusively: wait for any in-flight autosave to finish,
+   * then block new autosaves from starting until endExclusive. This is what
+   * checkpoint/restore use so their own write cannot race an autosave.
+   */
+  beginExclusive(): Promise<void>;
+  /**
+   * Release the exclusive lane. By default, persist anything queued while it
+   * was held (content typed during a checkpoint). Pass { flushPending: false }
+   * to DROP the pending content instead — used by restore, whose restored
+   * content is authoritative over edits made during the operation. Pass the
+   * value the exclusive write already persisted so an unchanged queue is
+   * dropped rather than re-saved.
+   */
+  endExclusive(opts?: { flushPending?: boolean; persisted?: string }): void;
 }
 
 /**
@@ -220,6 +240,7 @@ export function createDraftSaver(
 ): DraftSaver {
   let queued: string | null = null;
   let inFlight: Promise<void> | null = null;
+  let paused = false; // an exclusive write (checkpoint/restore) holds the lane
 
   async function run(): Promise<void> {
     if (queued === null) return;
@@ -244,6 +265,7 @@ export function createDraftSaver(
   }
 
   function flush(): void {
+    if (paused) return; // an exclusive write holds the lane; it will re-flush on release
     if (inFlight) return; // an active run will pick up the latest queued value
     if (queued === null) return;
     inFlight = run().finally(() => {
@@ -262,6 +284,24 @@ export function createDraftSaver(
     },
     whenIdle() {
       return inFlight ?? Promise.resolve();
+    },
+    async beginExclusive() {
+      // Drain any in-flight autosave (including its ordered continuations),
+      // then close the lane so no new autosave can start mid-write.
+      while (inFlight) await inFlight;
+      paused = true;
+    },
+    endExclusive(opts) {
+      paused = false;
+      if (opts?.flushPending === false) {
+        queued = null; // restore: restored content is authoritative
+        return;
+      }
+      if (opts?.persisted !== undefined && queued === opts.persisted) {
+        queued = null; // nothing new was typed during the write; already persisted
+        return;
+      }
+      flush(); // content typed during the exclusive write — persist it, in order
     },
   };
 }

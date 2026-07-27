@@ -161,23 +161,29 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     setCheckpointing(true);
     setCheckpointMsg(null);
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    await saver.whenIdle(); // let any in-flight autosave settle first (ordering)
-    const r = await putDraft(http, manuscriptId, {
-      content,
-      checkpoint: true,
-      note: note.trim() || undefined,
-    });
-    if (r.kind === 'ok') {
-      if (typeof r.revisionCount === 'number') setRevisionCount(r.revisionCount);
-      setUpdatedAt(r.updatedAt);
-      setSaveState('saved');
-      setNote('');
-      setCheckpointMsg('Checkpoint saved.');
-      if (showHistory) await refreshRevisions();
-    } else {
-      setCheckpointMsg('Could not save a checkpoint. Please try again.');
+    // Take the save lane so no autosave races this checkpoint write.
+    await saver.beginExclusive();
+    try {
+      const r = await putDraft(http, manuscriptId, {
+        content,
+        checkpoint: true,
+        note: note.trim() || undefined,
+      });
+      if (r.kind === 'ok') {
+        if (typeof r.revisionCount === 'number') setRevisionCount(r.revisionCount);
+        setUpdatedAt(r.updatedAt);
+        setSaveState('saved');
+        setNote('');
+        setCheckpointMsg('Checkpoint saved.');
+        if (showHistory) await refreshRevisions();
+      } else {
+        setCheckpointMsg('Could not save a checkpoint. Please try again.');
+      }
+    } finally {
+      // Persist anything typed during the checkpoint; drop it if unchanged.
+      saver.endExclusive({ persisted: content });
+      setCheckpointing(false);
     }
-    setCheckpointing(false);
   };
 
   const toggleHistory = () => {
@@ -192,16 +198,22 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     setRestoring(true);
     setRestoreError(false);
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    await saver.whenIdle();
-    const r = await restoreRevision(http, manuscriptId, revisionNumber);
-    if (r.kind === 'ok') {
-      setRestoreConfirm(null);
-      await reload();
-      await refreshRevisions();
-    } else {
-      setRestoreError(true);
+    // Take the save lane so no autosave races (or outlives) the restore.
+    await saver.beginExclusive();
+    try {
+      const r = await restoreRevision(http, manuscriptId, revisionNumber);
+      if (r.kind === 'ok') {
+        setRestoreConfirm(null);
+        await reload();
+        await refreshRevisions();
+      } else {
+        setRestoreError(true);
+      }
+    } finally {
+      // Restored content is authoritative: discard edits made during the restore.
+      saver.endExclusive({ flushPending: false });
+      setRestoring(false);
     }
-    setRestoring(false);
   };
 
   // ---- states ------------------------------------------------------------
