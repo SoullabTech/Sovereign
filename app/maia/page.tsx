@@ -34,6 +34,8 @@ import FeedbackSheet from '@/components/feedback/FeedbackSheet';
 import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
 import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
+import { useSession } from '@/lib/hooks/useSession';
+import { canSeeDecisionsTrigger } from '@/lib/navigation/sheetAudience';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import { deriveShouldRenderArrival, readHasArrivedBefore, recordFirstArrival } from '@/lib/maia/arrivalState';
@@ -467,6 +469,13 @@ function MAIAPageContent() {
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
   const [showChangesSheet, setShowChangesSheet] = useState(false);
   const [showDecisionsSheet, setShowDecisionsSheet] = useState(false);
+
+  // Decisions is the practitioner Studio Decision Council (/api/studio/decisions
+  // is practitioner-gated). Split ruling 2026-07-27: it is NOT a member tool, so
+  // its trigger appears only for practitioners. Changes stays member-facing.
+  // See lib/navigation/sheetAudience.ts.
+  const { isPractitioner } = useSession();
+  const showDecisionsTrigger = canSeeDecisionsTrigger({ isMember: true, isPractitioner });
 
   // Framework selector state (long-press on Care/Note tabs)
   const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);
@@ -1189,7 +1198,8 @@ function MAIAPageContent() {
                   <span className="text-xs">Changes</span>
                 </motion.button>
 
-                {/* Decisions Button */}
+                {/* Decisions Button — practitioner-only (Studio Decision Council) */}
+                {showDecisionsTrigger && (
                 <motion.button
                   onClick={() => setShowDecisionsSheet(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 hover:border-maia-navy-700 text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
@@ -1198,6 +1208,7 @@ function MAIAPageContent() {
                   <GitFork className="w-3 h-3" />
                   <span className="text-xs">Decisions</span>
                 </motion.button>
+                )}
 
                 {/* Feedback Button - Mobile */}
                 <button
@@ -1475,7 +1486,8 @@ function MAIAPageContent() {
                   </motion.button>
                 </FeatureTooltip>
 
-                {/* Decisions Button - Desktop */}
+                {/* Decisions Button - Desktop — practitioner-only (Studio Decision Council) */}
+                {showDecisionsTrigger && (
                 <FeatureTooltip featureId="decisions" side="bottom">
                   <motion.button
                     onClick={() => setShowDecisionsSheet(true)}
@@ -1491,6 +1503,7 @@ function MAIAPageContent() {
                     <span className="hidden sm:inline">Decisions</span>
                   </motion.button>
                 </FeatureTooltip>
+                )}
 
                 {/* Feedback Button - Desktop */}
                 <FeatureTooltip featureId="feedback" side="bottom">
