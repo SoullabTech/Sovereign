@@ -30,7 +30,12 @@
       "app/api/_backend/src/core/UnifiedOracleCore.ts",
       "app/api/_backend/src/services/ElementalIntelligenceRouter.ts",
       "app/api/_backend/src/services/hallucination-testing/maiaModelRunner.ts",
+      "app/api/maia/living-field/[fieldKey]/encounter/route.ts",
+      "app/api/maia/living-field/[fieldKey]/refine/route.ts",
+      "app/api/maia/relational-navigation/route.ts",
       "app/api/portal/[slug]/chat/route.ts",
+      "app/api/practitioner/practice-field/draft/route.ts",
+      "app/api/studio/with-me/sessions/[sessionId]/synthesize/route.ts",
       "lib/ai/ClaudeBridge.ts",
       "lib/astrology/spiralogicReportGenerator.ts",
       "lib/complete-sacred-oracle.ts",
@@ -47,6 +52,7 @@
       "lib/dialectical-ai/core.ts",
       "lib/elegant-sacred-oracle.ts",
       "lib/layered-sacred-oracle.ts",
+      "lib/maia/principleExtractor.ts",
       "lib/maia/sessionProcessor.ts",
       "lib/memory/bardic/LinkingService.ts",
       "lib/memory/bardic/TeleologyService.ts",
@@ -64,10 +70,20 @@
       "lib/team/maiaThreadReflection.ts",
       "lib/transcript-analysis/PatternExtractor.ts",
       "lib/transcript-analysis/TranscriptAnonymizer.ts",
-      "scripts/audit-sovereignty.ts",
       "scripts/backfill-maia-turns-summaries.ts",
       "scripts/generate-chapter-illustrations.ts",
-      "scripts/library/distillSource.ts"
-    ]
+      "scripts/library/distillSource.ts",
+      "scripts/walk-relational-navigation.ts"
+    ],
+    "notes": {
+      "_batch_2026-07-27": "The seven entries below were added retroactively on 2026-07-27. Each shipped AFTER this guard landed (2026-05-20) without being allowlisted — their lanes did not exercise preflight/pre-commit, so the guard never fired. Classified here as migration debt, NOT green-light: each pins its own model and calls messages.create directly, so routing through lib/ai/claudeClient generateWithClaude (which imposes selectClaudeModel policy) is a per-surface behavior change requiring its own reviewed migration per the audit. Migrate when each surface is next touched.",
+      "app/api/maia/living-field/[fieldKey]/encounter/route.ts": "Living Field encounter (added 2026-07-05). Cognitive surface, pins Sonnet.",
+      "app/api/maia/living-field/[fieldKey]/refine/route.ts": "Living Field refine (added 2026-07-01). Cognitive surface, pins Haiku.",
+      "app/api/maia/relational-navigation/route.ts": "Relational Navigation Room (added 2026-05-22, two days after the guard). Cognitive surface.",
+      "app/api/practitioner/practice-field/draft/route.ts": "Practice Field draft (added 2026-07-01). Cognitive surface, pins Haiku.",
+      "app/api/studio/with-me/sessions/[sessionId]/synthesize/route.ts": "With-Me session synthesis (added 2026-06-24). Cognitive surface, pins Sonnet.",
+      "lib/maia/principleExtractor.ts": "Principle extractor (added 2026-06-24). Cognitive surface, pins Haiku.",
+      "scripts/walk-relational-navigation.ts": "Dev walk harness for the relational-navigation route (added 2026-05-22). Not member-facing; migrates alongside its route."
+    }
   }
 }
