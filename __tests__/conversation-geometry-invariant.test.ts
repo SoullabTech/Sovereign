@@ -92,9 +92,38 @@ describe('invariant 2 — the conversation area is defined by clearances', () =>
   });
 });
 
-describe('scope — this fix must not have grown', () => {
-  it('adds no visualViewport infrastructure', () => {
-    expect(shell).not.toMatch(/visualViewport/);
+describe('scope — this fix stays geometric, not viewport-tracking', () => {
+  // #703 was a viewport-COUPLED geometry bug: the conversation surface's box
+  // resolved against a viewport-relative height. The fix's whole point is that
+  // this surface's geometry is FIXED — a top clearance (`top-44`) and a bottom
+  // clearance in px — decoupled from live viewport/keyboard height.
+  //
+  // The later mobile-keyboard work (#741/#744) legitimately reads
+  // `window.visualViewport`, but ONLY to re-settle SCROLL position after the
+  // keyboard opens/closes (scrollIntoView) and to recompute content overflow.
+  // It never feeds visualViewport into this surface's inline geometry — the
+  // resettle effect's own comment is explicit: "the `bottom: 260px` geometry
+  // itself is untouched." That is the line this scope test holds: visualViewport
+  // may drive SCROLL, never surface GEOMETRY.
+  //
+  // (Originally this asserted `visualViewport` appeared NOWHERE in the file — a
+  // blunt proxy for "no viewport-tracking was added." Once the sanctioned
+  // scroll-resettle work landed, that proxy went stale. The assertion below is
+  // re-scoped to the actual regression it was guarding: geometry, not scroll.)
+
+  /** The inline style object of the `fixed top-44` conversation surface. */
+  const styleBlock = (() => {
+    const anchor = shell.indexOf('fixed top-44');
+    const start = shell.indexOf('style={{', anchor);
+    return shell.slice(start, shell.indexOf('}}>', start));
+  })();
+
+  it('does not derive the conversation surface geometry from visualViewport', () => {
+    // Allowed anywhere: visualViewport → scrollIntoView / overflow recompute.
+    // Forbidden here: visualViewport feeding any inline style VALUE on this
+    // surface — that would re-couple the box to live keyboard/viewport height,
+    // the exact #703 class of bug.
+    expect(styleBlock).not.toMatch(/visualViewport/);
   });
 
   it('adds no dvh/svh units to the conversation surface', () => {
