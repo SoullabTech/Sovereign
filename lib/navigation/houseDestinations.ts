@@ -190,9 +190,15 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   // 2026-07-27), not a blanket gate:
   //   - Changes   → member-owned tool; /api/changes is member-scoped → audience 'all'.
   //   - Decisions → practitioner/steward tool; /api/studio/decisions is
-  //     practitioner-gated → audience 'founder' (isFounder = isAdmin || isPractitioner).
+  //     practitioner-gated → audience 'founder'.
   // The House gate is visibility only; the API enforcement is the real boundary
   // and is unchanged by this PR.
+  //
+  // On 'founder': it is the model's single coarse audience flag. MaiaShell
+  // resolves it to `isAdmin || isPractitioner` — the CURRENT APPROXIMATION of
+  // "practitioner/steward". There is no distinct steward-role primitive yet;
+  // do not read one into this gate. If a real steward role is introduced later,
+  // widen the audience model rather than overloading 'founder'.
   {
     id: 'decisions',
     label: 'Decisions',
