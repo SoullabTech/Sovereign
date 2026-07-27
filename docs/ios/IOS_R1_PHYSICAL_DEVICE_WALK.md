@@ -37,6 +37,17 @@ Result vocabulary: PASS · FAIL (with symptom) · PARTIAL (with boundary) · NOT
 - **Product question (founder decision, separate from the defect)**: most House places (Studio, Book Studio, Labtools, Commons, Library, Vision Studio, Living Field, Team) are deliberately web-only in the R1 bundle; once taps work, they will land on the "Available in Web Studio" fallback. Options: filter the House to native destinations, badge web-only places before the tap, or keep as-is for internal testers with a known-limitations note.
 - **Cold-launch linkage (hypothesis only, per founder correction)**: the web-only-route fallback provides a *plausible* explanation for the earlier cold-launch "Available in Web Studio" screen (restored route may have been a web-only destination) — a candidate mechanism to investigate, not an established identity. Note the two observations differ in one respect: cold launch *did* reach the fallback screen, while House taps currently reach nothing.
 
+## Device acceptance ledger (build 2504, in progress)
+
+| Thread | Status | Next evidence |
+|---|---|---|
+| House navigation | Awaiting route observations | Living Field → Team → Back to MAIA → House → MAIA |
+| Keep bookmark | **NEW UI finding (direct device observation, build 2504): the Keep affordance is absent during an active conversation** — not explainable by pre-conversation gating | Reproduce; identify the exact transition preceding the state (cold launch / House → MAIA / Settings → MAIA) |
+| Auth card | Independent investigation; 2 sightings, fresh-mount correlation, mechanism unconfirmed | Record the user action immediately preceding any reappearance |
+| Holoflower safe-area | Observation logged | Address during top-chrome reconciliation |
+
+Independence discipline (founder): the Keep-UI and auth findings stay separate threads until evidence links them. Verified: active conversation with no Keep affordance. Unproven hypothesis: a shared state-initialization issue affecting both Keep rendering and auth. No fixes until the transition is identified. Build-2504 provenance note: every `.html` spot-checked above was verified inside the exact installed `App.app` — artifact-level observation, not repository inference.
+
 ## Known limitations entering the walk
 
 - Display name is still `Soullab` (rename is deliberately sequenced after the walk, as its own commit).
