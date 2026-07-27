@@ -394,6 +394,13 @@ function MAIAPageContent() {
   // never sees a flash of Arrival before the marker is read.
   const [hasArrivedBefore, setHasArrivedBefore] = useState(true);
   const [arrivalInvoked, setArrivalInvoked] = useState(false);
+  // #736 — the third member act: crossing the threshold WITHOUT authoring
+  // speech ("I'm ready"). Session-temporary like arrivalInvoked; never
+  // persisted. It ends the Arrival render for this session while leaving the
+  // durable first-crossing marker untouched — activation is not expression
+  // (ruling below), so this member still meets the ceremony next visit
+  // unless they actually speak.
+  const [arrivalCrossedWithoutSpeech, setArrivalCrossedWithoutSpeech] = useState(false);
   useEffect(() => {
     setHasArrivedBefore(readHasArrivedBefore());
   }, []);
@@ -404,11 +411,20 @@ function MAIAPageContent() {
     arrivalEntryEnabled: featureFlags.arrivalEntry,
     hasArrivedBefore,
     arrivalInvoked,
+    crossedWithoutSpeech: arrivalCrossedWithoutSpeech,
   });
   // The House's deliberate return. Opens the room; leaves the first-crossing
   // marker exactly as it was. A member who returns and leaves again is still
   // someone who has arrived before.
   const returnToArrival = useCallback(() => setArrivalInvoked(true), []);
+  // #736 — the non-writing exit. Fired by "I'm ready". Clears ONLY the
+  // session-temporary states (an invoked return is over once crossed); the
+  // durable marker stays exactly as it was, per the ruling below. This is
+  // deliberately NOT markArrived — see the ⚠️ under that ruling.
+  const crossArrivalWithoutSpeech = useCallback(() => {
+    setArrivalCrossedWithoutSpeech(true);
+    setArrivalInvoked(false);
+  }, []);
   // Ruling (Kelly, 2026-07-22):
   //
   //   A person is no longer arriving once they have spoken into the relationship.
@@ -420,8 +436,10 @@ function MAIAPageContent() {
   // a member who speaks and closes the laptop before an answer has still crossed.
   //
   // ⚠️ Do NOT wire activation controls to this — not the jewel, not the mic, and
-  // not the forthcoming "I'm ready" button. Wiring any of them here silently
-  // collapses the ruling back to option A.
+  // not the "I'm ready" button. Wiring any of them here silently collapses the
+  // ruling back to option A. ("I'm ready" now exists and exits Arrival via
+  // crossArrivalWithoutSpeech above — session-scoped, durable-marker-free —
+  // exactly so it never has to touch this. #736)
   //
   // Fired on every member turn, so it must be idempotent AND write-once: the marker
   // records when arrival happened, not when the member last spoke.
@@ -809,6 +827,7 @@ function MAIAPageContent() {
                   onCloseSessionSelector={() => setShowSessionSelector(false)}
                   onSessionActiveChange={setHasActiveSession}
                   onMemberExpression={markArrived}
+                  onArrivalCrossed={crossArrivalWithoutSpeech}
                   shouldRenderArrival={shouldRenderArrival}
                   initialAction={searchParams?.get('action') || undefined}
                   askMode={askMode}
