@@ -186,14 +186,13 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     group: 'work',
   },
   // Existing member sheets — opened in place on /maia, never a new route/page.
-  // FOUNDER/STEWARD-ONLY (founder ruling 2026-07-27): these are governance
-  // surfaces; the House does not render them for ordinary members. NOTE: the
-  // House audience gate alone does NOT secure them — they remain reachable via
-  // the /maia ribbon and their backing APIs. That pre-existing exposure is a
-  // separate, tracked access-control defect (sheet + API enforcement), out of
-  // scope for this navigation PR because the House wiring here only REDUCES
-  // exposure. Do not describe these as genuinely founder-only until that
-  // enforcement audit lands.
+  // Audience MIRRORS each tool's actual product boundary (access audit,
+  // 2026-07-27), not a blanket gate:
+  //   - Changes   → member-owned tool; /api/changes is member-scoped → audience 'all'.
+  //   - Decisions → practitioner/steward tool; /api/studio/decisions is
+  //     practitioner-gated → audience 'founder' (isFounder = isAdmin || isPractitioner).
+  // The House gate is visibility only; the API enforcement is the real boundary
+  // and is unchanged by this PR.
   {
     id: 'decisions',
     label: 'Decisions',
@@ -201,7 +200,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     tooltip: 'Weigh a decision with the council',
     kind: 'sheet',
     sheet: 'decisions',
-    audience: 'founder',
+    audience: 'founder', // practitioner/steward — mirrors /api/studio/decisions
     returnBehavior: 'sheet-close',
     group: 'work',
   },
@@ -212,7 +211,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     tooltip: 'Name and walk a change',
     kind: 'sheet',
     sheet: 'changes',
-    audience: 'founder',
+    audience: 'all', // member-owned — mirrors member-scoped /api/changes
     returnBehavior: 'sheet-close',
     group: 'work',
   },

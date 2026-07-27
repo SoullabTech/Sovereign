@@ -39,23 +39,23 @@ function harness(isNative: boolean) {
 }
 
 describe('getHouseDestinations — audience filtering', () => {
-  it('hides founder/steward-only destinations from ordinary members', () => {
-    const ids = getHouseDestinations(false).map((d) => d.id);
-    expect(ids).not.toContain('circles');
-    expect(ids).not.toContain('vision-studio');
-    // Decisions/Changes are governance surfaces — founder/steward only.
-    expect(ids).not.toContain('decisions');
-    expect(ids).not.toContain('changes');
-    expect(ids).toContain('ideas');
-    expect(ids).toContain('studio');
+  it('mirrors each tool boundary: Changes is member-owned, Decisions is practitioner/steward', () => {
+    const member = getHouseDestinations(false).map((d) => d.id);
+    expect(member).toContain('changes'); // member-owned (/api/changes is member-scoped)
+    expect(member).not.toContain('decisions'); // practitioner-gated (/api/studio/decisions)
+    // Other practitioner/steward rooms still hidden from members.
+    expect(member).not.toContain('circles');
+    expect(member).not.toContain('vision-studio');
+    expect(member).toContain('ideas');
+    expect(member).toContain('studio');
   });
 
-  it('shows founder/steward-only destinations to founders', () => {
+  it('shows practitioner/steward-only destinations to founders/practitioners', () => {
     const ids = getHouseDestinations(true).map((d) => d.id);
-    expect(ids).toContain('circles');
-    expect(ids).toContain('vision-studio');
     expect(ids).toContain('decisions');
     expect(ids).toContain('changes');
+    expect(ids).toContain('circles');
+    expect(ids).toContain('vision-studio');
   });
 });
 
@@ -138,13 +138,13 @@ describe('visibleInGroup — no broken buttons on native', () => {
     expect(visibleInGroup(member, 'work', true).map((d) => d.id)).not.toContain('ideas');
   });
 
-  it('founder sheets remain visible on native; ordinary members never see them', () => {
-    const founderWork = visibleInGroup(getHouseDestinations(true), 'work', true).map((d) => d.id);
-    expect(founderWork).toContain('decisions');
-    expect(founderWork).toContain('changes');
+  it('Changes shows for members on native; Decisions only for practitioner/steward', () => {
     const memberWork = visibleInGroup(getHouseDestinations(false), 'work', true).map((d) => d.id);
-    expect(memberWork).not.toContain('decisions');
-    expect(memberWork).not.toContain('changes');
+    expect(memberWork).toContain('changes'); // member-owned
+    expect(memberWork).not.toContain('decisions'); // practitioner-gated
+    const founderWork = visibleInGroup(getHouseDestinations(true), 'work', true).map((d) => d.id);
+    expect(founderWork).toContain('changes');
+    expect(founderWork).toContain('decisions');
   });
 });
 
