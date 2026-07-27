@@ -7682,10 +7682,14 @@ I'm not sure what I'm feeling yet.`;
           Rendered as the exact COMPLEMENT of the arrival/greeting block above
           (same shouldRenderArrival / !hasActivated condition): that composition
           renders its OWN Keep affordance, so showing ours simultaneously would
-          put two bookmarks on screen at once. Gating this to "arrival not shown"
-          keeps exactly one always-visible Keep in every state — the arrival Keep
-          before activation, this one throughout the live conversation (the very
-          surface Kelly flagged as missing it). */}
+          put two bookmarks on screen at once. The rule is NOT "one Keep in
+          every state" — it is: a Keep exists wherever there is something to
+          keep. The arrival composition carries its own Keep pre-activation;
+          this bookmark covers the live conversation (the very surface Kelly
+          flagged as missing it); and the returning-member pre-activation
+          welcome state (legacy greeting, hasActivated=false,
+          shouldRenderArrival=false) has NO Keep anywhere, by design — nothing
+          exists to capture yet (the capture flow itself requires ≥2 messages). */}
       {!isSanctuary &&
         !(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (
         <div
