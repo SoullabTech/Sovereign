@@ -23,9 +23,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Capacitor } from '@capacitor/core';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DoorOpen, HelpCircle, Settings, User } from 'lucide-react';
-import { MAIA_WORLDS, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
+import { DoorOpen, ExternalLink, HelpCircle, Settings, User } from 'lucide-react';
+import { MAIA_WORLDS, getHousePlaces, getVisibleRecord, isNativeBundled } from '@/lib/navigation/maiaNav';
 import {
   badgeDelay,
   colabLabel,
@@ -69,12 +70,26 @@ interface MaiaHouseSheetProps {
   onOpenAccount?: () => void;
   /** Opens the help sheet. Moved out of the top bar (ruling 2026-07-23). */
   onOpenHelp?: () => void;
+  /**
+   * Record group (Kelly ruling 2026-07-27): Decisions and Changes open their
+   * EXISTING in-app sheets (DecisionsSheet / ChangesSheet via MaiaModalManager),
+   * not a /studio route — so they work natively without the web bridge. Omitted
+   * for members without founder/steward access (the group then does not render).
+   */
+  onOpenDecisions?: () => void;
+  onOpenChanges?: () => void;
 }
 
 const SERIF = 'Spectral, Georgia, serif';
 
-export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, onOpenAccount, onOpenHelp }: MaiaHouseSheetProps) {
+export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, onOpenAccount, onOpenHelp, onOpenDecisions, onOpenChanges }: MaiaHouseSheetProps) {
   const router = useRouter();
+
+  // Native vs web. The House opens bundled routes in-app and hands web-only
+  // routes to the /open-web Safari bridge. Resolved after mount (SSR-safe, same
+  // pattern as app/enter/page.tsx) so the first paint never assumes a platform.
+  const [isNative, setIsNative] = useState(false);
+  useEffect(() => { setIsNative(Capacitor.isNativePlatform()); }, []);
 
   // Close on Escape — the House never traps you.
   useEffect(() => {
@@ -85,8 +100,12 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
   }, [open, onClose]);
 
   const center = MAIA_WORLDS.find((w) => w.id === 'maia');
-  const worlds = MAIA_WORLDS.filter((w) => w.id !== 'maia');
-  const rooms = getVisibleBoundaries(isFounder);
+  // House display groups (Kelly ruling 2026-07-27), driven by houseGroup — not
+  // by classification. Worlds = broader environments; Rooms = direct practices;
+  // Record = founder/steward governance (empty for non-founders).
+  const worlds = getHousePlaces('worlds', isFounder);
+  const rooms = getHousePlaces('rooms', isFounder);
+  const record = getVisibleRecord(isFounder);
 
   // Co-lab's visibility is conditional on live state, not on membership class,
   // so the registry's audience field cannot express it. Rule preserved verbatim
@@ -111,15 +130,26 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
 
   const enter = (route: string) => {
     onClose();
-    router.push(route);
+    // Native-aware dispatch: bundled routes open in-app; web-only routes hand off
+    // to the /open-web bridge (Safari) rather than router.push-ing into a route
+    // the static export stripped — which would dead-tap into a blank native screen.
+    if (isNative && !isNativeBundled(route)) {
+      router.push(`/open-web?to=${encodeURIComponent(route)}`);
+    } else {
+      router.push(route);
+    }
   };
 
   const Place = ({ item, label }: { item: MaiaRailItem; label?: string }) => {
     const Icon = item.icon;
+    // On native a web-only place hands off to Safari via the bridge. Mark it
+    // gently so it reads as an intentional exit, not a broken in-app room.
+    const webOnly = isNative && !isNativeBundled(item.route);
     return (
       <button
         onClick={() => enter(item.route)}
         className={ROW}
+        aria-label={webOnly ? `${label ?? item.label} — opens on the web` : undefined}
       >
         <span className={ROW_ICON}>
           <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
@@ -139,6 +169,13 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
             </span>
           )}
         </span>
+        {webOnly && (
+          <ExternalLink
+            className="ml-auto h-4 w-4 shrink-0 self-center text-slate-500"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+        )}
       </button>
     );
   };
@@ -241,8 +278,62 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
                 </div>
               </section>
 
-              <Group title="Worlds" items={worlds} />
-              <Group title="Rooms" items={rooms} colabCount={colabCount} showColab={showColab} />
+              {/* Worlds — broader environments. Co-lab now lives here; its
+                  conditional (non-audience) visibility is still applied inside. */}
+              <Group title="Worlds" items={worlds} colabCount={colabCount} showColab={showColab} />
+
+              {/* Rooms — direct practices and tools, plus Settings (Kelly ruling
+                  2026-07-27: Settings is a Room; Account and Help remain utilities
+                  below the divider). Rendered inline so Settings sits in-section. */}
+              {rooms.length > 0 && (
+                <section className="mb-6">
+                  <GroupHeading>Rooms</GroupHeading>
+                  <div className="flex flex-col">
+                    {rooms.map((item) => (
+                      <Place key={item.id} item={item} />
+                    ))}
+                    <button onClick={() => enter('/account/settings')} className={ROW}>
+                      <span className={ROW_ICON}><Settings className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
+                      <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Settings</span>
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* Record — founder/steward governance. Decisions and Changes open
+                  their EXISTING in-app sheets (Kelly ruling 2026-07-27), not a
+                  /studio route — native-safe, no web bridge. getVisibleRecord is
+                  empty for non-founders, so members see nothing here. */}
+              {record.length > 0 && (
+                <section className="mb-6">
+                  <GroupHeading>Record</GroupHeading>
+                  <div className="flex flex-col">
+                    {record.map((item) => {
+                      const openSheet =
+                        item.id === 'decisions' ? onOpenDecisions
+                        : item.id === 'changes' ? onOpenChanges
+                        : undefined;
+                      if (!openSheet) return null;
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => { onClose(); openSheet(); }}
+                          className={ROW}
+                        >
+                          <span className={ROW_ICON}>
+                            <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>{item.label}</span>
+                            {item.tooltip && <span className={ROW_BLURB}>{item.tooltip}</span>}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
 
               {/* Below the line: the member's own account, not a place in MAIA.
                   Separated so utilities never read as another world. */}
@@ -253,10 +344,8 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
                     <span className={ROW_ICON}><User className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
                     <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Account</span>
                   </button>
-                  <button onClick={() => enter('/account/settings')} className={ROW}>
-                    <span className={ROW_ICON}><Settings className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
-                    <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Settings</span>
-                  </button>
+                  {/* Settings moved up into Rooms (Kelly ruling 2026-07-27). Only
+                      Account and Help remain here as utilities, not places. */}
                   {/* Help joins the utilities rather than sitting in the top bar.
                       Same reasoning as the rail: the bar is for identity and the
                       House holds the places. Help is somewhere you go, not part

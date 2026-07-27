@@ -47,7 +47,10 @@ export type BoundaryId =
   //
   // 'now-what' is deliberately NOT here — Now What? is a client build on AIN OS,
   // not a native MAIA room. See the ruling note in maiaNav.ts.
-  | 'keeps' | 'colab';
+  | 'keeps' | 'colab'
+  // Record group (Kelly ruling 2026-07-27) — founder/steward governance surfaces.
+  // Pages exist under /studio; audience-gated to founders, NOT general member features.
+  | 'decisions' | 'changes';
 
 export type MaiaRailItemId = MaiaWorldId | BoundaryId;
 
@@ -75,6 +78,16 @@ export interface MaiaRailItem {
    * Undefined = no group (MAIA center, boundaries)
    */
   group?: 'life' | 'work';
+  /**
+   * House display group (Kelly ruling 2026-07-27). Independent of `classification`
+   * and `group` (which drive other surfaces) — this is purely the section a place
+   * renders under in The House sheet:
+   *   'worlds' — broader environments
+   *   'rooms'  — direct practices and tools
+   *   'record' — founder/steward governance (Decisions, Changes)
+   * Undefined = not shown as a grouped House place (e.g. the MAIA center row).
+   */
+  houseGroup?: 'worlds' | 'rooms' | 'record';
 }
 
 // --- Utility items ---

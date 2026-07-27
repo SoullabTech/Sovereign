@@ -374,6 +374,8 @@ export function MaiaShell({
         isFounder={isAdmin || isPractitioner}
         onOpenHelp={onOpenHelp}
         onOpenAccount={() => { setHouseOpen(false); onOpenAccount(); }}
+        onOpenDecisions={() => { setHouseOpen(false); onOpenDecisions(); }}
+        onOpenChanges={() => { setHouseOpen(false); onOpenChanges(); }}
         onReturnToArrival={
           canReturnToArrival && onReturnToArrival
             ? () => { setHouseOpen(false); onReturnToArrival(); }
