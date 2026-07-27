@@ -21,8 +21,11 @@ PAGES_BACKUP_DIR="$PROJECT_ROOT/.capacitor-pages-backup"
 DYNAMIC_PAGES_BACKUP="$PROJECT_ROOT/.capacitor-dynamic-pages-backup"
 DYNAMIC_PAGES_MANIFEST="$PROJECT_ROOT/.capacitor-dynamic-pages.manifest"
 PATCHED_PAGES_FILE="$PROJECT_ROOT/.capacitor-patched-pages.txt"
+PATCHED_PAGES_BACKUP="$PROJECT_ROOT/.capacitor-patched-pages-backup"
 MOBILE_BACKUP_DIR="$PROJECT_ROOT/.capacitor-mobile-backup"
 MOBILE_BACKUP_MANIFEST="$PROJECT_ROOT/.capacitor-mobile.manifest"
+OG_IMAGES_BACKUP="$PROJECT_ROOT/.capacitor-og-backup"
+OG_IMAGES_MANIFEST="$PROJECT_ROOT/.capacitor-og.manifest"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -271,6 +274,66 @@ restore_pages_dir() {
     fi
 }
 
+# Code-generated OG image routes (opengraph-image.tsx etc.) are route handlers
+# that Next.js refuses to build under output:'export' without force-static.
+# The iOS bundle never serves link previews, so move them out of the build.
+# Static image files (opengraph-image.png/.jpg) are export-safe and are left alone.
+hide_og_image_routes() {
+    log_info "Moving code-generated OG image routes out of the build (incompatible with static export)..."
+
+    # Safety: abort if backup already exists (indicates a previous patch was never reverted).
+    if [ -d "$OG_IMAGES_BACKUP" ]; then
+        log_error "OG images backup already exists at $OG_IMAGES_BACKUP"
+        log_error "Run './scripts/capacitor-patch-routes.sh revert' before patching again."
+        exit 1
+    fi
+    mkdir -p "$OG_IMAGES_BACKUP"
+    > "$OG_IMAGES_MANIFEST"
+
+    local count=0
+    while IFS= read -r file; do
+        local rel_path="${file#$PROJECT_ROOT/}"
+        local backup_path="$OG_IMAGES_BACKUP/$rel_path"
+        mkdir -p "$(dirname "$backup_path")"
+        mv "$file" "$backup_path"
+        echo "$rel_path" >> "$OG_IMAGES_MANIFEST"
+        log_info "  Excluded (OG route): $rel_path"
+        count=$((count + 1))
+    done < <(find "$PROJECT_ROOT/app" -type f \
+        \( -name "opengraph-image.tsx" -o -name "opengraph-image.ts" \
+           -o -name "opengraph-image.jsx" -o -name "opengraph-image.js" \
+           -o -name "twitter-image.tsx" -o -name "twitter-image.ts" \
+           -o -name "twitter-image.jsx" -o -name "twitter-image.js" \) 2>/dev/null)
+
+    log_info "Excluded $count OG image routes from mobile build"
+}
+
+# Restore OG image routes after build
+restore_og_image_routes() {
+    log_info "Restoring OG image routes from backup..."
+
+    if [ ! -f "$OG_IMAGES_MANIFEST" ]; then
+        log_warn "No OG images manifest found"
+        return 0
+    fi
+
+    local count=0
+    while IFS= read -r rel_path; do
+        [ -z "$rel_path" ] && continue
+        local backup_path="$OG_IMAGES_BACKUP/$rel_path"
+        local restore_path="$PROJECT_ROOT/$rel_path"
+        if [ -f "$backup_path" ]; then
+            mkdir -p "$(dirname "$restore_path")"
+            mv "$backup_path" "$restore_path"
+            count=$((count + 1))
+        fi
+    done < "$OG_IMAGES_MANIFEST"
+
+    rm -rf "$OG_IMAGES_BACKUP"
+    rm -f "$OG_IMAGES_MANIFEST"
+    log_info "Restored $count OG image routes"
+}
+
 # Two-phase exclusion of incompatible dynamic pages
 # Phase 1: Scan all pages and collect directories to exclude
 # Phase 2: Move all collected directories
@@ -426,6 +489,12 @@ patch_remaining_dynamic_pages() {
                 log_info "  Adding generateStaticParams: $rel_path"
                 echo "$file" >> "$PATCHED_PAGES_FILE"
 
+                # Byte-exact backup of the original — revert restores it verbatim.
+                # (The old grep-based revert left one stray blank line per cycle,
+                # dirtying the tree and failing the next build's preflight.)
+                mkdir -p "$(dirname "$PATCHED_PAGES_BACKUP/$rel_path")"
+                cp "$file" "$PATCHED_PAGES_BACKUP/$rel_path"
+
                 local temp_file=$(mktemp)
                 echo "// Added by capacitor-patch-routes.sh for static export" > "$temp_file"
                 echo "export function generateStaticParams() { return []; }" >> "$temp_file"
@@ -457,15 +526,22 @@ revert_patched_pages() {
             local rel_path="${file#$PROJECT_ROOT/}"
             log_info "  Reverting: $rel_path"
 
-            local temp_file=$(mktemp)
-            grep -v "^// Added by capacitor-patch-routes.sh for static export$" "$file" | \
-            grep -v "^export function generateStaticParams() { return \[\]; }$" > "$temp_file" || true
-            mv "$temp_file" "$file"
+            if [ -f "$PATCHED_PAGES_BACKUP/$rel_path" ]; then
+                # Byte-exact restore from backup
+                mv "$PATCHED_PAGES_BACKUP/$rel_path" "$file"
+            else
+                # Fallback for a patched state created before backups existed
+                local temp_file=$(mktemp)
+                grep -v "^// Added by capacitor-patch-routes.sh for static export$" "$file" | \
+                grep -v "^export function generateStaticParams() { return \[\]; }$" > "$temp_file" || true
+                mv "$temp_file" "$file"
+            fi
             count=$((count + 1))
         fi
     done < "$PATCHED_PAGES_FILE"
 
     rm -f "$PATCHED_PAGES_FILE"
+    rm -rf "$PATCHED_PAGES_BACKUP"
     log_info "Reverted $count patched pages"
 }
 
@@ -611,6 +687,7 @@ case "${1:-}" in
         hide_middleware
         hide_pages_dir
         hide_web_only_routes
+        hide_og_image_routes
         hide_incompatible_pages
         patch_remaining_dynamic_pages
         ;;
@@ -619,6 +696,7 @@ case "${1:-}" in
         restore_middleware
         restore_pages_dir
         restore_web_only_routes
+        restore_og_image_routes
         restore_incompatible_pages
         revert_patched_pages
         restore_non_mobile_routes
@@ -631,6 +709,7 @@ case "${1:-}" in
         echo "           - Move app/api out of the way (iOS uses production API)"
         echo "           - Move middleware.ts out of the way (not compatible with static export)"
         echo "           - Move web-only routes out (mirrors lib/mobile/mobileAllowlist.ts)"
+        echo "           - Move code-generated OG image routes out (incompatible with static export)"
         echo "           - Exclude remaining incompatible dynamic pages"
         echo "           - Add generateStaticParams to remaining dynamic pages"
         echo "  revert  - Restore original state after build"

@@ -33,7 +33,9 @@ preflight_check() {
         ".capacitor-api-backup" \
         ".capacitor-mobile-excluded-backup" \
         ".capacitor-pages-backup" \
-        ".capacitor-dynamic-pages-backup"
+        ".capacitor-dynamic-pages-backup" \
+        ".capacitor-og-backup" \
+        ".capacitor-patched-pages-backup"
     do
         [ -d "$b" ] && stale+=("$b")
     done
