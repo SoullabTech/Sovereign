@@ -322,7 +322,20 @@ export function MaiaShell({
           Hidden while Arrival is on screen — Arrival carries its own doorway at
           these coordinates. One House, one renderer, one doorway. */}
       {!arrivalMode && (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[54px] items-center px-4 md:px-6">
+        <div
+          className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[54px] items-center px-4 md:px-6"
+          style={{
+            // Founder device walk 2026-07-27: with no safe-area inset this band
+            // centered the doorway ~27px from the physical top — inside the
+            // status-bar/Dynamic-Island zone, where iOS never delivers touches
+            // to the WebView. The doorway wasn't broken; it was unreachable.
+            // Same expression as MaiaTopBar and as MaiaArrivalField's header
+            // (the box-parity twin below in this comment's sense): the two
+            // doorway renderers must keep identical boxes across the
+            // Arrival ⇄ conversation swap.
+            paddingTop: 'calc(max(env(safe-area-inset-top), 0px) + 6px)',
+          }}
+        >
           <button
             onClick={() => setHouseOpen(true)}
             className={`
