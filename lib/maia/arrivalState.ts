@@ -23,6 +23,13 @@
  *
  * No inference lives here. Both inputs are member acts: crossing into speech,
  * and choosing Return to Arrival. Nothing reads readiness, mood, or absence.
+ *
+ * Addendum (#736): a THIRD member act joined the model — crossing the
+ * threshold without authoring speech ("I'm ready"). It is session-temporary
+ * like arrivalInvoked, and it deliberately does not touch the durable marker:
+ * activation is not expression (ruling, 2026-07-22), so a member who crosses
+ * without speaking and leaves is still arriving, and meets the ceremony again
+ * next visit. Same constitution: a member act, never an inference.
  */
 
 /** localStorage key for the durable first-crossing marker. */
@@ -35,6 +42,13 @@ export interface ArrivalStateInputs {
   hasArrivedBefore: boolean;
   /** Temporary: did the member invoke a return from The House this session? */
   arrivalInvoked: boolean;
+  /**
+   * Temporary, session-scoped (#736): did the member cross the threshold
+   * WITHOUT authoring speech this session — the "I'm ready" activation?
+   * Ends the Arrival RENDER for this session only; never writes the durable
+   * marker. Optional (defaults false) so existing callers are untouched.
+   */
+  crossedWithoutSpeech?: boolean;
 }
 
 /**
@@ -50,9 +64,16 @@ export function deriveShouldRenderArrival({
   arrivalEntryEnabled,
   hasArrivedBefore,
   arrivalInvoked,
+  crossedWithoutSpeech = false,
 }: ArrivalStateInputs): boolean {
   if (!arrivalEntryEnabled) return false;      // kill-switch wins over everything
-  return !hasArrivedBefore || arrivalInvoked;  // first visit, or member-invoked return
+  // The deliberate return outranks a prior same-session crossing: Return to
+  // Arrival invoked AFTER "I'm ready" must still open the room. #736 adds an
+  // exit; it must never subtract the member-invoked entry.
+  if (arrivalInvoked) return true;
+  // First visit — until the member either speaks (markArrived, durable) or
+  // crosses without speech ("I'm ready", session-scoped, dies with the tab).
+  return !hasArrivedBefore && !crossedWithoutSpeech;
 }
 
 /**
