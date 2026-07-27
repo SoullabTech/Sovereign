@@ -53,7 +53,11 @@ export function MaiaTopBar({
         ${opacityClass}
         hover:opacity-100 hover:transition-opacity hover:duration-200
       `}
-      style={{ paddingTop: 'max(env(safe-area-inset-top), 0px)' }}
+      {/* +6px breath below the status bar — founder device walk 2026-07-27:
+          flush against env(safe-area-inset-top) read as "a touch high" on a
+          physical iPhone. The constant applies uniformly (desktop gains the
+          same 6px), so the wordmark never rides the status-bar edge. */}
+      style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 0px) + 6px)' }}
     >
       {/* Left: reserved for The House.
           The House owns the upper-left anchor — the shell renders the doorway
