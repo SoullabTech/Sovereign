@@ -143,6 +143,43 @@ else
     ok "verify rejects a mismatched running GIT_COMMIT (stale-image guard)"
 fi
 
+# ── 7. Verification-mismatch REFUSAL is wired fail-closed in deploy/update ──────
+# The full-deploy entry points must ABORT before migrations when the running
+# container does not report the asserted SHA — matching deploy-maia. We check both
+# the contract (behavioral) and that the real entry points use it (source guard).
+echo "[selftest] 7. deploy/update verification mismatch fails closed BEFORE migrations"
+
+# (a) Behavioral: model the exact entry-point control flow around verify_running.
+sim_entry() {  # $1 = the value the 'running container' reports
+    if ! DEPLOY_VERIFY_PRINTENV_CMD="printf '%s' '$1'" DEPLOY_VERIFY_RETRIES=1 \
+            deploy_ctx_verify_running "$SHORT1" fake-container >/dev/null 2>&1; then
+        echo "ABORTED_BEFORE_MIGRATIONS"; return 0
+    fi
+    echo "REACHED_MIGRATIONS"
+}
+[ "$(sim_entry cafe1234)" = "ABORTED_BEFORE_MIGRATIONS" ] \
+    && ok "mismatch → entry-point wiring aborts before migrations" \
+    || fail "mismatch did NOT abort before migrations"
+[ "$(sim_entry "$SHORT1")" = "REACHED_MIGRATIONS" ] \
+    && ok "match → entry-point wiring proceeds to migrations" \
+    || fail "match did not proceed to migrations"
+
+# (b) Source guard on the REAL deploy-production.sh (regression tripwire against
+# reverting to warn-and-continue). SCRIPT_DIR is scripts/, where it lives.
+dp="$SCRIPT_DIR/deploy-production.sh"
+if grep -qE 'deploy_ctx_verify_running[^|]*\|\|[[:space:]]*log_warn' "$dp"; then
+    fail "deploy-production.sh still has a fail-OPEN verify (|| log_warn)"
+else
+    ok "deploy-production.sh has no fail-open verify (|| log_warn) remaining"
+fi
+grep -q 'if ! deploy_ctx_verify_running' "$dp" \
+    && ok "verify sites use the fail-closed 'if ! ... exit 1' form" \
+    || fail "verify sites are not in fail-closed form"
+vcount="$(grep -c 'deploy_ctx_verify_running' "$dp")"
+[ "${vcount:-0}" -ge 2 ] \
+    && ok "both deploy + update verify post-swap ($vcount sites)" \
+    || fail "expected >=2 verify sites in deploy-production.sh, found ${vcount:-0}"
+
 echo ""
 echo "[selftest] Results: $PASS passed · $FAIL failed"
 [ "$FAIL" -eq 0 ]

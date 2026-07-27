@@ -457,7 +457,13 @@ cmd_deploy() {
     sleep 10
 
     # Post-swap: assert the running container is the commit we authorized.
-    deploy_ctx_verify_running "$GIT_COMMIT" || log_warn "Provenance verify failed — investigate before trusting prod"
+    if ! deploy_ctx_verify_running "$GIT_COMMIT"; then
+        log_error "Post-swap provenance verification FAILED — the running container does not report the"
+        log_error "authorized immutable commit $GIT_COMMIT. ABORTING before migrations and smoke checks."
+        log_error "The container swap already happened; roll back to the previous image:"
+        log_error "  ./scripts/deploy-production.sh rollback"
+        exit 1
+    fi
 
     # Run migrations
     log_info "Running database migrations..."
@@ -553,7 +559,13 @@ cmd_update() {
 
     # Post-swap: assert the running container is the commit we authorized.
     sleep 10
-    deploy_ctx_verify_running "$GIT_COMMIT" || log_warn "Provenance verify failed — investigate before trusting prod"
+    if ! deploy_ctx_verify_running "$GIT_COMMIT"; then
+        log_error "Post-swap provenance verification FAILED — the running container does not report the"
+        log_error "authorized immutable commit $GIT_COMMIT. ABORTING before migrations and smoke checks."
+        log_error "The container swap already happened; roll back to the previous image:"
+        log_error "  ./scripts/deploy-production.sh rollback"
+        exit 1
+    fi
 
     log_info "Running migrations..."
     if ! docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate; then

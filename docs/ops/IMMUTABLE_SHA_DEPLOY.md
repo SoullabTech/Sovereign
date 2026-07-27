@@ -45,7 +45,7 @@ build now passes through it, in four moves that map onto the design options:
 | **resolve**     | The operator names a commit (explicit SHA arg). We verify it is a real commit **object** — `git rev-parse --verify <sha>^{commit}` — independent of what is checked out. | 1 + 2* |
 | **materialize** | `git archive <SHA> \| tar -x` extracts that commit's tree into a fresh isolated dir; that dir becomes the Docker build context (`MAIA_BUILD_CONTEXT`). | 4 (⊇ 3) |
 | **stamp**       | `GIT_COMMIT` is exported from the asserted SHA, never a re-resolution of HEAD. | 5 |
-| **verify**      | After the container swap, assert the running container's baked `GIT_COMMIT` equals the asserted SHA. | 5 |
+| **verify**      | After the container swap, assert the running container's baked `GIT_COMMIT` equals the asserted SHA — **fail-closed**: a mismatch aborts the deploy **before migrations/smoke** on every path (`deploy`, `update`, `deploy-maia`) and points at `rollback`. | 5 |
 
 \* *Option 2 as an **existence assertion**, not a `HEAD == SHA` check. A hard
 "refuse if HEAD differs" would re-couple the deploy to the very checkout we are
@@ -127,17 +127,20 @@ Both a hermetic self-test and a live real-Docker rehearsal were run before this
 control was proposed for merge (Kelly-directed pre-merge rehearsal).
 
 - **Hermetic self-test** — `scripts/verify-deploy-context.sh`, a throwaway git
-  repo with no docker and no network: **13/13 pass** (naming refusal, immutability
+  repo with no docker and no network: **18/18 pass** (naming refusal, immutability
   vs concurrent checkout, dirty-tree isolation, `GIT_COMMIT` stamping, HEAD-ack,
-  post-swap verify).
+  post-swap verify, and — added in review — that a **verification mismatch fails
+  closed before migrations** in the `deploy`/`update` entry points, checked both
+  behaviorally and by a source guard against reverting to warn-and-continue).
 
-- **Live end-to-end rehearsal** — **13/13 pass** on an isolated non-production
+- **Live end-to-end rehearsal** — **14/14 pass** on an isolated non-production
   target: the **actual `deploy-context.sh` seam** driven through a real
   `docker build` → `docker run` → `docker exec … printenv GIT_COMMIT`, using a
   tiny `caddy:2-alpine`-based image and a throwaway git repo. **This exercised the
   seam with real Docker on an isolated tiny-image target — NOT the full ~40 GB
-  MAIA application image, and NOT a live deployment stack.** The four requested
-  checks:
+  MAIA application image, and NOT a live deployment stack.** The checks include a
+  real-Docker **mismatch** case: asserting a different SHA against the live
+  container is rejected (fail-closed). The four core checks:
     1. **Deploy a named SHA** — the repo was checked out to commit **B**; commit
        **A** was deployed by name → `GIT_COMMIT` stamped to A, snapshot materialized.
     2. **Snapshot contains exactly that commit** — the snapshot file set equalled
