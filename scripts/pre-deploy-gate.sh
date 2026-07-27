@@ -26,13 +26,17 @@
 #             BEFORE the build is the only loud version of this failure.
 #
 # ── Usage ──────────────────────────────────────────────────────────────────────
-#   scripts/pre-deploy-gate.sh provenance     # validate + echo resolved SHA (stdout)
-#   scripts/pre-deploy-gate.sh colab          # run boundary verifier, block on fail
-#   scripts/pre-deploy-gate.sh disk           # check free disk on /, block on fail
-#   scripts/pre-deploy-gate.sh all            # all gates, no build
-#   scripts/pre-deploy-gate.sh deploy-maia    # all gates, then quick maia-only build
+#   scripts/pre-deploy-gate.sh provenance      # validate + echo resolved SHA (stdout)
+#   scripts/pre-deploy-gate.sh colab           # run boundary verifier, block on fail
+#   scripts/pre-deploy-gate.sh disk            # check free disk on /, block on fail
+#   scripts/pre-deploy-gate.sh all             # all gates, no build
+#   scripts/pre-deploy-gate.sh deploy-maia <SHA>  # materialize NAMED commit, gates, build+swap+verify
+#       (no SHA + DEPLOY_ALLOW_HEAD=1 → build current checkout tip as an explicit ack)
 #
 # ── Escape hatches (explicit, loud, never silent) ─────────────────────────────
+#   DEPLOY_ALLOW_HEAD=1   — deploy-maia with no SHA arg builds the current checkout
+#                           tip instead of refusing (still snapshotted + announced;
+#                           an explicit ack of the shared-checkout risk).
 #   FIRST_DEPLOY=1        — allow Co-Lab gate to skip when no container exists yet
 #   COLAB_VERIFIER_CMD    — override the verifier command (used by the gate's own
 #                           self-test; also lets you run against a local DB)
@@ -53,6 +57,11 @@ source "$SCRIPT_DIR/deploy-lock.sh"
 # maia-sovereign:current/:previous/:<sha> truthful too (see scripts/deploy-tag.sh;
 # the 2026-07-10 out-of-lane deploy left :current pointing at the wrong image).
 source "$SCRIPT_DIR/deploy-tag.sh"
+
+# Immutable-SHA build context — the deploy-maia build materializes a named commit
+# into an isolated context instead of trusting the shared checkout (2026-07-27
+# incident). See scripts/deploy-context.sh + docs/ops/IMMUTABLE_SHA_DEPLOY.md.
+source "$SCRIPT_DIR/deploy-context.sh"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
@@ -201,25 +210,38 @@ gate_all() {
     echo "$sha"
 }
 
-# deploy-maia — the mechanized replacement for the quick maia-only command.
-# Runs both gates, builds with a validated, EXPORTED GIT_COMMIT (so the operator
-# can no longer forget the prefix), refreshes the rollback tags, then swaps the
-# container with --force-recreate --no-deps (per
-# feedback_deploy_container_provenance_gate). Build and swap are separate steps
-# (not one `up -d --build`) so :current/:previous move only after a successful
-# build and BEFORE the new container starts — same ordering as
-# deploy-production.sh.
+# deploy-maia <SHA> — the mechanized replacement for the quick maia-only command.
+# Takes an EXPLICITLY NAMED commit, materializes it into an isolated build context
+# (so the build is a commit, not whatever branch is checked out — 2026-07-27
+# shared-checkout incident), runs the disk + Co-Lab gates, builds, refreshes the
+# rollback tags, swaps the container with --force-recreate --no-deps, then asserts
+# the running container's baked GIT_COMMIT equals the SHA we authorized. Build and
+# swap are separate steps (not one `up -d --build`) so :current/:previous move
+# only after a successful build and BEFORE the new container starts — same
+# ordering as deploy-production.sh.
+#
+# No SHA + DEPLOY_ALLOW_HEAD unset → refused. DEPLOY_ALLOW_HEAD=1 builds the
+# current checkout tip (still snapshotted + announced) as a conscious ack.
 cmd_deploy_maia() {
-    # Lock BEFORE the gates: the whole deploy attempt (verify + build + tag +
-    # swap) is one serialized lane occupancy. The fd-9 flock is inherited by
-    # every child, so the lock is held until docker compose itself finishes.
+    local ref="${1:-}"
+
+    # Lock BEFORE anything else: the whole deploy attempt (materialize + verify +
+    # build + tag + swap) is one serialized lane occupancy. The fd-9 flock is
+    # inherited by every child, so the lock is held until docker compose finishes.
+    # (acquire_deploy_lock also exports DEPLOY_LANE_TOKEN — the compose build arg
+    # the Dockerfile's deploy-lane tripwire requires.)
     acquire_deploy_lock "pre-deploy-gate.sh deploy-maia"
-    local sha
-    sha="$(gate_all)"
-    export GIT_COMMIT="$sha"
-    # DEPLOY_LANE_TOKEN was exported by acquire_deploy_lock above — the compose
-    # build arg the Dockerfile's deploy-lane tripwire requires.
-    log_info "Building maia at $GIT_COMMIT ..."
+
+    # Name a commit and snapshot it. Sets MAIA_BUILD_CONTEXT + GIT_COMMIT, or
+    # refuses when no SHA is named. This SUPERSEDES the old gate_provenance step:
+    # a resolved real commit can never stamp GIT_COMMIT=unknown.
+    deploy_ctx_assert_and_materialize "$ref" || exit 1
+
+    # Remaining pre-build gates (provenance is now covered by materialize above).
+    gate_disk
+    gate_colab
+
+    log_info "Building maia at $GIT_COMMIT (context: $MAIA_BUILD_CONTEXT) ..."
     docker compose -p maia-sovereign \
         -f "$PROJECT_DIR/docker-compose.production.yml" \
         --env-file "$PROJECT_DIR/.env.production" \
@@ -230,6 +252,9 @@ cmd_deploy_maia() {
         -f "$PROJECT_DIR/docker-compose.production.yml" \
         --env-file "$PROJECT_DIR/.env.production" \
         up -d --force-recreate --no-deps maia
+
+    # Post-swap: the live image must be the commit we authorized, not a stale one.
+    deploy_ctx_verify_running "$GIT_COMMIT" "$CONTAINER"
 }
 
 case "${1:-help}" in
@@ -237,17 +262,19 @@ case "${1:-help}" in
     colab)      gate_colab ;;
     disk)       gate_disk ;;
     all)        gate_all >/dev/null ;;   # SHA already logged to stderr; suppress stdout echo
-    deploy-maia) cmd_deploy_maia ;;
+    deploy-maia) cmd_deploy_maia "${2:-}" ;;
     *)
         echo "Pre-Deploy Gate — Construction Gate as structure, not discipline"
         echo ""
-        echo "Usage: $0 <provenance|colab|disk|all|deploy-maia>"
+        echo "Usage: $0 <provenance|colab|disk|all> | deploy-maia <SHA>"
         echo ""
-        echo "  provenance   Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
-        echo "  colab        Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"
-        echo "  disk         Block unless / has >= MIN_FREE_DISK_GB (default 60) GB free"
-        echo "  all          Run all gates (no build)"
-        echo "  deploy-maia  Run all gates, then quick maia-only build with validated GIT_COMMIT"
+        echo "  provenance        Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
+        echo "  colab             Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"
+        echo "  disk              Block unless / has >= MIN_FREE_DISK_GB (default 60) GB free"
+        echo "  all               Run all gates (no build)"
+        echo "  deploy-maia <SHA> Materialize the NAMED commit into an isolated build context,"
+        echo "                    run gates, quick maia-only build+swap, verify running provenance."
+        echo "                    No SHA + DEPLOY_ALLOW_HEAD=1 builds the current checkout tip (ack)."
         exit 0
         ;;
 esac
