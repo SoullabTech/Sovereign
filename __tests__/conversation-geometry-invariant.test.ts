@@ -92,9 +92,37 @@ describe('invariant 2 — the conversation area is defined by clearances', () =>
   });
 });
 
-describe('scope — this fix must not have grown', () => {
-  it('adds no visualViewport infrastructure', () => {
-    expect(shell).not.toMatch(/visualViewport/);
+describe('scope — mechanism growth must be deliberate', () => {
+  // SUPERSESSION NOTE. This block originally pinned
+  // `expect(shell).not.toMatch(/visualViewport/)` — correct in the #709 era,
+  // when #703 had refuted a visualViewport-based mechanism for the clearance
+  // bug and the ruled scope of THAT fix was "adds no vv infrastructure". The
+  // refutation was mechanism-specific, not surface-eternal: the stale-scroll
+  // resettle arc (#731/#739/#741 — b7a0036b5, c7eca8f3f, 10fe69a17) later
+  // added a separately-ruled visualViewport.resize listener that re-anchors
+  // the transcript after keyboard transitions, plus a ?debugScroll=1
+  // diagnostic read. What #703 actually established — and what stays pinned
+  // below — is that visualViewport never DERIVES this surface's geometry:
+  // layout comes from fixed clearances (invariant 2); vv only says WHEN to
+  // re-run scrollIntoView.
+  it('visualViewport has exactly the two known access sites', () => {
+    // 1. the pushScrollDebug diagnostic read; 2. the resize-resettle effect.
+    // A third site is new vv infrastructure — decide deliberately whether it
+    // respects the geometry boundary, then update this count.
+    expect(shell.match(/window\.visualViewport/g)).toHaveLength(2);
+  });
+
+  it('the resettle effect listens to resize only, with symmetric cleanup', () => {
+    expect(shell).toMatch(/vv\.addEventListener\('resize', handleViewportResize\)/);
+    expect(shell).toMatch(/vv\.removeEventListener\('resize', handleViewportResize\)/);
+    expect(shell.match(/vv\.addEventListener/g)).toHaveLength(1);
+  });
+
+  it('no vv-derived value reaches the conversation area style block', () => {
+    const anchor = shell.indexOf('fixed top-44');
+    const start = shell.indexOf('style={{', anchor);
+    const styleBlock = shell.slice(start, shell.indexOf('}}>', start));
+    expect(styleBlock).not.toMatch(/visualViewport|\bvv\b/);
   });
 
   it('adds no dvh/svh units to the conversation surface', () => {
