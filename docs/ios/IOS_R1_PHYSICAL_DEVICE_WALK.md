@@ -13,10 +13,17 @@
 | 2 — Authentication (sign in, correct account, kill + relaunch restores state) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
 | 3 — Arrival threshold (type without trapping, non-writing exit, single composer, return state) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
 | 4 — Conversation (send turn, streamed response, scroll, keyboard cycles, background/resume, no lost/duplicated turn) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
-| 5 — Voice (deliberate invoke, permission on action not launch, record + submit, playback, silent preference respected) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
+| 5 — Voice (deliberate invoke, permission on action not launch, record + submit, playback, silent preference respected) | iPhone 16 Pro Max | 26.6 | 2497 | **FAIL (partial)** | Screenshot 13:44–13:45; Kelly verbal report | First round worked: "Hi Maya can you hear me" transcribed, MAIA responded with the welcome. After the first round MAIA could no longer hear him. VOICE TRACE overlay shows `listeningState` churning stopped→started at ~1 Hz (13:44:50–13:44:54, continuous restart loop) with "MIC IS LIVE" flashes between — recognition session appears to be torn down and restarted every second, so speech never accumulates after round one. |
 | 6 — Session & safety (logout blocks protected routes, second account isolation if available, expired session explicit) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
 
 Result vocabulary: PASS · FAIL (with symptom) · PARTIAL (with boundary) · NOT RUN (with reason).
+
+## Additional walk observations (outside the six scenarios)
+
+- **"The MAIA screen is off" (Kelly, verbatim — meaning to be confirmed).** The screenshot shows the field rendering **purple/violet** behind the Holoflower; brand canon is navy, never purple. Whether Kelly meant the visual tone, or the screen/orb state, is not yet settled — recorded verbatim pending his clarification.
+- **VOICE TRACE debug overlay is visible in the walk build** — a developer diagnostic panel (timestamped mic-state log) rendering in the member-facing conversation view, plus a debug (bug-icon) button bottom-right. Whatever gates this overlay did not suppress it in a Release-configuration device build.
+- **Welcome text renders behind/through the debug overlay** with heavy overlap — may be purely a consequence of the overlay's presence; assess after the overlay question is resolved.
+- Positive signals visible in the same screenshot: correct member recognition ("Kelly" in header), transcription of the first utterance, "Keep this moment" mark gesture present, Text fallback affordance present, no browser chrome.
 
 ## Known limitations entering the walk
 
