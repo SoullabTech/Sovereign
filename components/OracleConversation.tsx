@@ -448,6 +448,22 @@ interface OracleConversationProps {
    */
   onMemberExpression?: () => void;
   /**
+   * #736: the non-writing exit from Arrival. Fired on "I'm ready" — the
+   * member crossing the threshold WITHOUT authoring speech (MaiaArrivalField's
+   * own onActivate contract). Upstream this is deliberately NOT markArrived:
+   * activation is not expression (ruling, 2026-07-22), so the parent clears
+   * only session-temporary arrival state (crossArrivalWithoutSpeech), which
+   * flips shouldRenderArrival false without writing the durable first-crossing
+   * marker — a member who crosses without speaking still meets the ceremony
+   * next visit.
+   *
+   * Without this, "I'm ready" only set local hasActivated — which the render
+   * gate ignores while shouldRenderArrival is true — so the affordance fired,
+   * set its state, and the z-[90] layer stayed mounted. The deliberate-return
+   * guard (`shouldRenderArrival ||`) stays intact.
+   */
+  onArrivalCrossed?: () => void;
+  /**
    * Whether the Arrival composition is ACTUALLY rendering for this member right
    * now — a first-time member who has never crossed, or a member who invoked a
    * deliberate return from The House. Computed once in app/maia/page.tsx and
@@ -617,6 +633,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onSessionActiveChange,
   onMessageAdded,
   onMemberExpression,
+  onArrivalCrossed,
   shouldRenderArrival = false,
   onSessionEnd,
   initialAction,
@@ -7420,7 +7437,16 @@ I'm not sure what I'm feeling yet.`;
                 subtext={welcomeGreeting.subtext}
                 userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
                 onSend={(text) => handleTextMessage(text)}
-                onActivate={() => setHasActivated(true)}
+                onActivate={() => {
+                  // #736: hasActivated alone cannot exit — the gate above is a
+                  // disjunction and ignores it while shouldRenderArrival is
+                  // true. onArrivalCrossed clears the parent's session-scoped
+                  // arrival state so the non-writing crossing actually
+                  // dismisses Arrival (without writing the durable marker —
+                  // activation is not expression).
+                  setHasActivated(true);
+                  onArrivalCrossed?.();
+                }}
                 onOpenHouse={() => window.dispatchEvent(new CustomEvent('openMaiaHouse'))}
                 onKeep={() => window.dispatchEvent(new CustomEvent('labAction', { detail: { action: 'capture-spirit' } }))}
               />
@@ -9169,9 +9195,23 @@ I'm not sure what I'm feeling yet.`;
                 </button>
               </div>
 
-              {/* Compact text input area - mobile-first, fixed at bottom */}
+              {/* Compact text input area - mobile-first, fixed at bottom
+
+                  #735 — single composer ownership. While Arrival owns the
+                  viewport (z-[90], its own composer), this underlying row is
+                  mounted but unreachable: elementFromPoint at its controls
+                  resolves to Arrival, so it reads as a false affordance
+                  through Arrival's translucent field. `invisible`
+                  (visibility:hidden) removes it from painting, hit-testing,
+                  focus order and the accessibility tree WITHOUT unmounting —
+                  the draft lives in parent state (draftMessage) but unmount/
+                  remount would still churn focus + effects. Keyed on
+                  shouldRenderArrival ONLY, never the legacy-greeting branch:
+                  during the z-40 welcome overlay this composer is exactly how
+                  the member starts typing. Do NOT fix by raising z-index —
+                  Arrival owns the threshold; two live composers is the bug. */}
               {showChatInterface && (
-              <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
+              <div className={`fixed left-14 right-0 sm:inset-x-0 z-below-nav ${shouldRenderArrival ? 'invisible' : ''}`} /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
                    lockup, close enough that the eye grouped the signature with the
                    input controls. The extra ~24px lets the composer close as one
                    complete object and leaves SOULLAB reading as the page's quiet
@@ -9396,7 +9436,12 @@ I'm not sure what I'm feeling yet.`;
           availability, so there is always one route back to text. */}
       {!showChatInterface && (
         <div
-          className="fixed left-0 right-0 z-below-nav flex justify-center"
+          /* #735: hidden (not unmounted) while Arrival owns the viewport.
+             This does not strand anyone — the escape hatch exists for "the
+             composer subtree didn't render", and during Arrival the member
+             HAS a composer: Arrival's own. Beneath the z-[90] field this
+             button is unreachable anyway; showing it is a false affordance. */
+          className={`fixed left-0 right-0 z-below-nav flex justify-center ${shouldRenderArrival ? 'invisible' : ''}`}
           style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
@@ -9411,8 +9456,18 @@ I'm not sure what I'm feeling yet.`;
         </div>
       )}
 
-      {/* Unified Voice Interaction Bar — state display, transcript, keyboard */}
+      {/* Unified Voice Interaction Bar — state display, transcript, keyboard
+
+          #735: wrapped, not conditionally unmounted, while Arrival owns the
+          viewport. VoiceInteractionBar keeps its slide-out text draft in LOCAL
+          state (textValue) — unmounting would destroy an in-progress draft if
+          the member invokes Return to Arrival mid-thought. visibility:hidden
+          inherits into the bar's fixed-position root, removing it from
+          painting, hit-testing, focus and the accessibility tree while React
+          state survives. The wrapper itself has zero layout footprint (the
+          child is position:fixed). */}
       {isMounted && voiceEnabled && !showChatInterface && (
+        <div className={shouldRenderArrival ? 'invisible' : undefined}>
         <VoiceInteractionBar
           voiceState={voiceInteractionState}
           interimTranscript={interimTranscript}
@@ -9424,6 +9479,7 @@ I'm not sure what I'm feeling yet.`;
           onInterrupt={handleVoiceInterrupt}
           onTextSubmit={(text) => handleTextMessage(text)}
         />
+        </div>
       )}
 
       {/* Voice Selection Menu - Popup from bottom */}
