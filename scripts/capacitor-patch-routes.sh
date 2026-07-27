@@ -464,7 +464,7 @@ restore_incompatible_pages() {
 
 # Patch server components with generateStaticParams (those not excluded)
 patch_remaining_dynamic_pages() {
-    log_info "Patching remaining dynamic pages with generateStaticParams..."
+    log_info "Excluding remaining dynamic pages without generateStaticParams..."
 
     > "$PATCHED_PAGES_FILE"
     local patched_count=0
@@ -485,22 +485,17 @@ patch_remaining_dynamic_pages() {
                     continue
                 fi
 
-                # Server Component - add generateStaticParams
-                log_info "  Adding generateStaticParams: $rel_path"
+                # Server Component without generateStaticParams.
+                # The old strategy injected `generateStaticParams() { return []; }`,
+                # but Next 15.5 treats an empty prerenderedRoutes array as MISSING
+                # (build/index.js: `prerenderedRoutes.length > 0`) and fails the
+                # export. An empty array never emitted any route into out/ anyway,
+                # so moving the page aside produces an identical export artifact.
+                log_info "  Excluding (emits no paths under export): $rel_path"
                 echo "$file" >> "$PATCHED_PAGES_FILE"
 
-                # Byte-exact backup of the original — revert restores it verbatim.
-                # (The old grep-based revert left one stray blank line per cycle,
-                # dirtying the tree and failing the next build's preflight.)
                 mkdir -p "$(dirname "$PATCHED_PAGES_BACKUP/$rel_path")"
-                cp "$file" "$PATCHED_PAGES_BACKUP/$rel_path"
-
-                local temp_file=$(mktemp)
-                echo "// Added by capacitor-patch-routes.sh for static export" > "$temp_file"
-                echo "export function generateStaticParams() { return []; }" >> "$temp_file"
-                echo "" >> "$temp_file"
-                cat "$file" >> "$temp_file"
-                mv "$temp_file" "$file"
+                mv "$file" "$PATCHED_PAGES_BACKUP/$rel_path"
                 ;;
         esac
     done
@@ -522,20 +517,21 @@ revert_patched_pages() {
     while IFS= read -r file; do
         [ -z "$file" ] && continue
 
-        if [ -f "$file" ]; then
-            local rel_path="${file#$PROJECT_ROOT/}"
-            log_info "  Reverting: $rel_path"
-
-            if [ -f "$PATCHED_PAGES_BACKUP/$rel_path" ]; then
-                # Byte-exact restore from backup
-                mv "$PATCHED_PAGES_BACKUP/$rel_path" "$file"
-            else
-                # Fallback for a patched state created before backups existed
-                local temp_file=$(mktemp)
-                grep -v "^// Added by capacitor-patch-routes.sh for static export$" "$file" | \
-                grep -v "^export function generateStaticParams() { return \[\]; }$" > "$temp_file" || true
-                mv "$temp_file" "$file"
-            fi
+        local rel_path="${file#$PROJECT_ROOT/}"
+        if [ -f "$PATCHED_PAGES_BACKUP/$rel_path" ]; then
+            # Byte-exact restore of the excluded page
+            log_info "  Restoring: $rel_path"
+            mkdir -p "$(dirname "$file")"
+            mv "$PATCHED_PAGES_BACKUP/$rel_path" "$file"
+            count=$((count + 1))
+        elif [ -f "$file" ]; then
+            # Fallback for a patched state created before backups existed
+            # (legacy injected-generateStaticParams form)
+            log_info "  Reverting (legacy inject): $rel_path"
+            local temp_file=$(mktemp)
+            grep -v "^// Added by capacitor-patch-routes.sh for static export$" "$file" | \
+            grep -v "^export function generateStaticParams() { return \[\]; }$" > "$temp_file" || true
+            mv "$temp_file" "$file"
             count=$((count + 1))
         fi
     done < "$PATCHED_PAGES_FILE"
@@ -711,7 +707,7 @@ case "${1:-}" in
         echo "           - Move web-only routes out (mirrors lib/mobile/mobileAllowlist.ts)"
         echo "           - Move code-generated OG image routes out (incompatible with static export)"
         echo "           - Exclude remaining incompatible dynamic pages"
-        echo "           - Add generateStaticParams to remaining dynamic pages"
+        echo "           - Exclude remaining dynamic pages without generateStaticParams"
         echo "  revert  - Restore original state after build"
         exit 1
         ;;
