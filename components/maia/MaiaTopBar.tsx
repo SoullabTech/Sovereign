@@ -47,7 +47,7 @@ export function MaiaTopBar({
   return (
     <header
       className={`
-        fixed top-0 left-0 right-0 h-[calc(54px+env(safe-area-inset-top,0px))] bg-[#0f0d0b]/90 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-[70]
+        fixed top-0 left-0 right-0 h-12 bg-[#0f0d0b]/90 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-[70]
         flex items-center justify-between px-4
         transition-opacity duration-500 ease-out
         ${opacityClass}

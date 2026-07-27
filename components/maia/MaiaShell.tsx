@@ -320,13 +320,9 @@ export function MaiaShell({
           this comment.
 
           Hidden while Arrival is on screen — Arrival carries its own doorway at
-          these coordinates. One House, one renderer, one doorway.
-
-          NATIVE/PWA: the safe-area term keeps the 54px content row below the
-          status bar (env is 0 in desktop browsers, so web geometry is
-          unchanged). It must remain IDENTICAL in this box and Arrival's. */}
+          these coordinates. One House, one renderer, one doorway. */}
       {!arrivalMode && (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[calc(54px+env(safe-area-inset-top,0px))] items-center pt-[env(safe-area-inset-top,0px)] px-4 md:px-6">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[54px] items-center px-4 md:px-6">
           <button
             onClick={() => setHouseOpen(true)}
             className={`
