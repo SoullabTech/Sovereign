@@ -7,9 +7,15 @@
  * (lib/mobile/mobileAllowlist.ts), and the iOS bundle was stripped by a third
  * (scripts/capacitor-patch-routes.sh). The three drifted independently, so a
  * tap could be advertised, allowed in-app, and yet absent from the bundle — a
- * silent white screen. This file is the one source the House renders from; a
- * drift guard (see __tests__/houseNavDrift.test.ts) validates the other two
- * against it.
+ * silent white screen. This file is the one authoritative navigation POLICY —
+ * the House renders from it — with test-enforced AGREEMENT against the existing
+ * runtime allowlist and Capacitor build config (see __tests__/houseNavDrift.test.ts).
+ *
+ * Not yet fully unified: the native bundle config still lives in
+ * scripts/capacitor-patch-routes.sh. The drift guard makes that duplication
+ * safe (it fails on drift); it does not eliminate it. PR 2 may decide whether
+ * the Capacitor config should be GENERATED from this model rather than merely
+ * checked against it.
  *
  * SCOPE (PR 1 — navigation contract): this defines the model + dispatch and
  * classifies every destination. It does NOT change the native bundle. Rooms
@@ -180,9 +186,14 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     group: 'work',
   },
   // Existing member sheets — opened in place on /maia, never a new route/page.
-  // Audience preserved as their CURRENT exposure (member-facing on the /maia
-  // ribbon). If these are governance surfaces that should be founder-only, that
-  // gate belongs on the sheet/API, not introduced here — flagged for the walk.
+  // FOUNDER/STEWARD-ONLY (founder ruling 2026-07-27): these are governance
+  // surfaces; the House does not render them for ordinary members. NOTE: the
+  // House audience gate alone does NOT secure them — they remain reachable via
+  // the /maia ribbon and their backing APIs. That pre-existing exposure is a
+  // separate, tracked access-control defect (sheet + API enforcement), out of
+  // scope for this navigation PR because the House wiring here only REDUCES
+  // exposure. Do not describe these as genuinely founder-only until that
+  // enforcement audit lands.
   {
     id: 'decisions',
     label: 'Decisions',
@@ -190,7 +201,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     tooltip: 'Weigh a decision with the council',
     kind: 'sheet',
     sheet: 'decisions',
-    audience: 'all',
+    audience: 'founder',
     returnBehavior: 'sheet-close',
     group: 'work',
   },
@@ -201,7 +212,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     tooltip: 'Name and walk a change',
     kind: 'sheet',
     sheet: 'changes',
-    audience: 'all',
+    audience: 'founder',
     returnBehavior: 'sheet-close',
     group: 'work',
   },

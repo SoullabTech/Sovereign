@@ -38,19 +38,23 @@ function harness(isNative: boolean) {
 }
 
 describe('getHouseDestinations — audience filtering', () => {
-  it('hides founder-only destinations from ordinary members', () => {
+  it('hides founder/steward-only destinations from ordinary members', () => {
     const ids = getHouseDestinations(false).map((d) => d.id);
     expect(ids).not.toContain('circles');
     expect(ids).not.toContain('vision-studio');
+    // Decisions/Changes are governance surfaces — founder/steward only.
+    expect(ids).not.toContain('decisions');
+    expect(ids).not.toContain('changes');
     expect(ids).toContain('ideas');
     expect(ids).toContain('studio');
-    expect(ids).toContain('decisions');
   });
 
-  it('shows founder-only destinations to founders', () => {
+  it('shows founder/steward-only destinations to founders', () => {
     const ids = getHouseDestinations(true).map((d) => d.id);
     expect(ids).toContain('circles');
     expect(ids).toContain('vision-studio');
+    expect(ids).toContain('decisions');
+    expect(ids).toContain('changes');
   });
 });
 
@@ -133,11 +137,13 @@ describe('visibleInGroup — no broken buttons on native', () => {
     expect(visibleInGroup(member, 'work', true).map((d) => d.id)).not.toContain('ideas');
   });
 
-  it('sheets remain visible on native', () => {
-    const member = getHouseDestinations(false);
-    const nativeWork = visibleInGroup(member, 'work', true).map((d) => d.id);
-    expect(nativeWork).toContain('decisions');
-    expect(nativeWork).toContain('changes');
+  it('founder sheets remain visible on native; ordinary members never see them', () => {
+    const founderWork = visibleInGroup(getHouseDestinations(true), 'work', true).map((d) => d.id);
+    expect(founderWork).toContain('decisions');
+    expect(founderWork).toContain('changes');
+    const memberWork = visibleInGroup(getHouseDestinations(false), 'work', true).map((d) => d.id);
+    expect(memberWork).not.toContain('decisions');
+    expect(memberWork).not.toContain('changes');
   });
 });
 
