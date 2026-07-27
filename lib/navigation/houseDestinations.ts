@@ -367,9 +367,20 @@ export interface HouseDispatchContext {
   onClose?: () => void;
 }
 
-/** The honest web bridge: a route that opens on the web instead of in-app. */
+/**
+ * The native web bridge: an allowlisted, bundled page (`/open-web`) that opens a
+ * route on the web instead of in-app, forwarding the destination as `?to=`.
+ *
+ * WEB_BRIDGE_ROUTE MUST be in the runtime mobile allowlist — otherwise
+ * MobileRouteGuard shadows it with its own generic web-only screen and the
+ * `?to=` target is lost, so the destination is never reached. The drift guard
+ * (see __tests__/houseNavDrift.test.ts) enforces that reachability so the two
+ * cannot drift apart.
+ */
+export const WEB_BRIDGE_ROUTE = '/open-web';
+
 export function webBridgePath(route: string): string {
-  return `/open-web?to=${encodeURIComponent(route)}`;
+  return `${WEB_BRIDGE_ROUTE}?to=${encodeURIComponent(route)}`;
 }
 
 /**

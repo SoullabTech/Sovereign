@@ -13,7 +13,7 @@
  */
 import { readFileSync } from 'fs';
 import path from 'path';
-import { HOUSE_DESTINATIONS } from '../houseDestinations';
+import { HOUSE_DESTINATIONS, WEB_BRIDGE_ROUTE } from '../houseDestinations';
 import { isMobileRoute } from '@/lib/mobile/mobileAllowlist';
 
 // --- parse the Capacitor MOBILE_MODE keep-list from the shell script --------
@@ -77,6 +77,19 @@ describe('drift guard — every native-ready House route is reachable natively',
       expect(inNativeBundle(route)).toBe(true);
     },
   );
+});
+
+describe('drift guard — the web bridge itself must be reachable natively', () => {
+  // If /open-web is not allowlisted, MobileRouteGuard shadows it with its
+  // generic web-only screen and the ?to= target is lost — every web-policy
+  // destination fails to reach its page on native.
+  it('WEB_BRIDGE_ROUTE is in the runtime mobile allowlist', () => {
+    expect(isMobileRoute(WEB_BRIDGE_ROUTE)).toBe(true);
+  });
+
+  it('WEB_BRIDGE_ROUTE is present in the Capacitor native bundle', () => {
+    expect(inNativeBundle(WEB_BRIDGE_ROUTE)).toBe(true);
+  });
 });
 
 describe('drift guard — model integrity', () => {

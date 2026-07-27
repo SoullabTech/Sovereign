@@ -12,6 +12,7 @@ import {
   dispatchHouseDestination,
   visibleInGroup,
   webBridgePath,
+  WEB_BRIDGE_ROUTE,
   type HouseDestination,
   type HouseSheetId,
 } from '../houseDestinations';
@@ -148,8 +149,12 @@ describe('visibleInGroup — no broken buttons on native', () => {
 });
 
 describe('webBridgePath', () => {
-  it('encodes the destination route', () => {
+  it('builds off WEB_BRIDGE_ROUTE and forwards the destination as an encoded ?to=', () => {
     expect(webBridgePath('/press/manuscript')).toBe('/open-web?to=%2Fpress%2Fmanuscript');
+    expect(webBridgePath('/astrology').startsWith(`${WEB_BRIDGE_ROUTE}?to=`)).toBe(true);
+    // the target survives round-trip decoding
+    const to = new URLSearchParams(webBridgePath('/wisdom-keepers/wisdom').split('?')[1]).get('to');
+    expect(to).toBe('/wisdom-keepers/wisdom');
   });
 });
 

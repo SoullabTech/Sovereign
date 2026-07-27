@@ -41,6 +41,14 @@ export const ONBOARDING_ROUTES = [
   '/magic-link-success',
   '/oauth-success',
   '/reset-password',
+  // Web bridge gate (not onboarding, but cross-shell + no-auth). The House sends
+  // web-only destinations to `/open-web?to=<route>`; this page opens the target
+  // on the web and forwards `?to=`. It is already bundled (capacitor-patch-routes
+  // MOBILE_TOP_LEVEL), but MUST also be allowlisted here — otherwise
+  // MobileRouteGuard shadows it with its generic web-only screen and the target
+  // is lost. Kept in sync with lib/navigation/houseDestinations WEB_BRIDGE_ROUTE
+  // by the House drift guard.
+  '/open-web',
 ] as const;
 
 // ─── Phone Shell (iPhone) — 5-tab companion ───────────────────────────────────
