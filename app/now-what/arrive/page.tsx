@@ -176,6 +176,17 @@ function ArriveInner() {
           </button>
         </form>
 
+        {mode === 'signin' && (
+          <p className="mt-4 text-center text-xs font-light">
+            <a
+              href="/reset-password"
+              className="text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              Forgot your password? You can set a new one.
+            </a>
+          </p>
+        )}
+
         <p className="mt-6 text-center text-slate-600 text-xs font-light">
           Your key is yours. Signing in is how the room knows whose field to hold.
         </p>
