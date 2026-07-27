@@ -60,6 +60,10 @@ export const PHONE_ROUTES = [
   '/capture',             // Quick capture action
   '/how-to-use',          // "Where should I use MAIA?" orientation page
   '/voice-controller-test', // Internal Phase 1 smoke test for new VoiceController (Kelly only)
+  // Beta expansion (founder ruling 2026-07-27) — exact roots; sub-paths are
+  // covered by the corresponding PHONE_PREFIXES entries.
+  '/studio',
+  '/book-studio',
 ] as const;
 
 export const PHONE_PREFIXES = [
@@ -67,6 +71,17 @@ export const PHONE_PREFIXES = [
   '/journal/',
   '/history/',
   '/conversation/',       // /conversation/[id] — deep link into a past session
+  // Beta expansion (founder ruling 2026-07-27): all House fields available in
+  // the native app for beta testing. Kept in lockstep with the build-time
+  // lists in scripts/capacitor-patch-routes.sh. /team and /commons remain
+  // web-only (their pages read cookies at prerender; cannot static-export).
+  '/studio/',
+  '/book-studio',
+  '/wisdom-keepers/',
+  '/labtools/journal',
+  '/labtools/settings',
+  '/labtools/reflections',
+  '/open-in-web',
 ] as const;
 
 // ─── Tablet Shell (iPad) — reflection + review additions ─────────────────────
@@ -136,13 +151,13 @@ export const STUDIO_ROUTES = [
 // ─── Web-Only (never ship in iOS Capacitor build) ─────────────────────────────
 // These routes stay on the web. Beta testers reach them via the web hatch.
 export const WEB_ONLY_PREFIXES = [
-  '/studio/',             // All Studio routes are web-only in the Capacitor build
+  // Beta expansion (founder ruling 2026-07-27): /studio/, /book-studio and
+  // /maia/community moved OUT of web-only — they ship in the native bundle.
   '/admin',
-  '/book-studio',         // Desktop authoring environment (manuscript/illustration tools)
   '/team',                // Desktop practitioner collaboration (channels, DMs, admin)
+  '/commons',             // apiFetch reads cookies at prerender — cannot static-export
   '/maia/labtools',
   '/maia/prototype',      // DEV-ONLY: Premium Arrival prototype (Package 2)
-  '/maia/community',
   '/maia/realtime-monitor',
   '/maia/soul-consciousness',
   '/maia/training',

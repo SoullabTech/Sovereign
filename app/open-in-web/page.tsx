@@ -18,6 +18,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { WEB_STUDIO_BASE_URL } from '@/lib/mobile/mobileAllowlist';
+import { capacitorHref } from '@/lib/navigation/capacitorNavigate';
 
 function OpenInWebContent() {
   const params = useSearchParams();
@@ -64,7 +65,15 @@ function OpenInWebContent() {
         </a>
 
         <button
-          onClick={() => router.push('/maia')}
+          onClick={() => {
+            // Native shell: router.push hangs (see lib/navigation/capacitorNavigate.ts)
+            const nativeHref = capacitorHref('/maia');
+            if (nativeHref) {
+              window.location.assign(nativeHref);
+              return;
+            }
+            router.push('/maia');
+          }}
           className="w-full py-3 px-6 rounded-xl bg-zinc-900 border border-zinc-800
                      text-zinc-400 text-sm font-medium
                      hover:bg-zinc-800 transition-colors active:scale-95"

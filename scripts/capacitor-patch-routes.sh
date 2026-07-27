@@ -46,6 +46,11 @@ MOBILE_TOP_LEVEL=(
   "intro" "welcome-back" "capture" "journal" "field" "settings"
   "oauth-success" "magic-link-success" "reset-password" "soul-gateway"
   "maia" "labtools" "account"
+  # Beta expansion (founder ruling 2026-07-27): all House fields ship in the
+  # native bundle for beta testing. /team and /commons stay web-only — their
+  # pages read cookies at prerender and cannot statically export.
+  "studio" "book-studio" "wisdom-keepers" "astrology" "birth-chart"
+  "history" "profile" "check-in" "how-to-use" "conversation" "open-in-web"
   "styles"  # CSS assets imported by globals.css — must stay in build
 )
 
@@ -53,10 +58,14 @@ MOBILE_TOP_LEVEL=(
 MOBILE_LABTOOLS_KEEP=("journal" "settings" "reflections")
 
 # account sub-dirs to KEEP
-MOBILE_ACCOUNT_KEEP=("settings")
+MOBILE_ACCOUNT_KEEP=("settings" "security")
 
 # maia sub-dirs to KEEP (empty = keep root page only, exclude all sub-dirs)
-MOBILE_MAIA_KEEP=()
+# Beta expansion: the House's member-facing places ship natively.
+MOBILE_MAIA_KEEP=(
+  "anchor" "community" "compact" "ideas" "keep-capture" "library"
+  "living-field" "moments" "orientation" "reflection" "vision-studio"
+)
 
 # ── helper: is_in_array name array[@] ────────────────────────────────────────
 is_in_array() {
@@ -551,32 +560,12 @@ revert_patched_pages() {
 #
 # Format: app-relative path from project root (no leading slash)
 MOBILE_EXCLUDED_DIRS=(
-    # Studio web-only sections
-    "app/studio/marketing"
-    "app/studio/media"
-    "app/studio/metrics"
-    "app/studio/agents"
-    "app/studio/code"
-    "app/studio/review"
-    "app/studio/vault"
-    "app/studio/tools"
-    "app/studio/field"
-    "app/studio/groups"
-    "app/studio/create"
-    "app/studio/case-studies"
-    "app/studio/decisions"
-    "app/studio/changes"
-    "app/studio/camera"
-    "app/studio/threshold"
-    "app/studio/session-room"
-    "app/studio/maia"
-    "app/studio/tasks"
-    "app/studio/teams"
-    "app/studio/services"
+    # Beta expansion (founder ruling 2026-07-27): Studio and Book Studio ship
+    # in the native bundle — their exclusions removed. Any studio page that
+    # fails static export gets re-added HERE individually with the measured
+    # reason, not wholesale.
     # Admin (web-only always)
     "app/admin"
-    # Book Studio (desktop authoring environment, web-only)
-    "app/book-studio"
     # Team (desktop practitioner collaboration; layout.tsx uses cookies())
     "app/team"
     # Commons (practitioner circles; apiFetch reads cookies during prerender)
@@ -591,9 +580,10 @@ MOBILE_EXCLUDED_DIRS=(
     "app/commons/circles"
     "app/commons/join"
     # MAIA advanced tools (web-only)
+    # Beta expansion 2026-07-27: app/maia/community un-excluded — the House's
+    # Library (/maia/community/library) ships natively.
     "app/maia/labtools"
     "app/maia/prototype"
-    "app/maia/community"
     "app/maia/realtime-monitor"
     "app/maia/soul-consciousness"
     "app/maia/training"
