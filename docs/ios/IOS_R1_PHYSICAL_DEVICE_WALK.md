@@ -9,7 +9,7 @@
 
 | Scenario | Device | iOS | Build | Result | Evidence | Notes |
 |---|---|---|---|---|---|---|
-| 1 — Installation & cold launch (icon, launch screen, no browser chrome, correct environment) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
+| 1 — Installation & cold launch (icon, launch screen, no browser chrome, correct environment) | iPhone 16 Pro Max | 26.6 | 2497 | **PARTIAL** | Kelly screenshot 14:12 + verbal | First cold launch from icon landed on the "Available in Web Studio" mobile-excluded-route fallback instead of MAIA (likely restoration of the last-visited route from the prior session). No member-visible path back to MAIA from that screen except the browser exit. Second force-quit + relaunch landed correctly in MAIA, "communicating perfectly" (Kelly). Classification: intermittent cold-launch route-restoration defect — recoverable by relaunch, but a member wouldn't know that. |
 | 2 — Authentication (sign in, correct account, kill + relaunch restores state) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
 | 3 — Arrival threshold (type without trapping, non-writing exit, single composer, return state) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
 | 4 — Conversation (send turn, streamed response, scroll, keyboard cycles, background/resume, no lost/duplicated turn) | iPhone 16 Pro Max | 26.6 | 2497 | | | |
@@ -24,6 +24,9 @@ Result vocabulary: PASS · FAIL (with symptom) · PARTIAL (with boundary) · NOT
 - **VOICE TRACE debug overlay is visible in the walk build** — a developer diagnostic panel (timestamped mic-state log) rendering in the member-facing conversation view, plus a debug (bug-icon) button bottom-right. Whatever gates this overlay did not suppress it in a Release-configuration device build.
 - **Welcome text renders behind/through the debug overlay** with heavy overlap — may be purely a consequence of the overlay's presence; assess after the overlay question is resolved.
 - Positive signals visible in the same screenshot: correct member recognition ("Kelly" in header), transcription of the first utterance, "Keep this moment" mark gesture present, Text fallback affordance present, no browser chrome.
+- **"Authentication required — Try again later" red card** (native, 14:20 screenshot) shown mid-session while signed in as Kelly (header shows member; mic starts fine). What this establishes: some request path believes an authenticated session is unauthenticated. Root cause NOT established by the screenshot. Candidate hypotheses (unverified): the SameSite-cookie vs `x-member-id` seam on a call bypassing `apiFetch()`; server-side session expiry surfaced poorly; a route-specific auth gate. HIGHEST-priority functional finding. Triggering action unknown — next observation should capture what action preceded the card.
+- **Home (house) icon renders inside the status-bar zone, top-left** — overlapping the clock, effectively hidden/untappable (Kelly requested twice: align it down into the header row with the "MAIA" title). **RESOLVED + DEVICE-VERIFIED** in two steps: safe-area term on both doorway boxes (build 2498, Kelly: "the house has dropped"), then the identical geometry formula on `MaiaTopBar` so title + member chip share the same 54px content row (build 2499, Kelly: "perfect!"). Web geometry: doorway boxes unchanged (env=0); top bar grows 48→54px aligning centerlines at 27px.
+- **Purple field is view-specific, not global**: the 14:20 native screenshot shows the correct navy field; the earlier voice-view screenshots showed purple. Narrows the brand-tone finding to the voice/orb view's background treatment.
 
 ## Known limitations entering the walk
 
