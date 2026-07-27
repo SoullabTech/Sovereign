@@ -157,7 +157,12 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
           the field reads as one edge rather than chrome floating on the bloom.
           The House lives here as a quiet icon at the upper left: still exactly
           ONE doorway, moved from the base of the composition. */}
-      <div className="absolute inset-x-0 top-0 z-10 flex h-[54px] items-center justify-between bg-[#0a0807] px-4 md:px-6">
+      {/* NATIVE/PWA: safe-area term must stay IDENTICAL to the House box in
+          MaiaShell — the two doorways swap beneath the member and must occupy
+          the same content row. env is 0 in desktop browsers (web unchanged);
+          on device it keeps the row below the status bar, with this header's
+          background still covering the notch zone. */}
+      <div className="absolute inset-x-0 top-0 z-10 flex h-[calc(54px+env(safe-area-inset-top,0px))] items-center justify-between bg-[#0a0807] pt-[env(safe-area-inset-top,0px)] px-4 md:px-6">
         {/* The doorway. Icon + label, 44px tall, matching MaiaShell's doorway
             exactly so it does not move or change shape when Arrival gives way to
             conversation. It was a bare 19x19 glyph — under half the 44px minimum,
