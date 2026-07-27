@@ -559,6 +559,14 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
     console.log('[apiFetch/safari] x-member-id present:', true);
   } else {
     console.log('[apiFetch/safari] x-member-id present:', false);
+    // R1 device diagnostic: header-less native calls surface as the
+    // "Authentication required" card with no visible cause on device.
+    // Push the moment onto the on-screen trace so one failing tap
+    // identifies the URL and whether session/member state was empty.
+    try {
+      const { pushVoiceDebug } = await import('@/lib/voice/voiceDebugBus');
+      pushVoiceDebug(`🔐 AUTH GAP: no member id for ${url.replace(/^https?:\/\/[^/]+/, '')} (session:${sessionToken ? 'y' : 'n'})`);
+    } catch { /* diagnostic only */ }
   }
 
   // Add stable visitor ID for anonymous usage tracking (Free tier limits)
@@ -568,12 +576,26 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
     headers.set('x-maia-anon-id', visitorId);
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers,
     credentials: 'include', // Still try cookies, but headers are the real auth
     mode: 'cors',
   });
+
+  // R1 device diagnostic (second half): a 401 WITH the member header attached
+  // means the server rejected an identified call — a different defect than the
+  // missing-header case traced above. One line onto the on-screen trace makes
+  // a single failing tap distinguish the two.
+  if (response.status === 401) {
+    try {
+      const { pushVoiceDebug } = await import('@/lib/voice/voiceDebugBus');
+      const shortUrl = url.replace(/^https?:\/\/[^/]+/, '');
+      pushVoiceDebug(`🔐 401 from ${shortUrl} (member:${memberId ? 'y' : 'n'} session:${sessionToken ? 'y' : 'n'})`);
+    } catch { /* diagnostic only */ }
+  }
+
+  return response;
 }
 
 /**
