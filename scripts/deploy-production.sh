@@ -38,6 +38,11 @@ source "$SCRIPT_DIR/deploy-lock.sh"
 # maia-sovereign:current/:previous/:<sha> truthful (see scripts/deploy-tag.sh).
 source "$SCRIPT_DIR/deploy-tag.sh"
 
+# Immutable-SHA build context — deploy/update build a NAMED commit materialized
+# into an isolated context, never whatever branch is checked out in the shared
+# repo (2026-07-27 incident). See scripts/deploy-context.sh + docs/ops/IMMUTABLE_SHA_DEPLOY.md.
+source "$SCRIPT_DIR/deploy-context.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -379,10 +384,18 @@ cmd_setup() {
 # DEPLOY - Build and start the stack
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_deploy() {
+    local ref="${1:-}"
     acquire_deploy_lock "deploy-production.sh deploy"
     log_info "Deploying MAIA Sovereign..."
 
     cd "$PROJECT_DIR"
+
+    # Name a commit and snapshot it into an isolated build context BEFORE any
+    # build work. Refuses when no SHA is named (unless DEPLOY_ALLOW_HEAD=1). This
+    # is the structural guarantee that the full deploy builds an explicitly named
+    # immutable commit, never whichever branch happens to be checked out in the
+    # shared repo. Sets MAIA_BUILD_CONTEXT + GIT_COMMIT.
+    deploy_ctx_assert_and_materialize "$ref" || exit 1
 
     # Verify .env.production exists
     if [ ! -f ".env.production" ]; then
@@ -416,8 +429,10 @@ cmd_deploy() {
 
     # Build and start
     log_info "Building Docker images..."
-    export GIT_COMMIT="$(git rev-parse --short HEAD)"
-    export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
+    # GIT_COMMIT was exported from the asserted SHA by materialize above — do NOT
+    # re-resolve it from HEAD here (that would re-couple us to the shared checkout).
+    # APP_VERSION is read from the SNAPSHOT so it matches the deployed commit.
+    export APP_VERSION="$(node -p "require('$MAIA_BUILD_CONTEXT/package.json').version" 2>/dev/null || echo '1.0.0')"
     export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
 
@@ -425,7 +440,8 @@ cmd_deploy() {
     # build dies at metadata write after minutes and can exit 0 through ssh).
     "$SCRIPT_DIR/pre-deploy-gate.sh" disk
 
-    # Build image first (never rebuild while down!)
+    # Build image first (never rebuild while down!) — from the immutable snapshot
+    # (compose reads MAIA_BUILD_CONTEXT for every build `context:`).
     docker compose -f "$COMPOSE_FILE" build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
@@ -439,6 +455,9 @@ cmd_deploy() {
 
     log_info "Waiting for services to be healthy..."
     sleep 10
+
+    # Post-swap: assert the running container is the commit we authorized.
+    deploy_ctx_verify_running "$GIT_COMMIT" || log_warn "Provenance verify failed — investigate before trusting prod"
 
     # Run migrations
     log_info "Running database migrations..."
@@ -484,6 +503,15 @@ cmd_update() {
     log_info "Pulling latest code..."
     git pull
 
+    # Capture the pulled tip as an explicit, immutable SHA the instant the pull
+    # completes, then build a SNAPSHOT of it. `update` legitimately means "build
+    # the commit I just pulled" — but it must name that commit and freeze it, so
+    # a concurrent checkout in the shared repo can't swap the build out from under
+    # us. Sets MAIA_BUILD_CONTEXT + GIT_COMMIT.
+    local pulled_sha
+    pulled_sha="$(git -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null || true)"
+    deploy_ctx_assert_and_materialize "$pulled_sha" || exit 1
+
     log_info "Rebuilding and redeploying..."
 
     # Dependency security audit
@@ -502,8 +530,9 @@ cmd_update() {
         log_warn "pnpm not found — skipping dependency audit"
     fi
 
-    export GIT_COMMIT="$(git rev-parse --short HEAD)"
-    export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
+    # GIT_COMMIT was exported from the pulled SHA by materialize above; APP_VERSION
+    # is read from the SNAPSHOT so it matches the deployed commit.
+    export APP_VERSION="$(node -p "require('$MAIA_BUILD_CONTEXT/package.json').version" 2>/dev/null || echo '1.0.0')"
     export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
 
@@ -511,7 +540,7 @@ cmd_update() {
     # build dies at metadata write after minutes and can exit 0 through ssh).
     "$SCRIPT_DIR/pre-deploy-gate.sh" disk
 
-    # Build image first (never rebuild while down!)
+    # Build image first (never rebuild while down!) — from the immutable snapshot.
     docker compose -f "$COMPOSE_FILE" build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
@@ -521,6 +550,10 @@ cmd_update() {
     tag_images_for_rollback "$GIT_COMMIT"
 
     docker compose -f "$COMPOSE_FILE" up -d
+
+    # Post-swap: assert the running container is the commit we authorized.
+    sleep 10
+    deploy_ctx_verify_running "$GIT_COMMIT" || log_warn "Provenance verify failed — investigate before trusting prod"
 
     log_info "Running migrations..."
     if ! docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate; then
@@ -790,7 +823,7 @@ case "${1:-help}" in
         cmd_setup
         ;;
     deploy)
-        cmd_deploy
+        cmd_deploy "$2"
         ;;
     update)
         cmd_update
@@ -832,9 +865,10 @@ case "${1:-help}" in
         echo "Usage: $0 <command>"
         echo ""
         echo "Commands:"
-        echo "  setup      - First-time setup (generate secrets)"
-        echo "  deploy     - Build and deploy the full stack"
-        echo "  update     - Pull latest code and redeploy"
+        echo "  setup       - First-time setup (generate secrets)"
+        echo "  deploy <SHA> - Build+deploy the full stack from a NAMED immutable commit"
+        echo "                 (no SHA + DEPLOY_ALLOW_HEAD=1 → build current checkout tip, ack)"
+        echo "  update      - Pull latest code, then build the pulled tip as an immutable snapshot"
         echo "  rollback   - Instant rollback to previous deployment"
         echo "  safe-mode  - Toggle safe mode (on/off/status)"
         echo "  migrate    - Run database migrations"

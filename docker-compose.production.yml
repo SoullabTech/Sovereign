@@ -15,7 +15,14 @@
 
 # Shared build config - single image for web + worker
 x-maia-build: &maia_build
-  context: .
+  # Build context is parametrized so the deploy lane can point every image build
+  # at an IMMUTABLE snapshot of a named commit (git archive <SHA>) instead of the
+  # shared working tree. Default `.` = build from the project dir (unchanged for
+  # local dev / staging / CI / M4). The deploy lane exports MAIA_BUILD_CONTEXT to
+  # a materialized snapshot so a deploy builds a commit, not whatever branch is
+  # checked out — closing the 2026-07-27 shared-checkout race.
+  # See scripts/deploy-context.sh and docs/ops/IMMUTABLE_SHA_DEPLOY.md.
+  context: ${MAIA_BUILD_CONTEXT:-.}
   dockerfile: Dockerfile
   args:
     GIT_COMMIT: ${GIT_COMMIT:-unknown}
@@ -216,7 +223,8 @@ services:
   # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-api
   maia-api:
     build:
-      context: .
+      # Immutable-SHA build context — see x-maia-build above.
+      context: ${MAIA_BUILD_CONTEXT:-.}
       dockerfile: apps/api/Dockerfile
       args:
         # Deploy-lane tripwire — see x-maia-build above.
@@ -513,7 +521,8 @@ services:
   # Usage: docker compose -f docker-compose.production.yml run --rm migrate
   migrate:
     build:
-      context: .
+      # Immutable-SHA build context — see x-maia-build above.
+      context: ${MAIA_BUILD_CONTEXT:-.}
       dockerfile: Dockerfile
       target: builder
       args:
@@ -529,9 +538,17 @@ services:
 
     command: ["sh", "/app/scripts/run-sql-migrations.sh"]
 
+    # These read-only mounts override the image's baked copies so the migrations
+    # that RUN are the migrations of the deployed commit — not the shared working
+    # tree's. Sourced from ${MAIA_BUILD_CONTEXT:-.} for the same reason the build
+    # context is: under the deploy lane this is the immutable snapshot, so the
+    # migration set cannot drift from the image between materialize and `run`.
+    # (macOS Docker Desktop note: a snapshot under $TMPDIR must be a shared path;
+    # production is Linux/minisforum where /tmp binds freely. Default `.` keeps
+    # local/staging behaviour identical.)
     volumes:
-      - ./database/migrations:/app/database/migrations:ro
-      - ./scripts/run-sql-migrations.sh:/app/scripts/run-sql-migrations.sh:ro
+      - ${MAIA_BUILD_CONTEXT:-.}/database/migrations:/app/database/migrations:ro
+      - ${MAIA_BUILD_CONTEXT:-.}/scripts/run-sql-migrations.sh:/app/scripts/run-sql-migrations.sh:ro
 
     profiles: ["migrate"]
 
@@ -635,7 +652,8 @@ services:
   # Usage: docker compose -f docker-compose.production.yml up -d rlm
   rlm:
     build:
-      context: ./services/rlm
+      # Immutable-SHA build context — see x-maia-build above.
+      context: ${MAIA_BUILD_CONTEXT:-.}/services/rlm
       dockerfile: Dockerfile
     container_name: maia-rlm
     restart: unless-stopped
@@ -713,7 +731,8 @@ services:
   # Deploy: docker compose -f docker-compose.production.yml up -d oldhead
   oldhead:
     build:
-      context: ./services/oldhead
+      # Immutable-SHA build context — see x-maia-build above.
+      context: ${MAIA_BUILD_CONTEXT:-.}/services/oldhead
       dockerfile: Dockerfile
     image: oldhead-plaster:prod
     container_name: oldhead-plaster
@@ -746,7 +765,8 @@ services:
   # Deploy: docker compose -f docker-compose.production.yml up -d demo
   demo:
     build:
-      context: ./services/oldhead
+      # Immutable-SHA build context — see x-maia-build above.
+      context: ${MAIA_BUILD_CONTEXT:-.}/services/oldhead
       dockerfile: Dockerfile
     image: demo-plaster:prod
     container_name: demo-plaster
@@ -868,7 +888,8 @@ services:
   maia-local-inference:
     profiles: ["sovereign"]
     build:
-      context: ./services/local-inference
+      # Immutable-SHA build context — see x-maia-build above.
+      context: ${MAIA_BUILD_CONTEXT:-.}/services/local-inference
       dockerfile: Dockerfile
     container_name: maia-local-inference
     restart: unless-stopped
@@ -904,7 +925,8 @@ services:
   # Only registered Soullab members can publish events.
   maia-nostr-relay:
     build:
-      context: .
+      # Immutable-SHA build context — see x-maia-build above.
+      context: ${MAIA_BUILD_CONTEXT:-.}
       dockerfile: Dockerfile.strfry
     container_name: maia-nostr-relay
     restart: unless-stopped
