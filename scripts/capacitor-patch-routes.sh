@@ -560,10 +560,15 @@ revert_patched_pages() {
 #
 # Format: app-relative path from project root (no leading slash)
 MOBILE_EXCLUDED_DIRS=(
-    # Beta expansion (founder ruling 2026-07-27): Studio and Book Studio ship
-    # in the native bundle — their exclusions removed. Any studio page that
-    # fails static export gets re-added HERE individually with the measured
-    # reason, not wholesale.
+    # Beta expansion (founder ruling 2026-07-27): Studio ships in the native
+    # bundle — its exclusions removed. Any page that fails static export gets
+    # re-added HERE individually with the measured reason, not wholesale.
+    # Book Studio: MEASURED export-blocker (build 2504 attempt) — its index is
+    # a server component calling requireFounder() (cookies, transitively) and
+    # reading manuscript drafts from the server filesystem; 6 more pages/
+    # layouts share the pattern. Cannot static-export without code changes.
+    # Members get the bundled /open-in-web interstitial instead.
+    "app/book-studio"
     # Admin (web-only always)
     "app/admin"
     # Team (desktop practitioner collaboration; layout.tsx uses cookies())

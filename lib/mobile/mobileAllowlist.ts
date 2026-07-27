@@ -63,7 +63,6 @@ export const PHONE_ROUTES = [
   // Beta expansion (founder ruling 2026-07-27) — exact roots; sub-paths are
   // covered by the corresponding PHONE_PREFIXES entries.
   '/studio',
-  '/book-studio',
 ] as const;
 
 export const PHONE_PREFIXES = [
@@ -76,7 +75,6 @@ export const PHONE_PREFIXES = [
   // lists in scripts/capacitor-patch-routes.sh. /team and /commons remain
   // web-only (their pages read cookies at prerender; cannot static-export).
   '/studio/',
-  '/book-studio',
   '/wisdom-keepers/',
   '/labtools/journal',
   '/labtools/settings',
@@ -151,10 +149,11 @@ export const STUDIO_ROUTES = [
 // ─── Web-Only (never ship in iOS Capacitor build) ─────────────────────────────
 // These routes stay on the web. Beta testers reach them via the web hatch.
 export const WEB_ONLY_PREFIXES = [
-  // Beta expansion (founder ruling 2026-07-27): /studio/, /book-studio and
-  // /maia/community moved OUT of web-only — they ship in the native bundle.
+  // Beta expansion (founder ruling 2026-07-27): /studio/ and /maia/community
+  // moved OUT of web-only — they ship in the native bundle.
   '/admin',
   '/team',                // Desktop practitioner collaboration (channels, DMs, admin)
+  '/book-studio',         // MEASURED export-blocker: founder server gate + server filesystem (build 2504)
   '/commons',             // apiFetch reads cookies at prerender — cannot static-export
   '/maia/labtools',
   '/maia/prototype',      // DEV-ONLY: Premium Arrival prototype (Package 2)
