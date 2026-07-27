@@ -24,6 +24,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { capacitorHref } from '@/lib/navigation/capacitorNavigate';
 import { DoorOpen, HelpCircle, Settings, User } from 'lucide-react';
 import { MAIA_WORLDS, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import {
@@ -111,6 +112,14 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
 
   const enter = (route: string) => {
     onClose();
+    // Native shell: router.push hangs (CapacitorHttp intercepts the RSC
+    // fetch), so navigate the document to the exported .html directly.
+    // See lib/navigation/capacitorNavigate.ts. Web: null → normal router.
+    const nativeHref = capacitorHref(route);
+    if (nativeHref) {
+      window.location.assign(nativeHref);
+      return;
+    }
     router.push(route);
   };
 
