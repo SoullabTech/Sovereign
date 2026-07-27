@@ -46,6 +46,8 @@ const ALLOWLIST_PATH = path.resolve(
 type AllowlistTier = {
   description: string;
   files: string[];
+  /** Optional per-file rationale (file path → why it is in this tier). */
+  notes?: Record<string, string>;
 };
 
 type Allowlist = {
@@ -80,14 +82,17 @@ function loadAllowlist(): Allowlist {
  * Uses `git ls-files` so we only scan tracked code (no node_modules,
  * no .next, no worktrees, no .DISABLED quarantines, no local junk).
  *
- * Matches both `from '@anthropic-ai/sdk'` and `require('@anthropic-ai/sdk')`
- * shapes; this is what the audit was looking for.
+ * Matches actual import shapes — `from`, `require(`, and dynamic `import(`
+ * followed by a quoted specifier starting with the package name (subpath
+ * imports included). Bare mentions of the package name in comments or
+ * strings do NOT match, so guard/telemetry files that merely talk about
+ * the SDK (e.g. lib/sovereignty/driftAlarm.ts) are not false-flagged.
  */
 function findImporters(): string[] {
   let raw: string;
   try {
     raw = execSync(
-      "git ls-files '*.ts' '*.tsx' '*.js' '*.mjs' '*.cjs' | xargs grep -l '@anthropic-ai/sdk' 2>/dev/null || true",
+      "git ls-files '*.ts' '*.tsx' '*.js' '*.mjs' '*.cjs' | xargs grep -lE \"(from|require\\(|import\\()[[:space:]]*['\\\"]@anthropic-ai/sdk\" 2>/dev/null || true",
       { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
     );
   } catch {
@@ -98,6 +103,9 @@ function findImporters(): string[] {
     .split("\n")
     .filter(Boolean)
     .filter((f) => !f.includes(".DISABLED"))
+    // This guard necessarily contains its own search pattern (docstring +
+    // grep command). It never imports the SDK — excluded by construction.
+    .filter((f) => f !== "scripts/check-no-direct-anthropic.ts")
     .sort();
 }
 
