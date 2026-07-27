@@ -25,8 +25,16 @@
  * exists so the UI trigger visibility matches that boundary instead of showing a
  * practitioner-only tool to ordinary members (who then hit a 401/403 empty sheet).
  *
- * `isPractitioner` comes from the `practitioner` role in `lib/hooks/useSession`,
- * the same signal `MaiaLeftRail` uses to gate the Studio / practitioner rooms.
+ * `isPractitioner` comes from the `practitioner` role in `lib/hooks/useSession`.
+ *
+ * DELIBERATELY NARROWER than the House / rail gate — do NOT normalize the two.
+ * `MaiaLeftRail` (and the House destination model, PR #766) gate practitioner
+ * rooms on the coarser `isAdmin || isPractitioner`. Here we use `isPractitioner`
+ * ALONE, because `/api/studio/decisions` enforces `getCurrentPractitioner` — an
+ * active row in `practitioners`. An admin WITHOUT a practitioner record would be
+ * shown the button by the coarse gate and then hit the same 401/403 empty sheet
+ * this fix removes. Only widen this to include admins after confirming admins
+ * necessarily have practitioner records; until then the exact-match gate is correct.
  */
 
 export interface SheetAudienceContext {
