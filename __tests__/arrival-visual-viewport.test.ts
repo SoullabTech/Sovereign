@@ -161,7 +161,15 @@ describe('reachability fix — nothing in the scrollable region has a negative m
       SRC.indexOf('style={{', SRC.indexOf('className="fixed left-0 right-0')),
       SRC.indexOf('}}', SRC.indexOf('className="fixed left-0 right-0'))
     );
-    expect(styleBlock).toMatch(/paddingTop:\s*'54px'/);
+    // paddingTop reserves the header's REAL height: the 54px base PLUS the top
+    // safe-area inset the header itself honors (#767 — a flat 54px let the
+    // notch inset crop the holoflower crown on device). The pin accepts the
+    // inset-aware form while still requiring the 54px base to lead, so the
+    // invariant this test guards — the lift is PADDING on the container, never
+    // a margin on the content — is unchanged.
+    expect(styleBlock).toMatch(
+      /paddingTop:\s*'calc\(54px \+ max\(env\(safe-area-inset-top\), 0px\)\)'/
+    );
     expect(styleBlock).toMatch(/paddingBottom:\s*'calc\(54px \+ 8vh\)'/);
   });
 
