@@ -4263,12 +4263,18 @@ I'm not sure what I'm feeling yet.`;
     console.log('✨ [Capsule] handleCaptureSpirit called', { userId, messageCount: messages.length });
 
     if (!userId) {
+      // Surface WHY Capture "did not open" to the on-device trace, not just console.
+      pushVoiceDebug('Capture blocked · member:n (userId not resolved)');
       toast.error('Please sign in to capture reflections');
       console.error('❌ [Capsule] No userId provided');
       return;
     }
 
     if (messages.length < 2) {
+      // Capture the Spirit summarizes a conversation — there is nothing to
+      // capture at Arrival / fresh launch. This guard is why the panel "does not
+      // open" there; it is expected, not an auth failure.
+      pushVoiceDebug('Capture blocked · no conversation yet');
       toast.error('Have a conversation first before capturing');
       console.error('❌ [Capsule] Not enough messages:', messages.length);
       return;
@@ -7682,10 +7688,14 @@ I'm not sure what I'm feeling yet.`;
           Rendered as the exact COMPLEMENT of the arrival/greeting block above
           (same shouldRenderArrival / !hasActivated condition): that composition
           renders its OWN Keep affordance, so showing ours simultaneously would
-          put two bookmarks on screen at once. Gating this to "arrival not shown"
-          keeps exactly one always-visible Keep in every state — the arrival Keep
-          before activation, this one throughout the live conversation (the very
-          surface Kelly flagged as missing it). */}
+          put two bookmarks on screen at once. The rule is NOT "one Keep in
+          every state" — it is: a Keep exists wherever there is something to
+          keep. The arrival composition carries its own Keep pre-activation;
+          this bookmark covers the live conversation (the very surface Kelly
+          flagged as missing it); and the returning-member pre-activation
+          welcome state (legacy greeting, hasActivated=false,
+          shouldRenderArrival=false) has NO Keep anywhere, by design — nothing
+          exists to capture yet (the capture flow itself requires ≥2 messages). */}
       {!isSanctuary &&
         !(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (
         <div
@@ -8692,6 +8702,16 @@ I'm not sure what I'm feeling yet.`;
                       if (keptMoments[message.id]) return;
                       const verbatimText = message.text ?? message.content ?? '';
                       if (!verbatimText) return;
+                      // Auth-race guard (native device walk 2026-07-27): the mark route
+                      // requires an authenticated member. Firing before identity resolves
+                      // on a fresh native load returns a 401 that reads to the member as a
+                      // hard failure. If the member id isn't resolved yet, say so honestly
+                      // instead of sending a doomed request; the trace records member:n.
+                      if (!getValidMemberId()) {
+                        pushVoiceDebug('Keep blocked · member:n (identity not resolved)');
+                        toast.error('Still signing you in — try Keep again in a moment', { duration: 2500, position: 'bottom-center' });
+                        return;
+                      }
                       try {
                         const res = await apiFetch('/api/sovereign/episodes/mark', {
                           method: 'POST',
@@ -8702,7 +8722,8 @@ I'm not sure what I'm feeling yet.`;
                           }),
                         });
                         if (!res.ok) {
-                          toast.error('Could not keep this moment', { duration: 2000, position: 'bottom-center' });
+                          // 401 is an auth failure, not a generic save error — say which.
+                          toast.error(res.status === 401 ? 'Sign-in needed to keep this moment' : 'Could not keep this moment', { duration: 2500, position: 'bottom-center' });
                           return;
                         }
                         const data = await res.json();
