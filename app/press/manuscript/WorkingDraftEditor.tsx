@@ -1,7 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  AUTOSAVE_DELAY_MS,
+  beginDraft,
+  createDraftSaver,
+  formatWhen,
+  loadDraft,
+  loadRevisions,
+  pageEstimate,
+  putDraft,
+  restoreRevision,
+  type DraftSaver,
+  type Http,
+  type RevisionSummary,
+  type SaverState,
+} from './workingDraftClient';
 
 /**
  * Soullab Press — Working Draft editor (Author Environment R1, writing surface).
@@ -15,11 +30,14 @@ import { apiFetch } from '@/lib/http/apiBase';
  * Constitutional lines it keeps, by construction:
  *   - Source stays immutable. This edits a SEPARATE working copy (POST creates
  *     it verbatim from the source sections); nothing here touches the source.
- *   - Only the author writes. Every call is member-scoped by credential; the
- *     API is the sole writer.
+ *   - Only the author writes. Every call is member-scoped by credential.
  *   - Every checkpoint is preserved. Autosave updates in place; a checkpoint
- *     appends an append-only revision the member can always return to. Restore
- *     writes a NEW revision — history is never rewritten.
+ *     appends an append-only revision; restore writes a NEW revision.
+ *
+ * State transitions (load, autosave sequencing, checkpoint, restore, errors)
+ * live in ./workingDraftClient and are unit-tested there; this file is the
+ * view. Autosave ordering — a slow earlier save never overwriting a later
+ * edit — is guaranteed by the single-flight createDraftSaver.
  *
  * Aesthetic: matches the Room — Soullab Press palette, quiet serif, wide
  * margins. A writing room, not a dashboard.
@@ -31,43 +49,14 @@ interface WorkingDraftEditorProps {
   manuscriptId: string;
 }
 
-interface RevisionSummary {
-  revisionNumber: number;
-  note: string | null;
-  contentChars: number;
-  createdAt: string;
-}
-
 type Phase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error';
-type SaveState = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error';
-
-const AUTOSAVE_DELAY_MS = 1200;
-const CHARS_PER_PAGE = 1800; // matches the Room's page estimate
-
-function formatWhen(iso: string | null): string {
-  if (!iso) return '';
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  } catch {
-    return '';
-  }
-}
-
-function pageEstimate(chars: number): number {
-  return Math.max(1, Math.round(chars / CHARS_PER_PAGE));
-}
 
 export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorProps) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [content, setContent] = useState('');
   const [revisionCount, setRevisionCount] = useState(0);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [saveState, setSaveState] = useState<SaverState>('idle');
 
   const [creating, setCreating] = useState(false);
   const [beginError, setBeginError] = useState<string | null>(null);
@@ -85,165 +74,110 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const base = `/api/sovereign/manuscripts/${manuscriptId}/draft`;
+  const http = useMemo<Http>(() => (path, init) => apiFetch(path, init), []);
 
-  const loadDraft = useCallback(async () => {
+  // Single-flight, ordered autosave. Created once (the parent remounts this
+  // component per manuscript via key), so manuscriptId is stable here.
+  const saverRef = useRef<DraftSaver | null>(null);
+  if (!saverRef.current) {
+    saverRef.current = createDraftSaver((value) => putDraft(http, manuscriptId, { content: value }), {
+      onState: setSaveState,
+      onSaved: (meta) => {
+        if (typeof meta.revisionCount === 'number') setRevisionCount(meta.revisionCount);
+        setUpdatedAt(meta.updatedAt);
+      },
+    });
+  }
+  const saver = saverRef.current;
+
+  const reload = useCallback(async () => {
     setPhase('loading');
-    try {
-      const res = await apiFetch(base, { method: 'GET' });
-      if (res.status === 401) {
-        setPhase('unauthorized');
-        return;
-      }
-      if (res.status === 404) {
-        setPhase('none');
-        return;
-      }
-      if (!res.ok) {
-        setPhase('error');
-        return;
-      }
-      const data = await res.json();
-      setContent(typeof data.content === 'string' ? data.content : '');
-      setRevisionCount(typeof data.revisionCount === 'number' ? data.revisionCount : 0);
-      setUpdatedAt(data.updatedAt ?? null);
+    const r = await loadDraft(http, manuscriptId);
+    if (r.kind === 'ok') {
+      setContent(r.content);
+      setRevisionCount(r.revisionCount);
+      setUpdatedAt(r.updatedAt);
       setSaveState('idle');
       setPhase('ready');
-    } catch {
-      setPhase('error');
+    } else {
+      setPhase(r.kind); // 'none' | 'unauthorized' | 'error'
     }
-  }, [base]);
+  }, [http, manuscriptId]);
+
+  const refreshRevisions = useCallback(async () => {
+    setRevisionsLoading(true);
+    const r = await loadRevisions(http, manuscriptId);
+    setRevisions(r.kind === 'ok' ? r.revisions : []);
+    setRevisionsLoading(false);
+  }, [http, manuscriptId]);
 
   useEffect(() => {
-    void loadDraft();
-  }, [loadDraft]);
+    void reload();
+  }, [reload]);
 
-  // Flush the pending autosave timer when the manuscript changes or unmounts.
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-  }, [manuscriptId]);
-
-  const autosave = useCallback(
-    async (value: string) => {
-      setSaveState('saving');
-      try {
-        const res = await apiFetch(base, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: value }),
-        });
-        if (!res.ok) {
-          setSaveState('error');
-          return;
-        }
-        const data = await res.json();
-        if (typeof data.revisionCount === 'number') setRevisionCount(data.revisionCount);
-        setUpdatedAt(data.updatedAt ?? null);
-        setSaveState('saved');
-      } catch {
-        setSaveState('error');
-      }
     },
-    [base],
+    [],
   );
 
   const onChange = (value: string) => {
     setContent(value);
-    setSaveState('unsaved');
     setCheckpointMsg(null);
+    saver.queue(value); // marks 'unsaved' via onState
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => void autosave(value), AUTOSAVE_DELAY_MS);
+    saveTimer.current = setTimeout(() => saver.flush(), AUTOSAVE_DELAY_MS);
   };
 
   const saveNow = () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    void autosave(content);
+    saver.flush();
   };
 
-  const beginDraft = async () => {
+  const begin = async () => {
     setCreating(true);
     setBeginError(null);
-    try {
-      const res = await apiFetch(base, { method: 'POST' });
-      if (res.status === 401) {
-        setPhase('unauthorized');
-        return;
-      }
-      if (res.ok) {
-        const data = await res.json();
-        setContent(typeof data.content === 'string' ? data.content : '');
-        setRevisionCount(typeof data.revisionCount === 'number' ? data.revisionCount : 1);
-        setUpdatedAt(null);
-        setSaveState('idle');
-        setPhase('ready');
-        return;
-      }
-      if (res.status === 409) {
-        const data = await res.json().catch(() => ({}));
-        if (typeof data.error === 'string' && data.error.includes('already exists')) {
-          await loadDraft();
-          return;
-        }
-        setBeginError(
-          data.error === 'Manuscript has no sections'
-            ? 'This manuscript has no sections yet, so there is nothing to begin from.'
-            : 'Could not start your working draft. Please try again.',
-        );
-        return;
-      }
+    const r = await beginDraft(http, manuscriptId);
+    if (r.kind === 'ok') {
+      setContent(r.content);
+      setRevisionCount(r.revisionCount);
+      setUpdatedAt(null);
+      setSaveState('idle');
+      setPhase('ready');
+    } else if (r.kind === 'exists') {
+      await reload();
+    } else if (r.kind === 'unauthorized') {
+      setPhase('unauthorized');
+    } else if (r.kind === 'no-sections') {
+      setBeginError('This manuscript has no sections yet, so there is nothing to begin from.');
+    } else {
       setBeginError('Could not start your working draft. Please try again.');
-    } catch {
-      setBeginError('Could not start your working draft. Please try again.');
-    } finally {
-      setCreating(false);
     }
+    setCreating(false);
   };
-
-  const loadRevisions = useCallback(async () => {
-    setRevisionsLoading(true);
-    try {
-      const res = await apiFetch(`${base}/revisions`, { method: 'GET' });
-      if (!res.ok) {
-        setRevisions([]);
-        return;
-      }
-      const data = await res.json();
-      setRevisions(Array.isArray(data.revisions) ? data.revisions : []);
-    } catch {
-      setRevisions([]);
-    } finally {
-      setRevisionsLoading(false);
-    }
-  }, [base]);
 
   const checkpoint = async () => {
     setCheckpointing(true);
     setCheckpointMsg(null);
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    try {
-      const res = await apiFetch(base, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, checkpoint: true, note: note.trim() || undefined }),
-      });
-      if (!res.ok) {
-        setCheckpointMsg('Could not save a checkpoint. Please try again.');
-        return;
-      }
-      const data = await res.json();
-      if (typeof data.revisionCount === 'number') setRevisionCount(data.revisionCount);
-      setUpdatedAt(data.updatedAt ?? updatedAt);
+    await saver.whenIdle(); // let any in-flight autosave settle first (ordering)
+    const r = await putDraft(http, manuscriptId, {
+      content,
+      checkpoint: true,
+      note: note.trim() || undefined,
+    });
+    if (r.kind === 'ok') {
+      if (typeof r.revisionCount === 'number') setRevisionCount(r.revisionCount);
+      setUpdatedAt(r.updatedAt);
       setSaveState('saved');
       setNote('');
       setCheckpointMsg('Checkpoint saved.');
-      if (showHistory) void loadRevisions();
-    } catch {
+      if (showHistory) await refreshRevisions();
+    } else {
       setCheckpointMsg('Could not save a checkpoint. Please try again.');
-    } finally {
-      setCheckpointing(false);
     }
+    setCheckpointing(false);
   };
 
   const toggleHistory = () => {
@@ -251,30 +185,23 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     setShowHistory(next);
     setRestoreConfirm(null);
     setRestoreError(false);
-    if (next) void loadRevisions();
+    if (next) void refreshRevisions();
   };
 
   const restore = async (revisionNumber: number) => {
     setRestoring(true);
     setRestoreError(false);
-    try {
-      const res = await apiFetch(`${base}/revisions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ revisionNumber }),
-      });
-      if (!res.ok) {
-        setRestoreError(true);
-        return;
-      }
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    await saver.whenIdle();
+    const r = await restoreRevision(http, manuscriptId, revisionNumber);
+    if (r.kind === 'ok') {
       setRestoreConfirm(null);
-      await loadDraft();
-      await loadRevisions();
-    } catch {
+      await reload();
+      await refreshRevisions();
+    } else {
       setRestoreError(true);
-    } finally {
-      setRestoring(false);
     }
+    setRestoring(false);
   };
 
   // ---- states ------------------------------------------------------------
@@ -299,7 +226,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
       <div>
         <p className="text-[14px] opacity-70 mb-4">Could not open your working draft just now.</p>
         <button
-          onClick={() => void loadDraft()}
+          onClick={() => void reload()}
           className="text-[13px] underline underline-offset-4 opacity-60"
         >
           Try again
@@ -323,7 +250,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
           checkpoint. Every checkpoint is preserved.
         </p>
         <button
-          onClick={() => void beginDraft()}
+          onClick={() => void begin()}
           disabled={creating}
           className="px-8 py-3 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
         >
@@ -408,7 +335,9 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         {showHistory && (
           <div className="mt-6">
             {restoreError && (
-              <p className="text-[13px] opacity-70 mb-4">Could not restore that checkpoint. Please try again.</p>
+              <p className="text-[13px] opacity-70 mb-4">
+                Could not restore that checkpoint. Please try again.
+              </p>
             )}
             {revisionsLoading ? (
               <p className="text-[13px] opacity-40">…</p>
