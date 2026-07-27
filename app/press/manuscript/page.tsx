@@ -81,7 +81,7 @@ interface PreviewSection {
   body: string;
 }
 
-type Tab = 'manuscript' | 'keeps' | 'collections' | 'emerging' | 'export';
+type Tab = 'manuscript' | 'keeps' | 'collections' | 'emerging' | 'export' | 'book';
 
 function sectionLabel(heading: string | null, position: number): string {
   return heading ?? `Section ${position + 1}`;
@@ -103,6 +103,8 @@ export default function PressManuscriptRoom() {
   const [preview, setPreview] = useState<PreviewSection[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [ingesting, setIngesting] = useState(false);
 
   const [sectionCursor, setSectionCursor] = useState(0);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -113,6 +115,9 @@ export default function PressManuscriptRoom() {
 
   const [newCollectionName, setNewCollectionName] = useState('');
   const [openCollection, setOpenCollection] = useState<string | null>(null);
+
+  const [rendering, setRendering] = useState<'pdf' | 'epub' | null>(null);
+  const [renderError, setRenderError] = useState(false);
 
   const loadList = useCallback(async () => {
     try {
@@ -196,9 +201,38 @@ export default function PressManuscriptRoom() {
   };
 
   const onFile = async (f: File) => {
-    const text = await f.text();
-    setDraftText(text);
-    if (!draftTitle.trim()) setDraftTitle(f.name.replace(/\.(txt|md|markdown)$/i, ''));
+    setWarnings([]);
+    // Plain text / markdown read in the browser (unchanged, transparent).
+    if (/\.(txt|md|markdown)$/i.test(f.name)) {
+      const text = await f.text();
+      setDraftText(text);
+      if (!draftTitle.trim()) setDraftTitle(f.name.replace(/\.(txt|md|markdown)$/i, ''));
+      return;
+    }
+    // .docx / .pdf — extracted server-side, then shown to the member to review
+    // before anything is saved. The author's words, unchanged.
+    setIngesting(true);
+    try {
+      const form = new FormData();
+      form.append('file', f);
+      const res = await apiFetch('/api/sovereign/manuscripts/ingest', { method: 'POST', body: form });
+      if (res.status === 401) {
+        setUnauthorized(true);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setWarnings([data.error || 'We could not read that file. Try a .docx, .pdf, .txt, or .md.']);
+        return;
+      }
+      setDraftText(data.text || '');
+      setWarnings(Array.isArray(data.warnings) ? data.warnings : []);
+      if (!draftTitle.trim() && data.title) setDraftTitle(data.title);
+    } catch {
+      setWarnings(['We could not read that file. Please try again.']);
+    } finally {
+      setIngesting(false);
+    }
   };
 
   // ---- Recognition flow --------------------------------------------------
@@ -324,6 +358,35 @@ export default function PressManuscriptRoom() {
     URL.revokeObjectURL(a.href);
   };
 
+  // ---- Your Book: render the whole manuscript into a PDF / EPUB ----------
+  const renderBook = async (format: 'pdf' | 'epub') => {
+    if (!active) return;
+    setRenderError(false);
+    setRendering(format);
+    try {
+      const res = await apiFetch(`/api/sovereign/manuscripts/${active}/render`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format }),
+      });
+      if (!res.ok) {
+        setRenderError(true);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title || 'manuscript'}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setRenderError(true);
+    } finally {
+      setRendering(null);
+    }
+  };
+
   const emerging = useMemo(() => {
     return collections.map((c) => {
       const items = keeps.filter((k) => c.keepIds.includes(k.id));
@@ -405,22 +468,32 @@ export default function PressManuscriptRoom() {
               />
               <div className="flex items-center gap-6">
                 <label className="text-[13px] underline underline-offset-4 opacity-60 cursor-pointer">
-                  or choose a .txt / .md file
+                  {ingesting ? 'reading your file…' : 'or choose a .docx / .pdf / .txt / .md file'}
                   <input
                     type="file"
-                    accept=".txt,.md,.markdown"
+                    accept=".txt,.md,.markdown,.docx,.pdf"
                     className="hidden"
+                    disabled={ingesting}
                     onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
                   />
                 </label>
                 <button
                   onClick={requestPreview}
-                  disabled={saving || !draftTitle.trim() || !draftText.trim()}
+                  disabled={saving || ingesting || !draftTitle.trim() || !draftText.trim()}
                   className="ml-auto px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
                 >
                   {saving ? '…' : 'Upload Manuscript'}
                 </button>
               </div>
+              {warnings.length > 0 && (
+                <div className="space-y-2">
+                  {warnings.map((w, i) => (
+                    <p key={i} className="text-[13px] leading-relaxed opacity-70">
+                      {w}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div>
@@ -522,6 +595,7 @@ export default function PressManuscriptRoom() {
                 ['collections', 'Collections'],
                 ['emerging', 'Emerging Books'],
                 ['export', 'Export'],
+                ['book', 'Your Book'],
               ] as [Tab, string][]
             ).map(([t, label]) => (
               <button
@@ -775,6 +849,41 @@ export default function PressManuscriptRoom() {
             >
               Download as Markdown
             </button>
+          </div>
+        )}
+
+        {tab === 'book' && (
+          <div>
+            <p className="text-[14px] opacity-70 mb-3 leading-relaxed">
+              Your manuscript, set as a book — the whole of it, in your own words,
+              nothing added. Make a copy you can hold or share.
+            </p>
+            <p className="text-[12px] opacity-50 mb-8">
+              {pageEstimate(totalChars)} pages · {sections.length} section
+              {sections.length === 1 ? '' : 's'}. Set in a clean book design; this can take a
+              moment to prepare.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => renderBook('pdf')}
+                disabled={rendering !== null || sections.length === 0}
+                className="px-8 py-3 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
+              >
+                {rendering === 'pdf' ? 'setting your book…' : 'Download PDF'}
+              </button>
+              <button
+                onClick={() => renderBook('epub')}
+                disabled={rendering !== null || sections.length === 0}
+                className="px-8 py-3 border border-[#4A4238] text-[14px] tracking-wide opacity-80 disabled:opacity-30"
+              >
+                {rendering === 'epub' ? 'setting your book…' : 'Download EPUB'}
+              </button>
+            </div>
+            {renderError && (
+              <p className="text-[13px] opacity-70 mt-6">
+                Could not make your book just now. Please try again in a moment.
+              </p>
+            )}
           </div>
         )}
       </main>
