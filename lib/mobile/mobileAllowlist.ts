@@ -247,7 +247,13 @@ export function isStudioMobileRoute(_pathname: string): boolean {
 }
 
 function normalise(pathname: string): string {
-  return pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
+  // Native document-load navigation targets the exported `<route>.html`
+  // directly (lib/navigation/capacitorNavigate.ts), so the guard sees
+  // "/account/settings.html" for the allowlisted "/account/settings".
+  // Treat the .html form as the pretty route; "/index.html" is the root.
+  const p = pathname.replace(/\.html$/, '');
+  if (p === '/index' || p === '') return '/';
+  return p.length > 1 ? p.replace(/\/$/, '') : p;
 }
 
 /**
