@@ -430,8 +430,16 @@ function getSessionToken(): string | null {
   if (typeof window === 'undefined') return null;
 
   try {
-    // Check for session token (set during signin)
-    const sessionToken = localStorage.getItem('maia_session_token');
+    // Check for session token (set during signin).
+    // KEY MISMATCH FIX (device-measured, build 2506): the signin path stores
+    // the token under 'session_token' (lib/auth/sessionManager.ts), while this
+    // reader only checked 'maia_session_token' — so native calls carried
+    // member:y session:n forever and every session-requiring route (e.g.
+    // /api/circles, loaded by the Keep panel) returned 401
+    // "Authentication required". Read both names, canonical first.
+    const sessionToken =
+      localStorage.getItem('maia_session_token') ||
+      localStorage.getItem('session_token');
     if (sessionToken) return sessionToken;
 
     return null;
