@@ -1,8 +1,8 @@
 diff --git a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
-index 5d1b35b..21c0be9 100644
+index 5d1b35b..4a0948e 100644
 --- a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
 +++ b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
-@@ -1,208 +1,267 @@
+@@ -1,208 +1,288 @@
  import Foundation
  import Capacitor
  import Speech
@@ -47,10 +47,9 @@ index 5d1b35b..21c0be9 100644
 -            if self.audioEngine!.isRunning {
 -                call.reject(self.messageOngoing)
 -                return
--            }
 +        DispatchQueue.main.async {
 +            self.performRecognition(call)
-         }
++        }
 +    }
 +
 +    private func logAudioRoute() {
@@ -62,12 +61,26 @@ index 5d1b35b..21c0be9 100644
 +        print("[SR] sampleRate:", session.sampleRate, "ioBuffer:", session.ioBufferDuration)
 +        print("[SR] category:", session.category.rawValue, "mode:", session.mode.rawValue)
 +    }
++
++    private func performRecognition(_ call: CAPPluginCall) {
++        print("[SR] === Build 78 - Serialized Start ===")
++
++        // Serialize starts: a start() while the engine is already running must be
++        // a no-op success, never a cleanup-kill of a healthy session. Overlapping
++        // JS restart paths (measured on device 2026-07-27: three Stop events and
++        // two interleaved starts after the first final transcript) tore down a
++        // just-started engine; after that ms-scale start/stop churn the input HAL
++        // wedges and every subsequent engine receives zero buffers.
++        if let engine = self.audioEngine, engine.isRunning {
++            print("[SR] Start ignored — engine already running (serialized)")
++            if call.getBool("partialResults") ?? false {
++                call.resolve()
+             }
++            return
+         }
  
 -        let status: SFSpeechRecognizerAuthorizationStatus = SFSpeechRecognizer.authorizationStatus()
 -        if status != SFSpeechRecognizerAuthorizationStatus.authorized {
-+    private func performRecognition(_ call: CAPPluginCall) {
-+        print("[SR] === Build 77 - VoiceChat Mode ===")
-+
 +        let language = call.getString("language") ?? "en-US"
 +        self.maxResults = call.getInt("maxResults") ?? self.defaultMatches
 +        self.partialResults = call.getBool("partialResults") ?? false
@@ -239,27 +252,12 @@ index 5d1b35b..21c0be9 100644
                  }
 -            })
 +            }
-+
-+            if let error = error {
-+                print("[SR] Recognition error:", error.localizedDescription)
-+            }
  
 -            inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
 -                self.recognitionRequest?.append(buffer)
-+            if error != nil || isFinal {
-+                print("[SR] Stopping - error:", error != nil, "isFinal:", isFinal)
-+                self.audioEngine?.stop()
-+                self.audioEngine?.inputNode.removeTap(onBus: 0)
-+                self.recognitionRequest = nil
-+                self.recognitionTask = nil
-+                self.notifyListeners("listeningState", data: ["status": "stopped"])
++            if let error = error {
++                print("[SR] Recognition error:", error.localizedDescription)
              }
-+        }
-+
-+        // 8. Install tap on input node with audio level emission for UV visualizer
-+        var levelEmitCounter = 0
-+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-+            self?.recognitionRequest?.append(buffer)
  
 -            self.audioEngine?.prepare()
 -            do {
@@ -267,6 +265,21 @@ index 5d1b35b..21c0be9 100644
 -                self.notifyListeners("listeningState", data: ["status": "started"])
 -                if partialResults {
 -                    call.resolve()
++            if error != nil || isFinal {
++                print("[SR] Stopping - error:", error != nil, "isFinal:", isFinal)
++                self.audioEngine?.stop()
++                self.audioEngine?.inputNode.removeTap(onBus: 0)
++                self.recognitionRequest = nil
++                self.recognitionTask = nil
++                self.notifyListeners("listeningState", data: ["status": "stopped"])
++            }
++        }
++
++        // 8. Install tap on input node with audio level emission for UV visualizer
++        var levelEmitCounter = 0
++        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
++            self?.recognitionRequest?.append(buffer)
++
 +            // Emit audio level every ~50ms for smooth UV visualizer animation
 +            levelEmitCounter += 1
 +            if levelEmitCounter % 2 == 0 { // ~50ms at 48kHz/1024
@@ -320,9 +333,8 @@ index 5d1b35b..21c0be9 100644
 +            if engine.isRunning {
                  engine.stop()
 -                self.recognitionRequest?.endAudio()
--                self.notifyListeners("listeningState", data: ["status": "stopped"])
 +                print("[SR] Engine stopped")
-             }
++            }
 +            engine.inputNode.removeTap(onBus: 0)
 +        }
 +        self.audioEngine = nil
@@ -332,10 +344,17 @@ index 5d1b35b..21c0be9 100644
 +    @objc func stop(_ call: CAPPluginCall) {
 +        DispatchQueue.main.async {
 +            print("[SR] Stop called")
++            // Only emit a state transition if something was actually running —
++            // phantom "stopped" events each triggered another JS restart cycle.
++            let wasRunning = self.audioEngine?.isRunning ?? false
 +            self.recognitionRequest?.endAudio()
 +            self.audioEngine?.stop()
 +            self.audioEngine?.inputNode.removeTap(onBus: 0)
-+            self.notifyListeners("listeningState", data: ["status": "stopped"])
++            if wasRunning {
+                 self.notifyListeners("listeningState", data: ["status": "stopped"])
++            } else {
++                print("[SR] Stop was a no-op (engine not running) — no state event")
+             }
              call.resolve()
          }
      }
