@@ -24,6 +24,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { libraryService } from '../../lib/library/LibraryService';
+import { extractIdentity, resolveIngestStatus } from '../../lib/library/ingestIntegrity';
 import { query } from '../../lib/database/postgres';
 
 // =============================================================================
@@ -145,6 +146,8 @@ interface FileInfo {
   checksum: string;
   title: string;
   author: string | null;
+  identityValid: boolean;
+  identityInvalidReason: string | null;
   folder: string;
 }
 
@@ -183,23 +186,10 @@ function findFiles(dir: string, basePath: string = dir): FileInfo[] {
 
         const checksum = crypto.createHash('sha256').update(content).digest('hex');
 
-        // Extract title from filename or first heading
-        let title = path.basename(entry.name, ext)
-          .replace(/[-_]/g, ' ')
-          .replace(/\b\w/g, c => c.toUpperCase());
-
-        // Check for markdown heading
-        const headingMatch = content.match(/^#\s+(.+)$/m);
-        if (headingMatch) {
-          title = headingMatch[1].trim();
-        }
-
-        // Try to extract author from content or filename
-        let author: string | null = null;
-        const authorMatch = content.match(/(?:by|author:?)\s+([A-Z][a-z]+ [A-Z][a-z]+)/i);
-        if (authorMatch) {
-          author = authorMatch[1];
-        }
+        // Validated identity extraction (D1): filename-derived title, heading
+        // override only when the heading itself validates, author only from a
+        // head-of-document byline. See lib/library/ingestIntegrity.ts.
+        const identity = extractIdentity(content, path.basename(entry.name, ext));
 
         files.push({
           path: fullPath,
@@ -207,8 +197,10 @@ function findFiles(dir: string, basePath: string = dir): FileInfo[] {
           name: entry.name,
           content,
           checksum,
-          title,
-          author,
+          title: identity.title,
+          author: identity.author,
+          identityValid: identity.validation.valid,
+          identityInvalidReason: identity.validation.reasons.join(',') || null,
           folder: path.dirname(path.relative(basePath, fullPath)) || '.',
         });
       }
@@ -333,7 +325,29 @@ async function ingest(options: {
         continue;
       }
 
-      // Create source record
+      // D1: identity-invalid sources are recorded as failed, never ingested
+      // as retrievable content.
+      if (!file.identityValid) {
+        console.warn(`   ❌ Identity invalid (${file.identityInvalidReason}) — recording as failed, no chunks written`);
+        const failedId = await libraryService.createSource({
+          type: 'txt',
+          title: file.title,
+          author: file.author || undefined,
+          filePath: file.relativePath,
+          checksum: file.checksum,
+          meta: { filename: file.name, folder: file.folder, ingested_by: 'ingestTxtSources.ts', chunking_version: 'v1' },
+          expectedChunkCount: chunks.length,
+          identityValid: false,
+          identityInvalidReason: file.identityInvalidReason || 'identity_invalid',
+        });
+        await libraryService.updateSourceStatus(failedId, 'failed', `identity_invalid: ${file.identityInvalidReason}`);
+        result.files_failed++;
+        result.errors.push(`${file.relativePath}: identity_invalid (${file.identityInvalidReason})`);
+        continue;
+      }
+
+      // Create source record (D2: expected chunk count planned from full content)
+      const expectedChunks = chunks.length;
       const sourceId = await libraryService.createSource({
         type: 'txt',
         title: file.title,
@@ -346,6 +360,8 @@ async function ingest(options: {
           ingested_by: 'ingestTxtSources.ts',
           chunking_version: 'v1',
         },
+        expectedChunkCount: expectedChunks,
+        identityValid: true,
       });
 
       // Update status to processing
@@ -368,16 +384,30 @@ async function ingest(options: {
         console.log(`   ✅ Embedded ${embedded}/${addedChunks} chunks`);
       }
 
-      // Update status to completed
-      await libraryService.updateSourceStatus(sourceId, 'completed', undefined, {
+      // D2: resolve terminal status from expected vs actual — a mismatch is
+      // 'partial', which is never retrieval-eligible. Explicit success or
+      // explicit failure; no silent "completed whatever happened".
+      const outcome = resolveIngestStatus({
+        expectedChunks,
+        actualChunks: addedChunks,
+        identityValid: true,
+      });
+      await libraryService.updateSourceStatus(sourceId, outcome.status, outcome.error || undefined, {
         tokenCount: chunks.reduce((sum, c) => sum + c.tokenCount, 0),
         chunkCount: addedChunks,
+        expectedChunkCount: expectedChunks,
       });
 
       const elapsed = ((Date.now() - fileStart) / 1000).toFixed(1);
-      console.log(`   ✅ Ingested successfully (${elapsed}s)`);
-      result.files_ingested++;
-      result.chunks_created += addedChunks;
+      if (outcome.status === 'completed') {
+        console.log(`   ✅ Ingested successfully (${elapsed}s)`);
+        result.files_ingested++;
+        result.chunks_created += addedChunks;
+      } else {
+        console.error(`   ⚠️  Ingest ${outcome.status}: ${outcome.error} (${elapsed}s)`);
+        result.files_failed++;
+        result.errors.push(`${file.relativePath}: ${outcome.error}`);
+      }
 
     } catch (error: any) {
       const elapsed = ((Date.now() - fileStart) / 1000).toFixed(1);
