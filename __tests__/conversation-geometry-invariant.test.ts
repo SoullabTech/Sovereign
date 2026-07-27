@@ -92,9 +92,46 @@ describe('invariant 2 — the conversation area is defined by clearances', () =>
   });
 });
 
-describe('scope — this fix must not have grown', () => {
-  it('adds no visualViewport infrastructure', () => {
-    expect(shell).not.toMatch(/visualViewport/);
+describe('scope — this fix stays geometric, not viewport-tracking', () => {
+  // #703 was a viewport-COUPLED geometry bug: the conversation surface's box
+  // resolved against a viewport-relative height. The fix's whole point is that
+  // this surface's geometry is FIXED — a top clearance (`top-44`) and a bottom
+  // clearance in px — decoupled from live viewport/keyboard height.
+  //
+  // The later mobile-keyboard work legitimately reads `window.visualViewport`.
+  // Its history (git log -S visualViewport -- components/OracleConversation.tsx):
+  //   b7a0036b5  re-settle bottom-anchored conversation after viewport changes
+  //   c7eca8f3f  temporary on-screen scroll/viewport diagnostic (?debugScroll=1)
+  //   10fe69a17  stale scroll-away can no longer permanently veto resettle
+  // Those reads serve exactly two purposes: re-settling SCROLL position after
+  // the keyboard opens/closes (scrollIntoView + content-overflow recompute),
+  // and printing numbers in the ?debugScroll=1 diagnostic strip. Neither feeds
+  // visualViewport into this surface's inline geometry — the resettle effect's
+  // own comment is explicit: "the `bottom: 260px` geometry itself is
+  // untouched." That is the line this scope test holds: visualViewport may
+  // drive SCROLL (and diagnostics), never surface GEOMETRY.
+  //
+  // (Originally this asserted `visualViewport` appeared NOWHERE in the file — a
+  // blunt proxy for "no viewport-tracking was added", correct when #703 had
+  // just refuted a visualViewport-based mechanism for the clearance bug. That
+  // refutation was mechanism-specific, not surface-eternal: once the sanctioned
+  // scroll-resettle work landed, the blanket proxy went stale and began failing
+  // against correct code. The assertion below is re-scoped to the actual
+  // regression it was guarding: geometry, not scroll.)
+
+  /** The inline style object of the `fixed top-44` conversation surface. */
+  const styleBlock = (() => {
+    const anchor = shell.indexOf('fixed top-44');
+    const start = shell.indexOf('style={{', anchor);
+    return shell.slice(start, shell.indexOf('}}>', start));
+  })();
+
+  it('does not derive the conversation surface geometry from visualViewport', () => {
+    // Allowed anywhere: visualViewport → scrollIntoView / overflow recompute.
+    // Forbidden here: visualViewport feeding any inline style VALUE on this
+    // surface — that would re-couple the box to live keyboard/viewport height,
+    // the exact #703 class of bug.
+    expect(styleBlock).not.toMatch(/visualViewport/);
   });
 
   it('adds no dvh/svh units to the conversation surface', () => {
