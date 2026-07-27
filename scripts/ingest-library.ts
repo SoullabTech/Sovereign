@@ -26,6 +26,7 @@ import * as crypto from 'crypto';
 import pg from 'pg';
 import { chunkText, estimateTokens, extractTitle } from '../lib/ain/knowledge/ChunkingService';
 import { classifyChunkSpiralogic, mergeTagsIntoMeta, isOperationalFile, inferSourceType, extractAuthor } from '../lib/library/spiralogicTagger';
+import { validateTitle, validateAuthor, resolveIngestStatus } from '../lib/library/ingestIntegrity';
 import { toPgVectorLiteral } from '../lib/db/pgvector';
 
 // =============================================================================
@@ -109,12 +110,21 @@ async function createSource(pool: pg.Pool, params: {
   filePath: string;
   checksum: string;
   meta?: Record<string, any>;
+  expectedChunkCount?: number;
+  identityValid?: boolean;
+  identityInvalidReason?: string | null;
 }): Promise<string> {
   const result = await pool.query(
-    `INSERT INTO library_sources (type, title, author, file_path, checksum, meta, ingestion_status)
-     VALUES ($1, $2, $3, $4, $5, $6, 'processing')
+    `INSERT INTO library_sources (type, title, author, file_path, checksum, meta, ingestion_status, expected_chunk_count, identity_valid, identity_invalid_reason)
+     VALUES ($1, $2, $3, $4, $5, $6, 'processing', $7, $8, $9)
      RETURNING id`,
-    [params.type, params.title, params.author, params.filePath, params.checksum, JSON.stringify(params.meta || {})]
+    [
+      params.type, params.title, params.author, params.filePath, params.checksum,
+      JSON.stringify(params.meta || {}),
+      params.expectedChunkCount ?? null,
+      params.identityValid ?? null,
+      params.identityInvalidReason ?? null,
+    ]
   );
   return result.rows[0].id;
 }
@@ -180,14 +190,15 @@ async function embedChunksForSource(pool: pg.Pool, sourceId: string): Promise<{ 
   return { embedded, errors };
 }
 
-async function updateSourceStatus(pool: pg.Pool, sourceId: string, status: string, stats?: { tokenCount: number; chunkCount: number }): Promise<void> {
+async function updateSourceStatus(pool: pg.Pool, sourceId: string, status: string, stats?: { tokenCount: number; chunkCount: number }, error?: string): Promise<void> {
   await pool.query(
     `UPDATE library_sources SET
       ingestion_status = $2,
       token_count_total = $3,
-      chunk_count = $4
+      chunk_count = $4,
+      ingestion_error = $5
      WHERE id = $1`,
-    [sourceId, status, stats?.tokenCount || null, stats?.chunkCount || null]
+    [sourceId, status, stats?.tokenCount || null, stats?.chunkCount || null, error || null]
   );
 }
 
@@ -256,6 +267,37 @@ async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; sk
     }
 
     try {
+      // Chunk the content first: expected count is planned from the FULL
+      // content before any writes (D2 completeness contract).
+      const textChunks = chunkText(content, {
+        maxTokens: CHUNK_MAX_TOKENS,
+        overlapTokens: CHUNK_OVERLAP_TOKENS,
+        minChunkTokens: CHUNK_MIN_TOKENS,
+      });
+
+      // D1 identity contract: filename-derived title + curated-list author,
+      // both validated. Invalid identity is recorded as failed, never as
+      // retrievable content.
+      const titleCheck = validateTitle(title);
+      const authorCheck = validateAuthor(author);
+      if (!titleCheck.valid || !authorCheck.valid) {
+        const reasons = [...titleCheck.reasons, ...authorCheck.reasons].join(',');
+        const failedId = await createSource(pool, {
+          type: sourceType,
+          title,
+          author,
+          filePath: filePath,
+          checksum,
+          meta: { original_filename: filename },
+          expectedChunkCount: textChunks.length,
+          identityValid: false,
+          identityInvalidReason: reasons,
+        });
+        await updateSourceStatus(pool, failedId, 'failed', undefined, `identity_invalid: ${reasons}`);
+        stats.errors++;
+        continue;
+      }
+
       // Create source record
       const sourceId = await createSource(pool, {
         type: sourceType,
@@ -263,14 +305,19 @@ async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; sk
         author,
         filePath: filePath,
         checksum,
-        meta: { original_filename: filename },
-      });
-
-      // Chunk the content
-      const textChunks = chunkText(content, {
-        maxTokens: CHUNK_MAX_TOKENS,
-        overlapTokens: CHUNK_OVERLAP_TOKENS,
-        minChunkTokens: CHUNK_MIN_TOKENS,
+        meta: {
+          original_filename: filename,
+          // Reproducibility: expected_chunk_count is only meaningful relative
+          // to the chunker that produced it.
+          chunking_params: {
+            algorithm: 'chunkText@lib/ain/knowledge/ChunkingService',
+            max_tokens: CHUNK_MAX_TOKENS,
+            overlap_tokens: CHUNK_OVERLAP_TOKENS,
+            min_chunk_tokens: CHUNK_MIN_TOKENS,
+          },
+        },
+        expectedChunkCount: textChunks.length,
+        identityValid: true,
       });
 
       // Classify each chunk with Spiralogic metadata
@@ -292,11 +339,17 @@ async function ingestSourceFiles(pool: pg.Pool): Promise<{ processed: number; sk
       // Calculate total tokens
       const totalTokens = classifiedChunks.reduce((sum, c) => sum + c.tokenCount, 0);
 
-      // Update source status
-      await updateSourceStatus(pool, sourceId, 'completed', {
+      // D2: terminal status from expected vs actual — mismatch resolves to
+      // 'partial', which is never retrieval-eligible.
+      const outcome = resolveIngestStatus({
+        expectedChunks: textChunks.length,
+        actualChunks: chunkCount,
+        identityValid: true,
+      });
+      await updateSourceStatus(pool, sourceId, outcome.status, {
         tokenCount: totalTokens,
         chunkCount,
-      });
+      }, outcome.error || undefined);
 
       stats.processed++;
       stats.chunks += chunkCount;
@@ -382,6 +435,8 @@ async function ingestWisdomTeachings(pool: pg.Pool): Promise<{ processed: number
         filePath: `lib/forge/wisdom-library.ts::${key}`,
         checksum,
         meta: { tradition, teacher, source_type: 'curated_wisdom' },
+        expectedChunkCount: teachings.length,
+        identityValid: true,
       });
 
       // Each teaching becomes one chunk with rich metadata
@@ -415,11 +470,16 @@ async function ingestWisdomTeachings(pool: pg.Pool): Promise<{ processed: number
       // Calculate total tokens
       const totalTokens = classifiedChunks.reduce((sum, c) => sum + c.tokenCount, 0);
 
-      // Update source status
-      await updateSourceStatus(pool, sourceId, 'completed', {
+      // D2: terminal status from expected vs actual.
+      const outcome = resolveIngestStatus({
+        expectedChunks: teachings.length,
+        actualChunks: chunkCount,
+        identityValid: true,
+      });
+      await updateSourceStatus(pool, sourceId, outcome.status, {
         tokenCount: totalTokens,
         chunkCount,
-      });
+      }, outcome.error || undefined);
 
       stats.processed++;
       stats.chunks += chunkCount;
