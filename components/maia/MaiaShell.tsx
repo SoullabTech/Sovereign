@@ -331,9 +331,9 @@ export function MaiaShell({
           status bar (env is 0 in desktop browsers, so web geometry is
           unchanged). It must remain IDENTICAL in this box and Arrival's. */}
       {!arrivalMode && (
-        {/* RECONCILED with #763 (reconcile-not-stack, 2026-07-28): grown-box
-            height + the 6px founder breath in ONE padding source, identical to
-            MaiaArrivalField's header. Do not add a style paddingTop here. */}
+        /* RECONCILED with #763 (reconcile-not-stack, 2026-07-28): grown-box
+           height + the 6px founder breath in ONE padding source, identical to
+           MaiaArrivalField's header. Do not add a style paddingTop here. */
         <div className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[calc(54px+env(safe-area-inset-top,0px))] items-center pt-[calc(env(safe-area-inset-top,0px)+6px)] px-4 md:px-6">
           <button
             onClick={() => setHouseOpen(true)}
