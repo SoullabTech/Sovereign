@@ -3436,6 +3436,69 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length > 0]);
 
+  // TRANSCRIPT ⇄ COMPOSER CLEARANCE (founder direction 2026-07-28: "the text
+  // field needs to be expanded as much as possible").
+  //
+  // The transcript container ends at a FIXED 220px (voice) / 260px (chat)
+  // above the viewport bottom (#703 made that clearance authoritative).
+  // Device measurement (House diagnosis, 2026-07-26/27) showed the composer
+  // stack occupies substantially less than that band, so the difference
+  // rendered as a permanent empty belt between the newest message and the
+  // composer — on a phone-height viewport, a large share of the possible
+  // reading window.
+  //
+  // The clearance is now DERIVED from the live composer's measured top
+  // edge: the transcript ends TRANSCRIPT_COMPOSER_GAP_PX above whatever the
+  // composer actually is (voice bar or chat input, either mode, any
+  // device), and the two can no longer drift apart as controls change. The
+  // old fixed values remain only as the pre-measurement fallback.
+  //
+  // Ruled constraint preserved: NO visualViewport and NO dvh units in this
+  // geometry — getBoundingClientRect() and window.innerHeight are
+  // layout-viewport reads, the same coordinate space the fixed containers
+  // position in.
+  const TRANSCRIPT_COMPOSER_GAP_PX = 12;
+  const [composerClearancePx, setComposerClearancePx] = useState<number | null>(null);
+  const chatComposerRef = useRef<HTMLDivElement>(null);
+  const voiceBarWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // The voice bar mounts as the first child of its visibility wrapper
+    // (the wrapper has zero layout footprint — the bar is position:fixed),
+    // so the wrapper ref is a stable attach point that doesn't require
+    // threading a forwardRef through VoiceInteractionBar.
+    const el = showChatInterface
+      ? chatComposerRef.current
+      : (voiceBarWrapRef.current?.firstElementChild as HTMLElement | null);
+    if (!el) {
+      setComposerClearancePx(null);
+      return;
+    }
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.height === 0) return; // not laid out yet
+      const clearance =
+        Math.round(window.innerHeight - rect.top) + TRANSCRIPT_COMPOSER_GAP_PX;
+      // Sanity band: a keyboard-displaced or mid-transition composer must
+      // not collapse the transcript to nothing (clearance approaching the
+      // viewport height) or go negative — outside the band, keep the last
+      // good value rather than adopt a transient one.
+      if (clearance <= 0 || clearance > window.innerHeight * 0.6) return;
+      setComposerClearancePx(prev => (prev === clearance ? prev : clearance));
+    };
+    measure();
+    const composerObserver =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    composerObserver?.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      composerObserver?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+    // The composer subtrees these refs point at mount/unmount with each of
+    // these flags, so each must re-run the attach.
+  }, [showChatInterface, isMounted, voiceEnabled, shouldRenderArrival]);
+
   // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -3565,6 +3628,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // When the derived composer clearance changes, the transcript container's
+  // height changes with it — re-settle to the newest message so the reply
+  // doesn't strand mid-thread, unless the member is deliberately reading
+  // back through history (same intent signal the vv re-settle respects).
+  useEffect(() => {
+    if (composerClearancePx == null) return;
+    if (!wasNearBottomRef.current) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    pushScrollDebug(`clearance-resettle(${composerClearancePx}px)`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [composerClearancePx]);
 
   // Smooth audio level changes for accessibility (prevents flashing from sudden spikes)
   useEffect(() => {
@@ -8574,7 +8649,16 @@ I'm not sure what I'm feeling yet.`;
                //
                // Dropping height/maxHeight makes the clearance authoritative and
                // correct at any viewport height without arithmetic to keep in sync.
-               bottom: showChatInterface ? '260px' : '220px',
+               //
+               // The clearance value itself is now MEASURED from the live
+               // composer's top edge (composerClearancePx above) instead of the
+               // former fixed 220px/260px band, which was roughly twice the
+               // composer's real height and rendered as permanent dead space
+               // below the newest message. The fixed values survive only as the
+               // pre-measurement fallback for the first paint.
+               bottom: composerClearancePx != null
+                 ? `${composerClearancePx}px`
+                 : (showChatInterface ? '260px' : '220px'),
                overflow: 'hidden',
                // TOP FADE (device walk 2026-07-28): the container's top clip
                // line sits exactly in the orb-label zone ("TAP TO SPEAK" /
@@ -9247,7 +9331,7 @@ I'm not sure what I'm feeling yet.`;
                   the member starts typing. Do NOT fix by raising z-index —
                   Arrival owns the threshold; two live composers is the bug. */}
               {showChatInterface && (
-              <div className={`fixed left-14 right-0 sm:inset-x-0 z-below-nav ${shouldRenderArrival ? 'invisible' : ''}`} /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
+              <div ref={chatComposerRef} className={`fixed left-14 right-0 sm:inset-x-0 z-below-nav ${shouldRenderArrival ? 'invisible' : ''}`} /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
                    lockup, close enough that the eye grouped the signature with the
                    input controls. The extra ~24px lets the composer close as one
                    complete object and leaves SOULLAB reading as the page's quiet
@@ -9503,7 +9587,7 @@ I'm not sure what I'm feeling yet.`;
           state survives. The wrapper itself has zero layout footprint (the
           child is position:fixed). */}
       {isMounted && voiceEnabled && !showChatInterface && (
-        <div className={shouldRenderArrival ? 'invisible' : undefined}>
+        <div ref={voiceBarWrapRef} className={shouldRenderArrival ? 'invisible' : undefined}>
         <VoiceInteractionBar
           voiceState={voiceInteractionState}
           interimTranscript={interimTranscript}
