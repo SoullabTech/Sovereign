@@ -896,7 +896,8 @@ export function QuickJournalSheet({
               <button
                 onClick={() => {
                   onClose();
-                  router.push('/labtools/journal');
+                  // Member route — /labtools/journal is behind the founder gate.
+                  router.push('/journal');
                 }}
                 className="w-full mt-4 py-2 flex items-center justify-center gap-2 text-xs text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 rounded-lg transition-colors"
               >

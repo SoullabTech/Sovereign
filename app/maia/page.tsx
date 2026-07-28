@@ -27,6 +27,7 @@ import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
+import { shouldOpenJournalCapture, urlWithoutJournalParam } from '@/lib/navigation/journalDeepLink';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
@@ -630,6 +631,17 @@ function MAIAPageContent() {
       const path = pathname ?? '/maia';
       router.replace(newQuery ? `${path}?${newQuery}` : path, { scroll: false });
     }
+  }, [searchParams, pathname, router]);
+
+  // Journal capture deep link (/maia?journal=1) — the Journal's "New Entry"
+  // control opens the EXISTING capture sheet here rather than bouncing the
+  // member to /maia with nothing open. Strip the parameter immediately so
+  // refresh, Back, or a re-render cannot reopen it; the guard above makes the
+  // effect a no-op on the re-run that the replace itself triggers.
+  useEffect(() => {
+    if (!shouldOpenJournalCapture(searchParams)) return;
+    setShowJournalSheet(true);
+    router.replace(urlWithoutJournalParam(searchParams, pathname), { scroll: false });
   }, [searchParams, pathname, router]);
 
   // Load and listen for framework/lens changes
