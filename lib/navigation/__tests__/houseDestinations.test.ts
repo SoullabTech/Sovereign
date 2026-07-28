@@ -61,7 +61,7 @@ describe('getHouseDestinations — audience filtering', () => {
    * capability and is not part of the member House grammar at all — including
    * for a practitioner who is using the member House. The 2026-07-27 design
    * gated it to 'founder'; that is superseded. The distinction is drawn by
-   * SURFACE, not identity. See docs/canon/THE_HOUSE.md.
+   * SURFACE, not identity. Ruling recorded in PR #785 (Supersession section); no repo canon doc records it yet — do not cite one.
    *
    * This is the invariant, not a visibility preference: no audience receives a
    * 'decisions' destination from the member House registry.

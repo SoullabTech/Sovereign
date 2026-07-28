@@ -195,7 +195,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   // using the member House. The distinction is drawn by surface, not identity.
   // A 401 is not a substitute for coherent navigation, and neither is a
   // conditional render. The practitioner surface (/studio/decisions,
-  // /api/studio/decisions) is unchanged. See docs/canon/THE_HOUSE.md.
+  // /api/studio/decisions) is unchanged. Ruling recorded in PR #785 (Supersession section); no repo canon doc records it yet — do not cite one.
   {
     id: 'changes',
     label: 'Changes',

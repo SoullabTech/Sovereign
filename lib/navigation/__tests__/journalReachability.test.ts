@@ -147,7 +147,7 @@ describe('House destinations for an ordinary member', () => {
     // Superseding ruling (2026-07-28): Decisions is a practitioner capability
     // and is not part of the member House grammar at all — including for a
     // practitioner using the member House. The 2026-07-27 'founder' audience
-    // gate is superseded. See docs/canon/THE_HOUSE.md.
+    // gate is superseded. Ruling recorded in PR #785 (Supersession section); no repo canon doc records it yet — do not cite one.
     expect(HOUSE_DESTINATIONS.find((d) => d.id === 'decisions')).toBeUndefined();
     expect(member).not.toContain('decisions');
     expect(founder).not.toContain('decisions');
