@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Lock, CheckCircle, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiFetch } from '@/lib/http/apiBase';
 
 type PasswordChangeSheetProps = {
   isOpen: boolean;
@@ -35,7 +35,9 @@ export default function PasswordChangeSheet({
     setError(null);
 
     try {
-      const response = await fetch(apiUrl('/api/members/password'), {
+      // apiFetch (not bare fetch) — the route now derives the member from the
+      // verified session, so the request must carry the session credential.
+      const response = await apiFetch('/api/members/password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
