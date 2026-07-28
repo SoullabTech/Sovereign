@@ -51,6 +51,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { JOURNAL_CAPTURE_HREF } from '@/lib/navigation/journalDeepLink';
 import CapsuleCard from '@/components/capsules/CapsuleCard';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 
@@ -905,7 +906,7 @@ export function UnifiedJournalView({
           >
             <div className="flex items-center justify-center gap-4">
               <button
-                onClick={() => router.push('/maia')}
+                onClick={() => router.push(JOURNAL_CAPTURE_HREF)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 border border-[#D4B896]/30 text-stone-600 hover:text-stone-800 hover:bg-white/90 transition-all text-sm"
               >
                 <Plus className="w-4 h-4" />
