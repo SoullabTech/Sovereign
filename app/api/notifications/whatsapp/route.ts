@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { WhatsAppProvider } from '@/lib/comms/providers/WhatsAppProvider';
+import { resolveSendAuthority } from '@/lib/notifications/sendAuthority';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,16 @@ const whatsappProvider = new WhatsAppProvider();
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { to, message, practitionerId, mediaUrl } = body;
+    const { to, message, practitionerId: claimedPractitionerId, mediaUrl } = body;
+
+    // Authority to send is resolved from the verified session, never the body.
+    // The caller may request a delivery; the server decides whose credentials
+    // may perform it. Fails closed. See lib/notifications/sendAuthority.
+    const auth = await resolveSendAuthority(request, claimedPractitionerId);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const practitionerId = auth.practitionerId;
 
     if (!to || !message) {
       return NextResponse.json(
