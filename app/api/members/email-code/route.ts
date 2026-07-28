@@ -123,13 +123,19 @@ export async function POST(request: NextRequest) {
     const memberName = (member?.name as string) || 'Beautiful Soul';
     const isExistingMember = !!member;
 
-    // ── Private-beta gate ──────────────────────────────────────────────────
-    // Existing members ALWAYS get a code (never lock out someone already in).
-    // New emails only if explicitly admitted to beta_allowlist; otherwise no
-    // code is sent — the email is captured to beta_waitlist and the client
-    // shows a warm "small groups" message. Fails CLOSED (waitlist) if the
-    // allowlist can't be read — for a private beta that is the safe direction.
-    if (!isExistingMember) {
+    // ── Private-beta gate (OFF by default — signup is open) ────────────────
+    // Founder decision 2026-07-28: MAIA moved from a stewarded private beta to
+    // active onboarding. Signup is now open — anyone who enters an email gets a
+    // code and can join. The beta_allowlist / beta_waitlist tables are KEPT for
+    // history but are no longer consulted at sign-in.
+    //
+    // Re-gate switch: set BETA_ALLOWLIST_ENABLED=1 (env, then restart the
+    // container) to restore the private beta — new emails not on beta_allowlist
+    // get no code, are captured to beta_waitlist, and the client shows a warm
+    // "small groups" message. Existing members are ALWAYS admitted either way.
+    // Fails CLOSED (waitlist) if the allowlist read errors while gating is on.
+    const betaGateOn = process.env.BETA_ALLOWLIST_ENABLED === '1';
+    if (!isExistingMember && betaGateOn) {
       let admitted = false;
       try {
         const allow = await query('SELECT 1 FROM beta_allowlist WHERE LOWER(email) = $1 LIMIT 1', [normalizedEmail]);

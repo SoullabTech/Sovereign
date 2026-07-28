@@ -256,61 +256,25 @@ export class VoiceFeedbackPrevention {
   }
 
   /**
-   * Register a speech recognition instance
+   * Register a speech recognition instance.
+   *
+   * NOTE (2026-07-28): This method used to monkey-patch `start()` to queue-
+   * while-speaking, abort recognition that started during MAIA's voice, AND
+   * auto-restart the SAME instance when MAIA finished. That made VFP a second,
+   * racy restart authority competing with ContinuousConversation's own state
+   * machine — and, fatally, it restarted an instance the component had already
+   * abandoned, which is how Chrome's Web Speech object ended up a zombie
+   * (onstart keeps firing, onresult never does; the mic button looks live but
+   * MAIA hears nothing). See lib/voice/webSpeechLifecycle.ts.
+   *
+   * The recognition lifecycle is now owned entirely by the component: it
+   * SUSPENDS (discards) recognition while MAIA speaks and RESUMES with a FRESH
+   * instance afterward. VFP no longer patches, aborts, or restarts recognition.
+   * It only keeps a reference for cleanup bookkeeping and continues to own
+   * audio-element + speech-synthesis feedback state.
    */
   registerRecognition(recognition: any) {
     this.recognitionInstances.add(recognition);
-
-    // Override the original start method
-    const originalStart = recognition.start.bind(recognition);
-    recognition.start = () => {
-      if (this.isMayaSpeaking) {
-        console.log('⏸️ Delaying recognition start - Maya is speaking');
-        // Queue the start for when Maya finishes
-        const checkInterval = setInterval(() => {
-          if (!this.isMayaSpeaking) {
-            clearInterval(checkInterval);
-            originalStart();
-          }
-        }, 100);
-      } else {
-        originalStart();
-      }
-    };
-
-    // Track when recognition is actually running
-    recognition.addEventListener('start', () => {
-      if (this.isMayaSpeaking) {
-        console.log('⚠️ Recognition started while Maya speaking - ABORTING immediately');
-        // Use abort() instead of stop() for immediate termination
-        if (recognition.abort) {
-          recognition.abort();
-        } else {
-          recognition.stop();
-        }
-      }
-    });
-
-    // Auto-restart after Maya finishes speaking
-    recognition.addEventListener('end', () => {
-      if (!this.isMayaSpeaking) {
-        // Recognition ended naturally, not due to Maya speaking
-        return;
-      }
-
-      // Queue restart for when Maya finishes
-      const restartCheck = setInterval(() => {
-        if (!this.isMayaSpeaking) {
-          clearInterval(restartCheck);
-          try {
-            recognition.start();
-            console.log('🔄 Recognition restarted after Maya finished');
-          } catch (error) {
-            console.error('Failed to restart recognition:', error);
-          }
-        }
-      }, 100);
-    });
   }
 
   /**
@@ -344,39 +308,18 @@ export class VoiceFeedbackPrevention {
    * Set Maya's speaking state and stop/start recognition accordingly
    */
   private setMayaSpeaking(speaking: boolean) {
-    const wasSpeaking = this.isMayaSpeaking;
     this.isMayaSpeaking = speaking;
 
-    if (speaking && !wasSpeaking) {
-      // Maya just started speaking - stop all recognition
-      this.stopAllRecognition();
-    } else if (!speaking && wasSpeaking) {
-      // Maya just finished - can restart recognition
-      // This is handled by the recognition's end event listener
-    }
+    // Recognition suspend/resume around MAIA's voice is owned by the component
+    // (it discards the instance while MAIA speaks and rebuilds a fresh one
+    // afterward). VFP no longer aborts or restarts recognition here — doing so
+    // raced the component and left Chrome's recognition object zombied. We only
+    // track + broadcast the speaking state.
 
     // Broadcast state change
     window.dispatchEvent(new CustomEvent('maya-speaking-state', {
       detail: { isSpeaking: speaking }
     }));
-  }
-
-  /**
-   * Stop all registered speech recognition
-   */
-  private stopAllRecognition() {
-    this.recognitionInstances.forEach(recognition => {
-      try {
-        if (recognition.abort) {
-          recognition.abort(); // Immediately stop without triggering end event
-        } else {
-          recognition.stop();
-        }
-        console.log('🛑 Stopped recognition while Maya speaks');
-      } catch (error) {
-        // Recognition might not be active
-      }
-    });
   }
 
   /**
