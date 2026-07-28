@@ -27,12 +27,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { resolveSendAuthority } from '@/lib/notifications/sendAuthority';
 
-/** The only four things a provider can be, from the caller's point of view. */
+/**
+ * What a provider can be, from the caller's point of view.
+ *
+ * NOTE ON SEMANTICS — this endpoint proves CONFIGURATION, not REACHABILITY.
+ * It answers "are usable credentials present and enabled for you?" by looking
+ * at stored/enabled credentials. It does NOT contact the provider, so it cannot
+ * and does not claim the provider is live, healthy, or that a message would be
+ * delivered. Deliberately no 'connected' or 'disconnected' member: naming a
+ * state we cannot determine would be the same category of dishonesty this
+ * endpoint exists to remove.
+ */
 export type ProviderState =
   | 'unauthorized'    // caller may not use this provider — says nothing about setup
-  | 'not_configured'  // no usable credentials exist
-  | 'connected'       // usable credentials exist
-  | 'disconnected';   // credentials exist but are unusable/incomplete
+  | 'not_configured'  // no usable credentials found
+  | 'configured';     // credentials present and enabled — NOT proof of reachability
 
 type Provider = 'sms' | 'telegram' | 'whatsapp';
 
@@ -91,7 +100,7 @@ export async function GET(request: NextRequest) {
 
   for (const p of ['sms', 'telegram', 'whatsapp'] as Provider[]) {
     const own = await practitionerConnected(auth.practitionerId, p);
-    providers[p] = { state: own || ENV_CREDENTIALS[p]() ? 'connected' : 'not_configured' };
+    providers[p] = { state: own || ENV_CREDENTIALS[p]() ? 'configured' : 'not_configured' };
   }
 
   return NextResponse.json({ providers });

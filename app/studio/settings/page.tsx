@@ -206,8 +206,12 @@ function SettingsContent() {
         set({
           // "Unauthorized" tells us nothing about setup, so we must not claim
           // it is configured — nor claim it is not.
-          configured: state === 'connected',
-          connected: state === 'connected',
+          //
+          // `connected` mirrors `configured` because the status endpoint proves
+          // credential presence, NOT provider reachability. We do not have a
+          // live-connectivity signal, so we do not display one.
+          configured: state === 'configured',
+          connected: state === 'configured',
           unauthorized: state === 'unauthorized',
         });
       };

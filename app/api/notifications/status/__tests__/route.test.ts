@@ -42,7 +42,7 @@ describe('an unauthorized caller is told exactly that', () => {
     const body = await res.json();
     for (const p of ['sms', 'telegram', 'whatsapp']) {
       expect(body.providers[p].state).toBe('unauthorized');
-      expect(body.providers[p].state).not.toBe('connected');
+      expect(body.providers[p].state).not.toBe('configured');
       expect(body.providers[p].state).not.toBe('not_configured');
     }
   });
@@ -61,10 +61,10 @@ describe('an authorized caller gets a real answer', () => {
   beforeEach(() =>
     mockAuth.mockResolvedValue({ ok: true, memberId: 'm', practitionerId: 'p' }));
 
-  it('connected when the practitioner has their own integration', async () => {
+  it('configured when the practitioner has their own integration', async () => {
     mockQuery.mockResolvedValue({ rows: [{ config_encrypted: '{}' }] } as never);
     const body = await (await GET(req)).json();
-    expect(body.providers.sms.state).toBe('connected');
+    expect(body.providers.sms.state).toBe('configured');
   });
 
   it('not_configured when neither practitioner nor env credentials exist', async () => {
@@ -78,7 +78,7 @@ describe('an authorized caller gets a real answer', () => {
     delete process.env.TELEGRAM_BOT_TOKEN;
     mockQuery.mockRejectedValue(new Error('db down'));
     const body = await (await GET(req)).json();
-    expect(body.providers.telegram.state).not.toBe('connected');
+    expect(body.providers.telegram.state).not.toBe('configured');
   });
 });
 
@@ -111,5 +111,22 @@ describe('structural — no send, no string-matching', () => {
 
   it('the remedy hint is withheld unless "not configured" is what was found', () => {
     expect(settings).toMatch(/!smsStatus\?\.unauthorized/);
+  });
+
+  it('reads status through the SAME authority as the send routes', () => {
+    // Not a weaker session-only gate: resolveSendAuthority requires an ACTIVE
+    // PRACTITIONER (via getCurrentPractitioner), identically to the send paths.
+    // A read that disclosed provider setup to a caller who cannot send would
+    // leak configuration across the very boundary #784 established.
+    expect(statusRoute).toMatch(/resolveSendAuthority\(request\)/);
+    expect(read('app/api/notifications/sms/route.ts')).toMatch(/resolveSendAuthority\(request/);
+    const authority = read('lib/notifications/sendAuthority.ts');
+    expect(authority).toMatch(/getCurrentPractitioner\(request\)/);
+    expect(statusRoute).not.toMatch(/getMemberIdFromRequest|getCurrentSession/);
+  });
+
+  it('declares no state it cannot determine', () => {
+    // Credential presence proves CONFIGURATION, not reachability.
+    expect(statusRoute).not.toMatch(/'connected'|'disconnected'/);
   });
 });
