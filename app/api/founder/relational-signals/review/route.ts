@@ -20,6 +20,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { requireFounder } from '@/lib/founder/founderAuth';
 
 type Verdict = 'looks_right' | 'unclear' | 'looks_off';
 
@@ -35,6 +36,14 @@ function parseNote(v: unknown): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  // Founder authorization is enforced HERE, not only in middleware. Middleware is
+  // routing/UX defence; this handler must reject an unauthorized caller reached
+  // directly. See lib/founder/founderAuth (verified session + server-held allowlist,
+  // fails closed when FOUNDER_MEMBER_IDS is unset).
+  const __auth = await requireFounder();
+  if (!__auth.ok) {
+    return NextResponse.json({ error: __auth.error }, { status: __auth.status });
+  }
   try {
     const session = await getCurrentSession();
     if (!session?.memberId) {
