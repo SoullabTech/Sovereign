@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { resolveSendAuthority } from '@/lib/notifications/sendAuthority';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,16 @@ function getResend(): Resend | null {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { to, subject, body: emailBody, practitionerId } = body;
+    const { to, subject, body: emailBody, practitionerId: claimedPractitionerId } = body;
+
+    // Authority to send is resolved from the verified session, never the body.
+    // The caller may request a delivery; the server decides whose credentials
+    // may perform it. Fails closed. See lib/notifications/sendAuthority.
+    const auth = await resolveSendAuthority(request, claimedPractitionerId);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const practitionerId = auth.practitionerId;
 
     if (!to || !subject || !emailBody) {
       return NextResponse.json(

@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { TelegramProvider } from '@/lib/comms/providers/TelegramProvider';
+import { resolveSendAuthority } from '@/lib/notifications/sendAuthority';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,16 @@ const telegramProvider = new TelegramProvider();
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { chatId, message, practitionerId, disableLinkPreview } = body;
+    const { chatId, message, practitionerId: claimedPractitionerId, disableLinkPreview } = body;
+
+    // Authority to send is resolved from the verified session, never the body.
+    // The caller may request a delivery; the server decides whose credentials
+    // may perform it. Fails closed. See lib/notifications/sendAuthority.
+    const auth = await resolveSendAuthority(request, claimedPractitionerId);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const practitionerId = auth.practitionerId;
 
     if (!chatId || !message) {
       return NextResponse.json(
@@ -140,6 +150,14 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Same authority as sending: `action=getUpdates` returns inbound Telegram
+    // message content read with the platform bot token. That is not public data,
+    // and reading it is a privileged operation even though nothing is sent.
+    const auth = await resolveSendAuthority(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'info';
 
