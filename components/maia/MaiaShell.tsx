@@ -34,7 +34,6 @@ interface MaiaShellProps {
   onOpenShadowWork: () => void;
   onOpenAcademy: () => void;
   onOpenChanges: () => void;
-  onOpenDecisions: () => void;
   onLabAction: (action: string) => void;
   /** MAIA mode — primary state of entry (Talk / Care / Note) */
   activeMode?: 'normal' | 'patient' | 'session';
@@ -77,7 +76,6 @@ export function MaiaShell({
   onOpenShadowWork,
   onOpenAcademy,
   onOpenChanges,
-  onOpenDecisions,
   onLabAction,
   activeMode,
   onModeChange,
@@ -382,7 +380,6 @@ export function MaiaShell({
         isNative={isNative}
         onOpenHelp={onOpenHelp}
         onOpenAccount={() => { setHouseOpen(false); onOpenAccount(); }}
-        onOpenDecisions={onOpenDecisions}
         onOpenChanges={onOpenChanges}
         onReturnToArrival={
           canReturnToArrival && onReturnToArrival
@@ -401,7 +398,6 @@ export function MaiaShell({
         onOpenShadowWork={onOpenShadowWork}
         onOpenAcademy={onOpenAcademy}
         onOpenChanges={onOpenChanges}
-        onOpenDecisions={onOpenDecisions}
         onChooseGuide={() => onLabAction('choose-guide')}
         onShowCurrentElder={() => onLabAction('show-current-elder')}
       />

@@ -38,7 +38,6 @@ import {
   Orbit,
   BookCopy,
   Users,
-  Scale,
   Wind,
   Settings as SettingsIcon,
 } from 'lucide-react';
@@ -50,7 +49,7 @@ export type HouseActionKind = 'route' | 'sheet' | 'external';
 export type NativePolicy = 'native' | 'web';
 
 /** Existing member sheets the House can open (no new surfaces). */
-export type HouseSheetId = 'decisions' | 'changes';
+export type HouseSheetId = 'changes';
 
 export type HouseAudience = 'all' | 'founder';
 
@@ -94,7 +93,7 @@ export interface HouseDestination {
  *  - Native in-app rooms: Ideas, Living Field, Settings, Journal, Keeps, Anchor.
  *    Journal + Settings already work (nativeReady) and are the reference impls;
  *    the other four are nativeReady:false pending PR 2.
- *  - Sheets (existing member surfaces, no new routes): Decisions, Changes.
+ *  - Sheets (existing member surfaces, no new routes): Changes.
  *  - Web environments (honest bridge, first pass): Wisdom, Astrology,
  *    Community Library, Co-lab, Circles, Vision Studio.
  *  - Studio: interim → /press/manuscript (the live author-writing surface),
@@ -186,30 +185,17 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     group: 'work',
   },
   // Existing member sheets — opened in place on /maia, never a new route/page.
-  // Audience MIRRORS each tool's actual product boundary (access audit,
-  // 2026-07-27), not a blanket gate:
-  //   - Changes   → member-owned tool; /api/changes is member-scoped → audience 'all'.
-  //   - Decisions → practitioner/steward tool; /api/studio/decisions is
-  //     practitioner-gated → audience 'founder'.
-  // The House gate is visibility only; the API enforcement is the real boundary
-  // and is unchanged by this PR.
   //
-  // On 'founder': it is the model's single coarse audience flag. MaiaShell
-  // resolves it to `isAdmin || isPractitioner` — the CURRENT APPROXIMATION of
-  // "practitioner/steward". There is no distinct steward-role primitive yet;
-  // do not read one into this gate. If a real steward role is introduced later,
-  // widen the audience model rather than overloading 'founder'.
-  {
-    id: 'decisions',
-    label: 'Decisions',
-    icon: Scale,
-    tooltip: 'Weigh a decision with the council',
-    kind: 'sheet',
-    sheet: 'decisions',
-    audience: 'founder', // practitioner/steward — mirrors /api/studio/decisions
-    returnBehavior: 'sheet-close',
-    group: 'work',
-  },
+  // Changes is member-owned (/api/changes is member-scoped) → audience 'all'.
+  //
+  // Decisions is deliberately ABSENT. The 2026-07-27 audit gated it to
+  // 'founder' so only practitioners saw it here; the 2026-07-28 ruling
+  // supersedes that: Decisions is a practitioner capability and is not part of
+  // the member House grammar AT ALL — including for a practitioner who is
+  // using the member House. The distinction is drawn by surface, not identity.
+  // A 401 is not a substitute for coherent navigation, and neither is a
+  // conditional render. The practitioner surface (/studio/decisions,
+  // /api/studio/decisions) is unchanged. Ruling recorded in PR #785 (Supersession section); no repo canon doc records it yet — do not cite one.
   {
     id: 'changes',
     label: 'Changes',

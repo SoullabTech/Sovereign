@@ -39,10 +39,9 @@ function harness(isNative: boolean) {
 }
 
 describe('getHouseDestinations — audience filtering', () => {
-  it('mirrors each tool boundary: Changes is member-owned, Decisions is practitioner/steward', () => {
+  it('Changes is member-owned and reaches members', () => {
     const member = getHouseDestinations(false).map((d) => d.id);
     expect(member).toContain('changes'); // member-owned (/api/changes is member-scoped)
-    expect(member).not.toContain('decisions'); // practitioner-gated (/api/studio/decisions)
     // Other practitioner/steward rooms still hidden from members.
     expect(member).not.toContain('circles');
     expect(member).not.toContain('vision-studio');
@@ -52,16 +51,29 @@ describe('getHouseDestinations — audience filtering', () => {
 
   it('shows practitioner/steward-only destinations to founders/practitioners', () => {
     const ids = getHouseDestinations(true).map((d) => d.id);
-    expect(ids).toContain('decisions');
     expect(ids).toContain('changes');
     expect(ids).toContain('circles');
     expect(ids).toContain('vision-studio');
+  });
+
+  /**
+   * Superseding ruling (Kelly, 2026-07-28): Decisions is a practitioner
+   * capability and is not part of the member House grammar at all — including
+   * for a practitioner who is using the member House. The 2026-07-27 design
+   * gated it to 'founder'; that is superseded. The distinction is drawn by
+   * SURFACE, not identity. Ruling recorded in PR #785 (Supersession section); no repo canon doc records it yet — do not cite one.
+   *
+   * This is the invariant, not a visibility preference: no audience receives a
+   * 'decisions' destination from the member House registry.
+   */
+  it('no audience receives a decisions destination from the member House', () => {
+    expect(getHouseDestinations(false).map((d) => d.id)).not.toContain('decisions');
+    expect(getHouseDestinations(true).map((d) => d.id)).not.toContain('decisions');
   });
 });
 
 describe('classifyReachability', () => {
   it('sheets are always "sheet"', () => {
-    expect(classifyReachability(find('decisions'), true)).toBe('sheet');
     expect(classifyReachability(find('changes'), false)).toBe('sheet');
   });
 
@@ -113,8 +125,8 @@ describe('dispatchHouseDestination', () => {
 
   it('sheet destination opens the existing sheet with no navigation', () => {
     const h = harness(false);
-    dispatchHouseDestination(find('decisions'), h.ctx);
-    expect(h.sheets).toEqual(['decisions']);
+    dispatchHouseDestination(find('changes'), h.ctx);
+    expect(h.sheets).toEqual(['changes']);
     expect(h.pushed).toEqual([]);
   });
 
@@ -138,13 +150,13 @@ describe('visibleInGroup — no broken buttons on native', () => {
     expect(visibleInGroup(member, 'work', true).map((d) => d.id)).not.toContain('ideas');
   });
 
-  it('Changes shows for members on native; Decisions only for practitioner/steward', () => {
+  it('Changes shows on native for members and practitioners alike; Decisions for neither', () => {
     const memberWork = visibleInGroup(getHouseDestinations(false), 'work', true).map((d) => d.id);
     expect(memberWork).toContain('changes'); // member-owned
-    expect(memberWork).not.toContain('decisions'); // practitioner-gated
+    expect(memberWork).not.toContain('decisions');
     const founderWork = visibleInGroup(getHouseDestinations(true), 'work', true).map((d) => d.id);
     expect(founderWork).toContain('changes');
-    expect(founderWork).toContain('decisions');
+    expect(founderWork).not.toContain('decisions'); // not in the member House grammar
   });
 });
 

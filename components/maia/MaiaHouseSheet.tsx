@@ -57,8 +57,7 @@ interface MaiaHouseSheetProps {
   onReturnToArrival?: () => void;
   onOpenAccount?: () => void;
   onOpenHelp?: () => void;
-  /** Open the member's existing Decisions / Changes sheets in place on /maia. */
-  onOpenDecisions?: () => void;
+  /** Open the member's existing Changes sheet in place on /maia. */
   onOpenChanges?: () => void;
 }
 
@@ -72,7 +71,6 @@ export function MaiaHouseSheet({
   onReturnToArrival,
   onOpenAccount,
   onOpenHelp,
-  onOpenDecisions,
   onOpenChanges,
 }: MaiaHouseSheetProps) {
   const router = useRouter();
@@ -110,8 +108,7 @@ export function MaiaHouseSheet({
 
   // --- the single dispatch point ----------------------------------------
   const openSheet = (sheet: HouseSheetId) => {
-    if (sheet === 'decisions') onOpenDecisions?.();
-    else if (sheet === 'changes') onOpenChanges?.();
+    if (sheet === 'changes') onOpenChanges?.();
   };
   const ctx = (): HouseDispatchContext => ({
     isNative,
