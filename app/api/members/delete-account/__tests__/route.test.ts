@@ -174,3 +174,21 @@ describe('10. structural — the resolver cannot be removed', () => {
     expect(src).toMatch(/await transaction\(/);
   });
 });
+
+describe('the caller no longer sends an account identifier', () => {
+  const caller = readFileSync(
+    path.join(__dirname, '../../../../../components/account/AccountSettings.tsx'),
+    'utf8',
+  );
+
+  it('the delete request body carries no memberId', () => {
+    // userId here is `user.id || user.passkey` from localStorage — a passkey
+    // would never match the session and would 403 a legitimate closure.
+    const call = caller.slice(
+      caller.indexOf("apiFetch('/api/members/delete-account'"),
+      caller.indexOf("apiFetch('/api/members/delete-account'") + 400,
+    );
+    expect(call).toMatch(/confirmUsername/);
+    expect(call).not.toMatch(/memberId/);
+  });
+});

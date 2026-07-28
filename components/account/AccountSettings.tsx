@@ -827,8 +827,11 @@ export function AccountSettings() {
       const res = await apiFetch('/api/members/delete-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // No memberId: the server derives the account to close from the
+        // verified session. Sending one here could only ever disagree — this
+        // component's userId falls back to `user.passkey` when `user.id` is
+        // absent, which would be refused as a mismatch on a legitimate closure.
         body: JSON.stringify({
-          memberId: userId,
           confirmUsername: deleteConfirm,
         }),
       });
