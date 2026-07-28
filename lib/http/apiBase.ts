@@ -9,9 +9,19 @@
  */
 
 import { withTimeout } from '@/lib/utils/withTimeout';
+import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 
 // Hard fallback for iOS/Capacitor - NEVER use relative /api on mobile
 const FALLBACK_API_BASE_URL = 'https://soullab.life';
+
+// Endpoints whose auth outcome is surfaced to the on-device VOICE TRACE overlay
+// (not just console) so a single Keep/Capture tap tells us whether the request
+// carried the member ID and session token. Native device walk, 2026-07-27.
+const AUTH_TRACE_PATHS = [
+  '/api/sovereign/episodes/mark',
+  '/api/capsules/from-chat-window',
+  '/api/psyche/conversational-keep',
+];
 
 // Hard ceiling for native HTTP requests. Capacitor's URLSession defaults are
 // generous (60s connect / 60s data on iOS); this explicit cap ensures a
@@ -584,26 +594,29 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
     headers.set('x-maia-anon-id', visitorId);
   }
 
-  const response = await fetch(url, {
+  // Keep/Capture auth diagnostic: surface member/session presence + response
+  // status to the VOICE TRACE overlay for the traced endpoints only (no flood).
+  // MERGE NOTE (2026-07-28): both lanes independently built this diagnostic;
+  // this is main's superset form (pre-request presence + post-request status),
+  // which fully covers the R1 lane's 401-only trace — one diagnostic, not two.
+  const tracedAuth = AUTH_TRACE_PATHS.some((p) => url.includes(p));
+  const shortPath = tracedAuth ? url.replace(/^https?:\/\/[^/]+/, '').split('?')[0] : '';
+  if (tracedAuth) {
+    pushVoiceDebug(`${options.method || 'GET'} ${shortPath} · member:${memberId ? 'y' : 'n'} session:${sessionToken ? 'y' : 'n'}`);
+  }
+
+  const res = await fetch(url, {
     ...options,
     headers,
     credentials: 'include', // Still try cookies, but headers are the real auth
     mode: 'cors',
   });
 
-  // R1 device diagnostic (second half): a 401 WITH the member header attached
-  // means the server rejected an identified call — a different defect than the
-  // missing-header case traced above. One line onto the on-screen trace makes
-  // a single failing tap distinguish the two.
-  if (response.status === 401) {
-    try {
-      const { pushVoiceDebug } = await import('@/lib/voice/voiceDebugBus');
-      const shortUrl = url.replace(/^https?:\/\/[^/]+/, '');
-      pushVoiceDebug(`🔐 401 from ${shortUrl} (member:${memberId ? 'y' : 'n'} session:${sessionToken ? 'y' : 'n'})`);
-    } catch { /* diagnostic only */ }
+  if (tracedAuth) {
+    pushVoiceDebug(`${shortPath} → ${res.status}${res.status === 401 ? ' Unauthorized' : ''}`);
   }
 
-  return response;
+  return res;
 }
 
 /**

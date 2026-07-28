@@ -287,6 +287,7 @@ export class LibraryService {
         FROM library_chunks c
         JOIN library_sources s ON c.source_id = s.id
         WHERE s.ingestion_status = 'completed'
+          AND s.identity_valid IS DISTINCT FROM false
           AND c.embedding IS NOT NULL
       `;
 
@@ -354,6 +355,7 @@ export class LibraryService {
         FROM library_chunks c
         JOIN library_sources s ON c.source_id = s.id
         WHERE s.ingestion_status = 'completed'
+          AND s.identity_valid IS DISTINCT FROM false
           AND c.content_tsv @@ to_tsquery('english', $1)
       `;
 
@@ -753,12 +755,25 @@ export class LibraryService {
     filePath: string;
     checksum: string;
     meta?: Record<string, any>;
+    expectedChunkCount?: number;
+    identityValid?: boolean;
+    identityInvalidReason?: string;
   }): Promise<string> {
     const result = await queryOne<{ id: string }>(
-      `INSERT INTO library_sources (type, title, author, file_path, checksum, meta)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO library_sources (type, title, author, file_path, checksum, meta, expected_chunk_count, identity_valid, identity_invalid_reason)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
-      [params.type, params.title, params.author || null, params.filePath, params.checksum, JSON.stringify(params.meta || {})]
+      [
+        params.type,
+        params.title,
+        params.author || null,
+        params.filePath,
+        params.checksum,
+        JSON.stringify(params.meta || {}),
+        params.expectedChunkCount ?? null,
+        params.identityValid ?? null,
+        params.identityInvalidReason ?? null,
+      ]
     );
     return result!.id;
   }
@@ -787,18 +802,19 @@ export class LibraryService {
    */
   async updateSourceStatus(
     sourceId: string,
-    status: 'pending' | 'processing' | 'completed' | 'failed' | 'skipped',
+    status: 'pending' | 'processing' | 'completed' | 'partial' | 'failed' | 'skipped',
     error?: string,
-    stats?: { tokenCount: number; chunkCount: number }
+    stats?: { tokenCount: number; chunkCount: number; expectedChunkCount?: number }
   ): Promise<void> {
     await query(
       `UPDATE library_sources SET
         ingestion_status = $2,
         ingestion_error = $3,
         token_count_total = $4,
-        chunk_count = $5
+        chunk_count = $5,
+        expected_chunk_count = COALESCE($6, expected_chunk_count)
        WHERE id = $1`,
-      [sourceId, status, error || null, stats?.tokenCount || null, stats?.chunkCount || null]
+      [sourceId, status, error || null, stats?.tokenCount || null, stats?.chunkCount || null, stats?.expectedChunkCount ?? null]
     );
   }
 

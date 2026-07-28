@@ -25,6 +25,7 @@ import * as crypto from 'crypto';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require('pdf-parse');
 import { libraryService } from '../../lib/library/LibraryService';
+import { validateTitle, validateAuthor, titleFromFilename, resolveIngestStatus } from '../../lib/library/ingestIntegrity';
 
 // =============================================================================
 // CONFIGURATION
@@ -203,17 +204,23 @@ async function findPdfFiles(dir: string, basePath: string = dir): Promise<PdfInf
 
           const checksum = crypto.createHash('sha256').update(text).digest('hex');
 
-          // Extract title from PDF metadata or filename
-          let title = info?.Title || path.basename(entry.name, ext)
-            .replace(/[-_]/g, ' ')
-            .replace(/^\d+[-_]?\s*/, '') // Remove leading numbers
-            .replace(/\b\w/g, c => c.toUpperCase());
-
-          // Clean up title
+          // Extract title from PDF metadata or filename — metadata is used
+          // only if it validates (D1); PDF Title fields are frequently junk
+          // ("untitled", tool names, empty strings).
+          const fromFilename = titleFromFilename(
+            path.basename(entry.name, ext).replace(/^\d+[-_]?\s*/, '')
+          );
+          let title = fromFilename;
+          const metaTitle = (info?.Title || '').trim().substring(0, 200);
+          if (metaTitle && validateTitle(metaTitle).valid) {
+            title = metaTitle;
+          }
           title = title.trim().substring(0, 200);
 
-          // Extract author from PDF metadata
-          let author: string | null = info?.Author || null;
+          // Extract author from PDF metadata — only if it looks like a name.
+          const metaAuthor = (info?.Author || '').trim();
+          const author: string | null =
+            metaAuthor && validateAuthor(metaAuthor).valid ? metaAuthor : null;
 
           files.push({
             path: fullPath,
@@ -320,7 +327,29 @@ async function ingest(options: {
         console.log(`   📝 Copied to: ${copyPath}`);
       }
 
-      // Create source record
+      // D1: identity must validate before content becomes retrievable.
+      const titleCheck = validateTitle(file.title);
+      if (!titleCheck.valid) {
+        console.warn(`   ❌ Identity invalid (${titleCheck.reasons.join(',')}) — recording as failed, no chunks written`);
+        const failedId = await libraryService.createSource({
+          type: 'book',
+          title: file.title,
+          author: file.author || undefined,
+          filePath: file.relativePath,
+          checksum: file.checksum,
+          meta: { filename: file.name, folder: file.folder, pageCount: file.pageCount, originalFormat: 'pdf', ingested_by: 'ingestPdfSources.ts', chunking_version: 'v1' },
+          expectedChunkCount: chunks.length,
+          identityValid: false,
+          identityInvalidReason: titleCheck.reasons.join(','),
+        });
+        await libraryService.updateSourceStatus(failedId, 'failed', `identity_invalid: ${titleCheck.reasons.join(',')}`);
+        result.files_failed++;
+        result.errors.push(`${file.relativePath}: identity_invalid`);
+        continue;
+      }
+
+      // Create source record (D2: expected chunk count planned up front)
+      const expectedChunks = chunks.length;
       const sourceId = await libraryService.createSource({
         type: 'book',
         title: file.title,
@@ -334,7 +363,18 @@ async function ingest(options: {
           originalFormat: 'pdf',
           ingested_by: 'ingestPdfSources.ts',
           chunking_version: 'v1',
+          // Reproducibility: expected_chunk_count is only meaningful relative
+          // to the chunker that produced it.
+          chunking_params: {
+            algorithm: 'char-window/paragraph-break',
+            target_size: CONFIG.CHUNK_TARGET_SIZE,
+            min_size: CONFIG.CHUNK_MIN_SIZE,
+            max_size: CONFIG.CHUNK_MAX_SIZE,
+            overlap: CONFIG.CHUNK_OVERLAP,
+          },
         },
+        expectedChunkCount: expectedChunks,
+        identityValid: true,
       });
 
       // Update status to processing
@@ -357,15 +397,27 @@ async function ingest(options: {
         console.log(`   ✅ Embedded ${embedded}/${addedChunks} chunks`);
       }
 
-      // Update status to completed
-      await libraryService.updateSourceStatus(sourceId, 'completed', undefined, {
+      // D2: terminal status from expected vs actual.
+      const outcome = resolveIngestStatus({
+        expectedChunks,
+        actualChunks: addedChunks,
+        identityValid: true,
+      });
+      await libraryService.updateSourceStatus(sourceId, outcome.status, outcome.error || undefined, {
         tokenCount: chunks.reduce((sum, c) => sum + c.tokenCount, 0),
         chunkCount: addedChunks,
+        expectedChunkCount: expectedChunks,
       });
 
-      console.log(`   ✅ Ingested successfully`);
-      result.files_ingested++;
-      result.chunks_created += addedChunks;
+      if (outcome.status === 'completed') {
+        console.log(`   ✅ Ingested successfully`);
+        result.files_ingested++;
+        result.chunks_created += addedChunks;
+      } else {
+        console.error(`   ⚠️  Ingest ${outcome.status}: ${outcome.error}`);
+        result.files_failed++;
+        result.errors.push(`${file.relativePath}: ${outcome.error}`);
+      }
 
     } catch (error: any) {
       console.error(`   ❌ Error: ${error.message}`);

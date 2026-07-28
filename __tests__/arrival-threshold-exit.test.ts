@@ -143,8 +143,11 @@ describe('#735 — single composer ownership while Arrival owns the viewport', (
   });
 
   it('VoiceInteractionBar is wrapped invisible, NOT unmounted (local draft survives)', () => {
+    // [^>]* tolerates instrumentation attributes (the R1 lane's
+    // ref={voiceBarWrapRef}) — the pin is the suppression class, not the
+    // element's full attribute list.
     const vibMount = OC.match(
-      /\{isMounted && voiceEnabled && !showChatInterface && \(\s*<div className=\{shouldRenderArrival \? 'invisible' : undefined\}>\s*<VoiceInteractionBar/
+      /\{isMounted && voiceEnabled && !showChatInterface && \(\s*<div[^>]*className=\{shouldRenderArrival \? 'invisible' : undefined\}>\s*<VoiceInteractionBar/
     );
     expect(vibMount).not.toBeNull();
     // The mount condition itself must NOT gain a !shouldRenderArrival term —

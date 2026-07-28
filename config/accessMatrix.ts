@@ -296,6 +296,10 @@ export const ACCESS_RULES: AccessRule[] = [
   // Commons curation (role-gated)
   { exact: '/maia/community/commons/review', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
 
+  // Journal — the member's Journal room. A real member route (2026-07-28), no
+  // longer a redirect into founder-gated /labtools/journal.
+  { exact: '/journal', minTier: 'free', notes: 'Member Journal — depth (journals always saved)' },
+
   // ─────────────────────────────────────────────────────────────────
   // Lab Tools — Sanctuary Economy
   // Self-work tools are depth (open to all).
@@ -343,7 +347,6 @@ export const ACCESS_RULES: AccessRule[] = [
   // Backwards compatibility with old links.
   // ─────────────────────────────────────────────────────────────────
   { exact: '/birth-chart', public: true, minTier: 'free', notes: '→ /patterns' },
-  { exact: '/journal', minTier: 'free', notes: '→ /labtools/journal' },
   { exact: '/language', minTier: 'free', notes: '→ /labtools/language' },
   { exact: '/voice', minTier: 'free', notes: '→ /labtools/voice' },
 

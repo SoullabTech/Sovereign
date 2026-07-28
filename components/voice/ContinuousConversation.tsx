@@ -10,6 +10,7 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -227,9 +228,32 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const micStateRef = useRef<MicState>('IDLE');
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
-  const recognitionNeedsRefreshRef = useRef(false); // True after VFP abort — Chrome reused objects silently fail
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
   const recognitionActiveRef = useRef(false); // True between .start() and .onend — prevents double-start InvalidStateError
+
+  // ==========================================================================
+  // 🔁 WEB SPEECH LIFECYCLE — never reuse a failed/suspended recognition object
+  // ==========================================================================
+  // Owns the current webkitSpeechRecognition instance, a generation counter
+  // that drops stale callbacks from superseded instances, the needs-recreate
+  // flag (replacing the old recognitionNeedsRefreshRef), and devicechange
+  // invalidation. See lib/voice/webSpeechLifecycle.ts for the full rationale
+  // (Chrome zombies an instance after abort/restart cycles: onstart keeps
+  // firing but onresult never does — the "stuck mic button" defect).
+  const webSessionRef = useRef<WebSpeechRecognitionSession | null>(null);
+  const getWebSession = useCallback((): WebSpeechRecognitionSession => {
+    if (!webSessionRef.current) {
+      webSessionRef.current = new WebSpeechRecognitionSession({
+        unregister: (r) => VoiceFeedbackPrevention.getInstance().unregisterRecognition(r),
+      });
+    }
+    return webSessionRef.current;
+  }, []);
+  // Fn refs so recognition handlers (wired inside initializeSpeechRecognition)
+  // can reach lifecycle helpers defined later without circular useCallback deps.
+  const ensureFreshAndStartFnRef = useRef<(source: string) => boolean>();
+  const discardRecognitionFnRef = useRef<(reason: string) => void>();
+  const handleWebDeviceChangeFnRef = useRef<() => void>();
 
   // Convenience aliases (kept for backward compat with existing code)
   const handsFreeActiveRef = useRef(true);
@@ -323,31 +347,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 600ms');
       setTimeout(() => {
         if (isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
-          // 🔥 Recreate if VFP aborted — Chrome zombie objects silently fail on .start()
-          if (recognitionNeedsRefreshRef.current) {
-            if (recognitionRef.current) {
-              recognitionRef.current.onstart = null;
-              recognitionRef.current.onresult = null;
-              recognitionRef.current.onerror = null;
-              recognitionRef.current.onend = null;
-            }
-            recognitionRef.current = initializeSpeechRecognition();
-            recognitionNeedsRefreshRef.current = false;
-            if (!recognitionRef.current) {
-              console.warn('⚠️ [ContinuousConversation] Failed to recreate recognition object after VFP abort');
-              return;
-            }
-            console.log('🔄 [ContinuousConversation] Fresh recognition object created for auto-resume');
-          }
-          if (!recognitionRef.current) return;
-          try {
-            recognitionRef.current.start();
-            setIsRecording(true);
-            console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech (hands-free)');
-          } catch (err: any) {
-            if (!err?.message?.includes('already started')) {
-              console.warn('⚠️ [ContinuousConversation] Error auto-resuming mic:', err);
-            }
+          // 🔁 LIFECYCLE: recognition was SUSPENDED (discarded) for MAIA's
+          // playback window, so this resume ALWAYS builds a fresh instance —
+          // never restarting the pre-TTS object (the Chrome zombie defect).
+          // Truthful UI: isRecording is set by onstart when the instance
+          // actually confirms live, not optimistically here.
+          const ok = ensureFreshAndStartFnRef.current?.('auto_resume_after_tts') ?? false;
+          if (ok) {
+            console.log('✅ [ContinuousConversation] Mic auto-resume initiated after MAIA speech (hands-free)');
+          } else {
+            console.warn('⚠️ [ContinuousConversation] Auto-resume failed — listening cleared, user can tap mic');
           }
         } else {
           console.log('⏸️ [ContinuousConversation] Auto-resume blocked - conditions changed');
@@ -382,30 +391,38 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 3; // Increased for better accuracy
 
-    // CRITICAL: Register with feedback prevention to stop mic when Maya speaks
+    // Register with feedback prevention (bookkeeping only — VFP no longer
+    // patches start() or restarts recognition; the lifecycle session owns that)
     const feedbackPrevention = VoiceFeedbackPrevention.getInstance();
     feedbackPrevention.registerRecognition(recognition);
-    console.log('✅ [ContinuousConversation] Registered with VoiceFeedbackPrevention');
+
+    // 🔁 Adopt into the lifecycle session. The previous instance (if any) is
+    // hard-discarded first, and `gen` stamps every handler below so a late
+    // callback from a superseded instance is dropped before it can touch state.
+    const session = getWebSession();
+    const gen = session.adopt(recognition);
+    recognitionActiveRef.current = false;
+    recognitionRef.current = recognition;
 
     // Audio capture began. On Android Chrome, this sometimes never arrives
     // even after onstart fires — the gap between voice_listening_started and
     // voice_audio_started is the first observable signal of that failure mode.
-    recognition.onaudiostart = () => {
+    recognition.onaudiostart = session.guard(gen, () => {
       audioStartedThisCycleRef.current = true;
       logVoiceEvent('voice_audio_started');
-    };
+    });
 
     // VAD detected speech onset. Distinguishes "audio capture working but no
     // speech detected" from "speech detected but no transcript returned."
     // A successful speech_started resets the no-speech cycle counter — we're
     // making forward progress.
-    recognition.onspeechstart = () => {
+    recognition.onspeechstart = session.guard(gen, () => {
       speechStartedThisCycleRef.current = true;
       noSpeechCycleCountRef.current = 0;
       logVoiceEvent('voice_speech_started');
-    };
+    });
 
-    recognition.onstart = () => {
+    recognition.onstart = session.guard(gen, () => {
       // Reset per-cycle flags before the new cycle begins. The no-speech
       // ACROSS-cycle counter is intentionally NOT reset here — it only resets
       // on a successful speech_started or on a user-driven stop.
@@ -413,8 +430,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       speechStartedThisCycleRef.current = false;
       logVoiceEvent('voice_listening_started');
       recognitionStartTime.current = Date.now(); // Track when recognition actually started
+      recognitionActiveRef.current = true; // Confirmed live (defensive: start paths also set this)
       setIsRecording(true);
       isRecordingRef.current = true; // Update ref immediately
+      setVoiceError(null); // A confirmed live start clears any prior retryable error
       onRecordingStateChange?.(true);
       // Web speech confirmed live — exit ARMING into LISTENING
       if (micStateRef.current === 'ARMING') {
@@ -448,7 +467,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         clearTimeout(recognitionTimeoutRef.current);
       }
       recognitionTimeoutRef.current = setTimeout(() => {
-        if (recognitionRef.current && isRecording) {
+        // Use refs, not closure state — this fires up to 60s after render
+        if (recognitionRef.current && isRecordingRef.current) {
           // Only stop if no speech detected for a while
           const timeSinceLastSpeech = Date.now() - lastSpeechTime.current;
           if (timeSinceLastSpeech > 8000) {
@@ -456,16 +476,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           } else {
             // Reset the timeout if there was recent speech
             recognitionTimeoutRef.current = setTimeout(() => {
-              if (recognitionRef.current && isRecording) {
+              if (recognitionRef.current && isRecordingRef.current) {
                 recognitionRef.current.stop();
               }
             }, 20000);
           }
         }
       }, 60000);
-    };
+    });
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = session.guard(gen, (event: any) => {
       logVoiceEvent('voice_transcribe_result', {
         resultCount: event.results?.length ?? 0,
         isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
@@ -555,52 +575,59 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Also update interim display when we get finals
         onInterimTranscript?.(accumulatedTranscript.current);
       }
-    };
+    });
 
-    recognition.onerror = (event: any) => {
-      logVoiceEvent('voice_transcribe_error', { error: String(event.error || 'unknown') });
+    recognition.onerror = session.guard(gen, (event: any) => {
+      const errorCode = String(event?.error || 'unknown');
+      logVoiceEvent('voice_transcribe_error', { error: errorCode });
       // Only log critical errors (not no-speech or aborted, which are common)
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        console.error('❌ [Continuous] Speech recognition error:', event.error);
+      if (errorCode !== 'no-speech' && errorCode !== 'aborted') {
+        console.error('❌ [Continuous] Speech recognition error:', errorCode);
       }
 
-      if (event.error === 'no-speech') {
-        // DISABLED: Don't process here - silence timer already handles it
-        // Processing here causes DOUBLE TRANSCRIPTION bug
-        // if (accumulatedTranscript.current.trim()) {
-        //   processAccumulatedTranscript();
-        // }
-        // No-speech is normal in continuous mode, auto-restart happens in onend
-      } else if (event.error === 'network') {
+      if (errorCode === 'network') {
         networkErrorCount.current++;
         lastNetworkErrorTime.current = Date.now();
-
-        // 🔥 FIX: Stop after just 2 network errors to prevent blinking
-        // Network errors often mean Google's speech API is unreachable - don't keep trying
-        if (networkErrorCount.current >= 2) {
-          console.error('🚫 Network errors detected (2+), stopping to prevent blink - user can tap mic to retry');
-          setIsListening(false);
-          isListeningRef.current = false;
-          wantsContinuousConversationRef.current = false; // Prevent auto-restart
-          onRecordingStateChange?.(false);
-          return;
-        }
-
-        console.warn(`⚠️ Network error in speech recognition (${networkErrorCount.current}/2), will retry once`);
-        // Network errors will be retried by the auto-restart mechanism with exponential backoff
-      } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        console.error('🚫 Microphone permission denied');
-        // Stop listening permanently if permission denied
-        setIsListening(false);
-        // Note: onError is not defined in props, removed the call
-      } else if (event.error === 'aborted') {
-        // Aborted is normal when stopping/restarting - don't log as error
-        console.log('⏹️ Recognition aborted (normal during restart)');
-        // Don't trigger any restart logic here - let onend handle it
       }
-    };
 
-    recognition.onend = () => {
+      // 🔁 LIFECYCLE: classify the error into (fatal?, recreate?) actions.
+      // Every recreate-class error invalidates the CURRENT instance — Chrome
+      // may keep firing onstart on an errored/aborted object while silently
+      // never firing onresult again (the zombie-mic defect). The next listen
+      // attempt (onend auto-restart or user tap) builds a fresh object.
+      const action = classifyRecognitionError(errorCode, networkErrorCount.current);
+      if (action.recreate) {
+        session.markForRecreate(`onerror_${errorCode}`);
+      }
+
+      if (action.fatal) {
+        // TERMINAL path: clear listening state truthfully everywhere, surface
+        // a retryable message, and hard-discard the instance so no late
+        // callback from it can re-latch the UI. User re-arms via mic tap
+        // (authorityGuard allows starts from ERROR state).
+        console.error(`🚫 [onerror] Fatal recognition error (${errorCode}) — stopping; user can tap mic to retry`);
+        setIsListening(false);
+        isListeningRef.current = false;
+        setIsRecording(false);
+        isRecordingRef.current = false;
+        wantsContinuousConversationRef.current = false; // Prevent auto-restart
+        onRecordingStateChange?.(false);
+        setVoiceError(action.userMessage || 'Voice input hit a problem. Tap the mic to try again.');
+        setMicState('ERROR', `onerror_${errorCode}`);
+        discardRecognitionFnRef.current?.(`fatal_${errorCode}`);
+        return;
+      }
+
+      if (errorCode === 'network') {
+        console.warn(`⚠️ Network error in speech recognition (${networkErrorCount.current}/2), will retry with a fresh instance`);
+      } else if (errorCode === 'aborted') {
+        // Aborted is normal when stopping/restarting - don't log as error
+        console.log('⏹️ Recognition aborted (instance invalidated; onend decides restart)');
+      }
+      // no-speech is normal in continuous mode; onend owns restart policy
+    });
+
+    recognition.onend = session.guard(gen, () => {
       logVoiceEvent('voice_recognition_ended');
       console.log('🏁 [onend] Recognition stopped');
       recognitionActiveRef.current = false; // Clear double-start guard
@@ -739,9 +766,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Preserve isListening so the auto-resume effect can restart after TTS ends.
         if (isSpeakingRef.current || inputSuppressedRef.current) {
           console.log('⏸️ [onend] Recognition aborted quickly because MAIA started speaking - preserving listening state');
-          // 🔥 FIX: Mark for refresh. Chrome's Web Speech API silently fails onresult
-          // when start() is called on a previously-aborted object. Force fresh object next session.
-          recognitionNeedsRefreshRef.current = true;
+          // Chrome's Web Speech API silently fails onresult when start() is
+          // called on a previously-aborted object — never reuse this instance.
+          session.markForRecreate('quick_abort_during_tts');
           return;
         }
         console.log('🚨 [onend] Recognition ended too quickly after start (' + timeSinceStart + 'ms) - possible infinite abort loop, stopping');
@@ -755,7 +782,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // so the auto-resume effect can restart the mic after TTS ends.
       if (isSpeakingRef.current || inputSuppressedRef.current) {
         console.log('⏸️ [onend] Recognition timed out while MAIA speaking - preserving listening state for auto-resume');
-        recognitionNeedsRefreshRef.current = true;
+        session.markForRecreate('timeout_during_tts');
         return;
       }
 
@@ -787,7 +814,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
 
       // Log if persistent mode is keeping us open
-      if (persistentListeningRef.current && !hasRecentSpeech && !hasAccumulatedTranscript) {
+      // (was `hasRecentSpeech` — an out-of-scope name that would have thrown a
+      // ReferenceError inside onend in Care/Scribe modes, killing the restart
+      // path — exactly the class of silent latch this PR removes)
+      if (persistentListeningRef.current && !hasRecentActivity && !hasAccumulatedTranscript) {
         console.log('🎧 [onend] Persistent listening mode - staying open for Care/Scribe');
       }
 
@@ -835,20 +865,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setTimeout(() => {
           // Triple-check conditions before restart to prevent race conditions
           // CRITICAL: Use refs to check current state, not stale closure values
-          if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isProcessingRef.current && !isSpeakingRef.current) {
-            try {
-              // Mark this as a continuation so the upcoming onstart preserves
-              // (does not wipe) the accumulated transcript. iOS Safari fires
-              // onend mid-utterance; this restart is the *same* user turn.
-              continuationRestartRef.current = true;
-              recognitionRef.current.start();
+          if (isListeningRef.current && !isRecordingRef.current && !isProcessingRef.current && !isSpeakingRef.current) {
+            // Mark this as a continuation so the upcoming onstart preserves
+            // (does not wipe) the accumulated transcript. iOS Safari fires
+            // onend mid-utterance; this restart is the *same* user turn.
+            continuationRestartRef.current = true;
+            // 🔁 LIFECYCLE: restart through the session. If this instance was
+            // invalidated (error/abort/suspend), a FRESH object is created and
+            // started — the old one is never reused. On failure, listening
+            // state is cleared and a retryable message surfaces (no latch).
+            const ok = ensureFreshAndStartFnRef.current?.('onend_restart') ?? false;
+            if (ok) {
               console.log('✅ [onend] Recognition restarted (continuation — transcript preserved)');
-            } catch (err: any) {
-              // start failed — no onstart will fire, so don't leave the flag set
+            } else {
+              // no onstart will fire, so don't leave the continuation flag set
               continuationRestartRef.current = false;
-              // If start fails, it's likely already running or in a bad state
-              console.log('⚠️ [onend] Could not restart recognition:', err.message);
-              // Don't retry to avoid infinite loop
+              console.log('⚠️ [onend] Restart failed — listening cleared, user can tap mic to retry');
             }
           } else {
             console.log('🚫 [onend] Conditions changed, not restarting. State:', {
@@ -872,10 +904,123 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   isSpeakingRef.current ? 'IS_SPEAKING' : 'UNKNOWN'
         });
       }
-    };
+    });
 
     return recognition;
-  }, [silenceThreshold, onInterimTranscript, onRecordingStateChange, isSafari]);
+  }, [silenceThreshold, onInterimTranscript, onRecordingStateChange, isSafari, getWebSession, setMicState]);
+
+  // ==========================================================================
+  // 🔁 WEB SPEECH LIFECYCLE HELPERS
+  // ==========================================================================
+
+  /** Hard-discard the current web recognition instance (detach + abort + null). */
+  const discardRecognition = useCallback((reason: string) => {
+    getWebSession().discard(reason);
+    recognitionRef.current = null;
+    recognitionActiveRef.current = false;
+  }, [getWebSession]);
+
+  /**
+   * The ONE web-path start gate. Consults the lifecycle session:
+   *  - if the previous instance errored, aborted unexpectedly, was suspended
+   *    for TTS, or a device change invalidated it → build a FRESH instance;
+   *  - a healthy running instance is left running (no double-start);
+   *  - a failed start() is RECOVERABLE: instance discarded, listening state
+   *    cleared on every ref/state/parent surface, retryable message surfaced.
+   * Returns true iff a live (or freshly started) instance is in place.
+   */
+  const ensureFreshAndStart = useCallback((source: string): boolean => {
+    const session = getWebSession();
+
+    const clearToRetryable = (message: string, tag: string) => {
+      setIsListening(false);
+      isListeningRef.current = false;
+      setIsRecording(false);
+      isRecordingRef.current = false;
+      onRecordingStateChange?.(false);
+      setVoiceError(message);
+      setMicState('ERROR', tag); // authorityGuard allows user-tap starts from ERROR
+    };
+
+    if (session.shouldRecreate) {
+      discardRecognition(`recreate_for_${source}`);
+      const fresh = initializeSpeechRecognition(); // adopts into session, bumps generation
+      if (!fresh) {
+        console.warn(`⚠️ [lifecycle] Could not create recognition object (${source})`);
+        clearToRetryable('Voice input is unavailable right now. Tap the mic to try again.', `create_failed_${source}`);
+        return false;
+      }
+      console.log(`🔄 [lifecycle] Fresh recognition object (${source}, gen ${session.currentGeneration})`);
+    }
+
+    if (!recognitionRef.current) return false; // defensive; shouldRecreate covers null
+
+    if (recognitionActiveRef.current) {
+      console.log(`⏸️ [lifecycle] Recognition already running (${source})`);
+      return true;
+    }
+
+    try {
+      recognitionRef.current.start();
+      recognitionActiveRef.current = true;
+      console.log(`🎙️ [lifecycle] Recognition started (${source}, gen ${session.currentGeneration})`);
+      return true;
+    } catch (err: any) {
+      if (err?.name === 'InvalidStateError' || err?.message?.includes('already started')) {
+        recognitionActiveRef.current = true; // It IS running, just not started by us
+        return true;
+      }
+      console.error(`❌ [lifecycle] start() failed (${source}):`, err);
+      discardRecognition(`start_failed_${source}`); // never reuse a failed instance
+      clearToRetryable('The microphone could not start. Tap the mic to try again.', `start_failed_${source}`);
+      return false;
+    }
+  }, [getWebSession, discardRecognition, initializeSpeechRecognition, onRecordingStateChange, setMicState]);
+
+  /**
+   * `devicechange` recovery. By the time this runs, the session has already
+   * hard-discarded + invalidated the recognition instance. Mirror that into
+   * component state, tear down the audio pipeline bound to the old device, and
+   * return the UI to a recoverable idle state. Reacquisition happens ONLY
+   * through the normal start path (user taps the mic) — never by silently
+   * spinning up a competing listener here.
+   */
+  const handleWebDeviceChange = useCallback(() => {
+    recognitionRef.current = null;
+    recognitionActiveRef.current = false;
+
+    const wasActive = isListeningRef.current || isRecordingRef.current;
+    console.log(`🔌 [devicechange] Audio devices changed (wasActive=${wasActive}) — voice session invalidated`);
+    if (!wasActive) return; // idle: next start builds fresh anyway
+
+    // The mic stream + analyser are bound to the old device — tear them down.
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch { /* already closed */ }
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+
+    setIsListening(false);
+    isListeningRef.current = false;
+    setIsRecording(false);
+    isRecordingRef.current = false;
+    wantsContinuousConversationRef.current = false;
+    onRecordingStateChange?.(false);
+    setAudioLevel(0);
+    setVoiceError('Your audio device changed. Tap the mic to reconnect.');
+    setMicState('IDLE', 'devicechange');
+  }, [onRecordingStateChange, setMicState]);
+
+  // Keep fn refs current so recognition handlers reach the latest helpers
+  useEffect(() => {
+    ensureFreshAndStartFnRef.current = ensureFreshAndStart;
+    discardRecognitionFnRef.current = discardRecognition;
+    handleWebDeviceChangeFnRef.current = handleWebDeviceChange;
+  }, [ensureFreshAndStart, discardRecognition, handleWebDeviceChange]);
 
   // Sync props and state to refs to avoid stale closures in recognition callbacks
   // 🔥 CRITICAL: Sync isSpeaking SYNCHRONOUSLY (not in useEffect) to prevent race conditions
@@ -937,11 +1082,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setIsRecording(false);
         isRecordingRef.current = false;
       } else {
-        // 🌐 PWA/WEB: Soft suppress - keep mic HOT for barge-in detection
-        console.log('🎤 [PWA DUPLEX] MAIA speaking - mic stays HOT, transcripts suppressed');
-        inputSuppressedRef.current = true;
-        // NOTE: Do NOT stop recognition or mic - analyser needs it for barge-in
-        // The onresult handler will check inputSuppressedRef and ignore transcripts
+        // 🌐 PWA/WEB: SUSPEND recognition for MAIA's playback window — a
+        // PLANNED teardown through the lifecycle session, not a failure.
+        // The mic STREAM + analyser stay hot so voice barge-in detection keeps
+        // working (it reads audio levels, not transcripts), but the
+        // SpeechRecognition instance is discarded: no echo transcripts, and
+        // none of the abort/restart churn that used to zombie Chrome's
+        // recognition objects. The post-playback resume builds a FRESH one.
+        console.log('🔇 [PWA] MAIA speaking - suspending web recognition (mic stream stays hot for barge-in)');
+        inputSuppressedRef.current = true; // belt-and-braces vs. in-flight results
+        const session = webSessionRef.current;
+        if (session?.current) {
+          session.suspendForTts();
+          recognitionRef.current = null;
+          recognitionActiveRef.current = false;
+        }
+        setIsRecording(false);
+        isRecordingRef.current = false;
+        onRecordingStateChange?.(false);
       }
 
       isProcessingRef.current = false;
@@ -1490,6 +1648,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     armingTimeoutRef.current = setTimeout(() => {
       if (startAttemptTokenRef.current === attemptToken && micStateRef.current === 'ARMING') {
         console.warn('⏱️ [ContinuousConversation] ARMING timeout — resetting to IDLE');
+        // 🔁 WEB: the instance never confirmed onstart — treat it as failed and
+        // never reuse it. Clear listening truthfully and surface a retryable
+        // message so the button can't sit latched in a half-armed state.
+        if (!useNativeSpeechRef.current) {
+          discardRecognitionFnRef.current?.('arming_timeout');
+          setIsListening(false);
+          isListeningRef.current = false;
+          setIsRecording(false);
+          isRecordingRef.current = false;
+          onRecordingStateChange?.(false);
+          setVoiceError('The microphone did not start. Tap the mic to try again.');
+        }
         setMicState('IDLE', 'arming_timeout');
         isStartingRef.current = false;
       }
@@ -2213,56 +2383,27 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       onRecordingStateChange?.(true);
       console.log('📡 [Web] Permissions OK - showing listening state');
 
-    // Initialize speech recognition
-    // 🔥 FIX: Always create a fresh recognition object if the previous one was aborted by VFP.
-    // Chrome's Web Speech API silently fails onresult when start() is called on an aborted object —
-    // recognition appears to start (onstart fires) but onresult never fires for user speech.
-    if (!recognitionRef.current || recognitionNeedsRefreshRef.current) {
-      if (recognitionRef.current && recognitionNeedsRefreshRef.current) {
-        console.log('🔄 [ContinuousConversation] Refreshing recognition object (was aborted by VFP)');
-        // Null out all handlers first to prevent ghost callbacks from the dead instance
-        recognitionRef.current.onstart = null;
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.onend = null;
-        VoiceFeedbackPrevention.getInstance().unregisterRecognition(recognitionRef.current);
-        recognitionRef.current = null;
-      }
-      recognitionRef.current = initializeSpeechRecognition();
-      recognitionNeedsRefreshRef.current = false;
-      console.log('🔧 [ContinuousConversation] Speech recognition initialized');
+    // 🔌 Device-change resilience: if the active audio device changes, the
+    // lifecycle session hard-discards the recognition instance and the handler
+    // returns the UI to a recoverable idle state (reacquire via mic tap only).
+    // attachDeviceChange is idempotent, so calling it on every start is safe.
+    if (navigator.mediaDevices?.addEventListener) {
+      getWebSession().attachDeviceChange(navigator.mediaDevices, () => handleWebDeviceChangeFnRef.current?.());
     }
 
-    if (recognitionRef.current) {
-      isProcessingRef.current = false;
+    // 🔁 LIFECYCLE: single start gate. Never reuses a failed/aborted/suspended
+    // instance — the session decides whether a fresh object is required
+    // (replacing the old recognitionNeedsRefreshRef dance). A failed start()
+    // clears listening state and surfaces a retryable message (no latch).
+    isProcessingRef.current = false;
+    // Reset restart counter when user manually starts listening.
+    // NOTE: Do NOT reset lastSpeechTime here - it should only be set when
+    // actual speech is detected (prevents the "blinking listening" bug).
+    consecutiveRestartCount.current = 0;
 
-      // Reset restart counter when user manually starts listening
-      consecutiveRestartCount.current = 0;
-      // NOTE: Do NOT reset lastSpeechTime here - it should only be set when actual speech is detected
-      // This prevents the "blinking listening" bug where mic restarts even without speech
-
-      try {
-        // Guard against double-start: if recognition is already running, skip.
-        // This prevents InvalidStateError when multiple restart paths
-        // (watchdog, maya-voice-end, hands-free restart) fire within ms of each other.
-        // We track this ourselves because webkitSpeechRecognition has no .started property.
-        if (recognitionActiveRef.current) {
-          console.log('⏸️ [ContinuousConversation] Recognition already running, skipping duplicate start');
-        } else {
-          recognitionRef.current.start();
-          recognitionActiveRef.current = true;
-          console.log('🎙️ [ContinuousConversation] Recognition started');
-        }
-      } catch (err: any) {
-        // Catch InvalidStateError and "already started" — both mean recognition is active
-        recognitionActiveRef.current = false;
-        if (err?.name === 'InvalidStateError' || err?.message?.includes('already started')) {
-          recognitionActiveRef.current = true; // It IS running, just not started by us
-          console.log('⏸️ [ContinuousConversation] Recognition already active');
-        } else {
-          console.error('❌ [ContinuousConversation] Error starting recognition:', err);
-        }
-      }
+    const started = ensureFreshAndStartFnRef.current?.('user_start') ?? false;
+    if (!started) {
+      throw new Error('RECOGNITION_START_FAILED');
     }
     } catch (error: any) {
       console.error('❌ [ContinuousConversation] Failed to start listening:', error);
@@ -2371,11 +2512,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
     }
 
-    // Stop web speech recognition
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
+    // Stop web speech recognition — hard discard through the lifecycle session
+    // (detaches every handler, aborts, unregisters from VFP). No late callback
+    // from the old instance can fire after this; the next start builds fresh.
+    getWebSession().discard('stop_listening');
+    recognitionRef.current = null;
 
     // Clear timers
     if (silenceTimerRef.current) {
@@ -2410,7 +2551,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     //   success: true,
     //   mode: 'continuous'
     // });
-  }, [onTranscript, onRecordingStateChange]);
+  }, [onTranscript, onRecordingStateChange, getWebSession]);
 
   // Toggle listening
   const toggleListening = useCallback(() => {
@@ -2467,9 +2608,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (useNativeSpeechRef.current) {
       try { await NativeSpeechRecognition.stop(); } catch {}
     }
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
-    }
+    // Web: hard-discard so the interrupted instance is never reused
+    // (an interruption mid-capture is exactly the state that zombies it)
+    discardRecognitionFnRef.current?.('ios_interruption');
 
     setIsListening(false);
     isListeningRef.current = false;
@@ -2616,6 +2757,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   useEffect(() => {
     return () => {
       stopListening();
+      // Full lifecycle teardown: discards any remaining recognition instance
+      // (handlers detached — no restart can fire post-unmount) and removes the
+      // devicechange listener.
+      webSessionRef.current?.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only run on mount/unmount

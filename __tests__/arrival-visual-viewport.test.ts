@@ -161,12 +161,16 @@ describe('reachability fix — nothing in the scrollable region has a negative m
       SRC.indexOf('style={{', SRC.indexOf('className="fixed left-0 right-0')),
       SRC.indexOf('}}', SRC.indexOf('className="fixed left-0 right-0'))
     );
-    expect(styleBlock).toMatch(/paddingTop:\s*'54px'/);
+    // Post-reconciliation (2026-07-28): the reserve is the header's REAL
+    // height — 54px plus the safe-area inset the grown-box header honors.
+    expect(styleBlock).toMatch(/paddingTop:\s*'calc\(54px \+ max\(env\(safe-area-inset-top\), 0px\)\)'/);
     expect(styleBlock).toMatch(/paddingBottom:\s*'calc\(54px \+ 8vh\)'/);
   });
 
-  it('the 54px reserved at the top matches the header\'s own height', () => {
-    const header = SRC.match(/className="absolute inset-x-0 top-0[^"]*\bh-\[(\d+)px\][^"]*"/);
+  it('the reserved top matches the header\'s own grown-box height', () => {
+    // Header is h-[calc(54px+env(safe-area-inset-top,0px))] after the
+    // reconcile-not-stack merge — same 54px content row, notch-covering box.
+    const header = SRC.match(/className="absolute inset-x-0 top-0[^"]*\bh-\[calc\((\d+)px\+env\(safe-area-inset-top,0px\)\)\][^"]*"/);
     expect(header).not.toBeNull();
     expect(header![1]).toBe('54');
   });

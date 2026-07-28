@@ -133,18 +133,21 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
         // reproducing the exact #704 crop this field exists to prevent, just
         // by a different mechanism. The lift is now expressed entirely as
         // container padding instead:
-        //  - paddingTop reserves the 54px header's height, so the `safe`
-        //    fallback's top-aligned content starts below the header, not
-        //    underneath it, and is visible at scrollTop: 0 immediately.
-        //  - paddingBottom carries the old margin's ~8vh lift PLUS the 54px
-        //    paddingTop, so the centered (fits-fine) geometry this produces
-        //    is pixel-identical to the previous negative-margin version —
-        //    verified algebraically: border-box top reduces to the same
-        //    (containerHeight - contentHeight - 8vh) / 2 in both versions.
-        // No negative margin exists anywhere in the scrollable coordinate
-        // space now, in either the fits or overflow case.
+        //  - paddingTop reserves the header's REAL height — 54px PLUS the top
+        //    safe-area inset the header itself honors (line ~168). Reserving a
+        //    flat 54px let the inset-sized band under the notch crop the crown
+        //    of the holoflower on notched devices: the `safe` fallback's
+        //    top-aligned content started UNDER the header, not below it (native
+        //    device walk, 2026-07-27). With the inset reserved it clears, and is
+        //    visible at scrollTop: 0.
+        //  - paddingBottom carries the old margin's ~8vh lift PLUS a bare 54px.
+        //    Because paddingTop now also carries the inset, the centered
+        //    (fits-fine) content sits ~inset/2 lower than the pre-inset version
+        //    — exactly the "move it down a bit so the whole flower shows" the
+        //    notch requires. No negative margin exists anywhere in the
+        //    scrollable coordinate space, in either the fits or overflow case.
         justifyContent: 'safe center',
-        paddingTop: '54px',
+        paddingTop: 'calc(54px + max(env(safe-area-inset-top), 0px))',
         paddingBottom: 'calc(54px + 8vh)',
         // Opaque field so the arrival reads as ONE contained composition,
         // covering the scattered conversation layers + chrome behind it.
@@ -161,8 +164,13 @@ export function MaiaArrivalField({ greeting, subtext, userInitial = 'K', onSend,
           MaiaShell — the two doorways swap beneath the member and must occupy
           the same content row. env is 0 in desktop browsers (web unchanged);
           on device it keeps the row below the status bar, with this header's
-          background still covering the notch zone. */}
-      <div className="absolute inset-x-0 top-0 z-10 flex h-[calc(54px+env(safe-area-inset-top,0px))] items-center justify-between bg-[#0a0807] pt-[env(safe-area-inset-top,0px)] px-4 md:px-6">
+          background still covering the notch zone.
+
+          RECONCILED with #763 (reconcile-not-stack, 2026-07-28): the native
+          lane's grown-box height (background covers the notch) carries the
+          founder's 6px breath inside ONE padding source. Do not reintroduce a
+          second inset via style — that is the double-inset this note guards. */}
+      <div className="absolute inset-x-0 top-0 z-10 flex h-[calc(54px+env(safe-area-inset-top,0px))] items-center justify-between bg-[#0a0807] pt-[calc(env(safe-area-inset-top,0px)+6px)] px-4 md:px-6">
         {/* The doorway. Icon + label, 44px tall, matching MaiaShell's doorway
             exactly so it does not move or change shape when Arrival gives way to
             conversation. It was a bare 19x19 glyph — under half the 44px minimum,

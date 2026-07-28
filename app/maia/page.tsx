@@ -27,13 +27,13 @@ import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
+import { shouldOpenJournalCapture, urlWithoutJournalParam } from '@/lib/navigation/journalDeepLink';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
 import FeedbackSheet from '@/components/feedback/FeedbackSheet';
 import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
-import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import { deriveShouldRenderArrival, readHasArrivedBefore, recordFirstArrival } from '@/lib/maia/arrivalState';
@@ -466,7 +466,6 @@ function MAIAPageContent() {
   const [showFeedbackSheet, setShowFeedbackSheet] = useState(false);
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
   const [showChangesSheet, setShowChangesSheet] = useState(false);
-  const [showDecisionsSheet, setShowDecisionsSheet] = useState(false);
 
   // Framework selector state (long-press on Care/Note tabs)
   const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);
@@ -621,6 +620,17 @@ function MAIAPageContent() {
       const path = pathname ?? '/maia';
       router.replace(newQuery ? `${path}?${newQuery}` : path, { scroll: false });
     }
+  }, [searchParams, pathname, router]);
+
+  // Journal capture deep link (/maia?journal=1) — the Journal's "New Entry"
+  // control opens the EXISTING capture sheet here rather than bouncing the
+  // member to /maia with nothing open. Strip the parameter immediately so
+  // refresh, Back, or a re-render cannot reopen it; the guard above makes the
+  // effect a no-op on the re-run that the replace itself triggers.
+  useEffect(() => {
+    if (!shouldOpenJournalCapture(searchParams)) return;
+    setShowJournalSheet(true);
+    router.replace(urlWithoutJournalParam(searchParams, pathname), { scroll: false });
   }, [searchParams, pathname, router]);
 
   // Load and listen for framework/lens changes
@@ -794,7 +804,6 @@ function MAIAPageContent() {
             onOpenShadowWork={() => setShowShadowWork(true)}
             onOpenAcademy={() => setShowAcademySheet(true)}
             onOpenChanges={() => setShowChangesSheet(true)}
-            onOpenDecisions={() => setShowDecisionsSheet(true)}
             onLabAction={handleLabAction}
             activeMode={maiaMode}
             onModeChange={setMaiaMode}
@@ -867,8 +876,6 @@ function MAIAPageContent() {
           onCloseAcademySheet={() => setShowAcademySheet(false)}
           showChangesSheet={showChangesSheet}
           onCloseChangesSheet={() => setShowChangesSheet(false)}
-          showDecisionsSheet={showDecisionsSheet}
-          onCloseDecisionsSheet={() => setShowDecisionsSheet(false)}
         />
 
         {/* Account dropdown — extracted from inline bottom sheet */}
@@ -1189,16 +1196,6 @@ function MAIAPageContent() {
                   <span className="text-xs">Changes</span>
                 </motion.button>
 
-                {/* Decisions Button */}
-                <motion.button
-                  onClick={() => setShowDecisionsSheet(true)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 hover:border-maia-navy-700 text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
-                  title="Decisions"
-                >
-                  <GitFork className="w-3 h-3" />
-                  <span className="text-xs">Decisions</span>
-                </motion.button>
-
                 {/* Feedback Button - Mobile */}
                 <button
                   onClick={() => setShowFeedbackSheet(true)}
@@ -1472,23 +1469,6 @@ function MAIAPageContent() {
                   >
                     <Wind className="w-4 h-4" />
                     <span className="hidden sm:inline">Changes</span>
-                  </motion.button>
-                </FeatureTooltip>
-
-                {/* Decisions Button - Desktop */}
-                <FeatureTooltip featureId="decisions" side="bottom">
-                  <motion.button
-                    onClick={() => setShowDecisionsSheet(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-maia-navy-800/40 hover:bg-maia-navy-800
-                             border border-maia-navy-700/40 hover:border-maia-navy-700
-                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="Decisions"
-                  >
-                    <GitFork className="w-4 h-4" />
-                    <span className="hidden sm:inline">Decisions</span>
                   </motion.button>
                 </FeatureTooltip>
 
@@ -1836,14 +1816,6 @@ function MAIAPageContent() {
         <ChangesSheet
           isOpen={showChangesSheet}
           onClose={() => setShowChangesSheet(false)}
-          memberId={explorerId}
-          memberName={explorerName}
-        />
-
-        {/* Decisions Sheet */}
-        <DecisionsSheet
-          isOpen={showDecisionsSheet}
-          onClose={() => setShowDecisionsSheet(false)}
           memberId={explorerId}
           memberName={explorerName}
         />

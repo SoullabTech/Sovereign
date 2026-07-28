@@ -13,9 +13,9 @@
 #   5. Revert route patches
 #   6. Capacitor sync (cap sync ios)
 #   7. CocoaPods install (if needed)
-#   8. Bump build number (git commit count)
+#   8. Bump build number (increment CFBundleVersion in Info.plist by 1)
 #   9. Archive (xcodebuild)
-#  10. Export IPA (gym via Fastlane)
+#  10. Export IPA (xcodebuild -exportArchive)
 #
 # Output:
 #   ios/App/build/App.xcarchive
