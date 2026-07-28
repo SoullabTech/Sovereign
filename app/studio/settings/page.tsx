@@ -81,6 +81,10 @@ interface CalendarStatus {
 interface MessagingStatus {
   configured: boolean;
   connected: boolean;
+  /** Caller may not use this provider. Says nothing about whether it is set up. */
+  unauthorized?: boolean;
+  /** Status could not be determined (transport failure). Not a claim either way. */
+  unknown?: boolean;
 }
 
 function SettingsContent() {
@@ -184,47 +188,58 @@ function SettingsContent() {
       }
     };
 
-    // Check messaging integrations status
+    // Check messaging integrations status.
+    //
+    // This asks a read-only status endpoint. It does NOT attempt a send:
+    // opening settings must not deliver a message, and must not write a
+    // delivery audit entry.
+    //
+    // The `state` field is the contract. We never parse error strings — that is
+    // what previously turned an authorization refusal ("Authentication
+    // required", which does not contain "not configured") into the claim that
+    // the provider WAS configured.
     const checkMessagingStatus = async () => {
-      // SMS - check if Twilio env vars are set
+      const applyState = (
+        state: string | undefined,
+        set: (s: MessagingStatus) => void,
+      ) => {
+        set({
+          // "Unauthorized" tells us nothing about setup, so we must not claim
+          // it is configured — nor claim it is not.
+          //
+          // `connected` mirrors `configured` because the status endpoint proves
+          // credential presence, NOT provider reachability. We do not have a
+          // live-connectivity signal, so we do not display one.
+          configured: state === 'configured',
+          connected: state === 'configured',
+          unauthorized: state === 'unauthorized',
+        });
+      };
+
       try {
-        const smsResponse = await apiFetch('/api/notifications/sms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: 'test', message: 'test' }),
-        });
-        const smsData = await smsResponse.json();
-        setSmsStatus({
-          configured: !smsData.error?.includes('not configured'),
-          connected: smsData.devMode || smsData.success,
-        });
+        const res = await apiFetch('/api/notifications/status');
+        const data = await res.json().catch(() => ({}));
+
+        // Branch on status BEFORE reading the body.
+        if (res.status === 401 || res.status === 403) {
+          for (const set of [setSmsStatus, setTelegramStatus, setWhatsappStatus]) {
+            applyState('unauthorized', set);
+          }
+        } else {
+          applyState(data?.providers?.sms?.state, setSmsStatus);
+          applyState(data?.providers?.telegram?.state, setTelegramStatus);
+          applyState(data?.providers?.whatsapp?.state, setWhatsappStatus);
+        }
       } catch {
-        setSmsStatus({ configured: false, connected: false });
+        // A transport failure is not evidence about the provider.
+        for (const set of [setSmsStatus, setTelegramStatus, setWhatsappStatus]) {
+          set({ configured: false, connected: false, unknown: true });
+        }
       } finally {
         setSmsLoading(false);
-      }
-
-      // Telegram
-      try {
-        const telegramResponse = await apiFetch('/api/notifications/telegram');
-        const telegramData = await telegramResponse.json();
-        setTelegramStatus({
-          configured: telegramData.configured || false,
-          connected: telegramData.connected || false,
-        });
-      } catch {
-        setTelegramStatus({ configured: false, connected: false });
-      } finally {
         setTelegramLoading(false);
+        setWhatsappLoading(false);
       }
-
-      // WhatsApp - uses Twilio, check env var
-      const whatsappConfigured = !!process.env.NEXT_PUBLIC_WHATSAPP_ENABLED;
-      setWhatsappStatus({
-        configured: whatsappConfigured || smsStatus?.configured || false,
-        connected: false, // Requires setup
-      });
-      setWhatsappLoading(false);
     };
 
     fetchGoogleStatus();
@@ -1584,6 +1599,18 @@ function SettingsContent() {
                         <Loader2 className="w-3 h-3 animate-spin" />
                         Checking...
                       </div>
+                    ) : smsStatus?.unauthorized ? (
+                      // Not a configuration claim. We do not know, and must not
+                      // guess, whether the provider is set up.
+                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                        <AlertCircle className="w-3 h-3" />
+                        Not available to this account
+                      </div>
+                    ) : smsStatus?.unknown ? (
+                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                        <AlertCircle className="w-3 h-3" />
+                        Status unavailable
+                      </div>
                     ) : smsStatus?.configured ? (
                       <div className="flex items-center gap-2 text-sm text-teal-400">
                         <CheckCircle2 className="w-3 h-3" />
@@ -1597,7 +1624,8 @@ function SettingsContent() {
                     )}
                   </div>
                 </div>
-                {!smsLoading && !smsStatus?.configured && (
+                {/* Only offer the remedy when "not configured" is actually what we found. */}
+                {!smsLoading && !smsStatus?.configured && !smsStatus?.unauthorized && !smsStatus?.unknown && (
                   <span className="text-xs text-slate-500">Set TWILIO_* env vars</span>
                 )}
               </div>
