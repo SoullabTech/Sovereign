@@ -128,7 +128,15 @@ describe('structural — no send, no string-matching', () => {
   });
 
   it('declares no state it cannot determine', () => {
-    // Credential presence proves CONFIGURATION, not reachability.
-    expect(code(statusRoute)).not.toMatch(/'connected'|'disconnected'/);
+    // Credential presence proves CONFIGURATION, not reachability. Scope this to
+    // the ProviderState union — the route legitimately queries the
+    // practitioner_integrations column value `status = 'connected'`, which is a
+    // database fact, not a state we report to the caller.
+    const union = code(statusRoute).match(/export type ProviderState =[\s\S]*?;/)?.[0] ?? '';
+    expect(union).toBeTruthy();
+    expect(union).toMatch(/'unauthorized'/);
+    expect(union).toMatch(/'not_configured'/);
+    expect(union).toMatch(/'configured'/);
+    expect(union).not.toMatch(/'connected'|'disconnected'/);
   });
 });
