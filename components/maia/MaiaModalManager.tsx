@@ -15,7 +15,6 @@ import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
-import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 
 interface MaiaModalManagerProps {
   explorerId: string;
@@ -60,10 +59,6 @@ interface MaiaModalManagerProps {
   // Changes (Book of Changes)
   showChangesSheet: boolean;
   onCloseChangesSheet: () => void;
-
-  // Decisions
-  showDecisionsSheet: boolean;
-  onCloseDecisionsSheet: () => void;
 }
 
 export function MaiaModalManager({
@@ -93,8 +88,6 @@ export function MaiaModalManager({
   onCloseAcademySheet,
   showChangesSheet,
   onCloseChangesSheet,
-  showDecisionsSheet,
-  onCloseDecisionsSheet,
 }: MaiaModalManagerProps) {
   return (
     <>
@@ -157,12 +150,6 @@ export function MaiaModalManager({
       <ChangesSheet
         isOpen={showChangesSheet}
         onClose={onCloseChangesSheet}
-        memberId={explorerId}
-        memberName={explorerName}
-      />
-      <DecisionsSheet
-        isOpen={showDecisionsSheet}
-        onClose={onCloseDecisionsSheet}
         memberId={explorerId}
         memberName={explorerName}
       />

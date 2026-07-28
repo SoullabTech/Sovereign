@@ -143,12 +143,14 @@ describe('House destinations for an ordinary member', () => {
     expect(member).toContain('changes');
   });
 
-  it('withholds Decisions per the existing audience rule', () => {
-    // audience: 'founder' — mirrors the practitioner-gated /api/studio/decisions.
-    // The House gate is visibility only; the API is the real boundary.
-    expect(HOUSE_DESTINATIONS.find((d) => d.id === 'decisions')!.audience).toBe('founder');
+  it('has no Decisions destination for any audience', () => {
+    // Superseding ruling (2026-07-28): Decisions is a practitioner capability
+    // and is not part of the member House grammar at all — including for a
+    // practitioner using the member House. The 2026-07-27 'founder' audience
+    // gate is superseded. See docs/canon/THE_HOUSE.md.
+    expect(HOUSE_DESTINATIONS.find((d) => d.id === 'decisions')).toBeUndefined();
     expect(member).not.toContain('decisions');
-    expect(founder).toContain('decisions');
+    expect(founder).not.toContain('decisions');
   });
 });
 
