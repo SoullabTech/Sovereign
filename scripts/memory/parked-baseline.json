@@ -1,0 +1,90 @@
+{
+  "generated_at": "2026-07-28T11:05:25",
+  "note": "Inherited parked-lane entries (warnings). Triage each, then remove it; new entries are errors. Ruling 2026-07-28.",
+  "entries": {
+    "feedback_closure_differentiation_rule.md|feedback_practice_not_mechanism.md": {
+      "hash": "d9c8c224c0cf",
+      "text": "- [Closure differentiation rule](feedback_closure_differentiation_rule.md) · [Practice, not mechanism](feedback_practice_not_mechanism.md) — name which guard he"
+    },
+    "feedback_constitutional_governance_lifecycle.md": {
+      "hash": "012b658abc2f",
+      "text": "- [Constitutional governance lifecycle](feedback_constitutional_governance_lifecycle.md) — Cand→Reconcile→Ratify→Living; ⚠️ never collapse"
+    },
+    "project_ain_institute_living_inquiry.md|project_ainos_worthy_cyber_reality_candidate.md|project_member_sovereign_horizon.md": {
+      "hash": "875be60b4ff0",
+      "text": "- [Member-Sovereign Horizon](project_member_sovereign_horizon.md) — north star · [AINOS](project_ainos_worthy_cyber_reality_candidate.md) — ⚠️ name collision · "
+    },
+    "project_arc_narration_reconciliation_candidate.md": {
+      "hash": "bf0d20e9894d",
+      "text": "- [Arc-Narration Reconciliation](project_arc_narration_reconciliation_candidate.md) — UNCOMMITTED; continuity legit iff member-authored"
+    },
+    "project_attention_salience_ux_candidate.md": {
+      "hash": "05b5e78257ce",
+      "text": "- [Attention-salience UX](project_attention_salience_ux_candidate.md) — Cat-1 CAND; ⚠️ AskUserQuestion sparingly"
+    },
+    "project_client_representation_governance_patch.md|project_participatory_containers_paper.md": {
+      "hash": "7167fbfc15df",
+      "text": "- [Client Rep Governance](project_client_representation_governance_patch.md) — #526 OPEN · [Participatory Containers](project_participatory_containers_paper.md)"
+    },
+    "project_context_assembly_canon.md": {
+      "hash": "0f2697107574",
+      "text": "- [Context Assembly / ADR-013](project_context_assembly_canon.md) — ONE MAIA, many Field Configs; Inv 17 PROP"
+    },
+    "project_creator_world_studio_direction.md": {
+      "hash": "54d886e70e66",
+      "text": "- [Creator/World Studio direction](project_creator_world_studio_direction.md) — Cat 1 HELD; \"notice patterns, never name meaning\""
+    },
+    "project_developmental_publishing_system_candidate.md": {
+      "hash": "a29e89b80273",
+      "text": "- [Dev Publishing System](project_developmental_publishing_system_candidate.md) — v0.4 MERGED; #608/#673 open; witness ledger missing"
+    },
+    "project_house_studio_continuity_boundary.md": {
+      "hash": "5481624ab2e7",
+      "text": "- [House/Studio continuity boundary](project_house_studio_continuity_boundary.md) — 07-27 direction: House=mobile continuity, Studio=desktop production; Review="
+    },
+    "project_identity_lifecycle_consolidation.md": {
+      "hash": "688b1d21e59c",
+      "text": "- [Identity Lifecycle Consolidation](project_identity_lifecycle_consolidation.md) — HELD"
+    },
+    "project_inner_guide_field_portrait_bridge.md|project_relational_developmental_engine.md|project_spiralogic_relational_developmental_framework.md|project_two_forms_of_governance.md": {
+      "hash": "3943c585c420",
+      "text": "- [Relational Dev Engine](project_relational_developmental_engine.md) · [Inner Guide ⇄ Portrait](project_inner_guide_field_portrait_bridge.md) · [Spiralogic = r"
+    },
+    "project_jondi_companion_candidate.md": {
+      "hash": "e708af28c72e",
+      "text": "- [Jondi Companion](project_jondi_companion_candidate.md) — no build auth; ⚠️ Patterns FROZEN"
+    },
+    "project_open_source_orientation_index.md": {
+      "hash": "ea7d07d4476c",
+      "text": "- [Open Source & Orientation sub-index](project_open_source_orientation_index.md)"
+    },
+    "project_openai_removal_embeddings_live.md|project_provider_governance_layer.md": {
+      "hash": "4c2bd1f56c52",
+      "text": "- [OpenAI removal — embeddings LIVE](project_openai_removal_embeddings_live.md) — nomic · [Provider Governance](project_provider_governance_layer.md) — SEALED"
+    },
+    "project_operations_ecosystem_direction.md|project_operations_register.md|project_operations_sustainability_initiative.md|project_stewardship_review_cadence.md": {
+      "hash": "851da94cb595",
+      "text": "- [Operations Register](project_operations_register.md) · [Ops ecosystem](project_operations_ecosystem_direction.md) — Cat 1 HELD · [Stewardship cadence](projec"
+    },
+    "project_practitioner_consultation_candidate.md": {
+      "hash": "54b7c6298e60",
+      "text": "- [Practitioner Consultation candidate](project_practitioner_consultation_candidate.md) — HELD behind author work; ⚠️ MAIA never recommends treatments; ⚠️ clien"
+    },
+    "project_presence_constraints_candidate.md": {
+      "hash": "399a782c7ee0",
+      "text": "- [Presence Constraints](project_presence_constraints_candidate.md) — Cat-1 CAND; sovereignty CONSTRAINT not effects engine"
+    },
+    "project_reasoning_layer_replaceability.md": {
+      "hash": "20917d1bf52c",
+      "text": "- [Reasoning-layer replaceability](project_reasoning_layer_replaceability.md) — Cat-1 CAND; ⚠️ doctrine doesn't ratify it"
+    },
+    "project_recursive_development_candidate.md": {
+      "hash": "eeaae788281b",
+      "text": "- [Recursive Development](project_recursive_development_candidate.md) — Cat-1 HELD; ⭐ span ENDS AT SIGNAL; ⚠️ Risk#1 RUNNING; Prompt 2 HELD"
+    },
+    "project_retired_model_sweep_20260706.md|reference_mac_studio_storage_governance.md": {
+      "hash": "5b6379198698",
+      "text": "- [Retired-model sweep](project_retired_model_sweep_20260706.md) — UNCOMMITTED · [Mac Studio storage](reference_mac_studio_storage_governance.md) — `~/AI Models"
+    }
+  }
+}
