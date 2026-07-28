@@ -29,6 +29,14 @@ const req = {} as never;
 const REPO = path.resolve(__dirname, '../../../../..');
 const read = (rel: string) => readFileSync(path.join(REPO, rel), 'utf8');
 
+/**
+ * Comments describe history and intent; code is what ships. Every structural
+ * assertion below reads stripped code — otherwise a docstring naming the thing
+ * it removed reads as the thing itself.
+ */
+const code = (src: string) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockQuery.mockResolvedValue({ rows: [] } as never);
@@ -91,11 +99,8 @@ describe('structural — no send, no string-matching', () => {
   });
 
   it('settings no longer POSTs a message to learn configuration', () => {
-    const code = settings
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/(^|[^:])\/\/.*$/gm, '$1');
-    expect(code).not.toMatch(/apiFetch\('\/api\/notifications\/sms'/);
-    expect(code).not.toMatch(/to: 'test'/);
+    expect(code(settings)).not.toMatch(/apiFetch\('\/api\/notifications\/sms'/);
+    expect(code(settings)).not.toMatch(/to: 'test'/);
   });
 
   it('settings branches on HTTP status before reading the body', () => {
@@ -103,10 +108,7 @@ describe('structural — no send, no string-matching', () => {
   });
 
   it('settings does not parse error strings to decide configuration', () => {
-    const code = settings
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/(^|[^:])\/\/.*$/gm, '$1');
-    expect(code).not.toMatch(/error\?\.includes\(/);
+    expect(code(settings)).not.toMatch(/error\?\.includes\(/);
   });
 
   it('the remedy hint is withheld unless "not configured" is what was found', () => {
@@ -127,6 +129,6 @@ describe('structural — no send, no string-matching', () => {
 
   it('declares no state it cannot determine', () => {
     // Credential presence proves CONFIGURATION, not reachability.
-    expect(statusRoute).not.toMatch(/'connected'|'disconnected'/);
+    expect(code(statusRoute)).not.toMatch(/'connected'|'disconnected'/);
   });
 });
