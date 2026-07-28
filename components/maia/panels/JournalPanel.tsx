@@ -49,9 +49,9 @@ export function JournalPanel({ explorerId, onOpenJournalSheet, onOpenShadowWork 
         </div>
       </button>
 
-      {/* Full Journal */}
+      {/* Full Journal — the member route, not the founder-gated Lab Tools one */}
       <button
-        onClick={() => router.push('/labtools/journal')}
+        onClick={() => router.push('/journal')}
         className="w-full flex items-start gap-3 p-3 rounded-xl bg-[#D4B896]/5 hover:bg-[#D4B896]/10 border border-[#3a2a1f]/30 hover:border-[#D4B896]/20 transition-all text-left"
       >
         <BookOpen className="w-4 h-4 text-[#D4B896]/60 mt-0.5 flex-shrink-0" />
