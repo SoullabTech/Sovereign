@@ -8575,7 +8575,15 @@ I'm not sure what I'm feeling yet.`;
                // Dropping height/maxHeight makes the clearance authoritative and
                // correct at any viewport height without arithmetic to keep in sync.
                bottom: showChatInterface ? '260px' : '220px',
-               overflow: 'hidden'
+               overflow: 'hidden',
+               // TOP FADE (device walk 2026-07-28): the container's top clip
+               // line sits exactly in the orb-label zone ("TAP TO SPEAK" /
+               // "LISTENING"), so scrolled text used to slice hard through the
+               // label (measured in the WebKit harness; matches the member
+               // screenshots). Text now dissolves over the first 64px instead
+               // of being cut — purely visual, no geometry change.
+               WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 64px)',
+               maskImage: 'linear-gradient(to bottom, transparent 0, black 64px)'
              }}>
           {/* 🌀 AIN: Collective field indicator */}
           {fieldWisdomPresent && (
@@ -9100,11 +9108,18 @@ I'm not sure what I'm feeling yet.`;
                     either way. */}
                 <div
                   aria-hidden="true"
-                  className={
-                    contentOverflows
-                      ? 'h-48 md:h-60 shrink-0'
-                      : 'h-6 md:h-60 shrink-0'
-                  }
+                  /* MOBILE READING WINDOW (device walk 2026-07-28): the h-48
+                     overflow reserve was sized for desktop but consumed 192px
+                     of a ~278px phone viewport — 69% of the reading window —
+                     forcing the newest text up against the orb label and
+                     leaving the measured dead-space void beneath every reply.
+                     WebKit harness (scratchpad replica, iPhone 17 Pro):
+                     newest-line clearance 192px -> 24px, visible lines ~3 ->
+                     ~11. Mobile now always uses the small reserve; desktop
+                     (md:h-60, both branches identical before and after) is
+                     untouched. The contentOverflows machinery stays: the
+                     measurement still guards scroll re-settles elsewhere. */
+                  className="h-6 md:h-60 shrink-0"
                 />
                 </div>
               )}
