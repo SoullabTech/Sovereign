@@ -5,11 +5,13 @@ export {};
 /**
  * Journal Context Regression Tests
  *
- * Pins the two contracts that were broken and fixed on 2026-03-02:
+ * Pins the contracts for the journal read path:
  *
- *   1. GET /api/journal/quick/list — Reflections page must get 200 when
- *      x-member-id header is present (no ?userId= query param required).
- *      Previously returned 400, so Reflections showed nothing.
+ *   1. GET /api/journal/quick/list — identity comes from the verified session.
+ *      A bare `x-member-id` header or a `?userId=` query param is a
+ *      caller-supplied claim and is refused with 401.
+ *      (Superseded the 2026-03-02 contract, which accepted both — see the note
+ *      on that describe block.)
  *
  *   2. loadJournals() in SignificantMomentsService — was querying a phantom
  *      `journal_entries` table. Now queries quick_journal_entries.
@@ -24,42 +26,46 @@ export {};
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 const TEST_MEMBER_ID = process.env.TEST_MEMBER_ID || '';
+// The data contract now needs a real session, not a member id: a bare
+// `x-member-id` header no longer identifies anyone. Set TEST_SESSION_TOKEN to a
+// live auth_sessions token for the member named by TEST_MEMBER_ID.
+const TEST_SESSION_TOKEN = process.env.TEST_SESSION_TOKEN || '';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Contract 1: Reflections GET endpoint auth semantics
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * SUPERSEDED 2026-07-28 — this block previously pinned the opposite contract.
+ *
+ * It asserted that a bare `x-member-id` header returned 200, and that a
+ * `?userId=` query param returned 200, describing both as the fix for the
+ * Reflections page. Both are caller-supplied claims: honouring them meant any
+ * caller could read any member's journal by naming their id. The test was
+ * holding the vulnerability in place as though it were the specification.
+ *
+ * The contract is now: identity comes from the verified session, and nothing
+ * else establishes it. The Reflections page keeps working because its client
+ * (apiFetch) sends session credentials, not because the server trusts a header.
+ */
 describe('GET /api/journal/quick/list — auth contract', () => {
-  test('no auth → 400 (prevents unauthenticated data leakage)', async () => {
+  test('no credentials → 401', async () => {
     const res = await fetch(`${BASE_URL}/api/journal/quick/list`);
-    expect(res.status).toBe(400);
-
-    const data = await res.json();
-    expect(data.success).toBe(false);
+    expect(res.status).toBe(401);
   });
 
-  test('x-member-id header → 200 (aligns with apiFetch used by Reflections)', async () => {
-    // Use a syntactically valid UUID that won't match any real member —
-    // we only care that the route accepts the header and returns 200,
-    // not that it returns rows.
+  test('bare x-member-id header → 401 (an unverified claim is not identity)', async () => {
     const res = await fetch(`${BASE_URL}/api/journal/quick/list`, {
       headers: { 'x-member-id': '00000000-0000-0000-0000-000000000000' },
     });
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.success).toBe(true);
-    expect(Array.isArray(data.entries)).toBe(true);
+    expect(res.status).toBe(401);
   });
 
-  test('?userId= query param → 200 (QuickJournalSheet inline fetch still works)', async () => {
+  test('?userId= query param → 401 (naming a member does not authenticate as one)', async () => {
     const res = await fetch(
       `${BASE_URL}/api/journal/quick/list?userId=00000000-0000-0000-0000-000000000000`
     );
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.success).toBe(true);
+    expect(res.status).toBe(401);
   });
 });
 
@@ -68,16 +74,16 @@ describe('GET /api/journal/quick/list — auth contract', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('GET /api/journal/quick/list — data contract', () => {
-  const skip = !TEST_MEMBER_ID;
+  const skip = !TEST_SESSION_TOKEN;
 
-  test('returns entries for known member UUID', async () => {
+  test('returns entries for the session member', async () => {
     if (skip) {
-      console.log('Skipped: set TEST_MEMBER_ID env to a UUID that has quick_journal_entries rows');
+      console.log('Skipped: set TEST_SESSION_TOKEN (and TEST_MEMBER_ID) to exercise the authenticated path');
       return;
     }
 
     const res = await fetch(`${BASE_URL}/api/journal/quick/list`, {
-      headers: { 'x-member-id': TEST_MEMBER_ID },
+      headers: { 'x-session-token': TEST_SESSION_TOKEN },
     });
     expect(res.status).toBe(200);
 
@@ -98,7 +104,7 @@ describe('GET /api/journal/quick/list — data contract', () => {
 
     const res = await fetch(
       `${BASE_URL}/api/journal/quick/list?type=dream`,
-      { headers: { 'x-member-id': TEST_MEMBER_ID } }
+      { headers: { 'x-session-token': TEST_SESSION_TOKEN } }
     );
     expect(res.status).toBe(200);
 

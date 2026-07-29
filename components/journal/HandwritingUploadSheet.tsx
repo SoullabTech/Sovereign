@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, Upload, FileText, Save, Loader2, Check, AlertCircle, Sparkles, Info } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import HandwritingOCR from '@/lib/capacitor/HandwritingOCR';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 
 interface HandwritingUploadSheetProps {
   isOpen: boolean;
@@ -142,7 +142,10 @@ export function HandwritingUploadSheet({
     setError(null);
 
     try {
-      const response = await fetch(apiUrl('/api/journal/quick/list'), {
+      // apiFetch (not raw fetch): the server derives the owning member from the
+      // verified session, so the request must carry session credentials.
+      // `userId` stays in the body for older clients; the server ignores it.
+      const response = await apiFetch('/api/journal/quick/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
