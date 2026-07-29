@@ -59,11 +59,70 @@ const OPTIONAL_CLEANUP: ReadonlyArray<{ table: string; column: string }> = [
  * when governed content is present, rather than creating another
  * owner-orphaned record set. Refusing is reversible; orphaning is not.
  */
+/**
+ * Member-owned content this route does NOT remove.
+ *
+ * Sourced from `TABLES_TO_MIGRATE` in app/api/members/migrate-data/route.ts —
+ * the repo's existing definition of "data belonging to a member" — plus
+ * `episodic_memories` and `reflection_capsules`, which that list omits but the
+ * retention inventory found retained.
+ *
+ * Labels are member-legible categories, deduplicated in the response. A member
+ * asking to be deleted should be told what remains in words they can act on,
+ * not a table list.
+ *
+ * ⚠️ This list is "everything currently known", not "everything". A table
+ * missing here means the preflight will not see it — which is why the posture
+ * is refuse-by-default rather than delete-what-we-know.
+ */
 const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: string }> = [
+  // Conversations with MAIA
   { table: 'conversation_turns', column: 'user_id', label: 'conversations' },
+  { table: 'conversation_insights', column: 'user_id', label: 'conversations' },
+  { table: 'conversation_themes', column: 'user_id', label: 'conversations' },
+  { table: 'conversation_memory_uses', column: 'user_id', label: 'conversations' },
+  { table: 'maia_sessions', column: 'user_id', label: 'conversations' },
+  { table: 'session_insights', column: 'user_id', label: 'conversations' },
+  { table: 'user_session_patterns', column: 'user_id', label: 'conversations' },
+  // Journals
   { table: 'quick_journal_entries', column: 'user_id', label: 'journal entries' },
+  { table: 'elemental_journal_entries', column: 'user_id', label: 'journal entries' },
+  { table: 'holoflower_journal_entries', column: 'user_id', label: 'journal entries' },
+  // Remembered moments and derived memory
   { table: 'episodic_memories', column: 'user_id', label: 'remembered moments' },
+  { table: 'episodes', column: 'user_id', label: 'remembered moments' },
+  { table: 'episode_links', column: 'user_id', label: 'remembered moments' },
+  { table: 'breakthrough_moments', column: 'user_id', label: 'remembered moments' },
+  { table: 'developmental_memories', column: 'user_id', label: 'remembered moments' },
+  { table: 'semantic_memory_vectors', column: 'user_id', label: 'remembered moments' },
+  { table: 'pattern_connections', column: 'user_id', label: 'remembered moments' },
+  { table: 'consciousness_traces', column: 'user_id', label: 'remembered moments' },
+  { table: 'consciousness_expansion_events', column: 'user_id', label: 'remembered moments' },
+  { table: 'soul_patterns', column: 'user_id', label: 'remembered moments' },
+  { table: 'spiral_stage_transitions', column: 'user_id', label: 'remembered moments' },
+  // Reflections and written work
   { table: 'reflection_capsules', column: 'user_id', label: 'reflections' },
+  { table: 'scribe_sessions', column: 'user_id', label: 'reflections' },
+  { table: 'scribe_artifacts', column: 'user_id', label: 'reflections' },
+  // Relationships
+  { table: 'relationship_essences', column: 'user_id', label: 'people you noted' },
+  { table: 'relationship_events', column: 'user_id', label: 'people you noted' },
+  { table: 'relationship_patterns', column: 'user_id', label: 'people you noted' },
+  { table: 'user_relationship_context', column: 'user_id', label: 'people you noted' },
+  // Tasks and reminders
+  { table: 'focus_tasks', column: 'user_id', label: 'tasks and reminders' },
+  { table: 'focus_reminders', column: 'user_id', label: 'tasks and reminders' },
+  { table: 'focus_message_drafts', column: 'user_id', label: 'tasks and reminders' },
+  // Preferences the member set
+  { table: 'member_preferences', column: 'user_id', label: 'your preferences' },
+  { table: 'preference_confirmations', column: 'user_id', label: 'your preferences' },
+  // Field and bardic records
+  { table: 'resonance_events', column: 'user_id', label: 'field records' },
+  { table: 'field_records', column: 'user_id', label: 'field records' },
+  { table: 'teloi', column: 'user_id', label: 'field records' },
+  { table: 'bardic_teloi', column: 'user_id', label: 'field records' },
+  { table: 'bardic_links', column: 'user_id', label: 'field records' },
+  { table: 'bardic_cues', column: 'user_id', label: 'field records' },
 ];
 
 /**
@@ -79,9 +138,13 @@ const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: st
  */
 const CONTAINMENT_POSTURE: 'refuse' | 'proceed' = 'refuse';
 
-/** Count governed content for a member. Read-only; never mutates. */
+/**
+ * Count governed content for a member, aggregated into member-legible
+ * categories. Read-only — this function never mutates anything, which is the
+ * property that makes a refused request safe to retry.
+ */
 async function governedContentFor(memberId: string): Promise<Array<{ label: string; rows: number }>> {
-  const found: Array<{ label: string; rows: number }> = [];
+  const byLabel = new Map<string, number>();
   for (const { table, column, label } of GOVERNED_CONTENT) {
     try {
       const r = await query<{ n: string }>(
@@ -89,13 +152,14 @@ async function governedContentFor(memberId: string): Promise<Array<{ label: stri
         [memberId],
       );
       const rows = Number(r.rows[0]?.n ?? 0);
-      if (rows > 0) found.push({ label, rows });
+      if (rows > 0) byLabel.set(label, (byLabel.get(label) ?? 0) + rows);
     } catch {
-      // Table absent in this environment — not evidence of absence of content,
-      // so it is simply not counted.
+      // Table absent in this environment. Absence of a table is not evidence of
+      // absence of content, so it is not counted — and because the posture is
+      // refuse-by-default, an uncounted table cannot cause a wrongful deletion.
     }
   }
-  return found;
+  return [...byLabel.entries()].map(([label, rows]) => ({ label, rows }));
 }
 
 export async function POST(request: NextRequest) {
@@ -149,10 +213,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'deletion_incomplete_unavailable',
+          // Plain language, and unambiguous about the one fact that matters
+          // most to someone who just asked to be deleted: nothing happened.
           message:
-            'Account closure is temporarily unavailable for this account. Some of your ' +
-            'content cannot yet be removed reliably, and we will not tell you it was ' +
-            'deleted when it was not. Please contact support to request full deletion.',
+            "We can't complete full account deletion automatically yet. Your account " +
+            'and content have not been changed. Please contact support so we can ' +
+            'handle your request safely.',
+          accountChanged: false,
+          nextStep: 'contact_support',
           retained: governed,
         },
         { status: 409 },

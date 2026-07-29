@@ -107,6 +107,54 @@ describe('containment: refuses rather than orphaning', () => {
     expect(JSON.stringify(body)).not.toMatch(/all associated data|permanently deleted/i);
   });
 
+  it('a refused request issues no mutating SQL at all', async () => {
+    db({ username: 'kelly', counts: { conversation_turns: 1 } });
+    const { POST } = await import('@/app/api/members/delete-account/route');
+    await POST(req({ confirmUsername: 'kelly' }));
+
+    const statements = mockQuery.mock.calls.map((c) => String(c[0]));
+    expect(statements.length).toBeGreaterThan(0);
+    for (const sql of statements) {
+      expect({ sql, mutating: /\b(DELETE|UPDATE|INSERT|TRUNCATE|DROP)\b/i.test(sql) }).toEqual({
+        sql,
+        mutating: false,
+      });
+    }
+  });
+
+  it('the refusal states plainly that nothing changed, and gives a next step', async () => {
+    db({ username: 'kelly', counts: { conversation_turns: 1 } });
+    const { POST } = await import('@/app/api/members/delete-account/route');
+    const body: any = await (await POST(req({ confirmUsername: 'kelly' }))).json();
+
+    expect(body.accountChanged).toBe(false);
+    expect(body.nextStep).toBe('contact_support');
+    expect(body.message).toMatch(/have not been changed/i);
+    // Must not imply deletion started, is queued, or is partially done.
+    expect(body.message).not.toMatch(/in progress|has begun|started|queued|pending|partial/i);
+  });
+
+  it('covers the content classes the retention inventory found retained', async () => {
+    // Journal, conversations, episodic and capsule content are the four classes
+    // the inventory proved survive account closure. A preflight that cannot see
+    // one of them would allow that member to be orphaned.
+    for (const table of [
+      'conversation_turns',
+      'quick_journal_entries',
+      'episodic_memories',
+      'reflection_capsules',
+    ]) {
+      jest.clearAllMocks();
+      mockResolve.mockResolvedValue(MEMBER);
+      mockTransaction.mockResolvedValue(undefined);
+      db({ username: 'kelly', counts: { [table]: 1 } });
+      const { POST } = await import('@/app/api/members/delete-account/route');
+      const res = await POST(req({ confirmUsername: 'kelly' }));
+      expect({ table, status: res.status }).toEqual({ table, status: 409 });
+      expect({ table, deleted: mockTransaction.mock.calls.length }).toEqual({ table, deleted: 0 });
+    }
+  });
+
   it('names every class of retained content, not just the first', async () => {
     db({
       username: 'kelly',
