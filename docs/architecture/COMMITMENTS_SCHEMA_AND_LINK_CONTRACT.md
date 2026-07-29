@@ -71,15 +71,17 @@ timeframe_type  TEXT NOT NULL DEFAULT 'open'
 target_date     DATE                             -- NULL unless timeframe_type='date'
 authorship      TEXT NOT NULL
                 CHECK (authorship IN ('member_authored','member_adopted'))
-surface_preference TEXT NOT NULL DEFAULT <undecided -- see note>
+surface_preference TEXT NOT NULL      -- NO DEFAULT. Ruled 2026-07-29; see 2.2b
                 CHECK (surface_preference IN ('member_pulled','contextual_doorway','ritual_review_opt_in'))
                 -- Name is canonical per CONSENT_VOCABULARY_CONSOLIDATION.md.
-                -- The DEFAULT is a separate, un-taken decision: the two live
-                -- tables deliberately differ (atoms 'contextual_doorway' because
-                -- keeping is itself the consent act; anchors 'member_pulled'
-                -- because answering a prompt is not). Commitments must decide
-                -- which act, if any, its creation constitutes -- and state the
-                -- reasoning in the migration header. Do not copy either default.
+                -- RULED 2026-07-29: no DEFAULT. The two live tables deliberately
+                -- differ (atoms 'contextual_doorway' because keeping is itself
+                -- the consent act; anchors 'member_pulled' because answering a
+                -- prompt is not) and Commitments must inherit neither by
+                -- imitation. The application layer supplies the value on every
+                -- insert; the migration refuses omission rather than silently
+                -- encoding product policy. State the reasoning for whichever
+                -- value is chosen in the migration header. See 2.2b.
 created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 completed_at    TIMESTAMPTZ
@@ -161,7 +163,8 @@ any               → archived  (sets archived_at)
 - **`released` is not failure.** It is a member deciding this is no longer theirs to carry. UI and copy must not rank it below `completed`.
 - **No state is ever set by the system.** No inactivity timer completes, releases, or archives anything. `target_date` passing changes nothing — there is no `overdue`.
 - **History is preserved, never overwritten.** Status transitions and edits append; they do not destroy the prior record.
-- **Retention is UNRESOLVED — `archived` does not settle it.** (Founder ruling, 2026-07-28.)
+- **Retention is UNRESOLVED — `archived` does not settle it.** (Founder ruling, 2026-07-28; scope of the
+  separation ruled 2026-07-29 — see **§2.2a**, which governs.)
 
   > **Commitment lifecycle is proposed; member withdrawal and deletion semantics remain undecided and must not be inherited silently from Journal.**
 
@@ -178,6 +181,47 @@ any               → archived  (sets archived_at)
   `archived` answers **visibility only**. Conflating these is how *"archived"* quietly becomes *"kept forever."*
 
   A commitment is a declared orientation, not a record of inner expression — so it may warrant a different retention posture than a journal entry. That is a decision to take deliberately, with its own confirmation semantics and a truthful account of what withdrawal removes, once the propagation inventory for member-authored content exists. Account deletion cascades via `member_id`; that is the only removal path this design currently assumes, and it is not a substitute for per-object member authority.
+
+### 2.2a Retention is independent of lifecycle — RULED 2026-07-29
+
+The two questions do not answer each other, and R1 answers only the first:
+
+| | Governs |
+|---|---|
+| **Lifecycle** | how the commitment participates in the member's experience |
+| **Retention** | whether the system continues storing it at all |
+
+A commitment can be `active`, `paused`, `completed`, `released`, or `archived` **without any of those
+saying whether the member wants it retained.**
+
+**Ruled:**
+
+- ⛔ Do **not** infer Journal's retention policy. Journal was found to offer members no delete at all;
+  copying that is inheriting a gap, not choosing a posture.
+- ⛔ Do **not** introduce automatic deletion of any kind.
+- ✅ **Leave retention unresolved in R1** rather than encoding an assumption into the schema.
+- If a placeholder is ever required, it must be one that **preserves future flexibility**, never one
+  that silently establishes product policy.
+
+`archived` therefore remains a **visibility** state and nothing more. Account deletion cascades via
+`member_id`; that remains the only removal path this design assumes, and it is not a substitute for
+per-object member authority.
+
+### 2.2b `surface_preference` has NO DEFAULT — RULED 2026-07-29
+
+`surface_preference` is a **consent** question, not a schema convenience.
+
+The two live tables deliberately differ — memory atoms default `contextual_doorway` because the act of
+keeping is itself the consent act; daily anchors default `member_pulled` because answering a prompt is
+not. **Commitments is a different kind of member-owned object and must not inherit either by imitation.**
+
+**Ruled: define no DEFAULT.** The column is `NOT NULL` with no default, so the application layer must
+supply the value intentionally on every insert.
+
+> The migration **refuses omission** instead of silently encoding product policy.
+
+The specific value Commitments should carry is an implementation-time decision to be taken explicitly
+and recorded — not settled here, and not settled by whichever value is easiest to write.
 
 ### 2.3 Prohibited vocabulary
 
