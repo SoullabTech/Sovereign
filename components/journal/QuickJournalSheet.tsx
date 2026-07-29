@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mic, Moon, Sun, Save, Sparkles, Loader2, Check, AlertCircle, ChevronDown, ChevronUp, Square, Trash2, PenTool, Camera, Upload, Info, BookOpen } from 'lucide-react';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import HandwritingOCR from '@/lib/capacitor/HandwritingOCR';
 import { saveQuickJournal, getStorageDecision } from '@/lib/storage/sovereign';
@@ -102,7 +102,11 @@ export function QuickJournalSheet({
       // Fetch recent entries
       if (userId) {
         setIsLoadingRecent(true);
-        fetch(`/api/journal/quick/list?userId=${encodeURIComponent(userId)}&limit=5`)
+        // apiFetch (not raw fetch): the server now derives the member from the
+        // verified session, so the request must carry session credentials. Raw
+        // relative fetch sent none — and under Capacitor resolved against the
+        // local bundle rather than the API host.
+        apiFetch('/api/journal/quick/list?limit=5')
           .then(res => res.json())
           .then(data => {
             if (data.success) {

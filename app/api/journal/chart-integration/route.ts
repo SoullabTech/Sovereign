@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   processJournalEntry,
   getJournalChartLinks,
@@ -27,7 +28,6 @@ export const dynamic = 'force-dynamic';
  * Process a journal entry and create chart associations
  *
  * Body:
- * - userId (required): User ID
  * - entryId (required): Journal entry ID
  * - entryType (required): 'quick' | 'holoflower' | 'elemental'
  * - content (required): Journal entry text
@@ -36,12 +36,22 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { userId, entryId, entryType, content, createdAt, activeTransits } = body;
-
-    if (!userId || !entryId || !entryType || !content) {
+    // BEFORE (2026-07-28): `userId` came from the request body with no session
+    // resolution. AFTER: session-derived. A body `userId` is ignored.
+    const userId = await getMemberIdFromRequest(req);
+    if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'userId, entryId, entryType, and content are required' },
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const { entryId, entryType, content, createdAt, activeTransits } = body;
+
+    if (!entryId || !entryType || !content) {
+      return NextResponse.json(
+        { success: false, error: 'entryId, entryType, and content are required' },
         { status: 400 }
       );
     }
@@ -110,12 +120,13 @@ export async function GET(req: NextRequest) {
   }
   try {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
 
+    // BEFORE (2026-07-28): `userId` came from the query string. AFTER: session-derived.
+    const userId = await getMemberIdFromRequest(req);
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'userId is required' },
-        { status: 400 }
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
       );
     }
 
