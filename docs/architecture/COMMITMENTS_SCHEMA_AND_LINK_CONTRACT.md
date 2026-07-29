@@ -5,7 +5,7 @@ Class: *Designed*, not *Live*, under `docs/canon/MARKETING_CLAIM_DISCIPLINE.md`.
 
 ⚠️ **The five decisions in §7 are unresolved.** Merging this document records the proposal; it does **not** ratify those decisions and confers no more authority on them than they presently have. Implementation requires each to be adjudicated explicitly. Per `feedback_constitutional_governance_lifecycle`: Candidate → Reconcile → Ratify → Living. This is at **Candidate**.
 
-**Founder review 2026-07-28 (recorded, not closing):** §2.1 `authorship` — provisional approval, refinement applied below. §2.1 no `maia`/`system` value — **approved**. §4.2 `member_connected` — **approved for R1**, framing corrected. §7.2 preference vocabulary — **held pending consolidation**. §7.4 sheet vs route — strong preference for sheet, but the product reason must lead; recorded below.
+**Founder review 2026-07-28 (recorded, not closing):** §2.1 `authorship` — provisional approval, refinement applied below. §2.1 no `maia`/`system` value — **approved**. §4.2 `member_connected` — **approved for R1**, framing corrected. §7.2 preference vocabulary — **resolved** by `CONSENT_VOCABULARY_CONSOLIDATION.md` (canonical: `surface_preference`; its *default* remains undecided). §7.4 sheet vs route — strong preference for sheet, but the product reason must lead; recorded below.
 
 **Blocked on:** PR #793 (journal session-identity) merging. Ruling 9 of 2026-07-28 is an ordering gate: the journal auth findings resolve before capability implementation proceeds. Commitments links *to* journal entries, so building on that surface first would create new code against an ownership model already known to be unsafe.
 
@@ -40,8 +40,15 @@ timeframe_type  TEXT NOT NULL DEFAULT 'open'
 target_date     DATE                             -- NULL unless timeframe_type='date'
 authorship      TEXT NOT NULL
                 CHECK (authorship IN ('member_authored','member_adopted'))
-surface_preference TEXT NOT NULL DEFAULT 'member_pulled'
+surface_preference TEXT NOT NULL DEFAULT <undecided -- see note>
                 CHECK (surface_preference IN ('member_pulled','contextual_doorway','ritual_review_opt_in'))
+                -- Name is canonical per CONSENT_VOCABULARY_CONSOLIDATION.md.
+                -- The DEFAULT is a separate, un-taken decision: the two live
+                -- tables deliberately differ (atoms 'contextual_doorway' because
+                -- keeping is itself the consent act; anchors 'member_pulled'
+                -- because answering a prompt is not). Commitments must decide
+                -- which act, if any, its creation constitutes -- and state the
+                -- reasoning in the migration header. Do not copy either default.
 created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 completed_at    TIMESTAMPTZ
@@ -218,7 +225,7 @@ The primitive exists: **`keepSource()`** (`lib/psyche/portfolio.ts:340`, *"Arriv
 | # | Decision | Recommendation |
 |---|---|---|
 | 7.1 | `authorship` as a new column vs overloading `authored_by` | **New column.** `authored_by` already means two incompatible things in-repo (role string / member FK) and neither carries the authored-vs-adopted distinction. |
-| 7.2 | Consent column name: `surface_preference` (anchors) or `return_preference` (atoms) — identical triple, two names | ⏸️ **HELD pending consolidation** (founder, 2026-07-28). Do not introduce a third spelling. Before implementation, pick **one existing** consent grammar and document why it becomes canonical. This is a small vocabulary ruling, **not** a new conceptual model — resist expanding it into one. |
+| 7.2 | Consent column name: `surface_preference` (anchors) or `return_preference` (atoms) | ✅ **RESOLVED — see `CONSENT_VOCABULARY_CONSOLIDATION.md`.** Canonical: **`surface_preference`**. Commitments adopts it. ⚠️ Its **default** is a separate decision requiring its own stated reasoning — the two live tables deliberately differ (atoms `contextual_doorway`, anchors `member_pulled`), and the default must not be inherited by copy-paste. |
 | 7.3 | New `member_object_links` vs extending `memory_links` | **New table** (§4.1). |
 | 7.4 | Sheet vs route | See §7.4a — the product reason must lead. |
 | 7.5 | Whether `episodic_mark` ships in the Release-1 allowlist given zero rows exist | **Include in the registry, ship the UI affordance dark.** Costs nothing and avoids a schema change when the first mark arrives. |
