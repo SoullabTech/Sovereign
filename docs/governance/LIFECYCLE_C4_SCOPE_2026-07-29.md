@@ -91,8 +91,28 @@ truths on the record.
 
 ### ✅ RULED 2026-07-29T22:20:45Z — **OPTION 2**
 
-**C4 scope: BROAD, ratified.** C4 applies as written — any mechanism created to address any failure class
-must be tested against recreating that failure class. Not confined to the lifecycle gap.
+**C4 scope: BROAD, ratified.** C4 applies as a general principle:
+
+> A mechanism cannot be admitted without being tested against the failure class it was created to address.
+
+Not confined to the lifecycle gap.
+
+### ⚠️⚠️ Broad scope ≠ immediate universal enforcement
+
+**Broad means the principle is RECOGNIZED. It does not mean it is ENFORCED everywhere as of this ruling.**
+The ownership and application model remain to be designed.
+
+⭐ This is the distinction that makes Option 2 coherent rather than reckless: *recognition* and
+*enforcement* are separate acts. Reading this ruling as "every mechanism must now pass a gate" is a
+misreading — no gate exists, no owner is assigned, and none is created here.
+
+Plain-language form:
+
+> *When we create mechanisms that shape reality, we must eventually prove they do not recreate the failure
+> they claim to solve.*
+
+⭐ Note the **"eventually."** It is doing real work — it marks the obligation as recognized-now,
+enforced-when-a-process-exists.
 
 **⚠️ CARRIED FORWARD AS AN EXPLICIT OPEN QUESTION — the ownership gap:**
 
