@@ -494,13 +494,26 @@ export function UnifiedJournalView({
             <span className="text-sm">{backLabel}</span>
           </button>
 
-          <button
-            onClick={fetchAllData}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-[#D4B896]/30 text-stone-500 hover:text-stone-700 transition-all"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Primary action — always visible, independent of list state. */}
+            <button
+              onClick={() => router.push(JOURNAL_CAPTURE_HREF)}
+              aria-label="New journal entry"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all text-sm whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Entry</span>
+              <span className="sm:hidden">New</span>
+            </button>
+
+            <button
+              onClick={fetchAllData}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-[#D4B896]/30 text-stone-500 hover:text-stone-700 transition-all"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Main Header */}
@@ -688,13 +701,37 @@ export function UnifiedJournalView({
                         ? 'Use the Decision Council in Studio to reflect on complex choices.'
                         : 'Your journal entries, captures, sessions, changes, and decisions will appear here.'}
             </p>
-            <button
-              onClick={() => router.push('/maia')}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              {activeCategory === 'scribe' ? 'Start Scribe Session' : 'Talk with MAIA'}
-            </button>
+            {activeCategory === 'scribe' ? (
+              <button
+                onClick={() => router.push('/maia')}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Start Scribe Session
+              </button>
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                {/* Primary: write directly */}
+                <button
+                  onClick={() => router.push(JOURNAL_CAPTURE_HREF)}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Entry
+                </button>
+
+                {/* Secondary: enter through conversation */}
+                <p className="text-xs text-stone-500">
+                  Not sure where to begin?{' '}
+                  <button
+                    onClick={() => router.push('/maia')}
+                    className="text-[#8B7355] underline underline-offset-2 hover:text-[#6B5A45] transition-colors"
+                  >
+                    Reflect with MAIA.
+                  </button>
+                </p>
+              </div>
+            )}
           </motion.div>
         ) : (
           <div className="space-y-3">
@@ -896,25 +933,6 @@ export function UnifiedJournalView({
           </div>
         )}
 
-        {/* Quick Actions Footer */}
-        {!loading && filteredEntries.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 pt-6 border-t border-[#D4B896]/30"
-          >
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={() => router.push(JOURNAL_CAPTURE_HREF)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 border border-[#D4B896]/30 text-stone-600 hover:text-stone-800 hover:bg-white/90 transition-all text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                New Entry
-              </button>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );
