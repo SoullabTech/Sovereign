@@ -3,6 +3,7 @@ import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
+import { invitedFieldContext } from '@/lib/nowWhat/invitation';
 
 /**
  * POST /api/now-what/register — the environment's own front door.
@@ -26,28 +27,14 @@ export const dynamic = 'force-dynamic';
 
 /**
  * INVITATION INTEGRITY (Kelly ruling 2026-07-16, PR review requirement):
- * "the invitation is the gate" must be enforcement, not copy. Registration
- * requires an authorized environment context — the fieldContext carried by
- * the door link the practitioner sent — not merely a user-supplied next URL.
+ * "the invitation is the gate" must be enforcement, not copy.
  *
- * INTERIM MECHANISM: static allowlist, because no invitation-token system
- * or field registry exists yet (the reference field's framing is hardcoded
- * in NowWhatRoom; field_programs is the future source of truth). When
- * invitation tokens or catalog rows ship, they replace this list — the
- * check's position and refusal stay identical.
+ * The rule itself now lives in `lib/nowWhat/invitation.ts` so the arrival page
+ * and this route apply the SAME eligibility test without duplicating it. The
+ * page gate governs what is rendered — it is an ordering fix, so a visitor is
+ * never asked for credentials the system has already decided to refuse. THIS
+ * check remains the authority: a bypassed client gate changes nothing here.
  */
-const AUTHORIZED_FIELD_CONTEXTS = new Set(['now-what-demo', 'now-what', 'flourishing']);
-
-function invitedFieldContext(next: string): string | null {
-  try {
-    const url = new URL(next, 'https://internal.invalid');
-    if (!url.pathname.startsWith('/now-what/')) return null;
-    const ctx = url.searchParams.get('fieldContext');
-    return ctx && AUTHORIZED_FIELD_CONTEXTS.has(ctx) ? ctx : null;
-  } catch {
-    return null;
-  }
-}
 
 function randToken(len: number): string {
   const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
