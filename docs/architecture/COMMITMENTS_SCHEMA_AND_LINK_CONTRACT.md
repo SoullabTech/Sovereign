@@ -1,0 +1,233 @@
+# Commitments — schema and link contract
+
+**Status: DESIGN ONLY. No implementation authorized by this document.**
+Class: *Designed*, not *Live*, under `docs/canon/MARKETING_CLAIM_DISCIPLINE.md`. Commitments does not exist.
+
+**Blocked on:** PR #793 (journal session-identity) merging. Ruling 9 of 2026-07-28 is an ordering gate: the journal auth findings resolve before capability implementation proceeds. Commitments links *to* journal entries, so building on that surface first would create new code against an ownership model already known to be unsafe.
+
+**Governing documents:** `docs/canon/THE_HOUSE.md` (ratified direction) · `docs/architecture/CAPABILITY_ACCESS_MODEL_PROPOSAL.md` · `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md`.
+
+**Scope ruling (Kelly, 2026-07-28 eve):** *"Shared infrastructure only; no speculative Becoming implementation."* This document specifies Commitments in full, plus **only** the shared infrastructure Commitments genuinely requires and Becoming will later reuse. Becoming's own schema is deliberately absent — see `BECOMING_IMPLEMENTATION_GATE.md`.
+
+---
+
+## 1. What a commitment is
+
+> **Commitments — *How will I respond?*** Choice. What the member decides to carry forward, in their own words. — `THE_HOUSE.md`
+
+A commitment is **not** a task, a goal score, a habit streak, a notification trigger, an accountability metric, or evidence that the member is progressing. It is a thing a member said they would carry, recorded in their language, with a history they own.
+
+**Release-1 loop (the smallest honest one):** create → optionally connect an origin → record a return → revise / pause / complete / release → revisit history.
+
+---
+
+## 2. `member_commitments`
+
+```
+id              UUID PK DEFAULT gen_random_uuid()
+member_id       UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE
+title           TEXT NOT NULL                    -- the member's own words
+description     TEXT
+why             TEXT                             -- why it matters, member-authored
+status          TEXT NOT NULL DEFAULT 'active'
+                CHECK (status IN ('active','paused','completed','released','archived'))
+timeframe_type  TEXT NOT NULL DEFAULT 'open'
+                CHECK (timeframe_type IN ('open','date'))
+target_date     DATE                             -- NULL unless timeframe_type='date'
+authorship      TEXT NOT NULL
+                CHECK (authorship IN ('member_authored','member_adopted'))
+surface_preference TEXT NOT NULL DEFAULT 'member_pulled'
+                CHECK (surface_preference IN ('member_pulled','contextual_doorway','ritual_review_opt_in'))
+created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+completed_at    TIMESTAMPTZ
+released_at     TIMESTAMPTZ
+archived_at     TIMESTAMPTZ
+
+CHECK (timeframe_type = 'date') = (target_date IS NOT NULL)
+```
+
+### 2.1 `authorship` — the authority boundary enforced in schema
+
+This is the load-bearing column, and it is **not** the brief's `authored_by = member`.
+
+`member_id` already records *whose* commitment it is. What `authorship` records is *how the words came to exist*:
+
+| Value | Meaning |
+|---|---|
+| `member_authored` | The member wrote it. |
+| `member_adopted` | MAIA proposed language; the member explicitly accepted it. |
+
+**There is deliberately no `system`, `maia`, or `inferred` value.** A row cannot be written without one of these two, so *the schema itself refuses a MAIA-created commitment* — the constraint that Invariant 16 and THE_HOUSE's governing principle require is a CHECK, not a code convention that a later refactor can quietly drop.
+
+⚠️ **Decision needed (§7.1):** the repo's existing `authored_by` is split — a TEXT role string in `personal_living_fields`, a `UUID REFERENCES members(id)` in `encounters` and `recognitions`. Neither expresses the member-authored/member-adopted distinction. This proposes a **third, differently-named** column rather than overloading a name that already means two things.
+
+### 2.2 Lifecycle
+
+```
+active ⇄ paused
+active | paused → completed   (sets completed_at)
+active | paused → released    (sets released_at)
+any               → archived  (sets archived_at)
+```
+
+- **`released` is not failure.** It is a member deciding this is no longer theirs to carry. UI and copy must not rank it below `completed`.
+- **No state is ever set by the system.** No inactivity timer completes, releases, or archives anything. `target_date` passing changes nothing — there is no `overdue`.
+- **History is preserved, never overwritten.** Status transitions and edits append; they do not destroy the prior record.
+- **No hard delete in Release 1.** `archived` is the terminal state, matching `studio_changes` (member objects use a status enum; `deleted_at` is practitioner-side only). Account deletion cascades via `member_id`.
+
+### 2.3 Prohibited vocabulary
+
+Not in schema, API, copy, or logs: `overdue` · `failed` · `on track` · `behind` · `adherence` · `streak` · `completion rate` · `performance` · `success`. Counts are arithmetic and unqualified.
+
+---
+
+## 3. `commitment_returns`
+
+A member-authored record of returning to a commitment. Not a check-in, not a completion tick.
+
+```
+id            UUID PK DEFAULT gen_random_uuid()
+commitment_id UUID NOT NULL REFERENCES member_commitments(id) ON DELETE CASCADE
+member_id     UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE
+note          TEXT                               -- optional; a return may be wordless
+occurred_at   TIMESTAMPTZ NOT NULL DEFAULT NOW() -- member may backdate
+authorship    TEXT NOT NULL CHECK (authorship IN ('member_authored','member_adopted'))
+created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+```
+
+`member_id` is denormalized deliberately: every ownership predicate binds on the row being read, so no query depends on a join to be safe.
+
+**A return is only ever created by an explicit member gesture.** Nothing infers one from a conversation, a journal entry, or elapsed time.
+
+---
+
+## 4. The shared link contract — `member_object_links`
+
+This is **the** piece of shared infrastructure. Becoming will reuse it unchanged; nothing about it is Becoming-specific.
+
+### 4.1 Why not `memory_links`
+
+`memory_links` (`20251231_memory_architecture_enhancements.sql`) has the right *shape* — polymorphic `from_table`/`from_id` → `to_table`/`to_id` with a `link_type`. It has the wrong *identity lane*:
+
+- scoped by `user_id TEXT`, not `member_id UUID REFERENCES members(id)` — no FK, no cascade;
+- `created_by` defaults to `'system'`, the inverse of what this capability requires;
+- its `link_type` vocabulary (`supports`, `contradicts`, `evolves`, `repeats`, `triggers`, `derives_from`) is **interpretive** — those are claims about meaning, which is exactly what the member alone may author.
+
+Extending it means adding a member FK, flipping the provenance default, and adding a non-interpretive link type — close to the cost of a correct table, while leaving the legacy lane's semantics attached.
+
+⚠️ **Decision needed (§7.3).** Recommendation: new table, and leave `memory_links` to the legacy synthesis lane.
+
+### 4.2 Shape
+
+```
+id            UUID PK DEFAULT gen_random_uuid()
+member_id     UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE
+from_type     TEXT NOT NULL          -- e.g. 'commitment'
+from_id       UUID NOT NULL
+to_type       TEXT NOT NULL          -- see the allowlist below
+to_id         TEXT NOT NULL          -- TEXT: source PKs are not uniformly UUID
+relation      TEXT NOT NULL DEFAULT 'member_connected'
+              CHECK (relation IN ('member_connected'))
+created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+
+UNIQUE (member_id, from_type, from_id, to_type, to_id)
+INDEX (member_id, from_type, from_id)
+INDEX (member_id, to_type, to_id)
+```
+
+**`relation` has exactly one value.** A member connecting two things asserts *that* they are connected, never *how*. The moment a second value exists — `caused`, `resolves`, `evolves` — the system starts holding an interpretation of the member's life. If a richer vocabulary is ever wanted, the member must supply the words, and that is a separate ruling.
+
+### 4.3 Source allowlist
+
+`to_type` is a closed set, enforced in application code against a single registry (not a CHECK — it will grow):
+
+| `to_type` | Table | Owner column | Verified |
+|---|---|---|---|
+| `journal_entry` | `quick_journal_entries` | `user_id` ⚠️ TEXT, legacy lane | after #793 |
+| `change` | `studio_changes` | `member_id` | ✅ |
+| `commitment` | `member_commitments` | `member_id` | new |
+| `memory_atom` | `member_memory_atoms` | `member_id` | ✅ |
+| `episodic_mark` | `episodic_memories` | `user_id` + `marked_by_member = TRUE` | ✅ (zero rows) |
+
+**Every link write ownership-checks the target independently.** Holding a commitment does not authorize linking to an arbitrary id — the target row must resolve to the same session member. A registry entry supplies the table, the owner column, and the predicate; there is no generic "trust the id" path.
+
+⚠️ `quick_journal_entries.user_id` is TEXT on the legacy lane with the username/`{username}-nezat` aliases. The ownership predicate must reuse the same alias expansion #793 preserved. **This is the concrete reason Commitments waits for #793.**
+
+### 4.4 Missing and deleted sources
+
+A link whose target no longer resolves renders as *"a linked entry that is no longer available"* and is never silently dropped — the member connected something, and that act is theirs. Read paths must tolerate a dangling target without failing the whole view.
+
+---
+
+## 5. API surface
+
+**Guard: `getMemberIdFromRequest` on every route**, ownership bound in the SQL `WHERE`, so a foreign id affects zero rows and returns 404 rather than leaking existence. Model: `app/api/anchor/[id]/surface-preference/route.ts`.
+
+Named gesture endpoints, not a generic PATCH — the same reason the anchor route is shaped that way: each endpoint states what act it performs, and lifecycle transitions cannot be smuggled through a field update.
+
+```
+GET    /api/commitments                      list (status filter)
+POST   /api/commitments                      create        { title, description?, why?, timeframe, authorship }
+GET    /api/commitments/[id]                 detail + returns + links
+PATCH  /api/commitments/[id]                 edit title/description/why/timeframe only
+POST   /api/commitments/[id]/pause
+POST   /api/commitments/[id]/resume
+POST   /api/commitments/[id]/complete
+POST   /api/commitments/[id]/release
+POST   /api/commitments/[id]/archive
+POST   /api/commitments/[id]/returns         record a return { note?, occurred_at? }
+DELETE /api/commitments/[id]/returns/[rid]   member corrects their own record
+POST   /api/commitments/[id]/links           { to_type, to_id }  — target ownership-checked
+DELETE /api/commitments/[id]/links/[lid]
+POST   /api/commitments/[id]/surface-preference
+```
+
+`authorship` is set by the client to `member_adopted` **only** on the adoption path (§6) and is otherwise `member_authored`. It is never inferred server-side.
+
+---
+
+## 6. Adoption — reuse, do not rebuild
+
+The primitive exists: **`keepSource()`** (`lib/psyche/portfolio.ts:340`, *"Arrival ≠ keeping"*) with **`lib/psyche/keep-governor.ts`** governing whether an offer may be made at all (pause posture, decline streaks). These already express the boundary this capability needs; Commitments adopts them rather than introducing a parallel concept.
+
+**The rule:** MAIA-proposed language is a *suggestion* until an explicit member gesture accepts it. On acceptance the row is written with `authorship = 'member_adopted'`. There is no code path from a model response to a persisted commitment without that gesture.
+
+---
+
+## 7. Decisions required before implementation
+
+| # | Decision | Recommendation |
+|---|---|---|
+| 7.1 | `authorship` as a new column vs overloading `authored_by` | **New column.** `authored_by` already means two incompatible things in-repo (role string / member FK) and neither carries the authored-vs-adopted distinction. |
+| 7.2 | Consent column name: `surface_preference` (anchors) or `return_preference` (atoms) — identical triple, two names | **`surface_preference`**, and open a separate chore to reconcile the two existing names. Do not add a third spelling. |
+| 7.3 | New `member_object_links` vs extending `memory_links` | **New table** (§4.1). |
+| 7.4 | Sheet vs route | **Sheet**, on the `ChangesSheet` pattern — PWA and iOS in one build (`MOBILE_MAIA_KEEP=()` strips `app/maia/*` sub-routes; Changes survives because it is a sheet). Requires one `HouseDestination` entry, widening `HouseSheetId`, an `onOpenCommitments` prop, and the three navigation drift guards passing. |
+| 7.5 | Whether `episodic_mark` ships in the Release-1 allowlist given zero rows exist | **Include in the registry, ship the UI affordance dark.** Costs nothing and avoids a schema change when the first mark arrives. |
+
+---
+
+## 8. Explicitly NOT in Release 1
+
+Named so they do not become hidden prerequisites:
+
+- **Reminders / notifications.** No governed member notification system exists (`api/sovereignty/notifications` has no auth and no member scoping). Standing ruling: do not build them here.
+- **Analytics.** `lib/analytics/track.ts` is a `console.log` stub. Room-opened/object-created events wait for a real system; nothing derived (no adherence, stage, quality, or flourishing inference) is ever permitted.
+- **Audit trail.** No general member-object mutation audit exists; `runtime_events` is content-free substrate observability. Lifecycle history lives in the object's own columns and its returns for Release 1. A general audit facility is its own lane.
+- **Practitioner or shared-field visibility.** Default private (`member_pulled`); any sharing surface is a separate ruling.
+- **Becoming.** See the gate document.
+
+---
+
+## 9. MAIA's boundary in this room
+
+> **MAIA may open doors. It may not describe what is on the other side of one in the member's own life.** — `THE_HOUSE.md`
+
+**May:** help articulate language; offer to save language the member accepted; retrieve and display the member's own linked material; report dates and direct counts; ask whether the member wants to carry something forward; offer a doorway to another room.
+
+**May not:** create a commitment; infer one from a journal entry or conversation; attach material silently; decide completion or release; characterize progress, growth, or identity; describe repeated returns as evidence of who the member has become; route the member to a "next" room on inferred readiness.
+
+Allowed: *"You've returned to this nine times, most recently Tuesday."*
+Refused: *"You're becoming someone who follows through."*
+
+**Doorways are offers.** Declining has no effect — no re-prompting, no scoring, no recorded reluctance.
