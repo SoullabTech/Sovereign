@@ -1,31 +1,37 @@
 'use client';
 
 /**
- * MaiaHouseSheet — The House doorway (Arrival remodel Step 3).
+ * MaiaHouseSheet — The House doorway.
  *
  * One quiet doorway opens the whole world. Built as a PLACE, not a list of
  * destinations: navy field, host voice, generous rhythm.
  *
- * The House is now the member's ONLY navigation. The feature rail is gone from
- * the ordinary member experience, so this sheet greets in verbs — the four
- * places a member actually arrives wanting (Continue / Reflect / Create /
- * Belong) — and keeps every remaining destination behind "More places".
- * A member meets MAIA and a house, not MAIA and eight applications.
+ * NAVIGATION CONTRACT (2026-07-27): every place the House can open comes from a
+ * SINGLE authoritative model, lib/navigation/houseDestinations. Each entry is
+ * dispatched by kind — a native route, an existing member sheet, or an honest
+ * web bridge — instead of the old uniform `router.push`. That is what stops the
+ * registry, the mobile allowlist, and the native bundle from drifting apart and
+ * producing silent white screens on iPhone. The rows render honestly per
+ * platform: web-only places carry a "web ↗" mark; native rooms not yet in the
+ * bundle are withheld on native rather than shown as dead buttons.
  *
- * Because the rail no longer exists, "More places" is the last route to those
- * destinations: nothing may be dropped from it. Rooms stay audience-gated by
- * the registry (founder rooms appear only when unlocked) — capabilities gated
- * honestly, existence never hidden deceptively.
- *
- * Routes are the real maiaNav registry — this navigates for real. No new
+ * Routes navigate for real; sheets open the member's existing surfaces. No new
  * data, no persistence, no inference; opening the House is a member act.
  */
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DoorOpen, HelpCircle, Settings, User } from 'lucide-react';
-import { MAIA_WORLDS, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
+import { DoorOpen, HelpCircle, User } from 'lucide-react';
+import {
+  getHouseDestinations,
+  visibleInGroup,
+  classifyReachability,
+  dispatchHouseDestination,
+  type HouseDestination,
+  type HouseDispatchContext,
+  type HouseSheetId,
+} from '@/lib/navigation/houseDestinations';
 import {
   badgeDelay,
   colabLabel,
@@ -33,11 +39,7 @@ import {
   isColabVisible,
   lastColabTotal,
 } from '@/lib/navigation/colabBadge';
-import type { MaiaRailItem } from '@/lib/navigation/types';
 
-// One row shape for every place, so nothing in the House renders at a different
-// scale than anything else. (The verb-taxonomy pass introduced exactly that
-// inversion — secondary places larger than primary ones.)
 const ROW =
   'group flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition-colors duration-200 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none';
 const ROW_ICON =
@@ -50,51 +52,43 @@ interface MaiaHouseSheetProps {
   onClose: () => void;
   /** Founder/practitioner — surfaces steward rooms in the registry. */
   isFounder: boolean;
-  /**
-   * The deliberate return to Arrival. Omitted when there is nothing to return
-   * to — Arrival is already on screen, or the arrivalEntry kill-switch is off —
-   * in which case the affordance does not render at all.
-   *
-   * This is what makes Arrival member-invoked rather than a one-time event the
-   * member passes through once and can never see again. It opens the room; it
-   * does not reset the member's history. The durable first-crossing marker is
-   * untouched by this path.
-   */
+  /** Running inside the Capacitor native shell — governs bundle-vs-web dispatch. */
+  isNative?: boolean;
   onReturnToArrival?: () => void;
-  /**
-   * Opens the account panel. The rail used to carry Account and Settings at its
-   * foot; with the rail gone the House holds them — below a divider, so member
-   * utilities never read as another world of MAIA.
-   */
   onOpenAccount?: () => void;
-  /** Opens the help sheet. Moved out of the top bar (ruling 2026-07-23). */
   onOpenHelp?: () => void;
+  /** Open the member's existing Changes sheet in place on /maia. */
+  onOpenChanges?: () => void;
 }
 
 const SERIF = 'Spectral, Georgia, serif';
 
-export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, onOpenAccount, onOpenHelp }: MaiaHouseSheetProps) {
+export function MaiaHouseSheet({
+  open,
+  onClose,
+  isFounder,
+  isNative = false,
+  onReturnToArrival,
+  onOpenAccount,
+  onOpenHelp,
+  onOpenChanges,
+}: MaiaHouseSheetProps) {
   const router = useRouter();
 
   // Close on Escape — the House never traps you.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  const center = MAIA_WORLDS.find((w) => w.id === 'maia');
-  const worlds = MAIA_WORLDS.filter((w) => w.id !== 'maia');
-  const rooms = getVisibleBoundaries(isFounder);
-
-  // Co-lab's visibility is conditional on live state, not on membership class,
-  // so the registry's audience field cannot express it. Rule preserved verbatim
-  // from the rail: visible when the member can ACT on Co-lab, or has a pending
-  // count. A pure seeker never sees an empty coordination badge.
+  // Co-lab's visibility is conditional on live state, not membership class.
   const [colabCount, setColabCount] = useState(lastColabTotal());
   useEffect(() => {
-    if (!open) return; // only poll while the House is actually on screen
+    if (!open) return; // only poll while the House is on screen
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
@@ -105,39 +99,63 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
       });
     };
     tick();
-    return () => { alive = false; clearTimeout(timer); };
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
   }, [open]);
   const showColab = isColabVisible(isFounder, colabCount);
 
-  const enter = (route: string) => {
-    onClose();
-    router.push(route);
+  // --- the single dispatch point ----------------------------------------
+  const openSheet = (sheet: HouseSheetId) => {
+    if (sheet === 'changes') onOpenChanges?.();
   };
+  const ctx = (): HouseDispatchContext => ({
+    isNative,
+    push: (p) => router.push(p),
+    openSheet,
+    onClose,
+  });
+  const go = (d: HouseDestination) => dispatchHouseDestination(d, ctx());
 
-  const Place = ({ item, label }: { item: MaiaRailItem; label?: string }) => {
-    const Icon = item.icon;
+  // --- resolve what to render, honestly, for this platform --------------
+  const dests = getHouseDestinations(isFounder);
+  const center = dests.find((d) => d.id === 'maia');
+  const settings = dests.find((d) => d.id === 'settings');
+  const worlds = [
+    ...visibleInGroup(dests, 'life', isNative),
+    ...visibleInGroup(dests, 'work', isNative),
+  ];
+  const rooms = visibleInGroup(dests, 'rooms', isNative).filter(
+    (d) => d.conditional !== 'colab' || showColab,
+  );
+
+  const WebHint = () => (
+    <span className="ml-2 align-middle text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
+      web&nbsp;↗
+    </span>
+  );
+  const InterimHint = () => (
+    <span className="ml-2 align-middle text-[11px] font-medium uppercase tracking-[0.14em] text-[#c9a54e]/70">
+      interim
+    </span>
+  );
+
+  const Place = ({ d, label }: { d: HouseDestination; label?: string }) => {
+    const Icon = d.icon;
+    const onWeb = classifyReachability(d, isNative) === 'web';
     return (
-      <button
-        onClick={() => enter(item.route)}
-        className={ROW}
-      >
+      <button onClick={() => go(d)} className={ROW} aria-label={label ?? d.label}>
         <span className={ROW_ICON}>
           <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </span>
-        {/* Legibility floor (founder ruling §9): place names 17px, helper 15px.
-            They were 15/12 — the 12px helper is the "text too small" complaint
-            testers reported, and it sits on the one surface a member reads when
-            they are least oriented. `truncate` is gone with it: a place whose
-            description is cut mid-word cannot do the job of orienting anyone. */}
         <span className="min-w-0">
           <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>
-            {label ?? item.label}
+            {label ?? d.label}
+            {d.interim && <InterimHint />}
+            {onWeb && <WebHint />}
           </span>
-          {item.tooltip && (
-            <span className={ROW_BLURB}>
-              {item.tooltip}
-            </span>
-          )}
+          {d.tooltip && <span className={ROW_BLURB}>{d.tooltip}</span>}
         </span>
       </button>
     );
@@ -149,23 +167,14 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
     </h3>
   );
 
-  const Group = ({
-    title, items, colabCount: cc, showColab: sc,
-  }: { title: string; items: MaiaRailItem[]; colabCount?: number; showColab?: boolean }) => {
-    // Co-lab is filtered by its live rule, not by audience. Everything else in
-    // the registry is already audience-filtered upstream.
-    const visible = items.filter((i) => (i.id === 'colab' ? sc !== false : true));
-    if (visible.length === 0) return null;
+  const Section = ({ title, items }: { title: string; items: HouseDestination[] }) => {
+    if (items.length === 0) return null;
     return (
       <section className="mb-6">
         <GroupHeading>{title}</GroupHeading>
         <div className="flex flex-col">
-          {visible.map((item) => (
-            <Place
-              key={item.id}
-              item={item}
-              label={item.id === 'colab' ? colabLabel(cc ?? 0) : undefined}
-            />
+          {items.map((d) => (
+            <Place key={d.id} d={d} label={d.id === 'colab' ? colabLabel(colabCount) : undefined} />
           ))}
         </div>
       </section>
@@ -213,20 +222,13 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
             </div>
 
             <div className="px-1.5">
-              {/* YOUR CENTER — where the member already is, and the way back to
-                  the threshold. Not a category of activity: a location. */}
+              {/* YOUR CENTER — where the member already is, and the way back. */}
               <section className="mb-6">
                 <GroupHeading>Your Center</GroupHeading>
                 <div className="flex flex-col">
-                  {center && <Place item={center} />}
-                  {/* The deliberate return. A place among places — not a reset,
-                      not a settings toggle. The member may open this room as
-                      often as they like; nothing they have crossed is undone. */}
+                  {center && <Place d={center} />}
                   {onReturnToArrival && (
-                    <button
-                      onClick={onReturnToArrival}
-                      className={ROW}
-                    >
+                    <button onClick={onReturnToArrival} className={ROW}>
                       <span className={ROW_ICON}>
                         <DoorOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
                       </span>
@@ -241,32 +243,36 @@ export function MaiaHouseSheet({ open, onClose, isFounder, onReturnToArrival, on
                 </div>
               </section>
 
-              <Group title="Worlds" items={worlds} />
-              <Group title="Rooms" items={rooms} colabCount={colabCount} showColab={showColab} />
+              <Section title="Worlds" items={worlds} />
+              <Section title="Rooms" items={rooms} />
 
-              {/* Below the line: the member's own account, not a place in MAIA.
-                  Separated so utilities never read as another world. */}
+              {/* Below the line: the member's own account, not a place in MAIA. */}
               <div className="mx-4 mb-4 mt-1 border-t border-white/[0.07]" />
               <section className="mb-2">
                 <div className="flex flex-col">
                   <button onClick={onOpenAccount} className={ROW}>
-                    <span className={ROW_ICON}><User className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
-                    <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Account</span>
+                    <span className={ROW_ICON}>
+                      <User className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                    </span>
+                    <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>
+                      Account
+                    </span>
                   </button>
-                  <button onClick={() => enter('/account/settings')} className={ROW}>
-                    <span className={ROW_ICON}><Settings className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
-                    <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Settings</span>
-                  </button>
-                  {/* Help joins the utilities rather than sitting in the top bar.
-                      Same reasoning as the rail: the bar is for identity and the
-                      House holds the places. Help is somewhere you go, not part
-                      of who you are — and the top-right cluster is the one that
-                      crowds the centred wordmark, so every row moved down here
-                      buys back width. */}
+                  {settings && <Place d={settings} />}
                   {onOpenHelp && (
-                    <button onClick={() => { onClose(); onOpenHelp(); }} className={ROW}>
-                      <span className={ROW_ICON}><HelpCircle className="h-[18px] w-[18px]" strokeWidth={1.5} /></span>
-                      <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>Help</span>
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenHelp();
+                      }}
+                      className={ROW}
+                    >
+                      <span className={ROW_ICON}>
+                        <HelpCircle className="h-[18px] w-[18px]" strokeWidth={1.5} />
+                      </span>
+                      <span className={ROW_LABEL} style={{ fontFamily: SERIF }}>
+                        Help
+                      </span>
                     </button>
                   )}
                 </div>

@@ -3,11 +3,20 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getContentItem, updateContent } from '@/lib/founder/queries';
 import type { UpdateContentInput } from '@/lib/founder/types';
+import { requireFounder } from '@/lib/founder/founderAuth';
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Founder authorization is enforced HERE, not only in middleware. Middleware is
+  // routing/UX defence; this handler must reject an unauthorized caller reached
+  // directly. See lib/founder/founderAuth (verified session + server-held allowlist,
+  // fails closed when FOUNDER_MEMBER_IDS is unset).
+  const __auth = await requireFounder();
+  if (!__auth.ok) {
+    return NextResponse.json({ error: __auth.error }, { status: __auth.status });
+  }
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
@@ -27,6 +36,14 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Founder authorization is enforced HERE, not only in middleware. Middleware is
+  // routing/UX defence; this handler must reject an unauthorized caller reached
+  // directly. See lib/founder/founderAuth (verified session + server-held allowlist,
+  // fails closed when FOUNDER_MEMBER_IDS is unset).
+  const __auth = await requireFounder();
+  if (!__auth.ok) {
+    return NextResponse.json({ error: __auth.error }, { status: __auth.status });
+  }
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }

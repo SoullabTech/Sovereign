@@ -34,7 +34,6 @@ interface MaiaShellProps {
   onOpenShadowWork: () => void;
   onOpenAcademy: () => void;
   onOpenChanges: () => void;
-  onOpenDecisions: () => void;
   onLabAction: (action: string) => void;
   /** MAIA mode — primary state of entry (Talk / Care / Note) */
   activeMode?: 'normal' | 'patient' | 'session';
@@ -77,7 +76,6 @@ export function MaiaShell({
   onOpenShadowWork,
   onOpenAcademy,
   onOpenChanges,
-  onOpenDecisions,
   onLabAction,
   activeMode,
   onModeChange,
@@ -94,6 +92,13 @@ export function MaiaShell({
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [userPinnedPanel, setUserPinnedPanel] = useState(false);
   const [houseOpen, setHouseOpen] = useState(false);
+  // Native (Capacitor) shell? Governs whether the House opens routes in-app or
+  // via the honest web bridge. Client-only; SSR and web render as non-native.
+  const [isNative, setIsNative] = useState(false);
+  useEffect(() => {
+    const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+    setIsNative(!!cap?.isNativePlatform?.());
+  }, []);
 
   // The Arrival composition renders in a portal outside this tree, so its quiet
   // base doorway cannot call setHouseOpen directly. It announces the intent and
@@ -372,8 +377,10 @@ export function MaiaShell({
         open={houseOpen}
         onClose={() => setHouseOpen(false)}
         isFounder={isAdmin || isPractitioner}
+        isNative={isNative}
         onOpenHelp={onOpenHelp}
         onOpenAccount={() => { setHouseOpen(false); onOpenAccount(); }}
+        onOpenChanges={onOpenChanges}
         onReturnToArrival={
           canReturnToArrival && onReturnToArrival
             ? () => { setHouseOpen(false); onReturnToArrival(); }
@@ -391,7 +398,6 @@ export function MaiaShell({
         onOpenShadowWork={onOpenShadowWork}
         onOpenAcademy={onOpenAcademy}
         onOpenChanges={onOpenChanges}
-        onOpenDecisions={onOpenDecisions}
         onChooseGuide={() => onLabAction('choose-guide')}
         onShowCurrentElder={() => onLabAction('show-current-elder')}
       />
