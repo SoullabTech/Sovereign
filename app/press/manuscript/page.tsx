@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**
  * Soullab Press — Manuscript Room.
@@ -81,7 +82,7 @@ interface PreviewSection {
   body: string;
 }
 
-type Tab = 'manuscript' | 'keeps' | 'collections' | 'emerging' | 'export' | 'book';
+type Tab = 'manuscript' | 'draft' | 'keeps' | 'collections' | 'emerging' | 'export' | 'book';
 
 function sectionLabel(heading: string | null, position: number): string {
   return heading ?? `Section ${position + 1}`;
@@ -591,6 +592,7 @@ export default function PressManuscriptRoom() {
             {(
               [
                 ['manuscript', 'Manuscript'],
+                ['draft', 'Working Draft'],
                 ['keeps', 'Keeps'],
                 ['collections', 'Collections'],
                 ['emerging', 'Emerging Books'],
@@ -642,6 +644,8 @@ export default function PressManuscriptRoom() {
             </button>
           </div>
         )}
+
+        {tab === 'draft' && <WorkingDraftEditor key={active} manuscriptId={active} />}
 
         {tab === 'keeps' && (
           <div>
