@@ -7,7 +7,7 @@
 #
 # Pipeline:
 #   1. Patch dynamic routes for static export
-#   2. Build Next.js (CAPACITOR_BUILD=1)
+#   2. Build Next.js (CAPACITOR_BUILD=1) — stamps source commit as NEXT_PUBLIC_GIT_COMMIT
 #   3. Validate web export (out/ directory)
 #   4. Patch root index.html → /enter redirect
 #   5. Revert route patches
@@ -101,9 +101,28 @@ fi
 # ── Step 2: Web export ────────────────────────────────────────────────────────
 step "Next.js static export"
 
+# Provenance: resolve the exact source commit and hand it to the web build as
+# NEXT_PUBLIC_GIT_COMMIT, so the shipped bundle self-identifies (the Account
+# screen renders it via BUILD_STAMP.commit). This is the Release/TestFlight
+# lane: a distributable artifact MUST carry the commit its code was built from,
+# so an unresolvable SHA is a hard failure here — never a silent "dev" stamp.
+GIT_SHA="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || true)"
+if [ -z "$GIT_SHA" ]; then
+  fail "Cannot resolve git commit (git rev-parse HEAD). Refusing to build a release artifact with no provenance — NEXT_PUBLIC_GIT_COMMIT would fall back to 'dev'."
+fi
+# A dirty tree means the bundled code is not fully represented by the commit, so
+# the stamp says so rather than overclaiming a clean SHA.
+if ! git -C "$REPO_ROOT" diff --quiet HEAD 2>/dev/null; then
+  GIT_SHA="${GIT_SHA}-dirty"
+  warn "Working tree is dirty — stamping ${GIT_SHA} (bundle contains uncommitted changes)"
+fi
+export NEXT_PUBLIC_GIT_COMMIT="$GIT_SHA"
+info "Source commit : ${GIT_SHA}  (→ NEXT_PUBLIC_GIT_COMMIT)"
+
 if $SKIP_WEB; then
   if [ -d "$OUT_DIR" ] && [ -n "$(ls -A "$OUT_DIR")" ]; then
     skip "Web build (--skip-web) — reusing existing out/"
+    warn "Reused bundle keeps its previously-baked commit stamp — it may differ from ${GIT_SHA} (current HEAD)"
     ok "out/ exists"
   else
     fail "out/ is missing or empty — cannot skip web build"
@@ -289,6 +308,11 @@ echo ""
 echo -e "${BOLD}══════════════════════════════════════════${NC}"
 echo -e "${GREEN}${BOLD}  BUILD COMPLETE${NC}"
 echo -e "  Build     : ${BOLD}$BUILD_NUM${NC}"
+if $SKIP_WEB; then
+  echo -e "  Commit    : ${BOLD}${GIT_SHA}${NC}  ${YELLOW}(current HEAD; web skipped — bundle stamp may differ)${NC}"
+else
+  echo -e "  Commit    : ${BOLD}${GIT_SHA}${NC}"
+fi
 echo -e "  Archive   : $ARCHIVE_PATH"
 echo -e "  IPA       : $IPA_PATH"
 echo -e "  Duration  : ${MINUTES}m ${SECONDS}s"
