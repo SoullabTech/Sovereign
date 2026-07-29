@@ -36,6 +36,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from '@/components/maia/vision-studio/RoomHoloflower';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
+import { practitionerDisplayName } from '@/lib/practiceField/practitionerIdentity';
 
 // — Threshold staging (Now What?) —
 // The arrival surfaces are staged, not listed: a display serif for the room's
@@ -94,7 +95,17 @@ const THREAD_KIND_HEADINGS: { kind: ThreadKind; heading: string }[] = [
   { kind: 'open', heading: 'What remains open' },
 ];
 
-const OPENING_FRAME = `Before we begin, I'd like to frame what we're doing together.
+/**
+ * The opening frame is parameterised by the field's configured practitioner.
+ *
+ * It previously hard-coded "Kelly" here while the room eyebrow hard-coded
+ * "Larry Closs" — two different people named as the practitioner to the same
+ * member in the same session, with the consent language ("sharing any thread
+ * with X") attached to the name that was NOT the visible host. Both were
+ * literals; neither came from configuration. See
+ * lib/practiceField/practitionerIdentity.ts.
+ */
+const buildOpeningFrame = (practitioner: string) => `Before we begin, I'd like to frame what we're doing together.
 
 This isn't an intake interview.
 
@@ -136,7 +147,7 @@ The field will remember the work.
 
 You remain the author of its meaning.
 
-One thing to name clearly: Kelly can accompany this field as your facilitating practitioner. What you author here is yours and enters your own Living Field — private by default. Sharing any thread with Kelly is a separate choice you make thread by thread; nothing is shared unless you choose it. Never the conversation, never a record of who you are — only what you explicitly choose to share.
+One thing to name clearly: ${practitioner} can accompany this field as your facilitating practitioner. What you author here is yours and enters your own Living Field — private by default. Sharing any thread with ${practitioner} is a separate choice you make thread by thread; nothing is shared unless you choose it. Never the conversation, never a record of who you are — only what you explicitly choose to share.
 
 This is an early beta, and part of what you are helping us learn is how this kind of field can support your own recognition without turning you into a profile.`;
 
@@ -195,6 +206,9 @@ interface ProgramArrivalPayload {
  */
 export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) {
   const nowWhat = true;
+  // Practitioner identity for this field. `null` until the room-load resolves it
+  // and whenever the field has none configured — never a hard-coded name.
+  const [practitionerName, setPractitionerName] = useState<string | null>(null);
   const [roomPhase, setRoomPhase] = useState<RoomPhase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
@@ -315,6 +329,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           // Arrival payload (program position) rides the same load — null when
           // the field declares no anchoring; the line simply does not render.
           if (json?.arrival && !cancelled) setProgramArrival(json.arrival);
+          // Practitioner identity rides the same load. Absent → stays null and
+          // every surface renders neutral copy rather than guessing a name.
+          if (typeof json?.practitionerName === 'string' && !cancelled) {
+            setPractitionerName(json.practitionerName);
+          }
         }
       } catch {
         // Quiet fallback: no return context — the room simply begins fresh.
@@ -737,6 +756,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
   }
 
   const phaseLabel = PHASE_LABELS[phase] ?? phase;
+  // One resolved name for every practitioner reference in this room. Neutral
+  // copy when the field configures none — a gap must read as a gap.
+  const practitioner = practitionerDisplayName(practitionerName);
+  const openingFrame = buildOpeningFrame(practitioner);
   const openingQuestion = PHASE_OPENING_QUESTIONS[phase];
   const roomTitle = nowWhat ? 'Now What?' : 'Vision Studio';
 
@@ -785,7 +808,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
             </div>
             <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
-              <p className="text-sm uppercase tracking-[0.4em] text-[#ffe27a]">Now What? · with Larry Closs</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-[#ffe27a]">Now What? · with {practitioner}</p>
               <h1 style={SERIF} className="text-4xl sm:text-5xl font-light text-slate-100 tracking-wide">Welcome.</h1>
             </div>
             <div style={fadeUpStyle(0.5)} className="space-y-5 text-slate-300 text-[17px] font-light leading-[1.85]">
@@ -854,7 +877,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               ) : programArrival.cohortFocalPoint ? (
                 <>
                   <p style={SERIF} className="text-slate-300 text-base font-light leading-relaxed">
-                    This room holds Larry&apos;s work
+                    This room holds {practitioner}&apos;s work
                     {programArrival.programTitle ? (
                       <> — you&apos;ve come in through the <span className="text-slate-100">{programArrival.programTitle}</span>,</>
                     ) : (
@@ -1056,7 +1079,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
             </button>
             {showFrame && (
               <div className="text-left text-slate-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-slate-800 pl-4">
-                {OPENING_FRAME}
+                {openingFrame}
               </div>
             )}
             <p className="text-slate-500 text-xs font-light leading-relaxed">
@@ -1123,7 +1146,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           </button>
           {showFrame && (
             <div className="text-slate-400 text-sm leading-relaxed whitespace-pre-line font-light italic border-l-2 border-slate-800 pl-4">
-              {OPENING_FRAME}
+              {openingFrame}
             </div>
           )}
         </div>
