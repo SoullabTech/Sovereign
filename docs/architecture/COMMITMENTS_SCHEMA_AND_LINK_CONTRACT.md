@@ -93,7 +93,23 @@ any               → archived  (sets archived_at)
 - **`released` is not failure.** It is a member deciding this is no longer theirs to carry. UI and copy must not rank it below `completed`.
 - **No state is ever set by the system.** No inactivity timer completes, releases, or archives anything. `target_date` passing changes nothing — there is no `overdue`.
 - **History is preserved, never overwritten.** Status transitions and edits append; they do not destroy the prior record.
-- **No hard delete in Release 1.** `archived` is the terminal state, matching `studio_changes` (member objects use a status enum; `deleted_at` is practitioner-side only). Account deletion cascades via `member_id`.
+- **Retention is UNRESOLVED — `archived` does not settle it.** (Founder ruling, 2026-07-28.)
+
+  > **Commitment lifecycle is proposed; member withdrawal and deletion semantics remain undecided and must not be inherited silently from Journal.**
+
+  ⚠️ The first draft of this document said *"no hard delete in Release 1; `archived` is the terminal state,"* justified by matching `studio_changes`. That reasoning **inherited Journal's permanence posture by imitation rather than deciding it** — and Journal was subsequently found to offer members no delete at all. Copying a gap is not the same as choosing a policy.
+
+  **Three semantics that must not be conflated:**
+
+  | Layer | Question it answers |
+  |---|---|
+  | **Lifecycle** | What happened to the commitment? (`active` → `completed` / `released`) |
+  | **Visibility** | Should it remain in the active experience? (`archived`) |
+  | **Retention** | May the system continue to store it at all? (**undecided**) |
+
+  `archived` answers **visibility only**. Conflating these is how *"archived"* quietly becomes *"kept forever."*
+
+  A commitment is a declared orientation, not a record of inner expression — so it may warrant a different retention posture than a journal entry. That is a decision to take deliberately, with its own confirmation semantics and a truthful account of what withdrawal removes, once the propagation inventory for member-authored content exists. Account deletion cascades via `member_id`; that is the only removal path this design currently assumes, and it is not a substitute for per-object member authority.
 
 ### 2.3 Prohibited vocabulary
 
@@ -254,7 +270,8 @@ Named so they do not become hidden prerequisites:
 - **Reminders / notifications.** No governed member notification system exists (`api/sovereignty/notifications` has no auth and no member scoping). Standing ruling: do not build them here.
 - **Analytics.** `lib/analytics/track.ts` is a `console.log` stub. Room-opened/object-created events wait for a real system; nothing derived (no adherence, stage, quality, or flourishing inference) is ever permitted.
 - **Audit trail.** No general member-object mutation audit exists; `runtime_events` is content-free substrate observability. Lifecycle history lives in the object's own columns and its returns for Release 1. A general audit facility is its own lane.
-- **Practitioner or shared-field visibility.** Default private (`member_pulled`); any sharing surface is a separate ruling.
+- **Practitioner or shared-field visibility.** Default private; any sharing surface is a separate ruling.
+- **Member deletion / withdrawal semantics.** Explicitly undecided (§2.2), not deferred-by-silence. Depends on the member-sovereignty retention lane.
 - **Becoming.** See the gate document.
 
 ---
@@ -271,3 +288,23 @@ Allowed: *"You've returned to this nine times, most recently Tuesday."*
 Refused: *"You're becoming someone who follows through."*
 
 **Doorways are offers.** Declining has no effect — no re-prompting, no scoring, no recorded reluctance.
+
+---
+
+## 10. The invariant Commitments exists to satisfy
+
+Sharpened by founder ruling, 2026-07-28, from the earlier *"remove the Decisions doorway"*:
+
+> **No member surface may read, render, count, or navigate practitioner Decisions merely because the member also happens to be a practitioner.**
+
+**Why the earlier wording was insufficient.** PR #785 removed the Decisions *doorway* from the House registry, but a caller survived: `components/journal/UnifiedJournalView.tsx:281` still calls `/api/studio/decisions`, and the member Journal page renders a Decisions count from it. The doorway went; the capability relationship did not.
+
+**The defect this names.** *The member Journal currently changes behaviour according to an unrelated practitioner entitlement.* It works for a member who is also a practitioner and degrades for one who is not — a refusal, a missing tab, or an inconsistent surface depending on an entitlement that has nothing to do with being a member. A member surface must not have a practitioner-shaped hole in it.
+
+**The correction, in order:**
+
+1. Remove the practitioner Decisions dependency from the member Journal. This is a *removal*, and it does not wait for Commitments.
+2. Replace it with `commitments.member` **only once that capability actually exists**.
+3. Until then, **do not disguise the practitioner object as a member capability** — an empty room is honest; a borrowed one is not.
+
+**Test for any member surface, including every surface this document proposes:** does what a member sees depend on any entitlement other than being that member? If yes, it does not ship.
