@@ -11,6 +11,15 @@
  * the House renders from it — with test-enforced AGREEMENT against the existing
  * runtime allowlist and Capacitor build config (see __tests__/houseNavDrift.test.ts).
  *
+ * WHERE THAT ENFORCEMENT ACTUALLY RUNS (added 2026-07-29 — the claim above was
+ * aspirational until then; the guard existed but nothing failed on it):
+ *   • `npm run check:house-nav-drift` — the guard alone, exits nonzero on drift
+ *   • `npm run preflight` — included, so the documented pre-change gate covers it
+ *   • `.github/workflows/house-nav-drift.yml` — every PR, any base branch
+ *   • `.github/workflows/mobile-deploy.yml` — blocking step before the bundle build
+ * Not yet merge-BLOCKING: `clean-main-no-secrets` has no branch protection, so no
+ * status check can be marked required. That is an admin setting, not a code change.
+ *
  * Not yet fully unified: the native bundle config still lives in
  * scripts/capacitor-patch-routes.sh. The drift guard makes that duplication
  * safe (it fails on drift); it does not eliminate it. PR 2 may decide whether
