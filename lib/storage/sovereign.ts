@@ -1,6 +1,8 @@
 // Stub: sovereign storage module
 // TODO: Implement full sovereignty storage
 
+import { apiFetch } from '@/lib/http/apiBase';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -238,16 +240,17 @@ export async function saveQuickJournal(
 
   // Always try to save to server (PostgreSQL) for cross-device sync and data durability
   try {
-    // Use same-origin fetch for web, will work with Capacitor via apiFetch pattern
-    const apiBase = typeof window !== 'undefined' && window.location.origin.includes('localhost')
-      ? '' // Same-origin for localhost
-      : ''; // Same-origin for production too
-
-    const response = await fetch(`${apiBase}/api/journal/quick/list`, {
+    // apiFetch (not raw fetch): the server derives the owning member from the
+    // verified session, so the request must carry session credentials. The
+    // previous raw relative fetch sent none, and under Capacitor resolved
+    // against the local bundle instead of the API host.
+    //
+    // `userId` stays in the body for older deployed clients reading this shape,
+    // but the server ignores it — it no longer selects the row owner.
+    const response = await apiFetch('/api/journal/quick/list', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Member-Id': options.userId, // Include member ID header for auth
       },
       body: JSON.stringify({
         userId: options.userId,

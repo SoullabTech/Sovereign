@@ -7,11 +7,15 @@ import { z } from "zod";
 import { memoryStore } from "../../_backend/src/services/memory/MemoryStore";
 import { llamaService } from "../../_backend/src/services/memory/LlamaService";
 import { logger } from "../../_backend/src/utils/logger";
+import { getMemberIdFromRequest } from "@/lib/auth/getMemberFromRequest";
 
 // Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
 
+// `userId` is accepted but ignored: the owner is resolved from the verified
+// session. It stays in the schema only so any older caller sending it still
+// parses. See the note on POST below.
 const JournalSchema = z.object({
-  userId: z.string(),
+  userId: z.string().optional(),
   title: z.string(),
   content: z.string(),
   mood: z.string().optional(),
@@ -20,6 +24,14 @@ const JournalSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // BEFORE (2026-07-28): the entry owner came from a body-supplied `userId`
+    // with no session resolution, so any caller could write into any member's
+    // journal. AFTER: the owner is the member on the verified session.
+    const userId = await getMemberIdFromRequest(req);
+    if (!userId) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const body = await req.json();
     const parsed = JournalSchema.parse(body);
 
@@ -30,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Save in SQLite with enhanced metadata
     const entryId = await memoryStore.saveJournalEntry(
-      parsed.userId,
+      userId,
       parsed.title,
       parsed.content,
       parsed.mood,
@@ -38,7 +50,7 @@ export async function POST(req: NextRequest) {
     );
 
     // 2. Index in LlamaIndex for semantic search
-    await llamaService.addMemory(parsed.userId, {
+    await llamaService.addMemory(userId, {
       id: entryId,
       type: "journal",
       content: parsed.content,
@@ -51,7 +63,7 @@ export async function POST(req: NextRequest) {
     });
 
     logger.info("Journal entry saved and indexed", {
-      userId: parsed.userId.substring(0, 8) + '...',
+      userId: userId.substring(0, 8) + '...',
       entryId,
       contentLength: parsed.content.length
     });
@@ -76,15 +88,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
-    const userId = req.nextUrl.searchParams.get("userId");
+    // BEFORE (2026-07-28): `userId` came from the query string, so any caller
+    // could read any member's journal. AFTER: session-derived only.
+    const userId = await getMemberIdFromRequest(req);
+    if (!userId) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const limit = parseInt(req.nextUrl.searchParams.get("limit") || "10", 10);
     const search = req.nextUrl.searchParams.get("search");
-
-    if (!userId) {
-      return NextResponse.json({ 
-        error: "userId parameter is required" 
-      }, { status: 400 });
-    }
 
     // Initialize memory store
     const dbPath = process.env.MEMORY_DB_PATH || './data/soullab.sqlite';
@@ -126,12 +138,9 @@ export async function GET(req: NextRequest) {
 // Retrieve a specific journal entry
 export async function getEntry(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const userId = req.nextUrl.searchParams.get("userId");
-    
+    const userId = await getMemberIdFromRequest(req);
     if (!userId) {
-      return NextResponse.json({ 
-        error: "userId parameter is required" 
-      }, { status: 400 });
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
     const dbPath = process.env.MEMORY_DB_PATH || './data/soullab.sqlite';

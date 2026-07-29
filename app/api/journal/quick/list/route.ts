@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { createCapsule } from '@/lib/capsules/capsuleService';
 import { VectorEmbeddingService } from '@/lib/vector-embeddings';
 import crypto from 'crypto';
@@ -183,16 +184,26 @@ async function ensureTableExists() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, entryType, content, tags = [], source = 'quick_sheet', meta = null } = body;
-
-    // Validation
+    // The owner of the entry is the member resolved from the verified session.
+    //
+    // BEFORE (2026-07-28): `userId` was taken from the request body and used
+    // directly as the row owner, with no session resolution. Any caller could
+    // write an entry into any member's journal by naming their id.
+    //
+    // AFTER: the body's `userId` is ignored entirely. It is still accepted in
+    // the payload so older deployed clients do not break, but it selects
+    // nothing. getMemberIdFromRequest resolves an auth_sessions-backed
+    // credential and rejects a mismatched `x-member-id` claim.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'userId is required' },
-        { status: 400 }
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
       );
     }
+
+    const body = await request.json();
+    const { entryType, content, tags = [], source = 'quick_sheet', meta = null } = body;
 
     if (!entryType || !['dream', 'day', 'handwriting'].includes(entryType)) {
       return NextResponse.json(
@@ -220,7 +231,7 @@ export async function POST(request: NextRequest) {
 
     const entry = result.rows[0];
 
-    console.log(`✅ [QuickJournal] ${entryType} entry saved for user ${userId}`);
+    console.log(`✅ [QuickJournal] ${entryType} entry saved for user ${userId.substring(0, 8)}...`);
 
     // Bridge to episodic memory for resonance search (fire-and-forget)
     if (content.trim().length >= 10) {
@@ -256,17 +267,26 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    // Accept userId from query param (QuickJournalSheet) or x-member-id header (Reflections page via apiFetch)
-    const userId = searchParams.get('userId') || request.headers.get('x-member-id');
-    const entryType = searchParams.get('type'); // optional filter
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
 
+    // Whose entries are returned is decided by the verified session, never by
+    // the caller.
+    //
+    // BEFORE (2026-07-28): `searchParams.get('userId') || x-member-id header`.
+    // Both are caller-supplied claims, so anyone could read any member's
+    // journal by passing their id.
+    //
+    // AFTER: a `userId` query param is ignored. getMemberIdFromRequest resolves
+    // the session and rejects a mismatched `x-member-id` claim outright.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'userId is required' },
-        { status: 400 }
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
       );
     }
+
+    const entryType = searchParams.get('type'); // optional filter
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
 
     // Ensure table exists
     await ensureTableExists();
