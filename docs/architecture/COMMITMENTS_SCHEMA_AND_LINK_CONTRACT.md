@@ -1,7 +1,11 @@
 # Commitments — schema and link contract
 
-**Status: DESIGN ONLY. No implementation authorized by this document.**
+**Status: PROPOSAL. Design only — not canon, not ratified architecture.**
 Class: *Designed*, not *Live*, under `docs/canon/MARKETING_CLAIM_DISCIPLINE.md`. Commitments does not exist.
+
+⚠️ **The five decisions in §7 are unresolved.** Merging this document records the proposal; it does **not** ratify those decisions and confers no more authority on them than they presently have. Implementation requires each to be adjudicated explicitly. Per `feedback_constitutional_governance_lifecycle`: Candidate → Reconcile → Ratify → Living. This is at **Candidate**.
+
+**Founder review 2026-07-28 (recorded, not closing):** §2.1 `authorship` — provisional approval, refinement applied below. §2.1 no `maia`/`system` value — **approved**. §4.2 `member_connected` — **approved for R1**, framing corrected. §7.2 preference vocabulary — **held pending consolidation**. §7.4 sheet vs route — strong preference for sheet, but the product reason must lead; recorded below.
 
 **Blocked on:** PR #793 (journal session-identity) merging. Ruling 9 of 2026-07-28 is an ordering gate: the journal auth findings resolve before capability implementation proceeds. Commitments links *to* journal entries, so building on that surface first would create new code against an ownership model already known to be unsafe.
 
@@ -58,7 +62,15 @@ This is the load-bearing column, and it is **not** the brief's `authored_by = me
 | `member_authored` | The member wrote it. |
 | `member_adopted` | MAIA proposed language; the member explicitly accepted it. |
 
-**There is deliberately no `system`, `maia`, or `inferred` value.** A row cannot be written without one of these two, so *the schema itself refuses a MAIA-created commitment* — the constraint that Invariant 16 and THE_HOUSE's governing principle require is a CHECK, not a code convention that a later refactor can quietly drop.
+**There is deliberately no `system`, `maia`, or `inferred` value.** A row cannot be written without one of these two, so *the schema itself refuses a MAIA-created commitment* — the constraint that Invariant 16 and THE_HOUSE's governing principle require is a CHECK, not a code convention that a later refactor can quietly drop. MAIA may offer language; it can never become the recorded originator of a commitment.
+
+**What `authorship` records — the decisive act, not word provenance.**
+
+`authorship` names **the act by which the commitment entered canonical form**. It is not a forensic account of where the words came from, and must never be implemented or described as one.
+
+This matters because real cases sit on a spectrum: MAIA language accepted verbatim · MAIA language heavily rewritten by the member · member language lightly refined by MAIA. A binary would flatten that spectrum if read as a claim about word origin. Read correctly it does not, because the question it answers is *"what act made this canonical?"* — and there are only two answers: the member wrote it, or the member accepted it.
+
+A member who takes MAIA's draft and rewrites it substantially has **authored** it; `member_adopted` is for language that entered canonical form *by the act of acceptance*. Implementations must not compute this from diff ratios or word overlap. If the spectrum later proves to need more resolution, that is a schema ruling on evidence, not a reason to add values now.
 
 ⚠️ **Decision needed (§7.1):** the repo's existing `authored_by` is split — a TEXT role string in `personal_living_fields`, a `UUID REFERENCES members(id)` in `encounters` and `recognitions`. Neither expresses the member-authored/member-adopted distinction. This proposes a **third, differently-named** column rather than overloading a name that already means two things.
 
@@ -136,7 +148,13 @@ INDEX (member_id, from_type, from_id)
 INDEX (member_id, to_type, to_id)
 ```
 
-**`relation` has exactly one value.** A member connecting two things asserts *that* they are connected, never *how*. The moment a second value exists — `caused`, `resolves`, `evolves` — the system starts holding an interpretation of the member's life. If a richer vocabulary is ever wanted, the member must supply the words, and that is a separate ruling.
+**`relation` has exactly one value — a deliberately non-semantic link.**
+
+The correct reading (founder, 2026-07-28): this is **not** a claim that the connection is meaningless. It has meaning to the member. *The system declines to name that meaning.*
+
+The row records the member's **act** of joining two objects. It does not encode causation, resolution, development, or psychological significance. The moment a second value exists — `caused`, `resolves`, `evolves` — the platform is making an ontological claim about someone's life. Richer interpretation, where it is wanted, belongs in **member-authored language** (the commitment's `why`, a return's `note`), not in a system-owned vocabulary.
+
+If a richer set is ever proposed, the member must supply the words, and it is a separate ruling.
 
 ### 4.3 Source allowlist
 
@@ -200,10 +218,25 @@ The primitive exists: **`keepSource()`** (`lib/psyche/portfolio.ts:340`, *"Arriv
 | # | Decision | Recommendation |
 |---|---|---|
 | 7.1 | `authorship` as a new column vs overloading `authored_by` | **New column.** `authored_by` already means two incompatible things in-repo (role string / member FK) and neither carries the authored-vs-adopted distinction. |
-| 7.2 | Consent column name: `surface_preference` (anchors) or `return_preference` (atoms) — identical triple, two names | **`surface_preference`**, and open a separate chore to reconcile the two existing names. Do not add a third spelling. |
+| 7.2 | Consent column name: `surface_preference` (anchors) or `return_preference` (atoms) — identical triple, two names | ⏸️ **HELD pending consolidation** (founder, 2026-07-28). Do not introduce a third spelling. Before implementation, pick **one existing** consent grammar and document why it becomes canonical. This is a small vocabulary ruling, **not** a new conceptual model — resist expanding it into one. |
 | 7.3 | New `member_object_links` vs extending `memory_links` | **New table** (§4.1). |
-| 7.4 | Sheet vs route | **Sheet**, on the `ChangesSheet` pattern — PWA and iOS in one build (`MOBILE_MAIA_KEEP=()` strips `app/maia/*` sub-routes; Changes survives because it is a sheet). Requires one `HouseDestination` entry, widening `HouseSheetId`, an `onOpenCommitments` prop, and the three navigation drift guards passing. |
+| 7.4 | Sheet vs route | See §7.4a — the product reason must lead. |
 | 7.5 | Whether `episodic_mark` ships in the Release-1 allowlist given zero rows exist | **Include in the registry, ship the UI affordance dark.** Costs nothing and avoids a schema change when the first mark arrives. |
+
+### 7.4a Sheet vs route — architecture leads, packaging follows
+
+⚠️ **Correction to this document's first draft** (founder, 2026-07-28). The original recommendation led with the iOS build evidence. That inverts the reasoning: **the native-build constraint is implementation evidence and must not silently decide the product ontology.**
+
+The product question comes first:
+
+- A **sheet** is right when Commitments is a *contextual House surface* — entered and left, without becoming a separate destination in the member's mental model.
+- A **route** is right when it carries substantial internal navigation, deep-linking, browser history, or independent return behaviour.
+
+**Present reading: Commitments is likely a House sheet** — it is entered from the House, its detail view is one level deep, and leaving it returns the member to where they were. Changes, its nearest sibling, is a sheet for the same reasons.
+
+If that holds, architecture and packaging converge, and the iOS evidence becomes *confirming* rather than *deciding*. If a future need for deep-linking or independent history emerges, the product reason changes and the packaging constraint must be solved another way — not used to refuse the requirement.
+
+**Packaging evidence, recorded as secondary:** `capacitor-patch-routes.sh:56` sets `MOBILE_MAIA_KEEP=()`, stripping every `app/maia/*` sub-route from the iOS bundle; Changes survives on device because it is a sheet inside the retained `/maia` root page. A sheet therefore reaches PWA and iOS in one build. Implementation cost: one `HouseDestination` entry, widening `HouseSheetId` (currently `'changes'` only), an `onOpenCommitments` prop, and the three navigation drift guards passing.
 
 ---
 

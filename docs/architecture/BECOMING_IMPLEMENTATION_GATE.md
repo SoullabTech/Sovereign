@@ -1,7 +1,9 @@
 # Becoming — implementation gate
 
-**Status: CONCEPT RATIFIED, BUILD DEFERRED.**
+**Status: CONCEPT RATIFIED, BUILD DEFERRED.** This document is a **proposal**, not canon.
 Class: *Vision* under `docs/canon/MARKETING_CLAIM_DISCIPLINE.md`. Becoming does not exist and must be described as aspiration in any outward use.
+
+⚠️ Merging this document records the gate as proposed; it does not ratify it. The room stays deferred either way — a proposal cannot authorize a build.
 
 This document exists so that "not yet" is a **recorded condition with a test**, not a vague hesitation that erodes under enthusiasm. It names what must be true before the Becoming room is built, and what is reserved in the meantime.
 
@@ -81,7 +83,12 @@ Members are using `member_object_links` unprompted. If nobody connects a journal
 A meaningful population of member-authored, explicitly-marked material exists across at least two source types. Specifically: **episodic marks are no longer zero**, or an equivalent member-marked corpus has accumulated. Counting to nine requires nine things.
 
 **G4 — Observed use has replaced assumption.**
-The Release-1 Commitments work has produced at least one *surprise* — something members did with returns or links that the design did not anticipate. Absence of surprise usually means nobody is really using it yet.
+
+> Observed use must reveal at least one **materially important need, behaviour, or distinction that the current design did not predict.**
+
+⚠️ **This wording is the gate; "produced a surprise" was the first draft and is not sufficient** (founder refinement, 2026-07-28). "Surprise" is subjective and can be theatrically manufactured — a team wanting to ship can always find something to call surprising. The test is **inspectable**: the finding must have *altered the understanding* of what the room is for, not merely felt novel.
+
+Evidence for G4 is a written statement of what was believed before, what use revealed, and what changed as a result. If nothing changed, G4 is not met — and absence of any such finding usually means nobody is really using the room yet.
 
 **Lift condition:** G1–G4 evidenced **and** an explicit founder ruling. Evidence alone does not lift the gate; it makes the ruling possible.
 
