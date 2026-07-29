@@ -125,3 +125,73 @@ Three distinct promises. **They must not be merged under one generic "Delete" bu
 It proposes no endpoint, no schema, no UI, and no migration. It does not rule on which promise the product should make. It establishes only what is true now, so that the promise chosen later can be kept.
 
 Open question for ruling, stated plainly: **is the current account-deletion gap (§0) an incident, or a known defect to schedule?** It concerns member data already in production, and that classification is not Claude's to make.
+
+---
+
+## 8. Incident scope determination (2026-07-28, read-only)
+
+Classified by the founder as **a privacy and data-governance incident caused by a product defect** — not a breach; no evidence of unauthorized access or disclosure. Phase 1 was evidence preservation and scope. **No destructive writes were made.**
+
+### 8.1 ⚠️ The deletion destroys its own evidence
+
+`auth_sessions_member_id_fkey` is **`ON DELETE CASCADE`**. The route revokes sessions with `revoked_reason='account_deleted'` and never deletes those rows — but deleting `members` cascades them away regardless.
+
+**Consequence: the number of historical account-deletion invocations cannot be reconstructed from the database.** The identity anchor and its audit trail are removed together. Container logs do not help — the route logs nothing on success, and current logs post-date tonight's deploy.
+
+This is itself part of the incident: *deleting the identity anchor before the dependent data makes later remediation less reliable*, exactly as anticipated.
+
+### 8.2 Orphan sweep — content whose `user_id` matches no live member
+
+85 live members. Legacy aliases (`username`, `{username}-nezat`) counted as live.
+
+| Table | Total | Orphaned | UUID-shaped | Distinct UUID owners |
+|---|---:|---:|---:|---:|
+| `conversation_turns` | 38,867 | **1,450** | 832 | **137** |
+| `episodic_memories` | 104 | 4 | 1 | 1 |
+| `reflection_capsules` | 344 | 1 | 1 | 1 |
+| **`quick_journal_entries`** | 5 | **0** | 0 | 0 |
+
+**No journal entry is orphaned.** The specific scenario that opened this lane — a member closes their account and their journal writing remains — **has not occurred in production**.
+
+Three of the four orphaned episodic rows belong to the literal string `guest` (5 chars, not a UUID) — anonymous sessions that were never member accounts. All four carry `experience_context = 'session_summary:…'` and `episode_id = 'session-…'`, i.e. they came from the **conversation** path, not the journal bridge. **The journal bridge has never produced an orphan.**
+
+### 8.3 ⚠️ Attribution is NOT established — and the numbers argue against the alarming reading
+
+**137 distinct orphaned UUID owners against 85 live members.** A beta of this size did not have 137 account deletions. Orphaned ≠ deleted-by-this-endpoint. Untested alternative explanations, at least one of which is likely dominant:
+
+- anonymous/visitor identifiers (`x-maia-anon-id`) which are UUID-shaped;
+- turns written before a `members` row exists (`register-local` onboarding);
+- `migrate-data` re-keying `user_id` and leaving the old id behind;
+- test accounts and earlier-schema records.
+
+**Nothing here should be read as "137 members were affected."** The honest statement is: orphaned content exists at scale; **its cause is unestablished and may be unestablishable** (§8.1).
+
+The single characterized UUID retains 128 `conversation_turns`, 1 episodic row, 1 capsule, 0 journal entries, 0 memory atoms — content consistent with a real conversational history, cause unknown.
+
+### 8.4 ⚠️ The gap is broader than journal
+
+`delete-account` does not touch **`conversation_turns`** either. Conversation content is more voluminous and at least as sensitive as journal content. Framing this lane around journal understated it; the correct scope is *member-authored content generally*.
+
+### 8.5 Severity, revised on evidence
+
+> **Privacy incident — defect confirmed and live; realized member harm not established, and plausibly zero for journal content.**
+
+**Confirmed:** the false assurance was live in production; account closure genuinely leaves content behind; the evidence trail is destroyed by design.
+
+**Not established:** that any member exercised the path and relied on the false statement; that any orphaned row resulted from it; any cross-member exposure; any external exfiltration.
+
+**Reduces severity from the initial reading:** zero orphaned journal entries · the journal bridge has never orphaned anything · most orphans are non-UUID or explicable without deletion.
+
+**Sustains the incident classification:** a system that tells someone their data was permanently deleted when it was not is an incident regardless of how many people it told. Containment is therefore correct even if the realized harm proves to be nil.
+
+### 8.6 Audio — preventive defect, not an incident
+
+> **No known loss occurred. Future loss is deterministic on container replacement unless storage is mounted or moved.**
+
+Verified on the running container after tonight's deploy: `rows_with_audio = 0`, zero files under `/app/storage/audio`. Nothing has ever been written, so nothing was lost. Fix before journal audio is enabled or promoted.
+
+### 8.7 Containment status
+
+- ✅ False claim removed; preflight refuses rather than orphaning — **PR #796** (open, not deployed).
+- ⛔ **No cleanup of existing orphaned rows.** Deliberate: without provenance (§2) their origin cannot be established, and deleting them would destroy the only remaining evidence of scope.
+- ⏸️ Full deletion architecture remains separate and blocked on the provenance migration.
