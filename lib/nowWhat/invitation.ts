@@ -9,9 +9,16 @@
  * system had already decided to refuse, and an invitation was asserted before
  * eligibility was established.
  *
- * The invariant:
- *   No credential field appears until the arriving context has been resolved
- *   and found eligible.
+ * The invariant (Kelly ruling 2026-07-29, F1 — Option A):
+ *   No ACCOUNT-CREATING credential field may be presented until invitation
+ *   eligibility has been established. Existing authorized members must always
+ *   retain a path to authenticate into accounts they already hold.
+ *
+ * "The invitation is the gate" governs entry into MEMBERSHIP, not subsequent
+ * authentication into an account the person already holds. An earlier version
+ * of this repair gated the whole door and locked existing members out — and
+ * added no authorization, since `/api/now-what/signin` carries no invitation
+ * check server-side, so the denial was one the server would have overruled.
  *
  * The rule lives here so the page and the route cannot drift apart. The page
  * gate governs what is *rendered*; the route gate remains the authority and is
@@ -62,14 +69,17 @@ export function isInvited(next: string | null | undefined): boolean {
 }
 
 /**
- * Member-facing refusal copy. Names no allowlist member, no field, and no
- * reason beyond the absence of an invitation — a refusal must not become a
- * probe for which contexts are authorized.
+ * Copy shown when no invitation context was established.
+ *
+ * Per the F1 ruling (Option A), this is NOT a refusal of the door: an existing
+ * member still signs in here. It refuses only the creation of a new key, and
+ * says so without naming a field, an allowlist entry, or any reason beyond the
+ * absence of an invitation link — the copy must not become a probe for which
+ * contexts are authorized.
  */
-export const REFUSAL_COPY = {
-  heading: 'This door opens with an invitation.',
+export const UNINVITED_COPY = {
+  heading: 'Welcome back.',
   body:
-    'Now What? is opened by the person you are working with. If you were sent a link, ' +
-    'please open it again — it carries what this door needs. If you arrived another way, ' +
-    'ask them to send it.',
+    'Sign in to continue. If someone invited you to a new field, open the link they sent — ' +
+    'it carries what this door needs to set up a key.',
 } as const;

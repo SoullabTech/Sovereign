@@ -1,8 +1,16 @@
 /**
  * Invitation gate — ordering invariant for the Now What? front door.
  *
- * INVARIANT: no credential field appears until the arriving context has been
- * resolved and found eligible.
+ * INVARIANT (Kelly ruling 2026-07-29, F1 — Option A):
+ *   No ACCOUNT-CREATING credential field may be presented until invitation
+ *   eligibility has been established. Existing authorized members must always
+ *   retain a path to authenticate into accounts they already hold.
+ *
+ * An earlier version of this file encoded the broader invariant — "no credential
+ * field at all" — which the implementation then satisfied by locking existing
+ * members out. The ruling narrowed the gate to account creation; these tests
+ * were revised to match, and the acceptance case below pins the return path so
+ * the over-gate cannot silently return.
  *
  * ⚠️ TEST-STRENGTH NOTE (read before trusting this file): the strongest form of
  * these assertions would RENDER the page and assert no password input exists in
@@ -21,7 +29,7 @@
 import { execFileSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { invitedFieldContext, isInvited, AUTHORIZED_FIELD_CONTEXTS, REFUSAL_COPY } from '../invitation';
+import { invitedFieldContext, isInvited, AUTHORIZED_FIELD_CONTEXTS, UNINVITED_COPY } from '../invitation';
 
 const page = readFileSync(join(process.cwd(), 'app/now-what/arrive/page.tsx'), 'utf8');
 const route = readFileSync(join(process.cwd(), 'app/api/now-what/register/route.ts'), 'utf8');
@@ -58,12 +66,6 @@ function functionBody(src: string, name: string): string {
   }
   throw new Error(`unbalanced braces in ${name}`);
 }
-
-const CREDENTIAL_MARKERS = [
-  'type="password"',
-  'autoComplete="new-password"',
-  'autoComplete="current-password"',
-];
 
 const countOf = (haystack: string, needle: string) => haystack.split(needle).length - 1;
 
@@ -102,47 +104,98 @@ describe('eligibility rule (behavioural)', () => {
     expect(isInvited('/now-what/room?fieldContext=now-what-demo&program=x')).toBe(true);
   });
 
-  it('refusal copy leaks no allowlist member', () => {
-    const copy = `${REFUSAL_COPY.heading} ${REFUSAL_COPY.body}`;
+  it('uninvited copy leaks no allowlist member', () => {
+    const copy = `${UNINVITED_COPY.heading} ${UNINVITED_COPY.body}`;
     for (const ctx of AUTHORIZED_FIELD_CONTEXTS) {
       expect(copy).not.toContain(ctx);
     }
   });
+
+  it('uninvited copy does not assert an invitation', () => {
+    const copy = `${UNINVITED_COPY.heading} ${UNINVITED_COPY.body}`;
+    expect(copy).not.toMatch(/you were invited/i);
+  });
 });
 
-describe('credential component mounted only in the eligible branch (structural)', () => {
-  it('credential markup lives solely inside ArrivalCredentials', () => {
-    const credentials = functionBody(page, 'ArrivalCredentials');
-    for (const marker of CREDENTIAL_MARKERS) {
-      expect(credentials).toContain(marker);
-      expect(countOf(page, marker)).toBe(countOf(credentials, marker));
+/**
+ * ACCEPTANCE CASE (Kelly ruling 2026-07-29, F1 — Option A).
+ *
+ *   1. Existing member bookmarks /now-what/map
+ *   2. Signs out
+ *   3. Returns to the bookmark
+ *   4. Middleware redirects to /now-what/arrive?next=/now-what/map
+ *   5. No fieldContext is present
+ *   6. Member can sign in
+ *   7. Member returns to /now-what/map
+ */
+describe('acceptance — an existing member is never locked out', () => {
+  const BOOKMARK = '/now-what/map';
+
+  it('step 5: the arrival carries no eligible field context', () => {
+    expect(invitedFieldContext(BOOKMARK)).toBeNull();
+  });
+
+  it('step 6: sign-in is still offered — SignInForm is outside the eligible branch', () => {
+    const signInOnly = functionBody(page, 'ArrivalSignInOnly');
+    expect(signInOnly).toContain('<SignInForm');
+    // ...and account creation is not.
+    expect(signInOnly).not.toContain('<CreateForm');
+  });
+
+  it('step 7: the original destination survives authentication', () => {
+    // The ineligible branch is handed `destination`, which is requestedNext
+    // when present — so sign-in returns the member to their bookmark.
+    const inner = functionBody(page, 'ArriveInner');
+    expect(inner).toMatch(/const destination = requestedNext \?\? SIGNED_IN_LANDING/);
+    expect(inner).toMatch(/<ArrivalSignInOnly next=\{destination\}/);
+    // SignInForm redirects to exactly what it was given.
+    expect(functionBody(page, 'SignInForm')).toMatch(/window\.location\.href = next/);
+  });
+
+  it('the post-auth landing is never an eligibility input', () => {
+    const inner = functionBody(page, 'ArriveInner');
+    const eligibilityAt = inner.indexOf('invitedFieldContext(requestedNext)');
+    const destinationAt = inner.indexOf('const destination');
+    expect(eligibilityAt).toBeGreaterThan(-1);
+    // Eligibility is decided before any fallback destination exists.
+    expect(eligibilityAt).toBeLessThan(destinationAt);
+  });
+});
+
+describe('account creation gated; sign-in never gated (structural)', () => {
+  it('account-creating fields live solely inside CreateForm', () => {
+    const create = functionBody(page, 'CreateForm');
+    for (const marker of ['autoComplete="new-password"', 'placeholder="Your name"', 'placeholder="Email"']) {
+      expect(create).toContain(marker);
+      expect(countOf(page, marker)).toBe(countOf(create, marker));
     }
   });
 
-  it('the refused state mounts no credential component and no form', () => {
-    const refused = functionBody(page, 'ArrivalRefused');
-    expect(refused).not.toContain('ArrivalCredentials');
-    expect(refused).not.toContain('<form');
-    for (const marker of CREDENTIAL_MARKERS) expect(refused).not.toContain(marker);
+  it('the uninvited state mounts SignInForm and NOT CreateForm', () => {
+    const signInOnly = functionBody(page, 'ArrivalSignInOnly');
+    expect(signInOnly).toContain('<SignInForm');
+    expect(signInOnly).not.toContain('<CreateForm');
+    // A mount decision, not a CSS or disabled-prop one.
+    expect(signInOnly).not.toMatch(/hidden|display:\s*none|visibility:\s*hidden/);
   });
 
-  it('the resolving state mounts no credential component', () => {
+  it('the resolving state mounts neither form', () => {
     const resolving = functionBody(page, 'ArrivalResolving');
-    expect(resolving).not.toContain('ArrivalCredentials');
-    for (const marker of CREDENTIAL_MARKERS) expect(resolving).not.toContain(marker);
+    expect(resolving).not.toContain('<SignInForm');
+    expect(resolving).not.toContain('<CreateForm');
   });
 
-  it('only the eligible state mounts it — a mount, not a hidden render', () => {
+  it('only the eligible state mounts CreateForm', () => {
     const eligible = functionBody(page, 'ArrivalEligible');
-    expect(eligible).toContain('<ArrivalCredentials');
-    // The regression this lane exists to prevent: gating by CSS or a disabled
-    // prop instead of by mounting.
-    expect(eligible).not.toMatch(/hidden|display:\s*none|visibility:\s*hidden/);
+    expect(eligible).toContain('<CreateForm');
+    expect(eligible).toContain('<SignInForm');
+    // CreateForm appears in exactly one branch of the page.
+    expect(countOf(page, '<CreateForm')).toBe(1);
   });
 
   it('only ArrivalEligible asserts the invitation', () => {
     expect(functionBody(page, 'ArrivalEligible')).toContain('You were invited here.');
-    expect(functionBody(page, 'ArrivalRefused')).not.toContain('You were invited here.');
+    expect(functionBody(page, 'ArrivalSignInOnly')).not.toContain('You were invited here.');
     expect(functionBody(page, 'ArrivalResolving')).not.toContain('You were invited here.');
   });
 
@@ -155,11 +208,11 @@ describe('credential component mounted only in the eligible branch (structural)'
     expect(decidedAt).toBeLessThan(firstReturn);
   });
 
-  it('no fabricated default destination', () => {
-    // Comments are stripped: the file's own history note quotes the old
-    // expression, and prose must not fail an assertion about executable code.
+  it('no fabricated default feeds the eligibility check', () => {
     const code = page.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     expect(code).not.toContain("|| '/now-what/room'");
+    // The post-auth landing is a separate, named constant.
+    expect(code).toContain('SIGNED_IN_LANDING');
   });
 });
 
