@@ -1,8 +1,9 @@
 # Layer 2 · C2 — States must remain distinguishable
 
 **Opened:** 2026-07-29
-**Status:** PARTIALLY RULED — **Decision 0 = NECESSARY PROPERTY** (2026-07-29T20:27:10Z).
-Decisions 1 (vocabulary), 2 (`candidate`), 3 (`living`) remain **OPEN**.
+**Status:** FULLY RULED — Decision 0 = NECESSARY PROPERTY (durable `f1becda51`) · D1 `verifiable` ·
+D2 `candidate` · D3 `living`, all ruled 2026-07-29T21:17:46Z.
+⛔ `derived` remains outside the model. C3 / C4 / Layer 3 remain closed.
 **Upstream:** L1 AFFIRMED `448cb7eda` · L2 gate RULED `500b37f6f` · C1 AFFIRMED `78d9fb388`
 **Gate disposition carried in:** C2 = **property candidate; state set UNRESOLVED**
 **Authority:** Kelly only. Claude may open the slot and give an evidentiary read; Claude may not rule.
@@ -160,7 +161,71 @@ Named by the L1 ruling. Their *distinguishability requirement* is Decision 0, no
 **Claude's evidentiary read (not a ruling):** the evidence supports only `ratified`, `recorded`, and
 `verifiable` as established lifecycle states.
 
-**Ruled by:** _______________  **Timestamp (UTC):** _______________
+### The state model as it would stand — TWO COLUMNS, not one
+
+⭐ **Provenance ⊥ nature.** Describing what a state *is* must never imply how it *became authoritative*.
+Collapsing these reintroduces, at the vocabulary level, the same error C1 (`78d9fb388`) prohibited at the
+path level.
+
+| State | **Admitted by** (provenance) | **What it is** (nature) |
+|---|---|---|
+| `ratified` | L1 ruling `448cb7eda` | founder / governance act |
+| `recorded` | L1 ruling `448cb7eda` | canonical representation |
+| `verifiable` | L1 ruling `448cb7eda` | inspectable property |
+| `candidate` | **observed governance practice** (D2) | standing without authority |
+| `living` | **founder ruling; no prior canonical instance at admission** (D3) | post-verification continuity |
+
+⚠️ All three L1 states were admitted by **the same act**. Their differing natures belong in the second
+column only — *"canonical representation"* and *"inspectable property"* describe what they are, not how
+they entered.
+
+### ⛔ `derived` — tracked, OUTSIDE the model
+
+Surfaced as a possible third admission path (alongside *observed* and *ruled*): a state entering by
+derivation from an existing ruling. **Not admitted.** Its question is preserved unruled:
+
+> Can a lifecycle state enter by derivation from an existing ruling, or must every admission have an
+> explicit act?
+
+⚠️ *A derived state would need no new authority, making it the cheapest path into the model — and
+therefore the one most worth guarding.*
+
+---
+
+## ✅ D1 · D2 · D3 — RULED 2026-07-29T21:17:46Z
+
+### D1 — `verifiable` ✅
+**Basis: inherited from Layer 1 ruling `448cb7eda`.** The lifecycle state remains `verifiable`, not
+`verified`. `verifiable` describes a *property* of the state; `verified` would introduce a separate
+completed act requiring an actor and a moment of verification. **Layer 1 established the transition
+requirement; it did not create a verification ceremony.**
+
+### D2 — `candidate` ✅
+**Basis: admitted from observed governance practice.** The project has actual candidate usage;
+`candidate` describes standing before ratification.
+
+> **A candidate state is recognized standing, not recognized authority.**
+
+⚠️ **Precedent consequence — recorded, not hidden:** *this admission establishes observed practice as a
+sufficient path for `candidate`; whether observed practice generally admits lifecycle states remains
+UNRULED.*
+
+### D3 — `living` ✅
+**Basis: admitted by founder ruling; no prior canonical instance existed at admission.**
+A founder ruling may create a new governance category; prior observation is not required for admission.
+
+⛔ **The record must not rewrite a chosen category as an observed one.** The provenance line is exact and
+must not be paraphrased:
+
+> `living` — admitted by founder ruling; no prior canonical instance existed at admission.
+
+---
+
+**Ruled by (D1 · D2 · D3):** Kelly Nezat  **Timestamp (UTC):** 2026-07-29T21:17:46Z
+
+*(This block governs Decisions 1–3 only. Decision 0 is ruled above and durable at `f1becda51`.)*
+
+⛔ **Not ruled by these three:** `derived` remains outside the model, and C3 / C4 / Layer 3 remain closed.
 
 **Recorded to canonical (merge SHA):** _______________ ⬅ *unfilled until Kelly merges*
 
