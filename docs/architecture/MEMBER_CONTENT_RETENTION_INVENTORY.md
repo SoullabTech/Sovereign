@@ -1,7 +1,19 @@
-# Member content retention — propagation inventory
+# Account deletion completeness defect — historical member impact indeterminate
+
+*Evidence and incident record. Includes the member-content propagation inventory.*
+
+| | |
+|---|---|
+| **Discovered** | False total-deletion claim, and an incomplete deletion model beneath it |
+| **Contained** | `4b3448c6f`, merged and deployed 2026-07-29 |
+| **Historical impact** | **Indeterminate** — see §8.3 |
+| **Full deletion architecture** | Unresolved; blocked on provenance (§2) |
+| **Cleanup of orphaned records** | **Not authorized** (§8.7) |
 
 **Type: evidence. Status: FINDINGS, not a proposal.**
 No deletion capability is proposed, designed, or authorized here. Per founder ruling 2026-07-28: *inventory first, then define what "delete" truthfully means.*
+
+⚠️ **Tense:** this document describes the system **as found on 2026-07-28**. The false claim and the unconditional deletion path are **no longer in production** — containment is deployed. What remains unresolved is the deletion architecture, not an active false assurance.
 
 Traced against `origin/clean-main-no-secrets @ 471bdf85c`. Subject: a member-authored **journal entry** — the most personal surface in the product, and the first case where the question was asked.
 
@@ -174,9 +186,9 @@ The single characterized UUID retains 128 `conversation_turns`, 1 episodic row, 
 
 ### 8.5 Severity, revised on evidence
 
-> **Privacy incident — defect confirmed and live; realized member harm not established, and plausibly zero for journal content.**
+> **Privacy incident — defect confirmed as found and since contained; realized member harm not established, and plausibly zero for journal content.**
 
-**Confirmed:** the false assurance was live in production; account closure genuinely leaves content behind; the evidence trail is destroyed by design.
+**Confirmed:** the false assurance **was** live in production until `4b3448c6f`; account closure genuinely leaves content behind; the evidence trail is destroyed by design.
 
 **Not established:** that any member exercised the path and relied on the false statement; that any orphaned row resulted from it; any cross-member exposure; any external exfiltration.
 
@@ -192,6 +204,7 @@ Verified on the running container after tonight's deploy: `rows_with_audio = 0`,
 
 ### 8.7 Containment status
 
-- ✅ False claim removed; preflight refuses rather than orphaning — **PR #796** (open, not deployed).
+- ✅ False claim removed; preflight refuses rather than orphaning — **PR #796 merged and deployed, `4b3448c6f`**. Preflight covers the **39 currently known** member-content tables (sourced from `TABLES_TO_MIGRATE` plus the two the inventory found retained). Production verified: unauthenticated and forged-identity requests refuse with 401.
+- ⚠️ **Authenticated refusal structurally proven and production prerequisites confirmed; destructive-path acceptance deferred pending a disposable governed fixture.** The only available production subject was a real account, and a guard failure would have caused irreversible deletion. This is an acceptance boundary, not missing diligence — and it must not be recorded as end-to-end verified.
 - ⛔ **No cleanup of existing orphaned rows.** Deliberate: without provenance (§2) their origin cannot be established, and deleting them would destroy the only remaining evidence of scope.
 - ⏸️ Full deletion architecture remains separate and blocked on the provenance migration.
