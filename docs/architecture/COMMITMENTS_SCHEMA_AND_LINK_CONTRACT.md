@@ -25,6 +25,37 @@ A commitment is **not** a task, a goal score, a habit streak, a notification tri
 
 ---
 
+## 1a. The name — audited, kept, and namespaced
+
+**Ruled 2026-07-29.** The Becoming gate refused `practice` partly because the word was already spent
+eight ways in-repo. That audit had never been run for `commitment`. It has now.
+
+**"Commitment" is already live, practitioner-side, meaning a different object:**
+
+| Existing use | What it is |
+|---|---|
+| `components/practitioner/dashboard/CommitmentCards.tsx:17` → wired at `app/practitioner/dashboard/page.tsx:282` | counts drawn from **`rl_containers`** (relational containers: active/paused/closing/inquiry) |
+| `v_rl_practice_commitments` (`20260120000001_relational_ledger.sql:606`) | a rollup view over the same containers |
+| `threshold_events.event_type = 'commitment'` (`20260210000001_threshold_events.sql:22`) | *"pledged to a direction"* — an event type, not an entity |
+
+**Ruling: the room remains Commitments.** The collision is real but is a vocabulary-governance problem,
+not grounds to abandon a clear human destination. The two surfaces address different human
+relationships — commitments *within a practitioner's relational work* versus commitments *a member
+chooses to carry forward in their own life*. The governing question for the member room is unchanged:
+**How will I respond?**
+
+⛔ **The namespace is therefore load-bearing:**
+
+- House Commitments are **member-owned** commitments. Say so in domain language and in code.
+- Practitioner relational containers must **not** become the schema or conceptual model for this room.
+- Do **not** reuse `rl_containers` or `v_rl_practice_commitments`.
+- Do **not** use a bare `commitments` table, route segment, or type name where namespace ambiguity
+  would result. Member-owned objects carry the `member_` prefix already used across this contract.
+
+**Do not rename the room merely to make the database vocabulary easier.**
+
+---
+
 ## 2. `member_commitments`
 
 ```
@@ -80,6 +111,43 @@ This matters because real cases sit on a spectrum: MAIA language accepted verbat
 A member who takes MAIA's draft and rewrites it substantially has **authored** it; `member_adopted` is for language that entered canonical form *by the act of acceptance*. Implementations must not compute this from diff ratios or word overlap. If the spectrum later proves to need more resolution, that is a schema ruling on evidence, not a reason to add values now.
 
 ⚠️ **Decision needed (§7.1):** the repo's existing `authored_by` is split — a TEXT role string in `personal_living_fields`, a `UUID REFERENCES members(id)` in `encounters` and `recognitions`. Neither expresses the member-authored/member-adopted distinction. This proposes a **third, differently-named** column rather than overloading a name that already means two things.
+
+### 2.1a `authorship` already exists — this extends a live vocabulary
+
+**Correction (trunk re-audit, 2026-07-29).** An earlier reading of this section treated `authorship` as a
+column Commitments introduces. It does not. `member_field_note_threads.authorship` is **live in
+production**, written by three routes with an identical `saveThread()`:
+`app/api/now-what/field-note/route.ts:128`, `app/api/maia/vision-studio/field-note/route.ts:111`,
+`app/api/maia/field-lab/field-note/route.ts:125`.
+
+Its live values and the act each records:
+
+| Live value | `is_directly_stated` | `member_decision` | The decisive act |
+|---|---|---|---|
+| `member_authored` | `true` | `create` / `split` | the member wrote it |
+| `member_confirmed` | `false` | `keep` / `revise` | the member **adopted** MAIA-proposed language |
+
+`member_confirmed` and this document's `member_adopted` are **the same semantic**, under two names.
+
+**Ruled 2026-07-29: rename the authorship value `member_confirmed` → `member_adopted`.**
+A deliberate semantic correction, not a new vocabulary. Commitments therefore **extends and clarifies a
+shared vocabulary**, and does not introduce one — a materially different review question.
+
+**Migration cost is zero today.** Production holds 6 rows in `member_field_note_threads`, all
+`member_authored`/`create`; **zero rows carry `member_confirmed`**. The window closes the first time a
+member keeps a MAIA proposal. Scope: one union type and two literals in each of the three routes.
+
+⛔ **Explicitly out of scope — do NOT perform a broad token rename.** Four unrelated things share the
+token and must be left untouched:
+
+| Leave alone | What it is |
+|---|---|
+| `member_field_note_threads.member_confirmed` | a **BOOLEAN column**, hardcoded `TRUE` on every insert |
+| `consent_state = 'member-confirmed-memory'` | consent vocabulary (see `CONSENT_VOCABULARY_CONSOLIDATION.md`) |
+| `field_program_positions.member_confirmed_at` | position lane |
+| `statedBy = 'member_confirmed'` | position lane |
+
+The rename disambiguates three of these by removing the fourth meaning from the token.
 
 ### 2.2 Lifecycle
 
@@ -185,15 +253,66 @@ If a richer set is ever proposed, the member must supply the words, and it is a 
 
 | `to_type` | Table | Owner column | Verified |
 |---|---|---|---|
-| `journal_entry` | `quick_journal_entries` | `user_id` ⚠️ TEXT, legacy lane | after #793 |
-| `change` | `studio_changes` | `member_id` | ✅ |
+| `to_type` | Table | Ownership predicate | Verified |
+|---|---|---|---|
+| `journal_entry` | `quick_journal_entries` | `user_id` ⚠️ TEXT, legacy lane + alias expansion | ✅ after #793 (merged + deployed `471bdf85c`) |
+| `change` | `studio_changes` | ⚠️ **dual-owner — see 4.3a** | ❌ **not eligible under a table-level rule** |
 | `commitment` | `member_commitments` | `member_id` | new |
 | `memory_atom` | `member_memory_atoms` | `member_id` | ✅ |
-| `episodic_mark` | `episodic_memories` | `user_id` + `marked_by_member = TRUE` | ✅ (zero rows) |
+| `episodic_mark` | `episodic_memories` | `user_id` + `marked_by_member = TRUE` | ✅ (6 rows, founder-only, 2026-07-29) |
+
+### 4.3a `studio_changes` is dual-owner — an allowlisted table is not an allowlisted row
+
+**Ruled 2026-07-29.** The row above previously read `member_id` ✅. That is unsafe.
+`studio_changes` (`database/migrations/20260212000001_studio_changes.sql:12`) carries **two nullable
+ownership columns**: `practitioner_id REFERENCES practitioners(id)` **or**
+`member_id REFERENCES members(id)`, with two parallel route families reading it —
+`app/api/changes/**` filters `member_id`, `app/api/studio/changes/**` filters `practitioner_id`.
+
+Naming `member_id` as *the* owner column would let a **practitioner-owned** row enter a member's link
+graph. This is the same class as the middleware role-trust lane: authorization inferred from a column
+that is not always the owner.
+
+Required for any `studio_changes` link:
+
+- `member_id = <authenticated member>`; **and**
+- `practitioner_id IS NULL`, unless a separately governed relationship explicitly authorizes otherwise;
+- server-side ownership verification at **both** link creation **and** link retrieval;
+- any row with ambiguous ownership is **rejected**, not resolved by precedence.
+
+**Preferred alternative:** resolve `change` links through a member-only view or resolver, so the generic
+link layer never queries the dual-owner table directly.
+
+> **The principle, general to the registry: an allowlisted table is not an allowlisted row.
+> Ownership must be proven for the specific object.**
+
+This is a **security requirement for R1**, not a schema footnote.
 
 **Every link write ownership-checks the target independently.** Holding a commitment does not authorize linking to an arbitrary id — the target row must resolve to the same session member. A registry entry supplies the table, the owner column, and the predicate; there is no generic "trust the id" path.
 
 ⚠️ `quick_journal_entries.user_id` is TEXT on the legacy lane with the username/`{username}-nezat` aliases. The ownership predicate must reuse the same alias expansion #793 preserved. **This is the concrete reason Commitments waits for #793.**
+
+### 4.3b R1 boundary — the smallest provenance primitive, justified by Commitments alone
+
+**Ruled 2026-07-29.** Source provenance stays in R1: a member must be able to make a commitment
+directly, **or** from a Journal entry, a Change, or another explicitly supported member-owned source.
+
+This does **not** authorize a universal graph. The R1 rule:
+
+> Build the smallest member-owned provenance link primitive required to show **where a commitment came
+> from** and to preserve **explicit adoption**. Nothing more.
+
+⛔ Not authorized in R1:
+
+- arbitrary many-to-many graph traversal;
+- synthesized cross-room intelligence;
+- inferred relationships;
+- Becoming-specific link types;
+- a generic ontology for every future House object.
+
+The primitive may prove reusable later — the Becoming gate §5 anticipates exactly that — but it must be
+**justified completely by Commitments today**. The governing test is unchanged: *does Commitments need
+this to ship?* If no, it is speculative work regardless of how reusable it looks.
 
 ### 4.4 Missing and deleted sources
 

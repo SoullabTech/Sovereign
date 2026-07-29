@@ -22,7 +22,7 @@ Becoming's entire function is **gathering material the member chose to carry**. 
 | Journal entries | live |
 | Changes | live |
 | Commitments | **does not exist** |
-| Episodic marks | deployed, **zero rows in production** — documented across four architecture docs |
+| Episodic marks | **6 marked rows** (2026-07-23 → 07-28) — ⚠️ **all six are the founder's**, across two member rows (`Kelly`, `Kelly Nezat`). A naive query reports "2 distinct owners"; that is misleading. Supersedes the "zero rows in production" statement carried by four architecture docs. |
 | Memory atoms | live |
 
 Built today, Becoming renders an empty room for every member — and worse, it would be designed against an imagined pattern of use rather than an observed one. The generalized discipline: **build from lived evidence outward, not from conceptual completeness.**
@@ -37,14 +37,27 @@ The name is settled now **so nothing else claims it**, and so a later implementa
 
 **Domain object: Becoming Thread.**
 
-| Reserved | Note |
-|---|---|
-| `member_becoming_threads` | the object |
-| `becoming_returns` | explicit member returns to a thread |
-| `becoming_thread_links` | *or* reuse `member_object_links` — see §5 |
-| Capability slug | `becoming.member` — never `practice.member` |
+**Ruled 2026-07-29: storage identifiers are NOT reserved.** An earlier version of this section claimed
+`member_becoming_threads`, `becoming_returns`, and `becoming_thread_links`. Those names have been
+removed, along with a proposed capability slug.
 
-**Reserved, not specified.** No columns are defined here. That is deliberate: specifying the schema now is the speculative implementation the scope ruling forbids.
+Reserving storage names fixes a data model ahead of observed use — quietly performing the speculative
+schema design this document exists to defer. The reservation's stated purpose (so nothing else claims
+the name, so a later implementation need not relitigate under delivery pressure) is real but is served
+by the **concept** being recorded, not by the table names.
+
+> **Ratify the human concept now; defer storage names and schema shape until observed use requires them.**
+
+If Commitments needs a generic link or return-history primitive today, it is named for **the capability
+it presently serves** — not for Becoming. See `COMMITMENTS_SCHEMA_AND_LINK_CONTRACT.md` §4.3b.
+
+**What is recorded now is the human-facing term only**, and it remains provisional:
+
+> A **Becoming Thread** is a neutral, member-authored continuity through which a person may return to
+> something they intentionally wish to carry forward. It does not define who the member is becoming,
+> and it is not automatically classified by MAIA or the system.
+
+`practice` remains refused as the domain word for the reasons in §2.1.
 
 ### 2.1 Why not "practice"
 
@@ -113,9 +126,19 @@ The room may exist and be enterable while empty. What may never happen is the *s
 
 The only Becoming-serving work authorized now — because Commitments genuinely requires it:
 
-1. **`member_object_links`** (`COMMITMENTS_SCHEMA_AND_LINK_CONTRACT.md` §4) must be built object-agnostic. Becoming becomes another `from_type`, with a registry entry, and no schema change. If `becoming_thread_links` turns out to be unnecessary because this table already serves, that is the better outcome.
+1. **The provenance link primitive** (`COMMITMENTS_SCHEMA_AND_LINK_CONTRACT.md` §4, bounded by §4.3b)
+   should be built no wider than Commitments requires. If it later admits a Becoming thread as another
+   `from_type` with a registry entry and no schema change, that is the better outcome — but that is a
+   consequence to hope for, not a requirement to design toward. ⛔ It must **not** be widened today on
+   the grounds that Becoming may reuse it.
 2. **Member-owned object lifecycle** — the status/timestamp/archival pattern, established once.
-3. **Explicit adoption** — `keepSource()` + `keep-governor.ts` as the canonical primitive, not a Commitments-local reimplementation.
+3. **Explicit adoption** — reuse, do not reimplement. ⚠️ These are **two separate systems** and an
+   earlier version of this line merged them under one phrase:
+   - **`keepSource()`** (`lib/psyche/portfolio.ts:340`) is the *adoption persistence* primitive. It
+     writes the adopted row and enforces source guards (hard reject of `practitioner_observation`).
+   - **`lib/psyche/keep-governor.ts`** is *offer governance* — whether and how MAIA may offer Keep
+     again (pause posture, decline streaks). It **never writes adopted content** and must not be cited
+     as though it does.
 4. **Neutral return history** — returns as an append-only member-authored record with arithmetic counts and no derived vocabulary.
 
 **Test for anything proposed as "shared":** *does Commitments need this to ship?* If no, it is speculative Becoming work and is out of scope regardless of how reusable it looks.
@@ -124,7 +147,7 @@ The only Becoming-serving work authorized now — because Commitments genuinely 
 
 ## 6. Explicitly NOT authorized
 
-- Any `member_becoming_threads` migration, table, or model.
+- Any Becoming thread migration, table, or model — under any name.
 - Any Becoming API route.
 - Any Becoming UI, House destination, or navigation entry — including one hidden behind a flag.
 - Seeding threads on a member's behalf, or suggesting threads from observed behaviour.
@@ -142,7 +165,18 @@ Becoming's admissible form is narrow and worth stating plainly. The member autho
 
 The second and third are the system authoring Recognition in the member's own life — the one thing the House exists to refuse.
 
-> **MAIA may open doors. It may not describe what is on the other side of one in the member's own life.** — `THE_HOUSE.md`
+> **MAIA may open doors. It may not describe what is on the other side of one in the member's own life.**
+
+⚠️ **Citation repaired 2026-07-29.** This line was previously attributed to `THE_HOUSE.md`. **No such
+file exists at canonical HEAD** — the same failure already recorded in `CLAUDE.md` for
+`WISDOM_IS_RECOVERED.md`, where a spec rested on a canon file absent from the repo. The citation failure
+does not invalidate the principle; it invalidates the claimed provenance.
+
+The principle stands on the founder ruling record (2026-07-28, recorded as a candidate principle) and on
+`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`, which it specialises. For the **executable** House contract
+— what doorways exist and how they are declared — cite `lib/navigation/houseDestinations.ts`
+(`HOUSE_DESTINATIONS`, :103), rendered by `components/maia/MaiaHouseSheet.tsx:119` and guarded by
+`lib/navigation/__tests__/houseNavDrift.test.ts`. No replacement constitutional file has been invented.
 
 ---
 
