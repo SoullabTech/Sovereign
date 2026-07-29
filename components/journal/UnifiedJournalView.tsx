@@ -502,8 +502,11 @@ export function UnifiedJournalView({
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all text-sm whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Entry</span>
-              <span className="sm:hidden">New</span>
+              {/* Full label at every current phone width (375px included).
+                  Shortened only below ~340px, where the three header controls
+                  would otherwise have no slack. */}
+              <span className="hidden min-[341px]:inline">New Entry</span>
+              <span className="min-[341px]:hidden">New</span>
             </button>
 
             <button
@@ -701,37 +704,13 @@ export function UnifiedJournalView({
                         ? 'Use the Decision Council in Studio to reflect on complex choices.'
                         : 'Your journal entries, captures, sessions, changes, and decisions will appear here.'}
             </p>
-            {activeCategory === 'scribe' ? (
-              <button
-                onClick={() => router.push('/maia')}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                Start Scribe Session
-              </button>
-            ) : (
-              <div className="flex flex-col items-center gap-4">
-                {/* Primary: write directly */}
-                <button
-                  onClick={() => router.push(JOURNAL_CAPTURE_HREF)}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Entry
-                </button>
-
-                {/* Secondary: enter through conversation */}
-                <p className="text-xs text-stone-500">
-                  Not sure where to begin?{' '}
-                  <button
-                    onClick={() => router.push('/maia')}
-                    className="text-[#8B7355] underline underline-offset-2 hover:text-[#6B5A45] transition-colors"
-                  >
-                    Reflect with MAIA.
-                  </button>
-                </p>
-              </div>
-            )}
+            <button
+              onClick={() => router.push('/maia')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              {activeCategory === 'scribe' ? 'Start Scribe Session' : 'Talk with MAIA'}
+            </button>
           </motion.div>
         ) : (
           <div className="space-y-3">
