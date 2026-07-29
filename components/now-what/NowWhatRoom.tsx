@@ -36,6 +36,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from '@/components/maia/vision-studio/RoomHoloflower';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
+import { CaptureDisclosure } from '@/components/capture/CaptureDisclosure';
 
 // — Threshold staging (Now What?) —
 // The arrival surfaces are staged, not listed: a display serif for the room's
@@ -257,6 +258,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
   // Interim + final transcripts stream into the draft; the member always reviews and
   // sends. Nothing here is persisted, nothing leaves the device except the eventual
   // sent turn (identical to a typed one).
+  // micActivating and micListening are distinct claims. recognition.start() returns
+  // before the permission prompt resolves and before the microphone is live, so
+  // "Listening…" must not be shown until recognition.onstart actually fires.
+  const [micActivating, setMicActivating] = useState(false);
   const [micListening, setMicListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -491,7 +496,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
   // — Talk to it: start/stop dictation. Appends to whatever is already typed —
   // never overwrites it. The member always reviews before Send; nothing auto-sends.
   function startMic() {
-    if (!micSupported || micListening) return;
+    if (!micSupported || micListening || micActivating) return;
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
     const recognition: SpeechRecognition = new SR();
@@ -517,7 +522,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
       setMicValue(combined);
       if (!working) setRoomMotion(combined ? 'listening' : 'idle');
     };
+    // The only event that makes "Listening…" true. Until it fires the microphone is
+    // not live — the permission prompt may still be open, or may be denied.
+    recognition.onstart = () => {
+      setMicActivating(false);
+      setMicListening(true);
+    };
     recognition.onerror = (event: any) => {
+      setMicActivating(false);
       setMicListening(false);
       recognitionRef.current = null;
       if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') {
@@ -525,6 +537,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
       }
     };
     recognition.onend = () => {
+      setMicActivating(false);
       setMicListening(false);
       recognitionRef.current = null;
     };
@@ -532,8 +545,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
     try {
       recognition.start();
       recognitionRef.current = recognition;
-      setMicListening(true);
+      setMicActivating(true);
     } catch {
+      setMicActivating(false);
       setMicListening(false);
     }
   }
@@ -541,11 +555,12 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
   function stopMic() {
     try { recognitionRef.current?.stop(); } catch {}
     recognitionRef.current = null;
+    setMicActivating(false);
     setMicListening(false);
   }
 
   function toggleMic() {
-    if (micListening) stopMic();
+    if (micListening || micActivating) stopMic();
     else startMic();
   }
 
@@ -1004,14 +1019,28 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                   type="button"
                   onClick={toggleMic}
                   disabled={!micSupported}
-                  aria-pressed={micListening}
+                  aria-pressed={micListening || micActivating}
                   aria-label="Dictate — speak your answer aloud and it is transcribed into your draft"
                   className={`transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                    micListening ? 'text-amber-200' : 'text-slate-400 hover:text-slate-200'
+                    micListening || micActivating
+                      ? 'text-amber-200'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {micListening ? 'Listening…' : 'Dictate'}
+                  {/* Three labels for three conditions. "Listening…" used to appear the
+                      instant the button was pressed — while the permission prompt was
+                      still open, and after a denial. */}
+                  {micListening ? 'Listening…' : micActivating ? 'Starting…' : 'Dictate'}
                 </button>
+                {/* The visible label lives on the button; this announces the same
+                    state change to assistive tech via role="status". Same component,
+                    so the two can never describe different conditions. */}
+                {(micListening || micActivating) && (
+                  <CaptureDisclosure
+                    state={micListening ? 'listening' : 'activating'}
+                    className="sr-only"
+                  />
+                )}
                 <span aria-hidden className="text-slate-700">·</span>
                 <label
                   aria-label="Upload — bring a .txt or .md note into your draft"
@@ -1533,6 +1562,14 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           @keyframes room-mic-pulse {
             0%, 100% { opacity: 0.4; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.04); }
+          }
+          /* The ring is decoration over the "Listening…" label, which carries the
+             meaning. Removing the motion removes nothing a member needs to know. */
+          @media (prefers-reduced-motion: reduce) {
+            .room-mic-active::after {
+              animation: none;
+              opacity: 0.6;
+            }
           }
         `}</style>
       </div>
