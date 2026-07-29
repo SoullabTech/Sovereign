@@ -294,6 +294,30 @@ The "which build" question is answered by §VI-b, not by preference.
 
 ---
 
+## IX-b. Relationship to PR #464 (Personal Field methodology)
+
+Reviewed 2026-07-29: `METHODOLOGY_COLLISION_REVIEW_PR464_2026-07-29.md`. **Outcome 2 —
+shared foundation, different applications.** Proceed independently, cross-cited; do not merge.
+
+**Different acts.** #464 studies *people* — participants' real attending-episodes via interview
+and diary, and a human learner's competency growth. This method studies *the environment* —
+routes, states, components, transitions. Neither claims canonical status.
+
+**Shared substrate, named once here so it is not re-derived as duplicate canon:** classify
+before you interpret · inference must be marked and is weaker evidence · fix the instrument
+before the evidence · each signal earns only the rung it stands on · observe the behavior,
+never author the meaning.
+
+⚠️ **Do not harmonize the ethics rules.** This method forbids reading member content because
+its observer is an AI with no consent basis. #464's object *is* people, gathered under its own
+interview consent basis. Different act, different consent basis — the rules stay in their lanes.
+
+⚠️ **Terminology collision, recorded not resolved:** both lanes use *field*. In #464, "Personal
+Field" is a product surface; here, a "field" is the unit of study. #464 says *session* /
+*run-sheet*; this method says *sitting* / *study*.
+
+---
+
 ## X. Tooling
 
 - `scripts/field-study-scaffold.sh <field>` — scaffolds a sitting, stamps the Observation
