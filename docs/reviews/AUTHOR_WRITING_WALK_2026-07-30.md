@@ -32,7 +32,7 @@ finding** — it is a known gap. Record it as such.
 
 | # | Condition | Evidence | Walk question it can corrupt |
 |---|---|---|---|
-| C1 | **Imported work is not stored.** `import-docx` writes the upload to `os.tmpdir()`, converts, deletes the temp dir in `finally`, and returns JSON. Nothing persists server-side. | `app/api/book-studio/import-docx/route.ts:58,60,80,87` | "Can you bring work into it?" |
+| C1 | ⚠️ **STATE CHANGED 2026-07-30 18:49:52Z — see §F.1.** Fix deployed (`c1942d1c8`), **browser-unverified.** Original condition: **imported work is not stored.** `import-docx` writes the upload to `os.tmpdir()`, converts, deletes the temp dir in `finally`, and returns JSON. Nothing persists server-side. | `app/api/book-studio/import-docx/route.ts:58,60,80,87` | "Can you bring work into it?" |
 | C2 | **Drafts persist to the container filesystem, not Postgres.** `drafts/from-idea` does `fs.mkdir` + `fs.writeFile` to a drafts dir. In Docker this is container-local — **a rebuild or redeploy erases it.** | `app/api/book-studio/drafts/from-idea/route.ts:40,57` | "Can you leave with confidence?" · "Can you return and feel reconnected?" |
 | C3 | **One workbench is reachable; there is no chooser.** `findOrCreateTable` selects `ORDER BY updated_at DESC LIMIT 1`, else inserts. A second table can exist in the DB and be unreachable from the page. | `app/book-studio/workbench/page.tsx:24-40` | "Does the software become the thing you're thinking about?" |
 
@@ -208,3 +208,49 @@ preserving the pattern says the list is not the instrument.
 
 Both entries are **observations**, not rulings. Neither selects an instrument, a namespace, or
 a navigation model.
+
+---
+
+## F. Pre-walk baseline (recorded before the walk begins)
+
+### F.1 — C1 state transition: live, not resolved
+
+PR #797 (`fix(sw): never intercept non-GET requests`) merged and **deployed**.
+
+| Proof | Result |
+|---|---|
+| canonical contains the fix | ✅ `c1942d1c8` |
+| production rebuilt from it | ✅ `GIT_COMMIT=c1942d1c8`, `DEPLOY_LANE=deploy-lane`, built 18:49:52Z |
+| deployed asset carries the guard | ✅ `CONSCIOUSNESS_VERSION = '3.0.1'`, non-GET guard count 1 |
+| Safari controlled by active 3.0.1 | ⬜ **not yet** |
+| real multipart upload returns 2xx | ⬜ **not yet** |
+
+**C1 has moved from *merged but not live* to *live but browser-unverified*. That is not
+"resolved."** C1 leaves the substrate ledger only when both remaining rows are ✅. The installed
+worker was 3.0.0, so 3.0.1 will likely arrive **waiting** — a reload may not activate it; the
+page must be *controlled* by 3.0.1, not merely have downloaded it.
+
+⭐ A test is only evidence if it exercises the condition that caused the defect: a successful
+upload from a browser with no worker, or with a stale 3.0.0 worker, proves nothing either way.
+
+### F.2 — Walk baseline: post-deployment clean slate
+
+> **The walk begins immediately after a deployment that recreated the application container
+> (18:49:52Z). No pre-deployment draft persistence should be expected, because C2 remains
+> unresolved.**
+
+Any absence of earlier work is a **Substrate** consequence, not an **Experience** finding.
+Recorded *before* the walk so the first observation cannot be contaminated by something already
+known. This deploy also shipped ~30 hours of accumulated canon — including the Working Draft
+editor and Now What? changes — so a surprise may originate outside the surfaces mapped in
+Appendix D.
+
+### F.3 — Hairpin NAT: a non-result, recorded as one
+
+- **Observation:** a LAN-hosted request to `https://soullab.life/api/health` returned
+  `ConnectionRefused`. The instrument was verified working first (`example.com` and
+  `github.com` both returned 200).
+- **Known environmental limitation:** local hairpin NAT may prevent internal validation of the
+  public endpoint; most consumer routers disable hairpin by default.
+- **Conclusion:** **not evidence that production is unavailable.** An authoritative external
+  witness requires a device off the LAN.
