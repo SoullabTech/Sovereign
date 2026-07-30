@@ -165,7 +165,7 @@ main() {
 
     # Type checking
     total_tests=$((total_tests + 1))
-    if run_test "type-check" "npm run type-check"; then
+    if run_test "type-check" "npm run typecheck:full"; then
         passed_tests=$((passed_tests + 1))
     else
         failed_tests=$((failed_tests + 1))
