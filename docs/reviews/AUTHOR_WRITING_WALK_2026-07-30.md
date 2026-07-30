@@ -32,7 +32,7 @@ finding** — it is a known gap. Record it as such.
 
 | # | Condition | Evidence | Walk question it can corrupt |
 |---|---|---|---|
-| C1 | **Imported work is not stored.** `import-docx` writes the upload to `os.tmpdir()`, converts, deletes the temp dir in `finally`, and returns JSON. Nothing persists server-side. | `app/api/book-studio/import-docx/route.ts:58,60,80,87` | "Can you bring work into it?" |
+| C1 | ⚠️ **STATE CHANGED 2026-07-30 18:49:52Z — see §F.1.** Fix deployed (`c1942d1c8`), **browser-unverified.** Original condition: **imported work is not stored.** `import-docx` writes the upload to `os.tmpdir()`, converts, deletes the temp dir in `finally`, and returns JSON. Nothing persists server-side. | `app/api/book-studio/import-docx/route.ts:58,60,80,87` | "Can you bring work into it?" |
 | C2 | **Drafts persist to the container filesystem, not Postgres.** `drafts/from-idea` does `fs.mkdir` + `fs.writeFile` to a drafts dir. In Docker this is container-local — **a rebuild or redeploy erases it.** | `app/api/book-studio/drafts/from-idea/route.ts:40,57` | "Can you leave with confidence?" · "Can you return and feel reconnected?" |
 | C3 | **One workbench is reachable; there is no chooser.** `findOrCreateTable` selects `ORDER BY updated_at DESC LIMIT 1`, else inserts. A second table can exist in the DB and be unreachable from the page. | `app/book-studio/workbench/page.tsx:24-40` | "Does the software become the thing you're thinking about?" |
 
@@ -123,7 +123,7 @@ Verified 2026-07-30 by static link analysis. **This records what exists. It prop
 | Address | Gate | What it is |
 |---|---|---|
 | `/press` | public | Soullab Press **public landing** (`app/press/page.tsx`) |
-| `/book-studio` | public | Editorial workspace index |
+| `/book-studio` | **declared public · enforced authenticated founder-only** (`requireFounder()` in `app/book-studio/page.tsx:89`) | Editorial workspace index |
 | `/book-studio/read` | public | Manuscript reader |
 | `/book-studio/passages`, `/illustrations`, `/design-system` | public | Reference surfaces |
 | `/book-studio/ready-to-write` | `requireFounder()` | |
@@ -148,6 +148,28 @@ a writer journey — it was never placed in the navigation graph.
 The only link from the public landing into the editorial area is
 `components/landing/BookAnnouncement.tsx:55` → `/book-studio/read` — the manuscript **reader**.
 Every surface where writing actually happens is `requireFounder()`.
+
+### Correction (2026-07-30, after publication)
+
+The `/book-studio` row above originally read **"public — Editorial workspace index."** That was
+wrong. **Provenance of the error:** the gate was checked by inspecting the layout chain only —
+`app/book-studio/layout.tsx` contains no guard — without inspecting the page-level guard.
+`app/book-studio/page.tsx:89-94` calls `await requireFounder()` and then either redirects to
+`/signin?next=/book-studio` or renders `<FounderGateScreen />`. That is server-side enforcement,
+not a UI gate.
+
+**The discrepancy is preserved deliberately, because the mismatch is itself evidence:** access
+policy (`config/accessMatrix.ts:72`) declares this route public; the page enforces founder-only.
+Declared access and enforced access are separate fields and must not be flattened into one.
+
+**Resulting shape**, recorded as observation, not yet as experience judgment: the child reference
+surfaces (`/read`, `/passages`, `/illustrations`, `/design-system`) enforce nothing and are
+publicly reachable, while the parent index that links to them is founder-gated. A member can
+reach the book; they cannot reach the page that lists it.
+
+**Lesson for the instrument:** a route's gate is the union of every guard in its layout chain
+*and* its own page module. Checking either alone produces false classifications in both
+directions.
 
 ### The real graph
 
@@ -186,3 +208,77 @@ preserving the pattern says the list is not the instrument.
 
 Both entries are **observations**, not rulings. Neither selects an instrument, a namespace, or
 a navigation model.
+
+---
+
+## F. Pre-walk baseline (recorded before the walk begins)
+
+### F.1 — C1 state transition: live, not resolved
+
+PR #797 (`fix(sw): never intercept non-GET requests`) merged and **deployed**.
+
+| Proof | Result |
+|---|---|
+| canonical contains the fix | ✅ `c1942d1c8` |
+| production rebuilt from it | ✅ `GIT_COMMIT=c1942d1c8`, `DEPLOY_LANE=deploy-lane`, built 18:49:52Z |
+| deployed asset carries the guard | ✅ `CONSCIOUSNESS_VERSION = '3.0.1'`, non-GET guard count 1 |
+| Safari controlled by active 3.0.1 | ⬜ **not yet** |
+| real multipart upload returns 2xx | ⬜ **not yet** |
+
+**C1 has moved from *merged but not live* to *live but browser-unverified*. That is not
+"resolved."** C1 leaves the substrate ledger only when both remaining rows are ✅. The installed
+worker was 3.0.0, so 3.0.1 will likely arrive **waiting** — a reload may not activate it; the
+page must be *controlled* by 3.0.1, not merely have downloaded it.
+
+⭐ A test is only evidence if it exercises the condition that caused the defect: a successful
+upload from a browser with no worker, or with a stale 3.0.0 worker, proves nothing either way.
+
+### F.2 — Walk baseline: post-deployment clean slate
+
+> **The walk begins immediately after a deployment that recreated the application container
+> (18:49:52Z). No pre-deployment draft persistence should be expected, because C2 remains
+> unresolved.**
+
+Any absence of earlier work is a **Substrate** consequence, not an **Experience** finding.
+Recorded *before* the walk so the first observation cannot be contaminated by something already
+known. This deploy also shipped ~30 hours of accumulated canon — including the Working Draft
+editor and Now What? changes — so a surprise may originate outside the surfaces mapped in
+Appendix D.
+
+### F.3 — Hairpin NAT: a non-result, recorded as one
+
+- **Observation:** a LAN-hosted request to `https://soullab.life/api/health` returned
+  `ConnectionRefused`. The instrument was verified working first (`example.com` and
+  `github.com` both returned 200).
+- **Known environmental limitation:** local hairpin NAT may prevent internal validation of the
+  public endpoint; most consumer routers disable hairpin by default.
+- **Conclusion:** **not evidence that production is unavailable.** An authoritative external
+  witness requires a device off the LAN.
+
+### G. Posture during the walk (Kelly, 2026-07-30)
+
+If you catch yourself thinking **"this should…"** or **"it would be better if…"** — **do not
+record that.** Record only what *preceded* the thought:
+
+- *Paused here for 12 seconds.*
+- *Looked for Import under Write for ~15 seconds.*
+- *Clicked Back because I didn't know the next step.*
+- *Expected my draft to be here.*
+- *Wasn't sure whether Save had happened.*
+
+⭐ **The design impulse can always be reconstructed from the observation. The reverse is not
+true.** A recorded conclusion cannot be un-inferred back into what actually happened.
+
+**Classification may also wait.** If leaving it blank during the walk preserves a stronger
+separation between observation and interpretation, leave it blank. Classification is a later
+pass; the only thing that cannot be recovered later is the literal record of the moment.
+
+The raw material should look almost painfully literal:
+
+| Observation | Classification | Evidence | Follow-up |
+|---|---|---|---|
+| "Looked for Import under Write for ~15 seconds." | *(blank)* | screen recording / timestamp | *(blank)* |
+| "Clicked + Add Note; editor opened." | *(blank)* | screen recording | *(blank)* |
+| "Returned after save and resumed immediately." | *(blank)* | screen recording | *(blank)* |
+
+**Interpretation stays blank until Q1 — including against yourself.**
