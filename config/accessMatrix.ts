@@ -54,6 +54,16 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/vision-studio', public: true, notes: 'Vision Studio public landing — member room stays gated at /maia/vision-studio' },
   { exact: '/soullab-studio', public: true, notes: 'Soullab Studio public landing — practitioner app stays gated at /studio' },
   { exact: '/press', public: true, notes: 'Soullab Press public landing — editorial workspace stays founder-gated at /book-studio' },
+  // Author Studio Home (Layer 2, 2026-07-30). Mapped explicitly so it never
+  // relies on the permissive unmapped default (#717). `public` here mirrors the
+  // Manuscript Room it fronts: the ROUTE is servable, but it holds nothing —
+  // every manuscript read is member-scoped by credential server-side and returns
+  // 401, which the page renders as "sign in to enter". Gating the door tighter
+  // than the room behind it would lock members out of a surface they can reach.
+  // NOTE: /press/manuscript itself is still unmapped and rides the permissive
+  // default. That is a pre-existing gap, not one this entry introduces — it is
+  // left for a deliberate pass rather than changed underneath a live surface.
+  { exact: '/press/studio', public: true, notes: 'Author Studio Home — member-facing Layer 2 shell; manuscript data is 401-gated at the API, page renders a sign-in invitation' },
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)

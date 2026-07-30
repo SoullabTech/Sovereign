@@ -96,9 +96,10 @@ export interface HouseDestination {
  *  - Sheets (existing member surfaces, no new routes): Changes.
  *  - Web environments (honest bridge, first pass): Wisdom, Astrology,
  *    Community Library, Co-lab, Circles, Vision Studio.
- *  - Studio: interim → /press/manuscript (the live author-writing surface),
- *    explicitly interim, NOT a ratification of final Studio placement, and NOT
- *    /studio (which is the practitioner Pro Studio).
+ *  - Author Studio: → /press/studio, the Studio ENVIRONMENT (Layer 2). Never a
+ *    working surface: /press/manuscript is the Manuscript Room (Layer 3) and is
+ *    reached from inside the Studio, not from the House. Still NOT /studio,
+ *    which is the practitioner Pro Studio.
  */
 export const HOUSE_DESTINATIONS: HouseDestination[] = [
   // ── Center ────────────────────────────────────────────────────────────
@@ -211,15 +212,20 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   // ── Rooms ─────────────────────────────────────────────────────────────
   {
     id: 'studio',
-    label: 'Studio',
+    label: 'Author Studio',
     icon: Briefcase,
-    tooltip: 'Your writing surface (interim)',
+    tooltip: 'Where your book takes form',
     kind: 'route',
-    route: '/press/manuscript', // INTERIM — the live author-writing surface. NOT /studio (Pro Studio),
-    // and NOT a ratification of final Studio placement. See PR record.
+    // The House enters the Studio ENVIRONMENT (Layer 2), never a working
+    // surface and never the import form. Until 2026-07-30 this pointed at
+    // /press/manuscript, which dropped the member straight onto an upload
+    // textarea with no Studio around it — Layer 1 → Layer 3, skipping the
+    // environment entirely, which is why the Studio appeared not to exist.
+    // Still NOT /studio (that is the practitioner Pro Studio).
+    route: '/press/studio',
     audience: 'all',
-    nativePolicy: 'web', // /press/manuscript is not in the native bundle; bridge on native for now
-    interim: true,
+    nativePolicy: 'web', // /press/studio is not in the native bundle; bridge on native for now
+    interim: true, // placement is settled; the room set behind it is still growing
     returnBehavior: 'web-bridge',
     group: 'rooms',
   },
