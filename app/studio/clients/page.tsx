@@ -221,7 +221,7 @@ export default function ClientsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors cursor-pointer group"
+                    className="relative bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors cursor-pointer group focus-within:ring-2 focus-within:ring-amber-400/60"
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
@@ -230,7 +230,21 @@ export default function ClientsPage() {
                           {client.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
-                          <h3 className="text-white font-medium">{client.name}</h3>
+                          {/* Stretched link: the anchor lives on the name (so it is
+                              keyboard-focusable and activates with Enter) while its
+                              ::after overlays the whole card as the click target.
+                              A wrapping <Link> is not usable here — the card already
+                              contains a mailto <a> and the Schedule <Link>, and nesting
+                              anchors is invalid. Interactive children are raised above
+                              the overlay with relative z-10. */}
+                          <h3 className="text-white font-medium">
+                            <Link
+                              href={`/studio/clients/${client.id}`}
+                              className="rounded after:absolute after:inset-0 after:content-[''] hover:text-amber-300 transition-colors focus:outline-none"
+                            >
+                              {client.name}
+                            </Link>
+                          </h3>
                           <div className="flex items-center gap-2">
                             <span className={`
                               px-2 py-0.5 text-xs rounded-full
@@ -343,14 +357,14 @@ export default function ClientsPage() {
                     <div className="flex items-center gap-2 pt-4 border-t border-slate-800">
                       <a
                         href={`mailto:${client.email}`}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors text-sm"
+                        className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors text-sm"
                       >
                         <MessageSquare className="w-4 h-4" />
                         Message
                       </a>
                       <Link
                         href={`/studio/sessions/new?clientId=${client.id}`}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-maia-navy-700/20 text-maia-gold rounded-lg hover:bg-maia-navy-700/30 transition-colors text-sm"
+                        className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2 bg-maia-navy-700/20 text-maia-gold rounded-lg hover:bg-maia-navy-700/30 transition-colors text-sm"
                       >
                         <Calendar className="w-4 h-4" />
                         Schedule
