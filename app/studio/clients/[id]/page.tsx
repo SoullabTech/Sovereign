@@ -23,6 +23,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
 import { CaseMemoryTimeline } from '@/components/studio/CaseMemoryTimeline';
 import { PatternLedgerEvolutionPanel } from '@/components/studio/PatternLedgerEvolutionPanel';
+import { ClientNotesPanel } from '@/components/studio/ClientNotesPanel';
 import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
@@ -310,6 +311,11 @@ export default function ClientDetailPage() {
               </a>
             </div>
 
+            {/* Practitioner Notes */}
+            <div className="bg-slate-900/30 border border-slate-800 rounded-xl p-4">
+              <ClientNotesPanel clientId={client.id} />
+            </div>
+
             {/* Case Memory Timeline */}
             <div>
               <h2 className="text-sm font-medium text-slate-400 mb-3">Case Memory Timeline</h2>
@@ -412,17 +418,15 @@ export default function ClientDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Internal Notes */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-slate-400 mb-3">Internal Notes</h3>
-              {client.internalNotes ? (
+            {/* Internal Notes — legacy read-only field, shown only when it holds
+                content. Practitioner Notes (main column) is the authoring surface;
+                an empty card here would now be misleading rather than merely idle. */}
+            {client.internalNotes && (
+              <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                <h3 className="text-sm font-medium text-slate-400 mb-3">Internal Notes</h3>
                 <p className="text-sm text-slate-300 whitespace-pre-wrap">{client.internalNotes}</p>
-              ) : (
-                <p className="text-sm text-slate-500 italic">
-                  Notes are not yet connected to Studio clients.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Birth Info */}
             {(client.birthDate || client.birthLocation) && (

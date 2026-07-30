@@ -57,6 +57,8 @@ These columns contain clinical narratives and session content. **Highest breach 
 
 | Table | Column | Type | Status | PHI Reason |
 |-------|--------|------|--------|------------|
+| `practitioner_client_notes` | `content_enc` | TEXT | ENCRYPTED | Practitioner-private notes on a Studio client — **no plaintext sibling column exists by design** (encrypted from birth, no dual-write stage) |
+| `practitioner_client_notes` | `content_enc_meta` | JSONB | METADATA | Encryption metadata |
 | `case_notes` | `content` | TEXT | ENCRYPTED | Full session notes |
 | `case_notes` | `interventions_used` | TEXT[] | PLAINTEXT | Clinical interventions |
 | `case_notes` | `themes_observed` | TEXT[] | PLAINTEXT | Client patterns |
