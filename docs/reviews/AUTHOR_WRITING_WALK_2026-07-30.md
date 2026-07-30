@@ -7,9 +7,27 @@ rule it, does not compare instruments, and confers no authority. Recommendations
 
 ---
 
+## 0. Classification — every entry gets exactly one
+
+Ratified by Kelly, 2026-07-30. Prevents a future reader from treating *not observed* as
+*passed* or *failed*.
+
+| Classification | Meaning |
+|---|---|
+| **Observed** | The experience can be judged from this walk. |
+| **Substrate** | The observation is explained by a known substrate condition (C1–C3 below). |
+| **Governance** | The question cannot presently be answered because of an intentional governance constraint. |
+| **Unknown** | Something occurred, but there is insufficient evidence to classify it. |
+
+An unclassified entry is not usable as evidence. **Unknown** is a legitimate result — it means
+the walk raised a question it could not answer, and it is recorded as such rather than forced
+into one of the other three.
+
+---
+
 ## A. Observer constraints (verified 2026-07-30 on working tree)
 
-Three known substrate conditions. A failure traceable to one of these is **not an experience
+Three known **SUBSTRATE** conditions. A failure traceable to one of these is **not an experience
 finding** — it is a known gap. Record it as such.
 
 | # | Condition | Evidence | Walk question it can corrupt |
@@ -30,20 +48,60 @@ Note the time of the walk; note whether a deploy occurred between sessions.
 
 So **question 1 — "Can you find the room naturally?" — is structurally unanswerable from this
 seat.** The walker both knows where the room is and holds the only credential that opens it.
-Record question 1 as **not observable in this walk**. Do not record a pass.
+This is a **GOVERNANCE** constraint, not a defect and not a finding: the environment is
+*intentionally* founder-gated today. Answering question 1 requires a non-founder walker, which
+is not currently authorized. Do not record a pass. Do not record a fail.
 
 Questions 2–6 are answerable from the founder seat.
 
 ## C. The record
 
-Kelly's six questions, verbatim. Observations only.
+> **The purpose of this walk is to learn whether the current experience supports the founder's
+> writing practice. It is not an acceptance test, a usability review, or a design exercise.**
 
-1. *Can you find the room naturally?* — **NOT OBSERVABLE THIS WALK** (see §B)
-2. *Can you bring work into it?* —
-3. *Can you begin writing without hesitation?* —
-4. *Can you leave with confidence?* —
-5. *Can you return and feel reconnected?* —
-6. *At any point, does the software become the thing you're thinking about instead of the work?* —
+Kelly's six questions, verbatim. **Interpretation is left blank on purpose** — it is authored
+later, under the instrument selected at Q1, not during the walk.
+
+---
+
+**Question 1 — *Can you find the room naturally?***
+- Observation: —
+- Classification: **Governance** — not observable this walk (see §B)
+- Evidence: `app/book-studio/workbench/page.tsx:45` · `config/accessMatrix.ts:56`
+- Interpretation: *(leave blank)*
+
+**Question 2 — *Can you bring work into it?***
+- Observation:
+- Classification:
+- Evidence:
+- Interpretation: *(leave blank)*
+
+**Question 3 — *Can you begin writing without hesitation?***
+- Observation:
+- Classification:
+- Evidence:
+- Interpretation: *(leave blank)*
+
+**Question 4 — *Can you leave with confidence?***
+- Observation:
+- Classification:
+- Evidence:
+- Interpretation: *(leave blank)*
+
+**Question 5 — *Can you return and feel reconnected?***
+- Observation:
+- Classification:
+- Evidence:
+- Interpretation: *(leave blank)*
+
+**Question 6 — *At any point, does the software become the thing you're thinking about instead
+of the work?***
+- Observation:
+- Classification:
+- Evidence:
+- Interpretation: *(leave blank)*
+
+---
 
 **If one fails, the next line is "What happened?" — nothing else.**
 
