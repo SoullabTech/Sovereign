@@ -10,7 +10,6 @@ import {
   Phone,
   Calendar,
   Clock,
-  FileText,
   MessageSquare,
   Plus,
   Edit2,
@@ -302,13 +301,6 @@ export default function ClientDetailPage() {
                 <Plus className="w-4 h-4" />
                 Schedule Session
               </Link>
-              <button
-                onClick={() => router.push(`/caseload/${client.id}/notes/new`)}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                Add Note
-              </button>
               <a
                 href={`mailto:${client.email}`}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors"
@@ -426,11 +418,10 @@ export default function ClientDetailPage() {
               {client.internalNotes ? (
                 <p className="text-sm text-slate-300 whitespace-pre-wrap">{client.internalNotes}</p>
               ) : (
-                <p className="text-sm text-slate-500 italic">No notes yet</p>
+                <p className="text-sm text-slate-500 italic">
+                  Notes are not yet connected to Studio clients.
+                </p>
               )}
-              <button className="mt-3 text-xs text-amber-400 hover:text-amber-300">
-                + Add note
-              </button>
             </div>
 
             {/* Birth Info */}
