@@ -546,6 +546,55 @@ describe('PHI Leak Prevention', () => {
     });
   });
 
+  describe('Practitioner client notes accessor (encrypted-from-birth)', () => {
+    // phiEncryption is mocked file-wide here, so this suite tests the LEAK
+    // invariant only: ciphertext must never reach the output shape. The real
+    // AAD round-trip (a different defect) runs against real crypto in
+    // practitionerClientNotes.test.ts.
+    const RAW_ROW = {
+      id: 'note-123',
+      client_id: 'client-123',
+      practitioner_id: 'practitioner-456',
+      content_enc: 'encrypted-data',
+      content_enc_meta: { kid: 'test', iv: 'test-iv' },
+      note_date: '2026-07-30',
+      created_at: '2026-07-30T00:00:00.000Z',
+      updated_at: '2026-07-30T00:00:00.000Z',
+    };
+
+    it('decryptClientNoteRow should never return *_enc columns', () => {
+      const {
+        decryptClientNoteRow,
+      } = require('@/lib/security/phiAccessors/practitionerClientNotes');
+
+      const note = decryptClientNoteRow(RAW_ROW);
+
+      assertNoEncryptedColumns(note, 'decryptClientNoteRow');
+      expect(note).not.toBeNull();
+      expect(note).toHaveProperty('content');
+      expect(note).toHaveProperty('noteDate');
+    });
+
+    it('decryptClientNoteRows should never return *_enc columns', () => {
+      const {
+        decryptClientNoteRows,
+      } = require('@/lib/security/phiAccessors/practitionerClientNotes');
+
+      const notes = decryptClientNoteRows([RAW_ROW, { ...RAW_ROW, id: 'note-456' }]);
+
+      assertNoEncryptedColumns(notes, 'decryptClientNoteRows');
+      expect(notes).toHaveLength(2);
+    });
+
+    it('sanitizeClientNoteRow should strip ciphertext from a raw row', () => {
+      const {
+        sanitizeClientNoteRow,
+      } = require('@/lib/security/phiAccessors/practitionerClientNotes');
+
+      assertNoEncryptedColumns(sanitizeClientNoteRow(RAW_ROW), 'sanitizeClientNoteRow');
+    });
+  });
+
   describe('stripEncryptedColumns helper', () => {
     it('should remove all *_enc and *_enc_meta keys', () => {
       // Import the real function
