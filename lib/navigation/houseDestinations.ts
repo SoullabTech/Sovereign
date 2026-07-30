@@ -96,9 +96,10 @@ export interface HouseDestination {
  *  - Sheets (existing member surfaces, no new routes): Changes.
  *  - Web environments (honest bridge, first pass): Wisdom, Astrology,
  *    Community Library, Co-lab, Circles, Vision Studio.
- *  - Studio: interim → /press/manuscript (the live author-writing surface),
- *    explicitly interim, NOT a ratification of final Studio placement, and NOT
- *    /studio (which is the practitioner Pro Studio).
+ *  - Author Studio: → /press/studio, the Studio ENVIRONMENT (Layer 2). Never a
+ *    working surface: /press/manuscript is the Manuscript Room (Layer 3) and is
+ *    reached from inside the Studio, not from the House. Still NOT /studio,
+ *    which is the practitioner Pro Studio.
  */
 export const HOUSE_DESTINATIONS: HouseDestination[] = [
   // ── Center ────────────────────────────────────────────────────────────
