@@ -220,7 +220,7 @@ else
   echo ""
   echo "💡 Backup created in: $BACKUP_DIR"
   echo "💡 To rollback: ./scripts/rollback-type-fixes.sh"
-  echo "💡 To see all errors: npm run typecheck"
+  echo "💡 To see all errors: npm run typecheck:full"
 fi
 
 echo ""

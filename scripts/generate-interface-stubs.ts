@@ -119,7 +119,7 @@ function inferInterfaceName(category: string, properties: string[]): string {
 function parseTS2339Errors(logPath: string): Map<string, PropertyError> {
   if (!fs.existsSync(logPath)) {
     console.error(`❌ Typecheck log not found: ${logPath}`);
-    console.error('   Run: npm run typecheck -- --pretty false > artifacts/typecheck-full.log 2>&1');
+    console.error('   Run: npm run typecheck:full -- --pretty false > artifacts/typecheck-full.log 2>&1');
     process.exit(1);
   }
 

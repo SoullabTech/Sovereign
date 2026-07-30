@@ -44,7 +44,7 @@ function run(cmd: string, silent = false): string {
 
 function countErrors(): ErrorCounts {
   console.log("📊  Counting type errors…");
-  const output = run("npm run typecheck --silent || true", true);
+  const output = run("npm run typecheck:full --silent || true", true);
 
   const TS2339 = (output.match(/error TS2339:/g) || []).length;
   const TS2345 = (output.match(/error TS2345:/g) || []).length;
