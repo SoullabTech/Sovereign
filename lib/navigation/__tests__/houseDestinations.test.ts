@@ -130,12 +130,20 @@ describe('dispatchHouseDestination', () => {
     expect(h.pushed).toEqual([]);
   });
 
-  it('Studio is interim → /press/manuscript, bridged on native', () => {
+  it('Studio enters the Author Studio environment, bridged on native', () => {
     expect(find('studio').interim).toBe(true);
-    expect(find('studio').route).toBe('/press/manuscript');
+    expect(find('studio').route).toBe('/press/studio');
     const h = harness(true);
     dispatchHouseDestination(find('studio'), h.ctx);
-    expect(h.pushed).toEqual(['/open-web?to=%2Fpress%2Fmanuscript']);
+    expect(h.pushed).toEqual(['/open-web?to=%2Fpress%2Fstudio']);
+  });
+
+  // The regression this guards: until 2026-07-30 the House opened straight onto
+  // /press/manuscript — a working surface — so the member landed on an upload
+  // textarea with no Studio around it and asked "where is the rest of it?".
+  // The House must enter Layer 2 (the environment), never Layer 3 (the desk).
+  it('Studio does NOT enter a working surface directly', () => {
+    expect(find('studio').route).not.toBe('/press/manuscript');
   });
 
   it('Studio does NOT point at /studio (the practitioner Pro Studio)', () => {

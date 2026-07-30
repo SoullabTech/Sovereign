@@ -211,15 +211,20 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   // ── Rooms ─────────────────────────────────────────────────────────────
   {
     id: 'studio',
-    label: 'Studio',
+    label: 'Author Studio',
     icon: Briefcase,
-    tooltip: 'Your writing surface (interim)',
+    tooltip: 'Where your book takes form',
     kind: 'route',
-    route: '/press/manuscript', // INTERIM — the live author-writing surface. NOT /studio (Pro Studio),
-    // and NOT a ratification of final Studio placement. See PR record.
+    // The House enters the Studio ENVIRONMENT (Layer 2), never a working
+    // surface and never the import form. Until 2026-07-30 this pointed at
+    // /press/manuscript, which dropped the member straight onto an upload
+    // textarea with no Studio around it — Layer 1 → Layer 3, skipping the
+    // environment entirely, which is why the Studio appeared not to exist.
+    // Still NOT /studio (that is the practitioner Pro Studio).
+    route: '/press/studio',
     audience: 'all',
-    nativePolicy: 'web', // /press/manuscript is not in the native bundle; bridge on native for now
-    interim: true,
+    nativePolicy: 'web', // /press/studio is not in the native bundle; bridge on native for now
+    interim: true, // placement is settled; the room set behind it is still growing
     returnBehavior: 'web-bridge',
     group: 'rooms',
   },
