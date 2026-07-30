@@ -494,13 +494,29 @@ export function UnifiedJournalView({
             <span className="text-sm">{backLabel}</span>
           </button>
 
-          <button
-            onClick={fetchAllData}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-[#D4B896]/30 text-stone-500 hover:text-stone-700 transition-all"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Primary action — always visible, independent of list state. */}
+            <button
+              onClick={() => router.push(JOURNAL_CAPTURE_HREF)}
+              aria-label="New journal entry"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all text-sm whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              {/* Full label at every current phone width (375px included).
+                  Shortened only below ~340px, where the three header controls
+                  would otherwise have no slack. */}
+              <span className="hidden min-[341px]:inline">New Entry</span>
+              <span className="min-[341px]:hidden">New</span>
+            </button>
+
+            <button
+              onClick={fetchAllData}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-[#D4B896]/30 text-stone-500 hover:text-stone-700 transition-all"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Main Header */}
@@ -896,25 +912,6 @@ export function UnifiedJournalView({
           </div>
         )}
 
-        {/* Quick Actions Footer */}
-        {!loading && filteredEntries.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 pt-6 border-t border-[#D4B896]/30"
-          >
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={() => router.push(JOURNAL_CAPTURE_HREF)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 border border-[#D4B896]/30 text-stone-600 hover:text-stone-800 hover:bg-white/90 transition-all text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                New Entry
-              </button>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );
