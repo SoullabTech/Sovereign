@@ -103,6 +103,8 @@ function sectionLabel(heading: string | null, position: number): string {
 export default function PressManuscriptRoom() {
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+  // W-2: load failure and "no manuscripts" are different facts about the world.
+  const [listError, setListError] = useState(false);
   const [active, setActive] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
@@ -132,7 +134,19 @@ export default function PressManuscriptRoom() {
   const [rendering, setRendering] = useState<'pdf' | 'epub' | null>(null);
   const [renderError, setRenderError] = useState(false);
 
+  /**
+   * W-2 — a failed load must never look like an empty shelf.
+   *
+   * This previously swallowed the error and fell through to the landing/upload
+   * screen, which is indistinguishable from "you have no manuscripts". A writer
+   * whose network blipped would see the upload page and reasonably conclude
+   * their book was gone. Nothing on screen said otherwise.
+   *
+   * Five outcomes are now distinct: loading · unauthorized · load-failed ·
+   * genuinely empty · loaded.
+   */
   const loadList = useCallback(async () => {
+    setListError(false);
     try {
       const res = await apiFetch('/api/sovereign/manuscripts', { method: 'GET' });
       if (res.status === 401) {
@@ -144,7 +158,9 @@ export default function PressManuscriptRoom() {
       const list: ManuscriptSummary[] = data.manuscripts ?? [];
       setActive((cur) => cur ?? (list.length > 0 ? list[0].id : null));
     } catch {
-      // Landing will show; upload still possible for a signed-in member.
+      // Never fall through to the upload screen — that asserts an emptiness we
+      // have not established. We do not know what the writer has; say so.
+      setListError(true);
     } finally {
       setLoading(false);
     }
@@ -452,7 +468,47 @@ export default function PressManuscriptRoom() {
     );
   }
 
+  /* W-2 — load failure with NOTHING already loaded.
+     This MUST be checked before the landing/upload branch below: falling
+     through to it would assert an emptiness we have not established. The copy
+     deliberately makes no claim about what the writer has or has not got —
+     only that we could not read it.
+
+     Guarded on `!active` on purpose: if a manuscript is already open, a failed
+     REFRESH must not replace the writer's Room with an error screen. That would
+     destroy visible work context to report a transient network fault. In that
+     case the Room stays, and the failure appears as a banner (below). */
+  if (listError && !active) {
+    return (
+      <div style={paper} className="min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <img
+            src="/holoflower-studio-transparent.png"
+            alt="Soullab"
+            className="w-12 h-12 mx-auto mb-5 opacity-90"
+          />
+          <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Soullab Press</p>
+          <p className="text-[15px] leading-relaxed opacity-70 mb-6">
+            We couldn&rsquo;t load your manuscripts just now. Nothing has been lost — this is a
+            problem reaching them, not a problem with them.
+          </p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              void loadList();
+            }}
+            className="px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ---- Landing / upload --------------------------------------------------
+  // Reached only when the list genuinely loaded (loadedOnce) and is empty, or
+  // during the confirm-cuts preview. Never as a consequence of failure.
   if (!active || preview) {
     return (
       <div style={paper} className="min-h-screen">
@@ -602,6 +658,25 @@ export default function PressManuscriptRoom() {
 
   return (
     <div style={paper} className="min-h-screen">
+      {/* W-2: a failed refresh while the Room is open reports itself as a
+          banner and leaves the writer's work in place. Replacing the Room with
+          an error screen would discard visible context over a transient fault. */}
+      {listError && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-[#3a2a24] border-b border-[#5a4238] px-6 py-3 text-[13px] text-center"
+        >
+          We couldn&rsquo;t refresh your manuscript list just now. What you see here is still yours
+          and unchanged.{' '}
+          <button
+            onClick={() => void loadList()}
+            className="underline underline-offset-4 min-h-[44px] px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+          >
+            Try again
+          </button>
+        </div>
+      )}
       <header className="border-b border-[#4A4238]">
         <div className="max-w-3xl mx-auto px-6 pt-10 pb-0">
           <div className="flex items-center gap-2.5 mb-1">
