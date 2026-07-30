@@ -107,6 +107,60 @@ of the work?***
 
 ### Session log
 
+
 - Walk start (date/time):
 - Deploy occurred between sessions? (Y/N):
 - Return session (date/time):
+
+---
+
+## D. Appendix — the actual route graph today (observation only)
+
+Verified 2026-07-30 by static link analysis. **This records what exists. It proposes nothing.**
+
+### The addresses
+
+| Address | Gate | What it is |
+|---|---|---|
+| `/press` | public | Soullab Press **public landing** (`app/press/page.tsx`) |
+| `/book-studio` | public | Editorial workspace index |
+| `/book-studio/read` | public | Manuscript reader |
+| `/book-studio/passages`, `/illustrations`, `/design-system` | public | Reference surfaces |
+| `/book-studio/ready-to-write` | `requireFounder()` | |
+| `/book-studio/workbench` | `requireFounder()` | |
+| `/book-studio/canvas` | `requireFounder()` | |
+| `/book-studio/render` | `requireFounder()` | |
+| `/book-studio/drafts/*` | `requireFounder()` | |
+| `/soullab-studio` | public | Public landing; practitioner app gated at `/studio` |
+| `/studio` | `minTier: free` | Practitioner app — a **different** studio |
+
+### Two facts that matter more than the diagram
+
+**1. `/press` has zero inbound links and zero outbound links.**
+Nothing in `app/`, `components/`, or `lib/` links to `/press`. `app/press/page.tsx` renders
+`PublicSectionLanding` and contains no `href`. Its own source comment states its purpose:
+*"the outward face a share card or deck CTA can point at."*
+
+`/press` is **not a navigation node.** It is an OG-card destination. It is not failing to carry
+a writer journey — it was never placed in the navigation graph.
+
+**2. There is no public path to any writing surface.**
+The only link from the public landing into the editorial area is
+`components/landing/BookAnnouncement.tsx:55` → `/book-studio/read` — the manuscript **reader**.
+Every surface where writing actually happens is `requireFounder()`.
+
+### The real graph
+
+```
+Home ──(BookAnnouncement)──► /book-studio/read          [read Elemental Alchemy]
+
+/press ──────────────────────► (nothing)                 [share-card landing, orphan by design]
+
+Any writing surface ─────────► requireFounder()          [founder only]
+```
+
+**Consequence.** "Define one canonical author entry point" cannot be executed today, because
+there is no authorized non-founder writing environment for it to point at. That is a
+**Governance** constraint (§0), not a navigation defect. It is the same constraint that makes
+Question 1 unanswerable from the founder seat.
+
