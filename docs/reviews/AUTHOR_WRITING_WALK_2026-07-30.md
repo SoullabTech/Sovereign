@@ -254,3 +254,31 @@ Appendix D.
   public endpoint; most consumer routers disable hairpin by default.
 - **Conclusion:** **not evidence that production is unavailable.** An authoritative external
   witness requires a device off the LAN.
+
+### G. Posture during the walk (Kelly, 2026-07-30)
+
+If you catch yourself thinking **"this should…"** or **"it would be better if…"** — **do not
+record that.** Record only what *preceded* the thought:
+
+- *Paused here for 12 seconds.*
+- *Looked for Import under Write for ~15 seconds.*
+- *Clicked Back because I didn't know the next step.*
+- *Expected my draft to be here.*
+- *Wasn't sure whether Save had happened.*
+
+⭐ **The design impulse can always be reconstructed from the observation. The reverse is not
+true.** A recorded conclusion cannot be un-inferred back into what actually happened.
+
+**Classification may also wait.** If leaving it blank during the walk preserves a stronger
+separation between observation and interpretation, leave it blank. Classification is a later
+pass; the only thing that cannot be recovered later is the literal record of the moment.
+
+The raw material should look almost painfully literal:
+
+| Observation | Classification | Evidence | Follow-up |
+|---|---|---|---|
+| "Looked for Import under Write for ~15 seconds." | *(blank)* | screen recording / timestamp | *(blank)* |
+| "Clicked + Add Note; editor opened." | *(blank)* | screen recording | *(blank)* |
+| "Returned after save and resumed immediately." | *(blank)* | screen recording | *(blank)* |
+
+**Interpretation stays blank until Q1 — including against yourself.**
