@@ -32,7 +32,7 @@ git log -1 --pretty=format:"%H%n%an%n%ae%n%ai%n%s%n%b" > "$SNAPSHOT_DIR/git_comm
 
 # 3) Capture build sanity
 echo "🔨 Running typecheck..."
-npm run typecheck 2>&1 | tee "$SNAPSHOT_DIR/typecheck.txt" || echo "⚠️  Typecheck had errors (captured)"
+npm run typecheck:full 2>&1 | tee "$SNAPSHOT_DIR/typecheck.txt" || echo "⚠️  Typecheck had errors (captured)"
 
 echo "🧪 Running tests..."
 npm run test 2>&1 | tee "$SNAPSHOT_DIR/tests.txt" || echo "⚠️  Tests had failures (captured)"
@@ -135,7 +135,7 @@ git checkout $(cat snapshots/$STAMP/git_sha.txt)
 git apply snapshots/$STAMP/git_diff.patch
 
 # Verify typecheck matches
-npm run typecheck 2>&1 | diff - snapshots/$STAMP/typecheck.txt
+npm run typecheck:full 2>&1 | diff - snapshots/$STAMP/typecheck.txt
 \`\`\`
 EOF
 
