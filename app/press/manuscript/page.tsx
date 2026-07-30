@@ -126,7 +126,22 @@ function sectionLabel(heading: string | null, position: number): string {
 }
 
 function PressManuscriptRoom() {
-  const requestedTab = useSearchParams()?.get('tab') ?? null;
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams?.get('tab') ?? null;
+  /**
+   * Studio Home offers "Import Manuscript" whether or not a book already
+   * exists — a second book is not a regression. But the landing/upload view
+   * below is reached only when `active` is null, so once the member HAS a
+   * manuscript that link silently delivered them into the existing Room
+   * instead of the import form. A post-#825 seam walk caught it; the first
+   * walk had only ever imported from an empty Studio, so the condition was
+   * never exercised. `?import=1` states the intent explicitly.
+   *
+   * Held as state, not read live: after a successful save the intent is spent
+   * and must clear, otherwise the URL would pin the member on the import form
+   * forever.
+   */
+  const [importing, setImporting] = useState(() => searchParams?.get('import') === '1');
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   // W-2: load failure and "no manuscripts" are different facts about the world.
@@ -244,6 +259,7 @@ function PressManuscriptRoom() {
       setPreview(null);
       setDraftText('');
       setDraftTitle('');
+      setImporting(false); // intent spent — do not pin the member on the form
       await loadList();
       setActive(data.id);
       // Import is a threshold, not a destination. The member came here to
@@ -537,9 +553,10 @@ function PressManuscriptRoom() {
   }
 
   // ---- Landing / upload --------------------------------------------------
-  // Reached only when the list genuinely loaded (loadedOnce) and is empty, or
-  // during the confirm-cuts preview. Never as a consequence of failure.
-  if (!active || preview) {
+  // Reached when the list genuinely loaded (loadedOnce) and is empty, during
+  // the confirm-cuts preview, or when the member asked to import another book
+  // from Studio Home (?import=1). Never as a consequence of failure.
+  if (!active || preview || importing) {
     return (
       <div style={paper} className="min-h-screen">
         <main className="max-w-2xl mx-auto px-6 py-16">

@@ -65,7 +65,14 @@ export interface StudioGroup {
  */
 export const WRITE_HREF = '/press/manuscript?tab=draft';
 export const SOURCE_HREF = '/press/manuscript?tab=manuscript';
-export const IMPORT_HREF = '/press/manuscript';
+/**
+ * `?import=1` states the intent explicitly. Without it, a member who already
+ * has a manuscript lands in that manuscript's Room instead of the import form,
+ * because the Room shows its landing/upload view only when nothing is active.
+ * Caught by the post-#825 seam walk — the earlier walk only ever imported from
+ * an empty Studio, so the with-a-book path was never exercised.
+ */
+export const IMPORT_HREF = '/press/manuscript?import=1';
 
 export const STUDIO_MAP: StudioGroup[] = [
   {

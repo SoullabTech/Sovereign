@@ -1,7 +1,10 @@
 import {
   assertStudioMapHonest,
+  IMPORT_HREF,
+  SOURCE_HREF,
   STUDIO_MAP,
   visibleDestinations,
+  WRITE_HREF,
   type StudioGroup,
 } from '../studioMap';
 
@@ -73,6 +76,22 @@ describe('Author Studio map — what a member sees', () => {
         .map((d) => d.label);
       expect(labels).toContain('Home');
     }
+  });
+
+  /**
+   * Regression, post-#825 seam walk. Import must state its intent in the URL.
+   * Without `?import=1` a member who already has a manuscript was delivered
+   * into that manuscript's Room instead of the import form — the Room shows
+   * its landing/upload view only when nothing is active. The first walk had
+   * only ever imported from an empty Studio, so this path was never exercised.
+   */
+  it('Import states its intent so it works when a book already exists', () => {
+    expect(IMPORT_HREF).toContain('import=1');
+  });
+
+  it('enters the Room by named surface, never by whichever tab is first', () => {
+    expect(WRITE_HREF).toContain('tab=draft');
+    expect(SOURCE_HREF).toContain('tab=manuscript');
   });
 
   it('never drops a group to an empty heading', () => {
