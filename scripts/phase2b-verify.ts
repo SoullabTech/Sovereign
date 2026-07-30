@@ -41,7 +41,7 @@ function gitClean() {
   return !safeRun("git status --porcelain").trim();
 }
 function tsCount(code: string) {
-  const out = safeRun(`npm run typecheck 2>&1 | grep "${code}" | wc -l`);
+  const out = safeRun(`npm run typecheck:full 2>&1 | grep "${code}" | wc -l`);
   return parseInt(out.trim() || "0", 10);
 }
 function parseAudit(): Record<string, number> {

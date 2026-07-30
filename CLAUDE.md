@@ -401,7 +401,12 @@ Triggers: Co-Lab changes · Studio people · DMs · sessions/encounters · files
 1. Search codebase for existing implementations
 2. Run `npm run check:no-supabase` to verify no Supabase violations
 3. Run `npm run preflight` for full sovereignty check
-4. Run `npm run typecheck` for TypeScript validation (do not run single-file `tsc` - it bypasses path mappings)
+4. Run `npm run typecheck` for TypeScript validation — the enforced **no-regression gate**. It runs the application-wide `tsconfig.ship.json` (~3,965 files, including `app/**`, `components/**`, `middleware.ts`) and compares against `typecheck-baseline.json`. It **fails** on a new diagnostic, an increased occurrence count, or a path that left the program while still existing on disk.
+   - `npm run typecheck:full` — complete current diagnostic inventory (239 pre-existing errors as of 2026-07-30; this is debt, not a gate).
+   - `npm run typecheck:entrypoint` — narrow single-entrypoint check of `app/api/between/chat/route.ts` only.
+   - `npm run typecheck:baseline` — **dry run only.** Prints a before/after summary and names any error it would bless, then refuses to write. Recording requires the explicit `npm run typecheck:baseline -- --accept-current`. Re-baselining is a governed act: use it to lock in fixes or an intentional, reviewed coverage change — never to absorb a new error.
+   - ⚠️ **`npm run typecheck` green is not proof that everything typechecks** — it is proof that nothing got *worse*. For the absolute state, use `typecheck:full`.
+   - ⚠️ Historical note: before 2026-07-30, `npm run typecheck` checked **one file** (`app/api/between/chat/route.ts`) and its import graph — 409 files, zero `.tsx`, zero `components/**`. Any pre-2026-07-30 lane citing "typecheck passes" as evidence was citing that entrypoint smoke, not application validation. See `docs/ops/TYPECHECK_GATE_COVERAGE_AUDIT_2026-07-30.md`.
 5. Test with `npm run smoke` before committing
 6. **Sovereignty Invariant Check** — For any feature that touches voice, expression, relational tone, or user-facing behavior, ask:
    - Does this increase user agency?

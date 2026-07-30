@@ -149,7 +149,7 @@ function main() {
   console.log("🔍  Analyzing type-guard patterns from typecheck log…");
 
   if (!fs.existsSync(LOG_PATH)) {
-    console.error(`❌  Missing ${LOG_PATH}. Run npm run typecheck first.`);
+    console.error(`❌  Missing ${LOG_PATH}. Run npm run audit:typehealth first.`);
     process.exit(1);
   }
 
