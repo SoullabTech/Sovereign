@@ -5,6 +5,18 @@ import { apiFetch } from '@/lib/http/apiBase';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**
+ * Mirrors MAX_FILE_BYTES in app/api/sovereign/manuscripts/ingest/route.ts.
+ * Checked here so an oversized file is named as oversized before it is sent,
+ * rather than failing mid-flight with a message about the upload itself.
+ * The route-side check remains authoritative — this is a courtesy, not a gate.
+ */
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+
+function formatSize(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
  * Soullab Press — Manuscript Room.
  *
  * "A beautiful room for sitting with your own manuscript."
@@ -203,6 +215,15 @@ export default function PressManuscriptRoom() {
 
   const onFile = async (f: File) => {
     setWarnings([]);
+    // Named before sending. An oversized file cannot succeed by any path, and
+    // the member is told the actual size rather than being left to guess.
+    if (f.size > MAX_UPLOAD_BYTES) {
+      setWarnings([
+        `This file is ${formatSize(f.size)}. The upload limit is ${formatSize(MAX_UPLOAD_BYTES)}. ` +
+          `Compress or split the file, then try again.`,
+      ]);
+      return;
+    }
     // Plain text / markdown read in the browser (unchanged, transparent).
     if (/\.(txt|md|markdown)$/i.test(f.name)) {
       const text = await f.text();
