@@ -123,7 +123,7 @@ Verified 2026-07-30 by static link analysis. **This records what exists. It prop
 | Address | Gate | What it is |
 |---|---|---|
 | `/press` | public | Soullab Press **public landing** (`app/press/page.tsx`) |
-| `/book-studio` | public | Editorial workspace index |
+| `/book-studio` | **declared public · enforced authenticated founder-only** (`requireFounder()` in `app/book-studio/page.tsx:89`) | Editorial workspace index |
 | `/book-studio/read` | public | Manuscript reader |
 | `/book-studio/passages`, `/illustrations`, `/design-system` | public | Reference surfaces |
 | `/book-studio/ready-to-write` | `requireFounder()` | |
@@ -148,6 +148,28 @@ a writer journey — it was never placed in the navigation graph.
 The only link from the public landing into the editorial area is
 `components/landing/BookAnnouncement.tsx:55` → `/book-studio/read` — the manuscript **reader**.
 Every surface where writing actually happens is `requireFounder()`.
+
+### Correction (2026-07-30, after publication)
+
+The `/book-studio` row above originally read **"public — Editorial workspace index."** That was
+wrong. **Provenance of the error:** the gate was checked by inspecting the layout chain only —
+`app/book-studio/layout.tsx` contains no guard — without inspecting the page-level guard.
+`app/book-studio/page.tsx:89-94` calls `await requireFounder()` and then either redirects to
+`/signin?next=/book-studio` or renders `<FounderGateScreen />`. That is server-side enforcement,
+not a UI gate.
+
+**The discrepancy is preserved deliberately, because the mismatch is itself evidence:** access
+policy (`config/accessMatrix.ts:72`) declares this route public; the page enforces founder-only.
+Declared access and enforced access are separate fields and must not be flattened into one.
+
+**Resulting shape**, recorded as observation, not yet as experience judgment: the child reference
+surfaces (`/read`, `/passages`, `/illustrations`, `/design-system`) enforce nothing and are
+publicly reachable, while the parent index that links to them is founder-gated. A member can
+reach the book; they cannot reach the page that lists it.
+
+**Lesson for the instrument:** a route's gate is the union of every guard in its layout chain
+*and* its own page module. Checking either alone produces false classifications in both
+directions.
 
 ### The real graph
 
