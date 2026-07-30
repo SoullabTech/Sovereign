@@ -227,6 +227,45 @@ export interface DraftSaver {
 }
 
 /**
+ * W-1 — the exit guard.
+ *
+ * Autosave is debounced by AUTOSAVE_DELAY_MS, so there is always a window in
+ * which the writer's newest words are queued but not yet sent. Every way OUT of
+ * the editor must close that window: unmount (Room tab switch, route change,
+ * manuscript change), page hide, mobile backgrounding, and unload.
+ *
+ * The original defect was that the unmount path cleared the debounce timer
+ * WITHOUT flushing — cancelling the pending save instead of completing it. That
+ * pairing is the whole bug, so it lives here as one operation that cannot be
+ * half-performed, and is unit-tested rather than left implicit in an effect.
+ */
+export interface ExitGuard {
+  /** Cancel the pending debounce and persist immediately. Returns whether anything was pending. */
+  flushNow(): boolean;
+  /** Whether content remains unpersisted (e.g. a dispatched save has not resolved, or failed). */
+  stillPending(): boolean;
+}
+
+export function createExitGuard(
+  saver: Pick<DraftSaver, 'hasPending' | 'flush'>,
+  clearTimer: () => void,
+): ExitGuard {
+  return {
+    flushNow() {
+      // Order matters: clear the timer so it cannot fire later against a
+      // unmounted component, but ALWAYS flush what it would have saved.
+      clearTimer();
+      const wasPending = saver.hasPending();
+      if (wasPending) saver.flush();
+      return wasPending;
+    },
+    stillPending() {
+      return saver.hasPending();
+    },
+  };
+}
+
+/**
  * Guarantees, given a `save(content)` that resolves in arbitrary order:
  *   - at most ONE save runs at a time (no two PUTs racing the DB);
  *   - the NEWEST queued content is always persisted last, so a slow earlier

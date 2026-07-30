@@ -6,6 +6,7 @@ import {
   AUTOSAVE_DELAY_MS,
   beginDraft,
   createDraftSaver,
+  createExitGuard,
   formatWhen,
   loadDraft,
   loadRevisions,
@@ -115,12 +116,67 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     void reload();
   }, [reload]);
 
-  useEffect(
-    () => () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    },
-    [],
+  /**
+   * W-1 — close the debounce gap on every exit.
+   *
+   * Text typed within AUTOSAVE_DELAY_MS is queued in the saver but has not been
+   * sent. Previously the unmount cleanup only cleared the timer, so that text
+   * died with the component: switching Room tabs, changing route, or leaving
+   * the page silently discarded the writer's most recent words while the room
+   * said "It autosaves as you write."
+   *
+   * Every path out now flushes first. Clearing the timer without flushing is
+   * the bug; the two must never be separated again.
+   */
+  const exitGuard = useMemo(
+    () =>
+      createExitGuard(saver, () => {
+        if (saveTimer.current) {
+          clearTimeout(saveTimer.current);
+          saveTimer.current = null;
+        }
+      }),
+    [saver],
   );
+  const flushNow = useCallback(() => {
+    exitGuard.flushNow();
+  }, [exitGuard]);
+
+  // Ref indirection: the unmount cleanup must see the latest flushNow without
+  // the effect re-running (a re-run would flush on every render).
+  const flushRef = useRef(flushNow);
+  flushRef.current = flushNow;
+
+  // Unmount: Room tab switch, route change, manuscript change.
+  useEffect(() => () => flushRef.current(), []);
+
+  useEffect(() => {
+    // `pagehide` and `visibilitychange → hidden` are the events mobile browsers
+    // actually fire when backgrounding or discarding a tab; `beforeunload` is
+    // unreliable there, so it cannot be the only guard.
+    const onPageHide = () => flushRef.current();
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flushRef.current();
+    };
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      flushRef.current();
+      // Honesty limit: a dispatched PUT is not a completed PUT, and we cannot
+      // await one here. If anything is still pending we ask the browser to
+      // confirm rather than let the writer leave believing it was saved.
+      if (exitGuard.stillPending()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('pagehide', onPageHide);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      window.removeEventListener('pagehide', onPageHide);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [saver, exitGuard]);
 
   const onChange = (value: string) => {
     setContent(value);
@@ -290,15 +346,29 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
       <p className="text-[13px] opacity-60 mb-2 leading-relaxed">
         An editable copy of this manuscript, in your own words. The original is never changed.
       </p>
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[12px] opacity-40 mb-6">
-        <span>≈ {pageEstimate(content.length)} pages</span>
-        <span>
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[12px] mb-6">
+        <span className="opacity-40">≈ {pageEstimate(content.length)} pages</span>
+        <span className="opacity-40">
           {revisionCount} checkpoint{revisionCount === 1 ? '' : 's'}
         </span>
         <span className="ml-auto flex items-center gap-3">
-          {saveLabel}
+          {/* W-4: save state is announced, not just displayed. A writer using a
+              screen reader must hear "Unsaved changes" without hunting for it. */}
+          <span
+            role="status"
+            aria-live="polite"
+            className={saveState === 'error' ? 'opacity-100 text-[#E8B4A0]' : 'opacity-40'}
+          >
+            {saveLabel}
+          </span>
           {saveState === 'error' && (
-            <button onClick={saveNow} className="underline underline-offset-4 hover:opacity-80">
+            /* W-4: the control a writer needs when saving has FAILED must not be
+               hover-revealed — on touch there is no hover. Full opacity, real
+               tap target, visible focus ring. */
+            <button
+              onClick={saveNow}
+              className="underline underline-offset-4 opacity-100 min-h-[44px] px-2 -mx-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+            >
               Save now
             </button>
           )}
@@ -385,12 +455,16 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
                           </button>
                         </span>
                       ) : (
+                        /* W-4: restore is the only path back to a checkpoint.
+                           It was opacity-40 + hover-only — invisible on touch,
+                           exactly when a writer most needs it. */
                         <button
                           onClick={() => {
                             setRestoreConfirm(r.revisionNumber);
                             setRestoreError(false);
                           }}
-                          className="text-[12px] opacity-40 hover:opacity-80"
+                          aria-label={`Restore checkpoint ${r.revisionNumber}${r.note ? `: ${r.note}` : ''}`}
+                          className="text-[12px] opacity-80 underline underline-offset-4 min-h-[44px] px-2 -mx-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
                         >
                           restore
                         </button>
