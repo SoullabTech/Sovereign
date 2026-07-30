@@ -126,6 +126,7 @@
     "docs:fix": "node scripts/docs-fix.js",
     "render:diagrams": "bash scripts/render-diagrams.sh",
     "check:diagrams": "bash scripts/check-diagrams.sh",
+    "pr:create": "bash scripts/pr-create.sh",
     "vault:connect": "npx tsx scripts/start-obsidian-integration.ts",
     "vault:scan": "node scripts/connect-vault.js",
     "vault:sacred": "npx tsx scripts/sacred-vault-integration.ts",
