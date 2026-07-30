@@ -41,7 +41,15 @@ export async function POST(request: NextRequest) {
     try {
       form = await request.formData();
     } catch {
-      return NextResponse.json({ error: 'Expected multipart/form-data with a file' }, { status: 400 });
+      // A throw here does NOT mean no file was chosen — the most common cause is
+      // a body dropped in transit before it reached this handler (see
+      // experimental.middlewareClientMaxBodySize in next.config.js). Saying
+      // "expected a file" sent members looking for a mistake they had not made.
+      // Stay neutral about the cause and name the one thing they can act on.
+      return NextResponse.json(
+        { error: 'The upload could not be read. Confirm the file is under 25 MB and try again.' },
+        { status: 400 },
+      );
     }
 
     const file = form.get('file');
