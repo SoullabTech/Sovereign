@@ -270,6 +270,42 @@ async function checkMemoryAtomsScoped(p: Principal, other: Principal) {
   }
 }
 
+async function checkClientNotesScoped() {
+  // practitioner_client_notes has NO team_id — practitioner_clients does not
+  // carry one (only studio_people does). The containment invariant here is
+  // ownership agreement: a note's practitioner_id must match its client's
+  // practitioner_id, so a note can never hang off another practitioner's client.
+  const crossOwned = await qOne<{ n: number }>(
+    `SELECT COUNT(*)::int AS n
+     FROM practitioner_client_notes n
+     JOIN practitioner_clients c ON c.id = n.client_id
+     WHERE n.practitioner_id <> c.practitioner_id`
+  );
+
+  if ((crossOwned?.n ?? 0) === 0) {
+    pass(`All practitioner client notes belong to the practitioner who owns the client`);
+  } else {
+    fail(
+      `${crossOwned?.n} client note(s) are attached to a client owned by a different practitioner`
+    );
+  }
+
+  // These notes are practitioner-private with no sharing path. Ciphertext-only
+  // storage is the boundary — a NULL content_enc would mean a note body was
+  // written somewhere other than the encrypted column.
+  const unencrypted = await qOne<{ n: number }>(
+    `SELECT COUNT(*)::int AS n
+     FROM practitioner_client_notes
+     WHERE content_enc IS NULL OR content_enc_meta IS NULL`
+  );
+
+  if ((unencrypted?.n ?? 0) === 0) {
+    pass(`All practitioner client notes are stored encrypted`);
+  } else {
+    fail(`${unencrypted?.n} client note(s) are missing ciphertext or encryption metadata`);
+  }
+}
+
 async function checkPersonalAtomsNotTeamScoped() {
   // All personal atoms should have team_id = NULL
   const personalWithTeam = await qOne<{ n: number }>(
@@ -472,6 +508,10 @@ async function main() {
   // ── Section 11: Switching Changes Context ─────────────────────────────────
   section('11. Co-Lab switching changes people, DMs, sessions, files, encounters, memory');
   await checkSwitchingChangesContext(kelly, jondi);
+
+  // ── Section 12: Practitioner client notes ────────────────────────────────
+  section('12. Practitioner client notes are owner-scoped and encrypted at rest');
+  await checkClientNotesScoped();
 
   // ── Summary ───────────────────────────────────────────────────────────────
   const total = passed + failed + warned;

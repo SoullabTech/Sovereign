@@ -49,6 +49,9 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 9. **Admin workspace declared** — Team Soullab has `is_admin_workspace = true` (bug routing is explicit, not order-dependent)
 10. **New tester invariant** — every Team Soullab member owns their own Co-Lab; no one stranded in the commons
 11. **Switching changes context** — Co-Lab switching changes people, DMs, sessions, encounters, files, and memory
+12. **Practitioner client notes** — every `practitioner_client_notes` row's `practitioner_id` matches its client's owner (no note hangs off another practitioner's client), and every note is stored encrypted (`content_enc` + `content_enc_meta` non-NULL). Note: `practitioner_clients` has **no `team_id`** — only `studio_people` does — so containment here is owner agreement, not team scope.
+
+> ⚠️ **Pass count not yet re-observed.** Section 12 adds 2 assertions, so the expected condition becomes `33 passed`. That number is derived, not measured — the pass line below still records the last *observed* run. Update both after the next production run of the gate; do not treat 33 as verified until a run prints it.
 
 ---
 
