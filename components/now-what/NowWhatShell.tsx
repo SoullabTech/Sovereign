@@ -28,10 +28,22 @@
  * The threshold replaces the inline "Sign in required." API error the
  * walk hit inside the room: sign-in becomes a door you meet BEFORE the
  * room, in the field's own register, not a red failure inside it.
+ *
+ * NAVIGATION TRUTHFULNESS (2026-07-29): the shell knew three rooms while the
+ * map offered seven. Its full variant renders only its own pills and no
+ * location text, so a member standing in `position`, `next`, `questions`,
+ * `themes` or `reflections` saw navigation listing three places — none of them
+ * here — with `aria-current` set on nothing. The room list now comes from the
+ * shared registry (`lib/nowWhat/rooms.ts`) that the map also uses, and the
+ * active room is resolved from the REAL pathname rather than by comparing a
+ * caller-supplied display string. Gated rooms identify themselves without
+ * being offered as destinations: navigable is not the same as exposed.
  */
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { RoomHoloflower } from '@/components/maia/vision-studio/RoomHoloflower';
+import { NAV_DESTINATIONS, roomForPath } from '@/lib/nowWhat/rooms';
 
 const ACCENT = '#ffe27a';
 
@@ -52,11 +64,10 @@ export function useMemberSession(): 'unknown' | 'in' | 'out' {
   return state;
 }
 
-const DOORS: { key: string; name: string; route: string }[] = [
-  { key: 'map', name: 'Map', route: '/now-what/map' },
-  { key: 'room', name: 'Session room', route: '/now-what/room' },
-  { key: 'field', name: 'Your field', route: '/now-what/field' },
-];
+// The room list is no longer declared here. It lives in lib/nowWhat/rooms.ts
+// so the shell and the map cannot describe different environments — the
+// divergence that let the map grow to seven rooms while the shell stayed at
+// three. See NAV_DESTINATIONS / roomForPath.
 
 function HoloMark({ size = 16, className = '' }: { size?: number; className?: string }) {
   return (
@@ -86,6 +97,15 @@ export function NowWhatShell({
   const ctx = fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : '';
   const mapHref = `/now-what/map${ctx}`;
 
+  // The room the member is ACTUALLY in, from the route — not from the caller's
+  // display string. Comparing names is what let five rooms match nothing.
+  // `current` remains the label of record (rider 1: name only) and is the
+  // fallback when the pathname is unavailable, e.g. during SSR.
+  const pathname = usePathname();
+  const activeRoom = roomForPath(pathname);
+  const activeKey = activeRoom?.key ?? null;
+  const locationLabel = activeRoom?.name ?? current;
+
   if (variant === 'quiet') {
     // Quiet ≠ invisible (walk finding 2026-07-12: the founder couldn't see
     // the exit — the arc ruling requires a VISIBLE way out of every room).
@@ -102,7 +122,7 @@ export function NowWhatShell({
           <HoloMark size={18} />
           Now What?
         </a>
-        <span className="text-xs font-light text-slate-400">{current}</span>
+        <span className="text-xs font-light text-slate-400">{locationLabel}</span>
       </div>
     );
   }
@@ -123,8 +143,28 @@ export function NowWhatShell({
       </a>
       <span className="flex-1" />
       <nav className="flex items-center gap-2" aria-label="Rooms">
-        {DOORS.map((d) =>
-          d.name === current ? (
+        {/*
+          A member standing in a room the shell does not offer as a destination
+          — a gated room, or the map — must still see where they are. Render it
+          as a lit, non-navigable chip so exactly one item is aria-current and
+          the nav never lists only places the member is not.
+        */}
+        {activeRoom && !NAV_DESTINATIONS.some((d) => d.key === activeKey) && (
+          <span
+            key={activeRoom.key}
+            aria-current="page"
+            className="rounded-full px-4 py-1.5 text-xs border"
+            style={{
+              color: ACCENT,
+              borderColor: 'rgba(255,226,122,0.45)',
+              background: 'rgba(255,226,122,0.08)',
+            }}
+          >
+            {activeRoom.name}
+          </span>
+        )}
+        {NAV_DESTINATIONS.map((d) =>
+          d.key === activeKey ? (
             <span
               key={d.key}
               aria-current="page"
