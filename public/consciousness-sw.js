@@ -4,7 +4,7 @@
  */
 
 const CONSCIOUSNESS_CACHE = 'consciousness-v3';
-const CONSCIOUSNESS_VERSION = '3.0.0'; // Memory patterns UI - Dec 31 2024
+const CONSCIOUSNESS_VERSION = '3.0.1'; // Non-GET bypass — Safari POST-body fix, Jul 29 2026
 
 // Core consciousness computing files
 const CONSCIOUSNESS_FILES = [
@@ -85,6 +85,16 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve consciousness computing from cache when offline
 self.addEventListener('fetch', (event) => {
+  // Never intercept non-GET requests. Safari loses multipart/POST bodies when a
+  // service worker re-dispatches fetch(event.request) (WebKit request-body
+  // loss): the request reaches the server with auth headers intact but an
+  // empty body. Observed in production 2026-07-29 — authenticated
+  // POST /api/sovereign/manuscripts/ingest (file upload) arrived body-less and
+  // 400'd with "Expected multipart/form-data with a file". Mutations must reach
+  // the network natively; SW value (offline cache) is GET-only, and a
+  // synthesized offline "success" for a POST would be a lie.
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
 
   // Handle consciousness computing requests
