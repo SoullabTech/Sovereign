@@ -164,3 +164,25 @@ there is no authorized non-founder writing environment for it to point at. That 
 **Governance** constraint (§0), not a navigation defect. It is the same constraint that makes
 Question 1 unanswerable from the founder seat.
 
+
+---
+
+## E. Observation for Q1 — naming instability (Kelly, 2026-07-30)
+
+> **Repeated independent design passes produced different canonical namespaces. Treat namespace
+> selection as an explicit founder decision rather than allowing it to emerge from iterative
+> design refinement.**
+
+**Why this is durable:** it remains true whichever name is eventually selected. The individual
+candidates are not preserved here on purpose — each pass optimized a *different mental model*
+(books · authors · writing · enduring work), which is evidence that the underlying concept has
+not yet been chosen. Preserving the candidates would invite the next pass to pick from a list;
+preserving the pattern says the list is not the instrument.
+
+**Corollary that survives independent of naming, IA, or governance choices:**
+
+> A founder diagnostic index and a writer's home are **different objects with different
+> audiences.** Conflating them is how the wrong artifact gets built.
+
+Both entries are **observations**, not rulings. Neither selects an instrument, a namespace, or
+a navigation model.
