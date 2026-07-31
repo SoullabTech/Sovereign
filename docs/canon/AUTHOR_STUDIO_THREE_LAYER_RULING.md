@@ -100,13 +100,25 @@ An existing permission mechanism can *implement* a ruling; it cannot *supply* on
 
 ### 3.2 Implementation
 
-Both routes are now mapped explicitly in `config/accessMatrix.ts` with the same policy
-(`public: true`, no `minTier`, no `requiredRoles`), so neither relies on the permissive
-unmapped-route default (#717).
+Both routes are mapped explicitly in `config/accessMatrix.ts` with the same policy —
+**`minTier: 'free'`, no `requiredRoles`** — so neither relies on the permissive unmapped-route
+default (#717).
 
-`public` here means the **route is servable**; neither page holds anything. Every manuscript read is
-member-scoped by credential server-side and returns 401, which the pages render as a sign-in
-invitation.
+`minTier: 'free'` is the mechanism that states *member-facing*: **auth is required before the door**,
+and **every authenticated member qualifies regardless of tier**. Same shape as `/now-what/room`.
+
+> **Corrected 2026-07-31.** Both entries first shipped as `public: true`, and this section described
+> them that way. A **two-identity runtime check found the contradiction before activation**: an
+> unauthenticated visitor received `200` on *both* routes, while control routes (`/studio`, `/maia`)
+> correctly redirected to `/signin`. `public: true` short-circuits middleware *before* any auth
+> check, so the routes were public at the route layer no matter what the surrounding prose claimed.
+>
+> No data was exposed — the pages self-gate and render "sign in to enter" once loaded. But **a page
+> that hides its own contents is not an access boundary.** Route authorization was absent, and that
+> is the control which answers who may enter.
+>
+> The lesson is the reason the check existed: *the ruling names an audience; only the mechanism
+> enforces it. Prose in a config file is not a gate.*
 
 > **Route authorization answers who may ENTER. API authorization answers which data operations are
 > allowed.** They can reinforce each other; the second does not substitute for the first.
