@@ -23,6 +23,7 @@ import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatShell, NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
+import { WithdrawVisibility } from '@/components/now-what/WithdrawVisibility';
 
 interface Thread {
   id: string;
@@ -168,7 +169,7 @@ function FieldInner() {
                       <span className="ml-2 text-[#ffe27a]/70">{TAG_LABELS[t.spiralogic_phase]}</span>
                     )}
                     {t.can_be_shown_to_practitioner && (
-                      <span className="ml-2 text-slate-500">· shared with your practitioner</span>
+                      <WithdrawVisibility threadId={t.id} />
                     )}
                   </p>
                 </li>
@@ -201,8 +202,8 @@ function FieldInner() {
       <RoomTrustCopy
         holds="The threads, practices, and offerings you authored or chose to keep in this environment — verbatim, dated, grouped only by month."
         doesNotHold="No interpretation, scores, or summaries — and not everything you have ever kept in Soullab: this field holds what came through this environment's rooms."
-        whoSees="You. A thread is visible to your practitioner only if you explicitly shared it when you kept it — sharing is per-thread and never automatic."
-        control="Everything here exists because of your own gesture. Nothing new is written by opening this room."
+        whoSees="You. A thread is visible to your practitioner only if you explicitly shared it when you kept it — sharing is per-thread and never automatic. Any thread marked shared can be withdrawn from here."
+        control="Everything here exists because of your own gesture. Opening this room writes nothing. Withdrawing a thread from your practitioner ends their access to it and leaves the thread itself untouched in your field."
       />
 
       <p className="relative text-slate-600 text-sm font-light italic pt-2">

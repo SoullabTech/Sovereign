@@ -10,7 +10,6 @@ import {
   Phone,
   Calendar,
   Clock,
-  FileText,
   MessageSquare,
   Plus,
   Edit2,
@@ -24,6 +23,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
 import { CaseMemoryTimeline } from '@/components/studio/CaseMemoryTimeline';
 import { PatternLedgerEvolutionPanel } from '@/components/studio/PatternLedgerEvolutionPanel';
+import { ClientNotesPanel } from '@/components/studio/ClientNotesPanel';
 import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
@@ -302,13 +302,6 @@ export default function ClientDetailPage() {
                 <Plus className="w-4 h-4" />
                 Schedule Session
               </Link>
-              <button
-                onClick={() => router.push(`/caseload/${client.id}/notes/new`)}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                Add Note
-              </button>
               <a
                 href={`mailto:${client.email}`}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors"
@@ -316,6 +309,11 @@ export default function ClientDetailPage() {
                 <MessageSquare className="w-4 h-4" />
                 Message
               </a>
+            </div>
+
+            {/* Practitioner Notes */}
+            <div className="bg-slate-900/30 border border-slate-800 rounded-xl p-4">
+              <ClientNotesPanel clientId={client.id} />
             </div>
 
             {/* Case Memory Timeline */}
@@ -420,18 +418,15 @@ export default function ClientDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Internal Notes */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-slate-400 mb-3">Internal Notes</h3>
-              {client.internalNotes ? (
+            {/* Internal Notes — legacy read-only field, shown only when it holds
+                content. Practitioner Notes (main column) is the authoring surface;
+                an empty card here would now be misleading rather than merely idle. */}
+            {client.internalNotes && (
+              <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                <h3 className="text-sm font-medium text-slate-400 mb-3">Internal Notes</h3>
                 <p className="text-sm text-slate-300 whitespace-pre-wrap">{client.internalNotes}</p>
-              ) : (
-                <p className="text-sm text-slate-500 italic">No notes yet</p>
-              )}
-              <button className="mt-3 text-xs text-amber-400 hover:text-amber-300">
-                + Add note
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Birth Info */}
             {(client.birthDate || client.birthLocation) && (

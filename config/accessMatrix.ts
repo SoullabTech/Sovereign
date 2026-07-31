@@ -54,6 +54,41 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/vision-studio', public: true, notes: 'Vision Studio public landing — member room stays gated at /maia/vision-studio' },
   { exact: '/soullab-studio', public: true, notes: 'Soullab Studio public landing — practitioner app stays gated at /studio' },
   { exact: '/press', public: true, notes: 'Soullab Press public landing — editorial workspace stays founder-gated at /book-studio' },
+  // ── Author Studio — ONE governed path, two routes ─────────────────────
+  //
+  // R1 AUDIENCE RULING (2026-07-30): Author Studio is MEMBER-FACING. It is a
+  // member environment for working with one's book, not a founder or
+  // practitioner instrument. No Steward/founder tier gate: that would make
+  // commercial tier or internal role stand in for the actual audience
+  // distinction, without evidence that authorship belongs only to those groups.
+  // See docs/canon/AUTHOR_STUDIO_THREE_LAYER_RULING.md §3.
+  //
+  // /press/studio (Layer 2, the environment) and /press/manuscript (Layer 3,
+  // the Manuscript Room) are ONE governed Author Studio path. A member
+  // permitted into the Studio must be able to move from its home into the
+  // Room, so the two carry the SAME policy — deliberately, not incidentally.
+  //
+  // `minTier: 'free'` is the MECHANISM that states member-facing: auth is
+  // required before the door, and every authenticated member qualifies
+  // regardless of tier (same shape as /now-what/room). It is deliberately NOT
+  // `public: true` — that short-circuits middleware before any auth check, so
+  // the route would be public no matter what the surrounding prose claimed.
+  //
+  // Both entries carried `public: true` until 2026-07-31. A two-identity
+  // runtime check found the contradiction before activation: an unauthenticated
+  // visitor received 200 on BOTH routes, while control routes (/studio, /maia)
+  // correctly redirected to /signin. No data was exposed — the pages self-gate
+  // and render "sign in to enter" once loaded — but ROUTE authorization was
+  // absent, and route authorization is the thing that answers who may ENTER.
+  // API authorization answers which data operations are allowed; it does not
+  // substitute. A page that hides its own contents is not an access boundary.
+  //
+  // Both routes are mapped explicitly so neither relies on the permissive
+  // unmapped default (#717) — which is what had left middleware permitting
+  // entry while this matrix stayed silent, i.e. two competing declarations of
+  // who may enter.
+  { exact: '/press/studio', minTier: 'free', notes: 'Author Studio Home (Layer 2) — member-facing: authenticated members of any tier; unauthenticated visitors are redirected to sign-in before the door' },
+  { exact: '/press/manuscript', minTier: 'free', notes: 'Manuscript Room (Layer 3) — same member-facing policy as /press/studio; one governed Author Studio path' },
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)

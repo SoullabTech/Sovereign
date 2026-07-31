@@ -351,6 +351,16 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '500mb',
     },
+    // Request-body buffer for routes that pass through middleware.
+    // Next's default is 10 MiB. Because middleware.ts matches every API route,
+    // that default silently truncated manuscript uploads: the body was dropped
+    // before the handler ran, request.formData() threw, and the ingest route
+    // reported it as a missing file. Its own MAX_FILE_BYTES (25 MB) was
+    // unreachable. 30 MiB leaves headroom for multipart overhead so the
+    // application's 25 MB contract is the boundary members actually meet.
+    // Note: bodies are buffered in memory per in-flight request.
+    // serverActions.bodySizeLimit above does NOT cover route handlers.
+    middlewareClientMaxBodySize: 30 * 1024 * 1024,
   },
 };
 

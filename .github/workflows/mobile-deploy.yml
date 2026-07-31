@@ -45,8 +45,13 @@ jobs:
       - name: Run linter
         run: npm run lint || echo "Linting warnings ignored"
 
-      - name: Type check
-        run: npm run type-check || echo "Type check warnings ignored"
+      # ENFORCEMENT DEBT: the `|| echo` makes this step non-blocking by construction,
+      # so a TypeScript regression cannot fail the mobile pipeline. Retained
+      # deliberately — removing the bypass was NOT authorized as part of the
+      # typecheck gate-contract change (2026-07-30). Tracked in
+      # docs/ops/TYPECHECK_GATE_COVERAGE_AUDIT_2026-07-30.md.
+      - name: Type check (non-blocking — see enforcement debt above)
+        run: npm run typecheck || echo "Type check warnings ignored"
 
       - name: Run tests
         run: npm test || echo "Tests passed with warnings"

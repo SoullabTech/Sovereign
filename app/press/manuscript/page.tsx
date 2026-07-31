@@ -1,7 +1,21 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import WorkingDraftEditor from './WorkingDraftEditor';
+
+/**
+ * Mirrors MAX_FILE_BYTES in app/api/sovereign/manuscripts/ingest/route.ts.
+ * Checked here so an oversized file is named as oversized before it is sent,
+ * rather than failing mid-flight with a message about the upload itself.
+ * The route-side check remains authoritative — this is a courtesy, not a gate.
+ */
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+
+function formatSize(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 /**
  * Soullab Press — Manuscript Room.
@@ -81,22 +95,64 @@ interface PreviewSection {
   body: string;
 }
 
-type Tab = 'manuscript' | 'keeps' | 'collections' | 'emerging' | 'export' | 'book';
+type Tab = 'manuscript' | 'draft' | 'keeps' | 'collections' | 'emerging' | 'export' | 'book';
+
+const TABS: Tab[] = ['manuscript', 'draft', 'keeps', 'collections', 'emerging', 'export', 'book'];
+
+/**
+ * This room is Layer 3 — a working surface reached FROM the Author Studio
+ * (Layer 2, /press/studio). Studio Home enters it by named surface, so
+ * "Continue Writing" must land in the Working Draft rather than on whatever
+ * tab happens to be first.
+ *
+ * An unrecognised or absent ?tab falls back to the manuscript view — a bad
+ * link never strands the member.
+ *
+ * MUST use useSearchParams, not window.location.search. A walk on 2026-07-30
+ * caught the difference: during an App Router client-side navigation the new
+ * page renders BEFORE the URL is committed to `window.location`, so reading
+ * the window at first render still sees the PREVIOUS route and every
+ * "Continue Writing" silently landed on the Manuscript tab — the exact defect
+ * this deep link exists to fix. useSearchParams reflects the destination
+ * during the transition. The cost is the Suspense boundary at the bottom of
+ * this file, which is why it is there.
+ */
+function toTab(wanted: string | null): Tab {
+  return TABS.includes(wanted as Tab) ? (wanted as Tab) : 'manuscript';
+}
 
 function sectionLabel(heading: string | null, position: number): string {
   return heading ?? `Section ${position + 1}`;
 }
 
-export default function PressManuscriptRoom() {
+function PressManuscriptRoom() {
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams?.get('tab') ?? null;
+  /**
+   * Studio Home offers "Import Manuscript" whether or not a book already
+   * exists — a second book is not a regression. But the landing/upload view
+   * below is reached only when `active` is null, so once the member HAS a
+   * manuscript that link silently delivered them into the existing Room
+   * instead of the import form. A post-#825 seam walk caught it; the first
+   * walk had only ever imported from an empty Studio, so the condition was
+   * never exercised. `?import=1` states the intent explicitly.
+   *
+   * Held as state, not read live: after a successful save the intent is spent
+   * and must clear, otherwise the URL would pin the member on the import form
+   * forever.
+   */
+  const [importing, setImporting] = useState(() => searchParams?.get('import') === '1');
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+  // W-2: load failure and "no manuscripts" are different facts about the world.
+  const [listError, setListError] = useState(false);
   const [active, setActive] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
   const [sections, setSections] = useState<Section[]>([]);
   const [keeps, setKeeps] = useState<Keep[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [tab, setTab] = useState<Tab>('manuscript');
+  const [tab, setTab] = useState<Tab>(() => toTab(requestedTab));
 
   const [draftTitle, setDraftTitle] = useState('');
   const [draftText, setDraftText] = useState('');
@@ -119,7 +175,19 @@ export default function PressManuscriptRoom() {
   const [rendering, setRendering] = useState<'pdf' | 'epub' | null>(null);
   const [renderError, setRenderError] = useState(false);
 
+  /**
+   * W-2 — a failed load must never look like an empty shelf.
+   *
+   * This previously swallowed the error and fell through to the landing/upload
+   * screen, which is indistinguishable from "you have no manuscripts". A writer
+   * whose network blipped would see the upload page and reasonably conclude
+   * their book was gone. Nothing on screen said otherwise.
+   *
+   * Five outcomes are now distinct: loading · unauthorized · load-failed ·
+   * genuinely empty · loaded.
+   */
   const loadList = useCallback(async () => {
+    setListError(false);
     try {
       const res = await apiFetch('/api/sovereign/manuscripts', { method: 'GET' });
       if (res.status === 401) {
@@ -131,7 +199,9 @@ export default function PressManuscriptRoom() {
       const list: ManuscriptSummary[] = data.manuscripts ?? [];
       setActive((cur) => cur ?? (list.length > 0 ? list[0].id : null));
     } catch {
-      // Landing will show; upload still possible for a signed-in member.
+      // Never fall through to the upload screen — that asserts an emptiness we
+      // have not established. We do not know what the writer has; say so.
+      setListError(true);
     } finally {
       setLoading(false);
     }
@@ -189,9 +259,14 @@ export default function PressManuscriptRoom() {
       setPreview(null);
       setDraftText('');
       setDraftTitle('');
+      setImporting(false); // intent spent — do not pin the member on the form
       await loadList();
       setActive(data.id);
-      setTab('manuscript');
+      // Import is a threshold, not a destination. The member came here to
+      // write, so the import ends in the Working Draft — not on a section
+      // list whose only onward action was "Begin Exploration" (which led to
+      // Keeps, away from writing).
+      setTab('draft');
     } catch {
       // Preview is preserved so the member can retry the save.
       setSaveError(true);
@@ -202,6 +277,15 @@ export default function PressManuscriptRoom() {
 
   const onFile = async (f: File) => {
     setWarnings([]);
+    // Named before sending. An oversized file cannot succeed by any path, and
+    // the member is told the actual size rather than being left to guess.
+    if (f.size > MAX_UPLOAD_BYTES) {
+      setWarnings([
+        `This file is ${formatSize(f.size)}. The upload limit is ${formatSize(MAX_UPLOAD_BYTES)}. ` +
+          `Compress or split the file, then try again.`,
+      ]);
+      return;
+    }
     // Plain text / markdown read in the browser (unchanged, transparent).
     if (/\.(txt|md|markdown)$/i.test(f.name)) {
       const text = await f.text();
@@ -430,23 +514,70 @@ export default function PressManuscriptRoom() {
     );
   }
 
-  // ---- Landing / upload --------------------------------------------------
-  if (!active || preview) {
+  /* W-2 — load failure with NOTHING already loaded.
+     This MUST be checked before the landing/upload branch below: falling
+     through to it would assert an emptiness we have not established. The copy
+     deliberately makes no claim about what the writer has or has not got —
+     only that we could not read it.
+
+     Guarded on `!active` on purpose: if a manuscript is already open, a failed
+     REFRESH must not replace the writer's Room with an error screen. That would
+     destroy visible work context to report a transient network fault. In that
+     case the Room stays, and the failure appears as a banner (below). */
+  if (listError && !active) {
     return (
-      <div style={paper} className="min-h-screen">
-        <main className="max-w-2xl mx-auto px-6 py-24">
+      <div style={paper} className="min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
           <img
             src="/holoflower-studio-transparent.png"
             alt="Soullab"
-            className="w-12 h-12 mb-5 opacity-90"
+            className="w-12 h-12 mx-auto mb-5 opacity-90"
           />
           <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Soullab Press</p>
-          <h1 className="text-3xl leading-snug mb-4">
-            Discover the books already living within your work.
-          </h1>
-          <p className="text-[15px] leading-relaxed opacity-70 mb-12">
-            A manuscript is not only something to finish. It may also be something that reveals
-            itself.
+          <p className="text-[15px] leading-relaxed opacity-70 mb-6">
+            We couldn&rsquo;t load your manuscripts just now. Nothing has been lost — this is a
+            problem reaching them, not a problem with them.
+          </p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              void loadList();
+            }}
+            className="px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Landing / upload --------------------------------------------------
+  // Reached when the list genuinely loaded (loadedOnce) and is empty, during
+  // the confirm-cuts preview, or when the member asked to import another book
+  // from Studio Home (?import=1). Never as a consequence of failure.
+  if (!active || preview || importing) {
+    return (
+      <div style={paper} className="min-h-screen">
+        <main className="max-w-2xl mx-auto px-6 py-16">
+          {/* Import is a threshold inside the Studio, not a product of its own.
+              The way back up must always be visible — before this link existed,
+              arriving here from the House was a one-way trip into an upload
+              form with no Studio around it. */}
+          <a
+            href="/press/studio"
+            className="inline-block text-[12px] tracking-[0.15em] uppercase opacity-45 hover:opacity-80 mb-10"
+          >
+            ← Author Studio
+          </a>
+          <h1 className="text-3xl leading-snug mb-4">Import a manuscript</h1>
+          <p className="text-[15px] leading-relaxed opacity-70 mb-3">
+            Bring in a book you have already written. Paste it, or choose a file.
+          </p>
+          {/* State the consequence BEFORE the file dialog, not after. */}
+          <p className="text-[14px] leading-relaxed opacity-50 mb-12 max-w-md">
+            What you bring in is kept as your Source and is never altered. A Working Draft is made
+            alongside it — that is the copy you write in. You will land there when this is done.
           </p>
 
           {!preview ? (
@@ -482,7 +613,8 @@ export default function PressManuscriptRoom() {
                   disabled={saving || ingesting || !draftTitle.trim() || !draftText.trim()}
                   className="ml-auto px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
                 >
-                  {saving ? '…' : 'Upload Manuscript'}
+                  {/* Names the threshold being crossed, not the file transfer. */}
+                  {saving ? '…' : 'Import into Author Studio'}
                 </button>
               </div>
               {warnings.length > 0 && (
@@ -580,17 +712,45 @@ export default function PressManuscriptRoom() {
 
   return (
     <div style={paper} className="min-h-screen">
+      {/* W-2: a failed refresh while the Room is open reports itself as a
+          banner and leaves the writer's work in place. Replacing the Room with
+          an error screen would discard visible context over a transient fault. */}
+      {listError && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-[#3a2a24] border-b border-[#5a4238] px-6 py-3 text-[13px] text-center"
+        >
+          We couldn&rsquo;t refresh your manuscript list just now. What you see here is still yours
+          and unchanged.{' '}
+          <button
+            onClick={() => void loadList()}
+            className="underline underline-offset-4 min-h-[44px] px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+          >
+            Try again
+          </button>
+        </div>
+      )}
       <header className="border-b border-[#4A4238]">
         <div className="max-w-3xl mx-auto px-6 pt-10 pb-0">
-          <div className="flex items-center gap-2.5 mb-1">
-            <img src="/holoflower-studio-transparent.png" alt="Soullab" className="w-6 h-6 opacity-90" />
-            <p className="text-[12px] tracking-[0.25em] uppercase opacity-50">Soullab Press</p>
-          </div>
+          {/* This room is Layer 3. The Studio (Layer 2) is one step up and must
+              always be one click away — a working surface is somewhere you are,
+              not somewhere you are stuck. The tab row below stays exactly as it
+              was: naming those tabs is a local decision one layer down, and is
+              deliberately NOT settled by the Studio shell. */}
+          <a
+            href="/press/studio"
+            className="inline-flex items-center gap-2.5 mb-1 opacity-50 hover:opacity-85 transition-opacity"
+          >
+            <img src="/holoflower-studio-transparent.png" alt="" aria-hidden="true" className="w-6 h-6" />
+            <span className="text-[12px] tracking-[0.25em] uppercase">← Author Studio</span>
+          </a>
           <h1 className="text-2xl mb-6">{title}</h1>
           <nav className="flex flex-wrap gap-x-8 gap-y-2 text-[12px] tracking-[0.15em] uppercase">
             {(
               [
                 ['manuscript', 'Manuscript'],
+                ['draft', 'Working Draft'],
                 ['keeps', 'Keeps'],
                 ['collections', 'Collections'],
                 ['emerging', 'Emerging Books'],
@@ -642,6 +802,8 @@ export default function PressManuscriptRoom() {
             </button>
           </div>
         )}
+
+        {tab === 'draft' && <WorkingDraftEditor key={active} manuscriptId={active} />}
 
         {tab === 'keeps' && (
           <div>
@@ -888,5 +1050,19 @@ export default function PressManuscriptRoom() {
         )}
       </main>
     </div>
+  );
+}
+
+/**
+ * useSearchParams requires a Suspense boundary (see toTab above — the deep
+ * link from Author Studio Home depends on it). The fallback is deliberately
+ * blank: the room paints its own "opening…" state a beat later, and a second
+ * spinner ahead of it would only add flicker to a room meant to feel slow.
+ */
+export default function PressManuscriptRoomPage() {
+  return (
+    <Suspense fallback={null}>
+      <PressManuscriptRoom />
+    </Suspense>
   );
 }

@@ -31,7 +31,6 @@ interface MaiaRightPanelHostProps {
   onOpenShadowWork: () => void;
   onOpenAcademy: () => void;
   onOpenChanges: () => void;
-  onOpenDecisions: () => void;
   onChooseGuide: () => void;
   onShowCurrentElder: () => void;
 }
@@ -46,7 +45,6 @@ export function MaiaRightPanelHost({
   onOpenShadowWork,
   onOpenAcademy,
   onOpenChanges,
-  onOpenDecisions,
   onChooseGuide,
   onShowCurrentElder,
 }: MaiaRightPanelHostProps) {

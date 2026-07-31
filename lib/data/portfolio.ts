@@ -91,6 +91,17 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     group: 'helper-tools',
   },
   {
+    name: "Author's Studio",
+    slug: 'authors-studio',
+    domain: 'https://soullab.life/press/manuscript',
+    description:
+      'Where a life becomes a book. Bring a manuscript in, keep the passages that matter, gather collections, and leave with a publication-quality PDF or EPUB that is unmistakably the author’s own. Authorship never moves.',
+    status: 'beta',
+    accent: '#C9A227',
+    tags: ['Soullab Press', 'Authorship', 'Manuscripts'],
+    group: 'helper-tools',
+  },
+  {
     name: 'Book Studio',
     slug: 'book-studio',
     domain: 'https://soullab.life/book-studio/read',
