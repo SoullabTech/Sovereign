@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
@@ -152,7 +153,21 @@ function PressManuscriptRoom() {
   const [sections, setSections] = useState<Section[]>([]);
   const [keeps, setKeeps] = useState<Keep[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [tab, setTab] = useState<Tab>(() => toTab(requestedTab));
+  const [tab, setTab] = useState<Tab>(() => {
+    // A deep link (?tab=) is the intended destination and always wins.
+    if (requestedTab && TABS.includes(requestedTab as Tab)) return requestedTab as Tab;
+    // R1.1 Returning — with no deep link, return to the pane last left open.
+    const last = loadLastTab();
+    if (last && TABS.includes(last as Tab)) return last as Tab;
+    return toTab(requestedTab); // 'manuscript' — the safe default
+  });
+
+  // R1.1 Returning — remember the pane, so a return with no deep link lands
+  // where the writer was. Deep links win in the initializer above and are
+  // unaffected.
+  useEffect(() => {
+    saveLastTab(tab);
+  }, [tab]);
 
   const [draftTitle, setDraftTitle] = useState('');
   const [draftText, setDraftText] = useState('');
