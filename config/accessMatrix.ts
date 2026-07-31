@@ -54,16 +54,30 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/vision-studio', public: true, notes: 'Vision Studio public landing — member room stays gated at /maia/vision-studio' },
   { exact: '/soullab-studio', public: true, notes: 'Soullab Studio public landing — practitioner app stays gated at /studio' },
   { exact: '/press', public: true, notes: 'Soullab Press public landing — editorial workspace stays founder-gated at /book-studio' },
-  // Author Studio Home (Layer 2, 2026-07-30). Mapped explicitly so it never
-  // relies on the permissive unmapped default (#717). `public` here mirrors the
-  // Manuscript Room it fronts: the ROUTE is servable, but it holds nothing —
-  // every manuscript read is member-scoped by credential server-side and returns
-  // 401, which the page renders as "sign in to enter". Gating the door tighter
-  // than the room behind it would lock members out of a surface they can reach.
-  // NOTE: /press/manuscript itself is still unmapped and rides the permissive
-  // default. That is a pre-existing gap, not one this entry introduces — it is
-  // left for a deliberate pass rather than changed underneath a live surface.
-  { exact: '/press/studio', public: true, notes: 'Author Studio Home — member-facing Layer 2 shell; manuscript data is 401-gated at the API, page renders a sign-in invitation' },
+  // ── Author Studio — ONE governed path, two routes ─────────────────────
+  //
+  // R1 AUDIENCE RULING (2026-07-30): Author Studio is MEMBER-FACING. It is a
+  // member environment for working with one's book, not a founder or
+  // practitioner instrument. No Steward/founder tier gate: that would make
+  // commercial tier or internal role stand in for the actual audience
+  // distinction, without evidence that authorship belongs only to those groups.
+  // See docs/canon/AUTHOR_STUDIO_THREE_LAYER_RULING.md §3.
+  //
+  // /press/studio (Layer 2, the environment) and /press/manuscript (Layer 3,
+  // the Manuscript Room) are ONE governed Author Studio path. A member
+  // permitted into the Studio must be able to move from its home into the
+  // Room, so the two carry the SAME policy — deliberately, not incidentally.
+  //
+  // `public` on both means the ROUTE is servable; neither page holds anything.
+  // Every manuscript read is member-scoped by credential server-side and
+  // returns 401, which the pages render as "sign in to enter". Route
+  // authorization answers who may ENTER; API authorization answers which data
+  // operations are allowed. Both routes are mapped explicitly so neither
+  // relies on the permissive unmapped default (#717) — which is what had left
+  // middleware permitting entry while this matrix stayed silent, i.e. two
+  // competing declarations of who may enter.
+  { exact: '/press/studio', public: true, notes: 'Author Studio Home (Layer 2) — member-facing; manuscript data is 401-gated at the API, page renders a sign-in invitation' },
+  { exact: '/press/manuscript', public: true, notes: 'Manuscript Room (Layer 3) — same member-facing policy as /press/studio; one governed Author Studio path' },
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)

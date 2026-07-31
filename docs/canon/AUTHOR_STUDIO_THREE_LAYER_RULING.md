@@ -70,27 +70,49 @@ point only; their `/studio` and `/book-studio` assignments stand.
 
 ---
 
-## 3. Access policy (ratified; implementation outstanding)
+## 3. Access policy (ratified and implemented)
 
 `/press/studio` and `/press/manuscript` are **one governed Author Studio path**. A member permitted
 into the Author Studio must be able to move from its home into the Manuscript Room.
 
+### 3.1 R1 audience — ruled 2026-07-30
+
+**Author Studio is member-facing at R1.** It is a member environment for working with one's book —
+not a founder or practitioner instrument.
+
+**No Steward/founder tier gate.** Such a gate would make **commercial tier or internal role stand in
+for the actual audience distinction**, without evidence that authorship belongs only to those groups.
+An existing permission mechanism can *implement* a ruling; it cannot *supply* one.
+
+> **Supersedes an earlier draft of this section**, which recorded the access policy as
+> "paying-Steward / founder-gated" and forbade "broadening to all members." That language was written
+> before the audience question was ruled, and it treated an available tier as though it were a
+> settled audience. The audience ruling replaces it. The rest of §3 — that the two routes are one
+> governed path, and that route authorization is distinct from API authorization — is unchanged.
+
 **Ruled:**
 
-- `/press/manuscript` **must be represented explicitly in `config/accessMatrix.ts`**, under the same
-  paying-Steward / founder-gated policy already ruled for the Author Studio.
-- **No silent broadening to all members.**
+- Keep `/press/studio` under the member-facing policy.
+- Map `/press/manuscript` to **that same policy**.
+- Do not add a Steward/founder tier gate.
+- **Deployment implements this ruling; it does not decide it.** Production verification and founder
+  acceptance remain subsequent, separate states.
 
-**Current state, recorded honestly:** `/press/studio` is declared `public: true` in `accessMatrix`,
-which short-circuits before any auth check; its data protection rests on **API** authorization (every
-manuscript read is member-scoped by credential and returns 401). `/press/manuscript` is **absent**
-from `accessMatrix` and rides the permissive unmapped-route default.
+### 3.2 Implementation
 
-That disagreement — middleware permitting entry while `accessMatrix` does not name the route — is
-**not an acceptable lasting state**, because it leaves two competing declarations of who may enter.
+Both routes are now mapped explicitly in `config/accessMatrix.ts` with the same policy
+(`public: true`, no `minTier`, no `requiredRoles`), so neither relies on the permissive
+unmapped-route default (#717).
 
-**Reconciling it is a release precondition.** It is *not* a prerequisite for reviewing the shell's
-behavior.
+`public` here means the **route is servable**; neither page holds anything. Every manuscript read is
+member-scoped by credential server-side and returns 401, which the pages render as a sign-in
+invitation.
+
+> **Route authorization answers who may ENTER. API authorization answers which data operations are
+> allowed.** They can reinforce each other; the second does not substitute for the first.
+
+**The defect this closed:** `/press/manuscript` was absent from the matrix while middleware permitted
+entry — **two competing declarations of who may enter**. That was not an acceptable lasting state.
 
 ---
 
