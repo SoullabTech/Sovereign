@@ -17,6 +17,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { Plus, Lock, Pencil, Trash2 } from 'lucide-react';
+import { sortNotes } from '@/lib/studio/noteOrder';
 
 interface ClientNote {
   id: string;
@@ -41,15 +42,6 @@ function formatTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-}
-
-/** Mirrors the server's `ORDER BY note_date DESC, created_at DESC`. */
-function sortNotes(list: ClientNote[]): ClientNote[] {
-  return [...list].sort((a, b) => {
-    const byDate = new Date(b.noteDate).getTime() - new Date(a.noteDate).getTime();
-    if (byDate !== 0) return byDate;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
 }
 
 /** Local YYYY-MM-DD for <input type="date">. Not toISOString() — that shifts to UTC. */
