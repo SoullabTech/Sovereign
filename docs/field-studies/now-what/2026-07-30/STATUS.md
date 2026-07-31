@@ -56,6 +56,30 @@ distinctions (mechanism ⟂ assertion · rationale ⟂ standing · selection ⟂
 implementation divergence ⟂ observation divergence) belong to this domain, not to the
 harness.
 
+### The epistemic instrument the sitting produced
+
+⛔ **Provisional** — recorded here, not written into the method document, and not settled
+until exercised in a second study.
+
+Six questions to ask **before** a claim enters a durable record:
+
+1. **Is this actually new?**
+2. **Does the rationale have standing?**
+3. **Is the mechanism being confused with the assertion?**
+4. **Is the capability being confused with its implementation?**
+5. **Is the representation ahead of its referent?** *(premature)*
+6. **Has the referent changed since this representation was created?** *(stale)*
+
+⭐⭐ **5 and 6 are opposite temporal directions, and the pair makes the instrument symmetric.**
+Q5 catches representation before reality; Q6 catches representation after reality moved. **Q5
+alone would not have caught this sitting's actual index defect** — a MEMORY.md line reading
+*"#833 NOT DEPLOYED"* that was accurate when written and false ~6 hours later.
+
+⭐ **Indexes are the highest-risk surface for Q6:** representations *about other artifacts*,
+one level removed, accumulating obsolete truth faster than what they describe.
+
+⭐ *"Is this true?"* stopped being sufficient. These six did the work.
+
 ### Closing statement
 
 > **The sitting strengthened both the observations and the method by which observations become
