@@ -16,10 +16,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
-import { Plus, Lock, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Lock, Pencil, Trash2, ArrowUpRight } from 'lucide-react';
 import { sortNotes } from '@/lib/studio/noteOrder';
 
 interface ClientNote {
+  kind?: string;
   id: string;
   clientId: string;
   content: string;
@@ -30,6 +31,8 @@ interface ClientNote {
 
 interface Props {
   clientId: string;
+  /** Called after a session note is carried forward, so Continuity can refresh. */
+  onPromoted?: () => void;
 }
 
 function formatDate(iso: string): string {
@@ -50,7 +53,7 @@ function toDateInputValue(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function ClientNotesPanel({ clientId }: Props) {
+export function ClientNotesPanel({ clientId, onPromoted }: Props) {
   const [notes, setNotes] = useState<ClientNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -65,6 +68,13 @@ export function ClientNotesPanel({ clientId }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  // Carry Forward — human-directed only. The practitioner opens it on a specific
+  // note, chooses the destination kind, and may edit the wording before saving.
+  // Nothing is selected, classified, or promoted automatically.
+  const [carryFromId, setCarryFromId] = useState<string | null>(null);
+  const [carryKind, setCarryKind] = useState<'commitment' | 'recognition' | 'detail'>('commitment');
+  const [carryDraft, setCarryDraft] = useState('');
 
   const loadNotes = useCallback(async () => {
     setLoading(true);
@@ -81,7 +91,10 @@ export function ClientNotesPanel({ clientId }: Props) {
         return;
       }
       const data = await res.json();
-      setNotes(data.notes || []);
+      // Session notes only. Continuity kinds share this endpoint but not this
+      // ordering — `sortNotes()` encodes the temporal ontology of a session note,
+      // which a commitment or a detail does not share. See ClientContinuityPanel.
+      setNotes((data.notes || []).filter((n: ClientNote) => (n.kind ?? 'note') === 'note'));
     } catch {
       setLoadError('Notes could not be loaded.');
     } finally {
@@ -141,6 +154,36 @@ export function ClientNotesPanel({ clientId }: Props) {
       setEditDraft('');
     } catch {
       setSaveError('The change was not saved.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCarryForward(sourceId: string) {
+    if (!carryDraft.trim()) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await apiFetch(`/api/studio/clients/${clientId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({
+          content: carryDraft.trim(),
+          kind: carryKind,
+          promoted_from: sourceId,
+          ...(carryKind === 'commitment' ? { status: 'alive' } : {}),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveError(data.error || 'That was not carried forward.');
+        return;
+      }
+      // The source note is never modified — provenance only.
+      setCarryFromId(null);
+      setCarryDraft('');
+      onPromoted?.();
+    } catch {
+      setSaveError('That was not carried forward.');
     } finally {
       setSaving(false);
     }
@@ -283,6 +326,21 @@ export function ClientNotesPanel({ clientId }: Props) {
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
                     <button
                       onClick={() => {
+                        // Seeded with the note's text so the practitioner EDITS
+                        // rather than accepts. Nothing is selected for them.
+                        setCarryFromId(note.id);
+                        setCarryDraft(note.content);
+                        setCarryKind('commitment');
+                        setSaveError(null);
+                      }}
+                      className="text-slate-600 hover:text-amber-400 transition-colors"
+                      aria-label="Carry forward"
+                      title="Carry forward"
+                    >
+                      <ArrowUpRight className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => {
                         setEditingId(note.id);
                         setEditDraft(note.content);
                         setSaveError(null);
@@ -351,9 +409,57 @@ export function ClientNotesPanel({ clientId }: Props) {
                   </div>
                 </div>
               ) : (
+                <>
+                {carryFromId === note.id && (
+                  <div className="mt-2 bg-slate-800/60 border border-slate-700/50 rounded-lg p-3 space-y-2">
+                    <p className="text-[11px] text-slate-500">
+                      Carry forward — you choose where this belongs and how it reads.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {(['commitment', 'recognition', 'detail'] as const).map((k) => (
+                        <button
+                          key={k}
+                          onClick={() => setCarryKind(k)}
+                          className={`text-[11px] px-2 py-1 rounded border transition-colors ${
+                            carryKind === k
+                              ? 'bg-slate-700 border-slate-600 text-slate-200'
+                              : 'bg-slate-900 border-slate-700 text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {k === 'commitment' ? 'Commitment' : k === 'recognition' ? 'Recognition' : 'Detail'}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={carryDraft}
+                      onChange={(e) => setCarryDraft(e.target.value)}
+                      rows={3}
+                      className="w-full bg-slate-900 border border-slate-700 rounded text-xs text-slate-200 px-2 py-1.5 resize-none"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setCarryFromId(null);
+                          setCarryDraft('');
+                        }}
+                        className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleCarryForward(note.id)}
+                        disabled={saving || !carryDraft.trim()}
+                        className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded disabled:opacity-40"
+                      >
+                        {saving ? 'Carrying...' : 'Carry forward'}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <p className="text-xs text-slate-300 mt-1 leading-relaxed whitespace-pre-wrap">
                   {note.content}
                 </p>
+                </>
               )}
             </div>
           ))}
