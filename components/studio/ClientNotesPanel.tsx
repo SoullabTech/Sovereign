@@ -17,6 +17,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { Plus, Lock, Pencil, Trash2 } from 'lucide-react';
+import { sortNotes } from '@/lib/studio/noteOrder';
 
 interface ClientNote {
   id: string;
@@ -37,6 +38,18 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+/** Local YYYY-MM-DD for <input type="date">. Not toISOString() — that shifts to UTC. */
+function toDateInputValue(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function ClientNotesPanel({ clientId }: Props) {
   const [notes, setNotes] = useState<ClientNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +58,7 @@ export function ClientNotesPanel({ clientId }: Props) {
 
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
+  const [draftDate, setDraftDate] = useState(() => toDateInputValue(new Date()));
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -86,7 +100,7 @@ export function ClientNotesPanel({ clientId }: Props) {
     try {
       const res = await apiFetch(`/api/studio/clients/${clientId}/notes`, {
         method: 'POST',
-        body: JSON.stringify({ content: draft.trim() }),
+        body: JSON.stringify({ content: draft.trim(), note_date: draftDate }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -94,8 +108,11 @@ export function ClientNotesPanel({ clientId }: Props) {
         return;
       }
       const data = await res.json();
-      setNotes((prev) => [data.note, ...prev]);
+      // Server orders by note_date DESC, created_at DESC. A backdated note does not
+      // belong at the top, so re-sort locally rather than assuming newest-first.
+      setNotes((prev) => sortNotes([data.note, ...prev]));
       setDraft('');
+      setDraftDate(toDateInputValue(new Date()));
       setAdding(false);
     } catch {
       setSaveError('The note was not saved.');
@@ -187,11 +204,23 @@ export function ClientNotesPanel({ clientId }: Props) {
             autoFocus
             className="w-full bg-slate-900 border border-slate-700 rounded text-xs text-slate-200 px-2 py-1.5 placeholder-slate-600 resize-none"
           />
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <label className="flex items-center gap-2 text-xs text-slate-500">
+              <span>Date of this work</span>
+              <input
+                type="date"
+                value={draftDate}
+                max={toDateInputValue(new Date())}
+                onChange={(e) => setDraftDate(e.target.value)}
+                className="bg-slate-900 border border-slate-700 rounded text-xs text-slate-300 px-2 py-1"
+              />
+            </label>
+            <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 setAdding(false);
                 setDraft('');
+                setDraftDate(toDateInputValue(new Date()));
                 setSaveError(null);
               }}
               className="text-xs text-slate-500 hover:text-slate-300 px-3 py-1.5"
@@ -205,6 +234,7 @@ export function ClientNotesPanel({ clientId }: Props) {
             >
               {saving ? 'Saving...' : 'Save note'}
             </button>
+            </div>
           </div>
         </div>
       )}
@@ -237,7 +267,18 @@ export function ClientNotesPanel({ clientId }: Props) {
               className="bg-slate-800/40 border border-slate-700/30 rounded-lg px-3 py-2.5 group"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="text-xs text-slate-500">{formatDate(note.noteDate)}</span>
+                <span className="text-xs text-slate-500">
+                  {formatDate(note.noteDate)}
+                  {formatDate(note.noteDate) === formatDate(note.createdAt) ? (
+                    // Written the same day: the creation time is the note's time.
+                    <span className="text-slate-600"> · {formatTime(note.createdAt)}</span>
+                  ) : (
+                    // Backdated: say so rather than presenting the write time as the work's time.
+                    <span className="text-slate-600">
+                      {' '}· written {formatDate(note.createdAt)}
+                    </span>
+                  )}
+                </span>
                 {editingId !== note.id && (
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
                     <button
