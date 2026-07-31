@@ -40,6 +40,39 @@ direction."*
 
 ⭐ **Observations become durable before unresolved questions become settled.**
 
+## ⭐⭐ What the sitting produced — two domains, not one
+
+Founder refinement, 2026-07-30. The sitting produced knowledge in **two distinct domains**,
+and the second is not merely "instrument" knowledge:
+
+| Domain | Content |
+|---|---|
+| **About the field** | The observations that survived falsification and standing review |
+| **About the *epistemology* of the field** | Where authority, representation, and evidence can diverge — i.e. **how claims become trustworthy** |
+
+⭐ **The second is the more transferable result.** It governs every future field study, not
+this calibration — and it is a different class of finding from a harness defect. The four
+distinctions (mechanism ⟂ assertion · rationale ⟂ standing · selection ⟂ adequacy ·
+implementation divergence ⟂ observation divergence) belong to this domain, not to the
+harness.
+
+### Closing statement
+
+> **The sitting strengthened both the observations and the method by which observations become
+> trustworthy. Field findings survived repeated attempts at falsification and standing review;
+> the method itself became more reliable through repeated detection of cases where
+> representation threatened to outrun its referent.**
+
+⭐ What changed over the course of the work was not simply that the instrument improved, but
+that **the discipline for converting observation into durable knowledge became more rigorous.**
+
+⚠️ **The governing failure mode, named once rather than as four lessons:** *representation
+preceded referent.* Four instances this sitting — a premature ratification line · an index
+entry ahead of its artifact · an edited local copy of a tracked docket · scaffold templates
+implying a completed investigation. All four were caught at a verification point before
+entering the permanent record. **The calibration is not that the tendency disappeared; it is
+that detection became fast enough to stay ahead of propagation.**
+
 ## Integrity at close
 
 - **Instrument:** `84dde085c5d8` — **INTACT**, the method did not move under the sitting.
