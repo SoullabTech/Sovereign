@@ -1,7 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  headingAtOffset,
+  loadDraftPosition,
+  prefersReducedMotion,
+  saveDraftPosition,
+} from './returningState';
 import {
   AUTOSAVE_DELAY_MS,
   beginDraft,
@@ -46,6 +52,13 @@ import {
 
 const SERIF = 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif';
 
+// Restore must happen before paint (so the draft never visibly jumps from the
+// top to where the writer was), but React warns if useLayoutEffect appears
+// during SSR. This client component is server-rendered for initial HTML, so
+// pick the isomorphic variant: useLayoutEffect on the client, useEffect on the
+// server (where there is nothing to restore anyway).
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 interface WorkingDraftEditorProps {
   manuscriptId: string;
 }
@@ -74,6 +87,13 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
   const [restoreError, setRestoreError] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // R1.1 Returning — spatial continuity (single work, client-side, observable only).
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const posTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restoredRef = useRef(false); // restore position exactly once per mount
+  const [welcome, setWelcome] = useState<{ heading: string | null } | null>(null);
+  const [welcomeFading, setWelcomeFading] = useState(false);
 
   const http = useMemo<Http>(() => (path, init) => apiFetch(path, init), []);
 
@@ -116,6 +136,78 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     void reload();
   }, [reload]);
 
+  // ---- R1.1 Returning: spatial continuity ---------------------------------
+  // Persist the writer's position — caret, selection, scroll. Observable only;
+  // never intent or meaning. A courtesy, never load-bearing.
+  const persistPosition = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    saveDraftPosition(manuscriptId, {
+      selectionStart: ta.selectionStart ?? 0,
+      selectionEnd: ta.selectionEnd ?? 0,
+      scrollTop: ta.scrollTop ?? 0,
+    });
+  }, [manuscriptId]);
+
+  const persistPositionSoon = useCallback(() => {
+    if (posTimer.current) clearTimeout(posTimer.current);
+    posTimer.current = setTimeout(persistPosition, 400);
+  }, [persistPosition]);
+
+  // Ref indirection so exit handlers persist the latest position without
+  // re-subscribing each render (mirrors flushRef below).
+  const persistRef = useRef(persistPosition);
+  persistRef.current = persistPosition;
+
+  // Restore position once, before paint — the draft must never visibly jump
+  // from the top down to where the writer actually was.
+  useIsomorphicLayoutEffect(() => {
+    if (phase !== 'ready' || restoredRef.current) return;
+    restoredRef.current = true;
+    const ta = textareaRef.current;
+    const pos = loadDraftPosition(manuscriptId);
+    // A genuine "return": a stored position, or a draft written before now.
+    // A freshly-begun draft gets no welcome — there is no "back" to return to.
+    const returning = !!pos || !!updatedAt;
+    if (ta && pos) {
+      ta.scrollTop = Math.min(pos.scrollTop, Math.max(0, ta.scrollHeight));
+      const len = ta.value.length;
+      try {
+        ta.setSelectionRange(Math.min(pos.selectionStart, len), Math.min(pos.selectionEnd, len));
+      } catch {
+        /* selection API can throw; position is only a courtesy */
+      }
+      ta.focus({ preventScroll: true });
+    }
+    if (returning) {
+      setWelcome({ heading: headingAtOffset(content, pos?.selectionStart ?? 0) });
+    }
+  }, [phase, manuscriptId, updatedAt, content]);
+
+  // The welcome arrives, then steps aside — the work is already present.
+  useEffect(() => {
+    if (!welcome) return;
+    const reduce = prefersReducedMotion();
+    const hold = 5000;
+    const fade = reduce ? 0 : 1200;
+    const t1 = reduce ? null : setTimeout(() => setWelcomeFading(true), hold);
+    const t2 = setTimeout(() => setWelcome(null), hold + fade);
+    return () => {
+      if (t1) clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [welcome]);
+
+  // Persist position on unmount too (tab switch, route change), and clear the
+  // debounce timer.
+  useEffect(
+    () => () => {
+      if (posTimer.current) clearTimeout(posTimer.current);
+      persistRef.current();
+    },
+    [],
+  );
+
   /**
    * W-1 — close the debounce gap on every exit.
    *
@@ -154,11 +246,18 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     // `pagehide` and `visibilitychange → hidden` are the events mobile browsers
     // actually fire when backgrounding or discarding a tab; `beforeunload` is
     // unreliable there, so it cannot be the only guard.
-    const onPageHide = () => flushRef.current();
+    const onPageHide = () => {
+      persistRef.current();
+      flushRef.current();
+    };
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') flushRef.current();
+      if (document.visibilityState === 'hidden') {
+        persistRef.current();
+        flushRef.current();
+      }
     };
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      persistRef.current();
       flushRef.current();
       // Honesty limit: a dispatched PUT is not a completed PUT, and we cannot
       // await one here. If anything is still pending we ask the browser to
@@ -184,6 +283,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     saver.queue(value); // marks 'unsaved' via onState
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => saver.flush(), AUTOSAVE_DELAY_MS);
+    persistPositionSoon(); // the caret has moved with the typing
   };
 
   const saveNow = () => {
@@ -343,6 +443,19 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   return (
     <div>
+      {welcome && (
+        /* R1.1 Returning — hospitality, then it steps aside. Observable facts
+           only: the writer's own heading. No coaching, prediction, or prompt. */
+        <p
+          role="status"
+          aria-live="polite"
+          className="text-[15px] opacity-70 mb-6 leading-relaxed transition-opacity duration-[1200ms]"
+          style={{ fontFamily: SERIF, opacity: welcomeFading ? 0 : undefined }}
+        >
+          Welcome back.
+          {welcome.heading ? ` You were writing in ${welcome.heading}.` : ''}
+        </p>
+      )}
       <p className="text-[13px] opacity-60 mb-2 leading-relaxed">
         An editable copy of this manuscript, in your own words. The original is never changed.
       </p>
@@ -376,8 +489,11 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
       </div>
 
       <textarea
+        ref={textareaRef}
         value={content}
         onChange={(e) => onChange(e.target.value)}
+        onScroll={persistPositionSoon}
+        onSelect={persistPositionSoon}
         aria-label="Working draft"
         spellCheck
         className="w-full bg-black/20 border border-[#4A4238] rounded-sm p-5 text-[16px] leading-relaxed outline-none focus:border-[#C9A227]/50 min-h-[60vh] resize-y"
