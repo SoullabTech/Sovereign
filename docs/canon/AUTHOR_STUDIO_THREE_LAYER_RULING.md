@@ -75,11 +75,21 @@ point only; their `/studio` and `/book-studio` assignments stand.
 `/press/studio` and `/press/manuscript` are **one governed Author Studio path**. A member permitted
 into the Author Studio must be able to move from its home into the Manuscript Room.
 
+**R1 audience — ruled 2026-07-30/31: the Author Studio is MEMBER-FACING.**
+
+It is a member environment for working with one's own book. No paying-Steward or founder tier gate is
+ruled for it: a commercial tier or an internal role would stand in for an audience distinction that
+has not been established, and authorship has not been shown to belong only to those groups. The
+founder-gated editorial workspace remains `/book-studio`, which this ruling does not touch.
+
 **Ruled:**
 
-- `/press/manuscript` **must be represented explicitly in `config/accessMatrix.ts`**, under the same
-  paying-Steward / founder-gated policy already ruled for the Author Studio.
-- **No silent broadening to all members.**
+- **Both** `/press/studio` (Layer 2) and `/press/manuscript` (Layer 3) **must be represented
+  explicitly in `config/accessMatrix.ts`**, under the **same** member-facing policy — deliberately
+  the same, because they are one governed path.
+- Neither route may rely on the permissive unmapped-route default.
+- **Route authorization answers who may ENTER. API authorization answers which data operations are
+  allowed.** Both remain in force; neither substitutes for the other.
 
 **Current state, recorded honestly:** `/press/studio` is declared `public: true` in `accessMatrix`,
 which short-circuits before any auth check; its data protection rests on **API** authorization (every
@@ -88,9 +98,33 @@ from `accessMatrix` and rides the permissive unmapped-route default.
 
 That disagreement — middleware permitting entry while `accessMatrix` does not name the route — is
 **not an acceptable lasting state**, because it leaves two competing declarations of who may enter.
+Mapping `/press/manuscript` explicitly under the member-facing policy **removes the ambiguity without
+changing who can currently reach the route**, since the unmapped default already permits entry.
 
 **Reconciling it is a release precondition.** It is *not* a prerequisite for reviewing the shell's
 behavior.
+
+### 3.1 Correction — what this section previously asserted, and why it was wrong
+
+As first ratified (PR #837, merged `045ab1200`), this section required `/press/manuscript` to be
+mapped *"under the same paying-Steward / founder-gated policy **already ruled** for the Author
+Studio,"* and forbade *"silent broadening to all members."*
+
+**No such ruling existed.** At the time that text was written, `config/accessMatrix.ts` described
+`/press/studio` as a *member-facing Layer 2 shell*, and the founder gate was recorded against
+`/book-studio`. The phrase "already ruled" asserted a provenance it did not carry. The R1 audience was
+in fact **open and unruled** until 2026-07-30/31, when it was ruled **member-facing**.
+
+The correction is recorded rather than silently patched, because the failure is instructive:
+
+- **A docs-only change may be runtime-inert while still being constitutionally active.** #837 was
+  reviewed as "+133/−0, zero runtime" — all true. `git diff --stat` proves that *code* did not change;
+  it cannot prove that *authority* did not change.
+- **Access implementation may EXPRESS an audience decision. It may never DECIDE one.** This section is
+  the place the audience is ruled; `accessMatrix` is the place it is expressed. A permissions repair
+  must not become a product-definition change while presenting itself as cleanup.
+- **Canon follows the ruling; the ruling does not follow canon.** The resolution here corrects the
+  document to match the decision, and explicitly not the reverse.
 
 ---
 
@@ -128,6 +162,10 @@ These are recorded to prevent them being mistaken for settled:
 Ruled in session on 2026-07-30 and implemented in PR #833 (merged `c8e38c5a7`). The architectural
 premise appears in commit `abd24e009`; that commit message carries the premise **only** — not the
 layer assignments, the access ruling, or the deferred list. This document is the citable record.
+
+**Amended 2026-07-31** — §3 corrected to record the R1 audience ruling (**member-facing**) and to
+withdraw the unsupported "already ruled" paying-Steward / founder claim carried by the original
+ratification. See §3.1. No other section changed.
 
 Related: [`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`](./CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md) —
 the same discipline applied to developmental layers rather than navigational ones.
