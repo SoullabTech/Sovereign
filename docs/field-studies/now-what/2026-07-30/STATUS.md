@@ -56,6 +56,36 @@ distinctions (mechanism ⟂ assertion · rationale ⟂ standing · selection ⟂
 implementation divergence ⟂ observation divergence) belong to this domain, not to the
 harness.
 
+### ⭐⭐⭐ What the sitting actually converged on: a lifecycle of representations
+
+The six questions below are **not a checklist**. They are **one guard per stage** in a
+representation's life — each guarding a different failure mode, none subsuming the others:
+
+| Stage | Governing question |
+|---|---|
+| Creation | Is this actually new? |
+| Authority | Does the rationale have standing? |
+| Meaning | Am I confusing mechanism with assertion? |
+| Abstraction | Am I confusing capability with implementation? |
+| Initial truth | Is this representation ahead of its referent? |
+| Ongoing truth | Has its referent changed since it was written? |
+
+**Q5 — permission to create:** does reality exist yet? Prevents fiction entering the record.
+**Q6 — obligation to revisit:** has reality moved? Prevents history quietly replacing the
+present. *Superficially similar; opposite operations.*
+
+**Design principle — indexes are high-staleness artifacts.** Not from poor maintenance, but
+because they summarize moving objects without changing themselves. Consequence: **canonical
+artifacts are verified when they change; indexes when their referents change.** A different
+maintenance schedule.
+
+> **None of that was recoverable by care. Each was caught by a check placed where the error
+> would otherwise have propagated.** "Be more careful" depends on vigilance, which degrades. A
+> well-placed check changes the system instead of asking the operator to change.
+
+⭐ **The lasting product is not the six questions — it is the discipline of placing each
+question at the boundary where its corresponding error would otherwise become durable.**
+
 ### The epistemic instrument the sitting produced
 
 ⛔ **Provisional** — recorded here, not written into the method document, and not settled
