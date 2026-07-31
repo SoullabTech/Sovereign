@@ -251,6 +251,28 @@ alternate R1–R4 cut included matters outside theme scope.
 | **Current status** | Awaiting ruling — **deferrable without blocking anything.** Recorded so it is not lost. |
 | **References** | `docs/specs/developmental-environment/FIELD_STUDY_METHOD_CANDIDATE_2026-07-29.md` (tracked, `ea39fe3b0`) |
 
+### D9 — Q6: the Now What? landing — map or room as primary ground
+
+**Entered 2026-07-30 by founder direction** during the Now What? calibration sitting.
+⭐ **Escalation is founder-verified. The ruling is not made** — Kelly: *"Escalate the
+question now; decide it after the field evidence is complete."*
+
+| Field | Value |
+|---|---|
+| **Decision ID** | D9 (formerly Q6, carried from the Larry program specs) |
+| **Question** | ⚠️ **SCOPE CHANGED 2026-07-30 by founder statement, after the gravity map.** *Originally:* "Does `/now-what` land on the map or the room?" — a navigation question. **Now: which relationship does the environment establish first?** The gravity map showed the disagreement is not about routing. Visual and interaction gravity are coherent across the public journey; **only the relational centre varies** — `/welcome` = place, `/pitch` = practitioner, `/arrive` = **none**. The landing decision determines which of these a first arrival meets. Kelly: *"That's a qualitatively different governance question."* |
+| **Original formulation (preserved)** | Does `/now-what` land on the **map** or the **room** — which is the primary ground? |
+| **Formulation** | *An unresolved landing decision that has been operationally settled by implementation for twenty-two days, despite a later candidate specification pointing in the opposite direction.* |
+| **Current implementation** | `/now-what` lands on the **room** — `next.config.js:136-141`, 307 redirect, in-file comment *"room as entry (2026-07-08) … a person here to practice lands in the practice, not a slideshow."* |
+| **Competing candidate** | `/now-what` lands on the **map** — `LARRY_PROGRAM_FIELD_WALK_PROTOCOL_CANDIDATE_2026-07-12.md`, UX invariant #1: *"The map is the ground. `/now-what` lands on the map (Q6 — ruling pending)."* |
+| **Standing** | ⛔ **Neither has been ratified.** The 07-08 decision cites no founder ruling; the 07-12 spec explicitly marks Q6 *pending*. Classified **Rationale insufficient** — *"by design" is not "by ruling."* |
+| **Operational condition** | Room-first **settled by default since 2026-07-08** — 22 days as of this entry. The later spec did not displace it. |
+| **Evidence** | **Cross-instrument convergence, with current-production confirmation.** Prior: `docs/fields/larry/experience-audit-2026-07-28/02_SURFACE_AND_NAVIGATION.md:460-475` (experience audit, source/config layer). Current: environmental field study — deployed-instance walk confirms the behavior live at production `db245336d`, 2026-07-30. ⚠️ Evidence sources **substantially overlap**; this is cross-instrument convergence, **not** the strong class. The field study's contribution is narrow: live-instance confirmation and the extended settlement interval. **Confirmation, not novelty.** |
+| **Risk** | ⭐⭐ **Downstream architecture may be reasoning from an unruled premise.** Not a local navigation discrepancy. Upstream of: whether map or room is primary ground · how Now What? represents place, orientation, and return · whether **Candidate C inherits a valid geographic premise** · how the House distinguishes a destination from a doorway into work. Prior audit: *"The whole geography argument in the UX candidate is downstream of a landing that was never changed."* |
+| **What this unblocks** | Prevents the ecosystem review program from proceeding as though Q6 were local or already resolved. Bears on D1 calibration output and on the House geography grammar. |
+| **Current status** | **Founder ruling required.** ⛔ Do **not** suspend the Now What? public walk or gravity map to decide it — the observation sequence may reveal whether orientation is needed before encounter, or whether the room functions coherently as ground. That evidence informs the ruling. ⚠️ **The current default must not be allowed to masquerade as a ruling in the interim.** |
+| **References** | `next.config.js:136-141` · `lib/nowWhat/rooms.ts:28` · `components/now-what/EnvironmentMapView.tsx:70` · `config/accessMatrix.ts:57` · `docs/specs/LARRY_PROGRAM_FIELD_WALK_PROTOCOL_CANDIDATE_2026-07-12.md` · `docs/fields/larry/experience-audit-2026-07-28/` · `docs/field-studies/now-what/2026-07-30/13-instrument-ledger.md` |
+
 ---
 
 ## §2 — Stabilization queue
