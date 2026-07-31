@@ -22,6 +22,7 @@ import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatShell, NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
+import { WithdrawVisibility } from '@/components/now-what/WithdrawVisibility';
 
 interface Thread {
   id: string;
@@ -133,7 +134,7 @@ function QuestionsInner() {
                   <p className="text-slate-600 text-xs font-light">
                     kept {dayLabel(t.created_at)}
                     {t.can_be_shown_to_practitioner && (
-                      <span className="ml-2 text-slate-500">· shared with your practitioner</span>
+                      <WithdrawVisibility threadId={t.id} />
                     )}
                   </p>
                 </li>
@@ -165,8 +166,8 @@ function QuestionsInner() {
         <RoomTrustCopy
           holds="Questions you explicitly chose to keep at the end of a session — verbatim, dated, in the order you kept them."
           doesNotHold="No questions MAIA inferred, extracted, or synthesized from your conversations. No grouping, ranking, or 'deeper question' analysis — this room does not think about you between visits."
-          whoSees="You. A question is visible to your practitioner only if you explicitly shared that thread when you kept it."
-          control="A question exists here only because you kept it. Keep fewer, keep none — the room simply holds what you placed."
+          whoSees="You. A question is visible to your practitioner only if you explicitly shared that thread when you kept it — and any question marked shared can be withdrawn from here."
+          control="A question exists here only because you kept it. Keep fewer, keep none — the room simply holds what you placed. Withdrawing a question from your practitioner ends their access to it and leaves the question itself untouched here."
         />
 
         <p className="relative text-slate-600 text-sm font-light italic pt-2">
