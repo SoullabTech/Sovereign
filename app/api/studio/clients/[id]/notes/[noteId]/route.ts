@@ -20,6 +20,7 @@ import {
   type ClientNoteRow,
 } from '@/lib/security/phiAccessors/practitionerClientNotes';
 import { MAX_NOTE_LENGTH } from '../route';
+import { isValidNoteDate } from '@/lib/studio/noteDate';
 
 type Params = { params: Promise<{ id: string; noteId: string }> };
 
@@ -37,6 +38,15 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     if (content === undefined && noteDate === undefined) {
       return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+    }
+
+    // Same guard as POST: note_date reaches `$3::date`, so an invalid value would
+    // otherwise surface as a 500 rather than a rejected request.
+    if (noteDate !== undefined && noteDate !== null && !isValidNoteDate(noteDate)) {
+      return NextResponse.json(
+        { error: 'note_date must be a calendar date in YYYY-MM-DD form' },
+        { status: 400 }
+      );
     }
 
     if (content !== undefined) {

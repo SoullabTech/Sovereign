@@ -22,6 +22,7 @@ import {
   decryptClientNoteRows,
   type ClientNoteRow,
 } from '@/lib/security/phiAccessors/practitionerClientNotes';
+import { isValidNoteDate } from '@/lib/studio/noteDate';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -89,6 +90,12 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (content.length > MAX_NOTE_LENGTH) {
       return NextResponse.json(
         { error: `content exceeds ${MAX_NOTE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+    if (noteDate !== undefined && noteDate !== null && !isValidNoteDate(noteDate)) {
+      return NextResponse.json(
+        { error: 'note_date must be a calendar date in YYYY-MM-DD form' },
         { status: 400 }
       );
     }
