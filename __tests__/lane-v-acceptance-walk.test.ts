@@ -175,16 +175,67 @@ run('Lane V acceptance walk', () => {
   });
 
   /**
-   * Known Stage 2 gap, asserted so it is recorded rather than assumed.
-   * This is NOT a product failure — the accurate event type is not yet in the
-   * ledger's CHECK constraint, and that constraint is substrate owned by an
-   * open PR. When Stage 2 lands, this expectation inverts.
+   * Was a characterization test for the Stage 2 gap ("writes no ledger event
+   * yet"). Inverted once 20260730000002 added the vocabulary: the act must now
+   * leave an accurate, append-only record.
    */
-  it('STAGE 2 GAP — the withdrawal writes no ledger event yet', async () => {
+  it('each withdrawal appends practitioner_visibility_withdrawn to the ledger', async () => {
+    const events = await query<{ event_type: string; thread_id: string; surface: string }>(
+      `SELECT event_type, thread_id, surface FROM member_field_note_events
+        WHERE member_id = $1 ORDER BY created_at ASC`,
+      [memberId],
+    );
+
+    // States 3 and 6 both invoked withdrawal, but 6 was a no-op — an
+    // already-withdrawn thread must not manufacture a second record of an act
+    // that did not occur.
+    expect(events.rows).toHaveLength(1);
+    expect(events.rows[0]).toMatchObject({
+      event_type: 'practitioner_visibility_withdrawn',
+      thread_id: threadId,
+      surface: 'api/now-what/field-note/[id]',
+    });
+  });
+
+  /**
+   * Shared-substrate compatibility. member_field_note_events is written by
+   * Field Lab, Vision Studio and Now What?. The Lane V migration must only
+   * WIDEN the vocabulary — if it narrowed it, another surface's writer would
+   * begin failing in production with no change of its own.
+   */
+  it('every pre-existing event type is still accepted after the migration', async () => {
+    const legacy = ['proposed', 'kept', 'revised', 'split', 'discarded', 'created', 'consent_changed', 'released'];
+    for (const eventType of legacy) {
+      await expect(
+        query(
+          `INSERT INTO member_field_note_events (member_id, event_type, surface)
+           VALUES ($1, $2, 'compat-probe')`,
+          [memberId, eventType],
+        ),
+      ).resolves.toBeDefined();
+    }
+    await query(`DELETE FROM member_field_note_events WHERE surface = 'compat-probe'`);
+  });
+
+  it('an unknown event type is still refused — the constraint was widened, not removed', async () => {
+    await expect(
+      query(
+        `INSERT INTO member_field_note_events (member_id, event_type, surface)
+         VALUES ($1, 'not_a_real_event', 'compat-probe')`,
+        [memberId],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('the ledger row survives — it is append-only, never rewritten', async () => {
+    // Re-withdraw the thread re-shared in state 7, then confirm the earlier row
+    // is still present alongside the new one rather than replaced.
+    await withdraw(memberId, threadId);
     const events = await query<{ event_type: string }>(
       `SELECT event_type FROM member_field_note_events WHERE member_id = $1`,
       [memberId],
     );
-    expect(events.rows).toHaveLength(0);
+    expect(events.rows).toHaveLength(2);
+    expect(events.rows.every(r => r.event_type === 'practitioner_visibility_withdrawn')).toBe(true);
   });
 });

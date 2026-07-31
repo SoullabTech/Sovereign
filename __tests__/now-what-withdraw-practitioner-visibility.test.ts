@@ -135,6 +135,21 @@ describe('withdrawal', () => {
     }
   });
 
+  it('records the act under its own event type, never a borrowed one', async () => {
+    selectReturns({ id: THREAD, can_be_shown_to_practitioner: true });
+
+    await PATCH(req(WITHDRAW), ctx(THREAD));
+
+    const inserts = mockQuery.mock.calls.filter(([sql]) => /INSERT INTO member_field_note_events/i.test(sql));
+    expect(inserts).toHaveLength(1);
+    const [sql, params] = inserts[0];
+    expect(sql).toMatch(/'practitioner_visibility_withdrawn'/);
+    // 'released' removes the thread from the member's own field; 'consent_changed'
+    // is both wrong and inside a repro script's DELETE path.
+    expect(sql).not.toMatch(/'released'|'consent_changed'/);
+    expect(params).toEqual([THREAD, MEMBER, 'api/now-what/field-note/[id]']);
+  });
+
   it('is idempotent — withdrawing an already-withdrawn thread is a success and a no-op', async () => {
     selectReturns({ id: THREAD, can_be_shown_to_practitioner: false });
 
@@ -144,6 +159,8 @@ describe('withdrawal', () => {
     expect(res.status).toBe(200);
     expect(json).toMatchObject({ ok: true, can_be_shown_to_practitioner: false, changed: false });
     expect(updates()).toHaveLength(0);
+    // And no ledger row: an act that did not occur must not be recorded.
+    expect(mockQuery.mock.calls.filter(([sql]) => /INSERT INTO/i.test(sql))).toHaveLength(0);
   });
 });
 

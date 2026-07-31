@@ -37,27 +37,20 @@ export async function generateStaticParams() {
  * member's own field in order to take it back from the practitioner — the
  * inverse of the capability. Hence a Now What?-owned route, not a reuse.
  *
- * SUBSTRATE OWNERSHIP (Stage 1 / Stage 2 split)
- * ---------------------------------------------
- * PR #528 currently owns member_field_note_events and the Field Lab route.
- * This route deliberately does NOT touch either, and adds no migration.
+ * LEDGER VOCABULARY IS SHARED INFRASTRUCTURE
+ * ------------------------------------------
+ * Any new event type requires a forward-only migration and verification that
+ * existing member_field_note_events readers and writers remain compatible.
+ * `practitioner_visibility_withdrawn` was added by
+ * 20260730000002_practitioner_visibility_withdrawn_event.sql, which only widens
+ * the accepted set — every previously valid event_type stays valid.
  *
- * Consequence, recorded honestly: the withdrawal is NOT yet written to the
- * authorship ledger. The designed event is `practitioner_visibility_withdrawn`,
- * which is not in the ledger's CHECK constraint (allowed values, per
- * 20260626000003_field_note_release.sql:26-28: proposed, kept, revised, split,
- * discarded, created, consent_changed, released). Adding it means altering a
- * constraint on shared substrate — Stage 2, gated on #528.
- *
- * The obvious shortcut — logging this as 'consent_changed' — is refused on two
- * grounds: (a) it is not what changed (the thread's consent_state is untouched;
- * only the practitioner-visibility boolean moves), and (b) it is unsafe —
- * scripts/repro/consent_gate_proof.mjs:86 DELETEs rows WHERE
- * event_type='consent_changed', which would put real member withdrawal records
- * in a test-cleanup delete path.
- *
- * So: the mutation is authoritative and correct today; its ledger row lands in
- * Stage 2. See logWithdrawal() below.
+ * Two adjacent event types are deliberately NOT reused here:
+ *   'released'        — a different act; it removes the thread from the member's
+ *                       own field too.
+ *   'consent_changed' — a different subject (the thread's consent_state does not
+ *                       move), and unsafe: scripts/repro/consent_gate_proof.mjs
+ *                       DELETEs rows of that event_type as test cleanup.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -68,21 +61,23 @@ import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 const SURFACE = 'api/now-what/field-note/[id]';
 
 /**
- * Stage 2 seam. Intentionally inert.
+ * Append-only authorship ledger. Best-effort: a ledger failure must never undo
+ * or block the member's withdrawal, which has already been persisted.
  *
- * When #528 resolves and `practitioner_visibility_withdrawn` is added to the
- * member_field_note_events CHECK constraint, this becomes:
- *
- *   INSERT INTO member_field_note_events
- *     (thread_id, member_id, event_type, surface)
- *   VALUES ($1, $2, 'practitioner_visibility_withdrawn', SURFACE)
- *
- * Do not substitute an existing event_type to make this fire sooner. An
- * inaccurate ledger is worse than a deferred one — the ledger's whole value is
- * that what it says happened is what happened.
+ * Do not substitute a different event_type if this ever rejects. An inaccurate
+ * ledger is worse than a missing row — its whole value is that what it says
+ * happened is what happened.
  */
-async function logWithdrawal(_memberId: string, _threadId: string): Promise<void> {
-  // Stage 2 — see route header. No-op by design, not by omission.
+async function logWithdrawal(memberId: string, threadId: string): Promise<void> {
+  try {
+    await query(
+      `INSERT INTO member_field_note_events (thread_id, member_id, event_type, surface)
+       VALUES ($1, $2, 'practitioner_visibility_withdrawn', $3)`,
+      [threadId, memberId, SURFACE],
+    );
+  } catch (err) {
+    console.warn('[NowWhat/field-note/[id]] ledger append failed (non-fatal):', err);
+  }
 }
 
 export async function PATCH(
