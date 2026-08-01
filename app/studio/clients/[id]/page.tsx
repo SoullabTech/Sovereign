@@ -24,6 +24,7 @@ import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileS
 import { CaseMemoryTimeline } from '@/components/studio/CaseMemoryTimeline';
 import { PatternLedgerEvolutionPanel } from '@/components/studio/PatternLedgerEvolutionPanel';
 import { ClientNotesPanel } from '@/components/studio/ClientNotesPanel';
+import { ClientContinuityPanel } from '@/components/studio/ClientContinuityPanel';
 import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
@@ -119,6 +120,8 @@ export default function ClientDetailPage() {
   const clientId = params.id as string;
 
   const [client, setClient] = useState<Client | null>(null);
+  // Bumped when a session note is carried forward, so Continuity refetches.
+  const [continuityVersion, setContinuityVersion] = useState(0);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -311,9 +314,19 @@ export default function ClientDetailPage() {
               </a>
             </div>
 
-            {/* Practitioner Notes */}
+            {/* Continuity — above the chronological record by ruling: the
+                historical field serves the present encounter rather than
+                defining the person arriving. */}
             <div className="bg-slate-900/30 border border-slate-800 rounded-xl p-4">
-              <ClientNotesPanel clientId={client.id} />
+              <ClientContinuityPanel clientId={client.id} refreshKey={continuityVersion} />
+            </div>
+
+            {/* Practitioner Notes — the chronological session record */}
+            <div className="bg-slate-900/30 border border-slate-800 rounded-xl p-4">
+              <ClientNotesPanel
+                clientId={client.id}
+                onPromoted={() => setContinuityVersion((v) => v + 1)}
+              />
             </div>
 
             {/* Case Memory Timeline */}

@@ -23,6 +23,7 @@ import {
   type ClientNoteRow,
 } from '@/lib/security/phiAccessors/practitionerClientNotes';
 import { isValidNoteDate } from '@/lib/studio/noteDate';
+import { validateContinuityCreate } from '@/lib/studio/continuityKind';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     const result = await db.query(
       `SELECT id, client_id, practitioner_id, content_enc, content_enc_meta,
-              note_date, created_at, updated_at
+              note_date, created_at, updated_at, kind, status, promoted_from
          FROM practitioner_client_notes
         WHERE client_id = $1 AND practitioner_id = $2
         ORDER BY note_date DESC, created_at DESC`,
@@ -100,6 +101,31 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
+    // Continuity triple. Rejects rather than coerces: a status on a non-commitment
+    // is an error, not something to drop; a malformed commitment is not defaulted.
+    const continuity = validateContinuityCreate(body ?? {});
+    if (!continuity.ok) {
+      return NextResponse.json({ error: continuity.error }, { status: 400 });
+    }
+
+    // promoted_from is PROVENANCE ONLY — the server stores the id and copies
+    // nothing. The practitioner supplies the wording they want kept.
+    // Scope is enforced by a composite FK in the database; this pre-check exists
+    // so a cross-scope id returns a clean 400 rather than surfacing as a 500.
+    if (continuity.value!.promotedFrom) {
+      const source = await db.query(
+        `SELECT id FROM practitioner_client_notes
+          WHERE id = $1 AND client_id = $2 AND practitioner_id = $3`,
+        [continuity.value!.promotedFrom, clientId, practitionerId]
+      );
+      if (source.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'promoted_from must reference a note on this client' },
+          { status: 400 }
+        );
+      }
+    }
+
     // The row id must exist before encryption — the AAD binds to it.
     const noteId = randomUUID();
     const { contentEnc, contentEncMeta } = encryptClientNoteContent(content.trim(), {
@@ -109,11 +135,23 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     const inserted = await db.query(
       `INSERT INTO practitioner_client_notes
-         (id, client_id, practitioner_id, content_enc, content_enc_meta, note_date)
-       VALUES ($1, $2, $3, $4, $5::jsonb, COALESCE($6::date, CURRENT_DATE))
+         (id, client_id, practitioner_id, content_enc, content_enc_meta, note_date,
+          kind, status, promoted_from)
+       VALUES ($1, $2, $3, $4, $5::jsonb, COALESCE($6::date, CURRENT_DATE),
+               $7, $8, $9::uuid)
        RETURNING id, client_id, practitioner_id, content_enc, content_enc_meta,
-                 note_date, created_at, updated_at`,
-      [noteId, clientId, practitionerId, contentEnc, contentEncMeta, noteDate ?? null]
+                 note_date, created_at, updated_at, kind, status, promoted_from`,
+      [
+        noteId,
+        clientId,
+        practitionerId,
+        contentEnc,
+        contentEncMeta,
+        noteDate ?? null,
+        continuity.value!.kind,
+        continuity.value!.status,
+        continuity.value!.promotedFrom,
+      ]
     );
 
     const note = decryptClientNoteRow(inserted.rows[0] as ClientNoteRow);
