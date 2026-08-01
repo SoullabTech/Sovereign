@@ -414,6 +414,31 @@
     font-size: 16px !important;
   }
 
+  /* ── The writing surface is not a form ──────────────────────────────────
+     Two global rules above exist for FORMS: keep field text readable against
+     a white field (`input, textarea, select { text-gray-900 bg-white }`), and
+     stop iOS zooming on focus (`font-size: 16px !important`). Both are correct
+     for fields.
+
+     Both also landed on the Author Studio writing surface, where the textarea
+     is not a field to fill in but the page itself. Measured on 2026-07-31:
+     the writer's own prose computed to rgb(17,24,39) — near-black on the
+     espresso ground (#1A1513) — while every piece of surrounding chrome
+     rendered cream (#F3EDE4). The software was literally more visible than
+     the work. The `!important` also forced 19px type down to 16px.
+
+     Opting the writing surface out here, rather than weakening the form rules,
+     leaves every existing form in the app exactly as it was. `--writing-size`
+     lets the component keep owning its own typography; the `!important` here
+     exists only to beat the `!important` above, not to assert a preference.
+
+     Placed AFTER the rules it overrides: equal specificity, later wins. */
+  textarea.writing-surface {
+    color: inherit;
+    background-color: transparent;
+    font-size: var(--writing-size, 19px) !important;
+  }
+
   /* iOS Standalone Mode Adjustments */
   @media all and (display-mode: standalone) {
     body {
