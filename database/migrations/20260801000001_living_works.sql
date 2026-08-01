@@ -27,9 +27,11 @@
 --      ontology.
 --      → Membership points AT the expression. member_manuscripts is not altered and
 --        gains no foreign key; a manuscript does not know it belongs to anything.
---        expression_type is open TEXT with no CHECK — constraining it to the types
---        we happen to have built today would re-narrow the ontology that was just
---        ratified.
+--        expression_type is open TEXT with no CHECK. This is intentional, not an
+--        oversight: constraining it to today's implemented expressions would
+--        reintroduce an artifact-first ontology through the back door. A workbook,
+--        a course, a retreat and a framework are expressions whether or not the
+--        Studio can yet hold them.
 --
 --   5. Existing R1 writing infrastructure is retained, not discarded.
 --      → No existing table is modified. Drafts, revisions, sources and the Phase A
@@ -73,9 +75,14 @@ CREATE TABLE IF NOT EXISTS living_work_expressions (
   declared_by      UUID NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
   declared_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-  -- One declaration per expression per work. NOT unique on (type, id) alone:
-  -- whether an expression may belong to more than one Living Work is an open
-  -- question, and the schema should not answer it by accident.
+  -- One declaration per expression per work.
+  --
+  -- DELIBERATELY NOT unique on (expression_type, expression_id) alone. An
+  -- expression MAY belong to more than one Living Work, because the ontology has
+  -- not ruled exclusivity. This is preservation of optionality, not an omission.
+  -- A relational constraint here would decide a constitutional question by
+  -- accident. A future founder ruling may narrow it later with an additive
+  -- UNIQUE index and no destructive migration.
   UNIQUE (living_work_id, expression_type, expression_id)
 );
 
