@@ -76,6 +76,8 @@ export function ClientContinuityPanel({ clientId, refreshKey = 0 }: Props) {
 
   const [addingKind, setAddingKind] = useState<Kind | null>(null);
   const [draft, setDraft] = useState('');
+  // Deliberately null, never 'alive'. The practitioner classifies; the system validates.
+  const [draftStatus, setDraftStatus] = useState<Status | null>(null);
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -121,10 +123,11 @@ export function ClientContinuityPanel({ clientId, refreshKey = 0 }: Props) {
         body: JSON.stringify({
           content: draft.trim(),
           kind,
-          // A commitment is created alive. The API names this default rather than
-          // inferring it — a commitment with no status has no answer to the one
-          // question it exists to hold.
-          ...(kind === 'commitment' ? { status: 'alive' } : {}),
+          // No default. `alive` is a practitioner judgment about the present state
+          // of a commitment, not a neutral initialization value — preselecting it
+          // would quietly turn "status is required" into "alive unless corrected".
+          // The API rejects a commitment with no status; it never infers one.
+          ...(kind === 'commitment' ? { status: draftStatus } : {}),
         }),
       });
       if (!res.ok) {
@@ -135,6 +138,7 @@ export function ClientContinuityPanel({ clientId, refreshKey = 0 }: Props) {
       const data = await res.json();
       setItems((prev) => [data.note, ...prev]);
       setDraft('');
+      setDraftStatus(null);
       setAddingKind(null);
     } catch {
       setActionError('That was not saved.');
@@ -238,6 +242,7 @@ export function ClientContinuityPanel({ clientId, refreshKey = 0 }: Props) {
                   onClick={() => {
                     setAddingKind(addingKind === kind ? null : kind);
                     setDraft('');
+                    setDraftStatus(null);
                     setActionError(null);
                   }}
                   className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
@@ -257,11 +262,34 @@ export function ClientContinuityPanel({ clientId, refreshKey = 0 }: Props) {
                     autoFocus
                     className="w-full bg-slate-900 border border-slate-700 rounded text-xs text-slate-200 px-2 py-1.5 placeholder-slate-600 resize-none"
                   />
+                  {kind === 'commitment' && (
+                    <div className="space-y-1">
+                      <p className="text-[11px] text-slate-500">
+                        Where does this stand? Choose one — nothing is assumed.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        {(['alive', 'completed', 'released'] as const).map((st) => (
+                          <button
+                            key={st}
+                            onClick={() => setDraftStatus(st)}
+                            className={`text-[11px] px-2 py-1 rounded border transition-colors ${
+                              draftStatus === st
+                                ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                : 'bg-slate-900 border-slate-700 text-slate-500 hover:text-slate-300'
+                            }`}
+                          >
+                            {st === 'alive' ? 'Alive' : st === 'completed' ? 'Completed' : 'Released'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
                         setAddingKind(null);
                         setDraft('');
+                        setDraftStatus(null);
                       }}
                       className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1"
                     >
@@ -269,7 +297,9 @@ export function ClientContinuityPanel({ clientId, refreshKey = 0 }: Props) {
                     </button>
                     <button
                       onClick={() => handleCreate(kind)}
-                      disabled={saving || !draft.trim()}
+                      disabled={
+                        saving || !draft.trim() || (kind === 'commitment' && !draftStatus)
+                      }
                       className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded disabled:opacity-40 transition-colors"
                     >
                       {saving ? 'Saving...' : 'Save'}

@@ -75,6 +75,8 @@ export function ClientNotesPanel({ clientId, onPromoted }: Props) {
   const [carryFromId, setCarryFromId] = useState<string | null>(null);
   const [carryKind, setCarryKind] = useState<'commitment' | 'recognition' | 'detail'>('commitment');
   const [carryDraft, setCarryDraft] = useState('');
+  // Deliberately null. A commitment's status is a practitioner judgment, not a default.
+  const [carryStatus, setCarryStatus] = useState<'alive' | 'completed' | 'released' | null>(null);
 
   const loadNotes = useCallback(async () => {
     setLoading(true);
@@ -170,7 +172,7 @@ export function ClientNotesPanel({ clientId, onPromoted }: Props) {
           content: carryDraft.trim(),
           kind: carryKind,
           promoted_from: sourceId,
-          ...(carryKind === 'commitment' ? { status: 'alive' } : {}),
+          ...(carryKind === 'commitment' ? { status: carryStatus } : {}),
         }),
       });
       if (!res.ok) {
@@ -181,6 +183,7 @@ export function ClientNotesPanel({ clientId, onPromoted }: Props) {
       // The source note is never modified — provenance only.
       setCarryFromId(null);
       setCarryDraft('');
+      setCarryStatus(null);
       onPromoted?.();
     } catch {
       setSaveError('That was not carried forward.');
@@ -331,6 +334,7 @@ export function ClientNotesPanel({ clientId, onPromoted }: Props) {
                         setCarryFromId(note.id);
                         setCarryDraft(note.content);
                         setCarryKind('commitment');
+                        setCarryStatus(null);
                         setSaveError(null);
                       }}
                       className="text-slate-600 hover:text-amber-400 transition-colors"
@@ -436,11 +440,34 @@ export function ClientNotesPanel({ clientId, onPromoted }: Props) {
                       rows={3}
                       className="w-full bg-slate-900 border border-slate-700 rounded text-xs text-slate-200 px-2 py-1.5 resize-none"
                     />
+                    {carryKind === 'commitment' && (
+                      <div className="space-y-1">
+                        <p className="text-[11px] text-slate-500">
+                          Where does this stand? Choose one — nothing is assumed.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {(['alive', 'completed', 'released'] as const).map((st) => (
+                            <button
+                              key={st}
+                              onClick={() => setCarryStatus(st)}
+                              className={`text-[11px] px-2 py-1 rounded border transition-colors ${
+                                carryStatus === st
+                                  ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                  : 'bg-slate-900 border-slate-700 text-slate-500 hover:text-slate-300'
+                              }`}
+                            >
+                              {st === 'alive' ? 'Alive' : st === 'completed' ? 'Completed' : 'Released'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => {
                           setCarryFromId(null);
                           setCarryDraft('');
+                          setCarryStatus(null);
                         }}
                         className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1"
                       >
@@ -448,7 +475,11 @@ export function ClientNotesPanel({ clientId, onPromoted }: Props) {
                       </button>
                       <button
                         onClick={() => handleCarryForward(note.id)}
-                        disabled={saving || !carryDraft.trim()}
+                        disabled={
+                          saving ||
+                          !carryDraft.trim() ||
+                          (carryKind === 'commitment' && !carryStatus)
+                        }
                         className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded disabled:opacity-40"
                       >
                         {saving ? 'Carrying...' : 'Carry forward'}
