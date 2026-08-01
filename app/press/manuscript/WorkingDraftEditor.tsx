@@ -733,7 +733,7 @@ export default function WorkingDraftEditor({
           }}
           placeholder="Name this checkpoint (optional)"
           aria-label="Checkpoint note"
-          className="flex-1 min-w-[12rem] bg-transparent border-b border-[#4A4238] py-2 text-[14px] outline-none placeholder:opacity-40"
+          className="press-field flex-1 min-w-[12rem] bg-transparent border-b border-[#4A4238] py-2 text-[14px] outline-none placeholder:opacity-40"
           style={{ fontFamily: SERIF }}
         />
         <button

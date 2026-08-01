@@ -439,6 +439,21 @@
     font-size: var(--writing-size, 19px) !important;
   }
 
+  /* ── A field that holds the member's own words is not a form field ──────
+     The same measurement, taken on the import threshold 2026-08-01: the title
+     input and the paste box both computed to rgb(17,24,39) on the espresso
+     ground. A member pasting an entire manuscript would watch it disappear
+     into near-black on near-black.
+
+     Narrower than .writing-surface on purpose: it corrects colour only and
+     leaves the iOS 16px zoom guard in place. These ARE fields — they are just
+     fields that happen to contain a book, so they need the page's ink without
+     claiming to be a page. */
+  input.press-field,
+  textarea.press-field {
+    color: inherit;
+  }
+
   /* iOS Standalone Mode Adjustments */
   @media all and (display-mode: standalone) {
     body {
