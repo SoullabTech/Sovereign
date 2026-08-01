@@ -16,8 +16,15 @@
 export interface LivingWork {
   id: string;
   memberId: string;
-  /** The member's own words. Never generated. */
-  title: string;
+  /**
+   * The member's own words, and OPTIONAL. Never generated, never inferred,
+   * never demanded early.
+   *
+   * `null` means the work exists but has not yet been named — identity and
+   * recognition are different moments (ledger D-16). It is not a status to be
+   * managed; it is the absence of an act that has not happened yet.
+   */
+  title: string | null;
   purpose: string | null;
   createdAt: string;
   updatedAt: string;
@@ -104,3 +111,14 @@ export const NEVER_AUTHORED_BY_THE_SYSTEM = [
  * temptation to "helpfully" create one arrives at implementation time.
  */
 export const CREATION_REQUIRES_A_MEMBER_ACT = true as const;
+
+/**
+ * A title, once given, must be real. This does NOT make a title required —
+ * `null` is a legitimate state — it stops the column sliding from "not yet
+ * named" into "named with nothing", which would be a name the member never
+ * gave.
+ */
+export function refuseTitle(title: string | null | undefined): 'blank_title' | null {
+  if (title === null || title === undefined) return null; // not yet named
+  return title.trim().length === 0 ? 'blank_title' : null;
+}
