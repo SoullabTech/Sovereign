@@ -235,6 +235,25 @@ system never invents the name and never demands it early. A title is required be
 publication or sharing, not before existence — **recorded, not ruled**; that boundary
 belongs to the publication surface when it is built.
 
+> ⚠️ **Reconciliation note — authorization scope (2026-08-01).** A second instrument reached
+> canonical the same day: `docs/architecture/LIVING_WORK_ONTOLOGY_RATIFICATION_INSTRUMENT_2026-07-31.md`
+> (via PR #853), recording the same founder ratification but stating that it authorized
+> **"no schema, implementation, branch merge, or deployment."** The ruling quoted above,
+> given in this session, states that it authorizes implementation work.
+>
+> **The instrument governs authorization scope.** Neither text is edited here — a
+> constitutional record should be the hardest thing in the repository to rewrite, and both
+> are faithful transcriptions of what was said. But where they differ, the narrower reading
+> holds: **the ontology ruling establishes what the Studio is in relationship with, and
+> authorizes nothing buildable.** Every table, route, and gesture is a separate, later,
+> explicitly authorized act.
+>
+> Consequence, already applied: the `living_works` migration was **removed from PR #854**
+> and awaits its own implementation authorization, to arrive together with the member
+> declaration gesture. A **Studio governance convergence** — inventory every constitutional
+> Studio document, name overlaps and contradictions, establish one canonical lineage,
+> supersede duplicates explicitly — is required before Stage 2 proceeds.
+
 **Stage 2 is not "the Living Work becomes a record."** Framed that way, it reads as tables
 and the schema starts defining the experience. It is:
 
