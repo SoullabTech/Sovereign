@@ -20,6 +20,25 @@ const DRAFT = '33333333-3333-3333-3333-333333333333';
 
 const ctx = { params: Promise.resolve({ id: MANUSCRIPT }) };
 
+const GUARD = { baseRevisionId: 7, idempotencyKey: 'key-r1' };
+
+function guardRow(over: Record<string, unknown> = {}) {
+  return {
+    rows: [
+      {
+        id: DRAFT,
+        version: 7,
+        last_idempotency_key: null,
+        last_idempotency_op: null,
+        last_idempotency_payload_hash: null,
+        last_idempotency_response: null,
+        ...over,
+      },
+    ],
+    rowCount: 1,
+  };
+}
+
 function jsonRequest(method: string, body?: unknown): NextRequest {
   return new NextRequest(
     `http://localhost/api/sovereign/manuscripts/${MANUSCRIPT}/draft/revisions`,
@@ -91,12 +110,26 @@ describe('POST — restore', () => {
     expect(mockQuery).not.toHaveBeenCalled();
   });
 
+  it('refuses a restore that carries no guard', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    const res = await POST(jsonRequest('POST', { revisionNumber: 2 }), ctx);
+    expect(res.status).toBe(400);
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
+  it('refuses a stale base rather than discarding newer work', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery.mockResolvedValueOnce(guardRow({ version: 12 }));
+    const res = await POST(jsonRequest('POST', { revisionNumber: 2, ...GUARD }), ctx);
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ reason: 'stale_base', currentRevisionId: 12 });
+    expect(mockQuery.mock.calls.filter((c) => /UPDATE|INSERT/.test(String(c[0])))).toHaveLength(0);
+  });
+
   it('returns 404 when the revision does not exist', async () => {
     mockAuth.mockResolvedValue(MEMBER);
-    mockQuery
-      .mockResolvedValueOnce({ rows: [{ id: DRAFT }], rowCount: 1 })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
-    const res = await POST(jsonRequest('POST', { revisionNumber: 9 }), ctx);
+    mockQuery.mockResolvedValueOnce(guardRow()).mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    const res = await POST(jsonRequest('POST', { revisionNumber: 9, ...GUARD }), ctx);
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: 'Revision not found' });
   });
@@ -104,14 +137,22 @@ describe('POST — restore', () => {
   it('restores by writing a NEW revision — never UPDATE/DELETE on revisions', async () => {
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
-      .mockResolvedValueOnce({ rows: [{ id: DRAFT }], rowCount: 1 }) // draft gate
+      .mockResolvedValueOnce(guardRow()) // draft gate + concurrency guard
       .mockResolvedValueOnce({ rows: [{ content: 'older words' }], rowCount: 1 }) // revision fetch
-      .mockResolvedValueOnce({ rows: [{ revision_count: 5, updated_at: 't5' }], rowCount: 1 }) // draft update
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            revision_count: 5,
+            last_idempotency_response: { revisionCount: 5, revisionId: 8, restoredFrom: 2, updatedAt: 't5' },
+          },
+        ],
+        rowCount: 1,
+      }) // guarded update, idempotency recorded in the same statement
       .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // new revision insert
 
-    const res = await POST(jsonRequest('POST', { revisionNumber: 2 }), ctx);
+    const res = await POST(jsonRequest('POST', { revisionNumber: 2, ...GUARD }), ctx);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ revisionCount: 5, restoredFrom: 2, updatedAt: 't5' });
+    expect(await res.json()).toEqual({ revisionCount: 5, revisionId: 8, restoredFrom: 2, updatedAt: 't5' });
 
     // History preservation: the ONLY write to working_draft_revisions is an INSERT.
     const revisionWrites = mockQuery.mock.calls.filter(
@@ -126,6 +167,6 @@ describe('POST — restore', () => {
     const draftUpdate = mockQuery.mock.calls.find((c) =>
       String(c[0]).includes('UPDATE manuscript_working_drafts')
     );
-    expect(draftUpdate![1]).toEqual([DRAFT, 'older words']);
+    expect(draftUpdate![1].slice(0, 3)).toEqual([DRAFT, 'older words', GUARD.baseRevisionId]);
   });
 });

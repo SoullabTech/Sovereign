@@ -16,6 +16,7 @@ import {
   formatWhen,
   loadDraft,
   loadRevisions,
+  newIdempotencyKey,
   pageEstimate,
   putDraft,
   restoreRevision,
@@ -92,6 +93,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const posTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restoredRef = useRef(false); // restore position exactly once per mount
+  const [conflict, setConflict] = useState(false);
   const [welcome, setWelcome] = useState<{ heading: string | null } | null>(null);
   const [welcomeFading, setWelcomeFading] = useState(false);
 
@@ -100,14 +102,28 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
   // Single-flight, ordered autosave. Created once (the parent remounts this
   // component per manuscript via key), so manuscriptId is stable here.
   const saverRef = useRef<DraftSaver | null>(null);
+  // The version this client last saw. Every write carries it; the server
+  // refuses anything that does not match, so a second tab cannot overwrite
+  // this one without the writer being told.
+  const revisionIdRef = useRef<number>(1);
   if (!saverRef.current) {
-    saverRef.current = createDraftSaver((value) => putDraft(http, manuscriptId, { content: value }), {
-      onState: setSaveState,
-      onSaved: (meta) => {
-        if (typeof meta.revisionCount === 'number') setRevisionCount(meta.revisionCount);
-        setUpdatedAt(meta.updatedAt);
-      },
-    });
+    saverRef.current = createDraftSaver(
+      (value) =>
+        putDraft(http, manuscriptId, {
+          content: value,
+          baseRevisionId: revisionIdRef.current,
+          idempotencyKey: newIdempotencyKey(),
+        }),
+      {
+        onState: setSaveState,
+        onSaved: (meta) => {
+          if (typeof meta.revisionCount === 'number') setRevisionCount(meta.revisionCount);
+          if (typeof meta.revisionId === 'number') revisionIdRef.current = meta.revisionId;
+          setUpdatedAt(meta.updatedAt);
+        },
+        onConflict: () => setConflict(true),
+      }
+    );
   }
   const saver = saverRef.current;
 
@@ -117,6 +133,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     if (r.kind === 'ok') {
       setContent(r.content);
       setRevisionCount(r.revisionCount);
+      revisionIdRef.current = r.revisionId;
       setUpdatedAt(r.updatedAt);
       setSaveState('idle');
       setPhase('ready');
@@ -298,6 +315,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     if (r.kind === 'ok') {
       setContent(r.content);
       setRevisionCount(r.revisionCount);
+      revisionIdRef.current = r.revisionId;
       setUpdatedAt(null);
       setSaveState('idle');
       setPhase('ready');
@@ -324,9 +342,13 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         content,
         checkpoint: true,
         note: note.trim() || undefined,
+        baseRevisionId: revisionIdRef.current,
+        idempotencyKey: newIdempotencyKey(),
       });
+      if (r.kind === 'conflict') setConflict(true);
       if (r.kind === 'ok') {
         if (typeof r.revisionCount === 'number') setRevisionCount(r.revisionCount);
+        if (typeof r.revisionId === 'number') revisionIdRef.current = r.revisionId;
         setUpdatedAt(r.updatedAt);
         setSaveState('saved');
         setNote('');
@@ -357,8 +379,13 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     // Take the save lane so no autosave races (or outlives) the restore.
     await saver.beginExclusive();
     try {
-      const r = await restoreRevision(http, manuscriptId, revisionNumber);
+      const r = await restoreRevision(http, manuscriptId, revisionNumber, {
+        baseRevisionId: revisionIdRef.current,
+        idempotencyKey: newIdempotencyKey(),
+      });
+      if (r.kind === 'conflict') setConflict(true);
       if (r.kind === 'ok') {
+        if (typeof r.revisionId === 'number') revisionIdRef.current = r.revisionId;
         setRestoreConfirm(null);
         await reload();
         await refreshRevisions();
@@ -431,7 +458,9 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   // ---- ready: the writing surface ---------------------------------------
   const saveLabel =
-    saveState === 'saving'
+    saveState === 'conflict'
+      ? 'Not saved'
+      : saveState === 'saving'
       ? 'Saving…'
       : saveState === 'unsaved'
         ? 'Unsaved changes'
@@ -459,6 +488,12 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
       <p className="text-[13px] opacity-60 mb-2 leading-relaxed">
         An editable copy of this manuscript, in your own words. The original is never changed.
       </p>
+      {conflict && (
+        <p role="alert" className="mb-4 text-[#E8B4A0] leading-relaxed" style={{ fontFamily: SERIF }}>
+          This draft changed in another tab. Your work here has not been saved. Copy anything you
+          need, then reload.
+        </p>
+      )}
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[12px] mb-6">
         <span className="opacity-40">≈ {pageEstimate(content.length)} pages</span>
         <span className="opacity-40">

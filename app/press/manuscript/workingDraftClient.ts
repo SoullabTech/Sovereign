@@ -57,25 +57,48 @@ export interface RevisionSummary {
 }
 
 export type LoadResult =
-  | { kind: 'ok'; content: string; revisionCount: number; updatedAt: string | null }
+  | { kind: 'ok'; content: string; revisionCount: number; revisionId: number; updatedAt: string | null }
   | { kind: 'none' }
   | { kind: 'unauthorized' }
   | { kind: 'error' };
 
 export type BeginResult =
-  | { kind: 'ok'; content: string; revisionCount: number }
+  | { kind: 'ok'; content: string; revisionCount: number; revisionId: number }
   | { kind: 'exists' }
   | { kind: 'no-sections' }
   | { kind: 'unauthorized' }
   | { kind: 'error' };
 
+/**
+ * `conflict` is not an error to retry. stale_base means the draft moved under
+ * us and only the writer can decide what to keep; key_reuse means this client
+ * has a defect. Retrying either would loop.
+ */
 export type SaveResult =
-  | { kind: 'ok'; revisionCount: number | null; updatedAt: string | null }
+  | { kind: 'ok'; revisionCount: number | null; revisionId: number | null; updatedAt: string | null }
+  | { kind: 'conflict'; reason: 'stale_base' | 'idempotency_key_reuse'; currentRevisionId: number }
   | { kind: 'error' };
 
 export type RevisionsResult = { kind: 'ok'; revisions: RevisionSummary[] } | { kind: 'error' };
 
-export type RestoreResult = { kind: 'ok' } | { kind: 'error' };
+export type RestoreResult =
+  | { kind: 'ok'; revisionId: number | null }
+  | { kind: 'conflict'; reason: 'stale_base' | 'idempotency_key_reuse'; currentRevisionId: number }
+  | { kind: 'error' };
+
+/** One key per attempt; the same key is reused only when retrying that attempt. */
+export function newIdempotencyKey(): string {
+  const c = globalThis.crypto;
+  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  return `k-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function readConflict(data: Record<string, unknown>) {
+  const reason: 'stale_base' | 'idempotency_key_reuse' =
+    data.reason === 'idempotency_key_reuse' ? 'idempotency_key_reuse' : 'stale_base';
+  const currentRevisionId = typeof data.currentRevisionId === 'number' ? data.currentRevisionId : 0;
+  return { kind: 'conflict' as const, reason, currentRevisionId };
+}
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
@@ -94,6 +117,7 @@ export async function loadDraft(http: Http, manuscriptId: string): Promise<LoadR
       kind: 'ok',
       content: typeof data.content === 'string' ? data.content : '',
       revisionCount: typeof data.revisionCount === 'number' ? data.revisionCount : 0,
+      revisionId: typeof data.revisionId === 'number' ? data.revisionId : 1,
       updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : null,
     };
   } catch {
@@ -111,6 +135,7 @@ export async function beginDraft(http: Http, manuscriptId: string): Promise<Begi
         kind: 'ok',
         content: typeof data.content === 'string' ? data.content : '',
         revisionCount: typeof data.revisionCount === 'number' ? data.revisionCount : 1,
+        revisionId: typeof data.revisionId === 'number' ? data.revisionId : 1,
       };
     }
     if (res.status === 409) {
@@ -132,10 +157,20 @@ export async function beginDraft(http: Http, manuscriptId: string): Promise<Begi
 export async function putDraft(
   http: Http,
   manuscriptId: string,
-  opts: { content: string; checkpoint?: boolean; note?: string },
+  opts: {
+    content: string;
+    checkpoint?: boolean;
+    note?: string;
+    baseRevisionId: number;
+    idempotencyKey: string;
+  },
 ): Promise<SaveResult> {
   try {
-    const body: Record<string, unknown> = { content: opts.content };
+    const body: Record<string, unknown> = {
+      content: opts.content,
+      baseRevisionId: opts.baseRevisionId,
+      idempotencyKey: opts.idempotencyKey,
+    };
     if (opts.checkpoint) body.checkpoint = true;
     if (opts.note !== undefined) body.note = opts.note;
     const res = await http(draftBase(manuscriptId), {
@@ -143,11 +178,13 @@ export async function putDraft(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    if (res.status === 409) return readConflict(asRecord(await res.json().catch(() => ({}))));
     if (!res.ok) return { kind: 'error' };
     const data = asRecord(await res.json());
     return {
       kind: 'ok',
       revisionCount: typeof data.revisionCount === 'number' ? data.revisionCount : null,
+      revisionId: typeof data.revisionId === 'number' ? data.revisionId : null,
       updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : null,
     };
   } catch {
@@ -173,14 +210,18 @@ export async function restoreRevision(
   http: Http,
   manuscriptId: string,
   revisionNumber: number,
+  guard: { baseRevisionId: number; idempotencyKey: string },
 ): Promise<RestoreResult> {
   try {
     const res = await http(`${draftBase(manuscriptId)}/revisions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ revisionNumber }),
+      body: JSON.stringify({ revisionNumber, ...guard }),
     });
-    return res.ok ? { kind: 'ok' } : { kind: 'error' };
+    if (res.status === 409) return readConflict(asRecord(await res.json().catch(() => ({}))));
+    if (!res.ok) return { kind: 'error' };
+    const data = asRecord(await res.json());
+    return { kind: 'ok', revisionId: typeof data.revisionId === 'number' ? data.revisionId : null };
   } catch {
     return { kind: 'error' };
   }
@@ -188,11 +229,17 @@ export async function restoreRevision(
 
 // ---- single-flight, ordered autosave -----------------------------------
 
-export type SaverState = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error';
+export type SaverState = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error' | 'conflict';
 
 export interface SaverCallbacks {
   onState(state: SaverState): void;
-  onSaved?(meta: { revisionCount: number | null; updatedAt: string | null }): void;
+  onSaved?(meta: {
+    revisionCount: number | null;
+    revisionId: number | null;
+    updatedAt: string | null;
+  }): void;
+  /** The draft moved elsewhere, or this client reused a key. Autosave stops. */
+  onConflict?(info: { reason: 'stale_base' | 'idempotency_key_reuse'; currentRevisionId: number }): void;
 }
 
 export interface DraftSaver {
@@ -280,14 +327,28 @@ export function createDraftSaver(
   let queued: string | null = null;
   let inFlight: Promise<void> | null = null;
   let paused = false; // an exclusive write (checkpoint/restore) holds the lane
+  let stopped = false; // a conflict closed the lane for good
 
   async function run(): Promise<void> {
+    if (stopped) return;
     if (queued === null) return;
     const value = queued;
     cb.onState('saving');
     const result = await save(value);
+    if (result.kind === 'conflict') {
+      // Not retryable. Retrying a stale base loops forever and cannot resolve
+      // itself; only the writer can decide. Content stays queued, unsaved.
+      stopped = true;
+      cb.onConflict?.({ reason: result.reason, currentRevisionId: result.currentRevisionId });
+      cb.onState('conflict');
+      return;
+    }
     if (result.kind === 'ok') {
-      cb.onSaved?.({ revisionCount: result.revisionCount, updatedAt: result.updatedAt });
+      cb.onSaved?.({
+        revisionCount: result.revisionCount,
+        revisionId: result.revisionId,
+        updatedAt: result.updatedAt,
+      });
       if (queued === value) {
         // Nothing newer arrived while saving — we are current.
         queued = null;
@@ -304,6 +365,7 @@ export function createDraftSaver(
   }
 
   function flush(): void {
+    if (stopped) return; // a conflict is unresolved; writing again would loop
     if (paused) return; // an exclusive write holds the lane; it will re-flush on release
     if (inFlight) return; // an active run will pick up the latest queued value
     if (queued === null) return;
