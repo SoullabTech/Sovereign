@@ -570,10 +570,15 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         onPaste={pastePlain}
         aria-label="Working draft"
         spellCheck
-        className="block w-full bg-transparent border-0 outline-none resize-none overflow-hidden"
+        /* `writing-surface` opts this textarea out of the global FORM rules in
+           globals.css — see the comment there. Without it the writer's prose
+           inherits rgb(17,24,39) on the espresso ground and the type is forced
+           to 16px. The class is the whole repair; nothing here asserts a new
+           design choice. */
+        className="writing-surface block w-full bg-transparent border-0 outline-none resize-none overflow-hidden"
         style={{
           fontFamily: SERIF,
-          fontSize: '19px',
+          ['--writing-size' as string]: '19px',
           lineHeight: 1.75,
           maxWidth: '38rem',
           margin: '0 auto',
