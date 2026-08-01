@@ -62,11 +62,24 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
 
 interface WorkingDraftEditorProps {
   manuscriptId: string;
+  /**
+   * A passage the member has asked to bring in, handed down from the Room.
+   * Consumed exactly once: the editor calls `onInsertDone` whether it
+   * succeeded or not, so a failed insertion never silently re-fires.
+   * `id` changes per request so bringing the SAME passage in twice is two
+   * distinct acts rather than a no-op.
+   */
+  pendingInsert?: { id: number; text: string } | null;
+  onInsertDone?: (ok: boolean) => void;
 }
 
 type Phase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error';
 
-export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorProps) {
+export default function WorkingDraftEditor({
+  manuscriptId,
+  pendingInsert,
+  onInsertDone,
+}: WorkingDraftEditorProps) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [content, setContent] = useState('');
   const [revisionCount, setRevisionCount] = useState(0);
@@ -91,6 +104,12 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   // R1.1 Returning — spatial continuity (single work, client-side, observable only).
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  /* True once the writer has actually put a caret in the draft this session.
+     Distinguishes "caret at 0" from "no caret yet" — the textarea reports the
+     same number for both, and they mean opposite things. */
+  const caretTouchedRef = useRef(false);
+  /* A caret position waiting for React to commit the value it belongs to. */
+  const pendingCaretRef = useRef<number | null>(null);
   const posTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restoredRef = useRef(false); // restore position exactly once per mount
   const [conflict, setConflict] = useState(false);
@@ -361,7 +380,71 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     [content, onChange]
   );
 
-  const checkpoint = async () => {
+  /**
+   * Explicit insertion — the member brings a kept passage into the draft.
+   *
+   * Practice act: Integrate. Member-facing verb: "Bring in". Engineering
+   * capability: explicit insertion. Those three names stay separate.
+   *
+   * What makes this constitutional rather than an AI edit:
+   *   - The member chooses the passage and the caret. Nothing is placed,
+   *     rewritten, summarised, reordered, or inserted automatically.
+   *   - A checkpoint is written FIRST and awaited. Undo is not a bespoke
+   *     mechanism here — it is the existing restore, so "bring in" is
+   *     reversible by the same gesture that reverses everything else.
+   *   - The passage arrives as ordinary draft text. Once in, it is
+   *     indistinguishable from the member's own typing and carries no marker,
+   *     no provenance badge, no styling. Recognition was already enacted when
+   *     they kept it; the Room does not re-assert it.
+   *   - The kept passage is not consumed. It stays in Keeps, unchanged.
+   *
+   * If the checkpoint fails, the insertion does NOT happen. An irreversible
+   * insertion is worse than no insertion.
+   */
+  const insertAtCaret = useCallback(
+    async (text: string) => {
+      const ta = textareaRef.current;
+      if (!ta || !text) return false;
+      const ok = await checkpointRef.current(`Before bringing in a passage`);
+      if (!ok) return false;
+      /* WHERE it lands. A textarea the writer has not touched this session
+         reports selectionStart 0, and 0 is the worst possible answer: the
+         passage would land above the title page of a 216-section book. Walked
+         2026-08-01 — it did exactly that.
+
+         So: use the live caret only if the writer has actually placed one this
+         session. Otherwise fall back to the position they left last time, and
+         only then to the end. The end is a defensible default; the top is not. */
+      const touched = document.activeElement === ta || caretTouchedRef.current;
+      const stored = loadDraftPosition(manuscriptId)?.selectionStart;
+      const start = touched
+        ? ta.selectionStart ?? content.length
+        : Math.min(stored ?? content.length, content.length);
+      const end = touched ? ta.selectionEnd ?? start : start;
+      // A passage lands as its own paragraph unless the writer is mid-line.
+      const before = content.slice(0, start);
+      const after = content.slice(end);
+      const lead = before && !before.endsWith('\n') ? '\n\n' : '';
+      const tail = after && !after.startsWith('\n') ? '\n\n' : '';
+      const piece = lead + text + tail;
+      onChangeRef.current(before + piece + after);
+      /* Apply the caret AFTER React has committed the new value. Setting it in
+         a rAF races the commit: the browser replaces the textarea's value and
+         drops the caret at the end, clobbering whatever we set. Walked
+         2026-08-01 — the caret ended at character 380,797. */
+      pendingCaretRef.current = start + piece.length;
+      return true;
+    },
+    [content]
+  );
+
+  /**
+   * `overrideNote` lets a caller name the checkpoint it is taking on the
+   * member's behalf (explicit insertion does this). It never touches the
+   * member's own note field. Returns whether the checkpoint was actually
+   * written — callers that must be reversible depend on the answer.
+   */
+  const checkpoint = async (overrideNote?: string): Promise<boolean> => {
     setCheckpointing(true);
     setCheckpointMsg(null);
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -371,7 +454,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
       const r = await putDraft(http, manuscriptId, {
         content,
         checkpoint: true,
-        note: note.trim() || undefined,
+        note: overrideNote ?? (note.trim() || undefined),
         baseRevisionId: revisionIdRef.current,
         idempotencyKey: newIdempotencyKey(),
       });
@@ -381,18 +464,68 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         if (typeof r.revisionId === 'number') revisionIdRef.current = r.revisionId;
         setUpdatedAt(r.updatedAt);
         setSaveState('saved');
-        setNote('');
-        setCheckpointMsg('Checkpoint saved.');
+        if (!overrideNote) {
+          setNote('');
+          setCheckpointMsg('Checkpoint saved.');
+        }
         if (showHistory) await refreshRevisions();
-      } else {
-        setCheckpointMsg('Could not save a checkpoint. Please try again.');
+        return true;
       }
+      setCheckpointMsg(
+        overrideNote
+          ? 'Could not make a checkpoint, so nothing was brought in. Please try again.'
+          : 'Could not save a checkpoint. Please try again.'
+      );
+      return false;
     } finally {
       // Persist anything typed during the checkpoint; drop it if unchanged.
       saver.endExclusive({ persisted: content });
       setCheckpointing(false);
     }
   };
+
+  /* Ref indirection so insertAtCaret does not have to re-create on every
+     keystroke, and always calls the current closures. */
+  const checkpointRef = useRef(checkpoint);
+  checkpointRef.current = checkpoint;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  /* Consume a bring-in request exactly once, and only when there is a draft to
+     insert into. `handledInsertRef` guards against React re-running the effect
+     (StrictMode double-invoke, unrelated re-render) and inserting twice — a
+     duplicated paragraph in someone's book is not a recoverable annoyance. */
+  /* Place a caret that was chosen before the value existed. Runs after the
+     commit that contains the inserted text, which is the only moment the
+     position is meaningful. */
+  useEffect(() => {
+    const caret = pendingCaretRef.current;
+    if (caret === null) return;
+    pendingCaretRef.current = null;
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const at = Math.min(caret, ta.value.length);
+    ta.focus();
+    ta.setSelectionRange(at, at);
+    caretTouchedRef.current = true;
+    persistPositionSoon();
+  }, [content, persistPositionSoon]);
+
+  const handledInsertRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!pendingInsert || phase !== 'ready') return;
+    if (handledInsertRef.current === pendingInsert.id) return;
+    handledInsertRef.current = pendingInsert.id;
+    let live = true;
+    void insertAtCaret(pendingInsert.text).then((ok) => {
+      if (!live) return;
+      if (ok) setCheckpointMsg('Brought in. A checkpoint was saved just before it.');
+      onInsertDone?.(ok);
+    });
+    return () => {
+      live = false;
+    };
+  }, [pendingInsert, phase, insertAtCaret, onInsertDone]);
 
   const toggleHistory = () => {
     const next = !showHistory;
@@ -566,7 +699,10 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         value={content}
         onChange={(e) => onChange(e.target.value)}
         onScroll={persistPositionSoon}
-        onSelect={persistPositionSoon}
+        onSelect={() => {
+          caretTouchedRef.current = true;
+          persistPositionSoon();
+        }}
         onPaste={pastePlain}
         aria-label="Working draft"
         spellCheck
