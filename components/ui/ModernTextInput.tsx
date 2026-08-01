@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { canProgrammaticallyFocus } from '@/lib/ui/programmaticFocus';
 import {
   Send,
   Paperclip,
@@ -187,6 +188,17 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
       setValue(extVal);
     }
   }, [valueProp, externalValue, value]);
+
+  // Mount focus — desktop only. See lib/ui/programmaticFocus.ts for why.
+  //
+  // Applied imperatively rather than via the `autoFocus` attribute because React
+  // acts on that attribute at initial mount, before any client-side pointer
+  // check could run.
+  useEffect(() => {
+    if (!autoFocus) return;
+    if (!canProgrammaticallyFocus()) return;
+    textareaRef.current?.focus();
+  }, [autoFocus]);
 
   // Auto-resize textarea
   const adjustHeight = () => {
@@ -469,7 +481,8 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               // ready reply-to-reply without re-selecting it.
               disabled={enableVoiceInput || isRecording}
               readOnly={disabled || isProcessing}
-              autoFocus={autoFocus}
+              // No `autoFocus` attribute: mount focus is applied imperatively
+              // above so it can be withheld on touch devices. See the comment there.
               maxLength={maxLength}
               autoComplete="off"
               autoCorrect="off"

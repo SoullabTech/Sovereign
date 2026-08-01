@@ -24,6 +24,7 @@ import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { VoiceDebugOverlay } from './voice/VoiceDebugOverlay';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+import { canProgrammaticallyFocus } from '@/lib/ui/programmaticFocus';
 // 🔁 Recovery seam (Pattern A) — honest delivery state for member turns.
 import { markFailed, markRetrying, clearDelivery, stripDelivery, type DeliveryStatus, type DeliveryFailureReason } from '@/lib/maia/deliveryStatus';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
@@ -3862,7 +3863,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Auto-focus text input in chat mode - only when switching to chat mode or when processing ends
   // FIXED: Don't trigger on every message.length change - causes iOS Safari input freeze
   // Also don't refocus if already focused (causes keyboard flicker on iOS)
+  // Desktop only — see lib/ui/programmaticFocus.ts. Ungated, this would reopen
+  // the defect after MAIA's first reply: the first tap works on a fresh launch,
+  // then the refocus leaves the field falsely focused and no later tap raises
+  // the keyboard. (Ruled in scope, Kelly 2026-08-01.)
   useEffect(() => {
+    if (!canProgrammaticallyFocus()) return;
     if (showChatInterface && !isProcessing && !isResponding && textInputRef.current) {
       // Check if already focused to prevent iOS keyboard issues
       if (document.activeElement !== textInputRef.current) {
@@ -3874,6 +3880,59 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     }
   }, [showChatInterface, isProcessing, isResponding]); // isResponding covers text mode response completion
+
+  // ── iOS PWA keyboard inset — COMPATIBILITY FALLBACK ONLY ───────────────────
+  // The real fix is `interactiveWidget: 'resizes-content'` (app/layout.tsx),
+  // which shrinks the layout viewport so the fixed composer rides above the
+  // keyboard. Where that is not honoured the layout viewport stays full height
+  // and the composer is left behind the keys, so we measure the covered gap and
+  // lift the composer by exactly that much.
+  //
+  // Self-neutralising by construction: when resizes-content IS honoured,
+  // innerHeight shrinks in step with visualViewport.height, the computed inset
+  // is 0, and this writes nothing. It is never a second positioning system
+  // competing with the first.
+  //
+  // Written to a CSS custom property rather than React state deliberately —
+  // state would re-render the entire conversation on every keyboard resize event.
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : undefined;
+    if (!vv) return;
+
+    const root = document.documentElement;
+    let frame = 0;
+    let applied = -1;
+
+    const apply = () => {
+      frame = 0;
+      // While the member is pinch-zoomed the visual viewport is smaller for
+      // reasons that have nothing to do with the keyboard. Zoom is a supported
+      // accessibility path (maximumScale: 5) — leave positioning to the browser.
+      const zoomed = vv.scale > 1.01;
+      const gap = window.innerHeight - (vv.height + vv.offsetTop);
+      const next = !zoomed && gap > 1 ? Math.round(gap) : 0;
+      if (next === applied) return; // no write → no style recalculation
+      applied = next;
+      root.style.setProperty('--composer-keyboard-inset', `${next}px`);
+    };
+
+    // Coalesce bursts of resize/scroll events into a single write per frame.
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(apply);
+    };
+
+    apply();
+    vv.addEventListener('resize', schedule);
+    vv.addEventListener('scroll', schedule);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      vv.removeEventListener('resize', schedule);
+      vv.removeEventListener('scroll', schedule);
+      root.style.removeProperty('--composer-keyboard-inset');
+    };
+  }, []);
 
   // Listen for journal "Ask MAIA" events - puts journal content into composer and auto-sends
   useEffect(() => {
@@ -9336,7 +9395,7 @@ I'm not sure what I'm feeling yet.`;
                    input controls. The extra ~24px lets the composer close as one
                    complete object and leaves SOULLAB reading as the page's quiet
                    footer rather than another button in the row. */
-                style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px))' }}>
+                style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px) + var(--composer-keyboard-inset, 0px))' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   {/* The composer row no longer carries an "Ask MAIA" chip.
@@ -10094,10 +10153,15 @@ I'm not sure what I'm feeling yet.`;
           setShowPromptPicker(false);
           setHasActivated(true); // Skip welcome screen
 
-          // Focus the text input
-          setTimeout(() => {
-            textInputRef.current?.focus?.();
-          }, 100);
+          // Focus the text input — desktop only. A tap started this handler, but
+          // the deferred call breaks the gesture chain, so iOS treats it as
+          // programmatic focus: field focused, keyboard closed, next tap dead.
+          // See lib/ui/programmaticFocus.ts.
+          if (canProgrammaticallyFocus()) {
+            setTimeout(() => {
+              textInputRef.current?.focus?.();
+            }, 100);
+          }
         }}
         consciousnessLevel={3} // TODO: Get from user profile
         sessionPhase={sessionTimer?.getCurrentPhase?.() as any}
@@ -10132,7 +10196,9 @@ I'm not sure what I'm feeling yet.`;
           const contextMessage = `I'm arriving today feeling ${checkin.state.label.toLowerCase()} (${checkin.state.description.toLowerCase()}).${checkin.note ? ` ${checkin.note}` : ''}`;
           setDraftMessage(contextMessage);
           setComposerDraft(contextMessage);
-          setTimeout(() => textInputRef.current?.focus?.(), 100);
+          // Desktop only — deferred focus breaks the gesture chain on iOS.
+          // See lib/ui/programmaticFocus.ts.
+          if (canProgrammaticallyFocus()) setTimeout(() => textInputRef.current?.focus?.(), 100);
         }}
       />
 
@@ -10146,7 +10212,9 @@ I'm not sure what I'm feeling yet.`;
           const contextMessage = `I just discovered my dominant element is ${result.dominant} with ${result.secondary} as secondary. Help me understand what this means for my journey.`;
           setDraftMessage(contextMessage);
           setComposerDraft(contextMessage);
-          setTimeout(() => textInputRef.current?.focus?.(), 100);
+          // Desktop only — deferred focus breaks the gesture chain on iOS.
+          // See lib/ui/programmaticFocus.ts.
+          if (canProgrammaticallyFocus()) setTimeout(() => textInputRef.current?.focus?.(), 100);
         }}
       />
 

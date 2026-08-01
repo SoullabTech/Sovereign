@@ -70,6 +70,13 @@ export const viewport: Viewport = {
   minimumScale: 0.9,
   userScalable: true,
   viewportFit: "cover",
+  // The soft keyboard must shrink the layout viewport, not float over it.
+  // Default ("resizes-visual") leaves the layout viewport at full height, so a
+  // `position: fixed` bottom composer stays pinned behind the keyboard — the
+  // member taps, focus succeeds, and the field they were aiming at silently
+  // disappears under the keys. "resizes-content" makes fixed bottom elements
+  // ride above the keyboard instead.
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#1A1513" }
