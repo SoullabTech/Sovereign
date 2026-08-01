@@ -188,6 +188,26 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     }
   }, [valueProp, externalValue, value]);
 
+  // Mount focus — desktop only.
+  //
+  // RULING (Kelly, 2026-08-01): touch and desktop have different input
+  // contracts. On desktop, autofocus is useful and predictable. On iOS,
+  // programmatic focus without a user gesture produces a *false focused state*:
+  // the field is document.activeElement but no soft keyboard appears — and a tap
+  // on an already-focused element does not reliably raise it, so the member taps
+  // the composer over and over and nothing happens. The first tap must always be
+  // the member's own intentional transition into writing.
+  //
+  // Applied imperatively rather than via the `autoFocus` attribute because React
+  // acts on that attribute at initial mount, before any client-side pointer
+  // check could run.
+  useEffect(() => {
+    if (!autoFocus) return;
+    if (typeof window === 'undefined') return;
+    if (window.matchMedia?.('(pointer: coarse)').matches) return;
+    textareaRef.current?.focus();
+  }, [autoFocus]);
+
   // Auto-resize textarea
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -469,7 +489,8 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               // ready reply-to-reply without re-selecting it.
               disabled={enableVoiceInput || isRecording}
               readOnly={disabled || isProcessing}
-              autoFocus={autoFocus}
+              // No `autoFocus` attribute: mount focus is applied imperatively
+              // above so it can be withheld on touch devices. See the comment there.
               maxLength={maxLength}
               autoComplete="off"
               autoCorrect="off"

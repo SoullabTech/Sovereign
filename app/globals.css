@@ -327,16 +327,22 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Only apply strict viewport lock in standalone mode */
+  /* Only apply strict viewport lock in standalone mode.
+     The lock stays (it is what stops the whole document rubber-banding in the
+     installed PWA) but it is measured in `dvh`, not `vh`. `vh` is frozen at the
+     keyboard-closed height, so with the keyboard open the locked, overflow-hidden
+     body stayed taller than the visible area and there was no way for the composer
+     to come back into view — WebKit cannot scroll a fixed, overflow-hidden body.
+     `dvh` tracks the viewport the keyboard actually leaves behind. */
   @media all and (display-mode: standalone) {
     body {
       position: fixed;
       overflow: hidden;
-      height: 100vh;
+      height: 100dvh;
     }
 
     #__next, main {
-      height: 100vh;
+      height: 100dvh;
       overflow-y: auto;
     }
   }

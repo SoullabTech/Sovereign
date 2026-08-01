@@ -3862,7 +3862,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Auto-focus text input in chat mode - only when switching to chat mode or when processing ends
   // FIXED: Don't trigger on every message.length change - causes iOS Safari input freeze
   // Also don't refocus if already focused (causes keyboard flicker on iOS)
+  // SCOPE NOTE (2026-08-01): the ruling names "mount autofocus", but its reason —
+  // programmatic focus without a user gesture creates a false focused state with
+  // no keyboard — applies identically to this post-reply refocus. Left ungated,
+  // the first tap would open the keyboard on a fresh launch and then stop working
+  // after MAIA's first reply, which would make the PR's claim false. Gated on the
+  // same coarse-pointer test; trivially reversible if the narrower reading was meant.
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) return;
     if (showChatInterface && !isProcessing && !isResponding && textInputRef.current) {
       // Check if already focused to prevent iOS keyboard issues
       if (document.activeElement !== textInputRef.current) {
@@ -3874,6 +3881,59 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     }
   }, [showChatInterface, isProcessing, isResponding]); // isResponding covers text mode response completion
+
+  // ── iOS PWA keyboard inset — COMPATIBILITY FALLBACK ONLY ───────────────────
+  // The real fix is `interactiveWidget: 'resizes-content'` (app/layout.tsx),
+  // which shrinks the layout viewport so the fixed composer rides above the
+  // keyboard. Where that is not honoured the layout viewport stays full height
+  // and the composer is left behind the keys, so we measure the covered gap and
+  // lift the composer by exactly that much.
+  //
+  // Self-neutralising by construction: when resizes-content IS honoured,
+  // innerHeight shrinks in step with visualViewport.height, the computed inset
+  // is 0, and this writes nothing. It is never a second positioning system
+  // competing with the first.
+  //
+  // Written to a CSS custom property rather than React state deliberately —
+  // state would re-render the entire conversation on every keyboard resize event.
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : undefined;
+    if (!vv) return;
+
+    const root = document.documentElement;
+    let frame = 0;
+    let applied = -1;
+
+    const apply = () => {
+      frame = 0;
+      // While the member is pinch-zoomed the visual viewport is smaller for
+      // reasons that have nothing to do with the keyboard. Zoom is a supported
+      // accessibility path (maximumScale: 5) — leave positioning to the browser.
+      const zoomed = vv.scale > 1.01;
+      const gap = window.innerHeight - (vv.height + vv.offsetTop);
+      const next = !zoomed && gap > 1 ? Math.round(gap) : 0;
+      if (next === applied) return; // no write → no style recalculation
+      applied = next;
+      root.style.setProperty('--composer-keyboard-inset', `${next}px`);
+    };
+
+    // Coalesce bursts of resize/scroll events into a single write per frame.
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(apply);
+    };
+
+    apply();
+    vv.addEventListener('resize', schedule);
+    vv.addEventListener('scroll', schedule);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      vv.removeEventListener('resize', schedule);
+      vv.removeEventListener('scroll', schedule);
+      root.style.removeProperty('--composer-keyboard-inset');
+    };
+  }, []);
 
   // Listen for journal "Ask MAIA" events - puts journal content into composer and auto-sends
   useEffect(() => {
@@ -9336,7 +9396,7 @@ I'm not sure what I'm feeling yet.`;
                    input controls. The extra ~24px lets the composer close as one
                    complete object and leaves SOULLAB reading as the page's quiet
                    footer rather than another button in the row. */
-                style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px))' }}>
+                style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px) + var(--composer-keyboard-inset, 0px))' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   {/* The composer row no longer carries an "Ask MAIA" chip.
