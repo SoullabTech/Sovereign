@@ -3,6 +3,7 @@ import {
   payloadHash,
   precheck,
   readGuard,
+  normalizeVersion,
   type DraftGuardRow,
 } from '../draftConcurrency';
 
@@ -121,5 +122,51 @@ describe('conflictBody', () => {
   it('names the reason so the client can tell recoverable from defect', () => {
     expect(conflictBody('stale_base', 4).reason).toBe('stale_base');
     expect(conflictBody('idempotency_key_reuse', 4).reason).toBe('idempotency_key_reuse');
+  });
+});
+
+/**
+ * Regression — the bigint boundary.
+ *
+ * Between PR #851 and 2026-08-01 every write to a Working Draft was rejected as
+ * stale_base. manuscript_working_drafts.version is bigint; node-postgres
+ * returns bigint as a string; precheck compares it with !== against a number.
+ * "1" !== 1, so save, checkpoint and restore all returned 409 and the room told
+ * the writer their draft had changed in another tab.
+ */
+describe('bigint version boundary', () => {
+  const row = (version: unknown) => ({
+    version: normalizeVersion(version),
+    last_idempotency_key: null,
+    last_idempotency_op: null,
+    last_idempotency_payload_hash: null,
+    last_idempotency_response: null,
+  });
+
+  it('normalizes the string form node-postgres returns for bigint', () => {
+    expect(normalizeVersion('1')).toBe(1);
+    expect(normalizeVersion('42')).toBe(42);
+    expect(normalizeVersion(7)).toBe(7);
+  });
+
+  it('refuses a value that is not a version rather than coercing it to NaN', () => {
+    expect(() => normalizeVersion('not-a-number')).toThrow();
+    expect(() => normalizeVersion(null)).toThrow();
+    expect(() => normalizeVersion(undefined)).toThrow();
+  });
+
+  it('does NOT report a conflict when the driver returned "1" and the client sent 1', () => {
+    const decision = precheck(row('1'), 'save', 'key-a', 'hash-a', 1);
+    expect(decision.kind).toBe('proceed');
+  });
+
+  it('still reports a conflict when the base is genuinely stale', () => {
+    const decision = precheck(row('4'), 'save', 'key-a', 'hash-a', 2);
+    expect(decision).toEqual({ kind: 'conflict', reason: 'stale_base', currentRevisionId: 4 });
+  });
+
+  it('reports the current version as a number, not a string, so the client can compare it', () => {
+    const decision = precheck(row('9'), 'save', 'key-a', 'hash-a', 3);
+    expect(decision.kind === 'conflict' && typeof decision.currentRevisionId).toBe('number');
   });
 });

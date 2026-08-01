@@ -22,6 +22,7 @@ import {
 import {
   conflictBody,
   payloadHash,
+  normalizeVersion,
   precheck,
   readGuard,
   type DraftGuardRow,
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
       content: row.content,
       baseSourceHash: row.base_source_hash,
       revisionCount: row.revision_count,
-      revisionId: row.version,
+      revisionId: Number(row.version),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     });
@@ -179,7 +180,13 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
     }
     const draftId = current.rows[0].id;
 
-    const decision = precheck(current.rows[0], 'save', guard.idempotencyKey, hash, guard.baseRevisionId);
+    /* `version` is bigint, and node-postgres returns bigint as a STRING to
+       avoid silent precision loss past 2^53. precheck compares it with !==
+       against a number, so an unconverted "1" never equals 1 and EVERY write
+       was rejected as stale_base. Coerced at the driver boundary, which is the
+       only place the string form is real. */
+    const guardRow = { ...current.rows[0], version: normalizeVersion(current.rows[0].version) };
+    const decision = precheck(guardRow, 'save', guard.idempotencyKey, hash, guard.baseRevisionId);
     if (decision.kind === 'replay') {
       return NextResponse.json(decision.response as object);
     }
@@ -225,7 +232,7 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
       if (now.rows.length === 0) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(conflictBody('stale_base', now.rows[0].version), { status: 409 });
+      return NextResponse.json(conflictBody('stale_base', normalizeVersion(now.rows[0].version)), { status: 409 });
     }
     const row = updated.rows[0];
 
