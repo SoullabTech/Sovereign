@@ -173,6 +173,16 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   // Ref indirection so exit handlers persist the latest position without
   // re-subscribing each render (mirrors flushRef below).
+  /* The page grows with the writing. A fixed box with an inner scrollbar puts
+     the caret near the bottom edge for hours; growing keeps it in the band the
+     eye rests in and lets the browser own the one scrollbar. */
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = `${ta.scrollHeight}px`;
+  }, [content]);
+
   const persistRef = useRef(persistPosition);
   persistRef.current = persistPosition;
 
@@ -330,6 +340,26 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     }
     setCreating(false);
   };
+
+  /* Everything arrives as the writer's own plain text. A manuscript pasted
+     from a word processor brings fonts, colours and spacing that have nothing
+     to do with the book; the words are what was meant. */
+  const pastePlain = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const text = e.clipboardData?.getData('text/plain');
+      if (text === undefined) return;
+      e.preventDefault();
+      const ta = e.currentTarget;
+      const start = ta.selectionStart ?? 0;
+      const end = ta.selectionEnd ?? 0;
+      const next = content.slice(0, start) + text + content.slice(end);
+      onChange(next);
+      requestAnimationFrame(() => {
+        ta.setSelectionRange(start + text.length, start + text.length);
+      });
+    },
+    [content, onChange]
+  );
 
   const checkpoint = async () => {
     setCheckpointing(true);
@@ -523,16 +553,34 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         </span>
       </div>
 
+      {/* Phase B — the page, not a form field.
+          A bordered box on a dark ground reads as an input to fill in. A writer
+          spending six hours here is not filling in a field; they are working on
+          a page. So: no border, no panel, no resize handle. The measure is held
+          near 64 characters because that is where the eye finds the next line
+          without hunting, and the type is set for hours rather than for a
+          screenshot. Espresso palette throughout — this extends the Soullab
+          Press visual language rather than importing MAIA's navy. */}
       <textarea
         ref={textareaRef}
         value={content}
         onChange={(e) => onChange(e.target.value)}
         onScroll={persistPositionSoon}
         onSelect={persistPositionSoon}
+        onPaste={pastePlain}
         aria-label="Working draft"
         spellCheck
-        className="w-full bg-black/20 border border-[#4A4238] rounded-sm p-5 text-[16px] leading-relaxed outline-none focus:border-[#C9A227]/50 min-h-[60vh] resize-y"
-        style={{ fontFamily: SERIF }}
+        className="block w-full bg-transparent border-0 outline-none resize-none overflow-hidden"
+        style={{
+          fontFamily: SERIF,
+          fontSize: '19px',
+          lineHeight: 1.75,
+          maxWidth: '38rem',
+          margin: '0 auto',
+          padding: '0 0 40vh',
+          caretColor: '#C9A227',
+          minHeight: '60vh',
+        }}
       />
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
