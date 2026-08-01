@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -186,6 +186,22 @@ function PressManuscriptRoom() {
 
   const [newCollectionName, setNewCollectionName] = useState('');
   const [openCollection, setOpenCollection] = useState<string | null>(null);
+
+  /* Explicit insertion — a passage on its way from Keeps into the Working
+     Draft. Held here rather than in the editor because the two live on
+     different tabs of this Room; this is the only state that crosses.
+
+     The counter makes each request distinct, so bringing the same passage in
+     twice is two acts rather than a silently ignored repeat. Cleared as soon
+     as the editor reports back, success or failure — a request that failed
+     must not sit around waiting to re-fire on the next render. */
+  const [pendingInsert, setPendingInsert] = useState<{ id: number; text: string } | null>(null);
+  const insertSeq = useRef(0);
+  const bringIn = useCallback((text: string) => {
+    insertSeq.current += 1;
+    setPendingInsert({ id: insertSeq.current, text });
+    setTab('draft'); // the work is where the writing is, so go there
+  }, []);
 
   const [rendering, setRendering] = useState<'pdf' | 'epub' | null>(null);
   const [renderError, setRenderError] = useState(false);
@@ -818,7 +834,14 @@ function PressManuscriptRoom() {
           </div>
         )}
 
-        {tab === 'draft' && <WorkingDraftEditor key={active} manuscriptId={active} />}
+        {tab === 'draft' && (
+          <WorkingDraftEditor
+            key={active}
+            manuscriptId={active}
+            pendingInsert={pendingInsert}
+            onInsertDone={() => setPendingInsert(null)}
+          />
+        )}
 
         {tab === 'keeps' && (
           <div>
@@ -902,6 +925,21 @@ function PressManuscriptRoom() {
                             ))}
                           </select>
                         )}
+                        {/* Explicit insertion. The member's verb is "Bring in";
+                            the practice act is Integrate; the engineering
+                            capability is explicit insertion. Three layers, kept
+                            separate — the member only ever meets the first.
+
+                            This is the whole of the gesture on this side: hand
+                            the passage down and move to the Working Draft. No
+                            placement is decided here, nothing is consumed, and
+                            the Keep stays exactly where it is. */}
+                        <button
+                          onClick={() => bringIn(k.verbatimText)}
+                          className="underline underline-offset-4 opacity-80 hover:opacity-100 min-h-[44px] px-2 -mx-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+                        >
+                          Bring in
+                        </button>
                         <button onClick={() => unkeep(k.id)} className="hover:opacity-80">
                           remove
                         </button>
