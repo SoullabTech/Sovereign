@@ -1,18 +1,25 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from './pressTheme';
+import type { LivingWork, LivingWorksPhase } from './useLivingWorks';
 
 /**
- * The declaration gesture (Phase 2, Slice 2).
+ * The declaration gesture (Phase 2, Slice 2), now living under a re-founded
+ * arrival (Slice 5).
  *
  * A member says a work exists. That is the whole act.
  *
- * SLICE BOUNDARY, deliberately held: this section is *reachable and legible*
- * on Studio Home without becoming its organizing centre. Re-founding arrival
- * around the work is the NEXT slice, and doing both here would make this
- * commit's name untrue.
+ * SLICE 5 changed two things and nothing else. The read moved out to
+ * useLivingWorks so that Studio Home and this section answer "is there a
+ * work?" from one source rather than two. And when Home has already shown the
+ * work's name as the page's headline, this section does not say it again:
+ * `arrivalWorkId` marks that work, and only its quiet controls render.
+ *
+ * What Slice 5 did NOT change: the declaration act, withdrawal, naming, or any
+ * copy about them. Attachment, multiple-work switching and expression
+ * management remain unbuilt.
  *
  * THE UNNAMED STATE is the hard part, and the reason the schema allows it.
  * A work with no title renders as "Your work" — interface orientation, not
@@ -28,18 +35,20 @@ import { PRESS, SERIF } from './pressTheme';
  * is inline and proportionate — a second click, not a modal.
  */
 
-interface Work {
-  id: string;
-  title: string | null;
-  createdAt: string;
-  updatedAt: string;
+interface YourWorkProps {
+  phase: LivingWorksPhase;
+  works: LivingWork[];
+  /** Re-read after any act that changes what is declared. */
+  reload: () => Promise<void>;
+  /**
+   * The work whose name Studio Home has already rendered as the page
+   * headline, if any. Its name is not repeated here — the controls belong to
+   * the headline above them.
+   */
+  arrivalWorkId: string | null;
 }
 
-type Phase = 'loading' | 'ready' | 'unauthorized' | 'error';
-
-export default function YourWork() {
-  const [phase, setPhase] = useState<Phase>('loading');
-  const [works, setWorks] = useState<Work[]>([]);
+export default function YourWork({ phase, works, reload, arrivalWorkId }: YourWorkProps) {
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -50,24 +59,7 @@ export default function YourWork() {
   const [nameValue, setNameValue] = useState('');
   const [confirmingWithdraw, setConfirmingWithdraw] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setFailure(null);
-    try {
-      const res = await apiFetch('/api/sovereign/living-works', { method: 'GET' });
-      if (res.status === 401) return setPhase('unauthorized');
-      if (!res.ok) throw new Error(String(res.status));
-      const data = await res.json();
-      setWorks(Array.isArray(data.works) ? data.works : []);
-      setPhase('ready');
-    } catch {
-      // A failure to read is not an absence of works. Say only what is true.
-      setPhase('error');
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const load = reload;
 
   const declare = async (title: string | null) => {
     setBusy(true);
@@ -147,13 +139,21 @@ export default function YourWork() {
 
   return (
     <section className="mb-14">
-      {heading}
+      {/* When arrival is founded on the work, the page headline is the heading.
+          Repeating "Your work" here would label the same thing twice. */}
+      {!arrivalWorkId && heading}
 
       {works.length === 0 && !declaring && (
         <>
+          {/* Grounded in what declaring actually does: it creates a work, and
+              the title is optional. The earlier line — "a work can hold
+              everything that belongs to it" — described the substrate, not the
+              product: living_work_expressions has no writer, so nothing is
+              held yet. Slice 5 pointed arrival at this sentence, which made
+              the overstatement load-bearing. This says the present truth
+              without narrowing what a work may later become. */}
           <p className="text-[15px] leading-relaxed opacity-70 mb-6 max-w-md">
-            A work can hold everything that belongs to it, in whatever form it takes. You can begin
-            one before you know what it is.
+            A work can begin before you know what form it will take.
           </p>
           <button
             onClick={() => setDeclaring(true)}
@@ -213,13 +213,16 @@ export default function YourWork() {
       {works.map((w) => (
         <div key={w.id} className="mb-8">
           {/* An unnamed work is shown as the relationship, never as a name.
-              "Your work" is orientation; nothing by that name is stored. */}
-          <p
-            className="text-[22px] md:text-[24px] leading-snug mb-2"
-            style={{ fontFamily: SERIF, opacity: w.title ? 1 : 0.75 }}
-          >
-            {w.title ?? 'Your work'}
-          </p>
+              "Your work" is orientation; nothing by that name is stored.
+              Omitted when the arrival headline is already saying it. */}
+          {w.id !== arrivalWorkId && (
+            <p
+              className="text-[22px] md:text-[24px] leading-snug mb-2"
+              style={{ fontFamily: SERIF, opacity: w.title ? 1 : 0.75 }}
+            >
+              {w.title ?? 'Your work'}
+            </p>
+          )}
 
           {naming === w.id ? (
             <div className="max-w-md mt-3">

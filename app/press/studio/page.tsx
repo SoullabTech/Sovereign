@@ -5,6 +5,7 @@ import { PRESS, SERIF } from './pressTheme';
 import StudioShell from './StudioShell';
 import { IMPORT_HREF, SOURCE_HREF, WRITE_HREF } from './studioMap';
 import { useCurrentManuscript } from './useCurrentManuscript';
+import { arrivalWork, useLivingWorks } from './useLivingWorks';
 import YourWork from './YourWork';
 
 /**
@@ -27,14 +28,38 @@ import YourWork from './YourWork';
  *
  * What it will NOT do: claim capability that is absent. Gatherings, Shape and
  * Release appear in the rail as not yet available, and nowhere else.
+ *
+ * ── SLICE 5 (2026-08-01): arrival re-founded around the Living Work ─────────
+ *
+ * The 07-30 ruling answered "what is this place?" with the place's own name.
+ * That answer was right for a Studio whose only object was a manuscript. Once
+ * a member can declare a work, the manuscript stops being the thing they
+ * return to and becomes one of the forms their work is taking.
+ *
+ * So the headline is now the work, and "Author Studio" becomes the eyebrow
+ * above it — the place is still named, it just stops being the subject. The
+ * manuscript sections below are UNCHANGED, in copy and in order: same "Current
+ * Book" heading, same Continue Writing, same Import. They are simply beneath
+ * the work now instead of standing in for it.
+ *
+ * What this deliberately does NOT do, because none of it exists yet:
+ *   · assert that the manuscript belongs to the work. Nothing writes
+ *     living_work_expressions; a containment the data does not hold must not
+ *     be drawn. The hierarchy here is arrangement, not a claimed link.
+ *   · choose between several works (see arrivalWork's note)
+ *   · attachment · expression management · switching · summaries · dashboards
+ *
+ * With no work declared, arrival is exactly what it was.
  */
 
 const pageEstimate = (chars: number) => Math.max(1, Math.round(chars / 1800));
 
 export default function AuthorStudioHome() {
   const { phase, manuscript, count } = useCurrentManuscript();
+  const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
 
   const hasManuscript = phase === 'ready' && manuscript !== null;
+  const work = arrivalWork(worksPhase, works);
 
   // ---- Signed out --------------------------------------------------------
   // Not "your Studio is empty" — they have not been seen yet.
@@ -67,18 +92,53 @@ export default function AuthorStudioHome() {
   return (
     <StudioShell hasManuscript={hasManuscript} manuscriptTitle={manuscript?.title}>
       <div className="max-w-2xl px-6 md:px-12 py-12 md:py-16">
-        {/* ── First arrival. Restrained: name the place, then get out of the way. ── */}
-        <header className="mb-14">
-          <h1 className="text-[28px] md:text-[32px] mb-3">Author Studio</h1>
-          <p className="text-[16px] leading-relaxed opacity-65 max-w-md">
-            A place to gather, shape, write, and bring your book into form.
-          </p>
+        {/* ── Arrival. Restrained: name what they came back to, then get out of
+            the way. A declared work is the subject; otherwise the place is. ── */}
+        {/* Held until the works read settles. Rendering the place's name first
+            and then replacing it with the member's work would stage a small
+            act of forgetting-then-remembering on every single arrival — the
+            opposite of what returning to your work should feel like. The
+            reserved height keeps nothing below it from jumping. */}
+        <header className={work ? 'mb-8' : 'mb-14'} style={{ minHeight: '5.5rem' }}>
+          {worksPhase === 'loading' ? null : work ? (
+            <>
+              <p className="text-[13px] tracking-[0.25em] uppercase opacity-40 mb-4">
+                Author Studio
+              </p>
+              {/* An unnamed work keeps its absence: "Your work" is orientation,
+                  not a name, and nothing by that name is stored. */}
+              <h1
+                className="text-[28px] md:text-[32px] leading-snug"
+                style={{ fontFamily: SERIF, opacity: work.title ? 1 : 0.75 }}
+              >
+                {work.title ?? 'Your work'}
+              </h1>
+            </>
+          ) : (
+            <>
+              <h1 className="text-[28px] md:text-[32px] mb-3">Author Studio</h1>
+              <p className="text-[16px] leading-relaxed opacity-65 max-w-md">
+                A place to gather, shape, write, and bring your book into form.
+              </p>
+            </>
+          )}
         </header>
 
-        {/* Slice 2 — the declaration act. Reachable and legible here; it does
-            NOT re-found arrival around the work. That is the next slice, and the
-            manuscript sections below are deliberately untouched. */}
-        <YourWork />
+        {/* The declaration act (Slice 2). When arrival is founded on the work,
+            this renders only its quiet controls — the headline above is the
+            work's name, and it is not repeated. */}
+        <YourWork
+          phase={worksPhase}
+          works={works}
+          reload={reloadWorks}
+          arrivalWorkId={work?.id ?? null}
+        />
+
+        {/* A rule, not a container. It separates the work from what sits under
+            it without asserting that the manuscript is held by it. */}
+        {work && (
+          <hr className="border-0 border-t mb-14" style={{ borderColor: PRESS.rule }} />
+        )}
 
         {phase === 'loading' && <p className="text-[14px] opacity-40">opening…</p>}
 
