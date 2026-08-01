@@ -1,7 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  headingAtOffset,
+  loadDraftPosition,
+  prefersReducedMotion,
+  saveDraftPosition,
+} from './returningState';
 import {
   AUTOSAVE_DELAY_MS,
   beginDraft,
@@ -10,6 +16,7 @@ import {
   formatWhen,
   loadDraft,
   loadRevisions,
+  newIdempotencyKey,
   pageEstimate,
   putDraft,
   restoreRevision,
@@ -46,6 +53,13 @@ import {
 
 const SERIF = 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif';
 
+// Restore must happen before paint (so the draft never visibly jumps from the
+// top to where the writer was), but React warns if useLayoutEffect appears
+// during SSR. This client component is server-rendered for initial HTML, so
+// pick the isomorphic variant: useLayoutEffect on the client, useEffect on the
+// server (where there is nothing to restore anyway).
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 interface WorkingDraftEditorProps {
   manuscriptId: string;
 }
@@ -75,19 +89,41 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // R1.1 Returning — spatial continuity (single work, client-side, observable only).
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const posTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restoredRef = useRef(false); // restore position exactly once per mount
+  const [conflict, setConflict] = useState(false);
+  const [welcome, setWelcome] = useState<{ heading: string | null } | null>(null);
+  const [welcomeFading, setWelcomeFading] = useState(false);
+
   const http = useMemo<Http>(() => (path, init) => apiFetch(path, init), []);
 
   // Single-flight, ordered autosave. Created once (the parent remounts this
   // component per manuscript via key), so manuscriptId is stable here.
   const saverRef = useRef<DraftSaver | null>(null);
+  // The version this client last saw. Every write carries it; the server
+  // refuses anything that does not match, so a second tab cannot overwrite
+  // this one without the writer being told.
+  const revisionIdRef = useRef<number>(1);
   if (!saverRef.current) {
-    saverRef.current = createDraftSaver((value) => putDraft(http, manuscriptId, { content: value }), {
-      onState: setSaveState,
-      onSaved: (meta) => {
-        if (typeof meta.revisionCount === 'number') setRevisionCount(meta.revisionCount);
-        setUpdatedAt(meta.updatedAt);
-      },
-    });
+    saverRef.current = createDraftSaver(
+      (value) =>
+        putDraft(http, manuscriptId, {
+          content: value,
+          baseRevisionId: revisionIdRef.current,
+          idempotencyKey: newIdempotencyKey(),
+        }),
+      {
+        onState: setSaveState,
+        onSaved: (meta) => {
+          if (typeof meta.revisionCount === 'number') setRevisionCount(meta.revisionCount);
+          if (typeof meta.revisionId === 'number') revisionIdRef.current = meta.revisionId;
+          setUpdatedAt(meta.updatedAt);
+        },
+        onConflict: () => setConflict(true),
+      }
+    );
   }
   const saver = saverRef.current;
 
@@ -97,6 +133,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     if (r.kind === 'ok') {
       setContent(r.content);
       setRevisionCount(r.revisionCount);
+      revisionIdRef.current = r.revisionId;
       setUpdatedAt(r.updatedAt);
       setSaveState('idle');
       setPhase('ready');
@@ -115,6 +152,88 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // ---- R1.1 Returning: spatial continuity ---------------------------------
+  // Persist the writer's position — caret, selection, scroll. Observable only;
+  // never intent or meaning. A courtesy, never load-bearing.
+  const persistPosition = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    saveDraftPosition(manuscriptId, {
+      selectionStart: ta.selectionStart ?? 0,
+      selectionEnd: ta.selectionEnd ?? 0,
+      scrollTop: ta.scrollTop ?? 0,
+    });
+  }, [manuscriptId]);
+
+  const persistPositionSoon = useCallback(() => {
+    if (posTimer.current) clearTimeout(posTimer.current);
+    posTimer.current = setTimeout(persistPosition, 400);
+  }, [persistPosition]);
+
+  // Ref indirection so exit handlers persist the latest position without
+  // re-subscribing each render (mirrors flushRef below).
+  /* The page grows with the writing. A fixed box with an inner scrollbar puts
+     the caret near the bottom edge for hours; growing keeps it in the band the
+     eye rests in and lets the browser own the one scrollbar. */
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = `${ta.scrollHeight}px`;
+  }, [content]);
+
+  const persistRef = useRef(persistPosition);
+  persistRef.current = persistPosition;
+
+  // Restore position once, before paint — the draft must never visibly jump
+  // from the top down to where the writer actually was.
+  useIsomorphicLayoutEffect(() => {
+    if (phase !== 'ready' || restoredRef.current) return;
+    restoredRef.current = true;
+    const ta = textareaRef.current;
+    const pos = loadDraftPosition(manuscriptId);
+    // A genuine "return": a stored position, or a draft written before now.
+    // A freshly-begun draft gets no welcome — there is no "back" to return to.
+    const returning = !!pos || !!updatedAt;
+    if (ta && pos) {
+      ta.scrollTop = Math.min(pos.scrollTop, Math.max(0, ta.scrollHeight));
+      const len = ta.value.length;
+      try {
+        ta.setSelectionRange(Math.min(pos.selectionStart, len), Math.min(pos.selectionEnd, len));
+      } catch {
+        /* selection API can throw; position is only a courtesy */
+      }
+      ta.focus({ preventScroll: true });
+    }
+    if (returning) {
+      setWelcome({ heading: headingAtOffset(content, pos?.selectionStart ?? 0) });
+    }
+  }, [phase, manuscriptId, updatedAt, content]);
+
+  // The welcome arrives, then steps aside — the work is already present.
+  useEffect(() => {
+    if (!welcome) return;
+    const reduce = prefersReducedMotion();
+    const hold = 5000;
+    const fade = reduce ? 0 : 1200;
+    const t1 = reduce ? null : setTimeout(() => setWelcomeFading(true), hold);
+    const t2 = setTimeout(() => setWelcome(null), hold + fade);
+    return () => {
+      if (t1) clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [welcome]);
+
+  // Persist position on unmount too (tab switch, route change), and clear the
+  // debounce timer.
+  useEffect(
+    () => () => {
+      if (posTimer.current) clearTimeout(posTimer.current);
+      persistRef.current();
+    },
+    [],
+  );
 
   /**
    * W-1 — close the debounce gap on every exit.
@@ -154,11 +273,18 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     // `pagehide` and `visibilitychange → hidden` are the events mobile browsers
     // actually fire when backgrounding or discarding a tab; `beforeunload` is
     // unreliable there, so it cannot be the only guard.
-    const onPageHide = () => flushRef.current();
+    const onPageHide = () => {
+      persistRef.current();
+      flushRef.current();
+    };
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') flushRef.current();
+      if (document.visibilityState === 'hidden') {
+        persistRef.current();
+        flushRef.current();
+      }
     };
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      persistRef.current();
       flushRef.current();
       // Honesty limit: a dispatched PUT is not a completed PUT, and we cannot
       // await one here. If anything is still pending we ask the browser to
@@ -184,6 +310,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     saver.queue(value); // marks 'unsaved' via onState
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => saver.flush(), AUTOSAVE_DELAY_MS);
+    persistPositionSoon(); // the caret has moved with the typing
   };
 
   const saveNow = () => {
@@ -198,6 +325,7 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     if (r.kind === 'ok') {
       setContent(r.content);
       setRevisionCount(r.revisionCount);
+      revisionIdRef.current = r.revisionId;
       setUpdatedAt(null);
       setSaveState('idle');
       setPhase('ready');
@@ -213,6 +341,26 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     setCreating(false);
   };
 
+  /* Everything arrives as the writer's own plain text. A manuscript pasted
+     from a word processor brings fonts, colours and spacing that have nothing
+     to do with the book; the words are what was meant. */
+  const pastePlain = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const text = e.clipboardData?.getData('text/plain');
+      if (text === undefined) return;
+      e.preventDefault();
+      const ta = e.currentTarget;
+      const start = ta.selectionStart ?? 0;
+      const end = ta.selectionEnd ?? 0;
+      const next = content.slice(0, start) + text + content.slice(end);
+      onChange(next);
+      requestAnimationFrame(() => {
+        ta.setSelectionRange(start + text.length, start + text.length);
+      });
+    },
+    [content, onChange]
+  );
+
   const checkpoint = async () => {
     setCheckpointing(true);
     setCheckpointMsg(null);
@@ -224,9 +372,13 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         content,
         checkpoint: true,
         note: note.trim() || undefined,
+        baseRevisionId: revisionIdRef.current,
+        idempotencyKey: newIdempotencyKey(),
       });
+      if (r.kind === 'conflict') setConflict(true);
       if (r.kind === 'ok') {
         if (typeof r.revisionCount === 'number') setRevisionCount(r.revisionCount);
+        if (typeof r.revisionId === 'number') revisionIdRef.current = r.revisionId;
         setUpdatedAt(r.updatedAt);
         setSaveState('saved');
         setNote('');
@@ -257,8 +409,13 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
     // Take the save lane so no autosave races (or outlives) the restore.
     await saver.beginExclusive();
     try {
-      const r = await restoreRevision(http, manuscriptId, revisionNumber);
+      const r = await restoreRevision(http, manuscriptId, revisionNumber, {
+        baseRevisionId: revisionIdRef.current,
+        idempotencyKey: newIdempotencyKey(),
+      });
+      if (r.kind === 'conflict') setConflict(true);
       if (r.kind === 'ok') {
+        if (typeof r.revisionId === 'number') revisionIdRef.current = r.revisionId;
         setRestoreConfirm(null);
         await reload();
         await refreshRevisions();
@@ -331,7 +488,9 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   // ---- ready: the writing surface ---------------------------------------
   const saveLabel =
-    saveState === 'saving'
+    saveState === 'conflict'
+      ? 'Not saved'
+      : saveState === 'saving'
       ? 'Saving…'
       : saveState === 'unsaved'
         ? 'Unsaved changes'
@@ -343,9 +502,28 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
 
   return (
     <div>
+      {welcome && (
+        /* R1.1 Returning — hospitality, then it steps aside. Observable facts
+           only: the writer's own heading. No coaching, prediction, or prompt. */
+        <p
+          role="status"
+          aria-live="polite"
+          className="text-[15px] opacity-70 mb-6 leading-relaxed transition-opacity duration-[1200ms]"
+          style={{ fontFamily: SERIF, opacity: welcomeFading ? 0 : undefined }}
+        >
+          Welcome back.
+          {welcome.heading ? ` You were writing in ${welcome.heading}.` : ''}
+        </p>
+      )}
       <p className="text-[13px] opacity-60 mb-2 leading-relaxed">
         An editable copy of this manuscript, in your own words. The original is never changed.
       </p>
+      {conflict && (
+        <p role="alert" className="mb-4 text-[#E8B4A0] leading-relaxed" style={{ fontFamily: SERIF }}>
+          This draft changed in another tab. Your work here has not been saved. Copy anything you
+          need, then reload.
+        </p>
+      )}
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[12px] mb-6">
         <span className="opacity-40">≈ {pageEstimate(content.length)} pages</span>
         <span className="opacity-40">
@@ -375,13 +553,39 @@ export default function WorkingDraftEditor({ manuscriptId }: WorkingDraftEditorP
         </span>
       </div>
 
+      {/* Phase B — the page, not a form field.
+          A bordered box on a dark ground reads as an input to fill in. A writer
+          spending six hours here is not filling in a field; they are working on
+          a page. So: no border, no panel, no resize handle. The measure is held
+          near 64 characters because that is where the eye finds the next line
+          without hunting, and the type is set for hours rather than for a
+          screenshot. Espresso palette throughout — this extends the Soullab
+          Press visual language rather than importing MAIA's navy. */}
       <textarea
+        ref={textareaRef}
         value={content}
         onChange={(e) => onChange(e.target.value)}
+        onScroll={persistPositionSoon}
+        onSelect={persistPositionSoon}
+        onPaste={pastePlain}
         aria-label="Working draft"
         spellCheck
-        className="w-full bg-black/20 border border-[#4A4238] rounded-sm p-5 text-[16px] leading-relaxed outline-none focus:border-[#C9A227]/50 min-h-[60vh] resize-y"
-        style={{ fontFamily: SERIF }}
+        /* `writing-surface` opts this textarea out of the global FORM rules in
+           globals.css — see the comment there. Without it the writer's prose
+           inherits rgb(17,24,39) on the espresso ground and the type is forced
+           to 16px. The class is the whole repair; nothing here asserts a new
+           design choice. */
+        className="writing-surface block w-full bg-transparent border-0 outline-none resize-none overflow-hidden"
+        style={{
+          fontFamily: SERIF,
+          ['--writing-size' as string]: '19px',
+          lineHeight: 1.75,
+          maxWidth: '38rem',
+          margin: '0 auto',
+          padding: '0 0 40vh',
+          caretColor: '#C9A227',
+          minHeight: '60vh',
+        }}
       />
 
       <div className="mt-6 flex flex-wrap items-center gap-3">

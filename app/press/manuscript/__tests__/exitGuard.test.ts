@@ -18,7 +18,7 @@ function makeSaver(save: (c: string) => Promise<SaveResult>) {
 }
 
 const ok = (): Promise<SaveResult> =>
-  Promise.resolve({ kind: 'ok', revisionCount: 1, updatedAt: '2026-07-30T00:00:00Z' });
+  Promise.resolve({ kind: 'ok', revisionCount: 1, revisionId: 1, updatedAt: '2026-07-30T00:00:00Z' });
 
 describe('createExitGuard — W-1', () => {
   it('flushes text queued inside the debounce window (the core defect)', async () => {
@@ -113,7 +113,7 @@ describe('createExitGuard — W-1', () => {
       saved.push(c);
       if (saved.length === 1) {
         return new Promise<SaveResult>((res) => {
-          release = () => res({ kind: 'ok', revisionCount: 1, updatedAt: null });
+          release = () => res({ kind: 'ok', revisionCount: 1, revisionId: 1, updatedAt: null });
         });
       }
       return ok();

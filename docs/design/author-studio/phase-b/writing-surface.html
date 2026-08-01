@@ -1,0 +1,260 @@
+<title>The Page</title>
+<style>
+  :root {
+    --paper:#FCFCFA; --ink:#1A1D22; --faint:#AEB3BA; --brass:#9A7434;
+    --select:rgba(154,116,52,.15); --mark:rgba(154,116,52,.45); --here:rgba(154,116,52,.14);
+    --warn:#A33B2A;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper:#111419; --ink:#DEE1E6; --faint:#565D67; --brass:#C2A163;
+      --select:rgba(194,161,99,.19); --mark:rgba(194,161,99,.52); --here:rgba(194,161,99,.16);
+      --warn:#D9705C; }
+  }
+  :root[data-theme="dark"] { --paper:#111419; --ink:#DEE1E6; --faint:#565D67; --brass:#C2A163;
+    --select:rgba(194,161,99,.19); --mark:rgba(194,161,99,.52); --here:rgba(194,161,99,.16); --warn:#D9705C; }
+  :root[data-theme="light"] { --paper:#FCFCFA; --ink:#1A1D22; --faint:#AEB3BA; --brass:#9A7434;
+    --select:rgba(154,116,52,.15); --mark:rgba(154,116,52,.45); --here:rgba(154,116,52,.14); --warn:#A33B2A; }
+
+  html { font-size: clamp(16px, 14.6px + .22vw, 19.5px); }
+  body { background:var(--paper); color:var(--ink); font-family:var(--serif); -webkit-font-smoothing:antialiased; }
+  ::selection { background:var(--select); }
+
+  .sheet { max-width:40rem; margin:0 auto; padding:6rem 1.75rem 62vh; }
+  @media (min-width:68rem) { .sheet { padding-top:8rem; } }
+
+  /* everything about recovery lives above the title — off the page you write on */
+  .notice { color:var(--warn); font-size:.95rem; font-style:italic; margin-bottom:1rem; display:none; }
+  .notice.on { display:block; }
+
+  .earlier { font-size:.9rem; font-style:italic; color:var(--faint); margin-bottom:1.4rem; }
+  .earlier button { background:none; border:0; padding:0; font:inherit; color:var(--faint); cursor:pointer; }
+  .earlier button:hover { color:var(--brass); }
+  .earlier ol { list-style:none; margin-top:.5rem; display:none; flex-direction:column; gap:.3rem; }
+  .earlier.open ol { display:flex; }
+  .earlier li button { color:var(--faint); }
+
+  .title { font-size:.95rem; font-style:italic; color:var(--faint); margin-bottom:3.25rem; outline:none; min-height:1.4em; }
+
+  .prose { font-size:1.24rem; line-height:1.74; outline:none; caret-color:var(--brass); }
+  .prose > p, .prose > div { margin:0; position:relative; }
+  .prose > p + p, .prose > div + div { text-indent:1.6em; }
+
+  .prose > .brk { text-indent:0; text-align:center; color:var(--faint); letter-spacing:.6em; padding:1.1rem 0; }
+  .prose > .brk + p, .prose > .brk + div { text-indent:0; }
+
+  .prose > p::before, .prose > div::before {
+    content:''; position:absolute; left:-1.6rem; top:.28em; bottom:.28em; width:2px;
+    background:transparent; cursor:pointer;
+  }
+  .prose > .here::before { background:var(--here); }
+  .prose > .kept::before { background:var(--mark) !important; }
+  .prose > .asked::before { background:transparent !important; }
+  .prose > .asked::after { content:'?'; position:absolute; left:-1.95rem; top:0; font-style:italic; color:var(--brass); pointer-events:none; }
+  .prose > .brk::before { display:none; }
+</style>
+
+<div class="sheet">
+  <p class="notice" id="notice"></p>
+  <div class="earlier" id="earlier" hidden><button type="button" id="earlierToggle">earlier versions</button><ol id="earlierList"></ol></div>
+  <div class="title" contenteditable="plaintext-only" spellcheck="false" id="title"></div>
+  <div class="prose" contenteditable="true" spellcheck="false" id="prose"></div>
+</div>
+
+<script>
+(function () {
+  const prose   = document.getElementById('prose');
+  const title   = document.getElementById('title');
+  const notice  = document.getElementById('notice');
+  const earlier = document.getElementById('earlier');
+  const eList   = document.getElementById('earlierList');
+  const eToggle = document.getElementById('earlierToggle');
+
+  const DOC = 'page-v6', HIST = 'page-v6-history';
+  const TAB = Math.random().toString(36).slice(2);
+  const MAX_VERSIONS = 30, CHECKPOINT_GAP = 90000;
+
+  let sessionEdits = 0;     // native undo has nothing before this
+  let saving = true;        // set false if another tab takes over
+  let failed = false;
+
+  const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+
+  function say(msg) { notice.textContent = msg || ''; notice.classList.toggle('on', !!msg); }
+
+  /* ---- restore ------------------------------------------------------ */
+  const doc = read(DOC) || {};
+  if (doc.html)  prose.innerHTML = doc.html;
+  if (doc.title) title.textContent = doc.title;
+
+  prose.focus({ preventScroll: true });
+  (function caretToEnd() {
+    const r = document.createRange();
+    r.selectNodeContents(prose); r.collapse(false);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  })();
+  requestAnimationFrame(() => window.scrollTo(0, doc.scroll || 0));
+
+  /* Undo and history are different things and must not pretend otherwise.
+     Native undo covers this session only. Before the first edit there is
+     nothing to undo, so the keystroke is refused rather than allowed to
+     unwind the restore itself. */
+  document.addEventListener('keydown', e => {
+    const z = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z';
+    if (z && sessionEdits === 0) {
+      e.preventDefault();
+      say('Nothing to undo in this session. Earlier versions are above.');
+      setTimeout(() => say(''), 4000);
+    }
+  }, true);
+
+  /* ---- saved history ------------------------------------------------- */
+  let history = read(HIST) || [];
+
+  function renderHistory() {
+    earlier.hidden = history.length === 0;
+    eList.innerHTML = '';
+    history.forEach((v, i) => {
+      const li = document.createElement('li');
+      const b  = document.createElement('button');
+      b.type = 'button';
+      b.textContent = new Date(v.t).toLocaleString();
+      b.addEventListener('click', () => restore(i));
+      li.appendChild(b); eList.appendChild(li);
+    });
+  }
+
+  function checkpoint(force) {
+    const last = history[0];
+    const html = prose.innerHTML;
+    if (last && last.html === html) return;
+    if (!force && last && Date.now() - last.t < CHECKPOINT_GAP) return;
+    history.unshift({ t: Date.now(), html, title: title.textContent });
+    history = history.slice(0, MAX_VERSIONS);
+    if (!write(HIST, history)) history.shift();   // out of room: keep the document, drop the version
+    renderHistory();
+  }
+
+  /* restoring is reversible: the displaced version is checkpointed first */
+  function restore(i) {
+    const v = history[i];
+    if (!v) return;
+    checkpoint(true);
+    prose.innerHTML = v.html;
+    title.textContent = v.title || '';
+    sessionEdits = 0;
+    marks(); here(); save(true);
+    say('Restored ' + new Date(v.t).toLocaleString() + '. The version you replaced is in the list.');
+    setTimeout(() => say(''), 6000);
+  }
+
+  eToggle.addEventListener('click', () => earlier.classList.toggle('open'));
+  renderHistory();
+
+  /* ---- saving -------------------------------------------------------- */
+  let t;
+  function commit() {
+    if (!saving) return;
+    const ok = write(DOC, {
+      html: prose.innerHTML, title: title.textContent,
+      scroll: window.scrollY, owner: TAB, t: Date.now()
+    });
+    failed = !ok;
+    if (!ok) say('This work is not being saved. Copy your text somewhere safe before closing.');
+    else if (notice.textContent.startsWith('This work is not')) say('');
+    checkpoint(false);
+  }
+  function save(now) {
+    clearTimeout(t);
+    if (now) return commit();
+    t = setTimeout(commit, 700);
+  }
+
+  /* another tab has the same work open — never overwrite it silently */
+  window.addEventListener('storage', e => {
+    if (e.key !== DOC || !e.newValue) return;
+    let other; try { other = JSON.parse(e.newValue); } catch (err) { return; }
+    if (!other || other.owner === TAB) return;
+    saving = false;
+    clearTimeout(t);
+    say('This work is open in another tab. Changes here are no longer being saved.');
+  });
+
+  ['pagehide', 'visibilitychange'].forEach(ev =>
+    window.addEventListener(ev, () => { if (document.visibilityState !== 'visible') save(true); }));
+
+  window.addEventListener('beforeunload', e => {
+    if (!failed && saving) return;
+    e.preventDefault(); e.returnValue = '';
+  });
+
+  /* ---- the page ------------------------------------------------------ */
+  function caretBlock() {
+    const sel = window.getSelection();
+    let n = sel.rangeCount ? sel.getRangeAt(0).startContainer : null;
+    if (n && n.nodeType === 3) n = n.parentNode;
+    return n && n.closest ? n.closest('.prose > p, .prose > div') : null;
+  }
+  function marks() {
+    const cur = caretBlock();
+    Array.from(prose.children).forEach(el =>
+      el.classList.toggle('brk', el.textContent.trim() === '***' && el !== cur));
+  }
+  function here() {
+    const cur = caretBlock();
+    Array.from(prose.children).forEach(el => el.classList.toggle('here', el === cur));
+  }
+  document.addEventListener('selectionchange', () => { here(); marks(); });
+  marks(); here();
+
+  let scrolling = 0;
+  window.addEventListener('scroll', () => { scrolling = Date.now(); save(); }, { passive: true });
+
+  function band() {
+    if (Date.now() - scrolling < 1200) return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const r = sel.getRangeAt(0).cloneRange(); r.collapse(false);
+    let rect = r.getBoundingClientRect();
+    if (!rect || (!rect.top && !rect.height)) {
+      const probe = document.createElement('span');
+      probe.textContent = '​';
+      r.insertNode(probe); rect = probe.getBoundingClientRect(); probe.remove();
+    }
+    const h = window.innerHeight;
+    if (rect.top > h * 0.62) window.scrollBy({ top: rect.top - h * 0.45, behavior: 'auto' });
+  }
+
+  /* Only a real person editing counts. Restoring a document fires an untrusted
+     input event of its own; counting those made the undo gate open on the very
+     load it exists to protect. */
+  [prose, title].forEach(el =>
+    el.addEventListener('beforeinput', e => { if (e.isTrusted) sessionEdits++; }));
+
+  prose.addEventListener('input', () => { marks(); save(); band(); });
+  title.addEventListener('input', save);
+
+  function plain(e) {
+    e.preventDefault();
+    sessionEdits++;
+    const dt = e.clipboardData || e.dataTransfer;
+    const text = dt ? dt.getData('text/plain') : '';
+    if (text) document.execCommand('insertText', false, text);
+  }
+  prose.addEventListener('paste', plain);
+  prose.addEventListener('drop', plain);
+  title.addEventListener('paste', plain);
+
+  prose.addEventListener('mousedown', e => {
+    const block = e.target.closest('.prose > p, .prose > div');
+    if (!block || block.classList.contains('brk')) return;
+    if (e.clientX >= block.getBoundingClientRect().left - 4) return;
+    e.preventDefault();
+    if (block.classList.contains('kept')) block.classList.replace('kept', 'asked');
+    else if (block.classList.contains('asked')) block.classList.remove('asked');
+    else block.classList.add('kept');
+    save();
+  });
+})();
+</script>

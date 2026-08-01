@@ -19,6 +19,13 @@ import {
   computeSourceHash,
   type MemberBookSection,
 } from '@/lib/manuscript/render/renderMemberBook';
+import {
+  conflictBody,
+  payloadHash,
+  precheck,
+  readGuard,
+  type DraftGuardRow,
+} from '@/lib/manuscript/draftConcurrency';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,7 +81,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     );
 
     return NextResponse.json(
-      { id: draftId, manuscriptId: id, baseSourceHash, revisionCount: 1, content },
+      { id: draftId, manuscriptId: id, baseSourceHash, revisionCount: 1, revisionId: 1, content },
       { status: 201 }
     );
   } catch (error) {
@@ -97,10 +104,11 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
       content: string;
       base_source_hash: string;
       revision_count: number;
+      version: number;
       created_at: string;
       updated_at: string;
     }>(
-      `SELECT id, content, base_source_hash, revision_count, created_at, updated_at
+      `SELECT id, content, base_source_hash, revision_count, version, created_at, updated_at
        FROM manuscript_working_drafts
        WHERE manuscript_id = $1 AND member_id = $2`,
       [id, memberId]
@@ -115,6 +123,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
       content: row.content,
       baseSourceHash: row.base_source_hash,
       revisionCount: row.revision_count,
+      revisionId: row.version,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     });
@@ -150,49 +159,87 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
     return NextResponse.json({ error: 'note must be a string' }, { status: 400 });
   }
 
+  const guard = readGuard(body as Record<string, unknown>);
+  if ('error' in guard) {
+    return NextResponse.json({ error: guard.error }, { status: 400 });
+  }
+  const trimmedNote = typeof note === 'string' && note.trim().length > 0 ? note.trim() : null;
+  const hash = payloadHash('save', { content, checkpoint: checkpoint === true, note: trimmedNote });
+
   try {
-    if (checkpoint === true) {
-      // Single-statement increment serializes concurrent checkpoints on the
-      // UNIQUE (draft_id, revision_number) constraint.
-      const updated = await query<{ id: string; revision_count: number; updated_at: string }>(
-        `UPDATE manuscript_working_drafts
-           SET content = $3, revision_count = revision_count + 1, updated_at = now()
-         WHERE manuscript_id = $1 AND member_id = $2
-         RETURNING id, revision_count, updated_at`,
-        [id, memberId, content]
+    const current = await query<DraftGuardRow & { id: string }>(
+      `SELECT id, version, last_idempotency_key, last_idempotency_op,
+              last_idempotency_payload_hash, last_idempotency_response
+         FROM manuscript_working_drafts
+        WHERE manuscript_id = $1 AND member_id = $2`,
+      [id, memberId]
+    );
+    if (current.rows.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    const draftId = current.rows[0].id;
+
+    const decision = precheck(current.rows[0], 'save', guard.idempotencyKey, hash, guard.baseRevisionId);
+    if (decision.kind === 'replay') {
+      return NextResponse.json(decision.response as object);
+    }
+    if (decision.kind === 'conflict') {
+      return NextResponse.json(conflictBody(decision.reason, decision.currentRevisionId), { status: 409 });
+    }
+
+    // Compare-and-advance, recording the idempotency result in the SAME
+    // statement. The version predicate is what makes this safe: a client that
+    // raced us between the SELECT above and here matches zero rows. Recording
+    // the key separately would leave a window in which a successful save
+    // answers stale_base to its own retry. SET expressions read the OLD column
+    // values, so version + 1 is exactly the version being written, and now()
+    // is one timestamp for the whole statement.
+    const updated = await query<{
+      revision_count: number;
+      version: number;
+      last_idempotency_response: unknown;
+    }>(
+      `UPDATE manuscript_working_drafts
+          SET content = $3,
+              version = version + 1,
+              revision_count = revision_count + CASE WHEN $5::boolean THEN 1 ELSE 0 END,
+              updated_at = now(),
+              last_idempotency_key = $6,
+              last_idempotency_op = 'save',
+              last_idempotency_payload_hash = $7,
+              last_idempotency_response = jsonb_build_object(
+                'revisionCount', revision_count + CASE WHEN $5::boolean THEN 1 ELSE 0 END,
+                'revisionId', version + 1,
+                'updatedAt', now(),
+                'checkpointed', $5::boolean
+              )
+        WHERE manuscript_id = $1 AND member_id = $2 AND version = $4
+      RETURNING revision_count, version, last_idempotency_response`,
+      [id, memberId, content, guard.baseRevisionId, checkpoint === true, guard.idempotencyKey, hash]
+    );
+    if (updated.rows.length === 0) {
+      const now = await query<{ version: number }>(
+        `SELECT version FROM manuscript_working_drafts WHERE manuscript_id = $1 AND member_id = $2`,
+        [id, memberId]
       );
-      if (updated.rows.length === 0) {
+      if (now.rows.length === 0) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      const row = updated.rows[0];
-      const trimmedNote = typeof note === 'string' && note.trim().length > 0 ? note.trim() : null;
+      return NextResponse.json(conflictBody('stale_base', now.rows[0].version), { status: 409 });
+    }
+    const row = updated.rows[0];
+
+    if (checkpoint === true) {
       await query(
         `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
          VALUES ($1, $2, $3, $4, $5)`,
-        [row.id, row.revision_count, content, memberId, trimmedNote]
+        [draftId, row.revision_count, content, memberId, trimmedNote]
       );
-      return NextResponse.json({
-        revisionCount: row.revision_count,
-        updatedAt: row.updated_at,
-        checkpointed: true,
-      });
     }
 
-    const updated = await query<{ revision_count: number; updated_at: string }>(
-      `UPDATE manuscript_working_drafts
-         SET content = $3, updated_at = now()
-       WHERE manuscript_id = $1 AND member_id = $2
-       RETURNING revision_count, updated_at`,
-      [id, memberId, content]
-    );
-    if (updated.rows.length === 0) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-    return NextResponse.json({
-      revisionCount: updated.rows[0].revision_count,
-      updatedAt: updated.rows[0].updated_at,
-      checkpointed: false,
-    });
+    // Reply with the stored record itself, so a first response and its replay
+    // are byte-identical rather than merely equivalent.
+    return NextResponse.json(row.last_idempotency_response as object);
   } catch (error) {
     console.error('[manuscripts/draft] save failed', error);
     return NextResponse.json({ error: 'Failed to save draft' }, { status: 500 });

@@ -23,6 +23,8 @@ import {
 const ID = '22222222-2222-2222-2222-222222222222';
 const DRAFT = `/api/sovereign/manuscripts/${ID}/draft`;
 
+const GUARD = { baseRevisionId: 4, idempotencyKey: 'k-1' };
+
 function resp(status: number, body: unknown = {}): HttpResponse {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
 }
@@ -46,6 +48,7 @@ describe('loadDraft — opening the surface', () => {
       kind: 'ok',
       content: 'hi',
       revisionCount: 2,
+      revisionId: 1,
       updatedAt: 't',
     });
     expect(http).toHaveBeenCalledWith(DRAFT, { method: 'GET' });
@@ -75,7 +78,12 @@ describe('loadDraft — opening the surface', () => {
 describe('beginDraft — initialization from source', () => {
   it('returns the verbatim source content on create', async () => {
     const http = jest.fn(async () => resp(201, { id: 'd', content: '# A\n\nbody', revisionCount: 1 }));
-    expect(await beginDraft(http, ID)).toEqual({ kind: 'ok', content: '# A\n\nbody', revisionCount: 1 });
+    expect(await beginDraft(http, ID)).toEqual({
+      kind: 'ok',
+      content: '# A\n\nbody',
+      revisionCount: 1,
+      revisionId: 1,
+    });
     expect(http).toHaveBeenCalledWith(DRAFT, { method: 'POST' });
   });
 
@@ -97,39 +105,48 @@ describe('beginDraft — initialization from source', () => {
 describe('putDraft — autosave vs checkpoint', () => {
   it('autosave sends only content', async () => {
     const http = jest.fn(async () => resp(200, { revisionCount: 1, updatedAt: 't', checkpointed: false }));
-    const r = await putDraft(http, ID, { content: 'draft' });
-    expect(r).toEqual({ kind: 'ok', revisionCount: 1, updatedAt: 't' });
+    const r = await putDraft(http, ID, { content: 'draft', ...GUARD });
+    expect(r).toEqual({ kind: 'ok', revisionCount: 1, revisionId: null, updatedAt: 't' });
     const [path, init] = http.mock.calls[0] as [string, RequestInit];
     expect(path).toBe(DRAFT);
     expect(init.method).toBe('PUT');
-    expect(JSON.parse(init.body as string)).toEqual({ content: 'draft' });
+    expect(JSON.parse(init.body as string)).toEqual({ content: 'draft', ...GUARD });
   });
 
   it('checkpoint sends checkpoint:true and the optional note', async () => {
     const http = jest.fn(async () => resp(200, { revisionCount: 3, updatedAt: 't', checkpointed: true }));
-    const r = await putDraft(http, ID, { content: 'hello', checkpoint: true, note: 'first pass' });
-    expect(r).toEqual({ kind: 'ok', revisionCount: 3, updatedAt: 't' });
+    const r = await putDraft(http, ID, {
+      content: 'hello',
+      checkpoint: true,
+      note: 'first pass',
+      ...GUARD,
+    });
+    expect(r).toEqual({ kind: 'ok', revisionCount: 3, revisionId: null, updatedAt: 't' });
     const body = JSON.parse((http.mock.calls[0][1] as RequestInit).body as string);
-    expect(body).toEqual({ content: 'hello', checkpoint: true, note: 'first pass' });
+    expect(body).toEqual({ content: 'hello', checkpoint: true, note: 'first pass', ...GUARD });
   });
 
   it('reports error on a failed save — never a false "ok"', async () => {
-    expect(await putDraft(jest.fn(async () => resp(500)), ID, { content: 'x' })).toEqual({ kind: 'error' });
+    expect(
+      await putDraft(jest.fn(async () => resp(500)), ID, { content: 'x', ...GUARD })
+    ).toEqual({ kind: 'error' });
   });
 });
 
 describe('restoreRevision — restore creates a new revision', () => {
   it('posts the revision number to the revisions route', async () => {
     const http = jest.fn(async () => resp(200, { revisionCount: 5, restoredFrom: 2 }));
-    expect(await restoreRevision(http, ID, 2)).toEqual({ kind: 'ok' });
+    expect(await restoreRevision(http, ID, 2, GUARD)).toEqual({ kind: 'ok', revisionId: null });
     const [path, init] = http.mock.calls[0] as [string, RequestInit];
     expect(path).toBe(`${DRAFT}/revisions`);
     expect(init.method).toBe('POST');
-    expect(JSON.parse(init.body as string)).toEqual({ revisionNumber: 2 });
+    expect(JSON.parse(init.body as string)).toEqual({ revisionNumber: 2, ...GUARD });
   });
 
   it('reports error on failure', async () => {
-    expect(await restoreRevision(jest.fn(async () => resp(500)), ID, 2)).toEqual({ kind: 'error' });
+    expect(await restoreRevision(jest.fn(async () => resp(500)), ID, 2, GUARD)).toEqual({
+      kind: 'error',
+    });
   });
 });
 
@@ -147,7 +164,7 @@ describe('loadRevisions', () => {
 
 describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)', () => {
   it('coalesces rapid edits into a single save of the latest content', async () => {
-    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, updatedAt: null }));
+    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, revisionId: null, updatedAt: null }));
     const saver = createDraftSaver(save, { onState() {} });
     saver.queue('a');
     saver.queue('b');
@@ -165,7 +182,7 @@ describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)'
     const save = jest.fn((content: string): Promise<SaveResult> => {
       calls.push(content);
       const d = deferred<SaveResult>();
-      gates.push(() => d.resolve({ kind: 'ok', revisionCount: null, updatedAt: null }));
+      gates.push(() => d.resolve({ kind: 'ok', revisionCount: null, revisionId: null, updatedAt: null }));
       return d.promise;
     });
     const states: SaverState[] = [];
@@ -201,7 +218,7 @@ describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)'
     const save = jest.fn((content: string): Promise<SaveResult> => {
       calls.push(content);
       const d = deferred<SaveResult>();
-      gates.push(() => d.resolve({ kind: 'ok', revisionCount: null, updatedAt: null }));
+      gates.push(() => d.resolve({ kind: 'ok', revisionCount: null, revisionId: null, updatedAt: null }));
       return d.promise;
     });
     const saver = createDraftSaver(save, { onState() {} });
@@ -237,7 +254,7 @@ describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)'
   });
 
   it('endExclusive({flushPending:false}) discards edits made during the write (restore wins)', async () => {
-    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, updatedAt: null }));
+    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, revisionId: null, updatedAt: null }));
     const saver = createDraftSaver(save, { onState() {} });
 
     await saver.beginExclusive(); // nothing in flight → resolves immediately
@@ -250,7 +267,7 @@ describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)'
   });
 
   it('endExclusive({persisted}) drops an unchanged queue instead of re-saving it', async () => {
-    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, updatedAt: null }));
+    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'ok', revisionCount: null, revisionId: null, updatedAt: null }));
     const saver = createDraftSaver(save, { onState() {} });
 
     saver.queue('same');
@@ -278,7 +295,7 @@ describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)'
     expect(saver.hasPending()).toBe(true);
 
     // A later flush retries and succeeds.
-    save.mockResolvedValueOnce({ kind: 'ok', revisionCount: 2, updatedAt: null });
+    save.mockResolvedValueOnce({ kind: 'ok', revisionCount: 2, revisionId: null, updatedAt: null });
     saver.flush();
     await saver.whenIdle();
     expect(save).toHaveBeenCalledTimes(2);
@@ -291,5 +308,31 @@ describe('pageEstimate', () => {
     expect(pageEstimate(0)).toBe(1);
     expect(pageEstimate(1800)).toBe(1);
     expect(pageEstimate(3600)).toBe(2);
+  });
+});
+
+describe('createDraftSaver — a conflict stops the lane', () => {
+  it('does not retry, and says so', async () => {
+    const save = jest.fn(async (): Promise<SaveResult> => ({
+      kind: 'conflict',
+      reason: 'stale_base',
+      currentRevisionId: 9,
+    }));
+    const states: string[] = [];
+    const conflicts: unknown[] = [];
+    const saver = createDraftSaver(save, {
+      onState: (s) => states.push(s),
+      onConflict: (i) => conflicts.push(i),
+    });
+    saver.queue('a');
+    saver.flush();
+    await saver.whenIdle();
+    saver.queue('b');
+    saver.flush();
+    await saver.whenIdle();
+    expect(save).toHaveBeenCalledTimes(1); // the second write never went out
+    expect(states).toContain('conflict');
+    expect(conflicts).toEqual([{ reason: 'stale_base', currentRevisionId: 9 }]);
+    expect(saver.hasPending()).toBe(true); // the writer's text is still held
   });
 });

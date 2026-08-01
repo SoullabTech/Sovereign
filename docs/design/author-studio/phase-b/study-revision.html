@@ -1,0 +1,177 @@
+<title>Study 004 — Revision</title>
+<style>
+  :root {
+    --ground:#F4F6F8; --card:#FFFFFF; --ink:#161E2B; --ink-soft:#596373;
+    --ink-faint:#8B93A1; --rule:#DDE2E9; --brass:#8A6520; --heat:#A33B2A;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ground:#0B0F16; --card:#141A24; --ink:#E7EAEF; --ink-soft:#98A1B0;
+      --ink-faint:#6B7484; --rule:#242C39; --brass:#C9A059; --heat:#D9705C; }
+  }
+  :root[data-theme="dark"] { --ground:#0B0F16; --card:#141A24; --ink:#E7EAEF; --ink-soft:#98A1B0;
+    --ink-faint:#6B7484; --rule:#242C39; --brass:#C9A059; --heat:#D9705C; }
+  :root[data-theme="light"] { --ground:#F4F6F8; --card:#FFFFFF; --ink:#161E2B; --ink-soft:#596373;
+    --ink-faint:#8B93A1; --rule:#DDE2E9; --brass:#8A6520; --heat:#A33B2A; }
+
+  body { background:var(--ground); color:var(--ink); font-family:var(--sans); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:38rem; margin:0 auto; padding:4rem 1.25rem 6rem; }
+  .card { background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:2.25rem 2rem; display:flex; flex-direction:column; gap:2rem; }
+
+  .head { display:flex; flex-direction:column; gap:.35rem; }
+  .head .n { font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); }
+  .head h1 { font-family:var(--serif); font-size:2.4rem; font-weight:400; line-height:1; letter-spacing:-.015em; }
+  .head .sub { font-family:var(--serif); font-style:italic; font-size:1.02rem; color:var(--ink-faint); margin-top:.3rem; }
+
+  .sec { display:flex; flex-direction:column; gap:.55rem; }
+  .sec > .k { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); font-weight:600; }
+  .sec ul { list-style:none; display:flex; flex-direction:column; gap:.42rem; }
+  .sec li { font-family:var(--serif); font-size:1.06rem; line-height:1.45; }
+  .sec li b { font-weight:600; font-style:normal; }
+  .sec li span { color:var(--ink-soft); }
+
+  .rows { display:flex; flex-direction:column; }
+  .row { display:grid; grid-template-columns:6rem 1fr; gap:1.1rem; padding:.55rem 0; border-top:1px solid var(--rule); align-items:baseline; }
+  .row:first-child { border-top:0; }
+  @media (max-width:30rem){ .row { grid-template-columns:1fr; gap:.1rem; } }
+  .row .a { font-family:var(--serif); font-size:1.05rem; }
+  .row .b { font-size:.93rem; color:var(--ink-soft); }
+  .row .a.same { color:var(--ink-faint); }
+
+  .tension { border-left:2px solid var(--heat); padding-left:1.1rem; display:flex; flex-direction:column; gap:.25rem; }
+  .tension .t { font-family:var(--serif); font-size:1.08rem; }
+  .tension .d { font-size:.92rem; color:var(--ink-soft); }
+  .tensions { display:flex; flex-direction:column; gap:1.1rem; }
+
+  hr { height:1px; background:var(--rule); border:0; }
+  .foot { font-size:.78rem; color:var(--ink-faint); display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+</style>
+
+<div class="wrap">
+  <div class="card">
+
+    <div class="head">
+      <span class="n">Study 004</span>
+      <h1>Revision</h1>
+      <span class="sub">Observations only. Nothing here is a recommendation.</span>
+    </div>
+
+    <div class="sec">
+      <span class="k">What dies</span>
+      <ul>
+        <li><b>Momentum.</b> <span>Drafting moves forward. Revision is stop–start by nature.</span></li>
+        <li><b>Permission to be wrong.</b> <span>Drafting defers with "I'll fix it later." Revision is later.</span></li>
+        <li><b>Discovery.</b> <span>You stop finding out what you think. You find out whether you said it.</span></li>
+        <li><b>One direction.</b> <span>Attention goes back three pages, forward to chapter nine, and out to the shape, often in the same minute.</span></li>
+        <li><b>Being alone with the sentence.</b> <span>Drafting holds one thing. Revision always holds at least two.</span></li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <span class="k">What appears</span>
+      <ul>
+        <li><b>The reader.</b> <span>The writer tries to become someone who hasn't read it.</span></li>
+        <li><b>Distance, manufactured on purpose.</b> <span>Printing, reading aloud, waiting a week, changing the typeface — all techniques for becoming a stranger to your own text.</span></li>
+        <li><b>Structure.</b> <span>Invisible while drafting. Only exists once the whole exists.</span></li>
+        <li><b>Repetition.</b> <span>You start seeing your own tics — the word used six times a page.</span></li>
+        <li><b>Comparison.</b> <span>Against the earlier version, against what you meant, against the chapter before.</span></li>
+        <li><b>Whole-work doubt.</b> <span>Doesn't arise while drafting.</span></li>
+      </ul>
+    </div>
+
+    <hr>
+
+    <div class="sec">
+      <span class="k">What writers actually do</span>
+      <ul>
+        <li>Read aloud. The ear catches what the eye passes over.</li>
+        <li>Print it, then read it in a different room or chair.</li>
+        <li>Cross out instead of deleting — and keep looking at what was crossed out.</li>
+        <li>Spread pages on a table or the floor to see the sequence at once.</li>
+        <li>Draw arrows between things that are far apart.</li>
+        <li>Circle a phrase before knowing what's wrong with it.</li>
+        <li>Write "?" in the margin — the same gesture as drafting.</li>
+        <li>Keep a separate list of things to fix later, so revising doesn't stall.</li>
+        <li>Reread the last page aloud after one change, to hear whether it still holds.</li>
+      </ul>
+    </div>
+
+    <hr>
+
+    <div class="sec">
+      <span class="k">Which gestures survive</span>
+      <div class="rows">
+        <div class="row"><span class="a">Write</span><span class="b">Survives, meaning changed. Drafting adds. Revising replaces.</span></div>
+        <div class="row"><span class="a">Keep</span><span class="b">Survives, meaning inverted. Drafting: <em>I'll want this later.</em> Revising: <em>this is right, don't touch it.</em></span></div>
+        <div class="row"><span class="a same">?</span><span class="b">Survives unchanged. Possibly the only one.</span></div>
+        <div class="row"><span class="a">Return</span><span class="b">Splits in two. Where you were writing, and where you were reading, stop being the same place.</span></div>
+        <div class="row"><span class="a">Group</span><span class="b">Stronger here than in drafting. Noticing that three scattered passages are one thing is a revision act.</span></div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="sec">
+      <span class="k">Tensions</span>
+      <div class="tensions">
+        <div class="tension">
+          <span class="t">One mark, two opposite instructions.</span>
+          <span class="d">A writer will use Keep both ways in the same manuscript, months apart.</span>
+        </div>
+        <div class="tension">
+          <span class="t">Deleting is not crossing out.</span>
+          <span class="d">A struck line is a decision you can still see. Undo is invisible.</span>
+        </div>
+        <div class="tension">
+          <span class="t">Revision wants two things at once. A page shows one.</span>
+          <span class="d">Nearly every physical revision behavior is a way of seeing more than one thing at a time.</span>
+        </div>
+        <div class="tension">
+          <span class="t">Writers add friction on purpose.</span>
+          <span class="d">Print, wait, read aloud. The instinct to remove friction may be wrong here.</span>
+        </div>
+        <div class="tension">
+          <span class="t">The fix-later list lives outside the manuscript.</span>
+          <span class="d">It exists so revising can keep moving — and it is always a second document.</span>
+        </div>
+        <div class="tension">
+          <span class="t">Reading aloud leaves no trace.</span>
+          <span class="d">The most common revision behavior produces nothing a system can see.</span>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="sec">
+      <span class="k">What surprised us</span>
+      <ul>
+        <li><b>Keep inverted.</b> <span>Nobody expects a mark to reverse its meaning halfway through a book.</span></li>
+        <li><b>Writers add friction deliberately.</b> <span>Print it, wait a week, read it aloud. Removing friction may be the wrong instinct here.</span></li>
+        <li><b>Revision is plural. Drafting is singular.</b> <span>Revising always holds at least two things at once.</span></li>
+        <li><b>Crossing out is not deleting.</b> <span>Writers want to keep looking at what they decided against.</span></li>
+      </ul>
+      <p style="font-size:.86rem;color:var(--ink-faint);max-width:52ch;margin-top:.3rem;">Not findings. Things that challenged an assumption and deserve more attention.</p>
+    </div>
+
+    <hr>
+
+    <div class="sec">
+      <span class="k">Questions</span>
+      <ul>
+        <li>Is revision one practice or three? Polishing lines, reordering structure, and cutting may share nothing.</li>
+        <li>Does a revising writer want the drafting page at all, or the same text in a different form?</li>
+        <li>Where does the previous version live — beside, beneath, or gone?</li>
+        <li>Is distance the writer's job or the environment's?</li>
+        <li>What happens to a mark when the paragraph it marked is rewritten?</li>
+      </ul>
+    </div>
+
+    <div class="foot">
+      <span>No findings. Observation is not yet permission to build.</span>
+      <span>2026-07-31</span>
+    </div>
+
+  </div>
+</div>
