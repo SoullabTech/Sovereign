@@ -28,6 +28,17 @@ interface StudioShellProps {
   hasManuscript: boolean;
   /** Shown under the Studio name so the member always knows which book. */
   manuscriptTitle?: string | null;
+  /**
+   * D-05 — the shell persists across rooms, growing QUIETER inward, never absent.
+   *
+   * A working surface is deeper in the house than Studio Home, so the rail
+   * narrows and recedes there. It does not disappear: a room the shell has left
+   * stops being a room and becomes a separate application, and once rooms are
+   * applications the House does not exist.
+   *
+   * `quiet` changes weight only — same destinations, same spine, same way out.
+   */
+  quiet?: boolean;
 }
 
 function isCurrent(dest: StudioDestination, pathname: string, tab: string | null): boolean {
@@ -43,6 +54,7 @@ export default function StudioShell({
   children,
   hasManuscript,
   manuscriptTitle,
+  quiet = false,
 }: StudioShellProps) {
   const pathname = usePathname() ?? '';
   const [menuOpen, setMenuOpen] = useState(false);
@@ -174,7 +186,22 @@ export default function StudioShell({
       <div className="md:flex">
         {/* ── Desktop: the quiet rail. ── */}
         <aside
-          className="hidden md:block w-60 shrink-0 border-r px-6 py-10 sticky top-0 h-screen overflow-y-auto"
+          /* D-05 quiet treatment. `opacity-45` was measured on 2026-08-01 and
+             rejected: rail opacity MULTIPLIES with the per-element opacities
+             already inside the rail (links 0.6, group labels 0.35, notes 0.45),
+             so 0.45 drove every element under WCAG AA — primary destinations to
+             2.25:1 and secondary text to 1.37:1. That is not quiet, it is
+             illegible, and it would have made the founder's quiet-vs-dimmed
+             judgment a judgment about an inaccessible surface.
+
+             Quiet is now carried by FOOTPRINT (a narrower rail, less padding)
+             and one modest opacity step that keeps destinations above 4.5:1.
+             Hover/focus still returns the rail to full weight. */
+          className={`hidden md:block shrink-0 border-r sticky top-0 h-screen overflow-y-auto transition-opacity ${
+            quiet
+              ? 'w-52 px-5 py-10 opacity-85 hover:opacity-100 focus-within:opacity-100'
+              : 'w-60 px-6 py-10'
+          }`}
           style={{ borderColor: PRESS.rule }}
         >
           <div className="mb-10">{identity}</div>

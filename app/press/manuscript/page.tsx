@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
 import WorkingDraftEditor from './WorkingDraftEditor';
+import StudioShell from '../studio/StudioShell';
 
 /**
  * Mirrors MAX_FILE_BYTES in app/api/sovereign/manuscripts/ingest/route.ts.
@@ -515,14 +516,30 @@ function PressManuscriptRoom() {
   // =======================================================================
   const paper = { background: PRESS.bg, color: PRESS.text, fontFamily: SERIF } as const;
 
+  /* D-05 — loading is INSIDE the authorized journey, so the house is already
+     here while the room fills. Previously this painted a bare full-page ground
+     with a single ellipsis, so every entry began with the Studio absent and the
+     shell arriving a beat later. The member had not gone anywhere; only the
+     content had not arrived.
+
+     `hasManuscript` is false while loading: the rail must not claim a book
+     before the list has been read. It shows the Studio and its one real door,
+     which is true in either outcome. */
   if (loading) {
     return (
-      <div style={paper} className="min-h-screen flex items-center justify-center">
-        <span className="text-sm opacity-40">…</span>
-      </div>
+      <StudioShell quiet hasManuscript={false}>
+        <div className="min-h-screen flex items-center justify-center">
+          <span className="text-sm opacity-40">…</span>
+        </div>
+      </StudioShell>
     );
   }
 
+  /* D-17 (founder ruling 2026-08-01) — a boundary the member has NOT crossed
+     does not get the interior. This screen keeps its own bare ground on
+     purpose: rendering the quiet Studio rail around a sign-in wall would use
+     visual continuity to imply an interiority that has not been granted.
+     Truthfulness outranks continuity at a threshold. Do not wrap this. */
   if (unauthorized) {
     return (
       <div style={paper} className="min-h-screen flex items-center justify-center px-6">
@@ -555,9 +572,21 @@ function PressManuscriptRoom() {
      REFRESH must not replace the writer's Room with an error screen. That would
      destroy visible work context to report a transient network fault. In that
      case the Room stays, and the failure appears as a banner (below). */
+  /* D-05 — a load failure is INSIDE the authorized journey, not a threshold.
+     The member has crossed every boundary; a request failed. Removing the house
+     here would compound "we couldn't read your work" with "and you are nowhere",
+     at the moment a member is least able to absorb it. The rail also keeps the
+     one real way out visible, which a centred error card does not.
+
+     The governing test is NOT "was this state on the checklist?" It is: is the
+     member already inside the authorized Studio journey? Access has been
+     granted; the Studio is failing to recover their work. D-17 is untouched —
+     this is not a threshold and not an authorization boundary. (Founder,
+     2026-08-01.) */
   if (listError && !active) {
     return (
-      <div style={paper} className="min-h-screen flex items-center justify-center px-6">
+      <StudioShell quiet hasManuscript={false}>
+        <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <img
             src="/holoflower-studio-transparent.png"
@@ -579,7 +608,8 @@ function PressManuscriptRoom() {
             Try again
           </button>
         </div>
-      </div>
+        </div>
+      </StudioShell>
     );
   }
 
@@ -589,18 +619,19 @@ function PressManuscriptRoom() {
   // from Studio Home (?import=1). Never as a consequence of failure.
   if (!active || preview || importing) {
     return (
-      <div style={paper} className="min-h-screen">
-        <main className="max-w-2xl mx-auto px-6 py-16">
-          {/* Import is a threshold inside the Studio, not a product of its own.
-              The way back up must always be visible — before this link existed,
-              arriving here from the House was a one-way trip into an upload
-              form with no Studio around it. */}
-          <a
-            href="/press/studio"
-            className="inline-block text-[12px] tracking-[0.15em] uppercase opacity-45 hover:opacity-80 mb-10"
-          >
-            ← Author Studio
-          </a>
+      /* D-05 — import is a threshold INSIDE the Studio, not a product of its
+         own, and the whole flow (empty state, paste/upload, confirm-cuts
+         preview) now happens with the house around it.
+
+         The explicit "← Author Studio" link that used to sit here is gone: the
+         rail carries the way back permanently, and repeating it was the room
+         introducing itself to someone already standing in it (§3.9).
+
+         `hasManuscript` is false here by construction — this branch is reached
+         only when nothing is active. The rail therefore offers the one real
+         door rather than book-scoped rooms that do not yet apply. */
+      <StudioShell quiet hasManuscript={false}>
+        <main className="max-w-2xl px-6 md:px-12 py-16">
           <h1 className="text-3xl leading-snug mb-4">Import a manuscript</h1>
           <p className="text-[15px] leading-relaxed opacity-70 mb-3">
             Bring in a book you have already written. Paste it, or choose a file.
@@ -734,7 +765,7 @@ function PressManuscriptRoom() {
             </div>
           )}
         </main>
-      </div>
+      </StudioShell>
     );
   }
 
@@ -742,7 +773,11 @@ function PressManuscriptRoom() {
   const totalChars = sections.reduce((a, s) => a + s.chars, 0);
 
   return (
-    <div style={paper} className="min-h-screen">
+    /* D-05 — the Manuscript Room is INSIDE the Studio, not next to it.
+       Until now this room rendered its own full-page ground and the Layer 2
+       shell vanished at the threshold, so arriving here read as launching a
+       second application. The shell now persists and goes quiet instead. */
+    <StudioShell quiet hasManuscript manuscriptTitle={title}>
       {/* W-2: a failed refresh while the Room is open reports itself as a
           banner and leaves the writer's work in place. Replacing the Room with
           an error screen would discard visible context over a transient fault. */}
@@ -764,20 +799,14 @@ function PressManuscriptRoom() {
       )}
       <header className="border-b border-[#4A4238]">
         <div className="max-w-3xl mx-auto px-6 pt-10 pb-0">
-          {/* This room is Layer 3. The Studio (Layer 2) is one step up and must
-              always be one click away — a working surface is somewhere you are,
-              not somewhere you are stuck. The tab row below stays exactly as it
-              was: naming those tabs is a local decision one layer down, and is
-              deliberately NOT settled by the Studio shell. */}
-          <a
-            href="/press/studio"
-            className="inline-flex items-center gap-2.5 mb-1 opacity-50 hover:opacity-85 transition-opacity"
-          >
-            <img src="/holoflower-studio-transparent.png" alt="" aria-hidden="true" className="w-6 h-6" />
-            <span className="text-[12px] tracking-[0.25em] uppercase">← Author Studio</span>
-          </a>
-          <h1 className="text-2xl mb-6">{title}</h1>
-          <nav className="flex flex-wrap gap-x-8 gap-y-2 text-[12px] tracking-[0.15em] uppercase">
+          {/* §3.9 — once inside the work, the room stops describing itself.
+              The way back and the work's name are the shell's job now and are
+              permanently visible in the rail; repeating them here was the room
+              introducing itself to someone already standing in it.
+
+              The tab row stays exactly as it was: naming those tabs is a local
+              decision one layer down and is deliberately NOT settled here. */}
+          <nav className="flex flex-wrap gap-x-8 gap-y-2 pt-1 text-[12px] tracking-[0.15em] uppercase">
             {(
               [
                 ['manuscript', 'Manuscript'],
@@ -1102,7 +1131,7 @@ function PressManuscriptRoom() {
           </div>
         )}
       </main>
-    </div>
+    </StudioShell>
   );
 }
 
