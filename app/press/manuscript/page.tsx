@@ -617,7 +617,7 @@ function PressManuscriptRoom() {
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
                 placeholder="Title of your manuscript"
-                className="w-full bg-transparent border-b border-[#4A4238] py-2 text-lg outline-none placeholder:opacity-40"
+                className="press-field w-full bg-transparent border-b border-[#4A4238] py-2 text-lg outline-none placeholder:opacity-40"
                 style={{ fontFamily: SERIF }}
               />
               <textarea
@@ -625,7 +625,7 @@ function PressManuscriptRoom() {
                 onChange={(e) => setDraftText(e.target.value)}
                 placeholder="Paste your manuscript here…"
                 rows={12}
-                className="w-full bg-black/20 border border-[#4A4238] rounded-sm p-4 text-[14px] leading-relaxed outline-none placeholder:opacity-40"
+                className="press-field w-full bg-black/20 border border-[#4A4238] rounded-sm p-4 text-[14px] leading-relaxed outline-none placeholder:opacity-40"
                 style={{ fontFamily: SERIF }}
               />
               <div className="flex items-center gap-6">
