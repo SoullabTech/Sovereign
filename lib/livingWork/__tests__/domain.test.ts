@@ -3,6 +3,7 @@ import {
   refuseDeclaration,
   type Declaration,
   type LivingWork,
+  refuseTitle,
 } from '../domain';
 
 const MEMBER = '11111111-1111-1111-1111-111111111111';
@@ -76,5 +77,42 @@ describe('guard 2 — the Studio may not pronounce what the work is becoming', (
     expect(NEVER_AUTHORED_BY_THE_SYSTEM).toEqual(
       expect.arrayContaining(['title', 'purpose', 'type', 'theme', 'summary', 'status'])
     );
+  });
+});
+
+/**
+ * A Living Work exists when the member declares it. It is named when the member
+ * knows what it is. Those are different moments (ledger D-16), and 20260801000001
+ * collapsed them by making title NOT NULL.
+ */
+describe('a work may exist before it is named', () => {
+  it('accepts a work with no title', () => {
+    expect(refuseTitle(null)).toBeNull();
+    expect(refuseTitle(undefined)).toBeNull();
+  });
+
+  it('accepts a named work', () => {
+    expect(refuseTitle('Elemental Alchemy')).toBeNull();
+  });
+
+  it('rejects a title that is present but blank', () => {
+    expect(refuseTitle('')).toBe('blank_title');
+    expect(refuseTitle('   ')).toBe('blank_title');
+    expect(refuseTitle('\n\t')).toBe('blank_title');
+  });
+
+  it('still forbids the system from authoring a title', () => {
+    // The correction widens WHEN a member may name their work. It does not
+    // license the system to name it for them.
+    expect(NEVER_AUTHORED_BY_THE_SYSTEM).toContain('title');
+  });
+
+  it('does not introduce a placeholder for the unnamed state', () => {
+    // No 'Untitled', no generated name, no status flag standing in for absence.
+    const unnamed: LivingWork = {
+      id: 'w1', memberId: 'm1', title: null, purpose: null,
+      createdAt: 'now', updatedAt: 'now',
+    };
+    expect(unnamed.title).toBeNull();
   });
 });
