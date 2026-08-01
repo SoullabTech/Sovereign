@@ -5,6 +5,7 @@ import { PRESS, SERIF } from './pressTheme';
 import StudioShell from './StudioShell';
 import { IMPORT_HREF, SOURCE_HREF, WRITE_HREF } from './studioMap';
 import { useCurrentManuscript } from './useCurrentManuscript';
+import YourWork from './YourWork';
 
 /**
  * Author Studio — Home. The Layer 2 environment.
@@ -73,6 +74,11 @@ export default function AuthorStudioHome() {
             A place to gather, shape, write, and bring your book into form.
           </p>
         </header>
+
+        {/* Slice 2 — the declaration act. Reachable and legible here; it does
+            NOT re-found arrival around the work. That is the next slice, and the
+            manuscript sections below are deliberately untouched. */}
+        <YourWork />
 
         {phase === 'loading' && <p className="text-[14px] opacity-40">opening…</p>}
 
