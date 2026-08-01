@@ -22,6 +22,7 @@ import {
 import {
   conflictBody,
   payloadHash,
+  normalizeVersion,
   precheck,
   readGuard,
   type DraftGuardRow,
@@ -184,7 +185,7 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
        against a number, so an unconverted "1" never equals 1 and EVERY write
        was rejected as stale_base. Coerced at the driver boundary, which is the
        only place the string form is real. */
-    const guardRow = { ...current.rows[0], version: Number(current.rows[0].version) };
+    const guardRow = { ...current.rows[0], version: normalizeVersion(current.rows[0].version) };
     const decision = precheck(guardRow, 'save', guard.idempotencyKey, hash, guard.baseRevisionId);
     if (decision.kind === 'replay') {
       return NextResponse.json(decision.response as object);
@@ -231,7 +232,7 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ id: str
       if (now.rows.length === 0) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(conflictBody('stale_base', Number(now.rows[0].version)), { status: 409 });
+      return NextResponse.json(conflictBody('stale_base', normalizeVersion(now.rows[0].version)), { status: 409 });
     }
     const row = updated.rows[0];
 
