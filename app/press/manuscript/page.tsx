@@ -682,7 +682,7 @@ function PressManuscriptRoom() {
                             : p,
                         )
                       }
-                      className="flex-1 bg-transparent outline-none text-[15px] placeholder:opacity-30"
+                      className="press-field flex-1 bg-transparent outline-none text-[15px] placeholder:opacity-30"
                       style={{ fontFamily: SERIF }}
                     />
                     <span className="text-[12px] opacity-40">{pageEstimate(s.body.length)} pp</span>
@@ -959,7 +959,7 @@ function PressManuscriptRoom() {
                 value={newCollectionName}
                 onChange={(e) => setNewCollectionName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && createCollection()}
-                className="flex-1 bg-transparent border-b border-[#4A4238] py-2 text-lg outline-none"
+                className="press-field flex-1 bg-transparent border-b border-[#4A4238] py-2 text-lg outline-none"
                 style={{ fontFamily: SERIF }}
                 aria-label="New collection name"
               />
