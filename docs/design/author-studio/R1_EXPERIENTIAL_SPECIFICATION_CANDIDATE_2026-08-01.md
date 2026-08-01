@@ -27,39 +27,68 @@ that study, done now, rather than a recovery of one that existed.
 
 ---
 
-## What the good ones actually do
+## Comparative anatomy — what each environment protects
 
-Not their features. The properties that produce the feeling.
+Not a catalogue of software. Each of these succeeds at its own scale because it
+protects **one invariant** ruthlessly, and accepts the costs of protecting it. The
+useful question is never *what features does it have* but **what does it refuse to
+compromise** — and then, for each: does the Studio inherit that, refuse it, extend
+it, or is it ours alone?
 
-**iA Writer — the room has one job.** There is no sidebar, no inspector, no
-formatting bar. The measure is fixed and generous. Everything that could be a
-control is a keystroke instead. The lesson is not minimalism; it is that **every
-visible element is a claim on attention, and most cannot justify the claim.**
+| Environment | The invariant it protects | The cost it accepts | Studio |
+| --- | --- | --- | --- |
+| **iA Writer** | *The writing surface is the product. Everything else yields.* | No structure. Long works are unmanageable. | **Adopt** |
+| **Ulysses** | *Navigation is always one gesture away and never occupies the page.* | A library model the writer must learn. | **Adopt** |
+| **Scrivener** | *Structure is manipulable without interrupting writing.* | Structure surfaced so strongly that writing becomes project administration. | **Adopt the invariant, reject the expression** |
+| **Bear** | *An idea enters with almost no ceremony.* | Little help once the body of work is large. | **Adopt** |
+| **Craft** | *The document feels composed while it is being written.* | Formatting becomes a mode, and a mode competes with the sentence. | **Adopt partially** |
+| **Obsidian** | *Connections are declared by the writer, never inferred.* | No help at all in seeing what is gathering. | **Adopt and extend** |
+| **Apple Notes** | *Return costs nothing; nothing must be managed.* | No sense of a work as a whole. | **Adopt** |
 
-**Ulysses — the work is a body, not a file.** You do not open documents; you move
-through a library of sheets that belong to something. Structure is navigable
-without leaving the writing. The lesson: **a long work needs to be traversable from
-inside itself.**
+### What that resolves, case by case
 
-**Scrivener — the manuscript has a shape you can see.** Its binder makes structure a
-first-class object, so reordering is thinking, not file management. It is also the
-cautionary case: **structure surfaced too aggressively turns writing into project
-administration.**
+**From Ulysses we take the invariant, and it is the one we most obviously lack.**
+174 sections with no way through them is a failure by Ulysses' standard and by
+Scrivener's. Navigation is not a feature request; it is the property that makes a
+long work habitable.
 
-**Bear — typing is the only interface.** Markup is typed, never selected from a
-menu. Nothing modal. The lesson: **the fewer mode switches, the longer flow
-survives.**
+**From Scrivener we take the invariant and refuse the expression.** Structure must be
+manipulable — but a binder that greets you turns a writing room into a project
+manager. The test: can structure be reached and changed without the page ceasing to
+be a page.
 
-**Obsidian — relationships without imposed structure.** Connections are declared by
-the writer, never inferred. The lesson, and it is the one closest to this project's
-constitution: **the environment may hold relationships; it may not assert them.**
+**From Craft we take typographic care and refuse the formatting mode.** A document
+deserving of dignity is not the same as a document you style while writing it. Every
+styling control is a mode switch, and mode switches end flow.
 
-**Craft / Apple Notes — the page has physical dignity.** Margins, weight, and
-restraint make a note feel like an object rather than a record. The lesson:
-**typographic care reads as respect for the work.**
+**From Obsidian we take the invariant and go further than it does.** Obsidian never
+asserts connections because it has no intelligence that could. The Studio *does* —
+MAIA could infer relationships across a body of work at any moment, and must not.
+Protecting an invariant you have no capacity to violate is easy; protecting it while
+holding the capacity is the harder thing, and it is constitutional here
+(*the Studio may notice what is gathering; it may not pronounce what the work is
+becoming*).
 
-**What none of them do:** greet you, report on you, congratulate you, or offer to
-help. Not one shows a word count on the writing surface by default.
+### What the Studio refuses that all of them permit
+
+**Ambient measurement of the writer.** Every environment above surfaces a count
+somewhere — words, characters, progress toward a target. The Studio refuses it on the
+writing surface. A count measures activity; the room exists to support continuity.
+This is a deliberate divergence, not an omission.
+
+### What is ours alone
+
+**A creative environment with intelligence present and constrained.** None of the
+seven has to solve this: six have no intelligence, and the seventh treats it as an
+authoring assistant. The Studio holds a participant that could summarise, connect,
+and characterise a body of work — and is bound not to. That constraint is the
+Studio's own contribution to this class of software, and nothing above can be
+consulted about it.
+
+**The Living Work as the object.** Every environment above organises around files,
+sheets, or notes — an artifact. The candidate ontology organises around the body of
+work that gives rise to artifacts. *Unratified, and named here only so it is not
+mistaken for something inherited.*
 
 ---
 
