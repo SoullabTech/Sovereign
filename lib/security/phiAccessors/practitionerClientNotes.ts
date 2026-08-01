@@ -31,6 +31,29 @@ export interface ClientNotePHIContext {
   practitionerId: string;
 }
 
+/**
+ * Governed continuity kinds. There is deliberately no `arrival` kind — Current
+ * Arrival is a per-session authoring prompt inside the chronological note, not a
+ * durable object. See 20260731000001_practitioner_client_notes_continuity.sql.
+ */
+export type ClientNoteKind = 'note' | 'commitment' | 'recognition' | 'detail';
+
+/** Commitment lifecycle. Meaningful only when kind === 'commitment'. */
+export type CommitmentStatus = 'alive' | 'completed' | 'released';
+
+export const CLIENT_NOTE_KINDS: readonly ClientNoteKind[] = [
+  'note',
+  'commitment',
+  'recognition',
+  'detail',
+] as const;
+
+export const COMMITMENT_STATUSES: readonly CommitmentStatus[] = [
+  'alive',
+  'completed',
+  'released',
+] as const;
+
 /** Raw DB row shape (ciphertext columns present, no plaintext sibling). */
 export interface ClientNoteRow {
   id: string;
@@ -41,9 +64,18 @@ export interface ClientNoteRow {
   note_date: string | Date;
   created_at: string | Date;
   updated_at: string | Date;
+  kind?: ClientNoteKind;
+  status?: CommitmentStatus | null;
+  promoted_from?: string | null;
 }
 
-/** Decrypted, API-safe note. */
+/**
+ * Decrypted, API-safe note.
+ *
+ * ⚠️ `noteDate` is meaningful only for kind === 'note'. An object may carry
+ * timestamps without being temporal in meaning — each continuity kind has its
+ * own ruled ordering and must NOT be routed through the note comparator.
+ */
 export interface ClientNote {
   id: string;
   clientId: string;
@@ -51,6 +83,9 @@ export interface ClientNote {
   noteDate: string;
   createdAt: string;
   updatedAt: string;
+  kind: ClientNoteKind;
+  status: CommitmentStatus | null;
+  promotedFrom: string | null;
 }
 
 function buildContext(ctx: ClientNotePHIContext): PHIContext {
@@ -124,6 +159,11 @@ export function decryptClientNoteRow(row: ClientNoteRow): ClientNote | null {
     noteDate: toIsoDate(row.note_date),
     createdAt: toIsoDate(row.created_at),
     updatedAt: toIsoDate(row.updated_at),
+    // Defaults keep pre-migration rows (and any partial SELECT) reading as
+    // ordinary session notes rather than throwing.
+    kind: row.kind ?? 'note',
+    status: row.status ?? null,
+    promotedFrom: row.promoted_from ?? null,
   };
 }
 

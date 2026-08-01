@@ -21,6 +21,7 @@ import {
 } from '@/lib/security/phiAccessors/practitionerClientNotes';
 import { MAX_NOTE_LENGTH } from '../route';
 import { isValidNoteDate } from '@/lib/studio/noteDate';
+import { validateStatusUpdate } from '@/lib/studio/continuityKind';
 
 type Params = { params: Promise<{ id: string; noteId: string }> };
 
@@ -34,10 +35,26 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const { id: clientId, noteId } = await params;
 
     const body = await request.json();
-    const { content, note_date: noteDate } = body ?? {};
+    const { content, note_date: noteDate, status } = body ?? {};
 
-    if (content === undefined && noteDate === undefined) {
+    if (content === undefined && noteDate === undefined && status === undefined) {
       return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+    }
+
+    // kind and promoted_from are IMMUTABLE after creation. Rejected, not ignored:
+    //  - kind, because Carry Forward CREATES a new item rather than retyping an old one;
+    //  - promoted_from, because provenance that can be edited is not provenance.
+    if (body?.kind !== undefined) {
+      return NextResponse.json(
+        { error: 'kind cannot be changed after creation' },
+        { status: 400 }
+      );
+    }
+    if (body?.promoted_from !== undefined) {
+      return NextResponse.json(
+        { error: 'promoted_from cannot be changed after creation' },
+        { status: 400 }
+      );
     }
 
     // Same guard as POST: note_date reaches `$3::date`, so an invalid value would
@@ -61,6 +78,24 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       }
     }
 
+    // A status transition is only meaningful on a commitment, so the existing kind
+    // must be read before it can be validated. Scoped to this practitioner+client —
+    // a row outside scope is simply not found.
+    if (status !== undefined) {
+      const existing = await db.query(
+        `SELECT kind FROM practitioner_client_notes
+          WHERE id = $1 AND client_id = $2 AND practitioner_id = $3`,
+        [noteId, clientId, practitionerId]
+      );
+      if (existing.rows.length === 0) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      const check = validateStatusUpdate(existing.rows[0].kind, status);
+      if (!check.ok) {
+        return NextResponse.json({ error: check.error }, { status: 400 });
+      }
+    }
+
     // Re-encrypt against the SAME row id so the AAD stays valid.
     const encrypted =
       content !== undefined
@@ -72,10 +107,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           SET content_enc      = COALESCE($1, content_enc),
               content_enc_meta = COALESCE($2::jsonb, content_enc_meta),
               note_date        = COALESCE($3::date, note_date),
+              status           = COALESCE($7, status),
               updated_at       = NOW()
         WHERE id = $4 AND client_id = $5 AND practitioner_id = $6
        RETURNING id, client_id, practitioner_id, content_enc, content_enc_meta,
-                 note_date, created_at, updated_at`,
+                 note_date, created_at, updated_at, kind, status, promoted_from`,
       [
         encrypted?.contentEnc ?? null,
         encrypted?.contentEncMeta ?? null,
@@ -83,6 +119,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         noteId,
         clientId,
         practitionerId,
+        status ?? null,
       ]
     );
 
