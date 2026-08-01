@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { canProgrammaticallyFocus } from '@/lib/ui/programmaticFocus';
 import {
   Send,
   Paperclip,
@@ -188,23 +189,14 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     }
   }, [valueProp, externalValue, value]);
 
-  // Mount focus — desktop only.
-  //
-  // RULING (Kelly, 2026-08-01): touch and desktop have different input
-  // contracts. On desktop, autofocus is useful and predictable. On iOS,
-  // programmatic focus without a user gesture produces a *false focused state*:
-  // the field is document.activeElement but no soft keyboard appears — and a tap
-  // on an already-focused element does not reliably raise it, so the member taps
-  // the composer over and over and nothing happens. The first tap must always be
-  // the member's own intentional transition into writing.
+  // Mount focus — desktop only. See lib/ui/programmaticFocus.ts for why.
   //
   // Applied imperatively rather than via the `autoFocus` attribute because React
   // acts on that attribute at initial mount, before any client-side pointer
   // check could run.
   useEffect(() => {
     if (!autoFocus) return;
-    if (typeof window === 'undefined') return;
-    if (window.matchMedia?.('(pointer: coarse)').matches) return;
+    if (!canProgrammaticallyFocus()) return;
     textareaRef.current?.focus();
   }, [autoFocus]);
 

@@ -24,6 +24,7 @@ import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { VoiceDebugOverlay } from './voice/VoiceDebugOverlay';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+import { canProgrammaticallyFocus } from '@/lib/ui/programmaticFocus';
 // 🔁 Recovery seam (Pattern A) — honest delivery state for member turns.
 import { markFailed, markRetrying, clearDelivery, stripDelivery, type DeliveryStatus, type DeliveryFailureReason } from '@/lib/maia/deliveryStatus';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
@@ -3862,14 +3863,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Auto-focus text input in chat mode - only when switching to chat mode or when processing ends
   // FIXED: Don't trigger on every message.length change - causes iOS Safari input freeze
   // Also don't refocus if already focused (causes keyboard flicker on iOS)
-  // SCOPE NOTE (2026-08-01): the ruling names "mount autofocus", but its reason —
-  // programmatic focus without a user gesture creates a false focused state with
-  // no keyboard — applies identically to this post-reply refocus. Left ungated,
-  // the first tap would open the keyboard on a fresh launch and then stop working
-  // after MAIA's first reply, which would make the PR's claim false. Gated on the
-  // same coarse-pointer test; trivially reversible if the narrower reading was meant.
+  // Desktop only — see lib/ui/programmaticFocus.ts. Ungated, this would reopen
+  // the defect after MAIA's first reply: the first tap works on a fresh launch,
+  // then the refocus leaves the field falsely focused and no later tap raises
+  // the keyboard. (Ruled in scope, Kelly 2026-08-01.)
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) return;
+    if (!canProgrammaticallyFocus()) return;
     if (showChatInterface && !isProcessing && !isResponding && textInputRef.current) {
       // Check if already focused to prevent iOS keyboard issues
       if (document.activeElement !== textInputRef.current) {
@@ -10154,10 +10153,15 @@ I'm not sure what I'm feeling yet.`;
           setShowPromptPicker(false);
           setHasActivated(true); // Skip welcome screen
 
-          // Focus the text input
-          setTimeout(() => {
-            textInputRef.current?.focus?.();
-          }, 100);
+          // Focus the text input — desktop only. A tap started this handler, but
+          // the deferred call breaks the gesture chain, so iOS treats it as
+          // programmatic focus: field focused, keyboard closed, next tap dead.
+          // See lib/ui/programmaticFocus.ts.
+          if (canProgrammaticallyFocus()) {
+            setTimeout(() => {
+              textInputRef.current?.focus?.();
+            }, 100);
+          }
         }}
         consciousnessLevel={3} // TODO: Get from user profile
         sessionPhase={sessionTimer?.getCurrentPhase?.() as any}
@@ -10192,7 +10196,9 @@ I'm not sure what I'm feeling yet.`;
           const contextMessage = `I'm arriving today feeling ${checkin.state.label.toLowerCase()} (${checkin.state.description.toLowerCase()}).${checkin.note ? ` ${checkin.note}` : ''}`;
           setDraftMessage(contextMessage);
           setComposerDraft(contextMessage);
-          setTimeout(() => textInputRef.current?.focus?.(), 100);
+          // Desktop only — deferred focus breaks the gesture chain on iOS.
+          // See lib/ui/programmaticFocus.ts.
+          if (canProgrammaticallyFocus()) setTimeout(() => textInputRef.current?.focus?.(), 100);
         }}
       />
 
@@ -10206,7 +10212,9 @@ I'm not sure what I'm feeling yet.`;
           const contextMessage = `I just discovered my dominant element is ${result.dominant} with ${result.secondary} as secondary. Help me understand what this means for my journey.`;
           setDraftMessage(contextMessage);
           setComposerDraft(contextMessage);
-          setTimeout(() => textInputRef.current?.focus?.(), 100);
+          // Desktop only — deferred focus breaks the gesture chain on iOS.
+          // See lib/ui/programmaticFocus.ts.
+          if (canProgrammaticallyFocus()) setTimeout(() => textInputRef.current?.focus?.(), 100);
         }}
       />
 
