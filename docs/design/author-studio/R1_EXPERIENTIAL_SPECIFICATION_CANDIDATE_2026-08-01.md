@@ -35,15 +35,21 @@ useful question is never *what features does it have* but **what does it refuse 
 compromise** — and then, for each: does the Studio inherit that, refuse it, extend
 it, or is it ours alone?
 
-| Environment | The invariant it protects | The cost it accepts | Studio |
-| --- | --- | --- | --- |
-| **iA Writer** | *The writing surface is the product. Everything else yields.* | No structure. Long works are unmanageable. | **Adopt** |
-| **Ulysses** | *Navigation is always one gesture away and never occupies the page.* | A library model the writer must learn. | **Adopt** |
-| **Scrivener** | *Structure is manipulable without interrupting writing.* | Structure surfaced so strongly that writing becomes project administration. | **Adopt the invariant, reject the expression** |
-| **Bear** | *An idea enters with almost no ceremony.* | Little help once the body of work is large. | **Adopt** |
-| **Craft** | *The document feels composed while it is being written.* | Formatting becomes a mode, and a mode competes with the sentence. | **Adopt partially** |
-| **Obsidian** | *Connections are declared by the writer, never inferred.* | No help at all in seeing what is gathering. | **Adopt and extend** |
-| **Apple Notes** | *Return costs nothing; nothing must be managed.* | No sense of a work as a whole. | **Adopt** |
+| Environment | Invariant it protects | Why it holds there | What happens when intelligence enters | Studio response | Protects against |
+| --- | --- | --- | --- | --- | --- |
+| **iA Writer** | Deep focus | Nothing else is on screen | Intelligence wants to offer, suggest, interrupt | Silent until invited | The creator beginning to write *for* the AI instead of for the work |
+| **Ulysses** | Structure always one gesture away | A separate sheet hierarchy | Intelligence could reorganise the work | Structure stays creator-directed | Losing orientation in long-form work |
+| **Scrivener** | Long-form structure is manipulable | The binder | Intelligence could propose outlines | The creator moves structure; intelligence never authors it | Mistaking generated organisation for discovered meaning |
+| **Bear** | An idea enters with no ceremony | Typed markup, no modes | Intelligence could title, tag, file it | Capture stays verbatim and unprocessed | Losing why it mattered while keeping what it said |
+| **Craft** | The document has dignity | Rich styling controls | Intelligence encourages formatting mid-sentence | Beauty without a styling mode | Replacing composition with decoration |
+| **Obsidian** | Connections are declared, never inferred | **It has no inference engine** | Intelligence can infer everything, instantly | No asserted relationships without invitation | The system pronouncing what the work is becoming |
+| **Apple Notes** | Return costs nothing | Nothing to manage | Intelligence could "helpfully" reorganise on return | The page opens where it was left | Coming back to someone else's arrangement of your work |
+
+**The second and fourth columns are the whole point.** Six of these environments
+protect their invariant *by lacking the capacity to violate it*. Obsidian does not
+assert relationships because it has no engine that could. That is not a virtue under
+test. **Every one of these invariants becomes a live constitutional problem the moment
+intelligence is in the room**, and none of these products has had to solve it.
 
 ### What that resolves, case by case
 
@@ -69,16 +75,36 @@ holding the capacity is the harder thing, and it is constitutional here
 (*the Studio may notice what is gathering; it may not pronounce what the work is
 becoming*).
 
-### What the Studio refuses that all of them permit
+### Deliberate refusals — constitutional, not missing
 
-**Ambient measurement of the writer.** Every environment above surfaces a count
-somewhere — words, characters, progress toward a target. The Studio refuses it on the
+These are not features the Studio lacks. They are choices. **A future contributor
+should have to argue against them, not rediscover them.**
+
+| Refusal | Protects against |
+| --- | --- |
+| No ambient productivity metrics in the writing room | Confusing productivity with creative continuity |
+| No unsolicited interpretation | The system pronouncing meaning the creator has not reached |
+| No automatic clustering | Manufactured relationships read as discovered ones |
+| No automatic naming | A generated label replacing the creator's own word for their work |
+| No automatic summarisation | A summary standing in for the thing itself |
+| No streaks, targets, or progress toward output | Optimising for volume rather than for return |
+
+Every environment studied surfaces a count somewhere. The Studio refuses it on the
 writing surface. A count measures activity; the room exists to support continuity.
-This is a deliberate divergence, not an omission.
 
-### What is ours alone
+### The thesis — what is ours alone
 
-**A creative environment with intelligence present and constrained.** None of the
+> **An environment where intelligence is present, relationally constrained,
+> constitutionally governed, and always subordinate to the creator's relationship
+> with their work.**
+
+Every environment studied solved creative work *without* intelligence. Most AI
+products solve it by making intelligence dominant. Neither has attempted this.
+
+That is the research contribution, and it is why the anatomy above is
+two-dimensional: the useful question is not *what do these applications do well* but
+**what invariant does each protect, and what becomes of that invariant when
+intelligence enters the room.** None of the
 seven has to solve this: six have no intelligence, and the seventh treats it as an
 authoring assistant. The Studio holds a participant that could summarise, connect,
 and characterise a body of work — and is bound not to. That constraint is the
