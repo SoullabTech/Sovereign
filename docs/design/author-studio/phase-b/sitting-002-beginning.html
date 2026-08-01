@@ -1,0 +1,154 @@
+<title>Sitting 002 — Beginning</title>
+<style>
+  :root {
+    --ground:#F4F6F8; --card:#FFFFFF; --ink:#161E2B;
+    --ink-soft:#596373; --ink-faint:#8B93A1; --rule:#DDE2E9;
+    --brass:#8A6520; --heat:#A33B2A;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ground:#0B0F16; --card:#141A24; --ink:#E7EAEF; --ink-soft:#98A1B0;
+      --ink-faint:#6B7484; --rule:#242C39; --brass:#C9A059; --heat:#D9705C; }
+  }
+  :root[data-theme="dark"] { --ground:#0B0F16; --card:#141A24; --ink:#E7EAEF; --ink-soft:#98A1B0;
+    --ink-faint:#6B7484; --rule:#242C39; --brass:#C9A059; --heat:#D9705C; }
+  :root[data-theme="light"] { --ground:#F4F6F8; --card:#FFFFFF; --ink:#161E2B; --ink-soft:#596373;
+    --ink-faint:#8B93A1; --rule:#DDE2E9; --brass:#8A6520; --heat:#A33B2A; }
+
+  body { background:var(--ground); color:var(--ink); font-family:var(--sans); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:38rem; margin:0 auto; padding:4rem 1.25rem 6rem; display:flex; flex-direction:column; gap:1.75rem; }
+
+  .card { background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:2.25rem 2rem; display:flex; flex-direction:column; gap:2rem; }
+  .head { display:flex; flex-direction:column; gap:.35rem; }
+  .head .n { font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); }
+  .head h1 { font-family:var(--serif); font-size:2.4rem; font-weight:400; line-height:1; letter-spacing:-.015em; }
+
+  .field { display:grid; grid-template-columns:6.5rem 1fr; gap:1.25rem; align-items:baseline; }
+  @media (max-width:30rem){ .field { grid-template-columns:1fr; gap:.15rem; } }
+  .field .k { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); font-weight:600; }
+  .field .v { font-family:var(--serif); font-size:1.22rem; line-height:1.35; }
+  .field .v.small { font-size:1.05rem; color:var(--ink-soft); }
+  .fields { display:flex; flex-direction:column; gap:1.15rem; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  @media (max-width:30rem){ .cols { grid-template-columns:1fr; } }
+  .col { display:flex; flex-direction:column; gap:.5rem; }
+  .col .k { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }
+  .col.no .k { color:var(--heat); }
+  .col.yes .k { color:var(--brass); }
+  .col ul { list-style:none; display:flex; flex-direction:column; gap:.25rem; }
+  .col li { font-family:var(--serif); font-size:1.05rem; }
+  .col.no li { color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--rule); }
+
+  .scenes { display:flex; flex-direction:column; gap:1.5rem; }
+  .scene { display:flex; flex-direction:column; gap:.55rem; }
+  .scene .s { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+  .beats { display:flex; flex-direction:column; }
+  .bt { display:grid; grid-template-columns:2.9rem 1fr; gap:.85rem; align-items:baseline; padding:.26rem 0; }
+  .bt .t { font-family:var(--mono); font-size:.72rem; color:var(--ink-faint); font-variant-numeric:tabular-nums; }
+  .bt .d { font-size:.95rem; }
+  .bt.crit .d { color:var(--heat); }
+  .said { font-family:var(--serif); font-size:1.08rem; line-height:1.45; color:var(--ink-soft); }
+
+  .finding { display:flex; flex-direction:column; gap:.3rem; }
+  .finding .k { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); font-weight:600; }
+  .finding .v { font-family:var(--serif); font-size:1.5rem; line-height:1.3; text-wrap:balance; }
+
+  hr { height:1px; background:var(--rule); border:0; }
+  .foot { font-size:.78rem; color:var(--ink-faint); display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+</style>
+
+<div class="wrap">
+
+  <div class="card">
+
+    <div class="head">
+      <span class="n">Sitting 002</span>
+      <h1>Beginning</h1>
+    </div>
+
+    <div class="fields">
+      <div class="field"><span class="k">Loop</span><span class="v small">Idea → Capture → Waits → Return → Keep writing → Idea</span></div>
+      <div class="field"><span class="k">Protect</span><span class="v">New ideas</span></div>
+      <div class="field"><span class="k">People lose</span><span class="v">They remember the idea. They forget why they wrote it down.</span></div>
+      <div class="field"><span class="k">Stays</span><span class="v">The words they used. The question. What they were doing at the time.</span></div>
+      <div class="field"><span class="k">Brings it back</span><span class="v">Their own words, next to the work.</span></div>
+    </div>
+
+    <hr>
+
+    <div class="scenes">
+
+      <div class="scene">
+        <span class="s">Sketch 1 · a conversation</span>
+        <p class="said">“…you can only notice air by what it moves.”</p>
+        <div class="beats">
+          <div class="bt"><span class="t">0s</span><span class="d">She says it without planning to.</span></div>
+          <div class="bt crit"><span class="t">+2s</span><span class="d">It's better than anything she wrote this month.</span></div>
+          <div class="bt crit"><span class="t">+4s</span><span class="d">The other person is still talking. Picking up a phone would end the conversation.</span></div>
+          <div class="bt"><span class="t">+40m</span><span class="d">She remembers the topic. Not the sentence.</span></div>
+        </div>
+      </div>
+
+      <div class="scene">
+        <span class="s">Sketch 2 · a walk</span>
+        <div class="beats">
+          <div class="bt"><span class="t">0s</span><span class="d">The idea arrives on a walk, half a mile from home.</span></div>
+          <div class="bt"><span class="t">+3s</span><span class="d">Phone out. He can't type while walking.</span></div>
+          <div class="bt crit"><span class="t">+6s</span><span class="d">He says it out loud. No typing, no title, no folder.</span></div>
+          <div class="bt"><span class="t">+7s</span><span class="d">Phone back in pocket. He didn't have to decide anything.</span></div>
+        </div>
+      </div>
+
+      <div class="scene">
+        <span class="s">Sketch 3 · six months on</span>
+        <div class="beats">
+          <div class="bt"><span class="t">—</span><span class="d">She's writing the chapter. She's forgotten the recording exists.</span></div>
+          <div class="bt crit"><span class="t">—</span><span class="d">It shows up next to the paragraph. Her words, and what she was doing that day.</span></div>
+          <div class="bt"><span class="t">—</span><span class="d">She remembers why it mattered. It goes into the chapter.</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <hr>
+
+    <div class="cols">
+      <div class="col no">
+        <span class="k">Remove</span>
+        <ul><li>Summary</li><li>Auto title</li><li>Cleanup</li><li>Choosing a folder</li><li>Any question</li></ul>
+      </div>
+      <div class="col yes">
+        <span class="k">Keep</span>
+        <ul><li>Their exact words</li><li>The recording</li><li>Date and current work</li><li>Shown next to the work</li></ul>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="finding">
+      <span class="k">Finding</span>
+      <span class="v">Show it next to the work. Don't make people search for it.</span>
+    </div>
+
+    <div class="cols">
+      <div class="col yes">
+        <span class="k">The Studio should</span>
+        <ul><li>Let them speak it</li><li>Save their exact words</li><li>Save the date and the work</li><li>Show it beside that work</li></ul>
+      </div>
+      <div class="col yes">
+        <span class="k">Open questions</span>
+        <ul><li>Which work it belongs to</li><li>Ideas with no work yet</li><li>Showing it without interrupting</li></ul>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>Don't change what they said. Changing it is what loses the point.</span>
+      <span>2026-07-31</span>
+    </div>
+
+  </div>
+
+</div>
