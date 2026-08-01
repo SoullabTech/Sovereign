@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PRESS, SERIF } from './pressTheme';
+import { shellIdentity } from './shellIdentity';
 import { visibleDestinations, type StudioDestination } from './studioMap';
+import { arrivalWork, type LivingWork, type LivingWorksPhase } from './useLivingWorks';
 
 /**
  * Author Studio — the Layer 2 shell.
@@ -20,14 +22,38 @@ import { visibleDestinations, type StudioDestination } from './studioMap';
  *
  * It states what is here and what is not. A destination that is not built
  * renders as plainly unavailable — never a dead link, never a hopeful one.
+ *
+ * ── 2026-08-01: the shell says what the page says ──────────────────────────
+ *
+ * The rail used to name the current manuscript directly beneath "Author
+ * Studio", which made the book the Studio's identity. After #866 re-founded
+ * arrival on the Living Work, the authenticated walk found the room split:
+ * the main column returned the member to their work, the rail around it
+ * returned them to a manuscript manager.
+ *
+ * The fix is agreement, not a second opinion. The works read is NOT repeated
+ * here — Studio Home performs it once and passes it in, and this shell asks
+ * the same `arrivalWork` the page asked. Two fetches would have meant two
+ * answers to "what did I come back to?" in one room, which is the defect
+ * again in a new place. See shellIdentity.ts for what each state says.
  */
 
 interface StudioShellProps {
   children: React.ReactNode;
   /** Drives whether book-scoped destinations appear at all. */
   hasManuscript: boolean;
-  /** Shown under the Studio name so the member always knows which book. */
+  /**
+   * The current book. Names the shell only when no work is declared — see
+   * shellIdentity.ts. It is never shown as belonging to a work.
+   */
   manuscriptTitle?: string | null;
+  /**
+   * The Living Work read, handed down from Studio Home rather than performed
+   * again here. Required, so a future Studio surface cannot mount this shell
+   * without answering the question the shell is about to state an answer to.
+   */
+  worksPhase: LivingWorksPhase;
+  works: LivingWork[];
 }
 
 function isCurrent(dest: StudioDestination, pathname: string, tab: string | null): boolean {
@@ -43,6 +69,8 @@ export default function StudioShell({
   children,
   hasManuscript,
   manuscriptTitle,
+  worksPhase,
+  works,
 }: StudioShellProps) {
   const pathname = usePathname() ?? '';
   const [menuOpen, setMenuOpen] = useState(false);
@@ -116,8 +144,17 @@ export default function StudioShell({
     </nav>
   );
 
+  // The page's answer, not a second one: same function, same data.
+  const subject = shellIdentity({
+    worksPhase,
+    workCount: works.length,
+    work: arrivalWork(worksPhase, works),
+    manuscriptTitle,
+  });
+
   const identity = (
     <div>
+      {/* The place is still named. It just stops being the subject. */}
       <div className="flex items-center gap-2.5 mb-1">
         <img
           src="/holoflower-studio-transparent.png"
@@ -127,11 +164,22 @@ export default function StudioShell({
         />
         <p className="text-[12px] tracking-[0.25em] uppercase opacity-50">Author Studio</p>
       </div>
-      {manuscriptTitle && (
-        <p className="text-[15px] opacity-75 leading-snug" style={{ fontFamily: SERIF }}>
-          {manuscriptTitle}
-        </p>
-      )}
+      {/* One line, held at a constant height. The rail must not settle into
+          its answer by shifting the navigation beneath it. */}
+      <div style={{ minHeight: '1.4rem' }}>
+        {(subject.kind === 'work' || subject.kind === 'manuscript') && (
+          <p
+            className="text-[15px] leading-snug"
+            style={{
+              fontFamily: SERIF,
+              // An unnamed work reads as orientation, not as a title.
+              opacity: subject.kind === 'work' && !subject.named ? 0.55 : 0.75,
+            }}
+          >
+            {subject.label}
+          </p>
+        )}
+      </div>
     </div>
   );
 

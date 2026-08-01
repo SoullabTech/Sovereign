@@ -90,7 +90,14 @@ export default function AuthorStudioHome() {
   }
 
   return (
-    <StudioShell hasManuscript={hasManuscript} manuscriptTitle={manuscript?.title}>
+    <StudioShell
+      hasManuscript={hasManuscript}
+      manuscriptTitle={manuscript?.title}
+      // The same read the header below is founded on. Passed down so the room
+      // has one answer to "what did I come back to?" instead of two.
+      worksPhase={worksPhase}
+      works={works}
+    >
       <div className="max-w-2xl px-6 md:px-12 py-12 md:py-16">
         {/* ── Arrival. Restrained: name what they came back to, then get out of
             the way. A declared work is the subject; otherwise the place is. ── */}
