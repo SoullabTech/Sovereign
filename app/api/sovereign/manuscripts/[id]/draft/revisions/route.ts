@@ -14,6 +14,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   conflictBody,
   payloadHash,
+  normalizeVersion,
   precheck,
   readGuard,
   type DraftGuardRow,
@@ -104,7 +105,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     }
     const draftId = current.rows[0].id;
 
-    const decision = precheck(current.rows[0], 'restore', guard.idempotencyKey, hash, guard.baseRevisionId);
+    /* Same bigint coercion as the save route: node-postgres returns bigint as
+       a string, and precheck compares with !== against a number. Without this,
+       restore — the undo path — rejects every attempt as stale_base. */
+    const guardRow = { ...current.rows[0], version: normalizeVersion(current.rows[0].version) };
+    const decision = precheck(guardRow, 'restore', guard.idempotencyKey, hash, guard.baseRevisionId);
     if (decision.kind === 'replay') {
       return NextResponse.json(decision.response as object);
     }
@@ -152,7 +157,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       if (now.rows.length === 0) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(conflictBody('stale_base', now.rows[0].version), { status: 409 });
+      return NextResponse.json(conflictBody('stale_base', normalizeVersion(now.rows[0].version)), { status: 409 });
     }
 
     await query(
