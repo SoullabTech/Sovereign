@@ -10,6 +10,33 @@ corrections; it authorizes nothing and rules nothing until Kelly ratifies it.
 
 ---
 
+## Four independent dimensions (Kelly, 2026-08-02)
+
+The three chains below describe **which artifact governs** and **what evidence satisfies it**. Two
+further dimensions are independent of both, and of each other. Conflating any pair has produced a
+real error in this project.
+
+| # | Dimension | Answers | Where it lives |
+|---|---|---|---|
+| 1 | **Referential authority** | *what artifact governs?* | Amendment 5 · #895 · Feature Walk Spec · Phase 1 Walk Spec |
+| 2 | **Evidence authority** | *what evidence satisfies that artifact?* | persistence probes · authenticated feature walk · Phase 1 walk evidence |
+| 3 | **State authority** | *who may move an artifact through its lifecycle?* | ⏳ **unruled** — see below |
+| 4 | **Approval authority** | *who approves?* | `GOVERNANCE_MENTOR_COVENANT.md` — Founder / Steward / Council / Mentor, Class A/B/C gates |
+
+```
+Draft → Frozen → Executed → Accepted / Refused
+```
+
+⭐⭐⭐ **Approval authority is not state authority.** A Founder may approve something without having
+authored it. A Steward may assemble a release candidate without accepting it. A tester may execute a
+walk without being able to freeze its specification. The covenant answers dimension 4 in detail and
+is silent on dimension 3.
+
+⚠️ **Dimensions 1 and 2 are also distinct**, which is what the substitution rule below protects: an
+evidence record is not the specification it answers.
+
+---
+
 ## The three kinds of authority
 
 Governance in this project has been separating into three distinct authorities. Some language still
@@ -172,12 +199,28 @@ freezing a specification, and neither is completing an evidence record. The one 
 is `CORPUS_WEIGHTING_SCHEMA_v1.0.md` — *"Tier 1 is frozen except by explicit decision"* — a freeze
 concept that exists for corpus tiers and has never been generalized to governance artifacts.
 
-⛔ **This document does not answer these questions.** It records that they are the remaining gap, and
-that answering them is a founder act.
+⛔ **This document does not answer these questions, and must not be read as implying answers.**
+Answering them is a founder act.
+
+⭐⭐⭐ **Do not answer an open question because a table has a blank in it.** Recording the existence of
+an unresolved constitutional question *without silently answering it through implementation* is the
+discipline that produced this model in the first place. A blank marked **Unruled** is a finished
+piece of work, not an unfinished one.
 
 > Once four things are known — **what the artifacts are · what states they have · who may transition
 > them · and that evidence is prerequisite rather than substitutable** — the governance model is
 > complete without adding further special-case rules.
+
+### Where this leaves the work
+
+With referential authority, evidence authority, prerequisite relationships, representation-vs-referent,
+operational obligations separated from governance class, and state transitions named as their own
+dimension, **the remaining constitutional work is mostly filling in rulings rather than discovering
+new categories.**
+
+⭐⭐ That is a **different phase**: less inventing the framework, more deciding how it should be
+populated. Treat a newly discovered *category* as the surprising case worth stopping for; treat a
+blank *ruling* as ordinary pending work.
 
 ---
 
