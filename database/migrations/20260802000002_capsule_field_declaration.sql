@@ -69,22 +69,27 @@ ALTER TABLE member_memory_atoms
     'capsule'::text
   ]));
 
--- 2. One declaration per source, enforced by the database.
+-- 2. Idempotency needs NO new index — one already exists.
 --
--- The member presses once. A double-tap, a retry after a dropped response, or
--- two tabs must all leave one Field Object — and the UI cannot promise that.
--- Two concurrent inserts both pass a read-before-write check; only a unique
--- index makes the second one lose.
+-- `idx_memory_atoms_unique_source` is already present in production:
 --
--- PARTIAL, on source_id IS NOT NULL. Spontaneous declarations carry no source
--- (the sourcing_discipline CHECK requires a body instead), so a total index
--- would collapse every spontaneous Keep a member ever made into one row. That
--- would be a false uniqueness claim about a genuinely repeatable act.
+--   CREATE UNIQUE INDEX idx_memory_atoms_unique_source
+--     ON member_memory_atoms (member_id, source_type, source_id)
+--     WHERE source_id IS NOT NULL;
 --
--- Verified before writing this migration: zero duplicate groups and zero
--- surplus rows on production, so this index adds no reconciliation debt.
-CREATE UNIQUE INDEX IF NOT EXISTS uniq_atom_member_source
-  ON member_memory_atoms (member_id, source_type, source_id)
-  WHERE source_id IS NOT NULL;
+-- That is exactly the guarantee this correction needs, partial predicate and
+-- all. An earlier draft of this migration created a second index with the same
+-- definition under a different name — pure duplication, doubling write cost on
+-- every atom to enforce a rule already enforced. It is not created here.
+--
+-- The gap was never the constraint. It was that keepSource() did a bare INSERT
+-- against it, so a retry raised a unique violation instead of returning the
+-- Field Object the member already declared. That is fixed in the service with
+-- ON CONFLICT, which targets this existing index.
+--
+-- Recorded so the next reader does not re-add it: uniqueness on
+-- (member_id, source_type, source_id) WHERE source_id IS NOT NULL is ALREADY
+-- GUARANTEED. Verified on production 2026-08-02, alongside zero duplicate
+-- groups and zero surplus rows.
 
 COMMIT;
