@@ -244,6 +244,28 @@ blocker.
 the chain: implementation evidence → **feature acceptance** → **release acceptance** → **founder
 decision**. Loose synonyms are how two levels start reading as one.
 
+### Three different meanings of "done"
+
+⭐⭐⭐ *Done* is three separate predicates, and the four dimensions explain **why** rather than leaving
+it to convention.
+
+| Predicate | Means | Answered by |
+|---|---|---|
+| **Implemented** | the engineering work is complete | evidence authority, at the implementation level |
+| **Accepted** | the artifact satisfied **the acceptance instrument appropriate to its level** | referential authority (*which instrument?*) + evidence authority (*did it satisfy it?*) |
+| **Authorized** | someone with the required authority allowed the next state transition | state authority + approval authority |
+
+They come apart in every direction:
+
+- Correction 3 may be **implemented** and not **feature accepted**.
+- It may become **feature accepted** without being part of an **accepted Phase 1 release**.
+- Phase 1 may become **release accepted** without being **deployed**.
+- Deployment may occur **only** after the appropriate authorization.
+
+⛔ **Never infer one predicate from another.** *"It's built"* is not *"it's accepted."* *"It's
+accepted"* is not *"it's authorized."* Each is established by its own dimension, and a claim that
+skips one is the representation-substitution error wearing a schedule's clothing.
+
 ### Reporting status across three levels
 
 ⛔ **Never report status as a single flat list.** A flat list silently attaches every blocker to
@@ -270,6 +292,22 @@ new categories.**
 ⭐⭐ That is a **different phase**: less inventing the framework, more deciding how it should be
 populated. Treat a newly discovered *category* as the surprising case worth stopping for; treat a
 blank *ruling* as ordinary pending work.
+
+**The next work applies this model rather than extending it** — which is the useful test of whether
+a framework has stabilized. If a sequence can be derived from the model **without introducing a new
+governance concept**, the model is holding:
+
+1. Complete Correction 3's authenticated **feature acceptance**.
+2. Resolve the unrelated `detectRelationalSignal.ts` integration blocker.
+3. Assemble **one named** Phase 1 release candidate.
+4. Author and **freeze** the Phase 1 Walk Specification.
+5. Execute the release walk.
+6. Produce the evidence record.
+7. Make the **founder decision**.
+
+⚠️ Steps 4 and 7 both invoke authorities this document records as **unruled or founder-only** —
+*who* may freeze a specification is dimension 3 and still open. Reaching those steps will require
+answering it, and that answer is a founder act, not a by-product of arriving there.
 
 ---
 
