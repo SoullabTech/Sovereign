@@ -564,3 +564,76 @@ merged migration → known correction → new explicit migration → new evidenc
 That is what stops unresolved questions from leaking back into implementation as assumptions.
 By that standard this record is **two-thirds done**: every item above has a category and a boundary;
 **#916, #917, #918 still lack owners**, and #915 lacks a referent.
+
+---
+
+## 10. Ownership — completing the chain
+
+⭐⭐⭐ **referents → ownership → action authority.** The ledger established referents (§9). This
+completes the chain. **It is not more governance; it is the administrative step that lets each lane
+move without ambiguity.**
+
+| Referent | Owner | Recorded |
+|---|---|---|
+| **#916** post-merge corrective amendment | **Founder-Steward (Kelly)** | assignee + comment |
+| **#917** migration integrity / checksum | **Founder-Steward, until delegated** | assignee + comment |
+| **#918** merge-control governance | **Founder-Steward, until delegated** | assignee + comment |
+| **#915** | ⛔ **no owner, no scope — intentionally** | awaiting referent definition |
+
+⭐ All three land with Founder-Steward **not because the founder must personally implement them**, but
+because **ownership and execution are different dimensions**:
+
+```
+Founder-Steward owns the decision boundary
+        ↓
+executor may implement after authorization
+        ↓
+reviewers verify against the artifact
+```
+
+### 10.1 The four roles — separate dimensions, explicit overlap
+
+| Role | Function |
+|---|---|
+| **Specification author** | defines what must be true |
+| **Builder** | creates the implementation |
+| **Executor** | performs the run/change |
+| **Acceptor** | decides whether evidence is sufficient |
+
+One person may occupy several. ⛔ **The overlap has to be explicit** — an unstated overlap is how a
+builder's convenient choice becomes an acceptance, which is the failure this whole record documents.
+Decisions marked *"surface for ruling"* belong to the **Acceptor**, never the Builder.
+
+### 10.2 #915 stays unresolved on purpose
+
+⛔ **Do not assign a guessed owner or scope.** It lacks the primary requirement of a tracked work
+item — **a stable referent**. Ownership attaches only once #915 has a defined artifact, decision, or
+defect boundary. Assigning an owner to an undefined scope would manufacture exactly the false
+precision §9 warns against.
+
+### 10.3 #896 / #918 — final sharpening
+
+- **#896** is a **gate logic defect**: *obligations must compose with classification.*
+- **#918** is an **authority workflow defect**: *who controls the act of merging when governance
+  obligations exist.*
+
+⭐ **A fixed gate does not automatically create a correct authorization workflow.** Adjacent, different
+referents. Closing #896 must not be read as progress on #918.
+
+### 10.4 ⚠️ Concurrency notice — all three lanes are now executing in parallel
+
+Recorded because it is a live risk, not a hypothetical:
+
+1. **#916 ⟷ #917 file collision.** Both touch `database/migrations/` and
+   `database/migrations/README.md`. #916 adds `20260802000004`; #917 modifies the runner and the same
+   README section. Expect conflicts; neither should assume it lands first.
+2. **#917 can gate #916.** If checksum enforcement lands **fail-closed** with a `NULL = drift`
+   policy, environments carrying NULL checksums stop before reaching #916's corrective migration.
+   The NULL policy is therefore **a dependency of #916, not only a #917 decision.**
+3. **#918 can gate both.** `CODEOWNERS` or branch protection landing first would gate its own
+   siblings. ⭐ Sequencing implication: **#918's mechanism should land after #916 and #917 merge**, or
+   it blocks the corrections that motivated it.
+4. 🔴 **Shared dev database.** #916 and #917 both require DB verification, and this repo's worktrees
+   share one dev database — the standing trap where a concurrent lane drops another's tables
+   mid-gate. **Both lanes must use a branch-owned database**, not the shared one. Evidence produced
+   against the shared DB is not repeatable and does not count.
