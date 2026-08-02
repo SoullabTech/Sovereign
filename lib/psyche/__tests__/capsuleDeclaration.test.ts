@@ -190,8 +190,7 @@ describe('the declared body is stable — capsule and Field Object are separate 
     // to the DO UPDATE, a declared Field Object would start silently tracking
     // its source, collapsing two histories the canon keeps separate. That
     // change must fail here rather than in a member's Field.
-    query.mockResolvedValueOnce(eligibleCapsule());
-    query.mockResolvedValueOnce(atomRow());
+    respondBySql(eligibleCapsule(), atomRow());
 
     await keepSource(MEMBER, {
       memberId: MEMBER,
@@ -209,8 +208,7 @@ describe('the declared body is stable — capsule and Field Object are separate 
   });
 
   it('declaration never writes to the capsule — the source is left intact', async () => {
-    query.mockResolvedValueOnce(eligibleCapsule());
-    query.mockResolvedValueOnce(atomRow());
+    respondBySql(eligibleCapsule(), atomRow());
 
     await keepSource(MEMBER, {
       memberId: MEMBER,

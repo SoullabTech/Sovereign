@@ -1,5 +1,6 @@
 import { query } from '@/lib/db/postgres';
 import { keepSource } from '@/lib/psyche/portfolio';
+import { resolveCapsuleDeclarationSource } from '@/lib/psyche/sources/capsule';
 import { randomUUID } from 'crypto';
 
 const M1 = randomUUID(), M2 = randomUUID();
@@ -87,6 +88,24 @@ const refuses = async (fn: () => Promise<unknown>, s: string) => {
 
   const auto = await query(`SELECT count(*) n FROM member_memory_atoms WHERE source_type='capsule' AND member_id=$1`,[M2]);
   ok((auto.rows[0] as any).n==='0', '13. no automatic promotion for the other member\'s eligible capsule');
+
+  // 14. The declared formulation is stable. The member read these words and
+  //     said they belong in their Field; a later edit to the capsule must not
+  //     reach back and rewrite what was declared.
+  const stable = await mk(false, false, false, M1);
+  await query(`UPDATE reflection_capsules SET title='Original title', summary='The original reviewed formulation.' WHERE id=$1`,[stable]);
+  const src1 = await resolveCapsuleDeclarationSource(M1, stable);
+  const d1 = await keepSource(M1, { memberId:M1, sourceType:'capsule', sourceId:stable, title:src1.title, body:src1.summary });
+  ok(d1.body==='The original reviewed formulation.' && d1.title==='Original title',
+     `14. declaration carries the reviewed formulation as body (body=${JSON.stringify((d1.body||'').slice(0,28))})`);
+
+  await query(`UPDATE reflection_capsules SET title='Edited later', summary='Rewritten after the fact.' WHERE id=$1`,[stable]);
+  const src2 = await resolveCapsuleDeclarationSource(M1, stable);
+  const d2 = await keepSource(M1, { memberId:M1, sourceType:'capsule', sourceId:stable, title:src2.title, body:src2.summary });
+  const persisted = await query<any>(`SELECT title, body FROM member_memory_atoms WHERE id=$1`,[d1.id]);
+  ok(d2.id===d1.id, `15. re-declaring after a source edit returns the SAME atom`);
+  ok(persisted.rows[0].body==='The original reviewed formulation.' && persisted.rows[0].title==='Original title',
+     `16. source edit does NOT rewrite the declared Field Object (body=${JSON.stringify((persisted.rows[0].body||'').slice(0,28))})`);
 
   await query(`DELETE FROM member_memory_atoms WHERE member_id = ANY($1)`,[[M1,M2]]);
   await query(`DELETE FROM reflection_capsules WHERE user_id = ANY($1)`,[[M1,M2]]);

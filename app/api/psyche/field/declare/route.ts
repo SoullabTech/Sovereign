@@ -44,20 +44,27 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Resolved once, not twice. The eligibility check and the words carried
+    // into the Field Object must come from the same read: two reads could
+    // straddle a capsule edit and declare a formulation the member never saw
+    // in the state they approved.
+    const source = await resolveCapsuleDeclarationSource(memberId, capsuleId);
+
     const atom = await keepSource(memberId, {
       memberId,
       sourceType: 'capsule',
       sourceId: capsuleId,
       // The capsule's own words. The member declared this material; nothing
-      // interprets, summarises or rewrites it on the way in.
+      // interprets, summarises or rewrites it on the way in — and the browser
+      // supplies none of it, so a client cannot choose what gets declared.
       //
       // THE FORMULATION IS FIXED AT THIS MOMENT. What the member is looking at
       // when they press the act becomes the Field Object's stable body. Later
       // capsule edits do not reach back and rewrite it: keepSource INSERTs once
       // and its ON CONFLICT path returns the existing row untouched. Capsule and
       // Field Object are separate histories from here on, by construction.
-      title: (await resolveCapsuleDeclarationSource(memberId, capsuleId)).title,
-      body: null,
+      title: source.title,
+      body: source.summary,
     });
 
     // 201 vs 200 comes from the INSERT itself, not from a read before it.
