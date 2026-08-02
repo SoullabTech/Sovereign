@@ -57,6 +57,23 @@ import YourWork from './YourWork';
 
 const pageEstimate = (chars: number) => Math.max(1, Math.round(chars / 1800));
 
+/**
+ * Name the manuscript a link is about, rather than trusting the destination to
+ * pick the right one.
+ *
+ * `/press/manuscript?tab=draft` opens "the most recent manuscript". Returning
+ * that way is returning by POSITION: it lands on whatever sorts first, which is
+ * the manuscript the member was reading only for as long as they have exactly
+ * one. The card these links sit on is already about a specific manuscript and
+ * already holds its id — the ambiguity is gratuitous, and it stops being
+ * harmless the first time a member has two expressions.
+ *
+ * `Start writing` already navigates this way. This is the same rule applied to
+ * the return journey.
+ */
+const byIdentity = (href: string, manuscriptId: string) =>
+  `${href}&m=${encodeURIComponent(manuscriptId)}`;
+
 export default function AuthorStudioHome() {
   const { phase, manuscript, count } = useCurrentManuscript();
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
@@ -297,14 +314,14 @@ export default function AuthorStudioHome() {
 
               <div className="flex flex-wrap items-center gap-4">
                 <Link
-                  href={WRITE_HREF}
+                  href={byIdentity(WRITE_HREF, manuscript.id)}
                   className="inline-block px-7 py-3 text-[14px] tracking-wide"
                   style={{ background: PRESS.accent, color: PRESS.ink }}
                 >
                   Continue Writing
                 </Link>
                 <Link
-                  href={SOURCE_HREF}
+                  href={byIdentity(SOURCE_HREF, manuscript.id)}
                   className="text-[14px] opacity-55 hover:opacity-85 underline underline-offset-4"
                 >
                   Read the Source
