@@ -24,6 +24,7 @@ import { promises as fs } from 'node:fs';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { renderMemberBook, type MemberBookSection } from '@/lib/manuscript/render/renderMemberBook';
+import { UNTITLED_EXPRESSION } from '@/lib/manuscript/untitledExpression';
 
 type Format = 'pdf' | 'epub';
 
@@ -62,14 +63,32 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   let author: string | null = null;
   let sections: MemberBookSection[];
   try {
-    const ms = await query<{ title: string }>(
+    const ms = await query<{ title: string | null }>(
       `SELECT title FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
       [id, memberId],
     );
     if (ms.rows.length === 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-    title = ms.rows[0].title;
+    /**
+     * `title` is nullable since 20260802000001 — a member may begin writing
+     * before naming the expression. Resolve the absence HERE, at the boundary
+     * that must hand a string to pandoc, and nowhere earlier.
+     *
+     * Why this is stated rather than inherited: an unnamed manuscript cannot
+     * currently reach this line, because `title IS NULL` implies
+     * `provenance = 'member_written'`, which implies zero `manuscript_sections`
+     * rows, which the check below refuses with a 400. That is a real guard but
+     * an ACCIDENTAL one — it protects the renderer via an unrelated fact about
+     * section counts. The moment written drafts can be produced into output
+     * (the Design/Publish direction this slice is groundwork for), the
+     * coincidence dissolves and `null` would reach pandoc as the literal string
+     * "null", in the member's own book and its filename.
+     *
+     * The fallback is display/export only. Nothing is written back: the column
+     * stays NULL, and the member's naming is still theirs to perform.
+     */
+    title = ms.rows[0].title ?? UNTITLED_EXPRESSION;
 
     const secRows = await query<{ heading: string | null; body: string }>(
       `SELECT heading, body FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position`,
