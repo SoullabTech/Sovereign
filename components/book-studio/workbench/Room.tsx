@@ -288,6 +288,8 @@ export function WorkbenchRoom({
             query={shelfQuery}
             onQueryChange={setShelfQuery}
             onReturnToShelf={handleReturnToShelf}
+            groups={(table?.layout.groups ?? []).map((g) => ({ id: g.id, name: g.name }))}
+            onGather={handleGather}
           />
         </div>
         <div className="lg:col-span-3">

@@ -88,6 +88,41 @@ describe('criteria 10 & 11 — no arrangement path writes a source row', () => {
   });
 });
 
+/**
+ * Found by the walk, not by reasoning: every verb but Gather had an explicit
+ * control, and Gather is the FIRST act. Without a control on the Shelf, a member
+ * on iOS could not put anything on the table at all, and every other verb was
+ * unreachable behind that. The measured tap targets were also 10×16px — present,
+ * visible, and too small to hit.
+ *
+ * These pin both halves so the touch path cannot silently regress.
+ */
+describe('every verb is reachable without dragging', () => {
+  it('the Shelf offers a Gather control, not only a drag handle', () => {
+    const src = code('components/book-studio/workbench/Shelf.tsx');
+    expect(src).toMatch(/onGather/);
+    expect(src).toMatch(/Place in/);
+  });
+
+  it('a pile card offers move, reorder, duplicate and return as controls', () => {
+    const src = code('components/book-studio/workbench/Group.tsx');
+    expect(src).toMatch(/Move to/);
+    expect(src).toMatch(/Also place in/);
+    expect(src).toMatch(/Return to Shelf/);
+    expect(src).toMatch(/Move up in pile/);
+    expect(src).toMatch(/Move down in pile/);
+  });
+
+  it('the Room wires the Shelf Gather control to a handler', () => {
+    expect(code('components/book-studio/workbench/Room.tsx')).toMatch(/onGather=\{handleGather\}/);
+  });
+
+  it('tap targets are held at 44px', () => {
+    expect(code('components/book-studio/workbench/Group.tsx')).toMatch(/min-h-\[44px\]/);
+    expect(code('components/book-studio/workbench/Shelf.tsx')).toMatch(/min-h-\[44px\]/);
+  });
+});
+
 describe('criterion 12 — the arrangement surface calls no MAIA and no model', () => {
   const FORBIDDEN_ENDPOINTS = [
     /\/api\/oracle/,

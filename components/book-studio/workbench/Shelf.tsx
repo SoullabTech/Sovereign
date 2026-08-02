@@ -23,9 +23,26 @@ interface ShelfProps {
   onQueryChange: (q: string) => void;
   /** Called when a card is dragged off the table and dropped here. */
   onReturnToShelf?: (groupId: string, cardId: string) => void;
+  /**
+   * Piles currently on the table, for the "Place in…" control.
+   *
+   * Gather must be reachable without dragging for the same reason the other
+   * verbs are: HTML5 drag-and-drop does not fire on iOS Safari. Gather is the
+   * FIRST act — without a control here, a member on a phone cannot put anything
+   * on the table at all, and every other verb is unreachable behind it.
+   */
+  groups?: { id: string; name: string }[];
+  onGather?: (groupId: string, pointer: { source: string; ref: string }) => void;
 }
 
-export function Shelf({ cards, query, onQueryChange, onReturnToShelf }: ShelfProps) {
+export function Shelf({
+  cards,
+  query,
+  onQueryChange,
+  onReturnToShelf,
+  groups = [],
+  onGather,
+}: ShelfProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDrop = (e: React.DragEvent<HTMLElement>) => {
@@ -84,7 +101,32 @@ export function Shelf({ cards, query, onQueryChange, onReturnToShelf }: ShelfPro
           </p>
         ) : (
           cards.map((card) => (
-            <Card key={`${card.source}:${card.ref}`} card={card} draggable />
+            <Card
+              key={`${card.source}:${card.ref}`}
+              card={card}
+              draggable
+              controls={
+                onGather && groups.length > 0 ? (
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        onGather(e.target.value, { source: card.source, ref: card.ref });
+                      }
+                    }}
+                    className="bg-transparent text-amber-200/40 hover:text-amber-200/90 text-xs font-light border-none outline-none cursor-pointer transition-colors min-h-[44px]"
+                    aria-label={`Place "${card.title}" in a pile`}
+                  >
+                    <option value="">Place in…</option>
+                    {groups.map((g) => (
+                      <option key={g.id} value={g.id} className="bg-neutral-900">
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : undefined
+              }
+            />
           ))
         )}
       </div>

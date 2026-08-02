@@ -130,12 +130,24 @@ export function Group({
   };
 
   const otherGroups = allGroups.filter((g) => g.id !== group.id);
+
+  /**
+   * Tap targets are 44px, the documented minimum for a reliable finger press.
+   * Measured during the walk at 375px: without this the ↑/↓ arrows render at
+   * 10×16px — present, visible, and effectively untappable. A control a member
+   * cannot reliably hit is the same as a control they do not have, which is the
+   * exact failure the explicit-control path exists to prevent.
+   *
+   * The visual weight stays low because the targets are transparent; only the
+   * hit area grows.
+   */
+  const TAP = 'min-h-[44px] min-w-[44px] inline-flex items-center justify-center';
   const controlClass =
-    'text-amber-200/40 hover:text-amber-200/90 disabled:text-amber-200/15 ' +
+    `${TAP} text-amber-200/40 hover:text-amber-200/90 disabled:text-amber-200/15 ` +
     'disabled:cursor-not-allowed text-xs font-light transition-colors';
   const pickerClass =
     'bg-transparent text-amber-200/40 hover:text-amber-200/90 text-xs font-light ' +
-    'border-none outline-none cursor-pointer transition-colors';
+    'border-none outline-none cursor-pointer transition-colors min-h-[44px]';
 
   return (
     <div
