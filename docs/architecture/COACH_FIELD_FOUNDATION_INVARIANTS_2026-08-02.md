@@ -1,4 +1,4 @@
-# Coach Field foundation — two load-bearing invariants
+# Coach Field foundation — three load-bearing invariants
 
 **Date:** 2026-08-02 · **Status:** RECORDED with the foundation they govern, before any
 service or UI depends on them. Both are founder-ruled. Neither may be relaxed by a
@@ -10,7 +10,52 @@ a conversation is not a rule anyone can inherit.
 
 ---
 
-## Invariant 1 — `practitioner_id` has no freestanding meaning
+## Invariant 1 — the relationship is the bridge; the member remains the person
+
+> **`members` models persons. `practitioner_clients` models bounded professional
+> relationships. Developmental processes, enrollments, notes, sessions, commitments and
+> cohorts belong to the relationship, not directly to the person.**
+
+This is the ground the other two stand on. It is the answer to *why* `practitioner_clients`
+became canonical rather than a new table: a person is not a caseload entry, and a caseload
+entry is not a person. Everything a practitioner does is done **within a bounded
+relationship**, and that boundary is what makes the work legible, scopeable and revocable.
+
+The schema says it out loud. Every record of the work carries `relationship_id`:
+
+```
+coach_client_processes · coach_program_enrollments (via process) · coach_sessions
+coach_authored_notes · coach_note_publications · coach_work_items · coach_important_dates
+coach_follow_ups · coach_resource_recommendations · coach_cohort_memberships
+coach_client_shared_items · coach_position_shares · coach_position_share_consents
+```
+
+**The nuance that makes it precise.** Those tables also reference `members`, but every such
+reference is **authorship** — *who did this* — never **ownership**. `originated_by_member_id`,
+`published_by_member_id`, `changed_by_member_id`, `recorded_by_member_id`: all answer "which
+person performed the act", none answer "whose record is this".
+
+Exactly two tables are **person-owned**, keyed on `members.id` with **no `relationship_id`
+at all**:
+
+| Table | Why it belongs to the person, not the relationship |
+|---|---|
+| `coach_client_personal_notes` | the client's own private notes. They exist whether or not any practitioner does. |
+| `coach_client_selected_focus` | which process the client is attending to. Their attention is theirs. |
+
+That absence is the enforcement. There is no practitioner-scoped path to those rows —
+not guarded, **absent** — because a practitioner query starts from a relationship, and those
+tables have no relationship to start from. The boundary gate asserts this structurally
+(`1a`/`1b`), so a future migration that "helpfully" adds `relationship_id` to either one
+fails the gate rather than quietly opening a door.
+
+**The test to apply to any new table:** does this record exist because of a professional
+relationship, or does it exist because the person exists? The first gets `relationship_id`.
+The second must never get one.
+
+---
+
+## Invariant 2 — `practitioner_id` has no freestanding meaning
 
 > **`practitioner_id` has no freestanding meaning. Its identity domain is established by the
 > table contract. Translation between practitioner-profile identity and member identity
@@ -56,7 +101,7 @@ reached only through `relationship_id`, and an actor is recorded as an explicit 
 
 ---
 
-## Invariant 2 — ending a relationship is not deleting it
+## Invariant 3 — ending a relationship is not deleting it
 
 > **Once a practitioner–client relationship has authored history, ending the relationship is
 > a lifecycle transition. Hard deletion is unavailable to application code.**

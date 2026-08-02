@@ -102,6 +102,33 @@ async function main() {
   );
   const practRecord = pr[0].id as string;
 
+  // ── 1  the relationship is the bridge; the member remains the person ──────
+  // Structural, not behavioural: a future migration that "helpfully" gives a
+  // person-owned table a relationship_id must fail here rather than quietly open
+  // a practitioner-scoped path to the client's own private material.
+  console.log('\n1  relationship-owned vs person-owned');
+  const PERSON_OWNED = ['coach_client_personal_notes', 'coach_client_selected_focus'];
+  const { rows: personOwned } = await query(
+    `SELECT table_name FROM information_schema.columns
+      WHERE table_name = ANY($1) AND column_name = 'relationship_id'`, [PERSON_OWNED]);
+  expect('1a person-owned tables have NO relationship_id to reach them by',
+    personOwned.length === 0,
+    `these gained one: ${personOwned.map((r: any) => r.table_name).join(', ')}`);
+
+  const { rows: workTables } = await query(
+    `SELECT t.table_name FROM information_schema.tables t
+      WHERE t.table_schema='public' AND t.table_name LIKE 'coach\\_%'
+        AND t.table_name <> ALL($1)
+        AND t.table_name NOT IN ('coach_program_definitions','coach_program_stages','coach_cohorts',
+                                 'coach_program_enrollments','coach_enrollment_stage_history',
+                                 'coach_current_focus','coach_work_item_history')
+        AND NOT EXISTS (SELECT 1 FROM information_schema.columns c
+                         WHERE c.table_name = t.table_name AND c.column_name = 'relationship_id')`,
+    [PERSON_OWNED]);
+  expect('1b every record of the work is reached through a relationship',
+    workTables.length === 0,
+    `missing relationship_id: ${workTables.map((r: any) => r.table_name).join(', ')}`);
+
   // ── 8  identity translation is explicit ───────────────────────────────────
   console.log('\n8  practitioner identity translation');
   const resolvedRecord = await resolvePractitionerRecordFromMember(asMemberId(practMember));
