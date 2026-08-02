@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import WriterField, { type WriterFieldHandle } from './WriterField';
 import {
   headingAtOffset,
   loadDraftPosition,
@@ -103,9 +104,9 @@ export default function WorkingDraftEditor({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // R1.1 Returning — spatial continuity (single work, client-side, observable only).
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fieldRef = useRef<WriterFieldHandle | null>(null);
   /* True once the writer has actually put a caret in the draft this session.
-     Distinguishes "caret at 0" from "no caret yet" — the textarea reports the
+     Distinguishes "caret at 0" from "no caret yet" — the surface reports the
      same number for both, and they mean opposite things. */
   const caretTouchedRef = useRef(false);
   /* A caret position waiting for React to commit the value it belongs to. */
@@ -176,12 +177,12 @@ export default function WorkingDraftEditor({
   // Persist the writer's position — caret, selection, scroll. Observable only;
   // never intent or meaning. A courtesy, never load-bearing.
   const persistPosition = useCallback(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
+    const field = fieldRef.current;
+    if (!field) return;
     saveDraftPosition(manuscriptId, {
-      selectionStart: ta.selectionStart ?? 0,
-      selectionEnd: ta.selectionEnd ?? 0,
-      scrollTop: ta.scrollTop ?? 0,
+      selectionStart: field.selectionStart ?? 0,
+      selectionEnd: field.selectionEnd ?? 0,
+      scrollTop: field.scrollTop ?? 0,
     });
   }, [manuscriptId]);
 
@@ -194,13 +195,12 @@ export default function WorkingDraftEditor({
   // re-subscribing each render (mirrors flushRef below).
   /* The page grows with the writing. A fixed box with an inner scrollbar puts
      the caret near the bottom edge for hours; growing keeps it in the band the
-     eye rests in and lets the browser own the one scrollbar. */
-  useEffect(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    ta.style.height = 'auto';
-    ta.style.height = `${ta.scrollHeight}px`;
-  }, [content]);
+     eye rests in and lets the browser own the one scrollbar.
+
+     The textarea needed a measure-and-set effect on every keystroke to do this.
+     WriterField gets it structurally instead — `.cm-scroller { overflow: visible }`
+     with `height: auto`, so the surface has no inner scroll to begin with. Same
+     behaviour, no per-keystroke layout write. */
 
   const persistRef = useRef(persistPosition);
   persistRef.current = persistPosition;
@@ -210,20 +210,25 @@ export default function WorkingDraftEditor({
   useIsomorphicLayoutEffect(() => {
     if (phase !== 'ready' || restoredRef.current) return;
     restoredRef.current = true;
-    const ta = textareaRef.current;
+    const field = fieldRef.current;
     const pos = loadDraftPosition(manuscriptId);
     // A genuine "return": a stored position, or a draft written before now.
     // A freshly-begun draft gets no welcome — there is no "back" to return to.
     const returning = !!pos || !!updatedAt;
-    if (ta && pos) {
-      ta.scrollTop = Math.min(pos.scrollTop, Math.max(0, ta.scrollHeight));
-      const len = ta.value.length;
+    if (field && pos) {
+      const len = field.value.length;
       try {
-        ta.setSelectionRange(Math.min(pos.selectionStart, len), Math.min(pos.selectionEnd, len));
+        // Selection before scroll: setting the selection can scroll the caret
+        // into view, so applying scroll afterwards is what actually lands.
+        field.setSelectionRange(
+          Math.min(pos.selectionStart, len),
+          Math.min(pos.selectionEnd, len),
+        );
       } catch {
         /* selection API can throw; position is only a courtesy */
       }
-      ta.focus({ preventScroll: true });
+      field.focus({ preventScroll: true });
+      field.scrollTop = Math.min(pos.scrollTop, Math.max(0, field.scrollHeight));
     }
     if (returning) {
       setWelcome({ heading: headingAtOffset(content, pos?.selectionStart ?? 0) });
@@ -362,23 +367,14 @@ export default function WorkingDraftEditor({
 
   /* Everything arrives as the writer's own plain text. A manuscript pasted
      from a word processor brings fonts, colours and spacing that have nothing
-     to do with the book; the words are what was meant. */
-  const pastePlain = useCallback(
-    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      const text = e.clipboardData?.getData('text/plain');
-      if (text === undefined) return;
-      e.preventDefault();
-      const ta = e.currentTarget;
-      const start = ta.selectionStart ?? 0;
-      const end = ta.selectionEnd ?? 0;
-      const next = content.slice(0, start) + text + content.slice(end);
-      onChange(next);
-      requestAnimationFrame(() => {
-        ta.setSelectionRange(start + text.length, start + text.length);
-      });
-    },
-    [content, onChange]
-  );
+     to do with the book; the words are what was meant.
+
+     The textarea needed an explicit onPaste handler to enforce that. The
+     WriterField does not: its document IS a markdown string, so a rich paste
+     has nowhere to put formatting — it lands as text by construction. This is
+     the same property that makes the whole surface swap safe, applied to
+     paste. Removed rather than ported, because a handler that re-implements a
+     guarantee the model already gives is a place for the two to disagree. */
 
   /**
    * Explicit insertion — the member brings a kept passage into the draft.
@@ -403,27 +399,40 @@ export default function WorkingDraftEditor({
    */
   const insertAtCaret = useCallback(
     async (text: string) => {
-      const ta = textareaRef.current;
-      if (!ta || !text) return false;
+      const field = fieldRef.current;
+      if (!field || !text) return false;
       const ok = await checkpointRef.current(`Before bringing in a passage`);
       if (!ok) return false;
-      /* WHERE it lands. A textarea the writer has not touched this session
+      /* WHERE it lands. A surface the writer has not touched this session
          reports selectionStart 0, and 0 is the worst possible answer: the
          passage would land above the title page of a 216-section book. Walked
          2026-08-01 — it did exactly that.
 
          So: use the live caret only if the writer has actually placed one this
          session. Otherwise fall back to the position they left last time, and
-         only then to the end. The end is a defensible default; the top is not. */
-      const touched = document.activeElement === ta || caretTouchedRef.current;
+         only then to the end. The end is a defensible default; the top is not.
+
+         `field.hasFocus()` replaces the old `document.activeElement === ta`:
+         CodeMirror's focused element is its inner contentDOM, not the element
+         this component holds a ref to, so an identity check against the ref
+         would report "untouched" for a writer who is actively typing. */
+      /* W-2 — read the document AFTER the checkpoint resolves.
+         `content` was captured when this callback was created, and the await
+         above can last as long as a network round-trip. A writer who keeps
+         typing during it moves the real document on; writing the captured
+         string back would silently delete every word typed in that window.
+         The live surface is the authority, so ask it rather than the closure.
+         Same reason the caret is re-read here and not before the await. */
+      const current = field.value;
+      const touched = field.hasFocus() || caretTouchedRef.current;
       const stored = loadDraftPosition(manuscriptId)?.selectionStart;
       const start = touched
-        ? ta.selectionStart ?? content.length
-        : Math.min(stored ?? content.length, content.length);
-      const end = touched ? ta.selectionEnd ?? start : start;
+        ? Math.min(field.selectionStart ?? current.length, current.length)
+        : Math.min(stored ?? current.length, current.length);
+      const end = touched ? Math.min(field.selectionEnd ?? start, current.length) : start;
       // A passage lands as its own paragraph unless the writer is mid-line.
-      const before = content.slice(0, start);
-      const after = content.slice(end);
+      const before = current.slice(0, start);
+      const after = current.slice(end);
       const lead = before && !before.endsWith('\n') ? '\n\n' : '';
       const tail = after && !after.startsWith('\n') ? '\n\n' : '';
       const piece = lead + text + tail;
@@ -435,7 +444,11 @@ export default function WorkingDraftEditor({
       pendingCaretRef.current = start + piece.length;
       return true;
     },
-    [content]
+    /* Deliberately NOT [content]: this callback no longer reads the captured
+       string at all — it asks the live surface after the await. Depending on
+       `content` would rebuild it on every keystroke and re-introduce the
+       impression that the closure's copy is authoritative. It is not. */
+    [manuscriptId]
   );
 
   /**
@@ -502,11 +515,11 @@ export default function WorkingDraftEditor({
     const caret = pendingCaretRef.current;
     if (caret === null) return;
     pendingCaretRef.current = null;
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const at = Math.min(caret, ta.value.length);
-    ta.focus();
-    ta.setSelectionRange(at, at);
+    const field = fieldRef.current;
+    if (!field) return;
+    const at = Math.min(caret, field.value.length);
+    field.focus();
+    field.setSelectionRange(at, at);
     caretTouchedRef.current = true;
     persistPositionSoon();
   }, [content, persistPositionSoon]);
@@ -694,35 +707,36 @@ export default function WorkingDraftEditor({
           without hunting, and the type is set for hours rather than for a
           screenshot. Espresso palette throughout — this extends the Soullab
           Press visual language rather than importing MAIA's navy. */}
-      <textarea
-        ref={textareaRef}
-        value={content}
-        onChange={(e) => onChange(e.target.value)}
-        onScroll={persistPositionSoon}
-        onSelect={() => {
-          caretTouchedRef.current = true;
-          persistPositionSoon();
-        }}
-        onPaste={pastePlain}
-        aria-label="Working draft"
-        spellCheck
-        /* `writing-surface` opts this textarea out of the global FORM rules in
-           globals.css — see the comment there. Without it the writer's prose
-           inherits rgb(17,24,39) on the espresso ground and the type is forced
-           to 16px. The class is the whole repair; nothing here asserts a new
-           design choice. */
-        className="writing-surface block w-full bg-transparent border-0 outline-none resize-none overflow-hidden"
+      {/* The writing surface. Same measurements the textarea had — 38rem
+          measure, centred, 40vh of tail so the last line is never pinned to
+          the bottom edge — carried onto the wrapper rather than the field, so
+          the swap changes the widget and nothing about how the page reads.
+          `writing-surface` is kept: it opts out of the global FORM rules in
+          globals.css, and dropping it here would be an untested claim about
+          which of those rules reach a contenteditable. */}
+      <div
+        className="writing-surface"
         style={{
-          fontFamily: SERIF,
-          ['--writing-size' as string]: '19px',
-          lineHeight: 1.75,
           maxWidth: '38rem',
           margin: '0 auto',
           padding: '0 0 40vh',
-          caretColor: '#C9A227',
           minHeight: '60vh',
         }}
-      />
+      >
+        <WriterField
+          ref={fieldRef}
+          value={content}
+          onChange={onChange}
+          onSelectionChange={persistPositionSoon}
+          onCaretTouched={() => {
+            caretTouchedRef.current = true;
+          }}
+          fontFamily={SERIF}
+          fontSize="19px"
+          caretColor="#C9A227"
+          ariaLabel="Working draft"
+        />
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <input
