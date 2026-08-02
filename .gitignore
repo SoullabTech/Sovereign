@@ -81,6 +81,14 @@ jspm_packages/
 # Optional eslint cache
 .eslintcache
 
+# Jest cache (haste map + transform cache). Jest's default cache dir is
+# named jest_<uid-base36> (jest_dx for uid 501); jest.config.js now pins
+# cacheDirectory outside the repo, but ignore any stray in-repo copy so a
+# `git add -A` can never re-commit it.
+jest_dx/
+jest_*/
+.jest-cache/
+
 # Optional REPL history
 .node_repl_history
 
