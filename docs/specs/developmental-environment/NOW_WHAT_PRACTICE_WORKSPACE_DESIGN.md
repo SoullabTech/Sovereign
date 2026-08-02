@@ -121,6 +121,33 @@ This is where the product actually differs. **The nouns are familiar; the verbs 
 ⭐ **Every row is the same information under a different relationship to the person.** The left column
 positions the person as a task-executor; the right positions them as the author of their own work.
 
+### 4.1 ⭐⭐⭐ What transforms underneath the familiar handles
+
+Larry is not buying an ontology. He needs Clients · Sessions · Commitments · Notes · Timeline. Those
+are the doorway. **The transformation happens underneath, in what each one becomes:**
+
+| Familiar handle | Becomes | Not |
+|---|---|---|
+| **Notes** | continuity | documentation |
+| **Commitments** | tending | compliance |
+| **Timeline** | development | history |
+| **Sessions** | chapters | appointments |
+
+⭐ **That is how adoption happens without requiring philosophical conversion.**
+
+### 4.2 The absence IS the philosophy
+
+| A CRM asks | A practice environment asks |
+|---|---|
+| What is the status? | **What is alive?** |
+| What is the completion percentage? | **What is calling attention?** |
+| What is overdue? | **What did we agree to tend?** |
+| What is the next action? | **What wants to continue?** |
+
+⭐⭐⭐ The absence of **progress %** · **overdue flags** · **completion scoring** · **attrition
+metrics** is **not missing functionality. It is the product philosophy expressed structurally** —
+and it is already enforced: `coach_*` carries no such columns, by ruling.
+
 ⛔ **Never adopt left-column vocabulary for convenience.** It is the single fastest way to become the
 CRM this architecture exists to avoid — and it will not read as a small copy choice to the member.
 
@@ -137,6 +164,19 @@ standing sections, not a feed sorted by author:
 | **From Larry** | offered practices · resources · reflections | 🔴 deferred |
 | **Your Reflections** | the client's Field | ✅ available |
 | **Next Session** | calendar · preparation | ⚠️ partial (dates only, no preparation) |
+
+⭐⭐⭐ **The UX principle: design for the future channel, render only the present reality.**
+
+⛔ Bad — this creates an expectation the system cannot meet:
+
+```
+FROM LARRY
+
+Nothing here yet.
+```
+
+✅ The workspace architecture knows a future channel exists; **the client encounters it only when
+Larry has actually offered something.**
 
 ⭐⭐ **The design is complete at four sections; the build fills them gradually.** Designing all four
 now is what stops "From Larry" being retrofitted later into a layout that never anticipated it.
@@ -182,8 +222,12 @@ to continue.
 **Signature test (unchanged):** a client leaves for two weeks, returns — *"here's another app"* or
 **"something I began is still here"**?
 
-⭐ **The relationship between the two views is the innovation.** Same underlying reality, two
-authorized perspectives, neither a copy of the other — and per the standing question, still unruled:
+⭐⭐⭐ **Not two dashboards** — that would make this a reporting tool. **One shared practice reality,
+viewed through two accountable perspectives:** Larry sees *what I am holding, offering, and
+accompanying*; the client sees *what I have chosen, what is mine, and what I am continuing.*
+**Not different datasets — different relationships to the same unfolding work.**
+
+⭐ Same underlying reality, two authorized perspectives, neither a copy of the other — and per the standing question, still unruled:
 whether the client's journey is a *projection* of the practitioner's process object or a co-equal
 object the client also authors.
 
