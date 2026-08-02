@@ -506,3 +506,61 @@ belongs to the governance lane as **evidence, not blame**.
 ⭐ **Restraint that governs the corrective lane:** do not turn this correction into another foundation
 redesign. **The foundation survived review.** This is finishing two edges the review correctly
 exposed.
+
+---
+
+## 9. Lane map — verified state, and the referent rule
+
+⭐⭐⭐ **A debt item needs a stable referent.** Not *"identity inventory exists somewhere"* but
+*"identity inventory is tracked at [specific artifact] with an owner."* Until that exists it is an
+**observation**, not tracked work. #915 was cited in a lane list and **does not exist** — a plausible
+reference had begun functioning as a factual one. ⛔ **Do not allow a plausible reference to become a
+factual reference.**
+
+Applying that rule to this record's own output: the three lanes below existed only as prose here.
+They now have referents. **None has an owner** — ownership assignment is the next durable step, and
+it is not implementation.
+
+| Item | Verified status | Scope |
+|---|---|---|
+| **#902** | Canonical foundation, **merged** `c0c8b0ba6` | Relationship foundation and invariants |
+| **#911** | Open, **docs-only**, unmerged | Retirement ledger + methodology record |
+| **#896** | Open (`fix/covenant-gate-severity`) | Cumulative covenant obligation behaviour |
+| **#916** | Open, **no owner** | #902 post-merge corrective amendment |
+| **#917** | Open, **no owner** | Migration integrity / checksum enforcement |
+| **#918** | Open, **no owner** | Merge-control governance |
+| ~~#915~~ | 🔴 **UNRESOLVED REFERENCE — no such PR or issue** | cited as "identity inventory"; referent needs naming |
+
+### 9.1 ⚠️ #896 is not the merge-control lane — preserve the distinction
+
+| | The question it answers |
+|---|---|
+| **#896** | *When multiple obligations apply, are they all evaluated?* → **gate semantics** |
+| **#918** | *Can a foundation change merge while known unresolved corrections exist only as comments?* → **change authorization workflow** |
+
+Related, not the same. ⛔ **"Governance lane" must not become a bucket for both** — collapsing them
+would leave the authorization gap unaddressed behind a fix that never targeted it.
+
+### 9.2 The principle behind the in-place-edit rule
+
+The rule is **not** *"never edit migrations."* It is:
+
+> **Once a migration may have been consumed, an edit without a trustworthy drift mechanism is
+> indistinguishable from corruption.**
+
+⭐ **The runner's behaviour determines the rule.** If the system cannot answer *"was this migration
+changed intentionally?"*, then changing the file after merge **destroys evidence**. That is why
+#917 is load-bearing rather than hygiene: implementing it changes which corrections are safe.
+
+```
+merged migration → known correction → new explicit migration → new evidence trail
+```
+
+### 9.3 Synthesis
+
+> **A mature architecture is not one where nothing remains unresolved. It is one where every
+> unresolved thing has a category, a boundary, and an owner.**
+
+That is what stops unresolved questions from leaking back into implementation as assumptions.
+By that standard this record is **two-thirds done**: every item above has a category and a boundary;
+**#916, #917, #918 still lack owners**, and #915 lacks a referent.
