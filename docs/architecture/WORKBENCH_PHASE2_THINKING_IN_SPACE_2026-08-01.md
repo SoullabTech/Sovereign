@@ -191,15 +191,39 @@ Slice 1 does not need the answer, and use of the table should inform it.
 
 ### Verification status
 
+Authenticated member walk performed locally 2026-08-02, on one genuine Keep minted through
+`keepSource()` — the only writer that stamps `generated_by = 'member-gesture'`. Every act was driven
+through the **explicit controls**, not drag.
+
 | Evidence | State |
 | --- | --- |
-| Verb transforms, incl. walk steps 1–9 composed | ✅ 22 unit tests; mutation-checked (breaking `move` fails 3) |
-| No source-row write reachable from this surface (criteria 10–11) | ✅ structural test over 5 files |
-| No MAIA/model call reachable from this surface (criterion 12) | ✅ structural test over 5 components |
-| Whole workbench suite | ✅ 90 tests |
-| Typecheck | ✅ scoped `tsc` clean; repo gate shows 4 pre-existing `@codemirror/*` errors present on the base too — not from this branch |
-| **Acceptance walk in a browser, as a member, with a real Keep** | ❌ **not performed** |
-| **Atom byte-for-byte unchanged, observed in the database** | ❌ **not observed** |
+| Verb transforms, incl. walk steps 1–9 composed | ✅ unit tests; mutation-checked (breaking `move` fails 3) |
+| Place → duplicate → move → reorder → return → rename | ✅ one pile held **two placements of one atom** and reordered them |
+| Leave and return | ✅ exact pile name, placement id and order persisted |
+| Touch width (375px), all acts via controls | ✅ after correction — five controls, each ≥44px, no horizontal overflow |
+| Atom unchanged | ✅ **23/23 watched fields identical**; still exactly 1 atom, 1 table row |
+| Graduation + uploads | ✅ both **403**; neither control rendered on the member surface |
+| Invalid duplicate placement id | ✅ **400**, saved layout uncorrupted |
+| No MAIA/model call from the Workbench | ✅ every request `/api/book-studio/workbench/*` + static |
+| Whole workbench suite | ✅ 94 tests · scoped `tsc` clean |
+| **Felt grammar of the controls** | ⏳ **founder walk — the one question tests cannot answer** |
 
-The last two rows are Kelly's walk. Structural evidence shows the writes and calls are absent from
-the code; it does not show the walk happened.
+### What the walk found that reading the code did not
+
+Two defects, both real, both in the touch path:
+
+1. **Gather was drag-only.** Every other verb had an explicit control; the first act did not. On iOS
+   a member could not put anything on the table at all, and every other verb sat unreachable behind
+   it.
+2. **The controls were present but not tappable.** At 375px the reorder arrows measured **10×16px**.
+   The first pass confirmed they *rendered* at touch width and nearly recorded that as a pass.
+
+⭐ **Rendering a control is not proof the act is reachable.** A 10×16px target technically existed
+and functionally did not. This is the durable lesson of the slice.
+
+### Prerequisite for any further walk
+
+⚠️ **The Shelf is empty until a real Keep exists.** `generated_by = 'member-gesture'` is the
+discriminator, and no member row carries one by default — locally or in production. A walker must
+perform a genuine Keep first (`POST /api/psyche/portfolio/keep`, the member Keep gesture). Do **not**
+backfill provenance to populate it: an empty Shelf is truthful, and unknown-ness is unrecoverable.
