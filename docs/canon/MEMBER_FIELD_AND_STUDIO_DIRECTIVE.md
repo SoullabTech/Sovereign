@@ -136,6 +136,72 @@ Completely different questions.
 
 ---
 
+# Amendments required before ratification (Kelly, 2026-08-02)
+
+These three amendments are **conditions of ratification**. The directive above is read subject to
+them.
+
+## Amendment 1 — Layer 3 is the Project Development Record
+
+⛔ **Do not use "Development Memory."** That name already belongs to the member's developmental
+history. Two levels of language:
+
+| Level | Term |
+| --- | --- |
+| **Ontology** | **`Project Development Record`** |
+| **Member-facing surface** | **Development Notes** |
+
+The Project Development Record may contain: editorial notes · structural questions · research tasks ·
+revision intentions · unresolved tensions · developmental conversations about the work.
+
+**It belongs to the project's evolution, not the member's enduring Field.**
+
+## Amendment 2 — MAIA's role inside the project is bounded
+
+That the object is *"the work"* does **not** grant MAIA broad interpretive authority.
+
+> **Within the Project Development Record, MAIA may retrieve, compare, reflect, and help the member
+> examine questions already declared about the work. It may synthesize those records only when
+> explicitly invited. It may not decide the work's theme, argument, structure, readiness, or
+> meaning.**
+
+| ✅ Allowed | ⛔ Not allowed |
+| --- | --- |
+| *"You have left four notes about the opening feeling too abstract."* | *"Chapter 4 is really about transformation."* |
+| *"Would you like to compare the two structures you considered?"* | *"These stories are the ones carrying your argument."* |
+| *"These three unresolved questions all concern Chapter 4."* | *"This pile is ready to become a chapter."* |
+
+The first class **reveals the project's recorded development**. The second **performs authorship**.
+
+## Amendment 3 — cross-layer movement is an explicit member act
+
+A project note may reveal a life-level insight, but it must not silently migrate into the Member
+Field.
+
+> **A Project Development Note becomes a Member Field Object only through an explicit member act. The
+> system may offer that promotion; it may not perform it.**
+
+> *"This began as a note about Chapter 4, but it may matter beyond this project. Keep it in your
+> Field?"*
+
+This preserves the distinction without trapping an insight permanently in the project.
+
+## The clarified architecture
+
+```
+Member Field                enduring life-level insight objects
+        ↓
+Project                     references Field Objects
+        ↓
+Project Development Record  notes and questions about what this work is becoming
+        ↓
+Expression                  prose, course, talk, book, or other formed work
+```
+
+> **Each layer can illuminate the next. None silently becomes another.**
+
+---
+
 # The third thing — developmental questions
 
 Sometimes the project itself needs help **thinking**. Not writing. Thinking.
@@ -272,25 +338,20 @@ foundation rather than being reinterpreted afterward.
 
 Recorded by Claude Code alongside the directive, and **not part of Kelly's text.**
 
-## Where this directive expands MAIA's latitude ⚠️ the one thing to rule on deliberately
+## Where this directive expanded MAIA's latitude — ✅ RULED by Amendments 2 and 3
 
-Every clause above **constrains** MAIA except one. *"MAIA can participate there much more actively"*
-in project development is the single **expansion** in the document — the first place MAIA is
-authorized to act on an object rather than only offer and withdraw.
+Every clause constrained MAIA except one: *"MAIA can participate there much more actively"* in project
+development. Three consequences were flagged as unsettled. **All three are now ruled**, and the
+expansion is bounded:
 
-It is well-grounded (the object is the work, not the person), but three things follow that the text
-does not settle:
+| Flagged | Ruling |
+| --- | --- |
+| Where the boundary sits inside the work — *"which stories carry the argument?"* shapes what the member believes their book is about | **Amendment 2.** MAIA may retrieve, compare, reflect, and help examine **questions already declared**; synthesize **only when invited**; and may **never** decide theme, argument, structure, readiness, or meaning. *"These stories are the ones carrying your argument"* is explicitly disallowed |
+| Where noticing patterns across notes stops being retrieval | **Amendment 2's examples draw the line exactly here.** *"You have left four notes about the opening feeling too abstract"* is allowed — it reveals the recorded development. Naming what the notes mean performs authorship |
+| Whether a note may migrate Layer 2 → Layer 1 | **Amendment 3.** Promotion happens **only by explicit member act**; the system may **offer** it, never perform it |
 
-1. **Where the boundary sits inside the work.** *"Which stories carry the argument?"* is a question
-   about the manuscript — but answering it shapes what the member comes to believe their book is
-   about. The Field/Work distinction does not by itself keep MAIA out of authoring meaning.
-2. **Development Notes are member-authored today, but the developmental-partner examples require MAIA
-   to notice patterns across them** (*"you've made five notes… about the opening chapter"*). Counting
-   and surfacing is retrieval; characterising them as *about the opening chapter feeling too
-   conceptual* is a light interpretation. That line needs drawing explicitly.
-3. **A Development Note may migrate.** *"Chapter 4 is really about transformation"* can turn out to be
-   a life-level realization. Whether migration Layer 2 → Layer 1 exists, and who authorizes it, is
-   unaddressed.
+⭐ The operative distinction: **revealing the project's recorded development is permitted; performing
+authorship is not.**
 
 ## Consistency with existing canon
 
@@ -303,13 +364,12 @@ does not settle:
   `Living Field` is an existing substrate (`lib/maia/living-field/*`, and `indexAtomAffinities`
   already runs fire-and-forget on every Keep). **Different senses of one word; disambiguate before
   either borrows the other's machinery.**
-- ⚠️⚠️ **Terminology collision 2 — "Development Memory": the name is already taken, by the opposite
-  layer.** `developmental_memories` exists and is **member-scoped** — `user_id`, `spiral_cycle`,
-  `facet_code`, `significance`, `vector_embedding`, read by `app/api/memory/patterns/*`. It holds the
-  **person's** development. Kelly's Layer 3 holds **the work's** development and has no member axis at
-  all. Naming the project-level layer *Development Memory* would collide these two directly — which is
-  precisely the collapse this directive exists to forbid. **Name Layer 3 something else, or rename the
-  existing table; do not let them share a word.**
+- ✅ **Terminology collision 2 — RESOLVED by Amendment 1.** `developmental_memories` is
+  **member-scoped** (`user_id`, `spiral_cycle`, `facet_code`, `vector_embedding`; read by
+  `app/api/memory/patterns/*`) and holds the **person's** development. Layer 3 holds **the work's**
+  development. Amendment 1 names Layer 3 the **Project Development Record** (member-facing:
+  *Development Notes*), so the two never share a word. ⚠️ The existing table keeps its name and its
+  meaning — do not repurpose it.
 
 ## Current implementation against this directive
 
@@ -323,11 +383,39 @@ Verified 2026-08-02, not assumed:
 | Retrieval does not mark "used" | ✅ `surface_count` / `last_surfaced_at` unchanged |
 | No clustering, theming, or interpretation | ✅ MAIA absent from the Canvas entirely |
 | Search spans the Field | ❌ **`keep` only** — Ideas, Decisions, Changes, Journals have no adapter |
-| Search preserves each object's identity | ❌ the Shelf route **flattens** all adapters into one date-sorted stream |
+| Search preserves each object's identity | ⏸️ the Shelf route **flattens** all adapters into one date-sorted stream. Acceptable while `keep` is the only source; **gated before a second adapter ships** |
 | Contextual offering | ❌ not built |
-| Development Notes (Layer 2) | ❌ **no substrate** — no project-scoped table, route, or surface. ⚠️ `developmental_memories` is **not** it: member-scoped, about the person (see collision 2) |
-| Developmental questions (Layer 3) | ❌ not built; and per the expansion note above, not yet fully ruled |
-| Graduation copies content out of the Field | ⛔ **contradicts the directive** — `graduate.ts` inlines resolved content into a flat draft file |
+| **Project Development Record** | ❌ **no substrate** — no project-scoped table, route, or surface. ⚠️ `developmental_memories` is **not** it: member-scoped, about the person |
+| Developmental questions | ❌ not built. ✅ Now bounded by Amendment 2 before anything is built |
+| Graduation copies content out of the Field | ⛔ **contradicts the directive** — `graduate.ts` inlines resolved content into a flat draft file. ⏸️ Superseded-marking gated on first member exposure; no member exposure today (`canGraduate={false}`, 403 verified) |
 
 ⛔ **No implementation is authorized by this document.** The gaps are recorded so they are visible,
 not queued.
+
+## Disposition (Kelly, 2026-08-02)
+
+| Item | State |
+| --- | --- |
+| **PR #878** | **Consistent with the directive.** Proceed to the felt-grammar walk |
+| **This directive** | **Recorded, not ratified.** Ratification requires Amendments 1–3, now incorporated above |
+
+### Two future blockers, with their gates
+
+**1. Shelf flattening — a multi-source adapter blocker, not a #878 defect.**
+
+The Shelf **may remain one stream while Keeps are the only source**. ⏸️ **Before a second source
+ships**, results must preserve **visible object identity and provenance** — grouped sections, clear
+type markers, or another member-legible distinction. Reclassified from defect to gate.
+
+**2. `graduate.ts` — supersede before member exposure.**
+
+Its behaviour — `resolve cards → concatenate content → write flat draft` — treats Field Objects as
+manuscript material and is **genuinely inconsistent** with this directive.
+
+⛔ **Do not retrofit it inside #878.** ⏸️ **Mark the member path superseded before any graduation
+capability is exposed to members.** Today there is no member exposure: `canGraduate={false}` on the
+member surface and `drafts/from-group` returns 403 to a non-founder, verified in the walk. The marking
+belongs to whichever lane first exposes graduation, not to this one.
+
+> A future pile-to-writing act should **open a writing relationship with the selected references**, not
+> silently copy them into prose.
