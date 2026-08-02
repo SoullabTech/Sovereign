@@ -193,11 +193,20 @@ deletions: the migration, `lib/coachField/{access,notes,positionSharing}.ts`,
 **The hazard is neutralized.** The migration no longer exists on trunk and cannot execute.
 Verified: no surviving trunk code references `coachField` — the revert left no dangling imports.
 
-⚠️ **This is not the disposition that was ruled.** The founder ruling of 2026-08-02 was explicit:
-*"Replace the executable migration body with a deliberate abort. Do not revert history. Do not delete
-the migration."* The reasoning was that the repository should remember *this migration existed, was
-superseded, and is intentionally blocked.* A concurrent lane reverted instead. **Recorded, not judged**
-— the safety objective was met by a different route.
+**Two axes, kept separate — the safety outcome and the governance path.**
+
+> The rejected migration was neutralized **by revert rather than by in-place retirement**. This
+> achieved the safety objective. The original neutralization analysis remains preserved as a
+> migration-runner lesson (§5.6.3).
+
+The ruling of 2026-08-02 selected a non-revert neutralization path (*"replace the body with a
+deliberate abort; do not revert history; do not delete the migration"*). A concurrent lane selected a
+full revert. The resulting trunk state satisfies the safety requirement. **The difference is
+governance and process, not current architecture**, and the two should not be collapsed into one
+verdict.
+
+⛔ **Do not create a second corrective commit to simulate the originally-selected path.** The history
+is correct as it stands; re-enacting the abort would make it harder to understand, not easier.
 
 Consequences of the route taken, which the abort route would not have produced:
 
@@ -241,3 +250,72 @@ abort-in-place is therefore inherently **two acts**, not one, and the second mus
 > **A rejected architecture can remain in Git history. It cannot remain executable in the
 > deployment path.** Preserving history and preventing future execution are both necessary, and
 > they are different acts. #910 achieved the second. The first now rests on this ledger alone.
+
+### 5.6.5 Disposition of the three residual findings
+
+**1. No retired marker — ✅ ADDRESSED (this PR).**
+Not by restoring the migration. A retirement record was added to `database/migrations/README.md`
+under **Retired migrations**: status, reason, governing ruling, merge/removal SHAs, execution state at
+removal, and replacement lineage. Purpose is **discoverability, not execution** — so a future author
+who finds the migration in git history understands why it is absent instead of resurrecting it.
+
+⭐ While writing it, a **second docs/runner asymmetry** was found and corrected in the same README:
+it claimed *"a checksum (SHA-256) is recorded at apply time; editing a migration file after it has
+been applied is detected as drift, not silently ignored."* **That is not implemented.** The runner
+creates a `checksum` column marked *"for future compatibility"* and never computes, writes, or
+compares one — the recording statement inserts `filename` only. Editing an applied migration **is**
+silently ignored. Corrected to state the measured behaviour; **no checksum enforcement was
+implemented** (that is a code change and out of this PR's scope).
+
+**2. Spec and audit deletion — ⏳ UNRULED, with criteria fixed.**
+Not restored to trunk in this PR. The decision is *not* "should they be preserved" (they are, in git
+history and on `feature/coach-facilitator-field-foundation`) but **in what capacity**:
+
+> Restore as the **active specification** only if it survives the lifecycle and content corrections.
+> If it contains plaintext-content assumptions, superseded lifecycle assumptions, or rejected object
+> models, restore it **only as historical evidence**.
+
+On the record so far it contains all three (its `ProgramEnrollment`/`StageHistory` model reverses the
+declared-by-arrival ruling; its storage model is the rejected plaintext surface). The provisional
+reading is therefore **transitional artifact, not active specification** — but that determination
+belongs with the #902 foundation review, which may supply the cleaner canonical specification path.
+Marked as historical evidence in the README retirement record pending that review.
+
+**3. Local dev residue — ✅ CLOSED, no action.**
+The distinction holds and does not need reconciling:
+
+| | Tables | Data | Migration ledger |
+|---|---|---|---|
+| **Production** | none | none | never applied |
+| **Developer DB** | 17 empty rejected artifacts | none | records local experimentation |
+
+⛔ **Do not over-clean local state** unless it interferes with the verification path. For #902
+acceptance the verification database is rebuilt from zero anyway — which is also the standing remedy
+for the shared-dev-DB evidence problem.
+
+### 5.6.6 Scope boundary for this record
+
+This document and PR #911 are a **governance correction**. Their scope is fixed at: canonicality
+ledger · migration incident record · runner-semantics lesson · Q-A/Q-B status · the gate-split
+*proposal*.
+
+⛔ This is **not** the place where the gate split, the encryption lane, or the product-model decisions
+get implemented. Each deserves its own bounded change.
+
+---
+
+## 7. Sequence
+
+1. Review/merge **#911** as the historical correction.
+2. Complete **#902** foundation review.
+3. Rebuild the isolated verification environment.
+4. Accept the foundation lineage.
+5. Ratify **Q-A** (My Journey: projection vs co-owned object).
+6. Ratify **Q-B** (Home before a program exists).
+7. Build practitioner services.
+8. Build `/studio/clients`.
+9. Build the client home.
+10. Conduct the end-to-end walk.
+
+> **The finding worth carrying forward:** a migration can be absent from production and still be
+> dangerous while it remains executable in the path to production.
