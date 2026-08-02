@@ -1,6 +1,8 @@
 # The Field Object Declaration — the constitutional question surfaced by the Phase 1 release walk
 
 > **Status: RECORDED, NOT RATIFIED. Authorizes no implementation.**
+> Contains an **open constitutional question** and a **candidate model proposed as its answer**
+> (Kelly, 2026-08-02). Neither is canon. ⛔ Nothing here may be cited as a build authorization.
 > Kelly, 2026-08-02, in response to the Phase 1 release-acceptance walk failing at W8
 > (see `docs/product/releases/WRITERS_STUDIO_PHASE_1_RELEASE_RECORD.md` §3b, F3).
 > Recorded by Claude. ⛔ Nothing here is a build authorization, and the question below is
@@ -87,6 +89,92 @@ surface state**, and the Field is the platform root that Studios only reference.
 ⭐⭐ That is the significant thing: **the architecture is now mature enough to critique the
 implementation, rather than being shaped by it.** Earlier in this project the reverse was true.
 
+## A candidate constitutional model (Kelly, 2026-08-02)
+
+> ⚠️ **This is a proposed answer to the question above, not a ruling.** Kelly's framing is
+> conditional — *"that suggests a cleaner constitutional model"*, *"if it holds"*. Promoting any
+> of it into `docs/canon/` is Kelly's act and has not happened.
+
+### What the walk actually exposed about coupling
+
+Before the walk, architecture and implementation **appeared** aligned because there was only one
+visible source. The walk created no new requirement. It exposed that the implementation had
+**quietly coupled Field Object creation to one particular source pipeline.**
+
+### The model
+
+```
+Experience / Event
+        │
+        ▼
+Explicit Member Declaration
+        │
+        ▼
+   Field Object
+        │
+        ├──────────────┐
+        ▼              ▼
+Project References   Member Field
+        │
+        ▼
+   Placements
+        │
+        ▼
+ Canvas / Studio
+```
+
+### ⭐⭐⭐ Field Objects are not created by sources
+
+Sources produce **events**: conversation · journal · idea · uploaded document · practitioner
+note · bookmark · voice memo · highlight · future media types.
+
+⛔ **None of those should know how to manufacture a canonical Field Object.**
+
+Instead every source supports **one common act**:
+
+> **"I want to keep this."**
+
+That declaration — not the source — creates the enduring object.
+
+### The candidate invariant
+
+> ### **The declaration creates the Field Object, not the source.**
+
+Kelly: *"That is more than a Writer's Studio rule. It is an architectural invariant."*
+
+**If it holds, adding a new source becomes almost trivial.** Every new source answers exactly one
+question:
+
+> *How does a human explicitly declare that something from here belongs in their enduring Field?*
+
+Everything after that — References, Placements, Projects, Expressions, retrieval, contextual
+offering — operates on **the same canonical object regardless of origin.** That is the whole
+argument against teaching each source to manufacture its own version of a Field Object.
+
+### ⭐⭐⭐ Three things that had been blended together
+
+| | What it is | Examples |
+|---|---|---|
+| **1. Events** | transient things that happened; they remain **historical records** | conversation · session · journal entry · uploaded PDF · note · voice recording |
+| **2. Enduring objects** | things the human has **explicitly decided** belong in their Field; **these are what can participate in Projects** | Keep · Insight · Decision · Question · Image · Story · Pattern · Quote |
+| **3. Development** | the **changing relationship around** those enduring objects — the **history of work**, ⛔ *not* Field Objects | Project Development Record · Practitioner Development Notes · Author Development Notes |
+
+### The practitioner consequence
+
+⛔ **Client Notes should not try to become another Field.** They exist to support clinical or
+coaching continuity.
+
+The practitioner's own enduring insights — about practice, methods, observations across clients,
+ideas worth keeping — belong in a **separate practitioner Field, governed by the same declaration
+rule.** That keeps **client records and practitioner knowledge cleanly separated.**
+
+Same pattern, both axes:
+
+```
+Session → Observation → explicit practitioner declaration → Practitioner Field Object
+Conversation / Journal / Idea / Reading / … → explicit member declaration → Member Field Object
+```
+
 ## The same question appears on the practitioner axis (Kelly, 2026-08-02)
 
 Assessing the practitioner **note lifecycle** slice (draft → active → completed), Kelly found it
@@ -126,7 +214,8 @@ separated on the member side.
 
 ## What this document does NOT do
 
-- ⛔ It does not answer the question.
+- ⛔ It does not answer the question. It **records a candidate answer** whose author framed it conditionally (*"if it holds"*); a candidate is not a ruling.
+- ⛔ It does not promote the candidate invariant into `docs/canon/`. That is Kelly's act.
 - ⛔ It does not authorize a schema, a migration, a route, or a UI surface.
 - ⛔ It does not rule on where the declaration gesture lives, what it is called, or what it costs
   the member.
