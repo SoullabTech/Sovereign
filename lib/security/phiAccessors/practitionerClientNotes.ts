@@ -54,6 +54,12 @@ export const COMMITMENT_STATUSES: readonly CommitmentStatus[] = [
   'released',
 ] as const;
 
+/**
+ * Note lifecycle. INDEPENDENT of CommitmentStatus — both vocabularies contain
+ * "completed" and they answer different questions. See lib/studio/noteLifecycle.ts.
+ */
+export type NoteLifecycle = 'draft' | 'completed';
+
 /** Raw DB row shape (ciphertext columns present, no plaintext sibling). */
 export interface ClientNoteRow {
   id: string;
@@ -67,6 +73,10 @@ export interface ClientNoteRow {
   kind?: ClientNoteKind;
   status?: CommitmentStatus | null;
   promoted_from?: string | null;
+  lifecycle?: NoteLifecycle;
+  completed_at?: string | Date | null;
+  version?: number;
+  session_id?: string | null;
 }
 
 /**
@@ -86,6 +96,13 @@ export interface ClientNote {
   kind: ClientNoteKind;
   status: CommitmentStatus | null;
   promotedFrom: string | null;
+  /** draft | completed. NOT the same axis as `status`. */
+  lifecycle: NoteLifecycle;
+  /** Set only when completion was an explicit act. Null after the backfill. */
+  completedAt: string | null;
+  /** Optimistic concurrency token — echo it back as expected_version. */
+  version: number;
+  sessionId: string | null;
 }
 
 function buildContext(ctx: ClientNotePHIContext): PHIContext {
@@ -164,6 +181,14 @@ export function decryptClientNoteRow(row: ClientNoteRow): ClientNote | null {
     kind: row.kind ?? 'note',
     status: row.status ?? null,
     promotedFrom: row.promoted_from ?? null,
+    // 'completed' matches the migration's backfill: a row without a lifecycle
+    // predates the axis and was written as a finished note, never a draft.
+    lifecycle: row.lifecycle ?? 'completed',
+    // Null means "completed by backfill, not by an explicit act" — which is
+    // what keeps those notes editable. See isEditableInPlace().
+    completedAt: row.completed_at ? toIsoDate(row.completed_at) : null,
+    version: row.version ?? 1,
+    sessionId: row.session_id ?? null,
   };
 }
 

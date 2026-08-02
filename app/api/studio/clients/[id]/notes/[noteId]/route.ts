@@ -19,9 +19,15 @@ import {
   decryptClientNoteRow,
   type ClientNoteRow,
 } from '@/lib/security/phiAccessors/practitionerClientNotes';
-import { MAX_NOTE_LENGTH } from '../route';
+import { MAX_NOTE_LENGTH, NOTE_COLUMNS, validateSessionLink } from '../route';
 import { isValidNoteDate } from '@/lib/studio/noteDate';
 import { validateStatusUpdate } from '@/lib/studio/continuityKind';
+import {
+  validateLifecycleTransition,
+  isEditableInPlace,
+  LOCKED_NOTE_MESSAGE,
+  type NoteLifecycle,
+} from '@/lib/studio/noteLifecycle';
 
 type Params = { params: Promise<{ id: string; noteId: string }> };
 
@@ -35,10 +41,33 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const { id: clientId, noteId } = await params;
 
     const body = await request.json();
-    const { content, note_date: noteDate, status } = body ?? {};
+    const {
+      content,
+      note_date: noteDate,
+      status,
+      lifecycle,
+      session_id: sessionId,
+      expected_version: expectedVersion,
+    } = body ?? {};
 
-    if (content === undefined && noteDate === undefined && status === undefined) {
+    if (
+      content === undefined &&
+      noteDate === undefined &&
+      status === undefined &&
+      lifecycle === undefined &&
+      sessionId === undefined
+    ) {
       return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+    }
+
+    if (
+      expectedVersion !== undefined &&
+      (!Number.isInteger(expectedVersion) || expectedVersion < 1)
+    ) {
+      return NextResponse.json(
+        { error: 'expected_version must be a positive integer' },
+        { status: 400 }
+      );
     }
 
     // kind and promoted_from are IMMUTABLE after creation. Rejected, not ignored:
@@ -78,22 +107,65 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       }
     }
 
-    // A status transition is only meaningful on a commitment, so the existing kind
-    // must be read before it can be validated. Scoped to this practitioner+client —
-    // a row outside scope is simply not found.
+    // The current row governs every remaining check — a status transition is only
+    // meaningful on a commitment, a lifecycle transition depends on where the note
+    // already is, and the lock depends on how it was completed. Read it once.
+    // Scoped to this practitioner+client, so a row outside scope is simply not found.
+    const existing = await db.query(
+      `SELECT kind, lifecycle, completed_at, version
+         FROM practitioner_client_notes
+        WHERE id = $1 AND client_id = $2 AND practitioner_id = $3`,
+      [noteId, clientId, practitionerId]
+    );
+    if (existing.rows.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    const current = existing.rows[0];
+    const currentLifecycle: NoteLifecycle = current.lifecycle ?? 'completed';
+
     if (status !== undefined) {
-      const existing = await db.query(
-        `SELECT kind FROM practitioner_client_notes
-          WHERE id = $1 AND client_id = $2 AND practitioner_id = $3`,
-        [noteId, clientId, practitionerId]
-      );
-      if (existing.rows.length === 0) {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
-      }
-      const check = validateStatusUpdate(existing.rows[0].kind, status);
+      const check = validateStatusUpdate(current.kind, status);
       if (!check.ok) {
         return NextResponse.json({ error: check.error }, { status: 400 });
       }
+    }
+
+    const lifecycleCheck = validateLifecycleTransition(currentLifecycle, lifecycle);
+    if (!lifecycleCheck.ok) {
+      return NextResponse.json({ error: lifecycleCheck.error }, { status: 409 });
+    }
+    const completing = currentLifecycle === 'draft' && lifecycleCheck.value === 'completed';
+
+    // The completed-note lock. Applies to the BODY and the date — the things that
+    // would rewrite the record. `status` is deliberately exempt: a commitment
+    // moving alive -> completed is the continuity object doing its job, not an
+    // edit of a finished note.
+    //
+    // 409 rather than 403: the request is well-formed and the practitioner is
+    // authorised. What refuses it is the state of the note.
+    if (
+      (content !== undefined || noteDate !== undefined) &&
+      !isEditableInPlace(currentLifecycle, current.completed_at ?? null)
+    ) {
+      return NextResponse.json({ error: LOCKED_NOTE_MESSAGE }, { status: 409 });
+    }
+
+    // Optimistic concurrency for the debounced autosave loop. Two saves in flight
+    // can complete out of order; without this the STALER body would win and
+    // silently discard writing the practitioner watched land.
+    if (expectedVersion !== undefined && current.version !== expectedVersion) {
+      return NextResponse.json(
+        {
+          error: 'This note changed somewhere else. Reload to see the current version.',
+          currentVersion: current.version,
+        },
+        { status: 409 }
+      );
+    }
+
+    const sessionLink = await validateSessionLink(sessionId, clientId, practitionerId);
+    if ('error' in sessionLink) {
+      return NextResponse.json({ error: sessionLink.error }, { status: 400 });
     }
 
     // Re-encrypt against the SAME row id so the AAD stays valid.
@@ -102,16 +174,26 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         ? encryptClientNoteContent(content.trim(), { rowId: noteId, practitionerId })
         : null;
 
+    // `version` increments on every update — it is the token the next autosave
+    // echoes back. The WHERE clause re-checks it so the guard above cannot be
+    // defeated by a write landing between the read and this statement.
+    //
+    // session_id COALESCEs, so omitting it leaves the link alone. Unlinking is
+    // deliberately not offered in this slice.
     const updated = await db.query(
       `UPDATE practitioner_client_notes
           SET content_enc      = COALESCE($1, content_enc),
               content_enc_meta = COALESCE($2::jsonb, content_enc_meta),
               note_date        = COALESCE($3::date, note_date),
               status           = COALESCE($7, status),
+              lifecycle        = COALESCE($8, lifecycle),
+              completed_at     = CASE WHEN $9::boolean THEN NOW() ELSE completed_at END,
+              session_id       = COALESCE($10::uuid, session_id),
+              version          = version + 1,
               updated_at       = NOW()
         WHERE id = $4 AND client_id = $5 AND practitioner_id = $6
-       RETURNING id, client_id, practitioner_id, content_enc, content_enc_meta,
-                 note_date, created_at, updated_at, kind, status, promoted_from`,
+          AND ($11::int IS NULL OR version = $11::int)
+       RETURNING ${NOTE_COLUMNS}`,
       [
         encrypted?.contentEnc ?? null,
         encrypted?.contentEncMeta ?? null,
@@ -120,10 +202,23 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         clientId,
         practitionerId,
         status ?? null,
+        lifecycleCheck.value ?? null,
+        completing,
+        sessionLink.value,
+        expectedVersion ?? null,
       ]
     );
 
     if (updated.rows.length === 0) {
+      // The row was read a moment ago under the same scope, so zero rows here
+      // means the version guard in the WHERE clause caught a concurrent write.
+      // Reporting 404 would be a lie — the note exists, it just moved.
+      if (expectedVersion !== undefined) {
+        return NextResponse.json(
+          { error: 'This note changed somewhere else. Reload to see the current version.' },
+          { status: 409 }
+        );
+      }
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 

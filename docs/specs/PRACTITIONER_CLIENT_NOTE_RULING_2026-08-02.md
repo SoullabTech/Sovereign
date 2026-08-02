@@ -234,6 +234,89 @@ clinical records system or a taxonomy-management surface.**
 1. **`sessions.notes` / `sessions.practitioner_notes` plaintext PHI** (§3) — needs its own ruling.
 2. **Client of record** — `practitioner_clients` vs `practitioner_cases` remains unjoined and
    unruled. This ruling does not settle it.
-3. **Draft storage shape** — a `draft` row in `practitioner_client_notes` vs client-side persistence.
-   A draft of PHI is PHI; client-side persistence would place unencrypted client material in browser
-   storage. ⛔ Do not decide by implementation.
+3. ~~**Draft storage shape**~~ — **RULED 2026-08-02**, see §11.
+
+---
+
+## 11. Draft storage — RULED (Kelly, 2026-08-02)
+
+> **A Client Note draft is already a Client Note.** It receives the same encryption, ownership
+> scope, access control, and provenance from its first durable save.
+
+⛔ **No draft PHI in `localStorage`, IndexedDB, session storage, URL state, or an offline cache.**
+That would create a second, weaker persistence system for exactly the material the encrypted-note
+substrate exists to protect.
+
+The browser may hold current text **in memory** while the editor is open. Durable continuity begins
+only when it reaches the encrypted server record.
+
+### Save behaviour — restrained autosave, not per-keystroke
+
+- create the encrypted draft **after the practitioner begins writing**, not when the form opens
+- debounce saves after a short pause (1–2s)
+- flush on blur, navigation, tab backgrounding, and explicit Save
+- idempotency key or optimistic version to prevent stale writes
+- honest states: **Saving · Saved · Couldn't save**
+- unsaved text stays in memory only
+- warn before leaving when a final flush fails
+
+### Lifecycle axis — named, not overloaded
+
+```
+lifecycle          draft | completed | amended
+commitment_status  alive | completed | released
+```
+
+⛔ Do not call both `status`. The existing commitment field stays as-is for compatibility; the note
+axis is named **`lifecycle`**. First slice needs only `draft → completed`. Amendment and addendum
+behaviour waits on a ruling for completed-note mutability — but the *name* is chosen so those states
+can be added without redefining the axis.
+
+### Completion
+
+An explicit practitioner act. Once completed: the note stays encrypted · Carry Forward stays
+provenance-only · the source note is untouched · ordinary edits must not silently rewrite the
+completed record · reopening for correction should eventually require an explicit
+correction/addendum path.
+
+⭐ For this first slice it is acceptable to **prevent editing after completion and defer the
+correction model — provided the UI says so before the practitioner completes it.**
+
+### Session linkage
+
+Use the existing `sessions.id` as an **optional** FK: required only when the note is actually tied to
+a recorded session; nullable for preparation notes, unscheduled contact, and retrospective
+documentation; ownership validated so session, client, and practitioner all agree.
+⛔ **Do not infer a session from proximity in time.**
+
+### The plaintext `sessions` columns — separate high-priority PHI audit
+
+Not part of this lifecycle PR. Until resolved: ⛔ do not write new Client Note content into those
+columns · ⛔ do not synchronize encrypted notes into them · ⛔ do not migrate or delete existing
+values without an explicit migration and evidence plan · inventory all readers and writers to
+determine whether they are live, legacy, or unused.
+
+⭐ **Their existence must not force the new note workflow to repeat the older plaintext design.**
+
+### The bounded PR — truthful claim
+
+> Let a practitioner begin an encrypted client note as a draft, leave and return without losing it,
+> and explicitly complete it **without conflating note lifecycle with commitment status.**
+
+Acceptance must prove:
+
+1. Opening the form alone creates nothing.
+2. Writing creates one encrypted draft.
+3. No plaintext note body exists in browser persistence or database columns.
+4. Autosave is debounced and race-safe.
+5. Leave and return restores the draft.
+6. Completing is explicit.
+7. A completed note is no longer silently editable.
+8. Commitment status behaviour is unchanged.
+9. Carry Forward remains source-preserving.
+10. Session linkage, when supplied, is ownership-validated.
+11. Cross-client and cross-practitioner access fails plainly.
+12. Fixture cleanup restores exact baseline counts.
+
+⭐ **Every durable trace of the note inherits the protections of the note itself from the moment it
+first exists.**
