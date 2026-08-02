@@ -1,28 +1,40 @@
 'use client';
 
 /**
- * Card — a single capture pointer rendered on the Shelf or inside a Group.
+ * Card — a single capture pointer rendered on the Shelf or inside a pile.
  *
- * Shelf cards are draggable (carry a JSON-encoded { source, ref } via
- * DataTransfer). Group cards are not draggable in v0 (reorder-within-group
- * waits for lived contact to confirm it's needed).
+ * Cards carry a JSON drag payload. The payload's SHAPE is what tells a drop
+ * target which act is being performed:
+ *
+ *   { source, ref }                       — from the Shelf   → gather
+ *   { source, ref, cardId, fromGroupId }  — from a pile      → move / return
+ *
+ * A card on the table is a PLACEMENT, and two placements may point at the same
+ * capture. So a card's React key must be its placement id, never {source, ref}.
+ *
+ * The `controls` slot is composed by the caller rather than driven by a growing
+ * list of callback props — the Shelf renders none, a pile renders the full verb
+ * set. Controls are always in the DOM (not hover-gated) so they remain usable
+ * on touch, where drag-and-drop does not exist.
  */
 
-import type { WorkbenchCardRef } from '@/lib/workbench/sources/types';
+import type { ReactNode } from 'react';
 
 interface CardProps {
-  card: WorkbenchCardRef | { source: string; ref: string; title?: string; preview?: string };
+  card: { source: string; ref: string; title?: string; preview?: string };
   draggable?: boolean;
-  onRemove?: () => void;
+  /** Serialized to `application/json` on dragstart. */
+  dragPayload?: Record<string, unknown>;
+  controls?: ReactNode;
 }
 
-export function Card({ card, draggable = false, onRemove }: CardProps) {
+export function Card({ card, draggable = false, dragPayload, controls }: CardProps) {
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData(
       'application/json',
-      JSON.stringify({ source: card.source, ref: card.ref }),
+      JSON.stringify(dragPayload ?? { source: card.source, ref: card.ref }),
     );
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = 'copyMove';
   };
 
   return (
@@ -30,7 +42,7 @@ export function Card({ card, draggable = false, onRemove }: CardProps) {
       draggable={draggable}
       onDragStart={draggable ? handleDragStart : undefined}
       className={[
-        'group relative px-3 py-2 rounded border border-amber-200/10 bg-amber-200/[0.02]',
+        'group/card relative px-3 py-2 rounded border border-amber-200/10 bg-amber-200/[0.02]',
         'hover:border-amber-200/25 hover:bg-amber-200/[0.04] transition-colors',
         draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
       ].join(' ')}
@@ -43,16 +55,7 @@ export function Card({ card, draggable = false, onRemove }: CardProps) {
           {card.preview}
         </div>
       )}
-      {onRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          className="absolute top-1 right-1 text-amber-200/30 hover:text-amber-200/70 text-xs px-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="Remove from group"
-        >
-          ×
-        </button>
-      )}
+      {controls && <div className="mt-2">{controls}</div>}
     </div>
   );
 }

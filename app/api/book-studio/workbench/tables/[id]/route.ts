@@ -146,19 +146,41 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   return NextResponse.json({ ok: true });
 }
 
+/**
+ * Shape check for an incoming layout.
+ *
+ * Placement ids must be unique across the whole table, and pile ids unique
+ * across the table. A duplicated placement id is not a cosmetic problem: the
+ * verbs address a card by its placement id, so two cards sharing one id makes
+ * "move THIS card" ambiguous and React keys collide. The client generates ids
+ * correctly; this refuses the case where it does not.
+ *
+ * Note what is deliberately NOT checked: a given {source, ref} may appear any
+ * number of times, in one pile or many. That is Duplicate placement — one
+ * capture the member has put in more than one place — and it is a member act,
+ * not a malformed layout.
+ */
 function validateLayout(layout: unknown): layout is TableLayout {
   if (!layout || typeof layout !== 'object') return false;
   const groups = (layout as TableLayout).groups;
   if (!Array.isArray(groups)) return false;
+
+  const groupIds = new Set<string>();
+  const placementIds = new Set<string>();
+
   for (const g of groups) {
     if (!g || typeof g !== 'object') return false;
     if (typeof g.id !== 'string' || typeof g.name !== 'string') return false;
+    if (groupIds.has(g.id)) return false;
+    groupIds.add(g.id);
     if (!Array.isArray(g.cards)) return false;
     for (const c of g.cards as CardPointer[]) {
       if (!c || typeof c !== 'object') return false;
       if (typeof c.id !== 'string' || typeof c.source !== 'string' || typeof c.ref !== 'string') {
         return false;
       }
+      if (placementIds.has(c.id)) return false;
+      placementIds.add(c.id);
     }
   }
   return true;
