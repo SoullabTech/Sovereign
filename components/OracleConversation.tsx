@@ -9619,8 +9619,18 @@ I'm not sure what I'm feeling yet.`;
              This does not strand anyone — the escape hatch exists for "the
              composer subtree didn't render", and during Arrival the member
              HAS a composer: Arrival's own. Beneath the z-[90] field this
-             button is unreachable anyway; showing it is a false affordance. */
-          className={`fixed left-0 right-0 z-below-nav flex justify-center ${shouldRenderArrival ? 'invisible' : ''}`}
+             button is unreachable anyway; showing it is a false affordance.
+
+             pointer-events-none is load-bearing, not cosmetic. This wrapper spans
+             the full viewport width so its single pill can be centred, but only
+             the pill is meant to be touchable. Without it the strip claims a
+             44px-tall full-width hit surface at z-below-nav and swallows clicks
+             aimed at anything beneath it — which is how the capsule review panel's
+             primary action became unclickable while looking perfectly normal on
+             screen (2026-08-02, Correction 3 feature walk, halted at F4/F5).
+             The child already declares `pointer-events-auto`; that declaration
+             only means anything once the parent opts out. */
+          className={`pointer-events-none fixed left-0 right-0 z-below-nav flex justify-center ${shouldRenderArrival ? 'invisible' : ''}`}
           style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
