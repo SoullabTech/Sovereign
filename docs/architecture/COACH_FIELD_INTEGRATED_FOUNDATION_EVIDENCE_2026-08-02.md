@@ -151,6 +151,74 @@ two ids non-interchangeable at compile time. No route improvises it.
   vocabularies disagree (`completed` / `inactive` / `waitlist` are not shared), and any
   automatic mapping would invent a meaning the source never carried.
 
+## Post-merge corrective amendment — `20260802000004`
+
+#902 merged as `c0c8b0ba6`. Per `COACH_FIELD_FOUNDATION_CANONICALITY_2026-08-02.md` §8 the
+two remaining review findings are **post-merge corrective amendments, not acceptance
+blockers**, and are delivered as a NEW migration —
+`20260802000004_reconciliation_evidence_contract.sql`. The merged
+`20260802000002_practitioner_client_relationship.sql` is unchanged and must stay unchanged.
+
+⚠️ **The figures below replace the earlier 32/32 · M1 17/17.** Those do not carry across this
+amendment: it changes a column the reconciliation path writes, so the prior run is evidence
+about a schema that no longer exists.
+
+**Databases, both owned by this lane** — never the shared dev database, which another lane has
+already dropped tables in mid-gate:
+
+| Database | State it proves |
+|---|---|
+| `maia_cf_amend_004` | built from committed migrations **from zero**, amendment included |
+| `maia_cf_amend_004_transition` | built to `000003` only, seeded with rows in the shape the merged function writes, **then** upgraded — the state a dev environment that already applied `000002` is actually in |
+
+| Check | Result |
+|---|---|
+| boundary gate, from-zero database | **40 passed · 0 failed** (32 prior + 8 new) |
+| boundary gate, upgraded database | **40 passed · 0 failed** — identical, so the transition path and the from-zero path converge |
+| amendment applied 2nd and 3rd time | OK · OK — idempotent |
+| `npm run typecheck` | no regressions (239 errors, baseline 239) |
+| `npm run check:no-supabase` | clean |
+
+**The transition branch is proven, not assumed.** A from-zero build never executes the backfill,
+because there is nothing to back-fill — so it was exercised deliberately:
+
+- all four sentences mapped 1:1 to their codes, `NULL` preserved as `NULL` (5 seeded rows → 4
+  codes + 1 null);
+- an **unmappable** human sentence (`'I spoke to Dana and she confirmed this is her account.'`)
+  **stopped the migration** with the diagnostic exception. Nothing was destroyed —
+  `ambiguity_reason` was still present after the refusal, because the transaction rolled back;
+- with that row resolved, re-applying succeeded and retired the column.
+
+That is the intended behaviour: free human text in a machine reconciliation record cannot be
+mapped to a code, and is a fact to surface rather than silently drop.
+
+**New gate assertions (8).** `1e` no free-text column survives on the reconciliation queue ·
+`1f` `provenance` is the only unrestricted JSONB in the foundation · `7d` the ambiguity
+vocabulary is closed by the schema · `7e` `ambiguity_reason` is gone, not deprecated · `7f` the
+classifier emits a vocabulary code · `7g` every emitted provenance key is approved · `7h` a
+human sentence into the ambiguity axis is refused · `7i` a narrative key into `provenance` is
+refused. Both refusal probes assert the **constraint name**, so a probe that fails for the
+wrong reason still reports as a failure.
+
+⚠️ `1f`'s scope is the tables this foundation authored (`coach_%` + the reconciliation queue).
+`practitioner_clients` (6 JSONB columns) and `practitioner_client_notes.content_enc_meta` both
+predate #902 and are excluded — a gate that claimed a boundary it does not own would fail for
+someone else's reasons.
+
+⏳ **Left unruled on purpose:** `provenance.normalized_email`. Options are laid out in
+`COACH_FIELD_PROVENANCE_DISCLOSURE_QUESTION_2026-08-02.md`. The key is retained exactly as the
+merged function writes it and named as unruled in the CHECK, the column comment and the gate —
+removing it or hashing it would have decided a question the founder reserved.
+
+🔴 **Finding, separate lane, NOT fixed here.** `database/migrations/README.md` states *"A
+checksum (SHA-256) is recorded at apply time; editing a migration file after it has been applied
+is detected as drift, not silently ignored."* Verified against `scripts/run-sql-migrations.sh`:
+this is **false**. The runner adds a `checksum` column *"for future compatibility"* and never
+computes, writes or compares one; selection is filename set-membership alone. The README
+describes a control that does not exist — a reserved place reading identically to a working
+mechanism. It belongs to the checksum-enforcement lane (canonicality §8.9), so it is reported
+rather than repaired here, but it must not stay written as if the control were live.
+
 ## Not yet done on this lane
 
 The three donor services were removed rather than adapted. Practitioner services and UI are
