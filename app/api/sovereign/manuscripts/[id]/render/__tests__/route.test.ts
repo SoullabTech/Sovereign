@@ -119,3 +119,71 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
     await expect(fs.access(tmp)).rejects.toBeTruthy();
   });
 });
+
+/**
+ * C2 — the nullable-title contract at the render boundary.
+ *
+ * `member_manuscripts.title` became nullable in 20260802000001. This route is
+ * the one place a title must become a string, because pandoc metadata and the
+ * download filename are both strings. Before this, `title` was typed and
+ * treated as non-nullable, so a NULL would have travelled straight through and
+ * been interpolated as the literal "null" — into `--metadata title=null`, into
+ * `<title>null</title>`, and into the downloaded filename of a member's book.
+ *
+ * These tests pin the resolution rather than the coincidence that currently
+ * hides the problem (unnamed ⇒ member_written ⇒ zero sections ⇒ 400 earlier).
+ */
+describe('POST /api/sovereign/manuscripts/[id]/render — nullable title', () => {
+  async function renderWithTitle(title: string | null) {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title }], rowCount: 1 }) // manuscript
+      .mockResolvedValueOnce({ rows: [{ heading: null, body: 'text' }], rowCount: 1 }) // sections
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 }) // member name
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // INSERT provenance
+
+    const tmp = path.join(
+      os.tmpdir(),
+      `render-title-${process.pid}-${Math.floor(performance.now())}-${Math.random().toString(16).slice(2)}.pdf`,
+    );
+    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 test body'));
+    mockRender.mockResolvedValue({
+      filePath: tmp,
+      sizeBytes: 18,
+      pageCount: 1,
+      sourceHash: 'abc123',
+      sectionCount: 1,
+    });
+
+    const res = await POST(req({ format: 'pdf' }), ctx);
+    const passed = mockRender.mock.calls[0]?.[1] as { title: unknown } | undefined;
+    await new Promise((r) => setTimeout(r, 25));
+    await fs.rm(tmp, { force: true });
+    return { res, passed };
+  }
+
+  it('never lets a NULL title reach the renderer as the string "null"', async () => {
+    const { res, passed } = await renderWithTitle(null);
+
+    expect(res.status).toBe(200);
+    expect(passed?.title).toBe('Your writing');
+
+    // The specific failure this guards: interpolation of null into a string.
+    expect(passed?.title).not.toBe('null');
+    expect(passed?.title).not.toBeNull();
+    expect(typeof passed?.title).toBe('string');
+    expect(String(passed?.title)).not.toContain('null');
+
+    // …and it must not reach the member through the filename either.
+    expect(res.headers.get('content-disposition')).not.toContain('null');
+  });
+
+  it('leaves a title the member actually gave exactly as they gave it', async () => {
+    const { res, passed } = await renderWithTitle('The Salt Road');
+
+    expect(res.status).toBe(200);
+    expect(passed?.title).toBe('The Salt Road');
+    // The fallback is for absence only — it must never displace a real name.
+    expect(passed?.title).not.toBe('Your writing');
+  });
+});

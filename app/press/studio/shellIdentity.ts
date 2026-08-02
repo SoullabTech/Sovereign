@@ -1,4 +1,5 @@
 import type { LivingWork, LivingWorksPhase } from './useLivingWorks';
+import { UNTITLED_EXPRESSION } from '@/lib/manuscript/untitledExpression';
 
 /**
  * What the Studio shell names itself.
@@ -82,8 +83,13 @@ export interface ShellIdentityInput {
  *
  * Explicitly NOT: "Untitled", "New manuscript", "Draft 1", a generated
  * filename, or the Living Work's name.
+ *
+ * The word itself now lives in `lib/manuscript/untitledExpression` so the
+ * render/export boundary — server code, which cannot import this client
+ * module — says the same thing rather than a copy of it. Re-exported here so
+ * this module's consumers are unchanged.
  */
-export const UNTITLED_EXPRESSION = 'Your writing';
+export { UNTITLED_EXPRESSION };
 
 export function shellIdentity({
   worksPhase,
