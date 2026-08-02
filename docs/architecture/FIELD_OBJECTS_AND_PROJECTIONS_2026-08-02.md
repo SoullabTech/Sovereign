@@ -267,6 +267,93 @@ code already encodes that distinction rather than collapsing them.
 into the member's wider Field**, currently showing a single object type. The Writer's Studio may
 reference those insights; it does not own them.
 
+## Extension — the manuscript asks questions of the Field (Kelly, same day)
+
+This is the lived practice that should drive the architecture. It is **not "retrieving reference
+material."** It is **re-entering a conversation with your own life.**
+
+Writing about forgiveness, leadership, grief or fire, no one thinks *"insert Journal Entry #42."* They
+think **"I know I've wrestled with this before"** — and then go looking, not for a quotation, but for
+**their former self**. Rereading notebooks, journals, marginalia, old talks, scraps of paper, until
+something forgotten becomes alive again. Sometimes it is exactly what was needed. Sometimes it shows
+you have changed your mind. Sometimes it opens a new line of inquiry.
+
+### The direction inverts
+
+Not `Field → Writing`. Rather:
+
+```
+Writing
+   ↓
+"What have I already lived about this?"
+   ↓
+Field
+   ↓
+Member explores
+   ↓
+Writing continues
+```
+
+**The manuscript becomes a doorway into the Field.**
+
+### Why journals matter
+
+A journal entry is rarely something pasted into a manuscript. It may instead remind you of a
+forgotten experience · reveal how your understanding matured · surface an image abandoned too quickly
+· reconnect you with the emotional reality behind an abstract idea · expose tensions worth exploring ·
+point you toward another notebook, conversation or source.
+
+> **It expands consciousness before it expands text.**
+
+### Context becomes richer — and stays distinguished
+
+Writing on *belonging*, the Canvas does not merely offer three Keeps. It can offer, **in clearly
+distinguished groups**: Keeps · Journal entries · Ideas · Decisions · Changes · Conversations — each
+retaining its kind, its date, and its origin.
+
+**Nothing is inserted. Nothing is clustered for you. The Field simply becomes present.**
+
+### The asymmetry
+
+```
+Field  ↕  Canvas  ↕  WriterField
+```
+
+Writing influences the Field. The Field influences writing. **Neither consumes the other.** The Canvas
+is where the dialogue happens.
+
+### Checked against the implementation
+
+⚠️ **One concrete divergence, in code this lane owns.** `app/api/book-studio/workbench/shelf/route.ts`
+fans out across adapters and then **flattens**:
+
+```
+results.flat().sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)).slice(0, 300)
+```
+
+A single undifferentiated stream sorted by date. That is the opposite of *"clearly distinguished
+groups… preserving each object's identity and source."* It is invisible today because members search
+one source (`keep`), so the flattening has nothing to flatten — but it becomes wrong the moment a
+second adapter ships, which is Slice 2. Recorded, **not fixed**: grouping the Shelf by field-object
+kind is a behaviour change outside the verb-set slice.
+
+Everything else in this extension is a direction-of-travel statement rather than a checkable
+constraint, and is recorded as such.
+
+### The name
+
+⚠️ **Candidate, not a ruling.** *"Workbench"* sounds like a place where you **manipulate objects**.
+What is described here is closer to a **Field Table** or **Thinking Table** — a place where you lay
+out living traces of your own experience to see what begins to speak to one another.
+
+The speaking still belongs to the member. The environment **gathers, remembers, and makes available**.
+The recognition — the moment an old journal entry suddenly illuminates the paragraph being written —
+is **the member's act**. That is assistance that strengthens a person's own thinking rather than
+replacing it.
+
+⛔ No rename is authorized here. `Workbench` is load-bearing across routes, components, a migration,
+two test suites and an open PR; renaming it is a separate decision with its own blast radius.
+
 ---
 
 ## Refused by default
