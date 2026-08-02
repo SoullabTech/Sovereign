@@ -1,12 +1,13 @@
 # The Field Object Declaration — the constitutional question surfaced by the Phase 1 release walk
 
 > **Status: RECORDED, NOT RATIFIED. Authorizes no implementation.**
-> Contains an **open constitutional question** and a **candidate model proposed as its answer**
-> (Kelly, 2026-08-02). Neither is canon. ⛔ Nothing here may be cited as a build authorization.
+>
 > Kelly, 2026-08-02, in response to the Phase 1 release-acceptance walk failing at W8
-> (see `docs/product/releases/WRITERS_STUDIO_PHASE_1_RELEASE_RECORD.md` §3b, F3).
-> Recorded by Claude. ⛔ Nothing here is a build authorization, and the question below is
-> **open** — it is not answered by this document.
+> (see `docs/product/releases/WRITERS_STUDIO_PHASE_1_RELEASE_RECORD.md` §3b, F3). Recorded by
+> Claude.
+>
+> Contains **an open constitutional question** and **a candidate model proposed as its answer.**
+> Neither is canon. ⛔ Nothing here may be cited as a build authorization.
 
 ---
 
