@@ -178,6 +178,30 @@ Order of operations:
 
 Until step 3, the README correctly describes trunk.
 
+### The exact README edit to carry (apply on top of #911's merged version)
+
+Pinned here so it is not re-derived later. **Two** spots need correcting, not one — #911 rewrites the
+opening paragraph but leaves consequence 2 saying *"The checksum ledger will flag it"*, which is
+false under #911 alone and true again only once this lane lands. Both must move together.
+
+**Opening paragraph** — replace #911's text from `A `checksum` column exists…` to the end of the
+paragraph with:
+
+> A SHA-256 checksum of each migration's contents is recorded at apply time and re-verified on every
+> subsequent run, in a pre-flight phase before any pending migration is applied. Editing an applied
+> migration is detected as drift and fails the run — the deploy stops and nothing is applied. Rows
+> recorded before enforcement existed (`checksum IS NULL`) are reported as UNVERIFIED and are never
+> auto-certified; they are not protected. See `docs/ops/MIGRATION_INTEGRITY_POLICY.md`.
+
+**Consequence 2** — replace with:
+
+> 2. **Never edit an applied migration.** The pre-flight checksum check fails the run and names the
+>    file. Its edited contents will not run in any case — the file is already recorded. Write a new
+>    migration instead.
+
+Verify before merging that #911's merged text still matches what this edit assumes; if #911 changed
+further in review, re-read the merged file rather than applying this blind.
+
 ## 8. Verification
 
 `scripts/test-migration-checksums.sh` — **44 assertions, 44 passed, 0 failed** (run 2026-08-02).
