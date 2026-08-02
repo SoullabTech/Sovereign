@@ -356,8 +356,25 @@ two test suites and an open PR; renaming it is a separate decision with its own 
 
 ## Post-ratification addition — References as the connective tissue (Kelly, 2026-08-02)
 
-⚠️ **Recorded AFTER the directive was ratified.** Not covered by the 2026-08-02 ratification. The
-ratified text stands unchanged; this is a candidate object awaiting its own ruling.
+✅ **RULED 2026-08-02 by Kelly, before the directive landed** — incorporated into
+`docs/canon/MEMBER_FIELD_AND_STUDIO_DIRECTIVE.md` as **Amendment 4 — Project Reference and
+Placement.** Recorded after ratification, so it did not amend the ratified four-layer text; it
+completes the connective tissue between those layers.
+
+**The ruling: Reference is the durable layer; Placement is surface state.**
+
+```
+Field Object → Project Reference → Placement
+```
+
+Removing a Placement does not remove the Reference. Removing the Reference requires a separate
+explicit member act. Three verbs stay distinct: **Return to Shelf** (drop the placement) ·
+**Remove from Project** (drop the reference) · **Remove from Field** (a source-level act). Two
+shelves follow: the **Field Shelf** and the **Project Shelf** — *Return to Shelf* ordinarily means
+the latter.
+
+The sections below are the reasoning that produced that ruling; the canon directive is where it is
+binding.
 
 ### What the ratification separated
 
@@ -433,10 +450,18 @@ reference      — "this mattered to this work"              (does not exist yet
 placement      — "and right now it sits here"              (CardPointer.id) ✅ implemented
 ```
 
-⛔ Nothing here is authorized. Notably unsettled before anything could be built: whether a reference
-is created by the first placement or by a distinct member act; whether removing the last placement
-should offer to keep the reference; and whether references belong to the Project or to the Project
-Development Record.
+### ✅ The three unsettled questions — all RULED (Kelly, 2026-08-02)
+
+| Question | Ruling |
+|---|---|
+| Is a reference created by the first placement, or by a distinct member act? | **The first deliberate placement may create it.** Not inference — the member explicitly brought the object into relationship with the project. |
+| Should removing the last placement offer to keep the reference? | **It must not delete it.** Removing the Reference is a separate explicit act (*Remove from Project*). |
+| Do references belong to the Project or the Project Development Record? | **The Project.** A Project Reference is project-scoped. |
+
+⛔ **Still no implementation authorization.** The ruling settles the *domain model*; whether
+References and Placements need separate tables — or whether a reference initially lives inside the
+existing JSON and graduates later — remains an implementation decision. What is binding: **the
+domain distinction must exist before adapters expand or project-bound Canvas behaviour is built.**
 
 ---
 

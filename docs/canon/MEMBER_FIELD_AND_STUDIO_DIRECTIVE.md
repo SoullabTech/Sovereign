@@ -47,21 +47,73 @@ Expression                  prose, course, talk, book, or another formed work
 offering is to be thought about. This is a **constitutional** directive, not a feature spec: every
 implementation must grow from it.
 
-### ⏳ Pending addition — References (not ratified)
+### ✅ Amendment 4 — Project Reference and Placement (RULED 2026-08-02, Kelly)
 
-Raised by Kelly **after** this ratification and therefore **not covered by it**: a project develops a
-persisting **constellation of references** into the Member Field — *"these have mattered to this
-work"* — distinct from where a card currently sits on a table. Proposed as the connective tissue
-between the Member Field and the Project Development Record.
+Raised by Kelly after ratification and **ruled before this directive landed.** It completes the
+connective tissue between the four ratified layers; it does not alter them.
 
-Recorded in full, with its implementation consequences, at
-`docs/architecture/FIELD_OBJECTS_AND_PROJECTIONS_2026-08-02.md` §*Post-ratification addition*. It
-awaits its own ruling; the ratified text above stands unchanged.
+**The operative addition:**
 
-⚠️ It also states the standard for contextual retrieval more sharply than the ratified text does:
-retrieval means *"while working on this project, these parts of your Field may be worth revisiting"* —
-**never** *"here are things to insert into your manuscript."* The first restores memory; the second
-performs writing.
+> **A Project Reference records that a member has brought a Field Object into relationship with a
+> Project. A Placement records where and how that Reference is represented on a particular surface.
+> Removing a Placement does not remove the Reference. Removing the Reference requires a separate
+> explicit member act.**
+
+```
+Field Object          the thing itself, in the member's Field
+    ↓
+Project Reference     "this Field Object matters to this Project"   — durable
+    ↓
+Placement             "and it is currently represented here"        — surface state
+```
+
+**A Project Reference is** member-authored · durable · project-scoped · independent of any one
+Canvas or pile · non-consuming · **able to survive every arrangement change.** A project may
+reference one Field Object once while that reference carries several placements.
+
+**A Placement is** surface-specific · movable · reorderable · duplicable · removable · **cheap and
+reversible.** A Canvas, timeline, map, or later Studio surface may each project the same Reference
+differently.
+
+**Creation.** The first deliberate placement of a Field Object onto a project surface **may create
+the Project Reference.** This is not inference — the member has explicitly brought the object into
+relationship with the project.
+
+**Removal — three distinct verbs, never collapsed:**
+
+| Verb | Effect |
+|---|---|
+| **Return to Shelf** | Removes this Placement. The object **remains referenced** by the Project. |
+| **Remove from Project** | Explicitly deletes the Project Reference and its remaining Placements. |
+| **Remove from Field** | A separate source-level act, governed by the Field Object itself. |
+
+⛔ **Removing the last Placement must not delete the Reference.** Arrangement churn may no longer
+erase the history that an insight mattered to the work.
+
+**Consequence — there are now two legitimate shelves:**
+
+- **Field Shelf** — searchable access to the member's wider Field.
+- **Project Shelf** — Field Objects already referenced by this Project but not currently placed on
+  the Canvas.
+
+*Return to Shelf* ordinarily means the **Project Shelf** — not disappearance back into the
+undifferentiated global Field.
+
+**The Phase 4 conceptual order:** Field Object → Project Reference → Placement → projection onto a
+surface → member-authored arrangement → explicit relationship to an Expression, when invited.
+
+**Implementation note.** Whether References and Placements initially require separate tables remains
+an **implementation decision.** The *domain distinction* is load-bearing and **must exist before
+expanding adapters or project-bound Canvas behaviour.**
+
+⚠️ This amendment also states the standard for contextual retrieval more sharply than the ratified
+text does: retrieval means *"while working on this project, these parts of your Field may be worth
+revisiting"* — **never** *"here are things to insert into your manuscript."* The first restores
+memory; the second performs writing.
+
+Supporting derivation: `docs/architecture/FIELD_OBJECTS_AND_PROJECTIONS_2026-08-02.md`
+§*Post-ratification addition* — **included in this same change**, so the directive does not depend
+on an absent artifact.
 
 ---
 
