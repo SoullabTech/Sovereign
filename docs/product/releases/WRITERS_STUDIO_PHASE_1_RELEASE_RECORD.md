@@ -113,6 +113,25 @@ The same commit gives **opposite answers** depending on how dependencies were in
 | shared `node_modules` (missing `@codemirror/*`) | **FAILS** — 4 *new* diagnostics, all `TS2307: Cannot find module '@codemirror/…'` in `WriterField.tsx` |
 | clean `npm ci` from the lockfile | **PASSES** — 239 = baseline 239 |
 
+#### Independent reproduction — 2026-08-02, at this record's own head
+
+R5 and R6 remove stated release blockers, so they were re-measured by a second
+observer rather than carried forward on the first observation.
+
+**Environment:** isolated git worktree, detached at `6316cdcaa` (the head of #881 itself),
+**empty `node_modules`** before the run — not the shared dependency tree, and not the
+stale `.claude/worktrees/rc-verify` checkout.
+
+| Instrument | Outcome |
+|---|---|
+| `npm ci` | `added 2439 packages, and audited 2443 packages` — `@codemirror/*` resolved from the lockfile |
+| `npx jest --config jest.dom.config.js` | **10/10**, 1 suite, exit 0 |
+| `npm run typecheck` | **239 errors = baseline 239**, exit 0, `✅ No TypeScript regressions` (program 3994 files vs baseline 3965 — 29 new files entered, no new diagnostic) |
+| `npm run typecheck:full` | exit 1, **239 diagnostics** — of which `detectRelationalSignal.ts(36,7)` and `(61,7)` `TS2739` are the #863 pair, **still present** |
+| `WriterField.tsx` `TS2307` count | **0** — the "canonical typecheck red" cited on #875 does not reproduce on a clean install |
+
+⛔ This reproduces the two rows; it does **not** re-open the W8 walk. §3b stands.
+
 ⭐ **The lockfile is the referent.** A gate result measured against a shared or drifted
 `node_modules` is a measurement of that directory, not of the release candidate.
 
@@ -241,8 +260,8 @@ it."*
 | R2 | **Keep removal appears inert in the UI** (observed after two clicks; one local fixture Keep remained). | #869 | Named in #869 as its own narrow defect, deliberately not repaired there. |
 | R3 | ~~`title = NULL` reaching the book renderer as the literal `"null"`~~ | #875 migration | **CLOSED 2026-08-02** — #880 merged; `title = ms.rows[0].title ?? UNTITLED_EXPRESSION` verified present on trunk `9e1611306`. |
 | R4 | ~~The blank-page creation race has no automated coverage~~ | #875 | **CLOSED 2026-08-02** — #880 merged; blank-route suite 12/12 on trunk, with a 5-case mutation matrix. |
-| R5 | **#863 remains open**, but it is **not a gate failure.** | #863, OPEN | ⚠️ **Restated 2026-08-02.** The two `detectRelationalSignal` diagnostics still exist and are visible in `npm run typecheck:full` — but they sit **inside the 239-error baseline**, so they cannot fail the no-regression gate, which passes. The "canonical typecheck red" cited on #875 as its merge blocker reproduces **only in an environment missing `@codemirror/*`**, where the failure is 4 `TS2307` diagnostics in `WriterField.tsx` — i.e. R6, misattributed. #863 is real pre-existing debt and stays open; it is **not** a Phase 1 release blocker. |
-| R6 | ~~#869's jsdom suite cannot run — `@codemirror/*` absent~~ | environment | **CLOSED 2026-08-02** — `npm ci` from the lockfile installs them; DOM suite runs **10/10**. The gap was the shared `node_modules`, never the lockfile. ⛔ Standing rule: gates are measured from a clean install, and `npm install` is not run in a shared checkout while other sessions are active. |
+| R5 | **NOT RESOLVED — reclassified.** `detectRelationalSignal` is missing 5 `RelationshipTone` entries and 5 relation entries. The defect is real and the code is still wrong. What changed is its *standing*: it is pre-existing debt carried by the release, **not a release gate**. | #863, OPEN | ⛔ **Do not read this row as fixed.** Both diagnostics — `detectRelationalSignal.ts(36,7)` and `(61,7)`, `TS2739` — are present today and visible in `npm run typecheck:full` (independently reproduced at `6316cdcaa`, §3a). They sit **inside** the 239-error baseline, so they cannot fail the no-regression gate, which passes at 239 = 239. Separately: the "canonical typecheck red" cited on #875 as its merge blocker does **not** reproduce on a clean install — that failure was 4 `TS2307` diagnostics in `WriterField.tsx`, i.e. **R6 misattributed to #863**. R5 stays open and stays a residue. It closes when #863 closes, not when this release ships. |
+| R6 | ~~#869's jsdom suite cannot run — `@codemirror/*` absent~~ | environment | **CLOSED 2026-08-02** — `npm ci` from the lockfile installs them; DOM suite runs **10/10**. Independently reproduced at `6316cdcaa` from an empty `node_modules` (§3a). The gap was the shared `node_modules`, never the lockfile. ⛔ Standing rule: gates are measured from a clean install, and `npm install` is not run in a shared checkout while other sessions are active. |
 
 ## 5. Deferred work
 
