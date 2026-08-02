@@ -8,7 +8,9 @@
 > [`../WRITERS_STUDIO_PHASE_1_CHARTER.md`](../WRITERS_STUDIO_PHASE_1_CHARTER.md).
 > Completed **at** deployment. §6 is Kelly's to sign.
 
-**Last verified against the repository:** 2026-08-02, trunk `099de7aae`.
+**Last verified against the repository:** 2026-08-02, trunk `bfdf5512c`. Composition re-verified by
+`git merge-base --is-ancestor <merge-sha> origin/clean-main-no-secrets` for every row — not by PR
+badge. **No evidence slot was filled by this re-verification; blanks that were blank remain blank.**
 
 ---
 
@@ -25,6 +27,22 @@
 ⚠️ **This release carries a migration** (`20260802000001_manuscript_title_optional.sql`), so the
 quick `deploy-maia` path is **not** sufficient — it runs no migrations.
 
+**Candidate release object, as assembled 2026-08-02** *(inspection output — naming a candidate is
+not authorizing a deployment)*:
+
+| | |
+|---|---|
+| Currently deployed | `7c9dd5192` (container created 2026-08-02T00:18Z) |
+| Candidate tip | `bfdf5512c` |
+| Range | `7c9dd5192..bfdf5512c` — **52 commits**, 9 merged PRs |
+| Migrations in range | **1** — `20260802000001_manuscript_title_optional.sql` |
+| Required deploy path | `scripts/deploy-production.sh deploy <SHA>` (full; runs migrations) |
+| ⛔ Insufficient path | `pre-deploy-gate.sh deploy-maia <SHA>` — rebuilds `maia` only, **no migrations** |
+
+⛔ The candidate tip moves whenever trunk moves. **Re-assemble immediately before deploying** and
+name the SHA explicitly; a range recorded here is evidence of an inspection, not a standing
+authorization.
+
 ## 2. Composition
 
 | PR / Issue | What | State |
@@ -33,14 +51,22 @@ quick `deploy-maia` path is **not** sufficient — it runs no migrations.
 | #875 | Start writing — begin from a declared work without importing or naming (1B) | **MERGED** |
 | #877 | Member Workbench — arrange Keeps on a private table | **MERGED** |
 | #878 | Arrangement verbs — move, reorder, duplicate, return to Shelf | **MERGED** 2026-08-02 03:06:49Z |
-| #879 | Walk probes — read-only atom-immutability and MAIA-silence checks | OPEN |
-| #880 | Post-merge corrections — C1 race coverage, C2 nullable title | OPEN |
-| #876 | Phase 1 Charter + this record (governance; may or may not ride the release) | OPEN |
+| #879 | Walk probes — read-only atom-immutability and MAIA-silence checks | **MERGED** `62eedcf5e` |
+| #880 | Post-merge corrections — C1 race coverage, C2 nullable title | **MERGED** `9e1611306` |
+| #876 | Phase 1 Charter + this record (governance) | **MERGED** `5586720e0` |
+| #882 | Member Field constitutional directive — canon recovery | **MERGED** `b174730d1` |
+| #883 | Project Reference biography record | **MERGED** `bfdf5512c` |
 | [#863](https://github.com/SoullabTech/Sovereign/issues/863) | Canonical typecheck red — external blocker | OPEN |
 
-⚠️ **#880 is not on trunk.** Verified by ancestry, not by badge:
-`git merge-base --is-ancestor 4068f9a93 origin/clean-main-no-secrets` → **not an ancestor**.
-While it remains unmerged the release object contains residues R3 and R4.
+✅ **Every merged row above is ancestry-verified against `origin/clean-main-no-secrets`, not read
+from a PR badge.** #882 additionally verified by content, because it carried final file *state*
+rather than a commit replay — so its ratifying commit `6899223db` is deliberately **not** an
+ancestor. ⛔ Do not treat that absence as the canon being missing; read the files from canonical.
+
+⚠️ **The release object is all of trunk from the deployed SHA forward — not the Writer's Studio PRs
+alone.** `7c9dd5192..bfdf5512c` is **52 commits**, and includes work from lanes outside this phase
+(#871 DB degradation, #872 jest cache). Assembling it as "the Phase 1 PRs" would understate what
+actually ships.
 
 ## 3. Acceptance evidence
 
@@ -112,8 +138,8 @@ it."*
 |---|---|---|---|
 | R1 | **Scroll restoration is inert.** `.cm-scroller` has `overflow: visible`, so `scrollTop` is structurally 0; the real scroll owner is the `<main>` ancestor. | #869 | Pre-existing — the textarea had the same property, so this never worked. Repair needs the scrolling container's coordinates, not an editor property. A separate spatial-continuity defect. |
 | R2 | **Keep removal appears inert in the UI** (observed after two clicks; one local fixture Keep remained). | #869 | Named in #869 as its own narrow defect, deliberately not repaired there. |
-| R3 | **`title = NULL` can reach the book renderer as the literal `"null"`** — in `--metadata title=`, in `<title>`, and in the download filename. | #875 migration | Unreachable today *only by accident*: unnamed ⇒ `member_written` ⇒ zero `manuscript_sections` ⇒ the route's earlier 400. **Repaired by #880** — a residue only while #880 is unmerged. |
-| R4 | **The blank-page creation race has no automated coverage on trunk.** | #875 | The race was *observed* and fixed, but its guard is unprotected against regression. **Repaired by #880** — a residue only while #880 is unmerged. |
+| ~~R3~~ | ~~`title = NULL` reaching the book renderer as the literal `"null"`~~ | #875 migration | ✅ **CLEARED 2026-08-02** — #880 merged (`9e1611306`, ancestry-verified). No longer a residue. ⚠️ Its *repair* is on trunk; the repair's **test evidence** is still a blank in §3a. |
+| ~~R4~~ | ~~The blank-page creation race has no automated coverage on trunk~~ | #875 | ✅ **CLEARED 2026-08-02** — #880 merged. Same caveat: coverage exists, its **result** is unrecorded in §3a. |
 | R5 | **Canonical typecheck is red** — `detectRelationalSignal` keyword map missing 5 `RelationshipTone` entries. | #863, OPEN | Pre-existing and external to this lane; reproduces with every Phase 1 slice removed. ⛔ #875's own stated gate was *do not merge until canonical is green*; that gate did not hold. **Unresolved.** |
 | R6 | **#869's jsdom suite cannot run** — `@codemirror/*` absent from the shared `node_modules`; `jest -c jest.dom.config.js` → 0 tests, resolve failure. | environment | Not a code defect. ⛔ **Blocks the release until cleared** — see §3a. |
 
