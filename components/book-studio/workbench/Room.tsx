@@ -7,21 +7,38 @@
  *   │ Header + UploadDropzone                                  │
  *   ├──────────────────────────┬───────────────────────────────┤
  *   │ Shelf                    │ Table                         │
- *   │ - search                 │ - groups (named)              │
- *   │ - card list (draggable)  │   - cards inside (drop here)  │
- *   │                          │ - graduate group → draft      │
+ *   │ - search                 │ - piles (named)               │
+ *   │ - card list (draggable)  │   - placements (drop here)    │
+ *   │ - drop here to return    │ - graduate pile → draft       │
  *   └──────────────────────────┴───────────────────────────────┘
  *
- * Native HTML5 drag-and-drop (no library dep). DataTransfer carries a
- * JSON-encoded { source, ref } pointer when a Shelf card is dragged.
+ * Native HTML5 drag-and-drop (no library dep), plus an explicit control for
+ * every verb so the whole surface remains operable without dragging.
  *
- * No MAIA voice present in this room. Retrieval and arrangement only.
+ * This component does no layout arithmetic. Every member act is a pure
+ * transform in `lib/workbench/arrange`, and this file only decides what to do
+ * with the result: save it, or show why it could not be applied. That split is
+ * what makes the verbs testable without a browser.
+ *
+ * No MAIA voice present in this room. Retrieval and arrangement only — nothing
+ * here interprets, groups, names, or summarizes on the member's behalf.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { Shelf } from './Shelf';
 import { Table } from './Table';
 import { UploadDropzone } from './UploadDropzone';
+import {
+  gather,
+  movePlacement,
+  reorderPlacement,
+  duplicatePlacement,
+  returnToShelf,
+  stripLayout,
+  newPlacementId,
+  describeFailure,
+  type ArrangeResult,
+} from '@/lib/workbench/arrange';
 import type {
   WorkbenchCardRef,
   CardPointer,
@@ -118,106 +135,111 @@ export function WorkbenchRoom({
     [tableId, loadTable],
   );
 
-  const handleDropOnGroup = useCallback(
-    async (groupId: string, pointer: CardPointer) => {
-      if (!table) return;
-      const newCardId = `c_${crypto.randomUUID()}`;
-      const newGroups: TableGroup[] = table.layout.groups.map((g) => {
-        if (g.id !== groupId) {
-          return {
-            id: g.id,
-            name: g.name,
-            cards: g.cards.map((c) => ({ id: c.id, source: c.source, ref: c.ref })),
-          };
-        }
-        // Skip if pointer already exists in this group
-        const exists = g.cards.some(
-          (c) => c.source === pointer.source && c.ref === pointer.ref,
-        );
-        if (exists) {
-          return {
-            id: g.id,
-            name: g.name,
-            cards: g.cards.map((c) => ({ id: c.id, source: c.source, ref: c.ref })),
-          };
-        }
-        return {
-          id: g.id,
-          name: g.name,
-          cards: [
-            ...g.cards.map((c) => ({ id: c.id, source: c.source, ref: c.ref })),
-            { id: newCardId, source: pointer.source, ref: pointer.ref },
-          ],
-        };
-      });
-      await saveLayout({ groups: newGroups });
+  /** The current table as pointers only — the shape every verb operates on. */
+  const currentLayout = useCallback((): TableLayout | null => {
+    if (!table) return null;
+    return stripLayout(table.layout.groups);
+  }, [table]);
+
+  /**
+   * Apply one member act. The verb decides what the layout becomes; this only
+   * persists it, or reports why it could not be applied. A failure is never
+   * silent — a card that vanished under the member's hands should say so.
+   */
+  const applyArrange = useCallback(
+    async (act: (layout: TableLayout) => ArrangeResult) => {
+      const layout = currentLayout();
+      if (!layout) return;
+      const result = act(layout);
+      if (!result.ok) {
+        setStatus(describeFailure(result.reason));
+        await loadTable();
+        return;
+      }
+      setStatus('');
+      await saveLayout(result.layout);
     },
-    [table, saveLayout],
+    [currentLayout, saveLayout, loadTable],
+  );
+
+  const handleGather = useCallback(
+    (groupId: string, pointer: Pick<CardPointer, 'source' | 'ref'>, toIndex?: number) =>
+      applyArrange((l) =>
+        gather(l, { groupId, pointer, placementId: newPlacementId(), toIndex }),
+      ),
+    [applyArrange],
+  );
+
+  const handleMove = useCallback(
+    (cardId: string, fromGroupId: string, toGroupId: string, toIndex?: number) =>
+      applyArrange((l) => movePlacement(l, { cardId, fromGroupId, toGroupId, toIndex })),
+    [applyArrange],
+  );
+
+  const handleReorder = useCallback(
+    (groupId: string, cardId: string, toIndex: number) =>
+      applyArrange((l) => reorderPlacement(l, { groupId, cardId, toIndex })),
+    [applyArrange],
+  );
+
+  const handleDuplicate = useCallback(
+    (cardId: string, fromGroupId: string, toGroupId: string) =>
+      applyArrange((l) =>
+        duplicatePlacement(l, {
+          cardId,
+          fromGroupId,
+          toGroupId,
+          placementId: newPlacementId(),
+        }),
+      ),
+    [applyArrange],
+  );
+
+  const handleReturnToShelf = useCallback(
+    (groupId: string, cardId: string) =>
+      applyArrange((l) => returnToShelf(l, { groupId, cardId })),
+    [applyArrange],
   );
 
   const handleAddGroup = useCallback(async () => {
-    if (!table) return;
+    const layout = currentLayout();
+    if (!layout) return;
     const newGroup: TableGroup = {
       id: `g_${crypto.randomUUID()}`,
-      name: 'New group',
+      name: 'New pile',
       cards: [],
     };
-    const newGroups: TableGroup[] = [
-      ...table.layout.groups.map((g) => ({
-        id: g.id,
-        name: g.name,
-        cards: g.cards.map((c) => ({ id: c.id, source: c.source, ref: c.ref })),
-      })),
-      newGroup,
-    ];
-    await saveLayout({ groups: newGroups });
-  }, [table, saveLayout]);
+    await saveLayout({ groups: [...layout.groups, newGroup] });
+  }, [currentLayout, saveLayout]);
 
   const handleRenameGroup = useCallback(
     async (groupId: string, newName: string) => {
-      if (!table) return;
+      const layout = currentLayout();
+      if (!layout) return;
       const trimmed = newName.trim();
       if (!trimmed) return;
-      const newGroups: TableGroup[] = table.layout.groups.map((g) => ({
-        id: g.id,
-        name: g.id === groupId ? trimmed : g.name,
-        cards: g.cards.map((c) => ({ id: c.id, source: c.source, ref: c.ref })),
-      }));
-      await saveLayout({ groups: newGroups });
+      await saveLayout({
+        groups: layout.groups.map((g) => (g.id === groupId ? { ...g, name: trimmed } : g)),
+      });
     },
-    [table, saveLayout],
-  );
-
-  const handleRemoveCard = useCallback(
-    async (groupId: string, cardId: string) => {
-      if (!table) return;
-      const newGroups: TableGroup[] = table.layout.groups.map((g) => ({
-        id: g.id,
-        name: g.name,
-        cards:
-          g.id === groupId
-            ? g.cards.filter((c) => c.id !== cardId).map((c) => ({ id: c.id, source: c.source, ref: c.ref }))
-            : g.cards.map((c) => ({ id: c.id, source: c.source, ref: c.ref })),
-      }));
-      await saveLayout({ groups: newGroups });
-    },
-    [table, saveLayout],
+    [currentLayout, saveLayout],
   );
 
   const handleDeleteGroup = useCallback(
     async (groupId: string) => {
-      if (!table) return;
-      if (!confirm('Delete this group? Cards return to the Shelf (they are pointers, not copies).')) return;
-      const newGroups: TableGroup[] = table.layout.groups
-        .filter((g) => g.id !== groupId)
-        .map((g) => ({
-          id: g.id,
-          name: g.name,
-          cards: g.cards.map((c) => ({ id: c.id, source: c.source, ref: c.ref })),
-        }));
-      await saveLayout({ groups: newGroups });
+      const layout = currentLayout();
+      if (!layout) return;
+      const group = layout.groups.find((g) => g.id === groupId);
+      const count = group?.cards.length ?? 0;
+      const warning =
+        count === 0
+          ? 'Delete this pile?'
+          : `Delete this pile? Its ${count} ${count === 1 ? 'card comes' : 'cards come'} off the table. ` +
+            'Nothing is deleted — they are pointers, and the captures stay on the Shelf.';
+      if (!confirm(warning)) return;
+      await saveLayout({ groups: layout.groups.filter((g) => g.id !== groupId) });
     },
-    [table, saveLayout],
+    [currentLayout, saveLayout],
   );
 
   const handleGraduate = useCallback(
@@ -265,6 +287,7 @@ export function WorkbenchRoom({
             cards={shelfCards}
             query={shelfQuery}
             onQueryChange={setShelfQuery}
+            onReturnToShelf={handleReturnToShelf}
           />
         </div>
         <div className="lg:col-span-3">
@@ -272,9 +295,12 @@ export function WorkbenchRoom({
             table={table}
             onAddGroup={handleAddGroup}
             onRenameGroup={handleRenameGroup}
-            onRemoveCard={handleRemoveCard}
             onDeleteGroup={handleDeleteGroup}
-            onDropOnGroup={handleDropOnGroup}
+            onGather={handleGather}
+            onMove={handleMove}
+            onDuplicate={handleDuplicate}
+            onReorder={handleReorder}
+            onReturnToShelf={handleReturnToShelf}
             onGraduate={handleGraduate}
             canGraduate={canGraduate}
           />
