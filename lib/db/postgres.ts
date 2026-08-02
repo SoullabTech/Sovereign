@@ -62,12 +62,24 @@ export async function query<T extends QueryResultRow = any>(
 
     return result;
   } catch (error: any) {
-    // 42P01 = undefined_table - gracefully degrade instead of crashing
-    if (error?.code === '42P01') {
-      console.warn('⚠️  [POSTGRES] Missing table (graceful degradation):', error?.message);
-      return { rows: [], rowCount: 0, command: '', oid: 0, fields: [] } as QueryResult<T>;
-    }
+    /* A missing table is infrastructure failure, not an empty result, and it
+       propagates like every other error. This function used to translate
+       Postgres 42P01 (undefined_table) into a successful `{rows: []}`, which
+       collapsed two independent states — "the query ran and found nothing" and
+       "the query could not run" — for all ~750 callers at once. A member could
+       then be told "you have no works" when the platform was in fact unable to
+       read them (observed on the #867 walk). Callers that genuinely want to
+       continue past a read failure already say so in their own catch blocks,
+       which is where that product decision belongs.
 
+       If a table is ever genuinely optional — schema legitimately staged ahead
+       of its callers — the ruling permits an explicit opt-in at the call site
+       that names the exact table, signals the degradation, and returns a state
+       visibly distinguishable from an empty read. Build it against that real
+       caller when one appears; do not reintroduce a blanket allowlist or an
+       environment flag here, both of which put this layer back in the business
+       of deciding product semantics for callers that never asked.
+       Ruling + caller inventory: docs/ops/DB_MISSING_TABLE_DEGRADATION_AUDIT_2026-08-01.md */
     console.error('❌ [POSTGRES] Query error:', error);
     console.error('   SQL:', sql);
     console.error('   Params:', params);
