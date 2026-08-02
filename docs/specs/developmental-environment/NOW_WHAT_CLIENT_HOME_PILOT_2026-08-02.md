@@ -3,6 +3,15 @@
 **Lane opened:** 2026-08-02 · **Base:** `c0c8b0ba6` (trunk, #902 merged)
 **Phase:** Audit. ⛔ No UI code. Sequence is **Audit → Design → Vertical Slice → Walk.**
 
+⭐⭐⭐ **AMENDED 2026-08-02 — the lane runs TWO CO-EQUAL TRACKS.** UI/UX is a **primary product
+layer**, not a presentation layer. Track A (this document) answers *what exists · who owns it · who
+sees it · who can act*. **Track B — `NOW_WHAT_CLIENT_HOME_EXPERIENCE_DESIGN.md`** answers *what
+arrival feels like · what is understood immediately · what deserves attention · what stays quiet ·
+how the environment invites continuation*. ⛔ **Neither is subordinate**, and the experience
+architecture is resolved **alongside** the ownership architecture, not after it.
+⚠️ **The biggest risk in this phase is not the missing tables — it is building a technically correct
+coaching CRM dashboard.** The required design artifact ships **before** implementation.
+
 ---
 
 ## 1. The governing question
