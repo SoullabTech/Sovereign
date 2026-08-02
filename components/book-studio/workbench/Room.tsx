@@ -31,6 +31,19 @@ import type {
 
 interface RoomProps {
   tableId: string;
+  /**
+   * Founder-only affordances. Both default true so the founder Workbench
+   * renders exactly as it did before the member surface existed.
+   *
+   * The member surface passes false for both. That is presentation only —
+   * the server is the real boundary: uploads/* and drafts/from-group are
+   * still requireFounder(), so a member cannot reach either even if the
+   * control were somehow rendered.
+   */
+  canUpload?: boolean;
+  canGraduate?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 export interface ResolvedCard extends CardPointer {
@@ -47,7 +60,13 @@ export interface ResolvedTable {
   layout: { groups: ResolvedGroup[] };
 }
 
-export function WorkbenchRoom({ tableId }: RoomProps) {
+export function WorkbenchRoom({
+  tableId,
+  canUpload = true,
+  canGraduate = true,
+  title = 'The Workbench',
+  subtitle = 'Arrangement surface between captures and form.',
+}: RoomProps) {
   const [shelfCards, setShelfCards] = useState<WorkbenchCardRef[]>([]);
   const [shelfQuery, setShelfQuery] = useState('');
   const [table, setTable] = useState<ResolvedTable | null>(null);
@@ -227,14 +246,14 @@ export function WorkbenchRoom({ tableId }: RoomProps) {
     <div>
       <header className="mb-8">
         <h1 className="text-amber-100/90 text-3xl md:text-4xl font-light tracking-wide leading-tight mb-2">
-          The Workbench
+          {title}
         </h1>
         <p className="text-amber-200/55 text-base font-light italic">
-          Arrangement surface between captures and form.
+          {subtitle}
         </p>
       </header>
 
-      <UploadDropzone onUploaded={handleUploadDone} setStatus={setStatus} />
+      {canUpload && <UploadDropzone onUploaded={handleUploadDone} setStatus={setStatus} />}
 
       {status && (
         <div className="mt-4 mb-2 text-amber-200/50 text-sm font-light italic">{status}</div>
@@ -257,6 +276,7 @@ export function WorkbenchRoom({ tableId }: RoomProps) {
             onDeleteGroup={handleDeleteGroup}
             onDropOnGroup={handleDropOnGroup}
             onGraduate={handleGraduate}
+            canGraduate={canGraduate}
           />
         </div>
       </div>

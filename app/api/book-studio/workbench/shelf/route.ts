@@ -11,16 +11,17 @@
  *   to     — ISO date upper bound
  *   tag    — capture tag (where supported)
  *
- * Slice 1 enables only `uploaded`. Slice 3 lights up the remaining sources
- * via lib/workbench/sources/index.ts — no changes to this route required.
+ * The source set is chosen by the caller's role, not by the caller's request:
+ * founder searches `uploaded` (unchanged from Slice 1), member searches `keep`.
+ * A `?source=` param can only NARROW that set, never widen it.
  *
  * Sanctuary filtering happens inside each adapter, not here. This route is
  * a pure fan-out + sort.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireFounder } from '@/lib/founder/founderAuth';
-import { enabledSources, getSource } from '@/lib/workbench/sources';
+import { requireArranger } from '@/lib/workbench/access';
+import { sourcesForRole } from '@/lib/workbench/sources';
 import type { WorkbenchSourceKind, WorkbenchCardRef } from '@/lib/workbench/sources/types';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,7 @@ const VALID_SOURCES: WorkbenchSourceKind[] = [
 ];
 
 export async function GET(req: NextRequest) {
-  const auth = await requireFounder();
+  const auth = await requireArranger();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -46,13 +47,13 @@ export async function GET(req: NextRequest) {
   const tag = sp.get('tag') ?? undefined;
   const sourceParam = sp.get('source');
 
-  let sources = enabledSources();
+  // Role decides the ceiling; `?source=` may only narrow within it.
+  let sources = sourcesForRole(auth.role);
   if (sourceParam) {
     if (!VALID_SOURCES.includes(sourceParam as WorkbenchSourceKind)) {
       return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
     }
-    const single = getSource(sourceParam as WorkbenchSourceKind);
-    sources = single ? [single] : [];
+    sources = sources.filter((s) => s.kind === sourceParam);
   }
 
   const query = {
