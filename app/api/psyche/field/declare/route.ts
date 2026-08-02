@@ -22,7 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { keepSource } from '@/lib/psyche/portfolio';
-import { query } from '@/lib/db/postgres';
+import { resolveCapsuleDeclarationSource } from '@/lib/psyche/sources/capsule';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +50,13 @@ export async function POST(request: NextRequest) {
       sourceId: capsuleId,
       // The capsule's own words. The member declared this material; nothing
       // interprets, summarises or rewrites it on the way in.
-      title: await capsuleTitle(capsuleId, memberId),
+      //
+      // THE FORMULATION IS FIXED AT THIS MOMENT. What the member is looking at
+      // when they press the act becomes the Field Object's stable body. Later
+      // capsule edits do not reach back and rewrite it: keepSource INSERTs once
+      // and its ON CONFLICT path returns the existing row untouched. Capsule and
+      // Field Object are separate histories from here on, by construction.
+      title: (await resolveCapsuleDeclarationSource(memberId, capsuleId)).title,
       body: null,
     });
 
@@ -101,18 +107,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * The capsule's title, read under the member's own scope.
- *
- * keepSource re-checks ownership and eligibility before writing, so this read
- * is not the guard — it exists so the Field Object carries the member's words
- * rather than a placeholder. An unreadable capsule yields a plain fallback and
- * lets keepSource produce the real refusal.
- */
-async function capsuleTitle(capsuleId: string, memberId: string): Promise<string> {
-  const r = await query<{ title: string | null }>(
-    `SELECT title FROM reflection_capsules WHERE id = $1 AND user_id = $2::text`,
-    [capsuleId, memberId],
-  );
-  return r.rows[0]?.title?.trim() || 'Kept from a reflection';
-}

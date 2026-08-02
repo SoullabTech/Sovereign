@@ -25,6 +25,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { resolveCapsuleDeclarationSource } from '@/lib/psyche/sources/capsule';
 import type {
   AtomGesture,
   CrystallizedMemory,
@@ -147,6 +148,38 @@ export async function getAtom(
        FROM member_memory_atoms
       WHERE member_id = $1 AND id = $2`,
     [memberId, atomId],
+  );
+  const row = result.rows[0];
+  return row ? rowToAtom(row) : null;
+}
+
+/**
+ * Look up the atom a member already minted from a specific source row.
+ *
+ * The unique index `idx_memory_atoms_unique_source (member_id, source_type,
+ * source_id) WHERE source_id IS NOT NULL` guarantees at most one row, so this
+ * is the read side of "has this source already been declared?".
+ *
+ * ⛔ THIS IS A READ, NOT A GUARD. It must never be used as a preflight before
+ * declaring: under concurrency several requests all read absent, all proceed,
+ * and the unique index — not this function — is what converges them onto one
+ * row. `keepSource()` decides created-vs-existing inside the write itself.
+ * Use this to *show* a member what they already declared, not to decide
+ * whether to declare.
+ *
+ * `spontaneous` atoms have a NULL source_id and are therefore never findable
+ * here — by design; they have no source to be declared from.
+ */
+export async function getAtomBySource(
+  memberId: string,
+  sourceType: MemoryAtomSourceType,
+  sourceId: string,
+): Promise<CrystallizedMemory | null> {
+  const result = await query<AtomRow>(
+    `SELECT ${ATOM_COLUMNS}
+       FROM member_memory_atoms
+      WHERE member_id = $1 AND source_type = $2 AND source_id = $3`,
+    [memberId, sourceType, sourceId],
   );
   const row = result.rows[0];
   return row ? rowToAtom(row) : null;
@@ -369,46 +402,18 @@ export async function keepSource(
     }
   }
 
-  // A capsule must exist, be the member's own, and be eligible — checked here,
+  // A capsule must exist, be the member's own, and be eligible — resolved here,
   // where every caller converges, rather than in whichever surface hosts the
   // gesture.
   //
-  // ELIGIBILITY IS NOT DECLARATION (Amendment 5). draft = false decides whether
-  // the gesture may be *offered*; reaching that state declares nothing. This
-  // check exists so a declaration cannot name an ineligible source — it is not
-  // a trigger, and nothing here watches capsules change state.
-  //
-  // `pinned` is deliberately NOT an eligibility condition. Pinning is a
-  // separate member act about attention, and no ruling ties it to declaration.
-  //
-  // THE IDENTITY BOUNDARY IS EXPLICIT. `reflection_capsules.user_id` is `text`;
-  // `member_memory_atoms.member_id` is `uuid`. We render the authenticated
-  // UUID into its canonical text form and compare text to text, rather than
-  // casting the column and letting PostgreSQL decide what equality means. All
-  // 346 production capsules carry the uuid form; if a second form ever appears,
-  // this comparison fails closed rather than silently widening.
+  // The capsule's own table knowledge lives in its resolver, not inline here.
+  // keepSource enforces the universal rules — member identity, atom shape,
+  // provenance, privacy defaults, database idempotency, created-vs-existing —
+  // and stays the single governed minting capability. A source resolver may
+  // verify and read; it never inserts. See lib/psyche/sources/capsule.ts for
+  // the eligibility, identity-boundary and refusal-symmetry reasoning.
   if (input.sourceType === 'capsule') {
-    const capsule = await query<{ draft: boolean; archived: boolean; owned: boolean }>(
-      `SELECT draft, archived, (user_id = $2::text) AS owned
-         FROM reflection_capsules
-        WHERE id = $1`,
-      [input.sourceId, memberId],
-    );
-
-    if (capsule.rows.length === 0) {
-      throw new Error('keepSource: capsule not found');
-    }
-    // Same message for "not yours" as for "does not exist": a member must not
-    // be able to probe another member's capsule ids by reading the error.
-    if (!capsule.rows[0].owned) {
-      throw new Error('keepSource: capsule not found');
-    }
-    if (capsule.rows[0].draft) {
-      throw new Error('keepSource: capsule is still a draft — not eligible to declare');
-    }
-    if (capsule.rows[0].archived) {
-      throw new Error('keepSource: capsule is archived — not eligible to declare');
-    }
+    await resolveCapsuleDeclarationSource(memberId, input.sourceId!);
   }
 
   // Declaring the same source twice returns the first declaration.
