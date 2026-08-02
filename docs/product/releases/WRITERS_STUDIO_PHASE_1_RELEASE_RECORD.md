@@ -1,6 +1,6 @@
 # Release Record — Writer's Studio Phase 1
 
-> **Status: INCOMPLETE — §1, §3b, §6 and §7 are unfilled. The release has not happened.** Every blank below is blank because the
+> **Status: RELEASE WALK FAILED (2026-08-02). Phase 1 is NOT ready for founder acceptance or deployment.** §1, §6 and §7 remain unfilled; §3b is filled and records a failure at W8. Every blank below is blank because the
 > evidence does not exist yet. **Do not fill a slot to make the document look finished.**
 >
 > Structure is fixed by [`RELEASE_RECORD_TEMPLATE.md`](./RELEASE_RECORD_TEMPLATE.md) — seven
@@ -83,27 +83,81 @@ The same commit gives **opposite answers** depending on how dependencies were in
 
 ### 3b. Walks
 
-**Release-acceptance walk** — performed by: *(blank)* · date: *(blank)* · build walked: *(blank)*
+## 🔴 RELEASE WALK FAILED at W8 — Phase 1 is not ready for founder acceptance or deployment
 
-Fixture prerequisite: **a disposable local member with a declared Living Work and zero
-manuscripts.** ⛔ Production verifies the member's real state only — states are never
-manufactured there.
+**Release-acceptance walk** — performed by: **Claude** · date: **2026-08-02** · build walked:
+**trunk `9e1611306`**, clean-install environment (`npm ci` from the lockfile), local dev DB.
+
+Fixture: disposable local member `walk.phase1`, one declared Living Work ("The Salt Road"),
+zero manuscripts, zero atoms. ⛔ Production verifies the member's real state only — states are
+never manufactured there.
 
 | # | Step | Observed |
 |---|---|---|
-| W1 | Declared work, no manuscript → **Start writing** is the primary action | *(blank)* |
-| W2 | *Bring in existing writing* remains secondary | *(blank)* |
-| W3 | Nothing is created before the explicit gesture | *(blank)* |
-| W4 | WriterField opens genuinely blank | *(blank)* |
-| W5 | First sentence autosaves | *(blank)* |
-| W6 | Leave and return — the sentence persists | *(blank)* |
-| W7 | No duplicate blank page is created (double-tap / retry) | *(blank)* |
-| W8 | Workbench: place a Keep, group it, leave, return — it is where it was left | *(blank)* |
-| W9 | Arrangement verbs — move, reorder, duplicate, return to Shelf | *(blank)* |
-| W10 | Fixture cleanup restores the member exactly | *(blank)* |
+| W1 | Declared work, no manuscript → **Start writing** is the primary action | ✅ **PASS** — shell identity and page heading both resolve to the declared work; *Start writing* is the filled primary button |
+| W2 | *Bring in existing writing* remains secondary | ✅ **PASS** — secondary underlined text link beside, not above |
+| W3 | Nothing is created before the explicit gesture | ✅ **PASS** — 0 manuscripts before the click; after it exactly 1, `title IS NULL`, `provenance = member_written`, **0 `manuscript_sections`**, **0 `living_work_expressions`**. Routed by identity: `?m=8b42016c…` matched the created row |
+| W4 | WriterField opens genuinely blank | ⚠️ **NOT A CLEAN PASS** — field rendered correctly and empty (`.cm-content` = `"\n"`), but **a real click did not focus it**. See F1 |
+| W5 | First sentence autosaves | ✅ **PASS** — 91 chars persisted byte-exact. Returning shows **"Your writing"** as orientation; `title` stayed `NULL` — no synthetic title persisted |
+| W6 | Leave and return — the sentence persists | ✅ **PASS** on persistence — exact sentence resumed. ⚠️ but see F2: the return routes by **position**, not identity |
+| W7 | No duplicate blank page is created (double-tap / retry) | ✅ **PASS** — three parallel requests → **exactly one** manuscript, one `201` + two `200`, identical id. Also confirmed the other half: because the first page had writing in it, this correctly created a *new* blank rather than reusing it |
+| W8 | Workbench: place a Keep, group it, leave, return | 🔴 **FAIL** — no reachable member gesture can put a Keep on the Shelf. See F3 |
+| W9 | Arrangement verbs — move, reorder, duplicate, return to Shelf | ⛔ **NOT REACHED** — blocked by W8 |
+| W10 | Fixture cleanup restores the member exactly | ✅ **PASS** — every baseline count restored exactly (`members=5 · manuscripts=3 · drafts=2 · revisions=5 · sections=176 · works=0 · expressions=0 · atoms=1 · wb_tables=1`); the one pre-existing capsule belonging to another member was left untouched |
 
-⚠️⚠️ **As of 2026-08-02 no release-acceptance walk has been run.** It was a gate on #875 and did
-not block that merge.
+### 🔴 F3 — W8 failure: the Keep gesture and the Shelf use different substrates
+
+The acceptance path was: **a member performs a genuine Keep gesture → that Keep becomes
+available on the Workbench Shelf.** The running product does not connect those two acts.
+
+| Surface | Writes / reads |
+|---|---|
+| **Keep this moment** (prominent, in the MAIA conversation) | writes a **capsule** — `POST /api/capsules/from-chat-window` → `reflection_capsules` |
+| **Workbench Shelf** | reads **`member_memory_atoms`** where `generated_by = 'member-gesture'` |
+| `/maia/keep-capture` (only UI writing those atoms) | calls `POST /api/psyche/portfolio/keep`, and can keep **only pre-existing source candidates** drawn from `member_ideas` / `member_idea_blocks` — it cannot create a spontaneous Keep |
+
+**For a member with an ordinary MAIA conversation and no developed Idea, no reachable gesture
+creates a Shelf item.** The fixture's keep-capture page was correctly empty; the Keep it *could*
+perform became a capsule the Shelf does not read.
+
+⛔ **Calling `POST /api/psyche/portfolio/keep` by hand was deliberately NOT done as acceptance
+evidence.** It would prove the endpoint works; it would not prove a member can perform the act
+the release claims to support. The opposite world — where members cannot get anything onto the
+Shelf — produces the identical endpoint result, so the endpoint is **not an admissible
+substitute for the missing member path**. Any atom minted that way is a *diagnostic
+fixture — not release acceptance evidence.*
+
+⛔ Do not silently treat capsules as atoms.
+
+### ⚠️ F1 — blank WriterField click-to-focus fails
+
+The empty editor was **hit-test reachable** — `elementFromPoint` at its centre returned
+`.cm-line` inside `.cm-content`, `pointer-events: auto`, no overlay, and the box measured
+608×33px at (329, 294). A real click on that centre did **not** focus it; `document.activeElement`
+stayed on an ancestor `div`, and 91 typed characters went nowhere. Writing became possible only
+after `.cm-content.focus()` was called programmatically.
+
+**A member cannot call `.focus()` from DevTools.** Rendering is not reachability, and hit-testing
+is not focus. W4 is therefore not a clean pass.
+
+### ⚠️ F2 — return routes by position, not identity
+
+*Start writing* correctly routes by manuscript identity (`?m=<id>`). *Continue Writing* returns
+through `/press/manuscript?tab=draft` with **no `?m=`**. It reopened the correct manuscript here
+only because the fixture had one. This is a **known seam surfaced by the release walk** — not a
+failure in a single-manuscript fixture, but unsafe before multiple expressions or projects exist.
+
+### Blocking corrections before Phase 1 can be re-walked
+
+1. **Connect a genuine, generally reachable member Keep act to the canonical Field Object
+   substrate the Shelf consumes** — or alter the Shelf's admitted sources through an explicit
+   ontology ruling. ⛔ Not by treating capsules as atoms.
+2. **Fix blank-WriterField click-to-focus**, then repeat the real user action.
+3. **Replace return-by-position with identity routing** before project multiplicity makes the
+   ambiguity consequential.
+
+⭐ W1–W3 and W5–W7 passed and that evidence stands. It does **not** dilute the W8 failure —
+finding exactly this is what the assembled release walk exists for.
 
 **Other walks performed — ⛔ NOT release acceptance:**
 
@@ -137,6 +191,9 @@ it."*
 | R6 | ~~#869's jsdom suite cannot run — `@codemirror/*` absent~~ | environment | **CLOSED 2026-08-02** — `npm ci` from the lockfile installs them; DOM suite runs **10/10**. The gap was the shared `node_modules`, never the lockfile. ⛔ Standing rule: gates are measured from a clean install, and `npm install` is not run in a shared checkout while other sessions are active. |
 
 ## 5. Deferred work
+
+⚠️ The three **blocking corrections** in §3b are *not* deferred work — they gate the re-walk.
+
 
 - **The full mode set** — Write · Structure · Revise · Design · Publish. Phase 1 delivers the
   shell those modes will live in, not the modes.
