@@ -7,6 +7,39 @@
 (`docs/releases/WRITERS_STUDIO_PHASE1_RELEASE_WALK_2026-08-02.md`)
 **Governed by**: Member Field re-centering canon (#882) — *the Field is the platform root;
 Studios only reference.* `Reference = durable · Placement = surface state.`
+**Scope**: the **W8-specific application** of a general constitutional rule. See below.
+
+---
+
+## Relationship to canon — this applies, it does not compete
+
+`MEMBER_FIELD_AND_STUDIO_DIRECTIVE.md` **Amendment 5 — Field Object Declaration** is the general
+invariant across **all** sources:
+
+> **A source does not create an enduring Field Object merely by producing or saving an artifact. A
+> Field Object comes into being only through an explicit human declaration that something belongs in
+> the person's enduring Field.**
+>
+> Source surfaces may host the declaration gesture, but all must invoke **one governed declaration
+> capability.** Source lifecycle state may determine *when* the gesture is offered; **it does not
+> itself constitute declaration.**
+
+⭐⭐⭐ **Review makes a source eligible to be offered. Declaration makes a Field Object exist.**
+
+**This document does not restate that ontology and must not diverge from it.** It governs the one
+path that actually failed at W8 — conversation capsule → Workbench Shelf — as an *application* of
+the invariant above. Where the two ever appear to differ, **the canon amendment governs.**
+
+**Concretely, for capsules:** the persisted `reflection_capsules.draft = false` state (*"brought
+into the Lab"*) is a legitimate **eligibility condition** for offering the gesture. ⛔ It is **not**
+the declaration. Flipping `draft` must not mint an atom, and the capsule route must not invent its
+own Field Object semantics — it passes capsule identity and provenance into the one governed
+declaration capability.
+
+⛔ **`draft` is therefore not part of the Field ontology.** The capsule's editing history and the
+enduring declaration are **separate histories**: reopening a capsule must not delete, demote, or
+rewrite a Field Object already declared from it, and no interface may imply that reopening retracts
+the declaration.
 
 ---
 
@@ -78,8 +111,10 @@ material.
 **Acceptance criteria (pre-registered):**
 
 1. "Keep this moment" still opens the existing capsule review flow.
-2. Saving the capsule does **not** automatically mint an atom.
-3. The review surface offers an explicit **Keep in my Field** act.
+2. Saving the capsule does **not** automatically mint an atom — **nor does marking it reviewed**
+   (`draft = false`). Review only makes the gesture **eligible to be offered**.
+3. The review surface offers an explicit **Keep in my Field** act, invoking the **one governed
+   declaration capability** — not a capsule-local implementation of it.
 4. That act creates **exactly one** `member_memory_atom` stamped `generated_by='member-gesture'`.
 5. Retry or double-submit returns **the same atom** rather than minting duplicates.
 6. The atom **preserves source provenance** back to the capsule/conversation.
@@ -87,6 +122,23 @@ material.
 8. The capsule remains **intact and distinct**.
 9. **No historical** capsule or atom is silently converted.
 10. Removing a Shelf placement does **not** delete the atom or capsule.
+11. **Reopening the capsule** (setting `draft` back to `true`) does **not** delete, demote, or
+    rewrite the declared Field Object, and the interface does **not** imply that it retracts the
+    declaration.
+12. The **"Keep as draft"** affordance in `CaptureSpiritPanel` is renamed so the two acts are
+    legible — *Save for later* / *Save capsule draft* versus **Keep in my Field**. ⭐ A member must
+    never have to infer which kind of keeping occurred.
+
+**Open seams to verify before implementation** (audit 2026-08-02, no coercion permitted): capsule
+`user_id` is `TEXT` while the canonical authenticated member id and the atom ownership column may be
+a different domain — ⛔ **do not create a direct FK by coercion.** Provenance is expected to be a
+stable `source_type='reflection_capsule'` plus the capsule UUID, with a uniqueness rule of **one
+member declaration per capsule**.
+
+⚠️ **Drift, recorded not repaired:** `bringIntoLab()` (`lib/capsules/capsuleService.ts:381`) has zero
+callers — the UI flips `draft` through the generic PATCH. ⛔ Do not repair or consolidate it inside
+this slice unless the implementation genuinely needs it. **The declaration capability must not be
+built on dead code merely because its name is convenient.**
 
 ---
 
