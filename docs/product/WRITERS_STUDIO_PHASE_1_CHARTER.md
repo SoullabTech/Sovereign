@@ -195,13 +195,45 @@ observed capability before the next one begins.**
 A **Release Record is distinct from this Charter.** The Charter says what a phase intends and
 in what order it should be built. The Release Record says **what actually shipped.**
 
-Each phase ends with one, capturing:
+**The structure is fixed** — seven sections, same order, every release, so that someone reading
+Phase 7 in a year finds the same information in the same place they found it for Phase 1:
 
-- the exact **commit(s) deployed**
-- the **PRs** comprising the release
-- **known accepted residues** — defects and gaps shipped knowingly, with the reason
-- the **acceptance evidence** — walks, tests, observations, and who performed them
-- anything **explicitly deferred** into the next phase
+| § | Section | Purpose |
+|---|---|---|
+| 1 | **Identity** | release name, deployed commit(s), deployment date |
+| 2 | **Composition** | PRs and issues included |
+| 3 | **Acceptance evidence** | walks, tests, observations, reviewer sign-offs |
+| 4 | **Residues** | accepted known limitations and rationale |
+| 5 | **Deferred work** | explicitly moved to the next release |
+| 6 | **Founder acceptance** | human authorization, never inferred |
+| 7 | **Post-release observations** | only filled after deployment |
+
+Template: [`releases/RELEASE_RECORD_TEMPLATE.md`](./releases/RELEASE_RECORD_TEMPLATE.md).
+
+### ⭐ Three kinds of walk, and they are not interchangeable
+
+§3 must **classify** every walk it records:
+
+| Kind | Claim it supports |
+|---|---|
+| **Developer verification** | *this implementation behaves as intended* |
+| **Slice verification** | *this PR satisfies its own acceptance criteria* |
+| **Release acceptance** | *the assembled capability is ready for members* |
+
+⛔ **Only a release-acceptance walk satisfies the release gate.** The others are recorded
+explicitly labelled as *not* release acceptance. The failure this prevents is a later reader
+collapsing several kinds of evidence into *"someone walked it."*
+
+### Where the Release Record sits
+
+```
+Vision → Product Definition → Phase Charter → Implementation PRs → Release Candidate
+      → Acceptance Walk → Release Record → Deployment → Observed Production Evidence
+```
+
+⭐ The point of the chain: **an implementation cannot become *finished* merely because the code
+exists.** It must survive progressively stronger forms of evidence before it becomes part of
+the platform.
 
 **Why:** without it, a release has to be reconstructed months later by reading a sequence of PRs
 and comments — which is exactly the reconstruction-from-recollection this project refuses
