@@ -1,7 +1,26 @@
 # Acceptance Walk — Practitioner Note Lifecycle (PR #890)
 
 **Status:** protocol prepared, **not yet performed.**
-**Disposition of #890 until this completes:** *written and unit-tested; migration and member experience not yet accepted.*
+
+**Disposition of #890:** *written, unit-tested and instrumented. Its acceptance walk is prepared but
+unrun; session-linked acceptance is additionally blocked by #899.*
+
+### Sequence (ruled 2026-08-02) — #899 is a PREREQUISITE
+
+```
+1. #890 stays held
+2. #899 repaired in its own scoped lane — incl. the multi-team / no-team ruling
+3. #890's migration applied to a production-shaped disposable database
+4. criteria 1–12 and 14 run through the authenticated UI
+5. a session created through the REPAIRED application path
+6. criterion 13 run against that real session
+7. exact fixture baselines restored
+8. #890 receives ONE disposition
+```
+
+⭐ Steps 4 and 6 are separable — the non-session criteria do not wait on #899. But **no final
+disposition** may be given until criterion 13 is exercised against a session the real writers
+produced.
 
 ⛔ **#888 and #889 landing does not imply this.** Those cleared prerequisites — the ruling is
 canonical, and the PHI inventory now covers `practitioner_client_notes`. Neither proves the Class A
@@ -265,11 +284,13 @@ The constraint should **refuse** it (`completed_at` must be non-null when
 `practitioner_declared`). That refusal is itself the evidence that the timestamp is not load-bearing
 and the named field is. Record the exact constraint name in the error.
 
-**Then test the inverse world** — this is what makes the separation *directly observable* rather
-than argued. Keep `completed_at` exactly as it is; change only the authority:
+#### 10a — DATABASE DISCRIMINATION PROBE (not a product transition)
+
+⛔ **Label this exactly.** The `UPDATE` below is an instrument for observing which field the lock
+reads. It is **not** an allowed product behaviour, and nothing in the application may offer it.
 
 ```sql
--- completed_at stays populated; authority is downgraded
+-- INSTRUMENT ONLY. Downgrades completion authority directly in the database.
 UPDATE practitioner_client_notes
    SET completion_mode = 'backfilled', completed_at = NULL
  WHERE id = '<note id>' AND practitioner_id = '<fixture practitioner id>';
@@ -277,18 +298,50 @@ UPDATE practitioner_client_notes
 
 **Expect:** the note becomes **editable again** — the pencil returns and a `content` PATCH → 200.
 
-⭐ Run the two directions together and the claim is settled by observation:
+⭐ Run with the refusal above and the model is settled by observation:
 
 | `lifecycle` | `completion_mode` | `completed_at` | editable? |
 |---|---|---|---|
 | completed | `practitioner_declared` | set | ❌ locked |
 | completed | `backfilled` | null | ✅ editable |
 
-Editability tracks **`completion_mode`**, and `completed_at` moves with it as provenance rather than
-driving it. ⚠️ The `completed_at_check` constraint deliberately keeps the two consistent, so the
-inverse test changes both — the point is not that the timestamp is free to vary independently, but
-that **the lock reads the authority field**. If a future change lets these disagree, this table is
-where it will show.
+Editability tracks **`completion_mode`**; `completed_at` moves with it as provenance rather than
+driving it. ⚠️ The `completed_at_check` constraint deliberately keeps the two consistent, so this
+probe changes both. The point is not that the timestamp varies independently — it is that **the lock
+reads the authority field**.
+
+#### 10b — PRODUCT BEHAVIOUR: the lock cannot be revoked through ordinary routes
+
+⭐⭐ **10a alone is dangerous evidence.** It would establish that `completion_mode` is load-bearing
+while leaving open whether a practitioner can simply downgrade it and edit a completed note. An
+instrument that proves the field matters must not also expose the way around it. Both arms are
+required.
+
+Against a note that is `practitioner_declared`, through the **real API**:
+
+| Probe | Expect |
+|---|---|
+| `PATCH { completion_mode: "backfilled" }` | note stays **locked**; `completion_mode` **unchanged** in the DB |
+| `PATCH { completion_mode: "backfilled", content: "…" }` | **409** locked — the content edit is refused, and `completion_mode` still unchanged |
+| `PATCH { lifecycle: "draft" }` | **409** — *"A completed note cannot be reopened…"* |
+| `PATCH { completed_at: null }` | `completed_at` **unchanged** |
+
+**Substrate (verified on the branch, to be confirmed by observation):** `completion_mode` is **never
+read from the request body**. It appears only in the pre-read `SELECT`, the lock check, and the
+`CASE WHEN completing` branch of the `UPDATE`. A client-supplied value is therefore **inert** rather
+than rejected.
+
+⭐ That is the stronger form — *prefer boundaries unreachable by construction over guard clauses*.
+But it is also **silent**, which is why 10b must be observed rather than assumed: an ignored field
+and a respected field look identical from the client until you check the row.
+
+**Discrimination:** ⛔ after each probe, re-read the row. A 200 response does not mean the field was
+accepted, and a 409 does not by itself prove `completion_mode` survived. **The row is the evidence.**
+
+▶️ **Open question for the founder, raised not resolved:** should a body-supplied `completion_mode`
+be *explicitly rejected* (as `kind` and `promoted_from` already are) rather than silently ignored?
+Ignoring is safe; rejecting is legible. Both are defensible and this is a product-legibility call,
+not a defect — so no code was changed for it.
 
 ### 11 — Backfilled notes remain editable
 
