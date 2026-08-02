@@ -96,27 +96,38 @@ export function validateLifecycleTransition(
 }
 
 /**
+ * Completion AUTHORITY — under what warrant a note was marked complete.
+ *
+ * Deliberately a named field rather than something inferred from a timestamp.
+ * `completed_at` records WHEN; this records WHETHER a practitioner actually
+ * declared it. Only the second can carry the lock.
+ */
+export const COMPLETION_MODES = ['backfilled', 'practitioner_declared'] as const;
+export type CompletionMode = (typeof COMPLETION_MODES)[number];
+
+export function isCompletionMode(value: unknown): value is CompletionMode {
+  return typeof value === 'string' && (COMPLETION_MODES as readonly string[]).includes(value);
+}
+
+/**
  * Is this note's body still editable in place?
  *
- * A draft always is. A completed note is editable ONLY if it was completed by
- * the 20260802000002 backfill (`completedAt === null`) rather than by an
- * explicit act.
+ * ⭐ ONE RULE, stated on its own terms:
  *
- * ⭐ The backfill exception is not leniency. The ruling allows locking a
+ *     A note is locked only when a practitioner explicitly completed it.
+ *
+ * Backfilled rows stay editable because they carry no such declaration — NOT
+ * because some timestamp happens to be absent. The ruling allows locking a
  * completed note "provided the UI says so before the practitioner completes
- * it". Rows written before this migration were completed on the practitioner's
- * behalf, so that proviso was never satisfied for them — locking them would
- * enforce a condition on people who were never offered it, and would silently
- * remove an affordance those notes already had.
+ * it"; rows predating 20260802000002 were marked complete on their author's
+ * behalf, so that proviso was never satisfied for them.
  *
- * So `lifecycle === 'completed'` alone never means "locked". Read both fields.
+ * ⛔ Do not reintroduce `completedAt === null` as the test. An earlier draft did
+ * exactly that, which made a provenance field silently carry policy: two rows
+ * both reading lifecycle='completed' behaved differently and nothing named why.
  */
-export function isEditableInPlace(
-  lifecycle: NoteLifecycle,
-  completedAt: string | Date | null
-): boolean {
-  if (lifecycle === 'draft') return true;
-  return completedAt === null || completedAt === undefined;
+export function isEditableInPlace(completionMode: unknown): boolean {
+  return completionMode !== 'practitioner_declared';
 }
 
 /** Human-readable refusal for an edit attempt on a locked note. */

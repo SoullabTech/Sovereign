@@ -112,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     // already is, and the lock depends on how it was completed. Read it once.
     // Scoped to this practitioner+client, so a row outside scope is simply not found.
     const existing = await db.query(
-      `SELECT kind, lifecycle, completed_at, version
+      `SELECT kind, lifecycle, completion_mode, version
          FROM practitioner_client_notes
         WHERE id = $1 AND client_id = $2 AND practitioner_id = $3`,
       [noteId, clientId, practitionerId]
@@ -136,16 +136,20 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     }
     const completing = currentLifecycle === 'draft' && lifecycleCheck.value === 'completed';
 
-    // The completed-note lock. Applies to the BODY and the date — the things that
-    // would rewrite the record. `status` is deliberately exempt: a commitment
-    // moving alive -> completed is the continuity object doing its job, not an
-    // edit of a finished note.
+    // The completed-note lock, read off completion_mode alone — the note is
+    // locked because a practitioner declared it complete, not because some
+    // timestamp is absent.
+    //
+    // Applies to the BODY and the date, the things that would rewrite the
+    // record. `status` is deliberately exempt: a commitment moving
+    // alive -> completed is the continuity object doing its job, not an edit of
+    // a finished note.
     //
     // 409 rather than 403: the request is well-formed and the practitioner is
     // authorised. What refuses it is the state of the note.
     if (
       (content !== undefined || noteDate !== undefined) &&
-      !isEditableInPlace(currentLifecycle, current.completed_at ?? null)
+      !isEditableInPlace(current.completion_mode)
     ) {
       return NextResponse.json({ error: LOCKED_NOTE_MESSAGE }, { status: 409 });
     }
@@ -187,6 +191,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
               note_date        = COALESCE($3::date, note_date),
               status           = COALESCE($7, status),
               lifecycle        = COALESCE($8, lifecycle),
+              -- Completing through this route IS the governed declaration.
+              completion_mode  = CASE WHEN $9::boolean THEN 'practitioner_declared'
+                                      ELSE completion_mode END,
               completed_at     = CASE WHEN $9::boolean THEN NOW() ELSE completed_at END,
               session_id       = COALESCE($10::uuid, session_id),
               version          = version + 1,

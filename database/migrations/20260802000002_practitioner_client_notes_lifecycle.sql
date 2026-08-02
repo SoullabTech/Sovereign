@@ -63,24 +63,63 @@ BEGIN
   END IF;
 END $$;
 
+-- ---------- completion_mode ----------
+-- WHO COMPLETED THIS, AND UNDER WHAT AUTHORITY. This is the field the lock
+-- reads — a first-class, named distinction, not an inference.
+--
+--   'practitioner_declared'  the practitioner completed it through the governed
+--                            UI, having been shown the warning first -> LOCKED
+--   'backfilled'             this migration marked it complete on the
+--                            practitioner's behalf -> still editable
+--   NULL                     the note is still a draft
+--
+-- ⛔ DO NOT infer the lock from a null timestamp. An earlier draft of this
+-- migration used `completed_at IS NULL` as the lock authority, which made a
+-- provenance field silently carry policy: two rows both reading
+-- lifecycle='completed' behaved differently, and nothing in the schema said
+-- why. The rule is now legible on its own terms:
+--
+--     A note becomes locked only when a practitioner explicitly completed it.
+--     Backfilled rows stay editable because they carry no such declaration —
+--     not because some timestamp happens to be absent.
+--
+-- The ruling permits locking a completed note "provided the UI says so before
+-- the practitioner completes it". Rows predating this migration were never
+-- shown that warning, so the condition was never offered to their authors.
+ALTER TABLE practitioner_client_notes
+  ADD COLUMN IF NOT EXISTS completion_mode TEXT;
+
+UPDATE practitioner_client_notes
+   SET completion_mode = 'backfilled'
+ WHERE lifecycle = 'completed' AND completion_mode IS NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'practitioner_client_notes_completion_mode_check'
+  ) THEN
+    ALTER TABLE practitioner_client_notes
+      ADD CONSTRAINT practitioner_client_notes_completion_mode_check
+      CHECK (
+        (lifecycle = 'draft'     AND completion_mode IS NULL)
+        OR
+        (lifecycle = 'completed' AND completion_mode IN ('backfilled', 'practitioner_declared'))
+      );
+  END IF;
+END $$;
+
 -- ---------- completed_at ----------
--- Records that completion was an EXPLICIT PRACTITIONER ACT, not a backfill.
+-- WHEN the practitioner declared it complete. Pure provenance — it carries no
+-- policy and the lock never reads it.
 --
--- This distinction is load-bearing, not bookkeeping. The ruling permits locking
--- a completed note against ordinary edits "provided the UI says so before the
--- practitioner completes it". Rows that predate this migration were completed
--- by the backfill above; their authors never saw that warning, so retroactively
--- locking them would enforce a condition on people who were never offered it.
---
---   completed_at IS NOT NULL  -> completed by an explicit act, LOCKED
---   completed_at IS NULL      -> completed by backfill, still editable
---
--- So `lifecycle = 'completed'` alone does not imply locked. Read both.
--- This is provenance, not policy: it records what happened, and it is the
--- reason no note is silently stripped of an affordance it already had.
+-- Null for backfilled rows because the completion moment is genuinely unknown:
+-- this migration knows the note was finished, not when. Stamping NOW() would
+-- record the migration's clock as the practitioner's act.
 ALTER TABLE practitioner_client_notes
   ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 
+-- Keeps the timestamp honest in both directions: present exactly when a
+-- practitioner declared completion, absent otherwise.
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -88,7 +127,11 @@ BEGIN
   ) THEN
     ALTER TABLE practitioner_client_notes
       ADD CONSTRAINT practitioner_client_notes_completed_at_check
-      CHECK (completed_at IS NULL OR lifecycle = 'completed');
+      CHECK (
+        (completion_mode = 'practitioner_declared' AND completed_at IS NOT NULL)
+        OR
+        (completion_mode IS DISTINCT FROM 'practitioner_declared' AND completed_at IS NULL)
+      );
   END IF;
 END $$;
 
@@ -151,8 +194,11 @@ CREATE INDEX IF NOT EXISTS idx_practitioner_client_notes_session
 COMMENT ON COLUMN practitioner_client_notes.lifecycle IS
   'Note lifecycle: draft | completed. INDEPENDENT of `status` (commitment lifecycle). Only kind=note may be draft. "amended" is deliberately absent until completed-note mutability is ruled.';
 
+COMMENT ON COLUMN practitioner_client_notes.completion_mode IS
+  'Completion AUTHORITY, and the only field the edit lock reads: practitioner_declared (completed through the governed UI after the warning — LOCKED) | backfilled (marked complete by 20260802000002 on the practitioner''s behalf — still editable) | NULL (still a draft). Never infer the lock from a null timestamp.';
+
 COMMENT ON COLUMN practitioner_client_notes.completed_at IS
-  'Set only when completion was an explicit practitioner act. NULL on rows completed by the 20260802000002 backfill, which remain editable — their authors were never shown the completion warning. lifecycle=completed alone does NOT imply locked.';
+  'WHEN a practitioner declared completion. Pure provenance — carries no policy, and the lock never reads it. NULL for backfilled rows because the completion moment is genuinely unknown.';
 
 COMMENT ON COLUMN practitioner_client_notes.version IS
   'Optimistic concurrency token. Incremented on every update; a PATCH may pass expected_version so a stale autosave is refused rather than allowed to overwrite newer content.';

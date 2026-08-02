@@ -36,7 +36,7 @@ interface ClientNote {
   createdAt: string;
   updatedAt: string;
   lifecycle?: 'draft' | 'completed';
-  completedAt?: string | null;
+  completionMode?: 'backfilled' | 'practitioner_declared' | null;
   version?: number;
 }
 
@@ -72,14 +72,14 @@ function toDateInputValue(d: Date): string {
 /**
  * Can this note's body still be edited in place?
  *
- * Mirrors isEditableInPlace() on the server. A note completed by an explicit act
- * carries completedAt and is locked; a note completed by the 20260802000002
- * backfill does not, and stays editable — its author was never shown the
- * completion warning, so the lock was never a condition they accepted.
+ * Mirrors isEditableInPlace() on the server, and reads the same single field:
+ * a note is locked because a practitioner declared it complete. Rows the
+ * 20260802000002 migration marked complete on their author's behalf carry
+ * 'backfilled' and stay editable — that author was never shown the completion
+ * warning, so the lock was never a condition they accepted.
  */
 function isEditable(note: ClientNote): boolean {
-  if ((note.lifecycle ?? 'completed') === 'draft') return true;
-  return !note.completedAt;
+  return note.completionMode !== 'practitioner_declared';
 }
 
 export function ClientNotesPanel({ clientId, onPromoted }: Props) {

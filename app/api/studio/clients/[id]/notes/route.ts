@@ -33,7 +33,7 @@ export const MAX_NOTE_LENGTH = 20000;
 /** The columns every note response is built from. Kept in one place so GET, POST and PATCH cannot drift. */
 export const NOTE_COLUMNS = `id, client_id, practitioner_id, content_enc, content_enc_meta,
               note_date, created_at, updated_at, kind, status, promoted_from,
-              lifecycle, completed_at, version, session_id`;
+              lifecycle, completion_mode, completed_at, version, session_id`;
 
 /** Confirm the client exists AND belongs to this practitioner. */
 async function assertClientOwned(clientId: string, practitionerId: string): Promise<boolean> {
@@ -185,23 +185,27 @@ export async function POST(request: NextRequest, { params }: Params) {
       practitionerId,
     });
 
-    // completed_at records the moment a practitioner explicitly declared a
-    // SESSION NOTE finished. It is what locks the note against ordinary edits.
+    // completion_mode carries the lock. 'practitioner_declared' is set only for
+    // a SESSION NOTE completed through this route — that is the governed act the
+    // composer warns about before it happens.
     //
-    // Stamped only for kind='note'. A commitment, recognition, or detail is
-    // created whole by Carry Forward and its editability is governed by the
-    // 2026-07-31 continuity ruling, which this slice does not touch — stamping
-    // them would silently take the edit affordance away from
-    // ClientContinuityPanel, which patches item content.
+    // Continuity kinds are recorded 'backfilled' so they stay editable. A
+    // commitment, recognition, or detail is created whole by Carry Forward, and
+    // its editing grammar belongs to the 2026-07-31 continuity ruling, which
+    // this slice does not touch. Declaring them would silently take the edit
+    // affordance away from ClientContinuityPanel, which patches item content.
     //
-    // Left null by the 20260802000002 backfill for the same reason it exists:
-    // those notes' authors were never shown the completion warning.
+    // completed_at follows completion_mode and never leads it.
     const inserted = await db.query(
       `INSERT INTO practitioner_client_notes
          (id, client_id, practitioner_id, content_enc, content_enc_meta, note_date,
-          kind, status, promoted_from, lifecycle, completed_at, session_id)
+          kind, status, promoted_from, lifecycle, completion_mode, completed_at,
+          session_id)
        VALUES ($1, $2, $3, $4, $5::jsonb, COALESCE($6::date, CURRENT_DATE),
                $7, $8, $9::uuid, $10,
+               CASE WHEN $10 <> 'completed' THEN NULL
+                    WHEN $7 = 'note'        THEN 'practitioner_declared'
+                    ELSE 'backfilled' END,
                CASE WHEN $10 = 'completed' AND $7 = 'note' THEN NOW() ELSE NULL END,
                $11::uuid)
        RETURNING ${NOTE_COLUMNS}`,

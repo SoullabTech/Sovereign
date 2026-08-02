@@ -12,7 +12,9 @@
 
 import {
   NOTE_LIFECYCLES,
+  COMPLETION_MODES,
   isNoteLifecycle,
+  isCompletionMode,
   validateLifecycleCreate,
   validateLifecycleTransition,
   isEditableInPlace,
@@ -121,30 +123,58 @@ describe('validateLifecycleTransition', () => {
   });
 });
 
-describe('isEditableInPlace', () => {
-  it('always allows editing a draft', () => {
-    expect(isEditableInPlace('draft', null)).toBe(true);
+describe('completion mode', () => {
+  it('is exactly backfilled | practitioner_declared', () => {
+    expect(COMPLETION_MODES).toEqual(['backfilled', 'practitioner_declared']);
   });
 
-  it('locks a note completed by an explicit act', () => {
-    expect(isEditableInPlace('completed', '2026-08-02T10:00:00.000Z')).toBe(false);
-    expect(isEditableInPlace('completed', new Date())).toBe(false);
+  it('does not overlap the lifecycle vocabulary', () => {
+    // Three named vocabularies now live on this table. None may bleed into
+    // another: lifecycle, commitment status, completion authority.
+    for (const mode of COMPLETION_MODES) {
+      expect(isNoteLifecycle(mode)).toBe(false);
+    }
+    for (const lc of NOTE_LIFECYCLES) {
+      expect(isCompletionMode(lc)).toBe(false);
+    }
+  });
+});
+
+describe('isEditableInPlace', () => {
+  it('allows editing a draft, which carries no completion mode', () => {
+    expect(isEditableInPlace(null)).toBe(true);
+    expect(isEditableInPlace(undefined)).toBe(true);
+  });
+
+  it('locks a note a practitioner declared complete', () => {
+    expect(isEditableInPlace('practitioner_declared')).toBe(false);
   });
 
   it('leaves a backfilled note editable', () => {
-    // The 20260802000002 backfill set lifecycle='completed' with completed_at
-    // NULL. Those authors were never shown the completion warning, so the lock
-    // was never a condition they accepted. Removing the affordance retroactively
-    // would be taking something away that the note already had.
-    expect(isEditableInPlace('completed', null)).toBe(true);
+    // 20260802000002 marked these complete on their author's behalf. That author
+    // was never shown the completion warning, so the lock was never a condition
+    // they accepted. Removing the affordance retroactively would take away
+    // something the note already had.
+    expect(isEditableInPlace('backfilled')).toBe(true);
   });
 
-  it('does not treat lifecycle alone as sufficient', () => {
-    // Both rows are lifecycle='completed'. They differ ONLY by provenance.
-    // If this ever collapses to a single boolean, this test fails.
-    expect(isEditableInPlace('completed', null)).not.toBe(
-      isEditableInPlace('completed', '2026-08-02T10:00:00.000Z')
+  it('reads the declaration, never a timestamp', () => {
+    // ⛔ REGRESSION GUARD. An earlier draft used `completed_at IS NULL` as the
+    // lock authority, which made a provenance field silently carry policy. The
+    // signature takes ONE argument — completion authority — so a timestamp
+    // cannot be reintroduced as the test without changing it here first.
+    expect(isEditableInPlace.length).toBe(1);
+    // Both of these are lifecycle='completed'. They differ only by declared
+    // authority, and that alone decides the lock.
+    expect(isEditableInPlace('backfilled')).not.toBe(
+      isEditableInPlace('practitioner_declared')
     );
+  });
+
+  it('treats an unknown authority as not a declaration', () => {
+    // Fail open to editable rather than locking on a value nobody ruled.
+    expect(isEditableInPlace('completed')).toBe(true);
+    expect(isEditableInPlace('')).toBe(true);
   });
 
   it('exposes a refusal message that explains the state, not the request', () => {
