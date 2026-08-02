@@ -19,6 +19,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { CapsuleDTO } from '@/lib/capsules/types';
+import { apiFetch } from '@/lib/http/apiBase';
 
 // Element config
 const ELEMENTS = [
@@ -56,6 +57,46 @@ export default function CaptureSpiritPanel({
   const [showSource, setShowSource] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isBringing, setIsBringing] = useState(false);
+
+  /* Declaring is its own act, so it has its own state. `declared` is what the
+     member sees after the act — pressing again must read as "already yours",
+     never as a second creation. The route reports which happened (201 vs 200);
+     either way the member ends in the same settled state. */
+  const [isDeclaring, setIsDeclaring] = useState(false);
+  const [declared, setDeclared] = useState(false);
+  const [declareError, setDeclareError] = useState<string | null>(null);
+
+  /* Eligibility, read from the capsule — never assumed, and never granted by
+     asking. A draft capsule is not eligible; the honest response is to say so,
+     NOT to flip `draft` because the member reached for the button. Amendment 5:
+     lifecycle state decides when the gesture is offered, and declares nothing. */
+  const isEligible = capsule ? !capsule.draft && !capsule.archived : false;
+
+  const handleKeepInMyField = async () => {
+    if (!capsule) return;
+    setIsDeclaring(true);
+    setDeclareError(null);
+    try {
+      const res = await apiFetch('/api/psyche/field/declare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ capsuleId: capsule.id }),
+      });
+      if (res.ok) {
+        // 201 created and 200 already-declared are the same outcome for the
+        // member: this belongs to their Field. Only the wording of a retry
+        // differs, and it differs by saying nothing new.
+        setDeclared(true);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setDeclareError(data?.error ?? 'Could not keep this just now. Nothing was lost.');
+    } catch {
+      setDeclareError('Could not reach your Field just now. Please try again.');
+    } finally {
+      setIsDeclaring(false);
+    }
+  };
 
   // Sync local state with capsule
   useEffect(() => {
@@ -288,7 +329,70 @@ export default function CaptureSpiritPanel({
                       )}
                     </button>
 
-                    {/* Secondary: Keep as draft */}
+                    {/* The declaration. A DIFFERENT act from the two around it,
+                        and the member must be able to see that without being
+                        told: "Bring into the Lab" moves the capsule along,
+                        "Save for later" preserves unfinished work, and this one
+                        creates something enduring in their Field.
+
+                        Offered only when the capsule is eligible. When it is
+                        not, the disabled state says why rather than vanishing —
+                        an action that silently disappears teaches nothing, and
+                        pressing it must never be what makes it eligible. */}
+                    {declared ? (
+                      <div
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#D4B896]/10
+                                 border border-[#D4B896]/30 text-[#D4B896] rounded-xl text-[14px] tracking-wide"
+                        role="status"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Kept in your Field
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleKeepInMyField}
+                        disabled={!isEligible || isDeclaring || isSaving}
+                        title={
+                          isEligible
+                            ? undefined
+                            : 'Bring this into the Lab first — a draft is not yet kept.'
+                        }
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10
+                                 border border-[#D4B896]/30 text-[#D4B896] rounded-xl text-[14px] tracking-wide transition-all
+                                 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {isDeclaring ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Keeping...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            Keep in my Field
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {!isEligible && !declared && (
+                      <p className="text-[12px] text-white/40 text-center leading-relaxed">
+                        Bring this into the Lab first. A draft can be saved, but only
+                        finished work is kept in your Field.
+                      </p>
+                    )}
+
+                    {declareError && (
+                      <p className="text-[12px] text-red-400/80 text-center leading-relaxed">
+                        {declareError}
+                      </p>
+                    )}
+
+                    {/* Save for later — renamed from "Keep as Draft". Two acts
+                        both called some kind of "Keep" forced the member to
+                        infer which kind of keeping had occurred. This one
+                        preserves unfinished work; it does not keep anything in
+                        the Field. */}
                     <button
                       onClick={async () => {
                         await handleSaveQuickEdits();
@@ -307,7 +411,7 @@ export default function CaptureSpiritPanel({
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          Keep as Draft
+                          Save for later
                         </>
                       )}
                     </button>

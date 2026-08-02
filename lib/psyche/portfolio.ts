@@ -25,6 +25,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { resolveCapsuleDeclarationSource } from '@/lib/psyche/sources/capsule';
 import type {
   AtomGesture,
   CrystallizedMemory,
@@ -147,6 +148,38 @@ export async function getAtom(
        FROM member_memory_atoms
       WHERE member_id = $1 AND id = $2`,
     [memberId, atomId],
+  );
+  const row = result.rows[0];
+  return row ? rowToAtom(row) : null;
+}
+
+/**
+ * Look up the atom a member already minted from a specific source row.
+ *
+ * The unique index `idx_memory_atoms_unique_source (member_id, source_type,
+ * source_id) WHERE source_id IS NOT NULL` guarantees at most one row, so this
+ * is the read side of "has this source already been declared?".
+ *
+ * ⛔ THIS IS A READ, NOT A GUARD. It must never be used as a preflight before
+ * declaring: under concurrency several requests all read absent, all proceed,
+ * and the unique index — not this function — is what converges them onto one
+ * row. `keepSource()` decides created-vs-existing inside the write itself.
+ * Use this to *show* a member what they already declared, not to decide
+ * whether to declare.
+ *
+ * `spontaneous` atoms have a NULL source_id and are therefore never findable
+ * here — by design; they have no source to be declared from.
+ */
+export async function getAtomBySource(
+  memberId: string,
+  sourceType: MemoryAtomSourceType,
+  sourceId: string,
+): Promise<CrystallizedMemory | null> {
+  const result = await query<AtomRow>(
+    `SELECT ${ATOM_COLUMNS}
+       FROM member_memory_atoms
+      WHERE member_id = $1 AND source_type = $2 AND source_id = $3`,
+    [memberId, sourceType, sourceId],
   );
   const row = result.rows[0];
   return row ? rowToAtom(row) : null;
@@ -340,7 +373,7 @@ export async function listSourceCandidates(
 export async function keepSource(
   memberId: string,
   input: KeepGestureInput,
-): Promise<CrystallizedMemory> {
+): Promise<CrystallizedMemory & { wasCreated: boolean }> {
   if (input.memberId !== memberId) {
     throw new Error('keepSource: memberId mismatch between session and input');
   }
@@ -369,7 +402,61 @@ export async function keepSource(
     }
   }
 
-  const result = await query<AtomRow>(
+  // A capsule must exist, be the member's own, and be eligible — resolved here,
+  // where every caller converges, rather than in whichever surface hosts the
+  // gesture.
+  //
+  // The capsule's own table knowledge lives in its resolver, not inline here.
+  // keepSource enforces the universal rules — member identity, atom shape,
+  // provenance, privacy defaults, database idempotency, created-vs-existing —
+  // and stays the single governed minting capability. A source resolver may
+  // verify and read; it never inserts. See lib/psyche/sources/capsule.ts for
+  // the eligibility, identity-boundary and refusal-symmetry reasoning.
+  if (input.sourceType === 'capsule') {
+    await resolveCapsuleDeclarationSource(memberId, input.sourceId!);
+  }
+
+  // Declaring the same source twice returns the first declaration.
+  //
+  // The member presses once. A double-tap, a retry after a dropped response, or
+  // two open tabs must all leave ONE Field Object — and no amount of care in
+  // the UI can promise that: two concurrent requests both pass a
+  // read-before-write check, and both insert. ON CONFLICT makes the second one
+  // lose inside the database, which is the only place the race is decidable.
+  //
+  // Scoped to the partial index (source_id IS NOT NULL). Spontaneous keeps
+  // carry no source and stay genuinely repeatable — a member may keep the same
+  // thought twice, and that is two acts, not a duplicate.
+  //
+  // DO UPDATE SET member_id = EXCLUDED.member_id is a deliberate no-op write:
+  // it changes nothing, and it is the only way to make ON CONFLICT RETURN the
+  // existing row. DO NOTHING returns zero rows, which would make a retry
+  // indistinguishable from a failure.
+  //
+  // `(xmax = 0) AS was_created` reports which branch the statement took, from
+  // inside the statement itself, so the caller learns created-vs-existing from
+  // the SAME atomic operation that decided it.
+  //
+  // A read before the write cannot answer this. Under concurrent declarations
+  // both requests read "absent", both proceed, the index correctly converges
+  // them onto one row — and both would report "created". The row would be
+  // right and the answer would be a lie.
+  //
+  // ⚠️ WHAT GOVERNS THIS IS THE TEST, NOT THIS EXPLANATION. `xmax` is PostgreSQL
+  // tuple metadata, not a domain field: the reasoning below is why we expect it
+  // to work, and expectations about storage internals are exactly the kind of
+  // thing that quietly stops being true. The governing contract is the
+  // concurrency case in scripts/repro/c3probe.ts — five simultaneous
+  // declarations yield exactly one created and four existing, same id, one row
+  // — which must be re-run against the server version actually deployed
+  // (production runs PostgreSQL 16.13; local dev runs 17.x, so a local green is
+  // not evidence for production). If that test ever fails, replace the
+  // mechanism; do not repair the explanation.
+  //
+  // The reasoning, for whoever does that work: on a fresh INSERT the row has no
+  // updating transaction, so xmax is 0; on the ON CONFLICT path the row was
+  // locked and updated, so xmax carries the updating xid.
+  const result = await query<AtomRow & { was_created: boolean }>(
     `INSERT INTO member_memory_atoms (
        member_id, source_type, source_id, title, body,
        primary_register, registers, elemental_lenses, thread_ids,
@@ -383,7 +470,9 @@ export async function keepSource(
        NOW(), NOW(),
        'normal', 'member-gesture'
      )
-     RETURNING ${ATOM_COLUMNS}`,
+     ON CONFLICT (member_id, source_type, source_id) WHERE source_id IS NOT NULL
+       DO UPDATE SET member_id = EXCLUDED.member_id
+     RETURNING ${ATOM_COLUMNS}, (xmax = 0) AS was_created`,
     [
       memberId,
       input.sourceType,
@@ -399,13 +488,26 @@ export async function keepSource(
 
   const atom = rowToAtom(result.rows[0]);
 
+  // Carried as an extra property rather than a changed return type, so the
+  // three existing callers are untouched: they assign to CrystallizedMemory and
+  // never look at this. Only a caller that must distinguish creation from
+  // convergence — the declaration route, which owes the member a truthful 201
+  // vs 200 — reads it.
+  const wasCreated = result.rows[0].was_created === true;
+
   // Fire-and-forget: index affinities to Living Field dimensions.
   // Never awaited — atom creation must not block on this.
-  import('@/lib/maia/living-field/indexAtom').then(({ indexAtomAffinities }) => {
-    indexAtomAffinities(atom.id, memberId);
-  }).catch(() => { /* silent */ });
+  //
+  // Only on creation. A retry or a losing concurrent declaration converges on
+  // an atom that was already indexed; re-running would be work whose only
+  // effect is load.
+  if (wasCreated) {
+    import('@/lib/maia/living-field/indexAtom').then(({ indexAtomAffinities }) => {
+      indexAtomAffinities(atom.id, memberId);
+    }).catch(() => { /* silent */ });
+  }
 
-  return atom;
+  return Object.assign(atom, { wasCreated });
 }
 
 /**
