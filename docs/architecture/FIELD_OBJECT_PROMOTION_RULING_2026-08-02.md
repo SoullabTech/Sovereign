@@ -131,9 +131,26 @@ material.
 
 **Open seams to verify before implementation** (audit 2026-08-02, no coercion permitted): capsule
 `user_id` is `TEXT` while the canonical authenticated member id and the atom ownership column may be
-a different domain — ⛔ **do not create a direct FK by coercion.** Provenance is expected to be a
-stable `source_type='reflection_capsule'` plus the capsule UUID, with a uniqueness rule of **one
-member declaration per capsule**.
+a different domain — ⛔ **do not create a direct FK by coercion.**
+
+**Provenance uses the explicit discriminator `source_type='capsule'` with the capsule UUID as
+`source_id`.** This value is distinct from the pre-existing `reflection` bridge stub and
+unambiguously identifies `reflection_capsules` as the source domain:
+
+| value | source domain |
+|---|---|
+| `capsule` | `reflection_capsules` |
+| `reflection` | existing reserved bridge stub — **not** silently repurposed |
+
+Uniqueness rule: **one member declaration per capsule**.
+
+*(An earlier draft of this paragraph anticipated `source_type='reflection_capsule'` as a seam
+to verify. It was superseded by the explicit ruling of 2026-08-02, which selected `capsule`:
+`source_type` names the actual source object the member declared from, not the broader family
+of experience it resembles. `reflection_capsule` would carry the table's implementation name
+into the enduring Field vocabulary and imply that capsules and the `reflection` stub share one
+namespace. Corrected here rather than left to contradict the migration and the type union —
+no rows existed yet, which made this the cheap and truthful moment to align the record.)*
 
 ⚠️ **Drift, recorded not repaired:** `bringIntoLab()` (`lib/capsules/capsuleService.ts:381`) has zero
 callers — the UI flips `draft` through the generic PATCH. ⛔ Do not repair or consolidate it inside
