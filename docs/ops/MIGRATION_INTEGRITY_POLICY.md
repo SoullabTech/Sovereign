@@ -1,8 +1,11 @@
-# Migration integrity — mechanism implemented, policy awaiting ruling
+# Migration integrity — enforcement implemented, policy ruled
 
 **Date:** 2026-08-02
 **Scope:** `scripts/run-sql-migrations.sh` (the production `migrate` compose service)
-**Status:** mechanism implemented and verified · **two policy decisions open for founder ruling**
+**Status:** **RULED 2026-08-02** — mechanism implemented and verified; both policy decisions ruled
+
+> **The invariant this establishes:**
+> **A migration ledger is a record of executed artifacts, not merely filenames.**
 
 ---
 
@@ -36,7 +39,7 @@ permanently applied and the chain half-done. A pre-flight abort leaves the datab
 found. This is asserted by test T3: a genuinely pending migration sits alongside a drifted one and
 must **not** be applied.
 
-### Three outcomes are distinguished, not conflated
+### Four outcomes are distinguished, not conflated
 
 | Class | Meaning | Enforced? |
 |---|---|---|
@@ -48,46 +51,76 @@ must **not** be applied.
 The **absent** class is not incidental. Production has **47** such rows, and #911 has just documented
 a deliberately retired migration. Treating "recorded but absent" as drift would block every deploy.
 
-### No bypass
+### No bypass — unreachable by construction
 
-`DRIFT_POLICY` and `NULL_CHECKSUM_POLICY` are **script constants, not environment variables**. There
-is no runtime override. Changing the posture requires a reviewed code change through the normal
-deploy path — an env-var escape hatch would re-open the same docs-say-X / runner-does-Y asymmetry
-this check exists to close.
+While the decisions were open, the two postures were script constants (never environment variables).
+Once ruled, the alternatives were **removed from the runner entirely**. `warn` and `backfill` are not
+un-selected options sitting one token away from a ruled-against behaviour; they do not exist in the
+code. Their consequences are preserved here, in prose, where a change of posture requires a reviewed
+edit — the governance event it should be.
+
+This is asserted behaviourally, not by inspection: tests T6 and T8 run the runner with every
+environment variable a future operator might plausibly reach for (`DRIFT_POLICY=warn`,
+`SKIP_MIGRATION_CHECKSUM=1`, `MIGRATION_ALLOW_DRIFT=1`, `FORCE=1`, and others set simultaneously) and
+assert the refusal is unchanged and the bypass bought nothing.
 
 ## 3. DECISION 1 — behaviour when an applied migration's checksum differs
 
+**RULED: hard failure before any migration executes, with no runtime bypass.**
+
+The question was not *"should drift abort?"* It was:
+
+> **Should production migration integrity behave differently from the migration integrity behaviour that already exists?**
+
+It should not. `scripts/apply-migrations.sh` — the dev runner behind `npm run db:migrate` — has
+always treated a checksum mismatch as fatal. The production runner was the divergence, not the
+proposal. A drifted migration is not an ordinary warning condition: it means the ledger and the
+filesystem disagree about what was applied.
+
+The options as they were weighed:
+
 | Option | Consequence |
 |---|---|
-| **A. Abort** (interim value) | Deploy fails, loudly, naming the file and both checksums. Nothing is applied. The editor must restore the file and ship a new migration. Cost: a genuine drift blocks the deploy lane until resolved — which is the point. |
+| **A. Abort** ← **RULED** | Deploy fails, loudly, naming the file and both checksums. Nothing is applied. The editor must restore the file and ship a new migration. Cost: a genuine drift blocks the deploy lane until resolved — which is the point. |
 | **B. Warn** | Drift is printed; pending migrations still apply. Nothing is ever blocked. Cost: in practice this is near-silent — the message lands in deploy output nobody reads, and the asymmetry (docs promise detection, deploys ignore it) partly survives. |
 | **C. Require an explicit override** | Abort by default, with a per-file acknowledgement (e.g. an `allowed-drift` ledger entry) to proceed. Cost: a second mechanism to build and govern; the override becomes the thing that needs discipline. |
 
-**Recommendation: A (abort).** Two reasons beyond preference:
-
-- **Precedent.** `scripts/apply-migrations.sh` — the dev runner behind `npm run db:migrate` — already
-  aborts on a checksum mismatch (`SELECT 1/0` to force the error). The production runner diverging
-  from it is the actual anomaly. This ruling is less "pick a policy" than "should production match
-  the runner dev already uses?"
-- **Measured blast radius is zero.** See §5 — on production's current ledger, abort fires on nothing.
+Supporting evidence: the measured blast radius is zero — on production's current ledger, abort fires
+on nothing (§5).
 
 ## 4. DECISION 2 — pre-enforcement rows (`checksum IS NULL`)
 
-Production has **430** such rows. This is the decision that can break every existing environment.
+**RULED: reported as unverified. Never enforced, never auto-certified.**
+
+Production has **430** such rows. This is the decision that could break every existing environment.
+
+Backfilling would compute the hash of the *current* file and record it as the *historical* truth —
+silently assuming the current file is the historical file. It may be. It may not be. The system
+cannot prove it. Reporting is the only option that does not manufacture history.
+
+The transition path is therefore:
+
+```text
+unverified  →  superseded by a new, checksummed application  →  verified
+```
+
+and never:
+
+```text
+unverified  →  pretend verified
+```
 
 | Option | Consequence |
 |---|---|
-| **A. Report** (interim value) | Counted and named as UNVERIFIED in every run; never enforced, never written. Cost: **430 historical migrations are never protected** — the gap is permanent, but permanently *visible*. |
-| **B. Backfill** | On first sight, adopt current file contents as the recorded truth. Cost: **manufactures assurance.** If a file already drifted before enforcement existed, the backfill makes the drift canon and the ledger then certifies a lie. Test T6 asserts exactly this: it adopts the *edited* contents. |
+| **A. Report** ← **RULED** | Counted and named as UNVERIFIED in every run; never enforced, never written. Cost: **430 historical migrations are never protected** — the gap is permanent, but permanently *visible*. |
+| **B. Backfill** | On first sight, adopt current file contents as the recorded truth. Cost: **manufactures assurance.** If a file already drifted before enforcement existed, the backfill makes the drift canon and the ledger then certifies a lie. |
 | **C. Treat NULL as drift** | Full protection. Cost: fails every environment with pre-enforcement history — 430 rows in production — until each is individually resolved. Blocks all deploys immediately. |
 | **D. Verified backfill** | Backfill only where an independent hash proves contents unchanged. `apply-migrations.sh` does this for legacy MD5 rows. **Not available here** — the 430 rows are NULL, not MD5. There is nothing to verify against. |
 
-**Recommendation: A (report).** D is the only option that would close the gap honestly, and it is not
-reachable for these rows. B trades a visible gap for an invisible false guarantee, which is the
-failure mode this whole lane exists to correct. A leaves the gap open and *named* — the count is
-printed on every deploy, so it cannot quietly become assumed coverage. Protection then accrues
-naturally: every migration applied from here forward is checksummed, and the unverified count only
-falls.
+D is the only option that would close the gap honestly, and it is not reachable for these rows —
+there is no independent historical source to verify against. B trades a visible gap for an invisible
+false guarantee, which is the exact failure mode this lane exists to correct. A leaves the gap open
+and *named*: the count prints on every deploy, so it cannot quietly become assumed coverage.
 
 ## 5. Measured production blast radius (not estimated)
 
@@ -117,7 +150,18 @@ The repo has two migration runners writing to the same `schema_migrations` table
 
 They are now consistent on algorithm and on drift posture. **This is not a claim that they are
 otherwise equivalent** — their selection logic, transaction handling, and invariant checks differ and
-have not been reconciled. That is a separate lane.
+have not been reconciled.
+
+**Ruled 2026-08-02: that reconciliation is explicitly OUT OF SCOPE for this lane**, so that an
+integrity fix does not become another foundation project. The boundary:
+
+| Lane | Question it answers |
+|---|---|
+| **This lane** | Can we detect migration artifact drift reliably? |
+| **Future lane** | Why do we have multiple migration execution paths? |
+
+Runner consolidation, migration transaction semantics, and deploy-workflow redesign all belong to the
+second question. None of them are prerequisites for the first.
 
 ## 7. Sequencing — this lane must not land before #911
 
@@ -136,17 +180,17 @@ Until step 3, the README correctly describes trunk.
 
 ## 8. Verification
 
-`scripts/test-migration-checksums.sh` — **45 assertions, 45 passed, 0 failed** (run 2026-08-02).
+`scripts/test-migration-checksums.sh` — **44 assertions, 44 passed, 0 failed** (run 2026-08-02).
 
 It creates its own throwaway database and its own fixture migration directory; it never touches
 `maia_consciousness` or `database/migrations`. (The dev database is shared across worktrees, so
-evidence gathered against it is not repeatable.) Policy variants are exercised by `sed`-ing a copy of
-the runner — the only honest way to test constants that are deliberately not environment variables.
+evidence gathered against it is not repeatable.)
 
-Every refusal probe asserts a **matching reason**, not merely a non-zero exit: T3 asserts the abort
-names the drifted file, states the edited contents never ran, states nothing was applied, and then
-verifies against the database that the smuggled column is absent, the pending migration did not
-apply, and the ledger is unchanged.
+Every refusal probe asserts a **matching reason**, not merely a non-zero exit. A migration check that
+exits non-zero because PostgreSQL rejected syntax is not evidence that drift detection works — the
+refusal reason is part of the proof. T3 asserts the abort names the drifted file, states the edited
+contents never ran, states nothing was applied, and then verifies against the database that the
+smuggled column is absent, the pending migration did not apply, and the ledger is unchanged.
 
 | Test | Asserts |
 |---|---|
@@ -155,9 +199,9 @@ apply, and the ledger is unchanged.
 | T3 | edited migration aborts **before** anything is applied (pre-flight ordering) |
 | T4 | restoring the file clears drift; the backlog then applies |
 | T5 | NULL-checksum row is UNVERIFIED, not drift; not silently backfilled |
-| T6 | `backfill` policy adopts current contents — including *edited* contents |
+| T6 | no environment variable can backfill a NULL checksum |
 | T7 | retired migration (recorded, file removed) is ABSENT, not drift |
-| T8 | `warn` policy continues but still reports the edit never ran |
+| T8 | no environment variable can downgrade drift from abort |
 | T9 | digest covers contents only — the filename is not in it |
 | T10 | a failing migration is not recorded and its checksum is not banked |
 | T11 | a fresh database has zero unverified rows |
@@ -166,6 +210,6 @@ apply, and the ledger is unchanged.
 
 - It does not protect the 430 pre-enforcement migrations (§4).
 - It does not detect a migration edited *and* re-recorded by a direct SQL write to the ledger.
-- It does not reconcile the two runners beyond algorithm and drift posture (§6).
+- It does not reconcile the two runners beyond algorithm and drift posture — ruled out of scope (§6).
 - It does not change selection: set-membership by filename is unchanged, and ordering guarantees are
   still what `database/migrations/README.md` says they are.

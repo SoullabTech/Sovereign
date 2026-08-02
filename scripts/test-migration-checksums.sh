@@ -64,14 +64,26 @@ run_migrations() { # run_migrations [runner_path]
   set -e
 }
 
-# Produce a copy of the runner with a policy constant changed. The constants are
-# deliberately not environment variables, so a variant copy is the only honest
-# way to exercise the other ruled outcomes.
-variant() { # variant <NAME=value> -> echoes path
-  local out="$WORK/runner_${1//[^A-Za-z0-9]/_}.sh"
-  sed "s/^${1%%=*}=.*/$1/" "$RUNNER" > "$out"
-  grep -qx "$1" "$out" || { echo "FATAL: variant $1 did not apply" >&2; exit 2; }
-  echo "$out"
+# Every environment variable a future operator might plausibly reach for to
+# soften the check. The ruled behaviour must be unreachable by all of them.
+BYPASS_ENV=(
+  DRIFT_POLICY=warn
+  MIGRATION_DRIFT_POLICY=warn
+  NULL_CHECKSUM_POLICY=backfill
+  MIGRATION_NULL_CHECKSUM_POLICY=backfill
+  MIGRATION_CHECKSUM_BACKFILL=1
+  SKIP_MIGRATION_CHECKSUM=1
+  MIGRATION_ALLOW_DRIFT=1
+  FORCE=1
+)
+
+# Run the runner with every bypass variable set at once.
+run_with_bypass_env() {
+  set +e
+  RUN_OUT="$(env "${BYPASS_ENV[@]}" DATABASE_URL="$TEST_URL" MIGRATIONS_DIR="$MIGDIR" \
+    sh "$RUNNER" 2>&1)"
+  RUN_RC=$?
+  set -e
 }
 
 sql() { psql "$TEST_URL" -X -t -A -c "$1"; }
@@ -171,16 +183,13 @@ check "NULL checksum left NULL (no silent backfill)" "1" \
 
 # ─────────────────────────────────────────────────────────────────────────────
 echo
-echo "T6 — NULL_CHECKSUM_POLICY=backfill adopts current contents, loudly"
-BACKFILL_RUNNER="$(variant "NULL_CHECKSUM_POLICY=backfill")"
-run_migrations "$BACKFILL_RUNNER"
+echo "T6 — no environment variable can backfill a NULL checksum (ruled 2026-08-02)"
+run_with_bypass_env
 check "exit 0" "0" "$RUN_RC"
-contains "announces the backfill" "checksum backfilled from current file contents" "$RUN_OUT"
-check "no NULL checksums remain" "0" \
+contains "still reported as unverified" "unverified: 1" "$RUN_OUT"
+not_contains "nothing was backfilled" "backfill" "$RUN_OUT"
+check "NULL checksum is still NULL — no history was manufactured" "1" \
   "$(sql "SELECT count(*) FROM schema_migrations WHERE checksum IS NULL;")"
-check "adopted the EDITED contents, not the applied ones" \
-  "$(sha_of "$MIGDIR/20260101000002_beta.sql")" \
-  "$(sql "SELECT checksum FROM schema_migrations WHERE filename='20260101000002_beta.sql';")"
 
 # ─────────────────────────────────────────────────────────────────────────────
 echo
@@ -193,7 +202,7 @@ contains "reports 0 drift" "drift:      0" "$RUN_OUT"
 
 # ─────────────────────────────────────────────────────────────────────────────
 echo
-echo "T8 — DRIFT_POLICY=warn continues but still says the edit never ran"
+echo "T8 — no environment variable can downgrade drift from abort (ruled 2026-08-02)"
 cat > "$MIGDIR/20260101000001_alpha.sql" <<'SQL'
 CREATE TABLE IF NOT EXISTS alpha (id int primary key);
 ALTER TABLE alpha ADD COLUMN IF NOT EXISTS smuggled text;
@@ -201,14 +210,12 @@ SQL
 cat > "$MIGDIR/20260101000004_delta.sql" <<'SQL'
 CREATE TABLE IF NOT EXISTS delta (id int primary key);
 SQL
-WARN_RUNNER="$(variant "DRIFT_POLICY=warn")"
-run_migrations "$WARN_RUNNER"
-check "exit 0" "0" "$RUN_RC"
-contains "reports the drift" "drift:      1" "$RUN_OUT"
-contains "says the edit never ran" "have NOT run and will never run" "$RUN_OUT"
-check "smuggled column still NOT added" "0" \
+run_with_bypass_env
+check "still exits 1 despite every bypass variable" "1" "$RUN_RC"
+contains "refusal reason is still integrity" "Migration integrity check failed" "$RUN_OUT"
+check "smuggled column NOT added" "0" \
   "$(sql "SELECT count(*) FROM information_schema.columns WHERE table_name='alpha' AND column_name='smuggled';")"
-check "pending delta WAS applied under warn" "1" \
+check "pending delta NOT applied — the bypass bought nothing" "0" \
   "$(sql "SELECT count(*) FROM information_schema.tables WHERE table_name='delta';")"
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -20,40 +20,34 @@ set -eu
 MIGRATIONS_DIR="${MIGRATIONS_DIR:-/app/database/migrations}"
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Integrity policy
+# Integrity policy — RULED 2026-08-02
 # ═════════════════════════════════════════════════════════════════════════════
-# These are SCRIPT CONSTANTS, deliberately NOT environment variables. There is
-# no runtime bypass: changing the posture requires a reviewed code change that
-# goes through the normal deploy path. An env-var override would re-open the
-# same docs-say-X / runner-does-Y asymmetry this check exists to close.
+# The invariant this enforces:
 #
-# ── DRIFT_POLICY — a recorded checksum disagrees with the file on disk ───────
-#   abort : refuse to run anything; exit non-zero. (deploy fails)
-#   warn  : print the drift loudly, continue applying pending migrations.
+#   A migration ledger is a record of executed artifacts, not merely filenames.
 #
-# ── NULL_CHECKSUM_POLICY — a row recorded before checksums were enforced ─────
-#   report   : count and name them as UNVERIFIED. Never enforced, never
-#              backfilled. The gap stays visible in every run's output.
-#   backfill : adopt the current file contents as the recorded truth on first
-#              sight. NOTE: this manufactures assurance — if the file already
-#              drifted before enforcement existed, the drift becomes canon.
-#   drift    : treat a NULL checksum as a mismatch. Fails every environment
-#              that has pre-enforcement history until each row is resolved.
+# 1. DRIFT — a recorded checksum disagrees with the file on disk.
+#    → HARD FAILURE, before any migration executes. No runtime bypass.
+#    This is not a new posture. scripts/apply-migrations.sh (npm run db:migrate)
+#    has always treated a checksum mismatch as fatal. The question ruled was not
+#    "should drift abort?" but "should production migration integrity behave
+#    differently from the migration integrity behaviour that already exists?"
+#    It should not.
 #
-# INTERIM VALUES — pending founder ruling. See
-# docs/ops/MIGRATION_INTEGRITY_POLICY.md for the options, consequences, and the
-# recommendation these interim values encode.
-DRIFT_POLICY=abort
-NULL_CHECKSUM_POLICY=report
-
-case "$DRIFT_POLICY" in
-  abort|warn) ;;
-  *) echo "❌ Invalid DRIFT_POLICY: $DRIFT_POLICY" >&2; exit 2 ;;
-esac
-case "$NULL_CHECKSUM_POLICY" in
-  report|backfill|drift) ;;
-  *) echo "❌ Invalid NULL_CHECKSUM_POLICY: $NULL_CHECKSUM_POLICY" >&2; exit 2 ;;
-esac
+# 2. NULL CHECKSUM — a row recorded before enforcement existed.
+#    → REPORTED as unverified. Never enforced, never backfilled.
+#    Backfilling would hash the CURRENT file and record it as the historical
+#    truth, silently assuming the current file is the historical file. The
+#    system cannot prove that. Reporting is the only option that does not
+#    manufacture history. These rows converge to verified only by being
+#    superseded, never by assertion.
+#
+# There are deliberately NO policy variables here — not even constants. The
+# alternatives ("warn", "backfill") were decision-support and are now ruled
+# against, so they are unreachable by construction rather than merely
+# unselected. Their consequences are preserved in
+# docs/ops/MIGRATION_INTEGRITY_POLICY.md; changing this behaviour means editing
+# this file under review, which is the governance event it should be.
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Checksum computation
@@ -148,7 +142,6 @@ verified_count=0
 unverified_count=0
 absent_count=0
 drift_count=0
-backfilled_count=0
 
 echo "--- integrity pre-flight ---"
 
@@ -169,23 +162,11 @@ while IFS='|' read -r rec_file rec_sum; do
 
   actual_sum=$(compute_checksum "$path")
 
+  # Recorded before enforcement existed. There is nothing to compare against,
+  # and hashing the current file would record an assumption as a fact. Counted,
+  # named, and left alone.
   if [ -z "$rec_sum" ]; then
-    case "$NULL_CHECKSUM_POLICY" in
-      report)
-        unverified_count=$((unverified_count + 1))
-        ;;
-      backfill)
-        psql "$DATABASE_URL" -X -q -c "
-UPDATE schema_migrations SET checksum = '$actual_sum'
-WHERE filename = '$rec_file' AND checksum IS NULL;"
-        backfilled_count=$((backfilled_count + 1))
-        echo "  ↑ $rec_file — checksum backfilled from current file contents"
-        ;;
-      drift)
-        drift_count=$((drift_count + 1))
-        echo "  ✗ $rec_file — no recorded checksum (policy: drift)"
-        ;;
-    esac
+    unverified_count=$((unverified_count + 1))
     continue
   fi
 
@@ -200,22 +181,17 @@ WHERE filename = '$rec_file' AND checksum IS NULL;"
 done < "$ledger_tmp"
 
 echo "  verified:   $verified_count"
-[ "$backfilled_count" -eq 0 ] || echo "  backfilled: $backfilled_count"
 # Named, not swallowed: these rows predate enforcement and are NOT protected.
 [ "$unverified_count" -eq 0 ] || echo "  unverified: $unverified_count (recorded before checksum enforcement — not protected)"
 [ "$absent_count" -eq 0 ]     || echo "  absent:     $absent_count (recorded, file no longer present)"
 echo "  drift:      $drift_count"
 
 if [ "$drift_count" -gt 0 ]; then
-  if [ "$DRIFT_POLICY" = "abort" ]; then
-    echo "❌ Migration integrity check failed: $drift_count applied migration(s) differ from their recorded checksum." >&2
-    echo "   An applied migration was edited after the fact. Its new contents have NOT run and will never run." >&2
-    echo "   Fix forward: restore the file to its applied contents and ship the change as a NEW migration." >&2
-    echo "   No migrations were applied. The database is unchanged." >&2
-    exit 1
-  fi
-  echo "⚠️  Migration integrity: $drift_count drifted migration(s) — continuing (DRIFT_POLICY=warn)."
-  echo "    The edited contents have NOT run and will never run."
+  echo "❌ Migration integrity check failed: $drift_count applied migration(s) differ from their recorded checksum." >&2
+  echo "   An applied migration was edited after the fact. Its new contents have NOT run and will never run." >&2
+  echo "   Fix forward: restore the file to its applied contents and ship the change as a NEW migration." >&2
+  echo "   No migrations were applied. The database is unchanged." >&2
+  exit 1
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════
