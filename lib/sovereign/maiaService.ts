@@ -87,6 +87,7 @@ import {
   STATE_VECTOR_OUTPUT_CONTRACT,
   isLikelyCheckin,
   parseStateVector,
+  stripStateVectorBlocks,
   storeStateVector,
   routePractice,
   type StateVector,
@@ -2332,7 +2333,11 @@ function finalizeMemberFacingText(
   rawText: string,
   opts: { sanctuary: boolean },
 ): { text: string; presenceConstrained: boolean; identityGuarded: boolean } {
-  let text = sanitizeMaiaOutput(rawText);
+  // Internal-contract leak guard. The STATE_VECTOR block is stripped upstream on
+  // the state-vector path, but the funnel is the layer that owns "nothing
+  // internal reaches the member" — including paths (RCN) that never parse it.
+  // Idempotent, so re-running after the upstream strip is harmless.
+  let text = sanitizeMaiaOutput(stripStateVectorBlocks(rawText));
 
   const { mode, recognition } = determineResponseMode(input);
   let presenceConstrained = false;
@@ -2969,9 +2974,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         sessionId
       );
 
+      // Strip unconditionally. The block is internal instrumentation; whether
+      // its JSON validated has no bearing on whether the member should see it.
+      // Gating this on `parseResult.vector` meant one malformed field (e.g.
+      // `"entering": ,`) leaked the whole raw block into MAIA's reply.
+      text = parseResult.strippedText;
+
       if (parseResult.vector) {
         parsedStateVector = parseResult.vector;
-        text = parseResult.strippedText; // Strip vector from user-facing response
 
         console.log(
           `🌀 [State Vector] Parsed: ${parsedStateVector.primary.element}` +
