@@ -128,6 +128,147 @@ them. A Canvas is a set of projections, not a container of material.
 
 ---
 
+## Extension — one ontological family, and representation as a separate axis (Kelly, same day)
+
+### Defined by what they are, not what they are for
+
+Keeps, Ideas, Decisions, Changes, Journals, Quotes, Conversations and their kin belong to **one
+ontological family**. They are not defined by their use (writing, coaching, journaling). They are
+defined by what they are:
+
+> **Persistent fields of insight that can continue to participate in a person's life.**
+
+So the hierarchy inverts. Not `Writer's Studio → { Keeps, Ideas, Decisions }` but:
+
+```
+                          Member Field
+      { Keeps · Ideas · Decisions · Changes · Journals · Quotes · Conversations · … }
+                               │
+      ┌────────────────┬───────┴────────┬─────────────────┐
+Writer's Studio   Coach Studio    Vision Studio    Learning Studio
+      └────────────────┴────────────────┴─────────────────┘
+                    all REFERENCE field objects
+```
+
+A Writer's Studio project does not *contain* a Decision; it references one. A coaching preparation
+does not *own* an Idea. A Vision exercise does not *consume* a Journal entry. There is **one living
+Decision** in the member's field, and many contexts may draw on it.
+
+### The object is not the card
+
+> A card is one **representation**. The underlying thing is a **field object**.
+
+The Canvas renders it as a card because cards are excellent for human spatial thinking. Another
+environment might render the same object as a timeline event, a constellation, a conversation thread,
+a map, a relationship graph, or a chronological stream. **The object does not change; only the
+representation changes.**
+
+### What the Canvas actually is
+
+The Canvas is **not "where writing happens."** It is **where relationships between field objects
+become visible through human arrangement.** Writing is one possible consequence. Others:
+
+- *"I suddenly see the pattern in my life."*
+- *"These three Decisions all came from one Change."*
+- *"Every breakthrough traces back to this Journal entry."*
+- *"This coaching framework emerged from these seven Keeps."*
+- *"This chapter is really about this cluster of lived insights."*
+
+The Canvas supports **thinking itself**. The Writer's Studio specializes that thinking toward a
+manuscript. This is the standing principle applied: **cultivate human perception, do not automate
+human conclusions.** The member creates the relationships; the environment makes them easy to see and
+revisit.
+
+### What this means for the naming already in the code
+
+Checked against `lib/workbench/sources/types.ts` and `lib/workbench/arrange.ts`:
+
+| Name today | Under the ruling |
+| --- | --- |
+| `WorkbenchSourceKind` = `uploaded \| ideas \| keep \| journals \| decisions` | This **is** the field-object family — but named after the surface consuming it, not after what the objects are |
+| `CardPointer` | Names the reference after **one representation**. The object is a field object; "card" is how the Canvas draws it |
+| `lib/workbench/sources/*` | "Source" is Workbench-centric framing for what is actually the member's field |
+| **`placement`** (`arrange.ts`) | ⭐ **Already correct.** A placement is a member-authored *relationship* between a field object and a location — not a card, not a copy. It is the primitive the ruling describes |
+
+⭐ The Slice 1 primitive generalizes beyond piles unchanged: a placement is a relationship, so the
+same substrate supports a timeline, a constellation, or a graph by varying only the renderer. Nothing
+in `arrange.ts` assumes a pile — only ordered membership in a named group.
+
+### Additionally open after this extension
+
+- Does a field object family need a shared interface beyond `{source, ref}` — and if so, is that the
+  field's contract or each Studio's?
+- ⚠️ **"Field" is now carrying two senses** — the member's field of insight objects, and the Living
+  Field substrate. This was already flagged; the extension makes it urgent, because the family name
+  would inherit whichever sense is chosen.
+- If representation is a separate axis, where does a renderer live — with the Studio, or with the
+  field object type?
+
+## Extension — how field objects return (Kelly, same day)
+
+Field objects **remain in the member's Field**, searchable at any time and contextually offered when
+they may illuminate the present moment. They are **not raw material waiting to be consumed by a
+project.**
+
+### Two distinct ways they return
+
+**1. Search** — the member deliberately looks: *"decisions related to this project"*, *"where have I
+written about belonging?"*, *"the changes I noticed last winter"*, *"Keeps connected with fire"*.
+Search reaches **across** Keeps, Ideas, Decisions, Changes, Journals and other insight fields while
+**preserving each object's identity and source**.
+
+**2. Contextual offering** — MAIA may notice an existing field object appears relevant and offer it:
+*"You kept something several months ago that may bear on what you're describing. Would you like to see
+it?"* An **offer**, not an insertion, and not an interpretation presented as truth. The member decides
+whether to open it, ignore it, place a reference on a Canvas, connect it to a project, continue the
+conversation with it, or leave it where it is.
+
+### The authority boundary
+
+The system **may** say: *"This may be relevant."*
+
+It **may not** say: *"This belongs in your book."* · *"These form a theme."* · *"This decision caused
+that change."* · *"This pile is ready to become a chapter."*
+
+Those are higher-order meanings. They remain **the member's to recognize and declare.**
+
+### What an offer must carry, and must not do
+
+An offer must be intelligible: **what kind** of field object it is · **when** it arose · **where** it
+came from · **why it is being offered now** · whether it is **private** to the member or permitted to
+return contextually.
+
+Offering must **not**: alter the object · change its privacy or `return_preference` · attach it to the
+current project · place it on a Canvas · count it as *"used"* · silently strengthen an inferred
+relationship.
+
+### The governing line
+
+> **Field objects remain available to the member everywhere; the platform may retrieve and offer them,
+> but only the member gives them a new relationship, placement, or meaning.**
+
+### Checked against the implementation
+
+| Constraint | State |
+| --- | --- |
+| Retrieval does not alter the object | ✅ `keep.ts` is `SELECT`-only; walk showed 23/23 fields unchanged |
+| Retrieval does not change `return_preference` | ✅ adapter is explicitly barred from writing it |
+| Retrieval does not count as "used" | ✅ `surface_count` and `last_surfaced_at` unchanged across the walk |
+| Placement is member-authored only | ✅ every verb originates in a member gesture; nothing auto-places |
+| No interpretation offered | ✅ MAIA is absent from the room; no clustering, theming, or naming |
+| **Member search ≠ MAIA offer, on privacy** | ✅ already anticipated: the adapter deliberately does **not** filter by `return_preference`, because *a private atom is private **from MAIA**; it is still the member's own to see and place*. The gate belongs on the contextual-offer path, not on member search |
+| Search reaches across the family | ❌ **member search reaches `keep` only** — Ideas, Decisions, Changes, Journals have no adapter |
+| Contextual offering exists | ❌ not built; deliberately absent from the Workbench |
+
+⭐ The privacy row is the one worth noting: the two return paths need **different** gates, and the
+code already encodes that distinction rather than collapsing them.
+
+⚠️ **The Shelf is therefore misnamed in spirit** — it is not "writing materials." It is **one view
+into the member's wider Field**, currently showing a single object type. The Writer's Studio may
+reference those insights; it does not own them.
+
+---
+
 ## Refused by default
 
 ⛔ No renaming, no namespace move, no migration, no change to graduation is authorized by this
