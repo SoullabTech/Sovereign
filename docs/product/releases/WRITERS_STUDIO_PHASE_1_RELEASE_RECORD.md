@@ -79,9 +79,7 @@ The same commit gives **opposite answers** depending on how dependencies were in
 ⭐ **The lockfile is the referent.** A gate result measured against a shared or drifted
 `node_modules` is a measurement of that directory, not of the release candidate.
 
-⚠️ The **lockfile is the referent** for the DOM gate — not whatever exists in a shared
-`node_modules`. ⛔ Do not run `npm install` in the shared checkout while other sessions are
-active.
+⛔ Do not run `npm install` in the shared checkout while other sessions are active.
 
 ### 3b. Walks
 
