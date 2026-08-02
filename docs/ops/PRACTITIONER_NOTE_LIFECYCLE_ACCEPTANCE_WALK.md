@@ -317,31 +317,40 @@ while leaving open whether a practitioner can simply downgrade it and edit a com
 instrument that proves the field matters must not also expose the way around it. Both arms are
 required.
 
+**The governing rule (ruled 2026-08-02):**
+
+> **Completion authority is established only by the explicit completion operation. It cannot be
+> supplied, downgraded, or revoked through the ordinary note-update route.**
+
 Against a note that is `practitioner_declared`, through the **real API**:
 
 | Probe | Expect |
 |---|---|
-| `PATCH { completion_mode: "backfilled" }` | note stays **locked**; `completion_mode` **unchanged** in the DB |
-| `PATCH { completion_mode: "backfilled", content: "…" }` | **409** locked — the content edit is refused, and `completion_mode` still unchanged |
-| `PATCH { lifecycle: "draft" }` | **409** — *"A completed note cannot be reopened…"* |
-| `PATCH { completed_at: null }` | `completed_at` **unchanged** |
+| `PATCH { completion_mode: "backfilled" }` | **400** `completion_authority_not_client_settable` |
+| `PATCH { completion_mode: "backfilled", content: "…" }` | **400**, same code — refused *before* the content edit is considered |
+| `PATCH { completed_at: null }` | **400**, same code — presence is the test, not truthiness |
+| `PATCH { lifecycle: "draft" }` | **409** `completion_authority_not_revocable` |
+| `PATCH { lifecycle: "archived" }` | **400** — malformed value, **not** the revocation code |
+| `POST { …, completion_mode: "practitioner_declared" }` | **400**, same code — a note is never born carrying an authority its author did not perform |
 
-**Substrate (verified on the branch, to be confirmed by observation):** `completion_mode` is **never
-read from the request body**. It appears only in the pre-read `SELECT`, the lock check, and the
-`CASE WHEN completing` branch of the `UPDATE`. A client-supplied value is therefore **inert** rather
-than rejected.
+⭐ **Silent ignoring was rejected.** The routes never read these fields, so the boundary was already
+unreachable by construction — but silence made a misleading contract: a client could send an
+authority-bearing field, receive an ordinary 200, and have no way to learn the server disregarded
+it. The refusal keeps the transition unreachable by construction **and** legible at the boundary.
 
-⭐ That is the stronger form — *prefer boundaries unreachable by construction over guard clauses*.
-But it is also **silent**, which is why 10b must be observed rather than assumed: an ignored field
-and a respected field look identical from the client until you check the row.
+⚠️ **The two statuses differ on purpose.** 400 says the request was malformed; 409 says it was
+well-formed and the note's *state* refused it. An earlier revision returned 409 for both a refused
+transition and a plain typo, which told the caller the wrong thing about what to change.
 
-**Discrimination:** ⛔ after each probe, re-read the row. A 200 response does not mean the field was
-accepted, and a 409 does not by itself prove `completion_mode` survived. **The row is the evidence.**
+**Discrimination — both halves are required:**
 
-▶️ **Open question for the founder, raised not resolved:** should a body-supplied `completion_mode`
-be *explicitly rejected* (as `kind` and `promoted_from` already are) rather than silently ignored?
-Ignoring is safe; rejecting is legible. Both are defensible and this is a product-legibility call,
-not a defect — so no code was changed for it.
+1. the route **refuses** authority-bearing fields specifically, with the stable code; **and**
+2. **re-reading the row** confirms `completion_mode`, `completed_at`, `lifecycle`, `version` and
+   content are all **unchanged**.
+
+⛔ The re-read is not optional. **The response proves the contract; the row proves the state.** A 400
+tells you the request was rejected, not that nothing was written — and a partial write behind a
+rejection is exactly the failure this criterion exists to exclude.
 
 ### 11 — Backfilled notes remain editable
 

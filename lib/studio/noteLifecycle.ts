@@ -29,6 +29,17 @@ export interface LifecycleResult {
   ok: boolean;
   /** Present only when ok === false. Safe to return to the client verbatim. */
   error?: string;
+  /**
+   * Why it failed, so callers map to the right status without re-deriving it.
+   *
+   * 'malformed'  — not a lifecycle value at all → 400
+   * 'revocation' — a valid value the note's state refuses → 409
+   *
+   * ⚠️ Without this the route would have to re-check the input to tell the two
+   * apart, and an earlier revision did not: every failure returned 409, so a
+   * plain typo was reported as though the note's state had refused it.
+   */
+  reason?: 'malformed' | 'revocation';
   /** Present only when ok === true. */
   value?: NoteLifecycle;
 }
@@ -74,7 +85,11 @@ export function validateLifecycleTransition(
   if (next === undefined) return { ok: true };
 
   if (!isNoteLifecycle(next)) {
-    return { ok: false, error: `lifecycle must be one of: ${NOTE_LIFECYCLES.join(', ')}` };
+    return {
+      ok: false,
+      reason: 'malformed',
+      error: `lifecycle must be one of: ${NOTE_LIFECYCLES.join(', ')}`,
+    };
   }
 
   if (current === next) {
@@ -85,11 +100,13 @@ export function validateLifecycleTransition(
     return { ok: true, value: next };
   }
 
-  // completed -> draft. Refused with the reason, not a bare 400: a practitioner
-  // asking to reopen a note is asking for the correction model, and should be
-  // told it does not exist yet rather than that their request was malformed.
+  // completed -> draft. Refused with the reason, not a bare rejection: a
+  // practitioner asking to reopen a note is asking for the correction model,
+  // and should be told it does not exist yet rather than that their request
+  // was malformed.
   return {
     ok: false,
+    reason: 'revocation',
     error:
       'A completed note cannot be reopened. Correcting a completed note needs the amendment path, which does not exist yet.',
   };
@@ -133,3 +150,61 @@ export function isEditableInPlace(completionMode: unknown): boolean {
 /** Human-readable refusal for an edit attempt on a locked note. */
 export const LOCKED_NOTE_MESSAGE =
   'This note was completed and can no longer be edited.';
+
+/**
+ * Fields that carry COMPLETION AUTHORITY. A client may never set, downgrade, or
+ * revoke them.
+ *
+ * ⭐ THE GOVERNING RULE (ruled 2026-08-02):
+ *
+ *     Completion authority is established only by the explicit completion
+ *     operation. It cannot be supplied, downgraded, or revoked through the
+ *     ordinary note-update route.
+ *
+ * ⭐⭐ Why reject rather than ignore, when ignoring is already safe:
+ *
+ * The routes never read these fields, so the boundary was already unreachable
+ * by construction. But silence makes a MISLEADING CONTRACT — a client can send
+ * an authority-bearing field, receive an ordinary 200, and have no way to learn
+ * the server disregarded it. It also makes ambiguous evidence: an ignored field
+ * and a respected field look identical from the client until the row is re-read.
+ *
+ * Rejecting keeps the transition unreachable by construction AND legible at the
+ * boundary. Both, not one.
+ */
+export const COMPLETION_AUTHORITY_FIELDS = ['completion_mode', 'completed_at'] as const;
+
+/**
+ * Stable, machine-readable codes. Callers branch on these rather than on prose,
+ * so the refusals stay identifiable when wording changes.
+ *
+ * Two conditions under one rule, kept distinct because they fail differently:
+ *
+ *   not_client_settable — an authority FIELD was supplied. Never legitimate,
+ *                         independent of the note's state → 400.
+ *   not_revocable       — a well-formed lifecycle transition the note's STATE
+ *                         refuses (completed → draft) → 409.
+ *
+ * ⚠️ The status codes differ on purpose. 400 says the request was malformed;
+ * 409 says the request was fine and the note's state refused it. Collapsing
+ * them would tell a caller the wrong thing about what to change.
+ */
+export const COMPLETION_AUTHORITY_ERROR = 'completion_authority_not_client_settable';
+export const COMPLETION_REVOCATION_ERROR = 'completion_authority_not_revocable';
+
+/**
+ * Detect an attempt to supply completion authority in a request body.
+ *
+ * Presence is the test, not truthiness — `completed_at: null` is as much an
+ * attempt to set authority as a timestamp is, and is precisely the shape that
+ * would try to unlock a note.
+ */
+export function findCompletionAuthorityField(
+  body: Record<string, unknown> | null | undefined
+): string | null {
+  if (!body) return null;
+  for (const field of COMPLETION_AUTHORITY_FIELDS) {
+    if (field in body) return field;
+  }
+  return null;
+}

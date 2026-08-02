@@ -13,8 +13,12 @@
 import {
   NOTE_LIFECYCLES,
   COMPLETION_MODES,
+  COMPLETION_AUTHORITY_FIELDS,
+  COMPLETION_AUTHORITY_ERROR,
+  COMPLETION_REVOCATION_ERROR,
   isNoteLifecycle,
   isCompletionMode,
+  findCompletionAuthorityField,
   validateLifecycleCreate,
   validateLifecycleTransition,
   isEditableInPlace,
@@ -137,6 +141,59 @@ describe('completion mode', () => {
     for (const lc of NOTE_LIFECYCLES) {
       expect(isCompletionMode(lc)).toBe(false);
     }
+  });
+});
+
+describe('completion authority is not client-settable', () => {
+  it('names exactly the two authority-bearing fields', () => {
+    expect(COMPLETION_AUTHORITY_FIELDS).toEqual(['completion_mode', 'completed_at']);
+  });
+
+  it('detects each one', () => {
+    expect(findCompletionAuthorityField({ completion_mode: 'backfilled' })).toBe('completion_mode');
+    expect(findCompletionAuthorityField({ completed_at: '2026-08-02T00:00:00Z' })).toBe('completed_at');
+  });
+
+  it('detects PRESENCE, not truthiness', () => {
+    // ⭐ The critical case. `completed_at: null` is the exact shape an attempt to
+    // unlock a note would take — a falsy value that a `if (body.completed_at)`
+    // check would wave straight through.
+    expect(findCompletionAuthorityField({ completed_at: null })).toBe('completed_at');
+    expect(findCompletionAuthorityField({ completion_mode: null })).toBe('completion_mode');
+    expect(findCompletionAuthorityField({ completed_at: undefined })).toBe('completed_at');
+    expect(findCompletionAuthorityField({ completion_mode: '' })).toBe('completion_mode');
+  });
+
+  it('leaves ordinary update bodies alone', () => {
+    expect(findCompletionAuthorityField({ content: 'x', note_date: '2026-08-02' })).toBeNull();
+    expect(findCompletionAuthorityField({ lifecycle: 'completed' })).toBeNull();
+    expect(findCompletionAuthorityField({ status: 'alive' })).toBeNull();
+    expect(findCompletionAuthorityField({})).toBeNull();
+    expect(findCompletionAuthorityField(null)).toBeNull();
+    expect(findCompletionAuthorityField(undefined)).toBeNull();
+  });
+
+  it('exposes stable codes that do not collide', () => {
+    // Callers branch on these; if they ever became equal, a malformed request
+    // and a refused state transition would be indistinguishable downstream.
+    expect(COMPLETION_AUTHORITY_ERROR).toBe('completion_authority_not_client_settable');
+    expect(COMPLETION_REVOCATION_ERROR).toBe('completion_authority_not_revocable');
+    expect(COMPLETION_AUTHORITY_ERROR).not.toBe(COMPLETION_REVOCATION_ERROR);
+  });
+});
+
+describe('lifecycle transition failure reasons', () => {
+  it('separates a malformed value from a refused transition', () => {
+    // These map to different HTTP statuses. An earlier revision returned 409 for
+    // both, so a plain typo was reported as though the note's state had refused
+    // it — telling the caller the wrong thing about what to change.
+    expect(validateLifecycleTransition('draft', 'archived').reason).toBe('malformed');
+    expect(validateLifecycleTransition('completed', 'draft').reason).toBe('revocation');
+  });
+
+  it('carries no reason when it succeeds', () => {
+    expect(validateLifecycleTransition('draft', 'completed').reason).toBeUndefined();
+    expect(validateLifecycleTransition('draft', undefined).reason).toBeUndefined();
   });
 });
 

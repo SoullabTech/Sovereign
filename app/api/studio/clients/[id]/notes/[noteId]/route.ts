@@ -25,7 +25,10 @@ import { validateStatusUpdate } from '@/lib/studio/continuityKind';
 import {
   validateLifecycleTransition,
   isEditableInPlace,
+  findCompletionAuthorityField,
   LOCKED_NOTE_MESSAGE,
+  COMPLETION_AUTHORITY_ERROR,
+  COMPLETION_REVOCATION_ERROR,
   type NoteLifecycle,
 } from '@/lib/studio/noteLifecycle';
 
@@ -86,6 +89,24 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       );
     }
 
+    // Completion authority is NOT client-settable — refused before anything is
+    // read or written, so a rejected request cannot have partially applied.
+    //
+    // These fields were already inert (nothing below reads them), but silence
+    // made a misleading contract: a client could send authority and receive an
+    // ordinary 200 with no way to learn it was disregarded. Rejecting keeps the
+    // transition unreachable by construction AND legible at the boundary.
+    const authorityField = findCompletionAuthorityField(body);
+    if (authorityField) {
+      return NextResponse.json(
+        {
+          error: COMPLETION_AUTHORITY_ERROR,
+          message: `${authorityField} is set by completing the note, not by updating it.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Same guard as POST: note_date reaches `$3::date`, so an invalid value would
     // otherwise surface as a 500 rather than a rejected request.
     if (noteDate !== undefined && noteDate !== null && !isValidNoteDate(noteDate)) {
@@ -130,9 +151,20 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       }
     }
 
+    // Revoking completion is the third face of the same rule. It stays 409
+    // rather than 400: the request is well-formed and the practitioner is
+    // authorised — the note's STATE is what refuses it.
     const lifecycleCheck = validateLifecycleTransition(currentLifecycle, lifecycle);
     if (!lifecycleCheck.ok) {
-      return NextResponse.json({ error: lifecycleCheck.error }, { status: 409 });
+      // A typo and a refused transition are different failures. 400 says the
+      // request was malformed; 409 says it was fine and the note's state
+      // refused it — the third face of the completion-authority rule.
+      return lifecycleCheck.reason === 'revocation'
+        ? NextResponse.json(
+            { error: COMPLETION_REVOCATION_ERROR, message: lifecycleCheck.error },
+            { status: 409 }
+          )
+        : NextResponse.json({ error: lifecycleCheck.error }, { status: 400 });
     }
     const completing = currentLifecycle === 'draft' && lifecycleCheck.value === 'completed';
 

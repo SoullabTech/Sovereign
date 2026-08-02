@@ -24,7 +24,11 @@ import {
 } from '@/lib/security/phiAccessors/practitionerClientNotes';
 import { isValidNoteDate } from '@/lib/studio/noteDate';
 import { validateContinuityCreate, isUuid } from '@/lib/studio/continuityKind';
-import { validateLifecycleCreate } from '@/lib/studio/noteLifecycle';
+import {
+  validateLifecycleCreate,
+  findCompletionAuthorityField,
+  COMPLETION_AUTHORITY_ERROR,
+} from '@/lib/studio/noteLifecycle';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -123,6 +127,20 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     const body = await request.json();
     const { content, note_date: noteDate, lifecycle, session_id: sessionId } = body ?? {};
+
+    // Completion authority is not client-settable at CREATE either. The server
+    // derives completion_mode and completed_at from lifecycle and kind; a note
+    // is never born carrying an authority its author did not perform.
+    const authorityField = findCompletionAuthorityField(body);
+    if (authorityField) {
+      return NextResponse.json(
+        {
+          error: COMPLETION_AUTHORITY_ERROR,
+          message: `${authorityField} is derived from completing the note, not supplied when creating it.`,
+        },
+        { status: 400 }
+      );
+    }
 
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
       return NextResponse.json({ error: 'content is required' }, { status: 400 });
