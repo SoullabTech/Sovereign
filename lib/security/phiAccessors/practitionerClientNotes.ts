@@ -54,6 +54,19 @@ export const COMMITMENT_STATUSES: readonly CommitmentStatus[] = [
   'released',
 ] as const;
 
+/**
+ * Note lifecycle. INDEPENDENT of CommitmentStatus — both vocabularies contain
+ * "completed" and they answer different questions. See lib/studio/noteLifecycle.ts.
+ */
+export type NoteLifecycle = 'draft' | 'completed';
+
+/**
+ * Completion authority. `practitioner_declared` is the only value that locks a
+ * note; `backfilled` rows were marked complete on the author's behalf and stay
+ * editable. Never inferred from `completed_at`.
+ */
+export type CompletionMode = 'backfilled' | 'practitioner_declared';
+
 /** Raw DB row shape (ciphertext columns present, no plaintext sibling). */
 export interface ClientNoteRow {
   id: string;
@@ -67,6 +80,11 @@ export interface ClientNoteRow {
   kind?: ClientNoteKind;
   status?: CommitmentStatus | null;
   promoted_from?: string | null;
+  lifecycle?: NoteLifecycle;
+  completion_mode?: CompletionMode | null;
+  completed_at?: string | Date | null;
+  version?: number;
+  session_id?: string | null;
 }
 
 /**
@@ -86,6 +104,15 @@ export interface ClientNote {
   kind: ClientNoteKind;
   status: CommitmentStatus | null;
   promotedFrom: string | null;
+  /** draft | completed. NOT the same axis as `status`. */
+  lifecycle: NoteLifecycle;
+  /** Completion authority — the ONLY field the edit lock reads. */
+  completionMode: CompletionMode | null;
+  /** When a practitioner declared completion. Provenance; carries no policy. */
+  completedAt: string | null;
+  /** Optimistic concurrency token — echo it back as expected_version. */
+  version: number;
+  sessionId: string | null;
 }
 
 function buildContext(ctx: ClientNotePHIContext): PHIContext {
@@ -164,6 +191,16 @@ export function decryptClientNoteRow(row: ClientNoteRow): ClientNote | null {
     kind: row.kind ?? 'note',
     status: row.status ?? null,
     promotedFrom: row.promoted_from ?? null,
+    // 'completed' matches the migration's backfill: a row without a lifecycle
+    // predates the axis and was written as a finished note, never a draft.
+    lifecycle: row.lifecycle ?? 'completed',
+    // A row from before this column existed was never explicitly declared
+    // complete, so it reads as 'backfilled' — the same warrant the migration
+    // gives it. See isEditableInPlace().
+    completionMode: row.completion_mode ?? (row.lifecycle === 'draft' ? null : 'backfilled'),
+    completedAt: row.completed_at ? toIsoDate(row.completed_at) : null,
+    version: row.version ?? 1,
+    sessionId: row.session_id ?? null,
   };
 }
 
