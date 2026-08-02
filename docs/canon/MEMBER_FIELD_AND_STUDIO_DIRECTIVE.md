@@ -28,7 +28,16 @@ particularly:
 1. ⏸️ **Before a second Shelf source ships** — object type and provenance must remain **visibly
    distinct**.
 2. ⏸️ **Before member graduation ships** — the current flatten-and-copy behaviour must be replaced
-   with a **member-authored relationship between selected Field references and an expression**.
+   with **an explicit member-authored relationship between selected Project References and an
+   Expression**.
+
+   ⛔ **Graduation must not flatten, concatenate, copy, or consume the referenced Field Objects as
+   if they were manuscript text.**
+
+   *Disambiguated 2026-08-02 (Kelly) using the ontology established by Amendment 4 — **not a new
+   ruling.** The gate as originally ratified read "a member-authored relationship between selected
+   Field references and an expression," written before `Project Reference` and `Expression` were
+   named objects. The requirement is unchanged; only its referents are now precise.*
 
 ### Ratified architecture
 
@@ -536,5 +545,10 @@ capability is exposed to members.** Today there is no member exposure: `canGradu
 member surface and `drafts/from-group` returns 403 to a non-founder, verified in the walk. The marking
 belongs to whichever lane first exposes graduation, not to this one.
 
-> A future pile-to-writing act should **open a writing relationship with the selected references**, not
-> silently copy them into prose.
+> A future pile-to-writing act should **open a writing relationship with the selected Project
+> References**, not silently copy them into prose.
+
+⛔ **Graduation must not flatten, concatenate, copy, or consume the referenced Field Objects as if
+they were manuscript text.** `graduate.ts` is therefore **formally superseded for any future member
+path.** It needs no removal today — it remains founder-gated and unreachable to members — but **no
+lane may expose it without first replacing its flatten-and-copy semantics.**
