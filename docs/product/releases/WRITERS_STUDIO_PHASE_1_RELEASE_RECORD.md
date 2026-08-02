@@ -1,6 +1,6 @@
 # Release Record — Writer's Studio Phase 1
 
-> **Status: INCOMPLETE — the release has not happened.** Every blank below is blank because the
+> **Status: INCOMPLETE — §1, §3b, §6 and §7 are unfilled. The release has not happened.** Every blank below is blank because the
 > evidence does not exist yet. **Do not fill a slot to make the document look finished.**
 >
 > Structure is fixed by [`RELEASE_RECORD_TEMPLATE.md`](./RELEASE_RECORD_TEMPLATE.md) — seven
@@ -8,7 +8,7 @@
 > [`../WRITERS_STUDIO_PHASE_1_CHARTER.md`](../WRITERS_STUDIO_PHASE_1_CHARTER.md).
 > Completed **at** deployment. §6 is Kelly's to sign.
 
-**Last verified against the repository:** 2026-08-02, trunk `099de7aae`.
+**Last verified against the repository:** 2026-08-02, trunk `9e1611306` (composition complete).
 
 ---
 
@@ -33,14 +33,18 @@ quick `deploy-maia` path is **not** sufficient — it runs no migrations.
 | #875 | Start writing — begin from a declared work without importing or naming (1B) | **MERGED** |
 | #877 | Member Workbench — arrange Keeps on a private table | **MERGED** |
 | #878 | Arrangement verbs — move, reorder, duplicate, return to Shelf | **MERGED** 2026-08-02 03:06:49Z |
-| #879 | Walk probes — read-only atom-immutability and MAIA-silence checks | OPEN |
-| #880 | Post-merge corrections — C1 race coverage, C2 nullable title | OPEN |
-| #876 | Phase 1 Charter + this record (governance; may or may not ride the release) | OPEN |
+| #879 | Walk probes — read-only atom-immutability and MAIA-silence checks | **MERGED** 2026-08-02 12:05:16Z |
+| #880 | Post-merge corrections — C1 race coverage, C2 nullable title | **MERGED** 2026-08-02 12:33:43Z |
+| #876 | Phase 1 Charter + this record (governance) | **MERGED** 2026-08-02 12:21:55Z |
 | [#863](https://github.com/SoullabTech/Sovereign/issues/863) | Canonical typecheck red — external blocker | OPEN |
 
-⚠️ **#880 is not on trunk.** Verified by ancestry, not by badge:
-`git merge-base --is-ancestor 4068f9a93 origin/clean-main-no-secrets` → **not an ancestor**.
-While it remains unmerged the release object contains residues R3 and R4.
+✅ **Composition complete as of 2026-08-02.** Every component verified on trunk `9e1611306` by
+ancestry, not by badge — `git merge-base --is-ancestor 4068f9a93 origin/clean-main-no-secrets`
+→ **is an ancestor**, and the C1/C2 files are present in the tree. Residues R3 and R4 close
+with it.
+
+⚠️ #863 remains open and is deliberately listed: it is pre-existing debt carried by the
+release, not a component of it. See R5.
 
 ## 3. Acceptance evidence
 
@@ -48,15 +52,32 @@ While it remains unmerged the release object contains residues R3 and R4.
 
 ### 3a. Automated
 
+**Observed 2026-08-02 against trunk `9e1611306`** — the assembled candidate, after all of
+§2 merged. Environment: isolated worktree, **`npm ci` from the lockfile** (not a shared
+`node_modules` — see R6 and the note below).
+
 | Check | Required | Result |
 |---|---|---|
-| `app/press` suite | 61/61 | *(blank)* |
-| blank-route suite (arrives with #880) | 12/12 | *(blank)* |
-| render-route suite (arrives with #880) | 7/7 | *(blank)* |
-| workbench suites (#877, #878) | *(to be stated)* | *(blank)* |
-| **clean-install DOM gate** — `npm ci && npx jest --config jest.dom.config.js` | WriterField DOM suite runs and passes | *(blank — currently cannot run, R6)* |
-| `npm run typecheck` (no-regression gate) | no new diagnostic vs baseline | *(blank)* |
-| Co-Lab boundary gate, in production | `31 passed · 0 failed · 0 warned` | *(blank)* |
+| `app/press` suite | 61/61 | ✅ **61/61** |
+| blank-route suite (#880) | 12/12 | ✅ **12/12** |
+| render-route suite (#880) | 7/7 | ✅ **7/7** |
+| workbench suites (#877, #878) | all pass | ✅ **94/94** |
+| combined node-environment sweep | all pass | ✅ **270/270**, 19 suites |
+| **clean-install DOM gate** — `npm ci && npx jest --config jest.dom.config.js` | WriterField DOM suite runs and passes | ✅ **10/10** — R6 CLEARED |
+| `npm run typecheck` (no-regression gate) | no new diagnostic vs baseline | ✅ **239 = baseline 239** |
+| Co-Lab boundary gate, in production | `31 passed · 0 failed · 0 warned` | *(blank — requires the deployed container; measuring it now would measure the OLD build, not this candidate)* |
+
+### ⚠️ The environment is part of the measurement
+
+The same commit gives **opposite answers** depending on how dependencies were installed:
+
+| Environment | `npm run typecheck` |
+|---|---|
+| shared `node_modules` (missing `@codemirror/*`) | **FAILS** — 4 *new* diagnostics, all `TS2307: Cannot find module '@codemirror/…'` in `WriterField.tsx` |
+| clean `npm ci` from the lockfile | **PASSES** — 239 = baseline 239 |
+
+⭐ **The lockfile is the referent.** A gate result measured against a shared or drifted
+`node_modules` is a measurement of that directory, not of the release candidate.
 
 ⚠️ The **lockfile is the referent** for the DOM gate — not whatever exists in a shared
 `node_modules`. ⛔ Do not run `npm install` in the shared checkout while other sessions are
@@ -101,7 +122,7 @@ it."*
 
 | Reviewer | Scope reviewed | Disposition |
 |---|---|---|
-| Claude | #875 against Phase 1B acceptance (13 criteria) | *additive correction required* — C1, C2; delivered as #880 |
+| Claude | #875 against Phase 1B acceptance (13 criteria) | *additive correction required* — C1, C2; delivered as #880, **merged** |
 | *(blank)* | #878 | *(blank)* |
 | *(blank)* | #879 | *(blank)* |
 | *(blank)* | #880 | *(blank)* |
@@ -112,10 +133,10 @@ it."*
 |---|---|---|---|
 | R1 | **Scroll restoration is inert.** `.cm-scroller` has `overflow: visible`, so `scrollTop` is structurally 0; the real scroll owner is the `<main>` ancestor. | #869 | Pre-existing — the textarea had the same property, so this never worked. Repair needs the scrolling container's coordinates, not an editor property. A separate spatial-continuity defect. |
 | R2 | **Keep removal appears inert in the UI** (observed after two clicks; one local fixture Keep remained). | #869 | Named in #869 as its own narrow defect, deliberately not repaired there. |
-| R3 | **`title = NULL` can reach the book renderer as the literal `"null"`** — in `--metadata title=`, in `<title>`, and in the download filename. | #875 migration | Unreachable today *only by accident*: unnamed ⇒ `member_written` ⇒ zero `manuscript_sections` ⇒ the route's earlier 400. **Repaired by #880** — a residue only while #880 is unmerged. |
-| R4 | **The blank-page creation race has no automated coverage on trunk.** | #875 | The race was *observed* and fixed, but its guard is unprotected against regression. **Repaired by #880** — a residue only while #880 is unmerged. |
-| R5 | **Canonical typecheck is red** — `detectRelationalSignal` keyword map missing 5 `RelationshipTone` entries. | #863, OPEN | Pre-existing and external to this lane; reproduces with every Phase 1 slice removed. ⛔ #875's own stated gate was *do not merge until canonical is green*; that gate did not hold. **Unresolved.** |
-| R6 | **#869's jsdom suite cannot run** — `@codemirror/*` absent from the shared `node_modules`; `jest -c jest.dom.config.js` → 0 tests, resolve failure. | environment | Not a code defect. ⛔ **Blocks the release until cleared** — see §3a. |
+| R3 | ~~`title = NULL` reaching the book renderer as the literal `"null"`~~ | #875 migration | **CLOSED 2026-08-02** — #880 merged; `title = ms.rows[0].title ?? UNTITLED_EXPRESSION` verified present on trunk `9e1611306`. |
+| R4 | ~~The blank-page creation race has no automated coverage~~ | #875 | **CLOSED 2026-08-02** — #880 merged; blank-route suite 12/12 on trunk, with a 5-case mutation matrix. |
+| R5 | **#863 remains open**, but it is **not a gate failure.** | #863, OPEN | ⚠️ **Restated 2026-08-02.** The two `detectRelationalSignal` diagnostics still exist and are visible in `npm run typecheck:full` — but they sit **inside the 239-error baseline**, so they cannot fail the no-regression gate, which passes. The "canonical typecheck red" cited on #875 as its merge blocker reproduces **only in an environment missing `@codemirror/*`**, where the failure is 4 `TS2307` diagnostics in `WriterField.tsx` — i.e. R6, misattributed. #863 is real pre-existing debt and stays open; it is **not** a Phase 1 release blocker. |
+| R6 | ~~#869's jsdom suite cannot run — `@codemirror/*` absent~~ | environment | **CLOSED 2026-08-02** — `npm ci` from the lockfile installs them; DOM suite runs **10/10**. The gap was the shared `node_modules`, never the lockfile. ⛔ Standing rule: gates are measured from a clean install, and `npm install` is not run in a shared checkout while other sessions are active. |
 
 ## 5. Deferred work
 
@@ -128,6 +149,7 @@ it."*
 - **Graduation into drafts, uploads, and the Ideas / Journals / Decisions sources** — each
   deferred by the Workbench slice for its own stated reason.
 - **R1 and R2** — carried forward, not repaired.
+- **#863** — pre-existing typecheck debt, not a Phase 1 blocker (R5).
 - Any **judgment, clustering, ordering, naming, or suggestion by MAIA** inside the Canvas. The
   room stays silent.
 
