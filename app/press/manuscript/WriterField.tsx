@@ -73,6 +73,14 @@ interface WriterFieldProps {
   fontSize?: string;
   caretColor?: string;
   ariaLabel?: string;
+  /**
+   * Height the editable area occupies even when the document is empty, as a
+   * CSS length. Without this the contenteditable is exactly as tall as its
+   * content — one line on a blank draft — so a click anywhere in the blank
+   * writing area lands on the surrounding page and focuses nothing. Setting it
+   * makes the field the thing the writer is actually clicking.
+   */
+  minHeight?: string;
 }
 
 const WriterField = forwardRef<WriterFieldHandle, WriterFieldProps>(function WriterField(
@@ -87,6 +95,7 @@ const WriterField = forwardRef<WriterFieldHandle, WriterFieldProps>(function Wri
     fontSize,
     caretColor,
     ariaLabel = 'Working draft',
+    minHeight,
   },
   ref
 ) {
@@ -192,6 +201,13 @@ const WriterField = forwardRef<WriterFieldHandle, WriterFieldProps>(function Wri
           lineHeight: '1.75',
           padding: '0',
           caretColor: caretColor ?? 'currentColor',
+          // The editable area, not the page around it, is what the writer aims
+          // at. A blank draft is one line tall; without this the whole blank
+          // field is a click target that focuses nothing, and writing is only
+          // reachable through a programmatic focus() the writer does not have.
+          // CodeMirror maps a click in this space to the nearest line, so the
+          // caret lands correctly rather than merely focusing.
+          ...(minHeight ? { minHeight } : {}),
         },
         '.cm-line': { padding: '0' },
         // The page grows with the writing. No inner scrollbar: the browser owns
