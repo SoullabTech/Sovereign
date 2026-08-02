@@ -47,6 +47,22 @@ Expression                  prose, course, talk, book, or another formed work
 offering is to be thought about. This is a **constitutional** directive, not a feature spec: every
 implementation must grow from it.
 
+### ⏳ Pending addition — References (not ratified)
+
+Raised by Kelly **after** this ratification and therefore **not covered by it**: a project develops a
+persisting **constellation of references** into the Member Field — *"these have mattered to this
+work"* — distinct from where a card currently sits on a table. Proposed as the connective tissue
+between the Member Field and the Project Development Record.
+
+Recorded in full, with its implementation consequences, at
+`docs/architecture/FIELD_OBJECTS_AND_PROJECTIONS_2026-08-02.md` §*Post-ratification addition*. It
+awaits its own ruling; the ratified text above stands unchanged.
+
+⚠️ It also states the standard for contextual retrieval more sharply than the ratified text does:
+retrieval means *"while working on this project, these parts of your Field may be worth revisiting"* —
+**never** *"here are things to insert into your manuscript."* The first restores memory; the second
+performs writing.
+
 ---
 
 ## Constitutional principle

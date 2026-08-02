@@ -354,6 +354,90 @@ replacing it.
 ⛔ No rename is authorized here. `Workbench` is load-bearing across routes, components, a migration,
 two test suites and an open PR; renaming it is a separate decision with its own blast radius.
 
+## Post-ratification addition — References as the connective tissue (Kelly, 2026-08-02)
+
+⚠️ **Recorded AFTER the directive was ratified.** Not covered by the 2026-08-02 ratification. The
+ratified text stands unchanged; this is a candidate object awaiting its own ruling.
+
+### What the ratification separated
+
+Three kinds of knowledge that had begun to blur:
+
+| | Belongs to | Example |
+| --- | --- | --- |
+| **Member Field** | the person | Keeps, Ideas, Decisions, Changes, Journal insights, breakthroughs |
+| **Project Development** | the work | *"Chapter 2 still feels abstract."* · *"The central tension seems to be shifting."* · *"The order between Parts II and III isn't working."* |
+| **Expression** | the text | pages · chapters · paragraphs · sentences |
+
+⭐ A single Keep may matter to three books, a workshop, a coaching client, and a conversation six
+years from now. **Nothing about using it should consume it.**
+
+⭐⭐ **Writing is downstream of thinking, not the container for thinking.** Only at Expression does
+writing begin.
+
+### What this settles about contextual retrieval
+
+Contextual retrieval must **not** mean *"here are things to insert into your manuscript."* It means:
+
+> **"While working on this project, these parts of your Field may be worth revisiting."**
+
+Different acts. **The first performs writing. The second restores memory.**
+
+That is how people actually work: *"Didn't I journal about this last year?"* · *"I made a decision
+about this somewhere."* · *"I had an insight during that coaching session."* **The Studio's role is to
+shorten the distance back to those memories — not to decide they belong in the chapter.**
+
+### The new object: References
+
+A project gradually develops **its own constellation of references into the Member Field.** Not
+copies. Not inserts. Not links in the web sense.
+
+```
+Book: Elemental Alchemy
+References
+  • Keep #148   • Journal 2026-04-18   • Decision #22   • Change #17   • Idea #94
+```
+
+**Those references persist.** The underlying Field Objects continue to evolve independently. The
+project simply knows: **"These have mattered to this work."**
+
+This is the **missing connective tissue** between the Member Field and Project Development, and it
+makes contextual retrieval richer over time: show what you have referenced before · what is adjacent
+to those · newly created Field Objects that appear relevant — **while never collapsing the distinction
+between the member's field, the project's development, and the manuscript.**
+
+⭐ It is also what lets the Studio be broader than a book tool: the same structure serves a course, a
+keynote, a coaching methodology, a business, or a life question. **The work changes; the Field
+remains the enduring source.**
+
+### ⚠️ What this reveals about the current implementation
+
+**A placement and a reference are different objects with different lifetimes, and today placement is
+doing both jobs.**
+
+| | Says | Lifetime |
+| --- | --- | --- |
+| **Placement** (`workbench_tables.layout`) | *where this sits on the table right now* | dies when the member rearranges |
+| **Reference** (does not exist) | *this has mattered to this work* | persists past any arrangement |
+
+Consequence, concrete and checkable: **`Return to Shelf` currently erases the only trace.** When a
+member takes a card off the table, the project retains no memory that the object ever mattered to it.
+Under this addition it would drop the *placement* while the *reference* persists.
+
+⭐ This extends, rather than contradicts, the identity distinction Slice 1 already implements. There
+would be **three** identities, not two:
+
+```
+field object   — the thing itself, in the member's Field   (member_memory_atoms.id)
+reference      — "this mattered to this work"              (does not exist yet)
+placement      — "and right now it sits here"              (CardPointer.id) ✅ implemented
+```
+
+⛔ Nothing here is authorized. Notably unsettled before anything could be built: whether a reference
+is created by the first placement or by a distinct member act; whether removing the last placement
+should offer to keep the reference; and whether references belong to the Project or to the Project
+Development Record.
+
 ---
 
 ## Refused by default
