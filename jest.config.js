@@ -1,7 +1,15 @@
+const os = require('os');
+const path = require('path');
+
 /** @type {import('jest').Config} */
 const config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  // Pin the cache outside the repo. Jest's default is os.tmpdir()/jest_<uid-base36>,
+  // which is normally out-of-tree — but if TMPDIR is unset or relative it can resolve
+  // into the working tree, and the resulting jest_dx/ cache files have been committed
+  // on several branches (see .gitignore). An absolute path makes that impossible.
+  cacheDirectory: path.join(os.tmpdir(), 'maia-jest-cache'),
   roots: ['<rootDir>'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
   moduleNameMapper: {
