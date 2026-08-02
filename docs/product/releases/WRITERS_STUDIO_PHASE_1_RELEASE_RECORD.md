@@ -1,7 +1,8 @@
 # Release Record — Writer's Studio Phase 1
 
-> **Status: RELEASE WALK FAILED (2026-08-02). Phase 1 is NOT ready for founder acceptance or deployment.** §1, §6 and §7 remain unfilled; §3b is filled and records a failure at W8. Every blank below is blank because the
-> evidence does not exist yet. **Do not fill a slot to make the document look finished.**
+> **Status: RELEASE WALK FAILED (2026-08-02). Phase 1 is NOT ready for founder acceptance or deployment.** §1, §6 and §7 remain unfilled; §3a and §3b are filled from observation, and §3b records a
+> **failure at W8**. Every remaining blank is blank because that evidence does not exist.
+> **Do not fill a slot to make the document look finished.**
 >
 > Structure is fixed by [`RELEASE_RECORD_TEMPLATE.md`](./RELEASE_RECORD_TEMPLATE.md) — seven
 > sections, same order, every release. Governed by
