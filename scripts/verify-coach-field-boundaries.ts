@@ -10,7 +10,10 @@
  *
  * Fixtures are tagged and deleted at the end; the run asserts none survive.
  *
- * Covers founder-required integration evidence 4-10 and 12.
+ * Covers founder-required integration evidence 1, 4-8, 11-12 on a STRUCTURAL-ONLY
+ * foundation. Evidence 9 (note publication) and 10b-e (position-share snapshots) are
+ * proven in the encrypted-content lane, where those tables actually land — asserting
+ * them here would require shipping client expression in plaintext.
  */
 
 import { query, transaction, closePool } from '@/lib/db/postgres';
@@ -61,8 +64,6 @@ async function clearFixtures() {
     // one place that legitimately needs to undo its own fixtures, so it suspends the
     // triggers explicitly and locally. Nothing in the application may do this.
     await c.query(`ALTER TABLE coach_enrollment_stage_history DISABLE TRIGGER coach_stage_history_immutable`);
-    await c.query(`ALTER TABLE coach_note_publications DISABLE TRIGGER coach_note_publication_append_only`);
-    await c.query(`ALTER TABLE coach_position_shares DISABLE TRIGGER coach_position_shares_append_only`);
     await c.query(`DELETE FROM coach_client_processes WHERE relationship_id IN
       (SELECT id FROM practitioner_clients WHERE email LIKE $1)`, [`${TAG}-%`]);
     await c.query(`DELETE FROM client_invites WHERE code_hash LIKE $1`, [`${TAG}-%`]);
@@ -72,8 +73,6 @@ async function clearFixtures() {
     await c.query(`DELETE FROM practitioners WHERE slug LIKE $1`, [`${TAG}-%`]);
     await c.query(`DELETE FROM members WHERE username LIKE $1`, [`${TAG}-%`]);
     await c.query(`ALTER TABLE coach_enrollment_stage_history ENABLE TRIGGER coach_stage_history_immutable`);
-    await c.query(`ALTER TABLE coach_note_publications ENABLE TRIGGER coach_note_publication_append_only`);
-    await c.query(`ALTER TABLE coach_position_shares ENABLE TRIGGER coach_position_shares_append_only`);
   });
 }
 
@@ -120,14 +119,56 @@ async function main() {
       WHERE t.table_schema='public' AND t.table_name LIKE 'coach\\_%'
         AND t.table_name <> ALL($1)
         AND t.table_name NOT IN ('coach_program_definitions','coach_program_stages','coach_cohorts',
-                                 'coach_program_enrollments','coach_enrollment_stage_history',
-                                 'coach_current_focus','coach_work_item_history')
+                                 'coach_program_enrollments','coach_enrollment_stage_history')
         AND NOT EXISTS (SELECT 1 FROM information_schema.columns c
                          WHERE c.table_name = t.table_name AND c.column_name = 'relationship_id')`,
     [PERSON_OWNED]);
   expect('1b every record of the work is reached through a relationship',
     workTables.length === 0,
     `missing relationship_id: ${workTables.map((r: any) => r.table_name).join(', ')}`);
+
+  // ── 1c/1d  the foundation carries no plaintext human expression ──────────
+  // Founder merge ruling, option A. Structural privacy is not encryption at rest, so a
+  // content-bearing column in THIS migration would be plaintext in backups, logs, exports
+  // and to any DBA. These two assertions are what make "structural-only" checkable rather
+  // than merely claimed — a later migration that adds a free-text field here fails the gate.
+  console.log('\n1c the foundation carries no plaintext human expression');
+  const CATALOGUE_TEXT = [
+    // metadata a practitioner writes about their OWN offering — not about a person
+    'coach_program_definitions.title', 'coach_program_definitions.description',
+    'coach_program_stages.label', 'coach_program_stages.description',
+    'coach_cohorts.title',
+    // an opaque third-party identifier, not prose
+    'coach_sessions.external_calendar_event_id',
+  ];
+  const { rows: freeText } = await query(
+    `SELECT c.table_name||'.'||c.column_name AS col
+       FROM information_schema.columns c
+       JOIN information_schema.tables t
+         ON t.table_name = c.table_name AND t.table_schema = c.table_schema
+      WHERE c.table_schema='public' AND c.table_name LIKE 'coach\\_%'
+        AND c.data_type IN ('text','character varying','jsonb','json')
+        AND c.column_name NOT LIKE '%\\_id'
+        AND c.column_name NOT IN ('kind','state','status','mode','visibility','purpose',
+                                  'authored_by','stated_by','share_origin','origin','source',
+                                  'originated_by_role','external_calendar_source','field_changed')
+        AND c.table_name||'.'||c.column_name <> ALL($1)`, [CATALOGUE_TEXT]);
+  expect('1c no content-bearing column outside the named catalogue exceptions',
+    freeText.length === 0,
+    `plaintext expression would be stored in: ${freeText.map((r: any) => r.col).join(', ')}`);
+
+  const DEFERRED = [
+    'coach_authored_notes', 'coach_note_publications', 'coach_note_publication_events',
+    'coach_client_personal_notes', 'coach_client_shared_items', 'coach_position_shares',
+    'coach_current_focus', 'coach_work_items', 'coach_work_item_history',
+    'coach_important_dates', 'coach_resource_recommendations', 'coach_follow_ups',
+  ];
+  const { rows: present } = await query(
+    `SELECT table_name FROM information_schema.tables
+      WHERE table_schema='public' AND table_name = ANY($1)`, [DEFERRED]);
+  expect('1d content-bearing tables are deferred to the encrypted lane, not shipped here',
+    present.length === 0,
+    `these exist unencrypted: ${present.map((r: any) => r.table_name).join(', ')}`);
 
   // ── 8  identity translation is explicit ───────────────────────────────────
   console.log('\n8  practitioner identity translation');
@@ -240,127 +281,49 @@ async function main() {
   expect('7b it is NOT auto-linkable', q[0]?.auto_linkable === false, String(q[0]?.auto_linkable));
   expect('7c it was left unlinked for a human', q[0]?.member_id === null, String(q[0]?.member_id));
 
-  // ── 9  note publication boundaries ───────────────────────────────────────
-  console.log('\n9  private note / publication boundary');
+  // ── 9 / 10 / 12  boundaries whose tables are DEFERRED ────────────────────
+  // Note publication (9), position-share snapshots (10b-e) and work-item provenance
+  // (12b-d) are proven where their tables actually land: the encrypted-content lane.
+  // Asserting them here would require shipping those tables in plaintext, which is
+  // precisely what the merge ruling refused. Their designs and constraints are settled
+  // and recorded in the evidence document; they are sequenced, not abandoned.
+  //
+  // What CAN be proven on a structural-only foundation is proven here.
+
+  const { rows: prog } = await query(
+    `INSERT INTO coach_program_definitions (owner_practitioner_id, title, kind)
+     VALUES ($1,'Gate Program','coaching') RETURNING id`, [practRecord]);
   const { rows: proc } = await query(
-    `INSERT INTO coach_client_processes (relationship_id, title) VALUES ($1,'Process') RETURNING id`,
-    [pending.relationshipId]);
-  const { rows: note } = await query(
-    `INSERT INTO coach_authored_notes (relationship_id, process_id, author_practitioner_id, body, purpose)
-     VALUES ($1,$2,$3,'private thinking','private_observation') RETURNING id`,
-    [pending.relationshipId, proc[0].id, practRecord]);
+    `INSERT INTO coach_client_processes (relationship_id, program_definition_id)
+     VALUES ($1,$2) RETURNING id`, [pending.relationshipId, prog[0].id]);
 
-  const { rows: noteCols } = await query(
-    `SELECT column_name FROM information_schema.columns
-      WHERE table_name='coach_authored_notes' AND column_name IN ('visibility','published_at')`);
-  expect('9a the source note has NO visibility or published flag to toggle',
-    noteCols.length === 0, `found ${noteCols.map((c: any) => c.column_name).join(',')}`);
-
-  const { rows: pub } = await query(
-    `INSERT INTO coach_note_publications
-       (source_note_id, relationship_id, published_by_practitioner_id, published_body_snapshot)
-     VALUES ($1,$2,$3,'what the client received') RETURNING id`,
-    [note[0].id, pending.relationshipId, practRecord]);
-
-  await query(`UPDATE coach_authored_notes SET body='the practitioner kept thinking' WHERE id=$1`,
-    [note[0].id]);
-  const { rows: snap } = await query(
-    `SELECT published_body_snapshot FROM coach_note_publications WHERE id=$1`, [pub[0].id]);
-  expect('9b editing the private source does NOT alter what was published',
-    snap[0].published_body_snapshot === 'what the client received', snap[0].published_body_snapshot);
-
-  await mustRefuse('9c the published snapshot cannot be rewritten', /append-only/,
-    () => query(`UPDATE coach_note_publications SET published_body_snapshot='rewritten' WHERE id=$1`,
-      [pub[0].id]));
-  await mustRefuse('9d a publication cannot be deleted', /append-only/,
-    () => query(`DELETE FROM coach_note_publications WHERE id=$1`, [pub[0].id]));
-
-  await query(`UPDATE coach_note_publications SET withdrawn_at=NOW() WHERE id=$1`, [pub[0].id]);
-  const { rows: withdrawn } = await query(
-    `SELECT withdrawn_at, published_at FROM coach_note_publications WHERE id=$1`, [pub[0].id]);
-  expect('9e withdrawal preserves the fact that publication happened',
-    withdrawn[0].withdrawn_at !== null && withdrawn[0].published_at !== null, JSON.stringify(withdrawn[0]));
-
-  // ── 10  client-declared position sharing ─────────────────────────────────
-  console.log('\n10 client position sharing');
+  console.log('\n10 consent mechanics');
   const { rows: consent } = await query(
     `INSERT INTO coach_position_share_consents (relationship_id, client_member_id)
      VALUES ($1,$2) RETURNING mode`, [pending.relationshipId, client1]);
-  expect('10a consent defaults to OFF', consent[0].mode === 'off', consent[0].mode);
+  expect('10a sharing a declared position is OFF until the member turns it on',
+    consent[0].mode === 'off', consent[0].mode);
 
-  const { rows: share } = await query(
-    `INSERT INTO coach_position_shares
-       (relationship_id, client_member_id, declared_position, stated_by, share_origin)
-     VALUES ($1,$2,'I am in the middle of it','member_confirmed','item') RETURNING id`,
-    [pending.relationshipId, client1]);
-
-  await mustRefuse('10b a shared declaration cannot be rewritten', /append-only/,
-    () => query(`UPDATE coach_position_shares SET declared_position='reworded' WHERE id=$1`,
-      [share[0].id]));
-  await mustRefuse('10c a shared declaration cannot be deleted', /append-only/,
-    () => query(`DELETE FROM coach_position_shares WHERE id=$1`, [share[0].id]));
-  await mustRefuse('10d the practitioner cannot author a "declared" position',
-    /violates check constraint/,
-    () => query(
-      `INSERT INTO coach_position_shares
-         (relationship_id, client_member_id, declared_position, stated_by, share_origin)
-       VALUES ($1,$2,'what I think they feel','practitioner_seeded','item')`,
-      [pending.relationshipId, client1]));
-
-  await query(`UPDATE coach_position_shares SET withdrawn_at=NOW() WHERE id=$1`, [share[0].id]);
-  const { rows: stillThere } = await query(
-    `SELECT withdrawn_at FROM coach_position_shares WHERE id=$1`, [share[0].id]);
-  expect('10e withdrawing stops display without deleting the record',
-    stillThere.length === 1 && stillThere[0].withdrawn_at !== null, JSON.stringify(stillThere));
-
-  // ── 12  further refusal probes, each for its own reason ──────────────────
   console.log('\n12 refusal probes');
   const strangerAuth = await authorizePractitionerClientRelationship(
     asMemberId(stranger), asRelationshipId(pending.relationshipId));
-  expect('12a an unrelated member gets no grant at all', strangerAuth === null, JSON.stringify(strangerAuth));
-
-  await mustRefuse('12b a commitment cannot exist without member assent', /violates check constraint/,
-    () => query(
-      `INSERT INTO coach_work_items
-         (relationship_id, kind, title, originated_by_role, originated_by_practitioner_id,
-          recorded_by_practitioner_id)
-       VALUES ($1,'commitment','I decided they committed','practitioner',$2,$2)`,
-      [pending.relationshipId, practRecord]));
-
-  const { rows: affirmed } = await query(
-    `INSERT INTO coach_work_items
-       (relationship_id, kind, title, originated_by_role, originated_by_member_id,
-        recorded_by_practitioner_id, member_affirmed_at)
-     VALUES ($1,'commitment','I will walk each morning','member',$2,$3,NOW()) RETURNING originated_by_role`,
-    [pending.relationshipId, client1, practRecord]);
-  expect('12c a member-originated, member-affirmed commitment IS accepted',
-    affirmed[0].originated_by_role === 'member', affirmed[0].originated_by_role);
-
-  await mustRefuse('12d a practice cannot carry a deadline', /violates check constraint/,
-    () => query(
-      `INSERT INTO coach_work_items
-         (relationship_id, kind, title, originated_by_role, originated_by_practitioner_id,
-          recorded_by_practitioner_id, due_on)
-       VALUES ($1,'practice','Sit daily','practitioner',$2,$2,NOW())`,
-      [pending.relationshipId, practRecord]));
+  expect('12a an unrelated member gets no grant at all', strangerAuth === null,
+    JSON.stringify(strangerAuth));
 
   await mustRefuse('12e stage history cannot be rewritten', /append-only/, async () => {
-    const { rows: pd } = await query(
-      `INSERT INTO coach_program_definitions (owner_practitioner_id, title)
-       VALUES ($1,'P') RETURNING id`, [practRecord]);
     const { rows: en } = await query(
       `INSERT INTO coach_program_enrollments (process_id, program_definition_id, enrolled_by_practitioner_id)
-       VALUES ($1,$2,$3) RETURNING id`, [proc[0].id, pd[0].id, practRecord]);
+       VALUES ($1,$2,$3) RETURNING id`, [proc[0].id, prog[0].id, practRecord]);
     const { rows: sh } = await query(
       `INSERT INTO coach_enrollment_stage_history (program_enrollment_id, changed_by_practitioner_id)
        VALUES ($1,$2) RETURNING id`, [en[0].id, practRecord]);
-    return query(`UPDATE coach_enrollment_stage_history SET change_reason='rewritten' WHERE id=$1`,
+    return query(`UPDATE coach_enrollment_stage_history SET effective_at=NOW() WHERE id=$1`,
       [sh[0].id]);
   });
 
-  await mustRefuse('12f a client-private note has no relationship column to reach it by',
+  await mustRefuse('12g a client-selected focus has no relationship column to reach it by',
     /relationship_id.*does not exist/,
-    () => query(`SELECT relationship_id FROM coach_client_personal_notes LIMIT 1`));
+    () => query(`SELECT relationship_id FROM coach_client_selected_focus LIMIT 1`));
 
   // ── cleanup ──────────────────────────────────────────────────────────────
   await clearFixtures();

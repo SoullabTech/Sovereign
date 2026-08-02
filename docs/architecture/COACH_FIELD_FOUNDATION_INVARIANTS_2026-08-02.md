@@ -51,7 +51,28 @@ fails the gate rather than quietly opening a door.
 
 **The test to apply to any new table:** does this record exist because of a professional
 relationship, or does it exist because the person exists? The first gets `relationship_id`.
-The second must never get one.
+
+**The precise rule for the second** — person-owned does not mean unshareable:
+
+> A person-owned **source** record must not acquire `relationship_id` as an ownership key.
+> Any relational sharing must occur through a separate consent or publication object.
+
+So a member may share a personal note with a practitioner. What they must never do is
+*attach the private source itself* to Larry's relationship. Sharing creates a distinct
+object — a consent row, or a snapshot pointed at from an authorized relationship — while the
+source stays owned by the person and stays unreachable from a practitioner-scoped query.
+That is the same shape as `coach_note_publications`: the practitioner's private note is not
+made visible, a separate delivery object is created.
+
+This wording matters in both directions. Without it, a later developer might attach the
+private source directly to a relationship because "it's shared anyway", or conclude that
+person-owned material can never be shared at all. Neither is correct.
+
+**Structural privacy is not encryption.** These assertions prove that no *practitioner
+relationship path* reaches a person-owned record. They prove nothing about database
+administrators, backups, logs, exports, a future unrelated query path, or data at rest.
+Confidentiality of the content itself is a separate protection, met by the encryption
+contract — see the note on the content lane in the evidence document.
 
 ---
 

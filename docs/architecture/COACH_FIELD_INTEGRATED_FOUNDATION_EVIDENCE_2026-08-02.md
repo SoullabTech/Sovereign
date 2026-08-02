@@ -43,13 +43,62 @@ The old branch is left intact as evidence and was not rewritten.
 | 6 | linked relationships cannot be repointed or unlinked | **PASS** — gate 6a–6b (DB trigger, not service-level politeness) |
 | 7 | ambiguous legacy records are queued, not guessed | **PASS** — gate 7a–7c; 8 match states verified in `verify-practitioner-relationship-m1.sql` |
 | 8 | practitioner identity translation is explicit | **PASS** — gate 8a–8d against `lib/coachField/identity.ts` |
-| 9 | private-note publication boundaries hold | **PASS** — gate 9a–9e |
-| 10 | client-position sharing boundaries hold | **PASS** — gate 10a–10e |
+| 9 | private-note publication boundaries hold | **DEFERRED** — to the encrypted-content lane, where those tables land. See below. |
+| 10 | client-position sharing boundaries hold | **PARTIAL** — consent mechanics pass (gate 10a); the shared snapshot is deferred |
 | 11 | migrations run from zero and idempotently | **PASS with a named exception** — see below |
 | 12 | refusal probes fail for the intended reason | **PASS** — every probe asserts the message, not merely that it threw |
 
-Gate: `40 passed · 0 failed`, fixtures cleared before and after, none surviving.
+Gate: `32 passed · 0 failed`, fixtures cleared before and after, none surviving.
 M1 acceptance: `17 assertions, all passed`, transaction rolled back.
+Both re-verified against an isolated database rebuilt **from zero** after the merge ruling.
+
+---
+
+## The merge ruling — option A, structural-only
+
+**Structural privacy is not encryption at rest.** Invariant 1 proves that no *practitioner
+relationship path* reaches a person-owned record. It proves nothing about database
+administrators, backups, logs, exports, a future unrelated query path, or data at rest.
+Those are separate protections, and the first review of this PR conflated their sufficiency.
+
+So every column capable of holding human expression was removed from this foundation, and
+every table whose *purpose* is to hold it is deferred rather than shipped unencrypted:
+
+| Deferred table | Content it carries |
+|---|---|
+| `coach_authored_notes` | `title`, `body` |
+| `coach_note_publications` | `published_title`, `published_body_snapshot` |
+| `coach_client_personal_notes` | `title`, `body` |
+| `coach_client_shared_items` | `label`, `body` |
+| `coach_position_shares` | `declared_position` — verbatim client wording |
+| `coach_current_focus` | `focus` |
+| `coach_work_items` | `title`, `detail`, `duration_note` |
+| `coach_work_item_history` | `old_value`, `new_value` |
+| `coach_important_dates` | `label` |
+| `coach_resource_recommendations` | `label`, `note`, `external_url` |
+| `coach_follow_ups` | `label` |
+
+Also stripped from tables that stayed: `coach_client_processes.title` (a process label can
+name a private matter — a process here must belong to a program),
+`coach_enrollment_stage_history.change_reason`, `coach_sessions.location_note`, and
+`coach_sessions.stage_label_at_time` which became `stage_id_at_time` — an identifier rather
+than a copied string.
+
+**Kept, and why.** `coach_program_definitions.title`/`description`,
+`coach_program_stages.label`/`description` and `coach_cohorts.title` are catalogue metadata a
+practitioner writes about their **own offering** — the same text that appears on an invitation
+or a public program page. They are not about a person and reveal nothing about one.
+
+**The claim is checkable, not asserted.** Gate assertions `1c` and `1d` enumerate the permitted
+catalogue exceptions and fail on any other free-text or JSON column in a `coach_*` table, and
+on the presence of any deferred table. A later migration that adds a free-text field to this
+foundation fails the gate.
+
+Their designs, constraints and append-only semantics are settled — the M3 publication object
+with no visibility column on the source, `stated_by` admitting no practitioner-authored value,
+`member_affirmed_at` required for a commitment, append-only snapshots — and they land in a
+following PR under the encryption contract used by `lib/security/phiAccessors/*`. **Sequenced,
+not abandoned.**
 
 ### 11 — the named exception
 
