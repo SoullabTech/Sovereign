@@ -11,13 +11,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireFounder } from '@/lib/founder/founderAuth';
+import { requireArranger } from '@/lib/workbench/access';
 import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_req: NextRequest) {
-  const auth = await requireFounder();
+  const auth = await requireArranger();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireFounder();
+  const auth = await requireArranger();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

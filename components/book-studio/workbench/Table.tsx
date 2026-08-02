@@ -20,6 +20,8 @@ interface TableProps {
   onDeleteGroup: (groupId: string) => void;
   onDropOnGroup: (groupId: string, pointer: CardPointer) => void;
   onGraduate: (groupId: string) => void;
+  /** False on the member surface — graduation is not in the first member slice. */
+  canGraduate?: boolean;
 }
 
 export function Table({
@@ -30,6 +32,7 @@ export function Table({
   onDeleteGroup,
   onDropOnGroup,
   onGraduate,
+  canGraduate = true,
 }: TableProps) {
   if (!table) {
     return (
@@ -69,6 +72,7 @@ export function Table({
               onRemoveCard={onRemoveCard}
               onDelete={onDeleteGroup}
               onGraduate={onGraduate}
+              canGraduate={canGraduate}
             />
           ))}
         </div>

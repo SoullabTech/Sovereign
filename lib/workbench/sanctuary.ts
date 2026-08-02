@@ -26,8 +26,19 @@ export async function isSanctuary(
     return result.rows[0]?.sanctuary ?? false;
   }
 
-  // Slice 3 sources not yet wired. Returning false here is safe because
-  // adapters for those sources do not exist yet — there is no path that
-  // can reach this branch in Slice 1.
+  if (source === 'keep') {
+    // Atoms carry Sanctuary as `posture_at_creation = 'sanctuary'`. The
+    // s5_require_atom_attestation() trigger currently refuses to mint any
+    // posture but 'normal', so no such row can be created today — but the
+    // column accepts the value, so this is a real check, not an assumption.
+    const result = await query<{ posture_at_creation: string }>(
+      'SELECT posture_at_creation FROM member_memory_atoms WHERE id = $1',
+      [ref],
+    );
+    return result.rows[0]?.posture_at_creation === 'sanctuary';
+  }
+
+  // ideas / journals / decisions adapters do not exist yet — there is no path
+  // that can reach this branch.
   return false;
 }
