@@ -88,6 +88,22 @@ const ACCESSOR_SPECS: AccessorSpec[] = [
     ],
   },
   {
+    // Registered 2026-08-02. The accessor module has existed since the Client
+    // Note shipped, but was never listed here — so the inventory gate was not
+    // actually covering the table it protects. Adding the lifecycle axis
+    // surfaced the gap; the gap itself predates this slice.
+    file: "lib/security/phiAccessors/practitionerClientNotes.ts",
+    tables: ["practitioner_client_notes"],
+    requiredExports: [
+      "encryptClientNoteContent",
+      "decryptClientNoteContent",
+      "decryptClientNoteRow",
+      "decryptClientNoteRows",
+      "sanitizeClientNoteRow",
+      "sanitizeClientNoteRows",
+    ],
+  },
+  {
     file: "lib/stellium/clients.ts",
     tables: ["practitioner_clients"],
     requiredExports: [
