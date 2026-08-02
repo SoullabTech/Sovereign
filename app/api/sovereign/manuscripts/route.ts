@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query<{
       id: string;
-      title: string;
+      title: string | null;
       created_at: string;
       section_count: string;
       char_count: string;

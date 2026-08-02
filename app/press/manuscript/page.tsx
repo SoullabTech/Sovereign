@@ -56,7 +56,7 @@ const PRESS = {
 
 interface ManuscriptSummary {
   id: string;
-  title: string;
+  title: string | null;
   createdAt: string;
   sectionCount: number;
   charCount: number;
@@ -129,6 +129,9 @@ function sectionLabel(heading: string | null, position: number): string {
 function PressManuscriptRoom() {
   const searchParams = useSearchParams();
   const requestedTab = searchParams?.get('tab') ?? null;
+  /* Which manuscript to open, by identity rather than by position.
+     Absent on every existing entry point, so those keep their behaviour. */
+  const requestedManuscript = searchParams?.get('m') ?? null;
   /**
    * Studio Home offers "Import Manuscript" whether or not a book already
    * exists — a second book is not a regression. But the landing/upload view
@@ -228,7 +231,20 @@ function PressManuscriptRoom() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const list: ManuscriptSummary[] = data.manuscripts ?? [];
-      setActive((cur) => cur ?? (list.length > 0 ? list[0].id : null));
+      /* `?m=<id>` names WHICH manuscript to open, instead of inferring it from
+         position. Start writing uses it so a member who just made a blank page
+         lands in that page rather than in "whatever is newest" — the two happen
+         to coincide today and will stop coinciding the moment a member has
+         several projects.
+
+         Honored only if the id is in the member's own list. The list itself is
+         member-scoped server-side, so this cannot name another member's work;
+         the check simply means an unknown or stale id falls back to the
+         existing behaviour instead of opening nothing. */
+      const requested = list.some((m) => m.id === requestedManuscript)
+        ? requestedManuscript
+        : null;
+      setActive((cur) => cur ?? requested ?? (list.length > 0 ? list[0].id : null));
     } catch {
       // Never fall through to the upload screen — that asserts an emptiness we
       // have not established. We do not know what the writer has; say so.

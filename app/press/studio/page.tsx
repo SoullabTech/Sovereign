@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from './pressTheme';
 import StudioShell from './StudioShell';
 import { IMPORT_HREF, SOURCE_HREF, WRITE_HREF } from './studioMap';
 import { useCurrentManuscript } from './useCurrentManuscript';
+import { UNTITLED_EXPRESSION } from './shellIdentity';
 import { arrivalWork, useLivingWorks } from './useLivingWorks';
 import YourWork from './YourWork';
 
@@ -60,6 +63,53 @@ export default function AuthorStudioHome() {
 
   const hasManuscript = phase === 'ready' && manuscript !== null;
   const work = arrivalWork(worksPhase, works);
+
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+
+  /**
+   * Start writing — the explicit gesture that creates the place to write.
+   *
+   * Nothing is created before this click. Declaring a work creates nothing;
+   * arriving at the Studio creates nothing. The blank manuscript comes into
+   * existence because the member asked for it, and it arrives unnamed: the
+   * route stores `title = NULL` rather than borrowing the work's name or
+   * inventing "Untitled". Naming the expression is a second declaration the
+   * member has not made yet.
+   *
+   * Nothing is attached either — `living_work_expressions` is untouched. The
+   * member began writing; they did not say this belongs to that work.
+   */
+  const startWriting = async () => {
+    setStarting(true);
+    setStartError(null);
+    try {
+      const res = await apiFetch('/api/sovereign/manuscripts/blank', { method: 'POST' });
+      if (res.status === 401) {
+        setStartError('Your Studio opens only to you. Please sign in again.');
+        return;
+      }
+      if (!res.ok) {
+        setStartError('Could not make a page just now. Nothing was lost — please try again.');
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      /* Straight into the writing surface, and into THIS page by identity.
+         Navigating to the bare draft URL would open "the most recent
+         manuscript", which happens to be the same row today and stops being so
+         the moment a member has several projects. The route already returns the
+         id; using it costs one query parameter and closes the seam instead of
+         deepening it. Falls back to the positional URL only if the response
+         somehow carries no id, so a missing field degrades rather than strands. */
+      window.location.href = data?.id
+        ? `${WRITE_HREF}&m=${encodeURIComponent(data.id)}`
+        : WRITE_HREF;
+    } catch {
+      setStartError('Could not reach the Studio just now. Please try again in a moment.');
+    } finally {
+      setStarting(false);
+    }
+  };
 
   // ---- Signed out --------------------------------------------------------
   // Not "your Studio is empty" — they have not been seen yet.
@@ -160,8 +210,50 @@ export default function AuthorStudioHome() {
           </div>
         )}
 
-        {/* ── No book yet. One real door, described honestly. ── */}
-        {phase === 'none' && (
+        {/* ── A declared work, and nothing written yet. ─────────────────────
+            SLICE 2 (2026-08-02). Until now this state offered exactly one
+            door: "Import Manuscript". So a member who had named what they
+            were working on could do everything in the Studio except write it,
+            and the room was usable only by people who had already finished
+            something somewhere else. Walked 2026-08-01 — it did exactly that.
+
+            Writing is the primary act, so it is the primary action. Import
+            stays, as the other way to begin — not as the entrance. */}
+        {phase === 'none' && work && (
+          <section>
+            <h2 className="text-[13px] tracking-[0.2em] uppercase opacity-40 mb-4">Begin</h2>
+            <p className="text-[16px] leading-relaxed opacity-75 mb-8 max-w-md">
+              Begin where the work is alive.
+            </p>
+            <div className="flex flex-wrap items-center gap-5">
+              <button
+                onClick={() => void startWriting()}
+                disabled={starting}
+                className="inline-block px-7 py-3 text-[14px] tracking-wide disabled:opacity-40"
+                style={{ background: PRESS.accent, color: PRESS.ink }}
+              >
+                {starting ? 'making a page…' : 'Start writing'}
+              </button>
+              <Link
+                href={IMPORT_HREF}
+                className="text-[15px] opacity-60 hover:opacity-90 underline underline-offset-4"
+              >
+                Bring in existing writing
+              </Link>
+            </div>
+            {startError && (
+              <p role="alert" className="text-[13px] opacity-70 mt-6 max-w-md">
+                {startError}
+              </p>
+            )}
+            <p className="text-[13px] leading-relaxed opacity-45 mt-6 max-w-md">
+              A blank page, kept for you. You can name it whenever you want to — or not at all.
+            </p>
+          </section>
+        )}
+
+        {/* ── No work declared and no book. Unchanged: the import threshold. ── */}
+        {phase === 'none' && !work && (
           <section>
             <h2 className="text-[13px] tracking-[0.2em] uppercase opacity-40 mb-4">Begin</h2>
             <p className="text-[16px] leading-relaxed opacity-75 mb-8 max-w-md">
@@ -189,7 +281,14 @@ export default function AuthorStudioHome() {
               <h2 className="text-[13px] tracking-[0.2em] uppercase opacity-40 mb-4">
                 Current Book
               </h2>
-              <p className="text-[22px] md:text-[24px] mb-2 leading-snug">{manuscript.title}</p>
+              <p
+                className="text-[22px] md:text-[24px] mb-2 leading-snug"
+                /* An expression the member has not named reads as orientation,
+                   not as a title. Nothing by this name is stored. */
+                style={manuscript.title ? undefined : { opacity: 0.7 }}
+              >
+                {manuscript.title ?? UNTITLED_EXPRESSION}
+              </p>
               <p className="text-[13px] opacity-45 mb-8">
                 {pageEstimate(manuscript.charCount)} pages · {manuscript.sectionCount} section
                 {manuscript.sectionCount === 1 ? '' : 's'}
