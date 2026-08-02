@@ -124,6 +124,68 @@ Supporting derivation: `docs/architecture/FIELD_OBJECTS_AND_PROJECTIONS_2026-08-
 §*Post-ratification addition* — **included in this same change**, so the directive does not depend
 on an absent artifact.
 
+### ✅ Amendment 5 — Field Object Declaration (RULED 2026-08-02, Kelly)
+
+Amendment 4 governs what happens to a Field Object **once it exists**. This governs **whether it
+comes into being at all** — the boundary one layer earlier.
+
+**The operative rule:**
+
+> **A source does not create an enduring Field Object merely by producing or saving an artifact. A
+> Field Object comes into being only through an explicit human declaration that something belongs in
+> the person's enduring Field.**
+
+```
+Event or source artifact
+    ↓ explicit declaration
+Enduring Field Object
+    ↓
+Project Reference / other relationships
+
+Development records remain separate.
+```
+
+**What this preserves:**
+
+- **Source artifacts remain distinct from Field Objects.** Conversations, journals, ideas, capsules,
+  notes, recordings, uploads, and any future source artifact are **not** Field Objects. They may be
+  sources or developmental forms; **being saved is not being declared.**
+- ⛔ **No source save may silently mint or promote a Field Object.** Producing, storing, refining, or
+  finalizing an artifact never crosses the boundary on the member's behalf.
+- ⛔ **No historical backfill or automatic conversion is authorized** — not individually, not in bulk.
+- **The declaration is source-agnostic at the domain level.** It is one act — *"this belongs in my
+  enduring Field"* — not a per-source feature.
+- **Source-specific interfaces may host the gesture, but only by invoking the same governed
+  declaration capability.** A surface may **offer** the act; no surface may define its own version
+  of it.
+- **Provenance back to the source is preserved.** A declared Field Object records what it came from.
+  Declaration does not sever origin, and it does not consume or alter the source, which **remains
+  intact and distinct.**
+- **Retry or double-submit must not create duplicate Field Objects.** One declaration, one object.
+- ⛔ **Recording this amendment authorizes no implementation.**
+
+**Why this is a domain rule, not a Studio rule.** The declaration is the **authority boundary**
+between what a person has *produced* and what a person has *claimed as enduring*. It may occur from
+many source surfaces without making those surfaces ontologically identical, and it belongs to the
+Member Field — not to any Studio that happens to host the gesture.
+
+This is the boundary Amendment 3 draws between a Project Development Note and a Member Field Object,
+applied earlier: **the system may offer; only the member may declare.** Amendment 3 governs movement
+*between* layers once an object exists; Amendment 5 governs whether the object exists.
+
+**Deliberately not canonized.**
+
+⚠️ This amendment does **not** require a review step, a *"reviewed"* state, or any particular source
+lifecycle. Whether a given source has draft / reviewed / finalized states — and whether such state is
+durable — is an **open question this canon does not settle.** The declaration act is governed
+**independently of any source's lifecycle**: a source with no review stage and a source with several
+are equally subject to it.
+
+⚠️ It also does not name **which** surfaces host the gesture, or how many. Those are implementation
+questions, and this amendment authorizes none of them.
+
+Supporting ruling: `docs/architecture/FIELD_OBJECT_PROMOTION_RULING_2026-08-02.md`.
+
 ---
 
 ## Constitutional principle
