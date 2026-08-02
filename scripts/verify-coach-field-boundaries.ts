@@ -1,280 +1,356 @@
 /**
- * Coach Field — boundary verification gate.
+ * Coach Field — integrated foundation boundary gate.
  *
- * Proves the constitutional boundaries of the coach/facilitator field hold against a REAL
- * database, not a mock. Every check corresponds to a founder ruling of 2026-08-02.
+ *   DATABASE_URL=... npx tsx scripts/verify-coach-field-boundaries.ts
  *
- *   Run:  DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-coach-field-boundaries.ts
- *   Pass: all checks pass, 0 failed.
+ * Runs against an ISOLATED database built from committed migrations only. It
+ * exercises the services, not just the schema, and every refusal probe asserts the
+ * REASON it was refused — a probe that fails for the wrong reason is reported as a
+ * failure, because "it threw" is not evidence that the boundary held.
  *
- * Every fixture is created inside a transaction that is ALWAYS rolled back, so the gate
- * leaves zero residue and is safe to run against any environment including production.
+ * Fixtures are tagged and deleted at the end; the run asserts none survive.
+ *
+ * Covers founder-required integration evidence 4-10 and 12.
  */
 
-import { Pool } from 'pg';
+import { query, transaction, closePool } from '@/lib/db/postgres';
+import {
+  asMemberId,
+  asRelationshipId,
+  authorizePractitionerClientRelationship,
+  resolvePractitionerMemberFromRecord,
+  resolvePractitionerRecordFromMember,
+} from '@/lib/coachField/identity';
+import { acceptInvitation, createPendingRelationship } from '@/lib/coachField/invitation';
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
+const TAG = 'cfgate';
 let passed = 0;
-let failed = 0;
 const failures: string[] = [];
 
 function ok(label: string) {
   passed++;
-  console.log(`  \x1b[32m✓\x1b[0m ${label}`);
+  console.log(`  ✅ ${label}`);
 }
 function bad(label: string, detail: string) {
-  failed++;
   failures.push(`${label} — ${detail}`);
-  console.log(`  \x1b[31m✗\x1b[0m ${label}\n      ${detail}`);
+  console.log(`  ❌ ${label}\n       ${detail}`);
+}
+function expect(label: string, condition: boolean, detail = 'condition was false') {
+  condition ? ok(label) : bad(label, detail);
 }
 
-/**
- * Assert that a statement is REFUSED by the database, FOR THE RIGHT REASON.
- *
- * `expect` is required: a refusal that does not match it is reported as a FAILURE, not a
- * pass. Without this, a malformed probe refuses on its own syntax and the gate reports
- * green while having tested nothing — which is exactly what happened to check A5 on the
- * first run of this gate (pg rejected a two-statement prepared query, and the immutability
- * trigger was never reached). A gate that passes is not proof that it checked.
- */
-async function mustRefuse(
-  client: any, label: string, expect: RegExp, sql: string, params: any[] = [],
-) {
-  await client.query('SAVEPOINT p');
+/** A refusal probe: must throw, AND the message must match `reason`. */
+async function mustRefuse(label: string, reason: RegExp, fn: () => Promise<unknown>) {
   try {
-    await client.query(sql, params);
-    await client.query('ROLLBACK TO p');
-    bad(label, 'statement SUCCEEDED but must have been refused');
+    await fn();
+    bad(label, 'it was ALLOWED — the boundary did not hold');
   } catch (e: any) {
-    await client.query('ROLLBACK TO p');
     const msg = String(e?.message ?? '').split('\n')[0];
-    if (expect.test(msg)) {
-      ok(`${label}  →  refused: ${msg.slice(0, 88)}`);
-    } else {
-      bad(label, `refused for the WRONG reason (probe is not testing what it claims): ${msg}`);
-    }
+    if (reason.test(msg)) ok(`${label}`);
+    else bad(label, `refused for the WRONG reason: ${msg}`);
   }
 }
 
-/** Assert that a statement is PERMITTED. */
-async function mustAllow(client: any, label: string, sql: string, params: any[] = []) {
-  await client.query('SAVEPOINT p');
-  try {
-    await client.query(sql, params);
-    await client.query('RELEASE p');
-    ok(label);
-  } catch (e: any) {
-    await client.query('ROLLBACK TO p');
-    bad(label, `refused but must be permitted: ${e.message}`);
-  }
+/** Remove every tagged fixture. Run before AND after, so an aborted run cannot
+ *  poison the next one — a gate that only passes on a pristine database is not a gate. */
+async function clearFixtures() {
+  await transaction(async (c) => {
+    // Append-only history refuses DELETE — including a DELETE arriving via cascade.
+    // That is the boundary working: a client's history is not removable, and ending a
+    // relationship (never deleting it) is the supported path. A TEST HARNESS is the
+    // one place that legitimately needs to undo its own fixtures, so it suspends the
+    // triggers explicitly and locally. Nothing in the application may do this.
+    await c.query(`ALTER TABLE coach_enrollment_stage_history DISABLE TRIGGER coach_stage_history_immutable`);
+    await c.query(`ALTER TABLE coach_note_publications DISABLE TRIGGER coach_note_publication_append_only`);
+    await c.query(`ALTER TABLE coach_position_shares DISABLE TRIGGER coach_position_shares_append_only`);
+    await c.query(`DELETE FROM coach_client_processes WHERE relationship_id IN
+      (SELECT id FROM practitioner_clients WHERE email LIKE $1)`, [`${TAG}-%`]);
+    await c.query(`DELETE FROM client_invites WHERE code_hash LIKE $1`, [`${TAG}-%`]);
+    await c.query(`DELETE FROM practitioner_clients WHERE email LIKE $1`, [`${TAG}-%`]);
+    await c.query(`DELETE FROM coach_program_definitions WHERE owner_practitioner_id IN
+      (SELECT id FROM practitioners WHERE slug LIKE $1)`, [`${TAG}-%`]);
+    await c.query(`DELETE FROM practitioners WHERE slug LIKE $1`, [`${TAG}-%`]);
+    await c.query(`DELETE FROM members WHERE username LIKE $1`, [`${TAG}-%`]);
+    await c.query(`ALTER TABLE coach_enrollment_stage_history ENABLE TRIGGER coach_stage_history_immutable`);
+    await c.query(`ALTER TABLE coach_note_publications ENABLE TRIGGER coach_note_publication_append_only`);
+    await c.query(`ALTER TABLE coach_position_shares ENABLE TRIGGER coach_position_shares_append_only`);
+  });
 }
-
-const LARRY = '1a1a1a1a-0000-4000-8000-00000000000a';
-const SENJA = '2b2b2b2b-0000-4000-8000-00000000000b';
-const OTHER = '3c3c3c3c-0000-4000-8000-00000000000c'; // an unrelated practitioner
-const REL   = '4d4d4d4d-0000-4000-8000-00000000000d';
-const PROC  = '5e5e5e5e-0000-4000-8000-00000000000e';
-const NOTE  = '6f6f6f6f-0000-4000-8000-00000000000f';
 
 async function main() {
-  const client = await pool.connect();
-  await client.query('BEGIN');
-  try {
-    // ── fixtures ─────────────────────────────────────────────────────────────
-    await client.query(
-      `INSERT INTO members (id, passkey, username, name, password_hash) VALUES
-         ($1,'GATE-LARRY','gate_larry','Larry Gate','x'),
-         ($2,'GATE-SENJA','gate_senja','Senja Gate','x'),
-         ($3,'GATE-OTHER','gate_other','Other Gate','x')`,
-      [LARRY, SENJA, OTHER],
+  console.log('\nCoach Field — integrated foundation boundary gate\n');
+  await clearFixtures();
+
+  const mk = async (suffix: string, email: string, verified = true) => {
+    const { rows } = await query(
+      `INSERT INTO members (passkey, username, password_hash, email, email_verified)
+       VALUES ($1,$1,'x',$2,$3) RETURNING id`,
+      [`${TAG}-${suffix}`, email, verified]
     );
-    await client.query(
-      `INSERT INTO coach_client_relationships (id, practitioner_member_id, client_member_id, field_slug)
-       VALUES ($1,$2,$3,'flourishing')`, [REL, LARRY, SENJA],
-    );
-    await client.query(
-      `INSERT INTO coach_client_processes (id, relationship_id, title) VALUES ($1,$2,'Flourishing')`,
-      [PROC, REL],
-    );
-    await client.query(
-      `INSERT INTO coach_authored_notes (id, relationship_id, author_practitioner_id, body, purpose)
-       VALUES ($1,$2,$3,'a private observation','private_observation')`, [NOTE, REL, LARRY],
-    );
+    return rows[0].id as string;
+  };
 
-    // ── A. PUBLICATION BOUNDARY ──────────────────────────────────────────────
-    console.log('\nA. Publication boundary — a private note cannot leak into client view');
-    await mustRefuse(client, 'A1 ordinary UPDATE cannot publish a private note', /explicit publication act/,
-      `UPDATE coach_authored_notes SET visibility='client_visible', published_at=NOW() WHERE id=$1`, [NOTE]);
-    await mustRefuse(client, 'A2 bulk UPDATE across all notes cannot publish', /explicit publication act/,
-      `UPDATE coach_authored_notes SET visibility='client_visible', published_at=NOW()`);
-    await mustRefuse(client, 'A3 client_visible without published_at violates CHECK', /violates check constraint/,
-      `INSERT INTO coach_authored_notes (relationship_id, author_practitioner_id, body, visibility)
-       VALUES ($1,$2,'x','client_visible')`, [REL, LARRY]);
+  const practMember = await mk('prac', `${TAG}-prac@test.local`);
+  const client1 = await mk('c1', `${TAG}-c1@test.local`);
+  const client2 = await mk('c2', `${TAG}-c2@test.local`);
+  const stranger = await mk('str', `${TAG}-str@test.local`);
 
-    await client.query('SAVEPOINT pub');
-    await client.query(`SET LOCAL app.coach_note_publication = 'on'`);
-    await mustAllow(client, 'A4 explicit publication act (declared transaction) succeeds',
-      `UPDATE coach_authored_notes SET visibility='client_visible', published_at=NOW() WHERE id=$1`, [NOTE]);
-    // A5/A6 use SEPARATE statements: a two-command prepared query is rejected by pg
-    // itself, which would refuse before ever reaching the immutability trigger.
-    await client.query(
-      `INSERT INTO coach_note_publication_events (note_id, actor_member_id, action)
-       VALUES ($1,$2,'published')`, [NOTE, LARRY]);
-    await mustRefuse(client, 'A5 publication audit events are immutable (UPDATE)', /append-only/,
-      `UPDATE coach_note_publication_events SET action='withdrawn' WHERE note_id=$1`, [NOTE]);
-    await mustRefuse(client, 'A6 publication audit events are immutable (DELETE)', /append-only/,
-      `DELETE FROM coach_note_publication_events WHERE note_id=$1`, [NOTE]);
-    await client.query('ROLLBACK TO pub');
+  const { rows: pr } = await query(
+    `INSERT INTO practitioners (member_id, name, email, slug)
+     VALUES ($1,$2,$3,$4) RETURNING id`,
+    [practMember, `${TAG} Practice`, `${TAG}-prac@test.local`, `${TAG}-practice`]
+  );
+  const practRecord = pr[0].id as string;
 
-    // ── B. TENANCY ───────────────────────────────────────────────────────────
-    console.log('\nB. Tenancy — an unrelated practitioner sees nothing');
-    {
-      const { rows } = await client.query(
-        `SELECT n.id FROM coach_authored_notes n
-           JOIN coach_client_relationships r ON r.id = n.relationship_id
-          WHERE r.practitioner_member_id = $1`, [OTHER]);
-      rows.length === 0
-        ? ok('B1 unrelated practitioner reads zero notes')
-        : bad('B1 unrelated practitioner reads zero notes', `saw ${rows.length} rows`);
-    }
-    {
-      const { rows } = await client.query(
-        `SELECT id FROM coach_client_relationships WHERE practitioner_member_id = $1`, [OTHER]);
-      rows.length === 0
-        ? ok('B2 unrelated practitioner holds zero relationships')
-        : bad('B2 unrelated practitioner holds zero relationships', `saw ${rows.length}`);
-    }
-    await mustRefuse(client, 'B3 a member cannot be their own client', /violates check constraint/,
-      `INSERT INTO coach_client_relationships (practitioner_member_id, client_member_id) VALUES ($1,$1)`, [LARRY]);
+  // ── 8  identity translation is explicit ───────────────────────────────────
+  console.log('\n8  practitioner identity translation');
+  const resolvedRecord = await resolvePractitionerRecordFromMember(asMemberId(practMember));
+  expect('8a member -> practitioner record resolves', resolvedRecord === practRecord,
+    `got ${resolvedRecord}, expected ${practRecord}`);
+  const backToMember = await resolvePractitionerMemberFromRecord(resolvedRecord!);
+  expect('8b practitioner record -> member round-trips', backToMember === practMember,
+    `got ${backToMember}`);
+  const notAPractitioner = await resolvePractitionerRecordFromMember(asMemberId(client1));
+  expect('8c an ordinary member resolves to no practice record', notAPractitioner === null,
+    `got ${notAPractitioner}`);
+  expect('8d the practice id and the person id are different values',
+    practRecord !== practMember, 'they were equal — the fixture cannot prove the distinction');
 
-    // ── C. CLIENT PRIVATE NOTES ──────────────────────────────────────────────
-    console.log('\nC. Client personal notes — structurally unreachable by any practitioner');
-    {
-      const { rows } = await client.query(
-        `SELECT column_name FROM information_schema.columns
-          WHERE table_name='coach_client_personal_notes' AND column_name IN ('visibility','relationship_id')`);
-      rows.length === 0
-        ? ok('C1 personal notes carry NO visibility or relationship column (no path to a practitioner)')
-        : bad('C1 personal notes have no practitioner path', `found: ${rows.map((r: any) => r.column_name)}`);
-    }
+  // ── 4  a pending invitation works with no member_id ───────────────────────
+  console.log('\n4  pending relationship without a member');
+  const pending = await createPendingRelationship({
+    practitionerRecordId: practRecord,
+    invitationEmail: `${TAG}-c1@test.local`,
+    displayName: 'Invited One',
+    intendedScope: 'program-alpha',
+  });
+  expect('4a pending relationship created', pending.created, 'expected a new row');
+  const { rows: pendRows } = await query(
+    `SELECT member_id, relationship_status, normalized_invitation_email
+       FROM practitioner_clients WHERE id = $1`, [pending.relationshipId]);
+  expect('4b it carries no member_id', pendRows[0].member_id === null, `got ${pendRows[0].member_id}`);
+  expect('4c it is pending', pendRows[0].relationship_status === 'pending', pendRows[0].relationship_status);
+  expect('4d the invitation email is normalized for matching',
+    pendRows[0].normalized_invitation_email === `${TAG}-c1@test.local`.toLowerCase(),
+    String(pendRows[0].normalized_invitation_email));
 
-    // ── D. AXIS 3 — client-declared position (founder ruling C3, option ii) ───
-    console.log('\nD. Axis 3 — declared position private by default, shareable only by member act');
-    {
-      const { rows } = await client.query(
-        `SELECT mode FROM coach_position_share_consents
-          WHERE client_member_id=$1 AND practitioner_member_id=$2`, [SENJA, LARRY]);
-      rows.length === 0
-        ? ok('D1 no consent row exists by default — sharing is OFF until the member acts')
-        : bad('D1 sharing defaults off', `found consent: ${rows[0].mode}`);
-    }
-    {
-      // The narrowing, verified as ABSENCE: no practitioner-keyed read of the member's
-      // own declaration table may exist anywhere in the coach field.
-      const { rows } = await client.query(
-        `SELECT column_name FROM information_schema.columns
-          WHERE table_name='field_program_positions' AND column_name LIKE '%practitioner%'`);
-      rows.length === 0
-        ? ok('D2 field_program_positions gained NO practitioner column (§8 intact, narrowed not repealed)')
-        : bad('D2 §8 intact', `found: ${rows.map((r: any) => r.column_name)}`);
-    }
-    const SHARE = '7a7a7a7a-0000-4000-8000-00000000000a';
-    await client.query(
+  const again = await createPendingRelationship({
+    practitionerRecordId: practRecord,
+    invitationEmail: `  ${TAG.toUpperCase()}-C1@TEST.LOCAL `,
+    displayName: 'Invited One',
+    intendedScope: 'program-alpha',
+  });
+  expect('4e re-inviting the same person to the same thing finds the SAME pending row',
+    !again.created && again.relationshipId === pending.relationshipId,
+    `created=${again.created} id=${again.relationshipId}`);
+
+  const pendingAuth = await authorizePractitionerClientRelationship(
+    asMemberId(practMember), asRelationshipId(pending.relationshipId));
+  expect('4f the practitioner holds the pending relationship', pendingAuth?.role === 'practitioner',
+    String(pendingAuth?.role));
+  expect('4g a pending relationship grants NO member-shared read',
+    pendingAuth?.canReadMemberShared === false, `canReadMemberShared=${pendingAuth?.canReadMemberShared}`);
+
+  // ── 5  claiming an invitation binds the correct member ────────────────────
+  console.log('\n5  invitation acceptance');
+  await query(
+    `INSERT INTO client_invites (practitioner_id, client_id, code_hash, status)
+     VALUES ($1,$2,$3,'unused')`,
+    [practMember, pending.relationshipId, `${TAG}-code-1`]
+  );
+
+  const accepted = await acceptInvitation({
+    codeHash: `${TAG}-code-1`,
+    acceptingMemberId: asMemberId(client1),
+  });
+  expect('5a acceptance links the accepting member', accepted.memberId === client1, accepted.memberId);
+
+  const { rows: afterAccept } = await query(
+    `SELECT member_id, linked_at, relationship_status FROM practitioner_clients WHERE id=$1`,
+    [pending.relationshipId]);
+  expect('5b member_id is now bound', afterAccept[0].member_id === client1, String(afterAccept[0].member_id));
+  expect('5c linked_at is stamped', afterAccept[0].linked_at !== null, 'linked_at was null');
+  expect('5d the relationship activated', afterAccept[0].relationship_status === 'active',
+    afterAccept[0].relationship_status);
+
+  const { rows: inviteAfter } = await query(
+    `SELECT claimed_by_member_id, status FROM client_invites WHERE code_hash=$1`, [`${TAG}-code-1`]);
+  expect('5e invitation provenance is preserved',
+    inviteAfter[0].claimed_by_member_id === client1 && inviteAfter[0].status === 'claimed',
+    JSON.stringify(inviteAfter[0]));
+
+  await mustRefuse('5f a different member cannot claim a claimed invitation', /already been claimed/,
+    () => acceptInvitation({ codeHash: `${TAG}-code-1`, acceptingMemberId: asMemberId(client2) }));
+
+  const reAccept = await acceptInvitation({
+    codeHash: `${TAG}-code-1`, acceptingMemberId: asMemberId(client1) });
+  expect('5g the same member re-accepting is idempotent', reAccept.alreadyLinked, 'expected alreadyLinked');
+
+  // ── 6  a linked relationship cannot be re-pointed or unlinked ─────────────
+  console.log('\n6  the link is permanent');
+  await mustRefuse('6a re-pointing at another member is refused', /write-once|cannot be re-pointed/,
+    () => query(`UPDATE practitioner_clients SET member_id=$2 WHERE id=$1`,
+      [pending.relationshipId, client2]));
+  await mustRefuse('6b silent unlinking is refused', /write-once|cannot be re-pointed/,
+    () => query(`UPDATE practitioner_clients SET member_id=NULL WHERE id=$1`, [pending.relationshipId]));
+
+  // ── 7  ambiguity is queued, never guessed ────────────────────────────────
+  console.log('\n7  ambiguous legacy rows are queued');
+  const { rows: amb } = await query(
+    `INSERT INTO practitioner_clients (practitioner_id, name, email, invitation_email, relationship_status)
+     VALUES ($1,'Ambiguous',$2::varchar,$2::text,'pending') RETURNING id`,
+    [practRecord, `${TAG}-dupe@test.local`]);
+  await mk('d1', `${TAG}-dupe@test.local`);
+  await mk('d2', `${TAG}-dupe@test.local`);
+  await query(`SELECT * FROM practitioner_client_reconcile()`);
+  const { rows: q } = await query(
+    `SELECT r.match_basis, r.auto_linkable, pc.member_id
+       FROM practitioner_client_reconciliation r
+       JOIN practitioner_clients pc ON pc.id = r.relationship_id
+      WHERE r.relationship_id = $1`, [amb[0].id]);
+  expect('7a an email matching two members is classified ambiguous',
+    q[0]?.match_basis === 'ambiguous_multiple_members', String(q[0]?.match_basis));
+  expect('7b it is NOT auto-linkable', q[0]?.auto_linkable === false, String(q[0]?.auto_linkable));
+  expect('7c it was left unlinked for a human', q[0]?.member_id === null, String(q[0]?.member_id));
+
+  // ── 9  note publication boundaries ───────────────────────────────────────
+  console.log('\n9  private note / publication boundary');
+  const { rows: proc } = await query(
+    `INSERT INTO coach_client_processes (relationship_id, title) VALUES ($1,'Process') RETURNING id`,
+    [pending.relationshipId]);
+  const { rows: note } = await query(
+    `INSERT INTO coach_authored_notes (relationship_id, process_id, author_practitioner_id, body, purpose)
+     VALUES ($1,$2,$3,'private thinking','private_observation') RETURNING id`,
+    [pending.relationshipId, proc[0].id, practRecord]);
+
+  const { rows: noteCols } = await query(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_name='coach_authored_notes' AND column_name IN ('visibility','published_at')`);
+  expect('9a the source note has NO visibility or published flag to toggle',
+    noteCols.length === 0, `found ${noteCols.map((c: any) => c.column_name).join(',')}`);
+
+  const { rows: pub } = await query(
+    `INSERT INTO coach_note_publications
+       (source_note_id, relationship_id, published_by_practitioner_id, published_body_snapshot)
+     VALUES ($1,$2,$3,'what the client received') RETURNING id`,
+    [note[0].id, pending.relationshipId, practRecord]);
+
+  await query(`UPDATE coach_authored_notes SET body='the practitioner kept thinking' WHERE id=$1`,
+    [note[0].id]);
+  const { rows: snap } = await query(
+    `SELECT published_body_snapshot FROM coach_note_publications WHERE id=$1`, [pub[0].id]);
+  expect('9b editing the private source does NOT alter what was published',
+    snap[0].published_body_snapshot === 'what the client received', snap[0].published_body_snapshot);
+
+  await mustRefuse('9c the published snapshot cannot be rewritten', /append-only/,
+    () => query(`UPDATE coach_note_publications SET published_body_snapshot='rewritten' WHERE id=$1`,
+      [pub[0].id]));
+  await mustRefuse('9d a publication cannot be deleted', /append-only/,
+    () => query(`DELETE FROM coach_note_publications WHERE id=$1`, [pub[0].id]));
+
+  await query(`UPDATE coach_note_publications SET withdrawn_at=NOW() WHERE id=$1`, [pub[0].id]);
+  const { rows: withdrawn } = await query(
+    `SELECT withdrawn_at, published_at FROM coach_note_publications WHERE id=$1`, [pub[0].id]);
+  expect('9e withdrawal preserves the fact that publication happened',
+    withdrawn[0].withdrawn_at !== null && withdrawn[0].published_at !== null, JSON.stringify(withdrawn[0]));
+
+  // ── 10  client-declared position sharing ─────────────────────────────────
+  console.log('\n10 client position sharing');
+  const { rows: consent } = await query(
+    `INSERT INTO coach_position_share_consents (relationship_id, client_member_id)
+     VALUES ($1,$2) RETURNING mode`, [pending.relationshipId, client1]);
+  expect('10a consent defaults to OFF', consent[0].mode === 'off', consent[0].mode);
+
+  const { rows: share } = await query(
+    `INSERT INTO coach_position_shares
+       (relationship_id, client_member_id, declared_position, stated_by, share_origin)
+     VALUES ($1,$2,'I am in the middle of it','member_confirmed','item') RETURNING id`,
+    [pending.relationshipId, client1]);
+
+  await mustRefuse('10b a shared declaration cannot be rewritten', /append-only/,
+    () => query(`UPDATE coach_position_shares SET declared_position='reworded' WHERE id=$1`,
+      [share[0].id]));
+  await mustRefuse('10c a shared declaration cannot be deleted', /append-only/,
+    () => query(`DELETE FROM coach_position_shares WHERE id=$1`, [share[0].id]));
+  await mustRefuse('10d the practitioner cannot author a "declared" position',
+    /violates check constraint/,
+    () => query(
       `INSERT INTO coach_position_shares
-         (id, client_member_id, practitioner_member_id, field_slug, declared_position, stated_by, share_origin)
-       VALUES ($1,$2,$3,'flourishing','I feel like I am beginning again','member_stated','item')`,
-      [SHARE, SENJA, LARRY]);
-    await mustRefuse(client, 'D3 a shared declaration cannot be rewritten (exact wording preserved)', /append-only/,
-      `UPDATE coach_position_shares SET declared_position='different words' WHERE id=$1`, [SHARE]);
-    await mustRefuse(client, 'D4 a shared declaration cannot be deleted (withdraw instead)', /append-only/,
-      `DELETE FROM coach_position_shares WHERE id=$1`, [SHARE]);
-    await mustAllow(client, 'D5 the member may withdraw a share from future display',
-      `UPDATE coach_position_shares SET withdrawn_at=NOW() WHERE id=$1`, [SHARE]);
-    {
-      const { rows } = await client.query(
-        `SELECT declared_position, stated_by FROM coach_position_shares WHERE id=$1`, [SHARE]);
-      rows[0]?.declared_position === 'I feel like I am beginning again' && rows[0]?.stated_by === 'member_stated'
-        ? ok('D6 withdrawal preserves the record, the exact wording, and its client-declared provenance')
-        : bad('D6 withdrawal preserves record', JSON.stringify(rows[0]));
-    }
+         (relationship_id, client_member_id, declared_position, stated_by, share_origin)
+       VALUES ($1,$2,'what I think they feel','practitioner_seeded','item')`,
+      [pending.relationshipId, client1]));
 
-    // ── E. BOUNDED HISTORY ───────────────────────────────────────────────────
-    console.log('\nE. Stage history — bounded process record, never rewritten');
-    const HIST = '8b8b8b8b-0000-4000-8000-00000000000b';
-    await client.query(
-      `INSERT INTO coach_enrollment_stage_history (id, process_id, stage_label, changed_by_member_id)
-       VALUES ($1,$2,'Week 3',$3)`, [HIST, PROC, LARRY]);
-    await mustRefuse(client, 'E1 a past stage cannot be rewritten when the client advances', /append-only/,
-      `UPDATE coach_enrollment_stage_history SET stage_label='Week 9' WHERE id=$1`, [HIST]);
-    await mustRefuse(client, 'E2 stage history cannot be deleted', /append-only/,
-      `DELETE FROM coach_enrollment_stage_history WHERE id=$1`, [HIST]);
-    await mustAllow(client, 'E3 closing an open stage interval is permitted',
-      `UPDATE coach_enrollment_stage_history SET exited_at=NOW() WHERE id=$1`, [HIST]);
-    {
-      // The anti-dossier rule, verified as absence of any telemetry-shaped column.
-      const { rows } = await client.query(
-        `SELECT column_name FROM information_schema.columns
-          WHERE table_name LIKE 'coach\\_%'
-            AND column_name ~ '(score|risk|engagement|attrition|inactivity|resistance|readiness|last_seen|login)'`);
-      rows.length === 0
-        ? ok('E4 no scoring / engagement / attrition / behavioural-telemetry column exists anywhere in coach_*')
-        : bad('E4 no telemetry columns', `found: ${rows.map((r: any) => r.column_name).join(', ')}`);
-    }
+  await query(`UPDATE coach_position_shares SET withdrawn_at=NOW() WHERE id=$1`, [share[0].id]);
+  const { rows: stillThere } = await query(
+    `SELECT withdrawn_at FROM coach_position_shares WHERE id=$1`, [share[0].id]);
+  expect('10e withdrawing stops display without deleting the record',
+    stillThere.length === 1 && stillThere[0].withdrawn_at !== null, JSON.stringify(stillThere));
 
-    // ── F. WORK ITEM MEANINGS ────────────────────────────────────────────────
-    console.log('\nF. Homework · practice · commitment — distinct meanings enforced');
-    await mustRefuse(client, 'F1 a practice cannot carry a due date (lived with, not due)', /violates check constraint/,
-      `INSERT INTO coach_work_items (relationship_id, kind, title, created_by_member_id, due_on)
-       VALUES ($1,'practice','sit daily',$2,NOW())`, [REL, LARRY]);
-    await mustRefuse(client, 'F2 a commitment cannot be articulated by the practitioner alone', /violates check constraint/,
-      `INSERT INTO coach_work_items (relationship_id, kind, title, created_by_member_id, articulated_by)
-       VALUES ($1,'commitment','c',$2,'practitioner')`, [REL, LARRY]);
-    await mustAllow(client, 'F3 a client-articulated commitment is permitted',
-      `INSERT INTO coach_work_items (relationship_id, kind, title, created_by_member_id, articulated_by)
-       VALUES ($1,'commitment','I will call my brother',$2,'client')`, [REL, LARRY]);
-    await mustAllow(client, 'F4 homework may carry a due date',
-      `INSERT INTO coach_work_items (relationship_id, kind, title, created_by_member_id, due_on)
-       VALUES ($1,'homework','read chapter 2',$2,NOW())`, [REL, LARRY]);
+  // ── 12  further refusal probes, each for its own reason ──────────────────
+  console.log('\n12 refusal probes');
+  const strangerAuth = await authorizePractitionerClientRelationship(
+    asMemberId(stranger), asRelationshipId(pending.relationshipId));
+  expect('12a an unrelated member gets no grant at all', strangerAuth === null, JSON.stringify(strangerAuth));
 
-    // ── G. ISOLATION FROM THE UNVERIFIED NOTE LANE (founder ruling D-NW-2) ────
-    console.log('\nG. Isolation — no dependency on the unverified note lane or plaintext PHI');
-    {
-      const { rows } = await client.query(
-        `SELECT c.conname FROM pg_constraint c
-           JOIN pg_class t ON t.oid = c.conrelid
-           JOIN pg_class f ON f.oid = c.confrelid
-          WHERE t.relname LIKE 'coach\\_%'
-            AND f.relname IN ('practitioner_client_notes','sessions')`);
-      rows.length === 0
-        ? ok('G1 zero foreign keys from coach_* into practitioner_client_notes or sessions')
-        : bad('G1 isolation', `found FKs: ${rows.map((r: any) => r.conname).join(', ')}`);
-    }
-    {
-      const { rows } = await client.query(
-        `SELECT 1 FROM information_schema.columns
-          WHERE table_name='coach_sessions' AND column_name IN ('notes','note')`);
-      rows.length === 0
-        ? ok('G2 coach_sessions carries no note body (session notes live behind explicit visibility)')
-        : bad('G2 no note body on coach_sessions', 'a notes column exists');
-    }
-  } finally {
-    await client.query('ROLLBACK'); // always: the gate leaves zero residue
-    client.release();
-    await pool.end();
-  }
+  await mustRefuse('12b a commitment cannot exist without member assent', /violates check constraint/,
+    () => query(
+      `INSERT INTO coach_work_items
+         (relationship_id, kind, title, originated_by_role, originated_by_practitioner_id,
+          recorded_by_practitioner_id)
+       VALUES ($1,'commitment','I decided they committed','practitioner',$2,$2)`,
+      [pending.relationshipId, practRecord]));
 
-  console.log(`\n${'─'.repeat(70)}`);
-  console.log(`${passed} passed · ${failed} failed`);
-  if (failed) {
+  const { rows: affirmed } = await query(
+    `INSERT INTO coach_work_items
+       (relationship_id, kind, title, originated_by_role, originated_by_member_id,
+        recorded_by_practitioner_id, member_affirmed_at)
+     VALUES ($1,'commitment','I will walk each morning','member',$2,$3,NOW()) RETURNING originated_by_role`,
+    [pending.relationshipId, client1, practRecord]);
+  expect('12c a member-originated, member-affirmed commitment IS accepted',
+    affirmed[0].originated_by_role === 'member', affirmed[0].originated_by_role);
+
+  await mustRefuse('12d a practice cannot carry a deadline', /violates check constraint/,
+    () => query(
+      `INSERT INTO coach_work_items
+         (relationship_id, kind, title, originated_by_role, originated_by_practitioner_id,
+          recorded_by_practitioner_id, due_on)
+       VALUES ($1,'practice','Sit daily','practitioner',$2,$2,NOW())`,
+      [pending.relationshipId, practRecord]));
+
+  await mustRefuse('12e stage history cannot be rewritten', /append-only/, async () => {
+    const { rows: pd } = await query(
+      `INSERT INTO coach_program_definitions (owner_practitioner_id, title)
+       VALUES ($1,'P') RETURNING id`, [practRecord]);
+    const { rows: en } = await query(
+      `INSERT INTO coach_program_enrollments (process_id, program_definition_id, enrolled_by_practitioner_id)
+       VALUES ($1,$2,$3) RETURNING id`, [proc[0].id, pd[0].id, practRecord]);
+    const { rows: sh } = await query(
+      `INSERT INTO coach_enrollment_stage_history (program_enrollment_id, changed_by_practitioner_id)
+       VALUES ($1,$2) RETURNING id`, [en[0].id, practRecord]);
+    return query(`UPDATE coach_enrollment_stage_history SET change_reason='rewritten' WHERE id=$1`,
+      [sh[0].id]);
+  });
+
+  await mustRefuse('12f a client-private note has no relationship column to reach it by',
+    /relationship_id.*does not exist/,
+    () => query(`SELECT relationship_id FROM coach_client_personal_notes LIMIT 1`));
+
+  // ── cleanup ──────────────────────────────────────────────────────────────
+  await clearFixtures();
+  const { rows: leftover } = await query(
+    `SELECT (SELECT count(*) FROM practitioner_clients WHERE email LIKE $1)
+          + (SELECT count(*) FROM members WHERE username LIKE $1) AS n`, [`${TAG}-%`]);
+  expect('cleanup leaves no fixtures behind', Number(leftover[0].n) === 0, `${leftover[0].n} rows remain`);
+
+  console.log(`\n${passed} passed · ${failures.length} failed`);
+  if (failures.length) {
     console.log('\nFailures:');
     failures.forEach((f) => console.log(`  · ${f}`));
     process.exit(1);
   }
-  console.log('\x1b[32mAll coach-field boundaries hold.\x1b[0m');
+  console.log('\nCOACH FIELD BOUNDARY GATE — ALL PASSED\n');
 }
 
-main().catch((e) => {
-  console.error('Gate error:', e);
-  process.exit(1);
-});
+main()
+  .catch((e) => { console.error('\nGATE ERRORED:', e); process.exit(1); })
+  .finally(() => closePool());
