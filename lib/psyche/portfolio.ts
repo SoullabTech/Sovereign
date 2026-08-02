@@ -152,6 +152,32 @@ export async function getAtom(
   return row ? rowToAtom(row) : null;
 }
 
+/**
+ * Look up the atom a member already minted from a specific source row.
+ *
+ * The unique index `idx_memory_atoms_unique_source (member_id, source_type,
+ * source_id) WHERE source_id IS NOT NULL` guarantees at most one row, so this
+ * is the read side of "has this source already been declared?". Declaration
+ * paths use it to stay idempotent instead of minting a second Field Object.
+ *
+ * `spontaneous` atoms have a NULL source_id and are therefore never findable
+ * here — by design; they have no source to be declared from.
+ */
+export async function getAtomBySource(
+  memberId: string,
+  sourceType: MemoryAtomSourceType,
+  sourceId: string,
+): Promise<CrystallizedMemory | null> {
+  const result = await query<AtomRow>(
+    `SELECT ${ATOM_COLUMNS}
+       FROM member_memory_atoms
+      WHERE member_id = $1 AND source_type = $2 AND source_id = $3`,
+    [memberId, sourceType, sourceId],
+  );
+  const row = result.rows[0];
+  return row ? rowToAtom(row) : null;
+}
+
 export async function listAtoms(
   memberId: string,
   view: PortfolioView,

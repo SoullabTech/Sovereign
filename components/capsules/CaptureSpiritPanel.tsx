@@ -17,7 +17,10 @@ import {
   ChevronUp,
   ExternalLink,
   Loader2,
+  Check,
+  Library,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 
 // Element config
@@ -57,6 +60,14 @@ export default function CaptureSpiritPanel({
   const [isSaving, setIsSaving] = useState(false);
   const [isBringing, setIsBringing] = useState(false);
 
+  // ── Field declaration ────────────────────────────────────────────────────
+  // Whether this capsule has been declared a Field Object. `null` = not yet
+  // known (the status read is in flight); the act stays available either way,
+  // since the endpoint is idempotent.
+  const [keptInField, setKeptInField] = useState<boolean | null>(null);
+  const [isKeeping, setIsKeeping] = useState(false);
+  const [keepError, setKeepError] = useState<string | null>(null);
+
   // Sync local state with capsule
   useEffect(() => {
     if (capsule) {
@@ -65,6 +76,53 @@ export default function CaptureSpiritPanel({
       setElement(capsule.signals?.element || '');
     }
   }, [capsule]);
+
+  // Read the declaration's standing when a capsule is shown. This only reports
+  // what the member already did — opening the panel never declares anything.
+  useEffect(() => {
+    const capsuleId = capsule?.id;
+    if (!isOpen || !capsuleId) return;
+
+    let cancelled = false;
+    setKeptInField(null);
+    setKeepError(null);
+
+    (async () => {
+      try {
+        const r = await apiFetch(`/api/capsules/${capsuleId}/keep-in-field`);
+        if (!r.ok) return; // leave unknown; the act is still offered
+        const data = await r.json();
+        if (!cancelled) setKeptInField(Boolean(data.kept));
+      } catch {
+        // Unknown standing is not an error the member needs to see.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, capsule?.id]);
+
+  // The declaration act. Saves the member's edits first so what enters the
+  // Field is the text they are looking at, then declares.
+  const handleKeepInField = async () => {
+    if (!capsule || isKeeping) return;
+    setIsKeeping(true);
+    setKeepError(null);
+    try {
+      await handleSaveQuickEdits();
+      const r = await apiFetch(`/api/capsules/${capsule.id}/keep-in-field`, {
+        method: 'POST',
+      });
+      if (!r.ok) throw new Error(`keep-in-field failed: ${r.status}`);
+      setKeptInField(true);
+    } catch (err) {
+      console.error('[CaptureSpiritPanel] keep in field failed', err);
+      setKeepError("Could not keep this in your Field just now. It's still saved here.");
+    } finally {
+      setIsKeeping(false);
+    }
+  };
 
   const handleSaveQuickEdits = async () => {
     if (!capsule) return;
@@ -287,6 +345,50 @@ export default function CaptureSpiritPanel({
                         </>
                       )}
                     </button>
+
+                    {/* The declaration: this capsule becomes an enduring Field
+                        Object. Distinct from saving — the capsule stays exactly
+                        where it is; this is the member choosing that it should
+                        last. Governed by FIELD_OBJECT_PROMOTION_RULING_2026-08-02. */}
+                    {keptInField ? (
+                      <div className="w-full px-4 py-3 bg-[#D4B896]/5 border border-[#D4B896]/20 rounded-xl">
+                        <div className="flex items-center gap-2 text-[#D4B896] text-[14px]">
+                          <Check className="w-4 h-4 flex-shrink-0" />
+                          <span>In your Field</span>
+                        </div>
+                        <a
+                          href="/maia/workbench"
+                          className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-white/50 hover:text-white/80 transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Find it on your Workbench
+                        </a>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleKeepInField}
+                        disabled={isKeeping || isSaving || isBringing}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10
+                                 border border-[#D4B896]/30 text-[#D4B896] rounded-xl text-[14px] tracking-wide transition-all
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isKeeping ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Keeping...
+                          </>
+                        ) : (
+                          <>
+                            <Library className="w-4 h-4" />
+                            Keep in my Field
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {keepError && (
+                      <p className="text-red-400/80 text-[12px] leading-relaxed">{keepError}</p>
+                    )}
 
                     {/* Secondary: Keep as draft */}
                     <button
