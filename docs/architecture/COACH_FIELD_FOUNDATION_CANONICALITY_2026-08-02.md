@@ -319,3 +319,111 @@ get implemented. Each deserves its own bounded change.
 
 > **The finding worth carrying forward:** a migration can be absent from production and still be
 > dangerous while it remains executable in the path to production.
+
+---
+
+## 8. #902 accepted — and the amendment control that arrived too late
+
+**#902 merged 2026-08-02T22:59:55Z as `c0c8b0ba6`.** Both migrations
+(`20260802000002_practitioner_client_relationship.sql`,
+`20260802000003_coach_field_process_structures.sql`) are on trunk.
+
+**Status: #902 is the accepted canonical foundation.** Two post-merge amendments are required.
+
+⭐ **This is not a failed foundation acceptance. It is a governance/process gap exposed by
+acceptance.** The fact pattern, kept in order:
+
+1. #902 was accepted and merged.
+2. The review findings were valid.
+3. The review mechanism available was a **comment**, not an enforceable requested-change gate.
+4. The merge occurred before the amendments landed.
+5. The remaining changes are therefore **post-merge corrective amendments, not acceptance blockers.**
+
+### 8.1 ⛔ Do not amend the merged migrations in place
+
+The earlier rule — *"never reached production → amend directly in the draft lineage, no transitional
+duplication"* — **was correct before merge and does not survive it.**
+
+After merge the migration file is part of repository history. Editing it now creates a worse problem
+than it solves:
+
+- dev environments that already applied it **diverge silently**;
+- the repository **no longer describes what was applied**;
+- the checksum gap (§5.6.5) becomes actively harmful rather than merely undocumented.
+
+⭐ **The checksum gap is real but is a separate infrastructure issue. It must not be "solved" by
+pretending the merged migration never existed.** The safer path after merge is a **follow-up
+corrective migration**.
+
+### 8.2 Amendment 1 — constrained ambiguity representation
+
+Trunk carries `practitioner_client_reconciliation.ambiguity_reason TEXT` (L424): unconstrained,
+uncommented, populated by a CASE (L544–554) emitting one of four fixed English sentences.
+
+The corrective migration must:
+
+1. add the constrained field (`ambiguity_code` or equivalent, controlled vocabulary);
+2. map the four known existing sentences to codes;
+3. preserve **no arbitrary human text**;
+4. remove or retire the unconstrained field after the transition.
+
+⭐ **The point is not the column rename.** It is restoring the invariant:
+**reconciliation metadata describes machine evidence, not human explanation.**
+⚠️ Exact vocabulary is the owning lane's call — earlier code names posted to #902 were illustrative,
+an existence proof that a closed vocabulary covers all four branches, **not** a prescribed set.
+
+### 8.3 Amendment 2 — formalize the `provenance` contract
+
+Partially pre-satisfied by the original author. Trunk already carries a `COMMENT ON COLUMN` (L445):
+*"The evidence the classification rests on — candidate counts, invitation ids, whether the email was
+verified. Recorded so a human resolving the row can see WHY it was queued."*
+
+⭐ That comment is useful because it **reveals the intended semantic boundary** — it is evidence.
+Missing: a closed schema expectation · an explicit prohibition on becoming a content surface · a gate
+assertion.
+
+The follow-up must add: documented allowed keys · validation at the write boundary · a test/gate
+assertion.
+
+### 8.4 ⏳ The provenance/email question — reframed, still unruled
+
+Trunk writes raw `normalized_invitation_email` into `provenance` (L486).
+
+⭐ **The question is not "can we hash the email?" It is: *what is provenance allowed to reveal, and to
+whom?*** The answer depends on what provenance is *for*:
+
+| If provenance is for… | Then prefer |
+|---|---|
+| **automated reconciliation** | `candidate_relationship_ids` · `match_basis` · `verification_state` · `email_verified` — non-human-readable identifiers |
+| **human review** | different privacy implications entirely; requires an explicit decision, not a default |
+
+Belongs to the corrective lane. ⛔ Do not resolve it by picking the technically convenient option.
+
+### 8.5 Ownership — one foundation, forward-corrected
+
+```
+#902 foundation  →  post-merge corrective amendment PR  →  same foundation owner / reviewers
+```
+
+**Not** `new branch → new interpretation → new foundation fork`.
+
+⭐ The foundation **proved its value by making the remaining correction small and visible.**
+⛔ Do not reopen the foundation. The next act is a controlled amendment, not another architecture
+debate.
+
+### 8.6 ⭐⭐⭐ The governance lesson — its own lane, not this PR
+
+> **A review comment is not a control.** It can say *"this should change."*
+> It cannot enforce *"this must change before merge."*
+
+Third instance in one day (#814's coordination comment · #911's abort race · this). The distinction
+needs a **mechanism**, not more discipline. Candidates — **not authored, not ruled**:
+required approval from foundation owners · `CODEOWNERS` for foundation paths · merge-queue rules ·
+a required check that unresolved architectural amendments are tracked.
+
+⚠️ Aggravating factor found here: GitHub **refuses a requested-changes review on a same-account PR**,
+so on this repo the one native control for "must change before merge" is structurally unavailable to
+a same-account reviewer. Draft status is the remaining native control — and it must be applied
+*before* the merge window, not after.
+
+⛔ **Do not mix this into the correction PR.** Separate lane.
