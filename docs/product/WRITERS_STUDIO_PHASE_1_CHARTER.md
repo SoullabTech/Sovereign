@@ -132,6 +132,60 @@ Naming these prevents a later slice from being read as a regression:
 - Project selection UI beyond what 1C and 1D require to route correctly.
 - Any judgment, clustering, ordering, naming, or suggestion by MAIA inside the Canvas.
 
+## The unit of acceptance is the release object, not the PR
+
+> **Added by Kelly, 2026-08-02**, after Phase 1 stopped being a line and became a graph.
+
+The sequence above reads as linear — 1A, then 1B, then 1C, then 1D. **The work did not arrive
+that way**, and the charter would be lying if it pretended otherwise. Independent lanes ran
+concurrently, corrections landed after the slice they corrected had already merged, and
+instrumentation appeared beside implementation rather than after it:
+
+```
+1A  #869  WriterField substrate ─────────┐
+1B  #875  Start writing ──────────────┬──┤
+1C  #877  Member Workbench / Keep ────┘  │
+    #878  Arrangement verbs ───────┐     │
+    #879  Walk probes ─────────────┤     │
+    #880  Post-merge corrections ──┘     │
+    #876  This charter ─────────────────┘
+```
+
+That is not disorder. It is what independent work looks like. But it changes what "done" can
+mean, and the discipline has to change with it:
+
+> **Release discipline shifts from *PR order* to *release object*.**
+>
+> The unit of acceptance is no longer an individual PR. It is the
+> **Writer's Studio Phase 1 Release Candidate** — the merged work, the pending corrections,
+> the instrumentation, and the experiential walk, accepted together.
+>
+> Only after *that* passes does deployment happen.
+
+### Consequences, stated so they are not re-argued later
+
+- **A merged PR is not an accepted capability.** #875 merged before its corrections existed and
+  before its walk was run. Both facts are true; neither is a scandal; both belong to the release
+  object rather than to the PR.
+- **A correction to a merged slice is not a continuation of implementation.** It belongs to the
+  same release object as the slice it corrects, and it does not reopen that slice's scope.
+- **The walk is performed against the assembled candidate**, not against each PR as it lands.
+  Walking a slice that a later PR will change is walking something that will not ship.
+- **No new implementation lane opens until Phase 1 is a finished release object.** The Canvas
+  work this charter is groundwork for — projects, thinking space, multiple works, the Studio
+  environment — waits.
+
+### Phase 1 release sequence
+
+1. Merge **#880** — post-merge corrections (C1 concurrency coverage, C2 nullable title).
+2. Merge **#879** — walk probes, if the instrumentation is wanted in the repository.
+3. Merge **#878** — arrangement verbs, after review.
+4. Perform the **full experiential walk** against the assembled candidate.
+5. Deploy Phase 1 as **a single release**.
+
+This preserves the property the project has been careful to build: **each phase becomes an
+observed capability before the next one begins.**
+
 ## Success condition
 
 Phase 1 succeeds if it **establishes the trajectory** — Canvas as primary workspace, manuscript
