@@ -42,9 +42,36 @@ Feature Acceptance
 Release Acceptance
 ```
 
-⛔ **A pass in one chain is not a pass in another.** Persistence gates are specification-chain
-evidence; they do not accept a feature. A feature walk accepts a feature; it does not accept a
-release. Only the founder's decision, against frozen release-chain evidence, does that.
+### Evidence is prerequisite, not substitutable
+
+⭐⭐⭐ **Evidence produced for one authority chain cannot substitute for evidence required by another
+authority chain, even though it may be a prerequisite for it.**
+
+This is the precise form. An earlier draft said *"evidence from a lower chain never satisfies a
+higher one,"* which reads as though lower evidence were **irrelevant** higher up. It is not — a
+release decision depends on feature evidence absolutely. What it may not do is **stand in for** it.
+
+```
+Implementation evidence
+        ↓ prerequisite
+Feature evidence
+        ↓ prerequisite
+Release evidence
+        ↓ prerequisite
+Founder decision
+```
+
+**Each level consumes the previous one without replacing it.**
+
+| This | is required before | but cannot substitute for |
+|---|---|---|
+| Correction 3 persistence evidence | the authenticated feature walk | the authenticated feature walk |
+| the authenticated feature walk | the Phase 1 release walk | the Phase 1 release walk |
+| the release walk | founder acceptance | founder acceptance |
+
+⛔ So *"18/18 persistence gates pass"* is a **prerequisite** for accepting Correction 3 and is
+**not** an acceptance of it. The distinction is not pedantry: every collapse of it this project has
+seen produced a claim that something was ready when it was not.
 
 ---
 
@@ -121,6 +148,39 @@ silently alter the standards applied to the work passing through it.
 
 ---
 
+## ⏳ The open dimension — state transition authority
+
+Knowing the chains is not enough. Each chain moves artifacts through **states**, and *who may move
+them* is still implicit.
+
+⭐⭐⭐ **This is not authorship.** Someone may draft a specification without being able to **freeze**
+it. Someone may execute a walk without being able to **accept** it. Someone may assemble a candidate
+without being able to **release** it. Those are different authorities, and today they are unnamed.
+
+| Artifact | States | Who may transition? |
+|---|---|---|
+| Implementation Specification | Draft → Frozen | ⏳ unruled |
+| Feature Walk Specification | Draft → Frozen | ⏳ unruled |
+| Feature Walk Evidence | Open → Complete | ⏳ unruled — any witness? two? |
+| Release Candidate | Assembled → Accepted | ⏳ unruled |
+| Founder Acceptance | Pending → Accepted / Refused | ✅ **Founder-Steward only** |
+
+**What already exists to build on.** `docs/GOVERNANCE_MENTOR_COVENANT.md` defines the roles —
+Founder-Steward, Founder's Council, Mentors, Release Steward — and per-class **approval** gates.
+⚠️ Approval authority is **not** the same as state transition authority: approving a PR is not
+freezing a specification, and neither is completing an evidence record. The one adjacent precedent
+is `CORPUS_WEIGHTING_SCHEMA_v1.0.md` — *"Tier 1 is frozen except by explicit decision"* — a freeze
+concept that exists for corpus tiers and has never been generalized to governance artifacts.
+
+⛔ **This document does not answer these questions.** It records that they are the remaining gap, and
+that answering them is a founder act.
+
+> Once four things are known — **what the artifacts are · what states they have · who may transition
+> them · and that evidence is prerequisite rather than substitutable** — the governance model is
+> complete without adding further special-case rules.
+
+---
+
 ## How to use this document
 
 For any change, name which chain you are in **before** citing evidence:
@@ -132,5 +192,6 @@ For any change, name which chain you are in **before** citing evidence:
 3. **Release** — may this participate in a candidate? Only the founder, against frozen release
    evidence for a named SHA, answers here.
 
-⛔ **Evidence from a lower chain never satisfies a higher one.** *"The tests pass"* is not
-*"the feature is accepted."* *"The feature is accepted"* is not *"the release is accepted."*
+⛔ **Evidence for one chain cannot substitute for evidence required by another**, though it is
+usually a prerequisite for it. *"The tests pass"* is not *"the feature is accepted."* *"The feature
+is accepted"* is not *"the release is accepted."*
