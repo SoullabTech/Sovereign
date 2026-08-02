@@ -152,7 +152,24 @@ failure in a single-manuscript fixture, but unsafe before multiple expressions o
 
 1. **Connect a genuine, generally reachable member Keep act to the canonical Field Object
    substrate the Shelf consumes** — or alter the Shelf's admitted sources through an explicit
-   ontology ruling. ⛔ Not by treating capsules as atoms.
+   ontology ruling.
+
+   ⛔ **NOT by auto-creating an atom when a capsule is saved** (Kelly, 2026-08-02). That is the
+   obvious engineering response and it is refused: it would be **silent promotion**, which this
+   project has ruled against repeatedly. *"This conversation mattered"* and *"this belongs in my
+   enduring Field"* are **two different declarations**, and the member makes both or neither.
+
+   ⭐⭐⭐ W8 did not expose a broken button. It exposed that **two models of "keeping" coexist in
+   the running product**: the member is asked to perform the first act while the Workbench
+   assumes the second already happened. That is the failure — and it is an architectural one.
+
+   The correction is therefore gated on a constitutional question, not an implementation choice:
+
+   > **What is the first deliberate act by which something becomes part of a person's enduring
+   > Field?**
+
+   See `docs/architecture/FIELD_OBJECT_DECLARATION_QUESTION_2026-08-02.md` — recorded, **not
+   ratified**, and authorizing no implementation.
 2. **Fix blank-WriterField click-to-focus**, then repeat the real user action.
 3. **Replace return-by-position with identity routing** before project multiplicity makes the
    ambiguity consequential.
