@@ -427,3 +427,82 @@ a same-account reviewer. Draft status is the remaining native control — and it
 *before* the merge window, not after.
 
 ⛔ **Do not mix this into the correction PR.** Separate lane.
+
+### 8.7 The stronger rule, and why it replaces the earlier one
+
+The pre-merge rule — *"if it has never reached production, amend in place"* — existed to prevent
+**shipping a known defect**. It is correct in the draft lineage and it does not survive merge.
+
+> **Once a migration is merged and potentially consumed by any environment, corrective history must
+> be explicit.**
+
+⭐⭐⭐ **The reason is the checksum gap, and it is decisive.** Because
+`scripts/run-sql-migrations.sh` records `filename` only and never computes or compares a checksum
+(§5.6.5), the system **cannot distinguish**:
+
+```
+migration changed intentionally    ⟺    migration drifted accidentally
+```
+
+An in-place edit is therefore not a "safe correction that nobody has applied yet." It is
+**invisible divergence** — indistinguishable, by the only mechanism that could tell them apart, from
+corruption. Every environment gets a visible transition instead:
+
+```
+000002 (historical truth, unchanged)  →  000004 (corrective amendment)
+```
+
+**not** `000002 (changed after the fact)`.
+
+`20260802000004` is free on trunk (verified). `20260802000002_practitioner_client_relationship.sql`
+stays exactly as merged.
+
+### 8.8 What the two amendments actually are
+
+Neither is new architecture.
+
+- **Amendment 1 completes the architecture #902 already claims.** The schema currently permits human
+  interpretation to enter a machine reconciliation record. The correction splits what was conflated:
+  **machine classification → constrained code** · **human explanation → a separate future evidence
+  surface.** Corrective migration · constrained codes · map existing known values · gate assertion.
+- **Amendment 2 is narrower and gated on a ruling.** The existing column comment already establishes
+  aligned intent (*"evidence the classification rests on"*). What is missing is: which **keys** are
+  allowed · which **data classes** are allowed · whether human narrative is **explicitly forbidden**.
+
+⛔ **Rule the email question before changing the schema.** The starting question is not *"can we hash
+it?"* — convenience is not a reason to keep or transform a field. It is:
+
+> **Does this artifact need the email itself, or only proof that a match occurred?**
+
+⭐ If provenance exists to help **machines reconcile**, store machine evidence. If it exists to help
+**humans understand**, it is approaching a notes/audit-content surface. **Those are different
+objects**, and the answer determines the schema rather than following from it.
+
+### 8.9 Lane ownership
+
+**Foundation corrective amendment** — scope: ambiguity codes · provenance contract · gate assertions.
+⛔ **No UI. No service expansion.**
+
+⚠️ **Do not assign this to #911 unless its owner accepts it.** #911 is the governance/incident record;
+absorbing an implementation scope would repeat the pattern this document exists to name.
+
+Separate lanes, separately owned: **checksum enforcement** · **governance around merge controls**
+(**#896** `fix/covenant-gate-severity`, OPEN — verified).
+
+⚠️ **Unresolved reference:** the clean-next-state list cites *"#915 — identity inventory."*
+**No PR #915 exists** (`gh pr view 915` → not found). Recorded as unresolved rather than guessed at;
+the intended referent needs naming before it can be tracked.
+
+### 8.10 The governance failure stated precisely
+
+⛔ The missing capability was **not** *"reviewers need to comment more clearly."* It was:
+
+> **The repository had no mechanism to prevent acceptance of a foundation change while known
+> architectural amendments remained unresolved.**
+
+A comment is a **signal**. A required review is a **control**. That is a mechanism gap, and it
+belongs to the governance lane as **evidence, not blame**.
+
+⭐ **Restraint that governs the corrective lane:** do not turn this correction into another foundation
+redesign. **The foundation survived review.** This is finishing two edges the review correctly
+exposed.
