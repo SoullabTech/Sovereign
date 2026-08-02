@@ -176,6 +176,9 @@ revert shape.
 
 > **FAILED at W8. Founder acceptance unavailable. Deployment unauthorized.**
 
+⛔ **This ruling authorizes no implementation.** The sequence below states the order corrections must
+take if and when they are separately authorized; authorization is a distinct founder act.
+
 **Implementation sequence:**
 
 1. Fix real click-to-focus.
