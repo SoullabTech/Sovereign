@@ -150,6 +150,7 @@ export default function StudioShell({
     workCount: works.length,
     work: arrivalWork(worksPhase, works),
     manuscriptTitle,
+    hasManuscript,
   });
 
   const identity = (
