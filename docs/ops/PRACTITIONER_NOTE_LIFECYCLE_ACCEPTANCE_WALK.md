@@ -102,9 +102,37 @@ The fixture itself has been run. What that established, and what it did not:
 | ⚠️ **session fixture NOT created** — `sessions.team_id` is `NOT NULL` with no default, and the `teams` table does not exist on the local dev database | see below |
 | ⛔ `inspect` / `plaintext-scan` **not exercised** — the migration is unapplied locally, so the lifecycle columns do not exist | must be re-verified on the walk database |
 
-⚠️ **Before the walk, supply `sessions.team_id`.** On the production-shaped database, either a team
-row exists to reference or one must be added to the fixture. Until then the script self-reports and
-**criterion 13's session arm is NOT EXERCISED — not passed.**
+### 🔴 `sessions.team_id` — inventoried, and the blocker is upstream
+
+The three questions asked before fabricating around this, answered:
+
+| Question | Answer |
+|---|---|
+| What does `team_id` reference? | **`studio_teams(id)`** `ON DELETE RESTRICT` — added by `20260630000004_sessions_encounters_team_scope.sql`. ⚠️ Not a `teams` table; an earlier check for that name returned nothing and read as "absent" when the substrate was simply named differently. |
+| Does a practitioner fixture have a valid team? | Not automatically. The canonical resolution is in the migration's own backfill: `studio_team_members` where `member_id = practitioners.member_id` and `role='owner'`. The fixture practitioner has no `member_id`, so no team resolves. Locally `studio_teams` holds 3 rows. |
+| Is session creation normally done through an API or helper? | **Yes — four write paths.** `app/api/studio/sessions/route.ts` · `app/api/book/[slug]/confirm/route.ts` · `app/api/portal/[slug]/book/route.ts` · `lib/portal/bookingTools.ts` |
+
+⭐ That third answer is why the fixture must **not** create sessions by direct INSERT. A hand-built
+row would bypass whatever the app does, and criterion 13 would then be testing a session the
+application would never have produced.
+
+🔴 **But session creation is currently broken — see #899.** All four write paths omit `team_id`,
+which is `NOT NULL` with no default and no trigger. Reproduced:
+
+```
+ERROR:  null value in column "team_id" of relation "sessions" violates not-null constraint
+```
+
+Production confirms `is_nullable = NO`, 34 session rows, **none created since 2026-06-30** (the
+migration date); the last successful creation was 2026-06-11.
+
+⛔ **Do not fabricate around this.** Until #899 is repaired, criterion 13's session arm stands
+**NOT EXERCISED — not passed, not failed.** Creating the session by direct INSERT to unblock the
+walk would produce exactly the false evidence this protocol exists to prevent: a session that no
+application path could have made, used to certify that the application enforces ownership on it.
+
+The other four rows of criterion 13 (cross-practitioner, cross-client, malformed uuid) are
+**unaffected** and must still be exercised.
 
 ⭐ Running the harness found three defects in it that reading it did not: a CHECK constraint
 introspection cannot see (`practitioner_clients_pending_reachable`), a `GENERATED ALWAYS` column that
@@ -236,6 +264,31 @@ UPDATE practitioner_client_notes SET completed_at = NULL
 The constraint should **refuse** it (`completed_at` must be non-null when
 `practitioner_declared`). That refusal is itself the evidence that the timestamp is not load-bearing
 and the named field is. Record the exact constraint name in the error.
+
+**Then test the inverse world** — this is what makes the separation *directly observable* rather
+than argued. Keep `completed_at` exactly as it is; change only the authority:
+
+```sql
+-- completed_at stays populated; authority is downgraded
+UPDATE practitioner_client_notes
+   SET completion_mode = 'backfilled', completed_at = NULL
+ WHERE id = '<note id>' AND practitioner_id = '<fixture practitioner id>';
+```
+
+**Expect:** the note becomes **editable again** — the pencil returns and a `content` PATCH → 200.
+
+⭐ Run the two directions together and the claim is settled by observation:
+
+| `lifecycle` | `completion_mode` | `completed_at` | editable? |
+|---|---|---|---|
+| completed | `practitioner_declared` | set | ❌ locked |
+| completed | `backfilled` | null | ✅ editable |
+
+Editability tracks **`completion_mode`**, and `completed_at` moves with it as provenance rather than
+driving it. ⚠️ The `completed_at_check` constraint deliberately keeps the two consistent, so the
+inverse test changes both — the point is not that the timestamp is free to vary independently, but
+that **the lock reads the authority field**. If a future change lets these disagree, this table is
+where it will show.
 
 ### 11 — Backfilled notes remain editable
 
