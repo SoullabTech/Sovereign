@@ -11,7 +11,23 @@
 import { useState } from 'react';
 import { Card } from './Card';
 import type { CardPointer } from '@/lib/workbench/sources/types';
-import type { ResolvedGroup } from './Room';
+import type { ResolvedCard, ResolvedGroup } from './Room';
+
+/**
+ * Each adapter names its display field for what the object actually is:
+ * `title` for a Keep atom, `originalName` for an uploaded file. Fall through
+ * both rather than forcing one adapter's vocabulary onto the other.
+ */
+function cardTitle(card: ResolvedCard): string {
+  const meta = card.resolved?.meta;
+  if (meta) {
+    if (typeof meta.title === 'string' && meta.title.trim()) return meta.title;
+    if (typeof meta.originalName === 'string' && meta.originalName.trim()) {
+      return meta.originalName;
+    }
+  }
+  return `${card.source}:${card.ref.slice(0, 8)}…`;
+}
 
 interface GroupProps {
   group: ResolvedGroup;
@@ -20,6 +36,8 @@ interface GroupProps {
   onRemoveCard: (groupId: string, cardId: string) => void;
   onDelete: (groupId: string) => void;
   onGraduate: (groupId: string) => void;
+  /** False on the member surface — graduation is not in the first member slice. */
+  canGraduate?: boolean;
 }
 
 export function Group({
@@ -29,6 +47,7 @@ export function Group({
   onRemoveCard,
   onDelete,
   onGraduate,
+  canGraduate = true,
 }: GroupProps) {
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState(group.name);
@@ -105,15 +124,17 @@ export function Group({
         <span className="text-amber-200/35 text-xs font-light italic shrink-0">
           {group.cards.length}
         </span>
-        <button
-          type="button"
-          onClick={() => onGraduate(group.id)}
-          disabled={group.cards.length === 0}
-          className="text-amber-200/50 hover:text-amber-200/90 disabled:text-amber-200/15 disabled:cursor-not-allowed text-xs font-light tracking-wide transition-colors shrink-0"
-          title="Graduate this group to a Book Studio draft"
-        >
-          Graduate →
-        </button>
+        {canGraduate && (
+          <button
+            type="button"
+            onClick={() => onGraduate(group.id)}
+            disabled={group.cards.length === 0}
+            className="text-amber-200/50 hover:text-amber-200/90 disabled:text-amber-200/15 disabled:cursor-not-allowed text-xs font-light tracking-wide transition-colors shrink-0"
+            title="Graduate this group to a Book Studio draft"
+          >
+            Graduate →
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onDelete(group.id)}
@@ -137,10 +158,7 @@ export function Group({
               card={{
                 source: card.source,
                 ref: card.ref,
-                title:
-                  card.resolved && typeof card.resolved.meta.originalName === 'string'
-                    ? card.resolved.meta.originalName
-                    : `${card.source}:${card.ref.slice(0, 8)}…`,
+                title: cardTitle(card),
                 preview: card.resolved
                   ? card.resolved.content.slice(0, 140)
                   : '(unresolved or sanctuary)',

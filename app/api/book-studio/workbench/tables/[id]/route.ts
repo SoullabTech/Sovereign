@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireFounder } from '@/lib/founder/founderAuth';
+import { requireArranger } from '@/lib/workbench/access';
 import { query } from '@/lib/db/postgres';
 import { getSource } from '@/lib/workbench/sources';
 import type { TableLayout, CardPointer } from '@/lib/workbench/sources/types';
@@ -35,7 +35,7 @@ interface TableRow {
 }
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
-  const auth = await requireFounder();
+  const auth = await requireArranger();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -76,7 +76,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
-  const auth = await requireFounder();
+  const auth = await requireArranger();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -128,7 +128,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
-  const auth = await requireFounder();
+  const auth = await requireArranger();
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
