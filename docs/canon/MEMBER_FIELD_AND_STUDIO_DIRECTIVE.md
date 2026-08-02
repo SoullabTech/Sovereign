@@ -1,10 +1,51 @@
 # The Member Field and the Studios — Constitutional Directive
 
 **Authored by:** Kelly, 2026-08-02. **Recorded by:** Claude Code, verbatim in intent.
-**Status:** **Recorded — awaiting ratification.** Ratification is Kelly's act, not Claude's.
+
+## ✅ RATIFIED — 2026-08-02 (Kelly)
+
+> *"I would ratify `MEMBER_FIELD_AND_STUDIO_DIRECTIVE.md` as the governing model for Phases 3
+> onward."* — Kelly, 2026-08-02, following incorporation of Amendments 1–3.
+
+**Governing model for Phases 3 onward.**
+
+⛔ **Ratification does not authorize new implementation by itself.** It **constrains** future work,
+particularly:
+
+- project expansion
+- additional Shelf adapters
+- contextual retrieval
+- Development Notes
+- pile-to-writing
+- MAIA's role around evolving work
+
+**The operative rule:**
+
+> **Reveal the project's recorded development; do not perform authorship.**
+
+### The two implementation gates (ratified as placed)
+
+1. ⏸️ **Before a second Shelf source ships** — object type and provenance must remain **visibly
+   distinct**.
+2. ⏸️ **Before member graduation ships** — the current flatten-and-copy behaviour must be replaced
+   with a **member-authored relationship between selected Field references and an expression**.
+
+### Ratified architecture
+
+```
+Member Field                enduring life-level insight objects
+Project                     references Field Objects
+Project Development Record  notes and questions about what this work is becoming
+Expression                  prose, course, talk, book, or another formed work
+```
+
+**Each layer can illuminate the next. None silently becomes another.**
+
+---
+
 **Scope:** how every implementation touching Field Objects, Studios, Canvas, search, or contextual
-offering is to be thought about. This is a **constitutional** directive, not a feature spec: no
-implementation is authorized by it, and every implementation must grow from it.
+offering is to be thought about. This is a **constitutional** directive, not a feature spec: every
+implementation must grow from it.
 
 ---
 
@@ -396,8 +437,18 @@ not queued.
 
 | Item | State |
 | --- | --- |
-| **PR #878** | **Consistent with the directive.** Proceed to the felt-grammar walk |
-| **This directive** | **Recorded, not ratified.** Ratification requires Amendments 1–3, now incorporated above |
+| **PR #878** | **Compatible; no architectural correction needed.** One item left: the founder felt-grammar walk |
+| **This directive** | ✅ **RATIFIED 2026-08-02** as the governing model for Phases 3 onward (see header) |
+
+### The remaining #878 walk (narrow, experiential)
+
+1. Create **one real Keep** through the normal gesture.
+2. Place it.
+3. Use **Also place in…**, **Move to…**, and **Return to Shelf**.
+4. Judge: do these feel like **natural acts of arranging insight**, or like **managing records**?
+
+⚠️ **Use your own Keep, not the fixture.** The unresolved issue is experiential language, and the
+member's own material is the only reliable test for it.
 
 ### Two future blockers, with their gates
 
