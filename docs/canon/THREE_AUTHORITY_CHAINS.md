@@ -211,6 +211,55 @@ piece of work, not an unfinished one.
 > them · and that evidence is prerequisite rather than substitutable** — the governance model is
 > complete without adding further special-case rules.
 
+### The full chain, end to end
+
+```
+Implementation Specification
+        ↓
+Implementation
+        ↓
+Feature Walk Specification
+        ↓
+Feature Walk Evidence
+        ↓
+Feature Acceptance
+        ↓
+Release Candidate
+        ↓
+Phase 1 Walk Specification
+        ↓
+Phase 1 Walk Evidence
+        ↓
+Release Acceptance
+        ↓
+Founder Decision
+```
+
+**Each transition consumes the evidence from the level below without replacing it.** The property
+that matters is that **feature-level and release-level decisions stay distinct**: a feature can be
+accepted while the release object it belongs to is not, and a release blocker is not a feature
+blocker.
+
+⭐⭐ **Vocabulary.** Say **feature acceptance**, not *"feature verification"* — the nouns should match
+the chain: implementation evidence → **feature acceptance** → **release acceptance** → **founder
+decision**. Loose synonyms are how two levels start reading as one.
+
+### Reporting status across three levels
+
+⛔ **Never report status as a single flat list.** A flat list silently attaches every blocker to
+every item. Report three levels separately:
+
+| Level | Scope | Example |
+|---|---|---|
+| **Feature** | one correction or slice | *Correction 3: selected · implementation-complete · persistence-verified · feature-acceptance pending* |
+| **Release object** | the assembled candidate | *Phase 1: failed at W8 · no candidate assembled · an unrelated typecheck failure blocks a green integrated candidate · founder acceptance unavailable · deployment unauthorized* |
+| **Framework** | governance work itself | *open: the gate-obligation defect · the four-dimensions record · lane reconciliation* |
+
+⚠️ **Worked example of the misread this prevents:** listing *"`detectRelationalSignal.ts` blocks a
+green candidate"* alongside Correction 3's state invites the conclusion that **Correction 3 is
+waiting on it.** It is not. That blocker belongs to the **integrated release candidate**, not to the
+feature — the feature's only outstanding item is its own authenticated walk.
+
 ### Where this leaves the work
 
 With referential authority, evidence authority, prerequisite relationships, representation-vs-referent,
