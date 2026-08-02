@@ -43,6 +43,17 @@ not authorizing a deployment)*:
 name the SHA explicitly; a range recorded here is evidence of an inspection, not a standing
 authorization.
 
+> ⛔⛔ **HISTORICAL INSPECTION ONLY.** This candidate became stale when canonical advanced to
+> `a1f021fbc`. It **must not** be used for deployment without a fresh release-object assembly and
+> inspection against the exact SHA being authorized.
+
+⚠️ **This candidate is additionally ineligible on its merits, not only its age.** The Phase 1 walk
+was run on 2026-08-02 and **failed at W8** — no reachable member gesture populates the Shelf (#881).
+A release object that fails reachability cannot be rescued by founder grammar judgment, so the
+sequence resumes at repair, not at acceptance. ⛔ Do not re-assemble a release object again until the
+blocking corrections land and Phase 1 is re-run **from W1** — otherwise the work is auditing
+candidates already known to be ineligible.
+
 ## 2. Composition
 
 | PR / Issue | What | State |
