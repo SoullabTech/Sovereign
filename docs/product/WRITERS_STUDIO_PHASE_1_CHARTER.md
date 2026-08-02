@@ -186,6 +186,35 @@ mean, and the discipline has to change with it:
 This preserves the property the project has been careful to build: **each phase becomes an
 observed capability before the next one begins.**
 
+## Every phase ends with a Release Record
+
+> **Proposed by Kelly, 2026-08-02.** Stated here because this is where it arose. It is a
+> **general rule, not a Phase 1 rule** — promoting it to canon (`docs/canon/`) is Kelly's call,
+> not something this charter can perform.
+
+A **Release Record is distinct from this Charter.** The Charter says what a phase intends and
+in what order it should be built. The Release Record says **what actually shipped.**
+
+Each phase ends with one, capturing:
+
+- the exact **commit(s) deployed**
+- the **PRs** comprising the release
+- **known accepted residues** — defects and gaps shipped knowingly, with the reason
+- the **acceptance evidence** — walks, tests, observations, and who performed them
+- anything **explicitly deferred** into the next phase
+
+**Why:** without it, a release has to be reconstructed months later by reading a sequence of PRs
+and comments — which is exactly the reconstruction-from-recollection this project refuses
+elsewhere. The Release Record makes **the release itself the historical unit**, rather than the
+PR.
+
+⛔ **A Release Record is written from verified state, never from intent.** Slots for which no
+evidence yet exists are left **literally blank** — an unfilled acceptance line is information;
+a plausible-looking one is a fabrication. It is completed *at* deployment, not before, and the
+acceptance line is Kelly's to sign.
+
+Phase 1's lives at [`releases/WRITERS_STUDIO_PHASE_1_RELEASE_RECORD.md`](./releases/WRITERS_STUDIO_PHASE_1_RELEASE_RECORD.md).
+
 ## Success condition
 
 Phase 1 succeeds if it **establishes the trajectory** — Canvas as primary workspace, manuscript
