@@ -87,6 +87,43 @@ surface state**, and the Field is the platform root that Studios only reference.
 ⭐⭐ That is the significant thing: **the architecture is now mature enough to critique the
 implementation, rather than being shaped by it.** Earlier in this project the reverse was true.
 
+## The same question appears on the practitioner axis (Kelly, 2026-08-02)
+
+Assessing the practitioner **note lifecycle** slice (draft → active → completed), Kelly found it
+covers the **client-note** case studies — write during/after a session · leave and return ·
+Carry Forward · commitments · recognitions · session linkage · encryption/PHI ·
+completion-as-explicit-act — and **intentionally does not** cover the practitioner's own
+developmental field.
+
+⭐⭐⭐ **The structural pattern is identical; only the object of development differs:**
+
+```
+conversation   →  capsule            →  Field Object          (member / Writer's Studio)
+session note   →  developmental note →  practitioner Field Object   (practitioner)
+```
+
+The next practitioner question is therefore the same constitutional question in another key:
+
+> **When does something cease being documentation of a client encounter and become part of the
+> practitioner's own evolving understanding?**
+
+Four things the note-lifecycle slice deliberately does **not** absorb — each the practitioner
+analogue of something already separated on the member side:
+
+| Not covered | Why it is a different object |
+|---|---|
+| **Development Notes** — *"his resistance has shifted from fear to grief"* · *"the leadership question may be an identity question"* | **thinking about the client**, not documentation of the session. The member-side analogue is the **Project Development Record**; practitioner development will likely need its own substrate. |
+| **Field Objects** — *"this realization belongs in my own Field"* | a **practitioner** Field Object, not a client note. Different destination. |
+| **References** | a note may be referenced by an engagement · a client · a workshop · a model · a future paper · practitioner learning — **without becoming part of any of them**. Same Reference ⊥ Placement distinction as books. |
+| **Cross-case insight** — *"what have I learned across hundreds of clients?"* | not a client note at all; a **practitioner Field question**. ⚠️ The ratified rule **history yes, interpretation no** becomes load-bearing here. |
+
+⭐⭐ **The slice being small is the point.** Absorbing Development Notes, Field Objects,
+References and practitioner learning now would stop it being about note lifecycle and start it
+being the Practitioner Studio architecture — blurring two ontologies immediately after they were
+separated on the member side.
+
+⛔ Recorded as scope, not as a plan. No practitioner Field substrate is authorized here.
+
 ## What this document does NOT do
 
 - ⛔ It does not answer the question.
