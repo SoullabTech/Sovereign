@@ -51,7 +51,7 @@ import type { LivingWork, LivingWorksPhase } from './useLivingWorks';
 export type ShellIdentity =
   | { kind: 'held' }
   | { kind: 'work'; label: string; named: boolean }
-  | { kind: 'manuscript'; label: string }
+  | { kind: 'manuscript'; label: string; named: boolean }
   | { kind: 'neutral' };
 
 export interface ShellIdentityInput {
@@ -61,13 +61,36 @@ export interface ShellIdentityInput {
   /** Studio Home's arrival decision, passed down. Never re-derived here. */
   work: LivingWork | null;
   manuscriptTitle?: string | null;
+  /**
+   * Whether a manuscript EXISTS — a different question from whether it has a
+   * title. Since 2026-08-02 a member can begin writing without naming the
+   * expression, so an untitled manuscript is a real manuscript with
+   * `title = NULL`. Without this flag the shell cannot tell "no book" from "a
+   * book not yet named", and would fall silent on the second.
+   */
+  hasManuscript?: boolean;
 }
+
+/**
+ * Orientation copy for an expression the member has not named.
+ *
+ * Display only — nothing by this name is stored, and the database title stays
+ * NULL. Sibling of "Your work" for an unnamed Living Work, and kept distinct
+ * from it on purpose: the work's name answers "what am I in relationship
+ * with?", the expression's title answers "what is this called?". Two
+ * declarations, two absences, two different words for the absence.
+ *
+ * Explicitly NOT: "Untitled", "New manuscript", "Draft 1", a generated
+ * filename, or the Living Work's name.
+ */
+export const UNTITLED_EXPRESSION = 'Your writing';
 
 export function shellIdentity({
   worksPhase,
   workCount,
   work,
   manuscriptTitle,
+  hasManuscript,
 }: ShellIdentityInput): ShellIdentity {
   if (worksPhase === 'loading') return { kind: 'held' };
 
@@ -79,9 +102,13 @@ export function shellIdentity({
     };
   }
 
-  // Only a settled, genuinely empty read may fall back to the book.
-  if (worksPhase === 'ready' && workCount === 0 && manuscriptTitle) {
-    return { kind: 'manuscript', label: manuscriptTitle };
+  // Only a settled, genuinely empty read may fall back to the book. An
+  // untitled book still counts as a book — the absence of a name is not the
+  // absence of the thing.
+  if (worksPhase === 'ready' && workCount === 0 && (manuscriptTitle || hasManuscript)) {
+    return manuscriptTitle
+      ? { kind: 'manuscript', label: manuscriptTitle, named: true }
+      : { kind: 'manuscript', label: UNTITLED_EXPRESSION, named: false };
   }
 
   return { kind: 'neutral' };

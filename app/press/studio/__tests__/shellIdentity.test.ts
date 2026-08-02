@@ -54,7 +54,51 @@ describe('shellIdentity', () => {
     expect(identityFor('ready', [], 'The Long Book')).toEqual({
       kind: 'manuscript',
       label: 'The Long Book',
+      named: true,
     });
+  });
+
+  it('names an untitled expression as orientation, not as a title', () => {
+    // Slice 2: a member can begin writing without naming the expression, so a
+    // manuscript with title = NULL is a real manuscript. The shell must not
+    // fall silent on it — the absence of a name is not the absence of the
+    // thing. "Your writing" is display copy; nothing by that name is stored.
+    const identity = shellIdentity({
+      worksPhase: 'ready',
+      workCount: 0,
+      work: null,
+      manuscriptTitle: null,
+      hasManuscript: true,
+    });
+    expect(identity).toEqual({ kind: 'manuscript', label: 'Your writing', named: false });
+  });
+
+  it('distinguishes an untitled expression from no expression at all', () => {
+    const none = shellIdentity({
+      worksPhase: 'ready',
+      workCount: 0,
+      work: null,
+      manuscriptTitle: null,
+      hasManuscript: false,
+    });
+    expect(none).toEqual({ kind: 'neutral' });
+  });
+
+  it('never uses the work name for the expression, or vice versa', () => {
+    // Two declarations, two absences, two different words. "Your work" answers
+    // what am I in relationship with; "Your writing" answers what is this
+    // called. Collapsing them would invent a naming the member did not make.
+    const unnamedWork = identityFor('ready', [work('w1', null)], null);
+    const untitledExpression = shellIdentity({
+      worksPhase: 'ready',
+      workCount: 0,
+      work: null,
+      manuscriptTitle: null,
+      hasManuscript: true,
+    });
+    expect(unnamedWork).toMatchObject({ label: 'Your work' });
+    expect(untitledExpression).toMatchObject({ label: 'Your writing' });
+    expect(unnamedWork.kind).not.toBe(untitledExpression.kind);
   });
 
   it('stays neutral with several works rather than picking one', () => {
