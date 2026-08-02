@@ -40,6 +40,13 @@ export type MemoryAtomSourceType =
   | 'change'           // a change block, or standalone
   | 'session_excerpt'  // excerpt from a conversation session
   | 'spontaneous'      // member typed directly into Keep (body required)
+  | 'capsule'          // reflection_capsules — a developed conversational
+                       // artifact the member reviewed, then explicitly declared
+                       // into their Field. NOT 'reflection': source_type names
+                       // the actual source object, not the family of experience
+                       // it resembles, so a reader can tell which table
+                       // source_id points at without undocumented knowledge.
+                       // (Ruled 2026-08-02; Amendment 5.)
   | 'practitioner_observation'; // authored BY a practitioner ABOUT the member —
                                 // NOT member-keepable (keepSource rejects it); the
                                 // member may only respond to it (decline). Present

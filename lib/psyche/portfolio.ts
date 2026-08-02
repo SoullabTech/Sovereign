@@ -369,6 +369,64 @@ export async function keepSource(
     }
   }
 
+  // A capsule must exist, be the member's own, and be eligible — checked here,
+  // where every caller converges, rather than in whichever surface hosts the
+  // gesture.
+  //
+  // ELIGIBILITY IS NOT DECLARATION (Amendment 5). draft = false decides whether
+  // the gesture may be *offered*; reaching that state declares nothing. This
+  // check exists so a declaration cannot name an ineligible source — it is not
+  // a trigger, and nothing here watches capsules change state.
+  //
+  // `pinned` is deliberately NOT an eligibility condition. Pinning is a
+  // separate member act about attention, and no ruling ties it to declaration.
+  //
+  // THE IDENTITY BOUNDARY IS EXPLICIT. `reflection_capsules.user_id` is `text`;
+  // `member_memory_atoms.member_id` is `uuid`. We render the authenticated
+  // UUID into its canonical text form and compare text to text, rather than
+  // casting the column and letting PostgreSQL decide what equality means. All
+  // 346 production capsules carry the uuid form; if a second form ever appears,
+  // this comparison fails closed rather than silently widening.
+  if (input.sourceType === 'capsule') {
+    const capsule = await query<{ draft: boolean; archived: boolean; owned: boolean }>(
+      `SELECT draft, archived, (user_id = $2::text) AS owned
+         FROM reflection_capsules
+        WHERE id = $1`,
+      [input.sourceId, memberId],
+    );
+
+    if (capsule.rows.length === 0) {
+      throw new Error('keepSource: capsule not found');
+    }
+    // Same message for "not yours" as for "does not exist": a member must not
+    // be able to probe another member's capsule ids by reading the error.
+    if (!capsule.rows[0].owned) {
+      throw new Error('keepSource: capsule not found');
+    }
+    if (capsule.rows[0].draft) {
+      throw new Error('keepSource: capsule is still a draft — not eligible to declare');
+    }
+    if (capsule.rows[0].archived) {
+      throw new Error('keepSource: capsule is archived — not eligible to declare');
+    }
+  }
+
+  // Declaring the same source twice returns the first declaration.
+  //
+  // The member presses once. A double-tap, a retry after a dropped response, or
+  // two open tabs must all leave ONE Field Object — and no amount of care in
+  // the UI can promise that: two concurrent requests both pass a
+  // read-before-write check, and both insert. ON CONFLICT makes the second one
+  // lose inside the database, which is the only place the race is decidable.
+  //
+  // Scoped to the partial index (source_id IS NOT NULL). Spontaneous keeps
+  // carry no source and stay genuinely repeatable — a member may keep the same
+  // thought twice, and that is two acts, not a duplicate.
+  //
+  // DO UPDATE SET member_id = EXCLUDED.member_id is a deliberate no-op write:
+  // it changes nothing, and it is the only way to make ON CONFLICT RETURN the
+  // existing row. DO NOTHING returns zero rows, which would make a retry
+  // indistinguishable from a failure.
   const result = await query<AtomRow>(
     `INSERT INTO member_memory_atoms (
        member_id, source_type, source_id, title, body,
@@ -383,6 +441,8 @@ export async function keepSource(
        NOW(), NOW(),
        'normal', 'member-gesture'
      )
+     ON CONFLICT (member_id, source_type, source_id) WHERE source_id IS NOT NULL
+       DO UPDATE SET member_id = EXCLUDED.member_id
      RETURNING ${ATOM_COLUMNS}`,
     [
       memberId,
