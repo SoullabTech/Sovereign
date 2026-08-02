@@ -143,6 +143,31 @@ describe('resolveCapsuleDeclarationSource — verifies, never writes', () => {
     query.mockResolvedValueOnce(eligibleCapsule({ pinned: false }));
     await expect(resolveCapsuleDeclarationSource(MEMBER, CAPSULE_ID)).resolves.toBeTruthy();
   });
+
+  // A capsule may reach eligibility with no usable title — distillation can
+  // leave it empty, and a member can clear the field themselves. The Field
+  // Object still needs something a person can read on the Shelf, so the
+  // resolver substitutes a plain phrase rather than declaring an untitled
+  // object. Whitespace counts as absent: a title of spaces is not a title.
+  it.each([
+    ['empty', ''],
+    ['whitespace only', '   '],
+    ['absent', null],
+  ])('falls back to a readable title when the capsule title is %s', async (_label, title) => {
+    query.mockResolvedValueOnce(eligibleCapsule({ title }));
+
+    const source = await resolveCapsuleDeclarationSource(MEMBER, CAPSULE_ID);
+
+    expect(source.title).toBe('Kept from a reflection');
+  });
+
+  it('does not substitute when the member gave a title', async () => {
+    query.mockResolvedValueOnce(eligibleCapsule({ title: 'Mine' }));
+
+    const source = await resolveCapsuleDeclarationSource(MEMBER, CAPSULE_ID);
+
+    expect(source.title).toBe('Mine');
+  });
 });
 
 describe('the declared body is stable — capsule and Field Object are separate histories', () => {
