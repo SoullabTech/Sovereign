@@ -428,16 +428,29 @@ export async function keepSource(
   // existing row. DO NOTHING returns zero rows, which would make a retry
   // indistinguishable from a failure.
   //
-  // `(xmax = 0) AS was_created` is how the statement itself reports which
-  // branch it took. On a fresh INSERT the row has no updating transaction, so
-  // xmax is 0; on the ON CONFLICT path the row was locked and updated, so xmax
-  // is the updating xid. The caller therefore learns created-vs-existing from
+  // `(xmax = 0) AS was_created` reports which branch the statement took, from
+  // inside the statement itself, so the caller learns created-vs-existing from
   // the SAME atomic operation that decided it.
   //
   // A read before the write cannot answer this. Under concurrent declarations
   // both requests read "absent", both proceed, the index correctly converges
   // them onto one row — and both would report "created". The row would be
   // right and the answer would be a lie.
+  //
+  // ⚠️ WHAT GOVERNS THIS IS THE TEST, NOT THIS EXPLANATION. `xmax` is PostgreSQL
+  // tuple metadata, not a domain field: the reasoning below is why we expect it
+  // to work, and expectations about storage internals are exactly the kind of
+  // thing that quietly stops being true. The governing contract is the
+  // concurrency case in scripts/repro/c3probe.ts — five simultaneous
+  // declarations yield exactly one created and four existing, same id, one row
+  // — which must be re-run against the server version actually deployed
+  // (production runs PostgreSQL 16.13; local dev runs 17.x, so a local green is
+  // not evidence for production). If that test ever fails, replace the
+  // mechanism; do not repair the explanation.
+  //
+  // The reasoning, for whoever does that work: on a fresh INSERT the row has no
+  // updating transaction, so xmax is 0; on the ON CONFLICT path the row was
+  // locked and updated, so xmax carries the updating xid.
   const result = await query<AtomRow & { was_created: boolean }>(
     `INSERT INTO member_memory_atoms (
        member_id, source_type, source_id, title, body,
