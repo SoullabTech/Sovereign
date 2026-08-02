@@ -146,6 +146,39 @@ a row to be reclaimed.
 `authorizePractitionerClientRelationship` grants nothing beyond a live relationship. It does
 not touch a single historical record.
 
+### ⚠️ This invariant is two claims, and only one is enforced today
+
+The wording above states them as one. They carry different authorities and different evidence:
+
+| Claim | Kind | Status |
+|---|---|---|
+| Ending a relationship revokes present access | **current-state authorization** | ✅ **enforced** — `identity.ts` treats only `active`/`paused` as live, so `ended` yields `canWrite: false` and `canReadMemberShared: false`. Covered by the boundary gate. |
+| Ending is the governed lifecycle act, rather than deletion or manual mutation | **transition authority** | ⏳ **not yet enforced** — no service performs the transition. Nothing in `lib/` or `app/` sets `relationship_status = 'ended'`. |
+
+So the honest statement of this foundation's position:
+
+> **The access consequence of ending is enforced. The transition authority that makes ending the
+> governed lifecycle operation remains unimplemented.**
+
+The schema holds the coherence rules — an `ended` relationship must carry
+`relationship_ended_at`, history refuses `DELETE` — but today a caller would reach that state
+by writing the column directly, and no service owns the act.
+
+**`endRelationship()` is deliberately not written here.** The gap was found by tracing
+claim → schema → service → evidence, and implementing it now would convert a *discovered gap*
+into an *implementation decision* before the questions it depends on are answered. Those are
+lifecycle authority questions, not coding questions:
+
+- Who may end a relationship — the practitioner, the member, either?
+- May a member *request* ending, and is that a different act?
+- Is ending reversible, or is re-engagement always a new relationship?
+- Is a reason code required, and who may read it?
+- Does ending emit a notice or an event to the other party?
+- Does ending preserve invitations, notes, commitments and cohort membership — or only revoke access?
+
+They belong to the service-layer artifact, which can then own the lifecycle transition question
+rather than silently inheriting it.
+
 **`archived` was deliberately NOT invented.** The four states above are what this foundation
 committed; nothing else may be introduced silently in code. If a distinction between "ended"
 and "archived" is wanted, it is a ruling, not a refactor. (Legacy
