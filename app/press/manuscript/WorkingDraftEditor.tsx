@@ -713,14 +713,19 @@ export default function WorkingDraftEditor({
           the swap changes the widget and nothing about how the page reads.
           `writing-surface` is kept: it opts out of the global FORM rules in
           globals.css, and dropping it here would be an untested claim about
-          which of those rules reach a contenteditable. */}
+          which of those rules reach a contenteditable.
+
+          The 60vh belongs to the FIELD, not the wrapper. Held on the wrapper it
+          made a blank page the writer could see, aim at, and click — and the
+          click landed on this div, because the editable area was one line tall.
+          Focus was reachable only through code. The blank page has to BE the
+          field, not sit behind it. */}
       <div
         className="writing-surface"
         style={{
           maxWidth: '38rem',
           margin: '0 auto',
           padding: '0 0 40vh',
-          minHeight: '60vh',
         }}
       >
         <WriterField
@@ -735,6 +740,7 @@ export default function WorkingDraftEditor({
           fontSize="19px"
           caretColor="#C9A227"
           ariaLabel="Working draft"
+          minHeight="60vh"
         />
       </div>
 
