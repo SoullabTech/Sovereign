@@ -18,7 +18,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 
 export interface CurrentManuscript {
   id: string;
-  title: string;
+  title: string | null;
   createdAt: string;
   sectionCount: number;
   charCount: number;
