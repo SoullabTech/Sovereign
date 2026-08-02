@@ -82,18 +82,28 @@ contract — see the note on the content lane in the evidence document.
 > table contract. Translation between practitioner-profile identity and member identity
 > occurs once, behind typed boundaries.**
 
-This is not defensive style. The live schema proves the ambiguity:
+This is not defensive style. The live schema proves the ambiguity, and it is **repository-wide**:
 
-| Table | `practitioner_id` references |
-|---|---|
-| `practitioner_clients` | `practitioners(id)` — the **practice record** |
-| `practitioner_client_notes` | `practitioners(id)` — the **practice record** |
-| `client_invites` | `members(id)` — the **person** |
-| `practitioner_sessions` | `members(id)` — the **person** |
+> **68 tables carry a `practitioner_id` foreign key. 38 reference `practitioners(id)` — the
+> practice record. 30 reference `members(id)` — the person.**
 
-Four tables, one column name, two different referents. Any code that writes
+Examples on either side: `practitioner_clients`, `practitioner_client_notes`, `academy_paths`,
+`availability_overrides` → `practitioners(id)`. `client_invites`, `practitioner_sessions`,
+`case_notes`, `client_messages`, `client_portal_tokens`, `booking_funnels` → `members(id)`.
+
+One column name, two referents, across a third of the schema. Any code that writes
 `a.practitioner_id = b.practitioner_id` across that boundary is comparing a practice to a
 person, and it will authorize the wrong human without erroring.
+
+**What this foundation does and does not claim.** It does **not** resolve the repository-wide
+ambiguity, and branded types have not fixed 68 tables:
+
+> The foundation path does not introduce new ambiguous practitioner identity interpretation;
+> it routes authorization through explicit identity translation. Existing ambiguous columns
+> elsewhere remain a separate migration and inventory concern.
+
+That debt is real and unowned. It is named here so a reader does not mistake a scoped
+resolution for a repository-wide one.
 
 **Where the translation lives:** `lib/coachField/identity.ts`, and nowhere else.
 
@@ -104,8 +114,32 @@ authorizePractitionerClientRelationship(actorMemberId, relationshipId)
 ```
 
 `PractitionerRecordId`, `MemberId` and `RelationshipId` are branded types: passing one where
-another is expected fails to typecheck. That is the point — the invariant is enforced by the
-compiler rather than by everyone remembering it.
+another is expected fails to typecheck.
+
+**Branding is not the enforcement, and this document previously overstated it.** A branded type
+erases at runtime, and `asMemberId` / `asPractitionerRecordId` / `asRelationshipId` are exported
+unguarded casts — so a caller *can* construct one from a raw string. Branding provides
+compile-time friction, accidental-mixing prevention and API clarity. It does **not** provide
+runtime validation, ownership proof, or protection from a caller who means it.
+
+The actual boundary is that **authorization never relies on caller-supplied practitioner
+identity**:
+
+```
+credential
+   ↓  the session, never a request parameter
+actor member identity
+   ↓  resolvePractitionerRecordFromMember — server-owned, one implementation
+practitioner identity
+   ↓  authorizePractitionerClientRelationship — joins practitioners→members, returns null without standing
+relationship authorization
+   ↓
+allowed operation
+```
+
+Every service in this module takes the actor and derives the rest. None accepts a practice id
+as an argument — see `createPendingRelationship`, whose signature was corrected during
+acceptance review for exactly that reason.
 
 **Rules for every downstream service:**
 

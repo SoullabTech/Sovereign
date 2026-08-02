@@ -187,7 +187,7 @@ async function main() {
   // ── 4  a pending invitation works with no member_id ───────────────────────
   console.log('\n4  pending relationship without a member');
   const pending = await createPendingRelationship({
-    practitionerRecordId: practRecord,
+    actorMemberId: asMemberId(practMember),
     invitationEmail: `${TAG}-c1@test.local`,
     displayName: 'Invited One',
     intendedScope: 'program-alpha',
@@ -203,7 +203,7 @@ async function main() {
     String(pendRows[0].normalized_invitation_email));
 
   const again = await createPendingRelationship({
-    practitionerRecordId: practRecord,
+    actorMemberId: asMemberId(practMember),
     invitationEmail: `  ${TAG.toUpperCase()}-C1@TEST.LOCAL `,
     displayName: 'Invited One',
     intendedScope: 'program-alpha',
@@ -211,6 +211,14 @@ async function main() {
   expect('4e re-inviting the same person to the same thing finds the SAME pending row',
     !again.created && again.relationshipId === pending.relationshipId,
     `created=${again.created} id=${again.relationshipId}`);
+
+  await mustRefuse('4h a member with no practice cannot open a relationship under one',
+    /holds a practice record/,
+    () => createPendingRelationship({
+      actorMemberId: asMemberId(stranger),
+      invitationEmail: `${TAG}-victim@test.local`,
+      displayName: 'Not mine to invite',
+    }));
 
   const pendingAuth = await authorizePractitionerClientRelationship(
     asMemberId(practMember), asRelationshipId(pending.relationshipId));

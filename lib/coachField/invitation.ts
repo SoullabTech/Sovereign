@@ -23,7 +23,13 @@
  */
 
 import { transaction } from '@/lib/db/postgres';
-import { asMemberId, asRelationshipId, type MemberId, type RelationshipId } from './identity';
+import {
+  asMemberId,
+  asRelationshipId,
+  resolvePractitionerRecordFromMember,
+  type MemberId,
+  type RelationshipId,
+} from './identity';
 
 export class InvitationError extends Error {
   readonly code: string;
@@ -171,16 +177,34 @@ export async function acceptInvitation(input: {
 /**
  * Create a pending relationship for someone who may not have an account yet.
  *
+ * Takes the ACTOR, never a practice id. An earlier draft accepted
+ * `practitionerRecordId: string`, which made the caller responsible for supplying an
+ * authority-bearing identifier — the exact mistake Invariant 2 exists to prevent, in
+ * the module that declares it. No route reached it, but a service contract is part of
+ * the architecture: a foundation that says identity must derive from the actor must
+ * not expose a service that accepts identity as an argument.
+ *
+ * The practice is resolved server-side from the credential. A member who holds no
+ * practice record cannot create a relationship under anyone's practice.
+ *
  * Returns the existing pending row when one already matches — re-inviting the same
  * person to the same thing must find that invitation, not mint a second one. The
  * partial unique index enforces this even if a caller forgets.
  */
 export async function createPendingRelationship(input: {
-  practitionerRecordId: string;
+  actorMemberId: MemberId;
   invitationEmail: string;
   displayName: string;
   intendedScope?: string | null;
 }): Promise<{ relationshipId: RelationshipId; created: boolean }> {
+  const practitionerRecordId = await resolvePractitionerRecordFromMember(input.actorMemberId);
+  if (!practitionerRecordId) {
+    throw new InvitationError(
+      'not_a_practitioner',
+      'Only a member who holds a practice record may open a client relationship.'
+    );
+  }
+
   return transaction(async (client) => {
     const scope = input.intendedScope ?? null;
     const { rows: found } = await client.query(
@@ -189,7 +213,7 @@ export async function createPendingRelationship(input: {
           AND normalized_invitation_email = lower(btrim($2))
           AND COALESCE(intended_scope, 'general') = COALESCE($3, 'general')
           AND relationship_status = 'pending'`,
-      [input.practitionerRecordId, input.invitationEmail, scope]
+      [practitionerRecordId, input.invitationEmail, scope]
     );
     if (found.length > 0) {
       return { relationshipId: asRelationshipId(found[0].id), created: false };
@@ -204,7 +228,7 @@ export async function createPendingRelationship(input: {
        -- required because Postgres cannot deduce one type for a parameter used twice.
        VALUES ($1, $2, $3::varchar, $3::text, $4, 'pending')
        RETURNING id`,
-      [input.practitionerRecordId, input.displayName, input.invitationEmail, scope]
+      [practitionerRecordId, input.displayName, input.invitationEmail, scope]
     );
     return { relationshipId: asRelationshipId(rows[0].id), created: true };
   });
