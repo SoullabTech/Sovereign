@@ -43,18 +43,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'capsuleId is required' }, { status: 400 });
   }
 
-  // Was this capsule already declared? Asked BEFORE the write, because
-  // afterwards the answer is indistinguishable: keepSource returns the same
-  // atom either way, by design. This read decides 201 vs 200 and nothing else —
-  // it is not the idempotency mechanism. That lives in the unique index, which
-  // is the only place two concurrent requests can be ordered.
-  const prior = await query<{ id: string }>(
-    `SELECT id FROM member_memory_atoms
-      WHERE member_id = $1 AND source_type = 'capsule' AND source_id = $2`,
-    [memberId, capsuleId],
-  );
-  const existed = prior.rows.length > 0;
-
   try {
     const atom = await keepSource(memberId, {
       memberId,
@@ -66,14 +54,23 @@ export async function POST(request: NextRequest) {
       body: null,
     });
 
+    // 201 vs 200 comes from the INSERT itself, not from a read before it.
+    //
+    // A preflight "does this exist?" is wrong under concurrency: five
+    // simultaneous declarations all read absent, all proceed, the unique index
+    // correctly converges them onto one row — and all five would answer 201.
+    // The row would be right and every response but one would be false.
+    //
+    // keepSource reports `wasCreated` from `(xmax = 0)` in the same statement
+    // that decided it, so exactly one concurrent request can claim creation.
     return NextResponse.json(
       {
         atomId: atom.id,
         sourceType: atom.sourceType,
         sourceId: atom.sourceId,
-        alreadyDeclared: existed,
+        alreadyDeclared: !atom.wasCreated,
       },
-      { status: existed ? 200 : 201 },
+      { status: atom.wasCreated ? 201 : 200 },
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Declaration failed';

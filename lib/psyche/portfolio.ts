@@ -340,7 +340,7 @@ export async function listSourceCandidates(
 export async function keepSource(
   memberId: string,
   input: KeepGestureInput,
-): Promise<CrystallizedMemory> {
+): Promise<CrystallizedMemory & { wasCreated: boolean }> {
   if (input.memberId !== memberId) {
     throw new Error('keepSource: memberId mismatch between session and input');
   }
@@ -427,7 +427,18 @@ export async function keepSource(
   // it changes nothing, and it is the only way to make ON CONFLICT RETURN the
   // existing row. DO NOTHING returns zero rows, which would make a retry
   // indistinguishable from a failure.
-  const result = await query<AtomRow>(
+  //
+  // `(xmax = 0) AS was_created` is how the statement itself reports which
+  // branch it took. On a fresh INSERT the row has no updating transaction, so
+  // xmax is 0; on the ON CONFLICT path the row was locked and updated, so xmax
+  // is the updating xid. The caller therefore learns created-vs-existing from
+  // the SAME atomic operation that decided it.
+  //
+  // A read before the write cannot answer this. Under concurrent declarations
+  // both requests read "absent", both proceed, the index correctly converges
+  // them onto one row — and both would report "created". The row would be
+  // right and the answer would be a lie.
+  const result = await query<AtomRow & { was_created: boolean }>(
     `INSERT INTO member_memory_atoms (
        member_id, source_type, source_id, title, body,
        primary_register, registers, elemental_lenses, thread_ids,
@@ -443,7 +454,7 @@ export async function keepSource(
      )
      ON CONFLICT (member_id, source_type, source_id) WHERE source_id IS NOT NULL
        DO UPDATE SET member_id = EXCLUDED.member_id
-     RETURNING ${ATOM_COLUMNS}`,
+     RETURNING ${ATOM_COLUMNS}, (xmax = 0) AS was_created`,
     [
       memberId,
       input.sourceType,
@@ -459,13 +470,26 @@ export async function keepSource(
 
   const atom = rowToAtom(result.rows[0]);
 
+  // Carried as an extra property rather than a changed return type, so the
+  // three existing callers are untouched: they assign to CrystallizedMemory and
+  // never look at this. Only a caller that must distinguish creation from
+  // convergence — the declaration route, which owes the member a truthful 201
+  // vs 200 — reads it.
+  const wasCreated = result.rows[0].was_created === true;
+
   // Fire-and-forget: index affinities to Living Field dimensions.
   // Never awaited — atom creation must not block on this.
-  import('@/lib/maia/living-field/indexAtom').then(({ indexAtomAffinities }) => {
-    indexAtomAffinities(atom.id, memberId);
-  }).catch(() => { /* silent */ });
+  //
+  // Only on creation. A retry or a losing concurrent declaration converges on
+  // an atom that was already indexed; re-running would be work whose only
+  // effect is load.
+  if (wasCreated) {
+    import('@/lib/maia/living-field/indexAtom').then(({ indexAtomAffinities }) => {
+      indexAtomAffinities(atom.id, memberId);
+    }).catch(() => { /* silent */ });
+  }
 
-  return atom;
+  return Object.assign(atom, { wasCreated });
 }
 
 /**

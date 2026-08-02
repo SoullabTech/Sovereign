@@ -38,10 +38,18 @@ const refuses = async (fn: () => Promise<unknown>, s: string) => {
   const a2 = await keepSource(M1, inp(eligible));
   ok(a1.id === a2.id, `2. exact retry returns the SAME atom (${a2.id.slice(0,8)})`);
 
-  const conc = await Promise.allSettled([1,2,3,4,5].map(() => keepSource(M1, inp(eligible))));
-  const ids = new Set(conc.filter(r=>r.status==='fulfilled').map((r:any)=>r.value.id));
-  const rows = await query(`SELECT count(*) n FROM member_memory_atoms WHERE member_id=$1 AND source_type='capsule' AND source_id=$2`,[M1,eligible]);
+  const conc2 = await mk(false, false, false, M1);
+  const conc = await Promise.allSettled([1,2,3,4,5].map(() => keepSource(M1, inp(conc2))));
+  const fulfilled = conc.filter(r=>r.status==='fulfilled') as any[];
+  const ids = new Set(fulfilled.map(r=>r.value.id));
+  const created = fulfilled.filter(r=>r.value.wasCreated).length;
+  const existing = fulfilled.filter(r=>!r.value.wasCreated).length;
+  const rows = await query(`SELECT count(*) n FROM member_memory_atoms WHERE member_id=$1 AND source_type='capsule' AND source_id=$2`,[M1,conc2]);
   ok(ids.size===1 && (rows.rows[0] as any).n==='1', `3. concurrent x5 -> one atom (distinct ids=${ids.size}, rows=${(rows.rows[0] as any).n})`);
+  ok(created===1 && existing===4, `3b. concurrent x5 -> exactly one 201, four 200 (created=${created}, existing=${existing})`);
+
+  const rt = await keepSource(M1, inp(conc2));
+  ok(rt.wasCreated===false && rt.id===[...ids][0], `3c. later retry reports EXISTING, same id`);
 
   await refuses(() => keepSource(M1, inp(others)),   '4. another member\'s capsule refused');
   await refuses(() => keepSource(M1, inp(draft)),    '5. draft capsule refused');
@@ -64,7 +72,14 @@ const refuses = async (fn: () => Promise<unknown>, s: string) => {
   ok(r1.id===r2.id, '10. reflection declarations unaffected in kind, now idempotent too');
 
   const shelf = await query(`SELECT count(*) n FROM member_memory_atoms WHERE member_id=$1 AND generated_by='member-gesture' AND status IN ('active','still_alive') AND source_type='capsule'`,[M1]);
-  ok((shelf.rows[0] as any).n==='2', `11. Shelf discriminator includes declared capsules (n=${(shelf.rows[0] as any).n})`);
+  // Three declared capsules by now: the first, the concurrency subject, and the
+  // unpinned one. Asserted against the set actually declared rather than a
+  // hardcoded count, so adding a case above cannot silently break this.
+  const declaredIds = new Set([eligible, conc2, unpinned]);
+  const shelfIds = await query<{source_id:string}>(`SELECT source_id FROM member_memory_atoms WHERE member_id=$1 AND generated_by='member-gesture' AND status IN ('active','still_alive') AND source_type='capsule'`,[M1]);
+  const seen = new Set(shelfIds.rows.map(r=>r.source_id));
+  ok(seen.size===declaredIds.size && [...declaredIds].every(id=>seen.has(id)),
+     `11. Shelf discriminator includes exactly the declared capsules (${seen.size}/${declaredIds.size})`);
 
   await query(`UPDATE reflection_capsules SET pinned=true, archived=true WHERE id=$1`,[eligible]);
   const survive = await query(`SELECT count(*) n FROM member_memory_atoms WHERE id=$1`,[a1.id]);
