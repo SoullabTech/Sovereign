@@ -157,6 +157,42 @@ async function main() {
     freeText.length === 0,
     `plaintext expression would be stored in: ${freeText.map((r: any) => r.col).join(', ')}`);
 
+  // ── 1e/1f  the reconciliation queue carries evidence, not explanation ────
+  // The 1c sweep above scans `coach_%` only, so the reconciliation table — which is
+  // named practitioner_client_% — sat outside it. That is where the amendment of
+  // 20260802000004 lands: the queue is read by a human, which is exactly why its
+  // columns must be constrained to what a machine counted.
+  console.log('\n1e the reconciliation queue carries evidence, not explanation');
+  const { rows: pcrText } = await query(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_schema='public' AND table_name='practitioner_client_reconciliation'
+        AND data_type IN ('text','character varying')
+        AND column_name NOT IN ('match_basis','reconciliation_status','ambiguity_code')`);
+  expect('1e no free-text column survives on the reconciliation queue',
+    pcrText.length === 0,
+    `unconstrained human text could be stored in: ${pcrText.map((r: any) => r.column_name).join(', ')}`);
+
+  // provenance is a deliberate, SINGULAR exception: an open JSONB is a content surface
+  // with the type system switched off. One is one more than this foundation would
+  // choose again — a second one arriving later must fail here, not pass unnoticed.
+  //
+  // Scope is the tables THIS foundation authored: the coach_% surface from
+  // 20260802000003 plus the reconciliation queue from 20260802000002. It deliberately
+  // excludes practitioner_clients and practitioner_client_notes — both predate #902,
+  // both already carry JSONB, and neither is this foundation's to assert over. A gate
+  // that claimed a boundary it does not own would fail for someone else's reasons.
+  const { rows: openJsonb } = await query(
+    `SELECT c.table_name||'.'||c.column_name AS col
+       FROM information_schema.columns c
+      WHERE c.table_schema='public'
+        AND (c.table_name LIKE 'coach\\_%'
+             OR c.table_name = 'practitioner_client_reconciliation')
+        AND c.data_type IN ('jsonb','json')
+      ORDER BY 1`);
+  expect('1f provenance is the ONLY unrestricted JSONB in the foundation',
+    openJsonb.length === 1 && openJsonb[0].col === 'practitioner_client_reconciliation.provenance',
+    `found: ${openJsonb.map((r: any) => r.col).join(', ') || 'none'}`);
+
   const DEFERRED = [
     'coach_authored_notes', 'coach_note_publications', 'coach_note_publication_events',
     'coach_client_personal_notes', 'coach_client_shared_items', 'coach_position_shares',
@@ -280,6 +316,66 @@ async function main() {
     q[0]?.match_basis === 'ambiguous_multiple_members', String(q[0]?.match_basis));
   expect('7b it is NOT auto-linkable', q[0]?.auto_linkable === false, String(q[0]?.auto_linkable));
   expect('7c it was left unlinked for a human', q[0]?.member_id === null, String(q[0]?.member_id));
+
+  // ── 7d-7i  the queue records machine evidence, not human explanation ─────
+  // Corrective amendment 20260802000004. The invariant is not "the column has a
+  // better name" — it is that the SCHEMA, not the current implementation, is what
+  // keeps interpretation out of a reconciliation record.
+  const AMBIGUITY_VOCABULARY = [
+    'multiple_claimed_invitations',
+    'competing_relationship_same_email',
+    'multiple_member_email_matches',
+    'sole_match_email_unverified',
+  ];
+  const PROVENANCE_KEYS = [
+    'verified_email_matches', 'any_email_matches', 'claimed_invitations',
+    'competing_relationships',
+    // ⏳ UNRULED — retained exactly as the merged function writes it, pending
+    // COACH_FIELD_PROVENANCE_DISCLOSURE_QUESTION_2026-08-02.md. Named here so a
+    // ruling either way shows up as a gate failure rather than as silent drift.
+    'normalized_email',
+  ];
+
+  const { rows: vocab } = await query(
+    `SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint
+      WHERE conrelid = 'practitioner_client_reconciliation'::regclass
+        AND conname = 'pcr_ambiguity_code_vocabulary'`);
+  expect('7d the ambiguity vocabulary is closed by the schema, not by convention',
+    vocab.length === 1 && AMBIGUITY_VOCABULARY.every((c) => vocab[0].def.includes(`'${c}'`)),
+    vocab.length ? `constraint does not name all four codes: ${vocab[0].def}` : 'no vocabulary CHECK exists');
+
+  const { rows: retired } = await query(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_name='practitioner_client_reconciliation' AND column_name='ambiguity_reason'`);
+  expect('7e the unconstrained ambiguity_reason column is gone, not deprecated',
+    retired.length === 0, 'ambiguity_reason still exists — free text remains reachable');
+
+  const { rows: coded } = await query(
+    `SELECT ambiguity_code, provenance FROM practitioner_client_reconciliation
+      WHERE relationship_id = $1`, [amb[0].id]);
+  expect('7f the classifier emits a code from the vocabulary',
+    coded[0]?.ambiguity_code === 'multiple_member_email_matches',
+    String(coded[0]?.ambiguity_code));
+
+  const emitted = Object.keys(coded[0]?.provenance ?? {});
+  const unapproved = emitted.filter((k) => !PROVENANCE_KEYS.includes(k));
+  expect('7g every provenance key the classifier emits is in the approved set',
+    emitted.length > 0 && unapproved.length === 0,
+    emitted.length === 0 ? 'provenance was empty' : `unapproved keys emitted: ${unapproved.join(', ')}`);
+
+  await mustRefuse('7h a human sentence cannot be written into the ambiguity axis',
+    /pcr_ambiguity_code_vocabulary/,
+    () => query(
+      `UPDATE practitioner_client_reconciliation
+          SET ambiguity_code = 'The invitation email matches more than one member account.'
+        WHERE relationship_id = $1`, [amb[0].id]));
+
+  await mustRefuse('7i provenance refuses a narrative key — it is not a content surface',
+    /pcr_provenance_closed_keys/,
+    () => query(
+      `UPDATE practitioner_client_reconciliation
+          SET provenance = provenance || '{"notes":"the practitioner says this is the same person"}'::jsonb
+        WHERE relationship_id = $1`, [amb[0].id]));
 
   // ── 9 / 10 / 12  boundaries whose tables are DEFERRED ────────────────────
   // Note publication (9), position-share snapshots (10b-e) and work-item provenance
