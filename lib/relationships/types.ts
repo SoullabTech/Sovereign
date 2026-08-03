@@ -82,8 +82,19 @@ export interface ActiveRelationalContext {
  * shut_down` — drawn from the Relational Field spec. Append-only union
  * so the substrate stays stable and readers handle the full range.
  */
-export type RelationshipTone =
-  // Phase 2 canonical set (detector + CheckInFlow)
+/**
+ * Tones the background detector currently has authority to INFER from a
+ * member's language. `TONE_LANGUAGE` in detectRelationalSignal.ts is typed
+ * against this, not against the full union.
+ *
+ * ⚠️ This is an authority boundary, not a claim about what is knowable. It
+ * says: *this detector has no authority to derive these tones today.* A future
+ * ruling may create a different detector, a practitioner interpretation layer,
+ * or a member-confirmed inference pathway. The narrow type does not prevent
+ * that; it prevents it happening by accident — e.g. as a side effect of making
+ * a build green.
+ */
+export type DetectableTone =
   | 'open'
   | 'warm'
   | 'active'
@@ -93,13 +104,26 @@ export type RelationshipTone =
   | 'contracted'
   | 'tense'
   | 'unresolved'
-  | 'unclear'
-  // Phase 4 Relational Field entry additions (append-only)
+  | 'unclear';
+
+/**
+ * Tones that reach the system only because a member SELECTED them in the
+ * Relational Field entry flow. Declared, never derived. Adding one of these
+ * to the detector's lexicon would convert a member's declaration into a
+ * system inference.
+ */
+export type DeclaredTone =
   | 'tender'
   | 'strained'
   | 'conflicted'
   | 'heavy'
   | 'shut_down';
+
+/**
+ * Both are legitimate tones; they differ in epistemic source, not validity.
+ * Storage, readers, and the field card handle the full union.
+ */
+export type RelationshipTone = DetectableTone | DeclaredTone;
 
 /** Rupture state — broad, honest, never diagnostic. */
 export type RuptureState = 'none' | 'strained' | 'ruptured' | 'unclear';
@@ -117,8 +141,11 @@ export type RuptureState = 'none' | 'strained' | 'ruptured' | 'unclear';
  * atmosphere, not just named people. `self` and `unnamed_field` are
  * first-class so the labtool works even when there is no other to name.
  */
-export type CounterpartLabel =
-  // Phase 2: person-type inference labels (background detector)
+/**
+ * Counterpart labels the background detector has authority to INFER from a
+ * member's language. Same authority boundary as DetectableTone — see its note.
+ */
+export type DetectableCounterpartLabel =
   | 'partner'
   | 'family'
   | 'mother'
@@ -130,12 +157,28 @@ export type CounterpartLabel =
   | 'ex'
   | 'inner'
   | 'unspecified'
-  // Phase 4: neutral entry-flow labels (Relational Field labtool)
-  | 'person'
+  // ⚠️ `person` sits here because the SHIPPED detector already infers it —
+  // "Patch B" in detectRelationalSignal.ts assigns it when a named entity plus
+  // interaction is present and no canonical label matched. This records
+  // existing behavior; it does not authorize it. It is the weakest possible
+  // reading ("someone is present"), not a claim about what the relationship
+  // is — but it IS an entry-flow label being derived, and the boundary
+  // deserves a ruling. See docs/governance/RELATIONAL_INFERENCE_AUTHORITY_DEBT.md
+  | 'person';
+
+/**
+ * Neutral entry-flow labels that reach the system only because a member
+ * SELECTED them in the Relational Field labtool. Declared, never derived —
+ * `self` and `unnamed_field` especially: inferring those from language would
+ * be the system naming what a relationship IS to someone.
+ */
+export type DeclaredCounterpartLabel =
   | 'group'
   | 'situation'
   | 'self'
   | 'unnamed_field';
+
+export type CounterpartLabel = DetectableCounterpartLabel | DeclaredCounterpartLabel;
 
 /** Source of the signal — was it detected or explicitly offered? */
 export type SignalSource = 'maia_conversation' | 'labtool_manual';
