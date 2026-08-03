@@ -1,6 +1,13 @@
 # Artifact Field Inventory — 2026-08-03
 
 **Status:** ⛔ **INVENTORY. Assigns no authority. Preserves; does not classify.**
+**Observed at:** `0e9e47f6c` on `clean-main-no-secrets`, 2026-08-03.
+
+> ⭐ **An inventory is not a declaration of the field. It is a timestamped observation of the field.**
+> **Snapshot accuracy ≠ field truth** — a snapshot can be perfectly accurate at t₁ and incomplete at
+> t₂ (see §1a, where this one went stale in minutes). Any re-run must: name the exact commit,
+> timestamp the observation, distinguish **tracked state** from **working-field state**, and record
+> parallel changes as **field events** rather than as corrections.
 
 A repository state pass, not a design pass. **Preservation precedes classification** — every artifact
 below is committed in the same change as this document so that nothing can be lost while its status
@@ -49,13 +56,23 @@ finding that was not yet evidence and not a design. That distinction is worth ke
 
 ### ⭐ §2 — the instrument question is already open, and predates today
 
-`product/WALK_INSTRUMENT_OPEN_DECISION_2026-08-02.md` — *"Open decision: walk instrument identity,
-sequence, and authorship"* — **was raised yesterday and is unresolved.** Group E grew by two
-instruments today without that decision being made.
+🔴 **CORRECTION (2026-08-03, same day).** I previously reported that
+`product/WALK_INSTRUMENT_OPEN_DECISION_2026-08-02.md` governs the instruments in group E. **It does
+not.** Read in full, it is scoped to the **Writer's Studio** lane — Phase 1 acceptance container vs
+a Phase 3 field experiment, with three named conflicts (container identity · sequence dependency ·
+authorship boundary) and three founder options. **It says nothing about Now What?**
 
-⛔ **Resolve the open decision before adding or reconciling any further walk.** The baseline walk
-authored today may be a legitimate sixth instrument, a duplicate of the pilot test plan, or a
-sub-step of it — and that is exactly the question the open decision exists to answer.
+What *does* generalize is the rule it states, in general terms:
+
+> **Do not create a walk before the question being walked is settled.**
+> And: one artifact, one responsibility — ⛔ **a container is not to be repurposed.**
+
+⇒ **The Now What? lane has the same class of problem and no such record.** Group E's five
+instruments accumulated without an identity decision. That decision is **separate, unopened, and
+now recorded** at
+[`NOW_WHAT_WALK_INSTRUMENT_IDENTITY_OPEN_DECISION_2026-08-03.md`](../product/NOW_WHAT_WALK_INSTRUMENT_IDENTITY_OPEN_DECISION_2026-08-03.md).
+
+⛔ **Do not add or reconcile another Now What? walk until it is decided.**
 
 ## 3. The empty-state finding — status corrected
 
