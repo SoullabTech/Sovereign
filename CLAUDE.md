@@ -415,6 +415,25 @@ Triggers: Co-Lab changes · Studio people · DMs · sessions/encounters · files
    - **Cultural sovereignty / Invariant 14:** Are we imposing a framework, translating the member's meaning into our vocabulary, or assuming "self," "growth," "healing," "family," or "spirit" mean the same everywhere? If uncertain, ask more, preserve the member's language, or gate the feature behind member-initiated use.
    - If the honest answer to any is no, the feature does not ship. (See `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md`)
 
+## Opening a PR from the CLI (MANDATORY)
+
+**Use `scripts/pr-create.sh`, not bare `gh pr create`.**
+
+```bash
+npm run pr:create -- --class b --rollback revert --title "fix(x): …" --body-file body.md --base clean-main-no-secrets
+```
+
+`gh pr create --body` / `--body-file` / `--fill` **bypasses `.github/pull_request_template.md`** — GitHub only auto-populates the template in the web UI or an interactive editor. Every CLI-authored PR therefore shipped without the Class and Rollback checkboxes Covenant Gates parses, and opened red. This recurred **four times** with the root cause already documented each time; the manual per-PR fix is what kept it alive.
+
+The wrapper preserves your body verbatim, appends the exact blocks the gate reads, and **refuses to create the PR** when a required governance field is missing.
+
+- `--class a|b|c|frontier` — **required**. Your declaration; the script never infers it from touched paths.
+- `--rollback revert|migration|flag|none` — **required for Class B.**
+- `--verified-by "<handle, date>"` — **required for Frontier-Dependent.**
+- `--dry-run` — print the composed body, create nothing.
+
+⚠️ **A `class-*` label repairs classification metadata only — it cannot repair missing body requirements.** Class B's rollback acknowledgement is read from the PR *body*, so labelling a class-B PR leaves the gate red with a different message. This is the trap that made "just apply the label" bad advice.
+
 ## Setup (New Clones)
 
 After cloning this repo, run once:
