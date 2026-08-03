@@ -155,6 +155,86 @@ presentation and revertible by a single commit.
 
 ---
 
+## 5b. The five decisions — resolved where evidence allows
+
+### The three object classes, mapped to real tables
+
+| Class | Question answered | Created by | Tables |
+|---|---|---|---|
+| **A. Containers** | *Where does this work happen?* | practitioner | `coach_program_definitions` · `coach_cohorts` · `client_groups` |
+| **B. Experiences** | *What happens here?* | practitioner, inside a container | `coach_program_stages` · `group_sessions` · `practitioner_resources` |
+| **C. Member expressions** | *What does this mean to me?* | **member only** | `member_field_note_threads` · `field_program_positions` |
+
+**Authority chain**: practitioner creates possibility → member chooses
+participation → member creates meaning → meaning becomes enduring field.
+Authority never runs backwards: nothing in class A or B may write class C.
+
+### D1 — Canonical container: **`coach_program_definitions`**. Not a tie.
+
+The FK graph settles it. Only one of the two is a container:
+
+```
+coach_program_definitions  (owner_member_id, state, client_facing_language)
+  ├── coach_program_stages        ← experiences
+  ├── coach_cohorts               ← groups
+  └── coach_client_processes      ← the coaching relationship
+        └── coach_program_enrollments (process_id, enrolled_by_member_id)
+
+field_programs  (field_slug, program_slug, focal_points)
+  └── field_program_lessons
+      ↑ no owner · no state · no stages · no enrolment
+```
+
+`field_programs` is **not a competing container** — it is the field-facing
+*catalog and focal-point* surface, and it is what `program-position` reads. It
+answers *"where am I"* (positioning). `coach_program_definitions` answers
+*"what am I in"* (participation). Two different roles that ended up with
+similar names.
+
+⚠️ **But there is real drift to reconcile.** Both tables currently hold the
+*same four programmes* — "1:1 Coaching", "Thursday Group", "Training", "Deep
+Dive Retreat" — duplicated. Worse, `coach_program_definitions.field_slug` holds
+values like `one-to-one-coaching` and `training-module-3`, which are *programme*
+slugs, not field slugs. That column is being used against its name. Reconcile
+before either table is rendered, or the Home will show the same programme twice
+under two identities.
+
+### D2 — Enrolment authority: schema already records the actor
+
+`coach_program_enrollments.enrolled_by_member_id` exists precisely so the system
+knows **who performed the enrolment**. The schema therefore supports A, B or C
+without change.
+
+**Recommendation: A — practitioner invites, member accepts**, consistent with
+the §4 invariant (*offers create availability, never ownership*). A two-step
+shape fits the existing columns: the invitation writes the row with
+`status` = invited and `enrolled_by_member_id` = practitioner; the member's
+acceptance moves `status` and stamps `enrolled_at`. Option B (member
+self-joins) is not wrong in principle but has no listing surface and would need
+a "what may I join" read that does not exist — and *listing is not offering*.
+
+### D3 — Does enrolment create field material? **No.**
+
+Enrolment creates **access**. Only a member act creates class C. This follows
+directly from the authority chain and needs no further ruling.
+
+### D4 — Home entry point: **Current Work**, with programmes as context
+
+Endorsed. A person does not wake up thinking *"I need my program."* They think
+*"what am I doing today?"* Programmes are the organizing context that makes
+current work legible, not the top-level index.
+
+### D5 — Reflections: **Model B** (return surface, no door)
+
+Endorsed, and consistent with the rest: reflection is where meaning *returns*
+after a gesture, not a separate authoring activity. Model A makes the
+environment journaling software and gives Reflections an initiating gesture
+that the other member-expression rooms would then all need.
+**Consequence**: the Reflections door in candidate `d8fb19794` is removed
+before any merge.
+
+---
+
 ## 6. Success criteria
 
 A new member understands, without being taught the object model:
