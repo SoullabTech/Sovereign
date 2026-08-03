@@ -44,15 +44,30 @@ An evidence packet is inadmissible without these. They answer *what environment 
 this observation?*
 
 ```
-walk target SHA          named BEFORE execution
-executor                 named BEFORE execution
-role overlap             declared, or explicitly "none"
+referent SHA             what was measured — named BEFORE execution
+instrument SHA           which frozen protocol version governed
+executor                 who performed it — named BEFORE execution
+observer                 who recorded the observations, if not the executor
+acceptance               who decides — recorded, and NOT exercised by this packet
+role overlaps            declared, or explicitly "none"
 member fixture identity  from §2
 baseline snapshot        from §2
 walk timestamp
 observations             per criterion, in the protocol's own numbering
 disposition              exactly one of the protocol's three
 ```
+
+⭐⭐⭐ **Both SHAs, never one.** A referent SHA says *what was measured*; an **instrument SHA** says
+*what measured it*. A frozen protocol can still be superseded by a v2, so a packet naming only the
+referent cannot answer *which criteria was this judged against?* — and evidence inherits the
+authority state of the instrument it measured.
+
+⭐⭐ **Executor · observer · acceptance are three fields because they are three acts**, even when one
+person performs all of them. Recording `acceptance` here names *who decides*; ⛔ it does **not**
+exercise the decision. A walk must never be able to prove itself accepted by virtue of having been
+executed.
+
+> **The result then belongs to the walk, not to whoever prepared it.**
 
 ### Naming the target SHA
 
