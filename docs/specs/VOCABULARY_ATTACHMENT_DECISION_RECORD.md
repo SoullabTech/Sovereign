@@ -264,6 +264,42 @@ first instance once §7 is ruled.
 
 ---
 
+## 6A. The invariant
+
+> ### A lens can illuminate experience. It cannot become the owner's name for the experience.
+
+This is the whole Client Field challenge in one line. Practitioners matter; frameworks
+matter; developmental language matters — **and the person's life remains theirs.**
+
+Every rule in this document is a consequence of that sentence. Where a future decision is
+ambiguous, resolve it against this.
+
+### The lifecycle it produces
+
+```
+DURING the relationship          AFTER the relationship
+
+Practitioner expression
+        ↓
+   temporary lens                     member meaning
+        ↓                                   ↓
+  member experience              portable member artifact
+        ↓
+   member meaning
+```
+
+**Nothing is migrated. Nothing is rewritten. Nothing is "cleaned."** The artifact was always
+the member's.
+
+### Why time-based release was rejected
+
+A timer would manufacture an authority nobody granted: *"this relationship is no longer
+relevant because six months passed."* That is not relational intelligence.
+
+> **A relationship has state. It does not have an expiration algorithm.**
+
+---
+
 ## 7. Decision ledger
 
 | Ref | Decision | State |
@@ -278,16 +314,32 @@ first instance once §7 is ruled.
 | — | Layer suppression — may a practitioner hide an unused layer? | ⏳ open |
 | **D9** | Human encounter authorization | ⏳ open, independent |
 
+### The CF-D5 stack — three different questions
+
+```
+CF-D5a   Vocabulary boundaries   "What may a lens DO?"          ✅
+   ↓
+CF-D5c   Lens lifecycle          "How long may it remain?"      ✅
+   ↓
+CF-D5b   Lens authorship         "Who may CREATE the lens?"     ⏳
+```
+
 ### CF-D5b is now much narrower than it looks
 
-> **CF-D5b is not deciding who owns meaning. That is already settled.**
->
-> It decides only **who is permitted to author the temporary lens** through which universal
-> human work is expressed.
+**It does not decide:**
 
-Ownership, authorship of meaning, and the render firewall are all settled above. What remains
-is a question about **the lens**, and a lens is by construction temporary, non-owning and
-releasable.
+- ⛔ who owns meaning
+- ⛔ whether member memory persists
+- ⛔ whether practitioner language can become identity
+- ⛔ whether context survives
+
+Those are already constrained by §1, §4, §5 and §6A.
+
+> **It decides only: who is allowed to create a temporary interpretive layer around a
+> universal capability?**
+
+A lens is by construction temporary, non-owning and releasable. Whoever receives authorship
+of it **cannot acquire ownership through it** — that path is closed independently, above.
 
 ---
 
