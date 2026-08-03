@@ -35,22 +35,42 @@ taken are the ones that unlock the next legitimate movement.
 **Rationale:** there cannot be two acceptance instruments. This resolves the
 container-identity problem directly.
 
+**Adoption authority (amendment 3):**
+
+> **Supporting material may be adopted only through an explicit founder acceptance act.**
+
+Ties directly to §2.3. ⛔ Material does not become an instrument by being cited, being
+useful, or being the only other document present.
+
 **Consequence for [#909](https://github.com/SoullabTech/Sovereign/pull/909)** (`CORRECTION_3_FEATURE_WALK_SPECIFICATION_v1.md`, open, draft): it becomes
 **supporting material**, not an instrument — unless explicitly adopted. ⛔ This draft does not
 adopt it, and does not direct that it be closed.
 
 ### 2.2 §1 substitution
 
-> `keepSource()` is accepted as satisfying the **intent** of §1, **provided the acceptance
-> evidence demonstrates**:
+> `keepSource()` is accepted as a **candidate satisfaction** of §1, **pending evidence from
+> two sources**:
 >
-> 1. the governed source declaration path;
-> 2. discriminator alignment;
-> 3. separation of minting from route/component concerns.
+> 1. **The frozen F1–F10 Feature Walk** establishes **member-path behavior**, including
+>    capsule provenance and discriminator behavior.
+> 2. **Code-level review** establishes **implementation properties not observable from the
+>    member path**, including separation of minting from route/component concerns.
 
-⭐⭐⭐ **This is a conditional acceptance, not a finding of conformance.** The precise standing
-is: *`keepSource()` is accepted as a **candidate satisfaction** of §1, **pending evidence**
-from the frozen walk.* ⛔ It must not be restated as *"§1 is satisfied."*
+⭐⭐⭐ **Amendment 1 — the evidence sources are split deliberately.** The frozen protocol
+scopes itself: *"the persistence half is already evidenced separately … this walk is the
+**browser/member path only**."* The §1 conditions exceed what that instrument can observe.
+The repair is **not to weaken the conditions** but to name the second evidence pathway:
+
+```text
+member evidence  ≠  code evidence
+```
+
+⛔ **A successful walk must not be forced to prove architecture it cannot observe.** Nor may
+a clean F1–F10 pass be read as discharging condition 2 — that condition is settled by review,
+or it is not settled.
+
+⭐⭐⭐ **This is a conditional acceptance, not a finding of conformance.** ⛔ It must not be
+restated as *"§1 is satisfied."*
 
 **Rationale:** the question is not *"is the new implementation better?"* It is *"does the
 implementation satisfy the authorized requirement?"* The reconnaissance (#925) suggests it
@@ -67,7 +87,28 @@ may — suggests, and no more.
 
 > Correction 3 may proceed to **acceptance preparation**. The canonical F1–F10 Feature Walk
 > Protocol governs. `keepSource()` is accepted as a candidate satisfaction of §1, pending
-> evidence from the frozen walk. **Acceptance remains a founder act and has not occurred.**
+> evidence from **both** sources named in §2.2. **Acceptance remains a founder act and has
+> not occurred.**
+
+### 2.5 The precondition binds the commit, not the branch (amendment 2)
+
+The frozen protocol's preconditions say *"run against the Correction 3 implementation
+**branch** at a named commit."* The implementation has since merged to trunk (#905); there is
+no branch. **The intent is unchanged and still valid: run against a known implementation
+state.**
+
+> **The binding is the named commit, not the branch.** Read the precondition as *"against the
+> Correction 3 implementation at a named commit."*
+
+⛔ **This does not edit the frozen protocol.** A frozen instrument is not amended in place —
+revising its text requires a **new version with its own freeze act**. This clause is a
+*reading* of the existing precondition, recorded here so a walk is not blocked by a referent
+that no longer exists.
+
+⚠️ **Related stage-identity drift, recorded not fixed:** the frozen protocol cites #895 as
+`OPEN`; #895 is merged. The content is correct; the referent's **state label** is stale. Same
+class as the four stage-identity failures — correct content, wrong stage marker. Correcting
+it likewise requires a new version, not an in-place edit.
 
 ⛔ Still not permitted by this draft: claiming acceptance · assembling a release candidate ·
 deployment · treating a passed walk as acceptance.
