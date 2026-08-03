@@ -22,10 +22,30 @@ resolution:
 | Group | Artifacts | Likely relation |
 |---|---|---|
 | **A · Constitution** | `specs/AIN_OS_EXPERIENCE_CONSTITUTION_DRAFT` + Articles 8, 9 · `canon/AIN_OS_CROSS_LAYER_DESIGN_CONSTITUTION_DRAFT` | ⚖️ **unresolved** — possibly parent + cross-layer translation, possibly competing. ⚠️ the second's **location implies authority not granted** |
-| **B · BD / Mark** | `pitch/BUSINESS_DEVELOPMENT_BRIEF` · `pitch/MARK_EFFINGER_BD_BRIEF` | ⚖️ **unresolved** — likely one audience, two attempts. A header in the first claims the second is retired to `_archive/`; **`docs/pitch/_archive/` does not exist** |
+| **B · BD / Mark** | `pitch/BUSINESS_DEVELOPMENT_BRIEF` · `pitch/_archive/MARK_EFFINGER_BD_BRIEF` | ✅ **RESOLVED — see §1a** |
 | **C · Navigation / arrival** | `product/NOW_WHAT_NAVIGATION_AND_ARRIVAL_ARCHITECTURE` (parallel) · `product/AIN_OS_ENTRY_ARCHITECTURE` · `product/NOW_WHAT_HOUSE_ROOMS` · `product/NOW_WHAT_CLIENT_ENVIRONMENT_MAP` | 🔍 **likely different views** — threshold layer vs entry-type layer vs room layer. **Read before merging anything** |
 | **D · Surface grammar** | `product/NOW_WHAT_ACTIVE_SURFACE_PRINCIPLES` (parallel, *"working synthesis, not durable"*) · `product/NOW_WHAT_DESIGN_PRINCIPLES` | 🔍 likely adjacent layers — *what may be on a surface* vs *what governs a screen* |
 | **E · Evidence instruments** | `product/NOW_WHAT_LARRY_PILOT_TEST_PLAN` · `product/walks/CLIENT_ARRIVAL_BASELINE_WALK` · `product/walks/HOME_ROOM_STATE_WALK` · `product/walks/NOW_WHAT_PRACTICE_WORKSPACE_LARRY_WALK_01` · `reviews/NOW_WHAT_CLIENT_HOME_LARRY_ACCEPTANCE_WALK` | ⚠️ **five instruments, one lane** — see §2 |
+
+### 1a. ⚠️ This inventory was stale within minutes of being written — corrected
+
+Two facts changed between authoring §1 and committing it. Recorded rather than silently fixed,
+because the staleness is itself the finding:
+
+| Claimed above | Actual |
+|---|---|
+| *`docs/pitch/_archive/` does not exist* | ✅ **it does** — the parallel session performed the move, adding `_archive/MARK_EFFINGER_BD_BRIEF_2026-08-03.md` and `_archive/README_MARK_BD_BRIEF_COLLISION_2026-08-03.md`. **Group B is resolved**; the declared state and the filesystem now agree |
+| The empty-state finding lives only inside `HOME_ROOM_STATE_WALK` | ⚠️ **it now has its own artifact** — `docs/observations/EMPTY_STATE_OBSERVATION_2026-08-03.md`, in a **`docs/observations/` layer this inventory did not know existed** |
+
+⭐ **The lesson is not that the inventory was wrong. It is that a shared checkout with live parallel
+sessions has no stable state to inventory.** Any snapshot of the artifact field is accurate as of a
+timestamp and not after. This is the same structural cause as the six collisions — and it means the
+referent-resolution session should **re-list the field at the moment it begins**, never work from
+this document's §4 as if it were current.
+
+⭐ **New layer to carry forward: `docs/observations/`** — a home for observations that are neither
+design nor walk records. Its existence is itself a status signal: someone needed a place for a
+finding that was not yet evidence and not a design. That distinction is worth keeping.
 
 ### ⭐ §2 — the instrument question is already open, and predates today
 
