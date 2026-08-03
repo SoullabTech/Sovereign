@@ -67,12 +67,40 @@ observation → interpretation → acceptance
 accept a release; an acceptance walk cannot discover an unanticipated experience. **The mistake would
 be making them compete. They answer different questions.**
 
-⚠️ **Three categories from the first pass are not carried forward** — *Experience walk · Readiness
-walk · Implementation verification.* **Confirm whether they were dropped or folded** (Experience
-looks folded into Pilot/practice; Readiness and Implementation verification may be a different family
-entirely — gates rather than walks). A category that disappears between two versions of a taxonomy
-while its need persists is the same disappearance pattern seen with *"complexity belongs
-underneath."*
+### ✅ The dropped categories, reconciled — walks are not gates
+
+The three categories missing from the second pass were not lost; they belong to a **different
+family**. Founder reconciliation (still a candidate, not a ruling):
+
+> **A walk learns. A gate permits.**
+
+**Walks — generate understanding**
+
+| Walk | Question |
+|---|---|
+| Observation | what is happening? |
+| State | does the environment hold under changing conditions? |
+| Acceptance | does this satisfy a defined criterion? |
+| Practice / Pilot | does this work in lived use? *(absorbs the first pass's "Experience")* |
+| Transition | where do seams fail between states? |
+
+**Gates — authorize movement**
+
+| Gate | Question |
+|---|---|
+| Readiness | are prerequisites satisfied to begin? |
+| Implementation verification | did the built thing match the authorized design? |
+
+⭐ This fits the chain the whole lane has been building toward:
+
+```
+observation → evidence   ·   ruling → authority   ·   gate → transition   ·   implementation → artifact
+```
+
+⚠️ **Consequence for §"What must be decided":** the five instruments in this lane are all **walks**.
+The deployment gate in `specs/NOW_WHAT_LARRY_PRACTICE_WORKSPACE_UIUX_SPECIFICATION.md` (G1–G6) is a
+**gate** and must not be classified as, or satisfied by, a walk result. **A walk can supply what a
+gate reads; it cannot open one.**
 
 ## What must be decided
 
