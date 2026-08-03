@@ -50,6 +50,21 @@ timestamp and not after. This is the same structural cause as the six collisions
 referent-resolution session should **re-list the field at the moment it begins**, never work from
 this document's §4 as if it were current.
 
+### Field events — how to read a discrepancy without assigning blame
+
+A stale inventory is not automatically a failure. **Classify the discrepancy before reacting to it:**
+
+| Event | Meaning |
+|---|---|
+| Inventory says a file is absent, later it appears | **the field changed** — expected in a live checkout |
+| Inventory names one referent, later another appears | **ambiguity surfaced** — a real finding |
+| Inventory misses an artifact that existed | **the observation boundary was incomplete** — fix the method |
+| Inventory **overwrites** an artifact | 🔴 **preservation failure** — the only one of the four that is a defect |
+
+⭐ Only the last is a fault. Naming the other three as *events* rather than *errors* is what keeps
+concurrent work from becoming blame-oriented — and blame is what makes parallel sessions hide work,
+which is the condition that produced the collisions in the first place.
+
 ⭐ **New layer to carry forward: `docs/observations/`** — a home for observations that are neither
 design nor walk records. Its existence is itself a status signal: someone needed a place for a
 finding that was not yet evidence and not a design. That distinction is worth keeping.

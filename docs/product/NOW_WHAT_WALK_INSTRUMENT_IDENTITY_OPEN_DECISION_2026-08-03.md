@@ -45,19 +45,34 @@ symptom of the same shared-checkout condition as the six collisions, not of anyo
 
 ## Candidate taxonomy — founder-authored, explicitly NOT a ruling
 
-| Instrument | Purpose |
-|---|---|
-| **Observation walk** | discover what happens |
-| **Acceptance walk** | determine whether a defined criterion is met |
-| **Experience walk** | understand human interpretation |
-| **Readiness walk** | determine whether prerequisites exist |
-| **Implementation verification** | confirm technical conditions |
+**Second pass (2026-08-03), which adds the column that makes it operable:**
 
-> **The mistake would be making them compete. They answer different questions.**
+| Instrument | Primary question | Authority of result |
+|---|---|---|
+| **Observation walk** | what exists / what happens? | produces **evidence** |
+| **Acceptance walk** | does this satisfy a defined criterion? | produces **acceptance evidence** |
+| **State walk** | does the environment hold across changing conditions? | produces **boundary evidence** |
+| **Transition walk** | where do seams fail between states or rooms? | produces **continuity evidence** |
+| **Pilot / practice walk** | does this fit a real person's work? | produces **lived-practice evidence** |
 
-⭐ The question each result must be able to answer is: **what authority can this kind of result
-carry?** An observation walk cannot accept a release. An acceptance walk cannot discover an
-unanticipated experience. Conflating them lets a discovery masquerade as a pass.
+> ⭐⭐ **A result can only carry the authority of the question the instrument was designed to answer.**
+
+That is the rule the whole decision exists to establish. It blocks the common slide:
+
+```
+observation → interpretation → acceptance
+```
+
+— where someone sees something interesting and treats it as approval. An observation walk cannot
+accept a release; an acceptance walk cannot discover an unanticipated experience. **The mistake would
+be making them compete. They answer different questions.**
+
+⚠️ **Three categories from the first pass are not carried forward** — *Experience walk · Readiness
+walk · Implementation verification.* **Confirm whether they were dropped or folded** (Experience
+looks folded into Pilot/practice; Readiness and Implementation verification may be a different family
+entirely — gates rather than walks). A category that disappears between two versions of a taxonomy
+while its need persists is the same disappearance pattern seen with *"complexity belongs
+underneath."*
 
 ## What must be decided
 
