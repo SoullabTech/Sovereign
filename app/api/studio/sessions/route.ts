@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
+import { resolveSessionTeamId } from '@/lib/team/sessionTeamScope';
 import { sendBookingConfirmation } from '@/lib/notifications/SessionNotificationService';
 import { syncNewSessionToGoogle, syncUpdatedSessionToGoogle, syncCancelledSessionToGoogle } from '@/lib/calendar/syncSessionToGoogle';
 
@@ -200,10 +201,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const teamId = await resolveSessionTeamId(practitionerId);
     const result = await db.query(
       `INSERT INTO sessions
-        (practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, location_type, location_details, notes, calendar_disclosure)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::calendar_disclosure)
+        (practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, location_type, location_details, notes, calendar_disclosure, team_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::calendar_disclosure, $11)
        RETURNING *`,
       [
         practitionerId,
@@ -216,6 +218,7 @@ export async function POST(request: NextRequest) {
         meeting_link || null,
         notes.trim() || null,
         effectiveDisclosure,
+        teamId,
       ]
     );
 

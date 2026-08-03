@@ -13,6 +13,7 @@
 
 import db from '@/lib/db/postgres';
 import crypto from 'crypto';
+import { resolveSessionTeamId } from '@/lib/team/sessionTeamScope';
 import { generateInviteCode, hashInviteCode } from '@/lib/portal/invites';
 import { sendPortalClaimEmail } from '@/lib/portal/notifications';
 import { getAvailableSlots } from '@/lib/scheduling/slotCalculator';
@@ -344,10 +345,11 @@ export async function createBooking(
 
     // Create the session
     const sessionId = crypto.randomUUID();
+    const teamId = await resolveSessionTeamId(ctx.practitionerId);
     await db.query(
       `INSERT INTO sessions
-       (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, notes, price_cents, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, NOW())`,
+       (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, notes, price_cents, created_at, team_id)
+       VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, NOW(), $9)`,
       [
         sessionId,
         ctx.practitionerId,
@@ -357,6 +359,7 @@ export async function createBooking(
         scheduledEnd.toISOString(),
         notes || null,
         service.price_cents,
+        teamId,
       ]
     );
 
