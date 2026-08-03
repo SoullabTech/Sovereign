@@ -50,6 +50,25 @@ Begin with authorship, not with the domains.
 - Are there parts of your work that are yours but should never be surfaced by an AI?
 - Are there things you teach only inside a live relationship?
 - Are there things that require your presence?
+- Are there parts of your work, your thinking, your experiences, or your way of working
+  that you would want the system to **understand but not use** in conversation? Are there
+  things that are meaningful for context but should remain private, or only available in
+  certain situations?
+
+  ⚠️ ⭐⭐⭐ **This question reaches a category that cannot be inferred from absence.** The
+  preceding three elicit only `never`. "Hold but do not speak" is a **third disposition**,
+  not a softer refusal:
+
+  ```text
+  understand  ≠  surface
+  hold        ≠  speak
+  know about  ≠  use from
+  ```
+
+  Maps to `private` / `reference_only` — see [Authority Schema §1.3](PRACTITIONER_FIELD_AUTHORITY_SCHEMA.md)
+  (`private` ⊥ `never` must not collapse). ⛔ Do not offer the vocabulary words to Larry;
+  record what he says, classify afterward. Silence here records as **no `private` items**,
+  never as an unasked question.
 
 ---
 
