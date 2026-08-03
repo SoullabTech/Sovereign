@@ -57,7 +57,7 @@ export {
 } from './types';
 
 // Parser
-export { parseStateVector } from './parser';
+export { parseStateVector, stripStateVectorBlocks } from './parser';
 export type { ParseResult } from './parser';
 
 // Prompt contract
