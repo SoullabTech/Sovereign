@@ -20,6 +20,8 @@
 
 import type {
   CounterpartLabel,
+  DetectableCounterpartLabel,
+  DetectableTone,
   DetectedSignal,
   DynamicTag,
   RelationshipTone,
@@ -33,7 +35,10 @@ import { SIGNAL_CONFIDENCE_THRESHOLD } from './types';
 // *possible* signals; the card frames everything as "possible".
 // ─────────────────────────────────────────────────────────────────────────────
 
-const COUNTERPART_KEYWORDS: Record<CounterpartLabel, string[]> = {
+// Typed against DetectableCounterpartLabel — the Phase 4 entry-flow labels
+// (person/group/situation/self/unnamed_field) are member-selected, never
+// inferred. See the DetectableTone note in types.ts.
+const COUNTERPART_KEYWORDS: Record<DetectableCounterpartLabel, string[]> = {
   partner: [
     'partner', 'husband', 'wife', 'spouse',
     'boyfriend', 'girlfriend', 'fiance', 'fiancée', 'fiancee',
@@ -56,9 +61,17 @@ const COUNTERPART_KEYWORDS: Record<CounterpartLabel, string[]> = {
     'part of me', 'a part of me', 'the voice in my head',
   ],
   unspecified: [],
+  // No keywords by design — `person` is never matched from this registry. It is
+  // assigned only by the named-entity fallback below (Patch B). An empty list
+  // keeps that visible rather than implying a lexicon that doesn't exist.
+  person: [],
 };
 
-const TONE_LANGUAGE: Record<RelationshipTone, string[]> = {
+// Typed against DetectableTone, not the full RelationshipTone union: the five
+// Phase 4 tones (tender/strained/conflicted/heavy/shut_down) reach the system
+// only by member selection. Adding entries for them here would silently grant
+// this detector authority to infer what a member was meant to declare.
+const TONE_LANGUAGE: Record<DetectableTone, string[]> = {
   tense: [
     'tense', 'tension', 'pressure between', 'on edge',
     'fight', 'fighting', 'argument', 'arguing', 'yelled', 'yelling',
