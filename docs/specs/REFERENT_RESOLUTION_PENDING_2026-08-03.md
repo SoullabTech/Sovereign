@@ -53,6 +53,61 @@ be visible.
    `docs/canon/` placement is not ratification.
 4. **Only then consider promotion.**
 
+## Candidate structure — founder-authored, explicitly NOT a ruling
+
+The three constitution-shaped artifacts appear to solve **different** problems:
+
+| Artifact | Likely role |
+|---|---|
+| **AIN OS Experience Constitution** | human experience rules · relationship boundaries · authority model · AI/human interaction |
+| **Cross-Layer Design Constitution** | translation of principles across architecture layers — design / product / engineering alignment |
+| **Author's Studio Member Experience Design Constitution** | surface-specific application |
+
+Candidate tree:
+
+```
+AIN OS Experience Constitution
+   ├── Cross-Layer Design Constitution
+   ├── Author Studio Experience Charter
+   └── Now What? Experience Charter
+```
+
+> ⛔ **The mistake to avoid: allowing any child artifact to silently become the parent.**
+
+⚠️ **One structural note for the resolution session — the candidate tree mixes two axes.** Author
+Studio and Now What? are **surfaces** (*how does this principle apply in this place?*). A cross-layer
+translation is a **stack traversal** (*how does this principle appear at each level — design,
+product, engineering?*). Those are orthogonal: cross-layer cuts **through** every surface charter
+rather than sitting beside them. The same shape was already noted for the MAIA Interaction Charter.
+
+This is the **third** recurrence of axis-mixing in one session — audience vs surface vs agent;
+roadmap Stages vs method steps; now surface vs translation layer. The recurrence is the finding:
+**ask what axis a thing is on before drawing the tree.**
+
+## The yield article — the constitutional hinge
+
+Founder reframing, sharper than the earlier "which principle yields" formulation and worth
+preserving verbatim:
+
+> The question is not *"which principle wins?"* The better question: **when two good principles
+> collide, how does the system remain honest about the tradeoff?**
+
+That makes the article about *honesty about tradeoffs* rather than *precedence*, and it is what
+prevents future design debates from becoming preference battles.
+
+## Sequence after resolution
+
+```
+Constitution → Now What? Design Principles → Experience Architecture → Larry Walk → Implementation
+```
+
+Then the build question stops being *"what should Now What? become?"* and becomes **"what is the
+smallest living expression of the already-decided experience?"** — which is Slice 0.
+
+**Larry does not need to understand the constitution.** He needs familiar navigation, clear purpose,
+an obvious next action, and confidence that the system respects the relationship. The complexity
+belongs underneath.
+
 ## Also open, from the design work itself
 
 - Principle hierarchy (Tier 1 / Tier 2) — drafted by Claude, requires founder ruling.
