@@ -260,6 +260,32 @@ const PRESENCE_SUBSTRING_WORDS = [
   'between us', 'we ', 'relationship',
 ];
 
+// Patch C: inner-realm presence.
+//
+// The gate is the sole entry to inference, so its vocabulary must cover every
+// realm the downstream registries claim to serve — otherwise a registry is
+// authored but unreachable. `RelationshipRealm` (types.ts) names 'inner'
+// alongside 'outer', and three registries speak it: COUNTERPART_KEYWORDS.inner,
+// DYNAMIC_SIGNALS['parts-polarization'], and FRAMEWORK_KEYWORDS.ifs. Before
+// this list existed the gate's vocabulary was entirely interpersonal, so those
+// three surfaced only by accident — when an unrelated outer token happened to
+// co-occur ("We talked and a part of me…").
+//
+// This does NOT widen what is inferred. It only lets inner language reach the
+// inference that was already written for it. Each phrase is multi-word and
+// self-anchoring, so none collide as substrings the way Patch A's short kinship
+// tokens do ('person' ⊅ son, 'another' ⊅ 'another part').
+//
+// Not covered: 'transpersonal'. It is named in RelationshipRealm but no
+// counterpart or dynamic registry speaks it, so there is nothing downstream for
+// a gate token to reach. Widening for it would admit text the detector cannot
+// read.
+const PRESENCE_INNER_WORDS = [
+  'part of me', 'parts of me',
+  'inner critic', 'inner child',
+  'my shadow', 'the voice in my head',
+];
+
 // Patch B: named entity + interaction context pathway.
 // Detects proper names (capitalized, 3+ chars, not sentence-start)
 // combined with interaction verbs → relational presence.
@@ -284,6 +310,8 @@ function hasRelationalPresence(text: string, originalText?: string): boolean {
   if (PRESENCE_BOUNDARY_PATTERNS.some((re) => re.test(text))) return true;
   // Canonical: safe substring matches (multi-word, no collision risk)
   if (PRESENCE_SUBSTRING_WORDS.some((w) => text.includes(w))) return true;
+  // Patch C: inner-realm presence (the `inner` counterpart's own vocabulary)
+  if (PRESENCE_INNER_WORDS.some((w) => text.includes(w))) return true;
   // Patch B: named entity + interaction context
   if (originalText && hasNamedEntityPresence(originalText, text)) return true;
   return false;
