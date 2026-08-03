@@ -143,7 +143,33 @@ closed or merged; nothing was deployed. §5.5 in particular is a production-affe
 
 ---
 
-## 6. Q-A and Q-B — founder positions **stated, not ratified** (2026-08-02)
+## 6. Q-A and Q-B — ⚠️ STATUS CORRECTED 2026-08-03
+
+🔴 **Q-A IS RATIFIED — the text below recorded it as unruled, and that was stale.**
+
+> **The relationship is shared; the claims within it are separately authored, and every claim carries
+> its author.**
+
+⛔ Explicitly **NOT** projection — `Larry's model → client's reality` inverts the Constitutional
+Direction of Authority. Precedent already in code: `field_program_positions.stated_by ∈
+(member_confirmed, member_stated, practitioner_seeded)` + `member_confirmed_at` NULL until the
+member's own gesture. ⭐ **Co-equal ≠ symmetric write access** — the client never moves their own stage.
+
+⭐⭐ The shape this protects:
+
+```
+Relationship                          NOT      Relationship
+  ├── Member claim (member-authored)               └── merged truth
+  └── Practitioner claim (practitioner-authored)
+```
+
+⇒ prevents the system becoming a **joint record that erases provenance**.
+
+**Q-B remains a founder position, stated and not ratified.**
+
+⚠️ The original wording is preserved below for provenance. Read it as superseded for Q-A.
+
+### 6.1 (superseded for Q-A) Original record — positions stated, not ratified
 
 Recorded verbatim in substance so a later session does not mistake them for rulings:
 
@@ -157,7 +183,7 @@ Recorded verbatim in substance so a later session does not mistake them for ruli
 
 Both must be ratified before `/studio/clients` is built, because that page encodes all four decisions.
 
-Related: `NOW_WHAT_PHASE_TRANSITION_RECONCILIATION_2026-08-02.md` ·
+Related:
 `COACH_FIELD_FOUNDATION_INVARIANTS_2026-08-02.md` (#902) ·
 `COACH_FACILITATOR_FIELD_SPEC_2026-08-02.md`
 
@@ -637,3 +663,35 @@ Recorded because it is a live risk, not a hypothetical:
    share one dev database — the standing trap where a concurrent lane drops another's tables
    mid-gate. **Both lanes must use a branch-owned database**, not the shared one. Evidence produced
    against the shared DB is not repeatable and does not count.
+
+---
+
+## 11. ⚠️ Withdrawal of the phase-transition reconciliation document
+
+`NOW_WHAT_PHASE_TRANSITION_RECONCILIATION_2026-08-02.md` is **removed from this PR** (2026-08-03).
+
+**Why.** It asserted that the Now What? design assessment existed on canonical trunk via **#898**.
+That was true when written and became **false ~36 minutes later** when **#910 reverted #898**. The
+established Client Home lane independently flagged it as a **stale-doc trap**: *"all four artifacts
+it cites are ABSENT from trunk. Correct or withdraw it; do not reason from it."*
+
+⭐ **Withdrawn rather than corrected**, because its remaining content duplicates the established lane
+(Phase 0 inventory · Phase 0.5 boundary · experience design). It mainly carried superseded history.
+
+> ⭐⭐⭐ **A stale document must not become a permanent historical falsehood.** Preserving history does
+> not require preserving a false claim about the present — the git history retains what was written;
+> the repository should not keep asserting it.
+
+**What survives, and where:** the two sovereignty questions → **#940** (what the practitioner may
+*create and retain*) and **#922** (expression-protection symmetry); the plaintext asymmetry finding →
+**#922**. Nothing else in that document was unique.
+
+⭐ **The generalizable lesson, and the reason this lane existed at all:**
+
+> **Do not let a useful insight become a competing architecture.**
+
+Real findings — practitioner *creation/retention* ≠ practitioner *receipt* · expression ownership
+needs symmetry · source-based protection rules create false asymmetry — belong as **questions and
+constraints feeding the existing architecture**, not as a new one. When two lanes independently
+produce inventory, ownership model, experience design and acceptance walk, ⛔ the answer is **not to
+merge them**: **one becomes the source of truth, the other becomes evidence.**
