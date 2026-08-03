@@ -16,10 +16,21 @@
  * The practitioner-authored identity layers keep composing. They are
  * self-descriptive, low-risk, and were not the failure vector.
  */
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+
+// The live path (buildPracticeFieldContext) reads the DB; the room path does not.
+// Mocked here so BOTH guarded boundaries can be proven by the same fixture.
+const mockQuery = jest.fn();
+jest.mock('@/lib/db/postgres', () => ({
+  query: (...args: unknown[]) => mockQuery(...args),
+  transaction: jest.fn(),
+}));
+
 import {
   corpusIsComposable,
   formatFieldContextForRoom,
+  buildPracticeFieldContext,
+  formatPracticeFieldContextForPrompt,
 } from '@/lib/practiceField/practiceFieldService';
 import type { PracticeField } from '@/lib/types/practiceField';
 
@@ -93,5 +104,65 @@ describe('formatFieldContextForRoom', () => {
 
   it('returns empty for a null field', () => {
     expect(formatFieldContextForRoom(null)).toBe('');
+  });
+});
+
+/**
+ * The SECOND guarded boundary.
+ *
+ * `corpusIsComposable` gates two composition sites. Until now only the room
+ * path had a proof; the live path was correct by inspection alone. That
+ * asymmetry mattered because the live path is the one that composes the
+ * current field — a regression there would have left the room-path suite green.
+ *
+ * Same invariant, same fixture, same two assertions. Both halves are required:
+ * a system that simply stopped composing would satisfy the negative and fail
+ * the positive.
+ */
+describe('buildPracticeFieldContext — the live path', () => {
+  const snapshot = {
+    space_id: 's0000000-0000-4000-8000-000000000000',
+    about_practice: 'About this practice.',
+    how_we_work_together: 'How we work.',
+    how_maia_supports: 'How MAIA supports.',
+    resources: [],
+    orientation_style: 'guided',
+  };
+
+  beforeEach(() => {
+    mockQuery.mockReset();
+    // 1) getSnapshotForSpace  2) the live practice_fields join
+    mockQuery
+      .mockResolvedValueOnce({ rows: [snapshot] } as never)
+      .mockResolvedValueOnce({ rows: [field()] } as never);
+  });
+
+  it('withholds the corpus while still carrying the identity layers', async () => {
+    const ctx = await buildPracticeFieldContext(snapshot.space_id, 'The practitioner');
+    expect(ctx).not.toBeNull();
+
+    // Forbidden path blocked — the corpus never reaches the context object.
+    expect(ctx!.active_field_content).toBeNull();
+
+    // Legitimate identity remains available — this half is what prevents a
+    // silent system from passing.
+    expect(ctx!.about_practice).toBe('About this practice.');
+    expect(ctx!.how_we_work_together).toBe('How we work.');
+    expect(ctx!.how_maia_supports).toBe('How MAIA supports.');
+  });
+
+  it('composes a prompt block with no corpus and intact self-description', async () => {
+    const ctx = await buildPracticeFieldContext(snapshot.space_id, 'The practitioner');
+    const block = formatPracticeFieldContextForPrompt(ctx!);
+
+    // This is the actual invariant: corpus does not enter prompt context.
+    expect(block).not.toContain('FIELD CORPUS');
+    expect(block).not.toContain(CORPUS);
+    expect(block).not.toContain('composed in full from');
+    expect(block).not.toContain('Current practitioner emphasis');
+
+    expect(block).toContain('About this practice.');
+    expect(block).toContain('How we work.');
+    expect(block).toContain('How MAIA supports.');
   });
 });
