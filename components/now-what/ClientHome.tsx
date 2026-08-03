@@ -260,9 +260,9 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             {name ? `${name}, this is your space.` : 'This is your space.'}
           </h1>
           <p className="text-slate-400 text-base font-light leading-relaxed mt-3 max-w-prose">
-            Your leadership work, as you have authored it — the decisions you are
-            weighing, what you are practising, and what you chose to keep. It is
-            yours. Sharing any of it is your choice, made one piece at a time.
+            Your leadership work — your decisions, commitments, reflections, and
+            what you chose to carry forward. Everything here is yours. Sharing
+            happens only by your choice, one piece at a time.
           </p>
         </header>
 
@@ -282,14 +282,12 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             <Section
               eyebrow="My journey"
               title="What you are working on"
-              lead="Your place in the work — as you or your coach stated it, each labelled with who said so. Nothing here is inferred, and nothing measures you."
+              lead="Your work, in your own words — or your coach's, each labelled with who said so. Nothing here is inferred, measured or evaluated."
               delay={60}
             >
               {journey.length === 0 ? (
                 <Quiet>
-                  No programme is named here yet. That is a real place to be standing,
-                  not a gap — the work can begin in a conversation and take its shape
-                  from what you actually bring.
+                  Nothing here yet. Your work takes its shape from what you bring.
                 </Quiet>
               ) : (
                 <ul className="space-y-4">
@@ -329,16 +327,14 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             <Section
               eyebrow="Decisions"
               title="What you are working through"
-              lead="The decisions you are actually carrying, held open while they are still open. Nothing here recommends, ranks or decides — the judgement stays yours."
+              lead="The decisions you are carrying — held open until you decide. No recommendations. No ranking. No answers assigned. The judgement remains yours."
               delay={120}
             >
               {decisions.length === 0 ? (
                 <>
                   <Quiet>
-                    Nothing is held here yet. A decision belongs here once you have
-                    named it — the context, who it touches, what you know and what
-                    you are still assuming. Working one through in a session is how
-                    it arrives.
+                    Nothing here yet. A decision enters when you name it: the
+                    context, what you know, what you are still exploring.
                   </Quiet>
                   <div className="mt-5">
                     <Door href={roomHref}>Work a decision through →</Door>
@@ -353,14 +349,13 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             <Section
               eyebrow="Commitments"
               title="What you are practising"
-              lead="Not tasks. The way you said you would lead differently — kept in your own words, with nothing tracking whether you complied."
+              lead="The ways you chose to lead and live differently. Kept in your words. Not tracked. Not measured."
               delay={180}
             >
               {commitments.length === 0 ? (
                 <Quiet>
-                  Nothing is being practised here yet. A commitment lands here when
-                  you name one at the close of a conversation — what you will
-                  actually live, and why it matters to you.
+                  Nothing here yet. A commitment begins when you name what you
+                  will practise, and why it matters to you.
                 </Quiet>
               ) : (
                 <ThreadList items={commitments} />
@@ -371,14 +366,13 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             <Section
               eyebrow="Sessions"
               title="Continuity between conversations"
-              lead="The conversations you carried something out of, and the door into the next one."
+              lead="What you chose to carry forward, and the door into the next conversation."
               delay={240}
             >
               {sessions.length === 0 ? (
                 <Quiet>
-                  No conversation has left anything here yet. What you choose to keep
-                  at the end of a session collects here, so returning does not mean
-                  starting again.
+                  No conversations here yet. What you keep from a session collects
+                  here, so returning does not mean starting again.
                 </Quiet>
               ) : (
                 <ul className="space-y-3">
@@ -409,13 +403,13 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             <Section
               eyebrow="Reflections"
               title="What you kept"
-              lead="Yours alone unless you say otherwise. Held in the order you kept them — not ranked, not summarised, not scored."
+              lead="Your reflections, held in your words and your order. No summaries. No scores. No rankings."
               delay={300}
             >
               {reflections.length === 0 ? (
                 <Quiet>
-                  Nothing is kept here yet. This fills only through your own
-                  gestures — opening this room writes nothing.
+                  Nothing here yet. This grows only through what you choose to
+                  keep — opening this room writes nothing.
                 </Quiet>
               ) : (
                 <>
@@ -438,15 +432,15 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             <Section
               eyebrow="Coach connection"
               title="What your coach can see"
-              lead="Your coach sees the shape of the work you share — the relationship, the programme, and anything you explicitly chose to bring. Nothing else reaches them."
+              lead="Your coach sees what you choose to share — the work you are doing together, and anything you deliberately brought forward. Nothing else reaches them."
               delay={360}
             >
               {shared.length === 0 ? (
                 <Quiet>
-                  You have not shared anything from this space. Your coach can see
-                  that you are working together and where the work is pointed — not
-                  what you have written here. Sharing happens one piece at a time,
-                  by your gesture, and can be withdrawn.
+                  Nothing shared yet. Your coach can see that you are working
+                  together and where the work is pointed — not what you have
+                  written here. Sharing is always your choice, one piece at a
+                  time, and can be withdrawn.
                 </Quiet>
               ) : (
                 <>
