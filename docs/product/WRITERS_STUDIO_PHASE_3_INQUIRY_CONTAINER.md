@@ -36,19 +36,26 @@ status field is not edited on its own.
 union of both statements governs: **observation execution · criteria · Model A/B selection ·
 implementation · Phase 3 build work · deployment** are all unauthorized.)
 
-### What authorizing this question chose
+### What the authorized inquiry frames — and what it does not validate
 
 A question is not neutral merely because it is phrased as an observation question. Its
 wording establishes what counts as relevant evidence, what alternatives are considered, and
-what outcome would constitute resolution. Authorizing it therefore **chose three things**,
-which are recorded here so they remain visible rather than becoming invisible assumptions:
+what outcome would constitute resolution. Those commitments are recorded here so they remain
+visible rather than becoming invisible assumptions.
 
-1. that the **Model A / Model B** question is the right inquiry;
-2. that **observation** is the next evidence source;
-3. that the purpose is **reconciliation**, rather than further unresolved discovery.
+> ⭐⭐⭐ **The authorized inquiry preserves the existing Model A/B question as the object of
+> investigation. It does not assert that Model A/B is the final or correct explanatory model.
+> Evidence may refine, replace, or withdraw the frame.**
 
-⭐ These are now chosen, not assumed. A later finding that any of them was wrong is a reason
-to revise or withdraw the inquiry — not a reason to reinterpret the evidence.
+Framed by this authorization, and **held as the inquiry's shape rather than as validated
+conclusions**:
+
+1. the **Model A / Model B** question is the object of investigation;
+2. **observation** is the next evidence source;
+3. the purpose is **reconciliation**, rather than further unresolved discovery.
+
+⛔ **None of the three is thereby validated.** A later finding that any of them was wrong is
+grounds to **revise or withdraw the inquiry** — never grounds to reinterpret the evidence.
 
 ## 2. What this container is not
 
@@ -101,9 +108,11 @@ founder; the rows are the container.
 | Consent boundaries defined | |
 | No implementation changes during observation — confirmed | |
 
-⛔ **Consent boundaries are not a formality here.** Observation of a member's real use is
-governed by Sanctuary Mode and the sovereignty invariants. An unfilled consent row blocks
-execution as firmly as an unfrozen status.
+⭐ **On the consent row: existing sovereignty and consent invariants apply.** Observation of a
+member's real use is already governed by Sanctuary Mode and the Sovereignty Invariants. This
+row **records how those existing invariants were satisfied** for a given run — it does **not**
+introduce a new Phase 3 consent criterion, and nothing here authors one. Like every other
+precondition row, leaving it unfilled leaves the container unready.
 
 ## 5. Observation subject
 
