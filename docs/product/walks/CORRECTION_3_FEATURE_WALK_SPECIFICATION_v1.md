@@ -1,7 +1,8 @@
 # Correction 3 — Feature Walk Specification v1
 
 **Authority:** Kelly (Founder-Steward). **Recorded by:** Claude Code.
-**Status:** 🟡 **DRAFT — not frozen.** Freeze is a separate act; see the Freeze Record below.
+**Status:** 🔵 **REVIEW READY — not frozen.** F15 is ruled (see below); the remaining act is the
+freeze. Freeze is a separate act; see the Freeze Record.
 **Level:** **Feature acceptance.** ⛔ Not release acceptance, and not a substitute for the Phase 1
 Walk Specification — those are different artifacts at a different level.
 
@@ -85,11 +86,27 @@ substitute for any criterion below.**
 
 ---
 
-## Criteria
+## Criteria — two classes, deliberately not merged
+
+| Class | Criteria | Governs | Blocking? |
+|---|---|---|---|
+| **Required acceptance** | **F1–F14** | *Can the act happen correctly?* | ✅ **yes** — any failure fails the walk |
+| **Added design** | **F15** | *Does the environment accidentally invite repetition of a completed act?* | ⛔ **no** — unless explicitly elevated |
+
+⭐⭐⭐ **These are related but different questions**, and merging them would do one of two harms:
+dropping F15 lets the system **satisfy the mechanics while violating the intended posture**; treating
+F15 as required **silently expands the acceptance boundary beyond #895**. Keeping it as a separate,
+non-blocking class preserves the observation without changing the source specification.
+
+⚠️ **Elevation is an explicit act**, not a drift. If F15 is ever to block acceptance, it must be
+elevated by name and recorded in the Freeze Record.
+
+### Required acceptance criteria (F1–F14)
 
 Derived from #895's fourteen-step acceptance test, one criterion per step. ⚠️ Kelly's shorthand for
 this series has been *"F1–F10"*; the source defines **fourteen** steps, and this document follows the
-source rather than the shorthand.
+source rather than the shorthand. ⛔ The shorthand is a **compressed checklist**, not the acceptance
+instrument — that compression is the failure mode this document exists to refuse.
 
 | # | The member act | What must be observed |
 |---|---|---|
@@ -108,21 +125,35 @@ source rather than the shorthand.
 | **F13** | Reopen the capsule | The atom **remains valid**; nothing implies the declaration was retracted |
 | **F14** | — | ⛔ **No historical capsule was converted.** The 12 pre-existing eligible capsules remain undeclared |
 
-### [added] F15 — the settled state reads as settled
+### Added design criterion — F15 ✅ RULED 2026-08-02: **retained, non-blocking**
 
-After F6 succeeds, the surface shows a **non-actionable** *Kept in your Field* status rather than a
-second Keep-looking control.
+**F15** — after F6 succeeds, the surface shows a **non-actionable** *Kept in your Field* status
+rather than a second Keep-looking control.
 
-**Why added:** #895 requires the act be explicit and distinct (§2) but does not state what the
-surface shows afterwards. A control that still looks pressable after a successful declaration
-re-creates the ambiguity §2 exists to remove. ⚠️ Kelly may strike this before freeze; it is the only
-criterion not traceable to a numbered step in #895.
+**Ruling (Kelly):** keep it, **explicitly as a design criterion, not a compliance criterion.** It
+does **not** block technical acceptance unless explicitly elevated.
+
+**Why it is kept:** F1–F14 govern *can the act happen correctly?* F15 governs *does the environment
+accidentally invite repetition of a completed act?* Removing it would let the system **satisfy the
+mechanics while violating the intended psychological posture**. #895 requires the act be explicit and
+distinct (§2) but does not say what the surface shows afterwards, and a control that still looks
+pressable after a successful declaration re-creates the very ambiguity §2 removes.
+
+**Why it does not block:** requiring it would **silently expand the acceptance boundary beyond
+#895**, which no ruling authorized. It is the only criterion not traceable to a numbered step in the
+source.
+
+⛔ **A failed F15 does not fail the walk.** It is recorded as an observation in the evidence record
+and carried to the acceptance decision, where Kelly may weigh it.
 
 ---
 
 ## Disposition rules
 
-- **Any criterion failing → the walk fails.** ⛔ There is no partial feature acceptance.
+- **Any F1–F14 criterion failing → the walk fails.** ⛔ There is no partial feature acceptance.
+- **F15 failing does not fail the walk** — it is recorded as an observation and carried to the
+  acceptance decision. ⚠️ Unless it has been **explicitly elevated** in the Freeze Record, in which
+  case it joins the required set.
 - A criterion **not reached** is recorded as **unreached** — ⛔ never as passing and never as pending.
 - The evidence record is a **separate artifact** from this specification, and the acceptance decision
   is **separate from both**.
@@ -138,6 +169,8 @@ criterion not traceable to a numbered step in #895.
 | Act | Actor | Date | Record |
 |---|---|---|---|
 | Authored | Kelly | 2026-08-02 | this document, v1 |
+| F15 ruled | Kelly | 2026-08-02 | ✅ retained as **added design criterion, non-blocking** |
+| F15 elevated to required? | Kelly | ⬜ | ⬜ **not elevated** — leave blank unless deliberately elevating |
 | **Frozen** | **Kelly** | ⬜ | ⬜ *no criterion may change after this line is signed* |
 | Candidate named | ⬜ | ⬜ | ⬜ SHA |
 | Executed | ⬜ | ⬜ | ⬜ evidence record |
