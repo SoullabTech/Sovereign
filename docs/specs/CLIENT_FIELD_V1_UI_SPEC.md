@@ -53,7 +53,26 @@ The six taxonomy bands — My Journey · Decisions · Commitments · Sessions ·
 Reflections · Coach Connection — are replaced, not renamed. Their reads are
 re-projected into the five zones; no storage changes.
 
-## 5. Then
+## 5. What v1 must NOT pretend to support
 
-Test with one practitioner + one member. Prepare stays empty until the
-enrolment migration (`invited`/`declined`) is approved.
+The participation layer does not exist — three invitation mechanisms compete and
+none carries programme enrolment (see `NOW_WHAT_ENROLLMENT_AND_MEMBER_WORK_FLOW_V1.md` §9).
+v1 therefore truthfully supports member-confirmed positions, member-created
+field material, and existing session context — **and must not imply**:
+
+- practitioner-assigned programmes
+- automatic preparation flows
+- cohort participation
+- coach-created commitments
+
+**Prepare states its own gap without describing a mechanism.** Copy that
+forward-promised *"what they have laid out for the next stretch appears here"*
+was removed: the shape of practitioner-side preparation is not ruled, so v1 may
+not describe it. An honest empty beats a dead module; an honest empty that makes
+no promise beats both.
+
+## 6. Then
+
+Test with one practitioner + one member on the member surface only.
+**No `pending` migration, no enrolment writes, no practitioner-side expansion**
+until the canonical invitation/participation model is ruled.

@@ -598,10 +598,12 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               lead="What is worth bringing — yours to decide, never a list of tasks set for you."
               delay={120}
             >
+              {/* States its own gap without describing a mechanism. The shape
+                  of practitioner-side preparation is not settled, so this must
+                  not promise one — an honest empty is better than a dead module,
+                  and better still when it does not forward-promise. */}
               <Quiet>
-                Nothing is set out here. When you are working inside a programme
-                with your coach, what they have laid out for the next stretch
-                appears here. Until then, what you bring is entirely your call.
+                What you bring is your call. Nothing is set out for you here.
               </Quiet>
               <div className="mt-5">
                 <Door href={roomHref}>Prepare for your next conversation →</Door>
