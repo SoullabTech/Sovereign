@@ -135,6 +135,22 @@ v1 does not go to Larry until **all** hold:
 ⭐ **G6 matters:** if the environment cannot survive an internal walk, Larry's time is being spent on
 our unfinished work. That is the exact failure this resequencing exists to prevent.
 
+⚠️ **G6 is unsatisfiable as written** — see
+[the instrument-identity decision](../product/NOW_WHAT_WALK_INSTRUMENT_IDENTITY_OPEN_DECISION_2026-08-03.md).
+**A walk cannot satisfy a gate unless the gate names that walk as its evidence source**, and G6 names
+none. It must either name its instrument or be restated as something a walk cannot open.
+
+### Before building any item under this spec — four questions
+
+1. **What artifact authorizes this?**
+2. **What gate permits this transition?**
+3. **What evidence supports this decision?**
+4. **What would falsify the assumption?**
+
+⭐ These are the implementation equivalent of the product principles. **Question 4 is the one that
+gets skipped**, and it is the one that keeps the chain honest: a decision no evidence could overturn
+is not a decision, it is a preference that has been written down.
+
 ## 9. What v1 excludes — stated as loudly as what it includes
 
 ⛔ Messages · Resources · practitioner authored notes · commitments · group and cohort spaces ·

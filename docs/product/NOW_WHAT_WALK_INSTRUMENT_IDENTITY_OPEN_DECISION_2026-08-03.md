@@ -97,10 +97,24 @@ family**. Founder reconciliation (still a candidate, not a ruling):
 observation → evidence   ·   ruling → authority   ·   gate → transition   ·   implementation → artifact
 ```
 
-⚠️ **Consequence for §"What must be decided":** the five instruments in this lane are all **walks**.
-The deployment gate in `specs/NOW_WHAT_LARRY_PRACTICE_WORKSPACE_UIUX_SPECIFICATION.md` (G1–G6) is a
-**gate** and must not be classified as, or satisfied by, a walk result. **A walk can supply what a
-gate reads; it cannot open one.**
+### The rule connecting the two families
+
+> **A walk can inform a gate. A walk cannot *satisfy* a gate — unless the gate explicitly names that
+> walk as its evidence source.**
+
+The exception is what makes it workable, and it must be **declared at the gate, in advance**. A gate
+that names its evidence source can be opened by that source and by nothing else. A gate that names
+none cannot be opened by a walk at all.
+
+This blocks two opposite failures: **a discovery walk treated as approval**, and **a gate treated as
+a suggestion**.
+
+⚠️ **Consequence, concrete.** The five instruments in this lane are all **walks**. The deployment
+gate in `specs/NOW_WHAT_LARRY_PRACTICE_WORKSPACE_UIUX_SPECIFICATION.md` (G1–G6) is a **gate** — and
+**G6 currently reads as a walk result without naming its walk**: *"acceptance questions answered by
+someone who is not Larry, first."* Under this rule G6 must either **name the instrument** that
+satisfies it or be restated as something a walk cannot open. Until then it is exactly the ambiguity
+this decision exists to remove.
 
 ## What must be decided
 
