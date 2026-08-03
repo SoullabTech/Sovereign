@@ -53,6 +53,12 @@ jobs:
       - name: Type check (non-blocking — see enforcement debt above)
         run: npm run typecheck || echo "Type check warnings ignored"
 
+      # Blocking — the native bundle is built from this config, so House
+      # navigation drift must stop the mobile build. Deliberately NOT covered
+      # by the `|| echo` treatment below.
+      - name: House navigation drift guard
+        run: npm run check:house-nav-drift
+
       - name: Run tests
         run: npm test || echo "Tests passed with warnings"
 

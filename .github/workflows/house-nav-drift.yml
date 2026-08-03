@@ -1,0 +1,58 @@
+# House Navigation Drift Guard — blocking check
+#
+# WHY THIS WORKFLOW EXISTS
+#
+# lib/navigation/houseDestinations.ts claims, in its own header comment, that it
+# holds "test-enforced AGREEMENT against the existing runtime allowlist and
+# Capacitor build config". That claim was not true when written:
+#
+#   • the only workflow invoking the suite was mobile-deploy.yml, as
+#     `npm test || echo "Tests passed with warnings"` — failure swallowed;
+#   • mobile-deploy.yml triggers on `pull_request: branches: [main]`, and this
+#     repo's trunk is `clean-main-no-secrets`, so it never fired for our PRs at all;
+#   • no git hook and no preflight step ran the drift guard.
+#
+# The guard would report drift and never block it. This workflow makes the claim
+# true: it triggers on every pull request regardless of base branch, runs the
+# drift test alone, and exits nonzero on failure with no `|| echo` treatment.
+#
+# SCOPE: this invariant only. It deliberately does NOT run the general test
+# suite, and does not alter mobile-deploy.yml's own quality-check behaviour.
+#
+# NOTE ON "REQUIRED": as of 2026-07-29 `clean-main-no-secrets` has no branch
+# protection configured, so no check can be *required* by GitHub. This workflow
+# makes drift visible and red on every PR; making it merge-blocking additionally
+# requires enabling branch protection and adding "house-nav-drift" to the
+# required status checks — a repository admin setting, not a code change.
+
+name: House Nav Drift
+
+on:
+  pull_request:
+  push:
+    branches: [clean-main-no-secrets]
+
+concurrency:
+  group: house-nav-drift-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  house-nav-drift:
+    name: house-nav-drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No `|| echo`. Drift must fail this job.
+      - name: House navigation drift guard
+        run: npm run check:house-nav-drift
