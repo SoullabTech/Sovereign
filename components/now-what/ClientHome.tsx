@@ -1,31 +1,45 @@
 'use client';
 
 /**
- * Now What? — Client Home. The room an executive arrives into.
+ * Now What? — My Work Field. The surface an executive arrives into.
  *
- * `/now-what` had no page: the environment had six rooms and no threshold, so
- * a person who followed their invitation link met a 404 or a sign-in door and
- * had to already know which room they wanted. This is the place that answers
- * "where am I, and what is mine here" before anything asks them to work.
+ * PHASE 1 of docs/specs/MY_WORK_FIELD_UX_SPEC_V1.md (governed by
+ * MY_WORK_FIELD_GOVERNANCE_MODEL_V1.md R1–R7).
  *
- * REGISTER (why this reads the way it does): the person arriving is carrying
- * live decisions, competing stakeholders and real accountability. They do not
- * need their information managed — they need the thread of their own becoming
- * to still be here when they come back. So the room shows what THEY authored,
- * in their words, and never tells them how they are doing.
+ * WHAT CHANGED AND WHY. This room previously rendered six fixed sections —
+ * My journey, Decisions, Commitments, Sessions, Reflections, Coach
+ * connection — each with its own authored empty state. A member with nothing
+ * kept yet met six empty paragraphs, which reads as a broken product rather
+ * than a quiet one, and it asked them to learn our object model before they
+ * could find their own work. The taxonomy was ours; the arrival was theirs.
  *
- * WHAT THIS ROOM REFUSES, structurally and not as a matter of taste:
- *   - No score, percentage, streak, ranking, completion count or progress bar.
- *   - No system-voiced finding. There is no "theme detected", no "pattern
- *     noticed for you", no third voice narrating the member to themselves.
- *     Every line is either the member's own words or a plain fact about their
- *     own act, and every claim carries its author.
- *   - No recency framing. Bands are ordered by the member's keeping gesture,
- *     never labelled "recent" or "latest" — recent is not important, and
- *     kept is not completed.
+ * THE GOVERNING RULE (spec §1): this is a CONTEXTUAL STREAM, not five
+ * modules. A layer with no content DOES NOT RENDER. There is no placeholder
+ * card, no "nothing here yet" repeated down the page, no dead rooms. The
+ * blocks below are the vocabulary of what can appear — not a template.
+ *
+ * The single exception is arrival (spec §6): when nothing is under way, the
+ * member meets ONE welcome, not five absences.
+ *
+ * WHAT THIS SURFACE STILL REFUSES, structurally and not as taste:
+ *   - No score, percentage, streak, ranking, completion count, progress bar,
+ *     and no "week N of M" — progress framing converts development into
+ *     completion tracking (spec §2.1 correction).
+ *   - No system-voiced finding. Every line is either the member's own words
+ *     or a plain fact about their own act, and every claim carries its
+ *     author (R4 · spec §3).
+ *   - No recency framing. Order follows the member's keeping gesture, never
+ *     "recent" or "latest" — and never an inferred importance (Governance
+ *     §6: the system may reveal momentum, it may not manufacture direction).
  *   - No silent coach visibility. Nothing reaches a coach except by an
- *     explicit per-thread gesture, and the member can see that boundary from
- *     their own side in the Coach connection band.
+ *     explicit per-thread gesture.
+ *
+ * WHAT PHASE 1 DELIBERATELY DOES NOT DO: no new tables, no new API, no
+ * participation object (Gate 1 open), no practitioner pathways — Prepare,
+ * Practice-as-offered, lessons, resources, messaging and groups all wait for
+ * phases 2–3. The member's own distinctions are PRESERVED, not collapsed:
+ * a decision is not a commitment is not a reflection. Only their placement
+ * in the front door changed.
  *
  * Data comes from ONE member-scoped composition call (`/api/now-what/home`)
  * over material the member already authored. This room creates no storage.
@@ -90,11 +104,15 @@ function dayLabel(iso: string | null): string {
 /** Whose act made this exist. Attribution is necessary, never decorative. */
 function authorLine(authorship: string): string {
   if (authorship === 'member_authored') return 'in your words';
-  if (authorship === 'member_confirmed') return 'you kept this';
   return 'you kept this';
 }
 
-function Section({
+/**
+ * A block of the stream. Unlike the Section it replaces, this is never
+ * rendered empty — callers gate on content before mounting it, so the page
+ * is composed of what exists rather than a skeleton with holes.
+ */
+function Block({
   eyebrow,
   title,
   lead,
@@ -102,7 +120,7 @@ function Section({
   delay = 0,
 }: {
   eyebrow: string;
-  title: string;
+  title?: string;
   lead?: string;
   children: React.ReactNode;
   delay?: number;
@@ -112,23 +130,14 @@ function Section({
       <p className="text-[11px] uppercase tracking-[0.3em] mb-2" style={{ color: ACCENT }}>
         {eyebrow}
       </p>
-      <h2 className="text-slate-100 text-xl sm:text-2xl font-extralight tracking-wide">{title}</h2>
+      {title && (
+        <h2 className="text-slate-100 text-xl sm:text-2xl font-extralight tracking-wide">{title}</h2>
+      )}
       {lead && (
         <p className="text-slate-400 text-sm font-light leading-relaxed mt-2 max-w-prose">{lead}</p>
       )}
       <div className="mt-5">{children}</div>
     </section>
-  );
-}
-
-/**
- * Empty states are first-class. A person with nothing here yet is not in an
- * error state and must never be shown one — they are at the beginning, which
- * is a valid place to be standing. No "no data", no zero counts.
- */
-function Quiet({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-slate-400 text-sm font-light leading-relaxed max-w-prose">{children}</p>
   );
 }
 
@@ -159,11 +168,29 @@ function ThreadCard({ t }: { t: HomeThread }) {
   );
 }
 
-function ThreadList({ items }: { items: HomeThread[] }) {
-  return <ul className="space-y-5">{items.map((t) => <ThreadCard key={t.id} t={t} />)}</ul>;
+/**
+ * A named group of the member's own material INSIDE a block. This is how the
+ * member's distinctions survive the front-door change: a decision is still a
+ * decision, but it is no longer a room you must navigate to. Renders nothing
+ * when the member has none of that kind.
+ */
+function Strand({ label, items }: { label: string; items: HomeThread[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-6 first:mt-0">
+      <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">{label}</p>
+      <ul className="space-y-5">
+        {items.map((t) => <ThreadCard key={t.id} t={t} />)}
+      </ul>
+    </div>
+  );
 }
 
-/** The single accented action of a band. At most one per band, always named. */
+/**
+ * The single accented action of a block. Its label is always one of the four
+ * member verbs — Continue · Practice · Explore · Keep (spec §4). The verbs
+ * Create, Add, Complete, Submit and Track are banned from this surface.
+ */
 function Door({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a
@@ -176,7 +203,15 @@ function Door({ href, children }: { href: string; children: React.ReactNode }) {
   );
 }
 
-// ── The room ─────────────────────────────────────────────────────────────
+/** How the member's own focus was placed, in the placer's voice, always attributed. */
+function statedByLine(j: JourneyRow): string {
+  const when = j.confirmedAt ? ` · ${dayLabel(j.confirmedAt)}` : '';
+  if (j.statedBy === 'practitioner_seeded') return 'placed by your coach — yours when you say so';
+  if (j.statedBy === 'member_stated') return `in your own words${when}`;
+  return `you confirmed this${when}`;
+}
+
+// ── The field ────────────────────────────────────────────────────────────
 
 export default function ClientHome({ fieldContext }: { fieldContext?: string }) {
   const session = useMemberSession();
@@ -194,7 +229,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         if (parsed?.name && typeof parsed.name === 'string') setName(parsed.name.split(' ')[0]);
       }
     } catch {
-      /* a missing or unreadable name is not an error — the room greets plainly */
+      /* a missing or unreadable name is not an error — the field greets plainly */
     }
   }, []);
 
@@ -206,7 +241,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         const qs = fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : '';
         const res = await apiFetch(`/api/now-what/home${qs}`);
         const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json?.error || 'Could not open your space right now.');
+        if (!res.ok) throw new Error(json?.error || 'Could not open your work right now.');
         if (!cancelled) setData(json);
       } catch (e: any) {
         if (!cancelled) setError(e.message);
@@ -222,7 +257,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
   if (session === 'out') {
     return (
       <NowWhatThreshold
-        roomName="Your space"
+        roomName="Your work"
         line="Where your leadership work continues between conversations."
         fieldContext={fieldContext}
       />
@@ -236,6 +271,15 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
   const reflections = data?.reflections ?? [];
   const shared = data?.shared ?? [];
   const sessions = data?.sessions ?? [];
+
+  // What the member actually has. Each block below mounts only when its own
+  // content exists — the page is composed, never scaffolded.
+  const hasCurrentWork = journey.length > 0;
+  const hasMaterial =
+    decisions.length > 0 || questions.length > 0 || commitments.length > 0 || reflections.length > 0;
+  const hasSessions = sessions.length > 0;
+  const hasShared = shared.length > 0;
+  const hasAnything = hasCurrentWork || hasMaterial || hasSessions || hasShared;
 
   return (
     <>
@@ -254,18 +298,6 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           className="pointer-events-none absolute right-0 top-4 w-48 sm:w-64 opacity-[0.05]"
         />
 
-        {/* ① Arrival — what this place is, before it asks anything */}
-        <header className="relative pt-2 pb-2" style={{ animation: 'nwhFadeUp 0.55s ease both' }}>
-          <h1 className="text-slate-100 text-3xl sm:text-4xl font-extralight tracking-wide leading-tight">
-            {name ? `${name}, this is your space.` : 'This is your space.'}
-          </h1>
-          <p className="text-slate-400 text-base font-light leading-relaxed mt-3 max-w-prose">
-            Your leadership work, as you have authored it — the decisions you are
-            weighing, what you are practising, and what you chose to keep. It is
-            yours. Sharing any of it is your choice, made one piece at a time.
-          </p>
-        </header>
-
         {error && (
           <p role="alert" className={`${PANEL} text-red-300 text-sm font-light`}>
             {error}
@@ -273,115 +305,121 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         )}
 
         {!data && !error && (
-          <p className={`${PANEL} text-slate-500 text-sm font-light`}>Opening your space…</p>
+          <p className={`${PANEL} text-slate-500 text-sm font-light`}>Opening your work…</p>
         )}
 
-        {data && (
+        {/*
+          ARRIVAL (spec §6). The most common first render, and the one the old
+          surface got wrong. A person with nothing under way is not in an
+          error state and is not looking at a gap — they are at the beginning.
+          One welcome, stated warmly, never as an absence, and never five
+          empty rooms listing capabilities they do not have.
+        */}
+        {data && !hasAnything && (
+          <section
+            className={`${PANEL} sm:p-9`}
+            style={{ animation: 'nwhFadeUp 0.55s ease both' }}
+          >
+            <h1 className="text-slate-100 text-3xl sm:text-4xl font-extralight tracking-wide leading-tight">
+              {name ? `${name}, your work field.` : 'Your work field.'}
+            </h1>
+            <p className="text-slate-300 text-base font-light leading-relaxed mt-4 max-w-prose">
+              A place for the work you choose to carry forward.
+            </p>
+            <p className="text-slate-400 text-sm font-light leading-relaxed mt-4 max-w-prose">
+              When your practitioner invites you into a programme, your current work
+              will appear here. You can also begin by bringing something you want to
+              explore.
+            </p>
+            <div className="mt-7">
+              <Door href={roomHref}>Explore →</Door>
+            </div>
+          </section>
+        )}
+
+        {data && hasAnything && (
           <>
-            {/* ② My Journey — where the work is pointed, as declared */}
-            <Section
-              eyebrow="My journey"
-              title="What you are working on"
-              lead="Your place in the work — as you or your coach stated it, each labelled with who said so. Nothing here is inferred, and nothing measures you."
-              delay={60}
-            >
-              {journey.length === 0 ? (
-                <Quiet>
-                  No programme is named here yet. That is a real place to be standing,
-                  not a gap — the work can begin in a conversation and take its shape
-                  from what you actually bring.
-                </Quiet>
-              ) : (
-                <ul className="space-y-4">
+            {/*
+              CURRENT WORK (spec §2.1) — the anchor. Opens with CONTEXT, never
+              with objects: the member is the subject of the sentence and the
+              programme is only its setting (R2). Renders nothing at all when
+              no focus has been placed — there is no "no programme yet" line,
+              because an absent programme is not a deficiency to announce.
+
+              No progress, no counts, no "week N of M": focal_points[] orders
+              the practitioner's sequence for assembly, and its ordinal is not
+              a completion denominator.
+            */}
+            {hasCurrentWork && (
+              <header className="relative pt-2 pb-1" style={{ animation: 'nwhFadeUp 0.55s ease both' }}>
+                <p className="text-[11px] uppercase tracking-[0.3em] mb-3" style={{ color: ACCENT }}>
+                  {name ? `${name}, you are working on` : 'You are working on'}
+                </p>
+                <ul className="space-y-5">
                   {journey.map((j) => (
-                    <li key={`${j.programSlug}-${j.focalPoint}`} className="space-y-1">
-                      {j.programTitle && (
-                        <p className="text-slate-500 text-xs uppercase tracking-[0.2em]">
-                          {j.programTitle}
-                        </p>
-                      )}
-                      <p className="text-slate-100 text-lg font-light">
-                        Working through: {j.focalPoint}
-                      </p>
-                      <p className="text-slate-600 text-xs font-light">
-                        {j.statedBy === 'practitioner_seeded'
-                          ? 'placed by your coach — yours when you say so'
-                          : j.statedBy === 'member_stated'
-                            ? `in your own words${j.confirmedAt ? ` · ${dayLabel(j.confirmedAt)}` : ''}`
-                            : `you confirmed this${j.confirmedAt ? ` · ${dayLabel(j.confirmedAt)}` : ''}`}
+                    <li key={`${j.programSlug}-${j.focalPoint}`} className="space-y-1.5">
+                      <h1 className="text-slate-100 text-3xl sm:text-4xl font-extralight tracking-wide leading-tight">
+                        {j.focalPoint}
+                      </h1>
+                      <p className="text-slate-500 text-sm font-light">
+                        {j.programTitle ? `Within ${j.programTitle} · ` : ''}
+                        {statedByLine(j)}
                       </p>
                     </li>
                   ))}
                 </ul>
-              )}
+              </header>
+            )}
 
-              {questions.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-slate-700/50">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
-                    Questions you are exploring
+            {/*
+              WHAT YOU ARE WORKING WITH — the member's own material, in their
+              words. The kinds are PRESERVED as strands rather than collapsed
+              (Phase 1 rule: decision ≠ commitment ≠ reflection), but they are
+              no longer six destinations the member must navigate. Each strand
+              disappears entirely when the member has none of that kind.
+            */}
+            {hasMaterial && (
+              <Block
+                eyebrow="Your work"
+                title={hasCurrentWork ? undefined : 'What you are working with'}
+                lead="In your words, in the order you kept them. Nothing here is inferred, nothing ranks or summarises you, and nothing measures how you are doing."
+                delay={60}
+              >
+                <Strand label="Decisions you are carrying" items={decisions} />
+                <Strand label="Questions you are living" items={questions} />
+                <Strand label="What you are practising" items={commitments} />
+                <Strand label="What you kept" items={reflections.slice(0, 8)} />
+                {reflections.length > 8 && (
+                  <p className="mt-6">
+                    <a
+                      href={`/now-what/field${ctx}`}
+                      className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
+                    >
+                      Open your full field →
+                    </a>
                   </p>
-                  <ThreadList items={questions} />
-                </div>
-              )}
-            </Section>
+                )}
+              </Block>
+            )}
 
-            {/* ③ Decisions — the highest-stakes executive surface */}
-            <Section
-              eyebrow="Decisions"
-              title="What you are working through"
-              lead="The decisions you are actually carrying, held open while they are still open. Nothing here recommends, ranks or decides — the judgement stays yours."
+            {/*
+              CONTINUE — the thread between conversations. This is the single
+              door of the surface. The old room had two doors pointing at the
+              identical URL (defect D1); one door removes the contradiction
+              without carrying intent, which is a later phase and a ruled
+              question, not a query-param patch.
+            */}
+            <Block
+              eyebrow="Continue"
+              lead={
+                hasSessions
+                  ? 'What you carried out of your conversations, and the way back into the next one.'
+                  : undefined
+              }
               delay={120}
             >
-              {decisions.length === 0 ? (
-                <>
-                  <Quiet>
-                    Nothing is held here yet. A decision belongs here once you have
-                    named it — the context, who it touches, what you know and what
-                    you are still assuming. Working one through in a session is how
-                    it arrives.
-                  </Quiet>
-                  <div className="mt-5">
-                    <Door href={roomHref}>Work a decision through →</Door>
-                  </div>
-                </>
-              ) : (
-                <ThreadList items={decisions} />
-              )}
-            </Section>
-
-            {/* ④ Commitments — identity-level, never tasks */}
-            <Section
-              eyebrow="Commitments"
-              title="What you are practising"
-              lead="Not tasks. The way you said you would lead differently — kept in your own words, with nothing tracking whether you complied."
-              delay={180}
-            >
-              {commitments.length === 0 ? (
-                <Quiet>
-                  Nothing is being practised here yet. A commitment lands here when
-                  you name one at the close of a conversation — what you will
-                  actually live, and why it matters to you.
-                </Quiet>
-              ) : (
-                <ThreadList items={commitments} />
-              )}
-            </Section>
-
-            {/* ⑤ Sessions — the thread between conversations */}
-            <Section
-              eyebrow="Sessions"
-              title="Continuity between conversations"
-              lead="The conversations you carried something out of, and the door into the next one."
-              delay={240}
-            >
-              {sessions.length === 0 ? (
-                <Quiet>
-                  No conversation has left anything here yet. What you choose to keep
-                  at the end of a session collects here, so returning does not mean
-                  starting again.
-                </Quiet>
-              ) : (
-                <ul className="space-y-3">
+              {hasSessions && (
+                <ul className="space-y-3 mb-6">
                   {sessions.slice(0, 8).map((s) => (
                     <li
                       key={s.ref}
@@ -389,74 +427,40 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                     >
                       <span className="text-slate-200 text-sm font-light">{dayLabel(s.at)}</span>
                       <span className="text-slate-500 text-xs font-light">
-                        {s.carried === 1 ? 'you carried one thing forward' : `you carried ${s.carried} things forward`}
+                        {s.carried === 1
+                          ? 'you carried one thing forward'
+                          : `you carried ${s.carried} things forward`}
                       </span>
                     </li>
                   ))}
                 </ul>
               )}
-              <div className="mt-6 pt-5 border-t border-slate-700/50 flex flex-wrap items-center gap-4">
-                <Door href={roomHref}>
-                  {sessions.length === 0 ? 'Enter the session room →' : 'Prepare for the next conversation →'}
-                </Door>
+              <div className="flex flex-wrap items-center gap-4">
+                <Door href={roomHref}>{hasSessions ? 'Continue →' : 'Explore →'}</Door>
                 <p className="text-slate-500 text-xs font-light">
                   What is most alive · what changed · what you want to bring.
                 </p>
               </div>
-            </Section>
+            </Block>
 
-            {/* ⑥ Reflections — private by construction */}
-            <Section
-              eyebrow="Reflections"
-              title="What you kept"
-              lead="Yours alone unless you say otherwise. Held in the order you kept them — not ranked, not summarised, not scored."
-              delay={300}
-            >
-              {reflections.length === 0 ? (
-                <Quiet>
-                  Nothing is kept here yet. This fills only through your own
-                  gestures — opening this room writes nothing.
-                </Quiet>
-              ) : (
-                <>
-                  <ThreadList items={reflections.slice(0, 8)} />
-                  {reflections.length > 8 && (
-                    <p className="mt-5">
-                      <a
-                        href={`/now-what/field${ctx}`}
-                        className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
-                      >
-                        Open your full field →
-                      </a>
-                    </p>
-                  )}
-                </>
-              )}
-            </Section>
-
-            {/* ⑦ Coach connection — the boundary, from the member's own side */}
-            <Section
-              eyebrow="Coach connection"
-              title="What your coach can see"
-              lead="Your coach sees the shape of the work you share — the relationship, the programme, and anything you explicitly chose to bring. Nothing else reaches them."
-              delay={360}
-            >
-              {shared.length === 0 ? (
-                <Quiet>
-                  You have not shared anything from this space. Your coach can see
-                  that you are working together and where the work is pointed — not
-                  what you have written here. Sharing happens one piece at a time,
-                  by your gesture, and can be withdrawn.
-                </Quiet>
-              ) : (
-                <>
-                  <p className="text-slate-400 text-sm font-light mb-4">
-                    You chose to bring these into the work together:
-                  </p>
-                  <ThreadList items={shared} />
-                </>
-              )}
-            </Section>
+            {/*
+              SHARED WITH YOUR COACH — the boundary from the member's own side.
+              Renders only when the member has actually shared something. The
+              old surface stated the boundary as an empty state on every visit;
+              a boundary nobody has crossed does not need announcing every time,
+              and the same commitment is held durably in the trust copy below.
+            */}
+            {hasShared && (
+              <Block
+                eyebrow="Shared with your coach"
+                lead="You chose to bring these into the work together. Nothing else from here reaches them, and anything shared can be withdrawn."
+                delay={180}
+              >
+                <ul className="space-y-5">
+                  {shared.map((t) => <ThreadCard key={t.id} t={t} />)}
+                </ul>
+              </Block>
+            )}
 
             <RoomTrustCopy
               holds="What you authored in this environment — the decisions you are working through, what you are practising, the questions you are living, and what you chose to keep."
