@@ -127,6 +127,41 @@ less than he does is in as much trouble as one who thinks he sees more.
 > **The key finding is not whether they liked it. It is whether the interface created recognition or
 > required explanation.**
 
+## 4a-ii. The third contamination path — documentation
+
+Two guards above cover the participant and the observer. There is a third: **mistaking the documented
+system for the lived system.**
+
+Documentation says *the client journey is relationship-first.* The walk finds *the first screen
+introduces the AI architecture.* **Neither statement need be false.** They describe different
+realities — one the system as designed and recorded, one the system as encountered.
+
+⚠️ **This walk exists because that contamination already occurred here.** The Journey-1 finding —
+*the new client meets the Daimon before they meet Larry* — was produced by reading a documented
+invariant and inferring an experience. It is a confident, specific, and possibly correct claim that
+**no one has observed.** That is precisely the failure mode, and naming it concretely is more useful
+than naming it abstractly: the guard is not a principle to admire, it is the reason this document is
+a walk definition rather than a finding.
+
+> **The baseline walk records what *is*. Not what is *permitted*, and not what is *documented*.**
+
+## 4a-iii. Three error states in the belief/reality gap
+
+Questions 4–6 measure a gap, and the gap has three states, not two:
+
+| | Client believes | Reality | Result |
+|---|---|---|---|
+| **Error 1** | Larry sees everything | he sees what was shared | **self-censorship** — the person withholds, and the work shrinks |
+| **Error 2** | Larry sees less than he does | he sees more | **false safety** — the person discloses on a wrong premise |
+| **Accurate** | matches | matches | **trust through clarity** — the goal |
+
+⚠️ **Error 2 is silent.** It generates no complaint, no confusion, no hesitation — nothing an observer
+would notice. It surfaces only if the walk asks directly what the person thinks is visible, and
+compares that to what is. **A walk that does not probe for Error 2 will report its absence
+regardless of whether it is there.**
+
+Error 1 is the one that looks like a UX problem. Error 2 is the one that is a harm.
+
 ## 4b. Outcomes, pre-committed
 
 Naming what each result means *before* the walk is itself a bias control — it removes the room to
