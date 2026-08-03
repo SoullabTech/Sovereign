@@ -297,12 +297,34 @@ not surfaces to be worked.
 | Reflections | **lean no** | ⏳ *not settled — see below* |
 | Coach Connection | **no** | ruled |
 
-**Reflections is a lean, not a ruling.** Founder wording: *"maybe no… should probably remain
-a 'keep' consequence, not another productivity surface."* Recorded as a lean so it is not
-later cited as settled. It must be closed explicitly before Reflections is doored or
-finalised as doorless.
-
 Governing rationale: *otherwise the House becomes a task manager.*
+
+#### Open edge — Reflection ontology
+
+**This belongs to the activation model, not to gesture vocabulary.** It is not a door
+question; it determines *what kind of thing Reflection is.* If it is carried forward as a
+copy decision, the wording will settle the ontology by accident.
+
+```
+Open edge: Reflection ontology
+
+Question:
+Is Reflection:
+A) a member-authored act of creating reflection,
+or
+B) the return surface where meaning appears after a member chooses to keep something?
+
+Current lean:
+Reflection should not become a productivity object or task surface.
+
+Resolution criterion:
+Determine whether a member experiences reflection as something they intentionally begin,
+or something the system preserves after an intentional keeping gesture.
+```
+
+Recorded as a **lean, not a ruling**, so it cannot later be cited as settled. A and B
+produce materially different houses. It must be closed explicitly before Reflections is
+doored or finalised as doorless.
 
 ### 7.5 — What the ruling narrows the implementation question to
 
@@ -313,13 +335,49 @@ Governing rationale: *otherwise the House becomes a task manager.*
 
 > This is an architecture decision, not a UI polish pass.
 
-### 7.6 — Still required before code
+### 7.6 — Sequence discipline (binding)
 
-- [ ] Close the **Reflections door** open edge (§7.4).
-- [ ] Author the **gesture copy** for the four ruled doors — member's own words, first
-      person, per §7.1 and the Member's World principle. Copy is the ruling's surface here;
-      it is not decoration and should not be improvised at implementation time.
-- [ ] Decide where the gesture is **offered** — on the Home section itself, or at the
-      moment of the act inside the room. §7.1 does not settle this.
-- [ ] Confirm the **Decisions write tag** reaches the section once intent is carried
+```
+Object → Relationship → Gesture → Surface
+```
+
+**not**
+
+```
+Surface → Button → Object
+```
+
+The second path is how "six fields, one chat door" happened in the first place. The order is
+the control; each stage may only be decided once the stage above it is closed.
+
+| # | Stage | Answers | Artifact | Status |
+|---|---|---|---|---|
+| 1 | Activation model | *What are these things?* | this document | ✅ ruled, one open edge (§7.4) |
+| 2 | Gesture vocabulary | *How does a person enter relationship with them?* | next artifact | ⏳ not started |
+| 3 | Placement | *Where/when does that gesture become available?* | held **inside** artifact 2 as an explicit unresolved dimension — **not merged into the copy** | ⏳ not started |
+| 4 | Implementation | — | — | ⛔ build only what 1–3 require |
+
+**Why placement stays separate from vocabulary.** They answer different questions:
+
+- **Gesture meaning:** *What human act is this?*
+- **Placement:** *When does that act become available?*
+
+```
+Gesture:   "I'm carrying a decision."
+Meaning:   The member recognises an unresolved matter worth holding.
+Placement: A. inside conversation, after exploration
+           B. on Home, as a return invitation
+           C. both
+```
+
+Deciding placement too early turns the Home into a command center — *"Create Decision"* —
+instead of a field — *"Something you are carrying may be worth continuing."*
+
+### 7.7 — Queue
+
+- [ ] Close the **Reflection ontology** open edge (§7.4). Stage 1; blocks stage 2.
+- [ ] Author the **gesture vocabulary** artifact — member's own words, first person, per
+      §7.1 and the Member's World principle. Carry placement inside it as an open dimension.
+- [ ] Confirm the **Decisions write tag** reaches its section once intent is carried
       (§3 defect closes as a consequence of the model, not as a patch).
+- ⛔ **Do not build the doors yet.**
