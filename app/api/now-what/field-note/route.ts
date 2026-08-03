@@ -62,6 +62,12 @@ const asPhase = (v: unknown): string | null => {
   // ("Questions you're living" room, ruling 2026-07-13: member-authored question
   // records only). The tag types the evidence, never the person.
   if (cleaned === 'question') return cleaned;
+  // 'decision' = a decision the member is working through, kept by their own
+  // gesture. Same authorship and consent model as every other tag — the member
+  // names it a decision; nothing classifies it for them. It exists so the Home
+  // can group what the member already typed, NOT so the system can reason
+  // about decisions. No new table: the tag types the evidence, never the person.
+  if (cleaned === 'decision') return cleaned;
   return null;
 };
 

@@ -154,17 +154,24 @@ const nextConfig = {
           destination: '/now-what',
           permanent: false,
         },
-        // /now-what — room as entry (2026-07-08). The front door of the
-        // Now What? field is the live room, not the pitch slideshow. Redirects
-        // run BEFORE middleware, so the unauthenticated flow composes cleanly:
-        // /now-what → 307 /now-what/room → middleware auth gate →
-        // /signin?next=/now-what/room → back into the room, signed in.
-        // NOT permanent: entry-flow design decision, don't 308-cache it.
-        {
-          source: '/now-what',
-          destination: '/now-what/room',
-          permanent: false,
-        },
+        // /now-what — HOME as entry (2026-08-03), replacing the room-as-entry
+        // redirect added 2026-07-08.
+        //
+        // That redirect existed because `/now-what` had no page: the field had
+        // rooms and no threshold, so the entry had to borrow one of the rooms.
+        // Sending an arriving person straight into a session is the right
+        // default only when there is nowhere else to arrive — it asks them to
+        // start working before they have seen what is theirs, and it gives a
+        // returning person no place that holds the thread of their own work.
+        //
+        // `app/now-what/page.tsx` is now that place, so the borrowed entry is
+        // removed rather than repointed. The unauthenticated flow still
+        // composes: /now-what → middleware auth gate → /now-what/arrive →
+        // back to Home, signed in. The room stays one door away, from Home.
+        //
+        // NOT re-added as a permanent redirect anywhere: the aliases above
+        // (/whatnow, /what-now, /now-what/guide) all target /now-what and now
+        // land on Home, which is what each of them was reaching for.
         // /begin was deprecated 2026-05-16 in favor of /signin as the
         // canonical threshold/auth surface. Page-level redirect() did not
         // work here for the reasons noted above — the page was statically

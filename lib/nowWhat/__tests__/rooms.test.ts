@@ -87,13 +87,43 @@ describe('route resolution', () => {
     }
   });
 
-  it('exactly one room matches any given path', () => {
+  it('resolution never depends on registry order', () => {
+    // The invariant is that a path resolves to exactly one room. It used to be
+    // asserted by re-implementing the matcher here, which meant the test could
+    // only ever describe a single-pass resolver. Assert it through the real
+    // resolver instead, so the test tracks the contract rather than a copy of
+    // the implementation it is meant to check.
     for (const room of NOW_WHAT_ROOMS) {
-      const matches = NOW_WHAT_ROOMS.filter(
-        (r) => room.route === r.route || room.route.startsWith(`${r.route}/`),
-      );
-      expect(matches).toHaveLength(1);
+      expect(roomForPath(room.route)?.key).toBe(room.key);
     }
+    // Routes are unique...
+    const routes = NOW_WHAT_ROOMS.map((r) => r.route);
+    expect(new Set(routes).size).toBe(routes.length);
+    // ...and no room's route is a prefix of another's, WITH ONE deliberate
+    // exception: Home's route is the environment root, so it is a prefix of
+    // every path here. That is why roomForPath resolves exact matches first
+    // and excludes Home from the prefix pass — otherwise standing in the
+    // session room would report as standing in Home.
+    for (const a of NOW_WHAT_ROOMS) {
+      for (const b of NOW_WHAT_ROOMS) {
+        if (a.key === b.key || a.key === 'home') continue;
+        expect(b.route.startsWith(`${a.route}/`)).toBe(false);
+      }
+    }
+  });
+
+  it('Home is the environment root and does not swallow the rooms inside it', () => {
+    expect(roomForPath('/now-what')?.key).toBe('home');
+    expect(roomForPath('/now-what/')?.key).toBe('home');
+    expect(roomForPath('/now-what?fieldContext=now-what-demo')?.key).toBe('home');
+    // Every other room still resolves to itself, not to Home.
+    for (const room of NOW_WHAT_ROOMS) {
+      if (room.key === 'home') continue;
+      expect(roomForPath(room.route)?.key).toBe(room.key);
+    }
+    // And the two non-rooms stay non-rooms rather than falling into Home.
+    expect(roomForPath('/now-what/arrive')).toBeNull();
+    expect(roomForPath('/now-what/welcome')).toBeNull();
   });
 });
 
