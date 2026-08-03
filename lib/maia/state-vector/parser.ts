@@ -27,6 +27,21 @@ import { isElement, isIntensity, isKairosAssessment } from './types';
 // Public API
 // ---------------------------------------------------------------------------
 
+/**
+ * Remove any STATE_VECTOR fenced block from member-facing text.
+ *
+ * Independent of parsing: the block is internal instrumentation and must never
+ * reach the member, whether or not its JSON is well-formed. Handles the closed
+ * fence first, then an unterminated block (model truncated mid-JSON), which
+ * would otherwise leave a wall of raw JSON in the reply.
+ */
+export function stripStateVectorBlocks(text: string): string {
+  return text
+    .replace(/```STATE_VECTOR[\s\S]*?```/g, '')
+    .replace(/```STATE_VECTOR[\s\S]*/g, '')
+    .trim();
+}
+
 export interface ParseResult {
   /** The parsed state vector, or null if none found or invalid */
   vector: StateVector | null;
@@ -65,13 +80,15 @@ export function parseStateVector(
 
     return {
       vector: null,
-      strippedText: responseText,
+      // Catches an unterminated block (```STATE_VECTOR with no closing fence),
+      // which the fenced regex above cannot match.
+      strippedText: stripStateVectorBlocks(responseText),
       errors: [],
     };
   }
 
   // Strip the block from user-facing text
-  const strippedText = responseText.replace(match[0], '').trim();
+  const strippedText = stripStateVectorBlocks(responseText);
 
   // Parse JSON
   let raw: any;
