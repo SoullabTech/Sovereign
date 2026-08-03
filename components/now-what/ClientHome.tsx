@@ -133,7 +133,32 @@ function Quiet({ children }: { children: React.ReactNode }) {
 }
 
 /** A member-authored item. Title is their words; content is their words. */
-function ThreadCard({ t }: { t: HomeThread }) {
+function ThreadCard({ t, onWithdraw }: { t: HomeThread; onWithdraw?: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  // Withdrawal changes only WHO MAY SEE this thread. It does not release,
+  // delete or reorder it — the thread stays exactly where the member put it.
+  async function withdraw() {
+    if (busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await apiFetch(`/api/now-what/field-note/${t.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'withdraw_practitioner_visibility' }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Could not complete that just now.');
+      onWithdraw?.();
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <li className="relative border-l pl-5 py-1" style={{ borderColor: 'rgba(255,226,122,0.25)' }}>
       <span
@@ -154,25 +179,261 @@ function ThreadCard({ t }: { t: HomeThread }) {
             shared with your coach
           </span>
         )}
+        {t.sharedWithCoach && onWithdraw && (
+          <>
+            <span className="mx-2 text-slate-700" aria-hidden>
+              ·
+            </span>
+            <button
+              type="button"
+              onClick={withdraw}
+              disabled={busy}
+              className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors disabled:opacity-50 min-h-[24px]"
+            >
+              {busy ? 'Withdrawing…' : 'Stop sharing this'}
+            </button>
+          </>
+        )}
       </p>
+      {err && (
+        <p role="alert" className="text-red-300 text-xs font-light mt-1">
+          {err}
+        </p>
+      )}
     </li>
   );
 }
 
-function ThreadList({ items }: { items: HomeThread[] }) {
-  return <ul className="space-y-5">{items.map((t) => <ThreadCard key={t.id} t={t} />)}</ul>;
+function ThreadList({ items, onWithdraw }: { items: HomeThread[]; onWithdraw?: () => void }) {
+  return (
+    <ul className="space-y-5">
+      {items.map((t) => (
+        <ThreadCard key={t.id} t={t} onWithdraw={onWithdraw} />
+      ))}
+    </ul>
+  );
 }
+
+const DOOR_CLASS =
+  'inline-flex rounded-full border px-6 py-2.5 text-sm transition-all hover:shadow-[0_0_30px_rgba(255,226,122,0.3)] disabled:opacity-50';
+const DOOR_STYLE = { color: ACCENT, borderColor: 'rgba(255,226,122,0.45)' } as const;
 
 /** The single accented action of a band. At most one per band, always named. */
 function Door({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a
-      href={href}
-      className="inline-flex rounded-full border px-6 py-2.5 text-sm transition-all hover:shadow-[0_0_30px_rgba(255,226,122,0.3)]"
-      style={{ color: ACCENT, borderColor: 'rgba(255,226,122,0.45)' }}
-    >
+    <a href={href} className={DOOR_CLASS} style={DOOR_STYLE}>
       {children}
     </a>
+  );
+}
+
+/**
+ * A member-held door.
+ *
+ * Every band except Sessions has its own object and its own existing write
+ * path; before this, none of them had a handle, so the only way in was the
+ * session room and the whole environment collapsed back into chat. This is
+ * the handle — it opens the room the member is already standing in, and it
+ * never routes to a conversation.
+ *
+ * The member's words go to the substrate verbatim. Nothing classifies what
+ * they wrote: the band they opened is the tag, because they chose the band.
+ */
+function Compose({
+  label,
+  placeholder,
+  phase,
+  fieldContext,
+  onSaved,
+}: {
+  label: string;
+  placeholder: string;
+  phase: 'decision' | 'practice' | 'question' | 'unsolicited';
+  fieldContext?: string;
+  onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [share, setShare] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  if (!open) {
+    return (
+      <div className="mt-5">
+        <button type="button" className={DOOR_CLASS} style={DOOR_STYLE} onClick={() => setOpen(true)}>
+          {label}
+        </button>
+      </div>
+    );
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const title = text.trim();
+    if (!title || busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await apiFetch('/api/now-what/field-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          created: [{ title, shareWithPractitioner: share }],
+          spiralogicPhase: phase,
+          ...(fieldContext ? { fieldContext } : {}),
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Could not save that just now.');
+      setText('');
+      setShare(false);
+      setOpen(false);
+      onSaved();
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-5 space-y-3">
+      <textarea
+        autoFocus
+        rows={3}
+        maxLength={400}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={placeholder}
+        aria-label={label}
+        className="w-full rounded-xl border border-slate-600/60 bg-slate-900/50 px-4 py-3 text-[15px] font-light text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-slate-400/70 resize-y"
+      />
+      {/* Sharing is per-thread, chosen at the moment of authoring, default off. */}
+      <label className="flex items-center gap-2.5 text-slate-500 text-xs font-light cursor-pointer">
+        <input
+          type="checkbox"
+          checked={share}
+          onChange={(e) => setShare(e.target.checked)}
+          className="accent-[#ffe27a] w-3.5 h-3.5"
+        />
+        Share this one with your coach
+      </label>
+      {err && (
+        <p role="alert" className="text-red-300 text-xs font-light">
+          {err}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={busy || !text.trim()} className={DOOR_CLASS} style={DOOR_STYLE}>
+          {busy ? 'Saving…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setErr(null);
+          }}
+          className="text-slate-500 hover:text-slate-300 text-sm font-light transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * My Journey's door. A separate substrate (`field_program_positions`) and a
+ * separate act: this is a position the member declares, not a thread they
+ * keep. Their words are stored verbatim as `member_stated` — which is why a
+ * coach-placed focus and a self-stated one stay distinguishable forever.
+ *
+ * The endpoint resolves a real field and a real program, so the door is only
+ * offered when we are inside a field. A door that cannot open is not shown.
+ */
+function JourneyCompose({
+  fieldContext,
+  hasPosition,
+  onSaved,
+}: {
+  fieldContext: string;
+  hasPosition: boolean;
+  onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const label = hasPosition ? 'Update your direction →' : 'Add your focus →';
+
+  if (!open) {
+    return (
+      <div className="mt-5">
+        <button type="button" className={DOOR_CLASS} style={DOOR_STYLE} onClick={() => setOpen(true)}>
+          {label}
+        </button>
+      </div>
+    );
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const focalPoint = text.trim();
+    if (!focalPoint || busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await apiFetch('/api/now-what/program-position', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fieldContext, focalPoint }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Could not save that just now.');
+      setText('');
+      setOpen(false);
+      onSaved();
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-5 space-y-3">
+      <textarea
+        autoFocus
+        rows={2}
+        maxLength={300}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="What you are working on, in your own words."
+        aria-label={label}
+        className="w-full rounded-xl border border-slate-600/60 bg-slate-900/50 px-4 py-3 text-[15px] font-light text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-slate-400/70 resize-y"
+      />
+      {err && (
+        <p role="alert" className="text-red-300 text-xs font-light">
+          {err}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={busy || !text.trim()} className={DOOR_CLASS} style={DOOR_STYLE}>
+          {busy ? 'Saving…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setErr(null);
+          }}
+          className="text-slate-500 hover:text-slate-300 text-sm font-light transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -198,6 +459,12 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
     }
   }, []);
 
+  // Bumped by every member gesture, so the room re-reads its own composition
+  // from the substrate rather than patching a local copy. The Home shows what
+  // was actually written — never an optimistic guess at it.
+  const [tick, setTick] = useState(0);
+  const reload = () => setTick((n) => n + 1);
+
   useEffect(() => {
     if (session !== 'in') return;
     let cancelled = false;
@@ -213,7 +480,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
       }
     })();
     return () => { cancelled = true; };
-  }, [session, fieldContext]);
+  }, [session, fieldContext, tick]);
 
   const ctx = fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : '';
   const roomHref = `/now-what/room${ctx}`;
@@ -289,7 +556,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                 <Quiet>
                   Nothing here yet. Your work takes its shape from what you bring.
                 </Quiet>
-              ) : (
+              ) : null}
+              {journey.length === 0 ? null : (
                 <ul className="space-y-4">
                   {journey.map((j) => (
                     <li key={`${j.programSlug}-${j.focalPoint}`} className="space-y-1">
@@ -313,14 +581,36 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                 </ul>
               )}
 
-              {questions.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-slate-700/50">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
-                    Questions you are exploring
-                  </p>
-                  <ThreadList items={questions} />
-                </div>
+              {/* The endpoint resolves a real field and programme, so this door
+                  is only offered inside a field — never shown unable to open. */}
+              {fieldContext && (
+                <JourneyCompose
+                  fieldContext={fieldContext}
+                  hasPosition={journey.length > 0}
+                  onSaved={reload}
+                />
               )}
+
+              <div className="mt-6 pt-5 border-t border-slate-700/50">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
+                  Questions you are exploring
+                </p>
+                {questions.length === 0 ? (
+                  <Quiet>
+                    Nothing here yet. A question belongs here while you are still
+                    living it — it does not need an answer to be worth keeping.
+                  </Quiet>
+                ) : (
+                  <ThreadList items={questions} onWithdraw={reload} />
+                )}
+                <Compose
+                  label="Name a question you are living →"
+                  placeholder="The question you are carrying, in your own words."
+                  phase="question"
+                  fieldContext={fieldContext}
+                  onSaved={reload}
+                />
+              </div>
             </Section>
 
             {/* ③ Decisions — the highest-stakes executive surface */}
@@ -331,18 +621,33 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               delay={120}
             >
               {decisions.length === 0 ? (
-                <>
-                  <Quiet>
-                    Nothing here yet. A decision enters when you name it: the
-                    context, what you know, what you are still exploring.
-                  </Quiet>
-                  <div className="mt-5">
-                    <Door href={roomHref}>Work a decision through →</Door>
-                  </div>
-                </>
+                <Quiet>
+                  Nothing here yet. A decision enters when you name it: the
+                  context, what you know, what you are still exploring.
+                </Quiet>
               ) : (
-                <ThreadList items={decisions} />
+                <ThreadList items={decisions} onWithdraw={reload} />
               )}
+              {/* Naming a decision is its own act. It must NOT mean "start a
+                  conversation" — that is the collapse this door exists to end.
+                  Working one through in a session stays available, secondary. */}
+              <Compose
+                label="Name a decision you are carrying →"
+                placeholder="The decision you are weighing, in your own words."
+                phase="decision"
+                fieldContext={fieldContext}
+                onSaved={reload}
+              />
+              <p className="mt-4 text-slate-500 text-xs font-light">
+                Or{' '}
+                <a
+                  href={roomHref}
+                  className="underline underline-offset-4 hover:text-slate-300 transition-colors"
+                >
+                  work one through in a conversation
+                </a>
+                .
+              </p>
             </Section>
 
             {/* ④ Commitments — identity-level, never tasks */}
@@ -358,8 +663,15 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                   will practise, and why it matters to you.
                 </Quiet>
               ) : (
-                <ThreadList items={commitments} />
+                <ThreadList items={commitments} onWithdraw={reload} />
               )}
+              <Compose
+                label="Name what you want to practise →"
+                placeholder="What you will actually live, and why it matters to you."
+                phase="practice"
+                fieldContext={fieldContext}
+                onSaved={reload}
+              />
             </Section>
 
             {/* ⑤ Sessions — the thread between conversations */}
@@ -413,7 +725,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                 </Quiet>
               ) : (
                 <>
-                  <ThreadList items={reflections.slice(0, 8)} />
+                  <ThreadList items={reflections.slice(0, 8)} onWithdraw={reload} />
                   {reflections.length > 8 && (
                     <p className="mt-5">
                       <a
@@ -426,6 +738,16 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                   )}
                 </>
               )}
+              {/* A reflection can be kept from a session or written straight
+                  here — `sessionRef` is nullable, so the substrate has always
+                  allowed this. Only the surface required a conversation first. */}
+              <Compose
+                label="Keep a reflection →"
+                placeholder="What you want to keep, in your own words."
+                phase="unsolicited"
+                fieldContext={fieldContext}
+                onSaved={reload}
+              />
             </Section>
 
             {/* ⑦ Coach connection — the boundary, from the member's own side */}
@@ -439,15 +761,17 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                 <Quiet>
                   Nothing shared yet. Your coach can see that you are working
                   together and where the work is pointed — not what you have
-                  written here. Sharing is always your choice, one piece at a
-                  time, and can be withdrawn.
+                  written here. You choose to share a piece as you write it, and
+                  it appears here where you can take it back.
                 </Quiet>
               ) : (
                 <>
                   <p className="text-slate-400 text-sm font-light mb-4">
-                    You chose to bring these into the work together:
+                    You chose to bring these into the work together. Stop sharing
+                    any of them and it leaves your coach's view, staying exactly
+                    where it is in yours.
                   </p>
-                  <ThreadList items={shared} />
+                  <ThreadList items={shared} onWithdraw={reload} />
                 </>
               )}
             </Section>
