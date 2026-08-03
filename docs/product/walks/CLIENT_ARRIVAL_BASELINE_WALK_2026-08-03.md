@@ -98,6 +98,49 @@ are handed. Design a probe: ask what they thought would happen next, ask them to
 words who can see what they just wrote, and record the words they use unprompted. **The vocabulary a
 walker reaches for is the finding**; their agreement is not.
 
+## 4a. ⚠️ Observer discipline — the second contamination path
+
+The confabulation guard protects against **the participant being led**. There is a second and
+opposite risk: **the observer importing the conclusion.**
+
+> **The baseline walk records what *is*, not what is *permitted*.**
+
+⛔ The observer must not ask, or think in terms of, *"does this violate Article X?"* while walking.
+That question belongs to the analysis, after the record exists. Asked during the walk, it decides the
+finding before the evidence arrives — and it is especially tempting here, because the constitution
+that would judge this surface was written this week by the same people who would be observing.
+
+**The six questions the baseline walk actually asks:**
+
+1. What happens?
+2. What does the person believe is happening?
+3. What do they expect next?
+4. What do they think belongs to **them**?
+5. What do they think belongs to **MAIA**?
+6. What do they think belongs to **Larry**?
+
+Questions 4–6 are the whole relational instrument, and note what they are not: they do not ask
+whether the boundaries are *correct*. They ask what the person *believes the boundaries are*. **The
+gap between belief and reality is the finding** — in either direction. A person who thinks Larry sees
+less than he does is in as much trouble as one who thinks he sees more.
+
+> **The key finding is not whether they liked it. It is whether the interface created recognition or
+> required explanation.**
+
+## 4b. Outcomes, pre-committed
+
+Naming what each result means *before* the walk is itself a bias control — it removes the room to
+interpret a result into the answer already preferred.
+
+| | Observation | Finding |
+|---|---|---|
+| **A** | The documented universal flow is accurate — the invited client walks `/begin → … → /onboarding` | **The threshold needs redesign.** The Journey-1 finding is confirmed and the ratification question is live. |
+| **B** | Invitation flows already diverge | **The documentation was stale.** No threshold redesign needed there; correct the finding, and check what else was inferred from that document. |
+| **C** | The flow technically works but produces confusion | **The architecture may be right and the translation wrong.** A vocabulary and sequencing problem, not a structural one — much cheaper to fix, and a different ruling. |
+
+All three are useful. **There is no result of this walk that wastes the run**, which is the sign it is
+scoped correctly.
+
 ## 5. What a run of this walk produces
 
 - **The observed step at which a client is lost** — the fact the threshold ruling needs.
@@ -113,7 +156,16 @@ Whether the *designed* environment works — nothing is built. Whether Larry's c
 Any evidence about rooms 6–9. And it does not authorize the threshold change it informs: **the walk
 supplies the fact; the ruling remains a founder act.**
 
-## 7. Status
+## 7. The artifact that follows — named, deliberately not started
+
+**Arrival Evidence Packet:** the baseline walk result · the authenticated arrival walk once a
+threshold exists · and the comparison — *what changed · what remained invariant · what was learned.*
+
+⛔ **Not started, and not startable.** A packet built before there is evidence is an empty container
+that will attract speculation into the shape of a finding — the same failure as a harness never run,
+in a different costume. It becomes real the moment §3 has a result.
+
+## 8. Status
 
 **Defined, not executed.** No result may be recorded against this document until a human operator
 runs it. Until then the Journey-1 onboarding finding remains *verified against project
