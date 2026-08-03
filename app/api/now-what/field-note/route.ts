@@ -28,6 +28,7 @@ import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { resolveArrival } from '@/lib/practiceField/programPositionService';
+import { resolvePractitionerName } from '@/lib/practiceField/practitionerIdentity.server';
 
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface ProposalDecision {
@@ -192,7 +193,22 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ threads: res.rows, arrival });
+    // Practitioner identity rides this same room-load call — no new read
+    // surface, mirroring the arrival payload above. Non-fatal by the same rule:
+    // a resolution failure must never block the member's own threads. `null`
+    // means "not configured" and the room renders neutral copy rather than a
+    // name. See lib/practiceField/practitionerIdentity.ts for why there is
+    // exactly one source.
+    let practitionerName: string | null = null;
+    if (fieldContext) {
+      try {
+        practitionerName = await resolvePractitionerName(fieldContext);
+      } catch (err) {
+        console.warn('[NowWhat/field-note] practitioner resolution failed (non-fatal):', err);
+      }
+    }
+
+    return NextResponse.json({ threads: res.rows, arrival, practitionerName });
   } catch (err: any) {
     console.error('[NowWhat/field-note] GET error:', err?.message || err);
     return NextResponse.json({ error: 'Could not load your threads right now.' }, { status: 500 });
