@@ -15,7 +15,7 @@
  * Run:  DATABASE_URL=... npx tsx scripts/verify-practitioner-projection.ts
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { query, closePool } from '@/lib/db/postgres';
 import { asMemberId, asRelationshipId } from '@/lib/coachField/identity';
@@ -230,11 +230,29 @@ async function main() {
 
   // ── 5  reversibility ─────────────────────────────────────────────────────
   console.log('\n5  reversibility');
-  const { rows: mig } = await query<{ n: string }>(
-    `SELECT count(*) n FROM information_schema.tables
-      WHERE table_schema='public' AND table_name LIKE 'coach\\_%'`);
-  expect('5a this lane added no table — removing the module restores prior state',
-    Number(mig[0].n) === 10, `${mig[0].n} coach_ tables (expected 10)`);
+  // Stated as what it means, not as a global table count: an earlier version
+  // asserted "exactly 10 coach_ tables" and broke the moment a DIFFERENT lane
+  // legitimately added one. A reversibility claim about THIS lane must not be
+  // coupled to the rest of the schema.
+  const PROJECTION_SOURCES = [
+    'practitioner_clients', 'coach_client_processes', 'coach_program_enrollments',
+    'coach_program_definitions', 'coach_program_stages',
+  ];
+  const migrations = readdirSync(join(process.cwd(), 'database/migrations'));
+  const introducedBy = (t: string) =>
+    migrations.filter((f) =>
+      readFileSync(join(process.cwd(), 'database/migrations', f), 'utf8')
+        .match(new RegExp(`CREATE TABLE (IF NOT EXISTS )?${t}\\b`)));
+  // Compare the numeric prefix, not the whole filename: '20260802000003_x.sql'
+  // sorts AFTER the bare stamp '20260802000003' and would false-positive.
+  const stamp = (f: string) => (f.match(/^\d+/) ?? ['0'])[0];
+  const newer = PROJECTION_SOURCES.flatMap((t) =>
+    introducedBy(t).filter((f) => stamp(f) > '20260802000003'));
+  expect('5a every table this projection reads pre-dates the lane — it added none',
+    newer.length === 0, `introduced later: ${newer.join(', ')}`);
+  const missing = PROJECTION_SOURCES.filter((t) => introducedBy(t).length === 0);
+  expect('5b and each one is actually created by a committed migration',
+    missing.length === 0, `no migration creates: ${missing.join(', ')}`);
 
   await cleanup();
   const { rows: leftover } = await query<{ n: string }>(
