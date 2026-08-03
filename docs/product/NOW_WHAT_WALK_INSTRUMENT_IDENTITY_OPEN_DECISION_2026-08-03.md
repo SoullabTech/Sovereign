@@ -116,6 +116,33 @@ someone who is not Larry, first."* Under this rule G6 must either **name the ins
 satisfies it or be restated as something a walk cannot open. Until then it is exactly the ambiguity
 this decision exists to remove.
 
+### What a gate must declare — four questions
+
+A gate that asks for *"someone to confirm this works"* has taken an authority it cannot exercise.
+Every gate must answer:
+
+1. **What transition are we permitting?**
+2. **What evidence permits it?**
+3. **Who is authorized to produce that evidence?**
+4. **What result would *prevent* the transition?**
+
+> ⭐⭐⭐ **A gate that cannot fail is not a gate. It is a ritual.**
+
+That is the same test as *can this claim fail?*, applied to permission instead of assertion. And the
+declaration must come **before the transition is desired**, or the sequence inverts:
+
+```
+⛔  desired outcome → find convenient evidence → declare it sufficient
+✅  named evidence source → observed result → gate evaluation → transition
+```
+
+Same discipline as the claim ledger: **do not claim Live without evidence · do not claim acceptance
+without an acceptance source · do not claim authority without a ruling.**
+
+⭐ **Diagnosis of the G6 defect:** it is primarily *same problem shape → same decision.* A familiar
+"acceptance before release" shape was imported whole, without specifying the instrument that would
+actually produce the acceptance. The shape was right; the decision it implied was never made.
+
 ## What must be decided
 
 1. **Does this lane adopt a taxonomy at all**, or does each instrument simply state its own question?
