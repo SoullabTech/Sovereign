@@ -573,4 +573,43 @@ Refusing ranking is necessary and not sufficient. A living commons must **active
 
 ⭐ This is **Invariant 14 (cultural sovereignty)** at ecosystem scale — the risk §10 already flags for Layer 1 defaults, now compounded: a Commons that resolves disagreement will resolve it toward its own center of gravity, and a practitioner whose tradition sits outside that center will find their framing rendered as the deviation.
 
+### 12.11 MAIA's role — do not become the place where disagreement disappears
+
+The shape to refuse:
+
+```text
+Practitioner A ─┐
+Practitioner B ─┼→ AI synthesis → "the emerging model"
+Practitioner C ─┘
+```
+
+That is `interpretation → derivation` (§3) at ecosystem scale, with the synthesis step supplying the missing referent.
+
+The shape to build:
+
+```text
+Practitioner A perspective ─┐
+Practitioner B perspective ─┼→ Commons  (tension remains visible)
+Practitioner C perspective ─┘
+```
+
+The Commons may say *"these practitioners understand this territory differently."* ⛔ It may not say *"these differences have been resolved into the best model."*
+
+**This is an intelligence gain, not a limitation.** MAIA's contribution is in *preserving distinctions*, and the legitimate moves are:
+
+- *this practitioner frames it this way*
+- *this tradition frames it another way*
+- *this evidence suggests another possibility*
+- ⭐ *this remains unresolved* — a first-class output, never a failure to answer
+
+### 12.12 The milestone is an honest empty state
+
+The next real milestone is **not more architecture**. It is the first moment a practitioner sits down and the system can truthfully say:
+
+> *"I don't know your work yet. Help me understand it."*
+
+⭐⭐⭐ This is the Wisdom Field's equivalent of the empty `01_Larry_Own_Framework/` folder in the IP corpus: **an absence that is doing work.** It is the feature that prevents the system from pretending it already knows — the same doctrine as the absence-of-query rule in the custody spine (§1) and the *empty measurement ≠ absence* discipline.
+
+⚠️ The pressure will be to fill it — with Commons defaults, with inferred framing, with a helpful starting template. Each of those is a system-supplied answer occupying the place where the practitioner's own authority belongs, and would make Layer 3 partly authored by the platform before the practitioner has written a line.
+
 Under Invariant 16 the direction of authority is unchanged by the cycle: authority moves **upward through authored experience**. Contribution is the practitioner's authored work going outward — ⛔ it is not the Commons acquiring standing over the practitioner. A commons is something practitioners **draw from and add to**; a canon is something they are **measured against**.
