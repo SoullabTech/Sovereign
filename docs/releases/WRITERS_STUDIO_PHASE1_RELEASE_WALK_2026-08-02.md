@@ -137,3 +137,63 @@ Corrections (2) and (3) are independent of that ruling and proceed on their own,
 ⛔ **This record authorizes none of the above.** It records the failure and preserves the
 evidence; authorization is a separate act, and the scope of (3) is governed by the ruling
 document, not by this record.
+
+## Correction status — 2026-08-02
+
+Branch `fix/writerfield-click-to-focus`, two clearly separate commits.
+
+| # | Correction | Commit | State |
+|---|---|---|---|
+| 1 | Blank WriterField click-to-focus | `a9cde4520` | implemented, verified by real pointer click |
+| 2 | Return by identity | `b326a0a9a` | implemented, verified with two manuscripts |
+| 3 | Capsule → Field Keep promotion | — | **not started**; governed by the ruling above |
+
+### Correction 1 — cause and evidence
+
+`.cm-content` is exactly as tall as its content — **33px** on an empty draft — while
+`div.writing-surface` held the 60vh that made the blank page *look* like a page. A click in
+the blank area landed on the wrapper, which focuses nothing. The 60vh now belongs to the
+editable area itself, via a `minHeight` prop on `WriterField`.
+
+Verified on a blank draft reached through the real **Start writing** gesture. No
+instrumentation in the act under test:
+
+- `.cm-content` height **33px → 432px**
+- same click point: `div.writing-surface` → `div.cm-content`
+- after a real pointer click at 70% of the field's height:
+  `document.activeElement === .cm-content`, `.cm-editor` carries `cm-focused`
+- 39 characters typed with **no programmatic focus anywhere in the sequence**
+
+Counter-check (causality, not correlation): with `minHeight` overridden back to `0`, the
+height returns to 33px and the same point resolves to `div.writing-surface` again.
+
+### Correction 2 — cause and evidence
+
+`Continue Writing` and `Read the Source` linked to the bare
+`/press/manuscript?tab=draft`, which opens *the most recent manuscript*. The card those
+links sit on already holds the manuscript's id; both now name it.
+
+`Read the Source` was fixed alongside `Continue Writing` — same card, same manuscript, same
+defect. Leaving it would have left two links about one object disagreeing on which object
+it is.
+
+Verified with **two manuscripts**, where position and identity genuinely differ:
+
+- `Continue Writing` href → `/press/manuscript?tab=draft&m=<the card's id>`
+- `Read the Source` href → `/press/manuscript?tab=manuscript&m=<the card's id>`
+- bare `?tab=draft` → the **newest** manuscript, blank
+- `?tab=draft&m=<older>` → the **older** manuscript, with its text
+
+⚠️ **Still positional, and deliberately not fixed here**: the left-nav `Working Draft` /
+`Source` entries in `app/press/studio/studioMap.ts`. That map is static and has no
+manuscript in scope; giving it identity is a different change with a different shape.
+
+### Gates
+
+`npm run typecheck` — **green**, no regressions (239 errors, baseline 239; 30 files entered
+the program from trunk drift, not from these commits).
+
+### What this does not change
+
+⛔ **The walk verdict stands: FAILED at W8.** Two corrections implemented is not a passed
+walk. Acceptance requires correction 3 and then **a fresh walk from W1**.
