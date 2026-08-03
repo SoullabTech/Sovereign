@@ -116,3 +116,52 @@ client-authored plaintext is acceptable.
 > pretending the practitioner extension layer already exists?**
 
 That question — not *"what UI should we build?"* — governs the next decision.
+
+---
+
+## 7. ⭐⭐⭐ The two lanes are different sovereignty questions
+
+⛔ **Do not merge them just because both involve practitioner content.**
+
+| Lane | Question |
+|---|---|
+| **Coach Field** — #902, merged | **What may the practitioner *receive*?** |
+| **Encrypted content** — **#940**, no owner | **What may the practitioner *create and retain*?** |
+
+Receiving is governed by **relationship authorization**. Creating and retaining is governed by an
+**encryption contract, an ownership model, and a retention rule.** ⛔ The second is not a follow-on of
+the first.
+
+⭐ **#940 now exists** — the lane that was repeatedly flagged as *"no issue, no owner, no scope"* has a
+referent, per the standing rule that a debt item without one is an observation, not tracked work.
+Still unowned.
+
+### 7.1 §5's symmetry question, reframed (#922)
+
+The question underneath is **not** *practitioner vs member*. It is:
+
+> **Who owns this meaning, and what relationship permits access?**
+
+⭐ That applies in **both directions**. Source-based framing produces a false symmetry in either
+orientation — *member material sacred, practitioner material visible*, or the reverse. **Ownership and
+sensitivity are the axes; authorship is not.**
+
+⚠️ **#922 governs *scope*; #940 governs *mechanism*.** Neither answers the other.
+
+---
+
+## 8. Build sequence
+
+1. **Merge/deploy the current substrate.**
+2. **Run the walk against the actual environment** (`…PROTOTYPE_WALK.md`).
+3. **Collect verbatim language from a person unfamiliar with the model.**
+4. **Only then** refine the member reflection view and practitioner extension.
+
+⭐⭐⭐ **The walk is the next authority.** Step 3 is not optional colour — it is the only admissible
+evidence for the 30-second legibility claim, because *the author of a layout cannot measure its
+legibility.*
+
+⭐ The acceptance question has shifted, and this is the threshold that matters:
+
+> ⛔ Not *"did we build the intended thing?"*
+> ✅ **"Does the person experience the intended thing without being told what it is?"**
