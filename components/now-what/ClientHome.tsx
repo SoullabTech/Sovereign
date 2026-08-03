@@ -527,8 +527,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             {name ? `${name}, this is your space.` : 'This is your space.'}
           </h1>
           <p className="text-slate-400 text-base font-light leading-relaxed mt-3 max-w-prose">
-            Your leadership work — your decisions, commitments, reflections, and
-            what you chose to carry forward. Everything here is yours. Sharing
+            What you are working on, what you are practising, and what you are
+            carrying — in your own words. Everything here is yours. Sharing
             happens only by your choice, one piece at a time.
           </p>
         </header>
@@ -545,9 +545,9 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
         {data && (
           <>
-            {/* ② My Journey — where the work is pointed, as declared */}
+            {/* ① CURRENT WORK — what am I working on */}
             <Section
-              eyebrow="My journey"
+              eyebrow="Current work"
               title="What you are working on"
               lead="Your work, in your own words — or your coach's, each labelled with who said so. Nothing here is inferred, measured or evaluated."
               delay={60}
@@ -556,8 +556,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                 <Quiet>
                   Nothing here yet. Your work takes its shape from what you bring.
                 </Quiet>
-              ) : null}
-              {journey.length === 0 ? null : (
+              ) : (
                 <ul className="space-y-4">
                   {journey.map((j) => (
                     <li key={`${j.programSlug}-${j.focalPoint}`} className="space-y-1">
@@ -566,9 +565,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                           {j.programTitle}
                         </p>
                       )}
-                      <p className="text-slate-100 text-lg font-light">
-                        Working through: {j.focalPoint}
-                      </p>
+                      <p className="text-slate-100 text-lg font-light">{j.focalPoint}</p>
                       <p className="text-slate-600 text-xs font-light">
                         {j.statedBy === 'practitioner_seeded'
                           ? 'placed by your coach — yours when you say so'
@@ -580,7 +577,6 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                   ))}
                 </ul>
               )}
-
               {/* The endpoint resolves a real field and programme, so this door
                   is only offered inside a field — never shown unable to open. */}
               {fieldContext && (
@@ -590,77 +586,42 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                   onSaved={reload}
                 />
               )}
-
-              <div className="mt-6 pt-5 border-t border-slate-700/50">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
-                  Questions you are exploring
-                </p>
-                {questions.length === 0 ? (
-                  <Quiet>
-                    Nothing here yet. A question belongs here while you are still
-                    living it — it does not need an answer to be worth keeping.
-                  </Quiet>
-                ) : (
-                  <ThreadList items={questions} onWithdraw={reload} />
-                )}
-                <Compose
-                  label="Name a question you are living →"
-                  placeholder="The question you are carrying, in your own words."
-                  phase="question"
-                  fieldContext={fieldContext}
-                  onSaved={reload}
-                />
-              </div>
             </Section>
 
-            {/* ③ Decisions — the highest-stakes executive surface */}
+            {/* ② PREPARE — what do I do next.
+                The only zone with no live substrate: preparation hangs off
+                programme stages, which hang off an enrolment that nothing can
+                yet write. It says so rather than rendering an empty shell. */}
             <Section
-              eyebrow="Decisions"
-              title="What you are working through"
-              lead="The decisions you are carrying — held open until you decide. No recommendations. No ranking. No answers assigned. The judgement remains yours."
+              eyebrow="Prepare"
+              title="Before your next conversation"
+              lead="What is worth bringing — yours to decide, never a list of tasks set for you."
               delay={120}
             >
-              {decisions.length === 0 ? (
-                <Quiet>
-                  Nothing here yet. A decision enters when you name it: the
-                  context, what you know, what you are still exploring.
-                </Quiet>
-              ) : (
-                <ThreadList items={decisions} onWithdraw={reload} />
-              )}
-              {/* Naming a decision is its own act. It must NOT mean "start a
-                  conversation" — that is the collapse this door exists to end.
-                  Working one through in a session stays available, secondary. */}
-              <Compose
-                label="Name a decision you are carrying →"
-                placeholder="The decision you are weighing, in your own words."
-                phase="decision"
-                fieldContext={fieldContext}
-                onSaved={reload}
-              />
+              <Quiet>
+                Nothing is set out here. When you are working inside a programme
+                with your coach, what they have laid out for the next stretch
+                appears here. Until then, what you bring is entirely your call.
+              </Quiet>
+              <div className="mt-5">
+                <Door href={roomHref}>Prepare for your next conversation →</Door>
+              </div>
               <p className="mt-4 text-slate-500 text-xs font-light">
-                Or{' '}
-                <a
-                  href={roomHref}
-                  className="underline underline-offset-4 hover:text-slate-300 transition-colors"
-                >
-                  work one through in a conversation
-                </a>
-                .
+                What is most alive · what changed · what you want to bring.
               </p>
             </Section>
 
-            {/* ④ Commitments — identity-level, never tasks */}
+            {/* ③ MY PRACTICE — between sessions. Never "homework". */}
             <Section
-              eyebrow="Commitments"
+              eyebrow="My practice"
               title="What you are practising"
               lead="The ways you chose to lead and live differently. Kept in your words. Not tracked. Not measured."
               delay={180}
             >
               {commitments.length === 0 ? (
                 <Quiet>
-                  Nothing here yet. A commitment begins when you name what you
-                  will practise, and why it matters to you.
+                  Nothing here yet. A practice begins when you name what you will
+                  try, and why it matters to you.
                 </Quiet>
               ) : (
                 <ThreadList items={commitments} onWithdraw={reload} />
@@ -674,57 +635,45 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               />
             </Section>
 
-            {/* ⑤ Sessions — the thread between conversations */}
+            {/* ④ EXPLORE — after sessions. Decisions and questions have doors;
+                reflections do not (Model B): they appear here because they were
+                kept elsewhere, not because this room asks for them. */}
             <Section
-              eyebrow="Sessions"
-              title="Continuity between conversations"
-              lead="What you chose to carry forward, and the door into the next conversation."
+              eyebrow="Explore"
+              title="What you are working through"
+              lead="What you are carrying and still living with. Nothing here recommends, ranks or decides — the judgement remains yours."
               delay={240}
             >
-              {sessions.length === 0 ? (
+              {decisions.length === 0 && questions.length === 0 && reflections.length === 0 && (
                 <Quiet>
-                  No conversations here yet. What you keep from a session collects
-                  here, so returning does not mean starting again.
+                  Nothing here yet. Something enters when you name it: a choice you
+                  are weighing, or a question you are living with.
                 </Quiet>
-              ) : (
-                <ul className="space-y-3">
-                  {sessions.slice(0, 8).map((s) => (
-                    <li
-                      key={s.ref}
-                      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-slate-700/40 pb-3 last:border-0"
-                    >
-                      <span className="text-slate-200 text-sm font-light">{dayLabel(s.at)}</span>
-                      <span className="text-slate-500 text-xs font-light">
-                        {s.carried === 1 ? 'you carried one thing forward' : `you carried ${s.carried} things forward`}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
               )}
-              <div className="mt-6 pt-5 border-t border-slate-700/50 flex flex-wrap items-center gap-4">
-                <Door href={roomHref}>
-                  {sessions.length === 0 ? 'Enter the session room →' : 'Prepare for the next conversation →'}
-                </Door>
-                <p className="text-slate-500 text-xs font-light">
-                  What is most alive · what changed · what you want to bring.
-                </p>
-              </div>
-            </Section>
 
-            {/* ⑥ Reflections — private by construction */}
-            <Section
-              eyebrow="Reflections"
-              title="What you kept"
-              lead="Your reflections, held in your words and your order. No summaries. No scores. No rankings."
-              delay={300}
-            >
-              {reflections.length === 0 ? (
-                <Quiet>
-                  Nothing here yet. This grows only through what you choose to
-                  keep — opening this room writes nothing.
-                </Quiet>
-              ) : (
-                <>
+              {decisions.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
+                    What you are carrying
+                  </p>
+                  <ThreadList items={decisions} onWithdraw={reload} />
+                </div>
+              )}
+
+              {questions.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
+                    Questions you are living
+                  </p>
+                  <ThreadList items={questions} onWithdraw={reload} />
+                </div>
+              )}
+
+              {reflections.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
+                    What you kept
+                  </p>
                   <ThreadList items={reflections.slice(0, 8)} onWithdraw={reload} />
                   {reflections.length > 8 && (
                     <p className="mt-5">
@@ -736,27 +685,53 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                       </a>
                     </p>
                   )}
-                </>
+                </div>
               )}
-              {/* A reflection can be kept from a session or written straight
-                  here — `sessionRef` is nullable, so the substrate has always
-                  allowed this. Only the surface required a conversation first. */}
-              <Compose
-                label="Keep a reflection →"
-                placeholder="What you want to keep, in your own words."
-                phase="unsolicited"
-                fieldContext={fieldContext}
-                onSaved={reload}
-              />
+
+              <div className="flex flex-wrap items-center gap-x-6">
+                <Compose
+                  label="Carry a decision →"
+                  placeholder="The choice you are weighing, in your own words."
+                  phase="decision"
+                  fieldContext={fieldContext}
+                  onSaved={reload}
+                />
+                <Compose
+                  label="Name a question →"
+                  placeholder="The question you are living with, in your own words."
+                  phase="question"
+                  fieldContext={fieldContext}
+                  onSaved={reload}
+                />
+              </div>
             </Section>
 
-            {/* ⑦ Coach connection — the boundary, from the member's own side */}
+            {/* ⑤ CONNECTION — who am I with. The ONLY zone that routes to a
+                conversation; every other zone's action makes its own object. */}
             <Section
-              eyebrow="Coach connection"
-              title="What your coach can see"
+              eyebrow="Connection"
+              title="You and your coach"
               lead="Your coach sees what you choose to share — the work you are doing together, and anything you deliberately brought forward. Nothing else reaches them."
-              delay={360}
+              delay={300}
             >
+              {sessions.length > 0 && (
+                <ul className="space-y-3 mb-6">
+                  {sessions.slice(0, 8).map((s) => (
+                    <li
+                      key={s.ref}
+                      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-slate-700/40 pb-3 last:border-0"
+                    >
+                      <span className="text-slate-200 text-sm font-light">{dayLabel(s.at)}</span>
+                      <span className="text-slate-500 text-xs font-light">
+                        {s.carried === 1
+                          ? 'you carried one thing forward'
+                          : `you carried ${s.carried} things forward`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               {shared.length === 0 ? (
                 <Quiet>
                   Nothing shared yet. Your coach can see that you are working
@@ -766,18 +741,24 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                 </Quiet>
               ) : (
                 <>
-                  <p className="text-slate-400 text-sm font-light mb-4">
-                    You chose to bring these into the work together. Stop sharing
-                    any of them and it leaves your coach's view, staying exactly
-                    where it is in yours.
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
+                    Shared with your coach
                   </p>
                   <ThreadList items={shared} onWithdraw={reload} />
                 </>
               )}
+
+              <div className="mt-6 pt-5 border-t border-slate-700/50">
+                <Door href={roomHref}>
+                  {sessions.length === 0
+                    ? 'Enter the session room →'
+                    : 'Continue the conversation →'}
+                </Door>
+              </div>
             </Section>
 
             <RoomTrustCopy
-              holds="What you authored in this environment — the decisions you are working through, what you are practising, the questions you are living, and what you chose to keep."
+              holds="What you authored in this environment — what you are working on, what you are practising, what you are carrying and living with, and what you chose to keep."
               doesNotHold="No scores, rankings, progress measures, assessments or summaries of you. No record of how often you come here, and no interpretation of your material by anyone but you."
               whoSees="You. Your coach sees a piece only if you explicitly shared it, one piece at a time — never automatically, and never because you were active here."
               control="Everything here exists because of a gesture you made. Opening this room writes nothing. Anything shared can be withdrawn, and withdrawing it tells no one."
