@@ -104,6 +104,63 @@ Q3 is the one that catches relevance ranking, the third voice, and the rendered 
 three of the open items in this lane — with a single question a designer can actually apply at a
 whiteboard.
 
+### 4a. Two further questions (transferred 2026-08-03; proposed, not ruled)
+
+Q1–Q4 can all be answered honestly by an item that is nonetheless *inventory* rather than
+orientation, and none of them interrogates **absence**. Two additions:
+
+5. **Does this help the person accomplish the reason they arrived?** — **user purpose** *(new)*
+6. **What would happen if it were absent?** — **the counterfactual** *(new)*
+
+**Q5 is not a restatement of Q1.** Orienting (*do I know where I am?*) and accomplishing (*can I do
+what I came to do?*) are different, and the gap between them is where this lane is most exposed. A
+screen can satisfy every constitutional boundary and still serve the system's story rather than the
+person's need.
+
+| Item | Q5 |
+|---|---|
+| Calendar | ✅ they need to know when they meet |
+| Program stage | ✅ it orients the shared journey |
+| MAIA reflection | ✅ **iff the person chose reflection** |
+| A beautiful explanation of the architecture | ❌ serves the system's story, not the person's need |
+
+> ⭐ Without Q5, a team can preserve every boundary and still build **a philosophy museum.** Q5 is the
+> bridge between hyper-functional on the surface and hyper-relational underneath — which is the
+> outcome this design is for.
+
+**Q6 changes the optimization function rather than tightening it.** Q1–Q5 can all operate inside a
+conventional product frame (*is it useful, relevant, personalized, accurate, attributable*). Q6 asks
+what *relationship* changes because the item exists. A system optimized only for helpfulness drifts
+toward more context, more prediction, more visibility, more assistance; Q6 supplies the counter-force
+— more restraint, more consent, more silence. **Not less capability: capability governed by
+relationship.**
+
+### 4b. Placement states (transferred 2026-08-03; proposed, not ruled)
+
+Most software models availability as `visible / hidden / disabled`. A relational system needs
+**presence conditions**:
+
+| State | Meaning |
+|---|---|
+| **Present now** | the person needs it |
+| **Available by invitation** | the capability exists but requires a relationship gesture |
+| **Private by design** | the boundary is the feature |
+| **⛔ Never appropriate** | the affordance itself creates the violation |
+
+⭐⭐⭐ **`Never appropriate` is an architectural boundary, not a missing feature.** It exists to block
+the standard product reflex — *"if users might want it, add a setting."* **Some things must not become
+settings.** A private reflection may be meaningful without becoming a coaching signal; a person's
+uncertainty may be valuable without becoming a profile attribute; a pattern may be observable without
+becoming an identity claim.
+
+⚠️ **Numbering hazard.** The working synthesis
+([Active Surface Principles](NOW_WHAT_ACTIVE_SURFACE_PRINCIPLES_2026-08-03.md)) numbered the
+counterfactual **Q6** in a six-question set that included presence authorship; here the counterfactual
+is also Q6 but the set is ordered differently, and *user purpose* is Q5. **This document's numbering
+is authoritative.** Cite questions by name — *presence authorship*, *user purpose*, *the
+counterfactual* — not by number. (Same class of trap as the two four-part models in the Larry
+materials: Stages vs. steps.)
+
 ---
 
 ## 5. Status of the open set
@@ -115,6 +172,9 @@ whiteboard.
 | Rule 1 — *reveals, does not decide* | ◐ needs the provenance test to be operable |
 | The third voice (*MAIA noticed*) | ⛔ separate ruling required |
 | Presence authorship (§2, §4) | ⏳ new — proposed, not ruled |
+| User purpose (§4a) — *did this help them do what they came to do?* | ⏳ new — proposed, not ruled |
+| The counterfactual (§4a) — *what if it were absent?* | ⏳ new — proposed, not ruled |
+| Placement states (§4b) — present / by invitation / private by design / **never appropriate** | ⏳ new — proposed, not ruled |
 | Q-P1 viewer parameter · Q-P2 rendered absence · Q-P3 nav sized to what exists | ⏳ open |
 
 **Unchanged:** Slice 0 remains the next build unit — a trust-boundary demonstration, services before

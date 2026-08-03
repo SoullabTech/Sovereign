@@ -92,6 +92,46 @@ Named for what a person does there, not for what the system stores.
 | **Resources** | things Larry shared, connected to a stage | `coach_resource_recommendations` ⛔ | ⛔ **no — see §4** |
 | **Reflect** | the person's own material, and MAIA as one door | member-owned primitives ✅ | ✅ yes |
 
+### 3a. The rooms, put to the design instrument (added 2026-08-03; proposed, not ruled)
+
+⚠️ **Three question-sets now exist in this lane. They operate at different levels and must be cited
+by level and name, never by number** — `Q6` alone is already ambiguous across three documents:
+
+| Level | Set | Home |
+|---|---|---|
+| **Item** — may this thing be on a screen? | orient · whose voice · **whose act** · relationship · **user purpose** · **counterfactual** | [Design Principles §4 / §4a](NOW_WHAT_DESIGN_PRINCIPLES_2026-08-03.md) — authoritative |
+| **Room** — what is this room for? | the five below | §3a here |
+| **Environment** — does the whole hold together? | first 10 seconds · what Larry sees · never on Larry's view · ownership · simplicity · neither-CRM-nor-chatbot | §5 below |
+
+**The room instrument:** *(1) what human purpose brings someone here · (2) what is the simplest
+familiar action · (3) what must remain invisible · (4) what must be explicitly attributed · (5) what
+is never appropriate to show.*
+
+The ordering matters: **purpose first, feature second.** Not *"what features should we add?"* but
+*"what human action is this environment trying to support?"* — Calendar not because calendars are
+standard but because people need to know when they meet; Reflect not because MAIA needs somewhere to
+live but because people need a place that remains theirs.
+
+| Room | 1 · Human purpose | 2 · Simplest familiar action | 3 · Invisible | 4 · Attributed | 5 · ⛔ Never |
+|---|---|---|---|---|---|
+| **Home** | *know where I stand with Larry* | read it; one obvious way in | the machinery that assembled it | who placed the stage; who shared what | any ranking-derived "relevant now"; any withdrawal trace |
+| **Program** | *understand the shared journey* | see the map, see where we are | how stages are stored | **Larry moved the stage** — never *you completed* | progress framed as the person's score |
+| **Sessions** | *remember what we did together* | look at a session | the record's structure | who authored each note | practitioner private notes; ⚠️ PHI-in-plaintext is a **security** item, not a design one |
+| **Calendar** | *know when we meet* | see the next date | scheduling internals | *Before/After* are the client's, *During* is Larry's | Before/After surfacing to Larry unless **shared as an act** |
+| **Messages** | *reach each other when needed* | write to a person | — | sender, always | ⛔ **room is unbuildable by construction** (§4); group spaces carry unruled third-party consent |
+| **Resources** | *find what Larry gave me* | open the thing | which stage it maps to | **Larry offered this** | ⛔ **unbuildable by construction** (§4); "recommended for you" as a system act |
+| **Reflect** | *a place that stays mine* | write, or don't | that MAIA is a door and not the room | member-authored throughout | ⛔ any reflection reaching Larry unshared; ⛔ any MAIA claim **about** the material (third voice — separate ruling) |
+
+⭐⭐⭐ **Column 5 is the load-bearing one, and it is not a settings column.** *Never appropriate* means
+the affordance itself creates the wrong relationship — the harm is caused by the feature existing, not
+by its misuse. It exists to block the standard reflex *"if users might want it, add a setting."*
+**Some things must not become settings.**
+
+⚠️ Two rows are **⛔ by construction, not by preference** — Messages and Resources depend on the
+eleven `coach_*` content tables whose *absence* boundary gate `1d` asserts. Their purpose columns are
+recorded so the rooms are designed when the encrypted lane ships; **nothing here authorizes building
+them.**
+
 ### Stages — the shared map, not a measurement
 
 ```
