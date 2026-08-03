@@ -97,7 +97,7 @@
     "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
     "ci:sovereignty": "npm run check:no-supabase && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run test -- lib/tts/__tests__/voiceIdentityContract.test.ts --silent",
     "ci:guard": "jest scripts/ci/maia-route-guard.test.ts --testPathPattern='maia-route-guard' --passWithNoTests=false",
-    "preflight": "bash scripts/check-dark-text-opacity.sh && npm run check:no-supabase && npm run check:no-direct-anthropic && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run ci:guard && bash scripts/preflight-compose-config.sh && echo '✅ Preflight passed: opacity + supabase + direct-anthropic + vendor voices + voice-provenance + provider-governance + route-guard + docker checks clean'",
+    "preflight": "bash scripts/check-dark-text-opacity.sh && npm run check:no-supabase && npm run check:no-direct-anthropic && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-owned-boundary && npm run ci:guard && bash scripts/preflight-compose-config.sh && echo '✅ Preflight passed: opacity + supabase + direct-anthropic + vendor voices + voice-provenance + provider-governance + member-owned-boundary + route-guard + docker checks clean'",
     "biomarkers:report": "npx tsx scripts/report-biomarker-metrics.ts",
     "biomarkers:verify": "npx tsx scripts/test-biomarker-exports.ts --log artifacts/phase4.2d-barrel-verification.log",
     "pwa:build": "npm run build && npm run pwa:generate-icons",
@@ -154,7 +154,8 @@
     "maia-notes:status": "curl -s http://localhost:3000/api/admin/maia-notes/status | jq",
     "maia": "bash scripts/maia",
     "maia:status": "bash scripts/maia status",
-    "maia:doctor": "bash scripts/maia doctor"
+    "maia:doctor": "bash scripts/maia doctor",
+    "check:member-owned-boundary": "npx tsx scripts/check-member-owned-boundary.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
