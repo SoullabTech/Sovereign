@@ -225,15 +225,54 @@ export async function getFieldGuidanceByFieldId(fieldId: string): Promise<FieldG
  * impersonates the practitioner and never reads the member THROUGH the
  * practitioner's framework (apprentice-not-imitation; Mirror Invariant).
  */
+/**
+ * CORPUS AUTHORITY GATE — interim containment (founder ruling, 2026-08-03).
+ *
+ * Ruling recorded: **No composition gate may use readiness status as a proxy
+ * for authority.** `status='live'` is computed by checkPracticeFieldReadiness()
+ * from form completeness alone — "the required layers are filled in" — and says
+ * nothing about whether an authorized person approved what MAIA may compose.
+ * Gating on it would enforce tidiness while looking like custody.
+ *
+ * Incident that produced this gate: `now-what-demo` carried 63,861 chars of
+ * steward-composed candidate material in active_field_content, composed IN FULL
+ * into room context via the slug path. No Larry-authored IP and no third-party
+ * text reached runtime, but a candidate interpretation became MAIA ground truth.
+ * The defect class is not "a pending field leaked" — it is *a field with no
+ * authority decision could become eligible for composition through a readiness
+ * transition.* That field satisfied every readiness condition; had syncStatus()
+ * run, it would have been 'live'.
+ *
+ * Two axes, deliberately separate:
+ *   readiness  — "is there enough structure?"      → status live/pending
+ *   authority  — "has an authorized person allowed this?"  → NOT YET MODELLED
+ *
+ * Until the ratification model exists (field_authorization: ratified_by /
+ * ratified_at / authorization_version matched against the current revision),
+ * the corpus channel stays closed. The practitioner-authored identity layers
+ * (about / how-we-work / how-MAIA-supports / professional practice) continue to
+ * compose: they are low-risk, self-descriptive, and were not the failure vector.
+ *
+ * Deliberately NOT inferred from revision history: a revision proves a
+ * practitioner *changed something*, never that they *reviewed what MAIA may
+ * compose*. That signal is provenance, not permission.
+ *
+ * When ratification lands, this becomes a real check; it does not become `true`.
+ */
+export function corpusIsComposable(_field: PracticeField): boolean {
+  return false;
+}
+
 export function formatFieldContextForRoom(field: PracticeField | null): string {
   if (!field) return '';
+  const composableCorpus = corpusIsComposable(field) ? field.active_field_content : null;
   const sections: string[] = [];
   if (field.about_practice) sections.push(`About this practice: ${field.about_practice}`);
   if (field.how_we_work_together) sections.push(`How this practice works: ${field.how_we_work_together}`);
   if (field.how_maia_supports) sections.push(`How you (MAIA) support it here: ${field.how_maia_supports}`);
   if (field.professional_practice) sections.push(`The practitioner: ${field.professional_practice}`);
   const guidance = renderFieldGuidance(field.maia_guidance ?? null);
-  if (sections.length === 0 && !guidance && !field.active_field_content) return '';
+  if (sections.length === 0 && !guidance && !composableCorpus) return '';
 
   const header = [
     `[Field Context — this room belongs to a practitioner's field]`,
@@ -259,8 +298,9 @@ export function formatFieldContextForRoom(field: PracticeField | null): string {
   // "kind of knows" the practitioner's work is worse than one that says it
   // doesn't. The corpus carries its own provenance + not-instructions framing
   // in its header (steward-held until the practitioner's own authoring act).
-  const corpus = field.active_field_content
-    ? `[The field's material — composed in full]\n${field.active_field_content}`
+  // Gated on authority, not readiness — see corpusIsComposable above.
+  const corpus = composableCorpus
+    ? `[The field's material — composed in full]\n${composableCorpus}`
     : '';
 
   return [header, sections.join('\n\n'), corpus, guidance].filter(Boolean).join('\n\n');
@@ -368,14 +408,19 @@ export async function buildPracticeFieldContext(
 
   // Active Field + Layer 4 Guidance are always current (never snapshotted) — pull live
   const liveResult = await query(
-    `SELECT pf.active_field_content, pf.maia_guidance
+    `SELECT pf.*
      FROM practice_field_snapshots pfs
      JOIN practice_fields pf ON pf.id = pfs.practice_field_id
      WHERE pfs.space_id = $1`,
     [spaceId]
   );
-  const activeContent = liveResult.rows[0]?.active_field_content ?? null;
-  const guidance = (liveResult.rows[0]?.maia_guidance as FieldGuidance) ?? null;
+  const liveField = (liveResult.rows[0] as PracticeField | undefined) ?? null;
+  // Same authority gate as the room path — the corpus channel is closed until a
+  // ratification model exists. See corpusIsComposable.
+  const activeContent = liveField && corpusIsComposable(liveField)
+    ? liveField.active_field_content ?? null
+    : null;
+  const guidance = (liveField?.maia_guidance as FieldGuidance) ?? null;
 
   return {
     practitioner_name: practitionerName,
