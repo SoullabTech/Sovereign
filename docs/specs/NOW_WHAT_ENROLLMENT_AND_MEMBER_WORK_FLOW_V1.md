@@ -169,3 +169,57 @@ no path to share an already-authored thread. Unresolved (Q4).
 3. **Reflections Model B** — removes the Reflections door from candidate `d8fb19794` before merge.
 4. **Does "Continue" open a conversation?** If yes, chat re-enters through every room.
 5. **Group visibility boundary** — nothing in Connect ships before it is ruled.
+
+---
+
+## 9. Invitation path verification (2026-08-03) — **step 3 is NOT yet safe**
+
+Two bounded checks were run. Both came back against the plan.
+
+### 9.1 Reachability — `coachField/invitation.ts` is orphaned
+
+`acceptInvitation()` and `createPendingRelationship()` have **zero callers in
+application code**. The only importer in the entire repo is
+`scripts/verify-coach-field-boundaries.ts` — a verification script. The module
+exists to be tested, not to be used.
+
+The **live** claim paths are different code:
+`app/api/portal/[slug]/invites/claim/route.ts` and
+`app/api/portal/[slug]/claim/route.ts`. Both update `practitioner_clients` and
+`client_invites`. **Neither touches `coach_program_enrollments`.**
+
+⇒ Adding `pending` to the CHECK would unblock a function nothing calls.
+**It would produce no behaviour change.** The prior recommendation (§0) is
+therefore premature as sequenced.
+
+### 9.2 `relationship_spaces` is a third path, not an older one
+
+It carries its own `invite_token`, `invite_expires_at`, `invitation_mode`,
+`consent_status`, `consent_items`, and an FK `practitioner_client_id →
+practitioner_clients`. It has a live accept route (`/api/join/[token]/accept`),
+is read by 7 files including the member portal, and holds the only live
+invitation row in the database (1).
+
+### 9.3 Corrected picture
+
+| Layer | Reality |
+|---|---|
+| Invitation model | ✅ exists — **three** implementations |
+| Relationship acceptance | ✅ live |
+| **Programme enrolment on acceptance** | ❌ **no live path writes `coach_program_enrollments`** |
+| Pending state | ❌ blocked by CHECK |
+| Code that would use it | ⚠️ orphaned |
+
+The bridge is not "built but disconnected by a state model." The **relationship**
+half is built and live. The **enrolment** half exists only as an uncalled
+function plus an empty table. `coachField/invitation.ts` is a design of that
+segment, kept alive by a boundary test.
+
+### 9.4 The question that now precedes step 3
+
+Which of the three invitation mechanisms is canonical? Same class of question as
+program identity — several implementations of one concept, and the one carrying
+the capability we want is the one not connected. Ruling that comes before any
+constraint change.
+
+**No schema change is recommended until it is ruled.**
