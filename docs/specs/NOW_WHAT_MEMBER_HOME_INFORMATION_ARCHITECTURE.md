@@ -191,13 +191,15 @@ answers *"where am I"* (positioning). `coach_program_definitions` answers
 *"what am I in"* (participation). Two different roles that ended up with
 similar names.
 
-⚠️ **But there is real drift to reconcile.** Both tables currently hold the
-*same four programmes* — "1:1 Coaching", "Thursday Group", "Training", "Deep
-Dive Retreat" — duplicated. Worse, `coach_program_definitions.field_slug` holds
-values like `one-to-one-coaching` and `training-module-3`, which are *programme*
-slugs, not field slugs. That column is being used against its name. Reconcile
-before either table is rendered, or the Home will show the same programme twice
-under two identities.
+⚠️ **CORRECTED 2026-08-03 — this is not duplication.** An earlier pass here
+claimed both tables hold the same four programmes duplicated. They do not: the
+two sets are owned by *different* practitioners and the matching titles are a
+seeding coincidence. The real finding is more basic — **0 of 5
+`coach_program_definitions.field_slug` values match any practice field, so the
+two tables have never been linked by anything, ever.** The column holds
+programme slugs (`training-module-3`), not field slugs. This needs a
+relationship *defined*, not records deduplicated. See
+`NOW_WHAT_PROGRAM_IDENTITY_RECONCILIATION.md`.
 
 ### D2 — Enrolment authority: schema already records the actor
 
