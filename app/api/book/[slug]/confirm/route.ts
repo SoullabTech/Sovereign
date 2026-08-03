@@ -11,6 +11,7 @@ export async function generateStaticParams() { return []; }
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import crypto from 'crypto';
+import { resolveSessionTeamId } from '@/lib/team/sessionTeamScope';
 import { bridgeBookingToCalendar } from '@/lib/portal/bookingTools';
 
 interface BookingBody {
@@ -117,10 +118,11 @@ export async function POST(
 
     // Create session
     const sessionId = crypto.randomUUID();
+    const teamId = await resolveSessionTeamId(practitionerId);
     await db.query(
       `INSERT INTO sessions
-       (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, notes, price_cents, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, NOW())`,
+       (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, notes, price_cents, created_at, team_id)
+       VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, NOW(), $9)`,
       [
         sessionId,
         practitionerId,
@@ -130,6 +132,7 @@ export async function POST(
         scheduledEnd.toISOString(),
         notes || null,
         service.price_cents,
+        teamId,
       ]
     );
 
