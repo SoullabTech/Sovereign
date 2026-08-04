@@ -38,7 +38,12 @@ If the tree moves, **the walk's referent does not follow it.** A new SHA is a ne
 
 ---
 
-## 2. Instrument — the four questions
+## 2. Instrument — the questions
+
+**Amended 2026-08-03 — founder, PRE-ENCOUNTER**, before any participant sat down: questions 5
+and 6 added. ⛔ No further amendment once the encounter begins. Sibling instrument for the
+practitioner seat: `CLIENT_FIELD_PRACTITIONER_ENCOUNTER_INSTRUMENT.md` — ⛔ the two are not
+interchangeable.
 
 Asked in order, verbatim:
 
@@ -46,6 +51,21 @@ Asked in order, verbatim:
 2. **What would you do here?**
 3. **Where would you go next?**
 4. **What feels missing?**
+
+### The two questions only this seat can answer
+
+> 5. **"Do you experience this as your work continuing, or as someone else's framework
+>    continuing through you?"**
+
+> 6. **"At any point did you feel you had to participate?"** — the **consent** question
+
+⭐⭐⭐ **These are the reason the member walk cannot be substituted.** Q5 measures whether the
+lens became the owner's name for the experience, *from the only seat that can perceive it*.
+Q6 measures felt consent — and a practitioner's sincere belief that the invitation was freely
+declinable is **evidence of their intent, not of the member's experience.**
+
+⛔ Ask Q6 plainly and do not soften it into *"you didn't feel pressured, did you?"*, which
+supplies its own answer.
 
 ### The binding constraint
 
