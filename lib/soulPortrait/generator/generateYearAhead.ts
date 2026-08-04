@@ -19,22 +19,12 @@ import {
   transitDataText,
   type ParsedTransit,
 } from './transitReportParser';
+import { parseModelJson } from './parseModelJson';
 import { yearAheadSystemPrompt } from './yearAheadPrompt';
 
 /** The Seasonal Spiral's fixed elemental order (schema: YearAhead docs). */
 const SPIRAL_ORDER: ElementKey[] = ['earth', 'fire', 'water', 'air', 'aether'];
 const ELEMENT_SET = new Set<string>(SPIRAL_ORDER);
-
-/** Strip markdown fences and parse the model's JSON defensively. */
-function parseModelJson(raw: string): any {
-  let s = (raw || '').trim();
-  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fence) s = fence[1].trim();
-  const first = s.indexOf('{');
-  const last = s.lastIndexOf('}');
-  if (first !== -1 && last !== -1) s = s.slice(first, last + 1);
-  return JSON.parse(s);
-}
 
 /**
  * Design Law validation: every transit cited by an assembled phase must exist
@@ -153,6 +143,6 @@ export async function generateYearAhead(opts: {
     maxTokens: 8000,
   });
 
-  const json = parseModelJson(llm.text || '');
+  const json = parseModelJson(llm.text || '', 'soul-portrait/year-ahead');
   return assemble(transits, json);
 }
