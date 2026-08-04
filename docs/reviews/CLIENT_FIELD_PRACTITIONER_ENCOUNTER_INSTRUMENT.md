@@ -117,6 +117,66 @@ condition* for that instrument's Trust criterion.
 
 ---
 
+## 0B. ⭐⭐⭐ TWO practitioner encounters, not one — RULED 2026-08-03
+
+The materials agreement is unsigned, so Larry-authored language is unavailable
+(`NOW_WHAT_PILOT_STATE_2026-08-03.md` §4). That does **not** produce a degraded version of
+this walk. **It produces a different instrument.**
+
+```
+ENCOUNTER A — synthetic          ENCOUNTER B — real (post-agreement)
+
+Tests:                           Tests:
+  container coherence              fidelity to Larry's framework
+  role preservation                expression vocabulary fit
+  sovereignty boundaries           practitioner ownership of language
+
+Does NOT test:                   Prerequisite:
+  fidelity to Larry's framework    Attachment A signed + populated
+  expression vocabulary fit
+  practitioner ownership of language
+```
+
+> ⛔⛔ **The synthetic walk is not a substitute for the real one, and its result may never be
+> reported as one.** A finding from A may not be cited against a B question.
+
+**A cannot answer** *"Does Larry recognize his practice inside the environment?"*
+**A can answer:**
+
+- Does the environment **preserve the role** of the practitioner?
+- Does the member/practitioner relationship feel **extended rather than replaced**?
+- Does the structure make sense as a **between-session companion**?
+- Does the boundary between **Larry and AIN** remain clear?
+
+⭐ **A is not a compromise.** It tests whether the house is standing **before the owner brings
+someone through the door.**
+
+### 🔴 Derived consequence — Attribution cannot be scored in Encounter A
+
+§3's **Attribution** criterion asks whether he can distinguish *what came from him* from
+*what the member authored*. **In the synthetic walk, nothing came from him.** The criterion
+has no object.
+
+⛔⛔ **Do not score Attribution in Encounter A.** Record it as **NOT EVALUABLE**, not as a
+pass. It is a **B** criterion. Continuity, Non-replacement and Sufficiency remain scorable in
+both; the Continuity/Non-replacement pass condition (§3) is unchanged.
+
+### ⚠️ Label provenance — a risk the synthetic walk creates
+
+Phase 1's shell carries **executive-coaching vocabulary that Soullab authored**, not Larry
+(universal architecture §5). In a synthetic encounter he may reasonably read those strings as
+**his own framing already absorbed into the system.**
+
+- ⛔ **Do not pre-disclose.** If he identifies the vocabulary as his, **that is the finding** —
+  it is unattributed absorption observed live, and it is the most valuable result the
+  synthetic walk can produce. Record his words verbatim.
+- ⛔⛔ **But correct it before the encounter closes.** Leaving him believing his language was
+  used when it was not is a representation crossed without permission — a real
+  misrepresentation, not a measurement technique. **Measurement does not license it.**
+- Log the correction and its timing on the packet.
+
+---
+
 ## 1. Referent — what exactly is being encountered
 
 ```

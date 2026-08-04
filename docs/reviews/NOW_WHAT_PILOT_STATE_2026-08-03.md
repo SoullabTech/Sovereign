@@ -32,26 +32,57 @@ Evidence gate
 
 ---
 
-## 2. Operational sequence
+## 2. Operational sequence — REVISED 2026-08-03
+
+Two evidence paths. ⛔⛔ **They must not be collapsed.**
 
 ```
-D9 authorization
+PRACTITIONER                        CLIENT
+  ✅ possible                         ⛔ blocked
+  ⏳ D9 authorization                 ⛔ agreement gate
+  ⛔ Larry corpus unavailable         ⛔ no pre-member entry yet
+```
+
+```
+1. D9 authorization
       ↓
-Create encounter packet
+2. Run SYNTHETIC Larry practitioner walk      ← Encounter A
       ↓
-Prepare controlled field state
+3. Capture findings
       ↓
-Larry walk
+4. Complete Larry agreement / expression population
       ↓
-Revise only from evidence
+5. Run REAL Larry practitioner walk           ← Encounter B
       ↓
-Client walk
+6. Build client initiation path
       ↓
-Pilot decision
+7. Client encounter
 ```
 
 ⛔ The encounter packet is created **after** D9, not before. Readiness does not create its own
 authorization.
+
+### ⭐⭐⭐ The labels that must be preserved
+
+```
+synthetic  ≠  validation of Larry's practice
+real       ≠  available before consent
+prototype  ≠  promoted product
+```
+
+### Why the client walk is correctly blocked
+
+The temptation is *"we have the invitation bridge; let's just create a pilot client."* The
+agreement constraint is doing exactly what it should.
+
+> **A person entering through Larry's trust is not a test user. They are a real participant in
+> a relationship.**
+
+The client path requires **Larry agreement + relationship initiation rules + client consent**
+before it exists at all.
+
+⭐ The architecture is doing what it was designed to do: **it slows down exactly at the points
+where trust could accidentally become leverage.**
 
 ---
 
