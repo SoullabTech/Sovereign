@@ -108,7 +108,7 @@ describe('schema boundary — the member row carries no practitioner reference',
   });
 
   it('the response table stores a gesture, never a completion state', () => {
-    const file = path.join(migrations, '20260803000001_field_invitations.sql');
+    const file = path.join(migrations, '20260803000002_field_invitations.sql');
     const sql = fs.readFileSync(file, 'utf8');
     // An invitation is an offer, not an assignment (CF-D2a). A completion
     // state would make the practitioner the auditor of the member's living.
