@@ -6,29 +6,83 @@ into **encounter preparation**. ⛔ The next work is not another ruling layer. I
 
 ---
 
-## 1. State
+## 1. State — regenerated from evidence, 2026-08-03
+
+> ### ⭐⭐⭐ The governing rule
+>
+> **A capability may only be carried into the pilot state if it exists on the walk referent
+> and has been verified there.**
 
 ```
+Referent
+  ✅ 78358f979 verified          ⚠️ NOT 78358b979 — that object does not exist
+  ✅ production 95b21ce42 unchanged
+  ⛔ prototype not promoted
+
+Home
+  ✅ renders
+  ✅ live member data path verified
+
+Invitation
+  🟡 contested / NOT integrated on referent
+
+Reachability
+  ⏳ requires a real viewport
+
 Architecture
   ✅ Client Field boundaries established
   ✅ Now What? as expression, not ontology
   ✅ Member meaning ownership protected
   ✅ Practitioner vocabulary boundary established
 
-Phase 1
-  ✅ Prototype exists
-  ✅ Referent verified: 78358f979
-  ⛔ Not promoted
-  ⏳ Needs controlled encounter
-
-Phase 2
-  🟡 Invitation bridge exists          ⚠️ SEE BELOW — status contested
-  ⏳ Needs pilot relationship path
-  ⏳ Needs Larry expression content     ⛔ SEE §4 — BLOCKED
+Blocked
+  ⛔ Larry expression content — see §4
 
 Evidence gate
   ⏳ D9
 ```
+
+### Invitation loop / bridge — split by referent
+
+```
+Walk referent (78358f979)
+    🟡 not present as a reachable member experience
+
+Verified:
+    invitation-related PROSE exists in ClientHome
+    invitation backend work exists ELSEWHERE
+    invitation behaviour exercised in a DIFFERENT context
+
+Not verified:
+    invitation surface reachable from Home
+    member can receive / respond through the walk path
+    consent flow exists on the encounter referent
+```
+
+⛔ **The bridge is not "broken."** It is a **backend capability awaiting integration into the
+walk referent**:
+
+| Built | Not yet proven |
+|---|---|
+| invitation object · APIs · persistence · service layer · tests | product surface · member journey · practitioner/client relationship experience |
+
+### ⭐⭐⭐ State summaries are artifacts, and they need provenance
+
+The repeated upward drift is **not a reliability judgment about anyone.** It is this:
+
+> **The state block became a lens — and the lens began describing the intended architecture
+> rather than the observed tree.**
+
+That is the project's own invariant turned on its own reporting. The failure chain it
+produces:
+
+```
+a schema      becomes  a capability
+a capability  becomes  a product claim
+a product claim becomes a remembered fact
+```
+
+⛔⛔ **Regenerate this block from the artifacts. Never restate it from recollection.**
 
 ---
 
@@ -104,6 +158,25 @@ he would invite someone, the answer at this referent is *"not from here."*
 ⭐ **This is a FINDING, not a defect to fix** — and it is *useful*: Q4 (*"what feels
 missing?"*) may surface it unprompted, which would be **stronger evidence than anything we
 could arrange.** ⛔ Do not pre-empt it, and ⛔ do not fix it — fixing it moves the referent.
+
+### ⭐⭐ Preserved as a walk observation candidate
+
+The arrival line is **instructive precisely because of what it does**:
+
+> **It creates the expectation of a relationship object without providing the relationship
+> action.**
+
+That is a **valuable encounter condition**, not an oversight to repair before contact.
+Responses that would be **evidence** if they arise unprompted:
+
+- *"Where does the invitation happen?"*
+- *"How does the client accept?"*
+- *"I assumed this was already here."*
+- *"This is where I would want my clients to begin."*
+
+⛔⛔ **A pre-fix would remove that evidence.** ⛔ Do not integrate the invitation surface
+before D9, and do not integrate it *because of* this finding — that decision belongs to the
+governance lane, after the walk.
 
 ### ⚠️ The state block is mixing two referents
 
