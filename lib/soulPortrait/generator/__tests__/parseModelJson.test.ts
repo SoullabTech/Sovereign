@@ -8,12 +8,24 @@ describe('parseModelJson', () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it('parses clean JSON', () => {
+  // Strict-first: conforming output must take the unmodified JSON.parse path and
+  // leave no trace. If normalization ever became the ordinary route, a degrading
+  // prompt contract would stop being visible. These two assertions are what keep
+  // the resilience layer an exception rather than the definition of "valid".
+  it('parses clean JSON strictly, without invoking normalization', () => {
+    const parse = vi.spyOn(JSON, 'parse');
     expect(parseModelJson('{"a":1}', 't')).toEqual({ a: 1 });
+    // The FIRST parse attempt must be the untouched input. Asserting only that
+    // no warning fired would still pass if normalization silently became the
+    // ordinary route; this asserts the strict attempt actually happened first.
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(parse.mock.calls[0][0]).toBe('{"a":1}');
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
-  it('strips markdown fences', () => {
+  it('strips markdown fences without invoking normalization', () => {
     expect(parseModelJson('```json\n{"a":1}\n```', 't')).toEqual({ a: 1 });
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   // The production failure: the output contract demonstrated `], // 6-8 key
@@ -25,6 +37,11 @@ describe('parseModelJson', () => {
       natalPlacements: [{ body: 'Sun' }],
       natalSynthesis: 'x',
     });
+    // Recovery succeeds, but it does not erase the evidence that it was needed:
+    // the draft is usable AND the output is still recorded as contract-nonconforming.
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('needed noise-stripping'),
+    );
   });
 
   it('strips a comment that follows a comma', () => {
