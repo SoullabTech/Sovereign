@@ -11,12 +11,24 @@
  * Role is taken from the participant row server-side, not trusted from the URL.
  * Explicitly still: NO recording, NO transcript, NO memory, NO Encounter/scribe write.
  *
+ * Slice 1a (native presence) adds the picture: 1:1 audio AND video, local preview,
+ * camera/mic toggles, device selection, and typed permission failures. It adds NOTHING
+ * else — recording in the native room is Slice 2 and is gated on the per-participant
+ * `record` consent event. The room says so plainly rather than showing dead controls.
+ *
  * Entry: mint links via POST /api/studio/encounters/[id]/threshold → each participant
  * crosses their own threshold → "Enter the session room".
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import {
+  acquireLocalMedia,
+  partitionDevices,
+  setTrackEnabled,
+  switchDevice,
+  type MediaErrorInfo,
+} from '@/lib/session/nativeMedia';
 
 // R-A5: ICE endpoints are fetched at join time from /turn-credentials and are ALWAYS
 // self-hosted (coturn). There is deliberately NO hardcoded third-party STUN/TURN fallback —
@@ -59,10 +71,24 @@ export default function WebRtcSmokeRoom() {
   const [connectedVia, setConnectedVia] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
 
+  // Media state. `videoStatus` is 'unavailable' whenever this participant is not publishing
+  // a camera — the room then runs audio-only and SAYS so, rather than showing a dead tile.
+  const [videoStatus, setVideoStatus] = useState<'off' | 'on' | 'unavailable'>('off');
+  const [cameraOn, setCameraOn] = useState(true);
+  const [micOn, setMicOn] = useState(true);
+  const [mediaError, setMediaError] = useState<MediaErrorInfo | null>(null);
+  const [videoIssue, setVideoIssue] = useState<MediaErrorInfo | null>(null);
+  const [remoteHasVideo, setRemoteHasVideo] = useState(false);
+  const [cameras, setCameras] = useState<Array<{ deviceId: string; label: string }>>([]);
+  const [microphones, setMicrophones] = useState<Array<{ deviceId: string; label: string }>>([]);
+  const [selectedCam, setSelectedCam] = useState<string>('');
+  const [selectedMic, setSelectedMic] = useState<string>('');
+
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const esRef = useRef<EventSource | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerIdRef = useRef<string>('');
   const offerSentRef = useRef(false);
   const iceServersRef = useRef<RTCIceServer[]>([]);
@@ -160,13 +186,27 @@ export default function WebRtcSmokeRoom() {
     localStreamRef.current?.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
 
     pc.ontrack = (e) => {
-      if (audioRef.current) {
-        audioRef.current.srcObject = e.streams[0];
-        audioRef.current.play().then(() => setRemoteAudible(true)).catch(() => {
-          addLog('autoplay blocked — click "Play remote audio"');
+      const remote = e.streams[0];
+      if (remoteVideoRef.current && remote) {
+        remoteVideoRef.current.srcObject = remote;
+        remoteVideoRef.current.play().then(() => setRemoteAudible(true)).catch(() => {
+          addLog('autoplay blocked — click "Play remote media"');
         });
       }
-      addLog('remote track received');
+      // A camera the peer has switched OFF arrives as a muted track, not an absent one.
+      // Reading `muted` (not merely track count) is what keeps "their camera is off"
+      // honest instead of showing a black rectangle and calling it video.
+      const syncRemoteVideo = () => {
+        const v = remote?.getVideoTracks() ?? [];
+        setRemoteHasVideo(v.length > 0 && v.some((t) => !t.muted));
+      };
+      if (e.track.kind === 'video') {
+        e.track.onmute = syncRemoteVideo;
+        e.track.onunmute = syncRemoteVideo;
+        e.track.onended = syncRemoteVideo;
+      }
+      syncRemoteVideo();
+      addLog(`remote ${e.track.kind} track received`);
     };
     pc.onicecandidate = (e) => {
       if (e.candidate) {
@@ -264,15 +304,43 @@ export default function WebRtcSmokeRoom() {
     }
     peerIdRef.current = randomPeerId();
     addLog(`joining as ${role} (${peerIdRef.current}) room=${roomId}`);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStreamRef.current = stream;
-      setMicState('granted');
-      addLog('mic granted');
-    } catch {
+    setMediaError(null);
+    setVideoIssue(null);
+    const media = await acquireLocalMedia(
+      (c) => navigator.mediaDevices.getUserMedia(c),
+      { audioDeviceId: selectedMic || undefined, videoDeviceId: selectedCam || undefined }
+    );
+    if (!media.ok) {
+      // Audio is the floor: no microphone, no session. Say which device and what to do.
       setMicState('denied');
-      addLog('mic DENIED — cannot proceed');
+      setMediaError(media.error);
+      addLog(`media DENIED — ${media.error.kind}: ${media.error.title}`);
       return;
+    }
+    localStreamRef.current = media.stream;
+    setMicState('granted');
+    setMicOn(true);
+    setVideoStatus(media.video);
+    setCameraOn(media.video === 'on');
+    setVideoIssue(media.videoIssue ?? null);
+    addLog(media.video === 'on' ? 'mic + camera granted' : `mic granted · camera unavailable (${media.videoIssue?.kind})`);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = media.stream;
+      localVideoRef.current.play().catch(() => {});
+    }
+    // Device labels are withheld until permission is granted, so enumerate AFTER the grant —
+    // enumerating earlier yields unnamed entries the participant cannot choose between.
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const { cameras: cams, microphones: mics } = partitionDevices(devices);
+      setCameras(cams);
+      setMicrophones(mics);
+      const liveCam = media.stream.getVideoTracks()[0]?.getSettings?.().deviceId;
+      const liveMic = media.stream.getAudioTracks()[0]?.getSettings?.().deviceId;
+      if (liveCam) setSelectedCam(liveCam);
+      if (liveMic) setSelectedMic(liveMic);
+    } catch {
+      /* device list is a convenience; the room works without it */
     }
     // R-A5: fetch self-hosted ICE (coturn). No third-party fallback — if unconfigured,
     // proceed host-candidate-only (works same-machine/LAN; real NAT traversal needs coturn).
@@ -301,7 +369,52 @@ export default function WebRtcSmokeRoom() {
     lastEventAtRef.current = Date.now();
     connectSignaling();
     setJoined(true);
-  }, [role, roomId, door, thresholdToken, createPeer, addLog]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [role, roomId, door, thresholdToken, createPeer, addLog, selectedCam, selectedMic]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Toggles flip `track.enabled` — the sender and its m-line stay in place, so turning the
+  // camera back on never triggers a renegotiation mid-session.
+  const toggleCamera = useCallback(() => {
+    const next = !cameraOn;
+    if (setTrackEnabled(localStreamRef.current, 'video', next) === null) return;
+    setCameraOn(next);
+    addLog(`camera ${next ? 'on' : 'off'}`);
+  }, [cameraOn, addLog]);
+
+  const toggleMic = useCallback(() => {
+    const next = !micOn;
+    if (setTrackEnabled(localStreamRef.current, 'audio', next) === null) return;
+    setMicOn(next);
+    addLog(`microphone ${next ? 'live' : 'muted'}`);
+  }, [micOn, addLog]);
+
+  const changeDevice = useCallback(
+    async (kind: 'audio' | 'video', deviceId: string) => {
+      const stream = localStreamRef.current;
+      if (!stream || !deviceId) return;
+      const res = await switchDevice({
+        getUserMedia: (c) => navigator.mediaDevices.getUserMedia(c),
+        stream,
+        senders: (pcRef.current?.getSenders() ?? []) as unknown as Parameters<typeof switchDevice>[0]['senders'],
+        kind,
+        deviceId,
+      });
+      if (!res.ok) {
+        // The old device is still publishing — report the failure without dropping them.
+        setMediaError(res.error ?? null);
+        addLog(`device switch failed (${kind}): ${res.error?.kind}`);
+        return;
+      }
+      if (kind === 'video') {
+        setSelectedCam(deviceId);
+        // Re-point the preview: the stream object is the same, but the element must be told.
+        if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      } else {
+        setSelectedMic(deviceId);
+      }
+      addLog(`switched ${kind} device`);
+    },
+    [addLog]
+  );
 
   // Signaling connection with reconnect: SAME peerId across reconnects (the server
   // re-announces on re-subscribe, so presence self-heals). Backoff 1s→10s. A dead
@@ -360,6 +473,12 @@ export default function WebRtcSmokeRoom() {
     setJoined(false);
     setConnState('closed');
     setRemoteAudible(false);
+    setRemoteHasVideo(false);
+    setVideoStatus('off');
+    // Detach both elements so no last frame lingers after the room is gone.
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    localStreamRef.current = null;
     addLog('left cleanly');
   }, [post, addLog]);
 
@@ -385,8 +504,12 @@ export default function WebRtcSmokeRoom() {
         <div>
           <h1 className="text-lg font-semibold">Session Room</h1>
           <p className="text-xs text-neutral-500">
-            No recording, no transcript, no memory. Room <span className="font-mono">{roomId}</span> · role{' '}
-            <span className="font-mono">{role}</span>
+            Room <span className="font-mono">{roomId}</span> · role <span className="font-mono">{role}</span>
+          </p>
+          {/* Truthful statement of current capability — not "coming soon", not "may not work". */}
+          <p className="mt-1 text-xs text-neutral-500" data-testid="recording-notice">
+            Recording is not yet available in the native room. Nothing here is recorded, transcribed,
+            or remembered.
           </p>
         </div>
 
@@ -427,37 +550,146 @@ export default function WebRtcSmokeRoom() {
           </div>
         )}
 
+        {/* A media failure is the participant's problem to solve, so it names the device and
+            the remedy. Shown whether or not the room is otherwise fine. */}
+        {mediaError && (
+          <div className="rounded-xl bg-red-500/10 border border-red-500/40 p-4 space-y-1" data-testid="media-error">
+            <h2 className="text-sm font-semibold text-red-200">{mediaError.title}</h2>
+            <p className="text-sm text-red-200/80">{mediaError.detail}</p>
+          </div>
+        )}
+
+        {joined && (
+          <div className="space-y-3" data-testid="stage">
+            {/* Remote first: the person you are with is the subject of the room, not yourself. */}
+            <div className="relative rounded-xl overflow-hidden bg-black border border-neutral-800 aspect-video">
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+                data-testid="remote-video"
+              />
+              {!remoteHasVideo && (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-neutral-500">
+                  {remoteAudible ? 'Their camera is off' : 'Waiting for the other participant…'}
+                </div>
+              )}
+              <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-xs text-neutral-200">
+                {role === 'practitioner' ? 'Participant' : 'Practitioner'}
+              </span>
+            </div>
+
+            <div className="relative w-48 rounded-lg overflow-hidden bg-black border border-neutral-800 aspect-video">
+              {/* muted: a live preview of your own microphone would feed back. */}
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover scale-x-[-1]"
+                data-testid="local-video"
+              />
+              {(!cameraOn || videoStatus !== 'on') && (
+                <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-500">
+                  {videoStatus === 'unavailable' ? 'No camera' : 'Camera off'}
+                </div>
+              )}
+              <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-neutral-300">
+                {doorName ?? 'You'}
+                {!micOn && ' · muted'}
+              </span>
+            </div>
+          </div>
+        )}
+
         {door === 'open' && (
-          <div className="flex gap-2">
-          {!joined ? (
-            <button onClick={join} className="px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm hover:bg-emerald-500/25">
-              Join as {role}
-            </button>
-          ) : (
-            <button onClick={leave} className="px-4 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 text-sm hover:bg-red-500/25">
-              Leave
-            </button>
-          )}
-          <button
-            onClick={() => audioRef.current?.play().then(() => setRemoteAudible(true)).catch(() => {})}
-            className="px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-neutral-300 text-sm hover:bg-neutral-700"
-          >
-            Play remote audio
-          </button>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {!joined ? (
+                <button onClick={join} className="px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm hover:bg-emerald-500/25">
+                  Join as {role}
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={toggleMic}
+                    data-testid="toggle-mic"
+                    className={`px-4 py-2 rounded-lg border text-sm ${micOn ? 'bg-neutral-800 border-neutral-700 text-neutral-200 hover:bg-neutral-700' : 'bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25'}`}
+                  >
+                    {micOn ? 'Mute' : 'Unmute'}
+                  </button>
+                  <button
+                    onClick={toggleCamera}
+                    disabled={videoStatus !== 'on'}
+                    data-testid="toggle-camera"
+                    title={videoStatus !== 'on' ? 'No camera is publishing — rejoin to enable it' : undefined}
+                    className={`px-4 py-2 rounded-lg border text-sm disabled:opacity-40 disabled:cursor-not-allowed ${cameraOn ? 'bg-neutral-800 border-neutral-700 text-neutral-200 hover:bg-neutral-700' : 'bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25'}`}
+                  >
+                    {cameraOn ? 'Camera off' : 'Camera on'}
+                  </button>
+                  <button onClick={leave} className="px-4 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 text-sm hover:bg-red-500/25">
+                    Leave
+                  </button>
+                  <button
+                    onClick={() => remoteVideoRef.current?.play().then(() => setRemoteAudible(true)).catch(() => {})}
+                    className="px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-neutral-300 text-sm hover:bg-neutral-700"
+                  >
+                    Play remote media
+                  </button>
+                </>
+              )}
+            </div>
+
+            {joined && (cameras.length > 1 || microphones.length > 1) && (
+              <div className="flex flex-wrap gap-2 text-xs">
+                {microphones.length > 1 && (
+                  <select
+                    value={selectedMic}
+                    onChange={(e) => changeDevice('audio', e.target.value)}
+                    data-testid="mic-select"
+                    className="px-2 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-300"
+                  >
+                    {microphones.map((m) => (
+                      <option key={m.deviceId} value={m.deviceId}>{m.label}</option>
+                    ))}
+                  </select>
+                )}
+                {cameras.length > 1 && videoStatus === 'on' && (
+                  <select
+                    value={selectedCam}
+                    onChange={(e) => changeDevice('video', e.target.value)}
+                    data-testid="camera-select"
+                    className="px-2 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-300"
+                  >
+                    {cameras.map((c) => (
+                      <option key={c.deviceId} value={c.deviceId}>{c.label}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
+
+            {/* Audio-only is a legitimate way to be in the room — but never a silent one. */}
+            {joined && videoStatus === 'unavailable' && videoIssue && (
+              <p className="text-xs text-amber-300/80" data-testid="video-degraded">
+                Audio only — {videoIssue.title.toLowerCase()}. {videoIssue.detail}
+              </p>
+            )}
           </div>
         )}
 
         <div className="rounded-lg bg-neutral-900 border border-neutral-800 p-4">
           <Row k="door" v={door === 'open' ? `consented ✓${doorName ? ` (${doorName})` : ''}` : door} />
-          <Row k="mic" v={micState} />
+          <Row k="mic" v={micState === 'granted' ? (micOn ? 'live' : 'muted') : micState} />
+          <Row k="camera" v={videoStatus === 'on' ? (cameraOn ? 'on' : 'off') : videoStatus} />
           <Row k="signaling" v={sigState} />
           <Row k="connection" v={connState} />
           <Row k="ice" v={iceState} />
           <Row k="remote audible" v={remoteAudible ? 'yes' : 'no'} />
+          <Row k="remote video" v={remoteHasVideo ? 'yes' : 'no'} />
           <Row k="connected via" v={connectedVia ?? '—'} />
         </div>
-
-        <audio ref={audioRef} autoPlay className="hidden" />
 
         <div className="rounded-lg bg-neutral-900 border border-neutral-800 p-3">
           <div className="text-xs text-neutral-500 mb-1 uppercase tracking-wider">Connection log</div>
