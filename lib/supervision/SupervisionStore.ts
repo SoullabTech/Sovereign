@@ -10,6 +10,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { randomUUID } from 'crypto';
+import type { CaptureIntegrityRecord } from '@/lib/studio/captureIntegrity';
 import {
   getEncryptedColumnsForInsert,
   decryptTranscriptSegments,
@@ -302,6 +303,45 @@ export async function getLastChunkTail(
 
   if (!result.rows[0]?.text) return null;
   return result.rows[0].text.slice(-80) || null;
+}
+
+/**
+ * Capture integrity for a session, by supervision session id.
+ *
+ * Returns null when the session predates integrity monitoring. Callers must
+ * keep that distinct from "monitored and clean" — one means nothing is known,
+ * the other is a positive finding.
+ */
+export async function getCaptureIntegrity(
+  sessionId: string,
+): Promise<CaptureIntegrityRecord | null> {
+  const result = await query<{ metadata: Record<string, unknown> | null }>(
+    `SELECT metadata FROM supervision_sessions WHERE id = $1 LIMIT 1`,
+    [sessionId],
+  );
+  return (result.rows[0]?.metadata?.captureIntegrity as CaptureIntegrityRecord) ?? null;
+}
+
+/**
+ * Capture integrity for a SCRIBE session id.
+ *
+ * The Session Room writes integrity onto the supervision session, but review
+ * and export address a session by its scribe id. The two are joined through
+ * supervision_sessions.metadata->>'scribeSessionId' — the same linkage
+ * sessionReviewMode uses. Without this hop the exported transcript silently
+ * loses the warning, which is the whole failure this is meant to prevent.
+ */
+export async function getCaptureIntegrityByScribeSessionId(
+  scribeSessionId: string,
+): Promise<CaptureIntegrityRecord | null> {
+  const result = await query<{ metadata: Record<string, unknown> | null }>(
+    `SELECT metadata FROM supervision_sessions
+     WHERE metadata->>'scribeSessionId' = $1
+     ORDER BY started_at DESC
+     LIMIT 1`,
+    [scribeSessionId],
+  );
+  return (result.rows[0]?.metadata?.captureIntegrity as CaptureIntegrityRecord) ?? null;
 }
 
 /**

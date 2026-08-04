@@ -72,7 +72,7 @@ export function laneLossMessage(channel: CaptureChannel, atClock: string): strin
  */
 export function uploadFailureMessage(count: number, firstAtClock: string): string {
   const chunks = count === 1 ? '1 audio segment' : `${count} audio segments`;
-  return `${chunks} failed to upload, starting at ${firstAtClock}. Those parts of the conversation are missing from the transcript.`;
+  return `${chunks} failed to upload, beginning at ${firstAtClock}. Those portions of the conversation are missing.`;
 }
 
 /**
@@ -121,6 +121,78 @@ export interface CaptureIntegrityRecord {
   hadTwoSources: boolean;
   uninterrupted: boolean;
   events: CaptureIntegrityEvent[];
+}
+
+/**
+ * The capture-integrity notice that must travel with every representation of
+ * the transcript a human can read, copy, download, or export.
+ *
+ * Why this exists as a formatter rather than a UI detail: without it the system
+ * holds a split epistemic state. The live recorder knows the capture was
+ * incomplete, the stored session knows it, and the durable artifact — the thing
+ * that actually leaves the building — does not. An exported transcript would
+ * then arrive stripped of the one fact that governs how far it can be trusted,
+ * recreating false completeness at exactly the point the record becomes
+ * portable.
+ *
+ * Three states, deliberately distinct:
+ *
+ *   null      → integrity was never assessed (a session recorded before this
+ *               shipped). Says nothing, because nothing is known. NOT the same
+ *               as "no problems found".
+ *   clean     → monitored and intact. The affirmative matters: it is what makes
+ *               "verified intact" distinguishable from "never checked".
+ *   degraded  → what was lost, when, and what it means for interpretation.
+ *
+ * It never estimates how much conversation is missing. The number of failed
+ * chunks is known; the duration they covered is not measured, and inventing it
+ * would be a second false precision layered on the first.
+ */
+export function captureIntegrityNotice(
+  record: CaptureIntegrityRecord | null | undefined,
+): string | null {
+  if (!record) return null;
+
+  if (record.events.length === 0) {
+    return record.hadTwoSources
+      ? '**Capture integrity**\n\nTwo-source capture was monitored and no interruption was detected.'
+      : '**Capture integrity**\n\nSingle-source capture (practitioner microphone only). Speech in this transcript is not attributed to individual speakers.';
+  }
+
+  const blocks: string[] = [];
+
+  const seenLanes = new Set<CaptureChannel>();
+  const laneLosses: string[] = [];
+  for (const e of record.events) {
+    if (e.kind !== 'lane_lost' || seenLanes.has(e.channel)) continue;
+    seenLanes.add(e.channel);
+    laneLosses.push(laneLossMessage(e.channel, e.atClock));
+  }
+
+  if (laneLosses.length > 0) {
+    const lines = ['**Capture integrity warning**', ''];
+    if (record.hadTwoSources) {
+      lines.push(
+        'This recording began with two capture sources (practitioner microphone and meeting participants).',
+        '',
+      );
+    }
+    lines.push(...laneLosses);
+    blocks.push(lines.join('\n'));
+  }
+
+  const failures = record.events.filter((e) => e.kind === 'upload_failed');
+  if (failures.length > 0) {
+    blocks.push(
+      [
+        '**Transcript completeness warning**',
+        '',
+        uploadFailureMessage(failures.length, failures[0].atClock),
+      ].join('\n'),
+    );
+  }
+
+  return blocks.join('\n\n');
 }
 
 export function buildIntegrityRecord(

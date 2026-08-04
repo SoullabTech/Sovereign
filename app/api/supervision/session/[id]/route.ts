@@ -20,6 +20,10 @@ import {
   getJobsForSession
 } from '@/lib/supervision/SupervisionStore';
 import { query } from '@/lib/db/postgres';
+import {
+  captureIntegrityNotice,
+  type CaptureIntegrityRecord,
+} from '@/lib/studio/captureIntegrity';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -63,7 +67,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
         transcriptPath: session.transcript_path,
         metadata: session.metadata,
         createdAt: session.created_at
-      }
+      },
+      // Rendered notice, not just the raw record. Every consumer of this
+      // endpoint gets the warning already formatted, so none of them has to
+      // remember to derive it — a transcript that can be read must carry the
+      // conditions under which it can be believed.
+      captureIntegrity: captureIntegrityNotice(
+        (session.metadata as { captureIntegrity?: CaptureIntegrityRecord } | null)
+          ?.captureIntegrity,
+      ),
     };
 
     // Optionally include transcript

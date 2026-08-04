@@ -1,5 +1,6 @@
 import {
   buildIntegrityRecord,
+  captureIntegrityNotice,
   formatClockTime,
   integrityWarnings,
   isUninterruptedTwoSourceRecord,
@@ -36,7 +37,7 @@ describe('uploadFailureMessage', () => {
   it('says the audio is missing, not merely that a request failed', () => {
     const msg = uploadFailureMessage(3, '12:41 PM');
     expect(msg).toContain('3 audio segments');
-    expect(msg).toContain('missing from the transcript');
+    expect(msg).toContain('Those portions of the conversation are missing');
   });
 
   it('reads correctly for a single failure', () => {
@@ -132,6 +133,74 @@ describe('buildIntegrityRecord', () => {
     const record = buildIntegrityRecord(events, true);
     expect(record.uninterrupted).toBe(false);
     expect(record.events).toEqual(events);
+  });
+});
+
+describe('captureIntegrityNotice', () => {
+  const laneLoss: CaptureIntegrityEvent = {
+    kind: 'lane_lost',
+    channel: 'participants',
+    ...at('12:41 PM'),
+  };
+  const upload = (clock: string): CaptureIntegrityEvent => ({
+    kind: 'upload_failed',
+    channel: 'practitioner',
+    chunkIndex: 4,
+    ...at(clock),
+  });
+
+  // The three states must stay distinct. Collapsing "never assessed" into
+  // "no problems found" is how a transcript acquires a completeness it was
+  // never checked for.
+  it('says nothing when integrity was never assessed', () => {
+    expect(captureIntegrityNotice(null)).toBeNull();
+    expect(captureIntegrityNotice(undefined)).toBeNull();
+  });
+
+  it('affirms a monitored, intact two-source recording', () => {
+    const notice = captureIntegrityNotice(buildIntegrityRecord([], true));
+    expect(notice).toContain('Two-source capture was monitored and no interruption was detected.');
+  });
+
+  it('distinguishes a single-source recording from an interrupted one', () => {
+    const notice = captureIntegrityNotice(buildIntegrityRecord([], false))!;
+    expect(notice).toContain('Single-source capture');
+    expect(notice).not.toContain('warning');
+    expect(notice).not.toContain('stopped at');
+  });
+
+  it('states the two-source start, the lane lost, the time, and the consequence', () => {
+    const notice = captureIntegrityNotice(buildIntegrityRecord([laneLoss], true))!;
+    expect(notice).toContain('Capture integrity warning');
+    expect(notice).toContain('began with two capture sources');
+    expect(notice).toContain('Participant audio stopped at 12:41 PM');
+    expect(notice).toContain("may contain only the practitioner's microphone");
+  });
+
+  it('carries upload loss as its own warning with the earliest affected time', () => {
+    const notice = captureIntegrityNotice(
+      buildIntegrityRecord([upload('12:41 PM'), upload('12:52 PM'), upload('12:58 PM')], true),
+    )!;
+    expect(notice).toContain('Transcript completeness warning');
+    expect(notice).toContain('3 audio segments failed to upload, beginning at 12:41 PM');
+  });
+
+  it('carries both warnings when both happened', () => {
+    const notice = captureIntegrityNotice(
+      buildIntegrityRecord([laneLoss, upload('12:52 PM')], true),
+    )!;
+    expect(notice).toContain('Capture integrity warning');
+    expect(notice).toContain('Transcript completeness warning');
+  });
+
+  // Chunk count is known; the duration those chunks covered is not measured.
+  // Inventing it would layer a second false precision on the first.
+  it('never claims how much conversation is missing', () => {
+    const notice = captureIntegrityNotice(
+      buildIntegrityRecord([laneLoss, upload('12:52 PM')], true),
+    )!;
+    expect(notice).not.toMatch(/\d+\s*(seconds|minutes|mins|hours)/i);
+    expect(notice).not.toMatch(/approximately|roughly|about \d/i);
   });
 });
 
