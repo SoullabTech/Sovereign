@@ -285,6 +285,51 @@ packet carrying it names nothing, and every claim resting on it is unanchored. �
 silently normalise a near-miss SHA to the intended one: **re-derive it, or the field is not
 verified.**
 
+### Instrument provenance — governance field
+
+```
+✅ Verified
+     394e8bf06
+     docs/reviews/CLIENT_FIELD_PRACTITIONER_ENCOUNTER_INSTRUMENT.md
+
+⚠️ REJECTED — do not reinstate
+     92afbfcac
+     valid commit · WRONG artifact and WRONG lane
+     (touches CLIENT_ARRIVAL_BASELINE_WALK.md; not in this branch's history)
+```
+
+> ### ⭐⭐⭐ A resolving SHA is not a verified referent.
+
+Existence is only the first check. The full chain:
+
+```
+Commit exists
+    ↓
+Commit contains the claimed artifact
+    ↓
+Artifact is the governing instrument
+    ↓
+Artifact belongs to the intended lane
+    ↓
+Artifact is the state being used for observation
+```
+
+**`92afbfcac` passed only the first.** It was dangerous *because it was plausible* — its
+subject line reads as exactly the right kind of methodological amendment, so a packet could
+have carried it forward with **no obvious error signal.**
+
+⛔⛔ **A packet must not inherit the most recent plausible reference.** Every governance field
+is resolved **from source artifacts**, which is why packet assembly is a separate act from
+conversation memory.
+
+The same invariant, now at the provenance layer:
+
+| A sentence | is not | an ownership claim |
+|---|---|---|
+| A capability | is not | a product experience |
+| An invitation object | is not | a relationship |
+| **A commit SHA** | **is not** | **an instrument** |
+
 ### The hierarchy the packet must follow
 
 ```
