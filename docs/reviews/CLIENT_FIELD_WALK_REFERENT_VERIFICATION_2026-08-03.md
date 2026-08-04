@@ -82,6 +82,43 @@ response — including obvious ones. It is recorded here so that:
 him something more mature than the test surface*, but showing him a surface **less coherent**
 than the architecture that has been ruled.
 
+### ⛔ Not a defect — a disclosed variable
+
+| If the purpose were | the hybrid topology is |
+|---|---|
+| **shipping** | likely a **blocking implementation issue** |
+| **learning** | a **controlled variable that must be disclosed** |
+
+The purpose is learning. The danger is not that old routes exist — it is that the
+participant's interpretation of the new Home may be **shaped by an ungoverned door after they
+leave it.** Q3 does not ask about the Home; it asks about **the environment they believe they
+entered.**
+
+### ⭐⭐⭐ The interpretation boundary — RULED
+
+> **The walk may reveal the coherence of the CURRENT TREE. It may not be used to infer the
+> coherence of the INTENDED ARCHITECTURE.**
+
+### What this encounter can and cannot test
+
+| ✅ Legitimately tests | ⛔ Cannot yet test |
+|---|---|
+| arrival comprehension | complete Now What? navigation |
+| orientation | full field topology |
+| perceived purpose | mature invitation experience |
+| whether the Home creates a coherent first impression | final architecture |
+
+### The claim, stated correctly
+
+⛔ *"We are testing the Now What? experience."*
+
+✅ **"We are testing the `ClientHome.tsx` Phase 1 expression, rendered against a deliberately
+constructed member field state, inside a tree that still contains legacy `/now-what/*`
+surfaces."**
+
+Those are different claims. ⛔⛔ **Do not let a prototype branch be treated as if it
+represents the entire product.**
+
 ---
 
 ## 4. No accidental promotion — ✅ verified

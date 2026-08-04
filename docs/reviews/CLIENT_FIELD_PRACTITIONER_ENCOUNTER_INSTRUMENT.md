@@ -48,6 +48,24 @@ If the instrument is ever read as suspicion, it has been read wrong. It is the s
 sovereignty discipline the system applies to itself, applied to the relationship the system
 sits inside.
 
+**The question this walk asks is not:**
+
+⛔ *"Can Larry be trusted with this?"*
+
+**It is:**
+
+> ✅ **"Can the system preserve the freedom of a client inside a relationship where trust
+> already exists?"**
+
+That is a **design property**, not a judgment of a person. ⭐ **A trustworthy practitioner
+still cannot occupy the client's seat** — which is precisely why both walks remain necessary
+and neither replaces the other:
+
+```
+Larry:    Does this honor and extend the practice?
+Client:   Do I experience this as my own work?
+```
+
 ### ⭐ Why "free to decline" is the most dangerous one to accept from this seat
 
 A practitioner answering *"of course they can decline"* is reporting **his intent**, which is
@@ -223,6 +241,27 @@ than in code. ⛔ **Record the phrasing verbatim; do not correct it in the momen
 ---
 
 ## 5. Evidence packet
+
+### ⭐⭐⭐ The test member's field state is part of the REFERENT, not setup data
+
+> **A different member state creates a different encounter.**
+
+⛔ It is not "arranging the demo." The environment being observed must be **reproducible**,
+and the field state is half of what is being observed (the component renders live member
+data — see the referent verification §2). Captured **not because the person is being
+measured**, but because the environment is:
+
+```
+Encounter:
+    build SHA
+    member / test identity
+    field contents present
+    invitations present / absent
+    practitioner context
+    date / time
+```
+
+### Also captured
 
 - The referent block (§1) verbatim, including SHA
 - Verbatim responses to the four questions
