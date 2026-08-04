@@ -172,7 +172,12 @@ export async function POST(req: NextRequest) {
         success: true,
         sessionId,
         lens,
-        report: reportText,
+        // Embedded in `report` AND exposed as its own field. The structured
+        // field is the useful one for a machine consumer; the embedded copy is
+        // what makes the notice inseparable from the prose. A caller that
+        // reads `.report` alone — the obvious thing to do — must not end up
+        // holding a transcript stripped of the condition governing its trust.
+        report: integrityNotice ? `${integrityNotice}\n\n---\n\n${reportText}` : reportText,
         captureIntegrity: integrityNotice,
         meta: {
           generatedAt: new Date().toISOString(),
