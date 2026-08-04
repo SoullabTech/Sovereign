@@ -254,17 +254,68 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           className="pointer-events-none absolute right-0 top-4 w-48 sm:w-64 opacity-[0.05]"
         />
 
-        {/* ① Arrival — what this place is, before it asks anything */}
+        {/* ① Arrival — S1a. What this place is FOR, before it lists what it holds.
+            The prior copy described the contents ("the decisions you are weighing,
+            what you are practising, what you chose to keep") — an inventory, which
+            reads as storage. A person arriving does not ask what is filed here.
+            They ask why they came back. */}
         <header className="relative pt-2 pb-2" style={{ animation: 'nwhFadeUp 0.55s ease both' }}>
           <h1 className="text-slate-100 text-3xl sm:text-4xl font-extralight tracking-wide leading-tight">
-            {name ? `${name}, this is your space.` : 'This is your space.'}
+            {name ? `Welcome back, ${name}.` : 'Welcome back.'}
           </h1>
+          <p className="text-slate-300 text-lg sm:text-xl font-extralight leading-relaxed mt-4 max-w-prose">
+            Your leadership work continues here.
+          </p>
           <p className="text-slate-400 text-base font-light leading-relaxed mt-3 max-w-prose">
-            Your leadership work, as you have authored it — the decisions you are
-            weighing, what you are practising, and what you chose to keep. It is
-            yours. Sharing any of it is your choice, made one piece at a time.
+            A place between conversations where what matters can become clearer.
+            Everything here is yours, in your words. Sharing any of it is your
+            choice, made one piece at a time.
           </p>
         </header>
+
+        {/* ② CONTINUE — S1a/S1c. The centre the surface was missing.
+            The page was structurally complete and experientially empty: categories
+            with no centre, records with no thread. This answers "what brings me
+            back?" before any category does.
+
+            ⛔ It never invents a thread. With no sessions it says so plainly and
+            offers the only real door — a conversation. An empty centre that
+            pretended otherwise would be the false affordance CF-D2 prohibits. */}
+        {data && (
+          <section
+            className="relative mt-8 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-6 sm:px-7 sm:py-7"
+            style={{ animation: 'nwhFadeUp 0.55s ease both', animationDelay: '40ms' }}
+          >
+            <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Continue</p>
+            {sessions.length === 0 ? (
+              <>
+                <p className="mt-3 text-slate-100 text-xl sm:text-2xl font-extralight leading-snug">
+                  Your next thread begins with a conversation.
+                </p>
+                <p className="mt-2 text-slate-400 text-sm font-light max-w-prose">
+                  Nothing is waiting to be resumed yet — which is a real place to be
+                  standing, not a gap.
+                </p>
+                <div className="mt-5">
+                  <Door href={roomHref}>Begin a conversation →</Door>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-slate-100 text-xl sm:text-2xl font-extralight leading-snug">
+                  What is alive for you today?
+                </p>
+                <p className="mt-2 text-slate-400 text-sm font-light max-w-prose">
+                  You last carried something forward on {dayLabel(sessions[0].at)}. Picking
+                  it up again is where the work continues.
+                </p>
+                <div className="mt-5">
+                  <Door href={roomHref}>Continue the conversation →</Door>
+                </div>
+              </>
+            )}
+          </section>
+        )}
 
         {error && (
           <p role="alert" className={`${PANEL} text-red-300 text-sm font-light`}>
@@ -280,8 +331,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           <>
             {/* ② My Journey — where the work is pointed, as declared */}
             <Section
-              eyebrow="My journey"
-              title="What you are working on"
+              eyebrow="Where the work is pointed"
+              title="What is alive"
               lead="Your place in the work — as you or your coach stated it, each labelled with who said so. Nothing here is inferred, and nothing measures you."
               delay={60}
             >
@@ -327,8 +378,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
             {/* ③ Decisions — the highest-stakes executive surface */}
             <Section
-              eyebrow="Decisions"
-              title="What you are working through"
+              eyebrow="Leadership moments"
+              title="What you are becoming clear about"
               lead="The decisions you are actually carrying, held open while they are still open. Nothing here recommends, ranks or decides — the judgement stays yours."
               delay={120}
             >
@@ -351,8 +402,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
             {/* ④ Commitments — identity-level, never tasks */}
             <Section
-              eyebrow="Commitments"
-              title="What you are practising"
+              eyebrow="Practice"
+              title="How you are practising leadership"
               lead="Not tasks. The way you said you would lead differently — kept in your own words, with nothing tracking whether you complied."
               delay={180}
             >
@@ -369,8 +420,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
             {/* ⑤ Sessions — the thread between conversations */}
             <Section
-              eyebrow="Sessions"
-              title="Continuity between conversations"
+              eyebrow="Conversations"
+              title="The thread between conversations"
               lead="The conversations you carried something out of, and the door into the next one."
               delay={240}
             >
