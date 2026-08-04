@@ -386,7 +386,14 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               purpose: the member's work is the anchor of this surface, and an
               offer is a guest in it. Self-hides when nothing is offered.
             */}
-            {fieldContext && <MemberInvitations fieldSlug={fieldContext} />}
+            {fieldContext &&
+              journey.map((j) => (
+                <MemberInvitations
+                  key={j.programSlug}
+                  fieldSlug={fieldContext}
+                  programSlug={j.programSlug}
+                />
+              ))}
 
             {/* ③ Decisions — the highest-stakes executive surface.
 
