@@ -45,6 +45,7 @@ describe('getHouseDestinations — audience filtering', () => {
     // Other practitioner/steward rooms still hidden from members.
     expect(member).not.toContain('circles');
     expect(member).not.toContain('vision-studio');
+    expect(member).not.toContain('pro-studio');
     expect(member).toContain('ideas');
     expect(member).toContain('studio');
   });
@@ -54,6 +55,7 @@ describe('getHouseDestinations — audience filtering', () => {
     expect(ids).toContain('changes');
     expect(ids).toContain('circles');
     expect(ids).toContain('vision-studio');
+    expect(ids).toContain('pro-studio');
   });
 
   /**
@@ -148,6 +150,47 @@ describe('dispatchHouseDestination', () => {
 
   it('Studio does NOT point at /studio (the practitioner Pro Studio)', () => {
     expect(find('studio').route).not.toBe('/studio');
+  });
+
+  it('Pro Studio enters /studio, bridged on native', () => {
+    expect(find('pro-studio').route).toBe('/studio');
+    const h = harness(true);
+    dispatchHouseDestination(find('pro-studio'), h.ctx);
+    expect(h.pushed).toEqual(['/open-web?to=%2Fstudio']);
+  });
+});
+
+/**
+ * RULING (Kelly, 2026-08-04): "Studio is one threshold. Mode is revealed after
+ * entry." docs/governance/HOUSE_IA_RULING_STUDIO_ONE_THRESHOLD_2026-08-04.md
+ *
+ * These are the enforcing mechanism for that ruling, not a description of it.
+ * The failure they guard is a plausible, tidy-looking refactor: registering
+ * Personal Field and Practice Portal as two Rooms so each "has its own door".
+ * That asserts the person has two workspaces. They have one, entered in
+ * different relational contexts. The House reveals a place; it must not expose
+ * the object model underneath it.
+ */
+describe('Studio is ONE threshold — mode is not an address', () => {
+  const all = HOUSE_DESTINATIONS.filter((d) => d.kind === 'route');
+
+  it('exactly one House destination opens /studio', () => {
+    const doors = all.filter((d) => d.route === '/studio' || d.route?.startsWith('/studio?'));
+    expect(doors.map((d) => d.id)).toEqual(['pro-studio']);
+  });
+
+  it('no destination encodes a studio MODE in its route', () => {
+    // Personal Field / Practice Portal are StudioMode values (see MODE_CONFIG in
+    // components/studio/TeamSwitcher.tsx), never navigation targets.
+    for (const d of all) {
+      expect(d.route).not.toMatch(/[?&]mode=/);
+    }
+  });
+
+  it('no destination is LABELLED as a studio mode', () => {
+    const labels = HOUSE_DESTINATIONS.map((d) => d.label);
+    expect(labels).not.toContain('Personal Field');
+    expect(labels).not.toContain('Practice Portal');
   });
 });
 
