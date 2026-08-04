@@ -128,22 +128,79 @@ describe('scrubMemoryAmnesia — no memory content is fabricated', () => {
   });
 });
 
-describe('FORBIDDEN_AMNESIA_PATTERNS — known characteristics', () => {
+describe('"starting fresh" — MAIA\'s own discontinuity vs the member\'s', () => {
+  // The guard must distinguish MAIA asserting her own absence of memory from the phrase
+  // "starting fresh" wherever it appears. Replacing a reflection about the member's life
+  // with a memory fallback is itself a relational failure — as bad in its own direction as
+  // the false-amnesia claim this guard exists to stop.
+
+  it.each([
+    ["I'm starting fresh and don't remember our earlier conversations."],
+    ["I don't retain memory from previous chats."],
+    ['Each time we talk, I start fresh.'],
+    ["I'm coming in fresh each time we speak."],
+    ["I start fresh every session — I have no continuity."],
+  ])('SCRUB — MAIA denying her own memory: %s', (utterance) => {
+    expect(containsForbiddenAmnesia(utterance)).toBe(true);
+  });
+
+  it.each([
+    // The member is the subject. These are reflections, not claims about MAIA.
+    ["It sounds like you're starting fresh."],
+    ["It sounds like you're starting fresh with this project after everything that happened."],
+    ['You may want to start fresh.'],
+    ['You may want to start fresh with her, rather than picking up the old conversation.'],
+    ['There\'s something in you that wants to begin fresh here.'],
+    // The phrase discussed rather than asserted.
+    ['We could talk about what starting fresh would actually mean for you.'],
+    ['That impulse — starting fresh — has come up for you before.'],
+    // MAIA quoting the member. Stripping quoted spans is what saves these.
+    ['You said, "I\'m starting fresh and I don\'t remember much of last year."'],
+    ['You told me, "each time we talk I start fresh" — say more about that feeling?'],
+    // The preamble without a memory denial attached.
+    ["I should tell you honestly, I think you're being hard on yourself."],
+    ['I should tell you clearly: my sense is that you already know the answer.'],
+  ])('PRESERVE — not a claim about MAIA\'s memory: %s', (utterance) => {
+    expect(containsForbiddenAmnesia(utterance)).toBe(false);
+    expect(scrubMemoryAmnesia(utterance, WITH_CONTEXT)).toBeNull();
+  });
+
+  it('REGRESSION — the 2026-08-04 production sentence still scrubs after narrowing', () => {
+    const production =
+      "I don't have memory of previous conversations each time we talk, I'm starting " +
+      'fresh without what came before.';
+    expect(containsForbiddenAmnesia(production)).toBe(true);
+    expect(scrubMemoryAmnesia(production, WITH_CONTEXT)).not.toBeNull();
+  });
+
+  it('a quoted violation does not launder an unquoted one in the same reply', () => {
+    // Stripping quotes must not become an escape hatch: if MAIA quotes the member AND
+    // makes her own denial, the denial still fires.
+    const mixed =
+      'You said, "I\'m starting fresh." I don\'t have memory of previous conversations.';
+    expect(containsForbiddenAmnesia(mixed)).toBe(true);
+  });
+});
+
+describe('FORBIDDEN_AMNESIA_PATTERNS — structural invariants', () => {
   it('is non-empty and exported as the single canonical blocklist', () => {
     expect(FORBIDDEN_AMNESIA_PATTERNS.length).toBeGreaterThan(0);
     expect(FORBIDDEN_AMNESIA_PATTERNS.every((p) => p instanceof RegExp)).toBe(true);
   });
 
-  it('DOCUMENTED OVER-MATCH: "starting fresh" fires even when it describes the member', () => {
-    // This is current canonical behaviour, asserted here so it is visible rather than
-    // discovered in production. The pattern is unanchored to the speaker, so a reflection
-    // about the *member* starting fresh is scrubbed as if MAIA had denied her own memory,
-    // replacing an otherwise good response with the §VI fallback.
-    //
-    // NOT fixed here: narrowing the regex changes canonical guard behaviour shared with
-    // app/api/oracle/conversation, which is out of scope for this route-wiring fix.
-    // Raised for separate ruling.
-    const memberFacing = "It sounds like you're starting fresh in this chapter.";
-    expect(containsForbiddenAmnesia(memberFacing)).toBe(true);
+  it('every pattern is anchored to a first-person subject or a memory noun', () => {
+    // The anchoring rule, enforced structurally: no pattern may be a bare phrase match.
+    // This is what stops a future edit from reintroducing /\bstarting fresh\b/.
+    for (const pattern of FORBIDDEN_AMNESIA_PATTERNS) {
+      const source = pattern.source;
+      const hasFirstPerson = /\\bI\b|\\bI\(/.test(source) || source.includes('\\bI');
+      const hasMemoryNoun = /memor|remember|recall|recollection|continuity|context|history/.test(source);
+      expect(hasFirstPerson || hasMemoryNoun).toBe(true);
+    }
+  });
+
+  it('no pattern matches "starting fresh" on its own', () => {
+    expect(FORBIDDEN_AMNESIA_PATTERNS.some((p) => p.test('starting fresh'))).toBe(false);
+    expect(FORBIDDEN_AMNESIA_PATTERNS.some((p) => p.test('start fresh'))).toBe(false);
   });
 });
