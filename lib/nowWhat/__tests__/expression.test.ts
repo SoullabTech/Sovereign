@@ -98,11 +98,32 @@ describe('schema boundary — the member row carries no practitioner reference',
     for (const file of fs.readdirSync(migrations)) {
       if (!file.endsWith('.sql')) continue;
       const sql = fs.readFileSync(path.join(migrations, file), 'utf8');
-      const touchesMemberMaterial = /member_field_note_threads/i.test(sql);
-      const addsInvitationRef =
-        /ADD COLUMN[^;]*invitation_id/i.test(sql) ||
-        /ADD COLUMN[^;]*practitioner_id/i.test(sql);
-      if (touchesMemberMaterial && addsInvitationRef) offenders.push(file);
+      // Comments are stripped first. Twice now a whole-file text match has
+      // read PROSE ABOUT the invariant as a breach of it -- the migration that
+      // documents "meaning lives in member_field_note_threads with no link
+      // back" was flagged for containing both names. A test that cannot tell
+      // documentation from schema will be silenced rather than fixed.
+      const code = sql
+        .replace(/--[^\n]*/g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/'(?:[^']|'')*'/g, "''"); // string literals, incl. COMMENT ON bodies
+
+      // Only statements that actually TARGET the member table can put a column
+      // on it. Widened from the original `ADD COLUMN` pattern after the
+      // 2026-08-03 walk surfaced that a reference introduced inside a CREATE
+      // TABLE body, or named anything other than invitation_id/practitioner_id,
+      // would have slipped through.
+      const targeting = [
+        ...code.matchAll(/CREATE TABLE[^;]*?member_field_note_threads\s*\(([\s\S]*?);/gi),
+        ...code.matchAll(/ALTER TABLE\s+member_field_note_threads\b([\s\S]*?);/gi),
+      ].map((m) => m[1] ?? '');
+      if (targeting.length === 0) continue;
+
+      // The invariant is a REFERENCE TO A PERSON OR THEIR OFFER landing on
+      // member-authored material -- not two particular column names.
+      const REFERENCE =
+        /\b(?:[a-z_]*invitation[a-z_]*_id|[a-z_]*practitioner[a-z_]*_id|program_id|offered_by[a-z_]*)\b/i;
+      if (targeting.some((stmt) => REFERENCE.test(stmt))) offenders.push(file);
     }
     expect(offenders).toEqual([]);
   });
