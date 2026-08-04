@@ -269,6 +269,9 @@ Detail:
 
 ### 3.1 Referent
 
+> ⭐⭐⭐ **The referent field is a GOVERNANCE field, not descriptive prose.** It must name the
+> object actually being observed.
+
 ```
 Build:        78358f979
 Environment:  declared test environment
@@ -276,6 +279,24 @@ Production:   95b21ce42 unchanged
 Purpose:      observe coherence of the CURRENT EXPERIENCE
               ⛔ not validate the intended architecture
 ```
+
+⛔⛔ **`78358b979` is INVALID — not an alias, not a minor typo.** No such object exists. A
+packet carrying it names nothing, and every claim resting on it is unanchored. ⛔ Do not
+silently normalise a near-miss SHA to the intended one: **re-derive it, or the field is not
+verified.**
+
+### The hierarchy the packet must follow
+
+```
+✅ Observed tree              ⛔ Intended architecture
+        ↓                             ↓
+   Verified capability          Assumed capability
+        ↓                             ↓
+     Pilot claim                Expected experience
+```
+
+⭐ **The state block is itself part of the epistemic system**, so it carries the same
+discipline the architecture applies to MAIA's interpretations.
 
 ### 3.2 Participant roles — separated
 
