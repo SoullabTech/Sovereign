@@ -46,9 +46,10 @@ export function chartSummaryText(chart: BirthChart): string {
 }
 
 /** The FLAT JSON contract the model must return. Assembled into SoulPortrait in code. */
-export const OUTPUT_CONTRACT = `Return ONLY a JSON object (no markdown, no prose outside JSON) with EXACTLY these keys:
+export const OUTPUT_CONTRACT = `Return ONLY a JSON object (no markdown, no prose outside JSON) with EXACTLY these keys.
+The object must be strict JSON: no comments of any kind, no trailing commas, and every double quote inside a prose value escaped as \\".
 {
-  "natalPlacements": [ { "body": "Sun", "sign": "...", "house": 4, "meaning": "one plain sentence of what this placement points toward" } ],  // 6-8 key placements
+  "natalPlacements": [ { "body": "Sun", "sign": "...", "house": 4, "meaning": "one plain sentence of what this placement points toward" } ],
   "natalSynthesis": "one paragraph weaving the placements into a single picture",
   "openingLetter": "a warm 2-3 paragraph letter addressed to the person about their becoming",
   "soulSignature": { "headline": "a short evocative phrase", "body": "1-2 paragraphs" },
@@ -59,7 +60,7 @@ export const OUTPUT_CONTRACT = `Return ONLY a JSON object (no markdown, no prose
     "air":    { "title": "...", "body": "1 paragraph on Air (curiosity/communication/ideas)" },
     "aether": { "title": "...", "body": "1 paragraph on Aether (meaning/spirit/mystery)" }
   },
-  "archetypes": [ { "key": "seeker|guardian|alchemist|storyteller|explorer|builder|healer|sage|steward", "essence": "...", "gift": "...", "shadow": "a growth edge, never a verdict", "resonance": "strong|present|emerging" } ],  // 3-4
+  "archetypes": [ { "key": "seeker|guardian|alchemist|storyteller|explorer|builder|healer|sage|steward", "essence": "...", "gift": "...", "shadow": "a growth edge, never a verdict", "resonance": "strong|present|emerging" } ],
   "seerAndProphet": { "title": "...", "body": "1-2 paragraphs on their way of perceiving + speaking", "blessing": ["1-3 short closing lines"] },
   "challenges": { "body": "1 paragraph reframing difficulty as training", "trainings": [ { "challenge": "...", "training": "..." } ] },
   "northStar": { "title": "...", "body": "1 paragraph of forward direction (from the North Node) — direction, never prediction" },
@@ -67,6 +68,7 @@ export const OUTPUT_CONTRACT = `Return ONLY a JSON object (no markdown, no prose
   "reflectionQuestions": ["3-5 open questions to sit with — not goals, not predictions"],
   "soulVocation": "one paragraph: what this life's gift is FOR"
 }
+Give 6-8 entries in "natalPlacements" and 3-4 entries in "archetypes".
 Every archetype "key" MUST be one of the nine listed. Keep all prose in plain, human, non-deterministic language.`;
 
 export function portraitSystemPrompt(opts: { name: string; age?: number; isMinor?: boolean; mode: string }): string {
