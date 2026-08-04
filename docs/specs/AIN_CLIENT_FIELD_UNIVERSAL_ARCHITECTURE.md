@@ -138,22 +138,76 @@ a test of the universal field, and its results may not be cited as one.
 
 ---
 
-## 6. Open — not ruled here
+## 5A. Navigation identity — RULED
 
-1. **Where does vocabulary live?** A practice-field-scoped label set, a per-program override,
-   or practitioner-authored? This is the P0 of the universal lane.
-2. **Is there a default vocabulary** when a practitioner supplies none — a neutral universal
-   set, or is vocabulary mandatory at field creation?
-3. **Do the five layers bind 1:1 to the five verbs**, or can a practitioner suppress a layer
-   their practice does not use?
-4. **Relationship to `practice_fields`** — the existing field-scoping table is the obvious
-   carrier for vocabulary, but that is an assumption, not a ruling.
+**RULED — founder, 2026-08-03.** The earlier question was the wrong one:
+
+| ⛔ Was asked | ✅ Actually asked |
+|---|---|
+| *"Is the Client Field a place the member goes?"* | *"Is the Client Field the member's experience of their work?"* |
+
+> ### The Client Field is not another destination. It is the field rendered through the current relationship context.
+
+The Member Field is already ratified as the platform root. A Client Field that were a
+*sibling* would give the member **two homes** — and the second one would have been created by
+the practitioner relationship. That is a lens becoming the owner's name for the environment:
+it fails the invariant (§6A of the vocabulary record) directly.
+
+```
+⛔ REFUSED — a menu of competing identities
+
+AIN
+ ├── Client Field
+ ├── Now What?
+ ├── Author Studio
+ └── other rooms
+```
+
+```
+✅ RULED — the environment stays primary
+
+AIN
+ |
+ Member Field
+ |
+ +-- Now What? lens
+ +-- Author lens
+ +-- Spiritual direction lens
+```
+
+### What this ruling produces
+
+Navigation becomes a **consequence** of the vocabulary resolution chain, not a separate
+system: practice-field context resolving *is* what "the Client Field is active" means. Lens
+release then applies to navigation exactly as it applies to artifacts — the relationship ends,
+the lens releases, and the member keeps their home.
+
+⛔⛔ **No separate client-side navigation model may be built.** Building one would recreate
+the second root this ruling rejects.
+
+---
+
+## 6. Open — status after the 2026-08-03 sitting
+
+1. ~~**Where does vocabulary live?**~~ ✅ **RULED** — read-time resolution chain, not a
+   carrier. See the vocabulary record §6C.
+2. ~~**Is there a default vocabulary?**~~ ✅ **RULED** — the universal verb. Vocabulary is
+   **not** mandatory at field creation.
+3. ~~**May a practitioner suppress a layer?**~~ ✅ **RULED — no.** Suppression of a universal
+   capability is re-authorization, not relabeling.
+4. **Relationship to `practice_fields`** — ⏳ **still open.** The chain names a *practice-field
+   context* position; whether the existing `practice_fields` table is the carrier for it
+   remains an assumption. ⛔ No binding on grounds of convenience.
+5. **Language governance layer** — ⏳ **newly opened by CF-D5b.** Verb binding closes the
+   authority hole; the language hole (`Practice → Assignment`) is not mechanically decidable
+   and needs a governance surface.
 
 ---
 
 ## 7. What this does not authorize
 
-- ⛔ No code. No vocabulary layer built before §6.1 is ruled.
 - ⛔ No rewrite of Phase 1 — it is reclassified, not rejected.
 - ⛔ No claim that the Phase 1 walk tests the universal field.
 - ⛔ No new domain expressions before the vocabulary seam exists.
+- ⛔ No separate client-side navigation surface (§5A).
+- ⛔ No `practice_fields` binding before §6.4 is ruled.

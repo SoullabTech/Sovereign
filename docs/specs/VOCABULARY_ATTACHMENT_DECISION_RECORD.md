@@ -1,8 +1,9 @@
 # Vocabulary Attachment — Decision Record
 
-**Status:** ⏳ **PARTIALLY RULED.** Boundaries (CF-D5a) and the render firewall (CF-D5c) are
-**settled**; lens-release mechanics are **ruled** (§4.3–4.5). **CF-D5b — vocabulary
-authorship — and the attachment model remain open.** See the ledger, §7.
+**Status:** ✅ **RULED — founder, 2026-08-03**, in the completion-docket sitting
+(`docs/governance/CLIENT_FIELD_COMPLETION_DOCKET_2026-08-03.md`). CF-D5a, CF-D5b and CF-D5c
+are settled; lens release is ruled (§4.3–4.5); the attachment model is ruled (§6B). The
+ledger (§7) carries the closed state. **D9 remains open and is independent.**
 **Governed by:** `AIN_VOCABULARY_ARCHITECTURE.md` (constraint/naming split) ·
 `AIN_CLIENT_FIELD_UNIVERSAL_ARCHITECTURE.md`
 **Why this blocks everything below it:** this decision determines whether every future
@@ -264,6 +265,116 @@ first instance once §7 is ruled.
 
 ---
 
+## 6B. CF-D5b — vocabulary authorship — RULED
+
+> **Practitioners may author expressions within an enforced universal envelope.**
+
+**RULED — founder, 2026-08-03.**
+
+### What a practitioner MAY author
+
+Their own domain language over the universal verbs — *Leadership Presence · Flourishing
+Practice · Executive Reflection.*
+
+### What a practitioner MAY NOT redefine — the non-overridable list
+
+⛔ Fixed by Core, not negotiable by any expression:
+
+- **what a decision is**
+- **who owns an insight**
+- **what counts as completion**
+- **what the member's experience means**
+
+These are not vocabulary. They are the envelope. A label that moves any of them is not a
+relabel — it is a re-authorization, and it is refused.
+
+### 🔴 The critical guard — technical mapping is not safety
+
+> **A vocabulary label is not safe merely because it maps technically to a universal verb.**
+
+| Universal verb | Allowed expression | Risky expression |
+|---|---|---|
+| `Practice` | Leadership Practice | **Assignment** |
+
+`Assignment` bound to the `Practice` verb still behaves as an invitation *to the system* —
+and imports a **compliance relationship** to the member reading it. The authority hole and
+the language hole are **different holes**:
+
+| Layer | Closed by | Mechanism |
+|---|---|---|
+| **Authority** — what the system does | verb binding: every label binds to exactly one universal verb | ✅ mechanical. Authority attaches to the **verb**, not the string; the render firewall (§5) guarantees the stored object carries the verb |
+| **Language** — what the member reads | ⏳ **a language governance layer** | ❌ **not mechanically decidable.** Requires a governance surface, not a validator |
+
+> **CF-D5b is therefore not only a data-model decision. It requires a language governance
+> layer.**
+
+⛔⛔ **Do not claim CF-D5b is enforced once verb binding ships.** Verb binding closes the
+authority hole and leaves the language hole open. Claiming otherwise makes the boundary a
+description. The language governance layer's **design** is downstream work; its **necessity**
+is ruled here.
+
+---
+
+## 6C. Attachment — RULED: a read-time resolution chain
+
+**RULED — founder, 2026-08-03.** The question was reshaped before it was answered:
+
+| ⛔ Was asked | ✅ Actually asked |
+|---|---|
+| *"Where does the lens live?"* | *"How is context resolved when rendering?"* |
+
+No single carrier can work: the four ruled release triggers (§4.4) each name a **different**
+entity. That is why every candidate in §2 carries a fatal risk. Attachment is a **lookup**,
+not an owner.
+
+```
+Member meaning
+      ↑
+Practice field context
+      ↑
+Program context
+      ↑
+Universal verb
+```
+
+Resolution is **first match wins**, read-time, per §5.
+
+### The invariant this preserves
+
+> **Context may shape perception; it may not acquire ownership.**
+
+```
+During the Larry relationship:   "Your exploration through Leadership Presence"
+After the relationship:          "Your exploration"
+```
+
+**The member's artifact did not change. Only the lens released.**
+
+### Release behaviour — no special-casing, no migration
+
+| Trigger (§4.4) | Behaviour | Migration |
+|---|---|---|
+| program ends | program context drops · practice-field context still resolves | none |
+| member leaves the practice | both drop · falls to the universal verb — the member's own words | none |
+| practitioner changes vocabulary | practice-field context changes for everyone at once | **none** — if it ever looks like a migration, write-time substitution has crept in |
+| member returns | context resolves again · ownership never moved (§4.5) | none |
+
+### ⏳ Member personal vocabulary — deferred
+
+The **Member meaning** layer is ruled as the top of the chain but **not built in v1**: §4.3
+requires a member gesture for any *addition* of meaning, and no such gesture exists.
+⛔ Shipping it without one would manufacture the gesture.
+
+### Closed by derivation from this ruling
+
+| Ref | Question | Ruled |
+|---|---|---|
+| universal §6.2 | default vocabulary when none is supplied | **the universal verb.** Vocabulary is **not** mandatory at field creation |
+| §3 | two naming layers — lean or ruled | **ruled** — they are chain positions, resolved in order |
+| universal §6.3 | may a practitioner **suppress** a layer | ⛔ **No.** Suppression of a universal capability is re-authorization (§1). *A layer with no content does not render* already covers the real case — that is emptiness, not suppression |
+
+---
+
 ## 6A. The invariant
 
 > ### A lens can illuminate experience. It cannot become the owner's name for the experience.
@@ -306,12 +417,14 @@ relevant because six months passed."* That is not relational intelligence.
 |---|---|---|
 | **CF-D5a** | Vocabulary boundaries — constraint vs naming authority | ✅ **settled** (§1) |
 | **CF-D5c** | Attachment boundary — the render firewall | ✅ **settled** (§5) |
-| **CF-D5b** | **Vocabulary authorship — who may author the lens** | ⏳ **open** |
-| — | Attachment model — which entity carries the vocabulary | ⏳ open (§2) |
+| **CF-D5b** | **Vocabulary authorship — who may author the lens** | ✅ **RULED 2026-08-03** (§6B) — practitioner authors within an enforced envelope; ⏳ **language governance layer required, not yet designed** |
+| — | Attachment model — which entity carries the vocabulary | ✅ **RULED 2026-08-03** (§6C) — read-time resolution chain |
 | — | Lens-release mechanics | ✅ ruled (§4.3–4.5) |
-| — | Two naming layers (§3) | ⏳ lean, not ruled |
-| — | Default vocabulary where none is supplied | ⏳ open |
-| — | Layer suppression — may a practitioner hide an unused layer? | ⏳ open |
+| — | Two naming layers (§3) | ✅ **ruled** — chain positions (§6C) |
+| — | Default vocabulary where none is supplied | ✅ **ruled** — the universal verb (§6C) |
+| — | Layer suppression — may a practitioner hide an unused layer? | ✅ **ruled — no** (§6C) |
+| — | Member personal vocabulary layer | ⏳ **deferred to v2** — needs a member gesture that does not exist (§6C) |
+| — | **Language governance layer** — design | ⏳ **open, newly opened by CF-D5b** |
 | **D9** | Human encounter authorization | ⏳ open, independent |
 
 ### The CF-D5 stack — three different questions
@@ -345,7 +458,9 @@ of it **cannot acquire ownership through it** — that path is closed independen
 
 ## 8. Not authorized
 
-- ⛔ No implementation before CF-D5b and the attachment model are ruled.
+- ⛔ No claim that CF-D5b is *enforced* until the language governance layer exists — verb
+  binding closes the authority hole only (§6B).
+- ⛔ No member personal vocabulary layer before a member gesture exists (§6C).
 - ⛔ No binding to `practice_fields` on grounds of convenience.
 - ⛔ **No write-time vocabulary substitution, under any attachment model** — this holds
   regardless of how anything else resolves.
