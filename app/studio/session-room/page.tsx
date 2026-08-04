@@ -236,9 +236,10 @@ export default function SessionRoomPage() {
   const [markersExpanded, setMarkersExpanded] = useState(true);
   const circleOffer = useOfferToCircle();
 
-  // Refs
-  const transcriptEndRef = useRef<HTMLDivElement>(null);
-  const maiaEndRef = useRef<HTMLDivElement>(null);
+  // Refs — the *pane* refs, not end-sentinels. Auto-scroll drives these containers
+  // directly so a transcript update can only ever move the transcript viewport.
+  const transcriptPaneRef = useRef<HTMLDivElement>(null);
+  const maiaPaneRef = useRef<HTMLDivElement>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────
   // When recording/review, use context values; when idle, use local state
@@ -345,17 +346,27 @@ export default function SessionRoomPage() {
     fetchVideoRoomUrl();
   }, []);
 
-  // Auto-scroll transcript
+  // Auto-scroll transcript.
+  //
+  // Scroll the owned container directly — never scrollIntoView() on an end-sentinel.
+  // scrollIntoView walks every scrollable ancestor including the document, and
+  // `block: 'nearest'` only asks each ancestor to move as little as necessary; it does
+  // NOT guarantee the page stays put. That ambiguity let each new segment push the
+  // recording top bar — and the Stop button with it — above the viewport, making the
+  // session impossible to end. Driving scrollTop makes ownership explicit: a transcript
+  // update may move the transcript viewport, never the page.
   useEffect(() => {
-    if (transcriptEndRef.current && phase === 'recording') {
-      transcriptEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    const pane = transcriptPaneRef.current;
+    if (pane && phase === 'recording') {
+      pane.scrollTo({ top: pane.scrollHeight, behavior: 'smooth' });
     }
   }, [ctx.segments, phase]);
 
-  // Auto-scroll MAIA exchanges
+  // Auto-scroll MAIA exchanges — same ownership rule as the transcript above.
   useEffect(() => {
-    if (maiaEndRef.current) {
-      maiaEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    const pane = maiaPaneRef.current;
+    if (pane) {
+      pane.scrollTo({ top: pane.scrollHeight, behavior: 'smooth' });
     }
   }, [ctx.maiaExchanges]);
 
@@ -1138,8 +1149,10 @@ ${insightsSection}
         {/* ── RECORDING PHASE ──────────────────────────────────────── */}
         {phase === 'recording' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {/* Top bar */}
-            <div className="flex items-center justify-between mb-4">
+            {/* Top bar — sticky so the session controls (Pause / Stop) stay reachable no
+                matter how far the page has scrolled. Ending a session must never depend on
+                where the transcript happens to have scrolled to. */}
+            <div className="sticky top-0 z-30 flex items-center justify-between mb-4 -mx-4 lg:-mx-6 px-4 lg:px-6 py-3 bg-[#1a1a2e]/95 backdrop-blur-sm border-b border-slate-800/50">
               <h1 className="text-lg font-medium text-white flex items-center gap-2">
                 <Radio className="w-4 h-4 text-red-400 animate-pulse" />
                 Recording
@@ -1238,7 +1251,10 @@ ${insightsSection}
                     )}
                   </div>
 
-                  <div className="h-[calc(100vh-220px)] overflow-y-auto space-y-2 pr-2">
+                  <div
+                    ref={transcriptPaneRef}
+                    className="h-[calc(100vh-220px)] overflow-y-auto space-y-2 pr-2"
+                  >
                     {ctx.segments.length === 0 ? (
                       <div className="text-center py-20 text-slate-600 text-sm">
                         {ctx.isPaused ? 'Recording paused...' : 'Listening for speech...'}
@@ -1275,7 +1291,6 @@ ${insightsSection}
                         </motion.div>
                       ))
                     )}
-                    <div ref={transcriptEndRef} />
                   </div>
                 </div>
               </div>
@@ -1416,7 +1431,10 @@ ${insightsSection}
                       </div>
 
                       {/* Exchanges */}
-                      <div className="flex-1 overflow-y-auto space-y-2.5 mb-3">
+                      <div
+                        ref={maiaPaneRef}
+                        className="flex-1 overflow-y-auto space-y-2.5 mb-3"
+                      >
                         {ctx.maiaExchanges.length === 0 && !maiaLoading ? (
                           <p className="text-xs text-slate-600 text-center py-8">
                             Ask MAIA a question about this session
@@ -1450,7 +1468,6 @@ ${insightsSection}
                             </div>
                           </div>
                         )}
-                        <div ref={maiaEndRef} />
                       </div>
 
                       {/* Input */}
