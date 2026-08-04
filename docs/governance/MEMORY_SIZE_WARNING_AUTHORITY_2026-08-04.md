@@ -7,14 +7,18 @@ STATUS
   authority hierarchy          RULED (founder, 2026-08-04)
   principle applied to tooling RULED (founder, 2026-08-04)
   emitter location             MEASURED — harness-native, not locally configurable
-  disposition of the warning    OPEN — NOT RULED
+  disposition of the warning   RULED (founder, 2026-08-04) — BOTH, in order (§6)
+    1. local subordination       IN FORCE (present operating posture)
+    2. upstream product feedback DRAFTED — ⛔ NOT SENT, awaiting wording approval
 ```
 
 ⭐⭐⭐ **The classification is the finding.** Two independent sources of instruction now address the
 same object (the root memory index) and disagree about what must be done to it. That is a conflict of
 **authority**, not a wrong number and not a broken script. Fixing the number would not fix the defect.
 
-⛔ This record does **not** rule the disposition. §6 states the options and stops.
+⭐ **Disposition ruled 2026-08-04: both, in a specific order** — see §6. §§1–5 were written before the
+ruling and are preserved as the basis it was ruled on; they are not rewritten to read as if the
+answer were always known.
 
 ---
 
@@ -100,6 +104,10 @@ Measured at authorship of this record via the canonical instrument
 | **root at authorship of this record** | **23,044** | **7.8%** |
 | warning's demanded target (17.1 KB ≈ 17,510 chars) | ~17,510 | — |
 
+⭐⭐⭐ **Founder correction, 2026-08-04 — canonical current state:**
+**23,044 / 24,986 characters — 1,942 characters headroom, 7.8%.**
+This **supersedes the recalled figures for current-state reporting.** ⛔⛔ It creates no authorization.
+
 ⚠️⚠️ **The brief that opened this lane cited 20,662 chars / ~17% headroom. That figure did not
 reproduce.** The measured value at authorship is 23,044 chars / 7.8%. The root has grown since the
 accepted state. This divergence is recorded rather than silently corrected, because it is itself an
@@ -141,13 +149,53 @@ Consequences that follow directly:
 
 ---
 
-## 6. ⛔ OPEN — disposition NOT RULED
+## 6. Disposition — RULED (founder, 2026-08-04): **BOTH, in this order**
 
-**The question:** given the emitter cannot be changed locally, what is the correct handling of a
-recurring advisory that instructs an unauthorized act?
+> **1. Treat the warning as advisory noise locally.** That is the present operating posture.
+> **2. File upstream product feedback.** That is where the actual design defect can be addressed.
 
-Both directions below are compatible with §2 — under either, the memory record stays authoritative and
-the warning is never obeyed. They differ in what is *done about the conflict itself*.
+⭐⭐⭐ **Neither substitutes for the other, and the reason is that they fail in opposite directions:**
+
+| | Acts when | Fails when |
+|---|---|---|
+| **Local subordination** | immediately — it is a control today | the next reader does not respect it |
+| **Upstream feedback** | never, or much later — it is **not** a control | it is treated as if it were one |
+
+⛔⛔ **Do not let the filing be mistaken for a fix.** A filed report changes nothing about what the
+harness emits tomorrow. Local subordination handles the present; upstream feedback addresses the
+source. Dropping either one leaves a real gap.
+
+### 6.1 Ordering — why local comes first
+
+The local rule is **already in force and already doing useful work**: the accepted state survived the
+warning because the constitutional line in the memory root held. Nothing about filing upstream
+suspends, weakens, or replaces it. Concretely, while this stands:
+
+- ⛔ The warning may keep firing. It does **not** authorize compaction, splitting, or any other
+  structural action.
+- ⛔⛔ Repetition adds no authority.
+- ⭐ Current-state reporting uses the canonical instrument, not recall (§4).
+
+### 6.2 Upstream feedback — scope of the report
+
+⭐⭐⭐ **The defect to report is not that it reports size.** It is that it moves directly from
+measurement to recommendation without checking the project's governing authority.
+
+The ask, in substance: **separate observation from recommendation — or let projects configure or
+suppress the recommendation while retaining the measurement.**
+
+⛔ **The report must not ask the harness to understand this project's governance system.** It states a
+general property (size telemetry may be advisory while compaction requires project authorization) and
+a general remedy. It does not export MAIA's canon, memory contents, or thresholds.
+
+**Draft for review:** [`UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md`](./UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md)
+
+⚠️⚠️ **DRAFTED, NOT SENT.** Filing is outward-facing; wording requires founder approval before it
+leaves the project. Drafting is authorized; sending is a separate act and has not been authorized.
+
+---
+
+### Options as they stood before the ruling (preserved — do not re-litigate)
 
 ### Option A — file it as product feedback to Claude Code
 
@@ -180,7 +228,7 @@ A and B can both be true: file upstream **and** rely on the constitutional line 
 harness changes. The real decision may be less *A or B* than **whether the conflict is treated as a
 defect worth reporting, or as an environmental constant to be absorbed.**
 
-⛔⛔ **Claude may not rule this.** The options are stated; the ruling is the founder's.
+⭐ **Ruled: both** — see §6. The founder took the non-exclusive reading and fixed the order.
 
 ---
 
@@ -188,9 +236,10 @@ defect worth reporting, or as an environmental constant to be absorbed.**
 
 | Settled | Not settled |
 |---|---|
-| memory record > automated measurement, explicitly | what to do about the warning (§6) |
-| tooling owes observation → permission-check → recommendation | whether other advisories carry the same defect |
-| the emitter is harness-native; no local fix exists | whether the hierarchy in §2 should be promoted to canon |
+| memory record > automated measurement, explicitly | the **wording** of the upstream report (drafted, awaiting approval) |
+| tooling owes observation → permission-check → recommendation | whether the report is ever **sent** — a separate, unauthorized act |
+| the emitter is harness-native; no local fix exists | whether other advisories carry the same defect |
+| disposition: both, local first, upstream second (§6) | whether the hierarchy in §2 should be promoted to canon |
 
 ⚠️ **Scope guard.** This record governs the *authority relationship* between the memory record and an
 automated size warning. It does **not** re-open the 2026-08-04 compaction, does **not** evaluate
