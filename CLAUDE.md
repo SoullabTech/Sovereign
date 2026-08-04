@@ -258,10 +258,23 @@ The onboarding journey happens exactly once per member — whether beta testers 
 
 ### Invariants
 
-1. **Universal flow** — All members (beta testers, gifted passkeys, future users) follow the same onboarding
-2. **Single entry point** — New users start at `/begin`
+1. **Universal orientation** — Every member receives the same foundational understanding of the
+   environment. *(Amended 2026-08-03, founder. The prior wording — "universal flow · single entry point ·
+   no shortcuts" — predates the practitioner relationship. The risk was never that invitation arrival
+   bypasses **onboarding**; it is that it bypasses **orientation**. Those are different.)*
+2. **Entry may originate from different legitimate contexts** — direct arrival, or practitioner
+   invitation. ⛔ **No entry path may bypass the orientation required for informed participation.**
+
+   ```
+   /begin
+      ├── direct signup
+      └── practitioner invitation
+   ```
+
+   Both arrive at the same understanding. **The invitation does not replace onboarding — it gives the
+   member a meaningful reason to enter.**
 3. **One-time flow** — Once `onboarded: true`, users skip directly to `/maia`
-4. **No shortcuts** — Each step must be completed in sequence
+4. **Sequence within orientation is preserved** — steps inside the orientation are still completed in order
 5. **Returning users** — `/signin` for existing members to sign in each session
 6. **New user link** — `/signin` includes amber "New to Soullab? Begin Journey" link → `/begin`
 

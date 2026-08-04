@@ -35,6 +35,10 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatShell, NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
+// Phase 2 bridge — additive only. Renders nothing when no practitioner has
+// offered anything, so the Home's arrival state is unchanged for every member
+// who has no invitation. Add the bridge; do not rebuild the house.
+import MemberInvitations from '@/components/now-what/MemberInvitations';
 
 const ACCENT = '#ffe27a';
 
@@ -376,7 +380,23 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               )}
             </Section>
 
-            {/* ③ Decisions — the highest-stakes executive surface */}
+            {/*
+              INVITATIONS — what a practitioner has offered, and the member's
+              gesture toward it. Sits BELOW the member's own material on
+              purpose: the member's work is the anchor of this surface, and an
+              offer is a guest in it. Self-hides when nothing is offered.
+            */}
+            {fieldContext && <MemberInvitations fieldSlug={fieldContext} />}
+
+            {/* ③ Decisions — the highest-stakes executive surface.
+
+                Rebase resolution 2026-08-04: this branch also carried a
+                `Continue` block. It is DROPPED, not merged — trunk built the
+                centre first (944c99749) and trunk's version is the current
+                disposition. Keeping both would have restored the exact defect
+                the branch comment describes: two doors on one surface. The
+                invitation mount above is the only part of this hunk that
+                trunk does not already have. */}
             <Section
               eyebrow="Leadership moments"
               title="What you are becoming clear about"
