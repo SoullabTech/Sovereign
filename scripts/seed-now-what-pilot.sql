@@ -27,6 +27,29 @@
 
 BEGIN;
 
+-- ── Demo credential, owned here instead of by hand ───────────────────────────
+-- 2026-08-03: walking the UI needed a signed-in member, and members.password_hash
+-- was edited directly to get one -- without capturing the original first, which
+-- is therefore gone. Putting it here makes the credential auditable, repeatable,
+-- and reviewable in a diff instead of living in someone's shell history.
+--
+-- Legacy SHA256 path (lib/auth/passwordUtils.hashPasswordLegacy):
+--     sha256(password + PASSWORD_SALT)
+-- password 'walk-2026-08-03' + default salt 'maia-sovereign-salt'.
+--
+-- ⚠️ Dev fixture only. If PASSWORD_SALT is set in your environment this hash
+--    will not match — regenerate rather than editing the row by hand.
+-- The literal is the precomputed sha256, so this runs without pgcrypto.
+--
+-- ⚠️ This value is a STARTING state, not a stable one. verifyPassword() detects
+--    the legacy format and the signin route upgrades the row to bcrypt on the
+--    first successful login — observed 2026-08-03, the row read back as
+--    $2b$12$… afterwards. Re-running this script resets it to legacy, which
+--    then upgrades again. That is the intended behaviour, not drift.
+UPDATE members
+   SET password_hash = '94ce33d086460ee15db29d4f3a492a41232c675eeaf68521ea416e8aa7530f12'
+ WHERE username = 'demo.practitioner';
+
 -- Remove any prior seed so re-runs do not accumulate offers.
 DELETE FROM field_invitations WHERE body LIKE '[SEED]%';
 
