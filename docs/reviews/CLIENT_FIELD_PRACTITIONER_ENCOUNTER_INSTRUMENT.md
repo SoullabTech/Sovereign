@@ -18,14 +18,30 @@ The seat determines the evidence. Neither list is a ranking.
 
 | ✅ A practitioner CAN validate | ⛔ A practitioner CANNOT validate |
 |---|---|
-| Does this fit my coaching philosophy? | Would a member understand this **without explanation**? |
-| Does this support my sessions? | Does the member experience this as **their own work**? |
-| Does this preserve my role? | Does the system accidentally sound like it **owns their development**? |
-| Does this create useful continuity? | |
+| Does this support the work he is trying to accomplish? | Would a member understand this **without explanation**? |
+| Does this feel aligned with his coaching philosophy? | Does the member experience **ownership** — this as *their own work*? |
+| Does this preserve his relationship with clients? | ⭐ Does the member feel **free to decline**? |
+| Does this reflect the kind of transformation he wants to facilitate? | Does the member experience this as **their own meaning-making space**? |
+| Does this create useful continuity? | Does the system accidentally sound like it **owns their development**? |
 
 The right-hand column requires the member seat and is measured by the sibling instrument.
 ⛔⛔ **No answer Larry gives may be recorded against a right-hand-column question**, however
 confidently he offers one — he is the author of the framing those questions test for.
+
+### ⭐ Why "free to decline" is the most dangerous one to accept from this seat
+
+A practitioner answering *"of course they can decline"* is reporting **his intent**, which is
+real and is not the measurement. Freedom to decline is a property of **how the invitation
+lands on the person who received it** — and the asymmetry of the coaching relationship is
+exactly what makes the practitioner unable to observe it. ⛔⛔ A confident yes here is
+**not** weak evidence; it is **evidence of a different proposition** (that he intends no
+coercion) and must be filed as such.
+
+> **Q5 is the same sovereignty test applied from the other side.** Where Continuity and
+> Non-replacement ask whether the tool serves the practice, Q5 asks him to locate the
+> boundary at which the tool would **violate the relationship**. It is the only question in
+> this instrument that creates the possibility of **disconfirmation** — the other four are
+> compatible with almost any augmentation.
 
 ---
 
