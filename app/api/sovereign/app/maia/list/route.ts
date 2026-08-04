@@ -84,6 +84,7 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
@@ -1075,6 +1076,46 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.log(
         `✅ Sovereign response: ${duration}ms | session=${session.id}`
       );
+    }
+
+    // 🛡️ Canon §V post-generation scrubber — output-side memory guard.
+    //
+    // The §V prohibition also ships in the system prompt (MEMORY_CANON_GUARD_PROMPT,
+    // injected via maiaService). That is an instruction the model can override, and on
+    // 2026-08-04 it did: MAIA told an authenticated member "I don't have memory of
+    // previous conversations each time we talk, I'm starting fresh" on this route while
+    // atoms/episodic/developmental were all loaded and injected.
+    //
+    // scrubMemoryAmnesia was already wired into app/api/oracle/conversation/route.ts —
+    // a route that receives ~zero live traffic — so production ran unprotected. Both
+    // routes now call the same canonical guard from the same module; the enforcement
+    // point lives where the traffic is.
+    //
+    // Applied immediately after generation and written back to orchestratorResult.text
+    // so persistence (relationship essence, conversation history) and the client payload
+    // all see the corrected text. This changes nothing about retrieval, the memory model,
+    // or the consent posture — it only constrains what MAIA may claim about herself.
+    //
+    // hasLoadedContext selects the §VI replacement shape. It reports whether any memory
+    // layer actually reached this turn — never whether one *could have*.
+    if (orchestratorResult?.text) {
+      const _memoryScrub = scrubMemoryAmnesia(orchestratorResult.text, {
+        hasLoadedContext:
+          atomsResult.length > 0 ||
+          !!conversationalRecallAddendum ||
+          !!episodicRecallAddendum ||
+          !!memberWebAddendum ||
+          !!memoryContext,
+      });
+      if (_memoryScrub) {
+        console.warn('[MAIA] §V scrub fired', {
+          rid: requestId,
+          userId: effectiveUserId ? `${String(effectiveUserId).slice(0, 8)}...` : null,
+          original_preview: orchestratorResult.text.slice(0, 200),
+          replacement_preview: _memoryScrub.slice(0, 200),
+        });
+        orchestratorResult.text = _memoryScrub;
+      }
     }
 
     // 🔮 Standardize provider info for sovereignty verification
