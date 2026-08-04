@@ -228,6 +228,28 @@ vocabulary is Soullab-authored is a **second observation**, not the close of the
 and file it against this ambiguity. A packet that logs the correction but not the response has
 thrown away the evidence the correction exists to produce.
 
+> **Without this step the instrument would systematically favour the interpretation most
+> flattering to the system.**
+
+### ⭐⭐⭐ How the correction is delivered — it is NOT a gotcha
+
+The delivery shapes the evidence. A correction that lands as exposure produces a defensive
+response, and a defensive response is **not** the observation this step exists to create.
+
+⛔ **Not:**
+
+> *"Actually, those aren't your words."*
+
+✅ **Say:**
+
+> **"These elements are currently Soullab-created placeholders. We want to understand what
+> happens when a practitioner encounters a structure that resembles their work before their
+> own language has entered it."**
+
+⭐ **The participant's response is the evidence.** The correction is an act of provenance
+restoration that *also* opens the question — it is not a verdict on his reading, and nothing
+in the delivery may imply he was caught out.
+
 ### Reading the other two headline responses
 
 | He says | Useful finding |

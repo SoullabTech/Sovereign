@@ -102,8 +102,16 @@ neither adds nor lacks anything relative to trunk. It is **not** a functional ch
 **not** a consent-boundary test.
 
 ⛔⛔ *"Consent boundaries tested"* is a **strictly stronger claim** than anything measured
-here. If a verification exists in another lane, it must be **cited by SHA and artifact**
-before this line reads ✅. Until then the value stands at 🟡 with the reason attached.
+here — it would imply evidence about **behaviour under acceptance and decline conditions.**
+If a verification exists in another lane, it must be **cited by SHA and artifact** before this
+line reads ✅. Until then the value stands at 🟡 with the reason attached.
+
+**The claim the evidence actually supports, stated exactly:**
+
+> **"Invitation-related surfaces exist in the tree and have not been shown absent."**
+
+⭐ Keeping the weaker status **preserves the evidence chain.** The two statements are not
+degrees of the same claim; they are different claims.
 
 ⚠️ This is the drift the whole sequence guards against, appearing in the **carry-forward state
 block** — the artifact a future session reads first. Recorded, not silently upgraded and not
