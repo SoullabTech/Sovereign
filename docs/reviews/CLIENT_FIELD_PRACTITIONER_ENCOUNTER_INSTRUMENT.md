@@ -28,6 +28,26 @@ The right-hand column requires the member seat and is measured by the sibling in
 ⛔⛔ **No answer Larry gives may be recorded against a right-hand-column question**, however
 confidently he offers one — he is the author of the framing those questions test for.
 
+Stated in his own voice, the three he cannot answer are:
+
+- *"Would my client feel free to say no?"*
+- *"Would my client experience this as their own choice?"*
+- *"Would my client feel pressure **because I** invited them?"*
+
+### ⭐⭐⭐ This is a structural boundary, not a character judgment
+
+> **A practitioner can sincerely believe they are offering a gift while the recipient
+> experiences an obligation.**
+
+⛔⛔ **Nothing here implies distrust of the practitioner.** The asymmetry is a structural
+possibility in **any** trusted relationship — the more trusted, the more available it is. A
+practitioner of unimpeachable integrity is *equally* unable to observe it, because the thing
+that would need observing is how his invitation lands on someone who values his regard.
+
+If the instrument is ever read as suspicion, it has been read wrong. It is the same
+sovereignty discipline the system applies to itself, applied to the relationship the system
+sits inside.
+
 ### ⭐ Why "free to decline" is the most dangerous one to accept from this seat
 
 A practitioner answering *"of course they can decline"* is reporting **his intent**, which is
@@ -42,6 +62,11 @@ coercion) and must be filed as such.
 > boundary at which the tool would **violate the relationship**. It is the only question in
 > this instrument that creates the possibility of **disconfirmation** — the other four are
 > compatible with almost any augmentation.
+
+⚠️ **Q5's answer space is not only feature overload.** *"Too much"* includes **relational
+power** — the point at which the field gives him more presence in a client's inner life than
+the relationship was consented into. If his answer stays entirely on volume, features or
+frequency, **record that the relational dimension went unnamed.** That absence is data.
 
 ---
 
