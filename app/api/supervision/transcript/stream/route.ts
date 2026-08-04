@@ -13,6 +13,7 @@ import {
   markContinuityBreak,
 } from '@/lib/supervision/promptContinuityState';
 import {
+  CHANNEL_PROVENANCE_CONFIDENCE,
   isCaptureChannel,
   laneKey,
   speakerLabelForChannel,
@@ -434,13 +435,26 @@ export async function POST(request: NextRequest) {
       const segment = await addTranscriptSegment({
         sessionId,
         speaker: finalSpeaker,
-        // Channel-derived attribution is a fact about the wire, so confidence
-        // is 1 — this audio provably arrived on that capture source. When no
-        // channel was supplied the segment is Unattributed, and there is no
+        // NOTE ON WHAT THIS 1 MEANS — the column is named speakerConfidence,
+        // but under channel-derived attribution it carries PROVENANCE
+        // confidence, not IDENTITY confidence:
+        //
+        //   1 = "this audio certainly arrived on that capture channel"
+        //   1 ≠ "we are certain which person spoke"
+        //
+        // For 'Participants' the system still cannot tell one remote speaker
+        // from another; the certainty is about the wire, never about a human.
+        // Reading this as identity confidence would reintroduce exactly the
+        // false precision this lane exists to remove. The honest schema is
+        // attributionSource='capture_channel' + attributionConfidence, which
+        // needs a migration this branch deliberately avoids (see the
+        // chunk-index striping note in lib/studio/audioChannels.ts).
+        //
+        // Absent a channel the segment is Unattributed — there is no
         // attribution to be confident about, so the column stays null. The
         // former hardcoded 0.8 reported confidence in a label nothing had
         // actually determined.
-        speakerConfidence: channel ? 1 : undefined,
+        speakerConfidence: channel ? CHANNEL_PROVENANCE_CONFIDENCE : undefined,
         startMs: finalStartMs,
         endMs: finalEndMs,
         text: finalText,

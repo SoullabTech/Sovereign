@@ -20,9 +20,11 @@ import {
 } from '@/lib/supervision/SupervisionStore';
 import {
   CAPTURE_CHANNELS,
+  CHANNEL_PROVENANCE_CONFIDENCE,
   laneKey,
   UNATTRIBUTED_LABEL,
 } from '@/lib/studio/audioChannels';
+import type { CaptureIntegrityRecord } from '@/lib/studio/captureIntegrity';
 import { analyzeSession } from '@/lib/supervision/ClinicalSupervisionEngine';
 import { runSessionSynthesis } from '@/lib/supervision/SessionSynthesizer';
 import { runAssembly } from '@/lib/supervision/transcriptAssembler';
@@ -34,6 +36,12 @@ interface StopSessionRequest {
   triggerAnalysis?: boolean; // Default true
   totalDurationMs?: number;
   speakerCount?: number;
+  /**
+   * Capture losses observed by the browser (a lane ending early, chunks that
+   * never uploaded). Persisted onto the session so the finished record cannot
+   * present itself as an uninterrupted two-source recording when it wasn't.
+   */
+  captureIntegrity?: CaptureIntegrityRecord;
 }
 
 export async function POST(request: NextRequest) {
@@ -89,7 +97,10 @@ export async function POST(request: NextRequest) {
           speaker: flushSpeaker ?? UNATTRIBUTED_LABEL,
           // Same rule as the streaming path: confidence 1 when the label came
           // from a capture channel, absent when nothing attributed it.
-          speakerConfidence: flushSpeaker && flushSpeaker !== UNATTRIBUTED_LABEL ? 1 : undefined,
+          speakerConfidence:
+            flushSpeaker && flushSpeaker !== UNATTRIBUTED_LABEL
+              ? CHANNEL_PROVENANCE_CONFIDENCE
+              : undefined,
           startMs: flushDecision.finalStartMs ?? 0,
           endMs: flushDecision.finalEndMs ?? 0,
           text: flushDecision.finalText,
@@ -130,6 +141,26 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Session not found'
       }, { status: 404 });
+    }
+
+    // Persist capture integrity onto the session. Merged into existing
+    // metadata rather than replacing it, and written even when the recording
+    // was clean — "we checked and it was intact" and "nobody ever recorded
+    // whether it was intact" must stay distinguishable on the row.
+    if (body.captureIntegrity) {
+      const { events, hadTwoSources, uninterrupted } = body.captureIntegrity;
+      await updateSession(body.sessionId, {
+        metadata: {
+          ...(session.metadata ?? {}),
+          captureIntegrity: body.captureIntegrity,
+        },
+      });
+      if (!uninterrupted && hadTwoSources) {
+        console.warn(
+          `[SUPERVISION] Session ${body.sessionId} recorded with capture loss:` +
+          ` ${events.length} event(s) — transcript is not an uninterrupted two-source record`,
+        );
+      }
     }
 
     // Update with additional metadata

@@ -24,6 +24,12 @@ import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { findFirstClusterOffset } from '@/lib/voice/webmInit';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 import { type CaptureChannel, stripedChunkIndex } from '@/lib/studio/audioChannels';
+import {
+  buildIntegrityRecord,
+  formatClockTime,
+  integrityWarnings,
+  type CaptureIntegrityEvent,
+} from '@/lib/studio/captureIntegrity';
 
 /** Independent chunk-sequencing state for one capture lane. */
 interface LaneState {
@@ -115,6 +121,12 @@ interface RecordingContextValue {
   hasTabAudio: boolean;
   tabAudioError: string | null;
 
+  // Capture integrity — losses that make the recording less than it claims.
+  // Deliberately has no clear/dismiss action: the session cannot become
+  // whole again, so the warning must not be dismissible.
+  integrityEvents: CaptureIntegrityEvent[];
+  integrityWarnings: string[];
+
   // Live data
   segments: TranscriptSegment[];
   insights: LiveInsight[];
@@ -171,6 +183,13 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [hasTabAudio, setHasTabAudio] = useState(false);
   const [tabAudioError, setTabAudioError] = useState<string | null>(null);
+  const [integrityEvents, setIntegrityEvents] = useState<CaptureIntegrityEvent[]>([]);
+  // Mirrored in a ref because the chunk handlers and track listeners are
+  // installed once and would otherwise close over a stale array.
+  const integrityEventsRef = useRef<CaptureIntegrityEvent[]>([]);
+  // Whether this session ever had two live lanes. A mic-only session is not
+  // "interrupted" — it never claimed a second source.
+  const hadTwoSourcesRef = useRef(false);
 
   // Unique handle so we can detect if the user accidentally selects the Session Room
   // tab itself (which would create a recursive feedback loop). Exposed via
@@ -217,6 +236,39 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const levelAnimationRef = useRef<number | null>(null);
 
   const isRecording = phase === 'recording';
+
+  /**
+   * Record a capture-integrity loss.
+   *
+   * Appends to both the ref (so listeners installed once see the current log)
+   * and state (so the banner re-renders). Lane losses are recorded once per
+   * lane — a track can fire `ended` and the recorder can fault for the same
+   * underlying loss, and reporting it twice would misrepresent one failure as
+   * two.
+   */
+  const recordIntegrityEvent = useCallback(
+    (event: Omit<CaptureIntegrityEvent, 'atMs' | 'atIso' | 'atClock'>) => {
+      const now = new Date();
+      const priorLane = integrityEventsRef.current.find(
+        (e) => e.kind === 'lane_lost' && e.channel === event.channel,
+      );
+      if (event.kind === 'lane_lost' && priorLane) return;
+
+      const full: CaptureIntegrityEvent = {
+        ...event,
+        atMs: startTimeRef.current ? Date.now() - startTimeRef.current : 0,
+        atIso: now.toISOString(),
+        atClock: formatClockTime(now),
+      };
+      integrityEventsRef.current = [...integrityEventsRef.current, full];
+      setIntegrityEvents(integrityEventsRef.current);
+      console.warn(
+        `[RecordingContext] capture integrity: ${full.kind} on ${full.channel} at ${full.atClock}` +
+        (full.reason ? ` (${full.reason})` : ''),
+      );
+    },
+    [],
+  );
 
   // Keep refs in sync
   useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
@@ -332,6 +384,14 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     });
     micStreamRef.current = micStream;
 
+    // The microphone can end mid-session too — device unplugged, OS revoking
+    // access, another app seizing it. Previously only the tab lane was watched,
+    // so a dead mic produced a transcript of the far end alone with nothing
+    // saying so.
+    micStream.getAudioTracks()[0]?.addEventListener('ended', () => {
+      recordIntegrityEvent({ channel: 'practitioner', kind: 'lane_lost', reason: 'track ended' });
+    });
+
     // 2. Optionally get tab audio
     let tabStream: MediaStream | null = null;
     if (captureTabAudio) {
@@ -392,11 +452,20 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
             tabStreamRef.current = candidate;
             setHasTabAudio(true);
 
-            // Handle tab stream ending (user stops sharing mid-session)
+            // Handle tab stream ending (user stops sharing mid-session).
+            // setHasTabAudio(false) drops the "connected" claim; the integrity
+            // event is what makes the loss timestamped, undismissable, and
+            // carried into the finished record. tabAudioError alone was a
+            // dismissible banner — one click and the session looked whole again.
             candidate.getAudioTracks()[0]?.addEventListener('ended', () => {
               console.log('[RecordingContext] Tab audio track ended');
               setHasTabAudio(false);
               setTabAudioError('Meeting audio stopped. Mic capture continues.');
+              recordIntegrityEvent({
+                channel: 'participants',
+                kind: 'lane_lost',
+                reason: 'track ended',
+              });
             });
           }
         } catch (err) {
@@ -432,13 +501,26 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       ? 'audio/webm'
       : 'audio/mp4';
 
-    const buildRecorder = (source: MediaStreamAudioSourceNode): MediaRecorder => {
+    const buildRecorder = (
+      source: MediaStreamAudioSourceNode,
+      channel: CaptureChannel,
+    ): MediaRecorder => {
       const destination = ctx.createMediaStreamDestination();
       source.connect(destination);
-      return new MediaRecorder(destination.stream, {
+      const recorder = new MediaRecorder(destination.stream, {
         mimeType,
         audioBitsPerSecond: 128000,
       });
+      // A recorder can fault while its track stays live — the lane goes silent
+      // with no `ended` event to catch it. Treated as loss of that lane.
+      recorder.onerror = (event) => {
+        recordIntegrityEvent({
+          channel,
+          kind: 'lane_lost',
+          reason: (event as unknown as { error?: Error })?.error?.name ?? 'recorder error',
+        });
+      };
+      return recorder;
     };
 
     // Mic lane — the practitioner.
@@ -448,7 +530,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     micAnalyserRef.current = micAnalyser;
     const micSource = ctx.createMediaStreamSource(micStream);
     micSource.connect(micAnalyser);
-    const micRecorder = buildRecorder(micSource);
+    const micRecorder = buildRecorder(micSource, 'practitioner');
     micRecorderRef.current = micRecorder;
 
     // Tab lane — whoever is on the far end of the meeting.
@@ -460,15 +542,19 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       tabAnalyserRef.current = tabAnalyser;
       const tabSource = ctx.createMediaStreamSource(tabStream);
       tabSource.connect(tabAnalyser);
-      tabRecorder = buildRecorder(tabSource);
+      tabRecorder = buildRecorder(tabSource, 'participants');
       tabRecorderRef.current = tabRecorder;
     }
+
+    // Two live lanes at start. Only such a session can later be "interrupted";
+    // a mic-only session never claimed a second source to lose.
+    hadTwoSourcesRef.current = tabRecorder !== null;
 
     // Whether this session can attribute at all. With no tab lane the mic
     // carries every voice in the room and honest attribution is impossible —
     // the server is told so explicitly rather than being allowed to default.
     return { micRecorder, tabRecorder, canAttribute: tabRecorder !== null };
-  }, []);
+  }, [recordIntegrityEvent]);
 
   // ── Session lifecycle ───────────────────────────────────────────────────
 
@@ -525,6 +611,12 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       }
 
       const audioSessionId = data.session.id;
+
+      // Clear integrity history before capture starts — losses belong to the
+      // session that suffered them, never carried forward into the next one.
+      integrityEventsRef.current = [];
+      setIntegrityEvents([]);
+      hadTwoSourcesRef.current = false;
 
       // 4. Setup audio capture
       const { micRecorder, tabRecorder, canAttribute } = await setupAudioCapture(
@@ -602,6 +694,15 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
           });
         } catch (err) {
           console.error(`[RecordingContext] ${channel} chunk #${idx} upload failed:`, err);
+          // There is no retry. This audio is gone, so the transcript now has a
+          // hole in it. Logging alone left the practitioner with a record that
+          // read as continuous — the loss has to reach them and the session.
+          recordIntegrityEvent({
+            channel,
+            kind: 'upload_failed',
+            chunkIndex: idx,
+            reason: err instanceof Error ? err.message : String(err),
+          });
         }
       };
 
@@ -689,6 +790,13 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
           sessionId: sid,
           triggerAnalysis: true,
           totalDurationMs: duration * 1000,
+          // Travels with the stop so the finished session carries what was
+          // lost. Without this the warning dies with the browser tab and the
+          // transcript reads, forever after, as an uninterrupted recording.
+          captureIntegrity: buildIntegrityRecord(
+            integrityEventsRef.current,
+            hadTwoSourcesRef.current,
+          ),
         }),
       });
     } catch (err) {
@@ -795,6 +903,11 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     setMarkers([]);
     setMaiaExchanges([]);
     setTabAudioError(null);
+    // Cleared only here, on an explicit reset to a new session. Never during
+    // or after a recording — the warning must outlive the loss it describes.
+    integrityEventsRef.current = [];
+    setIntegrityEvents([]);
+    hadTwoSourcesRef.current = false;
     setPhase('idle');
   }, []);
 
@@ -886,6 +999,8 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     connectionStatus,
     hasTabAudio,
     tabAudioError,
+    integrityEvents,
+    integrityWarnings: integrityWarnings(integrityEvents),
     segments,
     insights,
     markers,

@@ -54,6 +54,28 @@ export const CHANNEL_LABELS: Record<CaptureChannel, string> = {
  */
 export const UNATTRIBUTED_LABEL = 'Unattributed';
 
+/**
+ * What `supervision_transcript_segments.speaker_confidence` means once
+ * attribution comes from a capture channel.
+ *
+ * The column name predates this model and is now misleading: the value is
+ * confidence in PROVENANCE, not in IDENTITY.
+ *
+ *   1 = this audio certainly arrived on that capture channel
+ *   1 ≠ we are certain which person spoke
+ *
+ * 'Participants' can be one remote person or six, and the channel cannot tell
+ * them apart — so a 1 on a Participants segment asserts nothing about who.
+ * Anything reading this column as identity confidence would rebuild the false
+ * precision this module exists to remove.
+ *
+ * The honest shape is a separate `attribution_source = 'capture_channel'` plus
+ * `attribution_confidence`. That needs a migration, which this change avoids on
+ * purpose (see the chunk-index striping note below for the same reasoning), so
+ * the constraint is documented here instead of enforced by the schema.
+ */
+export const CHANNEL_PROVENANCE_CONFIDENCE = 1;
+
 export function isCaptureChannel(value: unknown): value is CaptureChannel {
   return typeof value === 'string' && (CAPTURE_CHANNELS as readonly string[]).includes(value);
 }

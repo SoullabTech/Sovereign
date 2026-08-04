@@ -1246,6 +1246,34 @@ ${insightsSection}
                 capture, consent, Sanctuary, or transcription. */}
             <AudioSourcesStatus hasTabAudio={ctx.hasTabAudio} />
 
+            {/* Capture-integrity warnings. Deliberately NOT dismissible: the
+                session cannot become whole again, and a warning the
+                practitioner can click away would let a half-recorded session
+                look complete for the rest of its run. Sits directly under the
+                source checklist so the claim and its contradiction are read
+                together. */}
+            {ctx.integrityWarnings.length > 0 && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <p className="text-xs font-medium uppercase tracking-wider text-amber-300/80">
+                      Recording incomplete
+                    </p>
+                    {ctx.integrityWarnings.map((warning) => (
+                      <p key={warning} className="text-xs text-amber-100/90 leading-relaxed">
+                        {warning}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Two-column: Transcript + Interactive Rail */}
             <div className="grid lg:grid-cols-2 gap-4">
               {/* Transcript column */}
