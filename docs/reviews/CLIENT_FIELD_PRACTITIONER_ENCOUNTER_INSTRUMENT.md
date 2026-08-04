@@ -161,6 +161,28 @@ has no object.
 pass. It is a **B** criterion. Continuity, Non-replacement and Sufficiency remain scorable in
 both; the Continuity/Non-replacement pass condition (§3) is unchanged.
 
+> ### ⭐⭐⭐ Not evaluable is not failure. Not evaluable is not pass. It is an **integrity state.**
+
+```
+Path A — Synthetic Practitioner Encounter
+
+Continuity          ✅ evaluable
+Non-replacement     ✅ evaluable
+Sufficiency         ✅ evaluable
+Attribution         ⛔ NOT EVALUABLE
+                       reason: no Larry-authored material is present
+```
+
+⛔ A packet that reports three criteria and omits the fourth has misreported. The reason is
+carried with the state.
+
+### The precise purpose of Encounter A
+
+⛔ *"Does Now What? work for Larry?"*
+
+✅ **"Does the environment preserve a practitioner relationship without requiring Larry's
+actual language to be embedded?"**
+
 ### ⚠️ Label provenance — a risk the synthetic walk creates
 
 Phase 1's shell carries **executive-coaching vocabulary that Soullab authored**, not Larry
@@ -174,6 +196,44 @@ Phase 1's shell carries **executive-coaching vocabulary that Soullab authored**,
   used when it was not is a representation crossed without permission — a real
   misrepresentation, not a measurement technique. **Measurement does not license it.**
 - Log the correction and its timing on the packet.
+
+```
+During encounter:   observe interpretation
+After encounter:    restore provenance
+```
+
+The correction is **not a debrief that fixes the answer.** It is a **boundary repair.**
+
+| ✅ Permitted | ⛔ Not permitted |
+|---|---|
+| observing what meaning he makes | letting a false attribution persist |
+
+> **Interpretation may increase visibility. It may not increase ownership.** — the same
+> invariant, now applied to the encounter itself rather than to the product.
+
+### 🔴 The correction is also the disambiguator — record his response to it
+
+*"This is exactly how I work"* has **two incompatible readings**, and the raw statement cannot
+distinguish them:
+
+| Reading | Meaning |
+|---|---|
+| **A** | the architecture **naturally fits** the practice |
+| **B** | the environment has absorbed **generic coaching language that resembles** his work |
+
+**The attribution correction is what reveals which.** His response *after* being told the
+vocabulary is Soullab-authored is a **second observation**, not the close of the encounter:
+
+⛔⛔ **Do not treat the correction as the end of recording.** Capture his reaction verbatim
+and file it against this ambiguity. A packet that logs the correction but not the response has
+thrown away the evidence the correction exists to produce.
+
+### Reading the other two headline responses
+
+| He says | Useful finding |
+|---|---|
+| *"This isn't how I work."* | the container is **too generic** — or the expression layer needs his authorship. ⛔ Do not resolve which in the room |
+| *"I can see how this supports my clients."* | ⭐ **the strongest early signal** — not because it proves fit, but because it tests the **non-replacement boundary** |
 
 ---
 

@@ -86,9 +86,31 @@ where trust could accidentally become leverage.**
 
 ---
 
+## 2A. Path status
+
+```
+Path A   Synthetic Larry encounter    ready after D9
+Path B   Real Larry expression        waiting on agreement
+Path C   Client encounter             waiting on agreement + initiation + consent
+```
+
+---
+
 ## 3. Encounter packet — required contents
 
-Recorded as a **specification**, not instantiated. It contains **only**:
+Recorded as a **specification**, not instantiated. Seven items:
+
+```
+1. exact build SHA
+2. environment
+3. synthetic field state
+4. questions
+5. recording protocol
+6. attribution correction protocol
+7. interpretation boundaries
+```
+
+Detail:
 
 ### 3.1 Referent
 
@@ -185,6 +207,27 @@ from Soullab documents; re-deriving from our own synthesis compounds the error.
 
 The memory-index compaction is a **governance/maintenance task**. ⛔ It is not a dependency
 for the encounter and must not be entangled with this milestone.
+
+---
+
+## 5A. ⭐⭐⭐ What this sequence achieved methodologically
+
+> **This is the first moment where the system can genuinely learn something without asking
+> the person to validate the design.**
+
+Every instrument choice recorded across these artifacts serves that one property:
+
+| Choice | What it removes |
+|---|---|
+| the seat split (member ⊥ practitioner) | answers given from a seat that cannot perceive the question |
+| Q5, *"where would this become too much?"* | a question set compatible with any augmentation |
+| Continuity **and** Non-replacement jointly | enthusiasm reading as a pass |
+| Attribution **NOT EVALUABLE** in A | a favourable result produced by a question the encounter cannot answer |
+| the attribution correction | an ambiguity the raw statement cannot resolve |
+| *finding, never a change* | the walk quietly becoming a design session |
+
+⛔ That property is what a demo destroys, and it is why the framing (§7A of the practitioner
+instrument) is load-bearing rather than cosmetic.
 
 ---
 
