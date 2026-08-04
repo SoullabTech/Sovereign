@@ -6,10 +6,11 @@
 
 ```
 STATUS
-  draft            APPROVED IN DIRECTION (founder, 2026-08-04)
-  refinements      APPLIED — generic example · preference-ordered asks
-  sent             NO
-  channel          NOT SELECTED
+  body             FINAL — wording approved (founder, 2026-08-04)
+  refinements      APPLIED — generic example · preference-ordered asks · no quoted string
+  channel          RULED — in-product feedback > GitHub issue > other official channel
+  attribution      RULED — Kelly's own name, NOT the project's identity
+  sent             NO — the send is Kelly's act; Claude has no tool for it
 ```
 
 ⚠️ **This file is the artifact under review, not a record of a filing.** If it is ever sent, that is a
@@ -27,8 +28,8 @@ current or historical · ⛔ no review notes.
 > **Subject: memory-size warning issues a compaction imperative without checking whether compaction is authorized**
 >
 > The built-in memory-size warning is valuable because it surfaces an observable measurement. However,
-> it also issues an imperative recommendation — *"compact it to under N now"* — without any mechanism
-> to determine whether compaction is actually authorized under the project's governance.
+> it also issues an imperative recommendation to compact, without any mechanism to determine whether
+> compaction is actually authorized under the project's governance.
 >
 > The problem is not that it reports size. The measurement is useful and we want to keep it. The
 > problem is that it moves directly from measurement to recommendation, with no check on whether the
@@ -75,14 +76,21 @@ from reading as a current-state claim. With the generic example that tension dis
 longer asserts anything about our sizes at all, so nothing needs disambiguating. **Fewer facts, fewer
 ways to be misread.**
 
-**⚠️ One judgment call for the founder to confirm or strike**
+**⭐ Resolved: no literal warning text, no thresholds** (founder, 2026-08-04)
 
-The subject line and body quote the warning's own imperative as *"compact it to under N now"* — the
-literal threshold values are **replaced with `N`**. This keeps the report identifiable to whoever
-triages it (it names the actual product string) while disclosing nothing. ⛔ If you would rather the
-product's own constants appear so the emitter is unambiguous, that is a change to make deliberately —
-they are the harness's fixed values, not ours, but the instruction was *completely generic* and I held
-to it.
+The quoted product string was removed entirely — the body now says *issues an imperative
+recommendation to compact*, and nothing is quoted.
+
+> The purpose of the report is to describe a **product behavior**, not to help the recipient identify
+> the exact warning string. A team that owns the feature will know which warning is meant from the
+> description.
+
+⭐⭐⭐ **Quoting would not have strengthened the report, but it would have made it brittle** — a
+report pinned to a literal string decays the moment the string is reworded, and the design issue it
+describes would still be live. **Describe the behavior, not the artifact.**
+
+⛔ Do not reintroduce the quote, the thresholds, or a "for reference, the exact text is…" appendix in
+any later revision.
 
 **Privacy / egress check** — ⭐⭐⭐ this is outward-facing; it leaves the project permanently:
 
@@ -97,9 +105,32 @@ to it.
 ⭐ The residual disclosure is now **structural only**: that a project can have a memory policy of its
 own. That is the premise of the report and cannot be removed without removing the report.
 
-**Open before sending**
+**Channel — founder preference, in order (2026-08-04)**
 
-1. **Channel not selected** — in-product feedback command, GitHub issue, or another route.
-   ⛔ Choosing the channel is part of the sending decision, not part of drafting.
-2. **Attribution** — founder's name or the project's.
-3. **The `N` judgment call above**, if you want it decided rather than left as drafted.
+1. **In-product feedback**, if the harness provides it — this is product behavior, not a bug in this
+   repository, and the in-product channel routes it to the team that owns the feature.
+2. **GitHub issue**, if the project publicly tracks product issues there.
+3. **Any other official support channel**, if neither of the above fits.
+
+**Attribution — founder ruling:** send under **Kelly's own name**, ⛔ not under the project's identity.
+
+> The report is framed as a product observation from a user of the tooling. It doesn't require the
+> recipient to know anything about Soullab or the governance model, and a personal name keeps it
+> straightforward.
+
+⭐ Attribution and scope agree: a fully generic body sent under a project identity would invite the
+question *"what project, and why does its policy matter?"* — the exact framing the refinements removed.
+
+**⛔⛔ Who performs the send**
+
+The draft is send-ready, but **Claude did not and cannot send it.** There is no tool here that files
+product feedback; the in-product channel is an interactive command, and the report goes out under
+Kelly's name from Kelly's account. **The sending act belongs to Kelly.**
+
+⭐ This is not a technicality. Sending is outward-facing and irreversible — a filed report is public or
+semi-public and cannot be recalled. Drafting was authorized; the send is a separate act performed by
+the person whose name is on it.
+
+**If it is sent, record it.** Add the date, channel, and any tracking identifier to this file, and flip
+`sent` in the STATUS block. ⚠️ Until then this file remains a draft — ⛔ its existence is not evidence
+that anything was filed.

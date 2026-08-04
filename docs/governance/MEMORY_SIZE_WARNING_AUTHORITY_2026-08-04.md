@@ -9,8 +9,8 @@ STATUS
   emitter location             MEASURED — harness-native, not locally configurable
   disposition of the warning   RULED (founder, 2026-08-04) — BOTH, in order (§6)
     1. local subordination       IN FORCE (present operating posture)
-    2. upstream product feedback WORDING APPROVED (2 refinements applied)
-                                 ⛔ NOT SENT — channel + attribution open
+    2. upstream product feedback BODY FINAL · channel + attribution RULED
+                                 ⛔ NOT SENT — the send is the founder's act
 ```
 
 ⭐⭐⭐ **The classification is the finding.** Two independent sources of instruction now address the
@@ -207,8 +207,27 @@ behavior to our repository. Incident-state figures belong in this record, not up
 **Draft:** [`UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md`](./UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md)
 — direction and wording **approved with two refinements, both applied.**
 
-⚠️⚠️ **NOT SENT.** Drafting was authorized; **sending is a separate act.** Channel and attribution
-remain open, and choosing the channel is part of the sending decision — ⛔ not part of drafting.
+⛔⛔ **No literal warning text and no thresholds in the body** (founder, 2026-08-04). The report
+describes a **product behavior**; a team that owns the feature will recognize the warning from the
+description. ⭐⭐⭐ Quoting the string would add little and **make the report brittle** — pinned to
+wording that may change, while the design issue outlives it. **Describe the behavior, not the
+artifact.**
+
+**Channel** (preference order): in-product feedback → GitHub issue, if product issues are tracked
+publicly → other official support channel.
+**Attribution:** the founder's own name — ⛔ not the project's identity. It is a product observation
+from a user of the tooling and requires no knowledge of Soullab or its governance.
+
+⚠️⚠️ **NOT SENT.** Drafting was authorized; **sending is a separate, outward-facing, irreversible act,
+and it belongs to the founder** — it goes out under their name, from their account, through an
+interactive channel Claude has no tool for. ⛔ The existence of the draft is not evidence of a filing;
+if it is sent, record date + channel + tracking id in the draft file and flip its `sent` status.
+
+### 6.3 The local rule is unaffected by any of this
+
+⭐⭐⭐ Nothing in the upstream track changes the present posture. **The warning remains useful
+telemetry, and this project's governing rule remains that it authorizes nothing.** Whether the report
+is sent tomorrow, sent never, or accepted and fixed upstream, §2 holds in the meantime and after.
 
 ---
 
