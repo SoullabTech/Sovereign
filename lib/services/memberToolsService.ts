@@ -33,6 +33,10 @@ export interface EnabledTool {
   category: ToolCategory;
   displayOrder: number;
   addedAt: Date;
+  /** When the member last opened this tool from My Lab (null = never) */
+  lastUsedAt: Date | null;
+  /** How many times the member has opened this tool from My Lab */
+  useCount: number;
 }
 
 export interface CategoryPref {
@@ -61,7 +65,7 @@ export async function getMemberEnabledTools(
   memberId: string
 ): Promise<EnabledTool[]> {
   const result = await query(
-    `SELECT tool_id, category, display_order, added_at
+    `SELECT tool_id, category, display_order, added_at, last_used_at, use_count
      FROM member_enabled_tools
      WHERE member_id = $1 AND enabled = true
      ORDER BY category, display_order`,
@@ -103,8 +107,31 @@ export async function getMemberEnabledTools(
       category: resolvedCategory,
       displayOrder: row.display_order,
       addedAt: new Date(row.added_at),
+      lastUsedAt: row.last_used_at ? new Date(row.last_used_at) : null,
+      useCount: row.use_count ?? 0,
     };
   });
+}
+
+/**
+ * Record that a member opened a tool from My Lab.
+ *
+ * Navigation memory only: this records that the door was opened and how
+ * often. It records nothing about what happened inside the tool.
+ *
+ * Fire-and-forget at the call site -- a failure here must never block the
+ * member from reaching the tool they asked for.
+ */
+export async function recordToolUse(
+  memberId: string,
+  toolId: string
+): Promise<void> {
+  await query(
+    `UPDATE member_enabled_tools
+     SET last_used_at = NOW(), use_count = use_count + 1
+     WHERE member_id = $1 AND tool_id = $2 AND enabled = true`,
+    [memberId, toolId]
+  );
 }
 
 /**
@@ -338,6 +365,9 @@ export async function seedDefaultTools(memberId: string): Promise<void> {
 export interface HydratedTool extends LabTool {
   displayOrder: number;
   addedAt: Date;
+  /** ISO string, or null if the member has never opened this tool */
+  lastUsedAt: string | null;
+  useCount: number;
 }
 
 export interface HydratedCategory {
@@ -378,6 +408,8 @@ export async function getHydratedToolsState(
       ...toolDef,
       displayOrder: enabled.displayOrder,
       addedAt: enabled.addedAt,
+      lastUsedAt: enabled.lastUsedAt ? enabled.lastUsedAt.toISOString() : null,
+      useCount: enabled.useCount,
     };
 
     const list = toolsByCategory.get(resolvedCategory) || [];

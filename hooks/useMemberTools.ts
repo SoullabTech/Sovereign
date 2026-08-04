@@ -9,7 +9,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
-import { type HydratedCategory } from '@/lib/services/memberToolsService';
+import {
+  type HydratedCategory,
+  type HydratedTool,
+} from '@/lib/services/memberToolsService';
 import { type ToolCategory } from '@/config/toolRegistry';
 
 interface UseMemberToolsReturn {
@@ -19,6 +22,12 @@ interface UseMemberToolsReturn {
   domainCategories: HydratedCategory[];
   /** Utility categories only (library, settings, etc.) */
   utilityCategories: HydratedCategory[];
+  /** Every enabled tool, flattened across categories */
+  allTools: HydratedTool[];
+  /** Tools the member has actually opened, most recent first */
+  recentTools: HydratedTool[];
+  /** Record that the member opened a tool (fire-and-forget) */
+  recordUse: (toolId: string) => void;
   /** Loading state */
   isLoading: boolean;
   /** Error message if any */
@@ -53,6 +62,27 @@ export function useMemberTools(): UseMemberToolsReturn {
   const utilityCategories = useMemo(
     () => categories.filter((c) => c.isUtility),
     [categories]
+  );
+
+  // Flat view of everything the member has enabled
+  const allTools = useMemo(
+    () => categories.flatMap((c) => c.tools),
+    [categories]
+  );
+
+  // Tools the member has actually opened, most recent first.
+  // Never-opened tools are excluded entirely -- an empty recent list is a
+  // true statement about this member, not a gap to pad with defaults.
+  const recentTools = useMemo(
+    () =>
+      allTools
+        .filter((t) => t.lastUsedAt)
+        .sort(
+          (a, b) =>
+            new Date(b.lastUsedAt!).getTime() -
+            new Date(a.lastUsedAt!).getTime()
+        ),
+    [allTools]
   );
 
   // Fetch tools from API
@@ -165,6 +195,33 @@ export function useMemberTools(): UseMemberToolsReturn {
     []
   );
 
+  // Record that the member opened a tool.
+  //
+  // Fire-and-forget, and optimistic: the local row is stamped immediately so
+  // "Recently used" reorders the moment the member returns, without waiting
+  // for a refetch. A failed ping must never delay or block navigation.
+  const recordUse = useCallback((toolId: string) => {
+    const nowIso = new Date().toISOString();
+    setCategories((prev) =>
+      prev.map((cat) => ({
+        ...cat,
+        tools: cat.tools.map((t) =>
+          t.id === toolId
+            ? { ...t, lastUsedAt: nowIso, useCount: (t.useCount ?? 0) + 1 }
+            : t
+        ),
+      }))
+    );
+
+    void apiFetch('/api/member-tools/use', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ toolId }),
+    }).catch((err) => {
+      console.error('[useMemberTools] recordUse error:', err);
+    });
+  }, []);
+
   // Check if tool is enabled
   const isToolEnabled = useCallback(
     (toolId: string) => enabledToolIds.has(toolId),
@@ -175,6 +232,9 @@ export function useMemberTools(): UseMemberToolsReturn {
     categories,
     domainCategories,
     utilityCategories,
+    allTools,
+    recentTools,
+    recordUse,
     isLoading,
     error,
     addTool,

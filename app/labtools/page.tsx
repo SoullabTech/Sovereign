@@ -1,268 +1,318 @@
 'use client';
 
 /**
- * My Lab - Personal Tool Dashboard
+ * My Lab — the member's shelf of instruments
  *
- * "Soullab outfits individuals and groups with tools
- * for conscious evolution and exploration—for discoveries
- * and advancements."
+ * Organising principle: the member's moment, not the builder's taxonomy.
  *
- * Tools are organized by consciousness domain (the map of
- * lived experience), with utility infrastructure at the bottom.
+ * The way in is three intent doors ("Settle or shift how I feel"), sourced
+ * from the SimpleMode layer already authored in config/toolRegistry.ts.
+ * Domain (somatic / cognitive / …) is demoted to a secondary way to look.
+ * Search reaches anything by name. Recency answers the return test.
+ *
+ * What this surface may do: present, filter, and remember what was opened.
+ * What it must not do: decide for the member. No tool is recommended, ranked
+ * by inferred need, or surfaced because the system thinks it knows better.
+ * Ordering is the member's own use and the registry's declared order.
  */
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Sparkles, Plus, Compass } from 'lucide-react';
+import { Plus, Compass, Sparkles, SearchX } from 'lucide-react';
 import { useMemberTools } from '@/hooks/useMemberTools';
-import { CategorySection } from '@/components/labtools/CategorySection';
+import { IntentDoors } from '@/components/labtools/IntentDoors';
+import { RecentStrip } from '@/components/labtools/RecentStrip';
+import { LabToolbar, type LabView } from '@/components/labtools/LabToolbar';
+import { ToolGroup } from '@/components/labtools/ToolGroup';
+import {
+  INTENT_ORDER,
+  INTENT_PROMPT,
+  SIMPLE_MODE_META,
+  intentCounts,
+  toolsForIntent,
+  type SimpleMode,
+} from '@/lib/labtools/intent';
 import { type ToolCategory } from '@/config/toolRegistry';
+
+/** Name + promise + tags, matched loosely. */
+function matchesQuery(
+  tool: { label: string; shortDescription: string; tags?: string[] },
+  q: string
+): boolean {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return true;
+  return (
+    tool.label.toLowerCase().includes(needle) ||
+    tool.shortDescription.toLowerCase().includes(needle) ||
+    (tool.tags ?? []).some((t) => t.toLowerCase().includes(needle))
+  );
+}
 
 export default function MyLabPage() {
   const router = useRouter();
-  const { categories, domainCategories, utilityCategories, isLoading, error, toggleCategory } = useMemberTools();
+  const {
+    domainCategories,
+    utilityCategories,
+    allTools,
+    recentTools,
+    recordUse,
+    isLoading,
+    error,
+    toggleCategory,
+  } = useMemberTools();
+
+  const [intent, setIntent] = useState<SimpleMode | null>(null);
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState<LabView>('intent');
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  const handleBack = () => {
-    router.push('/maia');
-  };
+  // Only consciousness-domain tools live on the main shelf. Infrastructure
+  // (library, settings, developer) is a drawer at the bottom, not an equal.
+  const shelfTools = useMemo(
+    () => domainCategories.flatMap((c) => c.tools),
+    [domainCategories]
+  );
 
-  const handleDiscover = () => {
-    router.push('/labtools/discover');
-  };
+  const counts = useMemo(() => intentCounts(shelfTools), [shelfTools]);
 
-  const handleToggleCategory = (category: string) => {
-    toggleCategory(category as ToolCategory);
-  };
+  const searching = query.trim().length > 0;
 
-  // Count total tools
-  const totalTools = categories.reduce((sum, cat) => sum + cat.tools.length, 0);
+  const visible = useMemo(() => {
+    let tools = shelfTools;
+    if (intent) tools = toolsForIntent(tools, intent);
+    if (searching) tools = tools.filter((t) => matchesQuery(t, query));
+    return tools;
+  }, [shelfTools, intent, searching, query]);
+
+  const handleOpen = (toolId: string) => recordUse(toolId);
+
+  const hasAnything = domainCategories.length + utilityCategories.length > 0;
+
+  // ---------------------------------------------------------------- states
+
+  if (isLoading && !mounted) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center py-24">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          >
+            <Compass className="w-7 h-7 text-[#D4B896]/40" strokeWidth={1.5} />
+          </motion.div>
+          <p className="text-white/35 mt-4 text-[13px]">Opening your lab…</p>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (error) {
+    return (
+      <Shell>
+        <div className="text-center py-24">
+          <p className="text-white/60 text-[14px]">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 rounded-xl bg-white/[0.05] border border-white/[0.08]
+                       text-[13px] text-white/70 hover:text-white hover:bg-white/[0.08]
+                       transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (!hasAnything) {
+    return (
+      <Shell>
+        <div className="text-center py-24">
+          <div className="inline-flex items-center justify-center w-14 h-14 mb-5
+                          rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+            <Sparkles className="w-6 h-6 text-white/25" strokeWidth={1.5} />
+          </div>
+          <h2 className="text-[17px] font-medium text-white/85 mb-2">
+            Your lab is empty
+          </h2>
+          <p className="text-white/45 text-[14px] mb-6 max-w-sm mx-auto leading-relaxed">
+            Choose the instruments you want within reach. You can add and
+            remove them at any time.
+          </p>
+          <button
+            onClick={() => router.push('/labtools/discover')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
+                       bg-[#D4B896]/[0.12] border border-[#D4B896]/30
+                       text-[#D4B896] hover:bg-[#D4B896]/20
+                       transition-colors text-[14px] font-medium"
+          >
+            <Plus className="w-4 h-4" strokeWidth={2} />
+            Find instruments
+          </button>
+        </div>
+      </Shell>
+    );
+  }
+
+  // ---------------------------------------------------------------- content
 
   return (
-    <div className="min-h-screen font-sans bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div /> {/* Spacer — back navigation handled by left rail */}
+    <Shell>
+      <div className="space-y-10">
+        <RecentStrip tools={recentTools} onOpen={handleOpen} />
 
-          {/* Discover button */}
-          <motion.button
-            onClick={handleDiscover}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl
-                     bg-[#D4B896]/10 border border-[#D4B896]/20
-                     text-[#D4B896] hover:bg-[#D4B896]/20
-                     transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="text-sm font-medium">Discover</span>
-          </motion.button>
+        <IntentDoors counts={counts} active={intent} onSelect={setIntent} />
+
+        <div className="space-y-6">
+          <LabToolbar
+            query={query}
+            onQueryChange={setQuery}
+            view={view}
+            onViewChange={setView}
+            total={shelfTools.length}
+            showViewSwitch={!intent && !searching}
+          />
+
+          {/* Active narrowing — always say what is being shown and how to undo it */}
+          {(intent || searching) && (
+            <div className="flex items-center gap-2 flex-wrap text-[13px]">
+              <span className="text-white/40">
+                {visible.length} {visible.length === 1 ? 'instrument' : 'instruments'}
+              </span>
+              {intent && (
+                <button
+                  onClick={() => setIntent(null)}
+                  className="px-2.5 py-1 rounded-full bg-[#D4B896]/[0.12] border border-[#D4B896]/25
+                             text-[#D4B896]/90 hover:bg-[#D4B896]/20 transition-colors"
+                >
+                  {INTENT_PROMPT[intent]} ✕
+                </button>
+              )}
+              {searching && (
+                <button
+                  onClick={() => setQuery('')}
+                  className="px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/[0.08]
+                             text-white/60 hover:text-white/90 transition-colors"
+                >
+                  “{query.trim()}” ✕
+                </button>
+              )}
+            </div>
+          )}
+
+          {visible.length === 0 ? (
+            <div className="text-center py-14">
+              <SearchX
+                className="w-6 h-6 text-white/20 mx-auto mb-3"
+                strokeWidth={1.5}
+              />
+              <p className="text-white/45 text-[14px]">
+                Nothing here matches that.
+              </p>
+              <p className="text-white/30 text-[13px] mt-1">
+                It may exist but not be in your lab yet —{' '}
+                <button
+                  onClick={() => router.push('/labtools/discover')}
+                  className="text-[#D4B896]/80 hover:text-[#D4B896] underline underline-offset-2"
+                >
+                  look through everything
+                </button>
+                .
+              </p>
+            </div>
+          ) : intent || searching ? (
+            /* Narrowed: one flat shelf. Grouping a short list adds noise. */
+            <ToolGroup
+              title={
+                intent ? SIMPLE_MODE_META[intent].description : 'Matches'
+              }
+              tools={visible}
+              onOpen={handleOpen}
+            />
+          ) : view === 'intent' ? (
+            <div className="space-y-8">
+              {INTENT_ORDER.map((i) => (
+                <ToolGroup
+                  key={i}
+                  title={INTENT_PROMPT[i]}
+                  subtitle={SIMPLE_MODE_META[i].description}
+                  tools={toolsForIntent(shelfTools, i)}
+                  onOpen={handleOpen}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {domainCategories.map((cat) => (
+                <ToolGroup
+                  key={cat.category}
+                  title={cat.label}
+                  subtitle={cat.description}
+                  tools={cat.tools}
+                  onOpen={handleOpen}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Main Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          {/* Lab icon */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center justify-center w-16 h-16 mb-4
-                     rounded-2xl bg-gradient-to-br from-[#D4B896]/20 to-[#D4B896]/5
-                     border border-[#D4B896]/20"
-          >
-            <span className="text-3xl">🧬</span>
-          </motion.div>
-
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-            My Lab
-          </h1>
-
-          <p className="text-white/50 max-w-md mx-auto">
-            Your instruments for conscious exploration.
-            {totalTools > 0 && (
-              <span className="text-[#D4B896]/70">
-                {' '}
-                {totalTools} tools ready.
-              </span>
-            )}
-          </p>
-        </motion.div>
-
-        {/* Loading state */}
-        <AnimatePresence mode="wait">
-          {isLoading && !mounted ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-20"
-            >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              >
-                <Compass className="w-8 h-8 text-[#D4B896]/50" />
-              </motion.div>
-              <p className="text-white/40 mt-4 text-sm">Preparing your workshop...</p>
-            </motion.div>
-          ) : error ? (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
-              <p className="text-red-400/70">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-4 px-4 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white"
-              >
-                Try again
-              </button>
-            </motion.div>
-          ) : categories.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-20"
-            >
-              <div className="inline-flex items-center justify-center w-20 h-20 mb-6
-                           rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <Sparkles className="w-8 h-8 text-white/30" />
-              </div>
-              <h2 className="text-xl font-medium text-white/80 mb-2">
-                Your workshop awaits
-              </h2>
-              <p className="text-white/50 mb-6 max-w-sm mx-auto">
-                Discover tools across 8 domains of conscious experience.
-              </p>
-              <motion.button
-                onClick={handleDiscover}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
-                         bg-[#D4B896]/10 border border-[#D4B896]/20
-                         text-[#D4B896] hover:bg-[#D4B896]/20
-                         transition-all font-medium"
-              >
-                <Plus className="w-5 h-5" />
-                Discover Tools
-              </motion.button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="categories"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {/* Consciousness Domain Tools */}
-              {domainCategories.length > 0 && (
-                <div className="space-y-8">
-                  {domainCategories.map((category, idx) => (
-                    <motion.div
-                      key={category.category}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                    >
-                      <CategorySection
-                        category={category}
-                        onToggleCollapsed={handleToggleCategory}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Utility / Infrastructure Tools */}
-              {utilityCategories.length > 0 && (
-                <div className="mt-12">
-                  {/* Divider */}
-                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-white/[0.04]">
-                    <span className="text-xs font-medium text-white/25 uppercase tracking-widest">
-                      Lab Infrastructure
-                    </span>
-                    <div className="flex-1 h-px bg-gradient-to-r from-white/[0.04] to-transparent" />
-                  </div>
-
-                  <div className="space-y-6">
-                    {utilityCategories.map((category, idx) => (
-                      <motion.div
-                        key={category.category}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (domainCategories.length + idx) * 0.05 }}
-                      >
-                        <CategorySection
-                          category={category}
-                          onToggleCollapsed={handleToggleCategory}
-                          compact
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Discover more footer */}
-        {categories.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-12 text-center"
-          >
-            <button
-              onClick={handleDiscover}
-              className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl
-                       bg-gradient-to-r from-white/[0.02] to-white/[0.04]
-                       border border-white/[0.06] hover:border-[#D4B896]/20
-                       text-white/60 hover:text-white/80
-                       transition-all group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#D4B896]/10 flex items-center justify-center
-                           group-hover:bg-[#D4B896]/20 transition-all">
-                <Sparkles className="w-5 h-5 text-[#D4B896]" />
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-medium text-white/80">
-                  Discover more tools
-                </div>
-                <div className="text-xs text-white/40">
-                  Explore all 8 domains of consciousness
-                </div>
-              </div>
-            </button>
-          </motion.div>
+        {/* Infrastructure — present, but never competing with the instruments */}
+        {utilityCategories.length > 0 && !intent && !searching && (
+          <div className="pt-8 border-t border-white/[0.05] space-y-5">
+            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/25">
+              Lab infrastructure
+            </p>
+            {utilityCategories.map((cat) => (
+              <ToolGroup
+                key={cat.category}
+                title={cat.label}
+                tools={cat.tools}
+                onOpen={handleOpen}
+                collapsible
+                collapsed={cat.collapsed}
+                onToggle={() => toggleCategory(cat.category as ToolCategory)}
+                compact
+              />
+            ))}
+          </div>
         )}
 
-        {/* Footer wisdom */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 text-center pb-8"
-        >
-          <p className="text-xs text-white/30 max-w-md mx-auto leading-relaxed">
-            Tools for conscious evolution and exploration.
-            For discoveries and advancements.
+        <div className="pt-4 pb-10 text-center">
+          <button
+            onClick={() => router.push('/labtools/discover')}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
+                       text-[13px] text-white/40 hover:text-white/70
+                       border border-white/[0.06] hover:border-white/[0.12]
+                       transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+            Add instruments to your lab
+          </button>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+/** Page chrome: background, width, and the header. */
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen font-sans bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
+      <div className="max-w-5xl mx-auto px-5 sm:px-6 pt-10 pb-6">
+        <header className="mb-10">
+          <h1 className="text-[26px] sm:text-[30px] font-semibold text-white tracking-tight">
+            My Lab
+          </h1>
+          <p className="mt-1.5 text-[14px] text-white/40 leading-relaxed max-w-lg">
+            Instruments for what you are working with. Nothing here decides
+            anything for you.
           </p>
-        </motion.div>
+        </header>
+
+        {children}
       </div>
     </div>
   );
