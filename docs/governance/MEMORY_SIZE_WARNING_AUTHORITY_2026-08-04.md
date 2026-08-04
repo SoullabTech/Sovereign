@@ -9,7 +9,8 @@ STATUS
   emitter location             MEASURED — harness-native, not locally configurable
   disposition of the warning   RULED (founder, 2026-08-04) — BOTH, in order (§6)
     1. local subordination       IN FORCE (present operating posture)
-    2. upstream product feedback DRAFTED — ⛔ NOT SENT, awaiting wording approval
+    2. upstream product feedback WORDING APPROVED (2 refinements applied)
+                                 ⛔ NOT SENT — channel + attribution open
 ```
 
 ⭐⭐⭐ **The classification is the finding.** Two independent sources of instruction now address the
@@ -181,17 +182,33 @@ suspends, weakens, or replaces it. Concretely, while this stands:
 ⭐⭐⭐ **The defect to report is not that it reports size.** It is that it moves directly from
 measurement to recommendation without checking the project's governing authority.
 
-The ask, in substance: **separate observation from recommendation — or let projects configure or
-suppress the recommendation while retaining the measurement.**
+The ask, in **explicit order of preference** (founder refinement, 2026-08-04):
+
+1. **Separate observation from recommendation.**
+2. If recommendations remain, **allow projects to suppress or customize them independently of the
+   measurement.**
+3. If neither is possible, **make the recommendation relative to the actual configured limit** rather
+   than a fixed threshold.
+
+⭐ The ordering is load-bearing: it makes clear the aim is to **preserve the telemetry while avoiding
+an overreaching recommendation** — not to switch the warning off.
 
 ⛔ **The report must not ask the harness to understand this project's governance system.** It states a
-general property (size telemetry may be advisory while compaction requires project authorization) and
-a general remedy. It does not export MAIA's canon, memory contents, or thresholds.
+general property and a general remedy. ⛔⛔ **It carries no project names, no repository names, no
+governance-document names, and no size figures — current or historical.** The illustration is generic:
+*a project may intentionally govern memory by a policy other than the warning's recommendation, in
+which case the measurement remains useful but the recommendation may be incorrect, because it has not
+consulted the project's governing authority.*
 
-**Draft for review:** [`UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md`](./UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md)
+⭐ Founder ruling on scope, 2026-08-04: **the report is stronger completely generic.** The defect is
+understandable without project-specific thresholds; naming them shifts attention from the product
+behavior to our repository. Incident-state figures belong in this record, not upstream.
 
-⚠️⚠️ **DRAFTED, NOT SENT.** Filing is outward-facing; wording requires founder approval before it
-leaves the project. Drafting is authorized; sending is a separate act and has not been authorized.
+**Draft:** [`UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md`](./UPSTREAM_FEEDBACK_MEMORY_SIZE_WARNING_DRAFT_2026-08-04.md)
+— direction and wording **approved with two refinements, both applied.**
+
+⚠️⚠️ **NOT SENT.** Drafting was authorized; **sending is a separate act.** Channel and attribution
+remain open, and choosing the channel is part of the sending decision — ⛔ not part of drafting.
 
 ---
 
@@ -236,10 +253,11 @@ defect worth reporting, or as an environmental constant to be absorbed.**
 
 | Settled | Not settled |
 |---|---|
-| memory record > automated measurement, explicitly | the **wording** of the upstream report (drafted, awaiting approval) |
-| tooling owes observation → permission-check → recommendation | whether the report is ever **sent** — a separate, unauthorized act |
+| memory record > automated measurement, explicitly | whether the report is ever **sent** — a separate act |
+| tooling owes observation → permission-check → recommendation | the **channel** and **attribution** for sending |
 | the emitter is harness-native; no local fix exists | whether other advisories carry the same defect |
 | disposition: both, local first, upstream second (§6) | whether the hierarchy in §2 should be promoted to canon |
+| the upstream **wording**, approved with 2 refinements (§6.2) | — |
 
 ⚠️ **Scope guard.** This record governs the *authority relationship* between the memory record and an
 automated size warning. It does **not** re-open the 2026-08-04 compaction, does **not** evaluate
