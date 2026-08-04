@@ -42,6 +42,18 @@ printf 'invitations     : %s open, %s seeded\n' \
   "$(Q "SELECT count(*) FROM field_invitations WHERE withdrawn_at IS NULL")" \
   "$(Q "SELECT count(*) FROM field_invitations WHERE body LIKE '[SEED]%'")"
 
+# Authentication state is part of the environment, not a static fixture value.
+# The seed writes legacy sha256; the signin route upgrades the row to bcrypt on
+# first successful login. So the seed script's representation and the runtime
+# representation diverge by design — a walk packet must record which one it met.
+# ⛔ Format only. The hash value itself is never printed.
+printf 'demo auth state : %s\n' "$(Q "SELECT CASE
+    WHEN password_hash ~ '^\\\$2[aby]\\\$' THEN 'bcrypt (already signed in at least once)'
+    WHEN length(password_hash) = 64        THEN 'legacy sha256 (freshly seeded, not yet used)'
+    WHEN password_hash IS NULL OR password_hash = '' THEN 'EMPTY — unusable, re-run the seed'
+    ELSE 'unrecognised format' END
+  FROM members WHERE username = 'demo.practitioner'")"
+
 RESP="$(Q "SELECT count(*) FROM field_invitation_responses")"
 printf 'responses       : %s' "$RESP"
 if [ "$RESP" != "0" ]; then
