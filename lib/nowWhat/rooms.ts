@@ -51,14 +51,20 @@ export const NOW_WHAT_ROOMS: readonly NowWhatRoomDef[] = [
   // person arrives and where every other room returns them. It sits first so
   // the shell offers it first. Its route is the environment root, which is why
   // roomForPath resolves exact matches before prefix matches (see below).
+  // S1d — navigation reduction. Six offered destinations made the member learn
+  // the architecture before they could use it: a person does not arrive
+  // thinking "I need my Questions module". Four remain offered; the rest stay
+  // reachable and honest but are reached from context instead of from a tab
+  // bar. ⛔ Nothing was deleted — demoting to `gated` removes the tab, never
+  // the room, so no existing link or bookmark breaks.
   { key: 'home', name: 'Home', route: '/now-what', exposure: 'open' },
   { key: 'map', name: 'Map', route: '/now-what/map', exposure: 'open' },
-  { key: 'room', name: 'Session room', route: '/now-what/room', exposure: 'open' },
-  { key: 'field', name: 'Your field', route: '/now-what/field', exposure: 'open' },
-  { key: 'position', name: 'Where you are', route: '/now-what/position', exposure: 'open' },
-  { key: 'questions', name: "Questions you're living", route: '/now-what/questions', exposure: 'open' },
-  { key: 'next', name: 'What may be next', route: '/now-what/next', exposure: 'open' },
+  { key: 'field', name: 'Your work', route: '/now-what/field', exposure: 'open' },
+  { key: 'room', name: 'Conversations', route: '/now-what/room', exposure: 'open' },
+  { key: 'position', name: 'Your journey', route: '/now-what/position', exposure: 'open' },
   // Gated: navigable and honest, never offered as a destination.
+  { key: 'questions', name: "Questions you're living", route: '/now-what/questions', exposure: 'gated' },
+  { key: 'next', name: 'What may be next', route: '/now-what/next', exposure: 'gated' },
   { key: 'themes', name: 'Themes', route: '/now-what/themes', exposure: 'gated' },
   { key: 'reflections', name: 'Reflections', route: '/now-what/reflections', exposure: 'gated' },
 ] as const;
