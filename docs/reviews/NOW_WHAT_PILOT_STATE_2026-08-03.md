@@ -22,7 +22,7 @@ Phase 1
   ⏳ Needs controlled encounter
 
 Phase 2
-  🟡 Invitation bridge exists          (unverified for the walk referent)
+  🟡 Invitation bridge exists          ⚠️ SEE BELOW — status contested
   ⏳ Needs pilot relationship path
   ⏳ Needs Larry expression content     ⛔ SEE §4 — BLOCKED
 
@@ -86,6 +86,31 @@ where trust could accidentally become leverage.**
 
 ---
 
+## 1A. ⚠️ Invitation bridge — status contested, NOT resolved here
+
+The bridge has been carried at three different values within one day:
+
+| Stated | Value |
+|---|---|
+| earlier | ✅ built |
+| after referent check | 🟡 exists · **referent for the `78358f979` walk UNVERIFIED** — self-corrected |
+| latest carry-forward | ✅ **runnable · consent boundaries tested** |
+
+**No evidence in this lane supports the third.** What was actually measured: the invitation
+surfaces on the walk tree are **identical in inventory to trunk**. That establishes the tree
+neither adds nor lacks anything relative to trunk. It is **not** a functional check, and it is
+**not** a consent-boundary test.
+
+⛔⛔ *"Consent boundaries tested"* is a **strictly stronger claim** than anything measured
+here. If a verification exists in another lane, it must be **cited by SHA and artifact**
+before this line reads ✅. Until then the value stands at 🟡 with the reason attached.
+
+⚠️ This is the drift the whole sequence guards against, appearing in the **carry-forward state
+block** — the artifact a future session reads first. Recorded, not silently upgraded and not
+silently dropped.
+
+---
+
 ## 2A. Path status
 
 ```
@@ -101,14 +126,21 @@ Path C   Client encounter             waiting on agreement + initiation + consen
 Recorded as a **specification**, not instantiated. Seven items:
 
 ```
-1. exact build SHA
-2. environment
-3. synthetic field state
-4. questions
-5. recording protocol
-6. attribution correction protocol
-7. interpretation boundaries
+1. Referent and SHA
+2. Environment
+3. Participant roles
+4. Test field state (synthetic for Path A)
+5. Questions / instrument
+6. Recording protocol
+7. Attribution correction protocol
+8. Interpretation boundaries
 ```
+
+⚠️ **Eight, not seven.** The list was stated twice with different members — the first omitted
+participant roles, the second omitted the attribution correction protocol. Both are carried,
+because ⛔ dropping the correction protocol would undo the ruling that makes it the
+**disambiguator** for Path A's most likely headline result, not an ethical footnote. If the
+omission was deliberate, it needs its own ruling.
 
 Detail:
 
