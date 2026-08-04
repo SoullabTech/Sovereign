@@ -88,6 +88,23 @@ When the system prompt below contains member-placed portfolio material or member
  * Wide enough to catch the family of denial-shapes; deliberately does NOT match legitimate
  * uses like "I don't have that detail in front of me right now" — note the trailing
  * "memory/context/continuity/etc." anchor.
+ *
+ * ── Anchoring rule (2026-08-04) ───────────────────────────────────────────────
+ * Every pattern must target MAIA asserting HER OWN absence of memory — never a phrase
+ * wherever it appears. Concretely, a pattern needs both:
+ *
+ *   1. a first-person subject ("I" / "I'm"), and
+ *   2. a memory / prior-conversation / recurrence anchor in the same sentence.
+ *
+ * The "starting fresh" family used to require neither. `/\b(?:starting)…fresh\b/` fired on
+ * "It sounds like you're starting fresh with this project" — a reflection about the MEMBER —
+ * and replaced that whole response with the §VI fallback. Scrubbing a good response is
+ * itself a relational failure, so the over-match was a defect, not acceptable slack.
+ * Same correction applied to the "I should tell you clearly…" preamble, which previously
+ * matched any sentence opening that way regardless of subject matter.
+ *
+ * Quoted spans are excluded before matching (see stripQuotedSpans) — MAIA quoting the
+ * member, or naming a phrase under discussion, is not MAIA making a claim about herself.
  */
 export const FORBIDDEN_AMNESIA_PATTERNS: RegExp[] = [
   // Verb-synonym family + memory-noun family
@@ -96,10 +113,17 @@ export const FORBIDDEN_AMNESIA_PATTERNS: RegExp[] = [
   // "I don't remember" attached to conversations/sessions/threads
   /\bI(?:'m| am)? ?(?:don'?t|do not) remember (?:our |any |the )?(?:earlier|previous|prior|past) (?:conversation|session|exchange|thread|chat|interaction)/i,
 
-  // "Coming in fresh" / "starting fresh" / "fresh each time"
-  /\b(?:coming|starting|come|start)(?:ing)? (?:in )?fresh\b/i,
-  /\bfresh each (?:time|conversation|session|day)\b/i,
-  /\beach time we (?:talk|chat|meet|speak)[, ]?I (?:start|come|begin)/i,
+  // "Starting fresh" family — MAIA asserting her OWN discontinuity.
+  //
+  // Both halves are required: a first-person subject immediately on the verb, and a
+  // memory / prior-conversation / recurrence anchor within the same sentence. Either
+  // order, since the claim arrives both ways:
+  //   "I'm starting fresh and don't remember our earlier conversations"  (claim → anchor)
+  //   "Each time we talk, I start fresh"                                 (anchor → claim)
+  //
+  // "It sounds like you're starting fresh" has neither half and is left alone.
+  /\bI(?:'m| am)?\s*(?:start(?:ing)?|begin(?:ning)?|come|coming)\s+(?:in\s+)?fresh\b[^.!?]{0,140}?(?:\b(?:memor(?:y|ies)|remember|recall|recollection|continuity|history)\b|\b(?:each|every)\s+(?:time|conversation|session|day)\b|\b(?:previous|prior|earlier|past)\s+(?:conversation|session|exchange|thread|chat|interaction|talk)\b|\bwhat came before\b)/i,
+  /(?:\b(?:memor(?:y|ies)|recollection|continuity)\b|\b(?:each|every)\s+(?:time|conversation|session|day)\b|\b(?:previous|prior|earlier|past)\s+(?:conversation|session|exchange|thread|chat|interaction|talk)\b)[^.!?]{0,140}?\bI(?:'m| am)?\s*(?:start(?:ing)?|begin(?:ning)?|come|coming)\s+(?:in\s+)?fresh\b/i,
 
   // "I'm new to this thread/conversation" (denial of continuity)
   /\bI(?:'m| am)? new to (?:this |our )?(?:thread|conversation|exchange|chat)\b/i,
@@ -107,8 +131,10 @@ export const FORBIDDEN_AMNESIA_PATTERNS: RegExp[] = [
   // "I have no memory/context/continuity"
   /\bI have no (?:memory|context|continuity|recall|recollection|access to (?:our |the )?(?:past|earlier|prior))/i,
 
-  // "I should tell you clearly: I don't..." — pre-amble pattern
-  /\bI should tell you (?:clearly|honestly|that)[: ,]?\s*(?:I |my)/i,
+  // "I should tell you clearly: I don't have memory…" — the confession preamble, but only
+  // when what follows is actually a memory denial. The bare preamble is ordinary speech
+  // ("I should tell you honestly, I think you're being hard on yourself") and is left alone.
+  /\bI should tell you (?:clearly|honestly|that)\b[^.!?]{0,80}?\b(?:don'?t|do not|can'?t|cannot|no)\b[^.!?]{0,40}?\b(?:memor(?:y|ies)|remember|recall|recollection|continuity|context)\b/i,
 
   // "Without memory of" / "with no memory of"
   /\bwith(?:out)? no? memory of (?:our |any |the )?(?:past|earlier|prior|previous)/i,
@@ -120,6 +146,27 @@ export const FORBIDDEN_AMNESIA_PATTERNS: RegExp[] = [
   // conversation noun. Narrow enough not to catch "I can't recall the date".
   /\bI(?:'m| am)? ?(?:can'?t|cannot|don'?t|do not) recall (?:our |any |the )?(?:earlier|previous|prior|past|former) (?:conversation|session|exchange|thread|chat|interaction|discussion|talk)/i,
 ];
+
+/**
+ * Blank the CONTENTS of double-quoted spans before pattern matching.
+ *
+ * MAIA quoting the member back to them — or naming a phrase under discussion — is not MAIA
+ * making a claim about her own memory. Without this, reflecting a member's words
+ * (`You said, "I'm starting fresh and don't remember much of last year"`) would trip a guard
+ * aimed squarely at MAIA's first-person assertions, and the entire reply would be replaced.
+ *
+ * Straight and curly double quotes only. Single quotes are deliberately NOT stripped: they
+ * are indistinguishable from apostrophes ("don't", "I'm"), and stripping them would blind the
+ * guard to the most common contraction-bearing violations. A §V denial hidden inside single
+ * quotes therefore still scrubs — the safer direction of the two.
+ *
+ * Matching is on the blanked copy; a fired scrub still replaces the ORIGINAL text.
+ */
+function stripQuotedSpans(text: string): string {
+  return text
+    .replace(/"[^"]*"/g, '""')
+    .replace(/“[^”]*”/g, '“”');
+}
 
 /**
  * Required §VI fallback shape — when a forbidden pattern fires, the scrubber
@@ -156,7 +203,8 @@ export function scrubMemoryAmnesia(
 ): string | null {
   if (!text || typeof text !== 'string') return null;
 
-  const matched = FORBIDDEN_AMNESIA_PATTERNS.find((pattern) => pattern.test(text));
+  const probe = stripQuotedSpans(text);
+  const matched = FORBIDDEN_AMNESIA_PATTERNS.find((pattern) => pattern.test(probe));
   if (!matched) return null;
 
   console.warn(
@@ -177,5 +225,6 @@ export function scrubMemoryAmnesia(
  */
 export function containsForbiddenAmnesia(text: string): boolean {
   if (!text || typeof text !== 'string') return false;
-  return FORBIDDEN_AMNESIA_PATTERNS.some((pattern) => pattern.test(text));
+  const probe = stripQuotedSpans(text);
+  return FORBIDDEN_AMNESIA_PATTERNS.some((pattern) => pattern.test(probe));
 }
