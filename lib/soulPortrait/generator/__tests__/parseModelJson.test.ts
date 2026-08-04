@@ -56,4 +56,23 @@ describe('parseModelJson', () => {
       expect.stringContaining('[soul-portrait/generate] unparseable model JSON'),
     );
   });
+
+  // The log exists to show what broke the parse, not to record what the model
+  // wrote about a person. A portrait draft must not reach container logs.
+  it('never logs the prose itself — only the structure around the failure', () => {
+    const secret = 'Cece carries a rare and unmistakable grief';
+    const raw = `{"openingLetter": "${secret}", "n": "x" "y"}`;
+    expect(() => parseModelJson(raw, 'soul-portrait/generate')).toThrow(SyntaxError);
+
+    const logged = (console.error as any).mock.calls[0][0] as string;
+    expect(logged).not.toContain(secret);
+    expect(logged).not.toContain('Cece');
+    expect(logged).not.toContain('grief');
+    // Structure survives: the key names and the offending quote boundary.
+    // (The window is JSON.stringify'd into the log line, so quotes are escaped.)
+    expect(logged).toContain('openingLetter');
+    expect(logged).toContain('\\"·\\" \\"·\\"');
+    // The value's length is all that remains of the prose.
+    expect(logged).toContain('·'.repeat(secret.length));
+  });
 });

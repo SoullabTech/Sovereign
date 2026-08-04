@@ -66,10 +66,67 @@ function stripJsonNoise(s: string): string {
 
 /** A readable window around a parse failure — so a bad draft is diagnosable. */
 function errorWindow(s: string, message: string): string {
+  // Mask the INSIDE of string literals before slicing. What breaks a parse is
+  // structure — a stray comment, an unescaped quote, a missing comma — and all
+  // of that lives outside string contents. The person's prose is not diagnostic
+  // information, and a portrait draft does not belong in container logs.
+  // Masking is 1:1 in length, so reported positions still line up.
+  const masked = maskStringContents(s);
   const at = /position (\d+)/.exec(message);
-  if (!at) return s.slice(0, 200);
+  if (!at) return masked.slice(0, 200);
   const pos = Number(at[1]);
-  return s.slice(Math.max(0, pos - 120), pos + 120);
+  return masked.slice(Math.max(0, pos - 120), pos + 120);
+}
+
+/**
+ * Replace the contents of string VALUES with `·`, preserving length.
+ *
+ * Property keys are kept: they are our own contract's field names, not the
+ * member's content, and knowing which field the parse died on is most of the
+ * diagnostic value. A string is treated as a key when the next non-whitespace
+ * character after its closing quote is `:`.
+ */
+function maskStringContents(s: string): string {
+  let out = '';
+  let i = 0;
+
+  while (i < s.length) {
+    if (s[i] !== '"') {
+      out += s[i];
+      i++;
+      continue;
+    }
+
+    // Scan the whole literal, honoring escapes, so we can decide key-vs-value.
+    const start = i;
+    let j = i + 1;
+    let closed = false;
+    while (j < s.length) {
+      if (s[j] === '\\') {
+        j += 2;
+        continue;
+      }
+      if (s[j] === '"') {
+        closed = true;
+        break;
+      }
+      j++;
+    }
+    // Unterminated literal (truncated output): mask to the end and stop.
+    if (!closed) {
+      out += '"' + '·'.repeat(s.length - start - 1);
+      return out;
+    }
+
+    const literal = s.slice(start, j + 1);
+    let k = j + 1;
+    while (k < s.length && /\s/.test(s[k])) k++;
+    const isKey = s[k] === ':';
+
+    out += isKey ? literal : '"' + '·'.repeat(literal.length - 2) + '"';
+    i = j + 1;
+  }
+  return out;
 }
 
 /**
