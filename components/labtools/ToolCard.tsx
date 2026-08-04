@@ -22,6 +22,12 @@ import { getToolById, type LabTool } from '@/config/toolRegistry';
 export interface ToolCardTool extends LabTool {
   lastUsedAt?: string | null;
   useCount?: number;
+  /**
+   * Resolved server-side from member-relative provenance (lib/labtools/newness.ts).
+   * NOT the registry's builder-time `isNew`, and NOT "never opened" — those both
+   * badge the member's entire shelf. If absent, no badge is shown.
+   */
+  isNewToMember?: boolean;
 }
 
 interface ToolCardProps {
@@ -56,8 +62,9 @@ export function ToolCard({ tool, onOpen, compact = false }: ToolCardProps) {
   // so resolve it from the registry on the client.
   const Icon = getToolById(tool.id)?.icon;
 
-  const neverOpened = !tool.lastUsedAt;
-  const showNew = Boolean(tool.isNew) && neverOpened;
+  // Fail quiet: an unresolved newness signal shows no badge rather than
+  // falling back to the registry flag, which would badge eleven tools at once.
+  const showNew = tool.isNewToMember === true;
 
   const handleClick = () => {
     if (tool.comingSoon) return;

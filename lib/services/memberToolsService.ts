@@ -12,6 +12,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { isNewToMember } from '@/lib/labtools/newness';
 import {
   TOOL_REGISTRY,
   CATEGORY_META,
@@ -368,6 +369,12 @@ export interface HydratedTool extends LabTool {
   /** ISO string, or null if the member has never opened this tool */
   lastUsedAt: string | null;
   useCount: number;
+  /**
+   * Whether this instrument is new TO THIS MEMBER — resolved server-side from
+   * member-relative provenance, never from the registry's builder-time `isNew`
+   * flag and never from `lastUsedAt` alone. See lib/labtools/newness.ts.
+   */
+  isNewToMember: boolean;
 }
 
 export interface HydratedCategory {
@@ -394,6 +401,15 @@ export async function getHydratedToolsState(
 ): Promise<HydratedCategory[]> {
   const { enabledTools, categoryPrefs } = await getMemberToolsState(memberId);
 
+  // When this member's lab was first established. Rows from that initial
+  // seeding batch are not "arrivals" and must never carry a NEW badge —
+  // otherwise a recency backfill lights up the member's entire shelf.
+  const labSeededAt = enabledTools.reduce<Date | null>(
+    (earliest, t) =>
+      !earliest || t.addedAt.getTime() < earliest.getTime() ? t.addedAt : earliest,
+    null
+  );
+
   // Build a map of enabled tools by their resolved category
   const toolsByCategory = new Map<ToolCategory, HydratedTool[]>();
 
@@ -410,6 +426,13 @@ export async function getHydratedToolsState(
       addedAt: enabled.addedAt,
       lastUsedAt: enabled.lastUsedAt ? enabled.lastUsedAt.toISOString() : null,
       useCount: enabled.useCount,
+      isNewToMember: labSeededAt
+        ? isNewToMember({
+            addedAt: enabled.addedAt,
+            lastUsedAt: enabled.lastUsedAt,
+            labSeededAt,
+          })
+        : false,
     };
 
     const list = toolsByCategory.get(resolvedCategory) || [];
