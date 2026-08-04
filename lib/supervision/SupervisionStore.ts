@@ -280,14 +280,25 @@ export async function addTranscriptSegment(params: {
 /**
  * Get the tail of the last finalized transcript segment for a session.
  * Used as a Whisper context prompt to reduce repeated openings across chunks.
+ *
+ * `speaker` scopes the lookup to one capture lane. Under dual-channel capture
+ * the two lanes transcribe independently, so seeding Whisper with the tail of
+ * the OTHER speaker's sentence actively degrades the transcript — it primes
+ * the model to continue a sentence this audio never contained. Callers on a
+ * known lane must pass it; omitting it preserves the whole-session behaviour
+ * used by single-channel (mic-only) sessions.
  */
-export async function getLastChunkTail(sessionId: string): Promise<string | null> {
+export async function getLastChunkTail(
+  sessionId: string,
+  speaker?: string,
+): Promise<string | null> {
   const result = await query<{ text: string }>(`
     SELECT text FROM supervision_transcript_segments
     WHERE session_id = $1 AND is_final = true
+      AND ($2::text IS NULL OR speaker = $2)
     ORDER BY end_ms DESC
     LIMIT 1
-  `, [sessionId]);
+  `, [sessionId, speaker ?? null]);
 
   if (!result.rows[0]?.text) return null;
   return result.rows[0].text.slice(-80) || null;
@@ -297,17 +308,24 @@ export async function getLastChunkTail(sessionId: string): Promise<string | null
  * Fetch the most recent finalized transcript-segment texts for a session.
  * Used by the pre-persistence phantom-duplicate guard to compare a newly
  * transcribed chunk against the texts produced by recent prior chunks.
+ *
+ * `speaker` scopes the comparison to one capture lane. Cross-lane comparison
+ * would treat genuine overlap as duplication: two people both saying "yeah"
+ * or "right" within a few seconds is ordinary conversation, and dropping the
+ * second one deletes a real turn.
  */
 export async function getRecentTranscriptTexts(
   sessionId: string,
   limit: number = 5,
+  speaker?: string,
 ): Promise<string[]> {
   const result = await query<{ text: string }>(`
     SELECT text FROM supervision_transcript_segments
     WHERE session_id = $1 AND is_final = true
+      AND ($3::text IS NULL OR speaker = $3)
     ORDER BY end_ms DESC
     LIMIT $2
-  `, [sessionId, Math.min(Math.max(limit, 1), 20)]);
+  `, [sessionId, Math.min(Math.max(limit, 1), 20), speaker ?? null]);
   return result.rows.map(r => r.text).filter((t): t is string => !!t);
 }
 

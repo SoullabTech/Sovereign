@@ -23,6 +23,14 @@ import {
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { findFirstClusterOffset } from '@/lib/voice/webmInit';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
+import { type CaptureChannel, stripedChunkIndex } from '@/lib/studio/audioChannels';
+
+/** Independent chunk-sequencing state for one capture lane. */
+interface LaneState {
+  sequence: number;
+  webmInit: Blob | null;
+  chunkStartTime: number;
+}
 
 // ---------------------------------------------------------------------------
 // Types (shared with Session Room page)
@@ -177,7 +185,10 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const [maiaExchanges, setMaiaExchanges] = useState<LivePromptExchange[]>([]);
 
   // Refs (persist across renders, survive navigation because context survives)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  // One recorder per capture lane. Both must be driven together (start, pause,
+  // resume, stop) or the transcript loses one side of the conversation.
+  const micRecorderRef = useRef<MediaRecorder | null>(null);
+  const tabRecorderRef = useRef<MediaRecorder | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const tabStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -190,11 +201,18 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const bookingIdRef = useRef<string | null>(null);
   const containerRef = useRef<SessionContainer>('solo');
   const isRecordingRef = useRef(false);
-  const chunkIndexRef = useRef(0);
-  const chunkStartTimeRef = useRef(0);
-  // WebM init segment (first chunk contains container headers; must be prepended
-  // to all subsequent chunks so Whisper receives a decodable file each time)
-  const webmInitChunkRef = useRef<Blob | null>(null);
+  // Chunk sequencing and WebM init state are PER LANE. Each MediaRecorder
+  // emits its own independent stream: its own header in its own first chunk,
+  // its own chunk cadence. Sharing either across lanes would prepend one
+  // lane's container header to the other lane's Opus data and produce garbage.
+  //
+  // WebM init segment: the first chunk contains container headers, which must
+  // be prepended to all subsequent chunks so Whisper receives a decodable file
+  // each time.
+  const laneStateRef = useRef<Record<CaptureChannel, LaneState>>({
+    practitioner: { sequence: 0, webmInit: null, chunkStartTime: 0 },
+    participants: { sequence: 0, webmInit: null, chunkStartTime: 0 },
+  });
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const levelAnimationRef = useRef<number | null>(null);
 
@@ -397,23 +415,44 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       }
     }
 
-    // 3. Setup AudioContext and merge streams
+    // 3. Setup AudioContext.
+    //
+    // The two sources are kept on SEPARATE recording destinations. They used to
+    // be summed into one destination, which made speaker attribution
+    // impossible downstream — by the time audio left the browser both people
+    // were one waveform, and the transcript could only ever label everything
+    // as a single speaker. Keeping the lanes apart means attribution comes
+    // from the capture source itself and needs no inference.
     const ctx = new AudioContext({ sampleRate: 16000 });
     audioContextRef.current = ctx;
 
-    // Mic analyser
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : MediaRecorder.isTypeSupported('audio/webm')
+      ? 'audio/webm'
+      : 'audio/mp4';
+
+    const buildRecorder = (source: MediaStreamAudioSourceNode): MediaRecorder => {
+      const destination = ctx.createMediaStreamDestination();
+      source.connect(destination);
+      return new MediaRecorder(destination.stream, {
+        mimeType,
+        audioBitsPerSecond: 128000,
+      });
+    };
+
+    // Mic lane — the practitioner.
     const micAnalyser = ctx.createAnalyser();
     micAnalyser.fftSize = 256;
     micAnalyser.smoothingTimeConstant = 0.8;
     micAnalyserRef.current = micAnalyser;
     const micSource = ctx.createMediaStreamSource(micStream);
     micSource.connect(micAnalyser);
+    const micRecorder = buildRecorder(micSource);
+    micRecorderRef.current = micRecorder;
 
-    // Merged destination for recording
-    const destination = ctx.createMediaStreamDestination();
-    micSource.connect(destination);
-
-    // Tab analyser + merge
+    // Tab lane — whoever is on the far end of the meeting.
+    let tabRecorder: MediaRecorder | null = null;
     if (tabStream && tabStream.getAudioTracks().length > 0) {
       const tabAnalyser = ctx.createAnalyser();
       tabAnalyser.fftSize = 256;
@@ -421,23 +460,14 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       tabAnalyserRef.current = tabAnalyser;
       const tabSource = ctx.createMediaStreamSource(tabStream);
       tabSource.connect(tabAnalyser);
-      tabSource.connect(destination);
+      tabRecorder = buildRecorder(tabSource);
+      tabRecorderRef.current = tabRecorder;
     }
 
-    // 4. Setup MediaRecorder on merged stream
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : MediaRecorder.isTypeSupported('audio/webm')
-      ? 'audio/webm'
-      : 'audio/mp4';
-
-    const recorder = new MediaRecorder(destination.stream, {
-      mimeType,
-      audioBitsPerSecond: 128000,
-    });
-    mediaRecorderRef.current = recorder;
-
-    return recorder;
+    // Whether this session can attribute at all. With no tab lane the mic
+    // carries every voice in the room and honest attribution is impossible —
+    // the server is told so explicitly rather than being allowed to default.
+    return { micRecorder, tabRecorder, canAttribute: tabRecorder !== null };
   }, []);
 
   // ── Session lifecycle ───────────────────────────────────────────────────
@@ -497,21 +527,30 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       const audioSessionId = data.session.id;
 
       // 4. Setup audio capture
-      const recorder = await setupAudioCapture(config.captureTabAudio ?? false);
+      const { micRecorder, tabRecorder, canAttribute } = await setupAudioCapture(
+        config.captureTabAudio ?? false,
+      );
 
-      // 5. Wire chunk handler
-      chunkIndexRef.current = 0;
-      webmInitChunkRef.current = null;
+      // 5. Wire chunk handlers — one per lane, each with independent state.
       startTimeRef.current = Date.now();
-      chunkStartTimeRef.current = Date.now();
+      laneStateRef.current = {
+        practitioner: { sequence: 0, webmInit: null, chunkStartTime: Date.now() },
+        participants: { sequence: 0, webmInit: null, chunkStartTime: Date.now() },
+      };
 
-      recorder.ondataavailable = async (event) => {
+      const handleChunk = (channel: CaptureChannel) => async (event: BlobEvent) => {
         if (event.data.size === 0 || !sessionIdRef.current) return;
 
+        const lane = laneStateRef.current[channel];
         const endMs = Date.now() - startTimeRef.current;
-        const startMs = chunkStartTimeRef.current - startTimeRef.current;
-        chunkStartTimeRef.current = Date.now();
-        const idx = chunkIndexRef.current++;
+        const startMs = lane.chunkStartTime - startTimeRef.current;
+        lane.chunkStartTime = Date.now();
+
+        const seq = lane.sequence++;
+        // Striped so the two lanes never collide on the (session_id,
+        // chunk_index) uniqueness constraint — a collision would be silently
+        // swallowed by ON CONFLICT DO NOTHING, losing a real utterance.
+        const idx = stripedChunkIndex(channel, seq);
 
         // The first chunk from MediaRecorder contains the WebM EBML/Segment header
         // (codec info, stream metadata) followed by the first Cluster of audio data.
@@ -524,20 +563,21 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
         // chunk, producing phantom-prefix segments that contaminate the continuity
         // field. Extract bytes before the first Cluster element (ID 0x1F43B675) so
         // only header bytes are prepended.
-        if (idx === 0) {
+        if (seq === 0) {
           const firstBuf = new Uint8Array(await event.data.arrayBuffer());
           const clusterOffset = findFirstClusterOffset(firstBuf);
-          webmInitChunkRef.current = clusterOffset > 0
+          lane.webmInit = clusterOffset > 0
             ? new Blob([firstBuf.slice(0, clusterOffset)], { type: event.data.type })
             : event.data; // fallback: Cluster ID not found, keep prior behavior
         }
-        const initPrepended = idx > 0 && !!webmInitChunkRef.current;
-        const audioToSend = (idx === 0 || !webmInitChunkRef.current)
+        const initPrepended = seq > 0 && !!lane.webmInit;
+        const audioToSend = (seq === 0 || !lane.webmInit)
           ? event.data
-          : new Blob([webmInitChunkRef.current, event.data], { type: event.data.type });
+          : new Blob([lane.webmInit, event.data], { type: event.data.type });
 
         console.log(
-          `[RecordingContext] chunk #${idx} raw=${(event.data.size / 1024).toFixed(1)}kb` +
+          `[RecordingContext] ${channel} chunk #${idx} (seq ${seq})` +
+          ` raw=${(event.data.size / 1024).toFixed(1)}kb` +
           ` sent=${(audioToSend.size / 1024).toFixed(1)}kb initPrepended=${initPrepended}`
         );
 
@@ -547,8 +587,13 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
         formData.append('chunkIndex', String(idx));
         formData.append('startMs', String(startMs));
         formData.append('endMs', String(endMs));
-        formData.append('speaker', 'Speaker 1');
-        formData.append('chunkIndex', String(idx));
+        // Attribution travels as the capture channel, never as a speaker name.
+        // When there is no tab lane the mic carries everyone, so we send no
+        // channel at all and the server records the audio as Unattributed
+        // rather than assigning it to a person.
+        if (canAttribute) {
+          formData.append('channel', channel);
+        }
 
         try {
           await apiFetch('/api/supervision/transcript/stream', {
@@ -556,12 +601,16 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
             body: formData,
           });
         } catch (err) {
-          console.error(`[RecordingContext] Chunk #${idx} upload failed:`, err);
+          console.error(`[RecordingContext] ${channel} chunk #${idx} upload failed:`, err);
         }
       };
 
+      micRecorder.ondataavailable = handleChunk('practitioner');
+      if (tabRecorder) tabRecorder.ondataavailable = handleChunk('participants');
+
       // 6. Start recording (5s chunks)
-      recorder.start(5000);
+      micRecorder.start(5000);
+      tabRecorder?.start(5000);
 
       // 7. Update state
       setSessionId(audioSessionId);
@@ -605,9 +654,9 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     const sid = sessionIdRef.current;
     if (!sid) return;
 
-    // Stop recorder
-    if (mediaRecorderRef.current?.state !== 'inactive') {
-      mediaRecorderRef.current?.stop();
+    // Stop both lanes
+    for (const recorder of [micRecorderRef.current, tabRecorderRef.current]) {
+      if (recorder && recorder.state !== 'inactive') recorder.stop();
     }
 
     // Stop audio tracks
@@ -697,7 +746,8 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     }
 
     // Reset refs
-    mediaRecorderRef.current = null;
+    micRecorderRef.current = null;
+    tabRecorderRef.current = null;
     micStreamRef.current = null;
     tabStreamRef.current = null;
     audioContextRef.current = null;
@@ -712,20 +762,27 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     console.log('[RecordingContext] Session stopped');
   }, [duration, segments, markers, insights]);
 
+  // Pause/resume drive both lanes together. Pausing only one would keep
+  // recording half the conversation while the practitioner believes the
+  // session is paused — a consent problem, not just a bug.
   const pauseSession = useCallback(() => {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.pause();
-      setIsPaused(true);
-      if (levelAnimationRef.current) cancelAnimationFrame(levelAnimationRef.current);
+    const recorders = [micRecorderRef.current, tabRecorderRef.current];
+    if (!recorders.some(r => r?.state === 'recording')) return;
+    for (const recorder of recorders) {
+      if (recorder?.state === 'recording') recorder.pause();
     }
+    setIsPaused(true);
+    if (levelAnimationRef.current) cancelAnimationFrame(levelAnimationRef.current);
   }, []);
 
   const resumeSession = useCallback(() => {
-    if (mediaRecorderRef.current?.state === 'paused') {
-      mediaRecorderRef.current.resume();
-      setIsPaused(false);
-      analyzeAudioLevels();
+    const recorders = [micRecorderRef.current, tabRecorderRef.current];
+    if (!recorders.some(r => r?.state === 'paused')) return;
+    for (const recorder of recorders) {
+      if (recorder?.state === 'paused') recorder.resume();
     }
+    setIsPaused(false);
+    analyzeAudioLevels();
   }, [analyzeAudioLevels]);
 
   const resetSession = useCallback(() => {
