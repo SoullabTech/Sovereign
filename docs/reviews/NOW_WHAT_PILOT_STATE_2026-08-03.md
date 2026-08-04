@@ -86,7 +86,49 @@ where trust could accidentally become leverage.**
 
 ---
 
-## 1A. ⚠️ Invitation bridge — status contested, NOT resolved here
+## 1A. 🔴 Invitation surface — MEASURED ABSENT at the walk referent
+
+*"Invitation surface integrated"* is **contradicted at `78358f979`.** Measured directly:
+
+| Where | Invitation / accept / decline / consent content |
+|---|---|
+| `components/now-what/ClientHome.tsx` | **one line of arrival prose** — *"When your practitioner invites you into a programme, your current work…"* |
+| `app/api/now-what/home/route.ts` | **none — zero fields** |
+| Doors exposed by the Home | `/now-what/room` · `/now-what/field` — **neither is an invitation surface** |
+
+> **A sentence describing an invitation is not an invitation surface.**
+
+⛔ There is **no invitation path reachable from the walk surface.** If the participant asks how
+he would invite someone, the answer at this referent is *"not from here."*
+
+⭐ **This is a FINDING, not a defect to fix** — and it is *useful*: Q4 (*"what feels
+missing?"*) may surface it unprompted, which would be **stronger evidence than anything we
+could arrange.** ⛔ Do not pre-empt it, and ⛔ do not fix it — fixing it moves the referent.
+
+### ⚠️ The state block is mixing two referents
+
+The likeliest source of the drift is not carelessness. **Values true of the product at large
+are being carried in a block that governs the walk tree.** Those are different objects:
+
+| Claim | True of trunk / another lane? | True at `78358f979`? |
+|---|---|---|
+| invitation surface integrated | possibly — not checked here | ⛔ **no** |
+| invitation bridge technically exercised | possibly | ⛔ unevidenced in this lane |
+| consent behaviour verified at system level | possibly | ⛔ unevidenced in this lane |
+| Home experience runnable | — | ✅ **yes** — route, component and live data path all present |
+
+⛔⛔ **The pilot state block governs the encounter.** A packet assembled from it inherits
+whatever it asserts. **Regenerate this block from the artifacts, never restate it from
+recollection** — that is the same *work-from-the-canonical-home* discipline the architecture
+already applies to everything else.
+
+⚠️ This is the **third** upward restatement of invitation status in one day, in a sequence
+built specifically to prevent that class of drift. The agreed weaker line is **not surviving
+restatement**, which is itself the finding.
+
+---
+
+## 1B. ⚠️ Invitation bridge — status contested, NOT resolved here
 
 The bridge has been carried at three different values within one day:
 
