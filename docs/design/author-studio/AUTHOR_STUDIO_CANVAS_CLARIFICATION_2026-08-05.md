@@ -126,6 +126,78 @@ it.**
 
 ---
 
+## 2ter. Refinements — the failure mode, and what the Writer Canvas actually holds
+
+### What the Writer Canvas is, stated more exactly
+
+⛔ Not merely *"where a work comes into being."*
+⭐⭐⭐ **It is where the relationship between the creator and the work is held.**
+
+The author is not only producing text. They are **discovering what they are trying to say ·
+organizing experience · gathering materials · finding patterns · shaping meaning · deciding what
+belongs.** ⭐⭐ **The text editor enters only after some of that work has already begun.**
+
+```
+                  AUTHOR STUDIO
+
+                  Writer Canvas
+        (creative environment / body of work)
+
+   Capture → Gather → Shape → Write → Refine → Release
+
+                       ↓
+
+                 Editing Canvas
+             (composition instrument)
+```
+
+⭐⭐⭐ **The arrow matters.** The Editing Canvas is **entered from** the creative environment.
+⛔ The creative environment does **not** emerge from the editor.
+
+### ⭐⭐⭐ Certainty is not centrality
+
+**The failure mode that produced the superseded §2, named so it can be caught next time:**
+
+> **Verified infrastructure is not the same as the user's centre of gravity.**
+> The most measured thing in the system will always tempt us to mistake it for the most meaningful
+> thing.
+
+| ✅ Correct sequence | ⛔ The inversion |
+|---|---|
+| Human experience | Infrastructure exists |
+| ↓ Creative practice | ↓ What experience can we wrap around it? |
+| ↓ Environment required | ↓ Feature |
+| ↓ Capabilities required | ↓ User interface |
+| ↓ Infrastructure required | |
+
+⚠️ **The second sequence almost always produces competent software that feels wrong.** That is
+exactly what §2 was on the way to producing: the Working Draft engine had been *verified* that day,
+so it became psychologically attractive as the centre.
+
+⛔ **Add to design governance language:** *certainty is not centrality.* It will recur anywhere deep
+infrastructure is built before the experience is defined.
+
+### MAIA — sharpened
+
+> ⭐⭐⭐ **MAIA participates in the author's thinking process; MAIA does not occupy the author's
+> creative position.**
+
+⭐⭐ **The centre is sacred because it is where authorship lives.**
+
+### The two mirror-image errors on `/book-studio/canvas`
+
+Both were committed on 2026-08-05, in opposite directions:
+
+| # | The error | Its kind |
+|---|---|---|
+| 1 | *"Canvas isn't built, therefore it is missing."* | **substrate thinking** |
+| 2 | *"Canvas exists, therefore move it here."* | **implementation thinking** |
+
+✅ **Correct:** Canvas is an **experiential reference** that helps us imagine the environment. ⛔ It
+does not define the environment's **ontology**.
+
+---
+
 ## 3. 🔴🔴 The referent correction — the reason this file exists
 
 ⛔ **`/book-studio/canvas` is a visual and interaction REFERENCE for the Canvas shell. It is NOT a
