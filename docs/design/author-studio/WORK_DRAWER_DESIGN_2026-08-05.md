@@ -2,12 +2,45 @@
 
 > **Status**: First design object of the Work Continuity Layer lane
 > (`WORK_CONTINUITY_LAYER_OPENING_PROMPT_2026-08-05.md`), per the founder's
-> ruled order: the Work drawer first, then Materials, then Structure. This is
-> a design document — **it authorizes no implementation**; the slice that
-> builds it is ruled separately after this design is walked.
+> ruled order: the Work drawer first, then Materials, then Structure.
+> **ACCEPTED by the founder 2026-08-05, with the refinements recorded below.**
+> This is a design document — **it authorizes no implementation**; the slice
+> that builds it is ruled separately.
 >
 > Design law: `docs/design/INHABITABLE_ARCHITECTURE.md`. Vocabulary: "Work
 > drawer" is builder language; the member sees only their work.
+>
+> **The governing distinction (founder, on acceptance):**
+> *The Work Drawer is not where the system describes the work. It is where
+> the creator encounters their relationship with the work.* That distinction
+> is what prevents the drawer from becoming a database inspector.
+
+## Founder refinements on acceptance (binding on the implementation slice)
+
+1. **Identity stays simple** — creator-authored title · purpose ·
+   description · intention. ⛔ No AI summaries, no inferred themes, no
+   automatic categorization. A creator should recognize themselves
+   immediately.
+2. **An origin is a relationship, not a property.** Preserve *"I brought
+   this here from that"* — never "this Work originated from these three
+   files." The register renders the creator's sentence ("this began as a
+   journal entry", "this continues an earlier manuscript"), not a
+   provenance listing.
+3. **Shape is a declared relationship.** The creator declares what the
+   work is becoming (✓ essay series · ✓ talk · ○ book). ⛔ The system
+   never decides "these documents are actually chapters of a book."
+4. **History is meaning-preserving continuity, not version management.**
+   Its vocabulary is first expression · renewal · major transformation ·
+   abandoned direction · revived work. The system preserves the sequence;
+   the creator understands the significance.
+5. **Relationships means participation, never access.** Contribution ·
+   witnessing · editing · adoption · acknowledgment — not permissions,
+   sharing, or access control. Unrendered until a real collaboration model
+   exists. (The authorship law appearing again.)
+6. **First implementation slice confirmed**: member-declared Work identity
+   + the expression relationship — the gesture *"this is part of this."*
+   The `living_work_expressions` write matters because it is **a
+   declaration, not a file attachment.**
 
 ---
 

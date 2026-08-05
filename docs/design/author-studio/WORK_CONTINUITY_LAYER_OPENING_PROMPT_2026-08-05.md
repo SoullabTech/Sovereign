@@ -183,4 +183,17 @@ Those emerge naturally after the Work can hold itself.
 > The Writer Canvas is the house. The Work Continuity Layer is the
 > foundation that lets the house remember what happens inside it.
 
+## The unifying test across every layer (founder, on accepting the Work drawer)
+
+Every layer of this lane is forced to answer the same question:
+
+> **Who makes the meaning?**
+
+If the answer remains *"the creator"*, the architecture stays coherent.
+
+And the question the Materials design must carry (the parallel of the
+Work drawer's question): **"What does a creator need to do for something to
+become part of a Work?"** A repository answers *"what files exist?"* — a
+creative environment answers *"what belongs here?"*
+
 Begin with the experiential question, not the schema.
