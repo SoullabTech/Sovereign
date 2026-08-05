@@ -51,6 +51,13 @@ interface ExpressionRow {
   expression_id: string;
   declared_at: string;
 }
+interface MaterialRow {
+  living_work_id: string;
+  material_type: string;
+  material_id: string;
+  relationship_sentence: string | null;
+  declared_at: string;
+}
 
 const shape = (r: WorkRow) => ({
   id: r.id,
@@ -102,8 +109,41 @@ export async function GET(request: NextRequest) {
       byWork.set(e.living_work_id, list);
     }
 
+    /* Materials ride along the same way (Work relationship loop, first
+       slice): belongings the member declared — the sentence is their words
+       or null, and null is a correct state, not a gap. Same member-scoping
+       through the owning work; this route asserts nothing beyond "the
+       member said this feeds that". */
+    const materials = await query<MaterialRow>(
+      `SELECT m.living_work_id, m.material_type, m.material_id,
+              m.relationship_sentence, m.declared_at
+         FROM living_work_materials m
+         JOIN living_works w ON w.id = m.living_work_id
+        WHERE w.member_id = $1
+        ORDER BY m.declared_at ASC`,
+      [memberId]
+    );
+    const materialsByWork = new Map<
+      string,
+      { materialType: string; materialId: string; sentence: string | null; declaredAt: string }[]
+    >();
+    for (const m of materials.rows) {
+      const list = materialsByWork.get(m.living_work_id) ?? [];
+      list.push({
+        materialType: m.material_type,
+        materialId: m.material_id,
+        sentence: m.relationship_sentence,
+        declaredAt: m.declared_at,
+      });
+      materialsByWork.set(m.living_work_id, list);
+    }
+
     return NextResponse.json({
-      works: rows.rows.map((r) => ({ ...shape(r), expressions: byWork.get(r.id) ?? [] })),
+      works: rows.rows.map((r) => ({
+        ...shape(r),
+        expressions: byWork.get(r.id) ?? [],
+        materials: materialsByWork.get(r.id) ?? [],
+      })),
     });
   } catch (error) {
     console.error('[living-works] list failed', error);

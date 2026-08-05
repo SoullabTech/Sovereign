@@ -62,7 +62,9 @@ export type Refusal =
   | 'not_the_owner'
   | 'missing_expression'
   | 'missing_living_work'
-  | 'blank_expression_type';
+  | 'blank_expression_type'
+  | 'missing_material'
+  | 'blank_material_type';
 
 /**
  * Guard 1 — *nothing enters a Living Work without the member's declaration.*
@@ -83,6 +85,50 @@ export function refuseDeclaration(
   if (!d.expressionId) return 'missing_expression';
   if (!d.expressionType || d.expressionType.trim().length === 0) return 'blank_expression_type';
   return null;
+}
+
+/**
+ * A member's declaration that a thing FEEDS a Living Work (a belonging).
+ * Sibling of ExpressionMembership — same declaration grammar, different
+ * relationship: an expression is a form of the work; a material feeds it.
+ * Ruled in the Work Continuity Layer first slice, 2026-08-05.
+ */
+export interface Belonging {
+  livingWorkId: string;
+  materialType: string;
+  materialId: string;
+  /** The member's own sentence, OPTIONAL — an unwritten sentence is a correct
+      state (Materials walk M2), never a gap to fill or generate. */
+  relationshipSentence: string | null;
+  declaredBy: string;
+}
+
+/**
+ * Guard 1, applied to belongings — *nothing feeds a Living Work without the
+ * member's declaration.* The crossing is the consent event; ownership of the
+ * work is what makes the crossing the member's own act.
+ */
+export function refuseBelonging(
+  b: Partial<Belonging>,
+  work: Pick<LivingWork, 'id' | 'memberId'> | null
+): Refusal | null {
+  if (!b.declaredBy) return 'no_declaring_member';
+  if (!work) return 'missing_living_work';
+  if (work.memberId !== b.declaredBy) return 'not_the_owner';
+  if (!b.materialId) return 'missing_material';
+  if (!b.materialType || b.materialType.trim().length === 0) return 'blank_material_type';
+  return null;
+}
+
+/**
+ * A blank sentence is the absence of a sentence, not an error — the member
+ * simply has not said (or chose not to say) what this feeds. Normalized to
+ * null so "unwritten" has exactly one representation.
+ */
+export function normalizeSentence(sentence: string | null | undefined): string | null {
+  if (sentence === null || sentence === undefined) return null;
+  const t = sentence.trim();
+  return t.length === 0 ? null : sentence;
 }
 
 /**
