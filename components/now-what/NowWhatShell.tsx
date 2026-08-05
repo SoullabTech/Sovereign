@@ -45,7 +45,7 @@ import { usePathname } from 'next/navigation';
 import { RoomHoloflower } from '@/components/maia/vision-studio/RoomHoloflower';
 import { NAV_DESTINATIONS, roomForPath } from '@/lib/nowWhat/rooms';
 
-const ACCENT = '#ffe27a';
+const ACCENT = '#c9a35e';
 
 /**
  * Session fact, per rider 2: signed in or not — read from the member's own
@@ -156,8 +156,8 @@ export function NowWhatShell({
             className="rounded-full px-4 py-1.5 text-xs border"
             style={{
               color: ACCENT,
-              borderColor: 'rgba(255,226,122,0.45)',
-              background: 'rgba(255,226,122,0.08)',
+              borderColor: 'rgba(201,163,94,0.45)',
+              background: 'rgba(201,163,94,0.08)',
             }}
           >
             {activeRoom.name}
@@ -171,8 +171,8 @@ export function NowWhatShell({
               className="rounded-full px-4 py-1.5 text-xs border"
               style={{
                 color: ACCENT,
-                borderColor: 'rgba(255,226,122,0.45)',
-                background: 'rgba(255,226,122,0.08)',
+                borderColor: 'rgba(201,163,94,0.45)',
+                background: 'rgba(201,163,94,0.08)',
               }}
             >
               {d.name}
@@ -216,7 +216,7 @@ export function NowWhatThreshold({
     <div className="relative max-w-prose mx-auto px-4 py-14">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_15%,rgba(125,175,255,0.10),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_15%,rgba(196,164,110,0.10),transparent_70%)]"
       />
       <div className="relative flex flex-col items-center text-center space-y-5">
         <div style={{ animation: 'nwtFadeUp 0.7s ease both' }}>
@@ -260,8 +260,8 @@ export function NowWhatThreshold({
         >
           <a
             href={`/now-what/arrive${next ? `?next=${next}` : ''}`}
-            className="rounded-full border px-6 py-2 text-sm transition-all hover:shadow-[0_0_30px_rgba(255,226,122,0.25)]"
-            style={{ color: ACCENT, borderColor: 'rgba(255,226,122,0.4)' }}
+            className="rounded-full border px-6 py-2 text-sm transition-all hover:shadow-[0_0_30px_rgba(201,163,94,0.25)]"
+            style={{ color: ACCENT, borderColor: 'rgba(201,163,94,0.4)' }}
           >
             Enter
           </a>

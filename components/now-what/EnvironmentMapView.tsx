@@ -141,7 +141,7 @@ const PROTECTED_ROOMS: RoomDef[] = [
 ];
 
 type Viewer = 'member' | 'practitioner';
-const ACCENT = { member: '#ffe27a', practitioner: '#f59e0b' } as const;
+const ACCENT = { member: '#c9a35e', practitioner: '#f59e0b' } as const;
 
 /**
  * The building itself — an SVG floor plan. The session room is the lit
@@ -173,9 +173,9 @@ function BuildingMap({ viewer, fieldContext }: { viewer: Viewer; fieldContext?: 
     >
       <defs>
         <radialGradient id="nwCenterGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(255,226,122,0.14)" />
-          <stop offset="60%" stopColor="rgba(255,226,122,0.05)" />
-          <stop offset="100%" stopColor="rgba(255,226,122,0)" />
+          <stop offset="0%" stopColor="rgba(201,163,94,0.14)" />
+          <stop offset="60%" stopColor="rgba(201,163,94,0.05)" />
+          <stop offset="100%" stopColor="rgba(201,163,94,0)" />
         </radialGradient>
         <filter id="nwSoft" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="6" result="b" />
@@ -312,7 +312,7 @@ function EnvironmentMapInner({ viewer }: { viewer: Viewer }) {
       {/* The environment's own weather */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(125,175,255,0.09),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(196,164,110,0.09),transparent_70%)]"
       />
 
       <header className="relative flex flex-col items-center text-center pt-10 pb-6 space-y-3">
@@ -420,7 +420,7 @@ export default function EnvironmentMapView({ viewer }: { viewer: Viewer }) {
   const shell =
     viewer === 'practitioner'
       ? 'min-h-full text-slate-200' // studio layout provides the dark shell
-      : 'min-h-screen bg-[#062a42] text-slate-200';
+      : 'min-h-screen bg-[#1f1b16] text-slate-200';
 
   return (
     <div className={shell}>

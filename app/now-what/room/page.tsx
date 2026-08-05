@@ -37,7 +37,7 @@ function NowWhatRoomInner() {
   const session = useMemberSession();
 
   return (
-    <div className="min-h-screen bg-[#062a42] text-slate-200">
+    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
       {session === 'out' && (
         // The threshold: sign-in met at the door, in the field's register —
         // not as a red API error inside a room that half-opened.
@@ -68,7 +68,7 @@ function NowWhatRoomInner() {
 export default function NowWhatRoomPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#062a42] flex items-center justify-center">
+      <div className="min-h-screen bg-[#1f1b16] flex items-center justify-center">
         <p className="text-slate-500 text-sm font-light">Opening the room…</p>
       </div>
     }>
