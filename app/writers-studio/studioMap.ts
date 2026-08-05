@@ -92,13 +92,16 @@ export const STUDIO_MAP: StudioGroup[] = [
         id: 'studio-home',
         label: 'Home',
         availability: 'available',
-        href: '/press/studio',
+        href: '/writers-studio',
       },
     ],
   },
   {
     id: 'current-book',
-    label: 'Current Book',
+    /* "Current Writing", not "Current Book" (Kelly, 2026-08-05): writing is
+       the practice; a book is one thing writing may become. The id stays —
+       it is an implementation key, not member-facing vocabulary. */
+    label: 'Current Writing',
     destinations: [
       {
         id: 'canvas',
@@ -132,19 +135,10 @@ export const STUDIO_MAP: StudioGroup[] = [
       {
         id: 'import',
         label: 'Import Manuscript',
-        note: 'Bring a book in from a file.',
+        note: 'Bring in writing from a file.',
         availability: 'available',
         href: IMPORT_HREF,
       },
-    ],
-  },
-  {
-    id: 'later',
-    label: 'Coming later',
-    destinations: [
-      { id: 'gatherings', label: 'Gatherings', availability: 'later' },
-      { id: 'shape', label: 'Shape', availability: 'later' },
-      { id: 'release', label: 'Release', availability: 'later' },
     ],
   },
 ];

@@ -147,14 +147,15 @@ describe('disposition vocabulary — presentation state, never audience', () => 
 describe('the three studios stay distinct', () => {
   const find = (id: string) => HOUSE_DESTINATIONS.find((d) => d.id === id)!;
 
-  it("Writer's Studio → /press/studio (Layer 2 environment), never the Layer 3 desk", () => {
-    expect(find('studio').route).toBe('/press/studio');
+  it("Writer's Studio → /writers-studio (Layer 2 environment), never the Layer 3 desk", () => {
+    // RULED 2026-08-05: the Writer's Studio does not live under /press.
+    expect(find('studio').route).toBe('/writers-studio');
     expect(find('studio').route).not.toBe('/press/manuscript');
   });
 
   it('Book Studio → /book-studio, distinct from both other studios', () => {
     expect(find('book-studio').route).toBe('/book-studio');
-    expect(find('book-studio').route).not.toBe('/press/studio');
+    expect(find('book-studio').route).not.toBe('/writers-studio');
     expect(find('book-studio').route).not.toBe('/studio');
   });
 

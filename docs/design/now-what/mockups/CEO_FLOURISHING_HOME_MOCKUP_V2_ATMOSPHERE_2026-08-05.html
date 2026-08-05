@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEO Flourishing Home — Mockup v2 (atmosphere pass)</title>
+<style>
+  :root {
+    --ink: #29231c;
+    --ink-soft: #57503f;
+    --ink-faint: #8f8474;
+    --bronze: #8a6a35;
+    --rule: rgba(90, 76, 58, 0.14);
+    --wash: rgba(255, 253, 248, 0.6);
+    --wash-warm: rgba(238, 226, 203, 0.45);
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --sans: -apple-system, 'Helvetica Neue', 'Segoe UI', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse 100% 55% at 50% -8%, rgba(196,164,110,0.18), transparent 62%),
+      linear-gradient(#f9f6f0, #f3eee5);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame { max-width: 72rem; margin: 0 auto; padding: 30px 48px 100px; }
+
+  .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .wordmark { font-size: 13px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--bronze); text-decoration: none; }
+  .loc { font-size: 12px; color: var(--ink-faint); font-weight: 300; }
+
+  /* ── The first screen: almost nothing. Welcome, the question, one door. ── */
+  .hero {
+    min-height: 78vh;
+    display: flex; flex-direction: column; justify-content: center;
+    max-width: 46rem;
+  }
+  .brand { font-size: 11px; letter-spacing: 0.42em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: 44px; font-weight: 400; letter-spacing: -0.01em; margin-top: 22px; }
+  .subtitle { font-size: 17px; font-weight: 300; color: var(--ink-soft); margin-top: 12px; line-height: 1.6; }
+
+  .carrying { margin-top: 64px; }
+  .carrying .lbl {
+    font-family: var(--serif); font-size: 17px; font-style: italic; color: var(--ink-faint);
+  }
+  .carrying .focal { font-family: var(--serif); font-size: 34px; line-height: 1.25; margin-top: 18px; }
+  .carrying .question {
+    font-family: var(--serif); font-size: 22px; font-style: italic; color: var(--ink-soft);
+    margin-top: 16px; line-height: 1.55;
+  }
+  .prov { font-size: 12px; font-weight: 300; color: var(--ink-faint); margin-top: 14px; }
+  .cta {
+    display: inline-block; margin-top: 40px; background: var(--ink); color: #f6f2ea;
+    border-radius: 999px; padding: 14px 40px; font-size: 15px; text-decoration: none;
+    box-shadow: 0 10px 30px rgba(64,52,36,0.2);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(64,52,36,0.28); }
+  .unfold { margin-top: 70px; font-size: 12px; font-weight: 300; color: var(--ink-faint); letter-spacing: 0.2em; text-transform: uppercase; }
+
+  /* ── The field unfolds below: few boxes, soft washes, wide silence. ── */
+  .field {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 22px;
+  }
+  a.card, .card {
+    display: block;
+    background: var(--wash);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 34px 36px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  a.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(64,52,36,0.1);
+    border-color: rgba(138,106,53,0.35);
+  }
+  .arealabel { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .arealabel .t { font-family: var(--serif); font-size: 21px; font-weight: 400; }
+  .arealabel .go { font-size: 14px; color: var(--bronze); font-weight: 300; white-space: nowrap; }
+  .quiet { font-size: 14.5px; font-weight: 300; color: var(--ink-soft); line-height: 1.7; }
+  .serif { font-family: var(--serif); font-weight: 400; }
+
+  /* Since your last conversation — ONE box, three quiet entries */
+  .since { grid-column: 1 / -1; }
+  .since .entries { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin-top: 6px; }
+  .entry .frameline { font-size: 12.5px; font-weight: 300; color: var(--ink-faint); margin-bottom: 10px; }
+  .entry .words { font-family: var(--serif); font-size: 17.5px; line-height: 1.55; }
+  .entry .prov { margin-top: 10px; }
+  .fwd { color: var(--bronze); margin-left: 8px; }
+
+  /* Leadership work — season framing, no curriculum */
+  .work { grid-column: 1 / span 6; }
+  .work .thread { font-family: var(--serif); font-size: 19px; padding: 12px 0; }
+  .work .thread + .thread { border-top: 1px solid var(--rule); }
+  .work .season { font-size: 13px; font-weight: 300; color: var(--ink-faint); margin-top: 14px; font-style: italic; }
+
+  /* Leadership story — the jewel: warm wash */
+  .story { grid-column: 7 / span 6; background: var(--wash-warm); }
+  .story .line { font-family: var(--serif); font-size: 18px; font-style: italic; line-height: 1.6; color: var(--ink-soft); margin-top: 4px; }
+
+  /* Relationship + next conversation, folded together */
+  .relate { grid-column: 1 / span 6; }
+  .relate .coach { font-family: var(--serif); font-size: 19px; }
+  .relate .next { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); }
+
+  /* MAIA */
+  .maia { grid-column: 7 / span 6; }
+  .triad { font-size: 13px; font-weight: 300; color: var(--ink-faint); margin-top: 12px; line-height: 1.65; }
+
+  /* Cultivating — quiet single line band, not a module */
+  .cultivate { grid-column: 1 / -1; background: transparent; border: none; padding: 10px 36px; }
+  .cultivate .lbl { font-family: var(--serif); font-size: 16px; font-style: italic; color: var(--ink-faint); }
+  .cultivate .dims { font-size: 13.5px; font-weight: 300; color: var(--ink-faint); margin-top: 8px; letter-spacing: 0.02em; }
+  .cultivate .dims b { font-weight: 400; color: var(--ink-soft); font-family: var(--serif); }
+
+  .trust { grid-column: 1 / -1; background: transparent; border-style: dashed; padding: 24px 36px; }
+  .trust p { font-size: 12.5px; font-weight: 300; color: var(--ink-faint); line-height: 1.75; max-width: 62rem; }
+
+  @media (max-width: 980px) {
+    .field > * { grid-column: 1 / -1 !important; }
+    .since .entries { grid-template-columns: 1fr; }
+    .hero { min-height: unset; padding-top: 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="top">
+    <a class="wordmark" href="#">Now What?</a>
+    <span class="loc">Home</span>
+  </div>
+
+  <!-- ── First screen: silence, the person, the question ── -->
+  <div class="hero">
+    <p class="brand">Larry Closs · Executive Coaching</p>
+    <h1>Welcome back, Maya.</h1>
+    <p class="subtitle">A private space to reflect, make meaning, and lead with greater clarity.</p>
+
+    <div class="carrying">
+      <p class="lbl">The question you are carrying —</p>
+      <p class="focal">Building a stronger leadership team</p>
+      <p class="question">&ldquo;How do I stop solving problems my team should own?&rdquo;</p>
+      <p class="prov">captured from your coaching conversation · named in your own words</p>
+      <a class="cta" href="#">Continue</a>
+    </div>
+  </div>
+
+  <p class="unfold">Your work, as it unfolds</p>
+
+  <!-- ── The field: few boxes, wide silence ── -->
+  <div class="field">
+
+    <!-- One box, three quiet entries -->
+    <a class="card since" href="#">
+      <div class="arealabel"><span class="t">Since your last conversation</span><span class="go">&rarr;</span></div>
+      <div class="entries">
+        <div class="entry">
+          <p class="frameline">What you noticed</p>
+          <p class="words">When I step back, my team finds solutions I would have created myself.</p>
+          <p class="prov">in your words · August 2</p>
+        </div>
+        <div class="entry">
+          <p class="frameline">What you are living</p>
+          <p class="words">Hand the Monday operations review to my COO.</p>
+          <p class="prov">in your words · July 28</p>
+        </div>
+        <div class="entry">
+          <p class="frameline">What you are exploring</p>
+          <p class="words">Where am I still stepping in too quickly?</p>
+          <p class="prov">in your words · August 2 <span class="fwd">brought into your coaching</span></p>
+        </div>
+      </div>
+    </a>
+
+    <!-- Season of leadership, not curriculum -->
+    <a class="card work" href="#">
+      <div class="arealabel"><span class="t">Your leadership work</span><span class="go">&rarr;</span></div>
+      <p class="thread">Building a stronger leadership team</p>
+      <p class="thread">Leading through change</p>
+      <p class="season">The questions and conversations shaping this season of leadership — with Larry Closs.</p>
+    </a>
+
+    <!-- The jewel -->
+    <a class="card story" href="#">
+      <div class="arealabel"><span class="t">Your leadership story</span><span class="go">Everything you&rsquo;ve kept &rarr;</span></div>
+      <p class="line">How you are becoming the leader you are becoming — realizations, turning points, commitments, lessons. In your own words, over time.</p>
+    </a>
+
+    <!-- Relationship, with the next conversation inside it -->
+    <a class="card relate" href="#">
+      <div class="arealabel"><span class="t">Your coaching relationship</span><span class="go">&rarr;</span></div>
+      <p class="coach">Larry Closs</p>
+      <p class="quiet" style="margin-top:8px;">You have brought one piece of your work into your coaching. Nothing else reaches Larry.</p>
+      <div class="next">
+        <p class="quiet"><span class="serif" style="color:var(--ink);">Your next conversation</span> — bring forward what has shifted, what remains unresolved, what deserves deeper exploration.</p>
+      </div>
+    </a>
+
+    <!-- MAIA -->
+    <a class="card maia" href="#">
+      <div class="arealabel"><span class="t">A place to think</span><span class="go">&rarr;</span></div>
+      <p class="quiet">Explore a question with MAIA — clarify a decision, explore a challenge, organize your thinking before it needs to be certain.</p>
+      <p class="triad">MAIA helps you think. Larry helps you develop. You remain the author.</p>
+    </a>
+
+    <!-- What you are cultivating — a breath, not a module -->
+    <div class="cultivate">
+      <p class="lbl">What you are cultivating —</p>
+      <p class="dims"><b>Inner leadership</b> · <b>Relationships</b> · <b>Strategic clarity</b> · <b>Organizational stewardship</b></p>
+    </div>
+
+    <!-- Boundary — stated once -->
+    <div class="card trust">
+      <p>This space holds what you authored — nothing else. No scores, no assessments, no record of how often you come here. Larry receives a piece of your work only when you bring it into your coaching, one piece at a time — never automatically. Anything brought forward can be withdrawn, and withdrawing it tells no one.</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

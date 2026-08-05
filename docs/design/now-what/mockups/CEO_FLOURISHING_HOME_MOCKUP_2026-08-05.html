@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEO Flourishing Home — Mockup v3 (full field, human register)</title>
+<style>
+  :root {
+    --ink: #29231c;
+    --ink-soft: #57503f;
+    --ink-faint: #8f8474;
+    --bronze: #8a6a35;
+    --rule: rgba(90, 76, 58, 0.16);
+    --box: rgba(255, 253, 248, 0.78);
+    --box-warm: rgba(240, 229, 209, 0.6);
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --sans: -apple-system, 'Helvetica Neue', 'Segoe UI', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse 90% 45% at 50% -5%, rgba(196,164,110,0.16), transparent 60%),
+      linear-gradient(#f8f5ef, #f3eee5);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame { max-width: 80rem; margin: 0 auto; padding: 26px 40px 80px; }
+
+  .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .wordmark { font-size: 13px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--bronze); text-decoration: none; }
+  .loc { font-size: 12px; color: var(--ink-faint); font-weight: 300; }
+
+  .arrive { margin-top: 34px; }
+  .brand { font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: 40px; font-weight: 400; letter-spacing: -0.01em; margin-top: 14px; }
+  .subtitle { font-size: 16.5px; font-weight: 300; color: var(--ink-soft); margin-top: 8px; max-width: 46rem; line-height: 1.6; }
+
+  .field {
+    margin-top: 34px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+  }
+  a.box, .box {
+    display: block;
+    border: 1px solid var(--rule);
+    background: var(--box);
+    border-radius: 16px;
+    padding: 24px 26px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  a.box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(64,52,36,0.12);
+    border-color: rgba(138,106,53,0.4);
+  }
+  .arealabel { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .arealabel .t { font-family: var(--serif); font-size: 19px; font-weight: 400; color: var(--ink); }
+  .arealabel .go { font-size: 14px; color: var(--bronze); white-space: nowrap; font-weight: 300; }
+
+  .serif { font-family: var(--serif); font-weight: 400; }
+  .prov { font-size: 12px; font-weight: 300; color: var(--ink-faint); margin-top: 10px; }
+  .prov .fwd { color: var(--bronze); margin-left: 8px; }
+  .quiet { font-size: 14px; font-weight: 300; color: var(--ink-soft); line-height: 1.65; }
+
+  .living {
+    grid-column: 1 / span 7; grid-row: span 2;
+    background: var(--box-warm);
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 320px;
+  }
+  .living .focal { font-size: 28px; line-height: 1.26; }
+  .living .question { font-size: 20px; font-style: italic; color: var(--ink-soft); margin-top: 12px; line-height: 1.5; }
+  .cta {
+    display: inline-block; margin-top: 20px; background: var(--ink); color: #f6f2ea;
+    border-radius: 999px; padding: 12px 28px; font-size: 14.5px;
+    box-shadow: 0 8px 26px rgba(64,52,36,0.18);
+  }
+
+  .upcoming { grid-column: 8 / span 5; }
+  .upcoming .when { font-family: var(--serif); font-size: 20px; }
+  .connect { grid-column: 8 / span 5; }
+  .connect .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; }
+  .connect .row + .row { border-top: 1px solid var(--rule); }
+  .connect .who { font-size: 15px; font-weight: 400; color: var(--ink); }
+  .connect .sub { font-size: 12px; color: var(--ink-faint); font-weight: 300; margin-left: 8px; }
+  .connect .go2 { font-size: 13.5px; color: var(--bronze); }
+
+  .slot { grid-column: span 4; }
+  .slot .words { font-size: 16.5px; line-height: 1.5; }
+
+  .programs { grid-column: 1 / span 7; }
+  .prog { padding: 14px 0 16px; }
+  .prog + .prog { border-top: 1px solid var(--rule); }
+  .prog .pname { font-family: var(--serif); font-size: 18px; }
+  .prog .pwith { font-size: 12.5px; font-weight: 300; color: var(--ink-faint); margin-top: 3px; }
+  .pmap { display: flex; align-items: center; margin-top: 15px; flex-wrap: wrap; }
+  .stage { display: flex; align-items: center; }
+  .stage .dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink-faint); }
+  .stage.here .dot { background: var(--bronze); border-color: var(--bronze); box-shadow: 0 0 0 4px rgba(138,106,53,0.15); }
+  .stage .sname { font-size: 12.5px; font-weight: 300; color: var(--ink-faint); margin-left: 7px; }
+  .stage.here .sname { color: var(--ink); font-weight: 400; }
+  .stage .path { width: 30px; height: 1px; background: var(--rule); margin: 0 9px; }
+  .pmap-note { font-size: 11.5px; font-weight: 300; color: var(--ink-faint); margin-top: 9px; }
+
+  .story { grid-column: 8 / span 5; background: var(--box-warm); }
+  .story .line { font-family: var(--serif); font-size: 17px; font-style: italic; line-height: 1.6; color: var(--ink-soft); }
+
+  .lens { grid-column: 1 / span 4; }
+  .lens .dim { font-size: 13.5px; line-height: 1.9; font-weight: 300; color: var(--ink-faint); }
+  .lens .dim b { font-family: var(--serif); font-weight: 400; color: var(--ink); margin-right: 8px; }
+  .maia { grid-column: 5 / span 4; }
+  .maia .triad { font-size: 12.5px; font-weight: 300; color: var(--ink-faint); margin-top: 10px; line-height: 1.6; }
+  .larrybox { grid-column: 9 / span 4; }
+  .larrybox .coach { font-family: var(--serif); font-size: 18px; margin-bottom: 6px; }
+
+  .trust { grid-column: 1 / -1; background: transparent; border-style: dashed; }
+  .trust p { font-size: 12.5px; font-weight: 300; color: var(--ink-faint); line-height: 1.7; max-width: 66rem; }
+
+  @media (max-width: 980px) {
+    .field > * { grid-column: 1 / -1 !important; }
+    .living { min-height: unset; }
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="top">
+    <a class="wordmark" href="#">Now What?</a>
+    <span class="loc">Home</span>
+  </div>
+
+  <div class="arrive">
+    <p class="brand">Larry Closs · Executive Coaching</p>
+    <h1>Welcome back, Maya.</h1>
+    <p class="subtitle">A private space for what comes next — your life, your meaning, your flourishing as a human being.</p>
+  </div>
+
+  <div class="field">
+
+    <!-- The living question — dominant, warm. Active: opens the reflection room. -->
+    <a class="box living" href="#reflection">
+      <div>
+        <div class="arealabel"><span class="t">The question you are carrying</span><span class="go">&rarr;</span></div>
+        <p class="focal serif">A life worth living</p>
+        <p class="question serif">&ldquo;Now that I have proven myself &mdash; what is all of this for?&rdquo;</p>
+        <p class="prov">captured from your coaching conversation · named in your own words</p>
+      </div>
+      <div><span class="cta">Continue this reflection</span></div>
+    </a>
+
+    <!-- Calendar / next session -->
+    <a class="box upcoming" href="#prepare">
+      <div class="arealabel"><span class="t">Your next conversation</span><span class="go">Prepare &rarr;</span></div>
+      <p class="when">Thursday, August 14 · 10:00</p>
+      <p class="quiet" style="margin-top:6px;">With Larry — bring forward what has shifted in you, what remains unresolved, what deserves deeper exploration.</p>
+    </a>
+
+    <!-- Communicate -->
+    <div class="box connect">
+      <div class="arealabel"><span class="t">Reach out</span></div>
+      <div class="row">
+        <span class="who">Message Larry<span class="sub">private, between conversations</span></span>
+        <span class="go2">Write &rarr;</span>
+      </div>
+      <div class="row">
+        <span class="who">Your circle<span class="sub">others walking the same road</span></span>
+        <span class="go2">Open &rarr;</span>
+      </div>
+    </div>
+
+    <!-- Continuity slots — their life, not their org chart -->
+    <a class="box slot" href="#noticed">
+      <div class="arealabel"><span class="t">What you noticed</span><span class="go">&rarr;</span></div>
+      <p class="words serif">When I slow down, I can feel my own life again.</p>
+      <p class="prov">in your words · August 2</p>
+    </a>
+
+    <a class="box slot" href="#living">
+      <div class="arealabel"><span class="t">What you are living</span><span class="go">&rarr;</span></div>
+      <p class="words serif">One evening a week that belongs to my family, protected.</p>
+      <p class="prov">in your words · July 28</p>
+    </a>
+
+    <a class="box slot" href="#exploring">
+      <div class="arealabel"><span class="t">What you are exploring</span><span class="go">&rarr;</span></div>
+      <p class="words serif">What does success mean to me now?</p>
+      <p class="prov">in your words · August 2 <span class="fwd">brought into your coaching</span></p>
+    </a>
+
+    <!-- A daily thought — a breath in the field -->
+    <div class="box" style="grid-column: 1 / -1; background: transparent; border: none; text-align: center; padding: 20px 26px;">
+      <p class="serif" style="font-size: 19px; font-style: italic; color: var(--ink-soft); line-height: 1.6; max-width: 44rem; margin: 0 auto;">&ldquo;Live the questions now. Perhaps you will then gradually, without noticing it, live along some distant day into the answer.&rdquo;</p>
+      <p style="font-size: 12.5px; font-weight: 300; color: var(--ink-faint); margin-top: 10px;">&mdash; Rainer Maria Rilke</p>
+    </div>
+
+    <!-- Your work with Larry — seasons of a life, with a visible map -->
+    <div class="box programs">
+      <div class="arealabel"><span class="t">Your work with Larry</span><span class="go">All of it &rarr;</span></div>
+
+      <div class="prog">
+        <p class="pname">Flourishing</p>
+        <p class="pwith">with Larry Closs · one-to-one</p>
+        <div class="pmap">
+          <span class="stage"><span class="dot"></span><span class="sname">Arrival</span></span>
+          <span class="stage"><span class="path"></span></span>
+          <span class="stage here"><span class="dot"></span><span class="sname">Deepening</span></span>
+          <span class="stage"><span class="path"></span></span>
+          <span class="stage"><span class="dot"></span><span class="sname">Integration</span></span>
+          <span class="stage"><span class="path"></span></span>
+          <span class="stage"><span class="dot"></span><span class="sname">Flourishing</span></span>
+        </div>
+        <p class="pmap-note">Where you are — placed by Larry, moved only in your conversations.</p>
+      </div>
+
+      <div class="prog">
+        <p class="pname">The Next Chapter</p>
+        <p class="pwith">with Larry Closs · with others walking the same road</p>
+        <div class="pmap">
+          <span class="stage"><span class="dot"></span><span class="sname">Orientation</span></span>
+          <span class="stage"><span class="path"></span></span>
+          <span class="stage here"><span class="dot"></span><span class="sname">Practice</span></span>
+          <span class="stage"><span class="path"></span></span>
+          <span class="stage"><span class="dot"></span><span class="sname">Return</span></span>
+        </div>
+        <p class="pmap-note">Where your circle is — placed by Larry for the circle.</p>
+      </div>
+    </div>
+
+    <!-- The jewel -->
+    <a class="box story" href="#kept">
+      <div class="arealabel"><span class="t">Your story</span><span class="go">Everything you&rsquo;ve kept &rarr;</span></div>
+      <p class="line">How you are becoming — as a human being, first. Realizations, turning points, commitments, lessons. In your own words, over time.</p>
+    </a>
+
+    <!-- What you are cultivating -->
+    <a class="box lens" href="#cultivating">
+      <div class="arealabel"><span class="t">What you are cultivating</span><span class="go">&rarr;</span></div>
+      <p class="quiet" style="margin-bottom:12px;">The dimensions of a flourishing life.</p>
+      <p class="dim"><b>Relationships</b> connection · belonging · love</p>
+      <p class="dim"><b>Meaning &amp; purpose</b> what your life is for</p>
+      <p class="dim"><b>Presence</b> experiencing the life you built</p>
+      <p class="dim"><b>Health &amp; energy</b> movement · sleep · vitality</p>
+      <p class="dim"><b>Contribution</b> what you give beyond yourself</p>
+      <p class="dim"><b>Time</b> enough of it for what matters</p>
+    </a>
+
+    <!-- MAIA -->
+    <a class="box maia" href="#maia">
+      <div class="arealabel"><span class="t">A place to think</span><span class="go">&rarr;</span></div>
+      <p class="quiet">A quiet space with MAIA — clarify a decision, explore a tension, listen to yourself think before anything needs to be certain.</p>
+      <p class="triad">MAIA helps you think. Larry helps you grow. You remain the author.</p>
+    </a>
+
+    <!-- Relationship -->
+    <a class="box larrybox" href="#relationship">
+      <div class="arealabel"><span class="t">Your coaching relationship</span><span class="go">&rarr;</span></div>
+      <p class="coach">Larry Closs</p>
+      <p class="quiet">These are your own private thoughts and insights. You have brought one piece into your coaching with Larry.</p>
+    </a>
+
+    <!-- Boundary — stated once -->
+    <div class="box trust">
+      <p>This space holds what you authored — nothing else. No scores, no assessments, no record of how often you come here. Larry receives a piece of your work only when you bring it into your coaching, one piece at a time — never automatically. Anything brought forward can be withdrawn, and withdrawing it tells no one.</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

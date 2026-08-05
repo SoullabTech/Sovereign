@@ -20,11 +20,30 @@ import { apiFetch } from '@/lib/http/apiBase';
  * phase: a signed-out member has not "declared no work".
  */
 
+/** A member's declaration that an expression belongs to this work. */
+export interface WorkExpression {
+  expressionType: string;
+  expressionId: string;
+  declaredAt: string;
+}
+
+/** The five stage words a member may claim. Orientation, never progress. */
+export const STAGES = ['capturing', 'developing', 'writing', 'refining', 'sharing'] as const;
+export type Stage = (typeof STAGES)[number];
+
 export interface LivingWork {
   id: string;
   title: string | null;
+  /** The member's stated intention — their words or nothing (null). */
+  purpose: string | null;
+  /** The member's own word for what this is becoming ("Book"). Never a taxonomy. */
+  form: string | null;
+  /** Where the member says they are. The system never sets or advances it. */
+  stage: Stage | null;
   createdAt: string;
   updatedAt: string;
+  /** Only what the member declared in — never inferred, never system-placed. */
+  expressions: WorkExpression[];
 }
 
 export type LivingWorksPhase = 'loading' | 'ready' | 'unauthorized' | 'error';
@@ -45,7 +64,9 @@ export function useLivingWorks() {
         return;
       }
       const data = await res.json();
-      setWorks(Array.isArray(data.works) ? data.works : []);
+      const list: LivingWork[] = Array.isArray(data.works) ? data.works : [];
+      // An older payload without expressions must not read as "nothing placed".
+      setWorks(list.map((w) => ({ ...w, expressions: Array.isArray(w.expressions) ? w.expressions : [] })));
       setPhase('ready');
     } catch {
       // A failure to read is not an absence of works. Say only what is true.

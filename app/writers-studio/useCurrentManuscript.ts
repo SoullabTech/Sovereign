@@ -30,6 +30,7 @@ export type ManuscriptPhase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'e
 export function useCurrentManuscript() {
   const [phase, setPhase] = useState<ManuscriptPhase>('loading');
   const [manuscript, setManuscript] = useState<CurrentManuscript | null>(null);
+  const [manuscripts, setManuscripts] = useState<CurrentManuscript[]>([]);
   const [count, setCount] = useState(0);
 
   const load = useCallback(async () => {
@@ -47,6 +48,9 @@ export function useCurrentManuscript() {
       const list: CurrentManuscript[] = Array.isArray(data.manuscripts) ? data.manuscripts : [];
       setCount(list.length);
       setManuscript(list[0] ?? null);
+      // Work Home (Slice 6) shows every manuscript — placed ones inside their
+      // work, the rest as themselves — so the whole read is kept, not just [0].
+      setManuscripts(list);
       setPhase(list.length > 0 ? 'ready' : 'none');
     } catch {
       // A network failure is not an empty Studio. Say so.
@@ -58,5 +62,5 @@ export function useCurrentManuscript() {
     load();
   }, [load]);
 
-  return { phase, manuscript, count, reload: load };
+  return { phase, manuscript, manuscripts, count, reload: load };
 }

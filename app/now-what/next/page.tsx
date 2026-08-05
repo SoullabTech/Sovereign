@@ -83,12 +83,12 @@ function NextInner() {
       <div className="relative max-w-2xl mx-auto px-4 py-10 space-y-6">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(125,175,255,0.08),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(196,164,110,0.08),transparent_70%)]"
         />
 
         {/* Box 1 — orientation */}
         <div className={panel} style={{ animation: 'nwnFadeUp 0.55s ease both' }}>
-          <p className="text-xs uppercase tracking-[0.35em] mb-2" style={{ color: '#ffe27a' }}>What may be next</p>
+          <p className="text-xs uppercase tracking-[0.35em] mb-2" style={{ color: '#c9a35e' }}>What may be next</p>
           {/* YPO-grade rule (founder, 2026-07-14 sweep): function words lead
               the header; the doctrine sentence stays, demoted to flavor inside
               the body. Positive-first: the negation now lands after the
@@ -124,10 +124,10 @@ function NextInner() {
           {practices !== null && practices.length > 0 && (
             <ul className="space-y-4">
               {practices.map((t) => (
-                <li key={t.id} className="relative border-l border-[#ffe27a]/25 pl-5 space-y-1">
+                <li key={t.id} className="relative border-l border-[#c9a35e]/25 pl-5 space-y-1">
                   <span
                     aria-hidden
-                    className="absolute -left-[3.5px] top-1.5 w-1.5 h-1.5 rounded-full bg-[#ffe27a]/80 shadow-[0_0_10px_rgba(255,226,122,0.55)]"
+                    className="absolute -left-[3.5px] top-1.5 w-1.5 h-1.5 rounded-full bg-[#c9a35e]/80 shadow-[0_0_10px_rgba(201,163,94,0.55)]"
                   />
                   <p className="text-slate-100 text-sm font-light leading-relaxed">{t.title}</p>
                   <p className="text-slate-600 text-xs font-light">{dayLabel(t.created_at)}</p>
@@ -139,15 +139,15 @@ function NextInner() {
 
         {/* Box 3 — THE accented action: where next actually emerges */}
         <div
-          className="relative rounded-xl border p-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[0_0_50px_rgba(255,226,122,0.07)]"
-          style={{ borderColor: 'rgba(255,226,122,0.4)', animation: 'nwnFadeUp 0.55s ease 240ms both' }}
+          className="relative rounded-xl border p-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[0_0_50px_rgba(201,163,94,0.07)]"
+          style={{ borderColor: 'rgba(201,163,94,0.4)', animation: 'nwnFadeUp 0.55s ease 240ms both' }}
         >
           <h2 className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-3">Now</h2>
           <div className="flex flex-wrap items-center gap-5">
             <a
               href={roomHref}
-              className="rounded-full border px-6 py-2.5 text-sm transition-all hover:shadow-[0_0_30px_rgba(255,226,122,0.3)]"
-              style={{ color: '#ffe27a', borderColor: 'rgba(255,226,122,0.45)' }}
+              className="rounded-full border px-6 py-2.5 text-sm transition-all hover:shadow-[0_0_30px_rgba(201,163,94,0.3)]"
+              style={{ color: '#c9a35e', borderColor: 'rgba(201,163,94,0.45)' }}
             >
               Start a session →
             </a>
@@ -181,7 +181,7 @@ function NextInner() {
 
 export default function NowWhatNextPage() {
   return (
-    <div className="min-h-screen bg-[#062a42] text-slate-200">
+    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">

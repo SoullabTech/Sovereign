@@ -13,6 +13,11 @@
  *   program      — program door within the field (catalog spec: the retreat link
  *                  carries the retreat door). Scopes the position block only;
  *                  the whole field stays composed either way.
+ *   entry        — which Home door the member came through (question | cultivate |
+ *                  prepare | think). Frames the arrival; never seeds content.
+ *   thread       — opaque thread id for entry=question (the member's own carried
+ *                  question, resolved member-scoped — the text never rides the URL).
+ *   dimension    — flourishing dimension slug for entry=cultivate (static copy only).
  */
 
 import { useSearchParams } from 'next/navigation';
@@ -25,11 +30,14 @@ function NowWhatRoomInner() {
   const phase = params?.get('phase') ?? 'fire_1';
   const fieldContext = params?.get('fieldContext') ?? undefined;
   const program = params?.get('program') ?? undefined;
+  const entry = params?.get('entry') ?? undefined;
+  const entryThread = params?.get('thread') ?? undefined;
+  const entryDimension = params?.get('dimension') ?? undefined;
   // Session fact only (shell rider 2): signed in before, or not.
   const session = useMemberSession();
 
   return (
-    <div className="min-h-screen bg-[#062a42] text-slate-200">
+    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
       {session === 'out' && (
         // The threshold: sign-in met at the door, in the field's register —
         // not as a red API error inside a room that half-opened.
@@ -43,7 +51,14 @@ function NowWhatRoomInner() {
         <>
           {/* Shell recedes mid-session (quiet): the room stays a room. */}
           <NowWhatShell current="Session room" fieldContext={fieldContext} variant="quiet" />
-          <NowWhatRoom phase={phase} fieldContext={fieldContext} program={program} />
+          <NowWhatRoom
+            phase={phase}
+            fieldContext={fieldContext}
+            program={program}
+            entry={entry}
+            entryThread={entryThread}
+            entryDimension={entryDimension}
+          />
         </>
       )}
     </div>
@@ -53,7 +68,7 @@ function NowWhatRoomInner() {
 export default function NowWhatRoomPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#062a42] flex items-center justify-center">
+      <div className="min-h-screen bg-[#1f1b16] flex items-center justify-center">
         <p className="text-slate-500 text-sm font-light">Opening the room…</p>
       </div>
     }>

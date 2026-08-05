@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Now What? — Brand Directions</title>
+<style>
+  :root {
+    --ink:#29231c; --ink-soft:#57503f; --ink-faint:#8f8474; --bronze:#8a6a35;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --sans:-apple-system,'Helvetica Neue','Segoe UI',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--sans);color:var(--ink);background:linear-gradient(#f8f5ef,#f3eee5);-webkit-font-smoothing:antialiased;}
+  .frame{max-width:72rem;margin:0 auto;padding:34px 40px 90px;}
+  h1{font-family:var(--serif);font-size:30px;font-weight:400;}
+  .lede{font-size:14.5px;font-weight:300;color:var(--ink-soft);margin-top:8px;max-width:44rem;line-height:1.7;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:34px;}
+  .card{border:1px solid rgba(90,76,58,.16);border-radius:16px;overflow:hidden;}
+  .card .label{font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--ink-faint);padding:14px 20px 0;}
+  .pane{padding:44px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:170px;}
+  .pane.dark{background:linear-gradient(#211d18,#1b1815);}
+  .note{font-size:12px;font-weight:300;color:var(--ink-faint);padding:0 20px 16px;line-height:1.6;}
+
+  /* A — Editorial serif logotype, bronze question mark */
+  .lockA{font-family:var(--serif);font-size:40px;color:var(--ink);}
+  .lockA .q{color:var(--bronze);}
+  .dark .lockA{color:#e9e2d4;} .dark .lockA .q{color:#c9a35e;}
+  .overline{font-size:10.5px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink-faint);}
+  .dark .overline{color:#857c6c;}
+
+  /* B — Letterspaced small caps, bronze ? */
+  .lockB{font-family:var(--sans);font-weight:400;font-size:22px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink);}
+  .lockB .q{color:var(--bronze);}
+  .dark .lockB{color:#e9e2d4;} .dark .lockB .q{color:#c9a35e;}
+
+  /* C — Stacked with hairline */
+  .lockC{text-align:center;font-family:var(--serif);color:var(--ink);line-height:1.06;}
+  .lockC .now{font-size:34px;font-style:italic;color:var(--ink-soft);}
+  .lockC .what{font-size:44px;}
+  .lockC .rule{width:120px;height:1px;background:rgba(90,76,58,.35);margin:10px auto;}
+  .lockC .q{color:var(--bronze);}
+  .dark .lockC{color:#e9e2d4;} .dark .lockC .now{color:#b6ac9a;}
+  .dark .lockC .rule{background:rgba(233,226,212,.3);} .dark .lockC .q{color:#c9a35e;}
+
+  /* D — The question mark AS the mark (monogram) */
+  .lockD{display:flex;align-items:center;gap:18px;}
+  .qmark{
+    font-family:var(--serif);font-size:64px;color:var(--bronze);line-height:1;
+    width:76px;height:76px;border:1.5px solid rgba(138,106,53,.5);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;padding-bottom:6px;
+  }
+  .lockD .words{font-family:var(--serif);font-size:26px;color:var(--ink);line-height:1.25;}
+  .lockD .sub{font-size:10.5px;letter-spacing:.35em;text-transform:uppercase;color:var(--ink-faint);margin-top:6px;}
+  .dark .lockD .words{color:#e9e2d4;} .dark .lockD .sub{color:#857c6c;}
+  .dark .qmark{color:#c9a35e;border-color:rgba(201,163,94,.5);}
+
+  @media(max-width:880px){.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="frame">
+  <h1>Now What? — brand directions</h1>
+  <p class="lede">Four typographic identities in the environment's own register — each shown on paper and on the designed charcoal. The question mark is the brand's soul: the question after success. Larry Closs lockup rides as an overline or underline, never competing with the mark.</p>
+
+  <div class="grid">
+
+    <div class="card">
+      <p class="label">A · Editorial serif</p>
+      <div class="pane">
+        <p class="overline">Larry Closs</p>
+        <p class="lockA">Now What<span class="q">?</span></p>
+      </div>
+      <div class="pane dark">
+        <p class="overline">Larry Closs</p>
+        <p class="lockA">Now What<span class="q">?</span></p>
+      </div>
+      <p class="note">The question spoken plainly, in the environment's serif. Quiet authority; reads as a book title, not an app.</p>
+    </div>
+
+    <div class="card">
+      <p class="label">B · Letterspaced caps (refined current)</p>
+      <div class="pane">
+        <p class="lockB">Now&nbsp;What<span class="q">?</span></p>
+        <p class="overline">with Larry Closs</p>
+      </div>
+      <div class="pane dark">
+        <p class="lockB">Now&nbsp;What<span class="q">?</span></p>
+        <p class="overline">with Larry Closs</p>
+      </div>
+      <p class="note">What the rooms wear today, sharpened — the bronze question mark makes the wordmark a question, not a label.</p>
+    </div>
+
+    <div class="card">
+      <p class="label">C · Stacked, italic-to-roman</p>
+      <div class="pane">
+        <p class="lockC"><span class="now">now</span><br><span class="rule"></span><span class="what">What<span class="q">?</span></span></p>
+      </div>
+      <div class="pane dark">
+        <p class="lockC"><span class="now">now</span><br><span class="rule"></span><span class="what">What<span class="q">?</span></span></p>
+      </div>
+      <p class="note">The pivot the talk names: the quiet "now" of arrival above the line, the open "What?" of the next chapter below it.</p>
+    </div>
+
+    <div class="card">
+      <p class="label">D · The mark — a held question</p>
+      <div class="pane">
+        <div class="lockD">
+          <div class="qmark">?</div>
+          <div><p class="words">Now What</p><p class="sub">Larry Closs</p></div>
+        </div>
+      </div>
+      <div class="pane dark">
+        <div class="lockD">
+          <div class="qmark">?</div>
+          <div><p class="words">Now What</p><p class="sub">Larry Closs</p></div>
+        </div>
+      </div>
+      <p class="note">A circled question mark as a standalone mark — works as favicon, app icon, and seal. The circle holds the question the way the environment holds the person.</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
