@@ -35,12 +35,33 @@
 import { HOUSE_DESTINATIONS, type HouseAudience } from './houseDestinations';
 import { MAIA_BOUNDARIES } from './maiaNav';
 
-/** The boundary's declared relationship to the House. */
+/**
+ * The boundary's declared relationship to the House.
+ *
+ * ⛔⛔ INVARIANT — disposition values describe HOUSE PRESENTATION STATE. They must
+ * NOT describe member class, founder status, audience, ownership, or the nature
+ * of the room. Three questions, three axes, never one:
+ *
+ *   What kind of work happens here?          → the room's own identity (not here)
+ *   Who does the House offer this door to?   → disposition            (HERE)
+ *   Who is authorized to enter?              → authorization          (below)
+ *
+ * This value set was originally `founder_only`, which smuggled the audience
+ * answer onto the presentation axis and read as an assertion about the room's
+ * NATURE — directly contradicting the ruling that the House must not encode
+ * founder-vs-member into a studio's identity. Renamed to `offered_restricted`
+ * 2026-08-04. The House can decide what it OFFERS without deciding what
+ * something IS.
+ *
+ * Enforced by the "disposition vocabulary" suite in
+ * __tests__/houseDispositions.test.ts — a new value carrying audience words
+ * fails the build.
+ */
 export type HouseDisposition =
   /** The House offers a door to it. */
   | 'offered'
   /** The House offers a door, restricted to founder/steward audiences. */
-  | 'founder_only'
+  | 'offered_restricted'
   /** Reachable contextually / via MAIA routing — deliberately not a House door. */
   | 'contextual_only'
   /** Deliberately withheld from House navigation. A ruling, not an omission. */
@@ -65,7 +86,7 @@ export type EnterAuthorization = 'open' | 'steward' | 'practitioner' | 'founder'
 
 export interface BoundaryDisposition {
   disposition: HouseDisposition;
-  /** Required for 'offered' | 'founder_only'; forbidden otherwise. */
+  /** Required for 'offered' | 'offered_restricted'; forbidden otherwise. */
   destinationId?: string;
   /** Long-term entry authorization. Declarative — not enforced here. */
   authorization: EnterAuthorization;
@@ -86,7 +107,7 @@ export interface BoundaryDisposition {
 export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
   // ── Studios — Steward-level offerings (founder ruling 2026-08-04) ────────
   studio: {
-    disposition: 'founder_only',
+    disposition: 'offered_restricted',
     destinationId: 'pro-studio',
     authorization: 'steward',
     interimAudience: 'founder',
@@ -96,7 +117,7 @@ export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
       'Ruled: docs/governance/HOUSE_IA_RULING_STUDIO_ONE_THRESHOLD_2026-08-04.md',
   },
   'book-studio': {
-    disposition: 'founder_only',
+    disposition: 'offered_restricted',
     destinationId: 'book-studio',
     authorization: 'steward',
     interimAudience: 'founder',
@@ -111,7 +132,7 @@ export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
       'Long-term Steward (specialized); interim founder gate pending the authorization layer.',
   },
   'vision-studio': {
-    disposition: 'founder_only',
+    disposition: 'offered_restricted',
     destinationId: 'vision-studio',
     authorization: 'steward',
     interimAudience: 'founder',
@@ -151,7 +172,7 @@ export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
       'field cannot express — so a pure seeker never meets an empty coordination badge.',
   },
   circles: {
-    disposition: 'founder_only',
+    disposition: 'offered_restricted',
     destinationId: 'circles',
     authorization: 'steward',
     interimAudience: 'founder',
@@ -230,7 +251,7 @@ export function unexplainedDestinations(): string[] {
 export function isOrphan(boundaryId: string): boolean {
   const d = BOUNDARY_DISPOSITIONS[boundaryId];
   if (!d) return true; // undispositioned — the actual failure
-  if (d.disposition === 'offered' || d.disposition === 'founder_only') {
+  if (d.disposition === 'offered' || d.disposition === 'offered_restricted') {
     return !HOUSE_DESTINATIONS.some((x) => x.id === d.destinationId);
   }
   return false;

@@ -24,7 +24,7 @@ House back into a complete registry — the taxonomy the House was created to le
 behind. It asserts instead:
 
 1. every `MAIA_BOUNDARY` has a **declared** House disposition;
-2. every `offered` / `founder_only` boundary resolves to a valid House destination;
+2. every `offered` / `offered_restricted` boundary resolves to a valid House destination;
 3. every House destination resolves back to a registered boundary **or** carries an
    explicit exception with a reason;
 4. `withheld` / `contextual` / `superseded` boundaries are **not** treated as orphans.
@@ -47,6 +47,37 @@ Identity       → which rules APPLY       → not modeled; unresolved
 ⚠️ `interimAudience` is the closest gate `HouseAudience` can express today
 (`'all' | 'founder'`). It is an **interim rendering control, not the authorization it
 approximates.** A list filter is not an authorization boundary.
+
+### Vocabulary invariant (added 2026-08-04, before merge)
+
+> **Disposition values describe House presentation state — not member class,
+> founder status, audience, or ownership.**
+
+Three questions, three axes:
+
+| Question | Axis |
+|---|---|
+| What kind of work happens here? | the room's own identity (not modeled here) |
+| Who does the House offer this door to? | **disposition** |
+| Who is authorized to enter? | **authorization** |
+
+The value set originally shipped `founder_only`. That smuggled the *audience*
+answer onto the *presentation* axis and read as a claim about the room's **nature**
+("the nature of this room is founder-only") — directly contradicting the ruling
+that the House must not encode founder-vs-member into a studio's identity.
+Renamed **`founder_only` → `offered_restricted`** before merge.
+
+**The House can decide what it OFFERS without deciding what something IS.**
+
+Enforced by the *disposition vocabulary* suite: a future value containing
+audience or ownership vocabulary (`founder`, `member`, `steward`, `practitioner`,
+`admin`, `tester`, `owner`, `private`, `public`, …) fails the build.
+Mutation-verified: reintroducing `founder_gated` fails 4 assertions.
+
+This is the same class of defect as the drift blind spot, caught at a different
+layer — *the guard caught the historical implementation bug; the naming review
+caught the future conceptual one.* Both are boundaries that are technically
+correct but invite the wrong mental model.
 
 ### Studios are Steward-level offerings
 
