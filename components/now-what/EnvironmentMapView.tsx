@@ -71,72 +71,49 @@ type RoomDef = {
 const OPEN_ROOMS: RoomDef[] = [
   {
     key: 'room',
-    name: 'Session room',
-    line: 'Sit with MAIA. Bring the actual thing — work with it until a next real step appears.',
+    name: 'The Room',
+    line: 'Think something through with MAIA — work with the actual thing until a next real step appears.',
     explain:
-      'This is where the work happens. Bring something real — a decision, a question, a stuck place — and talk it through with MAIA until a next real step appears. At the end, you choose what to keep; nothing is saved without your say-so.',
+      'This is where the thinking happens. Bring something real — a decision, a question, a stuck place — and talk it through with MAIA until a next real step appears. At the end, you choose what to keep; nothing is saved without your say-so.',
     route: '/now-what/room',
     carriesContext: true,
     primary: true,
   },
   {
-    key: 'field',
-    name: 'Your field',
-    line: 'The threads, practices, and offerings you authored here — in your own words.',
-    explain:
-      'Everything you chose to keep from your sessions collects here — threads, practices, offerings — in your own words, dated, never interpreted or scored. Visit it to see what your work has been teaching you.',
-    route: '/now-what/field',
-    carriesContext: true,
-  },
-  {
-    key: 'position',
-    name: 'Where you are',
-    line: 'If you came in through a program, this shows where you stand in it — as you declared it.',
-    explain:
-      'If you’re part of a program — coaching, a course, a group — this shows the place in it you last confirmed or stated, in your words. Nothing is tracked or worked out about you; until you say where you are, this room is simply empty.',
-    route: '/now-what/position',
-    carriesContext: true,
-  },
-  {
-    key: 'next',
-    name: 'What may be next',
-    line: 'The practices you chose to live — held open, not prescribed.',
-    explain:
-      'The practices you chose to live, and the door back to the session room — where what comes next actually emerges. No one here decides your next step, and nothing is recommended.',
-    route: '/now-what/next',
-    carriesContext: true,
-  },
-  {
-    key: 'questions',
-    name: "Questions you're living",
+    key: 'question',
+    name: 'My Question',
     line: 'The questions you chose to keep — named by you, kept warm.',
     explain:
-      'Some questions aren’t ready to be answered — they need to not get lost. When a session ends with a question still alive and you choose to keep it, it waits here in your exact words until you’re ready to bring it back.',
+      'Some questions aren’t ready to be answered — they need to not get lost. When you keep a question, it waits here in your exact words until you’re ready to continue thinking it through.',
     route: '/now-what/questions',
     carriesContext: true,
   },
-];
-
-// Deliberately protected (ruling 2026-07-13): these doors open onto an honest
-// explanation of what the room will be and why it is not running yet — never
-// onto generated content. Their function stays HOLD pending the episodic,
-// meaning-write, provenance, and member-pull gates.
-const PROTECTED_ROOMS: RoomDef[] = [
   {
-    key: 'themes',
-    name: 'Themes',
-    line: 'Patterns you pull, never pushed.',
+    key: 'work',
+    name: 'My Work',
+    line: 'What you chose to live, and the dimensions of a flourishing life where it gathers.',
     explain:
-      'Not open yet — on purpose. One day you’ll be able to ask MAIA to look across what you’ve kept and reflect patterns back, only when you ask. Step in to read why it isn’t running yet.',
-    route: '/now-what/themes',
+      'The practices you chose to live and the areas of life you are cultivating, gathered where you placed them. Nothing is assigned, measured, or recommended — this room holds what you put in it.',
+    route: '/now-what/work',
+    carriesContext: true,
   },
   {
-    key: 'reflections',
-    name: 'Reflections',
-    line: "MAIA's mirror, only when you ask.",
+    key: 'coaching',
+    name: 'My Coaching',
+    line: 'The human relationship this environment extends — conversations past and coming, and where you stand.',
     explain:
-      'Not open yet — on purpose. This will be a room you intentionally enter and ask for reflection — never a judgment running in the background. Step in to read why it isn’t running yet.',
-    route: '/now-what/reflections',
+      'Your work with your coach: the next conversation, previous ones, what you chose to bring forward, and your place in any program — as you declared it. The date serves the relationship, never the reverse.',
+    route: '/now-what/coaching',
+    carriesContext: true,
+  },
+  {
+    key: 'story',
+    name: 'My Story',
+    line: 'What you kept, in your own words, gathered over time.',
+    explain:
+      'Everything you chose to keep collects here — dated, in your own words, never interpreted or scored. Visit it to see what is becoming.',
+    route: '/now-what/field',
+    carriesContext: true,
   },
 ];
 
@@ -146,7 +123,9 @@ const ACCENT = { member: '#c9a35e', practitioner: '#f59e0b' } as const;
 /**
  * The building itself — an SVG floor plan. The session room is the lit
  * center chamber (holoflower heart); Your field is the lit chamber off the
- * east corridor; five taking-shape chambers stand as dashed scaffolding.
+ * east corridor; four noun-room chambers surround it (five-room ontology,
+ * 2026-08-05 — no scaffolded chambers remain; held capabilities are not
+ * advertised in the member house, ruling D-E).
  * The arrival arch at the south edge marks where the member came in —
  * it is a mark, not a link (the impostor-door ruling).
  */
@@ -192,9 +171,6 @@ function BuildingMap({ viewer, fieldContext }: { viewer: Viewer; fieldContext?: 
       <line x1="255" y1="255" x2="180" y2="255" stroke={accent} strokeOpacity="0.5" strokeWidth="2" />
       <line x1="298" y1="170" x2="222" y2="128" stroke={accent} strokeOpacity="0.5" strokeWidth="2" />
       <line x1="402" y1="170" x2="478" y2="128" stroke={accent} strokeOpacity="0.5" strokeWidth="2" />
-      {/* center → protected chambers (dashed scaffolding) */}
-      <line x1="298" y1="340" x2="222" y2="432" stroke={corridor} strokeWidth="1.5" strokeDasharray="4 5" />
-      <line x1="402" y1="340" x2="478" y2="432" stroke={corridor} strokeWidth="1.5" strokeDasharray="4 5" />
       {/* arrival corridor from the south arch to the center */}
       <line x1="350" y1="500" x2="350" y2="350" stroke={corridor} strokeWidth="2" />
 
@@ -217,17 +193,17 @@ function BuildingMap({ viewer, fieldContext }: { viewer: Viewer; fieldContext?: 
         />
         <image href="/holoflower.svg" x="298" y="168" width="104" height="104" opacity="0.4" />
         <text x="350" y="292" textAnchor="middle" fontSize="17" fill="#f1f5f9" fontWeight="300">
-          Session room
+          The Room
         </text>
         <text x="350" y="312" textAnchor="middle" fontSize="11" fill="#94a3b8" fontWeight="300">
-          sit with MAIA
+          think something through, with MAIA
         </text>
         <text x="350" y="333" textAnchor="middle" fontSize="11" fill={accent} letterSpacing="1.5" style={{ textTransform: 'uppercase' }}>
           {enterLabel}
         </text>
       </a>
 
-      {/* ————— east chamber: Your field (lit) ————— */}
+      {/* ————— east chamber: My Story (lit) ————— */}
       <a href={`/now-what/field${ctx}`} className="nw-chamber">
         <rect
           x="520" y="192" width="164" height="126" rx="14"
@@ -235,65 +211,50 @@ function BuildingMap({ viewer, fieldContext }: { viewer: Viewer; fieldContext?: 
           stroke={accent} strokeOpacity="0.45" strokeWidth="1.5"
         />
         <text x="602" y="240" textAnchor="middle" fontSize="15" fill="#f1f5f9" fontWeight="300">
-          Your field
+          My Story
         </text>
         <text x="602" y="259" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">
-          what you chose to keep
+          what you kept, over time
         </text>
         <text x="602" y="286" textAnchor="middle" fontSize="10.5" fill={accent} letterSpacing="1.5">
           {enterLabel}
         </text>
       </a>
 
-      {/* ————— west chamber: Where you are (lit) ————— */}
-      <a href={`/now-what/position${ctx}`} className="nw-chamber">
+      {/* ————— west chamber: My Coaching (lit) ————— */}
+      <a href={`/now-what/coaching${ctx}`} className="nw-chamber">
         <rect
           x="16" y="192" width="164" height="126" rx="14"
           fill="rgba(255,255,255,0.04)"
           stroke={accent} strokeOpacity="0.45" strokeWidth="1.5"
         />
-        <text x="98" y="240" textAnchor="middle" fontSize="15" fill="#f1f5f9" fontWeight="300">Where you are</text>
-        <text x="98" y="259" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">your place in a program</text>
+        <text x="98" y="240" textAnchor="middle" fontSize="15" fill="#f1f5f9" fontWeight="300">My Coaching</text>
+        <text x="98" y="259" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">the human relationship</text>
         <text x="98" y="286" textAnchor="middle" fontSize="10.5" fill={accent} letterSpacing="1.5">{enterLabel}</text>
       </a>
 
-      {/* ————— northwest chamber: Questions you're living (lit) ————— */}
+      {/* ————— northwest chamber: My Question (lit) ————— */}
       <a href={`/now-what/questions${ctx}`} className="nw-chamber">
         <rect
           x="95" y="30" width="176" height="98" rx="14"
           fill="rgba(255,255,255,0.04)"
           stroke={accent} strokeOpacity="0.45" strokeWidth="1.5"
         />
-        <text x="183" y="66" textAnchor="middle" fontSize="14" fill="#f1f5f9" fontWeight="300">Questions you&apos;re living</text>
-        <text x="183" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">questions you chose to keep</text>
+        <text x="183" y="66" textAnchor="middle" fontSize="14" fill="#f1f5f9" fontWeight="300">My Question</text>
+        <text x="183" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">what you are wrestling with</text>
         <text x="183" y="110" textAnchor="middle" fontSize="10.5" fill={accent} letterSpacing="1.5">{enterLabel}</text>
       </a>
 
-      {/* ————— northeast chamber: What may be next (lit) ————— */}
-      <a href={`/now-what/next${ctx}`} className="nw-chamber">
+      {/* ————— northeast chamber: My Work (lit) ————— */}
+      <a href={`/now-what/work${ctx}`} className="nw-chamber">
         <rect
           x="429" y="30" width="176" height="98" rx="14"
           fill="rgba(255,255,255,0.04)"
           stroke={accent} strokeOpacity="0.45" strokeWidth="1.5"
         />
-        <text x="517" y="66" textAnchor="middle" fontSize="14" fill="#f1f5f9" fontWeight="300">What may be next</text>
-        <text x="517" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">the practices you chose</text>
+        <text x="517" y="66" textAnchor="middle" fontSize="14" fill="#f1f5f9" fontWeight="300">My Work</text>
+        <text x="517" y="85" textAnchor="middle" fontSize="10.5" fill="#94a3b8" fontWeight="300">what you are living and cultivating</text>
         <text x="517" y="110" textAnchor="middle" fontSize="10.5" fill={accent} letterSpacing="1.5">{enterLabel}</text>
-      </a>
-
-      {/* ————— protected chambers (dashed scaffolding; door opens to an honest
-          explanation, never generated content — HOLD + EXPLAIN ruling 2026-07-13) ————— */}
-      <a href={`/now-what/themes${ctx}`} className="nw-chamber">
-        <rect x="95" y="432" width="176" height="98" rx="14" fill="rgba(255,255,255,0.015)" stroke={scaffold} strokeWidth="1.3" strokeDasharray="5 5" />
-        <text x="183" y="474" textAnchor="middle" fontSize="14" fill="#cbd5e1" fontWeight="300">Themes</text>
-        <text x="183" y="493" textAnchor="middle" fontSize="10.5" fill={scaffoldText} fontWeight="300">patterns you pull, never pushed</text>
-        <text x="183" y="514" textAnchor="middle" fontSize="9.5" fill={scaffoldText} letterSpacing="1.5">TAKING SHAPE · READ WHY</text>
-      </a>
-      <a href={`/now-what/reflections${ctx}`} className="nw-chamber">
-        <rect x="429" y="432" width="176" height="98" rx="14" fill="rgba(255,255,255,0.015)" stroke={scaffold} strokeWidth="1.3" strokeDasharray="5 5" />
-        <text x="517" y="474" textAnchor="middle" fontSize="14" fill="#cbd5e1" fontWeight="300">Reflections</text>
-        <text x="517" y="493" textAnchor="middle" fontSize="10.5" fill={scaffoldText} fontWeight="300">MAIA&apos;s mirror, only when you ask</text>
-        <text x="517" y="514" textAnchor="middle" fontSize="9.5" fill={scaffoldText} letterSpacing="1.5">TAKING SHAPE · READ WHY</text>
       </a>
     </svg>
   );
@@ -343,8 +304,7 @@ function EnvironmentMapInner({ viewer }: { viewer: Viewer }) {
             className="text-slate-400 text-sm font-light leading-relaxed max-w-md"
             style={{ animation: 'nwFadeUp 0.55s ease 160ms both' }}
           >
-            The lit rooms are open — walk in. The scaffolded ones are
-            deliberately still forming — step close and they will tell you why.
+            Five rooms, one house. The lit rooms are open — walk in.
           </p>
         )}
       </header>
@@ -373,22 +333,6 @@ function EnvironmentMapInner({ viewer }: { viewer: Viewer }) {
               <span className="text-xs whitespace-nowrap" style={{ color: accent }}>{enterWord}</span>
             </span>
             <span className="block text-slate-500 text-xs font-light leading-relaxed mt-1.5 max-w-xl">
-              {r.explain}
-            </span>
-          </a>
-        ))}
-        {PROTECTED_ROOMS.map((r) => (
-          <a
-            key={r.key}
-            href={`${r.route}${ctx}`}
-            className="group block py-3 border-b border-slate-800/40 hover:border-slate-600 transition-colors"
-          >
-            <span className="flex items-baseline gap-3">
-              <span className="text-slate-400 text-sm font-light whitespace-nowrap">{r.name}</span>
-              <span className="flex-1" />
-              <span className="text-slate-500 text-[10px] uppercase tracking-widest whitespace-nowrap">taking shape · read why</span>
-            </span>
-            <span className="block text-slate-600 text-xs font-light leading-relaxed mt-1.5 max-w-xl">
               {r.explain}
             </span>
           </a>

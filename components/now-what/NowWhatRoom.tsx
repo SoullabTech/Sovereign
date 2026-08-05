@@ -1061,6 +1061,18 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                 What has shifted? What remains unresolved? What deserves deeper exploration?
               </p>
             </div>
+          ) : entry === 'think' ? (
+            // A place to think — the door's promise honored at arrival
+            // (previously dead: 'think' fell through to the generic prompt).
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">A place to think.</p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What are you working through?
+              </p>
+              <p className="text-slate-500 text-sm font-light leading-relaxed">
+                A decision, a tension, something not yet formed — bring it as it is.
+              </p>
+            </div>
           ) : returning ? (
             <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
               <p className="text-slate-500 text-sm font-light">Last time you chose this practice:</p>

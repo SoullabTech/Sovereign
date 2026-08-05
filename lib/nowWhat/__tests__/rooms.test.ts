@@ -11,9 +11,20 @@
  * shell's rendering is asserted structurally, and says so.
  */
 import { execFileSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { NOW_WHAT_ROOMS, NAV_DESTINATIONS, roomForPath } from '../rooms';
+
+/**
+ * Routes on disk that are deliberately NOT rooms. Redirects must actually
+ * redirect (asserted below) — a retired route that renders content would be a
+ * shadow room the registry does not know about.
+ */
+// 'practice' is the Practice Workspace — a PRACTITIONER-side surface, not a
+// member room; it has zero member-surface inbound links and its disposition
+// belongs to the practitioner-field lane, not the member ontology.
+const NON_ROOM_ROUTES = ['arrive', 'welcome', 'practice'] as const;
+const REDIRECT_ROUTES = ['cultivate', 'next', 'calendar', 'position', 'themes', 'reflections', 'home'] as const;
 
 const shell = readFileSync(join(process.cwd(), 'components/now-what/NowWhatShell.tsx'), 'utf8');
 const map = readFileSync(join(process.cwd(), 'components/now-what/EnvironmentMapView.tsx'), 'utf8');
@@ -37,25 +48,54 @@ describe('registry integrity', () => {
   });
 
   it('excludes routes that exist but are not rooms', () => {
-    // arrive = the auth door; welcome = zero inbound links by design.
     const routes = NOW_WHAT_ROOMS.map((r) => r.route);
-    expect(routes).not.toContain('/now-what/arrive');
-    expect(routes).not.toContain('/now-what/welcome');
+    for (const dir of [...NON_ROOM_ROUTES, ...REDIRECT_ROUTES]) {
+      expect(routes).not.toContain(`/now-what/${dir}`);
+    }
+  });
+
+  it('DISK → REGISTRY: every route directory is a room, a known non-room, or a real redirect', () => {
+    // The inverse assertion the 2026-08-05 review found missing: registry→disk
+    // held while three of the home's doors (cultivate/coaching/calendar) were
+    // invisible to the registry. Any new route directory must now declare
+    // itself — register it as a room, or add it to the allowlists above with
+    // the honesty obligations they carry.
+    const base = join(process.cwd(), 'app/now-what');
+    const dirs = readdirSync(base).filter((d) => statSync(join(base, d)).isDirectory());
+    const roomDirs = new Set(
+      NOW_WHAT_ROOMS.filter((r) => r.route !== '/now-what').map((r) => r.route.replace('/now-what/', '')),
+    );
+    for (const dir of dirs) {
+      if (!existsSync(join(base, dir, 'page.tsx'))) continue; // route groups / assets
+      const known =
+        roomDirs.has(dir) ||
+        (NON_ROOM_ROUTES as readonly string[]).includes(dir) ||
+        (REDIRECT_ROUTES as readonly string[]).includes(dir);
+      if (!known) {
+        throw new Error(
+          `app/now-what/${dir} exists on disk but the registry does not know it. ` +
+            'Register it as a room, or add it to NON_ROOM_ROUTES/REDIRECT_ROUTES with its obligations.',
+        );
+      }
+    }
+  });
+
+  it('retired routes actually redirect — no shadow rooms', () => {
+    for (const dir of REDIRECT_ROUTES) {
+      const src = readFileSync(join(process.cwd(), 'app/now-what', dir, 'page.tsx'), 'utf8');
+      expect(src).toContain('router.replace');
+    }
   });
 });
 
 describe('exposure — navigable is not the same as offered', () => {
-  it('gated rooms are never navigation destinations', () => {
-    const gated = NOW_WHAT_ROOMS.filter((r) => r.exposure === 'gated').map((r) => r.key);
-    expect(gated).toEqual(expect.arrayContaining(['themes', 'reflections']));
-    for (const key of gated) {
-      expect(NAV_DESTINATIONS.some((d) => d.key === key)).toBe(false);
-    }
+  it('the five-room ontology carries no gated rooms — held capabilities are not advertised (ruling D-E)', () => {
+    expect(NOW_WHAT_ROOMS.filter((r) => r.exposure === 'gated')).toHaveLength(0);
   });
 
-  it('gated rooms are still identifiable when standing in one', () => {
-    expect(roomForPath('/now-what/themes')?.name).toBe('Themes');
-    expect(roomForPath('/now-what/reflections')?.name).toBe('Reflections');
+  it('the five rooms are exactly the ratified ontology', () => {
+    const keys = NOW_WHAT_ROOMS.filter((r) => !['home', 'map'].includes(r.key)).map((r) => r.key);
+    expect(keys.sort()).toEqual(['coaching', 'question', 'room', 'story', 'work']);
   });
 
   it('the map is identifiable but not a pill (it is the wordmark)', () => {
@@ -73,16 +113,17 @@ describe('route resolution', () => {
 
   it('query strings never change which room you are in', () => {
     expect(roomForPath('/now-what/room?fieldContext=now-what-demo&program=x')?.key).toBe('room');
-    expect(roomForPath('/now-what/next?fieldContext=flourishing')?.key).toBe('next');
+    expect(roomForPath('/now-what/work?fieldContext=flourishing')?.key).toBe('work');
   });
 
   it('nested and trailing-slash paths resolve to the room', () => {
-    expect(roomForPath('/now-what/field/')?.key).toBe('field');
-    expect(roomForPath('/now-what/position/anything')?.key).toBe('position');
+    expect(roomForPath('/now-what/field/')?.key).toBe('story');
+    expect(roomForPath('/now-what/questions/anything')?.key).toBe('question');
   });
 
-  it('non-rooms and foreign paths resolve to null', () => {
-    for (const p of ['/now-what/arrive', '/now-what/welcome', '/maia', '/', null, undefined, '']) {
+  it('non-rooms, retired redirects, and foreign paths resolve to null', () => {
+    const retired = REDIRECT_ROUTES.map((d) => `/now-what/${d}`);
+    for (const p of ['/now-what/arrive', '/now-what/welcome', ...retired, '/maia', '/', null, undefined, '']) {
       expect(roomForPath(p)).toBeNull();
     }
   });
