@@ -40,6 +40,7 @@ import {
   Users,
   Wind,
   DoorOpen,
+  BookMarked,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -337,6 +338,36 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     route: '/studio',
     audience: 'founder',
     nativePolicy: 'web', // /studio is not in the native bundle; bridge on native
+    returnBehavior: 'web-bridge',
+    group: 'rooms',
+  },
+  // RESTORED (Kelly, 2026-08-04) — a migration omission, not a disposition.
+  //
+  // Book Studio was a registered rail boundary that never migrated into this
+  // registry when the rail was retired (2026-07-22). Canon ratifies it as live
+  // and distinct: AUTHOR_STUDIO_THREE_LAYER_RULING.md §2 — "/book-studio = Book
+  // Studio. Unchanged." No ruling withheld it; both drift checks were blind to it.
+  //
+  // ⛔ DISTINCT from Writer's Studio (id 'studio' → /press/studio) and never to be
+  // merged into it. They are adjacent stages of different work:
+  //     Writer's Studio — how a life becomes a book (create, discover, revise)
+  //     Book Studio     — how a finished manuscript becomes a published book
+  //                       (production, editions, layout, release, operations)
+  // The distinction is the WORK being done, not the status of the person entering.
+  //
+  // Long-term this is a Steward-level offering (beta: authorized testers/authors),
+  // declared in lib/navigation/houseDispositions.ts. 'founder' is the closest gate
+  // HouseAudience can express today — an interim rendering control, NOT the
+  // authorization it approximates. ⛔ Do not read it as one.
+  {
+    id: 'book-studio',
+    label: 'Book Studio',
+    icon: BookMarked,
+    tooltip: 'Production and publishing',
+    kind: 'route',
+    route: '/book-studio',
+    audience: 'founder', // interim gate; disposition is 'offered'/steward
+    nativePolicy: 'web', // desktop authoring environment — web-only by design
     returnBehavior: 'web-bridge',
     group: 'rooms',
   },
