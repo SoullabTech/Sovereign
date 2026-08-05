@@ -13,7 +13,7 @@ import {
   loadRevisions,
   pageEstimate,
   type RevisionSummary,
-} from '../../manuscript/workingDraftClient';
+} from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
 
 /**
@@ -178,7 +178,7 @@ export default function WriterCanvasPage() {
             </div>
             <p className="text-[12.5px] leading-relaxed opacity-50 mb-3">
               Naming and renaming your work happens at the{' '}
-              <Link href="/press/studio" className="underline underline-offset-4 opacity-90">
+              <Link href="/writers-studio" className="underline underline-offset-4 opacity-90">
                 Studio Home
               </Link>
               , where you declared it.
@@ -195,7 +195,7 @@ export default function WriterCanvasPage() {
         ) : (
           <p className="text-[13px] leading-relaxed opacity-60">
             No single work is declared here yet.{' '}
-            <Link href="/press/studio" className="underline underline-offset-4">
+            <Link href="/writers-studio" className="underline underline-offset-4">
               The Studio Home
             </Link>{' '}
             is where a work is declared — or returned to, when you have several.
@@ -306,7 +306,7 @@ export default function WriterCanvasPage() {
       {/* ── The head of the room: what am I working on, and where am I. ── */}
       <header className="px-6 md:px-10 pt-6 pb-5">
         <Link
-          href="/press/studio"
+          href="/writers-studio"
           className="inline-block text-[11px] tracking-[0.2em] uppercase opacity-40 hover:opacity-75 mb-3"
         >
           ← Author Studio
@@ -390,7 +390,7 @@ export default function WriterCanvasPage() {
               </p>
               <p className="text-[14px] leading-relaxed opacity-55">
                 Begin at the{' '}
-                <Link href="/press/studio" className="underline underline-offset-4 opacity-90">
+                <Link href="/writers-studio" className="underline underline-offset-4 opacity-90">
                   Studio Home
                 </Link>{' '}
                 — start writing, or{' '}

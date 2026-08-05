@@ -82,7 +82,7 @@ export const IMPORT_HREF = '/press/manuscript?import=1';
  * at Studio Home. The gathering/development arrival (walk amendment A6) is a
  * later slice and gets its own door only when it is real.
  */
-export const CANVAS_HREF = '/press/studio/canvas';
+export const CANVAS_HREF = '/writers-studio/canvas';
 
 export const STUDIO_MAP: StudioGroup[] = [
   {

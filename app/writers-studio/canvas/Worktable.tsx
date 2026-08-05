@@ -15,7 +15,7 @@ import {
   putDraft,
   type DraftSaver,
   type SaverState,
-} from '../../manuscript/workingDraftClient';
+} from '../../press/manuscript/workingDraftClient';
 
 /**
  * The Worktable — Writer Canvas v0.1's one real instrument.

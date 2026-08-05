@@ -97,7 +97,7 @@ Draft the message:`;
       console.log(`✅ [Draft] Generated ${draft.length} chars`);
 
       // Log weight for AI draft (weight = 3, real Claude API cost)
-      let stewardship = null;
+      let stewardship: ReturnType<typeof mapStewardship> | null = null;
       if (body.memberId) {
         try {
           await logAction(body.memberId, 'ai_draft', {

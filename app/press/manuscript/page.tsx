@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
-import { CANVAS_HREF } from '../studio/studioMap';
+import { CANVAS_HREF } from '../../writers-studio/studioMap';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**

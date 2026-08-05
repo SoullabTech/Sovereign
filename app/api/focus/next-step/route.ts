@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         console.log(`[NextStep] Started: ${duration} min timer, check-in at ${checkInTime.toISOString()}`);
 
         // Log weight for next step + reminder (weight = 1 + 2)
-        let stewardship = null;
+        let stewardship: ReturnType<typeof mapStewardship> | null = null;
         if (memberId) {
           try {
             await logAction(memberId, 'next_step', { source: 'next-step-builder' });
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
         console.log(`[NextStep] Scheduled: "${nextStep}" at ${startTime.toISOString()}`);
 
         // Log weight for next step + reminder (weight = 1 + 2)
-        let stewardship = null;
+        let stewardship: ReturnType<typeof mapStewardship> | null = null;
         if (memberId) {
           try {
             await logAction(memberId, 'next_step', { source: 'next-step-builder' });
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
         console.log(`[NextStep] Reminder set: "${nextStep}" at ${reminderTime.toISOString()}`);
 
         // Log weight for next step + reminder (weight = 1 + 2)
-        let stewardship = null;
+        let stewardship: ReturnType<typeof mapStewardship> | null = null;
         if (memberId) {
           try {
             await logAction(memberId, 'next_step', { source: 'next-step-builder' });

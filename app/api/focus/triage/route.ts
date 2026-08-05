@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Log weight (capture = 0, but we track for patterns)
     // Only log if we have a valid memberId (UUID), not 'anonymous' strings
-    let stewardship = null;
+    let stewardship: ReturnType<typeof mapStewardship> | null = null;
     if (memberId) {
       try {
         await logAction(memberId, 'capture', { source: 'inbox-triage' });
