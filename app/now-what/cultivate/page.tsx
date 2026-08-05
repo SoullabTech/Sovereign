@@ -10,18 +10,25 @@
  * unsigned, corpus not captured — see
  * CLIENT_FIELD_TALK_ALIGNMENT_2026-08-05.md). Member-facing copy keeps the
  * unattributed posture ("dimensions of a flourishing life") until that
- * validation exists. Each area offers two
- * gestures: Add a reflection (opens the Reflection Room framed by the
- * dimension the member chose — the click is the gesture) and Explore
- * (their kept material). No scores, no assessments, no progress.
+ * validation exists.
  *
  * Per-dimension GATHERING waits on the member's placing gesture (a
  * reflection is placed under a dimension by the member, never
- * auto-categorized) — until that gesture exists, this landscape shows the
- * areas and their doors, and claims nothing about what lives in each.
+ * auto-categorized).
+ *
+ * CONTINUITY GESTURES (2026-08-05 build directive: "the field should become
+ * a working environment, not an archive"). Each placed thread carries the
+ * member's continuity gestures — all member-initiated, all in the member's
+ * own words, none inferred:
+ *   - Reflect further  → the room, through this dimension's door
+ *   - This has changed → the member restates the thread (PATCH restate)
+ *   - Carry forward    → a new thread descended from this one (PATCH)
+ * And each dimension offers "Add a thought" — a member-authored thread
+ * placed directly, no session required. No scores, no assessments, no
+ * progress, no activity feed.
  */
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
@@ -54,6 +61,187 @@ const DOMAINS = [
     line: 'Do you own your time, or does your schedule own you?' },
 ];
 
+const INPUT_STYLE: CSSProperties = {
+  fontFamily: SERIF,
+  fontSize: 15,
+  fontWeight: 300,
+  width: '100%',
+  maxWidth: 460,
+  background: 'transparent',
+  border: 'none',
+  borderBottom: `1px solid ${RULE}`,
+  outline: 'none',
+  padding: '4px 0',
+};
+
+const GESTURE_STYLE: CSSProperties = {
+  fontSize: 12,
+  color: INK_FAINT,
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
+  textDecoration: 'underline',
+  textUnderlineOffset: 3,
+  marginRight: 18,
+};
+
+/** One placed thread with its continuity gestures. */
+function PlacedThreadRow({
+  thread, roomHref, onChanged,
+}: {
+  thread: PlacedThread;
+  dimensionSlug: string;
+  roomHref: string;
+  onChanged: () => void;
+}) {
+  const [restating, setRestating] = useState(false);
+  const [restated, setRestated] = useState(thread.title);
+  const [busy, setBusy] = useState(false);
+  const [carried, setCarried] = useState(false);
+
+  const gesture = async (payload: Record<string, unknown>) => {
+    setBusy(true);
+    try {
+      const res = await apiFetch('/api/now-what/field-note', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId: thread.id, ...payload }),
+      });
+      if (res.ok) onChanged();
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <p className="nwp-member" style={{ fontSize: 16 }}>{thread.title}</p>
+      <p className="nwp-prov">in your words · {dayLabel(thread.created_at)} · placed here by you</p>
+      {restating ? (
+        <div style={{ marginTop: 6 }}>
+          <input
+            style={INPUT_STYLE}
+            value={restated}
+            onChange={(e) => setRestated(e.target.value)}
+            aria-label="Restate this in your current words"
+            maxLength={400}
+            disabled={busy}
+          />
+          <p style={{ marginTop: 6 }}>
+            <button
+              style={GESTURE_STYLE}
+              disabled={busy || !restated.trim() || restated.trim() === thread.title}
+              onClick={async () => {
+                const ok = await gesture({ action: 'restate', title: restated.trim() });
+                if (ok) setRestating(false);
+              }}
+            >
+              Keep the new words
+            </button>
+            <button style={GESTURE_STYLE} disabled={busy} onClick={() => { setRestating(false); setRestated(thread.title); }}>
+              Leave it as it was
+            </button>
+          </p>
+        </div>
+      ) : (
+        <p style={{ marginTop: 4 }}>
+          <a className="nwp-door" style={{ ...GESTURE_STYLE, textDecoration: 'none' }} href={roomHref}>
+            Reflect further &rarr;
+          </a>
+          <button style={GESTURE_STYLE} disabled={busy} onClick={() => setRestating(true)}>
+            This has changed
+          </button>
+          {carried ? (
+            <span style={{ fontSize: 12, color: INK_FAINT }}>carried forward</span>
+          ) : (
+            <button
+              style={GESTURE_STYLE}
+              disabled={busy}
+              onClick={async () => {
+                const ok = await gesture({ action: 'carry_forward' });
+                if (ok) setCarried(true);
+              }}
+            >
+              Carry forward
+            </button>
+          )}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** "Add a thought" — a member-authored thread placed directly under a dimension. */
+function AddThought({
+  dimensionSlug, fieldContext, onAdded,
+}: {
+  dimensionSlug: string;
+  fieldContext: string;
+  onAdded: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  if (!open) {
+    return (
+      <button style={GESTURE_STYLE} onClick={() => setOpen(true)}>
+        Add a thought
+      </button>
+    );
+  }
+  return (
+    <span style={{ display: 'block', marginTop: 8 }}>
+      <input
+        style={INPUT_STYLE}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="In your own words"
+        aria-label="Add a thought in your own words"
+        maxLength={400}
+        disabled={busy}
+        autoFocus
+      />
+      <span style={{ display: 'block', marginTop: 6 }}>
+        <button
+          style={GESTURE_STYLE}
+          disabled={busy || !text.trim()}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              const res = await apiFetch('/api/now-what/field-note', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  created: [{ title: text.trim() }],
+                  dimension: dimensionSlug,
+                  fieldContext,
+                }),
+              });
+              if (res.ok) {
+                setText('');
+                setOpen(false);
+                onAdded();
+              }
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          Place it here
+        </button>
+        <button style={GESTURE_STYLE} disabled={busy} onClick={() => { setOpen(false); setText(''); }}>
+          Never mind
+        </button>
+      </span>
+    </span>
+  );
+}
+
 function CultivateInner() {
   const params = useSearchParams();
   const fieldContext = params?.get('fieldContext') ?? undefined;
@@ -62,33 +250,35 @@ function CultivateInner() {
 
   /*
    * The field GATHERS: threads the member PLACED under a dimension (by
-   * entering the room through that dimension's door and keeping material).
-   * Unplaced material never renders here — the placing gesture is the only
-   * way in. Non-fatal: a read failure leaves the landscape quiet.
+   * entering the room through that dimension's door and keeping material,
+   * or by placing a thought here directly). Unplaced material never renders
+   * here — the placing gesture is the only way in. Non-fatal: a read
+   * failure leaves the landscape quiet.
    */
   const [placed, setPlaced] = useState<Record<string, PlacedThread[]>>({});
+  const loadThreads = useCallback(async () => {
+    if (!fieldContext) return;
+    try {
+      const res = await apiFetch(`/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}`);
+      if (!res.ok) return;
+      const json = await res.json().catch(() => ({}));
+      const threads: PlacedThread[] = json?.threads ?? [];
+      const byDim: Record<string, PlacedThread[]> = {};
+      for (const t of threads) {
+        if (t.flourishing_dimension) {
+          (byDim[t.flourishing_dimension] ??= []).push(t);
+        }
+      }
+      setPlaced(byDim);
+    } catch {
+      /* quiet landscape */
+    }
+  }, [fieldContext]);
+
   useEffect(() => {
     if (session !== 'in' || !fieldContext) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await apiFetch(`/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}`);
-        if (!res.ok) return;
-        const json = await res.json().catch(() => ({}));
-        const threads: PlacedThread[] = json?.threads ?? [];
-        const byDim: Record<string, PlacedThread[]> = {};
-        for (const t of threads) {
-          if (t.flourishing_dimension) {
-            (byDim[t.flourishing_dimension] ??= []).push(t);
-          }
-        }
-        if (!cancelled) setPlaced(byDim);
-      } catch {
-        /* quiet landscape */
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [session, fieldContext]);
+    void loadThreads();
+  }, [session, fieldContext, loadThreads]);
 
   if (session === 'unknown') return null;
   if (session === 'out') {
@@ -110,45 +300,49 @@ function CultivateInner() {
         the field simply holds what you place in it.
       </p>
 
-      {DOMAINS.map((d) => (
-        <section key={d.slug} className="nwp-sec">
-          <p className="nwp-label">
-            {d.name}{' '}
-            <span style={{ fontSize: 12, color: INK_FAINT, fontFamily: 'inherit', fontWeight: 300 }}>
-              {d.facets}
-            </span>
-          </p>
-          <p className="nwp-quiet" style={{ marginTop: 8, fontFamily: SERIF, fontStyle: 'italic' }}>
-            {d.line}
-          </p>
-          {(placed[d.slug] ?? []).slice(0, 4).map((t) => (
-            <div key={t.id} style={{ marginTop: 12 }}>
-              <p className="nwp-member" style={{ fontSize: 16 }}>{t.title}</p>
-              <p className="nwp-prov">in your words · {dayLabel(t.created_at)} · placed here by you</p>
-            </div>
-          ))}
-          <p style={{ marginTop: 4 }}>
-            <a
-              className="nwp-door"
-              style={{ marginRight: 22 }}
-              href={`/now-what/room${ctx}${ctx ? '&' : '?'}entry=cultivate&dimension=${d.slug}`}
-            >
-              Add a reflection &rarr;
-            </a>
-            <a className="nwp-door" href={`/now-what/field${ctx}`}>
-              Explore &rarr;
-            </a>
-          </p>
-        </section>
-      ))}
+      {DOMAINS.map((d) => {
+        const roomHref = `/now-what/room${ctx}${ctx ? '&' : '?'}entry=cultivate&dimension=${d.slug}`;
+        return (
+          <section key={d.slug} className="nwp-sec">
+            <p className="nwp-label">
+              {d.name}{' '}
+              <span style={{ fontSize: 12, color: INK_FAINT, fontFamily: 'inherit', fontWeight: 300 }}>
+                {d.facets}
+              </span>
+            </p>
+            <p className="nwp-quiet" style={{ marginTop: 8, fontFamily: SERIF, fontStyle: 'italic' }}>
+              {d.line}
+            </p>
+            {(placed[d.slug] ?? []).slice(0, 6).map((t) => (
+              <PlacedThreadRow
+                key={t.id}
+                thread={t}
+                dimensionSlug={d.slug}
+                roomHref={roomHref}
+                onChanged={loadThreads}
+              />
+            ))}
+            <p style={{ marginTop: 10 }}>
+              <a className="nwp-door" style={{ marginRight: 22 }} href={roomHref}>
+                Add a reflection &rarr;
+              </a>
+              {fieldContext ? (
+                <AddThought dimensionSlug={d.slug} fieldContext={fieldContext} onAdded={loadThreads} />
+              ) : null}
+              <a className="nwp-door" href={`/now-what/field${ctx}`}>
+                Explore &rarr;
+              </a>
+            </p>
+          </section>
+        );
+      })}
 
       <p
         className="nwp-quiet"
         style={{ marginTop: 34, paddingTop: 22, borderTop: `1px dashed ${RULE}`, fontSize: 12.5, color: INK_FAINT }}
       >
-        A reflection added here is placed under its dimension by you — that
-        placing gesture is what lets the field gather. Nothing is
-        auto-categorized, and nothing here is a score.
+        Everything here is placed, restated, or carried forward by you, in
+        your words. Nothing is auto-categorized, and nothing here is a score.
       </p>
     </PaperRoom>
   );
