@@ -180,9 +180,7 @@ interface Props {
   /** Opaque thread id for entry=question — resolved member-scoped from the
    *  room's own load; the member's text never rides the URL. */
   entryThread?: string;
-  /** Flourishing dimension slug for entry=cultivate. Frames the arrival AND
-   *  rides the save as the member's placing gesture — threads kept in a visit
-   *  entered through a dimension door persist under that dimension. */
+  /** Flourishing dimension slug for entry=cultivate — static copy only. */
   entryDimension?: string;
 }
 
@@ -687,9 +685,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           sessionRef: sessionRef.current,
           spiralogicPhase: phase,
           fieldContext: fieldContext ?? null,
-          // The placing gesture: a visit entered through the cultivate door
-          // keeps its threads under the dimension the member chose.
-          dimension: entry === 'cultivate' ? entryDimension ?? null : null,
+          // The placing gesture: the member entered through a dimension door,
+          // so what they keep from this session places itself in that
+          // dimension's area of the Flourishing Field.
+          ...(entryDimension ? { dimension: entryDimension } : {}),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -715,7 +714,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         sessionRef: sessionRef.current,
         spiralogicPhase: tag,
         fieldContext: fieldContext ?? null,
-        dimension: entry === 'cultivate' ? entryDimension ?? null : null,
+        ...(entryDimension ? { dimension: entryDimension } : {}),
       }),
     });
     const json = await res.json().catch(() => ({}));
@@ -813,7 +812,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     if (fieldContext && !returnChecked) {
       return (
         <div className="relative min-h-[92vh] flex items-center justify-center px-6 overflow-hidden">
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
           <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
         </div>
       );
@@ -827,13 +826,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       return (
         <div key="nw-welcome" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
           <style>{NW_FADE_KEYFRAMES}</style>
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
           <div className="relative w-full max-w-xl space-y-10">
             <div style={fadeUpStyle(0)} className="flex justify-center">
               <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
             </div>
             <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
-              <p className="text-sm uppercase tracking-[0.4em] text-[#ffe27a]">Now What? · with Larry Closs</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-[#c9a35e]">Now What? · with Larry Closs</p>
               <h1 style={SERIF} className="text-4xl sm:text-5xl font-light text-slate-100 tracking-wide">Welcome.</h1>
             </div>
             <div style={fadeUpStyle(0.5)} className="space-y-5 text-slate-300 text-[17px] font-light leading-[1.85]">
@@ -849,7 +848,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
               <p className="text-slate-500 text-sm font-light italic">When you're ready…</p>
               <button
                 onClick={() => setEntered(true)}
-                className="inline-block border border-[#ffe27a]/30 text-[#ffe27a] hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300"
+                className="inline-block border border-[#c9a35e]/30 text-[#c9a35e] hover:border-[#c9a35e]/70 hover:bg-[#c9a35e]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300"
               >
                 Come in
               </button>
@@ -862,12 +861,12 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     return (
       <div key="nw-arrival" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
         <style>{NW_FADE_KEYFRAMES}</style>
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
         <div className="relative w-full max-w-xl space-y-10">
           <div style={fadeUpStyle(0)} className="flex justify-center">
             <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
           </div>
-          <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#ffe27a]">
+          <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#c9a35e]">
             Now What?
           </p>
 
@@ -916,7 +915,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                       <input
                         type="text"
                         aria-label="Where you actually are, in your own words"
-                        className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-sm font-light focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-2 text-center transition-colors"
+                        className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-sm font-light focus:outline-none focus:border-[#c9a35e]/50 placeholder:text-slate-600 py-2 text-center transition-colors"
                         placeholder="Where are you, in your own words…"
                         value={anchorDraft}
                         maxLength={300}
@@ -927,7 +926,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                         <button
                           onClick={statePosition}
                           disabled={!anchorDraft.trim() || anchorBusy}
-                          className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                          className="text-[#c9a35e]/80 hover:text-[#c9a35e] transition-colors disabled:opacity-40"
                         >
                           That&apos;s where I am
                         </button>
@@ -945,7 +944,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                       <button
                         onClick={confirmPosition}
                         disabled={anchorBusy}
-                        className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                        className="text-[#c9a35e]/80 hover:text-[#c9a35e] transition-colors disabled:opacity-40"
                       >
                         Yes, that&apos;s where I am
                       </button>
@@ -1079,7 +1078,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           <div style={fadeUpStyle(0.65)} className="space-y-8">
             <textarea
               aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
-              className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
+              className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#c9a35e]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
               rows={2}
               placeholder={
                 entry === 'lived' || (returning && !entry)
@@ -1099,7 +1098,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
               <button
                 onClick={beginFromThreshold}
                 disabled={!arrivalAnswer.trim() || working}
-                className="inline-block border border-[#ffe27a]/30 text-[#ffe27a] hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300 disabled:opacity-25 disabled:cursor-not-allowed"
+                className="inline-block border border-[#c9a35e]/30 text-[#c9a35e] hover:border-[#c9a35e]/70 hover:bg-[#c9a35e]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300 disabled:opacity-25 disabled:cursor-not-allowed"
               >
                 Begin
               </button>
@@ -1297,7 +1296,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           <button
             onClick={commitPractice}
             disabled={saving || !practiceDraft.trim()}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Carry this practice'}
           </button>
@@ -1357,7 +1356,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           <button
             onClick={commitOffering}
             disabled={saving || !offeringDraft.trim()}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Offer it'}
           </button>
@@ -1414,7 +1413,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         <div className="flex items-center gap-6">
           <a
             href={`/now-what/field${fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : ''}`}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
           >
             See your field
           </a>
@@ -1457,7 +1456,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                 type="button"
                 onClick={listenBack}
                 disabled={working}
-                className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+                className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
               >
                 {working ? 'Listening…' : 'Try listening back again'}
               </button>
@@ -1595,7 +1594,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           <button
             onClick={() => carry(collectPayload())}
             disabled={saving}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
           >
             {saving ? 'Saving…' : 'Keep what I chose'}
           </button>
@@ -1615,7 +1614,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
   return (
     <div className="relative flex flex-col h-full max-w-[46rem] mx-auto w-full">
       <style>{NW_FADE_KEYFRAMES}</style>
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(125,175,255,0.06),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(196,164,110,0.06),transparent_70%)]" />
       <div className="relative px-4 pt-8 pb-4 flex flex-col items-center gap-3">
         <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
@@ -1628,7 +1627,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           />
         </div>
         <div className="text-center">
-          <p className={`text-xs uppercase tracking-[0.35em] ${nowWhat ? 'text-[#ffe27a]/80' : 'text-slate-500'}`}>{roomTitle}</p>
+          <p className={`text-xs uppercase tracking-[0.35em] ${nowWhat ? 'text-[#c9a35e]/80' : 'text-slate-500'}`}>{roomTitle}</p>
           {!nowWhat && <p className="text-slate-400 text-sm font-light">{phaseLabel}</p>}
         </div>
         {turns.length >= 4 && (
@@ -1893,7 +1892,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
             <button
               onClick={() => sendTurn(draft)}
               disabled={working || !draft.trim()}
-              className="rounded-full border border-[#ffe27a]/30 px-6 py-1.5 text-sm tracking-[0.14em] uppercase font-light text-[#ffe27a] transition-all duration-300 hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 disabled:opacity-25 disabled:cursor-not-allowed"
+              className="rounded-full border border-[#c9a35e]/30 px-6 py-1.5 text-sm tracking-[0.14em] uppercase font-light text-[#c9a35e] transition-all duration-300 hover:border-[#c9a35e]/70 hover:bg-[#c9a35e]/5 disabled:opacity-25 disabled:cursor-not-allowed"
             >
               {working ? 'Sending…' : 'Send'}
             </button>

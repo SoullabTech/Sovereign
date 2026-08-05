@@ -71,19 +71,6 @@ const asPhase = (v: unknown): string | null => {
   return null;
 };
 
-// The member's placing gesture from the cultivate door ("What you are
-// cultivating"): entering the room through a dimension they chose places the
-// threads they keep under that dimension. Whitelisted to the offered
-// flourishing vocabulary; offered, never imposed (ontology ruling D-D) —
-// absence is the normal state. The tag types the evidence, never the person.
-const asDimension = (v: unknown): string | null => {
-  if (typeof v !== 'string') return null;
-  const cleaned = v.toLowerCase().replace(/[^a-z0-9_]/g, '');
-  return ['relationships', 'meaning', 'presence', 'health', 'contribution', 'time'].includes(cleaned)
-    ? cleaned
-    : null;
-};
-
 function parseProposals(input: unknown): ProposalDecision[] {
   if (!Array.isArray(input)) return [];
   const out: ProposalDecision[] = [];
@@ -143,6 +130,18 @@ async function logEvent(
   }
 }
 
+/*
+ * The six flourishing dimensions a member may PLACE a thread under — the
+ * placing gesture is entering the room through a dimension door and keeping
+ * material from that session. Anything else is NULL. Never inferred.
+ */
+const FLOURISHING_DIMENSIONS = new Set([
+  'relationships', 'meaning', 'presence', 'health', 'contribution', 'time',
+]);
+function asDimension(v: unknown): string | null {
+  return typeof v === 'string' && FLOURISHING_DIMENSIONS.has(v) ? v : null;
+}
+
 async function saveThread(
   memberId: string,
   sessionRef: string | null,
@@ -154,18 +153,18 @@ async function saveThread(
   spiralogicPhase: string | null,
   fieldContext: string | null,
   shareWithPractitioner: boolean,
-  dimension: string | null,
+  flourishingDimension: string | null = null,
 ): Promise<string | null> {
   const res = await query<{ id: string }>(
     `INSERT INTO member_field_note_threads
        (member_id, source_session_ref, title, content, authorship, is_directly_stated,
         member_confirmed, member_decision, member_decision_at, revision_notes,
         consent_state, can_be_remembered, can_be_shown_to_practitioner, confirmed_at,
-        spiralogic_phase, field_context, dimension)
+        spiralogic_phase, field_context, flourishing_dimension)
      VALUES ($1, $2, $3, $3, $4, $5, TRUE, $6, NOW(), $7,
              'member-confirmed-memory', TRUE, $10, NOW(), $8, $9, $11)
      RETURNING id`,
-    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner, dimension],
+    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner, flourishingDimension],
   );
   return res.rows[0]?.id ?? null;
 }
@@ -188,11 +187,11 @@ export async function GET(request: NextRequest) {
       spiralogic_phase: string | null;
       can_be_shown_to_practitioner: boolean;
       field_context: string | null;
-      dimension: string | null;
       created_at: string;
     }>(
       `SELECT id, title, authorship, member_decision, spiralogic_phase,
-              can_be_shown_to_practitioner, field_context, dimension, created_at
+              can_be_shown_to_practitioner, field_context, created_at,
+              flourishing_dimension
          FROM member_field_note_threads
         WHERE member_id = $1
           AND released_at IS NULL
@@ -237,10 +236,10 @@ export async function POST(request: NextRequest) {
     const sessionRef = asStr(body?.sessionRef, 80) || null;
     const spiralogicPhase = asPhase(body?.spiralogicPhase);
     const fieldContext = asStr(body?.fieldContext, 80) || null;
-    // Present only when the member entered through the cultivate door — their
-    // placing gesture. Applies to every thread kept in that save (the whole
-    // visit happened inside the dimension the member chose).
-    const dimension = asDimension(body?.dimension);
+    // The placing gesture: present only when the member entered through a
+    // dimension door (Flourishing Field → Add a reflection). Validated
+    // against the six dimensions; anything else is NULL.
+    const flourishingDimension = asDimension(body?.dimension);
     // Practitioner visibility is per-thread, DEFAULT FALSE. Each thread carries its
     // own shareWithPractitioner flag parsed from the request body. Carrying a thread
     // is private to the member's field; sharing is a separate explicit gesture, per
@@ -265,7 +264,8 @@ export async function POST(request: NextRequest) {
         for (const childTitle of p.children ?? []) {
           const childId = await saveThread(
             memberId, sessionRef, childTitle, 'member_authored', true, 'split',
-            `split from MAIA's "${p.title}"`, threadPhase, fieldContext, p.shareWithPractitioner, dimension,
+            `split from MAIA's "${p.title}"`, threadPhase, fieldContext, p.shareWithPractitioner,
+            flourishingDimension,
           );
           saved += 1;
           activity.created += 1;
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
           ? `revised from MAIA's "${p.title}"` : null;
       const id = await saveThread(
         memberId, sessionRef, title, 'member_confirmed', false, p.decision, revisionNotes,
-        threadPhase, fieldContext, p.shareWithPractitioner, dimension,
+        threadPhase, fieldContext, p.shareWithPractitioner, flourishingDimension,
       );
       saved += 1;
       if (p.decision === 'keep') activity.kept += 1;
@@ -288,13 +288,13 @@ export async function POST(request: NextRequest) {
     }
 
     for (const c of created) {
-      // Same ruling as proposals (line above parseProposals): the member's own
-      // "a question I'm living" gesture types their self-authored thread, so it
-      // reaches the "Questions you're living" room. Previously this path always
-      // used the session phase, silently dropping the question (silent-loss
-      // bug 2, NOW_WHAT_ROOM_DOORWAY_LOGIC_REVIEW_2026-08-05.md).
+      // Same ruling as proposals: the member's own "a question I'm living"
+      // gesture types their self-authored thread, so it reaches the
+      // "Questions you're living" room. Previously this path always used the
+      // session phase, silently dropping the question (silent-loss bug 2,
+      // NOW_WHAT_ROOM_DOORWAY_LOGIC_REVIEW_2026-08-05.md).
       const createdPhase = c.isQuestion ? 'question' : spiralogicPhase;
-      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, createdPhase, fieldContext, c.shareWithPractitioner, dimension);
+      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, createdPhase, fieldContext, c.shareWithPractitioner, flourishingDimension);
       saved += 1;
       activity.created += 1;
       await logEvent(memberId, id, 'created', 'create');
