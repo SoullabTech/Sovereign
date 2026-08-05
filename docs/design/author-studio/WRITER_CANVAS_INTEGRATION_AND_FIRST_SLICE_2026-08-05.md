@@ -196,6 +196,58 @@ behavior.
 
 Technical gates (tests, typecheck) are preconditions, not acceptance.
 
+### The observation protocol (founder, closing the design-to-build transition)
+
+**The governing distinction of all evidence in this walk:**
+
+> The system can prove that a relationship was **recorded**.
+> Only a creator can prove that a relationship was **meaningful**.
+
+That distinction keeps the evaluation from collapsing into feature
+verification. The walk's evidence has a hierarchy:
+
+1. **Technical truth** — the loop works: create → declare becoming →
+   declare expression → bring material → return. Did the gesture persist?
+   Did the relationship survive? Did the creator return to the same Work?
+2. **Experiential truth** — the creator's first encounter answers *"do I
+   feel that I am returning to a Work?"* — not "can I find my document,"
+   "can I open my draft," "does the system remember my data." Those are
+   lower-level successes.
+
+**Do not lead the creator.** Not *"did you understand the Work drawer?"*
+but *"where did your attention go when you returned?"* Attention reveals
+the actual architecture. The first-instinct map:
+
+| First instinct goes to… | It reveals… |
+|---|---|
+| the Work | the room is centered correctly |
+| the material | the feeding relationship is clear |
+| the document | the old document model still dominates |
+| MAIA | intelligence is becoming the center |
+| nowhere | the environment lacks invitation |
+
+**Capture, without interpreting too quickly:**
+
+- where the creator pauses;
+- what they call things **in their own words**;
+- what they expect to happen;
+- what they try that the room does not support;
+- what they ignore.
+
+**Especially preserve the creator's language.** The next architecture
+emerges from sentences like *"I thought this was where my notes went"* ·
+*"I wanted to bring this whole folder into this work"* · *"I don't know if
+this is a chapter yet, but it belongs here."* Those sentences tell us what
+the next organ of the house actually is.
+
+And the reading of the unexpected declaration stands as method, not
+anecdote: a designed system assumes *"we know what people will do"*; a
+living environment discovers *"people are already making relationships we
+did not anticipate."* That openness is evidence the Work model can
+accommodate real creative life — and it is exactly why the stop-rule
+holds. The room is built. The next design input is not a concept. It is a
+person meeting it.
+
 ### The milestone, read by the founder (recorded)
 
 What the verified loop proved is not the row, the drawers, or the
