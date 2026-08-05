@@ -37,6 +37,14 @@ function dayLabel(iso: string): string {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
 }
 
+/*
+ * Six living areas — flourishing domains used as product structure, pending
+ * Larry's validation of them as his authored framework (agreement unsigned,
+ * corpus not captured — see CLIENT_FIELD_TALK_ALIGNMENT_2026-08-05.md).
+ * Member-facing copy keeps the unattributed posture ("dimensions of a
+ * flourishing life") until that validation exists. (Provenance comment
+ * carried from PR #981 when cultivate merged into this room.)
+ */
 const DOMAINS = [
   { slug: 'relationships', name: 'Relationships', facets: 'connection · belonging · love',
     line: 'People who matter. Conversations that shaped you. Moments of connection.' },
