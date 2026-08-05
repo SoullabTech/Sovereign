@@ -129,6 +129,37 @@ declared-by · declared-at. It is the sibling of `living_work_expressions`
 substrate or two sibling tables is an implementation-slice question, ruled
 then, not here.
 
+## Founder protections on acceptance (2026-08-05, binding)
+
+1. **"Bring this to [Work]" is the load-bearing idea** — the sibling of
+   Keep, Adopt, and Declare-expression. The platform repeatedly needs the
+   moment where the human says *"this belongs here."* Without the crossing
+   gesture the system has files, notes, artifacts, records; with it, the
+   system has **relationship**. That is the difference between storage and
+   a creative environment.
+2. **The elder is the critical stress test — abundance.** The novelist
+   tests structure, the scholar provenance, the collaborator authorship;
+   the elder tests abundance. The failure mode is *"great, upload
+   everything"* (a warehouse). The correct question: *"what does the elder
+   naturally recognize as belonging to this emerging body of work?"* The
+   system helps them **discover**, not ingest their life.
+3. **One grammar for origins, kept.** Never an origin system beside a
+   material system — they will diverge. One relationship (*this feeds the
+   work*) with the creator's variations: began as · renewed from · shaped ·
+   informed. **The relationship carries the meaning.**
+4. **The AI boundary is strongest here.** Dangerous features to refuse:
+   "we found related notes" · "these files seem connected" · "your themes
+   appear to be…" · "these quotes belong in Chapter 3." The pattern:
+   - **Allowed**: *"You have brought these seven pieces into this Work."*
+   - **Possible invitation**: *"Would you like to explore connections
+     among these materials?"*
+   - **Never**: *"These materials are connected because…"*
+
+**The walk question, ruled**: for every material type ask *what did the
+creator do that made this belong?* Sound answers: selected · named ·
+placed · declared · connected. Drift answers: uploaded · detected ·
+inferred · suggested.
+
 ## The walk this design must survive
 
 Before any slice is ruled: walk the five personas through Materials on
