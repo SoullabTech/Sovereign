@@ -314,9 +314,12 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                     )}
                     <p className="text-slate-600 text-xs font-light mt-2">
                       {authorLine(t.authorship)} · {dayLabel(t.keptAt)}
+                      {/* The member's ACT, not a visibility claim — "brought
+                          into your coaching" (ratified bring-forward
+                          vocabulary), never "Larry can see this". */}
                       {t.sharedWithCoach && (
                         <span className="ml-2" style={{ color: 'rgba(255,226,122,0.7)' }}>
-                          shared with {coachFirst ?? 'your coach'}
+                          brought into your coaching
                         </span>
                       )}
                     </p>
@@ -349,8 +352,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           <RoomTrustCopy
             holds="What you authored in this environment — the decisions you are working through, your commitments, your questions, and what you chose to keep."
             doesNotHold="No scores, rankings, progress measures, assessments or summaries of you. No record of how often you come here, and no interpretation of your material by anyone but you."
-            whoSees="You. Your coach sees a piece only if you explicitly shared it, one piece at a time — never automatically, and never because you were active here."
-            control="Everything here exists because of a gesture you made. Opening this room writes nothing. Anything shared can be withdrawn, and withdrawing it tells no one."
+            whoSees="You. Your coach receives a piece only if you explicitly brought it into your coaching, one piece at a time — never automatically, and never because you were active here."
+            control="Everything here exists because of a gesture you made. Opening this room writes nothing. Anything brought into your coaching can be withdrawn, and withdrawing it tells no one."
           />
         </section>
 
