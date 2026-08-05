@@ -91,18 +91,21 @@ function parseProposals(input: unknown): ProposalDecision[] {
   return out;
 }
 
-function parseCreated(input: unknown): { title: string; shareWithPractitioner: boolean }[] {
+function parseCreated(input: unknown): { title: string; shareWithPractitioner: boolean; isQuestion: boolean }[] {
   if (!Array.isArray(input)) return [];
-  const out: { title: string; shareWithPractitioner: boolean }[] = [];
+  const out: { title: string; shareWithPractitioner: boolean; isQuestion: boolean }[] = [];
   for (const c of input) {
     // Accept both legacy string items (shareWithPractitioner defaults false) and
-    // object items { title, shareWithPractitioner } for per-thread consent.
+    // object items { title, shareWithPractitioner, kind } for per-thread consent.
+    // kind === 'question' is the member's explicit "a question I'm living"
+    // gesture on their own thread — same ruling as proposals (2026-07-13):
+    // only 'question' persists; nothing is classified for the member.
     if (typeof c === 'string') {
       const t = asStr(c);
-      if (t) out.push({ title: t, shareWithPractitioner: false });
+      if (t) out.push({ title: t, shareWithPractitioner: false, isQuestion: false });
     } else if (c && typeof c === 'object') {
       const t = asStr((c as any).title);
-      if (t) out.push({ title: t, shareWithPractitioner: (c as any).shareWithPractitioner === true });
+      if (t) out.push({ title: t, shareWithPractitioner: (c as any).shareWithPractitioner === true, isQuestion: (c as any).kind === 'question' });
     }
     if (out.length >= 6) break;
   }
@@ -285,7 +288,13 @@ export async function POST(request: NextRequest) {
     }
 
     for (const c of created) {
-      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, spiralogicPhase, fieldContext, c.shareWithPractitioner, flourishingDimension);
+      // Same ruling as proposals: the member's own "a question I'm living"
+      // gesture types their self-authored thread, so it reaches the
+      // "Questions you're living" room. Previously this path always used the
+      // session phase, silently dropping the question (silent-loss bug 2,
+      // NOW_WHAT_ROOM_DOORWAY_LOGIC_REVIEW_2026-08-05.md).
+      const createdPhase = c.isQuestion ? 'question' : spiralogicPhase;
+      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, createdPhase, fieldContext, c.shareWithPractitioner, flourishingDimension);
       saved += 1;
       activity.created += 1;
       await logEvent(memberId, id, 'created', 'create');
