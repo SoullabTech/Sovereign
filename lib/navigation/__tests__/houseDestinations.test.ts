@@ -158,6 +158,18 @@ describe('dispatchHouseDestination', () => {
     dispatchHouseDestination(find('pro-studio'), h.ctx);
     expect(h.pushed).toEqual(['/open-web?to=%2Fstudio']);
   });
+
+  // Founder direction (Kelly, 2026-08-04): Pro Studio sits FIRST in Rooms, and
+  // Community Library is no longer a House door (the route itself is untouched
+  // — its disposition is 'intentionally_withheld' in houseDispositions).
+  it('Pro Studio is the first Room', () => {
+    const rooms = HOUSE_DESTINATIONS.filter((d) => d.group === 'rooms');
+    expect(rooms[0]?.id).toBe('pro-studio');
+  });
+
+  it('Community Library has no House door', () => {
+    expect(HOUSE_DESTINATIONS.some((d) => d.id === 'community-library')).toBe(false);
+  });
 });
 
 /**
