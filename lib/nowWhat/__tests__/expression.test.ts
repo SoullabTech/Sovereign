@@ -18,7 +18,23 @@ import {
   resolveExpression,
   labelFor,
   lensAttribution,
+  type Expression,
 } from '../expression';
+
+/**
+ * A lens a practitioner genuinely authored, with rights signed.
+ *
+ * Constructed here rather than taken from the module because NO SHIPPED LENS
+ * QUALIFIES YET — `now_what` is `platform_draft` with unsigned rights (E1).
+ * Using it to test attribution is what let the defect hide: the suite asserted
+ * that our own words carried Larry's name, and passed.
+ */
+const AUTHORED_BY_PRACTITIONER: Expression = {
+  key: 'test_practitioner_lens',
+  authoredBy: 'practitioner',
+  rightsCleared: true,
+  labels: { current_work: 'Their own wording' },
+};
 
 describe('expression vocabulary — CF-D5a: vocabulary may not create capability', () => {
   it('every lens labels only universal verbs — no lens invents a zone', () => {
@@ -69,21 +85,64 @@ describe('expression vocabulary — fails safe', () => {
 });
 
 describe('attribution — CF-D5c: context may not become identity', () => {
-  const lens = resolveExpression('now_what', { allowUnclearedRights: true });
-
-  it('attributes a practitioner lens while the relationship is live', () => {
-    expect(lensAttribution(lens, 'Larry', true)).toBe('Within your work with Larry');
+  it('attributes a practitioner-authored, rights-cleared lens while live', () => {
+    expect(lensAttribution(AUTHORED_BY_PRACTITIONER, 'Larry', true)).toBe(
+      'Within your work with Larry',
+    );
   });
 
   it('STOPS attributing once the relationship has ended', () => {
     // A line that outlives its context has become identity, which is the
     // prohibited form. Absence here is the correct behaviour, not a gap.
-    expect(lensAttribution(lens, 'Larry', false)).toBeNull();
+    expect(lensAttribution(AUTHORED_BY_PRACTITIONER, 'Larry', false)).toBeNull();
   });
 
   it('never attributes the platform lens to a person', () => {
     const universal = resolveExpression('universal');
     expect(lensAttribution(universal, 'Larry', true)).toBeNull();
+  });
+});
+
+/**
+ * E1 — the platform must not speak in a practitioner's voice.
+ *
+ * Found in audit 2026-08-04. The shipped leadership lens was marked
+ * `authoredBy: 'practitioner'` over labels WE wrote, and `lensAttribution`
+ * gated on authorship alone. On the founder walk — the one path that sets
+ * `allowUnclearedRights` — it would have rendered "Within your work with Larry"
+ * above words Larry never wrote.
+ *
+ * These assertions fail if either protection is removed.
+ */
+describe('E1 — authorship and rights are INDEPENDENT, both fail closed', () => {
+  it('the shipped leadership lens is a platform DRAFT, not the practitioner s', () => {
+    const lens = resolveExpression('now_what', { allowUnclearedRights: true });
+    // Our synthesis of leadership language, proposed to a practitioner and not
+    // yet owned by one. Claiming otherwise is the absorption failure itself.
+    expect(lens.authoredBy).toBe('platform_draft');
+  });
+
+  it('a platform draft is NEVER attributed to a person, even on the walk', () => {
+    const lens = resolveExpression('now_what', { allowUnclearedRights: true });
+    expect(lensAttribution(lens, 'Larry', true)).toBeNull();
+  });
+
+  it('a practitioner lens with UNSIGNED rights is never attributed', () => {
+    // Authorship alone is not enough. Rights clearance is a separate question,
+    // and the pre-E1 code checked only the first.
+    const uncleared: Expression = {
+      ...AUTHORED_BY_PRACTITIONER,
+      rightsCleared: false,
+    };
+    expect(lensAttribution(uncleared, 'Larry', true)).toBeNull();
+  });
+
+  it('a draft lens may still RENDER its labels — only the NAME is withheld', () => {
+    // The fix must not over-correct into silence. A draft is renderable; what
+    // it may not do is claim an author.
+    const lens = resolveExpression('now_what', { allowUnclearedRights: true });
+    expect(labelFor('current_work', lens)).toBe('Leadership focus');
+    expect(lensAttribution(lens, 'Larry', true)).toBeNull();
   });
 });
 

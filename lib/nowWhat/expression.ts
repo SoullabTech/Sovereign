@@ -52,8 +52,24 @@ export type ExpressionLabels = Partial<Record<UniversalVerb, string>>;
 export interface Expression {
   /** Stable id. Never rendered to a member. */
   readonly key: string;
-  /** Who authored these labels. Rendering a lens without this is absorption. */
-  readonly authoredBy: 'platform' | 'practitioner';
+  /**
+   * Who authored these labels. Rendering a lens without this is absorption.
+   *
+   * `platform_draft` exists because of a real defect found in audit (E1,
+   * 2026-08-04): leadership-domain labels WE wrote were marked
+   * `authoredBy: 'practitioner'`, and `lensAttribution` gates on exactly that.
+   * The surface would have rendered "Within your work with Larry" over words
+   * Larry never wrote — the platform speaking in a practitioner's voice.
+   *
+   *   platform        our words, and we say so
+   *   platform_draft  our words, PROPOSED to a practitioner, not yet theirs
+   *   practitioner    their words, authored by them
+   *
+   * The distinction is CF-D5a operating correctly: the platform may PROPOSE
+   * vocabulary; the practitioner OWNS the lens; the member remains the
+   * interpreter. A draft may be rendered — it may never be attributed.
+   */
+  readonly authoredBy: 'platform' | 'platform_draft' | 'practitioner';
   /**
    * True once the authoring practitioner has a signed rights instrument.
    * Larry's rights instrument is UNSIGNED as of 2026-08-03, which is why the
@@ -88,13 +104,21 @@ const UNIVERSAL: Expression = {
  *    practitioner's rights instrument is signed. `resolveExpression` enforces
  *    this; it is not left to the caller to remember.
  *
+ * 🔴 `authoredBy: 'platform_draft'` — corrected 2026-08-04 (E1). These strings
+ *    are OURS. They are variants of the table in
+ *    `docs/specs/AIN_CLIENT_FIELD_UNIVERSAL_ARCHITECTURE.md` §3 — our own
+ *    synthesis of leadership-domain language, not any practitioner's authored
+ *    words. Marking them `practitioner` claimed an authorship no one granted.
+ *
  * ⛔ Nothing here is authored by engineering on a practitioner's behalf. If a
  *    practitioner's own wording differs, theirs replaces this — that is the
- *    whole point of the lens being separable.
+ *    whole point of the lens being separable. When Larry authors his own
+ *    labels, this becomes `authoredBy: 'practitioner'` and only then may it
+ *    carry his name.
  */
 const NOW_WHAT: Expression = {
   key: 'now_what',
-  authoredBy: 'practitioner',
+  authoredBy: 'platform_draft',
   rightsCleared: false,
   labels: {
     current_work: 'Leadership focus',
@@ -160,6 +184,20 @@ export function labelFor(
  *
  * ⛔ Never render this over a member-authored object. It belongs to the lens
  *    and to practitioner-authored material only.
+ *
+ * ── E1, 2026-08-04: TWO INDEPENDENT PROTECTIONS, both fail closed ───────────
+ *
+ *   authoredBy === 'practitioner'   &&   rightsCleared === true
+ *
+ * Authorship and rights are different questions and neither implies the other.
+ * Before this fix only authorship was checked, so a lens with UNSIGNED rights
+ * still rendered a practitioner's name — and on the founder walk, where
+ * `allowUnclearedRights` is set, that is exactly the path that would have run.
+ *
+ * If EITHER is false: no attribution, no "within your work with X", and nothing
+ * rendered as if the practitioner authored it. The labels may still show; the
+ * NAME may not. Attribution is a claim about authorship, and an unowned claim
+ * is the absorption this module exists to prevent.
  */
 export function lensAttribution(
   expression: Expression,
@@ -167,6 +205,9 @@ export function lensAttribution(
   relationshipLive: boolean,
 ): string | null {
   if (expression.authoredBy !== 'practitioner') return null;
+  // Not redundant with resolveExpression's gate: a caller holding an uncleared
+  // lens (founder walk) reaches this function directly.
+  if (!expression.rightsCleared) return null;
   if (!relationshipLive) return null;
   if (!practitionerName) return null;
   return `Within your work with ${practitionerName}`;
