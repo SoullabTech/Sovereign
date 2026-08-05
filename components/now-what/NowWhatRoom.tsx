@@ -171,7 +171,33 @@ interface Props {
   fieldContext?: string;
   /** Program door within the field (catalog spec) — scopes the position block only. */
   program?: string;
+  /**
+   * Which Home door the member came through. Frames the arrival — it never
+   * seeds content, never sends anything, and the member's words remain the
+   * only input. question | cultivate | prepare | think (default).
+   */
+  entry?: string;
+  /** Opaque thread id for entry=question — resolved member-scoped from the
+   *  room's own load; the member's text never rides the URL. */
+  entryThread?: string;
+  /** Flourishing dimension slug for entry=cultivate — static copy only. */
+  entryDimension?: string;
 }
+
+/*
+ * Static entry copy for the cultivate door — mirrors the Home's researched
+ * flourishing domains (CLIENT_FIELD_TALK_ALIGNMENT_2026-08-05.md). The
+ * member chose the dimension by clicking it; that click is the gesture the
+ * framing keys on. No member data enters this map.
+ */
+const CULTIVATE_DIMENSIONS: Record<string, { name: string; facets: string }> = {
+  relationships: { name: 'Relationships', facets: 'connection · belonging · love' },
+  meaning: { name: 'Meaning & purpose', facets: 'what your life is for' },
+  presence: { name: 'Presence', facets: 'experiencing the life you built' },
+  health: { name: 'Health & energy', facets: 'movement · sleep · vitality' },
+  contribution: { name: 'Contribution', facets: 'what you give beyond yourself' },
+  time: { name: 'Time', facets: 'enough of it for what matters' },
+};
 
 // — Program position (arrival payload; rides the field-note room-load GET) —
 interface ArrivalPositionPayload {
@@ -193,7 +219,7 @@ interface ProgramArrivalPayload {
  * client experience lives in its own namespace and does not modify framework
  * surfaces. It may earn its way into shared architecture through observation.
  */
-export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) {
+export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, entryThread, entryDimension }: Props) {
   const nowWhat = true;
   const [roomPhase, setRoomPhase] = useState<RoomPhase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -212,6 +238,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
   // Now What? loop state. priorPractice = the practice committed on a previous visit
   // (drives the Return branch); practiceDraft/offeringDraft = this visit's commitments.
   const [priorPractice, setPriorPractice] = useState<string | null>(null);
+  // The carried question's title for entry=question — resolved member-scoped
+  // from the room's own thread load, never from the URL.
+  const [entryThreadTitle, setEntryThreadTitle] = useState<string | null>(null);
   const [arrivalAnswer, setArrivalAnswer] = useState('');
   const [practiceDraft, setPracticeDraft] = useState('');
   const [sharePractice, setSharePractice] = useState(false);
@@ -309,9 +338,16 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
         );
         if (res.ok) {
           const json = await res.json().catch(() => ({}));
-          const threads: { title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
+          const threads: { id?: string; title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
           const practice = threads.find(t => t.spiralogic_phase === 'practice');
           if (practice && !cancelled) setPriorPractice(practice.title);
+          // Entry=question: surface the member's own carried question at the
+          // threshold. Member-scoped resolution — an id that isn't theirs
+          // simply resolves to nothing.
+          if (entryThread && !cancelled) {
+            const carried = threads.find(t => t.id === entryThread);
+            if (carried) setEntryThreadTitle(carried.title);
+          }
           // Arrival payload (program position) rides the same load — null when
           // the field declares no anchoring; the line simply does not render.
           if (json?.arrival && !cancelled) setProgramArrival(json.arrival);
@@ -957,7 +993,64 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
             </div>
           )}
 
-          {returning ? (
+          {/* — Entry framing: the door the member came through shapes the
+              threshold. Their own carried question, a dimension they chose by
+              clicking it, or conversation preparation. The frame orients;
+              the member's words remain the only input. — */}
+          {entry === 'question' && entryThreadTitle ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">You are carrying —</p>
+              <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
+                &ldquo;{entryThreadTitle}&rdquo;
+              </p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What&apos;s moving in it now?
+              </p>
+            </div>
+          ) : entry === 'cultivate' && entryDimension && CULTIVATE_DIMENSIONS[entryDimension] ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">
+                Reflecting through{' '}
+                <span className="text-slate-300">{CULTIVATE_DIMENSIONS[entryDimension].name}</span>
+                <span className="text-slate-600"> · {CULTIVATE_DIMENSIONS[entryDimension].facets}</span>
+              </p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What in your life is asking for attention here?
+              </p>
+            </div>
+          ) : entry === 'lived' ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              {priorPractice ? (
+                <>
+                  <p className="text-slate-500 text-sm font-light">What you are living —</p>
+                  <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
+                    {priorPractice}
+                  </p>
+                  <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                    What happened?
+                  </p>
+                  <p className="text-slate-500 text-sm font-light">What is life showing you?</p>
+                </>
+              ) : (
+                <>
+                  <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                    What are you living right now?
+                  </p>
+                  <p className="text-slate-500 text-sm font-light">What is life showing you?</p>
+                </>
+              )}
+            </div>
+          ) : entry === 'prepare' ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">Before your next coaching conversation —</p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What do you want to bring forward?
+              </p>
+              <p className="text-slate-500 text-sm font-light leading-relaxed">
+                What has shifted? What remains unresolved? What deserves deeper exploration?
+              </p>
+            </div>
+          ) : returning ? (
             <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
               <p className="text-slate-500 text-sm font-light">Last time you chose this practice:</p>
               <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
@@ -976,7 +1069,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
               className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
               rows={2}
-              placeholder={returning ? 'What actually happened…' : 'In your own words…'}
+              placeholder={
+                entry === 'lived' || (returning && !entry)
+                  ? 'What actually happened…'
+                  : 'In your own words…'
+              }
               value={arrivalAnswer}
               onChange={e => setArrivalAnswer(e.target.value)}
               onKeyDown={e => {

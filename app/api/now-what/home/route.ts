@@ -221,6 +221,43 @@ export async function GET(request: NextRequest) {
       console.warn('[NowWhat/home] coach read failed (non-fatal):', err);
     }
 
+    /*
+     * Upcoming conversations — the member's own scheduled sessions, read
+     * through their side of the relationship (practitioner_clients.member_id).
+     * Safe fields ONLY: when, status, how (location type). Never notes,
+     * practitioner_notes, price, payment, or location details. Non-fatal:
+     * a scheduling read failure never costs the member their own material,
+     * and absence of a schedule is a valid state (the box simply does not
+     * render).
+     */
+    let upcoming: { start: string; end: string; status: string; locationType: string | null }[] = [];
+    try {
+      const up = await query<{
+        scheduled_start: string;
+        scheduled_end: string;
+        status: string;
+        location_type: string | null;
+      }>(
+        `SELECT s.scheduled_start, s.scheduled_end, s.status, s.location_type
+           FROM sessions s
+           JOIN practitioner_clients pc ON pc.id = s.client_id
+          WHERE pc.member_id = $1
+            AND s.status IN ('scheduled', 'confirmed')
+            AND s.scheduled_start > NOW()
+          ORDER BY s.scheduled_start ASC
+          LIMIT 5`,
+        [memberId],
+      );
+      upcoming = up.rows.map((r) => ({
+        start: r.scheduled_start,
+        end: r.scheduled_end,
+        status: r.status,
+        locationType: r.location_type,
+      }));
+    } catch (err) {
+      console.warn('[NowWhat/home] upcoming read failed (non-fatal):', err);
+    }
+
     console.info(
       '[NowWhat/home] read',
       JSON.stringify({
@@ -245,6 +282,7 @@ export async function GET(request: NextRequest) {
       reflections,
       shared,
       sessions,
+      upcoming,
     });
   } catch (err: any) {
     console.error('[NowWhat/home] GET error:', err?.message || err);
