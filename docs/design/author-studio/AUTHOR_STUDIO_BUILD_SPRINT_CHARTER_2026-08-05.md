@@ -108,6 +108,33 @@ experiment **advances**, **changes direction**, or **is retired**.
 
 This prevents the *Experimental* label from quietly becoming a permanent permission slip.
 
+## Walk framing — declared before contact (founder, 2026-08-05)
+
+The walk is **not** asking:
+
+- "Is Canvas the future?"
+- "Should Author Studio be built this way?"
+- "Does MAIA understand writers?"
+
+Those are either ruled elsewhere or outside this test's scope. The walk asks one narrower
+experiential question:
+
+> Does this environment allow a writer to encounter their own work and continue their process
+> without the software becoming the center of gravity?
+
+**Capture the raw encounter before interpretation:**
+
+- where they pause;
+- what they expect to happen;
+- what they try without instruction;
+- what language they use;
+- where they become uncertain;
+- whether they refer to the work as *theirs*.
+
+The absence of confusion is useful evidence. So is confusion. Both outcomes remain admissible —
+that admissibility is this charter's value. The next state transition is not code; it is contact
+with the actual writer.
+
 ## Sequence
 
 1. ✅ Re-pin #963 to `fa4ba27ed` (done — commit `58aed1814` on this branch).
