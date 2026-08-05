@@ -76,6 +76,21 @@ interface SessionRow {
   carried: number;
 }
 
+/**
+ * Practitioner-authored material for a focal point the member declared.
+ * PHASE 2. Always rendered as OFFERED — never in the member's voice, and never
+ * merged with what the member themselves committed to (R7).
+ */
+interface LessonRow {
+  programSlug: string;
+  programTitle: string | null;
+  focalPoint: string;
+  purpose: string | null;
+  practice: string | null;
+  reflectionPrompt: string | null;
+  statedBy: string;
+}
+
 interface HomePayload {
   journey: JourneyRow[];
   decisions: HomeThread[];
@@ -84,6 +99,7 @@ interface HomePayload {
   reflections: HomeThread[];
   shared: HomeThread[];
   sessions: SessionRow[];
+  lessons?: LessonRow[];
 }
 
 // ── Presentation primitives ──────────────────────────────────────────────
@@ -272,14 +288,24 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
   const shared = data?.shared ?? [];
   const sessions = data?.sessions ?? [];
 
+  const lessons = data?.lessons ?? [];
+
   // What the member actually has. Each block below mounts only when its own
   // content exists — the page is composed, never scaffolded.
   const hasCurrentWork = journey.length > 0;
+  // Explore material. Commitments are NOT here: they belong to Practice, where
+  // the member's own choice sits beside what was offered, visibly distinct.
   const hasMaterial =
-    decisions.length > 0 || questions.length > 0 || commitments.length > 0 || reflections.length > 0;
+    decisions.length > 0 || questions.length > 0 || reflections.length > 0;
+  // Prepare = what the practitioner authored to bring into the next conversation.
+  const prepare = lessons.filter((l) => l.reflectionPrompt || l.purpose);
+  // Practice = offered experiments (practitioner) + what the member chose (theirs).
+  const offeredPractice = lessons.filter((l) => l.practice);
+  const hasPractice = offeredPractice.length > 0 || commitments.length > 0;
   const hasSessions = sessions.length > 0;
   const hasShared = shared.length > 0;
-  const hasAnything = hasCurrentWork || hasMaterial || hasSessions || hasShared;
+  const hasAnything =
+    hasCurrentWork || hasMaterial || hasPractice || prepare.length > 0 || hasSessions || hasShared;
 
   return (
     <>
@@ -378,16 +404,104 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               no longer six destinations the member must navigate. Each strand
               disappears entirely when the member has none of that kind.
             */}
+            {/*
+              PREPARE (spec §2.2) — what the practitioner authored for the focal
+              point this member declared. Practitioner-authored throughout, so it
+              renders as OFFERED and is attributed in the copy itself; it is never
+              spoken in the member's voice (R4 · Activation Model §7.3).
+
+              An invitation, not an instruction: no due date, no "required",
+              nothing that turns bringing something into complying with something.
+            */}
+            {prepare.length > 0 && (
+              <Block
+                eyebrow="Prepare"
+                lead="Offered by your coach for the work you named. Bring what is true — none of this is required, and nothing here is tracked."
+                delay={40}
+              >
+                <ul className="space-y-5">
+                  {prepare.map((l) => (
+                    <li
+                      key={`${l.programSlug}-${l.focalPoint}-prep`}
+                      className="border-l pl-5 py-1"
+                      style={{ borderColor: 'rgba(125,175,255,0.3)' }}
+                    >
+                      {l.reflectionPrompt && (
+                        <p className="text-slate-100 text-[15px] font-light leading-relaxed">
+                          {l.reflectionPrompt}
+                        </p>
+                      )}
+                      {l.purpose && (
+                        <p className="text-slate-400 text-sm font-light leading-relaxed mt-1.5">
+                          {l.purpose}
+                        </p>
+                      )}
+                      <p className="text-slate-600 text-xs font-light mt-2">
+                        suggested by your coach
+                        {l.programTitle ? ` · ${l.programTitle}` : ''}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </Block>
+            )}
+
+            {/*
+              PRACTICE (spec §2.3) — TWO STATES ON ONE SURFACE, NEVER MERGED.
+
+              "Suggested by your coach" is the practitioner's offer. "You are
+              practising" is the member's own commitment, authored by them. R7:
+              a suggestion becomes a commitment only through a member gesture,
+              never through a render — so these are separately labelled and
+              separately sourced (field_program_lessons.practice vs
+              member_field_note_threads), and nothing counts, scores, streaks or
+              checks off either one.
+            */}
+            {hasPractice && (
+              <Block
+                eyebrow="Practice"
+                lead="What you are experimenting with. An invitation, never an assignment — nothing here tracks whether you did it."
+                delay={80}
+              >
+                {offeredPractice.length > 0 && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
+                      Suggested by your coach
+                    </p>
+                    <ul className="space-y-5">
+                      {offeredPractice.map((l) => (
+                        <li
+                          key={`${l.programSlug}-${l.focalPoint}-prac`}
+                          className="border-l pl-5 py-1"
+                          style={{ borderColor: 'rgba(125,175,255,0.3)' }}
+                        >
+                          <p className="text-slate-100 text-[15px] font-light leading-relaxed">
+                            {l.practice}
+                          </p>
+                          <p className="text-slate-600 text-xs font-light mt-2">
+                            offered{l.programTitle ? ` · ${l.programTitle}` : ''} — yours only if
+                            you choose it
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {commitments.length > 0 && (
+                  <Strand label="You are practising" items={commitments} />
+                )}
+              </Block>
+            )}
+
             {hasMaterial && (
               <Block
-                eyebrow="Your work"
+                eyebrow="Explore"
                 title={hasCurrentWork ? undefined : 'What you are working with'}
                 lead="In your words, in the order you kept them. Nothing here is inferred, nothing ranks or summarises you, and nothing measures how you are doing."
-                delay={60}
+                delay={120}
               >
                 <Strand label="Decisions you are carrying" items={decisions} />
                 <Strand label="Questions you are living" items={questions} />
-                <Strand label="What you are practising" items={commitments} />
                 <Strand label="What you kept" items={reflections.slice(0, 8)} />
                 {reflections.length > 8 && (
                   <p className="mt-6">

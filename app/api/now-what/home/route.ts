@@ -196,6 +196,72 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    /*
+     * Lessons — the practitioner's authored preparation and practice for the
+     * focal point THIS MEMBER HAS DECLARED (Phase 2, MY_WORK_FIELD_UX_SPEC_V1 §9).
+     *
+     * SELECTION RULE, and it is load-bearing: a lesson is reached through the
+     * member's own position row, joined on (field_slug, program_slug,
+     * focal_point). It is NOT reached by asking "is this member enrolled" —
+     * participation has no object yet and this read deliberately does not
+     * invent one. No declared position ⇒ no lessons ⇒ the Prepare and offered-
+     * Practice layers simply do not render. Position stays orientation;
+     * participation stays unruled.
+     *
+     * What comes back is PRACTITIONER-AUTHORED and must render as offered,
+     * never in the member's voice (R4 · R7 · Activation Model §7.3) — so
+     * statedBy travels with it and the UI attributes from that.
+     *
+     * material_ids is deliberately not read: Library is not in Phase 2.
+     * Non-fatal, like the journey read — a lesson failure must not cost the
+     * member their own material.
+     */
+    let lessons: {
+      programSlug: string;
+      programTitle: string | null;
+      focalPoint: string;
+      purpose: string | null;
+      practice: string | null;
+      reflectionPrompt: string | null;
+      statedBy: string;
+    }[] = [];
+    if (fieldContext && journey.length > 0) {
+      try {
+        const les = await query<{
+          program_slug: string;
+          title: string | null;
+          focal_point: string;
+          purpose: string | null;
+          practice: string | null;
+          reflection_prompt: string | null;
+          stated_by: string;
+        }>(
+          `SELECT l.program_slug, fp.title, l.focal_point, l.purpose,
+                  l.practice, l.reflection_prompt, p.stated_by
+             FROM field_program_lessons l
+             JOIN field_program_positions p
+               ON p.field_slug   = l.field_slug
+              AND p.program_slug = l.program_slug
+              AND p.focal_point  = l.focal_point
+             LEFT JOIN field_programs fp
+               ON fp.field_slug = l.field_slug AND fp.program_slug = l.program_slug
+            WHERE p.member_id = $1 AND p.field_slug = $2`,
+          [memberId, fieldContext],
+        );
+        lessons = les.rows.map((r) => ({
+          programSlug: r.program_slug,
+          programTitle: r.title,
+          focalPoint: r.focal_point,
+          purpose: r.purpose,
+          practice: r.practice,
+          reflectionPrompt: r.reflection_prompt,
+          statedBy: r.stated_by,
+        }));
+      } catch (err) {
+        console.warn('[NowWhat/home] lesson read failed (non-fatal):', err);
+      }
+    }
+
     console.info(
       '[NowWhat/home] read',
       JSON.stringify({
@@ -207,6 +273,7 @@ export async function GET(request: NextRequest) {
         reflections: reflections.length,
         shared: shared.length,
         sessions: sessions.length,
+        lessons: lessons.length,
       }),
     );
 
@@ -218,6 +285,7 @@ export async function GET(request: NextRequest) {
       reflections,
       shared,
       sessions,
+      lessons,
     });
   } catch (err: any) {
     console.error('[NowWhat/home] GET error:', err?.message || err);
