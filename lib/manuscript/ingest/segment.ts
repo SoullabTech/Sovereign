@@ -25,12 +25,19 @@ export const MAX_SECTIONS = 400;
  * Mechanical segmentation: split on markdown headings (#, ##, ###) or
  * ALL-CAPS / "Chapter N" lines. Fallback: whole text as one section.
  * Detection only — headings come from the document's own characters.
+ *
+ * "Chapter" matches case-insensitively ([Cc]hapter) but the branch is NOT
+ * a global /i: making the whole pattern case-insensitive would turn the
+ * ALL-CAPS alternative into "any short mixed-case line", cutting prose into
+ * confetti. Caught by the 2026-08-05 five-persona walk: a real manuscript's
+ * "Chapter One — The Late Frost" headings were invisible to the lowercase
+ * literal, and the whole book collapsed to one untitled section.
  */
 export function segment(text: string): SectionInput[] {
   const lines = text.split('\n');
   const headingIdx: { line: number; heading: string }[] = [];
 
-  const headingRe = /^(#{1,3}\s+.+|chapter\s+\w+.*|[A-Z][A-Z0-9 ,'&\-—:]{3,80})$/;
+  const headingRe = /^(#{1,3}\s+.+|[Cc]hapter\s+\w+.*|[A-Z][A-Z0-9 ,'&\-—:]{3,80})$/;
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i].trim();
     if (!raw) continue;

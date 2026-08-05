@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
+import { CANVAS_HREF } from '../studio/studioMap';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**
@@ -175,6 +176,38 @@ function PressManuscriptRoom() {
   const [draftTitle, setDraftTitle] = useState('');
   const [draftText, setDraftText] = useState('');
   const [preview, setPreview] = useState<PreviewSection[] | null>(null);
+  /**
+   * Which preview section is open for cutting, if any. The 2026-08-05 persona
+   * walk found the confirm stage one-directional: a member could edit or merge
+   * the detected cuts but could not ADD one the detector missed — a manuscript
+   * whose chapter headings went unrecognized collapsed irreversibly to one
+   * section. Cuts are structure and structure is authorship, so the member can
+   * redraw them here, in both directions.
+   */
+  const [splitOpen, setSplitOpen] = useState<number | null>(null);
+
+  /**
+   * Cut section i at line lineIdx: the clicked line becomes the new section's
+   * heading (the member's own characters — nothing is invented), everything
+   * after it becomes the new body. Refused when the cut would orphan words:
+   * an empty heading, an empty remainder above, or an empty body below would
+   * each be dropped by the save route, and a confirm step must never discard
+   * what the member pasted.
+   */
+  const splitSectionAt = (i: number, lineIdx: number) => {
+    setPreview((p) => {
+      if (!p || !p[i]) return p;
+      const lines = p[i].body.split('\n');
+      const headingLine = lines[lineIdx]?.trim() ?? '';
+      const before = lines.slice(0, lineIdx).join('\n');
+      const after = lines.slice(lineIdx + 1).join('\n');
+      if (!headingLine || before.trim().length === 0 || after.trim().length === 0) return p;
+      const next = [...p];
+      next.splice(i, 1, { ...p[i], body: before }, { position: 0, heading: headingLine, body: after });
+      return next.map((x, j) => ({ ...x, position: j }));
+    });
+    setSplitOpen(null);
+  };
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -307,13 +340,12 @@ function PressManuscriptRoom() {
       setDraftText('');
       setDraftTitle('');
       setImporting(false); // intent spent — do not pin the member on the form
-      await loadList();
-      setActive(data.id);
-      // Import is a threshold, not a destination. The member came here to
-      // write, so the import ends in the Working Draft — not on a section
-      // list whose only onward action was "Begin Exploration" (which led to
-      // Keeps, away from writing).
-      setTab('draft');
+      // Import is a threshold, not a destination — and since the Writer
+      // Canvas exists, the room the member lands in is the Canvas, by
+      // identity, with the new draft on the table. The 2026-08-05 persona
+      // walk found imports still ending in this room's seven-tab workbench:
+      // the environment existed, but its main entry path predated it.
+      window.location.href = `${CANVAS_HREF}?m=${encodeURIComponent(data.id)}`;
     } catch {
       // Preview is preserved so the member can retry the save.
       setSaveError(true);
@@ -624,7 +656,8 @@ function PressManuscriptRoom() {
           {/* State the consequence BEFORE the file dialog, not after. */}
           <p className="text-[14px] leading-relaxed opacity-50 mb-12 max-w-md">
             What you bring in is kept as your Source and is never altered. A Working Draft is made
-            alongside it — that is the copy you write in. You will land there when this is done.
+            alongside it — that is the copy you write in. When this is done you will land in the
+            Writer Canvas, with your draft on the table.
           </p>
 
           {!preview ? (
@@ -678,53 +711,91 @@ function PressManuscriptRoom() {
             <div>
               <p className="text-[14px] opacity-70 mb-2">
                 {preview.length} section{preview.length === 1 ? '' : 's'} detected — from your
-                document&rsquo;s own headings. Confirm the cuts before saving: edit any heading, or
-                merge a section into the one above it.
+                document&rsquo;s own headings. Confirm the cuts before saving: edit any heading,
+                merge a section into the one above it, or cut a section where a heading was missed.
               </p>
               <p className="text-[12px] opacity-50 mb-8">Saved as your words, as you wrote them.</p>
               <div className="space-y-3 mb-10">
                 {preview.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 border-b border-[#3a322b] pb-2">
-                    <span className="text-[12px] opacity-40 w-8">{i + 1}</span>
-                    <input
-                      value={s.heading ?? ''}
-                      placeholder="(untitled section)"
-                      onChange={(e) =>
-                        setPreview((p) =>
-                          p
-                            ? p.map((x, j) =>
-                                j === i ? { ...x, heading: e.target.value || null } : x,
-                              )
-                            : p,
-                        )
-                      }
-                      className="press-field flex-1 bg-transparent outline-none text-[15px] placeholder:opacity-30"
-                      style={{ fontFamily: SERIF }}
-                    />
-                    <span className="text-[12px] opacity-40">{pageEstimate(s.body.length)} pp</span>
-                    {i > 0 && (
-                      <button
-                        onClick={() =>
-                          setPreview((p) => {
-                            if (!p) return p;
-                            const merged = [...p];
-                            const cur = merged[i];
-                            merged[i - 1] = {
-                              ...merged[i - 1],
-                              body:
-                                merged[i - 1].body +
-                                '\n\n' +
-                                (cur.heading ? cur.heading + '\n' : '') +
-                                cur.body,
-                            };
-                            merged.splice(i, 1);
-                            return merged.map((x, j) => ({ ...x, position: j }));
-                          })
+                  <div key={i} className="border-b border-[#3a322b] pb-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] opacity-40 w-8">{i + 1}</span>
+                      <input
+                        value={s.heading ?? ''}
+                        placeholder="(untitled section)"
+                        onChange={(e) =>
+                          setPreview((p) =>
+                            p
+                              ? p.map((x, j) =>
+                                  j === i ? { ...x, heading: e.target.value || null } : x,
+                                )
+                              : p,
+                          )
                         }
+                        className="press-field flex-1 bg-transparent outline-none text-[15px] placeholder:opacity-30"
+                        style={{ fontFamily: SERIF }}
+                      />
+                      <span className="text-[12px] opacity-40">{pageEstimate(s.body.length)} pp</span>
+                      <button
+                        onClick={() => setSplitOpen((cur) => (cur === i ? null : i))}
+                        aria-expanded={splitOpen === i}
                         className="text-[12px] opacity-40 hover:opacity-70"
                       >
-                        merge ↑
+                        {splitOpen === i ? 'close' : 'cut'}
                       </button>
+                      {i > 0 && (
+                        <button
+                          onClick={() =>
+                            setPreview((p) => {
+                              if (!p) return p;
+                              const merged = [...p];
+                              const cur = merged[i];
+                              merged[i - 1] = {
+                                ...merged[i - 1],
+                                body:
+                                  merged[i - 1].body +
+                                  '\n\n' +
+                                  (cur.heading ? cur.heading + '\n' : '') +
+                                  cur.body,
+                              };
+                              merged.splice(i, 1);
+                              return merged.map((x, j) => ({ ...x, position: j }));
+                            })
+                          }
+                          className="text-[12px] opacity-40 hover:opacity-70"
+                        >
+                          merge ↑
+                        </button>
+                      )}
+                    </div>
+                    {/* The member redraws a missed cut: click the line where a
+                        new section begins — that line becomes its heading, in
+                        their own characters. Lines whose cut would orphan text
+                        above or below are shown but not offered. */}
+                    {splitOpen === i && (
+                      <div className="mt-3 ml-11 max-h-64 overflow-y-auto border-l border-[#3a322b] pl-4">
+                        <p className="text-[12px] opacity-50 mb-2">
+                          Choose the line where a new section begins. That line becomes its heading.
+                        </p>
+                        {s.body.split('\n').map((line, li, all) => {
+                          const t = line.trim();
+                          if (!t) return null;
+                          const cuttable =
+                            all.slice(0, li).join('').trim().length > 0 &&
+                            all.slice(li + 1).join('').trim().length > 0;
+                          return (
+                            <button
+                              key={li}
+                              disabled={!cuttable}
+                              onClick={() => splitSectionAt(i, li)}
+                              className="block w-full text-left text-[13px] leading-relaxed py-0.5 truncate disabled:cursor-default disabled:opacity-30 opacity-60 hover:opacity-100 hover:text-[#C9A227]"
+                              style={{ fontFamily: SERIF }}
+                            >
+                              {t}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 ))}

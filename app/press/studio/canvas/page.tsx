@@ -37,9 +37,12 @@ import Worktable from './Worktable';
  *
  * What this room deliberately does NOT claim:
  *   · that the manuscript belongs to the Work. Nothing writes
- *     living_work_expressions yet; the head of the room names the Work (when
- *     exactly one is declared) and the table names the manuscript — an
- *     arrangement, never a drawn containment. Same discipline as Studio Home.
+ *     living_work_expressions yet — so the head of the room names the thing
+ *     ACTUALLY on the table (the manuscript), and the declared Work lives in
+ *     the Work drawer, explicitly unlinked. The v0.1 shape (Work as headline,
+ *     manuscript beneath it) read as belonging the moment a member had both:
+ *     the persona walk's novelist found her book headlined by an unrelated
+ *     work. Display may not draw a containment the data does not hold.
  *   · which of several Works the member returned to (arrivalWork declines to
  *     guess; so does this room).
  *   · any inferred state. The orientation line is authored facts only: the
@@ -140,12 +143,16 @@ export default function WriterCanvasPage() {
     );
   }
 
-  // The head of the room: the Work when exactly one is declared; otherwise the
-  // manuscript speaks for itself. Never a guess between several Works.
-  const headline = work
-    ? (work.title ?? 'Your work')
-    : (manuscript?.title ?? (manuscript ? UNTITLED_EXPRESSION : 'Writer Canvas'));
-  const headlineNamed = work ? work.title !== null : Boolean(manuscript?.title);
+  // The head of the room names what is actually on the table. The declared
+  // Work is context (Work drawer), not the headline — headline-plus-"on the
+  // table" drew a belonging the data does not hold. With no manuscript, the
+  // Work (when exactly one is declared) may head the empty room.
+  const headline = manuscript
+    ? (manuscript.title ?? UNTITLED_EXPRESSION)
+    : work
+      ? (work.title ?? 'Your work')
+      : 'Writer Canvas';
+  const headlineNamed = manuscript ? manuscript.title !== null : Boolean(work?.title);
 
   // Structure exists only where structure exists: a single-section draft has
   // no Structure drawer, and its absence is correct, not a gap.
@@ -169,12 +176,20 @@ export default function WriterCanvasPage() {
               </p>
               <p className="text-[12px] opacity-45 mt-1">declared {formatWhen(work.createdAt)}</p>
             </div>
-            <p className="text-[12.5px] leading-relaxed opacity-50">
+            <p className="text-[12.5px] leading-relaxed opacity-50 mb-3">
               Naming and renaming your work happens at the{' '}
               <Link href="/press/studio" className="underline underline-offset-4 opacity-90">
                 Studio Home
               </Link>
               , where you declared it.
+            </p>
+            {/* Say the non-link out loud rather than letting layout imply one:
+                nothing yet records that what is on the table belongs to this
+                work, and that declaration is the member's to make when it
+                exists — never the display's to assume. */}
+            <p className="text-[12.5px] leading-relaxed opacity-50">
+              The Studio does not yet record what belongs to this work — what is on the table is
+              near it, not claimed by it.
             </p>
           </>
         ) : (
@@ -310,14 +325,11 @@ export default function WriterCanvasPage() {
             {draftMeta.updatedAt ? ` · last touched ${formatWhen(draftMeta.updatedAt)}` : ''}
           </p>
         )}
-        {/* Arrangement, not containment: the table names its manuscript when
-            the headline is the Work. No belonging is asserted. */}
-        {work && manuscript && (
+        {/* Several manuscripts, arrived without naming one: say which rule
+            picked. A fact about the room, not a claim about the work. */}
+        {manuscript && manuscripts.length > 1 && !manuscripts.some((m) => m.id === requested) && (
           <p className="text-[13px] opacity-50 mt-2">
-            On the table: {manuscript.title ?? UNTITLED_EXPRESSION}
-            {manuscripts.length > 1 && !manuscripts.some((m) => m.id === requested)
-              ? ' (the most recent)'
-              : ''}
+            The most recent of your {manuscripts.length} manuscripts is on the table.
           </p>
         )}
       </header>
