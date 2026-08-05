@@ -132,6 +132,13 @@ export default function WriterStudioHome() {
 
   const hasWorks = worksPhase === 'ready' && works.length > 0;
   const projectsRef = useRef<HTMLDivElement | null>(null);
+  const bringRef = useRef<HTMLDivElement | null>(null);
+
+  /* Choose your adventure (Kelly, 08-05 — the ruled second doorway axis):
+     "Where are you starting?" comes BEFORE "what kind of work?". The five
+     intention doors open behind "Begin something new" — expanded by default
+     only when the Studio is empty, because then beginning IS the adventure. */
+  const [newOpen, setNewOpen] = useState<boolean | null>(null);
 
   const placedIds = new Set(
     works.flatMap((w) =>
@@ -286,16 +293,71 @@ export default function WriterStudioHome() {
           </p>
         )}
 
-        {/* ── TOP: an invitation, not a classification. Nobody has to know
-            what the thing is before they know what it is — every door is a
-            way IN, and walking through one records nothing. ─────────────── */}
-        <h1 className="text-[24px] md:text-[28px] leading-snug opacity-90 mb-2">
-          What are you bringing into form?
+        {/* ── TOP: choose your adventure. The first axis is WHERE you are
+            starting, not what the thing is — a returning writer's adventure
+            is usually "continue", and arrival must offer that as plainly as
+            "begin". Doors, not classification; choosing records nothing. ── */}
+        <h1 className="text-[24px] md:text-[28px] leading-snug opacity-90 mb-6">
+          Where are you starting?
         </h1>
-        <p className="text-[12px] tracking-[0.25em] uppercase opacity-40 mb-6">
-          Start something new
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-12">
+        {(() => {
+          const hasAnything = hasWorks || manuscripts.length > 0;
+          const showNew = newOpen ?? !hasAnything;
+          return (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <IntentDoor
+                  icon={<Sparkles {...ICON} size={18} />}
+                  title="Begin something new"
+                  sub="An idea, a page, a project"
+                  onClick={() => setNewOpen(!showNew)}
+                />
+                {hasAnything ? (
+                  <IntentDoor
+                    icon={<Feather {...ICON} size={18} />}
+                    title="Continue your work"
+                    sub="Pick up where you left off"
+                    onClick={() =>
+                      projectsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  />
+                ) : (
+                  /* An honest door: nothing to continue until something exists. */
+                  <div
+                    className="border p-5 opacity-30"
+                    style={{ borderColor: PRESS.ruleSoft }}
+                    aria-disabled="true"
+                  >
+                    <span style={{ color: PRESS.accent }}>
+                      <Feather {...ICON} size={18} />
+                    </span>
+                    <span className="block text-[15px] mt-2.5" style={{ fontFamily: SERIF }}>
+                      Continue your work
+                    </span>
+                    <span className="block text-[12px] opacity-60 mt-1">
+                      Nothing here yet — it begins next door
+                    </span>
+                  </div>
+                )}
+                <IntentDoor
+                  icon={<FolderOpen {...ICON} size={18} />}
+                  title="Bring something in"
+                  sub="A document you already have"
+                  onClick={() =>
+                    bringRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                />
+              </div>
+
+              {/* The second axis, revealed by the first: what kind of thing. */}
+              {!showNew ? (
+                <div className="mb-12" />
+              ) : (
+                <>
+                  <p className="text-[12px] tracking-[0.25em] uppercase opacity-40 mb-4">
+                    What are you bringing into form?
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-12">
           <IntentDoor
             icon={<Sparkles {...ICON} size={18} />}
             title="Capture an idea"
@@ -320,13 +382,18 @@ export default function WriterStudioHome() {
             sub="Talk, course, campaign"
             onClick={openDeclare}
           />
-          <IntentDoor
-            icon={<Library {...ICON} size={18} />}
-            title="Explore and research"
-            sub="Study, investigation, collection"
-            onClick={openDeclare}
-          />
-        </div>
+                    <IntentDoor
+                      icon={<Library {...ICON} size={18} />}
+                      title="Explore and research"
+                      sub="Study, investigation, collection"
+                      onClick={openDeclare}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          );
+        })()}
         {(starting || startError) && (
           <p role={startError ? 'alert' : undefined} className="text-[13px] opacity-70 -mt-8 mb-8">
             {startError ?? 'making a page…'}
@@ -408,6 +475,7 @@ export default function WriterStudioHome() {
         </div>
 
         {/* ── BOTTOM: Bring Something In ─────────────────────────────────── */}
+        <div ref={bringRef}>
         <Zone>
           <ZoneLabel icon={<FolderOpen {...ICON} />} name="Bring Something In" />
 
@@ -498,6 +566,7 @@ export default function WriterStudioHome() {
             </p>
           )}
         </Zone>
+        </div>
       </div>
     </div>
   );
