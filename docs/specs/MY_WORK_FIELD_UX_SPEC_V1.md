@@ -333,6 +333,60 @@ Phase 1 is a real deliverable on its own: it removes the failure that opened thi
 
 ---
 
+## 9A. ⛔ The adoption transition — HELD for pilot design
+
+Phase 2 shipped `01ed21d70`: an offered practice renders beside the member's own, visibly
+distinct. **An offered practice still cannot become a member commitment.** The system stops
+one arrow short:
+
+```
+Coach offers → Member sees → Member chooses → [ Member authors ]
+                                                ↑ not built, deliberately
+```
+
+> **That is not a UI gap. It is the transition point** — the first place the implementation
+> crosses from *rendering a relationship state* into *creating a new member-authority
+> transition.* **This is a healthy stopping point.**
+
+### ⚠️ Why the existing primitive is the risk, not the solution
+
+`/api/now-what/field-note` already writes member-authored practice threads. **The primitive
+exists.** That is precisely why this must not be rushed:
+
+> **The question is not "can we build a write endpoint?" It is "what is the meaning of the
+> write?"**
+
+### The six questions any adoption gesture must answer first
+
+1. Who **initiated** the transition?
+2. What is **preserved** from the original offer?
+3. What becomes **member-owned**?
+4. Does **practitioner attribution remain**?
+5. How does **withdrawal** work?
+6. What happens if the member **changes the wording**?
+
+⛔ These are not implementation details.
+
+### ⚠️ The dangerous shape
+
+| ⛔ | **"Add this practice"** — makes the system *a collector of commitments* |
+|---|---|
+| ⚠️ closer | *"Carry this forward"* · *"Make this yours"* — **but even these need the ruling behind them** |
+
+### Two questions the pilot separates
+
+1. **Does the between-session loop work without adoption?** — testable **now**:
+   `Session → Reflection → Practice offered → Return`. Measures whether members recognise
+   value in the offered layer at all.
+2. **Does the member want to claim something?** — the *next* experiment, and it must be
+   **tested with actual pilot participants, not assumed from the architecture.**
+
+> **The next useful evidence is not more code. It is whether a real person looks at an
+> offered practice and naturally wants to make a move. That gesture, when it appears,
+> defines the transition.**
+
+---
+
 ## 10. Not authorized by this spec
 
 - ⛔ The participation object migration (Gate 1) — separate authorization.
