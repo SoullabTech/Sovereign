@@ -166,18 +166,59 @@ merely add another label?* And the return test governs throughout: *when a
 creator returns, do they recognize their own relationship with the Work —
 or are they merely reopening a document?*
 
-**Per-persona walk questions (founder's words — five personas; the
-collaborator is NOT in this walk set):**
+**The walk is the only legitimate source of truth now** (founder, on the
+loop's verification). Not a feature review, not a UI review. The personas
+are walked as **variations of the single question**, in the founder's
+final wording:
 
-| Persona | The question |
+| Persona | The variation |
 |---|---|
-| Novelist — "I have a manuscript" | Does the manuscript become an expression of the Work? |
-| Scholar — "I have research and arguments" | Does the Work hold inquiry without forcing it into a book prematurely? |
-| Blogger/Creator — "I have fragments and ideas" | Does the Work support emergence before structure? |
-| Elder/Teacher — "I have decades of material" | Does the system support gathering without becoming a warehouse? |
-| World-builder — "I am developing a world, philosophy, framework, or body of thought" | **The deepest test**: does the system allow the Work itself to be the primary object, with writing as one possible expression? |
+| Novelist — "I have a manuscript" | Does the Work become **larger than the manuscript**? |
+| Scholar — "I have research, arguments, sources" | Does the Work hold inquiry **without reducing it to a document structure**? |
+| Blogger/Creator — "I have fragments and ideas" | Does the Work **help emergence happen**? |
+| Elder/Teacher — "I have decades of material" | Does the Work become **a living field rather than a storage container**? |
+| World-builder — "I am developing a world" | Does the system still work **when the thing being created is not primarily a document**? |
+
+(The collaborator is NOT in this walk set.)
+
+**The first-glance observation (founder instruction):** during the walk,
+watch **where the creator naturally looks first after returning** — not
+what they click; what their attention seeks. Work? Materials? The writing
+surface? History? MAIA? Something missing? The first glance may teach more
+than the entire feature list, and it is the test of whether the room
+hierarchy is correct.
+
+**Why the walk outranks the design conversation** — the evidence already
+arrived unbidden: "The Practice of Return" carries a declared form nobody
+in the design conversation created. The system is already being used in
+ways the conversation cannot fully predict. The next information is human
+behavior.
 
 Technical gates (tests, typecheck) are preconditions, not acceptance.
+
+### The milestone, read by the founder (recorded)
+
+What the verified loop proved is not the row, the drawers, or the
+migration — those are necessary technical facts. It proved **the
+relationship crossed from concept into lived experience**:
+
+```
+Thing I am making → Work I am developing → Expression of that Work
+→ Material that feeds that Work → Return to the Work
+```
+
+With this, the Writer Canvas stops being only a writing environment and
+**becomes a relationship environment**. The strongest evidence is the
+restraint: before the declaration, *"On the table: Your writing"*; after
+it, *"Your writing — a form of The Salt Meadow."* The system did not
+decide the belonging — the creator did, and the platform preserved and
+reflected it. The constitutional line held: **the system can hold
+continuity without owning meaning.**
+
+The `purpose` decision is validated for now: the creator's statement is
+not metadata, it is **orientation** — what this Work is, why it matters,
+what forms it might become. A purpose/becoming distinction may emerge
+later; the first slice was right not to split the concept prematurely.
 
 ### The stop-rule (founder, ruled): the house has enough blueprints
 
