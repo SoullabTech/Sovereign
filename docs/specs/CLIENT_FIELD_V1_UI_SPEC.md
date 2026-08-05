@@ -32,14 +32,28 @@ MY WORK FIELD
 |---|---|---|---|
 | **Current Work** | `journey` ← `field_program_positions` | `JourneyCompose` → `POST /program-position` | ✅ needs a field |
 | **Prepare** | `coach_program_stages` · resources | *(gated on enrolment)* | ⛔ 0 rows |
-| **My Practice** | threads `practice` | `Compose phase="practice"` | ✅ |
-| **Explore** | threads `decision` · `question` · untagged | `Compose` ×2 | ✅ |
+| **Your work** | threads `decision` · `practice` · `question` | `Compose` ×3 | ✅ |
+| **What you discovered** | threads untagged | *(no door — Model B)* | ✅ |
 | **Connection** | `sessions` · `shared` | session room · withdraw | ✅ |
 
 Four of five zones render real member data today. **Prepare is the only zone
 gated on enrolment** — it states that honestly rather than rendering blank.
 
-## 3. Rules
+## 3. The empty-room rule (ruled 2026-08-03)
+
+> **Rooms are visible when the capability exists; meaning is visible only when
+> the member has created it.**
+
+Capability exists, no content → **show the room**, in relational language
+("Your decisions, practices and questions gather here as you work").
+Capability does not exist → **do not render the door**. It is not a room yet.
+
+This dissolves the apparent conflict between *"expose the gap, don't pretend"*
+(about the system's internal truth) and *"don't render empty sections"* (about
+the member surface). Both refuse pretense; only one is about implementation debt.
+Show the room. Do not show the absence.
+
+## 3b. Rules
 
 1. **Reflections have no door** (Model B, ruled). They appear inside Explore because they were kept elsewhere.
 2. **Only Connection routes to conversation.** Every other zone's primary action creates its own object.
@@ -65,7 +79,7 @@ field material, and existing session context — **and must not imply**:
 - cohort participation
 - coach-created commitments
 
-**Prepare states its own gap without describing a mechanism.** Copy that
+**Prepare states its own gap without describing a mechanism, and does not route to conversation.** Copy that
 forward-promised *"what they have laid out for the next stretch appears here"*
 was removed: the shape of practitioner-side preparation is not ruled, so v1 may
 not describe it. An honest empty beats a dead module; an honest empty that makes

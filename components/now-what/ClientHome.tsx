@@ -545,7 +545,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
         {data && (
           <>
-            {/* ① CURRENT WORK — what am I working on */}
+            {/* ① CURRENT WORK — what am I working with */}
             <Section
               eyebrow="Current work"
               title="What you are working on"
@@ -553,9 +553,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               delay={60}
             >
               {journey.length === 0 ? (
-                <Quiet>
-                  Nothing here yet. Your work takes its shape from what you bring.
-                </Quiet>
+                <Quiet>The work you name as yours will appear here.</Quiet>
               ) : (
                 <ul className="space-y-4">
                   {journey.map((j) => (
@@ -577,8 +575,6 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                   ))}
                 </ul>
               )}
-              {/* The endpoint resolves a real field and programme, so this door
-                  is only offered inside a field — never shown unable to open. */}
               {fieldContext && (
                 <JourneyCompose
                   fieldContext={fieldContext}
@@ -588,105 +584,64 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               )}
             </Section>
 
-            {/* ② PREPARE — what do I do next.
-                The only zone with no live substrate: preparation hangs off
-                programme stages, which hang off an enrolment that nothing can
-                yet write. It says so rather than rendering an empty shell. */}
+            {/* ② PREPARE — orient and reconnect. NOT a conversation door: the
+                grammar is Prepare = review, Connection = converse. Routing this
+                zone to the session room turned orientation into chat, which is
+                the collapse the whole structure exists to prevent. */}
             <Section
               eyebrow="Prepare"
               title="Before your next conversation"
-              lead="What is worth bringing — yours to decide, never a list of tasks set for you."
+              lead="What is worth bringing — yours to decide, never a list set for you."
               delay={120}
             >
-              {/* States its own gap without describing a mechanism. The shape
-                  of practitioner-side preparation is not settled, so this must
-                  not promise one — an honest empty is better than a dead module,
-                  and better still when it does not forward-promise. */}
               <Quiet>
-                What you bring is your call. Nothing is set out for you here.
+                What you choose to carry into your next conversation gathers here.
               </Quiet>
-              <div className="mt-5">
-                <Door href={roomHref}>Prepare for your next conversation →</Door>
-              </div>
               <p className="mt-4 text-slate-500 text-xs font-light">
                 What is most alive · what changed · what you want to bring.
               </p>
             </Section>
 
-            {/* ③ MY PRACTICE — between sessions. Never "homework". */}
+            {/* ③ YOUR WORK — "what am I carrying?" Decisions, practices and
+                questions together: the member's mental model is what they are
+                holding, not which act-type produced it. Storage still types
+                each one; the surface does not have to mirror the database. */}
             <Section
-              eyebrow="My practice"
-              title="What you are practising"
-              lead="The ways you chose to lead and live differently. Kept in your words. Not tracked. Not measured."
+              eyebrow="Your work"
+              title="What you are carrying"
+              lead="What you are weighing, practising and living with. Nothing here recommends, ranks or decides — the judgement remains yours."
               delay={180}
             >
-              {commitments.length === 0 ? (
+              {decisions.length === 0 && commitments.length === 0 && questions.length === 0 && (
                 <Quiet>
-                  Nothing here yet. A practice begins when you name what you will
-                  try, and why it matters to you.
-                </Quiet>
-              ) : (
-                <ThreadList items={commitments} onWithdraw={reload} />
-              )}
-              <Compose
-                label="Name what you want to practise →"
-                placeholder="What you will actually live, and why it matters to you."
-                phase="practice"
-                fieldContext={fieldContext}
-                onSaved={reload}
-              />
-            </Section>
-
-            {/* ④ EXPLORE — after sessions. Decisions and questions have doors;
-                reflections do not (Model B): they appear here because they were
-                kept elsewhere, not because this room asks for them. */}
-            <Section
-              eyebrow="Explore"
-              title="What you are working through"
-              lead="What you are carrying and still living with. Nothing here recommends, ranks or decides — the judgement remains yours."
-              delay={240}
-            >
-              {decisions.length === 0 && questions.length === 0 && reflections.length === 0 && (
-                <Quiet>
-                  Nothing here yet. Something enters when you name it: a choice you
-                  are weighing, or a question you are living with.
+                  Your decisions, practices and questions gather here as you work.
                 </Quiet>
               )}
 
               {decisions.length > 0 && (
                 <div className="mb-6">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
-                    What you are carrying
+                    Decisions
                   </p>
                   <ThreadList items={decisions} onWithdraw={reload} />
+                </div>
+              )}
+
+              {commitments.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
+                    Practices
+                  </p>
+                  <ThreadList items={commitments} onWithdraw={reload} />
                 </div>
               )}
 
               {questions.length > 0 && (
                 <div className="mb-6">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
-                    Questions you are living
+                    Questions
                   </p>
                   <ThreadList items={questions} onWithdraw={reload} />
-                </div>
-              )}
-
-              {reflections.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
-                    What you kept
-                  </p>
-                  <ThreadList items={reflections.slice(0, 8)} onWithdraw={reload} />
-                  {reflections.length > 8 && (
-                    <p className="mt-5">
-                      <a
-                        href={`/now-what/field${ctx}`}
-                        className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
-                      >
-                        Open your full field →
-                      </a>
-                    </p>
-                  )}
                 </div>
               )}
 
@@ -695,6 +650,13 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                   label="Carry a decision →"
                   placeholder="The choice you are weighing, in your own words."
                   phase="decision"
+                  fieldContext={fieldContext}
+                  onSaved={reload}
+                />
+                <Compose
+                  label="Name a practice →"
+                  placeholder="What you will actually live, and why it matters to you."
+                  phase="practice"
                   fieldContext={fieldContext}
                   onSaved={reload}
                 />
@@ -708,8 +670,35 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               </div>
             </Section>
 
-            {/* ⑤ CONNECTION — who am I with. The ONLY zone that routes to a
-                conversation; every other zone's action makes its own object. */}
+            {/* ④ WHAT YOU DISCOVERED — "what have I found?" No door, by ruling:
+                meaning emerges from a gesture made elsewhere. A "write a
+                reflection" button would make this journaling software. */}
+            <Section
+              eyebrow="What you discovered"
+              title="What you kept"
+              lead="Held in your words and your order. No summaries. No scores. No rankings."
+              delay={240}
+            >
+              {reflections.length === 0 ? (
+                <Quiet>Insights you choose to keep will appear here.</Quiet>
+              ) : (
+                <>
+                  <ThreadList items={reflections.slice(0, 8)} onWithdraw={reload} />
+                  {reflections.length > 8 && (
+                    <p className="mt-5">
+                      <a
+                        href={`/now-what/field${ctx}`}
+                        className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
+                      >
+                        Open your full field →
+                      </a>
+                    </p>
+                  )}
+                </>
+              )}
+            </Section>
+
+            {/* ⑤ CONNECTION — the ONLY conversation door in the environment. */}
             <Section
               eyebrow="Connection"
               title="You and your coach"
@@ -736,10 +725,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
               {shared.length === 0 ? (
                 <Quiet>
-                  Nothing shared yet. Your coach can see that you are working
-                  together and where the work is pointed — not what you have
-                  written here. You choose to share a piece as you write it, and
-                  it appears here where you can take it back.
+                  What you choose to share with your coach appears here, where you
+                  can also take it back.
                 </Quiet>
               ) : (
                 <>
@@ -760,7 +747,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             </Section>
 
             <RoomTrustCopy
-              holds="What you authored in this environment — what you are working on, what you are practising, what you are carrying and living with, and what you chose to keep."
+              holds="What you authored in this environment — what you are working on, what you are carrying, and what you chose to keep."
               doesNotHold="No scores, rankings, progress measures, assessments or summaries of you. No record of how often you come here, and no interpretation of your material by anyone but you."
               whoSees="You. Your coach sees a piece only if you explicitly shared it, one piece at a time — never automatically, and never because you were active here."
               control="Everything here exists because of a gesture you made. Opening this room writes nothing. Anything shared can be withdrawn, and withdrawing it tells no one."
