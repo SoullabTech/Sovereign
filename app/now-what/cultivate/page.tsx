@@ -5,8 +5,12 @@
  * ruling 2026-08-05: "What you are cultivating should open to a field of
  * contributions, not another gate to chat").
  *
- * Six living areas — Larry's researched flourishing domains
- * (CLIENT_FIELD_TALK_ALIGNMENT_2026-08-05.md). Each area offers two
+ * Six living areas — the six flourishing domains, adopted here as product
+ * structure PENDING Larry's validation of them as his authored framework
+ * (agreement unsigned, corpus not captured — see
+ * CLIENT_FIELD_TALK_ALIGNMENT_2026-08-05.md). Member-facing copy must keep
+ * the unattributed posture ("dimensions of a flourishing life") until that
+ * validation exists. Each area offers two
  * gestures: Add a reflection (opens the Reflection Room framed by the
  * dimension the member chose — the click is the gesture) and Explore
  * (their kept material). No scores, no assessments, no progress.
