@@ -197,6 +197,24 @@ material means; the system preserves and reflects only declared
 relationships. **No memoir pathway until the creator walk reveals a
 missing gesture.**
 
+The valid sequence, made explicit (founder follow-up): (1) the creator
+brings material → (2) the creator places material in relationship to a
+Work → (3) the system preserves that relationship → (4) **the creator
+discovers what it means.** The concrete boundary: the system can say
+*"You placed these 37 journals in this gathering."* It cannot say *"These
+journals are your memoir."* The second sentence requires human
+recognition.
+
+**ONE pre-registered observation for the elder and world-builder walks**
+(founder verbatim — do not pre-answer it; let the room produce it):
+
+> *"Does the creator naturally begin making relationships among
+> materials, or do they ask the system to make those relationships?"*
+
+That single observation tells us whether the next organ is richer
+gathering · history · renewal · expression · reflection · or something
+not yet named.
+
 **The first-glance observation (founder instruction):** during the walk,
 watch **where the creator naturally looks first after returning** — not
 what they click; what their attention seeks. Work? Materials? The writing
