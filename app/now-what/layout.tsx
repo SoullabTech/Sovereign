@@ -43,6 +43,7 @@ export default function NowWhatLayout({ children }: { children: ReactNode }) {
             .nww [class*="border-slate-6"] { border-color: rgba(233,226,212,0.18) !important; }
             .nww [class*="border-slate-7"] { border-color: rgba(233,226,212,0.13) !important; }
             .nww [class*="border-slate-8"] { border-color: rgba(233,226,212,0.10) !important; }
+            .nww [class*="border-slate-9"] { border-color: rgba(233,226,212,0.08) !important; }
 
             /* Slate/white surface tints → warm paper glass. */
             .nww [class*="bg-slate-8"], .nww [class*="bg-slate-9"] { background-color: rgba(255,253,248,0.045) !important; }

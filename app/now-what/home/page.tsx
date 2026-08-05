@@ -78,9 +78,9 @@ function ClientHome() {
   const shared = threads?.filter((t) => t.can_be_shown_to_practitioner).length ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#062a42] text-slate-200">
+    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
       <NowWhatShell current="Home" fieldContext={fieldContext} />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(125,175,255,0.08),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(196,164,110,0.08),transparent_70%)]" />
 
       <div className="relative max-w-2xl mx-auto px-4 py-10 space-y-8">
         <header>
@@ -188,7 +188,7 @@ function ClientHome() {
 
 export default function ClientHomePage() {
   const session = useMemberSession();
-  if (session === 'unknown') return <div className="min-h-screen bg-[#062a42]" />;
+  if (session === 'unknown') return <div className="min-h-screen bg-[#1f1b16]" />;
   if (session === 'out') {
     return (
       <NowWhatThreshold
@@ -198,7 +198,7 @@ export default function ClientHomePage() {
     );
   }
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#062a42]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#1f1b16]" />}>
       <ClientHome />
     </Suspense>
   );
