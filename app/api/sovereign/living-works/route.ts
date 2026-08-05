@@ -41,6 +41,19 @@ interface WorkRow {
   created_at: string;
   updated_at: string;
 }
+interface ExpressionRow {
+  living_work_id: string;
+  expression_type: string;
+  expression_id: string;
+  declared_at: string;
+}
+interface MaterialRow {
+  living_work_id: string;
+  material_type: string;
+  material_id: string;
+  relationship_sentence: string | null;
+  declared_at: string;
+}
 
 const shape = (r: WorkRow) => ({
   id: r.id,
@@ -57,14 +70,61 @@ export async function GET(request: NextRequest) {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const rows = await query<WorkRow>(
-      `SELECT id, title, created_at, updated_at
+    /* Purpose + declared relationships ride along (first slice, 2026-08-05):
+       the Canvas's Work drawer renders what the member has declared, so the
+       one list read carries it. Aggregates are small by construction — a
+       member's own declarations only. Empty arrays are the honest state for
+       a work with no declarations, not a loading artifact. */
+    const rows = await query<WorkRow & { purpose: string | null }>(
+      `SELECT id, title, purpose, created_at, updated_at
          FROM living_works
         WHERE member_id = $1
         ORDER BY updated_at DESC`,
       [memberId]
     );
-    return NextResponse.json({ works: rows.rows.map(shape) });
+    const workIds = rows.rows.map((r) => r.id);
+    const expressions =
+      workIds.length === 0
+        ? { rows: [] as ExpressionRow[] }
+        : await query<ExpressionRow>(
+            `SELECT living_work_id, expression_type, expression_id, declared_at
+               FROM living_work_expressions
+              WHERE living_work_id = ANY($1::uuid[])
+              ORDER BY declared_at ASC`,
+            [workIds]
+          );
+    const materials =
+      workIds.length === 0
+        ? { rows: [] as MaterialRow[] }
+        : await query<MaterialRow>(
+            `SELECT living_work_id, material_type, material_id, relationship_sentence, declared_at
+               FROM living_work_materials
+              WHERE living_work_id = ANY($1::uuid[])
+              ORDER BY declared_at ASC`,
+            [workIds]
+          );
+
+    return NextResponse.json({
+      works: rows.rows.map((r) => ({
+        ...shape(r),
+        purpose: r.purpose,
+        expressions: expressions.rows
+          .filter((e) => e.living_work_id === r.id)
+          .map((e) => ({
+            expressionType: e.expression_type,
+            expressionId: e.expression_id,
+            declaredAt: e.declared_at,
+          })),
+        materials: materials.rows
+          .filter((m) => m.living_work_id === r.id)
+          .map((m) => ({
+            materialType: m.material_type,
+            materialId: m.material_id,
+            sentence: m.relationship_sentence,
+            declaredAt: m.declared_at,
+          })),
+      })),
+    });
   } catch (error) {
     console.error('[living-works] list failed', error);
     return NextResponse.json({ error: 'Could not read your works' }, { status: 500 });

@@ -116,3 +116,47 @@ describe('a work may exist before it is named', () => {
     expect(unnamed.title).toBeNull();
   });
 });
+
+/** First slice, 2026-08-05 — the belonging guards (Materials design M-walk). */
+describe('refuseBelonging — nothing feeds a work without the member', () => {
+  const { refuseBelonging, normalizeSentence } = jest.requireActual('../domain');
+  const work = { id: 'w1', memberId: 'm1' };
+  const belonging = {
+    livingWorkId: 'w1',
+    materialType: 'manuscript',
+    materialId: 'x1',
+    relationshipSentence: null,
+    declaredBy: 'm1',
+  };
+
+  it('accepts the member bringing their own thing to their own work', () => {
+    expect(refuseBelonging(belonging, work)).toBeNull();
+  });
+
+  it('refuses a missing declaring member', () => {
+    expect(refuseBelonging({ ...belonging, declaredBy: undefined }, work)).toBe(
+      'no_declaring_member'
+    );
+  });
+
+  it("refuses a declaration on someone else's work — ownership makes it the member's own act", () => {
+    expect(refuseBelonging(belonging, { id: 'w1', memberId: 'someone-else' })).toBe(
+      'not_the_owner'
+    );
+  });
+
+  it('refuses a missing work and a missing/blank material', () => {
+    expect(refuseBelonging(belonging, null)).toBe('missing_living_work');
+    expect(refuseBelonging({ ...belonging, materialId: '' }, work)).toBe('missing_material');
+    expect(refuseBelonging({ ...belonging, materialType: '  ' }, work)).toBe(
+      'blank_material_type'
+    );
+  });
+
+  it('normalizeSentence: unwritten has exactly one representation (null)', () => {
+    expect(normalizeSentence(undefined)).toBeNull();
+    expect(normalizeSentence(null)).toBeNull();
+    expect(normalizeSentence('   ')).toBeNull();
+    expect(normalizeSentence('the letters this grew from')).toBe('the letters this grew from');
+  });
+});

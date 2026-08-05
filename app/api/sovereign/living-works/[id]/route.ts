@@ -39,10 +39,12 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseTitle } from '@/lib/livingWork/domain';
 
 const MAX_TITLE_CHARS = 300;
+const MAX_PURPOSE_CHARS = 2000;
 
 interface WorkRow {
   id: string;
   title: string | null;
+  purpose: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -56,45 +58,82 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = (await request.json().catch(() => ({}))) as { title?: unknown };
-    if (!('title' in body)) {
+    const body = (await request.json().catch(() => ({}))) as {
+      title?: unknown;
+      purpose?: unknown;
+    };
+    if (!('title' in body) && !('purpose' in body)) {
       return NextResponse.json({ error: 'nothing to change' }, { status: 400 });
     }
 
     /* `null` is allowed on purpose: a member may un-name a work they named too
        early. Recognition can be withdrawn without withdrawing the work. */
-    let title: string | null = null;
-    if (body.title !== null && body.title !== undefined) {
-      if (typeof body.title !== 'string') {
-        return NextResponse.json({ error: 'title must be text' }, { status: 400 });
+    let title: string | null | undefined = undefined;
+    if ('title' in body) {
+      title = null;
+      if (body.title !== null && body.title !== undefined) {
+        if (typeof body.title !== 'string') {
+          return NextResponse.json({ error: 'title must be text' }, { status: 400 });
+        }
+        if (body.title.length > MAX_TITLE_CHARS) {
+          return NextResponse.json(
+            { error: `title is longer than ${MAX_TITLE_CHARS} characters` },
+            { status: 400 }
+          );
+        }
+        if (refuseTitle(body.title) === 'blank_title') {
+          return NextResponse.json({ error: 'blank_title' }, { status: 400 });
+        }
+        title = body.title;
       }
-      if (body.title.length > MAX_TITLE_CHARS) {
-        return NextResponse.json(
-          { error: `title is longer than ${MAX_TITLE_CHARS} characters` },
-          { status: 400 }
-        );
+    }
+
+    /* The becoming statement (first-slice ruling, 2026-08-05): stored in the
+       existing `purpose` column — the founder ruled against a new field until
+       creators reveal that "why this exists" and "what it is becoming" are
+       different statements. Member-authored only; blank normalizes to null
+       (an unwritten becoming is a correct state, same as an unnamed work). */
+    let purpose: string | null | undefined = undefined;
+    if ('purpose' in body) {
+      purpose = null;
+      if (body.purpose !== null && body.purpose !== undefined) {
+        if (typeof body.purpose !== 'string') {
+          return NextResponse.json({ error: 'purpose must be text' }, { status: 400 });
+        }
+        if (body.purpose.length > MAX_PURPOSE_CHARS) {
+          return NextResponse.json(
+            { error: `purpose is longer than ${MAX_PURPOSE_CHARS} characters` },
+            { status: 400 }
+          );
+        }
+        purpose = body.purpose.trim().length === 0 ? null : body.purpose;
       }
-      if (refuseTitle(body.title) === 'blank_title') {
-        return NextResponse.json({ error: 'blank_title' }, { status: 400 });
-      }
-      title = body.title;
     }
 
     // Member-scoped in the predicate, not after the fact: another member's id
-    // cannot reach this row at all.
+    // cannot reach this row at all. COALESCE-free: only the fields the member
+    // sent change; an untouched field keeps their earlier words.
     const updated = await query<WorkRow>(
       `UPDATE living_works
-          SET title = $3, updated_at = now()
+          SET title = CASE WHEN $3 THEN $4 ELSE title END,
+              purpose = CASE WHEN $5 THEN $6 ELSE purpose END,
+              updated_at = now()
         WHERE id = $1 AND member_id = $2
-      RETURNING id, title, created_at, updated_at`,
-      [id, memberId, title]
+      RETURNING id, title, purpose, created_at, updated_at`,
+      [id, memberId, title !== undefined, title ?? null, purpose !== undefined, purpose ?? null]
     );
     if (updated.rows.length === 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     const r = updated.rows[0];
     return NextResponse.json({
-      work: { id: r.id, title: r.title, createdAt: r.created_at, updatedAt: r.updated_at },
+      work: {
+        id: r.id,
+        title: r.title,
+        purpose: r.purpose,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      },
     });
   } catch (error) {
     console.error('[living-works] name failed', error);
