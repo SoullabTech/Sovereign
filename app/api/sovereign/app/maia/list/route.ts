@@ -116,6 +116,7 @@ import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/f
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
 import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
+import { recordMemoryTransitions } from '@/lib/maia/memoryTransitionRecord';
 // 💬 Phase 2 — Conversational recall (wire site correction per spec §IX, 2026-05-24).
 // Live route wire — replaces oracle/conversation/route.ts which receives no real traffic.
 import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
@@ -897,6 +898,33 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.warn('[MAIA] episodic-block error (non-fatal):', err);
         }
 
+        // 🧾 Sprint 1 (Truth Layer) — Memory Transition Records: per-source
+        // accountability for this turn's memory pathway (available → retrieved
+        // → eligible → offered → injected, reasons as sentences, never scores).
+        // Fire-and-forget observability: never blocks or alters the conversation.
+        // Authority: MEMORY_SELECTION_PHILOSOPHY_RULING_INSTRUMENT_2026-08-04.md
+        // (Stage 2), MAIA_OPERATIONAL_MEMORY_STAGED_REBUILD_CHARTER_2026-08-04.md §IV.
+        recordMemoryTransitions({
+          memberId: userId,
+          sessionId: session.id ?? null,
+          atoms: {
+            retrieved: atomsResult.length,
+            offered: atomsAddendum ? atomsResult.length : 0,
+          },
+          conversational: {
+            retrieved: priorExchangesCount,
+            offered: conversationalRecallAddendum ? priorExchangesCount : 0,
+          },
+          episodic: {
+            retrieved: markedEpisodesCount,
+            offered: episodicRecallAddendum ? markedEpisodesCount : 0,
+          },
+          developmental: {
+            retrieved: developmentalCount,
+            offered: memoryInfluenceAddendum ? developmentalCount : 0,
+          },
+        });
+
         const readiness = detectForwardReadiness(message);
         if (readiness.ready) {
           console.log('[MAIA/sovereign] forward-readiness', {
@@ -934,6 +962,10 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       recentTurns: { count: session.turn_count ?? 0 },
       session: { present: !!session },
       relational: { present: !!(memoryBundle as any)?.recentTurns?.length || !!memoryBundle },
+      // Layer 5 keeps its canon §VII name, but what feeds it is the atoms
+      // loader ROW COUNT — no semantic retrieval exists on this path. The log
+      // summary emits this truthfully as `atoms:` + `semantic_retrieval: false`
+      // (Sprint 1 truth repair, 2026-08-04).
       semantic: { count: atomsResult.length, error: atomsError },
       // Breakthrough is a property of surfaced atoms (member-marked, never
       // system-set). If the atoms loader errored, breakthrough state is
