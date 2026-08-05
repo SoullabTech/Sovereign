@@ -229,6 +229,11 @@ interface AtomRow {
  */
 export async function loadMemberMemoryAtomsForPrompt(
   memberId: string,
+  // Stage 1 policy declaration (ruled 2026-08-04): this default IS the current
+  // selection policy — consent-bounded, breakthrough-first, recency-sovereign,
+  // take-8 — versioned in lib/maia/memorySelectionPolicy.ts. It stands as
+  // known-policy "until a more context-sensitive model is proven". Changing it
+  // is a governed act under founder ruling, never a tuning knob.
   limit: number = 8,
   scope: AtomScopeContext = {},
 ): Promise<MemoryAtomSnapshot[]> {
@@ -316,6 +321,54 @@ export async function loadMemberMemoryAtomsForPrompt(
       err instanceof Error ? err.message : String(err),
     );
     return [];
+  }
+}
+
+/**
+ * Count stored vs eligible atoms for a member (personal scope) — Sprint 1
+ * (Truth Layer) observability input for the MemoryTransitionRecord.
+ *
+ * "eligible" = passes the same consent/status predicates the loader applies,
+ * before any cap. This is what makes the ELIGIBLE→OFFERED transition visible:
+ * the loader's LIMIT drops (eligible − retrieved) atoms with no other trace.
+ *
+ * ⚠️ The eligibility predicates below MUST stay in lockstep with the personal-
+ * scope branch of loadMemberMemoryAtomsForPrompt above. If you touch one,
+ * touch both. (Deliberately duplicated rather than extracted so this
+ * observability addition cannot alter the production SELECT — Sprint 1
+ * preserves retrieval behavior exactly.)
+ *
+ * Read-only, fire-and-forget-safe: returns null on any failure — unknown is a
+ * valid state and must be recorded as such, never guessed.
+ */
+export async function countMemberMemoryAtomStates(
+  memberId: string,
+): Promise<{ stored: number; eligible: number } | null> {
+  if (!memberId) return null;
+  try {
+    const result = await query<{ stored: string; eligible: string }>(
+      `SELECT count(*) AS stored,
+              count(*) FILTER (
+                WHERE memory_scope = 'personal'
+                  AND status IN ('active', 'still_alive')
+                  AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+                  AND NOT ('sacred_protected' = ANY(registers))
+                  AND ${PRACTITIONER_ATTRIBUTION_GUARD}
+                  AND member_response_status IS DISTINCT FROM 'rejected'
+              ) AS eligible
+       FROM member_memory_atoms
+       WHERE member_id = $1`,
+      [memberId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    return { stored: Number(row.stored), eligible: Number(row.eligible) };
+  } catch (err) {
+    console.warn(
+      '[MAIA] memory-transition atom count failed (non-fatal):',
+      err instanceof Error ? err.message : String(err),
+    );
+    return null;
   }
 }
 

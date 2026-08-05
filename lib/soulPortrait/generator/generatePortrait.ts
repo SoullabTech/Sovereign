@@ -21,6 +21,7 @@ import {
   type PortraitMode,
   type PortraitThemeKey,
 } from '@/lib/soulPortrait/schema';
+import { parseModelJson } from './parseModelJson';
 import { chartSummaryText, portraitSystemPrompt } from './portraitPrompt';
 import { generateYearAhead } from './generateYearAhead';
 import { parseTransitReport, type ParsedTransit } from './transitReportParser';
@@ -50,17 +51,6 @@ export interface GeneratePortraitInput {
 const ELEMENT_KEYS: ElementKey[] = ['fire', 'water', 'earth', 'air', 'aether'];
 const ARCHETYPE_KEYS = new Set<ArchetypeKey>(Object.keys(ARCHETYPE_CATALOG) as ArchetypeKey[]);
 const RESONANCES = new Set<Resonance>(['strong', 'present', 'emerging']);
-
-/** Strip markdown fences and parse the model's JSON defensively. */
-function parseModelJson(raw: string): any {
-  let s = (raw || '').trim();
-  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fence) s = fence[1].trim();
-  const first = s.indexOf('{');
-  const last = s.lastIndexOf('}');
-  if (first !== -1 && last !== -1) s = s.slice(first, last + 1);
-  return JSON.parse(s);
-}
 
 /** Assemble the validated SoulPortrait from the model's flat JSON + canonical catalogs. */
 function assemble(input: GeneratePortraitInput, j: any): SoulPortrait {
@@ -215,7 +205,7 @@ export async function generateSoulPortrait(
     maxTokens: 8000,
   });
 
-  const json = parseModelJson(llm.text || '');
+  const json = parseModelJson(llm.text || '', 'soul-portrait/generate');
   const portrait = assemble(input, json);
 
   // Part II — the Year Ahead, assembled deterministically like Part I above.

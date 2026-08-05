@@ -94,7 +94,11 @@ export interface MemoryHealthInputs {
   session?: { present: boolean; error?: boolean };
   conversational?: { count: number; error?: boolean };
   developmental?: { count: number; error?: boolean };
-  semantic?: { count: number; error?: boolean }; // atoms loader feeds this
+  // Fed by the atoms loader ROW COUNT — no semantic retrieval exists on this
+  // path. Telemetry emits this as `atoms:` + `semantic_retrieval: false`
+  // (truth repair 2026-08-04); the field keeps its canon §VII layer name
+  // pending a canon amendment.
+  semantic?: { count: number; error?: boolean };
   relational?: { present: boolean; error?: boolean };
   pattern?: { count: number; error?: boolean }; // theme_signals feeds this
 
@@ -245,7 +249,15 @@ export function summarizeMemoryHealthForLog(h: MemoryHealth): Record<string, unk
     sess: h.session,
     conv: h.conversational,
     ep: h.episodic,
-    sem: h.semantic,
+    // Truth repair (Sprint 1, 2026-08-04): this layer is fed by the member-kept
+    // atoms loader ROW COUNT. No semantic retrieval exists on this path — the
+    // old `sem:` key let a row count masquerade as semantic capability (see
+    // docs/ops/MAIA_MEMORY_INTEGRITY_GAP_MAP_2026-08-04.md §III). The canonical
+    // layer NAME (MemoryHealth.semantic, canon §VII / runtime_events.memory_layers)
+    // is unchanged pending a canon amendment; the log now says what is measured.
+    // Principle: never give a capability a name before the capability exists.
+    atoms: h.semantic,
+    semantic_retrieval: false,
     rel: h.relational,
     dev: h.developmental,
     pat: h.pattern,

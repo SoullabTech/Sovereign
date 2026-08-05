@@ -253,6 +253,23 @@ alternate R1–R4 cut included matters outside theme scope.
 
 ---
 
+### D9 — Client research recruitment authority
+
+| Field | Value |
+|---|---|
+| **Decision ID** | D9 (opened 2026-08-03) |
+| **Question** | Who may invite a client into Walk B — and what relationship structure preserves the integrity of the evidence? |
+| **Context** | This is not *"may Larry invite clients?"* It crossed into governance because it determines whether Walk B produces valid evidence at all. Larry holds an existing relationship with the client **and** is the practitioner being evaluated, so his recruiting the participant may introduce pressure or loyalty dynamics that make "yes" unreliable. That does not automatically prohibit it — it makes it a governance choice rather than an operational convenience. Governed by the standing principle already recorded in the walk artifact: **the acceptance walk cannot become the first violation of the boundary it is testing.** |
+| **Option A** | **Larry recruits his own clients.** Highest convenience · highest relationship-contamination risk. |
+| **Option B** | **Independent invitation, with Larry's consent.** More friction · strongest participant autonomy. |
+| **Option C** | **Mixed model with safeguards.** Possible compromise · only valid if the safeguards are named explicitly, not assumed. |
+| **Attached draft** | A five-point consent model is drafted **and not adopted** in §9 of the walk artifact: three separable permissions (product use · research participation · sharing) never bundled; retroactive revocation that removes the record from the evidence packet; no Field content transcribed (reactions only, never material); participant reviews their own record before it enters the packet. Point 5 is the recruitment question this decision rules. The draft exists so the ruling has something concrete to accept, amend, or reject. |
+| **What this unblocks** | Walk B. Gate 0 and Walk A do not depend on it. Slice 0 cannot reach Accepted without it, since acceptance requires **both** walks performed by their human seats. |
+| **Current status** | Awaiting ruling — **blocking Walk B.** Not deferrable if Slice 0 acceptance is wanted. |
+| **References** | `docs/reviews/NOW_WHAT_CLIENT_HOME_LARRY_ACCEPTANCE_WALK.md` §1, §9 · `docs/reviews/NOW_WHAT_PHASE_4_IMPLEMENTATION_READINESS_2026-08-03.md` §4 (both walks are instruments that have never been run) |
+
+---
+
 ## §2 — Stabilization queue
 
 Execution, once judgment exists. **133 open pull requests** verified
