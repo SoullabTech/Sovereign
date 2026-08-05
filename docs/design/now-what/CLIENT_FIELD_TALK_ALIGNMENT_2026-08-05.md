@@ -63,6 +63,47 @@ Rendered as invitations, never measurements. The practice table from the talk (g
 mindfulness, exercise, awe, play, giving…) belongs to a later slice — practice surfaces are
 v2 Continuity Loop material and must not become homework.
 
+## Founder ratification (Kelly, same day) — protected findings
+
+The founder ratified this alignment and named what must be protected:
+
+- **The refusals are part of the product.** The absence of certain mechanics is not a lack of
+  features — it is the expression of the philosophy. A score moves the person from *"what am I
+  noticing about my life?"* to *"how am I doing compared to some ideal?"* A progress bar
+  implies a destination where the work is complete. A computed next step quietly transfers
+  authorship away from the member. Engagement mechanics compete for the attention this room
+  exists to restore. **The environment becomes the intervention.**
+- **Counter-environment is the product identity.** Most digital environments optimize for
+  attention capture, comparison, measurement, acceleration. This one is designed around
+  attention restoration, meaning, reflection, relationship, intentionality.
+- **"What you noticed" is participatory, not instructional** — the system never says
+  "practice gratitude"; it asks "what did you notice?" The person remains the discoverer.
+- **"Your story" is the signature artifact** — a living record of meaning, not a competency
+  profile. It protects against the modern conversion of extraordinary experience into
+  baseline expectation. Watch this element closely.
+- **The IP sequence is the stronger sequence**: the platform becomes *the right place* for
+  Larry's work before it contains Larry's content.
+
+### The post-merge inquiry (governs the next evidence pass)
+
+Not "can they navigate / do they click / do they use features." The questions:
+
+1. Does this feel like a place worthy of their attention?
+2. Does the language feel like their world?
+3. Does the room create reflection without demanding performance?
+4. Does it make the coaching relationship stronger?
+
+**Success state**: not "the CEO loves the platform" — *"the CEO finds themselves thinking
+differently because the platform gave their thinking somewhere to live."* The more this
+works, the less visible the system becomes.
+
+### The governing question for all next slices
+
+> **If the Client Field is the counter-environment, what is the minimum amount of technology
+> needed for a CEO to feel that difference?**
+
+The answer is probably not more capability. It is deeper fidelity.
+
 ## Gate flagged (not a blocker for this design pass)
 
 Aligning the field's **vocabulary and dimensions** to the talk is design work directed by the
