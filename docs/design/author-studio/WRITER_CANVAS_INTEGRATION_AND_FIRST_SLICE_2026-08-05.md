@@ -264,6 +264,43 @@ accommodate real creative life — and it is exactly why the stop-rule
 holds. The room is built. The next design input is not a concept. It is a
 person meeting it.
 
+### The learning loop and the deepest invariant (founder, at the stopping point)
+
+What this lane now has is **a way to learn without immediately converting
+learning into features**:
+
+```
+Design hypothesis → build smallest lived gesture → creator encounter
+→ observe natural behavior → name the missing relationship
+→ build only what restores that relationship
+```
+
+— against the normal cycle of *idea → feature → build → hope*. Memoir is
+the worked example: the weak process says "people have decades of
+journals — build memoir tools"; the disciplined process says "a person
+with decades of journals is entering the room — watch what they actually
+try to do." The outcomes stay open (Materials may be enough; Gathering
+may be the missing organ; History or renewal may become central; a new
+capability may be needed) — and the system **earns** that knowledge from
+the person's relationship with their own material.
+
+**The deepest invariant** (applies equally to memoir, dissertation, book,
+course, world-building, teaching archive, creative practice):
+
+> **The Work is allowed to become more than the system expected, but the
+> system is never allowed to become more certain than the creator.**
+
+**The five return-questions** (the walk's watching list, final form):
+
+1. What do they look for first?
+2. What do they call the thing they are making?
+3. What do they try to bring into it?
+4. What do they expect the Work to remember?
+5. Where does the environment fail to honor an already-natural human
+   gesture?
+
+The room is in the right state to receive evidence.
+
 ### The milestone, read by the founder (recorded)
 
 What the verified loop proved is not the row, the drawers, or the
