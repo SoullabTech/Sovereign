@@ -11,11 +11,46 @@
 import type { ReactNode } from 'react';
 
 export const SERIF = "'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif";
-export const INK = '#29231c';
-export const INK_SOFT = '#57503f';
-export const INK_FAINT = '#8f8474';
-export const BRONZE = '#8a6a35';
-export const RULE = 'rgba(90, 76, 58, 0.16)';
+/*
+ * The register's palette lives in CSS variables so the SAME brand renders
+ * as warm paper in light mode and a DESIGNED warm charcoal in dark mode —
+ * never a browser's forced inversion. Every room in the constellation
+ * shares these tokens.
+ */
+export const INK = 'var(--nw-ink)';
+export const INK_SOFT = 'var(--nw-ink-soft)';
+export const INK_FAINT = 'var(--nw-ink-faint)';
+export const BRONZE = 'var(--nw-bronze)';
+export const RULE = 'var(--nw-rule)';
+
+export const NW_PALETTE_CSS = `
+  --nw-ink: #29231c;
+  --nw-ink-soft: #57503f;
+  --nw-ink-faint: #8f8474;
+  --nw-bronze: #8a6a35;
+  --nw-rule: rgba(90, 76, 58, 0.16);
+  --nw-box: rgba(255, 253, 248, 0.78);
+  --nw-box-warm: rgba(240, 229, 209, 0.6);
+  --nw-cta-bg: #29231c;
+  --nw-cta-ink: #f6f2ea;
+  --nw-wash-a: rgba(196,164,110,0.14);
+  --nw-bg-1: #f8f5ef;
+  --nw-bg-2: #f4f0e8;
+`;
+export const NW_PALETTE_DARK_CSS = `
+  --nw-ink: #e9e2d4;
+  --nw-ink-soft: #b6ac9a;
+  --nw-ink-faint: #857c6c;
+  --nw-bronze: #c9a35e;
+  --nw-rule: rgba(233, 226, 212, 0.14);
+  --nw-box: rgba(255, 253, 248, 0.045);
+  --nw-box-warm: rgba(240, 229, 209, 0.07);
+  --nw-cta-bg: #e9e2d4;
+  --nw-cta-ink: #24201a;
+  --nw-wash-a: rgba(196,164,110,0.08);
+  --nw-bg-1: #211d18;
+  --nw-bg-2: #1b1815;
+`;
 
 export function PaperRoom({
   location,
@@ -36,13 +71,17 @@ export function PaperRoom({
         {children}
       </div>
       <style>{`
+        .nwp-root { ${NW_PALETTE_CSS} }
+        @media (prefers-color-scheme: dark) {
+          .nwp-root { ${NW_PALETTE_DARK_CSS} }
+        }
         .nwp-root {
           min-height: 100vh;
           font-family: -apple-system, 'Helvetica Neue', 'Segoe UI', sans-serif;
           color: ${INK};
           background:
-            radial-gradient(ellipse 90% 45% at 50% -5%, rgba(196,164,110,0.14), transparent 60%),
-            linear-gradient(#f8f5ef, #f4f0e8);
+            radial-gradient(ellipse 90% 45% at 50% -5%, var(--nw-wash-a), transparent 60%),
+            linear-gradient(var(--nw-bg-1), var(--nw-bg-2));
           -webkit-font-smoothing: antialiased;
         }
         .nwp-frame { max-width: 46rem; margin: 0 auto; padding: 26px 24px 90px; }

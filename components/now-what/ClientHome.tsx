@@ -40,12 +40,15 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
 
+import { NW_PALETTE_CSS, NW_PALETTE_DARK_CSS } from '@/components/now-what/PaperRoom';
+
 const SERIF = "'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif";
-const INK = '#29231c';
-const INK_SOFT = '#57503f';
-const INK_FAINT = '#8f8474';
-const BRONZE = '#8a6a35';
-const RULE = 'rgba(90, 76, 58, 0.16)';
+/* Shared register tokens — paper in light, designed charcoal in dark. */
+const INK = 'var(--nw-ink)';
+const INK_SOFT = 'var(--nw-ink-soft)';
+const INK_FAINT = 'var(--nw-ink-faint)';
+const BRONZE = 'var(--nw-bronze)';
+const RULE = 'var(--nw-rule)';
 
 interface HomeThread {
   id: string; title: string; content: string | null; authorship: string;
@@ -289,13 +292,17 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
       </div>
 
       <style>{`
+        .nwh-root { ${NW_PALETTE_CSS} }
+        @media (prefers-color-scheme: dark) {
+          .nwh-root { ${NW_PALETTE_DARK_CSS} }
+        }
         .nwh-root {
           min-height: 100vh;
           font-family: -apple-system, 'Helvetica Neue', 'Segoe UI', sans-serif;
           color: ${INK};
           background:
-            radial-gradient(ellipse 90% 45% at 50% -5%, rgba(196,164,110,0.16), transparent 60%),
-            linear-gradient(#f8f5ef, #f3eee5);
+            radial-gradient(ellipse 90% 45% at 50% -5%, var(--nw-wash-a), transparent 60%),
+            linear-gradient(var(--nw-bg-1), var(--nw-bg-2));
           -webkit-font-smoothing: antialiased;
         }
         .nwh-frame { max-width: 74rem; margin: 0 auto; padding: 26px 40px 80px; }
@@ -327,16 +334,16 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         }
         .nwh-door {
           display: block; text-decoration: none; color: ${INK};
-          border: 1px solid ${RULE}; background: rgba(255,253,248,0.78);
+          border: 1px solid ${RULE}; background: var(--nw-box);
           border-radius: 16px; padding: 26px 28px; min-height: 150px;
           transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
         }
         .nwh-door:hover {
           transform: translateY(-2px);
-          box-shadow: 0 14px 34px rgba(64,52,36,0.12);
-          border-color: rgba(138,106,53,0.4);
+          box-shadow: 0 14px 34px rgba(0,0,0,0.14);
+          border-color: var(--nw-bronze);
         }
-        .nwh-door-warm { background: rgba(240,229,209,0.6); }
+        .nwh-door-warm { background: var(--nw-box-warm); }
         .nwh-dname { font-family: ${SERIF}; font-size: 20px; }
         .nwh-dmean {
           font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
