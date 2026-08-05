@@ -37,7 +37,7 @@ export function RoomTrustCopy({
   return (
     <details className="group relative rounded-xl border border-slate-700/40 bg-white/[0.02] px-5 py-3">
       <summary className="cursor-pointer list-none flex items-center gap-2 text-slate-400 text-xs font-light select-none">
-        <span className="text-[#ffe27a]/60 transition-transform group-open:rotate-90">›</span>
+        <span className="text-[#c9a35e]/60 transition-transform group-open:rotate-90">›</span>
         What this room holds — and what it never does
       </summary>
       <div className="mt-3 space-y-2.5 pl-4 border-l border-slate-700/40">
