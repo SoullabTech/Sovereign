@@ -1,5 +1,44 @@
 # Author Studio — Writer Canvas Experience Definition
 
+> 🔴🔴🔴 **READ THIS FILE BEFORE TOUCHING ANY AUTHOR STUDIO CODE.**
+>
+> ⛔ **Do not infer the product from existing components.**
+> ⭐⭐⭐ **Existing components are implementation evidence, not product definition.**
+>
+> That single instruction prevents the inversion committed on 2026-08-05: a session that had just
+> verified the Working Draft engine built the architecture outward from it, making the editor the
+> centre of gravity. **Certainty is not centrality.** See
+> `AUTHOR_STUDIO_CANVAS_CLARIFICATION_2026-08-05.md` §2ter.
+
+## What is locked from 2026-08-05
+
+1. ⭐⭐⭐ **The primary object is the Work** — ⛔ not document, manuscript, draft, or editor. Those
+   are **states and instruments.** A Work gathers a life of material over time: ideas · journal
+   entries · images · quotes · research · uploaded writings · fragments · reflections ·
+   conversations · drafts · finished expressions. **The manuscript is one expression of the Work.**
+2. ⭐⭐⭐ **The editor is a room, not the house.** The Editing Canvas answers *how do I form
+   language?* The Writer Canvas answers *how does this work come into being?* ⛔ This distinction is
+   what prevents the product becoming another word processor.
+3. ⭐⭐⭐ **MAIA's position is bounded.** The temptation in AI products is to place the AI at the
+   centre because it is the novel capability. ⛔ Not here.
+   ```
+                Creator
+                   |
+                The Work
+              /          \
+       Materials          MAIA
+       Context            Reflection
+       Sources            Connections
+   ```
+   **MAIA increases awareness around the work. MAIA does not become the source of the work.**
+4. ⭐⭐⭐ **The acceptance test** — *"Where do I type?"* = form · *"I can work here."* = studio.
+   ⚠️ A sophisticated editor can still fail it. ⭐ A simple environment can pass it.
+5. ⭐⭐⭐ **The open implementation question is no longer** *"how do we build a writing editor?"* —
+   that is solved. It is: **"how do we create a professional creative environment around the writing
+   instrument?"** → how materials enter · how they gather · how themes emerge · how a creator moves
+   from fragment to structure · how writing is initiated · how reflection supports without
+   interrupting · how finished works emerge.
+
 **Date:** 2026-08-05 · **Author:** Kelly (founder)
 **Status:** ⭐⭐⭐ **EXPERIENCE DEFINITION — establishes the experience model BEFORE any
 implementation decision.** ⛔ Authorizes no build.
