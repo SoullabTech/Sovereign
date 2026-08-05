@@ -84,6 +84,7 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
@@ -115,6 +116,7 @@ import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/f
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
 import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
+import { recordMemoryTransitions } from '@/lib/maia/memoryTransitionRecord';
 // 💬 Phase 2 — Conversational recall (wire site correction per spec §IX, 2026-05-24).
 // Live route wire — replaces oracle/conversation/route.ts which receives no real traffic.
 import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLastPriorSessionMinutesAgo } from '@/lib/maia/conversationalRecallBlock';
@@ -896,6 +898,33 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.warn('[MAIA] episodic-block error (non-fatal):', err);
         }
 
+        // 🧾 Sprint 1 (Truth Layer) — Memory Transition Records: per-source
+        // accountability for this turn's memory pathway (available → retrieved
+        // → eligible → offered → injected, reasons as sentences, never scores).
+        // Fire-and-forget observability: never blocks or alters the conversation.
+        // Authority: MEMORY_SELECTION_PHILOSOPHY_RULING_INSTRUMENT_2026-08-04.md
+        // (Stage 2), MAIA_OPERATIONAL_MEMORY_STAGED_REBUILD_CHARTER_2026-08-04.md §IV.
+        recordMemoryTransitions({
+          memberId: userId,
+          sessionId: session.id ?? null,
+          atoms: {
+            retrieved: atomsResult.length,
+            offered: atomsAddendum ? atomsResult.length : 0,
+          },
+          conversational: {
+            retrieved: priorExchangesCount,
+            offered: conversationalRecallAddendum ? priorExchangesCount : 0,
+          },
+          episodic: {
+            retrieved: markedEpisodesCount,
+            offered: episodicRecallAddendum ? markedEpisodesCount : 0,
+          },
+          developmental: {
+            retrieved: developmentalCount,
+            offered: memoryInfluenceAddendum ? developmentalCount : 0,
+          },
+        });
+
         const readiness = detectForwardReadiness(message);
         if (readiness.ready) {
           console.log('[MAIA/sovereign] forward-readiness', {
@@ -933,6 +962,10 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       recentTurns: { count: session.turn_count ?? 0 },
       session: { present: !!session },
       relational: { present: !!(memoryBundle as any)?.recentTurns?.length || !!memoryBundle },
+      // Layer 5 keeps its canon §VII name, but what feeds it is the atoms
+      // loader ROW COUNT — no semantic retrieval exists on this path. The log
+      // summary emits this truthfully as `atoms:` + `semantic_retrieval: false`
+      // (Sprint 1 truth repair, 2026-08-04).
       semantic: { count: atomsResult.length, error: atomsError },
       // Breakthrough is a property of surfaced atoms (member-marked, never
       // system-set). If the atoms loader errored, breakthrough state is
@@ -1075,6 +1108,46 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.log(
         `✅ Sovereign response: ${duration}ms | session=${session.id}`
       );
+    }
+
+    // 🛡️ Canon §V post-generation scrubber — output-side memory guard.
+    //
+    // The §V prohibition also ships in the system prompt (MEMORY_CANON_GUARD_PROMPT,
+    // injected via maiaService). That is an instruction the model can override, and on
+    // 2026-08-04 it did: MAIA told an authenticated member "I don't have memory of
+    // previous conversations each time we talk, I'm starting fresh" on this route while
+    // atoms/episodic/developmental were all loaded and injected.
+    //
+    // scrubMemoryAmnesia was already wired into app/api/oracle/conversation/route.ts —
+    // a route that receives ~zero live traffic — so production ran unprotected. Both
+    // routes now call the same canonical guard from the same module; the enforcement
+    // point lives where the traffic is.
+    //
+    // Applied immediately after generation and written back to orchestratorResult.text
+    // so persistence (relationship essence, conversation history) and the client payload
+    // all see the corrected text. This changes nothing about retrieval, the memory model,
+    // or the consent posture — it only constrains what MAIA may claim about herself.
+    //
+    // hasLoadedContext selects the §VI replacement shape. It reports whether any memory
+    // layer actually reached this turn — never whether one *could have*.
+    if (orchestratorResult?.text) {
+      const _memoryScrub = scrubMemoryAmnesia(orchestratorResult.text, {
+        hasLoadedContext:
+          atomsResult.length > 0 ||
+          !!conversationalRecallAddendum ||
+          !!episodicRecallAddendum ||
+          !!memberWebAddendum ||
+          !!memoryContext,
+      });
+      if (_memoryScrub) {
+        console.warn('[MAIA] §V scrub fired', {
+          rid: requestId,
+          userId: effectiveUserId ? `${String(effectiveUserId).slice(0, 8)}...` : null,
+          original_preview: orchestratorResult.text.slice(0, 200),
+          replacement_preview: _memoryScrub.slice(0, 200),
+        });
+        orchestratorResult.text = _memoryScrub;
+      }
     }
 
     // 🔮 Standardize provider info for sovereignty verification

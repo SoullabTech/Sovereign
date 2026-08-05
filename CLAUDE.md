@@ -415,6 +415,13 @@ Triggers: Co-Lab changes · Studio people · DMs · sessions/encounters · files
    - **Cultural sovereignty / Invariant 14:** Are we imposing a framework, translating the member's meaning into our vocabulary, or assuming "self," "growth," "healing," "family," or "spirit" mean the same everywhere? If uncertain, ask more, preserve the member's language, or gate the feature behind member-initiated use.
    - If the honest answer to any is no, the feature does not ship. (See `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md`)
 
+   **Growth-obligation check** (founder-added 2026-08-04; see `docs/canon/RECIPROCAL_SOVEREIGNTY_INTENTION_2026-08-04.md`) — for any change that increases a capability (memory, personalization, pattern recognition, wisdom integration, autonomy), also answer:
+   - What uncertainty does this introduce, and how is that uncertainty preserved?
+   - What provenance and ownership boundaries does this require?
+   - What new responsibility does this capability create?
+
+   These are answered, not passed: a change that cannot answer them is incomplete work. The governing law: *every increase in capability must produce a matching increase in provenance, restraint, and transparency.*
+
 ## Setup (New Clones)
 
 After cloning this repo, run once:
