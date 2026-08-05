@@ -147,13 +147,6 @@ export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
     interimAudience: 'all',
     rationale: 'Member-facing web environment.',
   },
-  'community-library': {
-    disposition: 'offered',
-    destinationId: 'community-library',
-    authorization: 'open',
-    interimAudience: 'all',
-    rationale: 'Shared knowledge; member-facing.',
-  },
   keeps: {
     disposition: 'offered',
     destinationId: 'keeps',
@@ -180,6 +173,15 @@ export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
   },
 
   // ── Withheld from the House ─────────────────────────────────────────────
+  'community-library': {
+    disposition: 'intentionally_withheld',
+    authorization: 'open',
+    rationale:
+      'REMOVED from the House by founder direction (Kelly, 2026-08-04). Previously ' +
+      'offered to every member; the direction removes the House door only. The route ' +
+      '(/maia/community/library) remains reachable directly under its existing access. ' +
+      'This rules only its relationship to the House, not the library itself.',
+  },
   labtools: {
     disposition: 'intentionally_withheld',
     authorization: 'steward',
