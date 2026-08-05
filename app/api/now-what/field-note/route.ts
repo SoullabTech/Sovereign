@@ -222,6 +222,90 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * PATCH — continuity gestures on the member's OWN placed threads.
+ * Two member acts, both explicit, both scoped to the authenticated member:
+ *
+ *   action 'restate'       — "this has changed": the member restates the
+ *                            thread in their current words. The prior wording
+ *                            is preserved in revision_notes; authorship stays
+ *                            with the member; nothing else on the row moves.
+ *   action 'carry_forward' — the member carries a thread forward as a NEW
+ *                            thread (same dimension and field), descended
+ *                            from the old one via revision_notes. The
+ *                            original is untouched — carrying forward never
+ *                            rewrites history.
+ *
+ * Neither action changes practitioner visibility, consent state, or any
+ * other member's data. No inference, no auto-categorization: the member
+ * supplies every word.
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const cookieSession = await getCurrentSession();
+    const memberId = cookieSession?.memberId ?? (await getMemberIdFromRequest(request));
+    if (!memberId) {
+      return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => null);
+    const threadId = asStr(body?.threadId, 64);
+    const action = body?.action;
+    if (!threadId || !['restate', 'carry_forward'].includes(action)) {
+      return NextResponse.json({ error: 'Unknown gesture.' }, { status: 400 });
+    }
+
+    // The thread must be the member's own, and still held (not released).
+    const existing = await query<{
+      id: string;
+      title: string;
+      field_context: string | null;
+      flourishing_dimension: string | null;
+      spiralogic_phase: string | null;
+    }>(
+      `SELECT id, title, field_context, flourishing_dimension, spiralogic_phase
+         FROM member_field_note_threads
+        WHERE id = $1 AND member_id = $2 AND released_at IS NULL`,
+      [threadId, memberId],
+    );
+    const thread = existing.rows[0];
+    if (!thread) {
+      return NextResponse.json({ error: 'That thread is not here.' }, { status: 404 });
+    }
+
+    if (action === 'restate') {
+      const restated = asStr(body?.title);
+      if (!restated || restated === thread.title) {
+        return NextResponse.json({ error: 'Nothing to change.' }, { status: 400 });
+      }
+      await query(
+        `UPDATE member_field_note_threads
+            SET title = $3, content = $3, authorship = 'member_authored',
+                member_decision = 'revise', member_decision_at = NOW(),
+                revision_notes = $4
+          WHERE id = $1 AND member_id = $2`,
+        [threadId, memberId, restated, `restated by the member; was "${thread.title}"`],
+      );
+      await logEvent(memberId, threadId, 'revised', 'revise');
+      return NextResponse.json({ ok: true, id: threadId });
+    }
+
+    // carry_forward — a new member-authored thread descended from this one.
+    const carriedTitle = asStr(body?.title) || thread.title;
+    const newId = await saveThread(
+      memberId, null, carriedTitle, 'member_authored', true, 'create',
+      `carried forward by the member from "${thread.title}"`,
+      thread.spiralogic_phase, thread.field_context, false,
+      thread.flourishing_dimension,
+    );
+    await logEvent(memberId, newId, 'created', 'create');
+    return NextResponse.json({ ok: true, id: newId });
+  } catch (err: any) {
+    console.error('[NowWhat/field-note] PATCH error:', err?.message || err);
+    return NextResponse.json({ error: 'Could not save right now. Try once more in a moment.' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const cookieSession = await getCurrentSession();
