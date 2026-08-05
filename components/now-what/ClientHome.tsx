@@ -121,16 +121,10 @@ function Section({
   );
 }
 
-/**
- * Empty states are first-class. A person with nothing here yet is not in an
- * error state and must never be shown one — they are at the beginning, which
- * is a valid place to be standing. No "no data", no zero counts.
- */
-function Quiet({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-slate-400 text-sm font-light leading-relaxed max-w-prose">{children}</p>
-  );
-}
+/* `Quiet` (the per-band empty-state paragraph) was removed with the empty
+   bands themselves. A person with nothing here is not in an error state — but
+   the answer to that is not six gentle paragraphs about absence, it is not
+   rendering the band at all and saying it once. */
 
 /** A member-authored item. Title is their words; content is their words. */
 function ThreadCard({ t }: { t: HomeThread }) {
@@ -218,6 +212,18 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
   const ctx = fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : '';
   const roomHref = `/now-what/room${ctx}`;
 
+  /** Whether the member has authored anything at all. Drives the arrival case:
+      with nothing here, the room says so ONCE rather than six times. */
+  const hasAnything =
+    (data?.journey?.length ?? 0) +
+      (data?.decisions?.length ?? 0) +
+      (data?.commitments?.length ?? 0) +
+      (data?.questions?.length ?? 0) +
+      (data?.reflections?.length ?? 0) +
+      (data?.shared?.length ?? 0) +
+      (data?.sessions?.length ?? 0) >
+    0;
+
   if (session === 'unknown') return null;
   if (session === 'out') {
     return (
@@ -273,47 +279,35 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           </p>
         </header>
 
-        {/* ② CONTINUE — S1a/S1c. The centre the surface was missing.
-            The page was structurally complete and experientially empty: categories
-            with no centre, records with no thread. This answers "what brings me
-            back?" before any category does.
+        {/* ② THE HEARTH — the centre of the room.
+            Not a card among cards. It is unboxed on purpose: a bordered panel
+            reads as one more category, and the thing a person returns FOR is
+            not a category. Rules above and below give it the weight a border
+            was doing badly.
 
-            ⛔ It never invents a thread. With no sessions it says so plainly and
-            offers the only real door — a conversation. An empty centre that
-            pretended otherwise would be the false affordance CF-D2 prohibits. */}
+            ⛔ It never invents a thread. With no sessions it says so plainly.
+            An empty centre that implied a waiting conversation would be the
+            false affordance CF-D2 prohibits. */}
         {data && (
           <section
-            className="relative mt-8 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-6 sm:px-7 sm:py-7"
+            className="relative mt-12 mb-4 border-y border-white/10 py-10 sm:py-12"
             style={{ animation: 'nwhFadeUp 0.55s ease both', animationDelay: '40ms' }}
           >
-            <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Continue</p>
-            {sessions.length === 0 ? (
-              <>
-                <p className="mt-3 text-slate-100 text-xl sm:text-2xl font-extralight leading-snug">
-                  Your next thread begins with a conversation.
-                </p>
-                <p className="mt-2 text-slate-400 text-sm font-light max-w-prose">
-                  Nothing is waiting to be resumed yet — which is a real place to be
-                  standing, not a gap.
-                </p>
-                <div className="mt-5">
-                  <Door href={roomHref}>Begin a conversation →</Door>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="mt-3 text-slate-100 text-xl sm:text-2xl font-extralight leading-snug">
-                  What is alive for you today?
-                </p>
-                <p className="mt-2 text-slate-400 text-sm font-light max-w-prose">
-                  You last carried something forward on {dayLabel(sessions[0].at)}. Picking
-                  it up again is where the work continues.
-                </p>
-                <div className="mt-5">
-                  <Door href={roomHref}>Continue the conversation →</Door>
-                </div>
-              </>
-            )}
+            <p className="text-slate-100 text-2xl sm:text-3xl font-extralight leading-snug max-w-prose">
+              {sessions.length === 0
+                ? 'What is alive for you today?'
+                : 'What is alive for you today?'}
+            </p>
+            <p className="mt-3 text-slate-400 text-base font-light leading-relaxed max-w-prose">
+              {sessions.length === 0
+                ? 'Nothing is waiting to be resumed yet. That is a real place to be standing — the work takes its shape from what you bring.'
+                : `You last carried something forward on ${dayLabel(sessions[0].at)}. Picking it up again is where the work continues.`}
+            </p>
+            <div className="mt-7">
+              <Door href={roomHref}>
+                {sessions.length === 0 ? 'Begin with MAIA →' : 'Continue with MAIA →'}
+              </Door>
+            </div>
           </section>
         )}
 
@@ -329,20 +323,22 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
         {data && (
           <>
-            {/* ② My Journey — where the work is pointed, as declared */}
-            <Section
-              eyebrow="Where the work is pointed"
-              title="What is alive"
-              lead="Your place in the work — as you or your coach stated it, each labelled with who said so. Nothing here is inferred, and nothing measures you."
-              delay={60}
-            >
-              {journey.length === 0 ? (
-                <Quiet>
-                  No programme is named here yet. That is a real place to be standing,
-                  not a gap — the work can begin in a conversation and take its shape
-                  from what you actually bring.
-                </Quiet>
-              ) : (
+            {/* ⛔ EVERY BAND BELOW RENDERS ONLY WHEN IT HAS CONTENT.
+                Before this, a member with an empty field scrolled six panels
+                each announcing what they did not have — an inventory of
+                absences. Absence is not an error state and does not need a
+                card to live in. What replaces it is the single quiet line at
+                the foot of this block: one sentence, once.
+
+                The per-band explanatory leads were also removed. "Nothing here
+                recommends, ranks or decides" was said in five places and again
+                in RoomTrustCopy — the trust surface at the foot is where a
+                person goes looking for it, and saying it six times reads as
+                anxiety rather than assurance. The guarantees are enforced in
+                the payload, not in the reassurance. */}
+
+            {journey.length > 0 && (
+              <Section eyebrow="Where the work is pointed" title="What is alive" delay={60}>
                 <ul className="space-y-4">
                   {journey.map((j) => (
                     <li key={`${j.programSlug}-${j.focalPoint}`} className="space-y-1">
@@ -364,74 +360,33 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                     </li>
                   ))}
                 </ul>
-              )}
+              </Section>
+            )}
 
-              {questions.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-slate-700/50">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400 mb-4">
-                    Questions you are exploring
-                  </p>
-                  <ThreadList items={questions} />
-                </div>
-              )}
-            </Section>
+            {questions.length > 0 && (
+              <Section eyebrow="Questions" title="What you are living with" delay={90}>
+                <ThreadList items={questions} />
+              </Section>
+            )}
 
-            {/* ③ Decisions — the highest-stakes executive surface */}
-            <Section
-              eyebrow="Leadership moments"
-              title="What you are becoming clear about"
-              lead="The decisions you are actually carrying, held open while they are still open. Nothing here recommends, ranks or decides — the judgement stays yours."
-              delay={120}
-            >
-              {decisions.length === 0 ? (
-                <>
-                  <Quiet>
-                    Nothing is held here yet. A decision belongs here once you have
-                    named it — the context, who it touches, what you know and what
-                    you are still assuming. Working one through in a session is how
-                    it arrives.
-                  </Quiet>
-                  <div className="mt-5">
-                    <Door href={roomHref}>Work a decision through →</Door>
-                  </div>
-                </>
-              ) : (
+            {decisions.length > 0 && (
+              <Section
+                eyebrow="Leadership moments"
+                title="What you are becoming clear about"
+                delay={120}
+              >
                 <ThreadList items={decisions} />
-              )}
-            </Section>
+              </Section>
+            )}
 
-            {/* ④ Commitments — identity-level, never tasks */}
-            <Section
-              eyebrow="Practice"
-              title="How you are practising leadership"
-              lead="Not tasks. The way you said you would lead differently — kept in your own words, with nothing tracking whether you complied."
-              delay={180}
-            >
-              {commitments.length === 0 ? (
-                <Quiet>
-                  Nothing is being practised here yet. A commitment lands here when
-                  you name one at the close of a conversation — what you will
-                  actually live, and why it matters to you.
-                </Quiet>
-              ) : (
+            {commitments.length > 0 && (
+              <Section eyebrow="Practice" title="How you are practising leadership" delay={180}>
                 <ThreadList items={commitments} />
-              )}
-            </Section>
+              </Section>
+            )}
 
-            {/* ⑤ Sessions — the thread between conversations */}
-            <Section
-              eyebrow="Conversations"
-              title="The thread between conversations"
-              lead="The conversations you carried something out of, and the door into the next one."
-              delay={240}
-            >
-              {sessions.length === 0 ? (
-                <Quiet>
-                  No conversation has left anything here yet. What you choose to keep
-                  at the end of a session collects here, so returning does not mean
-                  starting again.
-                </Quiet>
-              ) : (
+            {sessions.length > 0 && (
+              <Section eyebrow="Conversations" title="The thread between them" delay={240}>
                 <ul className="space-y-3">
                   {sessions.slice(0, 8).map((s) => (
                     <li
@@ -445,69 +400,47 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                     </li>
                   ))}
                 </ul>
-              )}
-              <div className="mt-6 pt-5 border-t border-slate-700/50 flex flex-wrap items-center gap-4">
-                <Door href={roomHref}>
-                  {sessions.length === 0 ? 'Enter the session room →' : 'Prepare for the next conversation →'}
-                </Door>
-                <p className="text-slate-500 text-xs font-light">
-                  What is most alive · what changed · what you want to bring.
-                </p>
-              </div>
-            </Section>
+              </Section>
+            )}
 
-            {/* ⑥ Reflections — private by construction */}
-            <Section
-              eyebrow="Reflections"
-              title="What you kept"
-              lead="Yours alone unless you say otherwise. Held in the order you kept them — not ranked, not summarised, not scored."
-              delay={300}
-            >
-              {reflections.length === 0 ? (
-                <Quiet>
-                  Nothing is kept here yet. This fills only through your own
-                  gestures — opening this room writes nothing.
-                </Quiet>
-              ) : (
-                <>
-                  <ThreadList items={reflections.slice(0, 8)} />
-                  {reflections.length > 8 && (
-                    <p className="mt-5">
-                      <a
-                        href={`/now-what/field${ctx}`}
-                        className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
-                      >
-                        Open your full field →
-                      </a>
-                    </p>
-                  )}
-                </>
-              )}
-            </Section>
-
-            {/* ⑦ Coach connection — the boundary, from the member's own side */}
-            <Section
-              eyebrow="Coach connection"
-              title="What your coach can see"
-              lead="Your coach sees the shape of the work you share — the relationship, the programme, and anything you explicitly chose to bring. Nothing else reaches them."
-              delay={360}
-            >
-              {shared.length === 0 ? (
-                <Quiet>
-                  You have not shared anything from this space. Your coach can see
-                  that you are working together and where the work is pointed — not
-                  what you have written here. Sharing happens one piece at a time,
-                  by your gesture, and can be withdrawn.
-                </Quiet>
-              ) : (
-                <>
-                  <p className="text-slate-400 text-sm font-light mb-4">
-                    You chose to bring these into the work together:
+            {reflections.length > 0 && (
+              <Section eyebrow="Reflections" title="What you kept" delay={300}>
+                <ThreadList items={reflections.slice(0, 8)} />
+                {reflections.length > 8 && (
+                  <p className="mt-5">
+                    <a
+                      href={`/now-what/field${ctx}`}
+                      className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
+                    >
+                      Open your full field →
+                    </a>
                   </p>
-                  <ThreadList items={shared} />
-                </>
-              )}
-            </Section>
+                )}
+              </Section>
+            )}
+
+            {/* Coach connection renders ONLY once something has been shared.
+                Its empty state used to announce a boundary nobody had tested
+                yet — a paragraph about what a coach cannot see, shown to a
+                person who has shared nothing with anyone. The boundary is real
+                and is stated in the trust surface below; it does not need a
+                standing panel to prove itself. */}
+            {shared.length > 0 && (
+              <Section eyebrow="Coach connection" title="What you chose to share" delay={360}>
+                <ThreadList items={shared} />
+              </Section>
+            )}
+
+            {/* The arrival case — ONE line, where six empty panels used to be. */}
+            {!hasAnything && (
+              <p
+                className="relative text-slate-500 text-sm font-light leading-relaxed max-w-prose pt-2"
+                style={{ animation: 'nwhFadeUp 0.55s ease both', animationDelay: '120ms' }}
+              >
+                What you decide, practise and choose to keep will collect here, in
+                your words, as you name it.
+              </p>
+            )}
 
             <RoomTrustCopy
               holds="What you authored in this environment — the decisions you are working through, what you are practising, the questions you are living, and what you chose to keep."
