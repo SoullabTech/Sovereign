@@ -1069,7 +1069,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
               aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
               className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
               rows={2}
-              placeholder={returning ? 'What actually happened…' : 'In your own words…'}
+              placeholder={
+                entry === 'lived' || (returning && !entry)
+                  ? 'What actually happened…'
+                  : 'In your own words…'
+              }
               value={arrivalAnswer}
               onChange={e => setArrivalAnswer(e.target.value)}
               onKeyDown={e => {
