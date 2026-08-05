@@ -114,6 +114,34 @@ const LENS = [
   { name: 'Time', facets: 'enough of it for what matters' },
 ];
 
+/*
+ * A daily thought — ancient wisdom and modern depth, one voice per day.
+ * Curated, attributed, rotated deterministically by date: a contemplative
+ * companion, never an engagement mechanic. Not member data; not MAIA's
+ * voice; not the coach's.
+ */
+const QUOTES: { text: string; who: string }[] = [
+  { text: 'Very little is needed to make a happy life; it is all within yourself, in your way of thinking.', who: 'Marcus Aurelius' },
+  { text: 'It is not that we have a short time to live, but that we waste a lot of it.', who: 'Seneca' },
+  { text: 'Wealth consists not in having great possessions, but in having few wants.', who: 'Epictetus' },
+  { text: 'Happiness is the meaning and the purpose of life, the whole aim and end of human existence.', who: 'Aristotle' },
+  { text: 'When you realize there is nothing lacking, the whole world belongs to you.', who: 'Lao Tzu' },
+  { text: 'Let yourself be silently drawn by the strange pull of what you really love.', who: 'Rumi' },
+  { text: 'The price of anything is the amount of life you exchange for it.', who: 'Henry David Thoreau' },
+  { text: 'It is not the length of life, but the depth of life.', who: 'Ralph Waldo Emerson' },
+  { text: 'Live the questions now. Perhaps you will then gradually, without noticing it, live along some distant day into the answer.', who: 'Rainer Maria Rilke' },
+  { text: 'The great use of life is to spend it for something that will outlast it.', who: 'William James' },
+  { text: 'The great and glorious masterpiece of man is to know how to live to purpose.', who: 'Michel de Montaigne' },
+  { text: 'Who looks outside, dreams; who looks inside, awakes.', who: 'Carl Jung' },
+];
+
+function quoteOfTheDay(): { text: string; who: string } {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const day = Math.floor((now.getTime() - start.getTime()) / 86400000);
+  return QUOTES[day % QUOTES.length];
+}
+
 /** Primary area label — clear, visible, first thing in every box. */
 function AreaLabel({ title, go }: { title: string; go?: string }) {
   return (
@@ -206,6 +234,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
    * The living question takes questions[0]; the exploring slot takes the
    * next distinct kept question.
    */
+  const daily = quoteOfTheDay();
   const livingQuestion = data?.questions?.[0] ?? null;
   const noticed = data?.reflections?.[0] ?? null;
   const livingCommitment = data?.commitments?.[0] ?? null;
@@ -301,6 +330,12 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             <SlotBox frame="What you are living" item={livingCommitment} href={fieldHref} />
           )}
           {exploring && <SlotBox frame="What you are exploring" item={exploring} href={fieldHref} />}
+
+          {/* A daily thought — a breath in the field, in its author's voice. */}
+          <div className="nwh-box nwh-quote" aria-label="A thought for today">
+            <p className="nwh-serif nwh-quote-text">&ldquo;{daily.text}&rdquo;</p>
+            <p className="nwh-quote-who">— {daily.who}</p>
+          </div>
 
           {/* Programs — membership is live data; stages arrive with their
               substrate, never invented. Door: the position room. */}
@@ -454,6 +489,16 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
           font-weight: 400; color: #29231c; margin-right: 8px;
         }
+
+        .nwh-quote {
+          grid-column: 1 / -1; background: transparent; border: none;
+          text-align: center; padding: 20px 26px;
+        }
+        .nwh-quote-text {
+          font-size: 19px; font-style: italic; color: #57503f;
+          line-height: 1.6; max-width: 44rem; margin: 0 auto;
+        }
+        .nwh-quote-who { font-size: 12.5px; font-weight: 300; color: #8f8474; margin-top: 10px; }
 
         .nwh-trust { grid-column: 1 / -1; background: transparent; border-style: dashed; }
         .nwh-trust, .nwh-trust * { color: #57503f !important; border-color: rgba(90,76,58,0.25) !important; }
