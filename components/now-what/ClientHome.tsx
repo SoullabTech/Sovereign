@@ -20,6 +20,8 @@
  *   coaching    → /now-what/coaching                         (Coaching Room)
  *   story       → /now-what/field                            (Life Story / archive)
  *   think       → /now-what/room?entry=think                 (MAIA)
+ *   programs    → /now-what/position                         (Where you are)
+ *   calendar    → /now-what/calendar                         (Calendar Room)
  *   upcoming    → /now-what/calendar                         (Calendar Room)
  *
  * WHAT THIS SURFACE STILL REFUSES (structural, unchanged):
@@ -197,6 +199,23 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
     ? `${coachName}${shared.length > 0 ? ` — ${shared.length === 1 ? 'one piece' : `${shared.length} pieces`} brought forward` : ''}${nextConversation ? `, next conversation ${whenLabel(nextConversation.start).split(' · ')[0]}` : ''}.`
     : 'The human relationship this environment extends.';
 
+  /* Programs — the member's declared place in a program, or honest absence.
+     Membership only: no curriculum, no materials, no stages-as-progress. */
+  const programCount = data?.journey?.length ?? 0;
+  const programsLine = focal
+    ? `${focal.programTitle ?? focal.programSlug} — “${focal.focalPoint}”${programCount > 1 ? ` · and ${programCount - 1} more` : ''}`
+    : coachFirst
+      ? `When ${coachFirst} places a program with you, it appears here — with where you are, in your own words.`
+      : 'When a program is placed with you, it appears here — with where you are, in your own words.';
+
+  /* Calendar — when the relationship continues. Scheduled facts only. */
+  const pastCount = data?.sessions?.length ?? 0;
+  const calendarLine = nextConversation
+    ? `Next conversation${coachFirst ? ` with ${coachFirst}` : ''} — ${whenLabel(nextConversation.start)}.`
+    : pastCount > 0
+      ? `${pastCount === 1 ? 'One previous conversation' : `${pastCount} previous conversations`} · nothing scheduled yet.`
+      : 'When your next conversation is scheduled, it appears here.';
+
   return (
     <div className="nwh-root">
       <div className="nwh-frame">
@@ -257,6 +276,21 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             meaning="Human relationship"
             line={coachingLine}
             verb={coachFirst ? `Continue with ${coachFirst}` : 'Continue your coaching'}
+          />
+          <Door
+            italicLine={Boolean(focal)}
+            href={`/now-what/position${ctx}`}
+            name="Your programs"
+            meaning="Placed with your coach"
+            line={programsLine}
+            verb="See where you are"
+          />
+          <Door
+            href={`/now-what/calendar${ctx}`}
+            name="Your calendar"
+            meaning="When this continues"
+            line={calendarLine}
+            verb="View your calendar"
           />
           <Door
             href={`/now-what/field${ctx}`}
