@@ -13,6 +13,45 @@
 
 ---
 
+## Why this lane exists: the W8 grounding (founder amendment, 2026-08-05)
+
+> *"The creator can perform a preservation gesture, but the environment must
+> prove that the Work remains a coherent relationship when the creator
+> returns."*
+
+The actual problem this lane addresses is **not** missing fields, missing
+tables, or missing features — it is **relationship continuity**. Grounding
+referent: the Writer's Studio Phase 1 release walk failed at W8 because the
+Keep gesture and the Shelf lived on different substrates — the gesture was
+performed, and the relationship did not survive the return.
+
+## The return test (founder amendment — the central acceptance question)
+
+> **"When a creator returns, do they recognize their own relationship with
+> the Work?"**
+
+Stronger than "does the system remember", "are the files there", or "did
+the autosave work" — **the system can remember and still fail.** The walk
+threshold: *does the creator feel they are returning to a Work, or merely
+reopening a document?* Success is the returning creator thinking:
+
+> *"I know what this is, where it came from, what is happening with it,
+> and where I can continue."*
+
+## Implementation boundary (founder amendment)
+
+- **Allowed now**: reconcile concepts · refine design · define acceptance ·
+  identify observations.
+- **Held**: `keepSource()` changes · continuity substrate changes · new
+  persistence models · MAIA expansion.
+
+This boundary **coexists with** the recorded first-slice ruling (below):
+the narrow authorization — the Work relationship loop on the existing
+`living_works` / `living_work_expressions` spine — stands as ruled. The
+boundary holds the line *around* that authorization, not against it: no
+work outside the ruled loop opens under the "allowed" list, and nothing on
+the "held" list is touched by the loop.
+
 ## Where this lane sits: the room and its organs (founder identity statement)
 
 What exists after v0.1 **is the integrated Writer Canvas architecture — but

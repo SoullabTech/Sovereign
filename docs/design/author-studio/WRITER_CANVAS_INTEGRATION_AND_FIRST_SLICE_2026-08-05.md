@@ -152,11 +152,38 @@ sentences · citation instrument · gathering-at-volume UI · structure rail
 names+jump (next slice candidate, reads existing sections) · work shape ·
 collaboration · any MAIA surface change.
 
-### Acceptance (when ruled)
+### Acceptance (founder walk-framing, ruled 2026-08-05)
 
-Experiential and visual: the loop walked in the rendered room by the
-founder — create, declare, bring, see, leave, return — ending on the one
-felt sentence: *"this Work knows what it is becoming."* Technical gates
-(tests, typecheck) are preconditions, not acceptance. Then the five
-personas again, plus the sixth: does the world-explorer feel their world
-held, not their documents managed?
+**The frame is before/after, not feature-verification.** Do not evaluate
+the slice as "does the drawer show the new fields?" The real test:
+
+- Before — *"I have a document."*
+- After — *"I have a Work."*
+
+The creator should feel the difference. The threshold question stands:
+*did the creator experience a deeper relationship with the Work, or did we
+merely add another label?* And the return test governs throughout: *when a
+creator returns, do they recognize their own relationship with the Work —
+or are they merely reopening a document?*
+
+**Per-persona walk questions (founder's words — five personas; the
+collaborator is NOT in this walk set):**
+
+| Persona | The question |
+|---|---|
+| Novelist — "I have a manuscript" | Does the manuscript become an expression of the Work? |
+| Scholar — "I have research and arguments" | Does the Work hold inquiry without forcing it into a book prematurely? |
+| Blogger/Creator — "I have fragments and ideas" | Does the Work support emergence before structure? |
+| Elder/Teacher — "I have decades of material" | Does the system support gathering without becoming a warehouse? |
+| World-builder — "I am developing a world, philosophy, framework, or body of thought" | **The deepest test**: does the system allow the Work itself to be the primary object, with writing as one possible expression? |
+
+Technical gates (tests, typecheck) are preconditions, not acceptance.
+
+### The stop-rule (founder, ruled): the house has enough blueprints
+
+**The design-conversation list stops expanding.** No further conceptual
+rooms — Materials redesign, Collaboration, Learning layer, MAIA expansion,
+publishing, structure system — open until the creator walk of the
+implemented slice returns evidence. The sequence is fixed: finish the
+authorized slice → rendered/production walk → observe unexpected behavior
+→ only then the next design question.
