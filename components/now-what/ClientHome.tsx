@@ -25,6 +25,21 @@
  *   COACH RELATIONSHIP — persists on the arrival floor because it is a
  *      relationship, not a capability. One sentence; never a "room".
  *
+ * POSITIONING (founder, 2026-08-05): a BETWEEN-SESSION EXECUTIVE DEVELOPMENT
+ * ENVIRONMENT — a triangle, not a dyad: the coach's framework · the
+ * executive's real work · MAIA as continuity between conversations. The
+ * platform does not replace the coaching conversation; it extends the
+ * developmental arc between conversations (Prepare → Conversation → Apply →
+ * Reflect → Return). MAIA is the conversational presence WITHIN the coaching
+ * environment — the door belongs to the coaching relationship, not to MAIA.
+ * The member should never wonder "why am I talking to an AI?"; they are
+ * continuing work they already do with their coach. Design for the executive
+ * arriving with something important but not yet formed — the room helps them
+ * give shape to what they are already carrying; it never becomes the object
+ * of attention itself. Doorway language maximizes recognition (executive
+ * register); MAIA may grow more poetic through relationship, never at the
+ * door.
+ *
  * WHAT THIS ROOM STILL REFUSES (unchanged, structural, not taste):
  *   - No score, percentage, streak, ranking, completion count, progress bar.
  *   - No system-voiced finding. "What is alive for you today?" is a standing
@@ -210,19 +225,20 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           <h1 className="text-slate-100 text-3xl sm:text-4xl font-extralight tracking-wide leading-tight">
             {name ? `Welcome back, ${name}.` : 'Welcome back.'}
           </h1>
-          {focal ? (
-            <p className="text-slate-300 text-base sm:text-lg font-light leading-relaxed mt-4">
-              You are working through{' '}
+          {/* Relationship before conversation: the person is continuing
+              something that already matters, not entering an AI product. */}
+          <p className="text-slate-400 text-base font-light leading-relaxed mt-4">
+            Your coaching work continues here.
+          </p>
+          {focal && (
+            <p className="text-slate-300 text-base sm:text-lg font-light leading-relaxed mt-3">
+              Your current focus:{' '}
               <span className="text-slate-100">{focal.focalPoint}</span>
               <span className="text-slate-500 text-sm block mt-1.5">
                 {focal.statedBy === 'practitioner_seeded'
                   ? 'placed by your coach — yours when you say so'
                   : 'in your own words'}
               </span>
-            </p>
-          ) : (
-            <p className="text-slate-400 text-base font-light leading-relaxed mt-4">
-              Your work is here, and it continues here.
             </p>
           )}
         </header>
@@ -240,8 +256,10 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             confirmedElements={[]}
             size={130}
           />
+          {/* Doorway language maximizes recognition — executive register,
+              not practitioner vocabulary. Static string, never adaptive. */}
           <h2 className="text-slate-100 text-xl sm:text-2xl font-extralight tracking-wide mt-6">
-            What is alive for you today?
+            What are you working through today?
           </h2>
           <a
             href={roomHref}

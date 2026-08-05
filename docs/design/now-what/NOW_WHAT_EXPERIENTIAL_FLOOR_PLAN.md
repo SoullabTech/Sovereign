@@ -123,9 +123,46 @@ facts before inference · ✅ Conversation as medium, not product feature ·
 ✅ Current thread separated from archive · ✅ Builder rooms invisible to
 members · ✅ Doors emerge; they do not compete.
 
+## Amendments (founder, 2026-08-05 — same day; architecture SOUND, do not redesign)
+
+**Positioning**: Now What? is a **between-session executive development
+environment** — a triangle, not a dyad: **the coach's developmental framework
+· the executive's real work (decisions, pressures, application) · MAIA as
+continuity**. Governing sentence: *"Now What? does not replace the coaching
+conversation; it extends the developmental arc between conversations."*
+The coaching arc the environment serves: **Prepare → Conversation → Apply →
+Reflect → Return** — phases of the coaching relationship, never app modules.
+The destination is the executive becoming more capable through the coach's
+process; the software is the environment and must never become the object of
+attention.
+
+**Five ratified refinements**:
+1. **Doorway language**: "What is alive for you today?" is practitioner
+   vocabulary — replaced with executive-register recognition language:
+   *"What are you working through today?"* MAIA may become more poetic
+   through relationship; the doorway maximizes recognition.
+2. **The threshold names the relationship**: *"Your coaching work with
+   [coach] continues here"* appears at arrival, before MAIA. Sequence:
+   **relationship → conversation → continuity**. The person is continuing
+   something that already matters, not entering an AI environment.
+3. **"MAIA opens the door" tightened**: MAIA is **the conversational
+   presence within the coaching environment**. The door belongs to the
+   coaching relationship; MAIA facilitates crossing the threshold. MAIA is
+   never the owner of the environment.
+4. **Study/Archive are not places the member goes** — they are
+   **capabilities that emerge around meaningful work**. Rule: *if a member
+   can click it before needing it, it is probably a capability disguised as
+   a room.*
+5. **Governing sentence upgraded**: design for **the executive arriving with
+   something important but not yet formed**. Executives are not empty — they
+   carry decisions, pressures, relationships, uncertainty. The platform's
+   job is not to give them content; it is to help them **give shape to what
+   they are already carrying**.
+
 ## Next phase
 
-**Gesture architecture** — what the hand does, what the eye sees first, what
-appears, what disappears, what changes after a conversation, what remains
-when nothing has happened yet. Only after that: component mapping (*"what
-existing capabilities belong in each room?"*).
+**Gesture architecture** (`NOW_WHAT_GESTURE_ARCHITECTURE.md`) — the first 30
+seconds for returning and first-time executives; what the hand does, what
+appears, what disappears, what changes after a conversation. Only after
+that: component mapping (*"what existing capabilities belong in each
+room?"*).
