@@ -71,6 +71,19 @@ const asPhase = (v: unknown): string | null => {
   return null;
 };
 
+// The member's placing gesture from the cultivate door ("What you are
+// cultivating"): entering the room through a dimension they chose places the
+// threads they keep under that dimension. Whitelisted to the offered
+// flourishing vocabulary; offered, never imposed (ontology ruling D-D) —
+// absence is the normal state. The tag types the evidence, never the person.
+const asDimension = (v: unknown): string | null => {
+  if (typeof v !== 'string') return null;
+  const cleaned = v.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  return ['relationships', 'meaning', 'presence', 'health', 'contribution', 'time'].includes(cleaned)
+    ? cleaned
+    : null;
+};
+
 function parseProposals(input: unknown): ProposalDecision[] {
   if (!Array.isArray(input)) return [];
   const out: ProposalDecision[] = [];
@@ -91,18 +104,21 @@ function parseProposals(input: unknown): ProposalDecision[] {
   return out;
 }
 
-function parseCreated(input: unknown): { title: string; shareWithPractitioner: boolean }[] {
+function parseCreated(input: unknown): { title: string; shareWithPractitioner: boolean; isQuestion: boolean }[] {
   if (!Array.isArray(input)) return [];
-  const out: { title: string; shareWithPractitioner: boolean }[] = [];
+  const out: { title: string; shareWithPractitioner: boolean; isQuestion: boolean }[] = [];
   for (const c of input) {
     // Accept both legacy string items (shareWithPractitioner defaults false) and
-    // object items { title, shareWithPractitioner } for per-thread consent.
+    // object items { title, shareWithPractitioner, kind } for per-thread consent.
+    // kind === 'question' is the member's explicit "a question I'm living"
+    // gesture on their own thread — same ruling as proposals (2026-07-13):
+    // only 'question' persists; nothing is classified for the member.
     if (typeof c === 'string') {
       const t = asStr(c);
-      if (t) out.push({ title: t, shareWithPractitioner: false });
+      if (t) out.push({ title: t, shareWithPractitioner: false, isQuestion: false });
     } else if (c && typeof c === 'object') {
       const t = asStr((c as any).title);
-      if (t) out.push({ title: t, shareWithPractitioner: (c as any).shareWithPractitioner === true });
+      if (t) out.push({ title: t, shareWithPractitioner: (c as any).shareWithPractitioner === true, isQuestion: (c as any).kind === 'question' });
     }
     if (out.length >= 6) break;
   }
@@ -138,17 +154,18 @@ async function saveThread(
   spiralogicPhase: string | null,
   fieldContext: string | null,
   shareWithPractitioner: boolean,
+  dimension: string | null,
 ): Promise<string | null> {
   const res = await query<{ id: string }>(
     `INSERT INTO member_field_note_threads
        (member_id, source_session_ref, title, content, authorship, is_directly_stated,
         member_confirmed, member_decision, member_decision_at, revision_notes,
         consent_state, can_be_remembered, can_be_shown_to_practitioner, confirmed_at,
-        spiralogic_phase, field_context)
+        spiralogic_phase, field_context, dimension)
      VALUES ($1, $2, $3, $3, $4, $5, TRUE, $6, NOW(), $7,
-             'member-confirmed-memory', TRUE, $10, NOW(), $8, $9)
+             'member-confirmed-memory', TRUE, $10, NOW(), $8, $9, $11)
      RETURNING id`,
-    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner],
+    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner, dimension],
   );
   return res.rows[0]?.id ?? null;
 }
@@ -171,10 +188,11 @@ export async function GET(request: NextRequest) {
       spiralogic_phase: string | null;
       can_be_shown_to_practitioner: boolean;
       field_context: string | null;
+      dimension: string | null;
       created_at: string;
     }>(
       `SELECT id, title, authorship, member_decision, spiralogic_phase,
-              can_be_shown_to_practitioner, field_context, created_at
+              can_be_shown_to_practitioner, field_context, dimension, created_at
          FROM member_field_note_threads
         WHERE member_id = $1
           AND released_at IS NULL
@@ -219,6 +237,10 @@ export async function POST(request: NextRequest) {
     const sessionRef = asStr(body?.sessionRef, 80) || null;
     const spiralogicPhase = asPhase(body?.spiralogicPhase);
     const fieldContext = asStr(body?.fieldContext, 80) || null;
+    // Present only when the member entered through the cultivate door — their
+    // placing gesture. Applies to every thread kept in that save (the whole
+    // visit happened inside the dimension the member chose).
+    const dimension = asDimension(body?.dimension);
     // Practitioner visibility is per-thread, DEFAULT FALSE. Each thread carries its
     // own shareWithPractitioner flag parsed from the request body. Carrying a thread
     // is private to the member's field; sharing is a separate explicit gesture, per
@@ -243,7 +265,7 @@ export async function POST(request: NextRequest) {
         for (const childTitle of p.children ?? []) {
           const childId = await saveThread(
             memberId, sessionRef, childTitle, 'member_authored', true, 'split',
-            `split from MAIA's "${p.title}"`, threadPhase, fieldContext, p.shareWithPractitioner,
+            `split from MAIA's "${p.title}"`, threadPhase, fieldContext, p.shareWithPractitioner, dimension,
           );
           saved += 1;
           activity.created += 1;
@@ -257,7 +279,7 @@ export async function POST(request: NextRequest) {
           ? `revised from MAIA's "${p.title}"` : null;
       const id = await saveThread(
         memberId, sessionRef, title, 'member_confirmed', false, p.decision, revisionNotes,
-        threadPhase, fieldContext, p.shareWithPractitioner,
+        threadPhase, fieldContext, p.shareWithPractitioner, dimension,
       );
       saved += 1;
       if (p.decision === 'keep') activity.kept += 1;
@@ -266,7 +288,13 @@ export async function POST(request: NextRequest) {
     }
 
     for (const c of created) {
-      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, spiralogicPhase, fieldContext, c.shareWithPractitioner);
+      // Same ruling as proposals (line above parseProposals): the member's own
+      // "a question I'm living" gesture types their self-authored thread, so it
+      // reaches the "Questions you're living" room. Previously this path always
+      // used the session phase, silently dropping the question (silent-loss
+      // bug 2, NOW_WHAT_ROOM_DOORWAY_LOGIC_REVIEW_2026-08-05.md).
+      const createdPhase = c.isQuestion ? 'question' : spiralogicPhase;
+      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, createdPhase, fieldContext, c.shareWithPractitioner, dimension);
       saved += 1;
       activity.created += 1;
       await logEvent(memberId, id, 'created', 'create');
