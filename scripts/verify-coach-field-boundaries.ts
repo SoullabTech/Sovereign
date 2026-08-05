@@ -149,6 +149,12 @@ async function main() {
       WHERE c.table_schema='public' AND c.table_name LIKE 'coach\\_%'
         AND c.data_type IN ('text','character varying','jsonb','json')
         AND c.column_name NOT LIKE '%\\_id'
+        -- Ciphertext is not expression. A column encrypted from birth is opaque in
+        -- backups, logs and exports — the exact exposure 1c exists to prevent. The
+        -- exception is safe ONLY because 1e below proves no plaintext sibling
+        -- exists to read instead; the two assertions are a pair.
+        AND c.column_name NOT LIKE '%\\_enc'
+        AND c.column_name NOT LIKE '%\\_enc\\_meta'
         AND c.column_name NOT IN ('kind','state','status','mode','visibility','purpose',
                                   'authored_by','stated_by','share_origin','origin','source',
                                   'originated_by_role','external_calendar_source','field_changed')
@@ -157,12 +163,31 @@ async function main() {
     freeText.length === 0,
     `plaintext expression would be stored in: ${freeText.map((r: any) => r.col).join(', ')}`);
 
+  // 1e — the pair to 1c's ciphertext exception. An `_enc` column may only be
+  // excused from the plaintext check if there is nothing readable beside it: a
+  // table holding both `body_enc` and `body` is not encrypted, it is annotated.
+  const { rows: plaintextSibling } = await query(
+    `SELECT e.table_name||'.'||p.column_name AS col
+       FROM information_schema.columns e
+       JOIN information_schema.columns p
+         ON p.table_schema = e.table_schema
+        AND p.table_name  = e.table_name
+        AND p.column_name = regexp_replace(e.column_name, '_enc$', '')
+      WHERE e.table_schema='public' AND e.table_name LIKE 'coach\\_%'
+        AND e.column_name LIKE '%\\_enc'`);
+  expect('1e no encrypted column has a plaintext sibling to read instead',
+    plaintextSibling.length === 0,
+    `plaintext beside ciphertext: ${plaintextSibling.map((r: any) => r.col).join(', ')}`);
+
   const DEFERRED = [
     'coach_authored_notes', 'coach_note_publications', 'coach_note_publication_events',
-    'coach_client_personal_notes', 'coach_client_shared_items', 'coach_position_shares',
+    'coach_client_personal_notes', 'coach_position_shares',
     'coach_current_focus', 'coach_work_items', 'coach_work_item_history',
     'coach_important_dates', 'coach_resource_recommendations', 'coach_follow_ups',
   ];
+  // `coach_client_shared_items` has LEFT this list: it landed encrypted-from-birth
+  // in 20260803000001, which is the condition the deferral was waiting on. Its
+  // absence here is the explicit, reviewable boundary change — not an oversight.
   const { rows: present } = await query(
     `SELECT table_name FROM information_schema.tables
       WHERE table_schema='public' AND table_name = ANY($1)`, [DEFERRED]);
