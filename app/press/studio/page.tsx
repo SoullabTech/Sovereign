@@ -105,7 +105,9 @@ function IntentDoor({
 }) {
   const inner = (
     <>
-      <span style={{ color: PRESS.accent }}>{icon}</span>
+      <span style={{ color: PRESS.accent }} aria-hidden="true">
+        {icon}
+      </span>
       <span className="block text-[15px] mt-2.5" style={{ fontFamily: SERIF }}>
         {title}
       </span>
@@ -115,12 +117,14 @@ function IntentDoor({
   const cls =
     'border p-5 text-left transition-opacity hover:opacity-100 opacity-85 min-h-[44px] block w-full';
   const style = { borderColor: PRESS.ruleSoft, background: 'rgba(0,0,0,0.15)' };
+  // Explicit name: the walk found these doors exposing no accessible name.
+  const label = `${title} — ${sub}`;
   return href ? (
-    <Link href={href} className={cls} style={style}>
+    <Link href={href} className={cls} style={style} aria-label={label}>
       {inner}
     </Link>
   ) : (
-    <button onClick={onClick} className={cls} style={style}>
+    <button onClick={onClick} className={cls} style={style} aria-label={label}>
       {inner}
     </button>
   );
@@ -462,10 +466,11 @@ export default function WriterStudioHome() {
             ) : (
               <button
                 onClick={openDeclare}
+                aria-label="New project"
                 className="border border-dashed p-6 flex flex-col items-center justify-center gap-2 opacity-55 hover:opacity-90 min-h-[160px]"
                 style={{ borderColor: PRESS.rule }}
               >
-                <Plus {...ICON} size={18} />
+                <Plus {...ICON} size={18} aria-hidden="true" />
                 <span className="text-[14px]" style={{ fontFamily: SERIF }}>
                   New project
                 </span>
@@ -484,10 +489,11 @@ export default function WriterStudioHome() {
           <div className="flex flex-wrap gap-4 mb-7">
             <Link
               href={IMPORT_HREF}
+              aria-label="Bring in a document"
               className="border px-5 py-4 text-center opacity-90 hover:opacity-100"
               style={{ borderColor: PRESS.accent }}
             >
-              <span style={{ color: PRESS.accent }} className="inline-block">
+              <span style={{ color: PRESS.accent }} className="inline-block" aria-hidden="true">
                 <FileText {...ICON} size={18} />
               </span>
               <span className="block text-[13px] mt-1.5">Document</span>

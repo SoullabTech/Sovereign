@@ -121,8 +121,10 @@ export default function WorkCard({ work, manuscripts, reload }: WorkCardProps) {
             value={nameValue}
             onChange={(e) => setNameValue(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && nameValue.trim() && !busy)
+              if (e.key === 'Enter' && nameValue.trim()) {
+                e.preventDefault();
                 void patch({ title: nameValue.trim() }, () => setRenaming(false));
+              }
               if (e.key === 'Escape') setRenaming(false);
             }}
             autoFocus
@@ -142,18 +144,40 @@ export default function WorkCard({ work, manuscripts, reload }: WorkCardProps) {
 
       {/* Form · Stage — the member's own words, shown only when stated.
           Stage is orientation ("where am I?"), never progress: the chips are
-          claims the member makes and unmakes; the system never advances one. */}
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2 text-[12px]">
+          claims the member makes and unmakes; the system never advances one.
+          Two rows on purpose: the stage row wraps as its own block instead of
+          orphaning a chip beside the form (walk defect, 08-05). Enter-to-save
+          is NOT gated on `busy` — a save racing a just-finished stage save
+          must queue behind it, never silently drop the member's words (walk
+          defect, 08-05: stage persisted, form text vanished). */}
+      <div className="mb-1 text-[12px]">
         {editingForm ? (
           <input
             value={formValue}
             onChange={(e) => setFormValue(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !busy)
+              if (e.key === 'Enter') {
+                e.preventDefault();
                 void patch({ form: formValue.trim() ? formValue.trim() : null }, () =>
                   setEditingForm(false)
                 );
-              if (e.key === 'Escape') setEditingForm(false);
+              }
+              if (e.key === 'Escape') {
+                // Revert BEFORE closing so the blur-commit below sees no
+                // change — Escape stays a clean cancel.
+                setFormValue(work.form ?? '');
+                setEditingForm(false);
+              }
+            }}
+            onBlur={() => {
+              /* Clicking away must not discard the member's words (walk
+                 defect, 08-05). Commit on blur when the value changed. */
+              const next = formValue.trim() ? formValue.trim() : null;
+              if (next !== work.form) {
+                void patch({ form: next }, () => setEditingForm(false));
+              } else {
+                setEditingForm(false);
+              }
             }}
             autoFocus
             aria-label="What form is this taking?"
@@ -167,20 +191,23 @@ export default function WorkCard({ work, manuscripts, reload }: WorkCardProps) {
               setFormValue(work.form ?? '');
               setEditingForm(true);
             }}
+            aria-label={work.form ? `Form: ${work.form}. Change it` : 'Name the form this is taking'}
             className={`underline underline-offset-4 ${work.form ? 'opacity-70' : 'opacity-35'} hover:opacity-90`}
             style={work.form ? { color: PRESS.accent } : undefined}
           >
             {work.form ?? 'form?'}
           </button>
         )}
-        <span className="opacity-25">·</span>
+      </div>
+      <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mb-2 text-[12px]" role="group" aria-label="Where are you with this work?">
         {STAGES.map((s) => (
           <button
             key={s}
             onClick={() => void patch({ stage: work.stage === s ? null : s }, () => undefined)}
             disabled={busy}
+            aria-pressed={work.stage === s}
             title={work.stage === s ? 'Click to unclaim this stage' : `I am ${s}`}
-            className={`capitalize min-h-[28px] ${
+            className={`capitalize min-h-[28px] whitespace-nowrap ${
               work.stage === s
                 ? 'opacity-100 underline underline-offset-4'
                 : 'opacity-30 hover:opacity-70'
