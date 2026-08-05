@@ -13,10 +13,15 @@ export async function generateStaticParams() {
  * the field is derived from the session member). A member who holds no
  * practice field receives 404 — the surface is ABSENT for them, not hidden.
  *
- * §9 FENCE (PRACTITIONER_FIELD_ADMIN_SPEC_2026-07-10): monitor the mirror,
- * never through it. Nothing in this payload may describe members — no
- * positions, counts, activity, funnels, or aggregates. Everything returned is
- * the practitioner's own authored material and facts about it.
+ * §9 FENCE (PRACTITIONER_FIELD_ADMIN_SPEC_2026-07-10), refined by founder
+ * direction 2026-08-05: the practitioner field EXISTS to inform the client
+ * environment through authored, governed translation — the bridge is the
+ * point, not a violation. What this payload therefore monitors is the health
+ * and expression of the field AS IT TRANSLATES into client environments:
+ * coherence, available resources, expressions in use, revision history.
+ * What it may NEVER carry: anything about clients — no positions, counts,
+ * activity, reflections, progress, funnels, or aggregates. The practitioner
+ * provides the terrain; the client's journey through it is not visible here.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -92,6 +97,25 @@ export async function GET(request: NextRequest) {
      */
     const composedPreview = formatFieldContextForRoom(field);
 
+    /*
+     * Translation health — which authored expressions are in use, i.e. reach
+     * the client environment. `authored` = the practitioner wrote it;
+     * `composed` = the room's composition includes it. The conditions mirror
+     * formatFieldContextForRoom; composedPreview above remains the
+     * authoritative translation truth if these ever drift. welcome_message is
+     * deliberately authored-but-not-composed: it is arrival copy, not room
+     * context — showing that distinction IS the translation-health fact.
+     */
+    const expressions = [
+      { key: 'welcome_message', label: 'Welcome message', authored: Boolean(field.welcome_message), composed: false },
+      { key: 'about_practice', label: 'About this practice', authored: Boolean(field.about_practice), composed: Boolean(field.about_practice) },
+      { key: 'how_we_work_together', label: 'How this practice works', authored: Boolean(field.how_we_work_together), composed: Boolean(field.how_we_work_together) },
+      { key: 'how_maia_supports', label: 'How MAIA supports it', authored: Boolean(field.how_maia_supports), composed: Boolean(field.how_maia_supports) },
+      { key: 'professional_practice', label: 'The practitioner', authored: Boolean(field.professional_practice), composed: Boolean(field.professional_practice) },
+      { key: 'maia_guidance', label: 'Field guidance', authored: Boolean(field.maia_guidance), composed: Boolean(field.maia_guidance) },
+      { key: 'active_field_content', label: "The field's material", authored: Boolean(field.active_field_content), composed: Boolean(field.active_field_content) },
+    ];
+
     // Counts of the practitioner's OWN authored objects — never member data.
     let materialsCount = 0;
     let programsCount = 0;
@@ -119,6 +143,7 @@ export async function GET(request: NextRequest) {
       readiness,
       revisions,
       composedPreview,
+      expressions,
       materialsCount,
       programsCount,
       activeFieldChars: field.active_field_content?.length ?? 0,

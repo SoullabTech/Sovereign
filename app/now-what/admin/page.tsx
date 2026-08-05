@@ -16,8 +16,11 @@
  *               field history (the append-only revision spine, PR #586).
  *   Explore   — the composed-field view (exactly what the room receives) +
  *               "Enter as a member".
- *   Monitor   — field facts only. §9 fence: no member positions, counts,
- *               activity, or aggregates — monitor the mirror, never through it.
+ *   Monitor   — the field's health and expression as it translates into
+ *               client environments (coherence, resources, expressions in
+ *               use, revision history). §9 fence intact: no member positions,
+ *               counts, activity, or aggregates — the terrain is visible
+ *               here, the client's journey through it never is.
  *   Imagineer — draft → rehearse → promote. Designed, not yet built; the
  *               chip says so.
  */
@@ -45,6 +48,7 @@ interface AdminPayload {
     promotedFromDraft: boolean; createdAt: string;
   }[];
   composedPreview: string;
+  expressions: { key: string; label: string; authored: boolean; composed: boolean }[];
   materialsCount: number;
   programsCount: number;
   activeFieldChars: number;
@@ -134,7 +138,32 @@ export default function NowWhatAdminPage() {
     );
   }
 
-  const memberHref = data?.fieldSlug
+  /*
+   * The API is the authority: nothing of the field — including the editor,
+   * which talks to its own gated data routes — mounts until the gated payload
+   * has actually arrived. Component visibility is convenience; authorization
+   * happened at the server.
+   */
+  if (!data) {
+    return (
+      <div className="nwa-root">
+        <div className="nwa-frame">
+          {error
+            ? <p role="alert" className="nwa-error">{error}</p>
+            : <p className="nwa-absent">Opening your field&hellip;</p>}
+        </div>
+        <style>{`
+          .nwa-root { ${NW_PALETTE_CSS} min-height: 100vh; background: linear-gradient(var(--nw-bg-1), var(--nw-bg-2)); }
+          @media (prefers-color-scheme: dark) { .nwa-root { ${NW_PALETTE_DARK_CSS} } }
+          .nwa-frame { max-width: 74rem; margin: 0 auto; padding: 60px 40px; }
+          .nwa-absent { font-size: 14px; font-weight: 300; color: ${INK_SOFT}; }
+          .nwa-error { color: #8c2f22; font-size: 14px; font-weight: 300; }
+        `}</style>
+      </div>
+    );
+  }
+
+  const memberHref = data.fieldSlug
     ? `/now-what?fieldContext=${encodeURIComponent(data.fieldSlug)}`
     : '/now-what';
 
@@ -154,9 +183,9 @@ export default function NowWhatAdminPage() {
           <h1 className="nwa-h1">Your field</h1>
           <p className="nwa-subtitle">
             The holder&rsquo;s side of this environment — what you author here
-            shapes the room your clients enter. Nothing you change erases what
-            came before: your work stays versioned, and you remain in control
-            of it.
+            becomes the terrain your clients enter; the journey through it
+            remains theirs. Nothing you change erases what came before: your
+            work stays versioned, and you remain in control of it.
           </p>
           {data && (
             <p className="nwa-factline">
@@ -205,33 +234,50 @@ export default function NowWhatAdminPage() {
         >
           <p className="nwa-plain">
             This is the composed field — exactly the text your environment
-            draws on when a client is in the room. Reading it changes nothing.
+            draws on when a client is in the room: the translation moment where
+            your authored field becomes their terrain. Reading it changes
+            nothing.
           </p>
           <pre className="nwa-composed">{data ? (data.composedPreview || '— The composed field is currently empty. —') : '…'}</pre>
           <a className="nwa-amber" href={memberHref}>Enter as a member &rarr;</a>
         </Panel>
 
-        {/* ── Monitor — field facts only ── */}
+        {/* ── Monitor — the field's health and expression, never its clients ── */}
         <Panel
           name="Monitor"
-          meaning="The state of the field itself — never of your clients"
+          meaning="The health of your field as it becomes client environments"
           chip="Live"
           chipLive
         >
           {data ? (
-            <ul className="nwa-facts">
-              <li><b>Status</b> — {data.readiness.is_live ? 'live' : 'pending'}{data.statusReason ? ` (${data.statusReason})` : ''}</li>
-              <li><b>Current revision</b> — {data.revisions[0] ? `#${data.revisions[0].revisionNumber}, saved by ${data.revisions[0].savedBy}, ${dateLabel(data.revisions[0].createdAt)}` : 'none yet'}</li>
-              <li><b>Materials</b> — {data.materialsCount === 0 ? 'none yet' : data.materialsCount}</li>
-              <li><b>Programs</b> — {data.programsCount === 0 ? 'none yet' : data.programsCount}</li>
-              <li><b>Active field text</b> — {data.activeFieldChars === 0 ? 'empty' : `${data.activeFieldChars.toLocaleString()} characters`}{data.activeFieldUpdatedAt ? `, last changed ${dateLabel(data.activeFieldUpdatedAt)}` : ''}</li>
-            </ul>
+            <>
+              <ul className="nwa-facts">
+                <li><b>Coherence</b> — {data.readiness.is_live ? 'complete: every required expression is authored' : `pending — still needed: ${data.readiness.missing.join(', ')}`}{data.statusReason ? ` (${data.statusReason})` : ''}</li>
+                <li><b>Current revision</b> — {data.revisions[0] ? `#${data.revisions[0].revisionNumber}, saved by ${data.revisions[0].savedBy}, ${dateLabel(data.revisions[0].createdAt)}` : 'none yet'}</li>
+                <li><b>Resources</b> — {data.materialsCount === 0 ? 'no materials yet' : `${data.materialsCount} material${data.materialsCount === 1 ? '' : 's'}`} · {data.programsCount === 0 ? 'no programs yet' : `${data.programsCount} program${data.programsCount === 1 ? '' : 's'}`}</li>
+                <li><b>Field material</b> — {data.activeFieldChars === 0 ? 'empty' : `${data.activeFieldChars.toLocaleString()} characters`}{data.activeFieldUpdatedAt ? `, last changed ${dateLabel(data.activeFieldUpdatedAt)}` : ''}</li>
+              </ul>
+              <p className="nwa-hlabel nwa-exlabel">Expressions in use</p>
+              <ul className="nwa-facts">
+                {data.expressions.map((x) => (
+                  <li key={x.key}>
+                    <b>{x.label}</b> — {!x.authored
+                      ? 'not yet authored'
+                      : x.composed
+                        ? 'authored · reaches the room'
+                        : 'authored · arrival copy only, not composed into the room'}
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
             <p className="nwa-plain">…</p>
           )}
           <p className="nwa-fence">
-            No member positions, counts, or activity appear here — this panel
-            monitors the mirror, never through it.
+            This panel monitors your field&rsquo;s expression — never your
+            clients. Their thoughts, reflections, progress, and activity do not
+            appear here, and nothing on this page can reach them. You provide
+            the terrain; the journey through it is theirs.
           </p>
         </Panel>
 
@@ -300,6 +346,7 @@ export default function NowWhatAdminPage() {
           background: #1c1917; padding: 8px 4px;
         }
 
+        .nwa-exlabel { margin-top: 20px; }
         .nwa-history { margin-top: 20px; }
         .nwa-hlabel { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: ${INK_FAINT}; }
         .nwa-hlist { list-style: none; margin-top: 10px; padding: 0; }
