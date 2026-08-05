@@ -17,10 +17,23 @@
  * areas and their doors, and claims nothing about what lives in each.
  */
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 import { PaperRoom, SERIF, INK_FAINT, RULE } from '@/components/now-what/PaperRoom';
+
+interface PlacedThread {
+  id: string;
+  title: string;
+  created_at: string;
+  flourishing_dimension: string | null;
+}
+
+function dayLabel(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+}
 
 const DOMAINS = [
   { slug: 'relationships', name: 'Relationships', facets: 'connection · belonging · love',
@@ -42,6 +55,36 @@ function CultivateInner() {
   const fieldContext = params?.get('fieldContext') ?? undefined;
   const ctx = fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : '';
   const session = useMemberSession();
+
+  /*
+   * The field GATHERS: threads the member PLACED under a dimension (by
+   * entering the room through that dimension's door and keeping material).
+   * Unplaced material never renders here — the placing gesture is the only
+   * way in. Non-fatal: a read failure leaves the landscape quiet.
+   */
+  const [placed, setPlaced] = useState<Record<string, PlacedThread[]>>({});
+  useEffect(() => {
+    if (session !== 'in' || !fieldContext) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/now-what/field-note?fieldContext=${encodeURIComponent(fieldContext)}`);
+        if (!res.ok) return;
+        const json = await res.json().catch(() => ({}));
+        const threads: PlacedThread[] = json?.threads ?? [];
+        const byDim: Record<string, PlacedThread[]> = {};
+        for (const t of threads) {
+          if (t.flourishing_dimension) {
+            (byDim[t.flourishing_dimension] ??= []).push(t);
+          }
+        }
+        if (!cancelled) setPlaced(byDim);
+      } catch {
+        /* quiet landscape */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session, fieldContext]);
 
   if (session === 'unknown') return null;
   if (session === 'out') {
@@ -74,6 +117,12 @@ function CultivateInner() {
           <p className="nwp-quiet" style={{ marginTop: 8, fontFamily: SERIF, fontStyle: 'italic' }}>
             {d.line}
           </p>
+          {(placed[d.slug] ?? []).slice(0, 4).map((t) => (
+            <div key={t.id} style={{ marginTop: 12 }}>
+              <p className="nwp-member" style={{ fontSize: 16 }}>{t.title}</p>
+              <p className="nwp-prov">in your words · {dayLabel(t.created_at)} · placed here by you</p>
+            </div>
+          ))}
           <p style={{ marginTop: 4 }}>
             <a
               className="nwp-door"
