@@ -98,7 +98,7 @@ function DoorFrame({ children }: { children: React.ReactNode }) {
 function DoorHead({ heading, body }: { heading: string; body: string }) {
   return (
     <div className="relative flex flex-col items-center text-center space-y-4">
-      <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
+      <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
       <p className="text-xs uppercase tracking-[0.45em]" style={{ color: ACCENT }}>
         Now What?
       </p>
@@ -234,7 +234,7 @@ function ArrivalResolving() {
   return (
     <DoorFrame>
       <div className="relative flex flex-col items-center text-center space-y-4">
-        <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
+        <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
         <p className="text-xs uppercase tracking-[0.45em]" style={{ color: ACCENT }}>
           Now What?
         </p>

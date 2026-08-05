@@ -813,7 +813,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       return (
         <div className="relative min-h-[92vh] flex items-center justify-center px-6 overflow-hidden">
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
-          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+          <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
         </div>
       );
     }
@@ -829,7 +829,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
           <div className="relative w-full max-w-xl space-y-10">
             <div style={fadeUpStyle(0)} className="flex justify-center">
-              <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+              <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
             </div>
             <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
               <p className="text-sm uppercase tracking-[0.4em] text-[#c9a35e]">Now What? · with Larry Closs</p>
@@ -864,7 +864,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
         <div className="relative w-full max-w-xl space-y-10">
           <div style={fadeUpStyle(0)} className="flex justify-center">
-            <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+            <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
           </div>
           <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#c9a35e]">
             Now What?
@@ -1204,7 +1204,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-10">
         <div className="flex justify-center">
-          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+          <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
         </div>
         <div className="space-y-1 text-center">
           <p className="text-xs uppercase tracking-widest text-slate-400">Vision Studio</p>
@@ -1630,7 +1630,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       <div className="relative px-4 pt-8 pb-4 flex flex-col items-center gap-3">
         <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
-            coolTint
+
             mono
             motionState={roomMotion}
             proposedElement={cellCandidate?.element ?? null}

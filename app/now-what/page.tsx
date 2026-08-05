@@ -24,7 +24,7 @@ function HomeInner() {
 
 export default function NowWhatHomePage() {
   return (
-    <div className="min-h-screen bg-[#062a42] text-slate-200">
+    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">
