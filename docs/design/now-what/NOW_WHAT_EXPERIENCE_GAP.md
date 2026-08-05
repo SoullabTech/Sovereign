@@ -20,6 +20,18 @@ rendered room with real member data. The screenshot is the truth layer.
 The walk that matters: *if Larry opened this room, would he immediately
 understand why he paid for Now What?*
 
+**Acceptance statement (founder-required, 2026-08-05)**:
+> This release changes the arrival experience only. It does not claim that
+> the coaching room, MAIA relationship, continuity loop, or Writer's Field
+> equivalents are complete.
+
+The doorway is finally honest; the house is not finished. Post-deploy
+sequence (founder-set): **doorway deployed → Larry encounter (evidence) →
+Session Room improvement → continuity loop.** After deploy, STOP building
+and run the Larry walk — as Larry, not as founder or developer: does he
+understand what this is · know how to use it with a client · does it extend
+his coaching · does he want to bring clients here. Then one executive.
+
 **Status**: Founder-directed reset (Kelly, 2026-08-04). This document is the
 experiential target for the Home transformation. It supersedes the pending
 acceptance-walk referent for the Home — the walk re-targets the transformed

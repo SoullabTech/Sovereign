@@ -196,6 +196,31 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    /*
+     * Coach name — orientation, not personalization theater (founder ruling
+     * 2026-08-05: the narrow slice is practitioner name + program + focus,
+     * nothing more). One member-scoped read of the member's OWN relationship:
+     * the practitioner's display name, so the room can say whose coaching
+     * container this is. No caseload data, no practitioner-side fields, and
+     * absence is a valid state (a member without a coach sees a plain room).
+     * Non-fatal, like the journey read.
+     */
+    let coachName: string | null = null;
+    try {
+      const coach = await query<{ name: string | null }>(
+        `SELECT m.name
+           FROM practitioner_clients pc
+           JOIN members m ON m.id = pc.practitioner_id
+          WHERE pc.member_id = $1
+          ORDER BY pc.created_at ASC
+          LIMIT 1`,
+        [memberId],
+      );
+      coachName = coach.rows[0]?.name ?? null;
+    } catch (err) {
+      console.warn('[NowWhat/home] coach read failed (non-fatal):', err);
+    }
+
     console.info(
       '[NowWhat/home] read',
       JSON.stringify({
@@ -207,11 +232,13 @@ export async function GET(request: NextRequest) {
         reflections: reflections.length,
         shared: shared.length,
         sessions: sessions.length,
+        coach: coachName ? 'named' : 'none',
       }),
     );
 
     return NextResponse.json({
       journey,
+      coachName,
       decisions,
       commitments,
       questions,

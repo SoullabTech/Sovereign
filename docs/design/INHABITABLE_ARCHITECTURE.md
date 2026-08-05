@@ -112,6 +112,50 @@ Room names in floor plans (Threshold, Hearth, Study, Archive…) are
 speak the member's world (The Member's World is Primary) — the design
 vocabulary must not leak onto the walls of the rooms it designs.
 
+## The doorway law (founder, 2026-08-05 — applies to Now What?, MAIA, Author Studio, Practitioner Portal, the whole AIN ecosystem)
+
+> **Plain language at the doorway. Meaningful experience inside.**
+> The interface uses the language of orientation; the experience creates the
+> language of meaning.
+> **Do not write poetry about the user's transformation. Build the place
+> where they experience it.**
+
+The interface does not perform the transformation — it creates the
+conditions where transformation happens. The poetry belongs in the person's
+own realization, decision, conversation, and insight — never in labels
+("your field", "what is alive", "your journey", "your flourishing path").
+Those phrases are beautiful *after* the experience has occurred; they are
+not the doorway into it. A great coaching conversation does not begin
+"Welcome to a transformational developmental field." It begins "What's
+happening?" — the transformation comes afterward. Great environments don't
+tell you they are profound. The system **earns** deeper language through
+what happens; announced depth is the failure mode.
+
+## The visual-grammar law (founder, 2026-08-05)
+
+> **Design should carry the meaning. Words should only orient.**
+> Favor visual grammar over verbal explanation. If the interface needs
+> paragraphs to explain itself, the architecture is wrong.
+
+Layout, hierarchy, spatial relationships, interaction patterns, and
+progressive disclosure communicate BEFORE language does. Copy doing all the
+work is the signature of a design that does not know what the place is.
+
+The four-layer meaning hierarchy:
+1. **Brand communicates trust** — name, mark, authority.
+2. **Structure communicates purpose** — programs, coaching, development.
+3. **Interaction communicates possibility** — doors, conversation, next step.
+4. **Content communicates meaning** — the user's OWN words, insights,
+   decisions. This is where the poetry lives: *"I realized I have been
+   protecting my team from decisions they need to own"* is lived experience;
+   *"Your Leadership Evolution Field — a sacred space for transformation"*
+   is the product describing itself.
+
+Every-screen test: remove 50% of the words → does the layout still
+communicate the purpose? → let the user's own content become the meaningful
+layer. A CEO scans the page like an executive dashboard: *what am I doing ·
+where am I · what is next.* Emotional depth comes after engagement.
+
 ## Acceptance
 
 A surface passes when a person inhabits it without understanding the system

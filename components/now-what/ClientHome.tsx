@@ -1,57 +1,43 @@
 'use client';
 
 /**
- * Now What? — Client Home. The room a person enters to continue their work.
+ * Now What? — Client Home. Larry's executive coaching platform, as the
+ * member's arrival screen.
  *
- * EXPERIENCE RESET (founder directive 2026-08-04 — see
- * docs/design/now-what/NOW_WHAT_EXPERIENCE_GAP.md), built to the RATIFIED
- * floor plan (docs/design/now-what/NOW_WHAT_EXPERIENTIAL_FLOOR_PLAN.md,
- * approved with refinements 2026-08-05). Rooms below are BUILDER vocabulary —
- * architecture, not navigation; members never see these names.
+ * NORTH STAR (founder, 2026-08-05): "Now What? is Larry Closs' executive
+ * coaching platform that helps leaders continue their development between
+ * coaching conversations." Hierarchy: coach's practice → program → the
+ * member's work → conversation, with MAIA as SUPPORT — capability, never
+ * identity. The member should understand the product before the technology.
  *
- *   THRESHOLD — recognition, no choices. Known WITHOUT being interpreted:
- *      name, relationship, what they chose to carry — never state, needs,
- *      or readiness.
- *   HEARTH — relationship continuity through conversation (the medium, not
- *      the purpose). MAIA opens the door; Larry gives the room meaning.
- *      THE INVITATION NEVER ADAPTS ("What is alive for you today?"); the one
- *      door beneath it does (Begin with MAIA / Continue with MAIA).
- *      Continuity is offered AFTER the invitation, never imposed before it:
- *      present self → conversation → continuity.
- *   LIVING ROOM — within the Hearth, not a destination: what is currently on
- *      the table, in the member's words, typed and attributed. A dining
- *      table is not a warehouse shelf — few things, and a door to the rest.
- *   ARCHIVE — "the past never furnishes the entryway": one quiet door.
- *   COACH RELATIONSHIP — persists on the arrival floor because it is a
- *      relationship, not a capability. One sentence; never a "room".
+ * Built to the ratified floor plan + gesture architecture
+ * (docs/design/now-what/NOW_WHAT_EXPERIENTIAL_FLOOR_PLAN.md,
+ *  docs/design/now-what/NOW_WHAT_GESTURE_ARCHITECTURE.md) and the design
+ * laws in docs/design/INHABITABLE_ARCHITECTURE.md:
+ *   - Plain language at the doorway; meaningful experience inside. The
+ *     product speaks plainly; the member's own words are the only poetry.
+ *   - Design carries the meaning; words only orient. Brand → trust,
+ *     structure → purpose, interaction → possibility, content → meaning.
+ *   - One primary gesture: continue the work. Everything else recedes.
  *
- * POSITIONING (founder, 2026-08-05): a BETWEEN-SESSION EXECUTIVE DEVELOPMENT
- * ENVIRONMENT — a triangle, not a dyad: the coach's framework · the
- * executive's real work · MAIA as continuity between conversations. The
- * platform does not replace the coaching conversation; it extends the
- * developmental arc between conversations (Prepare → Conversation → Apply →
- * Reflect → Return). MAIA is the conversational presence WITHIN the coaching
- * environment — the door belongs to the coaching relationship, not to MAIA.
- * The member should never wonder "why am I talking to an AI?"; they are
- * continuing work they already do with their coach. Design for the executive
- * arriving with something important but not yet formed — the room helps them
- * give shape to what they are already carrying; it never becomes the object
- * of attention itself. Doorway language maximizes recognition (executive
- * register); MAIA may grow more poetic through relationship, never at the
- * door.
+ * PRODUCT TEST (pre-registered): Larry opens this → "this extends my
+ * executive coaching between sessions." A CEO opens this → "this helps me
+ * continue the work I am doing with my coach." If either says "this is an
+ * AI app" or "an LMS", the hierarchy is wrong.
  *
- * WHAT THIS ROOM STILL REFUSES (unchanged, structural, not taste):
- *   - No score, percentage, streak, ranking, completion count, progress bar.
- *   - No system-voiced finding. "What is alive for you today?" is a standing
- *     invitation string — never an inference from member material.
- *   - Every line is the member's own words or a plain fact about their own
- *     act, and every claim carries its author.
- *   - No silent coach visibility: nothing reaches a coach except by an
- *     explicit per-thread gesture, and that boundary is stated in the room.
+ * WHAT THIS ROOM STILL REFUSES (structural, unchanged):
+ *   - No score, streak, ranking, progress bar, completion count.
+ *   - No system-voiced finding; every line is the member's words or a plain
+ *     fact about their own act, with its author shown.
+ *   - The invitation is a static string — never an inference from member
+ *     material. Adaptation keys on authored facts only.
+ *   - Kept, not "recent" (E-2): presence comes from the member's keeping
+ *     gesture; no recency labels on their material.
+ *   - No silent coach visibility; the boundary is stated in one sentence.
  *
- * Data comes from ONE member-scoped composition call (`/api/now-what/home`)
- * over material the member already authored. Opening this room writes
- * nothing.
+ * Data: ONE member-scoped composition call (`/api/now-what/home`), which now
+ * carries the narrow orientation slice (coach name · program · focus) and
+ * nothing else practitioner-side. Opening this room writes nothing.
  */
 
 import { useEffect, useState } from 'react';
@@ -88,6 +74,7 @@ interface SessionRow {
 
 interface HomePayload {
   journey: JourneyRow[];
+  coachName: string | null;
   decisions: HomeThread[];
   commitments: HomeThread[];
   questions: HomeThread[];
@@ -114,11 +101,11 @@ function authorLine(authorship: string): string {
 }
 
 /**
- * The member's field as ONE thread: what they kept, interleaved, ordered by
+ * The member's work as ONE thread: what they kept, interleaved, ordered by
  * their own keeping gesture (`keptAt`). Interleaving is rendering, not
  * synthesis — every word stays the member's, typed and attributed.
  */
-function asField(data: HomePayload): FieldItem[] {
+function asWork(data: HomePayload): FieldItem[] {
   const tag = (items: HomeThread[], kind: FieldItem['kind']): FieldItem[] =>
     items.map((t) => ({ ...t, kind }));
   const merged = [
@@ -133,11 +120,12 @@ function asField(data: HomePayload): FieldItem[] {
     .sort((a, b) => (b.keptAt || '').localeCompare(a.keptAt || ''));
 }
 
+/* Register ruling 2026-08-05: native executive words, short nouns. */
 const KIND_LABEL: Record<FieldItem['kind'], string> = {
-  decision: 'a decision you are working through',
-  commitment: 'a commitment you are practising',
-  question: 'a question you are living',
-  reflection: 'something you kept',
+  decision: 'Decision',
+  commitment: 'Commitment',
+  question: 'Question',
+  reflection: 'Reflection',
 };
 
 // ── The room ─────────────────────────────────────────────────────────────
@@ -181,34 +169,39 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
 
   const ctx = fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : '';
   const roomHref = `/now-what/room${ctx}`;
-  const fieldHref = `/now-what/field${ctx}`;
+  const workHref = `/now-what/field${ctx}`;
 
   if (session === 'unknown') return null;
   if (session === 'out') {
     return (
       <NowWhatThreshold
         roomName="Your space"
-        line="Where your leadership work continues between conversations."
+        line="Continue your leadership development between coaching conversations."
         fieldContext={fieldContext}
       />
     );
   }
 
-  const journey = data?.journey ?? [];
+  const coachName = data?.coachName ?? null;
+  const coachFirst = coachName ? coachName.split(' ')[0] : null;
   const sessions = data?.sessions ?? [];
   const shared = data?.shared ?? [];
-  const field = data ? asField(data) : [];
+  const work = data ? asWork(data) : [];
   const lastSession = sessions[0] ?? null;
-  const focal = journey[0] ?? null;
+  const focal = data?.journey?.[0] ?? null;
+
+  /* One arrival sentence — program first, coach as fallback, plain always. */
+  const continuesLine = focal?.programTitle
+    ? `Your ${focal.programTitle} work continues.`
+    : coachName
+      ? `Your coaching work with ${coachFirst} continues here.`
+      : 'Your coaching work continues here.';
 
   return (
     <>
-      {/* Quiet shell: wordmark + location only. The room's own doors carry
-          wayfinding — no pill bar between the person and their work. */}
       <NowWhatShell current="Home" fieldContext={fieldContext} variant="quiet" />
 
-      <div className="relative max-w-2xl mx-auto px-5 sm:px-6 pt-12 sm:pt-16 pb-16">
-        {/* The environment's weather — between the movements, never inside them */}
+      <div className="relative max-w-2xl mx-auto px-5 sm:px-6 pt-10 sm:pt-14 pb-16">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_50%_0%,rgba(125,175,255,0.10),transparent_70%)]"
@@ -220,20 +213,31 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           </p>
         )}
 
-        {/* ① Arrival — the person, and where their work is pointed */}
-        <header className="relative text-center" style={{ animation: 'nwhFadeUp 0.6s ease both' }}>
+        {/* Brand — who owns this. Trust before anything else. */}
+        {coachName && (
+          <p
+            className="relative text-center text-[11px] uppercase tracking-[0.35em] text-slate-500"
+            style={{ animation: 'nwhFadeUp 0.6s ease both' }}
+          >
+            {coachName} Coaching
+          </p>
+        )}
+
+        {/* Arrival — where am I, what am I working on */}
+        <header
+          className="relative text-center mt-6"
+          style={{ animation: 'nwhFadeUp 0.6s ease 60ms both' }}
+        >
           <h1 className="text-slate-100 text-3xl sm:text-4xl font-extralight tracking-wide leading-tight">
             {name ? `Welcome back, ${name}.` : 'Welcome back.'}
           </h1>
-          {/* Relationship before conversation: the person is continuing
-              something that already matters, not entering an AI product. */}
           <p className="text-slate-400 text-base font-light leading-relaxed mt-4">
-            Your coaching work continues here.
+            {continuesLine}
           </p>
           {focal && (
             <p className="text-slate-300 text-base sm:text-lg font-light leading-relaxed mt-3">
-              Your current focus:{' '}
-              <span className="text-slate-100">{focal.focalPoint}</span>
+              You are working on:{' '}
+              <span className="text-slate-100">&ldquo;{focal.focalPoint}&rdquo;</span>
               <span className="text-slate-500 text-sm block mt-1.5">
                 {focal.statedBy === 'practitioner_seeded'
                   ? 'placed by your coach — yours when you say so'
@@ -243,22 +247,22 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           )}
         </header>
 
-        {/* ② Doorway — the conversation is the center of the room */}
+        {/* Next action — one door. MAIA is support, not identity. */}
         <section
-          className="relative flex flex-col items-center text-center mt-12 sm:mt-14"
-          style={{ animation: 'nwhFadeUp 0.6s ease 120ms both' }}
+          className="relative flex flex-col items-center text-center mt-10 sm:mt-12"
+          style={{ animation: 'nwhFadeUp 0.6s ease 140ms both' }}
         >
-          <RoomHoloflower
-            coolTint
-            mono
-            motionState="idle"
-            proposedElement={null}
-            confirmedElements={[]}
-            size={130}
-          />
-          {/* Doorway language maximizes recognition — executive register,
-              not practitioner vocabulary. Static string, never adaptive. */}
-          <h2 className="text-slate-100 text-xl sm:text-2xl font-extralight tracking-wide mt-6">
+          <div className="opacity-60">
+            <RoomHoloflower
+              coolTint
+              mono
+              motionState="idle"
+              proposedElement={null}
+              confirmedElements={[]}
+              size={64}
+            />
+          </div>
+          <h2 className="text-slate-100 text-xl sm:text-2xl font-extralight tracking-wide mt-5">
             What are you working through today?
           </h2>
           <a
@@ -266,24 +270,25 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             className="mt-6 rounded-full border px-9 py-3 text-base transition-all hover:shadow-[0_0_40px_rgba(255,226,122,0.35)]"
             style={{ color: ACCENT, borderColor: 'rgba(255,226,122,0.5)', background: 'rgba(255,226,122,0.05)' }}
           >
-            {lastSession ? 'Continue with MAIA' : 'Begin with MAIA'}
+            Continue your work
           </a>
+          <p className="text-slate-500 text-xs font-light mt-3">
+            Supported by MAIA between coaching conversations.
+          </p>
           {lastSession && (
-            <p className="text-slate-500 text-sm font-light mt-4">
+            <p className="text-slate-500 text-sm font-light mt-3">
               Last conversation, {dayLabel(lastSession.at)} — you carried{' '}
               {lastSession.carried === 1 ? 'one thing' : `${lastSession.carried} things`} forward.
             </p>
           )}
         </section>
 
-        {/* LIVING ROOM — within the Hearth, not a destination (ratified
-            amendment): what is currently on the table. The thread is why the
-            conversation matters, so it sits close beneath the door. */}
-        <section className="relative mt-10 sm:mt-12" style={{ animation: 'nwhFadeUp 0.6s ease 240ms both' }}>
+        {/* The member's work — their words are the meaningful layer. */}
+        <section className="relative mt-12 sm:mt-14" style={{ animation: 'nwhFadeUp 0.6s ease 220ms both' }}>
           <p className="text-[11px] uppercase tracking-[0.35em] mb-6" style={{ color: ACCENT }}>
-            What you are carrying
+            Your work
           </p>
-          {field.length === 0 ? (
+          {work.length === 0 ? (
             <p className="text-slate-400 text-[15px] font-light leading-relaxed max-w-prose">
               What you choose to keep in your conversations gathers here — in
               your words, yours alone.
@@ -291,7 +296,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           ) : (
             <>
               <ul className="space-y-7">
-                {field.slice(0, 4).map((t) => (
+                {work.slice(0, 4).map((t) => (
                   <li key={t.id} className="relative border-l pl-5" style={{ borderColor: 'rgba(255,226,122,0.25)' }}>
                     <span
                       aria-hidden
@@ -311,45 +316,42 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                       {authorLine(t.authorship)} · {dayLabel(t.keptAt)}
                       {t.sharedWithCoach && (
                         <span className="ml-2" style={{ color: 'rgba(255,226,122,0.7)' }}>
-                          shared with your coach
+                          shared with {coachFirst ?? 'your coach'}
                         </span>
                       )}
                     </p>
                   </li>
                 ))}
               </ul>
-              {/* ARCHIVE — a quiet door, never the first encounter. */}
               <p className="mt-8">
                 <a
-                  href={fieldHref}
+                  href={workHref}
                   className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
                 >
-                  Everything you&rsquo;ve carried →
+                  View all your work →
                 </a>
               </p>
             </>
           )}
         </section>
 
-        {/* COACH RELATIONSHIP — persists because it is a relationship, not a
-            capability. Relationship first, boundary second; never a "room". */}
-        <section className="relative mt-14 sm:mt-16 space-y-5" style={{ animation: 'nwhFadeUp 0.6s ease 360ms both' }}>
+        {/* Coaching relationship — one sentence; persists because it is a
+            relationship, not a capability. */}
+        <section className="relative mt-12 sm:mt-14 space-y-5" style={{ animation: 'nwhFadeUp 0.6s ease 300ms both' }}>
           <p className="text-slate-400 text-sm font-light leading-relaxed max-w-prose">
             {shared.length > 0
-              ? `Your coaching work continues here. You have brought ${
+              ? `You have brought ${
                   shared.length === 1 ? 'one piece' : `${shared.length} pieces`
-                } of what you are carrying into the work together — nothing else reaches your coach.`
-              : 'Your coaching work continues here. Nothing you keep reaches your coach unless you choose to bring it, one piece at a time.'}
+                } of your work into your coaching — nothing else reaches ${coachFirst ?? 'your coach'}.`
+              : `Nothing you keep here reaches ${coachFirst ?? 'your coach'} unless you choose to bring it, one piece at a time.`}
           </p>
 
           <RoomTrustCopy
-            holds="What you authored in this environment — the decisions you are working through, what you are practising, the questions you are living, and what you chose to keep."
+            holds="What you authored in this environment — the decisions you are working through, your commitments, your questions, and what you chose to keep."
             doesNotHold="No scores, rankings, progress measures, assessments or summaries of you. No record of how often you come here, and no interpretation of your material by anyone but you."
             whoSees="You. Your coach sees a piece only if you explicitly shared it, one piece at a time — never automatically, and never because you were active here."
             control="Everything here exists because of a gesture you made. Opening this room writes nothing. Anything shared can be withdrawn, and withdrawing it tells no one."
           />
-
-          <p className="text-slate-600 text-sm font-light italic">Nothing here rushes you.</p>
         </section>
 
         <style>{`
