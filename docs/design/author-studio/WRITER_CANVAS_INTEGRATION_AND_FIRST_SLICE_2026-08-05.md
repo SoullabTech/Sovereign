@@ -215,6 +215,20 @@ That single observation tells us whether the next organ is richer
 gathering · history · renewal · expression · reflection · or something
 not yet named.
 
+**A second pre-registered observation (founder, after the two-lane
+reconciliation):** two independent lanes converged on the same underlying
+gesture — the creator declaring the relationship to their work — which is
+evidence the *primitive* is load-bearing, not that every field choice is
+final. The Work now offers three identity registers built by two lanes:
+**purpose** (why this matters / what it is becoming), **form** (what kind
+of work this is), **stage** (where it is in its lifecycle). Those may be
+separate human declarations — or, after creator encounters, too much
+structure. **The creator reveals that; the walk watches which registers
+they actually reach for, which they conflate, and which they ignore.**
+The container-before-naming principle governs: the system provides places
+to declare, and never pre-defines "every creator's work has these
+categories." The architecture remains a container for recognition.
+
 Pre-registration protects the evidence from being reinterpreted after the
 fact — and **neither answer is better; they reveal different needs**:
 *"Help me find what belongs together"* teaches one thing; *"I know these
