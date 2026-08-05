@@ -269,8 +269,69 @@ export default function AuthorStudioHome() {
           </section>
         )}
 
+        {/* ── Several declared works. ────────────────────────────────────────
+            FIX 2026-08-05 (founder ruling). `arrivalWork()` correctly returns
+            null here — "which of your works did you come back to?" is a real
+            question and it must NOT be answered by a silent pick. That was
+            right. The defect was downstream: this page treated its null as if
+            it meant "no work declared", so a writer with several works landed
+            on the import threshold and lost "Start writing" entirely.
+
+            The two states are not the same:
+              0 works  → the import threshold. Nothing has been declared.
+              2+ works → a living creative field. Everything has.
+
+            Read plainly, the old branch told a practising author that the way
+            to begin is to go finish something somewhere else first. It opened
+            for a first-time writer and closed for a working one.
+
+            THE PRINCIPLE (founder, 2026-08-05):
+              Uncertainty in the system must not become restriction on the writer.
+
+            The system does not know which thread this is. It does know the
+            person is a writer with work. It says exactly that, offers the
+            page, and leaves the choosing to them.
+
+            ⛔ Do NOT "fix" this by making arrivalWork return works[0]. That
+            hides the ambiguity by choosing silently, which is the thing both
+            the original author and the ruling refused. Switching between works
+            is still unbuilt; this branch does not pretend otherwise. */}
+        {phase === 'none' && !work && works.length > 0 && (
+          <section>
+            <h2 className="text-[13px] tracking-[0.2em] uppercase opacity-40 mb-4">Begin</h2>
+            <p className="text-[16px] leading-relaxed opacity-75 mb-8 max-w-md">
+              You have several works here. Begin a new page whenever you want to — or open one of
+              them below.
+            </p>
+            <div className="flex flex-wrap items-center gap-5">
+              <button
+                onClick={() => void startWriting()}
+                disabled={starting}
+                className="inline-block px-7 py-3 text-[14px] tracking-wide disabled:opacity-40"
+                style={{ background: PRESS.accent, color: PRESS.ink }}
+              >
+                {starting ? 'making a page…' : 'Start writing'}
+              </button>
+              <Link
+                href={IMPORT_HREF}
+                className="text-[15px] opacity-60 hover:opacity-90 underline underline-offset-4"
+              >
+                Bring in existing writing
+              </Link>
+            </div>
+            {startError && (
+              <p role="alert" className="text-[13px] opacity-70 mt-6 max-w-md">
+                {startError}
+              </p>
+            )}
+            <p className="text-[13px] leading-relaxed opacity-45 mt-6 max-w-md">
+              Your work is listed below. Nothing here chooses for you.
+            </p>
+          </section>
+        )}
+
         {/* ── No work declared and no book. Unchanged: the import threshold. ── */}
-        {phase === 'none' && !work && (
+        {phase === 'none' && !work && works.length === 0 && (
           <section>
             <h2 className="text-[13px] tracking-[0.2em] uppercase opacity-40 mb-4">Begin</h2>
             <p className="text-[16px] leading-relaxed opacity-75 mb-8 max-w-md">
