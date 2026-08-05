@@ -5,15 +5,38 @@
 > *Can a writer bring material in, preserve the original source, create a working draft, edit, save,
 > close, reopen, and remain the author of every meaningful change?*
 
-**Referent — RE-PINNED 2026-08-05.** Deployed build **`f46a4fde4`** (container created
-2026-08-05T00:53:17Z). ⛔ Not trunk, ⛔ not any working tree. If the deployed SHA changes again
-before the walk runs, the referent is void and this instrument must be re-pinned again.
+**Referent — RE-PINNED (2nd time) 2026-08-05.** Deployed build **`fa4ba27ed`** (container created
+2026-08-05T13:33:22Z, `DEPLOY_LANE=deploy-lane`, gate-verified `GIT_COMMIT == asserted`).
+⛔ Not trunk, ⛔ not any working tree. If the deployed SHA changes again before the walk runs, the
+referent is void and this instrument must be re-pinned again.
 
-> ⚠️ **Prior referent `57b0324fd` is VOID for acceptance purposes.** Production moved before the
-> walk began (Relmem Stage 1 / #960). Measurements taken at `57b0324fd` are retained below as
-> **prior-state observations** — ⛔ they may not be carried into the walk as proven facts about the
-> object being accepted. This is the perishability the pin exists to catch, and it fired on the
-> first day.
+> 🔴🔴 **TWO prior referents are now VOID for acceptance purposes: `57b0324fd` AND `f46a4fde4`.**
+> Measurements taken at either are retained below as **prior-state observations** — ⛔ they may not
+> be carried into the walk as proven facts about the object being accepted.
+>
+> - `57b0324fd` → voided when production moved for Relmem Stage 1 / #960.
+> - `f46a4fde4` → voided by the **doorway-repair deploy** (below).
+>
+> ⭐⭐⭐ **The governing rule (Kelly, 2026-08-05):** *a changed instrument does not invalidate
+> history, but history from the old instrument cannot silently become evidence about the new one.*
+>
+> ⛔⛔ **#956's acceptance (5/6 House checks at `f46a4fde4`) does NOT transfer.** It is history about
+> the prior instrument state. The House itself also changed in this deploy (#964 moved Pro Studio
+> first in Rooms and withdrew the Community Library door), so check 2 — *"follows Vision Studio"* —
+> is **false by construction** on the current object. Do not read the old result forward.
+>
+> ⚠️ The pin voided **twice in one day**. That is the perishability it exists to catch, working.
+
+### What the `fa4ba27ed` deploy carried
+
+A deliberate **new-referent creation**, ⛔ not "one more fix" — four changes at once:
+
+| | |
+|---|---|
+| **`a3fcd2c50`** | 🔓 **THE DOORWAY REPAIR** — see §0quater |
+| #957 | Book Studio restored to the House |
+| #964 | Pro Studio first in Rooms; Community Library door withheld |
+| #968 | Now What? encounter protocol |
 
 **Re-measurement result — the referent moved, the measured surface did not.**
 `57b0324fd` is an **ancestor** of `f46a4fde4` (clean fast-forward), and the diff across
@@ -100,7 +123,47 @@ significance (*"this is your life's work"*). A and B long before C; **C is not a
 
 ---
 
-## 0quater. 🔴 PRE-WALK DEFECT — a second declared work removes "Start writing"
+## 0quater. ✅ REPAIRED at `fa4ba27ed` — the defect below is HISTORY
+
+> **RESOLVED 2026-08-05 by `a3fcd2c50`** — *"the writing room may not be withheld when the system
+> cannot name the work"* — deployed in `fa4ba27ed`. **The C2b / C5 blocker is gone.** The blank door
+> is reachable for a member with two declared works, which is the founder's actual state, so the
+> crossing can now begin.
+>
+> **What changed.** `phase === 'none'` collapsed from two branches to **one**. "Start writing"
+> now renders in *every* none-state, including **0 works** (*"Begin with a blank page. Nothing has
+> to exist first."*).
+>
+> ⭐⭐⭐ **`arrivalWork()` was NOT the bug and is unchanged.** Returning `null` for 2+ works is
+> correct — *"which of your works did you come back to?"* is a real question, and answering it by
+> silent pick (`works[0]`, most-recent, any other) is what the original author explicitly refused.
+> The defect was the **consumer**, which read one `null` as two opposite situations.
+>
+> ⛔ **Three invariants survive as invariants, not code** (PR #966 closed as superseded — it
+> preserved a 0-work import threshold that trunk deliberately removed):
+> 1. `arrivalWork()` must never infer a work from an arbitrary first item.
+> 2. `null` must remain **semantically meaningful** — ambiguous by design; consumers disambiguate.
+> 3. **Readiness state ⊥ existence state** — a failed or signed-out read is not "no works declared".
+>
+> 📋 **OPEN PRODUCT OBSERVATION, ⛔ not a walk blocker** (Kelly): the repair is *broader* than the
+> defect — it also removes the 0-work **import threshold** as a distinct state. *Should a new writer
+> begin with an empty room or an import workflow?* Evidence needed across **new member / imported
+> materials / multiple works**: do they know what to do · does blank feel welcoming or empty · does
+> import-first feel helpful or burdensome.
+>
+> ⚠️ **What the repair does NOT claim.** Only that *the Studio no longer prevents writing because
+> the system lacks certainty about which work is active.* ⛔ NOT that the Studio understands
+> writers. ⛔ NOT that switching between works exists — it does not. The doorway is open; **the room
+> is what the crossing measures.**
+
+---
+
+### The defect as originally found — retained as the record
+
+⛔ **Prior-state observation at `f46a4fde4`.** Retained because the finding shaped the instrument;
+⛔ it is no longer a statement about the current object.
+
+## 0quater-a. 🔴 PRE-WALK DEFECT — a second declared work removes "Start writing"
 
 **Found 2026-08-05 at `f46a4fde4`, by source inspection, after the founder reported the Studio Home
 offering only Import.** ⛔ Not a walk result — the walk had not opened. It is a **product defect**
