@@ -4,22 +4,26 @@
  * Now What? — Client Home. The room a person enters to continue their work.
  *
  * EXPERIENCE RESET (founder directive 2026-08-04 — see
- * docs/design/now-what/NOW_WHAT_EXPERIENCE_GAP.md). The previous Home was a
- * dashboard: seven parallel glass panels, each opening with prose explaining
- * itself, pill navigation on top, and the conversation door buried inside the
- * fifth panel. Good language inside the wrong grammar. That grammar is
- * REMOVED here, not renamed: no panel inventory, no tab bar, no empty-state
- * essays.
+ * docs/design/now-what/NOW_WHAT_EXPERIENCE_GAP.md), built to the RATIFIED
+ * floor plan (docs/design/now-what/NOW_WHAT_EXPERIENTIAL_FLOOR_PLAN.md,
+ * approved with refinements 2026-08-05). Rooms below are BUILDER vocabulary —
+ * architecture, not navigation; members never see these names.
  *
- * Four movements, top to bottom:
- *   ① Arrival — the person, and where their own work is pointed. Their words.
- *   ② Doorway — conversation is the center of the room, not a feature of an
- *      inventory. One door; its label continues rather than begins when a
- *      previous conversation left something behind.
- *   ③ Living field — everything they kept, one interleaved thread ordered by
- *      their keeping gesture, each line typed and attributed.
- *   ④ Coach line — the relationship and its boundary, one sentence, plus the
- *      existing collapsed trust disclosure.
+ *   THRESHOLD — recognition, no choices. Known WITHOUT being interpreted:
+ *      name, relationship, what they chose to carry — never state, needs,
+ *      or readiness.
+ *   HEARTH — relationship continuity through conversation (the medium, not
+ *      the purpose). MAIA opens the door; Larry gives the room meaning.
+ *      THE INVITATION NEVER ADAPTS ("What is alive for you today?"); the one
+ *      door beneath it does (Begin with MAIA / Continue with MAIA).
+ *      Continuity is offered AFTER the invitation, never imposed before it:
+ *      present self → conversation → continuity.
+ *   LIVING ROOM — within the Hearth, not a destination: what is currently on
+ *      the table, in the member's words, typed and attributed. A dining
+ *      table is not a warehouse shelf — few things, and a door to the rest.
+ *   ARCHIVE — "the past never furnishes the entryway": one quiet door.
+ *   COACH RELATIONSHIP — persists on the arrival floor because it is a
+ *      relationship, not a capability. One sentence; never a "room".
  *
  * WHAT THIS ROOM STILL REFUSES (unchanged, structural, not taste):
  *   - No score, percentage, streak, ranking, completion count, progress bar.
@@ -244,7 +248,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             className="mt-6 rounded-full border px-9 py-3 text-base transition-all hover:shadow-[0_0_40px_rgba(255,226,122,0.35)]"
             style={{ color: ACCENT, borderColor: 'rgba(255,226,122,0.5)', background: 'rgba(255,226,122,0.05)' }}
           >
-            {lastSession ? 'Continue the conversation' : 'Begin a conversation'}
+            {lastSession ? 'Continue with MAIA' : 'Begin with MAIA'}
           </a>
           {lastSession && (
             <p className="text-slate-500 text-sm font-light mt-4">
@@ -254,10 +258,12 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           )}
         </section>
 
-        {/* ③ Living field — one thread of what the member kept */}
-        <section className="relative mt-14 sm:mt-16" style={{ animation: 'nwhFadeUp 0.6s ease 240ms both' }}>
+        {/* LIVING ROOM — within the Hearth, not a destination (ratified
+            amendment): what is currently on the table. The thread is why the
+            conversation matters, so it sits close beneath the door. */}
+        <section className="relative mt-10 sm:mt-12" style={{ animation: 'nwhFadeUp 0.6s ease 240ms both' }}>
           <p className="text-[11px] uppercase tracking-[0.35em] mb-6" style={{ color: ACCENT }}>
-            Your field
+            What you are carrying
           </p>
           {field.length === 0 ? (
             <p className="text-slate-400 text-[15px] font-light leading-relaxed max-w-prose">
@@ -267,7 +273,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           ) : (
             <>
               <ul className="space-y-7">
-                {field.slice(0, 6).map((t) => (
+                {field.slice(0, 4).map((t) => (
                   <li key={t.id} className="relative border-l pl-5" style={{ borderColor: 'rgba(255,226,122,0.25)' }}>
                     <span
                       aria-hidden
@@ -294,26 +300,28 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
                   </li>
                 ))}
               </ul>
+              {/* ARCHIVE — a quiet door, never the first encounter. */}
               <p className="mt-8">
                 <a
                   href={fieldHref}
                   className="text-slate-400 hover:text-slate-200 text-sm font-light underline underline-offset-4 transition-colors"
                 >
-                  Open your full field →
+                  Everything you&rsquo;ve carried →
                 </a>
               </p>
             </>
           )}
         </section>
 
-        {/* ④ Coach line — the relationship and its boundary, one sentence */}
+        {/* COACH RELATIONSHIP — persists because it is a relationship, not a
+            capability. Relationship first, boundary second; never a "room". */}
         <section className="relative mt-14 sm:mt-16 space-y-5" style={{ animation: 'nwhFadeUp 0.6s ease 360ms both' }}>
           <p className="text-slate-400 text-sm font-light leading-relaxed max-w-prose">
             {shared.length > 0
-              ? `Your coach's work with you continues here. You have brought ${
+              ? `Your coaching work continues here. You have brought ${
                   shared.length === 1 ? 'one piece' : `${shared.length} pieces`
-                } of this field into the work together — nothing else reaches them.`
-              : "Your coach's work with you continues here. Nothing in this field reaches them unless you choose to bring it, one piece at a time."}
+                } of what you are carrying into the work together — nothing else reaches your coach.`
+              : 'Your coaching work continues here. Nothing you keep reaches your coach unless you choose to bring it, one piece at a time.'}
           </p>
 
           <RoomTrustCopy
