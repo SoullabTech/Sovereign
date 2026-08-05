@@ -1,6 +1,7 @@
 # Now What? Client Home — Larry Acceptance Walk
 
-**Date:** 2026-08-02 · **Status:** ACCEPTANCE DESIGN. Not executed. Not authorized.
+**Date:** 2026-08-02 · **Amended:** 2026-08-03 (§1 — four-layer sequence, telemetry bar)
+**Status:** ACCEPTANCE DESIGN. Not executed. Not authorized.
 **Design lane FROZEN** — this artifact defines how Slice 0 would be *accepted*, not what to build.
 
 **Composes with (does not replace):**
@@ -48,9 +49,113 @@ truthful exactly here.
 | **A real client (human, consented)** | Walk B findings only |
 | **Nobody** | A Class C finding inferred from implementation |
 
+### The four authorities (ruled 2026-08-02)
+
+| Layer | Source | Authority |
+|---|---|---|
+| **Structural assertions** | system inspection | technical evidence |
+| **Experience** | human participant | lived evidence |
+| **Interpretation** | participant / practitioner | **their meaning** |
+| **Acceptance** | owner / ruling authority | decision |
+
+**Interpretation is its own layer, and it belongs to the person who had the experience.** An
+observer may record *what* a participant reports; assigning what it *meant* is the participant's
+act, not the observer's. A study that collapses Experience and Interpretation reproduces, inside
+the research method, the exact displacement the product is designed to prevent — someone else
+authoring an account of your inner state. Record verbatim; let them name it.
+
 **Required form for any Class C statement, if one is written before human observation:** not
 *"the Home feels calm,"* but *"the Home presents one action per band with named consequences —
 a structure associated with lower decision load"* — with the class tag attached.
+
+### The four-layer sequence may not be shortened (amended 2026-08-03)
+
+`Structural → Experience → Interpretation → Acceptance`. **Not** `Structural → Experience →
+Acceptance`. The middle layer is where sovereignty is preserved or lost:
+
+- The participant owns *"what did this mean to me?"*
+- The observer records *"what did they say?"*
+- The founder decides *"does this meet our acceptance threshold?"*
+
+**The founder may not replace the participant's interpretation with an expert interpretation.**
+Acceptance can weigh an interpretation, reject its sufficiency, or decide against it — but it
+cannot author it.
+
+### Telemetry is not experience evidence (amended 2026-08-03)
+
+The confabulation guard above bars inferring Class C findings from *implementation*. This bars the
+symmetrical error: inferring them from *behavior*.
+
+The instrument must not infer:
+
+| Inference | Why it fails |
+|---|---|
+| adoption ← usage frequency | a member may use something often without trusting it |
+| trust ← continued use | continued use may be dependence, habit, or lack of an alternative |
+| safety ← absence of withdrawal | a member may never withdraw because they never noticed withdrawal existed |
+| value ← retention | retention measures return, not benefit |
+| comprehension ← successful completion | a member may complete a flow while misunderstanding the underlying model |
+
+> **The system may record behavior. It may not assign meaning to that behavior.**
+
+Behavioral data is admissible as **Class A/B substrate** — it supports and locates a question. It
+is never admissible as the answer to one. Every row above is an absence or a count being read as an
+interior state, which is the same displacement §1 exists to prevent, arriving through the
+back door.
+
+**Additional evidence classes to record in Walks A and B**, alongside verbatim language and
+observed action:
+
+- **moments of confusion** — where the participant paused, backtracked, or asked what something was
+- **unexpected mental models** — where the participant's account of what the system is diverges
+  from the designed model, *recorded as theirs, not corrected in the record*
+
+A divergent mental model is a finding, not a participant error.
+
+⚠️ **These two classes are observations, not verdicts.** *Confusion does not prove failure.* It is a
+Class C observation that still requires the participant's interpretation — they may report being
+confused and untroubled, confused and curious, or confused and abandoned. Recording confusion as a
+failure verdict re-commits the meaning-assignment error this section exists to prevent, using the
+evidence class introduced to prevent it.
+
+**Worked example.** A participant says: *"I thought this moved over to Larry."*
+
+- ⛔ Not: a participant mistake to be corrected, in the moment or in the record.
+- ✅ It is evidence that **the interface taught a transfer model** — the strongest possible finding
+  about what the system actually communicates, as opposed to what it was designed to communicate.
+
+Unexpected mental models are where the system reveals what it is *teaching* rather than what it
+*intends*. **The product has to be able to receive that finding without defending itself.**
+
+**The contamination point is precise: replacement before recording.** The evidence is not destroyed
+when a participant misunderstands. It is destroyed when an observer substitutes the builder's model
+for the participant's *before the participant's model has been recorded in their own words*.
+
+> Participant: *"I think this means Larry gets my reflection."* — **valuable evidence.**
+> Observer, in the moment: *"Actually no, it stays yours; Larry only receives an offering."* —
+> architecturally true, and it has converted the encounter from **observation** into **instruction**.
+
+This is not a rule against ever correcting the participant. **Record first, then correct.** Once
+their account is captured verbatim, the observer *should* resolve a misunderstanding that would
+otherwise leave someone believing their practitioner can see their inner work — leaving a
+participant misinformed about a consent boundary to protect an evidence packet inverts the priority
+this study exists to defend. The sequence is the whole discipline: **capture, then clarify.**
+
+**Record both — they are different evidence.** Clarification does not overwrite the earlier record;
+it produces a second, distinct one.
+
+| Recorded | Evidence about |
+|---|---|
+| *"I thought Larry gets my reflection"* (before) | the model **the interface taught** |
+| *"Oh — I understand now that it stays mine"* (after) | **learning after explanation** — how repairable the misunderstanding is |
+
+Clarify first and the first row is gone forever. Never clarify and the participant leaves holding a
+false belief about a boundary that protects their agency. Both rows survive only in this order.
+
+🔎 **Self-test for the observer:** *the urge to explain before recording is itself the contamination
+event.* If you feel compelled to correct the participant mid-sentence, that impulse is the signal —
+name it, finish capturing, then clarify. This is the method's guard against its most human failure
+mode: trying to help.
 
 ---
 
@@ -215,5 +320,46 @@ Class C finding · claim Gate 0 has been run · approve Walk B without the conse
 
 ## 9. Status
 
-Acceptance design recorded. Design lane frozen. Nothing built, nothing walked.
-Execution authorization — and the Walk B consent decision — are the founder's.
+```
+NOW_WHAT_CLIENT_HOME_LARRY_ACCEPTANCE_WALK
+
+Status:   Acceptance design complete
+
+Not:      - executed
+          - validated
+          - a release criterion
+
+Requires: 1. Gate 0 authorization
+          2. Larry participation authorization
+          3. Client research consent decision
+          4. Human observation
+```
+
+Everything else is appropriately waiting on evidence.
+
+### Standing research principle (proposed for general adoption)
+
+> **The acceptance walk cannot become the first violation of the boundary it is testing.**
+
+Generalizes beyond this lane: any study of a sovereignty boundary must satisfy that boundary in its
+own method. If observing the guarantee requires suspending it, the study is invalid regardless of
+what it finds.
+
+### Drafted consent model for decision 3 — NOT adopted
+
+Recorded so the decision has something concrete to accept, amend, or reject:
+
+1. **Three separable permissions**, never bundled: product use · research participation ·
+   sharing of observations. Each independently grantable and independently revocable.
+2. **Revocable retroactively** — the participant may withdraw their record after the walk, and it
+   leaves the evidence packet.
+3. **No Field content transcribed.** The observer records the participant's *reactions*, never
+   their material. Recognition can be reported without reproducing what was recognized.
+4. **The participant reviews the record** before it enters the evidence packet. Their
+   interpretation, in their words, per §1.
+5. ⚠️ **Larry should not be the one soliciting consent.** A practitioner asking their own client to
+   join research carries a power asymmetry that makes "yes" unreliable. Either a third party asks,
+   or the ask carries an explicit, credible guarantee that declining changes nothing about the
+   working relationship — and the client is told Larry will not know their answer.
+
+Point 5 is the one most likely to be skipped for convenience and most likely to invalidate Walk B.

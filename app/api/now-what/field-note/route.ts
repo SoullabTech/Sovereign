@@ -62,6 +62,12 @@ const asPhase = (v: unknown): string | null => {
   // ("Questions you're living" room, ruling 2026-07-13: member-authored question
   // records only). The tag types the evidence, never the person.
   if (cleaned === 'question') return cleaned;
+  // 'decision' = a decision the member is working through, kept by their own
+  // gesture. Same authorship and consent model as every other tag — the member
+  // names it a decision; nothing classifies it for them. It exists so the Home
+  // can group what the member already typed, NOT so the system can reason
+  // about decisions. No new table: the tag types the evidence, never the person.
+  if (cleaned === 'decision') return cleaned;
   return null;
 };
 
@@ -121,6 +127,18 @@ async function logEvent(
   }
 }
 
+/*
+ * The six flourishing dimensions a member may PLACE a thread under — the
+ * placing gesture is entering the room through a dimension door and keeping
+ * material from that session. Anything else is NULL. Never inferred.
+ */
+const FLOURISHING_DIMENSIONS = new Set([
+  'relationships', 'meaning', 'presence', 'health', 'contribution', 'time',
+]);
+function asDimension(v: unknown): string | null {
+  return typeof v === 'string' && FLOURISHING_DIMENSIONS.has(v) ? v : null;
+}
+
 async function saveThread(
   memberId: string,
   sessionRef: string | null,
@@ -132,17 +150,18 @@ async function saveThread(
   spiralogicPhase: string | null,
   fieldContext: string | null,
   shareWithPractitioner: boolean,
+  flourishingDimension: string | null = null,
 ): Promise<string | null> {
   const res = await query<{ id: string }>(
     `INSERT INTO member_field_note_threads
        (member_id, source_session_ref, title, content, authorship, is_directly_stated,
         member_confirmed, member_decision, member_decision_at, revision_notes,
         consent_state, can_be_remembered, can_be_shown_to_practitioner, confirmed_at,
-        spiralogic_phase, field_context)
+        spiralogic_phase, field_context, flourishing_dimension)
      VALUES ($1, $2, $3, $3, $4, $5, TRUE, $6, NOW(), $7,
-             'member-confirmed-memory', TRUE, $10, NOW(), $8, $9)
+             'member-confirmed-memory', TRUE, $10, NOW(), $8, $9, $11)
      RETURNING id`,
-    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner],
+    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner, flourishingDimension],
   );
   return res.rows[0]?.id ?? null;
 }
@@ -168,7 +187,8 @@ export async function GET(request: NextRequest) {
       created_at: string;
     }>(
       `SELECT id, title, authorship, member_decision, spiralogic_phase,
-              can_be_shown_to_practitioner, field_context, created_at
+              can_be_shown_to_practitioner, field_context, created_at,
+              flourishing_dimension
          FROM member_field_note_threads
         WHERE member_id = $1
           AND released_at IS NULL
@@ -213,6 +233,10 @@ export async function POST(request: NextRequest) {
     const sessionRef = asStr(body?.sessionRef, 80) || null;
     const spiralogicPhase = asPhase(body?.spiralogicPhase);
     const fieldContext = asStr(body?.fieldContext, 80) || null;
+    // The placing gesture: present only when the member entered through a
+    // dimension door (Flourishing Field → Add a reflection). Validated
+    // against the six dimensions; anything else is NULL.
+    const flourishingDimension = asDimension(body?.dimension);
     // Practitioner visibility is per-thread, DEFAULT FALSE. Each thread carries its
     // own shareWithPractitioner flag parsed from the request body. Carrying a thread
     // is private to the member's field; sharing is a separate explicit gesture, per
@@ -238,6 +262,7 @@ export async function POST(request: NextRequest) {
           const childId = await saveThread(
             memberId, sessionRef, childTitle, 'member_authored', true, 'split',
             `split from MAIA's "${p.title}"`, threadPhase, fieldContext, p.shareWithPractitioner,
+            flourishingDimension,
           );
           saved += 1;
           activity.created += 1;
@@ -251,7 +276,7 @@ export async function POST(request: NextRequest) {
           ? `revised from MAIA's "${p.title}"` : null;
       const id = await saveThread(
         memberId, sessionRef, title, 'member_confirmed', false, p.decision, revisionNotes,
-        threadPhase, fieldContext, p.shareWithPractitioner,
+        threadPhase, fieldContext, p.shareWithPractitioner, flourishingDimension,
       );
       saved += 1;
       if (p.decision === 'keep') activity.kept += 1;
@@ -260,7 +285,7 @@ export async function POST(request: NextRequest) {
     }
 
     for (const c of created) {
-      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, spiralogicPhase, fieldContext, c.shareWithPractitioner);
+      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, spiralogicPhase, fieldContext, c.shareWithPractitioner, flourishingDimension);
       saved += 1;
       activity.created += 1;
       await logEvent(memberId, id, 'created', 'create');

@@ -171,7 +171,33 @@ interface Props {
   fieldContext?: string;
   /** Program door within the field (catalog spec) — scopes the position block only. */
   program?: string;
+  /**
+   * Which Home door the member came through. Frames the arrival — it never
+   * seeds content, never sends anything, and the member's words remain the
+   * only input. question | cultivate | prepare | think (default).
+   */
+  entry?: string;
+  /** Opaque thread id for entry=question — resolved member-scoped from the
+   *  room's own load; the member's text never rides the URL. */
+  entryThread?: string;
+  /** Flourishing dimension slug for entry=cultivate — static copy only. */
+  entryDimension?: string;
 }
+
+/*
+ * Static entry copy for the cultivate door — mirrors the Home's researched
+ * flourishing domains (CLIENT_FIELD_TALK_ALIGNMENT_2026-08-05.md). The
+ * member chose the dimension by clicking it; that click is the gesture the
+ * framing keys on. No member data enters this map.
+ */
+const CULTIVATE_DIMENSIONS: Record<string, { name: string; facets: string }> = {
+  relationships: { name: 'Relationships', facets: 'connection · belonging · love' },
+  meaning: { name: 'Meaning & purpose', facets: 'what your life is for' },
+  presence: { name: 'Presence', facets: 'experiencing the life you built' },
+  health: { name: 'Health & energy', facets: 'movement · sleep · vitality' },
+  contribution: { name: 'Contribution', facets: 'what you give beyond yourself' },
+  time: { name: 'Time', facets: 'enough of it for what matters' },
+};
 
 // — Program position (arrival payload; rides the field-note room-load GET) —
 interface ArrivalPositionPayload {
@@ -193,7 +219,7 @@ interface ProgramArrivalPayload {
  * client experience lives in its own namespace and does not modify framework
  * surfaces. It may earn its way into shared architecture through observation.
  */
-export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) {
+export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, entryThread, entryDimension }: Props) {
   const nowWhat = true;
   const [roomPhase, setRoomPhase] = useState<RoomPhase>('arrival');
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -212,6 +238,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
   // Now What? loop state. priorPractice = the practice committed on a previous visit
   // (drives the Return branch); practiceDraft/offeringDraft = this visit's commitments.
   const [priorPractice, setPriorPractice] = useState<string | null>(null);
+  // The carried question's title for entry=question — resolved member-scoped
+  // from the room's own thread load, never from the URL.
+  const [entryThreadTitle, setEntryThreadTitle] = useState<string | null>(null);
   const [arrivalAnswer, setArrivalAnswer] = useState('');
   const [practiceDraft, setPracticeDraft] = useState('');
   const [sharePractice, setSharePractice] = useState(false);
@@ -309,9 +338,16 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
         );
         if (res.ok) {
           const json = await res.json().catch(() => ({}));
-          const threads: { title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
+          const threads: { id?: string; title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
           const practice = threads.find(t => t.spiralogic_phase === 'practice');
           if (practice && !cancelled) setPriorPractice(practice.title);
+          // Entry=question: surface the member's own carried question at the
+          // threshold. Member-scoped resolution — an id that isn't theirs
+          // simply resolves to nothing.
+          if (entryThread && !cancelled) {
+            const carried = threads.find(t => t.id === entryThread);
+            if (carried) setEntryThreadTitle(carried.title);
+          }
           // Arrival payload (program position) rides the same load — null when
           // the field declares no anchoring; the line simply does not render.
           if (json?.arrival && !cancelled) setProgramArrival(json.arrival);
@@ -645,6 +681,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           sessionRef: sessionRef.current,
           spiralogicPhase: phase,
           fieldContext: fieldContext ?? null,
+          // The placing gesture: the member entered through a dimension door,
+          // so what they keep from this session places itself in that
+          // dimension's area of the Flourishing Field.
+          ...(entryDimension ? { dimension: entryDimension } : {}),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -670,6 +710,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
         sessionRef: sessionRef.current,
         spiralogicPhase: tag,
         fieldContext: fieldContext ?? null,
+        ...(entryDimension ? { dimension: entryDimension } : {}),
       }),
     });
     const json = await res.json().catch(() => ({}));
@@ -765,7 +806,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
     if (fieldContext && !returnChecked) {
       return (
         <div className="relative min-h-[92vh] flex items-center justify-center px-6 overflow-hidden">
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
           <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
         </div>
       );
@@ -779,13 +820,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
       return (
         <div key="nw-welcome" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
           <style>{NW_FADE_KEYFRAMES}</style>
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
           <div className="relative w-full max-w-xl space-y-10">
             <div style={fadeUpStyle(0)} className="flex justify-center">
               <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
             </div>
             <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
-              <p className="text-sm uppercase tracking-[0.4em] text-[#ffe27a]">Now What? · with Larry Closs</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-[#c9a35e]">Now What? · with Larry Closs</p>
               <h1 style={SERIF} className="text-4xl sm:text-5xl font-light text-slate-100 tracking-wide">Welcome.</h1>
             </div>
             <div style={fadeUpStyle(0.5)} className="space-y-5 text-slate-300 text-[17px] font-light leading-[1.85]">
@@ -801,7 +842,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               <p className="text-slate-500 text-sm font-light italic">When you're ready…</p>
               <button
                 onClick={() => setEntered(true)}
-                className="inline-block border border-[#ffe27a]/30 text-[#ffe27a] hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300"
+                className="inline-block border border-[#c9a35e]/30 text-[#c9a35e] hover:border-[#c9a35e]/70 hover:bg-[#c9a35e]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300"
               >
                 Come in
               </button>
@@ -814,12 +855,12 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
     return (
       <div key="nw-arrival" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
         <style>{NW_FADE_KEYFRAMES}</style>
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(125,175,255,0.08),transparent_65%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
         <div className="relative w-full max-w-xl space-y-10">
           <div style={fadeUpStyle(0)} className="flex justify-center">
             <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
           </div>
-          <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#ffe27a]">
+          <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#c9a35e]">
             Now What?
           </p>
 
@@ -868,7 +909,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                       <input
                         type="text"
                         aria-label="Where you actually are, in your own words"
-                        className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-sm font-light focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-2 text-center transition-colors"
+                        className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-sm font-light focus:outline-none focus:border-[#c9a35e]/50 placeholder:text-slate-600 py-2 text-center transition-colors"
                         placeholder="Where are you, in your own words…"
                         value={anchorDraft}
                         maxLength={300}
@@ -879,7 +920,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                         <button
                           onClick={statePosition}
                           disabled={!anchorDraft.trim() || anchorBusy}
-                          className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                          className="text-[#c9a35e]/80 hover:text-[#c9a35e] transition-colors disabled:opacity-40"
                         >
                           That&apos;s where I am
                         </button>
@@ -897,7 +938,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                       <button
                         onClick={confirmPosition}
                         disabled={anchorBusy}
-                        className="text-[#ffe27a]/80 hover:text-[#ffe27a] transition-colors disabled:opacity-40"
+                        className="text-[#c9a35e]/80 hover:text-[#c9a35e] transition-colors disabled:opacity-40"
                       >
                         Yes, that&apos;s where I am
                       </button>
@@ -957,7 +998,64 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
             </div>
           )}
 
-          {returning ? (
+          {/* — Entry framing: the door the member came through shapes the
+              threshold. Their own carried question, a dimension they chose by
+              clicking it, or conversation preparation. The frame orients;
+              the member's words remain the only input. — */}
+          {entry === 'question' && entryThreadTitle ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">You are carrying —</p>
+              <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
+                &ldquo;{entryThreadTitle}&rdquo;
+              </p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What&apos;s moving in it now?
+              </p>
+            </div>
+          ) : entry === 'cultivate' && entryDimension && CULTIVATE_DIMENSIONS[entryDimension] ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">
+                Reflecting through{' '}
+                <span className="text-slate-300">{CULTIVATE_DIMENSIONS[entryDimension].name}</span>
+                <span className="text-slate-600"> · {CULTIVATE_DIMENSIONS[entryDimension].facets}</span>
+              </p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What in your life is asking for attention here?
+              </p>
+            </div>
+          ) : entry === 'lived' ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              {priorPractice ? (
+                <>
+                  <p className="text-slate-500 text-sm font-light">What you are living —</p>
+                  <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
+                    {priorPractice}
+                  </p>
+                  <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                    What happened?
+                  </p>
+                  <p className="text-slate-500 text-sm font-light">What is life showing you?</p>
+                </>
+              ) : (
+                <>
+                  <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                    What are you living right now?
+                  </p>
+                  <p className="text-slate-500 text-sm font-light">What is life showing you?</p>
+                </>
+              )}
+            </div>
+          ) : entry === 'prepare' ? (
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">Before your next coaching conversation —</p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What do you want to bring forward?
+              </p>
+              <p className="text-slate-500 text-sm font-light leading-relaxed">
+                What has shifted? What remains unresolved? What deserves deeper exploration?
+              </p>
+            </div>
+          ) : returning ? (
             <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
               <p className="text-slate-500 text-sm font-light">Last time you chose this practice:</p>
               <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
@@ -974,9 +1072,13 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           <div style={fadeUpStyle(0.65)} className="space-y-8">
             <textarea
               aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
-              className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#ffe27a]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
+              className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#c9a35e]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
               rows={2}
-              placeholder={returning ? 'What actually happened…' : 'In your own words…'}
+              placeholder={
+                entry === 'lived' || (returning && !entry)
+                  ? 'What actually happened…'
+                  : 'In your own words…'
+              }
               value={arrivalAnswer}
               onChange={e => setArrivalAnswer(e.target.value)}
               onKeyDown={e => {
@@ -990,7 +1092,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
               <button
                 onClick={beginFromThreshold}
                 disabled={!arrivalAnswer.trim() || working}
-                className="inline-block border border-[#ffe27a]/30 text-[#ffe27a] hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300 disabled:opacity-25 disabled:cursor-not-allowed"
+                className="inline-block border border-[#c9a35e]/30 text-[#c9a35e] hover:border-[#c9a35e]/70 hover:bg-[#c9a35e]/5 rounded-full px-10 py-3.5 text-sm tracking-[0.22em] uppercase font-light transition-all duration-300 disabled:opacity-25 disabled:cursor-not-allowed"
               >
                 Begin
               </button>
@@ -1188,7 +1290,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           <button
             onClick={commitPractice}
             disabled={saving || !practiceDraft.trim()}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Carry this practice'}
           </button>
@@ -1248,7 +1350,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           <button
             onClick={commitOffering}
             disabled={saving || !offeringDraft.trim()}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
           >
             {saving ? 'Saving…' : 'Offer it'}
           </button>
@@ -1305,7 +1407,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
         <div className="flex items-center gap-6">
           <a
             href={`/now-what/field${fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : ''}`}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
           >
             See your field
           </a>
@@ -1348,7 +1450,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
                 type="button"
                 onClick={listenBack}
                 disabled={working}
-                className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
+                className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-30"
               >
                 {working ? 'Listening…' : 'Try listening back again'}
               </button>
@@ -1475,7 +1577,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           <button
             onClick={() => carry(collectPayload())}
             disabled={saving}
-            className="text-[#ffe27a] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
+            className="text-[#c9a35e] hover:text-[#fff2ab] text-sm underline underline-offset-4 transition-colors disabled:opacity-40"
           >
             {saving ? 'Saving…' : 'Keep what I chose'}
           </button>
@@ -1495,7 +1597,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
   return (
     <div className="relative flex flex-col h-full max-w-[46rem] mx-auto w-full">
       <style>{NW_FADE_KEYFRAMES}</style>
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(125,175,255,0.06),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(196,164,110,0.06),transparent_70%)]" />
       <div className="relative px-4 pt-8 pb-4 flex flex-col items-center gap-3">
         <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
@@ -1508,7 +1610,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
           />
         </div>
         <div className="text-center">
-          <p className={`text-xs uppercase tracking-[0.35em] ${nowWhat ? 'text-[#ffe27a]/80' : 'text-slate-500'}`}>{roomTitle}</p>
+          <p className={`text-xs uppercase tracking-[0.35em] ${nowWhat ? 'text-[#c9a35e]/80' : 'text-slate-500'}`}>{roomTitle}</p>
           {!nowWhat && <p className="text-slate-400 text-sm font-light">{phaseLabel}</p>}
         </div>
         {turns.length >= 4 && (
@@ -1773,7 +1875,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program }: Props) 
             <button
               onClick={() => sendTurn(draft)}
               disabled={working || !draft.trim()}
-              className="rounded-full border border-[#ffe27a]/30 px-6 py-1.5 text-sm tracking-[0.14em] uppercase font-light text-[#ffe27a] transition-all duration-300 hover:border-[#ffe27a]/70 hover:bg-[#ffe27a]/5 disabled:opacity-25 disabled:cursor-not-allowed"
+              className="rounded-full border border-[#c9a35e]/30 px-6 py-1.5 text-sm tracking-[0.14em] uppercase font-light text-[#c9a35e] transition-all duration-300 hover:border-[#c9a35e]/70 hover:bg-[#c9a35e]/5 disabled:opacity-25 disabled:cursor-not-allowed"
             >
               {working ? 'Sending…' : 'Send'}
             </button>
