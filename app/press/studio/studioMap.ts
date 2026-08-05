@@ -120,15 +120,6 @@ export const STUDIO_MAP: StudioGroup[] = [
       },
     ],
   },
-  {
-    id: 'later',
-    label: 'Coming later',
-    destinations: [
-      { id: 'gatherings', label: 'Gatherings', availability: 'later' },
-      { id: 'shape', label: 'Shape', availability: 'later' },
-      { id: 'release', label: 'Release', availability: 'later' },
-    ],
-  },
 ];
 
 /**

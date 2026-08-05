@@ -192,7 +192,7 @@ export default function AuthorStudioHome() {
             <>
               <h1 className="text-[28px] md:text-[32px] mb-3">Author Studio</h1>
               <p className="text-[16px] leading-relaxed opacity-65 max-w-md">
-                A place to gather, shape, write, and bring your book into form.
+                Your book begins here.
               </p>
             </>
           )}

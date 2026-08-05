@@ -36,13 +36,18 @@ describe('Author Studio map — honesty invariant', () => {
     expect(() => assertStudioMapHonest(dishonest)).toThrow(/nowhere to go/);
   });
 
-  it('names the three deferred surfaces as not yet available', () => {
+  it('shows the member no unbuilt destinations at all', () => {
+    // No Roadmap Leakage. Gatherings / Shape / Release were previously listed
+    // as "not yet available" for orientation. They oriented the builder, not
+    // the writer: an author arriving to write read three things the room could
+    // not do before reaching the one it could. A product reveals capability,
+    // not construction status. The `later` availability remains in the type so
+    // assertStudioMapHonest keeps refusing an unbuilt destination that carries
+    // an href — the guard stays, the advertisement goes.
     const later = STUDIO_MAP.flatMap((g) => g.destinations).filter(
       (d) => d.availability === 'later',
     );
-    expect(later.map((d) => d.label).sort()).toEqual(['Gatherings', 'Release', 'Shape']);
-    // The whole point: they are visible for orientation, and inert.
-    expect(later.every((d) => d.href === undefined)).toBe(true);
+    expect(later).toEqual([]);
   });
 });
 
