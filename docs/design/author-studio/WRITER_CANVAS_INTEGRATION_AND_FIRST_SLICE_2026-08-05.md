@@ -215,6 +215,17 @@ That single observation tells us whether the next organ is richer
 gathering · history · renewal · expression · reflection · or something
 not yet named.
 
+Pre-registration protects the evidence from being reinterpreted after the
+fact — and **neither answer is better; they reveal different needs**:
+*"Help me find what belongs together"* teaches one thing; *"I know these
+belong together; help me hold them"* teaches another. The final guard on
+everything downstream: a good idea is not enough, a plausible feature is
+not enough, a beautiful possibility is not enough — **the next design
+conversation must be earned by a person's attempt to do something
+meaningful that the environment could not yet support.** The room has
+become the instrument; the next architecture comes from the hand reaching
+toward the table.
+
 **The first-glance observation (founder instruction):** during the walk,
 watch **where the creator naturally looks first after returning** — not
 what they click; what their attention seeks. Work? Materials? The writing
