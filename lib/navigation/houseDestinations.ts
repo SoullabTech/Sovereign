@@ -36,10 +36,10 @@ import {
   Bookmark,
   Briefcase,
   Orbit,
-  BookCopy,
   Users,
   Wind,
   DoorOpen,
+  BookMarked,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -96,7 +96,9 @@ export interface HouseDestination {
  *    the other four are nativeReady:false pending PR 2.
  *  - Sheets (existing member surfaces, no new routes): Changes.
  *  - Web environments (honest bridge, first pass): Wisdom, Astrology,
- *    Community Library, Co-lab, Circles, Vision Studio.
+ *    Co-lab, Circles, Vision Studio. (Community Library removed from the House
+ *    by founder direction 2026-08-04 — the route still exists, it is simply no
+ *    longer a House door.)
  *  - Author Studio: → /press/studio, the Studio ENVIRONMENT (Layer 2). Never a
  *    working surface: /press/manuscript is the Manuscript Room (Layer 3) and is
  *    reached from inside the Studio, not from the House. Still NOT /studio,
@@ -213,6 +215,43 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   },
 
   // ── Rooms ─────────────────────────────────────────────────────────────
+  // RULING (Kelly, 2026-08-04) — "Studio is one threshold. Mode is revealed
+  // after entry." Recorded in docs/governance/HOUSE_IA_RULING_STUDIO_ONE_THRESHOLD_2026-08-04.md.
+  //
+  // ONE door, not two. Personal Field and Practice Portal are the two MODES of
+  // /studio (see MODE_CONFIG in components/studio/TeamSwitcher.tsx), not two
+  // places. Registering them as two Rooms — 'Personal Field' and 'Pro Studio',
+  // each preselecting a mode — was considered and REJECTED: it reads clean but
+  // asserts a false ontology, that the person has two workspaces. They have one
+  // workspace entered in different relational contexts.
+  //
+  // ⛔ Do NOT add a second rooms entry pointing at /studio, and do NOT encode
+  // the mode in this registry (no ?mode= route variants). The House reveals a
+  // PLACE; it must not expose the object model underneath it. The switch is
+  // contextual and lives inside the Studio, where it already is.
+  //
+  // Placed FIRST in Rooms by founder direction 2026-08-04.
+  //
+  // This supersedes the placement half of the three-way practitioner-door
+  // conflict (founder direction 2026-07-13 "mount at the bottom of /now-what,
+  // no separate /studio address" · built reality /studio · sketch
+  // /practitioner/login). The SERVER-GATE half is NOT ruled here: 'founder' is
+  // the closest gate this registry can express (HouseAudience is 'all' |
+  // 'founder') and matches the Circles / Vision Studio precedent. Whether a
+  // non-practitioner should receive this door at all — absent server-side
+  // rather than filtered — remains open. Do not read this entry as settling it.
+  {
+    id: 'pro-studio',
+    label: 'Pro Studio',
+    icon: DoorOpen,
+    tooltip: 'Your practice workspace',
+    kind: 'route',
+    route: '/studio',
+    audience: 'founder',
+    nativePolicy: 'web', // /studio is not in the native bundle; bridge on native
+    returnBehavior: 'web-bridge',
+    group: 'rooms',
+  },
   {
     id: 'studio',
     label: 'Author Studio',
@@ -244,18 +283,9 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     returnBehavior: 'web-bridge',
     group: 'rooms',
   },
-  {
-    id: 'community-library',
-    label: 'Community Library',
-    icon: BookCopy,
-    tooltip: 'Shared knowledge & collective resources',
-    kind: 'route',
-    route: '/maia/community/library',
-    audience: 'all',
-    nativePolicy: 'web',
-    returnBehavior: 'web-bridge',
-    group: 'rooms',
-  },
+  // Community Library REMOVED from the House (founder direction 2026-08-04).
+  // The route (/maia/community/library) still exists and is reachable by URL;
+  // it simply no longer has a House door.
   {
     id: 'wisdom',
     label: 'Wisdom',
@@ -305,38 +335,33 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     returnBehavior: 'web-bridge',
     group: 'rooms',
   },
-  // RULING (Kelly, 2026-08-04) — "Studio is one threshold. Mode is revealed
-  // after entry." Recorded in docs/governance/HOUSE_IA_RULING_STUDIO_ONE_THRESHOLD_2026-08-04.md.
+  // RESTORED (Kelly, 2026-08-04) — a migration omission, not a disposition.
   //
-  // ONE door, not two. Personal Field and Practice Portal are the two MODES of
-  // /studio (see MODE_CONFIG in components/studio/TeamSwitcher.tsx), not two
-  // places. Registering them as two Rooms — 'Personal Field' and 'Pro Studio',
-  // each preselecting a mode — was considered and REJECTED: it reads clean but
-  // asserts a false ontology, that the person has two workspaces. They have one
-  // workspace entered in different relational contexts.
+  // Book Studio was a registered rail boundary that never migrated into this
+  // registry when the rail was retired (2026-07-22). Canon ratifies it as live
+  // and distinct: AUTHOR_STUDIO_THREE_LAYER_RULING.md §2 — "/book-studio = Book
+  // Studio. Unchanged." No ruling withheld it; both drift checks were blind to it.
   //
-  // ⛔ Do NOT add a second rooms entry pointing at /studio, and do NOT encode
-  // the mode in this registry (no ?mode= route variants). The House reveals a
-  // PLACE; it must not expose the object model underneath it. The switch is
-  // contextual and lives inside the Studio, where it already is.
+  // ⛔ DISTINCT from Writer's Studio (id 'studio' → /press/studio) and never to be
+  // merged into it. They are adjacent stages of different work:
+  //     Writer's Studio — how a life becomes a book (create, discover, revise)
+  //     Book Studio     — how a finished manuscript becomes a published book
+  //                       (production, editions, layout, release, operations)
+  // The distinction is the WORK being done, not the status of the person entering.
   //
-  // This supersedes the placement half of the three-way practitioner-door
-  // conflict (founder direction 2026-07-13 "mount at the bottom of /now-what,
-  // no separate /studio address" · built reality /studio · sketch
-  // /practitioner/login). The SERVER-GATE half is NOT ruled here: 'founder' is
-  // the closest gate this registry can express (HouseAudience is 'all' |
-  // 'founder') and matches the Circles / Vision Studio precedent. Whether a
-  // non-practitioner should receive this door at all — absent server-side
-  // rather than filtered — remains open. Do not read this entry as settling it.
+  // Long-term this is a Steward-level offering (beta: authorized testers/authors),
+  // declared in lib/navigation/houseDispositions.ts. 'founder' is the closest gate
+  // HouseAudience can express today — an interim rendering control, NOT the
+  // authorization it approximates. ⛔ Do not read it as one.
   {
-    id: 'pro-studio',
-    label: 'Pro Studio',
-    icon: DoorOpen,
-    tooltip: 'Your practice workspace',
+    id: 'book-studio',
+    label: 'Book Studio',
+    icon: BookMarked,
+    tooltip: 'Production and publishing',
     kind: 'route',
-    route: '/studio',
-    audience: 'founder',
-    nativePolicy: 'web', // /studio is not in the native bundle; bridge on native
+    route: '/book-studio',
+    audience: 'founder', // interim gate; disposition is 'offered'/steward
+    nativePolicy: 'web', // desktop authoring environment — web-only by design
     returnBehavior: 'web-bridge',
     group: 'rooms',
   },
