@@ -15,6 +15,8 @@ import {
   type RevisionSummary,
 } from '../../manuscript/workingDraftClient';
 import Worktable from './Worktable';
+import WorkDrawer from './WorkDrawer';
+import MaterialsDrawer from './MaterialsDrawer';
 
 /**
  * Writer Canvas — the room. v0.1 of the environment all Writer Studio entry
@@ -60,7 +62,7 @@ const WINDOW_SENTENCE =
   'Reflection with MAIA will become available when this Work can carry its context.';
 
 export default function WriterCanvasPage() {
-  const { phase: worksPhase, works } = useLivingWorks();
+  const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const work = arrivalWork(worksPhase, works);
 
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
@@ -143,16 +145,36 @@ export default function WriterCanvasPage() {
     );
   }
 
-  // The head of the room names what is actually on the table. The declared
-  // Work is context (Work drawer), not the headline — headline-plus-"on the
-  // table" drew a belonging the data does not hold. With no manuscript, the
-  // Work (when exactly one is declared) may head the empty room.
-  const headline = manuscript
-    ? (manuscript.title ?? UNTITLED_EXPRESSION)
-    : work
-      ? (work.title ?? 'Your work')
-      : 'Writer Canvas';
-  const headlineNamed = manuscript ? manuscript.title !== null : Boolean(work?.title);
+  // ── The unite rule (first slice, ruled 2026-08-05) ─────────────────────
+  // The head of the room may unite the Work and the table ONLY on the
+  // member's own declaration — a living_work_expressions row they created —
+  // and only when it is unambiguous (exactly one work declares this
+  // manuscript; expressions may belong to several works by design, and the
+  // room does not guess between them). Without a declaration, v0.1-close
+  // honesty stands: the manuscript heads the room, the Work stays in its
+  // drawer, near but not claimed.
+  const owningWorks = manuscript
+    ? works.filter((w) =>
+        w.expressions.some(
+          (e) => e.expressionType === 'manuscript' && e.expressionId === manuscript.id
+        )
+      )
+    : [];
+  const unitedWork = owningWorks.length === 1 ? owningWorks[0] : null;
+  const manuscriptLabel = manuscript ? (manuscript.title ?? UNTITLED_EXPRESSION) : '';
+
+  const headline = unitedWork
+    ? (unitedWork.title ?? 'Your work')
+    : manuscript
+      ? manuscriptLabel
+      : work
+        ? (work.title ?? 'Your work')
+        : 'Writer Canvas';
+  const headlineNamed = unitedWork
+    ? unitedWork.title !== null
+    : manuscript
+      ? manuscript.title !== null
+      : Boolean(work?.title);
 
   // Structure exists only where structure exists: a single-section draft has
   // no Structure drawer, and its absence is correct, not a gap.
@@ -168,70 +190,27 @@ export default function WriterCanvasPage() {
   const drawerBody = (id: DrawerId) => {
     switch (id) {
       case 'work':
-        return work ? (
-          <>
-            <div className="mb-4">
-              <p className="text-[15px]" style={{ fontFamily: SERIF, opacity: work.title ? 1 : 0.7 }}>
-                {work.title ?? 'Your work'}
-              </p>
-              <p className="text-[12px] opacity-45 mt-1">declared {formatWhen(work.createdAt)}</p>
-            </div>
-            <p className="text-[12.5px] leading-relaxed opacity-50 mb-3">
-              Naming and renaming your work happens at the{' '}
-              <Link href="/press/studio" className="underline underline-offset-4 opacity-90">
-                Studio Home
-              </Link>
-              , where you declared it.
-            </p>
-            {/* Say the non-link out loud rather than letting layout imply one:
-                nothing yet records that what is on the table belongs to this
-                work, and that declaration is the member's to make when it
-                exists — never the display's to assume. */}
-            <p className="text-[12.5px] leading-relaxed opacity-50">
-              The Studio does not yet record what belongs to this work — what is on the table is
-              near it, not claimed by it.
-            </p>
-          </>
-        ) : (
-          <p className="text-[13px] leading-relaxed opacity-60">
-            No single work is declared here yet.{' '}
-            <Link href="/press/studio" className="underline underline-offset-4">
-              The Studio Home
-            </Link>{' '}
-            is where a work is declared — or returned to, when you have several.
-          </p>
+        /* The anchor of the Study Wall (first slice): identity tended here,
+           the Shape declaration lives here. Everything member-authored. */
+        return (
+          <WorkDrawer
+            works={works}
+            unitedWork={unitedWork}
+            manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
+            manuscriptLabel={manuscriptLabel}
+            onChanged={reloadWorks}
+          />
         );
       case 'materials':
-        return manuscript && manuscript.sectionCount > 0 ? (
-          <>
-            <div
-              className="border px-4 py-3 mb-3"
-              style={{ borderColor: PRESS.ruleSoft }}
-            >
-              <p className="text-[14px]" style={{ fontFamily: SERIF }}>
-                Your Source
-              </p>
-              <p className="text-[12px] opacity-50 mt-1">What you brought in, unchanged.</p>
-            </div>
-            <Link
-              href={byIdentity(SOURCE_HREF, manuscript.id)}
-              className="text-[13px] underline underline-offset-4 opacity-60 hover:opacity-90"
-            >
-              Read the Source
-            </Link>
-          </>
-        ) : (
-          <>
-            <p className="text-[13px] leading-relaxed opacity-60 mb-3">
-              Nothing feeds this work yet. This page began blank, so there is no Source behind it.
-            </p>
-            <Link
-              href={IMPORT_HREF}
-              className="text-[13px] underline underline-offset-4 opacity-60 hover:opacity-90"
-            >
-              Bring something in
-            </Link>
-          </>
+        /* Belongings: sentence first, thing second, home stated. The bring
+           gesture is the consent event; un-belonging deletes nothing. */
+        return (
+          <MaterialsDrawer
+            work={unitedWork ?? (works.length === 1 ? works[0] : null)}
+            manuscript={manuscript}
+            manuscripts={manuscripts}
+            onChanged={reloadWorks}
+          />
         );
       case 'structure':
         return manuscript ? (
@@ -318,11 +297,28 @@ export default function WriterCanvasPage() {
         >
           {headline}
         </h1>
+        {/* The becoming — the member's one statement, in their words, shown
+            only when the member's declaration united work and table. */}
+        {unitedWork?.purpose && (
+          <p
+            className="text-[13px] leading-relaxed opacity-60 mt-1.5 max-w-md italic"
+            style={{ fontFamily: SERIF }}
+          >
+            {unitedWork.purpose}
+          </p>
+        )}
         {/* Orientation, not measurement: authored facts only. */}
         {draftMeta && (
           <p className="text-[12.5px] mt-1.5 italic" style={{ color: PRESS.accent, opacity: 0.85 }}>
             drafting
             {draftMeta.updatedAt ? ` · last touched ${formatWhen(draftMeta.updatedAt)}` : ''}
+          </p>
+        )}
+        {/* Legitimate now, and only now: the belonging is the member's own
+            declaration, so saying it is honest display, not drawn containment. */}
+        {unitedWork && manuscript && (
+          <p className="text-[13px] opacity-55 mt-2">
+            On the table: {manuscriptLabel} — a form of this work, declared by you.
           </p>
         )}
         {/* Several manuscripts, arrived without naming one: say which rule
