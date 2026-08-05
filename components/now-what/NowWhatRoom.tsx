@@ -681,6 +681,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           sessionRef: sessionRef.current,
           spiralogicPhase: phase,
           fieldContext: fieldContext ?? null,
+          // The placing gesture: the member entered through a dimension door,
+          // so what they keep from this session places itself in that
+          // dimension's area of the Flourishing Field.
+          ...(entryDimension ? { dimension: entryDimension } : {}),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -706,6 +710,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         sessionRef: sessionRef.current,
         spiralogicPhase: tag,
         fieldContext: fieldContext ?? null,
+        ...(entryDimension ? { dimension: entryDimension } : {}),
       }),
     });
     const json = await res.json().catch(() => ({}));
