@@ -18,6 +18,10 @@ import {
   type PracticeFieldStatus,
 } from '@/lib/types/practiceField';
 import { validateFieldGuidance, renderFieldGuidance } from '@/lib/practiceField/fieldGuidance';
+import {
+  compileFieldCorpusComposability,
+  type PractitionerSourceInput,
+} from '@/lib/practiceField/sourceAuthority';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // READ
@@ -258,9 +262,30 @@ export async function getFieldGuidanceByFieldId(fieldId: string): Promise<FieldG
  * compose*. That signal is provenance, not permission.
  *
  * When ratification lands, this becomes a real check; it does not become `true`.
+ *
+ * ── Ratification landing (2026-08-05) ─────────────────────────────────────
+ * This is now a REAL check, routed entirely through the compiler in
+ * lib/practiceField/sourceAuthority.ts (docs/governance/
+ * PRACTITIONER_FIELD_AUTHORITY_SCHEMA.md Part 1). It stays `false` exactly
+ * when no source backs the field's corpus — the caller passes no `sources`,
+ * or passes sources that do not compile to composable — and can only ever
+ * return `true` by a source resolving through the compiler (status
+ * 'ratified' + source_relationship.state 'validated' + a primary or
+ * validated-derived-from-primary chain).
+ *
+ * No caller in this file passes `sources` yet — there is no wiring that
+ * fetches `practitioner_sources` for a field, and building that fetch +
+ * the retrieval boundary (spec Part 3) is explicitly NOT authorized by the
+ * spec (§4.3: "nothing in this file may be cited as protection for anything
+ * running in production" until the compiler AND the retrieval boundary are
+ * both built and wired). So every existing call site below still resolves
+ * to `false`, unchanged in behavior — only the reasoning path is real now.
  */
-export function corpusIsComposable(_field: PracticeField): boolean {
-  return false;
+export function corpusIsComposable(
+  _field: PracticeField,
+  sources: PractitionerSourceInput[] = []
+): boolean {
+  return compileFieldCorpusComposability(sources).composable;
 }
 
 export function formatFieldContextForRoom(field: PracticeField | null): string {
