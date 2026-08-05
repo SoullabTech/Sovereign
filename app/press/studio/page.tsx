@@ -227,20 +227,39 @@ export default function AuthorStudioHome() {
           </div>
         )}
 
-        {/* ── A declared work, and nothing written yet. ─────────────────────
-            SLICE 2 (2026-08-02). Until now this state offered exactly one
-            door: "Import Manuscript". So a member who had named what they
-            were working on could do everything in the Studio except write it,
-            and the room was usable only by people who had already finished
-            something somewhere else. Walked 2026-08-01 — it did exactly that.
+        {/* ── Nothing written yet. ──────────────────────────────────────────
+            SLICE 2 (2026-08-02) added a "Start writing" door to this state,
+            but gated it on `work` — and `arrivalWork()` returns a work ONLY
+            when the member has EXACTLY ONE declared. So the door stood open
+            in one narrow state and was shut in every other:
 
-            Writing is the primary act, so it is the primary action. Import
-            stays, as the other way to begin — not as the entrance. */}
-        {phase === 'none' && work && (
+              · nothing declared, nothing written  → "Import Manuscript" only
+              · exactly one work declared          → Start writing
+              · two or more works declared         → "Import Manuscript" only
+
+            A writer who had declared nothing, and a writer who had declared
+            two things, were both told — in a room called a Studio — that to
+            begin writing they must already have written. That is the exact
+            defect Slice 2 was created to remove; it removed it for one state
+            and left it standing in the others. Found 2026-08-05 by the
+            founder, who could not start writing in his own Studio.
+
+            Writing is the primary act in ALL of these states, so it is the
+            primary action in all of them. Import stays as the other way to
+            begin — never as the entrance.
+
+            ⛔ Do not re-gate this on `work`. Naming WHICH work a member
+            returned to is a real question `arrivalWork` is right to decline
+            to guess — but declining to name the work may never withhold the
+            page. Arrival framing and the writing action are different
+            questions; only the first is ambiguous when several works exist. */}
+        {phase === 'none' && (
           <section>
             <h2 className="text-[13px] tracking-[0.2em] uppercase opacity-40 mb-4">Begin</h2>
             <p className="text-[16px] leading-relaxed opacity-75 mb-8 max-w-md">
-              Begin where the work is alive.
+              {work
+                ? 'Begin where the work is alive.'
+                : 'Begin with a blank page. Nothing has to exist first.'}
             </p>
             <div className="flex flex-wrap items-center gap-5">
               <button
@@ -265,28 +284,7 @@ export default function AuthorStudioHome() {
             )}
             <p className="text-[13px] leading-relaxed opacity-45 mt-6 max-w-md">
               A blank page, kept for you. You can name it whenever you want to — or not at all.
-            </p>
-          </section>
-        )}
-
-        {/* ── No work declared and no book. Unchanged: the import threshold. ── */}
-        {phase === 'none' && !work && (
-          <section>
-            <h2 className="text-[13px] tracking-[0.2em] uppercase opacity-40 mb-4">Begin</h2>
-            <p className="text-[16px] leading-relaxed opacity-75 mb-8 max-w-md">
-              Bring in a manuscript you have already written, and it becomes the ground you work
-              from.
-            </p>
-            <Link
-              href={IMPORT_HREF}
-              className="inline-block px-7 py-3 text-[14px] tracking-wide"
-              style={{ background: PRESS.accent, color: PRESS.ink }}
-            >
-              Import Manuscript
-            </Link>
-            <p className="text-[13px] leading-relaxed opacity-45 mt-6 max-w-md">
-              What you bring in is kept as your Source and never altered. A Working Draft is made
-              alongside it — that is the copy you write in.
+              Anything you bring in instead is kept as your Source and never altered.
             </p>
           </section>
         )}
