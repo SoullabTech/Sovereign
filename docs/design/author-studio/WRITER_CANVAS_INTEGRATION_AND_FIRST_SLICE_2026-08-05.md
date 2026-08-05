@@ -348,6 +348,14 @@ framing. The observer watches. First question: *where does their
 attention go when they return?* Capture the first click · first
 hesitation · first assumption · first phrase.
 
+**Do not rescue the creator** (founder guard). If they hesitate: do not
+explain, do not point, do not say *"what we intended was…"*, do not teach
+the Work model. The hesitation is often the most valuable data — a person
+reaching for the wrong thing may be revealing that the room's metaphor is
+wrong; a person asking a question may be revealing the missing gesture.
+The observer's job is not to explain the creator; it is to **preserve the
+moment where the creator and the environment meet.**
+
 **3. Capture language before interpretation.** Statements like *"I
 thought this was where my notes went"* · *"I want to put this with
 that"* · *"I don't know what this is yet, but I don't want to lose it"*
