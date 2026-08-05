@@ -32,7 +32,15 @@ The Product Definition states it directly:
 
 ---
 
-## 2. The architectural meaning — ⛔ not "move prose into Canvas"
+## 2. 🔴🔴 SUPERSEDED — see §2bis. Retained as the record of a corrected error.
+
+⛔ The formulation below — *"Canvas shell + preserved Working Draft engine"* — was **technically
+accurate and experientially wrong.** It preserved the **software stack** as the organizing
+metaphor, which quietly reproduces the exact failure this lane exists to correct: a writer
+arriving at a **tool** rather than entering a **creative environment**. It made the editor the
+centre of gravity. ⭐⭐⭐ **The centre is the author's work, never the text editor.**
+
+## 2. The architectural meaning *(superseded — read §2bis)*
 
 ```
 Canvas shell  +  preserved Working Draft engine
@@ -48,6 +56,73 @@ Canvas shell  +  preserved Working Draft engine
 
 ⭐⭐ **The manuscript page remains implementation scaffolding.** Its persistence and editing
 infrastructure are **preserved**; ⛔ its surface is not the final member experience.
+
+---
+
+## 2bis. ⭐⭐⭐ Writer Canvas ⊃ Editing Canvas
+
+```
+                 WRITER CANVAS
+      (the environment where a work comes into being)
+
+   Capture ─ Gather ─ Shape ─ Write ─ Refine ─ Release
+                       |
+                 Editing Canvas
+        (the instrument where words are composed)
+```
+
+⭐⭐⭐ **The Editing Canvas is subordinate. It is essential, but it is not sovereign.**
+
+| **Writer Canvas** — the environment | **Editing Canvas** — the instrument |
+|---|---|
+| the author's creative environment | the professional writing instrument |
+| the evolving body of work | where sentences are formed |
+| the relationship between source, insight, structure and expression | where drafts are edited and revised |
+| *How does this work come into being?* | *How do I compose and edit words?* |
+| spans the whole arc | belongs primarily to **Write** |
+
+⛔ **Writer Canvas contains Editing Canvas. NOT the reverse.**
+
+### The constitutional principle
+
+> ⭐⭐⭐ **Do not confuse a writing instrument with an author's environment.**
+> A writing instrument serves **composition**. An author's environment serves **creation**.
+> The platform must support both — ⛔ they are not interchangeable.
+
+### The acceptance test
+
+> ⛔ A writer opens it and thinks **"Where do I type?"** — **we failed.**
+> ✅ A writer opens it and thinks **"I can work here."** — **we succeeded.**
+
+⭐⭐ It tests the **felt relationship with the environment**, ⛔ not a feature checklist — and it is
+answerable in the first second. ⚠️ A good editor can pass *"did you forget the software"*; ⛔ only a
+studio passes this.
+
+### Layout relationship — ⛔ must not become another dashboard
+
+```
+LEFT — Context          CENTER — Work              RIGHT — Intelligence
+what am I working on?   Writer Canvas              MAIA reflection
+sources                 Editing Canvas             questions
+structure                 when writing             connections
+materials                                          observations
+```
+
+⛔ **The right panel is NOT an AI assistant panel.** It is a **thinking companion that remains
+separate from authorship.**
+
+> ⭐⭐⭐ **MAIA may illuminate the work. MAIA may not become the place where the work originates.**
+
+### `/book-studio/canvas`, precisely
+
+✅ A reference for **spatial thinking**. It asks: *how might creative material be arranged? how
+might a workspace feel alive?*
+⛔ It does **not** answer: *what is the ontology of an author's life work?* ⭐ That answer belongs to
+the Writer Canvas.
+
+⭐⭐ **What this changes about the design brief:** we are no longer designing *an AI writing tool*.
+We are designing **a professional creative environment with an excellent writing instrument inside
+it.**
 
 ---
 
