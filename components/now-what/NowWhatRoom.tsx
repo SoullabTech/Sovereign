@@ -60,7 +60,7 @@ type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread { title: string; origin: 'maia_proposed' | 'member_authored'; }
 interface CarryPayload {
   proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean; kind?: ThreadKind }[];
-  created: { title: string; shareWithPractitioner: boolean }[];
+  created: { title: string; shareWithPractitioner: boolean; kind?: 'question' }[];
 }
 interface CellCandidate {
   element: SpiralElement;
@@ -231,6 +231,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
   const [authored, setAuthored] = useState<AuthoredThread[]>([]);
   const [revising, setRevising] = useState<Record<string, string>>({});
   const [newThread, setNewThread] = useState('');
+  // The member's explicit "a question I'm living" gesture on their own thread —
+  // mirrors the share checkbox pattern; without it a self-authored question
+  // could never reach the "Questions you're living" room (silent-loss bug 2).
+  const [newThreadIsQuestion, setNewThreadIsQuestion] = useState(false);
   const [guided, setGuided] = useState(true);
   const [showFrame, setShowFrame] = useState(false);
   // Per-thread sharing consent: keyed by thread title; absent = private (default).
@@ -773,7 +777,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
     });
     const trimmed = newThread.trim();
-    const created = trimmed ? [{ title: trimmed, shareWithPractitioner: !!shared[trimmed] }] : [];
+    const created = trimmed
+      ? [{ title: trimmed, shareWithPractitioner: !!shared[trimmed], ...(newThreadIsQuestion ? { kind: 'question' as const } : {}) }]
+      : [];
     return { proposals, created };
   }
 
@@ -1553,15 +1559,26 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
             onChange={e => setNewThread(e.target.value)}
           />
           {newThread.trim() && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!!shared[newThread.trim()]}
-                onChange={e => setShared(s => ({ ...s, [newThread.trim()]: e.target.checked }))}
-                className="accent-slate-300 w-4 h-4"
-              />
-              <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
-            </label>
+            <>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newThreadIsQuestion}
+                  onChange={e => setNewThreadIsQuestion(e.target.checked)}
+                  className="accent-slate-300 w-4 h-4"
+                />
+                <span className="text-slate-300 text-xs font-light">A question I&rsquo;m living</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!shared[newThread.trim()]}
+                  onChange={e => setShared(s => ({ ...s, [newThread.trim()]: e.target.checked }))}
+                  className="accent-slate-300 w-4 h-4"
+                />
+                <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
+              </label>
+            </>
           )}
         </div>
 
