@@ -38,13 +38,26 @@ const MAX_TITLE_CHARS = 300;
 interface WorkRow {
   id: string;
   title: string | null;
+  purpose: string | null;
+  form: string | null;
+  stage: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface ExpressionRow {
+  living_work_id: string;
+  expression_type: string;
+  expression_id: string;
+  declared_at: string;
 }
 
 const shape = (r: WorkRow) => ({
   id: r.id,
   title: r.title,
+  purpose: r.purpose,
+  form: r.form,
+  stage: r.stage,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -58,13 +71,40 @@ export async function GET(request: NextRequest) {
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const rows = await query<WorkRow>(
-      `SELECT id, title, created_at, updated_at
+      `SELECT id, title, purpose, form, stage, created_at, updated_at
          FROM living_works
         WHERE member_id = $1
         ORDER BY updated_at DESC`,
       [memberId]
     );
-    return NextResponse.json({ works: rows.rows.map(shape) });
+
+    /* Each work carries what the member declared into it (Work Home, Slice 6).
+       Raw declarations only — type, id, when. What the id points at (its
+       title, its size) is the expression's own truth and stays with the
+       expression's own reads; this route asserts nothing beyond "the member
+       said this belongs here". Member-scoped through the owning work. */
+    const expressions = await query<ExpressionRow>(
+      `SELECT e.living_work_id, e.expression_type, e.expression_id, e.declared_at
+         FROM living_work_expressions e
+         JOIN living_works w ON w.id = e.living_work_id
+        WHERE w.member_id = $1
+        ORDER BY e.declared_at ASC`,
+      [memberId]
+    );
+    const byWork = new Map<string, { expressionType: string; expressionId: string; declaredAt: string }[]>();
+    for (const e of expressions.rows) {
+      const list = byWork.get(e.living_work_id) ?? [];
+      list.push({
+        expressionType: e.expression_type,
+        expressionId: e.expression_id,
+        declaredAt: e.declared_at,
+      });
+      byWork.set(e.living_work_id, list);
+    }
+
+    return NextResponse.json({
+      works: rows.rows.map((r) => ({ ...shape(r), expressions: byWork.get(r.id) ?? [] })),
+    });
   } catch (error) {
     console.error('[living-works] list failed', error);
     return NextResponse.json({ error: 'Could not read your works' }, { status: 500 });
@@ -105,7 +145,7 @@ export async function POST(request: NextRequest) {
     const created = await query<WorkRow>(
       `INSERT INTO living_works (member_id, title)
        VALUES ($1, $2)
-       RETURNING id, title, created_at, updated_at`,
+       RETURNING id, title, purpose, form, stage, created_at, updated_at`,
       [memberId, title]
     );
     return NextResponse.json({ work: shape(created.rows[0]) }, { status: 201 });

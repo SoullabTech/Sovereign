@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from './pressTheme';
 import type { LivingWork, LivingWorksPhase } from './useLivingWorks';
@@ -46,9 +46,30 @@ interface YourWorkProps {
    * the headline above them.
    */
   arrivalWorkId: string | null;
+  /**
+   * What Home wants shown inside each work's block, beneath its name and
+   * controls (Work Home, Slice 6: the work's declared expressions). This
+   * component keeps owning the declaration acts; what a work HOLDS is Home's
+   * composition, threaded through so the work reads as one presence rather
+   * than a name here and its contents somewhere else.
+   */
+  renderWorkBody?: (work: LivingWork) => ReactNode;
+  /**
+   * TRUE when the surrounding zone already names this space (Work Home's
+   * centre says "The Work"); the internal "Your work" heading would label the
+   * same thing twice.
+   */
+  hideHeading?: boolean;
 }
 
-export default function YourWork({ phase, works, reload, arrivalWorkId }: YourWorkProps) {
+export default function YourWork({
+  phase,
+  works,
+  reload,
+  arrivalWorkId,
+  renderWorkBody,
+  hideHeading,
+}: YourWorkProps) {
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -141,17 +162,14 @@ export default function YourWork({ phase, works, reload, arrivalWorkId }: YourWo
     <section className="mb-14">
       {/* When arrival is founded on the work, the page headline is the heading.
           Repeating "Your work" here would label the same thing twice. */}
-      {!arrivalWorkId && heading}
+      {!arrivalWorkId && !hideHeading && heading}
 
       {works.length === 0 && !declaring && (
         <>
           {/* Grounded in what declaring actually does: it creates a work, and
-              the title is optional. The earlier line — "a work can hold
-              everything that belongs to it" — described the substrate, not the
-              product: living_work_expressions has no writer, so nothing is
-              held yet. Slice 5 pointed arrival at this sentence, which made
-              the overstatement load-bearing. This says the present truth
-              without narrowing what a work may later become. */}
+              the title is optional. Since Slice 6 a work CAN hold writing —
+              but only writing the member places there afterwards, so this
+              sentence still promises nothing the declaration itself does. */}
           <p className="text-[15px] leading-relaxed opacity-70 mb-6 max-w-md">
             A work can begin before you know what form it will take.
           </p>
@@ -304,6 +322,8 @@ export default function YourWork({ phase, works, reload, arrivalWorkId }: YourWo
               )}
             </div>
           )}
+
+          {renderWorkBody?.(w)}
         </div>
       ))}
 
