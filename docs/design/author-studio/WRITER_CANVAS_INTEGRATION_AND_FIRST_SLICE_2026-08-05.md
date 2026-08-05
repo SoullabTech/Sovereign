@@ -181,6 +181,22 @@ final wording:
 
 (The collaborator is NOT in this walk set.)
 
+**The elder walk carries the memoir ruling (founder, 2026-08-05, ruled in
+a parallel session): memoir is a stress test, not a feature.** A request
+for a "memoir function" was ruled down — the failure mode to refuse is
+*"seeing a powerful human reality and immediately turning it into a
+product feature."* The question is not "how do we build memoir?" but
+**"does our Work model support a person whose material is an entire
+life?"** The elder is not asking for a memoir app; the elder is asking:
+*"can this room hold the accumulated relationship between a person and
+their own life?"* — arguably the deepest test of Writer Studio, and it is
+tested **through the existing room** (gathering · materials · renewal ·
+history · expression are already the organs), never added as another
+room. Recognition boundary intact: the creator discovers what their life
+material means; the system preserves and reflects only declared
+relationships. **No memoir pathway until the creator walk reveals a
+missing gesture.**
+
 **The first-glance observation (founder instruction):** during the walk,
 watch **where the creator naturally looks first after returning** — not
 what they click; what their attention seeks. Work? Materials? The writing
