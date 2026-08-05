@@ -6,12 +6,19 @@
  *
  * Holds: the coach · upcoming conversations (live sessions substrate) ·
  * previous conversations (derived from what the member carried out of them) ·
- * what the member brought forward (Bring Forward, live).
+ * what the member brought forward (Bring Forward, live) · where you are
+ * (program placement, member-declared — absorbed from the position room per
+ * NOW_WHAT_ROOM_ONTOLOGY_CONSOLIDATION_2026-08-05.md D-B).
  *
  * HONEST ABSENCE: notes-from-coach and direct messaging do NOT render —
  * they arrive with the encrypted content lane (see
  * NOW_WHAT_HOME_DOOR_MAP_2026-08-05.md §9). No placeholders, no "coming
  * soon". Larry is the relationship anchor; MAIA does not appear in this room.
+ *
+ * "Where you are" reads field_program_positions (member-scoped GET) and
+ * nothing else — no inference, no scoring, no sequence progress. Programs
+ * the member never entered do not appear. Only rendered when a fieldContext
+ * is present; absent otherwise, one honest line when empty.
  */
 
 import { Suspense, useEffect, useState } from 'react';
@@ -30,6 +37,14 @@ interface Payload {
   sessions: { ref: string; at: string; carried: number }[];
   upcoming?: { start: string; end: string; status: string; locationType: string | null }[];
 }
+interface PositionRow {
+  programSlug: string;
+  programTitle: string | null;
+  focalPoint: string;
+  statedBy: 'member_confirmed' | 'member_stated' | 'practitioner_seeded';
+  footing: 'confirmed-current' | 'assumed-from-last-known';
+  confirmedAt: string | null;
+}
 
 function whenLabel(iso: string): string {
   const d = new Date(iso);
@@ -43,6 +58,19 @@ function dayLabel(iso: string): string {
 }
 const HOW: Record<string, string> = { video: 'video', phone: 'phone', in_person: 'in person' };
 
+// The register each row speaks in — who said this, and does it still stand.
+function footingLine(p: PositionRow): string {
+  if (p.statedBy === 'practitioner_seeded') {
+    return 'placed by your practitioner — not yet yours until you say so';
+  }
+  if (p.footing === 'confirmed-current') {
+    return p.statedBy === 'member_stated'
+      ? `in your own words · ${dayLabel(p.confirmedAt ?? '')}`
+      : `you confirmed this · ${dayLabel(p.confirmedAt ?? '')}`;
+  }
+  return `last known — not reconfirmed since ${dayLabel(p.confirmedAt ?? '')}`;
+}
+
 function CoachingRoomInner() {
   const params = useSearchParams();
   const fieldContext = params?.get('fieldContext') ?? undefined;
@@ -50,6 +78,7 @@ function CoachingRoomInner() {
   const session = useMemberSession();
   const [data, setData] = useState<Payload | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [positions, setPositions] = useState<PositionRow[] | null>(null);
 
   useEffect(() => {
     if (session !== 'in') return;
@@ -66,6 +95,26 @@ function CoachingRoomInner() {
     })();
     return () => { cancelled = true; };
   }, [session, ctx]);
+
+  // Program placement — member-declared only. Absent without a fieldContext;
+  // quiet on read failure (no separate error UI — an honest absence is enough).
+  useEffect(() => {
+    if (session !== 'in' || !fieldContext) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch(
+          `/api/now-what/program-position?fieldContext=${encodeURIComponent(fieldContext)}`,
+        );
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json?.error || 'unavailable');
+        if (!cancelled) setPositions(json.positions ?? []);
+      } catch {
+        if (!cancelled) setPositions([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session, fieldContext]);
 
   if (session === 'unknown') return null;
   if (session === 'out') {
@@ -138,6 +187,34 @@ function CoachingRoomInner() {
         )}
         <a className="nwp-door" href={`/now-what/field${ctx}`}>Everything you&rsquo;ve kept &rarr;</a>
       </section>
+
+      {/* Where you are — program placement, as the member declared it.
+          Only you can say where you are; absent without a fieldContext. */}
+      {fieldContext && (
+        <section className="nwp-sec">
+          <p className="nwp-label">Where you are</p>
+          {positions === null && <p className="nwp-quiet" style={{ marginTop: 12 }}>Opening&hellip;</p>}
+          {positions !== null && positions.length === 0 && (
+            <p className="nwp-quiet" style={{ marginTop: 12 }}>
+              You haven&rsquo;t placed yourself in a program here yet — only you
+              can say where you are, and nothing appears until you do.
+            </p>
+          )}
+          {positions !== null && positions.length > 0 && (
+            <>
+              {positions.map((p) => (
+                <div key={p.programSlug} style={{ marginTop: 14 }}>
+                  <p className="nwp-prov" style={{ marginTop: 0 }}>{p.programTitle ?? 'This field'}</p>
+                  <p className="nwp-member">
+                    {p.statedBy === 'member_stated' ? `“${p.focalPoint}”` : p.focalPoint}
+                  </p>
+                  <p className="nwp-prov">{footingLine(p)}</p>
+                </div>
+              ))}
+            </>
+          )}
+        </section>
+      )}
 
       {/* Previous conversations — derived from what the member carried out. */}
       {past.length > 0 && (
