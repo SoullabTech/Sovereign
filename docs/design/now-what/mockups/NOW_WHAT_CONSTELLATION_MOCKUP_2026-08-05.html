@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Now What? — The Constellation of Rooms (Mockup)</title>
+<style>
+  :root {
+    --ink: #29231c; --ink-soft: #57503f; --ink-faint: #8f8474;
+    --bronze: #8a6a35; --rule: rgba(90,76,58,0.16);
+    --box: rgba(255,253,248,0.78); --box-warm: rgba(240,229,209,0.6);
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --sans: -apple-system, 'Helvetica Neue', 'Segoe UI', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: var(--sans); color: var(--ink);
+    background: radial-gradient(ellipse 90% 40% at 50% -5%, rgba(196,164,110,0.16), transparent 60%), linear-gradient(#f8f5ef, #f3eee5);
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame { max-width: 74rem; margin: 0 auto; padding: 26px 40px 90px; }
+  .serif { font-family: var(--serif); font-weight: 400; }
+  .top { display:flex; justify-content:space-between; align-items:baseline; }
+  .wordmark { font-size:13px; letter-spacing:.35em; text-transform:uppercase; color:var(--bronze); text-decoration:none; }
+  .loc { font-size:12px; color:var(--ink-faint); font-weight:300; }
+
+  /* ── THE HOME: an orientation field of six doors — lighter than today ── */
+  .arrive { margin-top: 40px; text-align:center; }
+  .brand { font-size:11px; letter-spacing:.4em; text-transform:uppercase; color:var(--ink-faint); }
+  h1 { font-family:var(--serif); font-size:38px; font-weight:400; margin-top:14px; }
+  .subtitle { font-size:16px; font-weight:300; color:var(--ink-soft); margin-top:8px; }
+  .upcomingline { margin-top:18px; font-size:13.5px; font-weight:300; color:var(--ink-faint); }
+  .upcomingline b { font-family:var(--serif); font-weight:400; color:var(--ink-soft); }
+
+  .doors { margin-top:40px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .door {
+    display:block; text-decoration:none; color:var(--ink);
+    border:1px solid var(--rule); background:var(--box); border-radius:16px;
+    padding:26px 28px; min-height:150px;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .door:hover { transform:translateY(-2px); box-shadow:0 14px 34px rgba(64,52,36,.12); border-color:rgba(138,106,53,.4); }
+  .door .dname { font-family:var(--serif); font-size:20px; }
+  .door .dmean { font-size:11px; letter-spacing:.25em; text-transform:uppercase; color:var(--ink-faint); margin-top:6px; }
+  .door .dline { font-size:13.5px; font-weight:300; color:var(--ink-soft); line-height:1.6; margin-top:10px; }
+  .door .dverb { display:inline-block; margin-top:14px; font-size:13.5px; color:var(--bronze); }
+  .door.warm { background:var(--box-warm); }
+
+  /* ── THE ROOMS: each promise, deeper ── */
+  .roomsec { margin-top:64px; }
+  .roomhead { display:flex; align-items:baseline; gap:14px; border-top:1px solid var(--rule); padding-top:34px; }
+  .roomhead .rname { font-family:var(--serif); font-size:26px; }
+  .roomhead .rmean { font-size:11px; letter-spacing:.25em; text-transform:uppercase; color:var(--ink-faint); }
+  .roombody { margin-top:18px; border:1px solid var(--rule); background:var(--box); border-radius:18px; padding:30px 34px; }
+  .quiet { font-size:14px; font-weight:300; color:var(--ink-soft); line-height:1.7; }
+  .member { font-family:var(--serif); font-size:18px; line-height:1.55; color:var(--ink); }
+  .prov { font-size:12px; font-weight:300; color:var(--ink-faint); margin-top:8px; }
+  .fwd { color:var(--bronze); }
+  .gated { font-size:11.5px; font-weight:300; color:var(--ink-faint); font-style:italic; }
+  .roomdoor { display:inline-block; margin-top:16px; font-size:13.5px; color:var(--bronze); text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(138,106,53,.35); }
+  .hr { border:0; height:1px; background:var(--rule); margin:20px 0; }
+
+  .fdomains { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:16px; }
+  .fdom { border:1px solid var(--rule); border-radius:14px; padding:18px 20px; background:rgba(255,253,248,.5); }
+  .fdom .fname { font-family:var(--serif); font-size:17px; }
+  .fdom .ffac { font-size:12px; font-weight:300; color:var(--ink-faint); margin-top:3px; }
+  .fdom .facts { font-size:12.5px; font-weight:300; color:var(--ink-soft); margin-top:10px; line-height:1.6; }
+  .fdom .fdoors { margin-top:12px; font-size:12.5px; }
+  .fdom .fdoors a { color:var(--bronze); text-decoration:none; margin-right:14px; }
+
+  .tworow { display:grid; grid-template-columns:1fr 1fr; gap:26px; }
+  @media (max-width:920px){ .doors{grid-template-columns:1fr;} .fdomains{grid-template-columns:1fr;} .tworow{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="top">
+    <a class="wordmark" href="#">Now What?</a><span class="loc">Home</span>
+  </div>
+
+  <!-- ═══ THE HOME — orientation field. Lighter than today: doors, not content. ═══ -->
+  <div class="arrive">
+    <p class="brand">Larry Closs · Executive Coaching</p>
+    <h1>Welcome back, Maya.</h1>
+    <p class="subtitle">A private space for what comes next — your life, your meaning, your flourishing as a human being.</p>
+    <p class="upcomingline">Next conversation with Larry — <b>Thursday, August 14 · 10:00</b></p>
+  </div>
+
+  <div class="doors">
+    <a class="door warm" href="#room-reflection">
+      <p class="dname">The question you are carrying</p>
+      <p class="dmean">Inquiry</p>
+      <p class="dline serif" style="font-style:italic;">&ldquo;Now that I have proven myself — what is all of this for?&rdquo;</p>
+      <span class="dverb">Continue exploring &rarr;</span>
+    </a>
+    <a class="door" href="#room-living">
+      <p class="dname">What you are living</p>
+      <p class="dmean">Embodiment</p>
+      <p class="dline">One evening a week that belongs to my family, protected.</p>
+      <span class="dverb">Reflect on your practice &rarr;</span>
+    </a>
+    <a class="door" href="#room-flourishing">
+      <p class="dname">What you are cultivating</p>
+      <p class="dmean">Flourishing</p>
+      <p class="dline">Relationships · Meaning · Presence · Health · Contribution · Time</p>
+      <span class="dverb">Explore your flourishing &rarr;</span>
+    </a>
+    <a class="door" href="#room-coaching">
+      <p class="dname">Your coaching relationship</p>
+      <p class="dmean">Human relationship</p>
+      <p class="dline">Larry Closs — one piece brought forward, next conversation August 14.</p>
+      <span class="dverb">Continue with Larry &rarr;</span>
+    </a>
+    <a class="door" href="#room-story">
+      <p class="dname">Your story</p>
+      <p class="dmean">Becoming over time</p>
+      <p class="dline">Turning points, realizations, chapters — in your own words.</p>
+      <span class="dverb">View your story &rarr;</span>
+    </a>
+    <a class="door" href="#room-maia">
+      <p class="dname">A place to think</p>
+      <p class="dmean">Reflection companion</p>
+      <p class="dline">Clarify a decision, explore a tension, listen to yourself think.</p>
+      <span class="dverb">Think something through &rarr;</span>
+    </a>
+  </div>
+
+  <!-- ═══ THE ROOMS — each promise, deeper ═══ -->
+
+  <div class="roomsec" id="room-reflection">
+    <div class="roomhead"><span class="rname">Reflection Room</span><span class="rmean">Inquiry · exists today</span></div>
+    <div class="roombody">
+      <p class="quiet">You are carrying —</p>
+      <p class="member" style="font-style:italic; margin-top:8px;">&ldquo;Now that I have proven myself — what is all of this for?&rdquo;</p>
+      <p class="member serif" style="font-size:24px; margin-top:14px;">What&rsquo;s moving in it now?</p>
+      <p class="quiet" style="margin-top:14px;">Think, write, speak, or talk it through — capture what deserves keeping, prepare for coaching. No AI answers, no computed advice; your words remain the only input.</p>
+    </div>
+  </div>
+
+  <div class="roomsec" id="room-living">
+    <div class="roomhead"><span class="rname">Living Practice Room</span><span class="rmean">Embodiment · room exists, door is new</span></div>
+    <div class="roombody">
+      <p class="quiet">Last time you chose this practice:</p>
+      <p class="member" style="font-style:italic; margin-top:8px;">One evening a week that belongs to my family, protected.</p>
+      <p class="member serif" style="font-size:24px; margin-top:14px;">What happened?</p>
+      <p class="quiet" style="margin-top:14px;">Not homework — the question is <i>what is life showing me?</i> What you notice becomes part of your material; what you choose next becomes your practice.</p>
+    </div>
+  </div>
+
+  <div class="roomsec" id="room-flourishing">
+    <div class="roomhead"><span class="rname">Flourishing Field</span><span class="rmean">Flourishing · new room — a landscape, not a chat</span></div>
+    <div class="roombody">
+      <p class="quiet">The dimensions of a flourishing life — each a living area where your reflections, moments, and contributions gather. No scores, no assessments, no progress.</p>
+      <div class="fdomains">
+        <div class="fdom">
+          <p class="fname">Relationships</p><p class="ffac">connection · belonging · love</p>
+          <p class="facts">People who matter. Conversations that shaped you. Moments of connection.</p>
+          <p class="fdoors"><a href="#">Add a reflection</a><a href="#">Explore</a></p>
+        </div>
+        <div class="fdom">
+          <p class="fname">Meaning &amp; purpose</p><p class="ffac">what your life is for</p>
+          <p class="facts">What matters now. What you are devoted to. What outlasts you.</p>
+          <p class="fdoors"><a href="#">Add a reflection</a><a href="#">Explore</a></p>
+        </div>
+        <div class="fdom">
+          <p class="fname">Presence</p><p class="ffac">experiencing the life you built</p>
+          <p class="facts">Moments you were fully there. What you savored. What you noticed.</p>
+          <p class="fdoors"><a href="#">Add a reflection</a><a href="#">Explore</a></p>
+        </div>
+        <div class="fdom">
+          <p class="fname">Health &amp; energy</p><p class="ffac">movement · sleep · vitality</p>
+          <p class="facts">How you are caring for the foundation beneath everything else.</p>
+          <p class="fdoors"><a href="#">Add a reflection</a><a href="#">Explore</a></p>
+        </div>
+        <div class="fdom">
+          <p class="fname">Contribution</p><p class="ffac">what you give beyond yourself</p>
+          <p class="facts">Where your gifts serve something larger. Who you are helping become.</p>
+          <p class="fdoors"><a href="#">Add a reflection</a><a href="#">Explore</a></p>
+        </div>
+        <div class="fdom">
+          <p class="fname">Time</p><p class="ffac">enough of it for what matters</p>
+          <p class="facts">Do you own your time, or does your schedule own you?</p>
+          <p class="fdoors"><a href="#">Add a reflection</a><a href="#">Explore</a></p>
+        </div>
+      </div>
+      <p class="gated" style="margin-top:14px;">A reflection added here is placed under its dimension by you — that placing gesture is what lets the field gather. Nothing is auto-categorized.</p>
+    </div>
+  </div>
+
+  <div class="roomsec" id="room-coaching">
+    <div class="roomhead"><span class="rname">Coaching Room</span><span class="rmean">Human relationship · new room</span></div>
+    <div class="roombody">
+      <div class="tworow">
+        <div>
+          <p class="member serif">Larry Closs</p>
+          <hr class="hr">
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Upcoming</b></p>
+          <p class="quiet" style="margin-top:6px;">Thursday, August 14 · 10:00 — video.<br>
+          <a class="roomdoor" href="#room-reflection" style="margin-top:8px;">Prepare for this conversation &rarr;</a></p>
+          <hr class="hr">
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Previous conversations</b></p>
+          <p class="quiet" style="margin-top:6px;">August 2 — you carried one thing forward.<br>July 28 — you carried one thing forward.</p>
+        </div>
+        <div>
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">What you brought forward</b></p>
+          <p class="member" style="font-size:16px; margin-top:8px;">What does success mean to me now?</p>
+          <p class="prov">in your words · August 2 · <span class="fwd">brought into your coaching</span></p>
+          <hr class="hr">
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Notes from Larry</b></p>
+          <p class="gated" style="margin-top:6px;">Arrives with the protected notes lane — Larry&rsquo;s notes reach you encrypted, attributed, and only when he shares them.</p>
+          <hr class="hr">
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Write to Larry</b></p>
+          <p class="gated" style="margin-top:6px;">Arrives with the protected message lane — private, between conversations, never a substitute for them.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="roomsec" id="room-story">
+    <div class="roomhead"><span class="rname">Life Story</span><span class="rmean">Becoming over time · narrative environment, not a conversation</span></div>
+    <div class="roombody">
+      <p class="quiet">The story you are creating — turning points, realizations, chapters. Nothing is synthesized for you; this is where you encounter your own becoming.</p>
+      <hr class="hr">
+      <p class="member" style="font-size:16px;">When I slow down, I can feel my own life again.</p>
+      <p class="prov">a realization · in your words · August 2</p>
+      <p class="member" style="font-size:16px; margin-top:14px;">One evening a week that belongs to my family, protected.</p>
+      <p class="prov">a commitment · in your words · July 28</p>
+      <p class="gated" style="margin-top:14px;">Chapters emerge when you name them — a naming gesture, never an automatic timeline.</p>
+    </div>
+  </div>
+
+  <div class="roomsec" id="room-maia">
+    <div class="roomhead"><span class="rname">A Place to Think</span><span class="rmean">Reflection companion · exists today</span></div>
+    <div class="roombody">
+      <p class="member serif" style="font-size:24px;">Where&rsquo;s your attention right now?</p>
+      <p class="quiet" style="margin-top:12px;">A quiet space with MAIA — clarify a decision, explore a tension, organize your thinking before it needs to be certain. MAIA helps you think. Larry helps you grow. You remain the author.</p>
+    </div>
+  </div>
+
+  <div class="roomsec" id="room-calendar">
+    <div class="roomhead"><span class="rname">My Calendar</span><span class="rmean">Time · the continuity spine — a timeline of the relationship, never a productivity system</span></div>
+    <div class="roombody">
+      <p class="quiet">The question this room answers: <i>when does this relationship continue?</i> The calendar is the bridge between moments — the center remains your work.</p>
+      <hr class="hr">
+      <div class="tworow">
+        <div>
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Conversations</b></p>
+          <p class="member" style="font-size:16px; margin-top:8px;">Thursday, August 14 · 10:00</p>
+          <p class="prov">Conversation with Larry · video</p>
+          <p class="quiet" style="margin-top:8px; font-style:italic;">Prepare: what have you noticed since we last met?</p>
+          <a class="roomdoor" href="#room-reflection">Prepare &rarr;</a>
+        </div>
+        <div>
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Your commitments</b></p>
+          <p class="member" style="font-size:16px; margin-top:8px;">One evening a week that belongs to my family, protected.</p>
+          <p class="prov">member-created · never assigned</p>
+          <hr class="hr">
+          <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Moments you marked</b></p>
+          <p class="gated" style="margin-top:6px;">Important moments appear when you mark them — a member gesture, never an activity log.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="roomsec" id="room-practitioner-cal" style="opacity:.85;">
+    <div class="roomhead"><span class="rname">Practitioner Calendar</span><span class="rmean">Larry&rsquo;s world · a SEPARATE surface under his studio — never on the member&rsquo;s page</span></div>
+    <div class="roombody">
+      <p class="quiet">The practitioner question: <i>what relationships and commitments need my attention?</i> — never "manage clients like appointments."</p>
+      <hr class="hr">
+      <p class="quiet"><b style="font-family:var(--serif); font-weight:400; color:var(--ink);">Today</b></p>
+      <p class="member" style="font-size:16px; margin-top:8px;">10:00 — Maya · Executive Coaching</p>
+      <p class="prov">Brought forward: &ldquo;What does success mean to me now?&rdquo; · in her words · August 2</p>
+      <p class="gated" style="margin-top:12px;">Continuity signals show ONLY what the member explicitly brought forward or shared. Never private reflections, never MAIA conversations, never hidden memory. Position placed by Larry renders as his act; the member&rsquo;s words render as theirs.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
