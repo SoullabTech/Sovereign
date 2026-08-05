@@ -88,7 +88,7 @@ export default function StudioShell({
   const currentLabel =
     groups
       .flatMap((g) => g.destinations)
-      .find((d) => isCurrent(d, pathname, tab))?.label ?? 'Author Studio';
+      .find((d) => isCurrent(d, pathname, tab))?.label ?? 'Writer’s Studio';
 
   const nav = (
     <nav className="space-y-7">
@@ -163,7 +163,7 @@ export default function StudioShell({
           aria-hidden="true"
           className="w-6 h-6 opacity-90"
         />
-        <p className="text-[12px] tracking-[0.25em] uppercase opacity-50">Author Studio</p>
+        <p className="text-[12px] tracking-[0.25em] uppercase opacity-50">Writer’s Studio</p>
       </div>
       {/* One line, held at a constant height. The rail must not settle into
           its answer by shifting the navigation beneath it. */}
@@ -195,7 +195,7 @@ export default function StudioShell({
         style={{ borderColor: PRESS.rule, background: 'rgba(26,21,19,0.92)' }}
       >
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] tracking-[0.25em] uppercase opacity-45">Author Studio</p>
+          <p className="text-[10px] tracking-[0.25em] uppercase opacity-45">Writer’s Studio</p>
           <p className="text-[14px] truncate">{currentLabel}</p>
         </div>
         <button

@@ -254,9 +254,9 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   },
   {
     id: 'studio',
-    label: 'Author Studio',
+    label: "Writer's Studio",
     icon: Briefcase,
-    tooltip: 'Where your book takes form',
+    tooltip: 'Where your work takes form',
     kind: 'route',
     // The House enters the Studio ENVIRONMENT (Layer 2), never a working
     // surface and never the import form. Until 2026-07-30 this pointed at
@@ -264,7 +264,11 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     // textarea with no Studio around it — Layer 1 → Layer 3, skipping the
     // environment entirely, which is why the Studio appeared not to exist.
     // Still NOT /studio (that is the practitioner Pro Studio).
-    route: '/press/studio',
+    // RULED 2026-08-05 (Kelly): the environment is the WRITER'S Studio and
+    // it does not live under /press — writing is the practice, a book is one
+    // expression (WRITER_STUDIO_AUTHOR_STUDIO_DISTINCTION). /press/studio
+    // redirects here so old links keep working.
+    route: '/writers-studio',
     audience: 'all',
     nativePolicy: 'web', // /press/studio is not in the native bundle; bridge on native for now
     interim: true, // placement is settled; the room set behind it is still growing

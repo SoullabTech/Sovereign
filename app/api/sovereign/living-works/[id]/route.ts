@@ -43,9 +43,18 @@ const MAX_TITLE_CHARS = 300;
 interface WorkRow {
   id: string;
   title: string | null;
+  purpose: string | null;
+  form: string | null;
+  stage: string | null;
   created_at: string;
   updated_at: string;
 }
+
+const MAX_PURPOSE_CHARS = 2000;
+const MAX_FORM_CHARS = 100;
+
+/** The five stage words a member may claim. Orientation, never progress. */
+const STAGES = ['capturing', 'developing', 'writing', 'refining', 'sharing'] as const;
 
 export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
@@ -56,8 +65,13 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = (await request.json().catch(() => ({}))) as { title?: unknown };
-    if (!('title' in body)) {
+    const body = (await request.json().catch(() => ({}))) as {
+      title?: unknown;
+      purpose?: unknown;
+      form?: unknown;
+      stage?: unknown;
+    };
+    if (!('title' in body) && !('purpose' in body) && !('form' in body) && !('stage' in body)) {
       return NextResponse.json({ error: 'nothing to change' }, { status: 400 });
     }
 
@@ -80,21 +94,100 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       title = body.title;
     }
 
+    /* Purpose (Work Home, Slice 6): the member's stated intention for the
+       work. Same member-authored rules as title — NEVER_AUTHORED_BY_THE_SYSTEM
+       lists purpose; the only writer is this member act. Null un-states it. */
+    let purpose: string | null = null;
+    if (body.purpose !== null && body.purpose !== undefined) {
+      if (typeof body.purpose !== 'string') {
+        return NextResponse.json({ error: 'purpose must be text' }, { status: 400 });
+      }
+      if (body.purpose.length > MAX_PURPOSE_CHARS) {
+        return NextResponse.json(
+          { error: `purpose is longer than ${MAX_PURPOSE_CHARS} characters` },
+          { status: 400 }
+        );
+      }
+      if (body.purpose.trim().length === 0) {
+        return NextResponse.json({ error: 'blank_purpose' }, { status: 400 });
+      }
+      purpose = body.purpose;
+    }
+
+    /* Form and stage (Slice 6e): member-declared, same precedent as title and
+       purpose — the NEVER_AUTHORED_BY_THE_SYSTEM list governs authorship, not
+       existence, and the only writer is this member act. Form is the member's
+       own word ("Book", "Blog series"); stage is one of five canonical words
+       and is orientation, never progress — the system never advances it. */
+    let form: string | null = null;
+    if (body.form !== null && body.form !== undefined) {
+      if (typeof body.form !== 'string') {
+        return NextResponse.json({ error: 'form must be text' }, { status: 400 });
+      }
+      if (body.form.length > MAX_FORM_CHARS) {
+        return NextResponse.json(
+          { error: `form is longer than ${MAX_FORM_CHARS} characters` },
+          { status: 400 }
+        );
+      }
+      if (body.form.trim().length === 0) {
+        return NextResponse.json({ error: 'blank_form' }, { status: 400 });
+      }
+      form = body.form;
+    }
+
+    let stage: string | null = null;
+    if (body.stage !== null && body.stage !== undefined) {
+      if (typeof body.stage !== 'string' || !(STAGES as readonly string[]).includes(body.stage)) {
+        return NextResponse.json({ error: 'unknown_stage' }, { status: 400 });
+      }
+      stage = body.stage;
+    }
+
+    // Only the fields the member actually addressed change; COALESCE-style
+    // partial updates would silently keep a value the member tried to clear.
+    const sets: string[] = [];
+    const params: unknown[] = [id, memberId];
+    if ('title' in body) {
+      params.push(title);
+      sets.push(`title = $${params.length}`);
+    }
+    if ('purpose' in body) {
+      params.push(purpose);
+      sets.push(`purpose = $${params.length}`);
+    }
+    if ('form' in body) {
+      params.push(form);
+      sets.push(`form = $${params.length}`);
+    }
+    if ('stage' in body) {
+      params.push(stage);
+      sets.push(`stage = $${params.length}`);
+    }
+
     // Member-scoped in the predicate, not after the fact: another member's id
     // cannot reach this row at all.
     const updated = await query<WorkRow>(
       `UPDATE living_works
-          SET title = $3, updated_at = now()
+          SET ${sets.join(', ')}, updated_at = now()
         WHERE id = $1 AND member_id = $2
-      RETURNING id, title, created_at, updated_at`,
-      [id, memberId, title]
+      RETURNING id, title, purpose, form, stage, created_at, updated_at`,
+      params
     );
     if (updated.rows.length === 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     const r = updated.rows[0];
     return NextResponse.json({
-      work: { id: r.id, title: r.title, createdAt: r.created_at, updatedAt: r.updated_at },
+      work: {
+        id: r.id,
+        title: r.title,
+        purpose: r.purpose,
+        form: r.form,
+        stage: r.stage,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      },
     });
   } catch (error) {
     console.error('[living-works] name failed', error);
