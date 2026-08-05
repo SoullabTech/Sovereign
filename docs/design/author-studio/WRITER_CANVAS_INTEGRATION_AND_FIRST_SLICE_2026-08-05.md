@@ -330,6 +330,63 @@ course, world-building, teaching archive, creative practice):
 
 The room is in the right state to receive evidence.
 
+### The Creator Encounter protocol (founder, opening the evidence phase)
+
+The next phase is not another design phase: **governed build → lived
+encounter → evidence.** Intentionally simple.
+
+**1. Prepare the room — by not changing it.** ⛔ No polish before the
+walk. The post-design temptation to "improve the experience" before
+anyone sees it would contaminate the evidence. The room is encountered
+exactly as it exists: Writer Studio doorway → Writer Canvas → the
+relationship loop → Work drawer → Materials → The Salt Meadow on the
+table.
+
+**2. Run the unprompted walk.** The creator receives no architecture
+explanation, no philosophy, no "here is how we designed it," no persona
+framing. The observer watches. First question: *where does their
+attention go when they return?* Capture the first click · first
+hesitation · first assumption · first phrase.
+
+**3. Capture language before interpretation.** Statements like *"I
+thought this was where my notes went"* · *"I want to put this with
+that"* · *"I don't know what this is yet, but I don't want to lose it"*
+are not comments to summarize. **They are design evidence.**
+
+**4. The authorization gate.** After the walk, every proposed change must
+answer: *what human action was already trying to happen that the room
+failed to honor?* Disqualified answers: "it would be nice…" · "creators
+might want…" · "competitors have…" · "AI could…". The only qualifying
+answer: *"the creator repeatedly tried to do X, and the room could not
+support X."* Then — and only then — a design conversation opens.
+
+**5. The first likely questions — answered by behavior, never by
+explanation:** Does the creator understand what a Work is (do they treat
+it differently from a document)? Does material naturally become belonging
+(*"this belongs with this"* vs *"can you organize this for me?"*)? Does
+returning feel like continuation (they leave, they come back — what are
+they returning to: a file, a project, or a Work)? Does the Work expand
+beyond writing (the world-builder and elder walks — can someone feel at
+home before they know the final expression)?
+
+**6. The next artifact is a field note — not a roadmap, not a feature
+list:**
+
+```
+Creator:
+Context:
+First thing they did:
+First thing they expected:
+Exact words:
+Gesture they attempted:
+Where the room supported:
+Where the room failed:
+```
+
+That field note becomes the next legitimate design input. The room is no
+longer waiting for another blueprint. **It is waiting for its first
+teacher.**
+
 ### The milestone, read by the founder (recorded)
 
 What the verified loop proved is not the row, the drawers, or the
