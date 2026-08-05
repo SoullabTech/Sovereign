@@ -47,7 +47,7 @@ import { useSearchParams } from 'next/navigation';
 import { RoomHoloflower } from '@/components/maia/vision-studio/RoomHoloflower';
 import { invitedFieldContext, UNINVITED_COPY } from '@/lib/nowWhat/invitation';
 
-const ACCENT = '#ffe27a';
+const ACCENT = '#c9a35e';
 
 /**
  * Where a member lands after signing in when the arrival named no destination.
@@ -61,10 +61,10 @@ const ACCENT = '#ffe27a';
 const SIGNED_IN_LANDING = '/now-what/map';
 
 const inputClass =
-  'w-full rounded-lg border border-slate-600/60 bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#ffe27a]/60';
+  'w-full rounded-lg border border-slate-600/60 bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#c9a35e]/60';
 
 const buttonClass =
-  'w-full rounded-full border px-6 py-2.5 text-sm transition-all hover:shadow-[0_0_30px_rgba(255,226,122,0.25)] disabled:opacity-40';
+  'w-full rounded-full border px-6 py-2.5 text-sm transition-all hover:shadow-[0_0_30px_rgba(201,163,94,0.25)] disabled:opacity-40';
 
 function storeSession(member: { id: string; name?: string; username?: string }, token?: string) {
   try {
@@ -85,7 +85,7 @@ function DoorFrame({ children }: { children: React.ReactNode }) {
     <div className="relative max-w-md mx-auto px-4 py-14">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_10%,rgba(125,175,255,0.10),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_10%,rgba(196,164,110,0.10),transparent_70%)]"
       />
       {children}
     </div>
@@ -145,7 +145,7 @@ function SignInForm({ next, seedIdentifier, notice }: { next: string; seedIdenti
       <input className={inputClass} placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
       {notice && <p className="text-sm font-light" style={{ color: ACCENT }}>{notice}</p>}
       {error && <p role="alert" className="text-red-400 text-sm font-light">{error}</p>}
-      <button type="submit" disabled={busy} className={buttonClass} style={{ color: ACCENT, borderColor: 'rgba(255,226,122,0.45)' }}>
+      <button type="submit" disabled={busy} className={buttonClass} style={{ color: ACCENT, borderColor: 'rgba(201,163,94,0.45)' }}>
         {busy ? 'Opening the door…' : 'Sign in and enter'}
       </button>
     </form>
@@ -200,7 +200,7 @@ function CreateForm({ next, onExistingIdentity }: { next: string; onExistingIden
       <input className={inputClass} placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
       <input className={inputClass} placeholder="Choose a password (8+ characters)" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
       {error && <p role="alert" className="text-red-400 text-sm font-light">{error}</p>}
-      <button type="submit" disabled={busy} className={buttonClass} style={{ color: ACCENT, borderColor: 'rgba(255,226,122,0.45)' }}>
+      <button type="submit" disabled={busy} className={buttonClass} style={{ color: ACCENT, borderColor: 'rgba(201,163,94,0.45)' }}>
         {busy ? 'Opening the door…' : 'Create my key and enter'}
       </button>
     </form>
@@ -217,7 +217,7 @@ function ModeTab({ active, label, onClick }: { active: boolean; label: string; o
       className="rounded-full px-4 py-1.5 text-xs border transition-all"
       style={
         active
-          ? { color: ACCENT, borderColor: 'rgba(255,226,122,0.45)', background: 'rgba(255,226,122,0.08)' }
+          ? { color: ACCENT, borderColor: 'rgba(201,163,94,0.45)', background: 'rgba(201,163,94,0.08)' }
           : { color: '#94a3b8', borderColor: 'rgba(148,163,184,0.35)' }
       }
     >
@@ -330,7 +330,7 @@ function ArriveInner() {
 
 export default function NowWhatArrivePage() {
   return (
-    <div className="min-h-screen bg-[#062a42] text-slate-200">
+    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
       <Suspense fallback={<ArrivalResolving />}>
         <ArriveInner />
       </Suspense>

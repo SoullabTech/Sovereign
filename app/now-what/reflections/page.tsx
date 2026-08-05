@@ -30,7 +30,7 @@ function ReflectionsInner() {
       <div className="relative max-w-2xl mx-auto px-4 py-10 space-y-6">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(125,175,255,0.08),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_35%_at_50%_0%,rgba(196,164,110,0.08),transparent_70%)]"
         />
 
         <div className={panel} style={{ animation: 'nwrFadeUp 0.55s ease both' }}>
@@ -96,7 +96,7 @@ function ReflectionsInner() {
 
 export default function NowWhatReflectionsPage() {
   return (
-    <div className="min-h-screen bg-[#062a42] text-slate-200">
+    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
       <Suspense fallback={null}>
         <ReflectionsInner />
       </Suspense>
