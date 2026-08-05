@@ -2,8 +2,35 @@
 
 > **Status**: Final design object of the Work Continuity Layer lane,
 > following the accepted Work drawer, Materials (+ paper walk M1–M7), and
-> Structure (+ paper walk S1–S5) designs. Design + slice *proposal* —
-> **the slice is not authorized until the founder rules it.**
+> Structure (+ paper walk S1–S5) designs.
+>
+> **RULED (founder, 2026-08-05): the first slice is AUTHORIZED, narrowly.**
+> - **Authorized**: the smallest complete Work relationship loop (create →
+>   declare becoming → bring one material → see reflected → return). The
+>   goal is not to complete the house; **the goal is to prove that the
+>   house has a living center.**
+> - **Not authorized**: full Materials system · full Structure system ·
+>   Collaboration · Learning layer · MAIA intelligence layer · new Canvas
+>   zones.
+> - **Becoming storage**: test the existing `purpose` field first. The
+>   question is *"what does the creator naturally want to say?"*, not
+>   *"what metadata does a Work need"* — a creator's one statement is often
+>   both why-this-exists and what-it-is-becoming. A separate field may
+>   emerge only if creators reveal the split; creating it now would force a
+>   conceptual distinction before they do.
+> - **Expression declaration confirmed as the load-bearing move**: a
+>   relationship action, not an object action — it establishes
+>   Work → Expression → current artifact, which is what allows one Work →
+>   many forms, forms changing over time, renewal without replacement,
+>   expression without identity collapse.
+> - **Acceptance walk (ruled)**: novelist · scholar · blogger ·
+>   elder/teacher · **world-builder** — asking one question: *did the
+>   creator experience a deeper relationship with the Work, or did we
+>   merely add another label?* Former → the foundation is real. Latter →
+>   the gesture has not yet earned its place.
+> - **Two coexisting tests**: universal — *"I can work here"*; world-builder
+>   — *"I can live in my worlds here"* (supports exploration before
+>   expression; prevents collapsing imagination into documents).
 >
 > The chain of questions, now complete:
 >
