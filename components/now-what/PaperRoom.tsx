@@ -65,7 +65,9 @@ export function PaperRoom({
     <div className="nwp-root">
       <div className="nwp-frame">
         <div className="nwp-top">
-          <a className="nwp-wordmark" href={homeHref}>Now What?</a>
+          <a className="nwp-wordmark" href={homeHref}>
+            Now What<span className="nwp-wordmark-q">?</span>
+          </a>
           <span className="nwp-loc">{location}</span>
         </div>
         {children}
@@ -86,10 +88,13 @@ export function PaperRoom({
         }
         .nwp-frame { max-width: 46rem; margin: 0 auto; padding: 26px 24px 90px; }
         .nwp-top { display: flex; justify-content: space-between; align-items: baseline; }
+        /* Direction B wordmark (brand pass 2026-08-05): words in ink, the
+           question mark in bronze — a question, not a label. */
         .nwp-wordmark {
           font-size: 13px; letter-spacing: 0.35em; text-transform: uppercase;
-          color: ${BRONZE}; text-decoration: none;
+          color: ${INK}; text-decoration: none;
         }
+        .nwp-wordmark-q { color: ${BRONZE}; }
         .nwp-loc { font-size: 12px; color: ${INK_FAINT}; font-weight: 300; }
         .nwp-h1 { font-family: ${SERIF}; font-size: 30px; font-weight: 400; margin-top: 38px; }
         .nwp-lede { font-size: 15px; font-weight: 300; color: ${INK_SOFT}; line-height: 1.7; margin-top: 10px; max-width: 40rem; }
