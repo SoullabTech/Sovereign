@@ -132,12 +132,12 @@ describe('dispatchHouseDestination', () => {
     expect(h.pushed).toEqual([]);
   });
 
-  it('Studio enters the Author Studio environment, bridged on native', () => {
+  it("Studio enters the Writer's Studio environment, bridged on native", () => {
     expect(find('studio').interim).toBe(true);
-    expect(find('studio').route).toBe('/press/studio');
+    expect(find('studio').route).toBe('/writers-studio');
     const h = harness(true);
     dispatchHouseDestination(find('studio'), h.ctx);
-    expect(h.pushed).toEqual(['/open-web?to=%2Fpress%2Fstudio']);
+    expect(h.pushed).toEqual(['/open-web?to=%2Fwriters-studio']);
   });
 
   // The regression this guards: until 2026-07-30 the House opened straight onto

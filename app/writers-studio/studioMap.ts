@@ -82,7 +82,7 @@ export const STUDIO_MAP: StudioGroup[] = [
         id: 'studio-home',
         label: 'Home',
         availability: 'available',
-        href: '/press/studio',
+        href: '/writers-studio',
       },
     ],
   },
