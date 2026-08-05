@@ -1,5 +1,13 @@
 # INHABITABLE ARCHITECTURE — the design law for all interface work
 
+**Governing authority**: `docs/canon/INHABITABLE_ARCHITECTURE_STANDARD.md`
+(founder-ratified canon, 2026-08-05) is the governing statement of this law
+for every AIN/Soullab environment. This document is its working companion —
+the same law with the implementation protocol (floor-plan-before-code), the
+sovereignty rider on adaptive state, the doorway law, and the visual-grammar
+law. If the two ever diverge, the canon standard wins and this file gets
+corrected in the same PR.
+
 **Provenance**: Founder-authored (Kelly, 2026-08-05), recorded in substance
 verbatim. This is the instruction-layer change that ends the pattern of
 rendering the ontology of the database instead of the architecture of the
