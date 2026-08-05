@@ -32,6 +32,28 @@ and run the Larry walk — as Larry, not as founder or developer: does he
 understand what this is · know how to use it with a client · does it extend
 his coaching · does he want to bring clients here. Then one executive.
 
+**FREEZE (in force from deploy, founder 2026-08-05)**: no more rooms, no
+more programs UI, no navigation redesign, no new AI features, no
+architecture changes. The only valid next input is a person encountering
+the deployed screen. Loop: *build → encounter → learn → adjust*.
+
+**Encounter protocol (pre-registered observations — record what happens,
+change nothing):**
+
+*Larry encounter* — observe whether he:
+1. recognizes his coaching model;
+2. understands where his programs live;
+3. sees MAIA as extending rather than replacing him;
+4. knows how he would introduce this to a CEO.
+
+*CEO encounter* — observe whether they:
+1. understand what this is;
+2. know what to do next;
+3. find it valuable;
+4. experience it as coaching or as software.
+
+Findings feed the next decision; they do not authorize in-walk fixes.
+
 **Status**: Founder-directed reset (Kelly, 2026-08-04). This document is the
 experiential target for the Home transformation. It supersedes the pending
 acceptance-walk referent for the Home — the walk re-targets the transformed
