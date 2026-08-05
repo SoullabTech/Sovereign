@@ -221,7 +221,9 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
       <div className="nwh-frame">
         {/* Quiet header — wordmark is the place's name; Home is the location. */}
         <div className="nwh-top">
-          <a className="nwh-wordmark" href={`/now-what/map${ctx}`}>Now What?</a>
+          <a className="nwh-wordmark" href={`/now-what/map${ctx}`}>
+            Now What<span className="nwh-wordmark-q">?</span>
+          </a>
           <span className="nwh-loc">Home</span>
         </div>
 
@@ -341,10 +343,13 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         }
         .nwh-frame { max-width: 74rem; margin: 0 auto; padding: 26px 40px 80px; }
         .nwh-top { display: flex; justify-content: space-between; align-items: baseline; }
+        /* Direction B wordmark (brand pass 2026-08-05): words in ink, the
+           question mark in bronze — a question, not a label. */
         .nwh-wordmark {
           font-size: 13px; letter-spacing: 0.35em; text-transform: uppercase;
-          color: ${BRONZE}; text-decoration: none;
+          color: ${INK}; text-decoration: none;
         }
+        .nwh-wordmark-q { color: ${BRONZE}; }
         .nwh-loc { font-size: 12px; color: ${INK_FAINT}; font-weight: 300; }
         .nwh-error { margin-top: 24px; color: #8c2f22; font-size: 14px; font-weight: 300; }
 
