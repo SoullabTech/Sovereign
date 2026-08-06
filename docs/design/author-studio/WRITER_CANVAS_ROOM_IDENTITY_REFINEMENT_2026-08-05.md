@@ -160,3 +160,38 @@ available if divergent concepts are still wanted. Deliverable for this
 direction: a high-fidelity interactive mockup of the Writing Canvas in
 the Book Canvas grammar (`mockups/writer-canvas-drafting-table.html`) —
 design artifact only; implementation awaits the founder's read of it.
+
+
+## The sibling contract (founder, final directive — the implementation lineage)
+
+Book Studio Canvas is the **reference implementation** for spatial
+architecture. The ask, verbatim in substance: *extract the Book Studio
+canvas architecture into a shared canvas framework, then rebuild Writer
+Canvas as the writing implementation of that framework, leaving Book
+Studio as the publishing implementation.*
+
+| Book Studio Canvas | Writer Canvas |
+|---|---|
+| Page is central | Manuscript is central |
+| Inspector shows page blocks | Inspector shows notes, MAIA, sources, writing context |
+| Left rail shows pages | Left rail shows manuscript structure / navigator |
+| Top bar has publishing tools | Top bar has writing tools |
+| Focus: design | Focus: writing |
+
+- **Replacement, not reskin** — the current Writer Canvas layout is
+  replaceable. Not preserved: its panel architecture, nested viewer,
+  page-reader metaphor, app-shell/document split. Preserved: the data
+  model, save/version behavior, materials/structure/history
+  capabilities, routes where practical, the visual identity.
+- **Reuse the layout architecture, never clone Book Studio wholesale** —
+  page blocks, inspector assumptions, proofing controls, and
+  print-specific state must not leak into the writing environment. The
+  clean split: same canvas shell · different work object · different
+  supporting tools · shared manuscript underneath.
+- **Do not destroy Book Studio** — extract the shell; two siblings on
+  one foundation, evolving together instead of drifting.
+- The writer's felt sentence on entry: *"I'm still in Author Studio."*
+- The lifecycle on one canvas: **Write → Refine → Design → Publish** —
+  the canvas stays familiar while the tools evolve.
+- **Ruled gate:** inspect Book Studio first → state the replacement plan
+  clearly → only then implementation.
