@@ -115,3 +115,48 @@ the manuscript lives on, not a full-width text region.
   creator evidence, but whether its build lands **before or after** the
   production acceptance walk of the current slice is a founder call —
   the walk instrument's do-not-change guard applies to the walked room.
+
+
+## THE DIRECTION (founder breakthrough, 2026-08-05 late — supersedes panel refinement entirely)
+
+The refinement path ended: two rounds of optimization still produced
+"application → panels → document viewer." The founder's diagnosis:
+**Work, Materials, Structure, and History are DESTINATIONS, not
+simultaneous UI regions** — every navigation choice is another PLACE, not
+another panel. Structure is something you *step back to see* — chapters
+laid out on a big table — then you walk back to the manuscript. The
+step-back → reorganize → return movement is part of the creative process
+and the UI honors it instead of showing both states at once.
+
+Then the breakthrough: **Writer Canvas should borrow the spatial grammar
+of the house's own Book Canvas** (/book-studio/canvas) — not its
+publishing tools, its metaphor. The Book Canvas already understands
+place: *here is the page; everything else supports the page.* Writer
+Studio currently says: *here is the application; inside it is a
+manuscript.* That is backwards.
+
+- **The manuscript IS the canvas** — the thing the whole environment is
+  built around. Left = materials/support · center = the work · right =
+  context/MAIA · top = quiet tools.
+- **The manuscript feels physical** — a surface with weight, a drafting
+  table. (The Book Canvas page-weight sanctions the surface the earlier
+  flat-canvas analysis had removed: the sibling grammar rules.)
+- **The rail inverts to support**: Writing · Source · Structure ·
+  History — four things that support writing; the canvas never
+  disappears.
+- **Lifecycle unification**: IDEA → WRITER CANVAS (thinking) → BOOK
+  CANVAS (designing) → PUBLISH — siblings, not separate applications.
+  *Same canvas, same manuscript, different tools appear; nothing is
+  exported anywhere; the manuscript simply matures.* Author Studio =
+  Writing → Design → Publish on one canvas.
+- The challenge, in the founder's words: **"adapt the publishing
+  canvas's spatial grammar to the act of writing"** — giving Author
+  Studio one coherent visual language from first draft to publication.
+
+Process note, recorded honestly: the three-concepts first-principles
+exercise (ordered mid-conversation) was superseded by the founder's own
+selection of this direction before the exercise ran; it remains
+available if divergent concepts are still wanted. Deliverable for this
+direction: a high-fidelity interactive mockup of the Writing Canvas in
+the Book Canvas grammar (`mockups/writer-canvas-drafting-table.html`) —
+design artifact only; implementation awaits the founder's read of it.
