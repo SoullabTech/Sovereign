@@ -38,8 +38,10 @@ import MaterialsDrawer from './MaterialsDrawer';
  *                a folded one.
  *
  * What this room deliberately does NOT claim:
- *   · that the manuscript belongs to the Work. Nothing writes
- *     living_work_expressions yet — so the head of the room names the thing
+ *   · that the manuscript belongs to the Work by anything other than the
+ *     member's own placement. living_work_expressions is written by the
+ *     project placement gesture and read here to orient the Canvas around the
+ *     containing work; without such a row the head of the room names the thing
  *     ACTUALLY on the table (the manuscript), and the declared Work lives in
  *     the Work drawer, explicitly unlinked. The v0.1 shape (Work as headline,
  *     manuscript beneath it) read as belonging the moment a member had both:
