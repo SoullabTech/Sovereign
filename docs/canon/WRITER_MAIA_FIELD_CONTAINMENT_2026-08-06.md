@@ -160,8 +160,20 @@ Enforced now (§4.3). Unavailable, and honestly named as unavailable, until Phas
 
 ### 4.3 The enforcing mechanism
 
-`scripts/check-writer-field-containment.ts` — run as `npm run check:writer-containment`,
-wired into the pre-commit gate written by `scripts/setup-githooks.sh`.
+`scripts/check-writer-field-containment.ts` — run as `npm run check:writer-containment`.
+
+⚠️ **Activation state, stated precisely.** `check:writer-containment` is wired into
+`scripts/setup-githooks.sh` and becomes active only after that installer is run. It is not
+present in the currently installed local pre-commit hook. So:
+
+| | |
+|---|---|
+| Check exists | ✅ yes |
+| Installer can activate it | ✅ yes (`./scripts/setup-githooks.sh`) |
+| Currently installed hook runs it | ⛔ no |
+| CI enforces it | ⛔ no |
+
+None of these layers blocks a merge.
 
 It encodes three rules:
 
