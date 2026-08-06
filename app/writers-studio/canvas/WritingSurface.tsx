@@ -119,14 +119,43 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
     const cbRef = useRef({ onMeta, onCheckpointed, onHeadings });
     cbRef.current = { onMeta, onCheckpointed, onHeadings };
 
-    // One scroll: the field grows; the easel (the shell's <main>) scrolls.
+    /**
+     * One scroll: the field grows; the easel (the shell's <main>) scrolls.
+     *
+     * Measured against the founder's own 209-page book (~380,000 chars):
+     * setting height to 'auto' and reading scrollHeight forces a full layout
+     * of an enormous element, and doing it inside render meant once per
+     * keystroke — the writer would feel their own book getting heavier as
+     * they typed. Batched to one measurement per animation frame, and the
+     * write is skipped when the height has not actually changed (the common
+     * case: typing within a line).
+     */
+    const rafRef = useRef<number | null>(null);
+    const lastHeightRef = useRef(0);
     const autosize = () => {
-      const el = fieldRef.current;
-      if (!el) return;
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight}px`;
+      if (rafRef.current !== null) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        const el = fieldRef.current;
+        if (!el) return;
+        const prev = el.style.height;
+        el.style.height = 'auto';
+        const next = el.scrollHeight;
+        if (next === lastHeightRef.current && prev) {
+          el.style.height = prev;
+          return;
+        }
+        lastHeightRef.current = next;
+        el.style.height = `${next}px`;
+      });
     };
-    useEffect(autosize, [content, phase]);
+    useEffect(() => {
+      autosize();
+      return () => {
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      };
+    }, [content, phase]);
 
     useEffect(() => {
       setSurface(loadSurfaceChoice(manuscriptId));

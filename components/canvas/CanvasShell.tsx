@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import type { CanvasContext, CanvasRegistry } from './registry';
 
 /**
  * THE AIN CANVAS — the shell.
@@ -51,6 +52,15 @@ interface CanvasShellProps {
   toolbar?: ReactNode;
   navigator?: ReactNode;
   support?: ReactNode;
+  /**
+   * Registered extensions (components/canvas/registry.ts) — how every future
+   * studio furnishes the rails without a new interface. Panels render after
+   * any static node given above, and a panel that is not relevant right now
+   * does not render at all: absence over emptiness.
+   */
+  registry?: CanvasRegistry;
+  /** Required with `registry`: what the work at the center is, right now. */
+  context?: CanvasContext;
   /** The work — rendered on the easel, centered, in the one scroll region. */
   children: ReactNode;
 }
@@ -60,8 +70,26 @@ export default function CanvasShell({
   toolbar,
   navigator,
   support,
+  registry,
+  context,
   children,
 }: CanvasShellProps) {
+  const panels = (region: 'navigator' | 'context') =>
+    registry && context
+      ? registry.panelsFor(region, context).map((p) => (
+          <section key={p.id} className="px-4 py-5">
+            <p className="text-[9px] font-bold tracking-[0.2em] uppercase opacity-40 mb-3">
+              {p.label}
+            </p>
+            {p.render(context)}
+          </section>
+        ))
+      : null;
+
+  const navigatorPanels = panels('navigator');
+  const contextPanels = panels('context');
+  const hasNavigator = Boolean(navigator) || (navigatorPanels?.length ?? 0) > 0;
+  const hasSupport = Boolean(support) || (contextPanels?.length ?? 0) > 0;
   return (
     <div
       className="h-screen flex flex-col overflow-hidden"
@@ -79,12 +107,13 @@ export default function CanvasShell({
       {/* The workspace: rails are chrome; the easel is the place. Rails
           collapse away on small screens rather than crowding the work. */}
       <div className="flex-1 min-h-0 flex">
-        {navigator && (
+        {hasNavigator && (
           <aside
             className="hidden md:block w-[220px] shrink-0 border-r overflow-y-auto"
             style={{ background: theme.chrome, borderColor: theme.border }}
           >
             {navigator}
+            {navigatorPanels}
           </aside>
         )}
 
@@ -94,12 +123,13 @@ export default function CanvasShell({
           <div className="min-h-full flex justify-center px-4 md:px-8 py-8">{children}</div>
         </main>
 
-        {support && (
+        {hasSupport && (
           <aside
             className="hidden lg:block w-[240px] shrink-0 border-l overflow-y-auto"
             style={{ background: theme.chrome, borderColor: theme.border }}
           >
             {support}
+            {contextPanels}
           </aside>
         )}
       </div>

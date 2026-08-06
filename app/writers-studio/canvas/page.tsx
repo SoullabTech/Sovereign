@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import CanvasShell, { type CanvasTheme } from '@/components/canvas/CanvasShell';
+import { createCanvasRegistry, type CanvasContext } from '@/components/canvas/registry';
 import { PRESS, SERIF } from '../pressTheme';
 import { IMPORT_HREF } from '../studioMap';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
@@ -161,7 +162,6 @@ export default function WriterCanvasPage() {
   // ── Navigator: the member's own heading lines; landing is approximate. ──
   const navigator = (
     <nav className="px-4 py-5" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
-      <p className="text-[9px] font-bold tracking-[0.2em] uppercase opacity-40 mb-3">Manuscript</p>
       {headings.length === 0 ? (
         <p className="text-[11.5px] leading-relaxed opacity-40" style={{ fontFamily: SERIF }}>
           No headings yet — your text is one continuous flow.
@@ -186,9 +186,8 @@ export default function WriterCanvasPage() {
   );
 
   // ── Support: the Work register and one honest line. Nothing else yet. ──
-  const support = (
-    <div className="px-4 py-5" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
-      <p className="text-[9px] font-bold tracking-[0.2em] uppercase opacity-40 mb-3">Work</p>
+  const workPanel = (
+    <div style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       {unitedWork ? (
         <div>
           <p className="text-[13px]" style={{ fontFamily: SERIF }}>
@@ -232,15 +231,49 @@ export default function WriterCanvasPage() {
           is where a work begins.
         </p>
       )}
-
-      <p className="text-[9px] font-bold tracking-[0.2em] uppercase opacity-40 mt-8 mb-3">
-        Reflection
-      </p>
-      <p className="text-[11px] leading-relaxed opacity-45" style={{ fontFamily: SERIF }}>
-        Reflection with MAIA will become available when this Work can carry its context.
-      </p>
     </div>
   );
+
+  /**
+   * The deployment furnishes the rails through the extension contract — the
+   * same path every future studio uses. Reflection declares itself relevant
+   * only once a Work can carry context; until then it is absent, not empty.
+   */
+  const canvasContext: CanvasContext = {
+    deployment: 'writer',
+    workId: unitedWork?.id ?? null,
+    objectId: manuscript?.id ?? null,
+    mode: 'writing',
+  };
+  const registry = createCanvasRegistry()
+    .registerPanel({
+      id: 'writer.manuscript',
+      label: 'Manuscript',
+      region: 'navigator',
+      order: 10,
+      isRelevant: () => manuscript !== null,
+      render: () => navigator,
+    })
+    .registerPanel({
+      id: 'writer.work',
+      label: 'Work',
+      region: 'context',
+      order: 10,
+      render: () => workPanel,
+    })
+    .registerPanel({
+      id: 'writer.reflection',
+      label: 'Reflection',
+      region: 'context',
+      order: 20,
+      // Absence over emptiness: no panel until the Work can carry context.
+      isRelevant: (ctx) => ctx.workId !== null,
+      render: () => (
+        <p className="text-[11px] leading-relaxed opacity-45" style={{ fontFamily: SERIF }}>
+          Reflection with MAIA will become available when this Work can carry its context.
+        </p>
+      ),
+    });
 
   // The quiet head of the work, on the sheet, in the sheet's ink.
   const head = (
@@ -257,7 +290,12 @@ export default function WriterCanvasPage() {
   );
 
   return (
-    <CanvasShell theme={WRITER_THEME} toolbar={toolbar} navigator={navigator} support={support}>
+    <CanvasShell
+      theme={WRITER_THEME}
+      toolbar={toolbar}
+      registry={registry}
+      context={canvasContext}
+    >
       {listPhase === 'loading' && (
         <p className="pt-20 text-[14px] opacity-40" style={{ fontFamily: SERIF }}>
           opening…
