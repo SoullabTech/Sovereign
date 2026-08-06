@@ -15,10 +15,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
-  assembleManuscriptMarkdown,
   computeSourceHash,
   type MemberBookSection,
 } from '@/lib/manuscript/render/renderMemberBook';
+
+/**
+ * Compose the draft's starting text from the source sections.
+ *
+ * Deliberately NOT assembleManuscriptMarkdown: that assembler writes
+ * `# `-prefixed headings because pandoc's chapter splitting depends on them,
+ * and it stays the render path's business. The draft is a WRITING SURFACE —
+ * the 2026-08-05 persona walk found the `#` scaffolding sitting inside the
+ * novelist's prose at the worktable. Headings appear here as their own plain
+ * lines, the author's words only; chapter structure stays canonical in
+ * manuscript_sections, not in draft markup.
+ */
+function composeDraftText(sections: MemberBookSection[]): string {
+  const parts: string[] = [];
+  for (const s of sections) {
+    const heading = s.heading?.trim();
+    if (heading) {
+      parts.push(heading);
+      parts.push('');
+    }
+    parts.push(s.body);
+    parts.push('');
+  }
+  return parts.join('\n');
+}
 import {
   conflictBody,
   payloadHash,
@@ -63,7 +87,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Manuscript has no sections' }, { status: 409 });
     }
 
-    const content = assembleManuscriptMarkdown(sections.rows);
+    const content = composeDraftText(sections.rows);
     const baseSourceHash = computeSourceHash(sections.rows);
 
     const draft = await query<{ id: string }>(

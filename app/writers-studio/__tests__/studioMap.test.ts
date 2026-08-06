@@ -74,6 +74,23 @@ describe('Author Studio map — what a member sees', () => {
     expect(labels).toContain('Import Manuscript');
   });
 
+  /**
+   * Writer Canvas v0.1: the room's one instrument is the writing surface, so
+   * the door exists only when there is something to put on the table. A member
+   * with no manuscript begins at Studio Home — never at an empty room.
+   */
+  it('offers the Writer Canvas only once there is something to put on the table', () => {
+    const withBook = visibleDestinations(true)
+      .flatMap((g) => g.destinations)
+      .map((d) => d.label);
+    const withoutBook = visibleDestinations(false)
+      .flatMap((g) => g.destinations)
+      .map((d) => d.label);
+
+    expect(withBook).toContain('Writer Canvas');
+    expect(withoutBook).not.toContain('Writer Canvas');
+  });
+
   it('always offers Home, so the member is never stranded on a working surface', () => {
     for (const has of [true, false]) {
       const labels = visibleDestinations(has)

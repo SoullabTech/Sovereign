@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from './pressTheme';
-import { IMPORT_HREF, SOURCE_HREF, WRITE_HREF } from './studioMap';
+import { CANVAS_HREF, IMPORT_HREF, SOURCE_HREF } from './studioMap';
 import { useCurrentManuscript } from './useCurrentManuscript';
 import { UNTITLED_EXPRESSION } from './shellIdentity';
 import { useLivingWorks } from './useLivingWorks';
@@ -61,6 +61,16 @@ const pagesLabel = (chars: number) => {
 
 const byIdentity = (href: string, manuscriptId: string) =>
   `${href}&m=${encodeURIComponent(manuscriptId)}`;
+
+/**
+ * The room, entered by identity. Navigation completeness (founder ruling,
+ * 2026-08-05, on the local acceptance walkthrough): the acceptance criterion
+ * is not "the Canvas renders" but "a member naturally arrives there through
+ * the intended architecture" — all entry paths lead into the Writer Canvas;
+ * the Working Draft remains reachable from inside the room and the rail.
+ */
+const canvasFor = (manuscriptId: string) =>
+  `${CANVAS_HREF}?m=${encodeURIComponent(manuscriptId)}`;
 
 const ICON = { size: 15, strokeWidth: 1.5 } as const;
 
@@ -204,8 +214,8 @@ export default function WriterStudioHome() {
       }
       const data = await res.json().catch(() => ({}));
       window.location.href = data?.id
-        ? `${WRITE_HREF}&m=${encodeURIComponent(data.id)}`
-        : WRITE_HREF;
+        ? canvasFor(data.id)
+        : CANVAS_HREF;
     } catch {
       setStartError('Could not reach the Studio just now. Please try again in a moment.');
     } finally {
@@ -536,7 +546,7 @@ export default function WriterStudioHome() {
                   </p>
                   <div className="flex flex-wrap items-center gap-4 text-[13px]">
                     <Link
-                      href={byIdentity(WRITE_HREF, m.id)}
+                      href={canvasFor(m.id)}
                       className="underline underline-offset-4 opacity-70 hover:opacity-100"
                     >
                       Open

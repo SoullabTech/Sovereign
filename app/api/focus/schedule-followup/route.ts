@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log weight for scheduled reminder (weight = 2, infrastructure cost)
-    let stewardship = null;
+    let stewardship: ReturnType<typeof mapStewardship> | null = null;
     if (body.memberId) {
       try {
         await logAction(body.memberId, 'reminder_scheduled', {

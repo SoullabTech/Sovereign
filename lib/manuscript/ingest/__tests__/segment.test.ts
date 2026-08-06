@@ -39,6 +39,39 @@ describe('segment (mechanical manuscript segmentation)', () => {
     expect(out.map((s) => s.heading)).toEqual(['chapter one', 'THE TURNING']);
   });
 
+  /**
+   * Five-persona walk, 2026-08-05: a real manuscript's prose-style headings
+   * ("Chapter One — The Late Frost") were invisible to the lowercase literal
+   * and the whole book collapsed to one untitled section. Case-fixed for the
+   * chapter branch ONLY — a global /i would make the ALL-CAPS branch match
+   * ordinary mixed-case prose lines.
+   */
+  it('detects capitalized "Chapter N — Title" prose headings (the persona-walk defect)', () => {
+    const text = [
+      'Chapter One — The Late Frost',
+      'Maren counted the jars twice.',
+      'Chapter Two — What Maren Kept',
+      'The letters lived in a biscuit tin.',
+    ].join('\n');
+    const out = segment(text);
+    expect(out.map((s) => s.heading)).toEqual([
+      'Chapter One — The Late Frost',
+      'Chapter Two — What Maren Kept',
+    ]);
+  });
+
+  it('a global /i must never arrive: mixed-case prose lines are not headings', () => {
+    const text = [
+      '# Real Heading',
+      'A short line of prose',
+      'Another ordinary sentence here',
+      '# Second Heading',
+      'body',
+    ].join('\n');
+    const out = segment(text);
+    expect(out.map((s) => s.heading)).toEqual(['Real Heading', 'Second Heading']);
+  });
+
   it('never invents a heading — body text is carried through unchanged', () => {
     const text = ['# H', 'line with trailing spaces   ', '\tand a tab'].join('\n');
     const out = segment(text);

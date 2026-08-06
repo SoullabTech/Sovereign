@@ -5,10 +5,6 @@
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
 jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
 jest.mock('@/lib/manuscript/render/renderMemberBook', () => ({
-  assembleManuscriptMarkdown: jest.fn(
-    (sections: Array<{ heading: string | null; body: string }>) =>
-      sections.map((s) => (s.heading ? `# ${s.heading}\n\n${s.body}` : s.body)).join('\n\n')
-  ),
   computeSourceHash: jest.fn(() => 'hash-abc123'),
 }));
 
@@ -129,7 +125,10 @@ describe('POST — create from source', () => {
     expect(payload.id).toBe(DRAFT);
     expect(payload.revisionCount).toBe(1);
     expect(payload.baseSourceHash).toBe('hash-abc123');
-    expect(payload.content).toBe('# One\n\nFirst words.\n\nSecond words.');
+    // Real composition (no mock): headings as plain lines, never `# ` markup —
+    // the draft is a writing surface; markdown scaffolding stays in the render
+    // path (persona-walk fix, 2026-08-05).
+    expect(payload.content).toBe('One\n\nFirst words.\n\nSecond words.\n');
 
     // Source sections were only ever SELECTed — never INSERT/UPDATE/DELETEd.
     const sectionWrites = mockQuery.mock.calls.filter(
@@ -143,7 +142,7 @@ describe('POST — create from source', () => {
     );
     expect(revisionInsert).toBeDefined();
     expect(revisionInsert![1][0]).toBe(DRAFT);
-    expect(revisionInsert![1][1]).toBe('# One\n\nFirst words.\n\nSecond words.');
+    expect(revisionInsert![1][1]).toBe('One\n\nFirst words.\n\nSecond words.\n');
   });
 
   it('returns 409 when a draft already exists', async () => {

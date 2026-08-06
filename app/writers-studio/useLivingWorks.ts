@@ -27,6 +27,15 @@ export interface WorkExpression {
   declaredAt: string;
 }
 
+/** A member's declaration that a thing FEEDS this work (a belonging). */
+export interface DeclaredMaterial {
+  materialType: string;
+  materialId: string;
+  /** The member's own sentence, or null — unwritten is a correct state. */
+  sentence: string | null;
+  declaredAt: string;
+}
+
 /** The five stage words a member may claim. Orientation, never progress. */
 export const STAGES = ['capturing', 'developing', 'writing', 'refining', 'sharing'] as const;
 export type Stage = (typeof STAGES)[number];
@@ -44,6 +53,8 @@ export interface LivingWork {
   updatedAt: string;
   /** Only what the member declared in — never inferred, never system-placed. */
   expressions: WorkExpression[];
+  /** Belongings the member brought — same declaration-only rule. */
+  materials: DeclaredMaterial[];
 }
 
 export type LivingWorksPhase = 'loading' | 'ready' | 'unauthorized' | 'error';
@@ -65,8 +76,15 @@ export function useLivingWorks() {
       }
       const data = await res.json();
       const list: LivingWork[] = Array.isArray(data.works) ? data.works : [];
-      // An older payload without expressions must not read as "nothing placed".
-      setWorks(list.map((w) => ({ ...w, expressions: Array.isArray(w.expressions) ? w.expressions : [] })));
+      // An older payload without expressions/materials must not read as
+      // "nothing placed" — degrade to empty declarations, never to a crash.
+      setWorks(
+        list.map((w) => ({
+          ...w,
+          expressions: Array.isArray(w.expressions) ? w.expressions : [],
+          materials: Array.isArray(w.materials) ? w.materials : [],
+        }))
+      );
       setPhase('ready');
     } catch {
       // A failure to read is not an absence of works. Say only what is true.

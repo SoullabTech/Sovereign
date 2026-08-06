@@ -74,6 +74,16 @@ export const SOURCE_HREF = '/press/manuscript?tab=manuscript';
  */
 export const IMPORT_HREF = '/press/manuscript?import=1';
 
+/**
+ * Writer Canvas v0.1 — the room the Studio's entry paths lead into. The v0.1
+ * boundary (docs/design/author-studio/WRITER_CANVAS_V01_IMPLEMENTATION_BOUNDARY
+ * _2026-08-05.md) ships the room with ONE real instrument, the writing surface,
+ * so the door requires a manuscript: a member with nothing on the table begins
+ * at Studio Home. The gathering/development arrival (walk amendment A6) is a
+ * later slice and gets its own door only when it is real.
+ */
+export const CANVAS_HREF = '/writers-studio/canvas';
+
 export const STUDIO_MAP: StudioGroup[] = [
   {
     id: 'home',
@@ -93,6 +103,14 @@ export const STUDIO_MAP: StudioGroup[] = [
        it is an implementation key, not member-facing vocabulary. */
     label: 'Current Writing',
     destinations: [
+      {
+        id: 'canvas',
+        label: 'Writer Canvas',
+        note: 'The room where your work develops.',
+        availability: 'available',
+        href: CANVAS_HREF,
+        requiresManuscript: true,
+      },
       {
         id: 'write',
         label: 'Working Draft',
