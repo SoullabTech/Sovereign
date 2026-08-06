@@ -6,7 +6,7 @@ import { Feather, X } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from './pressTheme';
 import { UNTITLED_EXPRESSION } from './shellIdentity';
-import { WRITE_HREF } from './studioMap';
+import { WRITE_HREF, canvasFor } from './studioMap';
 import { STAGES, type LivingWork } from './useLivingWorks';
 import type { CurrentManuscript } from './useCurrentManuscript';
 
@@ -30,6 +30,7 @@ interface WorkCardProps {
 
 const byIdentity = (href: string, manuscriptId: string) =>
   `${href}&m=${encodeURIComponent(manuscriptId)}`;
+
 
 const timeAgo = (iso: string): string => {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -79,6 +80,42 @@ export default function WorkCard({ work, manuscripts, reload }: WorkCardProps) {
     } catch {
       setFailure('Could not withdraw that just now. Nothing was changed.');
     } finally {
+      setBusy(false);
+    }
+  };
+
+  /**
+   * Begin a page inside THIS project, and open it on the worktable.
+   *
+   * Two acts, one member gesture: the blank page is made, then placed into
+   * this project because the member said "start writing here" — the crossing
+   * stays a member declaration, never an inference. If the placement fails the
+   * page still exists and the member is still taken to it; a page that cannot
+   * be filed is not a page that should be lost.
+   */
+  const startWritingHere = async () => {
+    setBusy(true);
+    setFailure(null);
+    try {
+      const res = await apiFetch('/api/sovereign/manuscripts/blank', { method: 'POST' });
+      if (res.status === 401) {
+        setFailure('Your Studio opens only to you. Please sign in again.');
+        return;
+      }
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json().catch(() => ({}));
+      const manuscriptId: string | undefined = data?.id;
+      if (!manuscriptId) throw new Error('no id');
+
+      await apiFetch(`/api/sovereign/living-works/${work.id}/expressions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expressionType: 'manuscript', expressionId: manuscriptId }),
+      }).catch(() => undefined);
+
+      window.location.href = canvasFor(manuscriptId);
+    } catch {
+      setFailure('Could not make a page just now. Nothing was lost — please try again.');
       setBusy(false);
     }
   };
@@ -274,7 +311,7 @@ export default function WorkCard({ work, manuscripts, reload }: WorkCardProps) {
           {placed.map((m) => (
             <li key={m.id} className="flex items-center gap-2 text-[13px] mb-1.5">
               <Link
-                href={byIdentity(WRITE_HREF, m.id)}
+                href={canvasFor(m.id)}
                 className="underline underline-offset-4 opacity-70 hover:opacity-100"
                 style={m.title ? undefined : { opacity: 0.5 }}
               >
@@ -294,18 +331,40 @@ export default function WorkCard({ work, manuscripts, reload }: WorkCardProps) {
         </ul>
       )}
 
-      {/* Continue — into the latest piece, by identity. */}
+      {/* The way in — onto the worktable. A project the member can see but
+          cannot enter is not a project, it is a label; before 08-06 an empty
+          one offered only the sentence "Nothing placed here yet." */}
       <div className="mt-auto">
         {latest ? (
-          <Link
-            href={byIdentity(WRITE_HREF, latest.id)}
-            className="inline-block px-5 py-2.5 text-[13px] tracking-wide mb-3"
-            style={{ background: PRESS.accent, color: PRESS.ink }}
-          >
-            Continue Developing
-          </Link>
+          <div className="mb-3 flex flex-wrap items-center gap-4">
+            <Link
+              href={canvasFor(latest.id)}
+              className="inline-block px-5 py-2.5 text-[13px] tracking-wide"
+              style={{ background: PRESS.accent, color: PRESS.ink }}
+            >
+              Continue Developing
+            </Link>
+            <Link
+              href={byIdentity(WRITE_HREF, latest.id)}
+              className="text-[12px] underline underline-offset-4 opacity-45 hover:opacity-80"
+            >
+              Working Draft
+            </Link>
+          </div>
         ) : (
-          <p className="text-[12px] opacity-40 mb-3">Nothing placed here yet.</p>
+          <div className="mb-3">
+            <button
+              onClick={() => void startWritingHere()}
+              disabled={busy}
+              className="inline-block px-5 py-2.5 text-[13px] tracking-wide disabled:opacity-40"
+              style={{ background: PRESS.accent, color: PRESS.ink }}
+            >
+              {busy ? 'making a page…' : 'Start writing'}
+            </button>
+            <p className="text-[12px] opacity-35 mt-2">
+              Nothing placed here yet — a blank page opens on the worktable.
+            </p>
+          </div>
         )}
 
         <div className="flex flex-wrap items-center gap-4 text-[12px]">

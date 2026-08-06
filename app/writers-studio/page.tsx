@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from './pressTheme';
-import { CANVAS_HREF, IMPORT_HREF, SOURCE_HREF } from './studioMap';
+import { CANVAS_HREF, IMPORT_HREF, SOURCE_HREF, canvasFor } from './studioMap';
 import { useCurrentManuscript } from './useCurrentManuscript';
 import { UNTITLED_EXPRESSION } from './shellIdentity';
 import { useLivingWorks } from './useLivingWorks';
@@ -61,16 +61,6 @@ const pagesLabel = (chars: number) => {
 
 const byIdentity = (href: string, manuscriptId: string) =>
   `${href}&m=${encodeURIComponent(manuscriptId)}`;
-
-/**
- * The room, entered by identity. Navigation completeness (founder ruling,
- * 2026-08-05, on the local acceptance walkthrough): the acceptance criterion
- * is not "the Canvas renders" but "a member naturally arrives there through
- * the intended architecture" — all entry paths lead into the Writer Canvas;
- * the Working Draft remains reachable from inside the room and the rail.
- */
-const canvasFor = (manuscriptId: string) =>
-  `${CANVAS_HREF}?m=${encodeURIComponent(manuscriptId)}`;
 
 const ICON = { size: 15, strokeWidth: 1.5 } as const;
 
@@ -316,7 +306,12 @@ export default function WriterStudioHome() {
         </h1>
         {(() => {
           const hasAnything = hasWorks || manuscripts.length > 0;
-          const showNew = newOpen ?? !hasAnything;
+          /* Open by default until there is a PAGE to continue, not merely a
+             project name. A member who declared projects but has written
+             nothing had every creation door folded away behind a click
+             (walk defect, 08-06): the Studio looked full and offered no way
+             in. Naming a project is not yet writing. */
+          const showNew = newOpen ?? manuscripts.length === 0;
           return (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
