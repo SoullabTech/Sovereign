@@ -1,8 +1,8 @@
-# Practitioner Wisdom Field — Product Definition v0.2
+# Practitioner Wisdom Field — Product Definition v0.3
 
 **Status:** CANDIDATE product definition. Cat 1 (preserved direction) + Cat 2 (canonical primitive target).
 **Authorizes:** nothing to be built, migrated, or ingested.
-**Date:** 2026-08-03
+**Date:** 2026-08-03 · §13 (source custody, founder ruling) added 2026-08-05
 **Upstream of:** `docs/governance/LARRY_SOURCE_AND_CUSTODY_SITTING_AGENDA_v1.md`, the authority schema in commit `c327dd526`, and any future practitioner onboarding.
 
 ---
@@ -346,6 +346,7 @@ The second validation is the broader one. It also has a practical consequence: *
 - ⛔ Does not re-open `corpusIsComposable()`.
 - ⛔ Does not rule on the Language Field (§6.6) or on client-derived input (§6.3).
 - ⛔ Does not authorize any Commons contribution surface, scope axis, or cross-practitioner composition path (§12). The upward arrow is described, not opened.
+- ⛔ Does not authorize any custody connector, bridge, or excerpt-promotion surface (§13). The custody model is design only.
 - ⛔ Does not resolve the five-domain language still live in `about_practice` — a translation-fidelity question **only Larry can answer**.
 - ⛔ Is not canon. It is a candidate product definition awaiting founder ratification.
 
@@ -368,6 +369,7 @@ The second validation is the broader one. It also has a practical consequence: *
 |---|---|
 | "Practitioner fields have custody, ownership, and revision integrity" | **Live** |
 | "Practitioner fields have provenance and rights authority" | **Designed** — §3 not built |
+| "Your sources stay where you keep them; AIN stores the relationship" | **Designed** — §13 ruled, nothing built |
 | "A platform where practitioners develop their wisdom in relationship with MAIA" | **Vision** |
 | "Larry's Flourishing framework is in the system" | ⛔ **FALSE** — do not say this in any form |
 
@@ -613,3 +615,51 @@ The next real milestone is **not more architecture**. It is the first moment a p
 ⚠️ The pressure will be to fill it — with Commons defaults, with inferred framing, with a helpful starting template. Each of those is a system-supplied answer occupying the place where the practitioner's own authority belongs, and would make Layer 3 partly authored by the platform before the practitioner has written a line.
 
 Under Invariant 16 the direction of authority is unchanged by the cycle: authority moves **upward through authored experience**. Contribution is the practitioner's authored work going outward — ⛔ it is not the Commons acquiring standing over the practitioner. A commons is something practitioners **draw from and add to**; a canon is something they are **measured against**.
+
+---
+
+## 13. Source custody — store the relationship, not the material (founder ruling 2026-08-05)
+
+> **AIN persists the RELATIONSHIP to a practitioner source, never the source itself.** The book stays in the practitioner's vault, the notes stay in their Obsidian, the recordings stay on their drive. What AIN holds is metadata — name · type · owner · location/connector reference · permissions · provenance · approved uses · last-verified timestamp · optional checksum — plus **authorized excerpts only**.
+
+Custody is a **third independent dimension**, kept deliberately separate from the two this document already carries:
+
+- **Custody** — *where does the content live, and what does AIN persist?* (this section)
+- **Authority** — *who allowed composition, of what, under which relationship claim?* (§3–§5, and `docs/governance/PRACTITIONER_FIELD_AUTHORITY_SCHEMA.md`)
+- **Expression** — *how the practitioner's field speaks* (§6)
+
+⛔ **This section does not redesign the authority schema.** Custody says nothing about whether material may compose; authority says nothing about where material lives. A governed copy with no granted permission composes nothing; an external reference with `attributed_reference` permission may still be *named*. The two axes cross; neither substitutes for the other.
+
+### 13.1 The four custody states
+
+Default is **external reference** — the fail-closed end of the axis.
+
+| Custody state | AIN persists |
+|---|---|
+| **External reference** — default | metadata only |
+| **Read-through** | metadata + transient access; **nothing persisted** |
+| **Selected excerpt** | only the practitioner-approved excerpt |
+| **Governed copy** | full content, explicitly authorized |
+
+**Selective publication is the expected working default**, not an edge case: the book stays in the vault; one approved distinction, exercise, or excerpt crosses. The crossing is the consent event — same grammar as the Materials/Gathering primitive and Keep's capture→candidate crossing. Un-belonging deletes nothing: withdrawing a reference removes AIN's relationship to the source, not the source.
+
+### 13.2 ⭐⭐⭐ Claim discipline — what the custody promise IS and IS NOT
+
+> The promise is: **"AIN does not PERSIST the source content."**
+> The promise is NEVER: *"AIN never touches or temporarily processes it."*
+
+Transient existence in memory, transit, and logs is real. A custody promise phrased as "never touches" is falsified by the first read-through and destroys trust in the promises that are true. State the persistence boundary; do not overstate it into an access boundary.
+
+**⚠️⚠️ The transit caveat — this platform must name it explicitly.** Read-through content that reaches a MAIA prompt transits the **Anthropic API** (the primary AI per project invariants); only the Ollama fallback is local. **Any custody promise made to a practitioner must name that boundary.** "Nothing persisted" and "nothing leaves the machine" are different claims; only the first is true on the primary path.
+
+### 13.3 Obsidian bridge — sketch only
+
+The first connector shape, recorded as design, not build: expose **note ids, titles, tags, and approved folders only**. An **`/AIN Approved` folder is the crossing surface** — a note placed there is the practitioner's act of authorization, in their own tool, on their own filesystem. Nothing is persisted unless separately promoted to excerpt or governed copy. The connector never walks the whole vault.
+
+### 13.4 ⛔⛔ The Harvard guard
+
+Kelly's working examples included *"Harvard notes: read-through only."* The recorded guard stands and travels with this ruling: **Harvard PSY 1060 material is not Larry's IP and never enters Attachment A.** Reference-only (provenance pointer, class C on Axis 1) is the **ceiling** for third-party course material until the rights question is separately ruled. Read-through of third-party material is a custody capability, not a rights grant — custody states do not answer rights questions.
+
+### 13.5 What §13 authorizes
+
+Nothing. This section records custody **design only** — no build, no migration, no connector. The Larry materials agreement remains unsigned; Attachment A remains empty; the sequencing in §8 is unchanged and custody work sits inside it, not beside it.
