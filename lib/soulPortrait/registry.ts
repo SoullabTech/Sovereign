@@ -23,7 +23,13 @@ import { kellyPortrait } from './portraits/kelly';
 import { nathanPortrait } from './portraits/nathan';
 import { jondiPortrait } from './portraits/jondi';
 import { heatherPortrait } from './portraits/heather';
-import { larryPortrait } from './portraits/larry';
+// Privacy gate (founder directive 2026-08-05, IP inventory audit Phase 0):
+// Larry's portrait carries a real person's birth date/time/place and a deeply
+// personal reading on an unauthenticated public route. Withdrawn from the
+// public registry until he has consented to public exposure. The portrait
+// content is preserved in ./portraits/larry — re-enabling is this import +
+// the registry line below.
+// import { larryPortrait } from './portraits/larry';
 import { summerPortrait } from './portraits/summer';
 
 const PORTRAITS: Record<string, AnyPortrait> = {
@@ -37,7 +43,6 @@ const PORTRAITS: Record<string, AnyPortrait> = {
   [nathanPortrait.person.slug]: nathanPortrait,
   [jondiPortrait.person.slug]: jondiPortrait,
   [heatherPortrait.person.slug]: heatherPortrait,
-  [larryPortrait.person.slug]: larryPortrait,
   [summerPortrait.person.slug]: summerPortrait,
 };
 

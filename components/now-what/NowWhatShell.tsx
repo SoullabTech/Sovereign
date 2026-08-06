@@ -221,7 +221,7 @@ export function NowWhatThreshold({
       <div className="relative flex flex-col items-center text-center space-y-5">
         <div style={{ animation: 'nwtFadeUp 0.7s ease both' }}>
           <RoomHoloflower
-            coolTint
+
             mono
             motionState="idle"
             proposedElement={null}

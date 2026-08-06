@@ -60,7 +60,7 @@ type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface AuthoredThread { title: string; origin: 'maia_proposed' | 'member_authored'; }
 interface CarryPayload {
   proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean; kind?: ThreadKind }[];
-  created: { title: string; shareWithPractitioner: boolean }[];
+  created: { title: string; shareWithPractitioner: boolean; kind?: 'question' }[];
 }
 interface CellCandidate {
   element: SpiralElement;
@@ -231,6 +231,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
   const [authored, setAuthored] = useState<AuthoredThread[]>([]);
   const [revising, setRevising] = useState<Record<string, string>>({});
   const [newThread, setNewThread] = useState('');
+  // The member's explicit "a question I'm living" gesture on their own thread —
+  // mirrors the share checkbox pattern; without it a self-authored question
+  // could never reach the "Questions you're living" room (silent-loss bug 2).
+  const [newThreadIsQuestion, setNewThreadIsQuestion] = useState(false);
   const [guided, setGuided] = useState(true);
   const [showFrame, setShowFrame] = useState(false);
   // Per-thread sharing consent: keyed by thread title; absent = private (default).
@@ -773,7 +777,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       return { title: t.title, decision: 'discard' as Decision, shareWithPractitioner: false };
     });
     const trimmed = newThread.trim();
-    const created = trimmed ? [{ title: trimmed, shareWithPractitioner: !!shared[trimmed] }] : [];
+    const created = trimmed
+      ? [{ title: trimmed, shareWithPractitioner: !!shared[trimmed], ...(newThreadIsQuestion ? { kind: 'question' as const } : {}) }]
+      : [];
     return { proposals, created };
   }
 
@@ -807,7 +813,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       return (
         <div className="relative min-h-[92vh] flex items-center justify-center px-6 overflow-hidden">
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
-          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+          <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
         </div>
       );
     }
@@ -823,7 +829,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
           <div className="relative w-full max-w-xl space-y-10">
             <div style={fadeUpStyle(0)} className="flex justify-center">
-              <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+              <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
             </div>
             <div style={fadeUpStyle(0.25)} className="text-center space-y-4">
               <p className="text-sm uppercase tracking-[0.4em] text-[#c9a35e]">Now What? · with Larry Closs</p>
@@ -858,7 +864,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
         <div className="relative w-full max-w-xl space-y-10">
           <div style={fadeUpStyle(0)} className="flex justify-center">
-            <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+            <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
           </div>
           <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#c9a35e]">
             Now What?
@@ -1055,6 +1061,18 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                 What has shifted? What remains unresolved? What deserves deeper exploration?
               </p>
             </div>
+          ) : entry === 'think' ? (
+            // A place to think — the door's promise honored at arrival
+            // (previously dead: 'think' fell through to the generic prompt).
+            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
+              <p className="text-slate-500 text-sm font-light">A place to think.</p>
+              <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                What are you working through?
+              </p>
+              <p className="text-slate-500 text-sm font-light leading-relaxed">
+                A decision, a tension, something not yet formed — bring it as it is.
+              </p>
+            </div>
           ) : returning ? (
             <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
               <p className="text-slate-500 text-sm font-light">Last time you chose this practice:</p>
@@ -1186,7 +1204,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     return (
       <div className="max-w-prose mx-auto px-4 py-12 space-y-10">
         <div className="flex justify-center">
-          <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
+          <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={mandalaSize} />
         </div>
         <div className="space-y-1 text-center">
           <p className="text-xs uppercase tracking-widest text-slate-400">Vision Studio</p>
@@ -1553,15 +1571,26 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
             onChange={e => setNewThread(e.target.value)}
           />
           {newThread.trim() && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!!shared[newThread.trim()]}
-                onChange={e => setShared(s => ({ ...s, [newThread.trim()]: e.target.checked }))}
-                className="accent-slate-300 w-4 h-4"
-              />
-              <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
-            </label>
+            <>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newThreadIsQuestion}
+                  onChange={e => setNewThreadIsQuestion(e.target.checked)}
+                  className="accent-slate-300 w-4 h-4"
+                />
+                <span className="text-slate-300 text-xs font-light">A question I&rsquo;m living</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!shared[newThread.trim()]}
+                  onChange={e => setShared(s => ({ ...s, [newThread.trim()]: e.target.checked }))}
+                  className="accent-slate-300 w-4 h-4"
+                />
+                <span className="text-slate-300 text-xs font-light">Share with your practitioner</span>
+              </label>
+            </>
           )}
         </div>
 
@@ -1601,7 +1630,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       <div className="relative px-4 pt-8 pb-4 flex flex-col items-center gap-3">
         <div className={`relative ${micListening ? 'room-mic-active' : ''}`}>
           <RoomHoloflower
-            coolTint
+
             mono
             motionState={roomMotion}
             proposedElement={cellCandidate?.element ?? null}

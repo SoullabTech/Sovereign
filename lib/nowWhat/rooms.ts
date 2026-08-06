@@ -2,30 +2,34 @@
  * Now What? room registry — the single definition shared by the persistent
  * shell and the environment map.
  *
- * WHY THIS EXISTS (2026-07-29): the shell knew three rooms
- * (`map`, `room`, `field`) while the map offered seven. The shell's full
- * variant renders ONLY its own pills and no location text, so a member
- * standing in `position`, `next`, `questions`, `themes` or `reflections` saw
- * navigation listing three places — none of which was where they were — and
- * `aria-current` set on nothing. The environment had grown; its hallway had
- * not.
+ * FIVE-ROOM ONTOLOGY (ratified 2026-08-05, built same day; see
+ * docs/design/now-what/NOW_WHAT_ROOM_ONTOLOGY_CONSOLIDATION_2026-08-05.md):
+ * four noun-rooms hold the member's life; one verb-room holds the
+ * conversation. Every noun-room's primary gesture is a contextualized door
+ * into The Room. Standing test: two rooms cannot exist merely because they
+ * use different nouns if they invoke the same human gesture.
  *
- * Three distinctions this registry preserves, because collapsing them is what
- * produced the defect:
+ *   My Question   what am I wrestling with?          → continue thinking
+ *   My Work       what am I living and cultivating?  → reflect on what you are living
+ *   My Coaching   how is another person's presence shaping this work? → prepare
+ *   My Story      what is becoming, over time?       → see what is becoming
+ *   The Room      can I think this through, now?     → think something through
+ *
+ * Three distinctions this registry preserves:
  *
  *   EXISTENCE      a route file exists
  *   NAVIGABILITY   a member can reach it through the UI
  *   EXPOSURE       we deliberately offer it as a destination
  *
- * `exposure: 'gated'` means navigable and honest about being unfinished — the
- * map links these rooms to an explanation of what they will be, per ruling
- * 2026-07-13. They must still identify themselves when a member is standing in
- * one; they are NOT offered as shell destinations. Promoting them to peer
- * navigation would be a design change, not a truthfulness repair.
- *
  * Routes that exist but are NOT rooms are deliberately absent:
- *   /now-what/arrive    the auth door, not a place inside the environment
- *   /now-what/welcome   zero inbound links by design (EnvironmentMapView)
+ *   /now-what/arrive       the auth door, not a place inside the environment
+ *   /now-what/welcome      zero inbound links by design (EnvironmentMapView)
+ *   /now-what/cultivate    redirect → /now-what/work      (merged room)
+ *   /now-what/next         redirect → /now-what/work      (merged room)
+ *   /now-what/calendar     redirect → /now-what/coaching  (merged room)
+ *   /now-what/position     redirect → /now-what/coaching  (merged room)
+ *   /now-what/themes       redirect → /now-what           (retired placeholder, ruling D-E)
+ *   /now-what/reflections  redirect → /now-what           (retired placeholder, ruling D-E)
  *
  * Client-safe: no database, no server imports. Both consumers are
  * `'use client'` components.
@@ -51,27 +55,17 @@ export const NOW_WHAT_ROOMS: readonly NowWhatRoomDef[] = [
   // person arrives and where every other room returns them. It sits first so
   // the shell offers it first. Its route is the environment root, which is why
   // roomForPath resolves exact matches before prefix matches (see below).
-  // S1d — navigation reduction. Six offered destinations made the member learn
-  // the architecture before they could use it: a person does not arrive
-  // thinking "I need my Questions module". Four remain offered; the rest stay
-  // reachable and honest but are reached from context instead of from a tab
-  // bar. ⛔ Nothing was deleted — demoting to `gated` removes the tab, never
-  // the room, so no existing link or bookmark breaks.
   { key: 'home', name: 'Home', route: '/now-what', exposure: 'open' },
   { key: 'map', name: 'Map', route: '/now-what/map', exposure: 'open' },
-  { key: 'field', name: 'Your work', route: '/now-what/field', exposure: 'open' },
-  { key: 'room', name: 'Conversations', route: '/now-what/room', exposure: 'open' },
-  { key: 'position', name: 'Your journey', route: '/now-what/position', exposure: 'open' },
-  // Gated: navigable and honest, never offered as a destination.
-  { key: 'questions', name: "Questions you're living", route: '/now-what/questions', exposure: 'gated' },
-  { key: 'next', name: 'What may be next', route: '/now-what/next', exposure: 'gated' },
-  { key: 'themes', name: 'Themes', route: '/now-what/themes', exposure: 'gated' },
-  { key: 'reflections', name: 'Reflections', route: '/now-what/reflections', exposure: 'gated' },
+  { key: 'question', name: 'My Question', route: '/now-what/questions', exposure: 'open' },
+  { key: 'work', name: 'My Work', route: '/now-what/work', exposure: 'open' },
+  { key: 'coaching', name: 'My Coaching', route: '/now-what/coaching', exposure: 'open' },
+  { key: 'story', name: 'My Story', route: '/now-what/field', exposure: 'open' },
+  { key: 'room', name: 'The Room', route: '/now-what/room', exposure: 'open' },
 ] as const;
 
 /**
- * Rooms offered as shell navigation. The map is excluded — it is the wordmark
- * — and gated rooms are excluded by design.
+ * Rooms offered as shell navigation. The map is excluded — it is the wordmark.
  */
 export const NAV_DESTINATIONS: readonly NowWhatRoomDef[] = NOW_WHAT_ROOMS.filter(
   (r) => r.exposure === 'open' && r.key !== 'map',
@@ -82,8 +76,9 @@ export const NAV_DESTINATIONS: readonly NowWhatRoomDef[] = NOW_WHAT_ROOMS.filter
  *
  * Matches on path only — query strings (`?fieldContext=…&program=…`) and
  * trailing segments never change which room you are standing in. Returns null
- * for paths outside the environment, and for `/now-what/arrive` and
- * `/now-what/welcome`, which are not rooms.
+ * for paths outside the environment, for `/now-what/arrive` and
+ * `/now-what/welcome` (not rooms), and for the retired redirect routes (a
+ * member never stands in a redirect long enough to need a hallway).
  */
 export function roomForPath(pathname: string | null | undefined): NowWhatRoomDef | null {
   if (!pathname) return null;
@@ -97,8 +92,7 @@ export function roomForPath(pathname: string | null | undefined): NowWhatRoomDef
   const exact = NOW_WHAT_ROOMS.find((r) => path === r.route);
   if (exact) return exact;
   // Home is deliberately excluded from the prefix pass: its route is a prefix
-  // of the entire environment, so prefix-matching it would swallow the two
-  // paths that are NOT rooms — `/now-what/arrive` (the auth door) and
-  // `/now-what/welcome` — and report them as Home. Home is an exact match only.
+  // of the entire environment, so prefix-matching it would swallow the paths
+  // that are NOT rooms and report them as Home. Home is an exact match only.
   return NOW_WHAT_ROOMS.find((r) => r.key !== 'home' && path.startsWith(`${r.route}/`)) ?? null;
 }

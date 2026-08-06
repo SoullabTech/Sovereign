@@ -1,28 +1,26 @@
 'use client';
 
 /**
- * Now What? — Client Home: the orientation field (six-door constellation,
- * founder-directed 2026-08-05).
+ * Now What? — Client Home: the orientation field (five-room ontology,
+ * ratified + built 2026-08-05; NOW_WHAT_ROOM_ONTOLOGY_CONSOLIDATION doc).
  *
- * "Every doorway makes a promise; every promise deserves its own room.
- *  Do not make the home richer — make the rooms deeper."
+ * "Every doorway makes a promise; every promise deserves its own room."
+ * Standing test: two rooms cannot exist merely because they use different
+ * nouns if they invoke the same human gesture.
  *
  * The home is not where everything happens. It answers ONE question:
  * "What part of my life and development do I want to enter right now?"
- * Six doors — inquiry · embodiment · flourishing · relationship ·
- * becoming · thinking — plus time as the quiet continuity line, the daily
- * thought as ambient orientation, and the trust boundary stated once.
+ * Five doors — four noun-rooms that hold, one verb-room that works — plus
+ * time as the quiet continuity line, the daily thought as ambient
+ * orientation, and the trust boundary stated once.
  *
- * Doors and their rooms (NOW_WHAT_HOME_DOOR_MAP_2026-08-05.md):
- *   question    → /now-what/room?entry=question&thread=<id>  (Reflection Room)
- *   living      → /now-what/room?entry=lived                 (Living Practice)
- *   cultivating → /now-what/cultivate                        (Flourishing Field)
- *   coaching    → /now-what/coaching                         (Coaching Room)
- *   story       → /now-what/field                            (Life Story / archive)
- *   think       → /now-what/room?entry=think                 (MAIA)
- *   programs    → /now-what/position                         (Where you are)
- *   calendar    → /now-what/calendar                         (Calendar Room)
- *   upcoming    → /now-what/calendar                         (Calendar Room)
+ * Doors and their rooms:
+ *   My Question → /now-what/questions       (what you are wrestling with)
+ *   My Work     → /now-what/work            (what you are living and cultivating)
+ *   My Coaching → /now-what/coaching        (the human relationship; holds programs + calendar)
+ *   My Story    → /now-what/field           (becoming over time)
+ *   The Room    → /now-what/room?entry=think (think something through)
+ *   upcoming line → /now-what/coaching      (the date serves the relationship)
  *
  * WHAT THIS SURFACE STILL REFUSES (structural, unchanged):
  *   - No score, streak, ranking, progress bar, completion count, metric.
@@ -199,23 +197,6 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
     ? `${coachName}${shared.length > 0 ? ` — ${shared.length === 1 ? 'one piece' : `${shared.length} pieces`} brought forward` : ''}${nextConversation ? `, next conversation ${whenLabel(nextConversation.start).split(' · ')[0]}` : ''}.`
     : 'The human relationship this environment extends.';
 
-  /* Programs — the member's declared place in a program, or honest absence.
-     Membership only: no curriculum, no materials, no stages-as-progress. */
-  const programCount = data?.journey?.length ?? 0;
-  const programsLine = focal
-    ? `${focal.programTitle ?? focal.programSlug} — “${focal.focalPoint}”${programCount > 1 ? ` · and ${programCount - 1} more` : ''}`
-    : coachFirst
-      ? `When ${coachFirst} places a program with you, it appears here — with where you are, in your own words.`
-      : 'When a program is placed with you, it appears here — with where you are, in your own words.';
-
-  /* Calendar — when the relationship continues. Scheduled facts only. */
-  const pastCount = data?.sessions?.length ?? 0;
-  const calendarLine = nextConversation
-    ? `Next conversation${coachFirst ? ` with ${coachFirst}` : ''} — ${whenLabel(nextConversation.start)}.`
-    : pastCount > 0
-      ? `${pastCount === 1 ? 'One previous conversation' : `${pastCount} previous conversations`} · nothing scheduled yet.`
-      : 'When your next conversation is scheduled, it appears here.';
-
   return (
     <div className="nwh-root">
       <div className="nwh-frame">
@@ -240,71 +221,53 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             your flourishing as a human being.
           </p>
           {nextConversation && (
-            <a className="nwh-upcomingline" href={`/now-what/calendar${ctx}`}>
+            <a className="nwh-upcomingline" href={`/now-what/coaching${ctx}`}>
               Next conversation{coachFirst ? ` with ${coachFirst}` : ''} —{' '}
               <b>{whenLabel(nextConversation.start)}</b>
             </a>
           )}
         </div>
 
-        {/* ── The six doors ── */}
+        {/* ── The five doors — one per room of the ratified ontology
+              (NOW_WHAT_ROOM_ONTOLOGY_CONSOLIDATION_2026-08-05.md): four
+              noun-rooms that hold, one verb-room that works. Each line is a
+              member-authored fact when one exists, a plain invitation when
+              none does. ── */}
         <div className="nwh-doors">
           <Door
             warm
             italicLine={Boolean(livingQuestion)}
-            href={livingQuestion ? `${roomHref}${amp}entry=question&thread=${livingQuestion.id}` : roomHref}
-            name="The question you are carrying"
-            meaning="Inquiry"
+            href={`/now-what/questions${ctx}`}
+            name="My Question"
+            meaning="What you are wrestling with"
             line={questionLine}
-            verb="Continue exploring"
+            verb="Continue thinking"
           />
           <Door
-            href={`${roomHref}${amp}entry=lived`}
-            name="What you are living"
-            meaning="Embodiment"
+            href={`/now-what/work${ctx}`}
+            name="My Work"
+            meaning="What you are living and cultivating"
             line={livingLine}
-            verb="Reflect on your practice"
-          />
-          <Door
-            href={`/now-what/cultivate${ctx}`}
-            name="What you are cultivating"
-            meaning="Flourishing"
-            line="Relationships · Meaning · Presence · Health · Contribution · Time"
-            verb="Explore your flourishing"
+            verb="Reflect on what you are living"
           />
           <Door
             href={`/now-what/coaching${ctx}`}
-            name="Your coaching relationship"
-            meaning="Human relationship"
+            name="My Coaching"
+            meaning="The human relationship"
             line={coachingLine}
             verb={coachFirst ? `Continue with ${coachFirst}` : 'Continue your coaching'}
           />
           <Door
-            italicLine={Boolean(focal)}
-            href={`/now-what/position${ctx}`}
-            name="Your programs"
-            meaning="Placed with your coach"
-            line={programsLine}
-            verb="See where you are"
-          />
-          <Door
-            href={`/now-what/calendar${ctx}`}
-            name="Your calendar"
-            meaning="When this continues"
-            line={calendarLine}
-            verb="View your calendar"
-          />
-          <Door
             href={`/now-what/field${ctx}`}
-            name="Your story"
+            name="My Story"
             meaning="Becoming over time"
             line="Turning points, realizations, chapters — in your own words."
-            verb="View your story"
+            verb="See what is becoming"
           />
           <Door
             href={`${roomHref}${amp}entry=think`}
-            name="A place to think"
-            meaning="Reflection companion"
+            name="The Room"
+            meaning="A place to think"
             line="Clarify a decision, explore a tension, listen to yourself think."
             verb="Think something through"
           />

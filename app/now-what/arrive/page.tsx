@@ -58,7 +58,10 @@ const ACCENT = '#c9a35e';
  * post-authentication landing and is never an input to eligibility. The two
  * concerns are kept separate on purpose.
  */
-const SIGNED_IN_LANDING = '/now-what/map';
+// One front door (ontology ruling 2026-08-05): a signed-in member arrives at
+// Home — what is alive since they were last here. The map is post-orientation
+// navigation, never the landing.
+const SIGNED_IN_LANDING = '/now-what';
 
 const inputClass =
   'w-full rounded-lg border border-slate-600/60 bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#c9a35e]/60';
@@ -95,7 +98,7 @@ function DoorFrame({ children }: { children: React.ReactNode }) {
 function DoorHead({ heading, body }: { heading: string; body: string }) {
   return (
     <div className="relative flex flex-col items-center text-center space-y-4">
-      <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
+      <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
       <p className="text-xs uppercase tracking-[0.45em]" style={{ color: ACCENT }}>
         Now What?
       </p>
@@ -231,7 +234,7 @@ function ArrivalResolving() {
   return (
     <DoorFrame>
       <div className="relative flex flex-col items-center text-center space-y-4">
-        <RoomHoloflower coolTint mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
+        <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={120} />
         <p className="text-xs uppercase tracking-[0.45em]" style={{ color: ACCENT }}>
           Now What?
         </p>
