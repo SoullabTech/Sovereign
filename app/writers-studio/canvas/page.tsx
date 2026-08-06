@@ -178,7 +178,10 @@ export default function WriterCanvasPage() {
               <li key={`${h.offset}-${i}`}>
                 <button
                   onClick={() => surfaceRef.current?.jumpTo(h.offset)}
-                  className="w-full text-left leading-snug truncate transition-opacity hover:opacity-100"
+                  /* Wraps rather than truncates: these are the writer's own
+                     chapter and section names, and a name cut mid-word is
+                     not a name. Widen the rail and the lines settle. */
+                  className="w-full text-left leading-snug transition-opacity hover:opacity-100"
                   style={{
                     fontFamily: SERIF,
                     fontSize: structural ? '12px' : secondary ? '11.5px' : '10.5px',
