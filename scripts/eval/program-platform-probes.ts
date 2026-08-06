@@ -56,9 +56,32 @@ async function cleanup(memberIds: string[]): Promise<TeardownReport> {
   // (The pooled helper also swallows 42P01 into an empty result, which would
   // let a missing table read as "nothing to remove".)
   const { Client } = await import('pg');
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  // Same DSN resolution as lib/db/postgres.ts, INCLUDING its fallback. Passing
+  // a bare `process.env.DATABASE_URL` would leave node-pg to libpq defaults
+  // when the variable is unset — a database named after the OS user rather than
+  // the one the probes wrote to. That is the false-cleanup failure this file is
+  // fixing, so the connection is asserted below rather than assumed.
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+  });
   await client.connect();
   try {
+    const probeConn = await query('SELECT current_database() AS db, inet_server_addr()::text AS addr, inet_server_port() AS port');
+    const tearConn = await client.query('SELECT current_database() AS db, inet_server_addr()::text AS addr, inet_server_port() AS port');
+    const same = (a: any, b: any) => a.db === b.db && a.addr === b.addr && String(a.port) === String(b.port);
+    if (!same(probeConn.rows[0], tearConn.rows[0])) {
+      // Tearing down a database the probes never wrote to would find nothing and
+      // report a clean run — the exact false claim this PR exists to remove.
+      return {
+        clean: false,
+        deleted: [],
+        blocked: [{
+          table: '(teardown)',
+          rows: -1,
+          reason: `teardown connected to "${tearConn.rows[0].db}" but the probes wrote to "${probeConn.rows[0].db}" — refusing to report a cleanup of rows it cannot see`,
+        }],
+      };
+    }
     return await teardownFixture(client as any, roots(memberIds), {
       guardedTables: ['members', 'public.members'],
     });
