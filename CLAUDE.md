@@ -383,7 +383,7 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 
 ## Co-Lab Release Gate (MANDATORY before tester invites)
 
-**No invite unless `verify-colab-boundaries.ts` passes 31/31 in production.**
+**No invite unless the constitutional verification passes in production** — Co-Lab Boundaries is one of its five required subsystems.
 
 Run inside the container on minisforum:
 ```bash
