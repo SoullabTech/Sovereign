@@ -41,6 +41,55 @@ This is the answer to *what is a manuscript made of*: **text with light
 compositional structure** — not a production document model. The heavy
 question moves to the field that actually needs it.
 
+## Not a transfer — the Work stays the center (founder refinement)
+
+⛔ **Do not call it a transfer.** That implies leaving one place for
+another. The writer never leaves the manuscript; they open one expression
+of it for publication:
+
+```text
+Work
+    │
+    ├── Working Draft  ← Writer Canvas
+    │
+    ├── Edition 1  →  Press Editor
+    │
+    └── Edition 2  →  Press Editor
+```
+
+**The Work is the enduring reality; editions are forms the Work takes.**
+The Canvas stays attached to the Work and tends the living manuscript;
+Press Editor opens a *particular form of its expression*. Multiple
+editions coexist without competing, exactly as multiple expressions
+already do.
+
+## Why the separation protects the writer
+
+Most writing tools introduce production concerns too early: you are
+writing a sentence and suddenly you are managing font sizes, image
+alignment, citation formats, page numbers, export settings — and attention
+moves from **meaning to mechanics**. Two rooms keep the two conversations
+apart:
+
+> The Canvas asks: **"What is this work becoming?"**
+> Press Editor asks: **"How should this edition be made?"**
+
+### The desks differ because the objects differ
+
+**Writer Canvas — creative objects.** *Write*: paragraph · heading · scene
+break · dialogue · block quotation. *Bring Something In*: photograph ·
+interview · voice memo · document · letter · PDF · website. *Reference*:
+book · article · research note · citation · timeline · character · place.
+*Organize*: chapter · part · card · collection · gathering. *Think*: ask
+MAIA · reflect · compare passages · find related material.
+
+**Press Editor — production objects.** Typography · layout · margins ·
+running heads · footnotes · cross-references · figure numbering · index ·
+front matter · back matter · print preview · EPUB preview.
+
+Almost nothing on the first list is a publishing object; almost nothing on
+the second belongs in a sanctuary for composition.
+
 ## THE KEY RULE — transfer must not mean replacement
 
 The danger is two unrelated copies. The transition is explicit and

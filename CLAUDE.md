@@ -387,10 +387,20 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 
 Run inside the container on minisforum:
 ```bash
-docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" bash scripts/constitutional-verification.sh'
 ```
 
-Pass condition: `31 passed · 0 failed · 0 warned`
+Pass condition: `Release gate: PASSED` — all five subsystems green (Co-Lab
+Boundaries · Memory · Relationships · Development · MAIA).
+
+⚠️ **Corrected 2026-08-06.** This gate previously named
+`scripts/verify-colab-boundaries.ts`, which no longer exists: `b806fa49c`
+renamed it to `scripts/verify-constitution-colab.ts` and folded it in as one
+of five required subsystems under `constitutional-verification.sh`. The old
+command fails with `ERR_MODULE_NOT_FOUND` — an **execution failure, not a
+gate failure**, and one a future session could easily misread as either "the
+gate is broken" or "the gate is unavailable, proceed anyway". The check
+itself never lapsed; only its pointer did.
 
 This gate runs automatically as part of `scripts/deploy-production.sh` smoke tests. It must also be run manually before any tester wave. See `docs/ops/COLAB_RELEASE_GATE.md` for the full gate specification — what it checks, which surfaces trigger it, and how to add new checks when new scoped surfaces ship.
 
