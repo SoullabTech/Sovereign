@@ -31,56 +31,183 @@
 
 import { execSync } from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
 /**
- * Search the tracked source tree for a pattern. Uses git grep so that
- * node_modules, build output, and — critically — the ~100 sibling worktrees
- * under .claude/worktrees are all excluded automatically. A plain filesystem
- * walk here would report other lanes' code as if it were this tree's state.
+ * ⚠️ WHY THIS IS NOT A GLOB PATHSPEC (finding F1, 2026-08-06)
+ *
+ * This helper previously passed pathspecs of the form `lib/maia/**\/*.ts`.
+ * Git pathspec globbing WITHOUT `:(glob)` magic does not treat `**` the way a
+ * shell globstar does: `X/**\/*.ts` matches only files at least one directory
+ * BELOW X, and silently skips every file sitting directly in X.
+ *
+ * Measured cost of that bug at 95e7f5fdf — the pins were scanning ~27% of the
+ * intended surface while reporting green:
+ *
+ *     lib/maia          50 of 165 .ts files    (115 skipped)
+ *     lib/consciousness 77 of 347 .ts files    (270 skipped)
+ *     lib/oracle        34 of  75 .ts files    ( 41 skipped)
+ *     lib/sovereign      6 of  23 .ts files    ( 17 skipped)
+ *
+ * The fix is deliberately NOT `:(glob)` magic — it is plain DIRECTORY
+ * pathspecs (which git recurses fully) plus an explicit extension filter
+ * applied here in JS. That keeps the scanned surface enumerable and auditable
+ * rather than dependent on pathspec-magic subtleties, and it lets
+ * `enumerate()` below report exactly what was covered.
  */
-function search(pattern: string, pathspecs: string[]): string[] {
+const CODE_EXT = /\.(ts|tsx)$/;
+
+/**
+ * UI surfaces only. Rendering happens in .tsx; .ts under app/ is API-route code,
+ * which PIN 2's first assertion already governs. Using an extension filter rather
+ * than a page.tsx-style glob pathspec keeps FULL directory depth (the F1 fix)
+ * while preserving the UI-only INTENT of these two pins.
+ *
+ * Caught during the F1 fix itself: mechanically rewriting the old pathspec to a
+ * bare 'app/' directory silently widened these pins to include .ts API routes,
+ * which surfaced the already-quarantined growth route as a false "UI violation".
+ * Widening coverage and widening SCOPE are different changes.
+ */
+const UI_EXT = /\.tsx$/;
+
+/** Untracked-but-not-ignored sibling worktrees would otherwise leak in via --untracked. */
+const FOREIGN = /(^|\/)\.claude\/worktrees\//;
+
+function gitLines(cmd: string): string[] {
   try {
-    const out = execSync(
-      `git grep -l -E ${JSON.stringify(pattern)} -- ${pathspecs.map((p) => JSON.stringify(p)).join(' ')}`,
-      { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
-    );
-    return out.split('\n').filter(Boolean).sort();
+    return execSync(cmd, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+      .split('\n')
+      .filter(Boolean);
   } catch {
-    // git grep exits 1 when there are no matches — that is a valid empty result,
-    // not an error. Any other failure also surfaces as [] and will be caught by
-    // the sanity test below, which asserts the harness can still find things.
+    // git grep exits 1 on "no matches" — a valid empty result, not an error.
+    // Genuine harness breakage is caught by the coverage + mutation tests below,
+    // which assert positively that real files are scanned and real violations found.
     return [];
   }
 }
 
-const SOURCE = ['app/**/*.ts', 'app/**/*.tsx', 'lib/**/*.ts', 'lib/**/*.tsx', 'components/**/*.tsx'];
+/**
+ * Search the source tree for a pattern within the given DIRECTORIES (recursive,
+ * including files directly inside them).
+ *
+ * `--untracked` is required so the F2 mutation fixtures — files created during
+ * the test run and never committed — are actually visible to the verifier. It
+ * respects .gitignore, so node_modules and build output stay out; sibling
+ * worktrees are not gitignored, so they are filtered explicitly.
+ */
+function search(pattern: string, dirs: string[], ext: RegExp = CODE_EXT): string[] {
+  const spec = dirs.map((d) => JSON.stringify(d)).join(' ');
+  return gitLines(`git grep -l --untracked -E ${JSON.stringify(pattern)} -- ${spec}`)
+    .filter((f) => ext.test(f) && !FOREIGN.test(f))
+    .sort();
+}
+
+/** Every file the verifier WOULD scan for these directories — the covered surface. */
+function enumerate(dirs: string[], ext: RegExp = CODE_EXT): string[] {
+  const spec = dirs.map((d) => JSON.stringify(d)).join(' ');
+  return [
+    ...gitLines(`git ls-files -- ${spec}`),
+    ...gitLines(`git ls-files --others --exclude-standard -- ${spec}`),
+  ]
+    .filter((f) => ext.test(f) && !FOREIGN.test(f))
+    .sort();
+}
+
+const SOURCE = ['app/', 'lib/', 'components/'];
 
 /**
  * Modules that compose context handed to MAIA for reasoning. Anything imported
  * here becomes epistemic input, not merely data the practitioner can look at.
  */
 const MAIA_CONTEXT_SURFACES = [
-  'lib/maia/**/*.ts',
-  'lib/sovereign/**/*.ts',
-  'lib/consciousness/**/*.ts',
-  'lib/oracle/**/*.ts',
-  'app/api/sovereign/**/*.ts',
-  'app/api/oracle/**/*.ts',
-  'app/api/maia/**/*.ts',
+  'lib/maia/',
+  'lib/sovereign/',
+  'lib/consciousness/',
+  'lib/oracle/',
+  'app/api/sovereign/',
+  'app/api/oracle/',
+  'app/api/maia/',
 ];
 
-describe('harness sanity', () => {
-  it('git grep reaches the source tree (guards against silently-empty pins)', () => {
-    // If this fails, every pin below is vacuously passing and proves nothing.
-    const hits = search('practitioner_growth', SOURCE);
-    expect(hits.length).toBeGreaterThan(0);
+/** Fixture paths for the F2 mutation check. Removed in afterAll. */
+const FIXTURE_MARKER = 'CONTAINMENT_VERIFIER_SELFTEST_MARKER';
+const FIXTURE_TOP = 'lib/maia/__containment_verifier_selftest.ts';
+const FIXTURE_NESTED = 'lib/maia/__containment_verifier_selftest_dir/nested.ts';
+
+describe('harness sanity — the verifier must prove what it scanned', () => {
+  beforeAll(() => {
+    for (const rel of [FIXTURE_TOP, FIXTURE_NESTED]) {
+      const abs = path.join(REPO_ROOT, rel);
+      fs.mkdirSync(path.dirname(abs), { recursive: true });
+      fs.writeFileSync(abs, `export const selftest = '${FIXTURE_MARKER}';\n`);
+    }
+  });
+
+  afterAll(() => {
+    fs.rmSync(path.join(REPO_ROOT, FIXTURE_TOP), { force: true });
+    fs.rmSync(path.join(REPO_ROOT, path.dirname(FIXTURE_NESTED)), { recursive: true, force: true });
+  });
+
+  /**
+   * F2 — the anti-vacuity check must be able to detect the F1 failure class.
+   *
+   * The previous guard only asserted "some pattern returns a nonzero count",
+   * which passed happily while four pathspecs under-scanned. These assert
+   * positively that BOTH file depths are reachable. Under the old glob
+   * pathspec the TOP-LEVEL fixture is invisible and this test fails — which is
+   * exactly the regression it exists to catch.
+   */
+  it('detects a forbidden reference in a TOP-LEVEL file (lib/maia/x.ts)', () => {
+    expect(search(FIXTURE_MARKER, ['lib/maia/'])).toContain(FIXTURE_TOP);
+  });
+
+  it('detects a forbidden reference in a NESTED file (lib/maia/sub/x.ts)', () => {
+    expect(search(FIXTURE_MARKER, ['lib/maia/'])).toContain(FIXTURE_NESTED);
+  });
+
+  it('detects BOTH depths in one search — neither class may be omitted', () => {
+    expect(search(FIXTURE_MARKER, ['lib/maia/'])).toEqual([FIXTURE_NESTED, FIXTURE_TOP].sort());
+  });
+
+  it('the same holds through the SOURCE surface used by PIN 2', () => {
+    const hits = search(FIXTURE_MARKER, SOURCE);
+    expect(hits).toContain(FIXTURE_TOP);
+    expect(hits).toContain(FIXTURE_NESTED);
+  });
+
+  /**
+   * F1 — report the enumerated surface. A pin that scans nothing is vacuous;
+   * this makes the covered surface an explicit, reviewable number rather than
+   * an assumption.
+   */
+  it('scans the full enumerated surface of every governed directory', () => {
+    const coverage: Record<string, number> = {};
+    for (const dir of MAIA_CONTEXT_SURFACES) {
+      const files = enumerate([dir]);
+      coverage[dir] = files.length;
+      // Every governed directory must contribute real files, and the count must
+      // match git's own enumeration — no silent under-scan.
+      expect(files.length).toBeGreaterThan(0);
+    }
+    // Printed so CI logs carry the proof of covered surface.
+    console.log('[containment verifier] scanned surface:', JSON.stringify(coverage, null, 2));
+
+    // lib/maia is the directory F1 was measured against; assert the corrected
+    // count is the FULL .ts inventory, not the ~30% the glob pathspec returned.
+    const maiaAll = enumerate(['lib/maia/']).filter((f) => f.endsWith('.ts'));
+    const maiaTopLevel = maiaAll.filter((f) => f.split('/').length === 3);
+    expect(maiaTopLevel.length).toBeGreaterThan(50); // the class the old pathspec skipped entirely
+    expect(maiaAll.length).toBeGreaterThan(maiaTopLevel.length); // nested included too
+  });
+
+  it('finds real violations in the tracked tree (not vacuously empty)', () => {
+    expect(search('practitioner_growth', SOURCE).length).toBeGreaterThan(0);
   });
 
   it('does not read sibling worktrees', () => {
-    const hits = search('practitioner_growth', SOURCE);
-    expect(hits.filter((f) => f.includes('.claude/worktrees'))).toEqual([]);
+    expect(search('practitioner_growth', SOURCE).filter((f) => FOREIGN.test(f))).toEqual([]);
   });
 });
 
@@ -108,7 +235,7 @@ describe('PIN 1 — /api/caseload must not become a MAIA context source', () => 
     // The inverse direction: caseload must not push itself into context either.
     const offenders = search(
       "from ['\"]@/lib/(maia|sovereign|oracle)/",
-      ['lib/caseload/**/*.ts', 'app/api/caseload/**/*.ts']
+      ['lib/caseload/', 'app/api/caseload/']
     );
     expect(offenders).toEqual([]);
   });
@@ -151,7 +278,8 @@ describe('PIN 2 — practitioner_growth is quarantined pending the perspective r
   it('no UI surface renders practitioner growth claims', () => {
     const offenders = search(
       'practitioner_growth|/api/practice/growth',
-      ['components/**/*.tsx', 'app/**/page.tsx', 'app/**/layout.tsx']
+      ['components/', 'app/'],
+      UI_EXT
     );
     expect(offenders).toEqual([]);
   });
@@ -166,7 +294,8 @@ describe('PIN 2 — practitioner_growth is quarantined pending the perspective r
     // ruling lands; it may never GROW.
     const offenders = search(
       "'blind_spot'|'growth_edge'|'strength_spotted'|'practitioner_pattern'",
-      ['components/**/*.tsx', 'app/**/page.tsx']
+      ['components/', 'app/'],
+      UI_EXT
     );
     expect(offenders).toEqual(KNOWN_UNRULED_VIOLATIONS);
   });
@@ -289,7 +418,7 @@ describe('PIN 4 — inferred member patterns reaching practitioner surfaces', ()
   it('no OTHER practitioner surface reads system-inferred pattern services', () => {
     const offenders = search(
       "from ['\"]@/lib/patterns/(PatternDetectionService|generatePatternIntelligence|getTopHypotheses)",
-      ['app/api/studio/**/*.ts', 'app/api/practice/**/*.ts', 'app/api/caseload/**/*.ts']
+      ['app/api/studio/', 'app/api/practice/', 'app/api/caseload/']
     );
     expect(offenders).toEqual([]);
   });
@@ -298,7 +427,7 @@ describe('PIN 4 — inferred member patterns reaching practitioner surfaces', ()
     // The single-relationship case is baselined above. The CROSS-CLIENT case —
     // the literal "belonging appeared across seven clients" shape — has no
     // instance today. This pin keeps it that way.
-    const offenders = search('pattern_ledger', ['app/api/caseload/**/*.ts', 'lib/caseload/**/*.ts']);
+    const offenders = search('pattern_ledger', ['app/api/caseload/', 'lib/caseload/']);
     expect(offenders).toEqual([]);
   });
 });
@@ -311,7 +440,7 @@ describe('PIN 3 — the member/practitioner authority boundary', () => {
   it('practitioner surfaces do not read member sanctuary material', () => {
     const offenders = search(
       'sanctuary',
-      ['app/api/studio/**/*.ts', 'app/api/practice/**/*.ts', 'app/api/caseload/**/*.ts']
+      ['app/api/studio/', 'app/api/practice/', 'app/api/caseload/']
     );
     expect(offenders).toEqual([]);
   });
@@ -319,7 +448,7 @@ describe('PIN 3 — the member/practitioner authority boundary', () => {
   it('the practice-field service does not read member memory atoms', () => {
     // practice_fields is practitioner-authored context flowing OUTWARD to members.
     // It must never become a read path back into member material.
-    const offenders = search('member_memory_atoms', ['lib/practiceField/**/*.ts']);
+    const offenders = search('member_memory_atoms', ['lib/practiceField/']);
     expect(offenders).toEqual([]);
   });
 
@@ -328,7 +457,7 @@ describe('PIN 3 — the member/practitioner authority boundary', () => {
     // route is the "belonging appeared across seven clients" shape.
     const offenders = search(
       'GROUP BY.*member_id|COUNT\\(.*\\).*FROM member_memory_atoms',
-      ['app/api/studio/**/*.ts', 'app/api/practice/**/*.ts']
+      ['app/api/studio/', 'app/api/practice/']
     );
     expect(offenders).toEqual([]);
   });
