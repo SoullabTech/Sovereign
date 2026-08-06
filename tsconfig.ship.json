@@ -21,6 +21,7 @@
     "lib/capture/**/*.ts",
     "lib/oracle/MaiaSystemPrompt.ts",
     "lib/consciousness/MAIA_RUNTIME_PROMPT.ts",
+    "lib/soulPortrait/portraits/larry.ts",
     "middleware.ts",
     "next-env.d.ts"
   ],
