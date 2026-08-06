@@ -167,7 +167,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
   if (session === 'out') {
     return (
       <NowWhatThreshold
-        roomName="Your space"
+        roomName="Home"
         line="Your own private thoughts and insights, between conversations with your coach."
         fieldContext={fieldContext}
       />

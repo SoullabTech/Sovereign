@@ -65,7 +65,7 @@ function QuestionsInner() {
   if (session === 'out') {
     return (
       <NowWhatThreshold
-        roomName="Questions you're living"
+        roomName="My Question"
         line="The ones you named, kept warm."
         fieldContext={fieldContext}
       />
@@ -79,7 +79,7 @@ function QuestionsInner() {
 
   return (
     <>
-      <NowWhatShell current="Questions you're living" fieldContext={fieldContext} />
+      <NowWhatShell current="My Question" fieldContext={fieldContext} />
       <div className="relative max-w-2xl mx-auto px-4 py-10 space-y-6">
         <div
           aria-hidden
