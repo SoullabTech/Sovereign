@@ -196,6 +196,19 @@ export function NowWhatShell({
  * The threshold — sign-in as a door met before the room, in the field's
  * register. Rendered by a room's page when the session fact says 'out';
  * signed-in members never see it.
+ *
+ * `roomName` MUST be the room's registry name (`lib/nowWhat/rooms.ts`). It is
+ * a prop rather than a `roomForPath` lookup only because the threshold renders
+ * before a room mounts its shell; that is a mechanical accident, not licence to
+ * author a second name.
+ *
+ * WHY (2026-08-06): a member met "Coaching Room" at the door and "My Coaching"
+ * on the map — the same place, named twice. The signed-in shell had already been
+ * moved onto the registry (see `locationLabel` above, and the 2026-07-29 note in
+ * rooms.ts); the threshold and `PaperRoom` were not, so four of six rooms drifted
+ * (`/coaching`, `/questions`, `/room`, and Home). Only the two that happened to
+ * copy the registry string agreed with it. Ruled: the registry is the single
+ * author of member-facing room names — a room does not get to introduce its own.
  */
 export function NowWhatThreshold({
   roomName,

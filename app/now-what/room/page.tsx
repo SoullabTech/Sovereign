@@ -42,7 +42,7 @@ function NowWhatRoomInner() {
         // The threshold: sign-in met at the door, in the field's register —
         // not as a red API error inside a room that half-opened.
         <NowWhatThreshold
-          roomName="Session room"
+          roomName="The Room"
           line="Sit with MAIA. Bring the actual thing — work with it until a next real step appears."
           fieldContext={fieldContext}
         />
@@ -50,7 +50,7 @@ function NowWhatRoomInner() {
       {session === 'in' && (
         <>
           {/* Shell recedes mid-session (quiet): the room stays a room. */}
-          <NowWhatShell current="Session room" fieldContext={fieldContext} variant="quiet" />
+          <NowWhatShell current="The Room" fieldContext={fieldContext} variant="quiet" />
           <NowWhatRoom
             phase={phase}
             fieldContext={fieldContext}

@@ -1,8 +1,13 @@
 'use client';
 
 /**
- * Now What? — the Coaching Room. The human relationship's own room
+ * Now What? — My Coaching. The human relationship's own room
  * (six-door constellation, founder-directed 2026-08-05).
+ *
+ * The room's name is the registry's (`lib/nowWhat/rooms.ts`), not a local
+ * string. Member-facing names are authored in ONE place; see the note on
+ * NowWhatThreshold about why this room's threshold once said "Coaching Room"
+ * while the map said "My Coaching".
  *
  * Holds: the coach · upcoming conversations (live sessions substrate) ·
  * previous conversations (derived from what the member carried out of them) ·
@@ -120,7 +125,7 @@ function CoachingRoomInner() {
   if (session === 'out') {
     return (
       <NowWhatThreshold
-        roomName="Coaching Room"
+        roomName="My Coaching"
         line="Your coaching relationship — its conversations, and what you chose to bring into it."
         fieldContext={fieldContext}
       />
@@ -134,7 +139,7 @@ function CoachingRoomInner() {
   const past = data?.sessions ?? [];
 
   return (
-    <PaperRoom location="Coaching Room" homeHref={`/now-what${ctx}`}>
+    <PaperRoom location="My Coaching" homeHref={`/now-what${ctx}`}>
       {error && <p role="alert" className="nwp-quiet" style={{ color: '#8c2f22', marginTop: 24 }}>{error}</p>}
 
       <h1 className="nwp-h1">{coachName ? `Your work with ${coachFirst}` : 'Your coaching relationship'}</h1>
