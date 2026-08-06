@@ -21,6 +21,7 @@ import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { consultChangeCouncil } from '@/lib/studio/changes/changeCouncil';
 import type { ChangeContext, ChangeIterationContext } from '@/lib/studio/changes/types';
 import type { DecisionInputBundle } from '@/lib/studio/practitioner/types';
+import { admitFieldSignalsForConsult } from '@/lib/studio/containment/inferenceContainment';
 import { getProtocol } from '@/lib/studio/practitioner/protocols';
 
 export async function POST(
@@ -171,20 +172,30 @@ export async function POST(
               createdAt: inquiryResult.rows[0].created_at,
             }
           : null,
-        fieldSignals: signalsResult.rows.map((r) => ({
-          id: r.id,
-          changeId: r.change_id,
-          clientId: r.client_id,
-          practitionerId: r.practitioner_id,
-          source: r.source,
-          type: r.signal_type,
-          title: r.title,
-          content: r.content,
-          intensity: r.intensity != null ? Number(r.intensity) : null,
-          tags: r.tags || [],
-          timestamp: r.signal_timestamp,
-          createdAt: r.created_at,
-        })),
+        // ── CONTAINED (Practitioner Inference Containment, 2026-08-06) ──────
+        // studio_field_signals mixes source ∈ ('client','practitioner','maia')
+        // with a numeric intensity and no consent gate. 'client' and 'maia' are
+        // categorically refused; 'practitioner' is refused too, because `source`
+        // is a category and not a provenance — no column establishes that such a
+        // row was authored BY the practitioner rather than attributed to them.
+        // ⛔ Ambiguous existing rows must not be reinterpreted as safe.
+        // Practitioner observations (below) are unaffected: those are authored.
+        fieldSignals: admitFieldSignalsForConsult(
+          signalsResult.rows.map((r) => ({
+            id: r.id,
+            changeId: r.change_id,
+            clientId: r.client_id,
+            practitionerId: r.practitioner_id,
+            source: r.source,
+            type: r.signal_type,
+            title: r.title,
+            content: r.content,
+            intensity: r.intensity != null ? Number(r.intensity) : null,
+            tags: r.tags || [],
+            timestamp: r.signal_timestamp,
+            createdAt: r.created_at,
+          }))
+        ),
         practitionerObservations: observationsResult.rows.map((r) => ({
           id: r.id,
           changeId: r.change_id,

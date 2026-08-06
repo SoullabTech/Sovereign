@@ -21,6 +21,7 @@ import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { consultDecisionCouncil } from '@/lib/studio/leadership/decisionCouncil';
 import type { DecisionContext, IterationContext } from '@/lib/studio/leadership/types';
 import type { DecisionInputBundle } from '@/lib/studio/practitioner/types';
+import { admitFieldSignalsForConsult } from '@/lib/studio/containment/inferenceContainment';
 import { getProtocol } from '@/lib/studio/practitioner/protocols';
 
 export async function POST(
@@ -167,20 +168,27 @@ export async function POST(
               createdAt: inquiryResult.rows[0].created_at,
             }
           : null,
-        fieldSignals: signalsResult.rows.map((r) => ({
-          id: r.id,
-          decisionId: r.decision_id,
-          clientId: r.client_id,
-          practitionerId: r.practitioner_id,
-          source: r.source,
-          type: r.signal_type,
-          title: r.title,
-          content: r.content,
-          intensity: r.intensity != null ? Number(r.intensity) : null,
-          tags: r.tags || [],
-          timestamp: r.signal_timestamp,
-          createdAt: r.created_at,
-        })),
+        // ── CONTAINED (Practitioner Inference Containment, 2026-08-06) ──────
+        // See lib/studio/containment/inferenceContainment.ts. 'client' and 'maia'
+        // sources are categorically refused; 'practitioner' is refused too until a
+        // provenance column can establish practitioner AUTHORSHIP rather than mere
+        // categorisation. ⛔ Ambiguous existing rows are not safe by default.
+        fieldSignals: admitFieldSignalsForConsult(
+          signalsResult.rows.map((r) => ({
+            id: r.id,
+            decisionId: r.decision_id,
+            clientId: r.client_id,
+            practitionerId: r.practitioner_id,
+            source: r.source,
+            type: r.signal_type,
+            title: r.title,
+            content: r.content,
+            intensity: r.intensity != null ? Number(r.intensity) : null,
+            tags: r.tags || [],
+            timestamp: r.signal_timestamp,
+            createdAt: r.created_at,
+          }))
+        ),
         practitionerObservations: observationsResult.rows.map((r) => ({
           id: r.id,
           decisionId: r.decision_id,
