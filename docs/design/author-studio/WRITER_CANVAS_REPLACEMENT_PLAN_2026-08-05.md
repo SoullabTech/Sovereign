@@ -106,3 +106,25 @@ as-pages, pagination engine, Export PDF, print CSS.
 Implementation proceeds now on `feature/canvas-surface-prototype`; the
 frozen walked room on #972 remains untouched until the founder rules
 sequencing.
+
+
+## THE AIN CANVAS (founder elevation, 2026-08-05 — written at the top of the framework)
+
+> **"The AIN Canvas is an identifiable, ceremonial, reliable place where
+> human work can grow — from a fleeting thought to a lifetime of
+> contribution."**
+
+The shared shell is not Writer infrastructure — it is **the canonical AIN
+Canvas**, and every discipline is a specialization: member reflections,
+Larry's courses, books, dissertations, keynotes, interventions. Four
+qualities, experience not UI: **identifiable** (crop the logo out and you
+still know it's AIN) · **ceremonial** (crossing onto it is a transition
+into focused creation) · **reliable** (always remembers, saves, restores,
+respects authorship — a favorite desk) · **powerful** (expands with the
+work: note → journal → research → manuscript → dissertation — the tools
+evolve, the place does not). Governing line: **the work changes; the
+canvas remains.** Writer Canvas is one deployment; people should come to
+say "I went into the Canvas." Memorability through continuity, not
+flash. Consequence for code: the shell lives at platform level
+(`components/canvas/CanvasShell.tsx`), themed per deployment, with the
+founder's sentence as its header.
