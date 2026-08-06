@@ -105,8 +105,23 @@ export default function WorkCard({ work, manuscripts, reload }: WorkCardProps) {
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json().catch(() => ({}));
       const manuscriptId: string | undefined = data?.id;
-      if (!manuscriptId) throw new Error('no id');
 
+      /* The page was made but we cannot name it. Saying "could not make a
+         page" here would be a lie that strands a real page the member does
+         not know exists — so we reload instead, and the Studio shows it
+         waiting to be placed. Never claim nothing happened when something
+         did. */
+      if (!manuscriptId) {
+        setFailure('A page was made, but the Studio lost track of it. Reload — it is waiting below.');
+        await reload();
+        setBusy(false);
+        return;
+      }
+
+      /* Placement is the member's crossing; it is not what makes the page
+         real. If filing fails the page still exists, still opens, and the
+         Canvas honestly shows it unlinked — the room's unite rule reads the
+         declaration row, so it will not draw a containment that failed. */
       await apiFetch(`/api/sovereign/living-works/${work.id}/expressions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
