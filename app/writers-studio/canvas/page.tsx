@@ -167,25 +167,53 @@ export default function WriterCanvasPage() {
           No headings yet — your text is one continuous flow.
         </p>
       ) : (
-        <ul className="space-y-0.5">
-          {headings.map((h, i) => (
-            <li key={`${h.offset}-${i}`}>
-              <button
-                onClick={() => surfaceRef.current?.jumpTo(h.offset)}
-                className="w-full text-left text-[12px] leading-snug py-1 opacity-55 hover:opacity-100 truncate transition-opacity"
-                style={{ fontFamily: SERIF }}
-                title={h.text}
-              >
-                {h.text}
-              </button>
-            </li>
-          ))}
+        /* Three quiet weights from the writer's OWN forms — parts stand,
+           chapters follow, their capitalized headers recede. The manuscript
+           stays the loudest thing in the room. */
+        <ul>
+          {headings.map((h, i) => {
+            const structural = h.kind === 'marked' && (h.depth ?? 1) === 1;
+            const secondary = h.kind === 'chapter' || (h.kind === 'marked' && (h.depth ?? 1) > 1);
+            return (
+              <li key={`${h.offset}-${i}`}>
+                <button
+                  onClick={() => surfaceRef.current?.jumpTo(h.offset)}
+                  className="w-full text-left leading-snug truncate transition-opacity hover:opacity-100"
+                  style={{
+                    fontFamily: SERIF,
+                    fontSize: structural ? '12px' : secondary ? '11.5px' : '10.5px',
+                    opacity: structural ? 0.8 : secondary ? 0.55 : 0.35,
+                    letterSpacing: structural ? '0.06em' : undefined,
+                    paddingLeft: structural ? 0 : secondary ? 10 : 20,
+                    paddingTop: structural ? 12 : 3,
+                    paddingBottom: 3,
+                  }}
+                  title={h.text}
+                >
+                  {h.text}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </nav>
   );
 
-  // ── Support: the Work register and one honest line. Nothing else yet. ──
+  /**
+   * The Work panel appears only when it has something true to say: a Work
+   * the member united with this manuscript, or a real gesture available to
+   * them (declaring it into a work they have). With neither, the panel is
+   * absent — and since it is the only context panel then, the whole rail
+   * goes with it and the easel takes the room back.
+   *
+   * The founder's review caught this: a panel that ANNOUNCES an absence
+   * ("no work is declared yet…") is an empty promise wearing other words,
+   * and it was reserving a fifth of the screen to say so. Absence over
+   * emptiness has to apply to itself.
+   */
+  const workPanelHasSomethingTrue = unitedWork !== null || (works.length > 0 && manuscript !== null);
+
   const workPanel = (
     <div style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       {unitedWork ? (
@@ -222,15 +250,7 @@ export default function WriterCanvasPage() {
             </button>
           ))}
         </div>
-      ) : (
-        <p className="text-[11px] leading-relaxed opacity-50">
-          No work is declared yet.{' '}
-          <Link href="/writers-studio" className="underline underline-offset-2 opacity-90">
-            The Studio Home
-          </Link>{' '}
-          is where a work begins.
-        </p>
-      )}
+      ) : null}
     </div>
   );
 
@@ -259,6 +279,7 @@ export default function WriterCanvasPage() {
       label: 'Work',
       region: 'context',
       order: 10,
+      isRelevant: () => workPanelHasSomethingTrue,
       render: () => workPanel,
     })
     .registerPanel({

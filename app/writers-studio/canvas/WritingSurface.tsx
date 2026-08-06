@@ -65,6 +65,16 @@ function loadSurfaceChoice(manuscriptId: string): SurfaceId {
 export interface Heading {
   text: string;
   offset: number;
+  /**
+   * The FORM the member's own line took — never an inferred hierarchy. A
+   * line they marked with `#` is marked; a line that names a chapter is a
+   * chapter; a line they set in capitals is capitals. The navigator gives
+   * these three quiet weights so the eye can rest, but the distinctions are
+   * the writer's own characters, read back.
+   */
+  kind: 'marked' | 'chapter' | 'caps';
+  /** Depth of the member's own `#` marking (1–3), else null. */
+  depth: number | null;
 }
 
 /**
@@ -74,12 +84,21 @@ export interface Heading {
  */
 function extractHeadings(content: string): Heading[] {
   const out: Heading[] = [];
-  const re = /^(#{1,3}\s+.+|[Cc]hapter\s+\w+.*|[A-Z][A-Z0-9 ,'&\-—:]{3,80})$/;
+  const marked = /^(#{1,3})\s+(.+)$/;
+  const chapter = /^[Cc]hapter\s+\w+.*$/;
+  const caps = /^[A-Z][A-Z0-9 ,'&\-—:]{3,80}$/;
   let offset = 0;
   for (const line of content.split('\n')) {
     const raw = line.trim();
-    if (raw && raw.length <= 100 && re.test(raw)) {
-      out.push({ text: raw.replace(/^#{1,3}\s+/, ''), offset });
+    if (raw && raw.length <= 100) {
+      const m = raw.match(marked);
+      if (m) {
+        out.push({ text: m[2], offset, kind: 'marked', depth: m[1].length });
+      } else if (chapter.test(raw)) {
+        out.push({ text: raw, offset, kind: 'chapter', depth: null });
+      } else if (caps.test(raw)) {
+        out.push({ text: raw, offset, kind: 'caps', depth: null });
+      }
     }
     offset += line.length + 1;
   }
