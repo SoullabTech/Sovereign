@@ -70,6 +70,40 @@ the writer chooses their paper.*
   compose with any paper rather than being a peer color (slice design
   decides; flagged, not assumed).
 
+## The easel ruling (founder, third message — supersedes any whole-app theme reading)
+
+**Not a light/dark switch. The adaptation happens at the easel.** An
+artist's studio doesn't disappear when the painter changes canvases: the
+room, the easel, and the lighting stay; the painter puts white canvas,
+toned canvas, or black paper on the easel. Writer Studio keeps its warm
+identity everywhere — **only the surface on which the manuscript lives
+changes** (Warm Canvas · Ivory · White · Midnight on the easel of a warm
+room). Turning the application into a conventional theme switch is
+explicitly refused — that would make Writer Studio feel like every other
+writing app.
+
+**The problem may not be color at all** (founder's read of his own
+reaction): the eye wasn't asking for white — it was asking *"why does
+this feel like a printed PDF sitting inside software?"* The document-
+viewer feel (imported pagination, page numbers, back matter, scroll) is
+the primary defect; on a fluid working surface the warm canvas may feel
+completely natural.
+
+**Prototype-before-theming (ruled test):** change ONE thing — keep the
+environment exactly as is, make the manuscript surface interchangeable —
+then observe whether writers actually switch surfaces after hours of
+writing. If many stay warm and some switch for long edits, identity is
+preserved without forcing one visual mode.
+
+**The professionalism bar, with an in-house reference:** the current
+writing field reads "uninspired and random" (founder verbatim); the
+Soullab Press book canvas — warm chrome, ivory page lifted on the
+surface, quiet inspector — is the house's own proof that a professional
+field and the Soullab identity coexist. Regular writing deserves that
+same felt quality. **Scope line (founder):** it doesn't need the
+Press editor's complexity — *but it needs to be a canvas*: a real sheet
+the manuscript lives on, not a full-width text region.
+
 ## What the slice ruling will need to decide (flagged, not designed here)
 
 - Where the surface preference lives (member settings + per-manuscript
