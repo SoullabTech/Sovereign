@@ -53,6 +53,7 @@
     "check:no-phi-enc": "npx tsx scripts/check-no-phi-enc-in-responses.ts",
     "check:phi-inventory": "npx tsx scripts/check-phi-columns-inventory.ts",
     "check:refusals": "npx tsx tests/constitutional/refusal-registry/index.ts",
+    "check:writer-containment": "npx tsx scripts/check-writer-field-containment.ts",
     "guard:no-scripted-maia": "npx ts-node scripts/guards/no-scripted-maia.ts",
     "guard:ain-v2-integration": "npx tsx scripts/guards/ain-v2-integration-present.ts",
     "guard:phi": "bash scripts/guards/phi-no-plaintext-drift.sh",

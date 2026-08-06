@@ -79,6 +79,33 @@ MAIA conversation without an explicit crossing, the work escapes its own context
 > brought it into the writing field. Everything outside the writing field remains outside
 > until the writer intentionally carries it across.
 
+### 3.1.1 Thresholds present crossings; they do not perform them
+
+Ruled 2026-08-06.
+
+> **Keep authorizes retention in the source field. It does not authorize crossing into the
+> writing field.**
+
+Proximity, retrieval, and prior retention may not substitute for the crossing act. §3's
+requirement of an explicit person-initiated gesture makes the person — not the system — the
+creator of the crossing.
+
+A **threshold** may therefore expose candidates from another field without crossing them.
+A threshold may: perform member-scoped read-only retrieval; show eligible material; identify
+where each candidate came from; let the writer decide whether to carry a specific item
+across; and serve as the audited choke point for that presentation.
+
+A threshold may **not**: prepopulate a manuscript, project, canvas, or writing-field memory;
+treat Keep as permission to cross; persist an item into the writing field without a separate,
+explicit per-item gesture; infer that opening a threshold surface means "import everything
+shown"; or allow later persistence to absorb threshold material automatically.
+
+**`lib/bookStudio/mirrorSources.ts` is a permitted threshold — not a constitutional
+exception.** Its permission is conditional on remaining read-only, and that condition is
+mechanically asserted (§4.3). Verified read-only at ratification: `SELECT` only, no
+`INSERT`/`UPDATE`/`DELETE` path. If any threshold surface persists or silently seeds a
+candidate, that behavior is a violation, not an inherited allowance.
+
 ### 3.2 The field, not the file type
 
 Every persisted artifact created within Writer Studio — **conversations, notes,
@@ -118,22 +145,51 @@ That migration is the first-persistence moment. The gate, in checkable form:
 A reviewer can evaluate that against a diff. This is the quality the rule is meant to have:
 **testable**, not merely stated.
 
-### 4.2 Honest status of the gate — currently a description
+### 4.2 Two phases, stated separately
 
-⚠️ **As written, §4.1 is a description, not an enforced control.** Nothing mechanically
-blocks a Phase C merge today. Per standing project discipline, *a control with no enforcing
-mechanism is a description* — and the platform has already been bitten by a governance check
-that was red but not in `required_status_checks`, and therefore blocked nothing.
+The gate must not present a green static check as proof of a runtime mechanism that has no
+subject yet. It therefore has two phases, and only the first is available today:
 
-To become a real control, the gate needs one of:
+> **The construction boundary is enforceable now:** writing-field persistence must not
+> acquire member-scoped material without a per-item crossing authorization.
+>
+> **Full containment verification remains unavailable** until writing-field persistence
+> exists.
 
-1. a boundary-verification script in the shape of `scripts/verify-colab-boundaries.ts`
-   (asserting no writing-field content reaches member-scoped memory), wired into the
-   deploy smoke tests; **and**
-2. that check present in branch protection `required_status_checks`.
+Enforced now (§4.3). Unavailable, and honestly named as unavailable, until Phase C ships.
 
-Until then this clause binds reviewers by intent, not by mechanism, and should be described
-that way — never cited as if a merge were structurally prevented.
+### 4.3 The enforcing mechanism
+
+`scripts/check-writer-field-containment.ts` — run as `npm run check:writer-containment`,
+wired into the pre-commit gate written by `scripts/setup-githooks.sh`.
+
+It encodes three rules:
+
+1. **`threshold-must-stay-read-only`** — a listed permitted threshold that acquires a write
+   statement fails. This is what makes §3.1.1's allowance conditional rather than blanket.
+2. **`no-persistence-from-member-scope-without-crossing`** — a writing surface that reaches
+   `member_memory_atoms` or `personal_spirals` *and* persists, without consuming a per-item
+   crossing authorization, fails.
+3. **`unlisted-member-scope-reader`** — a new reader of member-scoped memory from a writing
+   surface fails until deliberately listed. A new reader is a governance event, not a silent
+   addition; this holds even for a path that already carries crossing authorization.
+
+**Verified by negative test at authorship**, not merely by observing green: each rule was
+made to fire against a deliberately constructed violation, and the tree returned to green
+after removal.
+
+**Honest limits.** Static text analysis; it cannot prove absence of derivation through
+indirection. The persistence half passes **vacuously** today because writing-field
+persistence does not exist. A green result means *the violation has not been constructed* —
+never *containment is verified*.
+
+**Path scope.** Writer's Studio has no ruled route (canon marks route identity UNRULED), so
+the check enumerates the concrete surfaces canon names rather than inventing one. That list
+must be revisited when a route is ruled.
+
+**Not wired to branch protection.** CI deploys are disabled here (no self-hosted runner), so
+the enforcement surface is the pre-commit hook, which is real but local: a contributor who
+bypasses hooks bypasses this. Do not cite it as structurally preventing a merge.
 
 ---
 

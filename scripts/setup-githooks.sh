@@ -34,6 +34,12 @@ npm run check:no-supabase
 # Provider governance — no NEW OpenAI surfaces (docs/canon/PROVIDER_GOVERNANCE.md)
 npm run check:no-openai
 
+# Writer MAIA field containment — CONSTRUCTION tripwire, not a verification.
+# Goes red when a writing surface acquires a persistence path that could absorb
+# member-scoped material without a per-item crossing authorization.
+# Law: docs/canon/WRITER_MAIA_FIELD_CONTAINMENT_2026-08-06.md
+npm run check:writer-containment
+
 echo "✅ Pre-commit checks passed"
 HOOK
   chmod +x "$1"
