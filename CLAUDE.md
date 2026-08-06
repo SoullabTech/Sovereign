@@ -383,16 +383,37 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 
 ## Co-Lab Release Gate (MANDATORY before tester invites)
 
-**No invite unless `verify-colab-boundaries.ts` passes 31/31 in production.**
+**No invite unless the Co-Lab constitutional verifier passes clean in production.**
+
+⚠️ **`scripts/verify-colab-boundaries.ts` does not exist.** This section named it, with a
+`31/31` pass condition, until 2026-08-06. The gate was refactored into five
+`verify-constitution-*.ts` verifiers; the old name and count survived here as a citation to
+a script that could never have run. Corrected against the live tree and a live production
+run — see `docs/ops/VERIFICATION_SURFACE_TRUTH_2026-08-06.md`.
 
 Run inside the container on minisforum:
 ```bash
-docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
-Pass condition: `31 passed · 0 failed · 0 warned`
+Pass condition: `0 failed`. **Measured 2026-08-06 on `b1399f693`: `33 passed · 0 failed ·
+0 warned`.** Do not treat 33 as the required count — it grows as checks are added. The
+requirement is zero failures, not a fixed total.
 
-This gate runs automatically as part of `scripts/deploy-production.sh` smoke tests. It must also be run manually before any tester wave. See `docs/ops/COLAB_RELEASE_GATE.md` for the full gate specification — what it checks, which surfaces trigger it, and how to add new checks when new scoped surfaces ship.
+Full five-verifier suite (what the deploy smoke test actually runs):
+```bash
+docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" bash scripts/constitutional-verification.sh'
+```
+
+⚠️ **Two of the five verifiers are non-blocking** (`scripts/constitutional-verification.sh`
+declares Development and MAIA with `false`). The suite can report **"Release gate: PASSED"**
+while those two have warnings — MAIA reported `6 passed · 0 failed · 6 warned` on
+2026-08-06. A green suite means *no blocking verifier failed*, not *everything is clean*.
+
+This suite runs automatically in `scripts/deploy-production.sh` smoke tests, and
+`scripts/pre-deploy-gate.sh` runs the Co-Lab verifier on its own. It must also be run
+manually before any tester wave. **It is not run by CI** — no workflow in `.github/workflows/`
+invokes it. See `docs/ops/COLAB_RELEASE_GATE.md` for the gate specification.
 
 Triggers: Co-Lab changes · Studio people · DMs · sessions/encounters · files · memory atoms · onboarding · invitations/roles · any migration touching those tables.
 
@@ -422,7 +443,43 @@ After cloning this repo, run once:
 ./scripts/setup-githooks.sh
 ```
 
-This configures versioned git hooks that enforce sovereignty on every commit.
+This installs local git hooks. **This is the correct installer. Do not run
+`scripts/dev/setup-hooks.sh`** — see the conflict below.
+
+### ⚠️ Two installers exist and they produce different gates
+
+| installer | mechanism | pre-commit checks it produces |
+|---|---|---|
+| `scripts/setup-githooks.sh` **(correct)** | writes its own hook body into `$(git rev-parse --git-common-dir)/hooks` | branch guard · `check:no-supabase` · `check:no-openai` |
+| `scripts/dev/setup-hooks.sh` **(do not run)** | sets `core.hooksPath .githooks`, activating `.githooks/pre-commit` | branch guard · `check:no-supabase` · `check:no-inline-names` · `check:no-phi-enc` · `check:phi-inventory` · `check:no-direct-anthropic` |
+
+**Neither list is a superset of the other.** Which checks run on your machine depends on
+which script you happened to run. `check:no-openai` (provider governance) runs *only* under
+the correct installer; the PHI and inline-name checks run *only* under the other one. And
+`check:no-direct-anthropic` is knowingly RED — `setup-githooks.sh` omits it deliberately —
+so running the dev installer can block every commit on a known-failing check.
+
+`.githooks/pre-commit` is therefore **not** the hook that runs under the supported setup,
+but it is not inert either: it is one `core.hooksPath` away from becoming the live gate.
+
+Verify what is actually installed on your machine before trusting any of it:
+```bash
+git config core.hooksPath; grep -oE "npm run check:[a-z-]+" "$(git rev-parse --git-common-dir)/hooks/pre-commit.old"
+```
+
+### The three enforcement layers are not interchangeable
+
+Keep these distinct when citing a gate as evidence:
+
+| layer | what it is | binding? |
+|---|---|---|
+| **Documented gate** | a rule written in a doc (this file, an ops doc, a canon doc) | No. Binds by intent only. |
+| **Installed local hook** | pre-commit / pre-push on one developer's machine | Locally, and only after the installer is run. Bypassable with `--no-verify`. Not present in CI. |
+| **CI / branch protection** | a required status check that blocks merge | Would be binding — **but no constitutional or sovereignty check currently runs in CI.** `.github/workflows/deploy.yml` has its deploy job disabled (`if: false`, server unreachable). |
+
+**Nothing in this repository structurally blocks a merge on a sovereignty or constitutional
+check today.** Local hooks and deploy-time smoke tests are real controls; they are not merge
+controls. Do not describe them as if they were.
 
 # context-mode — MANDATORY routing rules
 

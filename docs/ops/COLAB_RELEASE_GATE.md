@@ -11,10 +11,10 @@ Before inviting testers or deploying changes to any of the surfaces below, the b
 ```bash
 # Run on minisforum (inside the container — pg is available there)
 docker exec maia-sovereign sh -c \
-  'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+  'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
-**Pass condition:** `31 passed · 0 failed · 0 warned`
+**Pass condition:** `0 failed`. Measured 2026-08-06 on `b1399f693`: `33 passed · 0 failed · 0 warned`. The total grows as checks are added — **the requirement is zero failures, not a fixed count.**
 
 Any failure or warning blocks the release unless explicitly reviewed and signed off.
 
@@ -36,7 +36,7 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 
 ---
 
-## What the matrix verifies (31 checks)
+## What the matrix verifies
 
 1. **Ownership** — each principal (Kelly, Jondi, Nathan) owns exactly their own Co-Lab
 2. **No accidental cross-ownership** — no one is owner of another principal's workspace
@@ -60,7 +60,7 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 `scripts/deploy-production.sh` runs the Co-Lab boundary gate as part of post-deploy smoke tests. The gate runs inside `maia-sovereign` where `pg` is available. A non-zero exit from the verification script fails the smoke test report.
 
 The deploy script will emit:
-- `PASS  Co-Lab boundary gate (31 passed · 0 failed · 0 warned)` — release is safe
+- `PASS  Co-Lab Boundaries` — no blocking verifier failed
 - `FAIL  Co-Lab boundary gate` — do not send invites; diagnose before proceeding
 - `SKIP  Co-Lab boundary script not found` — image may be mid-deploy; re-run after deploy completes
 
@@ -70,7 +70,7 @@ The deploy script will emit:
 
 Before sending tester invitations:
 
-- [ ] `verify-colab-boundaries.ts` passes 31/31 in production
+- [ ] `verify-constitution-colab.ts` passes with `0 failed` in production
 - [ ] New tester has been provisioned an owned Co-Lab (check section 10 output)
 - [ ] If any WARN appears: reviewed and explicitly signed off
 - [ ] If any schema migration was applied: re-run the gate against the migrated database
@@ -87,9 +87,9 @@ Before sending tester invitations:
 
 ## Adding checks to the matrix
 
-When a new Co-Lab-scoped surface ships, add a corresponding check to `scripts/verify-colab-boundaries.ts`. The pattern:
+When a new Co-Lab-scoped surface ships, add a corresponding check to `scripts/verify-constitution-colab.ts`. The pattern:
 
 1. Identify the table and its scope column (`team_id`, `memory_scope`, `file_scope`, etc.)
 2. Write a `check*` function that queries across principal boundaries and asserts zero cross-bleed
 3. Add it to `main()` under the appropriate section
-4. Update the pass-condition count in this document
+4. Do NOT record a new fixed total here — the pass condition is `0 failed`, so counts never need updating and cannot go stale

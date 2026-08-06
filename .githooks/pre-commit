@@ -1,8 +1,27 @@
 #!/usr/bin/env bash
-# ⚠️ NOT the hook that runs. scripts/setup-githooks.sh writes its own pre-commit
-# body into $(git rev-parse --git-common-dir)/hooks — THAT is what executes, and
-# its check list diverges from this file. Do not trust this file as the live
-# gate; branch allowlist source of truth is scripts/check-branch-allowed.sh.
+# ⚠️⚠️ NOT the hook that runs under the supported setup — but NOT inert either.
+#
+# Two installers exist and produce DIFFERENT gates:
+#
+#   scripts/setup-githooks.sh   (CORRECT)  writes its own body into
+#       $(git rev-parse --git-common-dir)/hooks — this file is ignored.
+#       Runs: branch guard, check:no-supabase, check:no-openai.
+#
+#   scripts/dev/setup-hooks.sh  (DO NOT RUN) sets core.hooksPath .githooks,
+#       which makes THIS FILE the live gate.
+#       Runs: branch guard, check:no-supabase, check:no-inline-names,
+#             check:no-phi-enc, check:phi-inventory, check:no-direct-anthropic.
+#
+# Neither list is a superset of the other. check:no-openai runs only under the
+# correct installer; the PHI/inline-name checks only under the other. And
+# check:no-direct-anthropic is knowingly RED (setup-githooks.sh omits it on
+# purpose), so activating this file can block every commit.
+#
+# This divergence is RECORDED, NOT RESOLVED — unifying the two gates would
+# broaden enforcement, which was explicitly out of scope for the correction
+# that documented it. See docs/ops/VERIFICATION_SURFACE_TRUTH_2026-08-06.md.
+#
+# Branch allowlist source of truth is scripts/check-branch-allowed.sh.
 set -euo pipefail
 
 echo "🔒 Sovereignty pre-commit check..."
