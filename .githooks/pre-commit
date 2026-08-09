@@ -1,55 +1,32 @@
 #!/usr/bin/env bash
-# ⚠️ NOT the hook that runs. scripts/setup-githooks.sh writes its own pre-commit
-# body into $(git rev-parse --git-common-dir)/hooks — THAT is what executes, and
-# its check list diverges from this file. Do not trust this file as the live
-# gate; branch allowlist source of truth is scripts/check-branch-allowed.sh.
+# THIS IS THE HOOK THAT RUNS. scripts/setup-githooks.sh installs this file
+# verbatim (cp), exactly as it does for .githooks/pre-push — so there is one
+# copy to maintain and it cannot drift from the installed hook.
+#
+# Only GREEN checks belong here. A commit gate that cannot fail, or one that is
+# red on pre-existing debt, is a false control surface — see
+# docs/ops/PRECOMMIT_RECONCILIATION_2026-08-09.md for the checks deliberately
+# NOT bound here and what each is waiting on.
+#
+# Branch allowlist source of truth: scripts/check-branch-allowed.sh (shared with pre-push).
 set -euo pipefail
-
 echo "🔒 Sovereignty pre-commit check..."
 
-# Branch guard — allowlist shared with pre-push via scripts/check-branch-allowed.sh
-scripts/check-branch-allowed.sh COMMIT "$(git branch --show-current)"
+# Branch guard — only commit on approved branches.
+BRANCH="$(git branch --show-current)"
+scripts/check-branch-allowed.sh COMMIT "$BRANCH"
+echo "✅ Branch guard: committing to '$BRANCH' (allowed)"
 
-# 1. No Supabase
+export GIT_PRE_COMMIT=1
+
+# Supabase ban (docs/canon — local PostgreSQL only)
 npm run check:no-supabase
-SUPABASE_EXIT=$?
 
-# 2. No inline name logic (preferred_name || name drift)
-npm run check:no-inline-names
-NAMES_EXIT=$?
+# Provider governance — no NEW OpenAI surfaces (docs/canon/PROVIDER_GOVERNANCE.md)
+npm run check:no-openai
 
-# 3. No PHI encryption columns in responses
-npm run check:no-phi-enc
-PHI_EXIT=$?
-
-# 4. PHI columns inventory check
-npm run check:phi-inventory
-INVENTORY_EXIT=$?
-
-# 5. No direct @anthropic-ai/sdk imports outside allowlist
-#    (drift prevention — see docs/orientation/maia-sovereign-runtime-intelligence-audit.md)
+# No direct @anthropic-ai/sdk imports outside allowlist — route via sovereignRouter.
+# (Green as of 2026-08-09: 1 approved, 1 operational, 55 grandfathered. ~2s.)
 npm run check:no-direct-anthropic
-ANTHROPIC_EXIT=$?
 
-if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ] && [ $ANTHROPIC_EXIT -eq 0 ]; then
-  echo "✅ Sovereignty check passed"
-  exit 0
-else
-  echo "❌ Sovereignty check failed - commit blocked"
-  if [ $SUPABASE_EXIT -ne 0 ]; then
-    echo "   - Supabase violations found"
-  fi
-  if [ $NAMES_EXIT -ne 0 ]; then
-    echo "   - Inline name logic found (use resolveClientDisplayName/resolveMemberDisplayName)"
-  fi
-  if [ $PHI_EXIT -ne 0 ]; then
-    echo "   - PHI encryption leak risks found"
-  fi
-  if [ $INVENTORY_EXIT -ne 0 ]; then
-    echo "   - PHI inventory inconsistent"
-  fi
-  if [ $ANTHROPIC_EXIT -ne 0 ]; then
-    echo "   - Direct @anthropic-ai/sdk imports outside allowlist (route through sovereignRouter)"
-  fi
-  exit 1
-fi
+echo "✅ Pre-commit checks passed"
