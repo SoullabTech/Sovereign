@@ -9,6 +9,12 @@
  */
 
 export type PracticeFieldStatus = 'pending' | 'warning' | 'live';
+
+/**
+ * Governance containment — "may this go live?", independent of readiness.
+ * Design + durable record: docs/design/practitioner-portal/GOVERNANCE_CONTAINMENT_2026-08-09.md
+ */
+export type ContainmentStatus = 'none' | 'contained';
 export type OrientationStyle = 'minimal' | 'guided' | 'relationship_first' | 'tour';
 
 export interface PracticeFieldResource {
@@ -66,9 +72,20 @@ export interface PracticeField {
   // Layer 4: Adaptive Guidance ("MAIA Guidance") — live, not snapshotted
   maia_guidance: FieldGuidance;
 
-  // State
+  // State — READINESS. "Could this go live?" Computed from content by syncStatus.
   status: PracticeFieldStatus;
   status_reason: string | null;
+
+  // State — CONTAINMENT. "May this go live?" An explicit governance act, never computed.
+  // Independent of readiness: a field may be ready AND contained, and must then stay non-live.
+  containment_status: ContainmentStatus;
+  containment_reason: string | null;
+  contained_at: string | null;
+  /** NULL only for the 2026-08-03 legacy containment; new acts require an actor. */
+  contained_by: string | null;
+  containment_reference: string | null;
+  released_at: string | null;
+  released_by: string | null;
 
   created_at: string;
   updated_at: string;
@@ -128,4 +145,29 @@ export function checkPracticeFieldReadiness(field: Partial<PracticeField>): Prac
   if (!field.how_maia_supports?.trim()) missing.push('How MAIA Supports Our Work');
   if (!field.professional_practice?.trim()) missing.push('Professional Practice declarations');
   return { is_live: missing.length === 0, missing };
+}
+
+/**
+ * Is an explicit governance containment currently in force?
+ *
+ * Independent of readiness. A field that satisfies every readiness requirement may still be
+ * contained, and must then remain non-live (GC-2).
+ */
+export function isContained(field: Partial<PracticeField>): boolean {
+  return field.containment_status === 'contained';
+}
+
+/**
+ * GC-2 — effective liveness is a CONJUNCTION:
+ *
+ *     effective_live := (status = 'live') AND (containment_status = 'none')
+ *
+ * Every gate that would otherwise test `status` alone must test this instead. Readiness
+ * answers "could this go live?"; containment answers "may it?". Neither alone is sufficient.
+ *
+ * Callers that need to explain a refusal must distinguish the two reasons — an incomplete
+ * field and a contained field are different facts and must never render identically.
+ */
+export function isEffectivelyLive(field: Partial<PracticeField>): boolean {
+  return field.status === 'live' && !isContained(field);
 }

@@ -115,7 +115,29 @@ export async function upsertPracticeField(
   return getPracticeField(practitionerMemberId) as Promise<PracticeField>;
 }
 
-/** Compute and persist the correct status. Called after every update. */
+/**
+ * Compute and persist the READINESS status. Called after every update.
+ *
+ * ⛔ GC-1 — A COMPUTED STATE MAY NEVER ERASE AN EXPLICIT GOVERNANCE ACT.
+ *
+ * This function owns exactly two columns: `status` and `status_reason`. It must NEVER
+ * read, write, or reason about the containment columns (`containment_status`,
+ * `containment_reason`, `contained_at`, `contained_by`, `containment_reference`,
+ * `released_at`, `released_by`). Containment answers a different question — "may this go
+ * live?" — and is settled only by an explicit attributed act (GC-3), never by recomputation.
+ *
+ * Before this boundary existed, containment lived in `status_reason`, which this UPDATE
+ * overwrites unconditionally. A single save would therefore have promoted a deliberately
+ * contained field to 'live' and destroyed the only record of the containment. That is the
+ * failure this invariant exists to make structurally impossible.
+ *
+ * Enforced by lib/practiceField/__tests__/governanceContainment.test.ts (invariants 1 and 6).
+ * If you add a column to this UPDATE, that test is the thing you must not break.
+ *
+ * Note that `status` here remains purely readiness-derived: a contained field may legitimately
+ * compute to 'live'. Liveness that gates behaviour is `isEffectivelyLive()` (GC-2), never
+ * `status` alone.
+ */
 async function syncStatus(
   client: TransactionClient,
   field: PracticeField
