@@ -1,7 +1,11 @@
 # Layer 2 · C1 — Authority is not inferred merely from file location
 
 **Opened:** 2026-07-29
-**Status:** OPEN — awaiting founder ruling
+**Status:** RULED — AFFIRMED as **independent necessary property**, 2026-07-29T18:54:35Z by Kelly
+Nezat (see [RULING](#ruling) below and *Standing state after this ruling*). Durable `78d9fb388`.
+⚠️ *Header hygiene, 2026-08-09: this line read `OPEN — awaiting founder ruling` while the ruling it
+was waiting for was already recorded further down in this same file. Nothing was decided by this
+edit; the header was made to agree with the founder's act already in the document.*
 **Upstream:** Layer 1 AFFIRMED `448cb7eda` · Layer 2 gate RULED (type-only) `500b37f6f`
 **Gate disposition carried in:** C1 = **property candidate**
 **Authority:** Kelly only. Claude may open the slot and give an evidentiary read; Claude may not rule.
