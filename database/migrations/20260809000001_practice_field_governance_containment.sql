@@ -30,6 +30,7 @@ BEGIN;
 
 ALTER TABLE practice_fields
   ADD COLUMN IF NOT EXISTS containment_status    TEXT NOT NULL DEFAULT 'none',
+  ADD COLUMN IF NOT EXISTS authority_basis       TEXT,
   ADD COLUMN IF NOT EXISTS containment_reason    TEXT,
   ADD COLUMN IF NOT EXISTS contained_at          TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS contained_by          UUID REFERENCES members(id),
@@ -45,6 +46,25 @@ BEGIN
     ALTER TABLE practice_fields
       ADD CONSTRAINT practice_fields_containment_status_check
       CHECK (containment_status IN ('none', 'contained'));
+  END IF;
+END $$;
+
+-- GC-4 — WHOSE act imposed the containment, and therefore whose act may lift it.
+--
+--   'holder'     — the field holder withheld their own field; they may release it.
+--   'governance' — imposed by an authority other than the holder; the SUBJECT may never
+--                  release it through the ordinary holder path.
+--
+-- Same storage, different release authority. This mirrors auth_sessions.revoked, which is
+-- written by four paths under three authorities and discriminated by revoked_reason.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'practice_fields_authority_basis_check'
+  ) THEN
+    ALTER TABLE practice_fields
+      ADD CONSTRAINT practice_fields_authority_basis_check
+      CHECK (authority_basis IS NULL OR authority_basis IN ('holder', 'governance'));
   END IF;
 END $$;
 
@@ -65,7 +85,10 @@ BEGIN
       ADD CONSTRAINT practice_fields_containment_has_provenance
       CHECK (
         containment_status = 'none'
-        OR (containment_reason IS NOT NULL AND contained_at IS NOT NULL)
+        OR (containment_reason IS NOT NULL
+            AND contained_at IS NOT NULL
+            -- An unclassifiable hold has no defined release authority. Refuse to store one.
+            AND authority_basis IS NOT NULL)
       );
   END IF;
 END $$;
@@ -78,6 +101,8 @@ COMMENT ON COLUMN practice_fields.containment_status IS
   'Governance containment — "may this go live?", independent of readiness. Only an explicit attributed act may set or clear it (GC-3). syncStatus must never write this column (GC-1).';
 COMMENT ON COLUMN practice_fields.containment_reason IS
   'Why the field is contained. Preserved verbatim across release — a released containment keeps its history.';
+COMMENT ON COLUMN practice_fields.authority_basis IS
+  'GC-4 — whose act imposed the containment, and therefore whose act may lift it. holder = the field holder withheld their own field and may release it. governance = imposed by another authority; the subject may NEVER release it through the holder path. Release authority follows the kind of containment, never the actor''s relationship to the resource.';
 COMMENT ON COLUMN practice_fields.contained_by IS
   'Member who imposed the containment. NULL is permitted ONLY for the 2026-08-03 legacy containment, whose author is unrecoverable from evidence. New containments require an authenticated actor, enforced at the route.';
 COMMENT ON COLUMN practice_fields.containment_reference IS
@@ -99,8 +124,16 @@ COMMENT ON COLUMN practice_fields.released_at IS
 -- Guarded on the exact surviving text, so this is inert if the row has already been
 -- edited, already contained, or does not exist in this database.
 
+-- authority_basis = 'governance', on the evidence of the surviving text itself:
+-- "preserved as evidence pending governance decision". This is a prohibition pending a
+-- governance decision, NOT a practitioner pausing their own field. The field holder must
+-- therefore not be able to lift it through the ordinary holder path (GC-4).
+-- It is also the safe direction: an unclassifiable restraint takes the more restrictive
+-- classification, never the more permissive one.
+
 UPDATE practice_fields
    SET containment_status    = 'contained',
+       authority_basis       = 'governance',
        containment_reason    = status_reason,
        contained_at          = TIMESTAMPTZ '2026-08-03 00:00:00+00',
        contained_by          = NULL,

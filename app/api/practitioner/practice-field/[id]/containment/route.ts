@@ -20,6 +20,20 @@
  * Release preserves `containment_reason` and `contained_at` as history rather than blanking
  * them. A hold that can only be imposed and never lifted is not governance, and a release
  * that erases what was held is not a record.
+ *
+ * ⛔ GC-4 — THIS IS THE HOLDER PATH ONLY.
+ *
+ * It imposes and releases `authority_basis = 'holder'` containments: "I am withholding my
+ * own field." It CANNOT mint a governance containment, and it REFUSES to release one (403).
+ * Holding the field is necessary but not sufficient — release authority follows the kind of
+ * containment, never the actor's relationship to the resource.
+ *
+ * NO GOVERNANCE RELEASE PATH EXISTS YET, DELIBERATELY. Building one requires settling who
+ * holds that authority, and the existing admin model documents its jurisdiction as "platform
+ * stewardship ONLY … never relationship data" — a Practice Field sits near that line. That
+ * question is open (CONTAINMENT_RELEASE_AUTHORITY_PRECEDENT_2026-08-09.md §3.2). Until it is
+ * ruled, a governance containment is releasable only by a deliberate, audited act outside
+ * this API. The absence is the safe state: it fails closed.
  */
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +41,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
+import { holderReleaseCheck } from '@/lib/types/practiceField';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -42,7 +57,8 @@ async function requireFieldHolder(req: NextRequest, fieldId: string) {
     return { failure: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }) };
   }
   const result = await query(
-    `SELECT id, practitioner_member_id, containment_status, containment_reason, contained_at
+    `SELECT id, practitioner_member_id, containment_status, authority_basis,
+            containment_reason, contained_at
        FROM practice_fields WHERE id = $1`,
     [fieldId],
   );
@@ -78,9 +94,13 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'A containment requires a stated reason.' }, { status: 400 });
   }
 
+  // This route imposes HOLDER containments only — "I am withholding my own field."
+  // A governance containment is a prohibition placed by another authority; it is not
+  // creatable here, and this route has no way to mint one (GC-4).
   await query(
     `UPDATE practice_fields SET
        containment_status    = 'contained',
+       authority_basis       = 'holder',
        containment_reason    = $2,
        contained_at          = NOW(),
        contained_by          = $3,
@@ -104,8 +124,27 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const auth = await requireFieldHolder(req, id);
   if ('failure' in auth) return auth.failure;
 
-  if (auth.field.containment_status !== 'contained') {
-    return NextResponse.json({ error: 'This Practice Field is not contained.' }, { status: 409 });
+  // GC-4 — the decision is made by holderReleaseCheck, not re-derived here. Holding the
+  // field is necessary but NOT sufficient: a holder may lift what they imposed and may not
+  // lift what an outside authority imposed on them.
+  const check = holderReleaseCheck(auth.field, auth.memberId);
+  if (!check.allowed) {
+    if (check.refusal === 'not_contained') {
+      return NextResponse.json({ error: 'This Practice Field is not contained.' }, { status: 409 });
+    }
+    if (check.refusal === 'governance_authority') {
+      return NextResponse.json(
+        {
+          error:
+            'This is a governance containment. It cannot be released by the field holder — a separately authorized governance release act is required.',
+          authority_basis: 'governance',
+          containment_reason: auth.field.containment_reason,
+          containment_reference: auth.field.containment_reference,
+        },
+        { status: 403 },
+      );
+    }
+    return NextResponse.json({ error: 'Not authorized for this Practice Field' }, { status: 403 });
   }
 
   // containment_reason and contained_at are deliberately NOT cleared: the release records
@@ -113,6 +152,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   await query(
     `UPDATE practice_fields SET
        containment_status = 'none',
+       authority_basis    = NULL,
        released_at        = NOW(),
        released_by        = $2
      WHERE id = $1`,

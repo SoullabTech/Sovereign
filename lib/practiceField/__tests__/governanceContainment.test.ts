@@ -20,6 +20,7 @@ import {
   checkPracticeFieldReadiness,
   isContained,
   isEffectivelyLive,
+  holderReleaseCheck,
   type PracticeField,
 } from '@/lib/types/practiceField';
 
@@ -33,6 +34,7 @@ const MIGRATION = 'database/migrations/20260809000001_practice_field_governance_
 
 const CONTAINMENT_COLUMNS = [
   'containment_status',
+  'authority_basis',
   'containment_reason',
   'contained_at',
   'contained_by',
@@ -40,6 +42,45 @@ const CONTAINMENT_COLUMNS = [
   'released_at',
   'released_by',
 ] as const;
+
+const HOLDER = 'holder-member-id';
+const OTHER_HOLDER = 'a-different-member-id';
+
+/** A containment the field holder imposed on their own field. */
+function holderContained(): Partial<PracticeField> {
+  return {
+    practitioner_member_id: HOLDER,
+    status: 'live',
+    containment_status: 'contained',
+    authority_basis: 'holder',
+    containment_reason: 'pausing my own field while I revise it',
+    contained_at: '2026-08-09T00:00:00Z',
+    contained_by: HOLDER,
+  };
+}
+
+/** A prohibition imposed by an authority other than the holder. */
+function governanceContained(): Partial<PracticeField> {
+  return {
+    practitioner_member_id: HOLDER,
+    status: 'live',
+    containment_status: 'contained',
+    authority_basis: 'governance',
+    containment_reason: 'held pending governance decision',
+    contained_at: '2026-08-03T00:00:00Z',
+    contained_by: 'some-governance-actor',
+  };
+}
+
+/** The real 2026-08-03 row: governance basis, imposing actor unrecoverable. */
+function legacyGovernanceContained(): Partial<PracticeField> {
+  return {
+    ...governanceContained(),
+    contained_by: null,
+    containment_reason:
+      'contained 2026-08-03: active content was Soullab candidate material composed as Larry program corpus; preserved as evidence pending governance decision',
+  };
+}
 
 /** A field that is fully ready by content, and contained by governance. */
 function readyAndContained(): Partial<PracticeField> {
@@ -50,6 +91,7 @@ function readyAndContained(): Partial<PracticeField> {
     professional_practice: 'p',
     status: 'live',
     containment_status: 'contained',
+    authority_basis: 'governance',
     containment_reason: 'held pending governance decision',
     contained_at: '2026-08-03T00:00:00Z',
   };
@@ -192,6 +234,78 @@ describe('GC-2 · the state the old model could not represent', () => {
   });
 });
 
+// ── GC-4 · release authority follows the KIND of containment ─────────────────
+//
+// Founder ruling 2026-08-09: "A field holder may contain and release a holder-authored
+// containment on their own field. A governance containment requires a separately
+// authorized governance release act."
+
+describe('GC-4 · who may release which containment', () => {
+  it('R1. a holder containment can be released by the authorized holder', () => {
+    expect(holderReleaseCheck(holderContained(), HOLDER)).toEqual({ allowed: true });
+  });
+
+  it('R2. another holder cannot release it', () => {
+    expect(holderReleaseCheck(holderContained(), OTHER_HOLDER)).toEqual({
+      allowed: false,
+      refusal: 'not_holder',
+    });
+  });
+
+  it('R3. a governance containment cannot be released through the holder route', () => {
+    // Even though the actor IS the field holder. Holding is necessary, not sufficient.
+    expect(holderReleaseCheck(governanceContained(), HOLDER)).toEqual({
+      allowed: false,
+      refusal: 'governance_authority',
+    });
+  });
+
+  it('R4. the legacy contained_by = NULL governance hold stays unreleasable by the holder', () => {
+    const legacy = legacyGovernanceContained();
+    expect(legacy.contained_by).toBeNull(); // the missing actor was not invented
+    expect(holderReleaseCheck(legacy, HOLDER)).toEqual({
+      allowed: false,
+      refusal: 'governance_authority',
+    });
+    // And nobody else can either — non-holders are refused earlier.
+    expect(holderReleaseCheck(legacy, OTHER_HOLDER).allowed).toBe(false);
+  });
+
+  it('R4b. an unclassifiable containment fails CLOSED, treated as governance', () => {
+    // authority_basis absent → not a self-imposed pause. The safe direction for an
+    // unknown restraint is the more restrictive one.
+    const unclassified = { ...governanceContained(), authority_basis: undefined };
+    expect(holderReleaseCheck(unclassified, HOLDER)).toEqual({
+      allowed: false,
+      refusal: 'governance_authority',
+    });
+  });
+
+  it('R4c. the DELETE route delegates to holderReleaseCheck rather than re-deriving it', () => {
+    const route = read(CONTAINMENT_ROUTE);
+    expect(route).toContain('holderReleaseCheck(auth.field, auth.memberId)');
+    expect(route).toContain("refusal === 'governance_authority'");
+    expect(route).toContain('status: 403');
+  });
+
+  it('R4d. the holder route can only mint holder containments, never governance ones', () => {
+    const route = read(CONTAINMENT_ROUTE);
+    const impose = route.slice(route.indexOf("containment_status    = 'contained'"));
+    expect(impose).toContain("authority_basis       = 'holder'");
+    // No path in this route writes a governance basis.
+    expect(route).not.toContain("authority_basis       = 'governance'");
+    expect(route).not.toContain("authority_basis = 'governance'");
+  });
+
+  it('R4e. the migration classifies the legacy hold as governance, from its own evidence', () => {
+    const sql = read(MIGRATION);
+    const update = sql.slice(sql.indexOf('UPDATE practice_fields'));
+    expect(update).toContain("authority_basis       = 'governance'");
+    // And the schema refuses to store a containment with no defined release authority.
+    expect(sql).toContain('authority_basis IS NOT NULL');
+  });
+});
+
 // ── Invariant 6 — recomputation leaves containment byte-identical ────────────
 
 describe('GC-1 · a computed state may never erase an explicit governance act', () => {
@@ -215,6 +329,27 @@ describe('GC-1 · a computed state may never erase an explicit governance act', 
     );
     expect(afterSnapshot).toBe(snapshot);
     expect(isContained(after)).toBe(true);
+    expect(isEffectivelyLive(after)).toBe(false);
+  });
+
+  it('R5. readiness recomputation cannot affect release authority either', () => {
+    // The founder-required fifth proof, stated at the authority layer: recomputing
+    // readiness must not turn a governance hold into something the holder can lift.
+    const before = legacyGovernanceContained();
+    const readiness = checkPracticeFieldReadiness({
+      welcome_message: 'w', how_we_work_together: 'h',
+      how_maia_supports: 'm', professional_practice: 'p',
+    });
+    const after: Partial<PracticeField> = {
+      ...before,
+      status: readiness.is_live ? 'live' : 'pending',
+      status_reason: readiness.is_live ? null : `Missing: ${readiness.missing.join(', ')}`,
+    };
+    expect(after.authority_basis).toBe('governance');
+    expect(holderReleaseCheck(after, HOLDER)).toEqual({
+      allowed: false,
+      refusal: 'governance_authority',
+    });
     expect(isEffectivelyLive(after)).toBe(false);
   });
 

@@ -15,6 +15,25 @@ export type PracticeFieldStatus = 'pending' | 'warning' | 'live';
  * Design + durable record: docs/design/practitioner-portal/GOVERNANCE_CONTAINMENT_2026-08-09.md
  */
 export type ContainmentStatus = 'none' | 'contained';
+
+/**
+ * WHOSE act imposed the containment — and therefore whose act may lift it.
+ *
+ *   'holder'     — "I am withholding my own field." The field holder imposed it;
+ *                  the field holder may release it. Entering carries leaving,
+ *                  because the act was their own.
+ *   'governance' — "This field is prohibited from going live pending a governance
+ *                  decision." Imposed by an authority other than the holder. The
+ *                  subject of a governance containment may NEVER release it
+ *                  (GC-4); doing so would defeat the control.
+ *
+ * Same storage, different release authority. Precedent for this shape already
+ * exists in the codebase: auth_sessions.revoked is written by four paths under
+ * three different authorities, discriminated by revoked_reason.
+ *
+ * Evidence: CONTAINMENT_RELEASE_AUTHORITY_PRECEDENT_2026-08-09.md
+ */
+export type ContainmentAuthorityBasis = 'holder' | 'governance';
 export type OrientationStyle = 'minimal' | 'guided' | 'relationship_first' | 'tour';
 
 export interface PracticeFieldResource {
@@ -79,6 +98,8 @@ export interface PracticeField {
   // State — CONTAINMENT. "May this go live?" An explicit governance act, never computed.
   // Independent of readiness: a field may be ready AND contained, and must then stay non-live.
   containment_status: ContainmentStatus;
+  /** Whose act imposed this — and therefore whose act may lift it. NULL when not contained. */
+  authority_basis: ContainmentAuthorityBasis | null;
   containment_reason: string | null;
   contained_at: string | null;
   /** NULL only for the 2026-08-03 legacy containment; new acts require an actor. */
@@ -170,4 +191,52 @@ export function isContained(field: Partial<PracticeField>): boolean {
  */
 export function isEffectivelyLive(field: Partial<PracticeField>): boolean {
   return field.status === 'live' && !isContained(field);
+}
+
+export type HolderReleaseRefusal =
+  /** The actor does not hold this field. */
+  | 'not_holder'
+  /** There is nothing to release. */
+  | 'not_contained'
+  /** A governance containment. The subject may never lift it through this path. */
+  | 'governance_authority';
+
+export type HolderReleaseCheck =
+  | { allowed: true }
+  | { allowed: false; refusal: HolderReleaseRefusal };
+
+/**
+ * GC-4 — MAY THIS ACTOR RELEASE THIS CONTAINMENT THROUGH THE ORDINARY HOLDER PATH?
+ *
+ * Release authority is determined by the KIND of containment, never by the actor's
+ * relationship to the resource. Being the field holder is necessary but not sufficient:
+ * a holder may lift what they themselves imposed, and may not lift what an outside
+ * authority imposed on them.
+ *
+ * The dangerous case this exists to refuse: the subject of a governance containment
+ * clearing it because they happen to own the row. That would make the representation
+ * durable while leaving the prohibition defeasible — restraint in name only.
+ *
+ * `authority_basis` missing on a contained field is treated as GOVERNANCE. Fail closed:
+ * an unclassifiable hold is not a self-imposed pause, and the safe direction for an
+ * unknown restraint is the more restrictive one. (This is also the legacy 2026-08-03
+ * case, whose imposing actor is unrecoverable from evidence.)
+ *
+ * This function is the single source of truth for the holder release decision — the route
+ * calls it rather than re-deriving the rule, so the tests exercise the real logic.
+ */
+export function holderReleaseCheck(
+  field: Partial<PracticeField>,
+  actorMemberId: string,
+): HolderReleaseCheck {
+  if (field.practitioner_member_id !== actorMemberId) {
+    return { allowed: false, refusal: 'not_holder' };
+  }
+  if (!isContained(field)) {
+    return { allowed: false, refusal: 'not_contained' };
+  }
+  if (field.authority_basis !== 'holder') {
+    return { allowed: false, refusal: 'governance_authority' };
+  }
+  return { allowed: true };
 }
