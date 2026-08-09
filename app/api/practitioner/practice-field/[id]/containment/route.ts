@@ -23,24 +23,26 @@
  *
  * ⛔ GC-4 — THIS IS THE HOLDER PATH ONLY.
  *
- * It imposes and releases `authority_basis = 'holder'` containments: "I am withholding my
+ * It imposes and releases `containment_kind = 'voluntary_hold'` containments: "I am withholding my
  * own field." It CANNOT mint a governance containment, and it REFUSES to release one (403).
  * Holding the field is necessary but not sufficient — release authority follows the kind of
  * containment, never the actor's relationship to the resource.
  *
- * NO GOVERNANCE RELEASE PATH EXISTS YET, DELIBERATELY. Building one requires settling who
- * holds that authority, and the existing admin model documents its jurisdiction as "platform
- * stewardship ONLY … never relationship data" — a Practice Field sits near that line. That
- * question is open (CONTAINMENT_RELEASE_AUTHORITY_PRECEDENT_2026-08-09.md §3.2). Until it is
- * ruled, a governance containment is releasable only by a deliberate, audited act outside
- * this API. The absence is the safe state: it fails closed.
+ * The governance counterpart lives at `app/api/admin/practice-field/[id]/governance-hold`,
+ * gated on founder|cto under R-GC2a (ratified 2026-08-09). The two paths are deliberately
+ * separate files with separate gates: release authority derives from the act that
+ * constituted the restraint, not from possession of the restrained resource.
+ *
+ * Every transition here is recorded in `practice_field_containment_events` with actor,
+ * time, prior state, resulting state and authority basis (R-GC2). An act that can be taken
+ * but not audited is not governed.
  */
 
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import { holderReleaseCheck } from '@/lib/types/practiceField';
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -57,7 +59,7 @@ async function requireFieldHolder(req: NextRequest, fieldId: string) {
     return { failure: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }) };
   }
   const result = await query(
-    `SELECT id, practitioner_member_id, containment_status, authority_basis,
+    `SELECT id, practitioner_member_id, containment_status, containment_kind,
             containment_reason, contained_at
        FROM practice_fields WHERE id = $1`,
     [fieldId],
@@ -97,19 +99,28 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   // This route imposes HOLDER containments only — "I am withholding my own field."
   // A governance containment is a prohibition placed by another authority; it is not
   // creatable here, and this route has no way to mint one (GC-4).
-  await query(
-    `UPDATE practice_fields SET
-       containment_status    = 'contained',
-       authority_basis       = 'holder',
-       containment_reason    = $2,
-       contained_at          = NOW(),
-       contained_by          = $3,
-       containment_reference = $4,
-       released_at           = NULL,
-       released_by           = NULL
-     WHERE id = $1`,
-    [id, reason, auth.memberId, reference],
-  );
+  await transaction(async (tx) => {
+    await tx.query(
+      `UPDATE practice_fields SET
+         containment_status    = 'contained',
+         containment_kind      = 'voluntary_hold',
+         containment_reason    = $2,
+         contained_at          = NOW(),
+         contained_by          = $3,
+         containment_reference = $4,
+         released_at           = NULL,
+         released_by           = NULL
+       WHERE id = $1`,
+      [id, reason, auth.memberId, reference],
+    );
+    await tx.query(
+      `INSERT INTO practice_field_containment_events (
+         practice_field_id, event, prior_status, prior_kind, resulting_status, resulting_kind,
+         authority_basis, actor_member_id, note)
+       VALUES ($1,'imposed','none',NULL,'contained','voluntary_hold','field_holder',$2,$3)`,
+      [id, auth.memberId, reason],
+    );
+  });
 
   console.info('[PracticeField/containment] imposed', JSON.stringify({
     fieldId: id, byPrefix: auth.memberId.slice(0, 8),
@@ -137,7 +148,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         {
           error:
             'This is a governance containment. It cannot be released by the field holder — a separately authorized governance release act is required.',
-          authority_basis: 'governance',
+          containment_kind: 'governance_hold',
           containment_reason: auth.field.containment_reason,
           containment_reference: auth.field.containment_reference,
         },
@@ -149,15 +160,24 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   // containment_reason and contained_at are deliberately NOT cleared: the release records
   // that a hold was lifted, it does not pretend the hold never existed.
-  await query(
-    `UPDATE practice_fields SET
-       containment_status = 'none',
-       authority_basis    = NULL,
-       released_at        = NOW(),
-       released_by        = $2
-     WHERE id = $1`,
-    [id, auth.memberId],
-  );
+  await transaction(async (tx) => {
+    await tx.query(
+      `UPDATE practice_fields SET
+         containment_status = 'none',
+         containment_kind   = NULL,
+         released_at        = NOW(),
+         released_by        = $2
+       WHERE id = $1`,
+      [id, auth.memberId],
+    );
+    await tx.query(
+      `INSERT INTO practice_field_containment_events (
+         practice_field_id, event, prior_status, prior_kind, resulting_status, resulting_kind,
+         authority_basis, actor_member_id)
+       VALUES ($1,'released','contained','voluntary_hold','none',NULL,'field_holder',$2)`,
+      [id, auth.memberId],
+    );
+  });
 
   console.info('[PracticeField/containment] released', JSON.stringify({
     fieldId: id, byPrefix: auth.memberId.slice(0, 8),

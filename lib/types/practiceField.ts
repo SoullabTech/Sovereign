@@ -19,10 +19,10 @@ export type ContainmentStatus = 'none' | 'contained';
 /**
  * WHOSE act imposed the containment — and therefore whose act may lift it.
  *
- *   'holder'     — "I am withholding my own field." The field holder imposed it;
+ *   'voluntary_hold'     — "I am withholding my own field." The field holder imposed it;
  *                  the field holder may release it. Entering carries leaving,
  *                  because the act was their own.
- *   'governance' — "This field is prohibited from going live pending a governance
+ *   'governance_hold' — "This field is prohibited from going live pending a governance
  *                  decision." Imposed by an authority other than the holder. The
  *                  subject of a governance containment may NEVER release it
  *                  (GC-4); doing so would defeat the control.
@@ -33,7 +33,7 @@ export type ContainmentStatus = 'none' | 'contained';
  *
  * Evidence: CONTAINMENT_RELEASE_AUTHORITY_PRECEDENT_2026-08-09.md
  */
-export type ContainmentAuthorityBasis = 'holder' | 'governance';
+export type ContainmentKind = 'voluntary_hold' | 'governance_hold';
 export type OrientationStyle = 'minimal' | 'guided' | 'relationship_first' | 'tour';
 
 export interface PracticeFieldResource {
@@ -99,7 +99,7 @@ export interface PracticeField {
   // Independent of readiness: a field may be ready AND contained, and must then stay non-live.
   containment_status: ContainmentStatus;
   /** Whose act imposed this — and therefore whose act may lift it. NULL when not contained. */
-  authority_basis: ContainmentAuthorityBasis | null;
+  containment_kind: ContainmentKind | null;
   containment_reason: string | null;
   contained_at: string | null;
   /** NULL only for the 2026-08-03 legacy containment; new acts require an actor. */
@@ -217,7 +217,7 @@ export type HolderReleaseCheck =
  * clearing it because they happen to own the row. That would make the representation
  * durable while leaving the prohibition defeasible — restraint in name only.
  *
- * `authority_basis` missing on a contained field is treated as GOVERNANCE. Fail closed:
+ * `containment_kind` missing on a contained field is treated as a GOVERNANCE HOLD. Fail closed:
  * an unclassifiable hold is not a self-imposed pause, and the safe direction for an
  * unknown restraint is the more restrictive one. (This is also the legacy 2026-08-03
  * case, whose imposing actor is unrecoverable from evidence.)
@@ -235,7 +235,7 @@ export function holderReleaseCheck(
   if (!isContained(field)) {
     return { allowed: false, refusal: 'not_contained' };
   }
-  if (field.authority_basis !== 'holder') {
+  if (field.containment_kind !== 'voluntary_hold') {
     return { allowed: false, refusal: 'governance_authority' };
   }
   return { allowed: true };

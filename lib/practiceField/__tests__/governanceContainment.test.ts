@@ -30,11 +30,12 @@ const read = (p: string) => readFileSync(join(ROOT, p), 'utf8');
 const SERVICE = 'lib/practiceField/practiceFieldService.ts';
 const INVITE_ROUTE = 'app/api/practitioner/practice-field/invite/route.ts';
 const CONTAINMENT_ROUTE = 'app/api/practitioner/practice-field/[id]/containment/route.ts';
+const GOVERNANCE_ROUTE = 'app/api/admin/practice-field/[id]/governance-hold/route.ts';
 const MIGRATION = 'database/migrations/20260809000001_practice_field_governance_containment.sql';
 
 const CONTAINMENT_COLUMNS = [
   'containment_status',
-  'authority_basis',
+  'containment_kind',
   'containment_reason',
   'contained_at',
   'contained_by',
@@ -52,7 +53,7 @@ function holderContained(): Partial<PracticeField> {
     practitioner_member_id: HOLDER,
     status: 'live',
     containment_status: 'contained',
-    authority_basis: 'holder',
+    containment_kind: 'voluntary_hold',
     containment_reason: 'pausing my own field while I revise it',
     contained_at: '2026-08-09T00:00:00Z',
     contained_by: HOLDER,
@@ -65,7 +66,7 @@ function governanceContained(): Partial<PracticeField> {
     practitioner_member_id: HOLDER,
     status: 'live',
     containment_status: 'contained',
-    authority_basis: 'governance',
+    containment_kind: 'governance_hold',
     containment_reason: 'held pending governance decision',
     contained_at: '2026-08-03T00:00:00Z',
     contained_by: 'some-governance-actor',
@@ -91,7 +92,7 @@ function readyAndContained(): Partial<PracticeField> {
     professional_practice: 'p',
     status: 'live',
     containment_status: 'contained',
-    authority_basis: 'governance',
+    containment_kind: 'governance_hold',
     containment_reason: 'held pending governance decision',
     contained_at: '2026-08-03T00:00:00Z',
   };
@@ -127,7 +128,7 @@ describe('GC-1 · syncStatus may not touch containment', () => {
 // ── Invariant 2/3 — only the containment route writes containment ────────────
 
 describe('GC-3 · containment is written in exactly one place', () => {
-  it('2. no code path outside the containment route writes containment_status', () => {
+  it('2. containment_status is written only by the two authorized governance routes', () => {
     const offenders: string[] = [];
     const glob = require('child_process')
       .execSync(
@@ -140,7 +141,9 @@ describe('GC-3 · containment is written in exactly one place', () => {
 
     for (const file of glob) {
       const rel = file.replace(`${ROOT}/`, '');
-      if (rel === CONTAINMENT_ROUTE) continue;
+      // The holder path and the governance path. Two acts, two authorities, two files —
+      // and no third writer anywhere.
+      if (rel === CONTAINMENT_ROUTE || rel === GOVERNANCE_ROUTE) continue;
       const body = readFileSync(file, 'utf8');
       // A write is an assignment inside a SET clause. Reads and type declarations are fine.
       if (/SET[\s\S]{0,400}?containment_status\s*=/.test(body)) offenders.push(rel);
@@ -272,9 +275,9 @@ describe('GC-4 · who may release which containment', () => {
   });
 
   it('R4b. an unclassifiable containment fails CLOSED, treated as governance', () => {
-    // authority_basis absent → not a self-imposed pause. The safe direction for an
+    // containment_kind absent → not a self-imposed pause. The safe direction for an
     // unknown restraint is the more restrictive one.
-    const unclassified = { ...governanceContained(), authority_basis: undefined };
+    const unclassified = { ...governanceContained(), containment_kind: undefined };
     expect(holderReleaseCheck(unclassified, HOLDER)).toEqual({
       allowed: false,
       refusal: 'governance_authority',
@@ -290,19 +293,124 @@ describe('GC-4 · who may release which containment', () => {
 
   it('R4d. the holder route can only mint holder containments, never governance ones', () => {
     const route = read(CONTAINMENT_ROUTE);
-    const impose = route.slice(route.indexOf("containment_status    = 'contained'"));
-    expect(impose).toContain("authority_basis       = 'holder'");
-    // No path in this route writes a governance basis.
-    expect(route).not.toContain("authority_basis       = 'governance'");
-    expect(route).not.toContain("authority_basis = 'governance'");
+    // Whitespace-insensitive: the invariant is about which VALUE is written, never about
+    // column alignment. An earlier version of this assertion broke on a reformat, which
+    // would have taught the next reader to loosen the test rather than trust it.
+    const impose = route.slice(
+      route.indexOf('export async function POST'),
+      route.indexOf('export async function DELETE'),
+    );
+    expect(impose).toMatch(/containment_kind\s*=\s*'voluntary_hold'/);
+    // No path in this route writes a governance kind.
+    expect(route).not.toMatch(/containment_kind\s*=\s*'governance_hold'/);
   });
 
   it('R4e. the migration classifies the legacy hold as governance, from its own evidence', () => {
     const sql = read(MIGRATION);
     const update = sql.slice(sql.indexOf('UPDATE practice_fields'));
-    expect(update).toContain("authority_basis       = 'governance'");
+    expect(update).toContain("containment_kind       = 'governance_hold'");
     // And the schema refuses to store a containment with no defined release authority.
-    expect(sql).toContain('authority_basis IS NOT NULL');
+    expect(sql).toContain('containment_kind IS NOT NULL');
+  });
+});
+
+// ── R-GC2 / R-GC2a · kind immutability, reason≠authority, jurisdiction ───────
+
+describe('R-GC2 · the subject cannot change the kind, and prose is not authority', () => {
+  it('K1. the holder route cannot reclassify an existing containment', () => {
+    const route = read(CONTAINMENT_ROUTE);
+    // Imposition is refused outright when already contained, so there is no path by which
+    // a holder relabels a governance_hold as their own voluntary_hold.
+    expect(route).toContain('already_contained');
+    const impose = route.slice(
+      route.indexOf('export async function POST'),
+      route.indexOf('export async function DELETE'),
+    );
+    expect(impose).toContain("containment_status === 'contained'");
+    expect(impose.indexOf("containment_status === 'contained'"))
+      .toBeLessThan(impose.indexOf('UPDATE practice_fields'));
+  });
+
+  it('K2. the holder route can only ever write voluntary_hold', () => {
+    const route = read(CONTAINMENT_ROUTE);
+    expect(route).toContain("containment_kind      = 'voluntary_hold'");
+    expect(route).not.toMatch(/containment_kind\s*=\s*'governance_hold'/);
+  });
+
+  it('K3. no code decides authority by reading reason text (R-GC2)', () => {
+    // "reason remains explanatory provenance, never the machine-readable source of
+    // release authority." Legacy classification was a one-time migration decision and
+    // confers no permission for runtime semantic inference.
+    for (const f of [CONTAINMENT_ROUTE, GOVERNANCE_ROUTE, 'lib/types/practiceField.ts']) {
+      const body = read(f);
+      expect(body).not.toMatch(/containment_reason[\s\S]{0,80}?\.(includes|match|startsWith|test)\(/);
+      expect(body).not.toMatch(/(includes|match|test)\([^)]*pending governance/i);
+    }
+    // holderReleaseCheck decides on the discriminator alone.
+    const contained = {
+      ...governanceContained(),
+      containment_reason: 'this text says voluntary_hold and pause and anything you like',
+    };
+    expect(holderReleaseCheck(contained, HOLDER).allowed).toBe(false);
+  });
+
+  it('K3b. the migration marks the legacy classification as one-time, not a precedent', () => {
+    const sql = read(MIGRATION);
+    expect(sql).toContain('ONE-TIME GOVERNED CLASSIFICATION, NOT A PRECEDENT');
+    expect(sql).toContain('legacy untyped containment → governance_hold');
+    expect(sql).toContain('R-GC2 legacy ruling');
+    expect(sql).toContain("'governed_migration'");
+  });
+});
+
+describe('R-GC2a · governance may release the hold, and nothing else', () => {
+  const route = read(GOVERNANCE_ROUTE);
+
+  it('K4. release is gated on founder|cto via the existing admin gate — no new role', () => {
+    expect(route).toContain("const OWNER_ROLES: AdminRole[] = ['founder', 'cto']");
+    expect(route).toContain('checkAdminAuth(req, OWNER_ROLES)');
+    expect(route).toContain('adminUnauthorized()');
+    // Not a bespoke gate.
+    expect(route).not.toContain('LABTOOLS_ADMIN_PASSWORD');
+  });
+
+  it('K5. JURISDICTION — the route writes containment columns only, never content', () => {
+    // R-GC2a: authority over the control plane, never the relational plane.
+    const RELATIONAL_COLUMNS = [
+      'welcome_message', 'how_we_work_together', 'how_maia_supports',
+      'professional_practice', 'active_field_content', 'maia_guidance',
+      'resources', 'about_practice', 'orientation_style',
+    ];
+    const writes = route.match(/UPDATE practice_fields SET[\s\S]*?WHERE/g) ?? [];
+    expect(writes.length).toBeGreaterThan(0);
+    for (const w of writes) {
+      for (const col of RELATIONAL_COLUMNS) expect(w).not.toContain(col);
+      // Nor readiness — releasing a hold is not an endorsement, and must not make it live.
+      expect(w).not.toMatch(/\bstatus\s*=\s*'live'/);
+      expect(w).not.toContain('status_reason');
+    }
+  });
+
+  it('K5b. release does not claim the field is now live', () => {
+    expect(route).toContain('still_requires_readiness: true');
+    expect(route).toContain('GC-2');
+  });
+
+  it('K6. platform governance does not lift a holder\'s own voluntary hold', () => {
+    expect(route).toContain("field.containment_kind !== 'governance_hold'");
+    expect(route).toContain('the holder does');
+  });
+
+  it('K7. every transition is a governed act with actor, prior/resulting state, basis', () => {
+    for (const f of [CONTAINMENT_ROUTE, GOVERNANCE_ROUTE]) {
+      const body = read(f);
+      expect(body).toContain('practice_field_containment_events');
+      expect(body).toContain('prior_status');
+      expect(body).toContain('resulting_kind');
+      expect(body).toContain('authority_basis');
+    }
+    expect(read(GOVERNANCE_ROUTE)).toContain("'platform_governance'");
+    expect(read(CONTAINMENT_ROUTE)).toContain("'field_holder'");
   });
 });
 
@@ -345,7 +453,7 @@ describe('GC-1 · a computed state may never erase an explicit governance act', 
       status: readiness.is_live ? 'live' : 'pending',
       status_reason: readiness.is_live ? null : `Missing: ${readiness.missing.join(', ')}`,
     };
-    expect(after.authority_basis).toBe('governance');
+    expect(after.containment_kind).toBe('governance_hold');
     expect(holderReleaseCheck(after, HOLDER)).toEqual({
       allowed: false,
       refusal: 'governance_authority',
