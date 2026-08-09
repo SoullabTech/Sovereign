@@ -54,21 +54,70 @@ describe('getHouseDestinations — audience filtering', () => {
     expect(ids).toContain('changes');
     expect(ids).toContain('circles');
     expect(ids).toContain('vision-studio');
+    expect(ids).toContain('studio-decisions'); // founder ruling 2026-08-09
   });
 
   /**
-   * Superseding ruling (Kelly, 2026-07-28): Decisions is a practitioner
-   * capability and is not part of the member House grammar at all — including
-   * for a practitioner who is using the member House. The 2026-07-27 design
-   * gated it to 'founder'; that is superseded. The distinction is drawn by
-   * SURFACE, not identity. Ruling recorded in PR #785 (Supersession section); no repo canon doc records it yet — do not cite one.
+   * Decisions — two rulings, both still in force, and they are about DIFFERENT
+   * surfaces. Do not collapse them.
    *
-   * This is the invariant, not a visibility preference: no audience receives a
-   * 'decisions' destination from the member House registry.
+   * 1. Kelly, 2026-07-28 (unchanged): the MEMBER decisions capability is not
+   *    part of the member House grammar at all — for any audience, including a
+   *    practitioner using the member House. The distinction is drawn by
+   *    SURFACE, not identity. Recorded in PR #785 (Supersession section); no
+   *    repo canon doc records it yet — do not cite one.
+   * 2. Kelly, 2026-08-09: the PRACTITIONER surface /studio/decisions IS
+   *    reachable from the House as a PRACTITIONER room — a web bridge into the
+   *    Pro Studio environment, not a member capability rendered inside the
+   *    member grammar. A refinement of scope, not a reversal of (1).
+   *
+   * So: no destination opens the member decisions sheet, and the only decisions
+   * route in the registry is the practitioner one, owned by the practitioner
+   * surface. (It is withheld from members by the same steward boolean that
+   * withholds the founder rooms — see the conflation note below.)
    */
-  it('no audience receives a decisions destination from the member House', () => {
+  it('no audience receives the member decisions capability from the House', () => {
     expect(getHouseDestinations(false).map((d) => d.id)).not.toContain('decisions');
     expect(getHouseDestinations(true).map((d) => d.id)).not.toContain('decisions');
+  });
+
+  it('members do not receive the practitioner decisions room', () => {
+    expect(getHouseDestinations(false).map((d) => d.id)).not.toContain('studio-decisions');
+  });
+
+  it('the only decisions route in the registry is the practitioner surface', () => {
+    const decisionRoutes = HOUSE_DESTINATIONS.filter((d) => d.route?.includes('decisions')).map(
+      (d) => d.route,
+    );
+    expect(decisionRoutes).toEqual(['/studio/decisions']);
+  });
+
+  /**
+   * The audience is named after the SURFACE that governs the route, not after
+   * whoever can currently see it. /studio/decisions is gated by practitioner
+   * identity end to end — app/studio/layout.tsx redirects a non-practitioner
+   * via /api/studio/whoami, and /api/studio/decisions 401s without
+   * getCurrentPractitioner(). Neither consults founder/admin, so labelling this
+   * room 'founder' would encode the wrong owner even though the route works.
+   */
+  it('the Decisions room is owned by the practitioner surface', () => {
+    expect(find('studio-decisions').audience).toBe('practitioner');
+  });
+
+  /**
+   * Honest record of a conflation, so a later split is a deliberate act rather
+   * than a surprise: the House gets ONE boolean (MaiaShell passes
+   * `isAdmin || isPractitioner`), so 'founder' and 'practitioner' resolve
+   * identically today. If this test ever fails because the signals were split,
+   * that is the follow-up landing — re-check Circles and Vision Studio too.
+   */
+  it('founder and practitioner audiences gate identically under the single steward boolean', () => {
+    const steward = getHouseDestinations(true).map((d) => d.id);
+    const member = getHouseDestinations(false).map((d) => d.id);
+    for (const d of HOUSE_DESTINATIONS.filter((x) => x.audience !== 'all')) {
+      expect(steward).toContain(d.id);
+      expect(member).not.toContain(d.id);
+    }
   });
 });
 

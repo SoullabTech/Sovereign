@@ -39,6 +39,7 @@ import {
   BookCopy,
   Users,
   Wind,
+  Signpost,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -51,7 +52,27 @@ export type NativePolicy = 'native' | 'web';
 /** Existing member sheets the House can open (no new surfaces). */
 export type HouseSheetId = 'changes';
 
-export type HouseAudience = 'all' | 'founder';
+/**
+ * Who a destination belongs to — named after the SURFACE that governs the
+ * destination, not after whoever happens to be looking.
+ *
+ *  - 'all'          — member grammar; every viewer.
+ *  - 'founder'      — steward/governance rooms (Circles, Vision Studio).
+ *  - 'practitioner' — rooms owned by the practitioner Pro Studio, whose access
+ *                     is decided by practitioner identity (/api/studio/whoami →
+ *                     isPractitioner; APIs scope by practitioner_id).
+ *
+ * KNOWN CONFLATION (do not mistake this for a distinction the House can make).
+ * `getHouseDestinations` receives ONE boolean, and MaiaShell computes it as
+ * `isAdmin || isPractitioner` (components/maia/MaiaShell.tsx:379). So at
+ * runtime 'founder' and 'practitioner' currently resolve identically. The two
+ * values are still worth distinguishing here because they record which surface
+ * OWNS each room, which is what a later split will need. Separating them for
+ * real means threading admin and practitioner as separate signals — and that
+ * would change visibility for the existing 'founder' rooms too, so it is a
+ * deliberate follow-up, not a side effect of adding a room.
+ */
+export type HouseAudience = 'all' | 'founder' | 'practitioner';
 
 export type HouseGroup = 'center' | 'life' | 'work' | 'rooms' | 'utility';
 
@@ -189,14 +210,20 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   //
   // Changes is member-owned (/api/changes is member-scoped) → audience 'all'.
   //
-  // Decisions is deliberately ABSENT. The 2026-07-27 audit gated it to
-  // 'founder' so only practitioners saw it here; the 2026-07-28 ruling
-  // supersedes that: Decisions is a practitioner capability and is not part of
-  // the member House grammar AT ALL — including for a practitioner who is
-  // using the member House. The distinction is drawn by surface, not identity.
-  // A 401 is not a substitute for coherent navigation, and neither is a
-  // conditional render. The practitioner surface (/studio/decisions,
-  // /api/studio/decisions) is unchanged. Ruling recorded in PR #785 (Supersession section); no repo canon doc records it yet — do not cite one.
+  // DECISIONS — history, in order, so the current state is not misread:
+  //  · 2026-07-27: a member-facing 'decisions' destination was gated to 'founder'.
+  //  · 2026-07-28: that was superseded — Decisions is a practitioner capability,
+  //    so NO member-House destination may open the member decisions surface, for
+  //    any audience. The distinction is drawn by SURFACE, not identity.
+  //  · 2026-08-09 (founder ruling, this change): the practitioner surface
+  //    /studio/decisions IS reachable from the House, as a PRACTITIONER room
+  //    (below, in the Rooms group) — an honest web bridge into the Pro Studio,
+  //    not a member capability rendered inside the member grammar.
+  // Note this is a refinement of scope, not a reversal: "no Decisions in the
+  // member House" and "a Decisions doorway into the Studio" are both true.
+  // The 2026-07-28 invariant therefore stands unchanged in its own terms: the
+  // member decisions sheet is still absent here. What is added is a doorway to
+  // a separate, practitioner-scoped environment.
   {
     id: 'changes',
     label: 'Changes',
@@ -279,6 +306,43 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     group: 'rooms',
   },
   {
+    id: 'studio-decisions',
+    label: 'Decisions',
+    icon: Signpost,
+    tooltip: 'Practitioner Studio — decisions under way',
+    kind: 'route',
+    // The PRACTITIONER surface (Pro Studio), not the member decisions sheet.
+    //
+    // audience 'practitioner' is read off the governing gates, not off who is
+    // asking: app/studio/layout.tsx checks /api/studio/whoami and redirects a
+    // non-practitioner to /studio/create, and app/api/studio/decisions/route.ts
+    // resolves getCurrentPractitioner() → 401, scoping rows by practitioner_id.
+    // Nothing in that chain consults founder or admin. It is also already the
+    // Studio's own room — lib/navigation/studioNav.ts:58 lists Decisions under
+    // 'content'. This House entry is a doorway to that room, not a second home.
+    //
+    // ACCEPTED REACHABILITY CAVEAT (founder, 2026-08-09 — recorded, not fixed).
+    // Ownership and module visibility are governed independently, and this patch
+    // deliberately changes only the first:
+    //   · Ownership — Decisions is practitioner-owned and reachable from the
+    //     House, via this doorway.
+    //   · Studio visibility — still governed on its own by the module record
+    //     (lib/studio/moduleDefinitions.ts:323): alwaysOn:false, mode:'field'.
+    // Consequence, accepted rather than treated as a bug: a practitioner in
+    // 'practice' mode, or without the module enabled, can arrive here from the
+    // House and NOT see Decisions in the Studio's own nav. A House doorway may
+    // legitimately cross modes. The House does not override module resolution,
+    // and the module's mode was NOT changed here — altering it is a separate
+    // decision about Studio module governance.
+    //
+    // On native this opens through the web bridge (/studio is not bundled).
+    route: '/studio/decisions',
+    audience: 'practitioner',
+    nativePolicy: 'web',
+    returnBehavior: 'web-bridge',
+    group: 'rooms',
+  },
+  {
     id: 'circles',
     label: 'Circles',
     icon: Users,
@@ -320,9 +384,19 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
 
 // --- Selection & classification helpers ---------------------------------
 
-/** Audience filter. Founder-only destinations are hidden from non-founders. */
+/**
+ * Audience filter. Everything that is not member grammar ('all') is withheld
+ * unless the viewer is a steward — where "steward" is the single conflated
+ * boolean MaiaShell passes (`isAdmin || isPractitioner`). See HouseAudience for
+ * why 'founder' and 'practitioner' are recorded separately but gate the same
+ * way today.
+ *
+ * The parameter keeps the name `isFounder` because that is what the prop is
+ * called at the call site; renaming it here without splitting the underlying
+ * signal would only move the inaccuracy around.
+ */
 export function getHouseDestinations(isFounder: boolean): HouseDestination[] {
-  return HOUSE_DESTINATIONS.filter((d) => d.audience !== 'founder' || isFounder);
+  return HOUSE_DESTINATIONS.filter((d) => d.audience === 'all' || isFounder);
 }
 
 /**
