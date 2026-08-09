@@ -1,0 +1,202 @@
+{
+ "captured": "2026-08-09",
+ "window_days": 30,
+ "sessions": 315,
+ "requests": 94339,
+ "cache_read": 24196682478,
+ "cache_write": 1094201260,
+ "output": 119716824,
+ "avg_ctx_per_request": 256486.5270778787,
+ "median_initial_ctx": 73916,
+ "channels": {
+  "Bash (already hook-governed)": {
+   "calls": 15134,
+   "tok": 4003352
+  },
+  "direct textual (ctx_execute_file candidate)": {
+   "calls": 3626,
+   "tok": 13094397
+  },
+  "other": {
+   "calls": 16271,
+   "tok": 1184459
+  },
+  "pixel/browser (subagent-only remedy)": {
+   "calls": 2691,
+   "tok": 18523272
+  },
+  "isolated: ctx_*": {
+   "calls": 5406,
+   "tok": 6372249
+  },
+  "isolated: subagent": {
+   "calls": 283,
+   "tok": 130114
+  }
+ },
+ "by_tool": {
+  "Read": {
+   "calls": 3625,
+   "tok": 13094355,
+   "max": 167063
+  },
+  "control": {
+   "calls": 375,
+   "tok": 10124090,
+   "max": 168390
+  },
+  "computer": {
+   "calls": 221,
+   "tok": 1070174,
+   "max": 29202
+  },
+  "Bash": {
+   "calls": 15134,
+   "tok": 4003352,
+   "max": 7600
+  },
+  "ctx_batch_execute": {
+   "calls": 976,
+   "tok": 3835719,
+   "max": 13191
+  },
+  "ctx_execute": {
+   "calls": 4237,
+   "tok": 2211447,
+   "max": 12090
+  },
+  "Edit": {
+   "calls": 9151,
+   "tok": 469636,
+   "max": 756
+  },
+  "ctx_search": {
+   "calls": 87,
+   "tok": 245173,
+   "max": 7815
+  },
+  "browser_batch": {
+   "calls": 11,
+   "tok": 178861,
+   "max": 37047
+  },
+  "screenshot": {
+   "calls": 4,
+   "tok": 177504,
+   "max": 60219
+  },
+  "javascript_tool": {
+   "calls": 197,
+   "tok": 24468,
+   "max": 366
+  },
+  "Agent": {
+   "calls": 283,
+   "tok": 130114,
+   "max": 3345
+  },
+  "Write": {
+   "calls": 2371,
+   "tok": 119166,
+   "max": 76
+  },
+  "preview_screenshot": {
+   "calls": 7,
+   "tok": 77851,
+   "max": 20064
+  },
+  "ctx_execute_file": {
+   "calls": 84,
+   "tok": 63486,
+   "max": 10739
+  },
+  "WebSearch": {
+   "calls": 73,
+   "tok": 62501,
+   "max": 2472
+  },
+  "get_page_text": {
+   "calls": 172,
+   "tok": 48533,
+   "max": 3650
+  },
+  "read_page": {
+   "calls": 224,
+   "tok": 39094,
+   "max": 883
+  },
+  "navigate": {
+   "calls": 642,
+   "tok": 38324,
+   "max": 234
+  },
+  "preview_logs": {
+   "calls": 112,
+   "tok": 35377,
+   "max": 1484
+  },
+  "list_sessions": {
+   "calls": 21,
+   "tok": 34730,
+   "max": 2864
+  },
+  "read_console_messages": {
+   "calls": 104,
+   "tok": 34043,
+   "max": 5770
+  },
+  "preview_start": {
+   "calls": 243,
+   "tok": 27128,
+   "max": 300
+  }
+ },
+ "subagent_returns": {
+  "n": 283,
+  "p50": 279,
+  "p90": 1095,
+  "mean": 460
+ },
+ "by_category": {
+  "ops/deploy": {
+   "n": 74,
+   "cread": 6012393740,
+   "out": 22395270
+  },
+  "implementation": {
+   "n": 103,
+   "cread": 7011162620,
+   "out": 47814538
+  },
+  "ui/browser-verify": {
+   "n": 33,
+   "cread": 4207663427,
+   "out": 16732032
+  },
+  "audit/review": {
+   "n": 48,
+   "cread": 4549383559,
+   "out": 19731869
+  },
+  "architecture/design": {
+   "n": 38,
+   "cread": 2371153302,
+   "out": 12527397
+  },
+  "mixed/other": {
+   "n": 16,
+   "cread": 36574974,
+   "out": 409291
+  },
+  "documentation": {
+   "n": 2,
+   "cread": 8231080,
+   "out": 98279
+  },
+  "exploration": {
+   "n": 1,
+   "cread": 119776,
+   "out": 8148
+  }
+ }
+}

@@ -1,0 +1,479 @@
+# Client Field Phase 1 — Practitioner Recognition Instrument
+
+**Status:** ⛔ **PRE-REGISTERED · NOT AUTHORIZED TO RUN.**
+**Gate:** **D9.** Unruled. Until D9 is ruled this is an instrument, not an encounter.
+**Pre-registered:** 2026-08-03, *before* any participant sat down. Criteria fixed at authoring
+time and **may not be revised after the encounter begins.**
+**Sibling of:** `CLIENT_FIELD_PHASE_1_ENCOUNTER_INSTRUMENT.md` — ⛔ **not a replacement for
+it.** Two different seats, two different evidence classes.
+**Amended 2026-08-03 — founder, PRE-ENCOUNTER**, before any participant sat down: §2 Q5,
+§3 Non-replacement reformulation, §3A failure modes, §0A validation scope, §7A framing. ⛔ No
+further amendment once the encounter begins.
+
+---
+
+## 0A. What a practitioner can and cannot validate
+
+The seat determines the evidence. Neither list is a ranking.
+
+| ✅ A practitioner CAN validate | ⛔ A practitioner CANNOT validate |
+|---|---|
+| Does this support the work he is trying to accomplish? | Would a member understand this **without explanation**? |
+| Does this feel aligned with his coaching philosophy? | Does the member experience **ownership** — this as *their own work*? |
+| Does this preserve his relationship with clients? | ⭐ Does the member feel **free to decline**? |
+| Does this reflect the kind of transformation he wants to facilitate? | Does the member experience this as **their own meaning-making space**? |
+| Does this create useful continuity? | Does the system accidentally sound like it **owns their development**? |
+
+The right-hand column requires the member seat and is measured by the sibling instrument.
+⛔⛔ **No answer Larry gives may be recorded against a right-hand-column question**, however
+confidently he offers one — he is the author of the framing those questions test for.
+
+Stated in his own voice, the three he cannot answer are:
+
+- *"Would my client feel free to say no?"*
+- *"Would my client experience this as their own choice?"*
+- *"Would my client feel pressure **because I** invited them?"*
+
+### ⭐⭐⭐ This is a structural boundary, not a character judgment
+
+> **A practitioner can sincerely believe they are offering a gift while the recipient
+> experiences an obligation.**
+
+⛔⛔ **Nothing here implies distrust of the practitioner.** The asymmetry is a structural
+possibility in **any** trusted relationship — the more trusted, the more available it is. A
+practitioner of unimpeachable integrity is *equally* unable to observe it, because the thing
+that would need observing is how his invitation lands on someone who values his regard.
+
+If the instrument is ever read as suspicion, it has been read wrong. It is the same
+sovereignty discipline the system applies to itself, applied to the relationship the system
+sits inside.
+
+**The question this walk asks is not:**
+
+⛔ *"Can Larry be trusted with this?"*
+
+**It is:**
+
+> ✅ **"Can the system preserve the freedom of a client inside a relationship where trust
+> already exists?"**
+
+That is a **design property**, not a judgment of a person. ⭐ **A trustworthy practitioner
+still cannot occupy the client's seat** — which is precisely why both walks remain necessary
+and neither replaces the other:
+
+```
+Larry:    Does this honor and extend the practice?
+Client:   Do I experience this as my own work?
+```
+
+### ⭐ Why "free to decline" is the most dangerous one to accept from this seat
+
+A practitioner answering *"of course they can decline"* is reporting **his intent**, which is
+real and is not the measurement. Freedom to decline is a property of **how the invitation
+lands on the person who received it** — and the asymmetry of the coaching relationship is
+exactly what makes the practitioner unable to observe it. ⛔⛔ A confident yes here is
+**not** weak evidence; it is **evidence of a different proposition** (that he intends no
+coercion) and must be filed as such.
+
+> **Q5 is the same sovereignty test applied from the other side.** Where Continuity and
+> Non-replacement ask whether the tool serves the practice, Q5 asks him to locate the
+> boundary at which the tool would **violate the relationship**. It is the only question in
+> this instrument that creates the possibility of **disconfirmation** — the other four are
+> compatible with almost any augmentation.
+
+⚠️ **Q5's answer space is not only feature overload.** *"Too much"* includes **relational
+power** — the point at which the field gives him more presence in a client's inner life than
+the relationship was consented into. If his answer stays entirely on volume, features or
+frequency, **record that the relational dimension went unnamed.** That absence is data.
+
+---
+
+## 0. 🔴 Why this document exists
+
+The founder named Larry as the first encounter. **Larry cannot sit for the member
+instrument**, and running him through it would produce a result that looks like member
+evidence and is not.
+
+| | Member instrument | This instrument |
+|---|---|---|
+| **Seat** | the client | the **practitioner** |
+| **Asks** | *does someone outside the design understand what this is?* | *does the practitioner recognize their practice continuing?* |
+| **§4 lens** | "do they describe it in terms of **their own leadership work**?" | not applicable |
+| **A failure line** | *"this is where my coach gives me assignments"* | **unaskable — he is the coach** |
+
+Larry is also **the source of the vocabulary under test.** He authored the mental model the
+member instrument measures comprehension of. He therefore cannot supply arrival-comprehension
+evidence at all: he already knows the answer, and *knowing the answer is the disqualifying
+condition* for that instrument's Trust criterion.
+
+> ⛔⛔ **Larry's encounter may never be cited as arrival-comprehension evidence.** The member
+> walk still needs an actual client, and its instrument stays untouched and unrun.
+
+**This is not a weaker test.** The founder's stated criterion —
+
+> **"This lets my coaching continue without replacing my coaching."**
+
+— is the actual Now What? test, and *no client can answer it.* Only the practitioner can.
+
+---
+
+## 0B. ⭐⭐⭐ TWO practitioner encounters, not one — RULED 2026-08-03
+
+The materials agreement is unsigned, so Larry-authored language is unavailable
+(`NOW_WHAT_PILOT_STATE_2026-08-03.md` §4). That does **not** produce a degraded version of
+this walk. **It produces a different instrument.**
+
+```
+ENCOUNTER A — synthetic          ENCOUNTER B — real (post-agreement)
+
+Tests:                           Tests:
+  container coherence              fidelity to Larry's framework
+  role preservation                expression vocabulary fit
+  sovereignty boundaries           practitioner ownership of language
+
+Does NOT test:                   Prerequisite:
+  fidelity to Larry's framework    Attachment A signed + populated
+  expression vocabulary fit
+  practitioner ownership of language
+```
+
+> ⛔⛔ **The synthetic walk is not a substitute for the real one, and its result may never be
+> reported as one.** A finding from A may not be cited against a B question.
+
+**A cannot answer** *"Does Larry recognize his practice inside the environment?"*
+**A can answer:**
+
+- Does the environment **preserve the role** of the practitioner?
+- Does the member/practitioner relationship feel **extended rather than replaced**?
+- Does the structure make sense as a **between-session companion**?
+- Does the boundary between **Larry and AIN** remain clear?
+
+⭐ **A is not a compromise.** It tests whether the house is standing **before the owner brings
+someone through the door.**
+
+### 🔴 Derived consequence — Attribution cannot be scored in Encounter A
+
+§3's **Attribution** criterion asks whether he can distinguish *what came from him* from
+*what the member authored*. **In the synthetic walk, nothing came from him.** The criterion
+has no object.
+
+⛔⛔ **Do not score Attribution in Encounter A.** Record it as **NOT EVALUABLE**, not as a
+pass. It is a **B** criterion. Continuity, Non-replacement and Sufficiency remain scorable in
+both; the Continuity/Non-replacement pass condition (§3) is unchanged.
+
+> ### ⭐⭐⭐ Not evaluable is not failure. Not evaluable is not pass. It is an **integrity state.**
+
+```
+Path A — Synthetic Practitioner Encounter
+
+Continuity          ✅ evaluable
+Non-replacement     ✅ evaluable
+Sufficiency         ✅ evaluable
+Attribution         ⛔ NOT EVALUABLE
+                       reason: no Larry-authored material is present
+```
+
+⛔ A packet that reports three criteria and omits the fourth has misreported. The reason is
+carried with the state.
+
+### The precise purpose of Encounter A
+
+⛔ *"Does Now What? work for Larry?"*
+
+✅ **"Does the environment preserve a practitioner relationship without requiring Larry's
+actual language to be embedded?"**
+
+### ⚠️ Label provenance — a risk the synthetic walk creates
+
+Phase 1's shell carries **executive-coaching vocabulary that Soullab authored**, not Larry
+(universal architecture §5). In a synthetic encounter he may reasonably read those strings as
+**his own framing already absorbed into the system.**
+
+- ⛔ **Do not pre-disclose.** If he identifies the vocabulary as his, **that is the finding** —
+  it is unattributed absorption observed live, and it is the most valuable result the
+  synthetic walk can produce. Record his words verbatim.
+- ⛔⛔ **But correct it before the encounter closes.** Leaving him believing his language was
+  used when it was not is a representation crossed without permission — a real
+  misrepresentation, not a measurement technique. **Measurement does not license it.**
+- Log the correction and its timing on the packet.
+
+```
+During encounter:   observe interpretation
+After encounter:    restore provenance
+```
+
+The correction is **not a debrief that fixes the answer.** It is a **boundary repair.**
+
+| ✅ Permitted | ⛔ Not permitted |
+|---|---|
+| observing what meaning he makes | letting a false attribution persist |
+
+> **Interpretation may increase visibility. It may not increase ownership.** — the same
+> invariant, now applied to the encounter itself rather than to the product.
+
+### 🔴 The correction is also the disambiguator — record his response to it
+
+*"This is exactly how I work"* has **two incompatible readings**, and the raw statement cannot
+distinguish them:
+
+| Reading | Meaning |
+|---|---|
+| **A** | the architecture **naturally fits** the practice |
+| **B** | the environment has absorbed **generic coaching language that resembles** his work |
+
+**The attribution correction is what reveals which.** His response *after* being told the
+vocabulary is Soullab-authored is a **second observation**, not the close of the encounter:
+
+⛔⛔ **Do not treat the correction as the end of recording.** Capture his reaction verbatim
+and file it against this ambiguity. A packet that logs the correction but not the response has
+thrown away the evidence the correction exists to produce.
+
+> **Without this step the instrument would systematically favour the interpretation most
+> flattering to the system.**
+
+### ⭐⭐⭐ How the correction is delivered — it is NOT a gotcha
+
+The delivery shapes the evidence. A correction that lands as exposure produces a defensive
+response, and a defensive response is **not** the observation this step exists to create.
+
+⛔ **Not:**
+
+> *"Actually, those aren't your words."*
+
+✅ **Say:**
+
+> **"These elements are currently Soullab-created placeholders. We want to understand what
+> happens when a practitioner encounters a structure that resembles their work before their
+> own language has entered it."**
+
+⭐ **The participant's response is the evidence.** The correction is an act of provenance
+restoration that *also* opens the question — it is not a verdict on his reading, and nothing
+in the delivery may imply he was caught out.
+
+### Reading the other two headline responses
+
+| He says | Useful finding |
+|---|---|
+| *"This isn't how I work."* | the container is **too generic** — or the expression layer needs his authorship. ⛔ Do not resolve which in the room |
+| *"I can see how this supports my clients."* | ⭐ **the strongest early signal** — not because it proves fit, but because it tests the **non-replacement boundary** |
+
+---
+
+## 1. Referent — what exactly is being encountered
+
+```
+Artifact:      Client Field Phase 1
+SHA:           78358f979
+Branch:        feature/my-work-field-phase-1
+Environment:   local dev tree, Phase 1
+Seat:          practitioner viewing the member's field
+Purpose:       practice-continuity recognition test
+NOT:           arrival comprehension · production acceptance · universal-field test
+```
+
+**Production is unchanged** — `soullab.life` serves `95b21ce42`. Nothing here may be cited
+about production. If the tree moves, **the referent does not follow it.** A new SHA is a new
+encounter.
+
+⚠️ Phase 1 ships **executive-coaching vocabulary in the universal layer** (universal
+architecture §5). For this instrument that is *not* a confound — Larry is the executive-coaching
+practitioner, so the surface is showing him his own domain language. ⛔ It does mean the result
+says nothing about any other practitioner's domain.
+
+---
+
+## 2. Instrument — the four questions
+
+Asked in order, verbatim, **before any explanation**:
+
+1. **What is this?**
+2. **What would your client do here?**
+3. **Where would they go next?**
+4. **What feels missing?**
+
+### The binding constraint
+
+> **Do not explain the architecture before or during the first interpretation.**
+
+The first response **is** the evidence. Understanding obtained after explanation is evidence
+that explanation works, nothing more.
+
+⚠️ **The practitioner-seat drift risk:** Larry will be tempted to answer as a *designer* —
+*"I'd want it to…"*. That is feature preference, not recognition. Record it separately; it is
+not evidence for any criterion below.
+
+### 🔴 Question 5 — asked last, deliberately uncomfortable
+
+> ## 5. **"Where would this become too much?"**
+
+⛔ **Not optional.** Questions 1–4 can all be answered warmly by a practitioner whose practice
+the system is quietly absorbing. **Q5 is the only question in this instrument that can surface
+that**, because it asks him to look for the boundary rather than the benefit.
+
+**Do not soften it, do not supply candidate answers, and do not move on at the first
+demurral.** *"I can't think of anything"* is a recorded result — and a concerning one. Ask it
+once, verbatim, then wait.
+
+---
+
+## 3. Evaluation criteria — fixed before the encounter
+
+**Do not ask "do you like it?"**
+
+| Criterion | The question it answers |
+|---|---|
+| **Continuity** | *"Does this help the work continue between conversations?"* |
+| **Non-replacement** | *"Does this make your role **more** important, not less?"* |
+| **Attribution** | Can he tell **what came from him** versus **what the member authored**? |
+| **Sufficiency** | Can he tell what he would need to **author** for this to serve a real client? |
+
+⭐ **Non-replacement is stated in the positive on purpose.** *"Does it avoid replacing you?"*
+invites reassurance. *"Does it make your role more important?"* has a failing answer he can
+actually give.
+
+### The load-bearing criterion
+
+**Continuity and Non-replacement must BOTH hold.** Either alone is a failure state:
+
+| Continuity | Non-replacement | Reads as |
+|---|---|---|
+| ✅ | ✅ | ✅ **the target** — *"this lets my coaching continue without replacing my coaching"* |
+| ✅ | ⛔ | 🔴 the field is **absorbing the practice** — the most dangerous pass-looking result |
+| ⛔ | ✅ | it is inert — a container his work does not reach |
+| ⛔ | ⛔ | a different product |
+
+> 🔴 **A warm reception is not a pass.** Enthusiasm is the expected surface of the
+> `✅ / ⛔` row — a practitioner may be delighted by a system that is quietly replacing them.
+> Non-replacement is satisfied only if he names a boundary **unprompted**.
+
+**Attribution** is likewise satisfied only if he distinguishes the two sources without being
+asked — he knows the design, so a prompted answer proves nothing.
+
+---
+
+## 3A. The three absorption failure modes — what Q5 is listening for
+
+> **The biggest risk with Larry is not that he dislikes it. It is that he likes it so much
+> that the system absorbs the practice.**
+
+| Failure mode | What it sounds like in the room |
+|---|---|
+| **MAIA becomes the coach** | the field is described as doing the reflecting, prompting or noticing that the practitioner does |
+| **The field becomes the program** | the environment is described as the curriculum rather than as where the work continues |
+| **The member's reflection becomes Larry's framework** | member-authored material is described in his vocabulary as though the vocabulary produced it |
+
+The third is the quietest and the most serious: it is the invariant —
+*a lens may not become the owner's name for the experience* — failing in live speech rather
+than in code. ⛔ **Record the phrasing verbatim; do not correct it in the moment.**
+
+---
+
+## 4. Recording protocol
+
+- **Record behaviour and words. Never assign meaning to them.** Interpretation belongs to the
+  participant.
+- Verbatim capture over summary. Hesitation, misreading and wrong turns are data.
+- Confusion is an **observation, not a verdict.**
+- **Claude may record what was said and done. Claude may not produce interpretation-class
+  findings** — that authority sits with the participant and the founder.
+- Telemetry is not experience evidence.
+- ⚠️ Record **design-voice** answers in a separate column from **recognition** answers. Do not
+  merge them at capture time; merging destroys the distinction the §2 drift note exists for.
+
+---
+
+## 5. Evidence packet
+
+### ⭐⭐⭐ The test member's field state is part of the REFERENT, not setup data
+
+> **A different member state creates a different encounter.**
+
+⛔ It is not "arranging the demo." The environment being observed must be **reproducible**,
+and the field state is half of what is being observed (the component renders live member
+data — see the referent verification §2). Captured **not because the person is being
+measured**, but because the environment is:
+
+```
+Encounter:
+    build SHA
+    member / test identity
+    field contents present
+    invitations present / absent
+    practitioner context
+    date / time
+```
+
+### Also captured
+
+- The referent block (§1) verbatim, including SHA
+- Verbatim responses to the four questions
+- His own description of what the field is, in his words — ⛔ never paraphrased into ours
+- The unprompted boundary statement, if any (Non-replacement)
+- What he said was missing, and what he said he would need to author
+- Design-voice remarks, kept separate
+- **Declared role overlaps** — executor, observer and acceptance authority each named. Where
+  one person holds more than one role the overlap is declared **on the packet**, not resolved
+  silently. **No acceptance may be inferred from execution.**
+
+---
+
+## 6. Outcome space
+
+Resolves to exactly one of: **retain · revise · reject** — scoped to the **Now What?
+expression only.**
+
+⛔⛔ **This encounter may not rule an open architecture question.** CF-D5b's language
+governance layer, the `practice_fields` carrier and the member-vocabulary gesture are
+governance items; a practitioner's reaction is **input to** them and never a ruling on them.
+
+> **The prototype must not silently decide what the sitting deliberately left open.**
+
+**The walk may produce a FINDING. It may not produce a CHANGE.** No fix during or immediately
+after — including obvious ones. Findings return to the governance lane.
+
+---
+
+## 7. Preconditions before anyone sits down
+
+- [ ] **D9 ruled** — **hard blocker**
+- [ ] Referent re-verified: the running tree reports `78358f979`
+- [ ] A controlled test member exists with a **known** field state, and Larry is told it is a
+      constructed case, not a real client
+- [ ] Executor, observer and acceptance authority named; overlaps declared in advance
+- [ ] This document read in full by the executor, unchanged since pre-registration
+
+---
+
+## 7A. Framing the session — a founder/practitioner encounter, not a demo
+
+Opening frame, spoken before the tree is shown:
+
+> **"We built the first expression of the Client Field around your work. We want to see
+> whether the environment helps your work continue while preserving the thing that makes your
+> coaching valuable."**
+
+This keeps him in the correct role. He is:
+
+| ✅ | ⛔ |
+|---|---|
+| providing evidence from the **practitioner side of the relationship** | approving the product |
+| | designing the system |
+| | standing in for a member |
+
+⚠️ **A demo framing produces a demo response.** *"Let me show you what we built"* recruits
+enthusiasm and makes Q5 nearly unanswerable — he would have to criticise a gift. The frame
+above asks him to evaluate a **relationship**, which is a question he is genuinely expert in.
+
+⛔ Nothing in the framing may be extended into explanation of the architecture before the
+first interpretation (§2).
+
+---
+
+## 8. What this instrument does not authorize
+
+- ⛔ Recruiting or approaching any participant. **That is D9.**
+- ⛔ Any claim about production.
+- ⛔ Any claim about arrival comprehension, or about any domain other than executive coaching.
+- ⛔ Any claim about the universal field.
+- ⛔ Any change to Phase 1 without a ruling.
+- ⛔ Revising these criteria after the encounter has begun.

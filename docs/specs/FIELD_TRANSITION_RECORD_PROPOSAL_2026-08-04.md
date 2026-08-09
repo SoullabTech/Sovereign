@@ -246,3 +246,234 @@ origin becomes, that unknown is prior work.
 read not as module integration but as the record of *"what happened between beings in this
 encounter"*: provenance, trust, mutual influence, boundaries, uncertainty, transformation. This
 proposal's grammar is one piece. ⛔ Nothing here authorizes building it.
+
+---
+
+## 9. Folded-in contributions (2026-08-04, from the memory-observability lane)
+
+Founder-directed consolidation. The memory-observability lane independently re-derived this
+proposal's axis and was **superseded rather than developed** —
+`docs/specs/SOVEREIGNTY_OWNERSHIP_AXIS_v0.md` is marked superseded; only its non-redundant
+findings are folded here. ⛔ Nothing in §9 alters a §7 ruling.
+
+> **The procedural lesson (founder):** *do not create a new room when you discover an existing
+> room with the same doorway.* The failure was **treating a discovered pattern as a new primitive
+> instead of checking whether the architecture had already named and governed it.** §0's "three
+> implementations" finding now has a fourth data point — the reinvention pressure is ongoing and
+> structural, not a one-time lapse.
+
+### 9.1 🔴 `alive` carries two referents — and the schema already separates them
+
+The memory lane proposed a member-memory lifecycle `stored → alive → offered → used`. **`alive` is
+overloaded**, in exactly the §7.3 fractal pattern:
+
+| Reading | Claim | Evidence | Authority |
+|---|---|---|---|
+| **Technical alive** | *the system loaded this successfully* | loader ran · query succeeded · object returned | system |
+| **Relational alive** | *this is still part of the person's living world* | member confirmation · continued engagement · explicit renewal | ⛔ **member only** |
+
+> **Never let system activity masquerade as human relevance.** This is the same failure class as
+> `sem: ok` — a loader-health signal read as a statement about the member.
+
+⭐ **Resolution — the existing substrate already has this right.** Per §2, `member_memory_atoms`
+separates curation from verdict, and its curation vocabulary already contains
+**`still_alive`** (`active/still_alive/set_aside/protected/archived`) — a **member-authored**
+state. Relational alive therefore needs no new vocabulary; it exists, and it is correctly on the
+member-curation axis, not the system axis.
+
+**Consequence for the memory lane:** its lifecycle is system-side only —
+`stored → loaded → offered → used` — and `alive` must be **reserved for the relational layer**,
+sourced from member curation. ⛔ A loader-health field may never be named `alive`.
+
+### 9.2 Ownership is not one object across arenas
+
+The lifecycle standardizes the **shape of the question**, not the answer. Founder formulation:
+
+> *A teaching can be offered. A personal realization can be owned. **Those are not the same object.***
+
+Same five words, different readings — which is why §6.3 forbids retrofit and §7.4 forbids backfill:
+
+| | Knowledge arena | Memory arena |
+|---|---|---|
+| stored | concepts authored by others | this member's own material |
+| offered | selected for this moment | reached the prompt |
+| **adopted** | ⚠️ applies to the member's *relationship to* a teaching — never to the teaching itself | the member's lived material, theirs by origin |
+
+Candidate per-arena instantiations (⛔ recorded, not ruled): knowledge
+`available → contextualized → offered → understood`; practitioner wisdom
+`captured → entrusted → offered → adopted`.
+
+### 9.3 Prior-art map — five ladders, one un-cross-referenced
+
+Beyond §0's three implementations, **five state-ladders** now exist. §0 catches the schema-level
+duplication; these are the *document*-level equivalent:
+
+| Ladder | Home | Note |
+|---|---|---|
+| `exists → reachable → participates → observable → influences` | `ADMIN_DIAGNOSTIC_SURFACE_2026-05-27.md` | **ratified**; capability-level |
+| `Built/Reachable/Participating/Observable/Sovereign` | `project_governed_participation_doctrine` | maturity; flagged *do not conflate* |
+| `exists → computed → persisted → loaded at start → surfaced to inference` | `docs/canon/INTELLIGENCE_FIELD_ACCESS_MAP.md` | ⭐ **closest to this grammar** — `surfaced to inference` **is** `offered`; its *observation-only by design* status is the same insight as "consent-blocked is healthy" |
+| `stored → loaded → offered → used` | memory-observability contract | subordinate (§9.5) |
+| `offered → explored · adopted · declined · withdrawn` | **this document** | governing |
+
+⭐ **`member_patterns` is the most mature instance of the grammar** — enforced in the database
+today: `CHECK (status IN ('emerging','offered','confirmed','rejected'))` (migration
+`20260316000003`), `PatternOfferingService` writing `offered` + `last_offered_at`,
+`respondToPattern` gating on member response. **Memory is a late implementation, not the first.**
+Any conformance pass should measure against patterns.
+
+### 9.4 ⚠️ Naming — "Wisdom Field" has four referents
+
+Verified at `0cf6696ab`. ⛔ Do not mint it as a top-level architectural term without a ruling:
+
+1. **Knowledge Field** — `docs/canon/MAIA_KNOWLEDGE_FIELD_v1.0.md` + 12-domain map; **ratified canon
+   with live code** (`lib/maia/knowledge/knowledgeField.ts`, `lib/maia/prompts/knowledgeFieldBlock.ts`).
+2. `lib/maia/wisdomFieldMoves.ts` — 10 conversational *move* types; a small implementation piece.
+3. **Practitioner Wisdom Field** — its own constitution (§9.6).
+4. Wisdom graph / keepers / submissions substrate + surfaces.
+
+Further, `docs/canon/MEDIA_FIELD_AND_RELATIONAL_FIELD_BOUNDARIES.md` **already draws the
+Wisdom/Memory boundary** as *Public Knowledge Field* vs *Relational Memory Field* — two of four
+domains that "cannot fully collapse into one substrate."
+
+**Naming hypothesis (⛔ recorded, NOT ruled):** Knowledge Field = what humanity has articulated ·
+Wisdom Field = what becomes meaningful through relationship, practice, lived context ·
+Memory Field = what the member has entrusted from their own life.
+
+### 9.5 Subordination + the conformance step
+
+- `SOVEREIGNTY_OWNERSHIP_AXIS_v0.md` — ⛔ **SUPERSEDED.** Content folded here.
+- `MAIA_MEMORY_FIELD_OBSERVABILITY_CONTRACT.md` — **subordinate / implementation-specific.** It is
+  the *memory arena's* instantiation; it may not define lifecycle or ownership semantics. Its
+  Panel 5 implements this grammar's authority boundary; it does not author it.
+- ⛔ **Before any new schema:** score all three §0 implementations against §5. That test already
+  exists and is scored (`pass (5), partial (3), fail (1)(2)(4)`) — ⛔ do not re-derive it.
+
+### 9.6 Record correction — a memory pointer resolves off-branch
+
+The memory index states the practitioner constitution *"LIVES IN
+`docs/specs/PRACTITIONER_WISDOM_FIELD_PRODUCT_DEFINITION_v0.md`"*. That path returns **No such
+file** on `feature/labtools-redesign` at `0cf6696ab`. It is **not lost** — added by three sibling
+commits (`51deb4b2d`, `e028a6334`, `80dfaf8df`) with three companions, all four absent here:
+the product definition (576 lines), the architecture assessment (279),
+`docs/governance/PRACTITIONER_WISDOM_CAPTURE_PROTOCOL_v1.md` (242), and the Larry custody agenda (19).
+Retrieve via `git show 51deb4b2d:<path>`.
+
+> **Generalized principle — absence in the current view ≠ absence in reality.** A pointer must carry
+> enough provenance to retrieve its target: *the artifact exists · this branch does not contain it ·
+> the historical referent is `<sha>`.* This is §4.1's *record the act, never derive a label* applied
+> to the repository itself — and the same overbroad-absence error already recorded once against the
+> Larry IP corpus.
+
+### 9.7 ⚠️ Lane convergence — PR #960 is open
+
+**#960 — `feat(memory): Sprint 1 Truth Layer — declared policy, transition records, truthful
+telemetry`** (`feature/memory-truth-layer`) is **OPEN, not merged**, and names *transition records*
+directly. Three lanes now approach one object: memory truth layer · this proposal · the (superseded)
+ownership axis.
+
+⛔ **Do not merge them into a larger abstraction.** Per founder: this grammar governs; each arena
+implements it under its own authority boundaries. Read #960 before extending either document.
+
+---
+
+## 10. The conformance pass — proposed next move (founder, 2026-08-04; ⛔ not authorized)
+
+> *"Recognize the organism before adding organs."*
+
+**Not implementation.** The proposed next move is a conformance pass, stated as:
+
+> **For each arena, can we map its existing objects onto the shared transition grammar
+> without forcing the arena to become something it is not?**
+
+### 10.1 ⭐ The non-distortion clause — this is NOT a restatement of §5
+
+§5 asks whether an implementation *satisfies* the grammar. §10 adds a second, opposing test that
+§5 alone cannot supply:
+
+| Test | Asks | Failure mode it catches |
+|---|---|---|
+| §5 conformance | does the arena answer the grammar's five questions? | fragmentation — arenas that cannot be compared |
+| **§10 non-distortion** | **does conforming deform the arena?** | **flattening — different kinds of human relationship compressed into one generic state machine** |
+
+⛔ **A conformance failure is not automatically an arena failure.** Three conclusions must remain
+distinguishable, and the pass must name which one it reached:
+
+1. **the arena is incomplete** — it should conform and does not yet;
+2. **the grammar is incomplete** — the arena is sound and the grammar cannot express it;
+3. **the mapping is inappropriate** — both are sound; this material does not belong on this axis.
+
+Collapsing these into "non-conformant" turns the pass into a compliance instrument — the opposite
+failure from the one §0 diagnosed. **The mechanism built to create coherence is exactly the
+mechanism that can erase difference**; the three-way reading is what prevents the grammar from
+quietly becoming the new authority source.
+
+**Maturity ordering for the pass** (strongest first — measure against the strongest, do not average):
+
+| Arena | Object | Maturity |
+|---|---|---|
+| Patterns | `member_patterns` — `offered` → member response, DB-enforced | **strongest** |
+| Memory atoms | `status` + `member_response_status` | partial |
+| Recognition | `member_idea_recognition_events` | partial |
+
+### 10.2 What the four reinventions actually indicate
+
+Four independent arenas built the same organ (§0's three, plus the superseded ownership axis).
+The founder's read, load-bearing:
+
+> **The missing component was never another object. It was a translation layer.**
+
+Each arena is fluent in its own material: memory knows memory language, patterns know pattern
+language, recognition knows recognition language, practitioner fields know practitioner language.
+None can read the others. **The shared transition grammar is connective tissue — the Corpus
+Callosum metaphor in its literal architectural sense**, consistent with R5 (*grammar, not service*).
+
+> ⛔ This is the argument *against* a central table, not for one. Connective tissue translates
+> between organs; it does not replace them.
+
+### 10.3 The `alive` boundary, stated as authority
+
+Restating §9.1 as the rule the pass applies:
+
+| Lifecycle | States | Answers | Authority |
+|---|---|---|---|
+| System | `stored → loaded → offered → used` | *what did the system do?* | system — logs, loaders, runtime |
+| Relational | `active · still_alive · set_aside · protected · archived` | *what is the person's current relationship to this?* | **member** |
+
+**A loader cannot determine aliveness.** The system may know *"I retrieved this," "I displayed
+this," "this query succeeded."* It may never know *"this still matters," "this still represents
+me," "I still want this carried."*
+
+### 10.4 ⭐ Withholding is a constitutional state, not a gap
+
+Generalized from `INTELLIGENCE_FIELD_ACCESS_MAP.md`'s **observation-only by design**, and the
+same insight as *consent-blocked is healthy*:
+
+> **A mature system needs the ability to say: *this information exists, but it is not mine to use
+> here.***
+
+The dangerous leap is not `exists → loaded`. It is:
+
+```text
+available   ──►   allowed to participate
+```
+
+**The full progression, with the terminal named honestly:**
+
+```text
+exists → computed → stored → available → eligible → offered → member-authorized participation
+```
+
+⭐ **A capability can correctly stop at any point on this progression.** Stopping is a *state*, not
+a shortfall:
+
+- a pattern may exist and not be offered;
+- a memory may exist and not participate in this moment;
+- knowledge may exist and not enter relational space.
+
+Only the last step is member-authorized. Everything before it is the system's own conduct, and
+none of it is authorization.
+
+⛔ Any dashboard, conformance score, or roadmap that renders a deliberately withheld capability as
+*missing* is creating pressure to breach a boundary that is working. Withholding must be
+representable as **correct**, everywhere the grammar is displayed.

@@ -1,0 +1,153 @@
+{
+ "captured": "2026-08-09",
+ "window_days": 1,
+ "sessions": 13,
+ "requests": 662,
+ "cache_read": 100179445,
+ "cache_write": 8244581,
+ "output": 767322,
+ "avg_ctx_per_request": 151328.4667673716,
+ "median_initial_ctx": 0,
+ "channels": {
+  "other": {
+   "calls": 99,
+   "tok": 5420
+  },
+  "isolated: ctx_*": {
+   "calls": 172,
+   "tok": 196302
+  },
+  "Bash (already hook-governed)": {
+   "calls": 30,
+   "tok": 6914
+  },
+  "direct textual (ctx_execute_file candidate)": {
+   "calls": 19,
+   "tok": 18493
+  },
+  "pixel/browser (subagent-only remedy)": {
+   "calls": 13,
+   "tok": 8856
+  }
+ },
+ "by_tool": {
+  "ctx_batch_execute": {
+   "calls": 25,
+   "tok": 106892,
+   "max": 9183
+  },
+  "ctx_execute": {
+   "calls": 135,
+   "tok": 69021,
+   "max": 3344
+  },
+  "ctx_search": {
+   "calls": 10,
+   "tok": 19459,
+   "max": 3118
+  },
+  "Read": {
+   "calls": 19,
+   "tok": 18493,
+   "max": 4364
+  },
+  "computer": {
+   "calls": 2,
+   "tok": 7079,
+   "max": 7068
+  },
+  "Bash": {
+   "calls": 30,
+   "tok": 6914,
+   "max": 2978
+  },
+  "Edit": {
+   "calls": 48,
+   "tok": 2370,
+   "max": 70
+  },
+  "get_page_text": {
+   "calls": 9,
+   "tok": 1658,
+   "max": 280
+  },
+  "Write": {
+   "calls": 24,
+   "tok": 1163,
+   "max": 61
+  },
+  "ctx_execute_file": {
+   "calls": 2,
+   "tok": 929,
+   "max": 904
+  },
+  "ToolSearch": {
+   "calls": 6,
+   "tok": 536,
+   "max": 98
+  },
+  "navigate": {
+   "calls": 9,
+   "tok": 454,
+   "max": 61
+  },
+  "javascript_tool": {
+   "calls": 5,
+   "tok": 371,
+   "max": 179
+  },
+  "preview_list": {
+   "calls": 2,
+   "tok": 320,
+   "max": 255
+  },
+  "preview_start": {
+   "calls": 2,
+   "tok": 140,
+   "max": 81
+  },
+  "read_page": {
+   "calls": 2,
+   "tok": 119,
+   "max": 60
+  },
+  "mark_chapter": {
+   "calls": 2,
+   "tok": 54,
+   "max": 27
+  },
+  "find": {
+   "calls": 1,
+   "tok": 12,
+   "max": 12
+  }
+ },
+ "subagent_returns": {
+  "n": 0,
+  "p50": 0,
+  "p90": 0,
+  "mean": 0
+ },
+ "by_category": {
+  "ui/browser-verify": {
+   "n": 1,
+   "cread": 27333635,
+   "out": 60761
+  },
+  "implementation": {
+   "n": 4,
+   "cread": 46957721,
+   "out": 382039
+  },
+  "mixed/other": {
+   "n": 7,
+   "cread": 21535261,
+   "out": 295066
+  },
+  "ops/deploy": {
+   "n": 1,
+   "cread": 4352828,
+   "out": 29456
+  }
+ }
+}
