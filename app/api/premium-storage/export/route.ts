@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;
 import { PremiumStorageService } from '@/lib/services/premium-storage';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Skip during static export (Capacitor builds)
 
@@ -149,6 +150,19 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // 🔐 SECURITY (2026-08-09): this handler previously took NO identity at all.
+    // It resolved an archive by `exportId` alone and then unlinked the file and
+    // deleted the row, so any caller who knew or guessed an id could destroy
+    // another member's export. Authenticate the caller, then prove ownership.
+    // Reference: docs/security/API_AUTHENTICATION_BOUNDARY_AUDIT_2026-08-09.md
+    const callerId = await getMemberIdFromRequest(request);
+    if (!callerId) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required.' },
+        { status: 401 }
+      );
+    }
+
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
 
@@ -158,6 +172,19 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!exportRecord) {
+      return NextResponse.json(
+        { error: 'Export archive not found' },
+        { status: 404 }
+      );
+    }
+
+    // Ownership is checked against the SESSION, never against anything supplied.
+    // 404 rather than 403 so the endpoint does not confirm that an id exists to
+    // someone who does not own it.
+    if (exportRecord.userId !== callerId) {
+      console.warn(
+        `⛔ [premium-storage/export:DELETE] refused cross-member delete: caller=${callerId.slice(0, 8)}… export=${String(exportId).slice(0, 8)}…`
+      );
       return NextResponse.json(
         { error: 'Export archive not found' },
         { status: 404 }
