@@ -135,6 +135,67 @@ function deployed(enabled) {
   return out ? { deployed_sha: out } : { deployed_sha: UNKNOWN, note: 'probe failed — remains UNKNOWN, do not infer' };
 }
 
+// ------------------------------------------- D2. governance: claims + capacity
+/**
+ * Horizon III. `/orient` must be able to answer, BEFORE writable work begins:
+ * does someone already own this worktree, and is there Claude capacity for me?
+ *
+ * This READS the session registry — it never claims, never opens, never releases.
+ * Orientation is a reading. Acquiring a claim is a separate deliberate act
+ * (`session.mjs open`), because a probe that silently acquired authority would be
+ * exactly the "model grants itself authority" failure the directive forbids.
+ *
+ * Both fields are UNKNOWN when the registry cannot be read — never "free".
+ */
+function governance(ws) {
+  const here = path.dirname(new URL(import.meta.url).pathname);
+  const sessionCli = path.join(here, 'session.mjs');
+  if (!existsSync(sessionCli)) {
+    return { status: UNKNOWN, reason: 'session registry not installed at ' + sessionCli };
+  }
+  let st;
+  try {
+    st = JSON.parse(execFileSync('node', [sessionCli, 'status', '--json'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
+  } catch (e) {
+    return { status: UNKNOWN, reason: `session registry unreadable: ${e.message}` };
+  }
+
+  const sessions = st.sessions ?? [];
+  // A worktree is claimed if a live WRITE session holds it. Read-only sessions
+  // hold no baseline and never block a writer.
+  const writers = sessions.filter((s) => s.mode !== 'read-only');
+  const holder = writers.find((s) => s.worktree === ws.worktree) ?? null;
+  const branchHolder = writers.find((s) => s.branch === ws.branch) ?? null;
+
+  const capacityFull = (st.active ?? 0) >= (st.limit ?? 1);
+
+  return {
+    status: 'MEASURED',
+    worktree_claim: holder
+      ? { claimed: true, by: holder.session_id, work_unit: holder.work_unit,
+          owner: holder.owner, since: holder.opened_at, mode: holder.mode }
+      : { claimed: false },
+    branch_claim: branchHolder && branchHolder !== holder
+      ? { claimed: true, by: branchHolder.session_id, branch: branchHolder.branch }
+      : { claimed: false },
+    claude_capacity: {
+      active: st.active ?? 0, limit: st.limit ?? null,
+      limit_source: st.limit_source ?? UNKNOWN,
+      full: capacityFull,
+      may_claim_slot: !capacityFull,
+    },
+    local_request_rate: st.local_request_rate
+      ? { overall_band: st.local_request_rate.overall_band,
+          w60m: st.local_request_rate.windows?.w60m ?? null,
+          recommendation: st.local_request_rate.recommendation ?? null,
+          caveat: 'LOCAL observability — not Anthropic quota units' }
+      : { overall_band: UNKNOWN },
+    contended: sessions.filter((s) => (s.collisions?.length ?? 0) > 0)
+      .map((s) => ({ session_id: s.session_id, work_unit: s.work_unit })),
+  };
+}
+
 // ---------------------------------------------------------- E. packet as CLAIMS
 // Classification vocabulary (design §1, founder-specified):
 //   confirmed | drifted | contradicted | not_measurable | governance_witness
@@ -252,6 +313,7 @@ const now = {
   workspace: ws,
   trunk: trunk(opt('--trunk')),
   hazards: hazards(ws.worktree, ws.head_committed_at),
+  governance: governance(ws),
   deployed: deployed(flag('--deployed')),
   memory_staleness: {
     status: UNKNOWN,
@@ -280,9 +342,17 @@ if (packetPath) {
 
 const escalation = (() => {
   const acts = (packetReport?.classifications ?? []).map((c) => c.action);
+  const g = now.governance;
+  // Ownership outranks everything else: writable work on a worktree someone else
+  // owns produces evidence about a moving artifact, which is not evidence at all.
+  if (g?.worktree_claim?.claimed || g?.branch_claim?.claimed) return 'STOP';
   if (acts.includes('STOP')) return 'STOP';
   if (acts.includes('DOWNGRADE')) return 'DOWNGRADE';
-  if (acts.includes('WARN') || now.hazards.status === 'HAZARD') return 'WARN';
+  // Capacity is not a defect — it is a scheduling fact. It gets its own verdict so
+  // a full lane is never mistaken for a broken workspace.
+  if (g?.claude_capacity?.full) return 'WAITING_FOR_CLAUDE';
+  if (acts.includes('WARN') || now.hazards.status === 'HAZARD'
+      || g?.local_request_rate?.overall_band === 'ANOMALOUS') return 'WARN';
   return 'OK';
 })();
 
@@ -306,6 +376,34 @@ for (const i of report.hazards.items) {
   console.log(`  ${i.newer_than_head ? '⚠️ ' : '   '}${i.path}  mtime ${i.mtime}` +
     (i.newer_than_head ? '  NEWER THAN HEAD — instrument readings suspect until cleared or declared' : ''));
 }
+const g = report.governance;
+console.log(`\nGOVERNANCE  (read-only — /orient never claims anything)`);
+if (g.status === UNKNOWN) {
+  console.log(`  ${UNKNOWN} — ${g.reason}`);
+} else {
+  if (g.worktree_claim.claimed) {
+    console.log(`  ⛔ WORKTREE OWNED by ${g.worktree_claim.by} (${g.worktree_claim.work_unit})`);
+    console.log(`       owner ${g.worktree_claim.owner}  since ${g.worktree_claim.since}`);
+    console.log(`       Do not begin writable work here. Ask, or use an isolated worktree.`);
+  } else if (g.branch_claim.claimed) {
+    console.log(`  ⛔ BRANCH OWNED by ${g.branch_claim.by} — a different worktree does not make`);
+    console.log(`       the same branch safe to write.`);
+  } else {
+    console.log(`  worktree claim   free (claim it deliberately: session.mjs open)`);
+  }
+  const c = g.claude_capacity;
+  console.log(`  Claude capacity  ${c.active} / ${c.limit}  ${c.full ? '— FULL → WAITING_FOR_CLAUDE' : '— slot available'}`);
+  const r = g.local_request_rate;
+  if (r.overall_band !== UNKNOWN) {
+    console.log(`  local rate       ${r.overall_band}`
+      + (r.w60m ? `  (${r.w60m.requests} reqs/60m, ${r.w60m.ratio_to_baseline}x baseline, ${r.w60m.distinct_sessions} sessions)` : ''));
+    console.log(`                   ⛔ local observability, not Anthropic quota units`);
+  }
+  if (g.contended.length) {
+    console.log(`  ⚠ CONTENDED      ${g.contended.map((x) => x.session_id).join(', ')}`);
+  }
+}
+
 console.log(`\nDEPLOYED REFERENT`);
 console.log(`  ${report.deployed.deployed_sha}${report.deployed.note ? `  (${report.deployed.note})` : ''}`);
 console.log(`\nMEMORY STALENESS`);

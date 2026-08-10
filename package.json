@@ -154,7 +154,11 @@
     "maia-notes:status": "curl -s http://localhost:3000/api/admin/maia-notes/status | jq",
     "maia": "bash scripts/maia",
     "maia:status": "bash scripts/maia status",
-    "maia:doctor": "bash scripts/maia doctor"
+    "maia:doctor": "bash scripts/maia doctor",
+    "jarvis": "node scripts/builder/session.mjs status",
+    "jarvis:rate": "node scripts/builder/rate.mjs",
+    "jarvis:report": "node scripts/builder/session.mjs report",
+    "jarvis:proof": "node scripts/builder/__tests__/session-proof.mjs && node scripts/builder/__tests__/orient-proof.mjs && node scripts/builder/__tests__/continue-proof.mjs && node scripts/builder/__tests__/rate-proof.mjs && node scripts/builder/__tests__/loop-governance-proof.mjs && node scripts/builder/__tests__/incident-scenario-proof.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

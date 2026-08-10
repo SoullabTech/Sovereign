@@ -13,8 +13,15 @@
  *   node scripts/builder/continue.mjs --init            # skeleton, probes measured now
  *   node scripts/builder/continue.mjs --validate <path> # grammar + budget + invariants
  *   node scripts/builder/continue.mjs --validate <path> --json
+ *   node scripts/builder/continue.mjs --validate <path> --handoff <session-id>
  *
- * Read-only: --init writes to stdout; nothing is written to disk by this script.
+ * Read-only by default: --init writes to stdout; validation writes nothing.
+ *
+ * `--handoff` is the ONE mutating path, and it is deliberately gated (Horizon III):
+ * it releases the session's write claim and its Claude concurrency slot, but ONLY
+ * after the packet validates. Releasing a claim without a valid packet would free
+ * the lane while destroying the continuity that made the lane worth holding — the
+ * worst of both. An invalid packet therefore keeps the claim.
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync, statSync } from 'node:fs';
@@ -261,4 +268,34 @@ if (result.warnings.length) {
   for (const w of result.warnings) console.log(`    [${w.rule}] ${w.detail}`);
 }
 console.log(`\n  ${result.ok ? 'VALID' : 'INVALID'}`);
+
+// ------------------------------------------------- handoff: release the claim
+const handoffSid = opt('--handoff');
+if (handoffSid) {
+  if (!result.ok) {
+    console.error(`\n  ⛔ HANDOFF REFUSED — the packet is INVALID.`);
+    console.error(`     The write claim and Claude slot are STILL HELD by ${handoffSid}.`);
+    console.error(`     Fix the packet and re-run. A lane released without a valid packet`);
+    console.error(`     frees capacity by destroying the continuity it was holding.`);
+    process.exit(1);
+  }
+  const sessionCli = path.join(path.dirname(new URL(import.meta.url).pathname), 'session.mjs');
+  if (!existsSync(sessionCli)) {
+    console.error(`\n  ⚠ session registry not installed — packet is valid, but no claim was released.`);
+    process.exit(0);
+  }
+  try {
+    execFileSync('node', [sessionCli, 'close', '--session', handoffSid, '--state', 'handed-off'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    console.log(`\n  HANDOFF  ${handoffSid} closed as handed-off`);
+    console.log(`     write claim released · Claude concurrency slot released`);
+    console.log(`     the next /orient will see this worktree free`);
+  } catch (e) {
+    console.error(`\n  ⚠ release FAILED for ${handoffSid}: ${(e.stderr || e.message).toString().trim()}`);
+    console.error(`     The packet is valid and written. The claim is still held — release it`);
+    console.error(`     explicitly: node scripts/builder/session.mjs close --session ${handoffSid} --state handed-off`);
+    process.exit(1);
+  }
+}
+
 process.exit(result.ok ? 0 : 1);
