@@ -36,6 +36,8 @@ import {
   verifyDelegation, delegationToUnit14, recordUse, publicDelegation, PUBLIC_REFUSAL,
 } from './jarvis-delegation.mjs';
 import { verifyResumption } from './jarvis-authority-gate.mjs';
+import { verifyInstruction } from './jarvis-authority-channel.mjs';
+import { resolveGovernanceGate, publicGovernanceGate } from './jarvis-governance-gate.mjs';
 
 /**
  * §18/§19 — bridge mode. When set, an enveloped request MUST present a
@@ -241,6 +243,8 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
     resumes_run_id: r.resumes_run_id ?? null,
     resolution_id: r.resolution_id ?? null,
     gate_id: r.gate_id ?? null,
+    // §8 — bounded unresolved question, no worker reasoning or evidence body.
+    governance_gate: publicGovernanceGate(r.governance_gate),
     disposition: r.disposition ?? null, failure_class: r.failure_class ?? null,
     failure_detail: r.failure_detail ?? null, blocked: r.blocked ?? null,
     created_at: r.created_at, updated_at: r.updated_at, finished_at: r.finished_at ?? null,
@@ -440,6 +444,65 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
       if (!run) return json(res, 404, { error: 'RUN_NOT_FOUND', run_id: seg[1] });
 
       if (req.method === 'GET' && seg.length === 2) return json(res, 200, publicRun(run));
+
+      // ── Unit 19: POST /runs/:id/resolve-gate ────────────────────────────────
+      // Close a governance gate with authenticated authority and, if approved,
+      // put THE SAME RUN back in the queue with a widened grant. The run keeps
+      // its id, request id, objective and pre-gate evidence.
+      if (req.method === 'POST' && seg[2] === 'resolve-gate' && seg.length === 3) {
+        const ct2 = String(req.headers['content-type'] || '');
+        if (!ct2.includes('application/json')) {
+          return json(res, 415, { error: 'UNSUPPORTED_MEDIA_TYPE' });
+        }
+        const raw2 = await readBody(req, res);
+        if (raw2 === null) return;
+        let body2;
+        try { body2 = JSON.parse(raw2); } catch { return json(res, 400, { error: 'BAD_REQUEST' }); }
+
+        if (run.state !== 'PAUSED_FOR_GOVERNANCE' || !run.governance_gate) {
+          return json(res, 409, { error: 'NO_OPEN_GOVERNANCE_GATE', state: run.state });
+        }
+        // §9 — authority comes from Unit 16. No second authority system.
+        const iv = verifyInstruction({ instruction_id: body2.instruction_id }, nowISO());
+        if (!iv.ok) {
+          rt.last_error = { at: nowISO(), message: `gate resolution refused: ${iv.refusal}` };
+          return json(res, 403, { error: PUBLIC_REFUSAL, detail: 'authenticated authority is required to resolve a governance gate' });
+        }
+        const gr = resolveGovernanceGate(run.governance_gate, iv.instruction, {
+          resolution_type: body2.resolution_type,
+          scope_grant: body2.scope_grant,
+          rationale: body2.rationale,
+        }, nowISO());
+        if (!gr.ok) {
+          rt.last_error = { at: nowISO(), message: `gate resolution refused: ${gr.refusal}` };
+          return json(res, 403, { error: PUBLIC_REFUSAL, detail: 'the resolution did not satisfy this gate' });
+        }
+
+        run.governance_gate = gr.gate;
+        if (gr.gate.permits_resumption) {
+          // §11 — the SAME run resumes. Its grant is widened only by what the
+          // gate asked for and the resolution conferred.
+          const extra = gr.gate.authority_delta?.additional_selectors ?? [];
+          if (extra.length) {
+            run.packet = { ...run.packet,
+              context_selectors: [...(run.packet.context_selectors ?? []), ...extra] };
+          }
+          run.authority_delta = gr.gate.authority_delta;
+          try { transition(run, 'QUEUED', { blocked: null }); }
+          catch (e) { return json(res, 409, { error: 'RESUME_REFUSED', detail: e.message }); }
+          queue.push(run.run_id);
+          drain();
+        } else {
+          // §13 — a refused gate leaves the objective truthfully unresolved.
+          try { transition(run, 'ESCALATION_REQUIRED', { disposition: 'ESCALATION_REQUIRED',
+            failure_class: 'GOVERNANCE_REFUSED', failure_detail: `gate ${gr.gate.gate_id} refused` }); }
+          catch { /* already terminal */ }
+        }
+        emit('governance.gate_resolved', { run_id: run.run_id, gate_id: gr.gate.gate_id,
+          resolution_type: gr.gate.resolution_type, resumed: gr.gate.permits_resumption });
+        saveRun(run);
+        return json(res, 200, publicRun(loadRun(run.run_id)));
+      }
 
       if (req.method === 'POST' && seg[2] === 'cancel' && seg.length === 3) {
         if (TERMINAL_STATES.includes(run.state)) {

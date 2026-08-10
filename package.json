@@ -165,7 +165,8 @@
     "jarvis:delegation:proof": "node scripts/builder/__tests__/jarvis-delegation-proof.mjs",
     "jarvis:authority:proof": "node scripts/builder/__tests__/jarvis-authority-channel-proof.mjs",
     "jarvis:gate:proof": "node scripts/builder/__tests__/jarvis-gate-resumption-proof.mjs",
-    "jarvis:alpha:walk": "node scripts/builder/__tests__/jarvis-alpha-proving-walk.mjs"
+    "jarvis:alpha:walk": "node scripts/builder/__tests__/jarvis-alpha-proving-walk.mjs",
+    "jarvis:governance:proof": "node scripts/builder/__tests__/jarvis-governance-gate-proof.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

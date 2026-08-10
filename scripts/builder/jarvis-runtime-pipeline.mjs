@@ -28,6 +28,7 @@ import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lintLeakage, bindSelector, headOf } from './jarvis-packet-guard.mjs';
+import { validateWorkerGate } from './jarvis-governance-gate.mjs';
 import { materializePacket, budget } from './jarvis-context.mjs';
 import { AIN_HOME, nowISO } from './jarvis-runtime-store.mjs';
 
@@ -42,6 +43,12 @@ const LOGS_DIR = path.join(AIN_HOME, 'logs');
 export const RUN_STATES = [
   'QUEUED', 'VALIDATING', 'CONTEXT_ROUTING', 'READY_FOR_WORKER', 'RUNNING',
   'VALIDATING_RESULT', 'VERIFYING_EVIDENCE',
+  // Unit 19 — the run stopped because continuing would require authority it does
+  // not hold. Deliberately NON-terminal: the objective is still open, and the
+  // same run resumes once legitimate authority arrives. This is not FAILED (no
+  // fault), not VERIFIED (nothing was concluded), and not QUEUED (no amount of
+  // capacity will start it).
+  'PAUSED_FOR_GOVERNANCE',
   'VERIFIED', 'ESCALATION_REQUIRED', 'FAILED', 'CANCELLED',
 ];
 export const TERMINAL_STATES = ['VERIFIED', 'ESCALATION_REQUIRED', 'FAILED', 'CANCELLED'];
@@ -59,8 +66,19 @@ export const LEGAL_TRANSITIONS = {
   // back to QUEUED is the governed "runtime accepted, worker capacity absent" path (§9)
   READY_FOR_WORKER: ['RUNNING', 'QUEUED', 'FAILED', 'CANCELLED'],
   RUNNING: ['VALIDATING_RESULT', 'FAILED', 'CANCELLED'],
-  VALIDATING_RESULT: ['VERIFYING_EVIDENCE', 'FAILED', 'CANCELLED'],
+  // Unit 19: a VALIDATED result may instead carry a governance gate the control
+  // plane accepted, which pauses rather than concludes.
+  VALIDATING_RESULT: ['VERIFYING_EVIDENCE', 'PAUSED_FOR_GOVERNANCE', 'FAILED', 'CANCELLED'],
   VERIFYING_EVIDENCE: ['VERIFIED', 'ESCALATION_REQUIRED', 'FAILED', 'CANCELLED'],
+  // Unit 19: the ONLY way out of a pause is back through the queue, and only
+  // after an authenticated resolution has widened the grant. The run keeps its
+  // identity, objective and pre-gate evidence — this is the same run resuming,
+  // not a successor. CANCELLED/FAILED remain reachable so a paused objective can
+  // still be abandoned or fail.
+  // ESCALATION_REQUIRED is reachable because a REFUSED gate closes the objective
+  // truthfully: authority was asked for and denied. Not VERIFIED (nothing was
+  // concluded) and not FAILED (nothing malfunctioned).
+  PAUSED_FOR_GOVERNANCE: ['QUEUED', 'ESCALATION_REQUIRED', 'FAILED', 'CANCELLED'],
   VERIFIED: [], ESCALATION_REQUIRED: [], FAILED: [], CANCELLED: [],
 };
 
@@ -352,6 +370,39 @@ export async function executeRun(run, ctx) {
     return fail('LOCAL_WORKER_WROTE',
       `read-only lane mutated the worktree: files_changed=${result.files_changed?.length ?? 0} ending_sha=${result.ending_sha}`);
   }
+  // ── Unit 19: native governance gate ────────────────────────────────────────
+  // A worker may return a structured claim that it cannot legitimately continue.
+  // The claim is validated against THIS run before it becomes governance state;
+  // an invalid gate is a result-contract failure, never an indefinite pause, so
+  // a worker cannot suspend its own run by emitting nonsense.
+  if (result.governance_gate !== undefined) {
+    const held = {
+      operation_class: run.operation_class ?? run.admission?.operation_class ?? null,
+      allowed_targets: run.delegation?.allowed_targets ?? [],
+    };
+    const gv = validateWorkerGate(result.governance_gate, run, { heldAuthority: held }, nowISO());
+    if (!gv.ok) {
+      return fail('GOVERNANCE_GATE_INVALID', `${gv.refusal}: ${gv.reason}`);
+    }
+    // Pre-gate evidence is preserved on the run so resumption continues the same
+    // work rather than restarting it (§12 of the mandate).
+    run.pre_gate_result = {
+      lane: result.lane, model: result.model, exit_summary: result.summary,
+      duration_s: result.duration_s, starting_sha: result.starting_sha,
+      phase_completed: result.phase_completed ?? null,
+    };
+    run.governance_gate = gv.gate;
+    T('PAUSED_FOR_GOVERNANCE', {
+      blocked: { reason: 'AUTHORITY_REQUIRED', gate_class: gv.gate.gate_class,
+        gate_id: gv.gate.gate_id, at: nowISO() },
+    });
+    ctx.emit('governance.gate_opened', {
+      run_id: run.run_id, gate_id: gv.gate.gate_id, gate_class: gv.gate.gate_class,
+      required_resolver_role: gv.gate.required_resolver_role,
+    });
+    return run;
+  }
+
   run.result_path = rf;
   run.log_path = result.log_path || logFile(packet.work_unit_id);
   run.result = {
