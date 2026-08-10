@@ -150,7 +150,23 @@ fix and **1** after. So canonical id propagation incidentally removes the domina
 production duplicate class (~103 of 120). ⛔ This is a claim about **future** writes
 only. **No historical data was touched**; U1 is not a cleanup unit.
 
-## 10 — TREE
+## 10 — COMMIT
+
+```
+COMMIT:   86649f5f1  fix(maia): make an accepted member turn durable independently of the client
+BRANCH:   fix/u1-durable-turn-acceptance  (rebased onto trunk b00340cfc)
+REBASE:   originally verified at d2db55d7b as f2d07b56c; rebased onto b00340cfc
+          (RU-0 Sanctuary containment + House door). Re-verified after rebase:
+          typecheck 231/239 no regressions; one send -> one exchange; same-id
+          retry collapses; 400ms navigation interrupt keeps both halves durable.
+PUSHED:   NO
+DEPLOYED: NO
+```
+Pre-commit sovereignty gates passed (no Supabase, no new OpenAI surface, branch
+guard). The commit-msg hook rejects Claude attribution, so none is present —
+repo policy over default convention.
+
+## 11 — TREE
 
 ```
 FILES CHANGED:        5 (all authorized; maiaService.ts added by this unit)
