@@ -138,6 +138,20 @@ _build_prompt() {
     # without context_selectors produces an empty block and behaves as before.
     # Fails CLOSED on budget overflow — exit 5 = CONTEXT_BUDGET_EXCEEDED.
     local frags=""
+    # Unit 10 gate: refuse to build a prompt that leaks verifier expectations, and
+    # refuse selectors not bound to the execution HEAD. Both fail CLOSED.
+    node "$PROJECT_DIR/scripts/builder/jarvis-packet-guard.mjs" lint "$f" >/dev/null || {
+        echo "🛑 [ain-delegate] PACKET_ANSWER_LEAKAGE — worker NOT invoked." >&2
+        node "$PROJECT_DIR/scripts/builder/jarvis-packet-guard.mjs" lint "$f" >&2
+        exit 7
+    }
+    if [ "$(jq -r '(.context_selectors // []) | length' "$f")" -gt 0 ]; then
+        node "$PROJECT_DIR/scripts/builder/jarvis-packet-guard.mjs" bind "$f" --repo "$(jq -r '.worktree' "$f")" >/dev/null || {
+            echo "🛑 [ain-delegate] SELECTOR_SHA_MISMATCH / REBIND failure — worker NOT invoked." >&2
+            node "$PROJECT_DIR/scripts/builder/jarvis-packet-guard.mjs" bind "$f" --repo "$(jq -r '.worktree' "$f")" >&2
+            exit 8
+        }
+    fi
     if [ "$(jq -r '(.context_selectors // []) | length' "$f")" -gt 0 ]; then
         frags="$(node "$PROJECT_DIR/scripts/builder/jarvis-context.mjs" materialize "$f" --repo "$(jq -r '.worktree' "$f")")" || {
             echo "🛑 [ain-delegate] CONTEXT_BUDGET_EXCEEDED or selector error — worker NOT invoked." >&2
@@ -156,8 +170,7 @@ _build_prompt() {
         (if (.prohibited_files_actions | length) > 0 then ([.prohibited_files_actions[] | ("- " + .)] | join("\n")) else "(none declared)" end) + "\n\n" +
         "ACCEPTANCE CRITERIA:\n" +
         (if (.acceptance_criteria | length) > 0 then ([.acceptance_criteria[] | ("- " + .)] | join("\n")) else "(none declared)" end) + "\n\n" +
-        "VERIFICATION COMMANDS (will be re-run independently after you finish):\n" +
-        (if (.verification_commands | length) > 0 then ([.verification_commands[] | ("- " + .)] | join("\n")) else "(none declared)" end) + "\n\n" +
+        "VERIFICATION: your output will be independently re-verified against source. Cite only what the MATERIALIZED CONTEXT supports.\n\n" +
         "ESCALATION CONDITIONS — if any apply, STOP and print a line starting with exactly `ESCALATE_TO_CLAUDE:` followed by the exact ambiguity. Do not guess:\n" +
         (if (.escalation_conditions | length) > 0 then ([.escalation_conditions[] | ("- " + .)] | join("\n")) else "(none declared beyond the standing authority firewall)" end) + "\n\n" +
         "STANDING AUTHORITY FIREWALL (always in force): you may execute settled decisions. You may NOT silently establish constitutional architecture, member authority, consent semantics, confidentiality semantics, provenance semantics, epistemic authority, destructive migration policy, security boundaries, founder rulings, ontology, or deprecation of important capability. Hitting one of these is an ESCALATE_TO_CLAUDE, not a judgment call.\n\n" +

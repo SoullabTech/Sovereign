@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os'; import path from 'node:path';
+import { lintLeakage, partitionPacket, bindSelector, resolveAnchor, WORKER_VISIBLE_FIELDS, VERIFIER_ONLY_FIELDS } from '../jarvis-packet-guard.mjs';
+let p=0,f=0; const t=(n,fn)=>{try{fn();console.log(`  ✓ ${n}`);p++}catch(e){console.error(`  ✗ ${n}\n      ${e.message}`);f++}};
+const eq=(a,b,m)=>{if(a!==b)throw new Error(m??`expected ${JSON.stringify(b)} got ${JSON.stringify(a)}`)};
+const repo=mkdtempSync(path.join(tmpdir(),'u10-'));
+writeFileSync(path.join(repo,'r.ts'),['a','export async function POST(req){','  return 1;','}','import { x } from "y";','dup','dup'].join('\n'));
+console.log('\nJARVIS Unit 10 — SHA-bound context + non-leaking packets\n');
+t('1  verifier-only field excluded from worker partition',()=>{const{worker,verifier}=partitionPacket({objective:'o',verification_commands:['sed -n 257p f.ts']});eq(worker.verification_commands,undefined);eq(verifier.verification_commands.length,1)});
+t('2  expected line-number leakage rejected',()=>{const r=lintLeakage({objective:'find it',established_facts:['answer is lib/ai/modelService.ts:76']});eq(r.ok,false);eq(r.status,'PACKET_ANSWER_LEAKAGE')});
+t('3  sed line-probe leakage rejected',()=>{const r=lintLeakage({objective:'x',established_facts:["run sed -n '257p' route.ts"]});eq(r.ok,false)});
+t('4  verifier field echoed into worker text rejected',()=>{const r=lintLeakage({objective:'the provider is anthropic branch',expected_answer:'the provider is anthropic branch'});eq(r.ok,false)});
+t('5  clean packet passes lint',()=>{const r=lintLeakage({objective:'trace the path',established_facts:['READ-ONLY'],verification_commands:['sed -n 253p r.ts']});eq(r.ok,true)});
+t('6  unknown fields default to verifier-only (default-deny)',()=>{const{worker,verifier}=partitionPacket({secret_gold:'zzz'});eq(worker.secret_gold,undefined);eq(verifier.secret_gold,'zzz')});
+t('7  line selector with matching SHA accepted',()=>{const b=bindSelector({ref:'r.ts',source_sha:'HEADX',selector:{type:'lines',start:2,end:3}},repo,'HEADX');eq(b.error,undefined);eq(b.start,2);eq(b.rebound,false)});
+t('8  line selector with mismatched SHA rejected',()=>{const b=bindSelector({ref:'r.ts',source_sha:'OLD',selector:{type:'lines',start:2,end:3}},repo,'NEW');eq(b.error,'SELECTOR_SHA_MISMATCH')});
+t('9  unbound line selector rejected',()=>{const b=bindSelector({ref:'r.ts',selector:{type:'lines',start:2,end:3}},repo,'H');eq(b.error,'SELECTOR_SHA_UNBOUND')});
+t('10 deterministic anchor rebind resolves at execution HEAD',()=>{const b=bindSelector({ref:'r.ts',selector:{type:'anchor',find:'export async function POST',mode:'lines',after:1}},repo,'H');eq(b.error,undefined);eq(b.start,2);eq(b.rebound,true);eq(b.source_sha,'H')});
+t('11 ambiguous anchor fails closed',()=>{const b=bindSelector({ref:'r.ts',selector:{type:'anchor',find:'dup'}},repo,'H');eq(b.error,'SELECTOR_REBIND_AMBIGUOUS')});
+t('12 missing anchor fails closed',()=>{const b=bindSelector({ref:'r.ts',selector:{type:'anchor',find:'nope'}},repo,'H');eq(b.error,'SELECTOR_REBIND_NOT_FOUND')});
+t('13 declaration mode takes brace-balanced body',()=>{const r=resolveAnchor(['a','function f(){','  x','}','z'],{find:'function f(',mode:'declaration'});eq(r.start,2);eq(r.end,4)});
+t('14 missing file fails closed',()=>{eq(bindSelector({ref:'nope.ts'},repo,'H').error,'SELECTOR_FILE_NOT_FOUND')});
+t('15 field partitions are disjoint (no field both worker- and verifier-visible)',()=>{for(const k of WORKER_VISIBLE_FIELDS) if(VERIFIER_ONLY_FIELDS.has(k)) throw new Error(`${k} in both`)});
+t('16 verification_commands is verifier-only by name',()=>{eq(VERIFIER_ONLY_FIELDS.has('verification_commands'),true);eq(WORKER_VISIBLE_FIELDS.has('verification_commands'),false)});
+rmSync(repo,{recursive:true,force:true});
+console.log(`\n  ${p} passed · ${f} failed\n`); process.exit(f?1:0);

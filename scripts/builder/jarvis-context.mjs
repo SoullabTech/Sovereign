@@ -91,6 +91,24 @@ export function materializeOne(item, repo, headSha) {
       throw new Error(`context: range ${start}-${end} exceeds ${ref} (${all.length} lines)`);
     }
     method = 'line-range';
+  } else if (sel.type === 'anchor') {
+    // Unit 10: resolve a non-answer-bearing anchor at the EXECUTION head.
+    const hits = [];
+    for (let i = 0; i < all.length; i++) if (all[i].includes(sel.find)) hits.push(i);
+    if (hits.length === 0) throw new Error(`context: anchor not found in ${ref}: ${sel.find}`);
+    if (hits.length > 1) throw new Error(`context: SELECTOR_REBIND_AMBIGUOUS in ${ref}: ${sel.find} (${hits.length} matches)`);
+    const s0 = hits[0];
+    if ((sel.mode ?? 'lines') === 'declaration') {
+      let d = 0, seen = false, e0 = Math.min(all.length - 1, s0 + 40);
+      for (let i = s0; i < all.length; i++) {
+        for (const ch of all[i]) { if (ch === '{') { d++; seen = true; } else if (ch === '}') d--; }
+        if (seen && d <= 0) { e0 = i; break; }
+      }
+      start = s0 + 1; end = e0 + 1;
+    } else {
+      start = s0 + 1; end = Math.min(all.length, s0 + 1 + (sel.after ?? 0));
+    }
+    method = `anchor:${sel.mode ?? 'lines'}`;
   } else if (sel.type === 'symbol') {
     const found = extractSymbol(all, sel.name);
     if (!found) throw new Error(`context: symbol '${sel.name}' not found in ${ref}`);
