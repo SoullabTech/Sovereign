@@ -41,7 +41,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import {
   existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, appendFileSync, renameSync,
-  realpathSync,
+  realpathSync, openSync, closeSync, writeSync, unlinkSync, statSync,
 } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -116,6 +116,73 @@ function git(a, cwd) {
 }
 
 function ensureHome() { mkdirSync(SESSIONS_DIR, { recursive: true }); }
+
+/**
+ * ── R1 admission lock ────────────────────────────────────────────────────
+ * Confirmed 2026-08-10: `open` is a check-then-act sequence — read the active
+ * claim count (activeRecs), decide there is room, then write a new claim file
+ * — spread across MULTIPLE OS PROCESSES sharing SESSIONS_DIR, with nothing
+ * between the read and the write. Two `open` invocations landing inside that
+ * window each read the same active count, each see capacity available, and
+ * both write: a classic TOCTOU. This is exactly how capacity 2 admitted 3
+ * concurrent claims on 2026-08-10 (cleared manually, never repaired) — see
+ * docs/governance/FOUNDER_RULING_POST_JCP-000_PROGRAM_STANDING_2026-08-10.md.
+ *
+ * `grep -r flock|lockfile|O_EXCL scripts/builder/` returned 0 hits before this
+ * change — there was no admission-side mutual exclusion at all.
+ *
+ * Fix: a single filesystem-level mutex spanning the ENTIRE check-then-write
+ * critical section (from the `activeRecs` read in cmdOpen through the
+ * `writeRec` of the new claim, inclusive of the invariant-3 clash check and
+ * the invariant-2 budget check). `open(path, 'wx')` is O_CREAT|O_EXCL — the
+ * kernel guarantees only one caller wins the create even under concurrent
+ * attempts, which is the same atomicity primitive named in the founder
+ * ruling (flock / lockfile / O_EXCL — this uses O_EXCL because plain Node
+ * has no synchronous flock(2) binding, and the goal is a small, dependency-
+ * free primitive, not a specific syscall).
+ *
+ * Deliberately NOT a queue, NOT a semaphore, NOT the concurrency budget
+ * itself — just serializes the read+write pair so no two `open` processes
+ * can observe the same "room available" snapshot.
+ */
+const ADMISSION_LOCK = path.join(HOME, 'admission.lock');
+const ADMISSION_LOCK_STALE_MS = 15000; // holder process presumed dead past this age
+
+function acquireAdmissionLock(timeoutMs = 10000) {
+  ensureHome();
+  const start = Date.now();
+  for (;;) {
+    try {
+      const fd = openSync(ADMISSION_LOCK, 'wx'); // O_CREAT|O_EXCL — atomic create-or-fail
+      writeSync(fd, JSON.stringify({ pid: process.pid, at: nowISO() }));
+      closeSync(fd);
+      return ADMISSION_LOCK;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      // Contended. Only break the lock if its holder is provably gone AND the
+      // lock is old — never on age alone (a slow-but-alive holder is not stale).
+      try {
+        const age = Date.now() - statSync(ADMISSION_LOCK).mtimeMs;
+        if (age > ADMISSION_LOCK_STALE_MS) {
+          let holderPid = null;
+          try { holderPid = JSON.parse(readFileSync(ADMISSION_LOCK, 'utf8')).pid; } catch { /* unreadable → treat as unknown */ }
+          if (!holderPid || !pidAlive(holderPid)) {
+            try { unlinkSync(ADMISSION_LOCK); } catch { /* raced with holder's own release; retry loop handles it */ }
+            continue;
+          }
+        }
+      } catch { /* stat/read races with release — just retry below */ }
+      if (Date.now() - start > timeoutMs) {
+        die(`admission lock contention: could not acquire ${ADMISSION_LOCK} within ${timeoutMs}ms — another 'open' is mid-admission`, 1);
+      }
+      try { execFileSync('sleep', ['0.05']); } catch { /* best-effort backoff */ }
+    }
+  }
+}
+
+function releaseAdmissionLock() {
+  try { unlinkSync(ADMISSION_LOCK); } catch { /* already gone — fine */ }
+}
 
 function ledger(event) {
   ensureHome();
@@ -244,7 +311,28 @@ function cmdOpen() {
   const mode = flag('--read-only') ? 'read-only' : 'write';
   const override = opt('--override');
   const sid = `s-${randomBytes(4).toString('hex')}`;
+
+  // ── R1 admission lock — spans the ENTIRE check-then-write critical section
+  // (active-claims read through new-claim write). Without this, two `open`
+  // processes can each read the same active count and both admit, exceeding
+  // cfg.max_active. See acquireAdmissionLock() for the full defect writeup.
+  // process.exit() does not run pending `finally` blocks (verified empirically —
+  // it terminates immediately), so the lock is released explicitly on every
+  // path out of this section rather than via try/finally.
+  acquireAdmissionLock();
+
   const active = activeRecs(cfg);
+
+  // Test-only hook (opt-in via env var, inert in normal operation): widens the
+  // check→write window so a concurrency proof can reliably force an interleave
+  // instead of hoping two processes race by accident. Placed INSIDE the locked
+  // region — under the fix this only lengthens how long other openers wait for
+  // the lock; it does not reopen the race. A mutated copy of this file with the
+  // acquire/release calls stripped is what makes the same delay actually widen
+  // an unguarded window, for discriminating (fixed-vs-broken) proof.
+  if (process.env.BUILDER_TEST_ADMISSION_DELAY_MS) {
+    try { execFileSync('sleep', [String(Number(process.env.BUILDER_TEST_ADMISSION_DELAY_MS) / 1000)]); } catch { /* best-effort */ }
+  }
 
   // ── invariant 3: one active WRITE unit → one branch → one worktree → one owner.
   // Read-only lanes are exempt: inspection must never acquire write authority, and
@@ -264,6 +352,7 @@ function cmdOpen() {
       console.error(`\n   One active write unit → one branch → one worktree → one owner.`);
       console.error(`   Close it (session.mjs close --session ${clash.session_id} --state <s>)`);
       console.error(`   or open this unit in its OWN worktree:  scripts/ain-worktree-claim.sh claim ${unit} ${branch}\n`);
+      releaseAdmissionLock();
       process.exit(1);
     }
   }
@@ -288,6 +377,7 @@ function cmdOpen() {
       console.error(`   session ${sid} recorded as queued. It has NOT started and holds no claim.`);
       console.error(`   It becomes eligible when an active session closes.\n`);
       console.log(sid);
+      releaseAdmissionLock();
       process.exit(3);
     } else {
       ledger({ event: 'refused', reason: 'concurrency-budget', work_unit: unit, branch, at_active: active.length, limit: cfg.max_active });
@@ -295,6 +385,7 @@ function cmdOpen() {
       console.error(`   limit source: ${cfg.max_active_source}`);
       for (const r of active) console.error(`     ${r.session_id}  ${r.mode}  ${r.model}  ${r.work_unit}  (${r.branch})`);
       console.error(`\n   Close a session, or re-run with --queue, or --override "<reason>" (audited).\n`);
+      releaseAdmissionLock();
       process.exit(1);
     }
   }
@@ -316,6 +407,7 @@ function cmdOpen() {
   };
   writeRec(rec);
   ledger({ event: 'opened', session_id: sid, work_unit: unit, branch, worktree, mode, model, owner: rec.owner, override: !!override });
+  releaseAdmissionLock();
 
   console.error(`[builder/session] opened ${sid}  unit=${unit}  mode=${mode}  model=${model}`);
   if (rec.baseline) console.error(`[builder/session] baseline branch=${rec.baseline.branch} head=${String(rec.baseline.head_sha).slice(0, 8)} dirty=${rec.baseline.dirty_count}`);
