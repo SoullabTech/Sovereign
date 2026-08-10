@@ -16,6 +16,8 @@
 > | entitlement + real cert, correct Team ID | SIGKILL | SIGKILL |
 >
 > The data-protection-keychain flag changed nothing in either row — ruled out as a confound. The restricted-entitlement/provisioning-profile blocker reproduces identically on fresh, uncontaminated, freshly-signed bundles. **This is now a clean, discriminating result, not an inherited assumption**: D-14P's finding stands, on firmer evidence than either prior version of this record. D-14Q (obtaining an actual provisioning profile) is the correctly earned next step — held pending the founder's separate authorization for that specific unit, and to be done Terminal-first (`xcodebuild -allowProvisioningUpdates`, not Xcode GUI) per standing instruction, escalating to an interactive step only if Apple account authentication itself requires it.
+>
+> **RECORD CORRECTION #3 (wording precision, 2026-08-10, before D-14Q execution).** Correction #2 above should not be read as calling provisioning/entitlement authorization "the sole reproducible cause" — that overstates what a discriminating rerun can establish. What the 2×2 proves is that it is the **remaining discriminating hypothesis**: the confounds tested (contamination, wrong keychain) are ruled out, but causation itself — that a correctly provisioned build actually clears the blocker — is not yet demonstrated. That is precisely D-14Q's job. Only if D-14Q succeeds does this get promoted from hypothesis to demonstrated cause.
 
 ## Goal, restated
 
