@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--
+  §18 — the renderer may not reach anything. No remote origin, no connect-src,
+  no inline script. Every fact on this page arrived over IPC from the main
+  process, which speaks to one loopback address and refuses any other.
+-->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>JARVIS</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark">
+    <span class="mark" aria-hidden="true">◇</span>
+    <h1>JARVIS</h1>
+    <span class="subtitle">local operations console</span>
+  </div>
+  <div class="system-strip" id="system-strip" role="status" aria-live="polite" aria-label="System state">
+    <span class="pill pill-pending"><span class="pill-mark">·</span> connecting</span>
+  </div>
+</header>
+
+<main class="grid">
+
+  <!-- ── §4 COMMAND ─────────────────────────────────────────────────────── -->
+  <section class="panel panel-command" aria-labelledby="h-command">
+    <h2 id="h-command">Command</h2>
+    <p class="lede">What do you want JARVIS to do?</p>
+
+    <form id="command-form" autocomplete="off">
+      <label for="template">Bounded task</label>
+      <select id="template" name="template"></select>
+      <p class="hint" id="template-summary"></p>
+
+      <label for="objective">Objective</label>
+      <textarea id="objective" name="objective" rows="5" spellcheck="false"></textarea>
+
+      <div class="authority-row">
+        <span class="badge badge-readonly" id="authority-badge">
+          <span class="badge-mark" aria-hidden="true">◎</span> READ-ONLY
+        </span>
+        <span class="hint">Desktop Alpha cannot grant write authority.</span>
+      </div>
+
+      <button type="submit" id="submit" class="primary">Submit to runtime</button>
+    </form>
+
+    <div id="submit-result" class="submit-result" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- ── §7 ACTIVE / RECENT RUNS ────────────────────────────────────────── -->
+  <section class="panel panel-runs" aria-labelledby="h-runs">
+    <div class="panel-head">
+      <h2 id="h-runs">Runs</h2>
+      <button type="button" id="refresh" class="ghost">Refresh</button>
+    </div>
+    <ul class="run-list" id="run-list" aria-label="Active and recent runs"></ul>
+  </section>
+
+  <!-- ── §8/§9 RUN DETAIL + EVIDENCE ────────────────────────────────────── -->
+  <section class="panel panel-detail" aria-labelledby="h-detail" id="detail-panel">
+    <h2 id="h-detail">Run detail</h2>
+    <div id="detail" class="detail">
+      <p class="empty">Select a run to inspect its context, worker, evidence and disposition.</p>
+    </div>
+  </section>
+
+</main>
+
+<script src="../lib/presentation.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
