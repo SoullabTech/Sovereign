@@ -73,6 +73,24 @@ cmd_claim() {
         git -C "$PROJECT_DIR" worktree add -B "$branch" "$worktree_path" "$base_sha" >&2
     fi
 
+    # Make the worktree hermetic for the sovereignty pre-commit hook.
+    #
+    # The hook runs `npm run check:no-supabase` and `npm run check:no-openai`,
+    # both of which are `npx tsx <script>`. A fresh worktree has no node_modules,
+    # so npx cannot resolve tsx locally and reaches the npm registry to install
+    # tsx@* on EVERY invocation — observed at 98s for a single check, and
+    # effectively unbounded when the network is slow or offline. Under a git hook
+    # stdin is not a TTY, so an npx install prompt has nothing to answer it.
+    #
+    # Linking the main checkout's node_modules makes `npx` resolve tsx from
+    # node_modules/.bin and never touch the network (98s -> 2s, deterministic).
+    # This changes only HOW the checks run — never whether they run or what they
+    # catch; both still fail closed on a real violation.
+    if [ ! -e "$worktree_path/node_modules" ] && [ -d "$PROJECT_DIR/node_modules" ]; then
+        ln -sfn "$PROJECT_DIR/node_modules" "$worktree_path/node_modules"
+        echo "[ain-worktree-claim] linked node_modules -> $PROJECT_DIR/node_modules (hermetic pre-commit)" >&2
+    fi
+
     {
         echo "pid=$$"
         echo "started=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
