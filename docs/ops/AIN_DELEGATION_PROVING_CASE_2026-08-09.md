@@ -315,3 +315,49 @@ safely close the work. It does not establish local-lane competence (Attempt B st
 unresolved local-runtime evidence), does not establish routing policy, and does not
 establish that workers should generally lack commit authority beyond what this one proving
 case exercised — see Unit 5 for where that gets generalized, deliberately not here.
+
+---
+
+## Unit 6 addendum (2026-08-09) — `proving-case-claude-multiply-fn`
+
+**`CLAUDE_AS_JARVIS_WORKER: PROVEN`.** Full architecture record:
+`docs/architecture/BUILDER_OS_CLAUDE_ADAPTER_2026-08-09.md`. Recorded here, in the same
+canonical proving-case home, per the discipline this file itself established — one home,
+not a fork per worker.
+
+**New, distinctly-named fixture** (`multiply(a,b)`, not `add(a,b)`) so provenance between
+the Kimi and Claude proving cases is never ambiguous.
+
+```text
+packet → isolated worktree → Builder WRITE ownership → Claude worker (sonnet, mutation) →
+independent verification (PASS) → JARVIS integration (commit f2218f3da) →
+persisted result → release (claim + slot)
+```
+
+**Succeeded on the first attempt** — no permission friction, unlike Kimi's first attempt.
+The `--permission-mode` was *derived* from the Work Unit's authority envelope
+(`work-unit.mjs permission-envelope`) rather than hard-coded, closing exactly the gap the
+Kimi closure's harness finding identified.
+
+**One real governance event, not staged:** the first invocation attempt was **genuinely
+refused** — Claude capacity was already held by this Unit 6 development session itself
+(`s-c96bbec4`), demonstrating C2/F1 against real, non-stub state before the proving case
+had even started. Resolved by pausing the development claim (not by self-authorizing a
+founder override) — the sole-slot model treats an orchestrating session and a delegated
+worker session identically, which is itself a finding, not a workaround (see the
+architecture record's Known Limitations).
+
+**Worker/JARVIS boundary held exactly as designed:** the packet explicitly prohibited the
+worker from committing; Claude complied without needing to be stopped or corrected.
+Integration commit `f2218f3da`, actor recorded as `"JARVIS (deterministic, not Claude)"`,
+never attributed to the worker.
+
+**C5 confirmed empirically, not just structurally:** `rate.mjs`, queried live during the
+run, showed 3 distinct sessions active in the trailing 5 minutes — the orchestrating
+session plus the just-launched Claude subprocess, picked up with no special-casing,
+because `rate.mjs` scans all local transcripts uniformly regardless of what spawned them.
+
+**F8 confirmed empirically:** `work-unit.mjs status proving-case-claude-multiply-fn`, run
+from a separate fresh worktree process, correctly reported `lifecycle_state: integrated`
+and `latest_result: pass via claude` — reconstructed entirely from disk, zero transcript
+consulted.

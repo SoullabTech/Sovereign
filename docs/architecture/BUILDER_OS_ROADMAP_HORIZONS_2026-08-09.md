@@ -92,10 +92,13 @@ sacrificing reasoning quality.*
 | Request-rate axis + closed-loop integration | `docs/architecture/BUILDER_OS_RATE_AXIS_AND_LOOP_INTEGRATION_2026-08-09.md` | built + proven (184/184 across 6 suites), **not yet exercised under real multi-lane load** |
 | Non-Claude closed-loop proving case (Kimi) | `docs/ops/AIN_DELEGATION_PROVING_CASE_2026-08-09.md` | `NON_CLAUDE_CLOSED_LOOP: PROVEN` — Kimi executed, JARVIS independently verified and integrated (commit `837f20bcf`) |
 | Canonical Work Unit reconciliation | `docs/architecture/BUILDER_OS_CANONICAL_WORK_UNIT_2026-08-09.md` | built + proven (37/37; 256/256 full regression) — packet file is now the canonical Work Unit; `ain-delegate.sh`/`session.mjs` unmodified |
+| Claude adapter (Claude as governed worker) | `docs/architecture/BUILDER_OS_CLAUDE_ADAPTER_2026-08-09.md` | `CLAUDE_AS_JARVIS_WORKER: PROVEN` (30/30; 286/286 full regression) — Claude executed a real proving case (`multiply.js`, commit `f2218f3da`), JARVIS independently verified and integrated |
 
-**MVJ (Minimum Viable JARVIS) sequence status:** Units 1–5 complete and proven. Unit 6
-(Claude as a governed worker adapter) remains **founder-gated** — not started as of this
-entry. Conversational Founder Input Resolution depends on Unit 6 and has not begun.
+**MVJ (Minimum Viable JARVIS) sequence status:** Units 1–6 complete and proven. Both
+non-Claude and Claude closed loops are demonstrated end to end — governed packet,
+isolated mutation, independent verification, JARVIS-controlled integration, durable
+result, release. Conversational Founder Input Resolution — the natural next MVJ step,
+now that both worker types are proven — has not been authorized or started.
 
 The concurrency unit was authorized in response to
 `docs/ops/CLAUDE_CODE_RAPID_ALLOTMENT_EXHAUSTION_AUDIT_2026-08-09.md`. It governs *how much

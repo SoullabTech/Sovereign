@@ -7,19 +7,24 @@
 # docs/ops/AIN_WORK_PACKET_CONTRACT.md / AIN_RESULT_CONTRACT.md for the schemas.
 #
 # This wraps the EXISTING lanes — it does not replace or redesign them:
-#   local -> ~/bin/maia-code        (Ollama maia-coder:latest / qwen3-coder)
-#   kimi  -> ~/.local/bin/kimi-cc   (Moonshot Kimi K2.7-code / K3)
-# Both are thin wrappers that exec `claude "$@"` with a lane-specific env, so
-# delegation here means: claim an isolated worktree, build a bounded prompt
-# from a work packet, run `<lane> -p "<prompt>"` inside that worktree, then
-# independently verify (never trust the delegate's self-report) and write a
-# compact result contract. Plain `claude` is never touched.
+#   local  -> ~/bin/maia-code        (Ollama maia-coder:latest / qwen3-coder)
+#   kimi   -> ~/.local/bin/kimi-cc   (Moonshot Kimi K2.7-code / K3)
+#   claude -> plain `claude`         (Unit 6, 2026-08-09 — Claude as a governed worker,
+#                                     not the orchestrator; no wrapper binary needed —
+#                                     the governance is in the flags + the worktree)
+# local/kimi are thin wrappers that exec `claude "$@"` with a lane-specific env; the
+# claude lane invokes the real binary directly. All three share one path: claim an
+# isolated worktree, build a bounded prompt from a work packet, run the worker inside
+# that worktree, then independently verify (never trust the delegate's self-report) and
+# write a compact result contract. The founder's *interactive* `claude` session is never
+# touched by any of this — this only ever launches a separate, governed subprocess.
 #
 # Usage:
 #   ain-delegate.sh new      <work_unit_id>
 #   ain-delegate.sh claim    <work_unit_id>
 #   ain-delegate.sh local    <work_unit_id>
 #   ain-delegate.sh kimi     <work_unit_id>
+#   ain-delegate.sh claude   <work_unit_id> [model]   # model default: sonnet, explicit not implicit
 #   ain-delegate.sh result   <work_unit_id>
 #   ain-delegate.sh review   <work_unit_id>
 #   ain-delegate.sh escalate <work_unit_id> "<reason>"
@@ -35,6 +40,7 @@ LOGS_DIR="$AIN_HOME/logs"
 LEDGER="$AIN_HOME/episodes.jsonl"
 CLAIM_SCRIPT="$PROJECT_DIR/scripts/ain-worktree-claim.sh"
 SESSION_SCRIPT="$PROJECT_DIR/scripts/builder/session.mjs"
+WORK_UNIT_SCRIPT="$PROJECT_DIR/scripts/builder/work-unit.mjs"
 
 mkdir -p "$PACKETS_DIR" "$RESULTS_DIR" "$LOGS_DIR"
 
@@ -99,6 +105,31 @@ cmd_claim() {
     echo "$worktree_path"
 }
 
+# ─── Unit 6 (2026-08-09): derive the Claude harness's --permission-mode from the
+# canonical Work Unit's authority, not hard-code it. Unlike local/kimi (fixed with a
+# blanket bypassPermissions in Unit 2, before this derivation function existed -- left
+# unretrofitted, out of this unit's scope), this is the first real consumer of
+# work-unit.mjs's derivePermissionEnvelope(). The translation is provider-specific
+# (Claude Code's actual flag name) and therefore belongs HERE, in the adapter -- never
+# in the canonical Work Unit itself (directive §6).
+_claude_permission_mode() {
+    local work_unit_id="$1" envelope scope
+    envelope="$(node "$WORK_UNIT_SCRIPT" permission-envelope "$work_unit_id" 2>/dev/null)" \
+        || { echo "🛑 could not derive a permission envelope for '$work_unit_id' — refusing to guess a mode." >&2; return 1; }
+    scope="$(echo "$envelope" | jq -r '.repo_write_scope')"
+    if [ "$scope" = "worktree" ]; then
+        # Bounded, not broad: the same envelope that authorizes worktree-scoped writes
+        # is what the isolated worktree (Unit 3) and independent re-verification
+        # (never trust self-report) already structurally contain.
+        echo "bypassPermissions"
+    elif [ "$scope" = "none" ]; then
+        echo "plan"   # read/reason only -- the envelope did not authorize mutation
+    else
+        echo "🛑 unrecognized repo_write_scope '$scope' — refusing to guess a permission mode." >&2
+        return 1
+    fi
+}
+
 _build_prompt() {
     local f="$1"
     jq -r '
@@ -124,7 +155,7 @@ _build_prompt() {
 }
 
 _run_lane() {
-    local lane="$1" work_unit_id="$2"
+    local lane="$1" work_unit_id="$2" model_override="${3:-}"
     local f wt starting_sha exit_code log ending_sha prompt cmd branch model
     f="$(_require_packet "$work_unit_id")"
     wt="$(jq -r '.worktree // empty' "$f")"
@@ -132,7 +163,15 @@ _run_lane() {
         wt="$(cmd_claim "$work_unit_id")"
     fi
     branch="$(jq -r '.branch' "$f")"
-    model="$([ "$lane" = "local" ] && echo "maia-coder:latest" || echo "kimi-k2.7-code")"
+    if [ "$lane" = "local" ]; then model="maia-coder:latest"
+    elif [ "$lane" = "kimi" ]; then model="kimi-k2.7-code"
+    elif [ "$lane" = "claude" ]; then
+        # Unit 6 (2026-08-09): EXPLICIT default, never an implicit Opus-because-Claude
+        # default. "sonnet" is a deliberate, documented, cheap-tier choice -- not a
+        # discovered Builder policy (none existed to discover; recorded as this unit's
+        # own choice in docs/architecture/BUILDER_OS_CLAUDE_ADAPTER_2026-08-09.md).
+        model="${model_override:-sonnet}"
+    else model="UNKNOWN"; fi
 
     # ─── Unit 3 convergence (2026-08-09): physical worktree existing is not the
     # same fact as Builder WRITE ownership existing. Register the claim HERE,
@@ -210,6 +249,14 @@ _run_lane() {
         class="$(jq -r '.execution_lane' "$f")"
         why="$(jq -r '.objective' "$f" | cut -c1-100)"
         ( cd "$wt" && kimi-cc --class "$class" --why "$why" -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
+        exit_code=$?
+    elif [ "$lane" = "claude" ]; then
+        # Unit 6: Claude as a governed worker, not the orchestrator. Plain `claude` --
+        # no wrapper binary needed the way local/kimi needed provider redirection; the
+        # governance is entirely in the flags and the worktree it runs inside.
+        local perm_mode
+        perm_mode="$(_claude_permission_mode "$work_unit_id")" || exit 1
+        ( cd "$wt" && claude -p "$prompt" --model "$model" --permission-mode "$perm_mode" ) > "$log" 2>&1
         exit_code=$?
     else
         echo "🛑 unknown lane: $lane" >&2
@@ -321,8 +368,9 @@ _run_lane() {
     cat "$(_result_file "$work_unit_id")"
 }
 
-cmd_local() { _run_lane "local" "$1"; }
-cmd_kimi()  { _run_lane "kimi" "$1"; }
+cmd_local()  { _run_lane "local" "$1"; }
+cmd_kimi()   { _run_lane "kimi" "$1"; }
+cmd_claude() { _run_lane "claude" "$1" "${2:-}"; }   # optional model, e.g. `claude <id> opus`
 
 cmd_result() {
     local f
@@ -385,12 +433,13 @@ case "${1:-}" in
     claim)    shift; cmd_claim "$@" ;;
     local)    shift; cmd_local "$@" ;;
     kimi)     shift; cmd_kimi "$@" ;;
+    claude)   shift; cmd_claude "$@" ;;
     result)   shift; cmd_result "$@" ;;
     review)   shift; cmd_review "$@" ;;
     escalate) shift; cmd_escalate "$@" ;;
     release)  shift; cmd_release "$@" ;;
     *)
-        echo "usage: $0 {new|claim|local|kimi|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        echo "usage: $0 {new|claim|local|kimi|claude|result|review|escalate|release} <work_unit_id> [args...]" >&2
         exit 2
         ;;
 esac
