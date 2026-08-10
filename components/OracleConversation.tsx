@@ -558,6 +558,12 @@ interface ConversationMessage {
       tool?: { id: string; name: string; description: string; agentConnection: string } | null;
       meta?: { agentName: string | null; patternType: string | null };
     };
+    // 🧱 F1 durable turn acceptance: stable id for the exchange this member turn
+    // belongs to. Minted client-side at submit, sent to the serving boundary so
+    // the utterance can be persisted at acceptance, and reused by the later pair
+    // write so it dedupes rather than duplicating.
+    exchangeId?: string;
+    [key: string]: unknown;
   };
   // 🚪 AIN: Knowledge Gate source well weighting for this turn
   ainState?: {
@@ -3044,6 +3050,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               userId,
               sessionId,
               isSanctuary,
+              // 🧱 F1: when this pair came from the sovereign path, the server already
+              // wrote both halves durably under this id — reusing it makes this write
+              // an idempotent no-op rather than a second exchange. Pairs from other
+              // paths carry no id and behave exactly as before.
+              exchangeId: msg.metadata?.exchangeId,
             }),
           })
             .then(res => res.json())
@@ -4745,6 +4756,20 @@ I'm not sure what I'm feeling yet.`;
     // ReferenceError on every send, retry or not.
     let userMessage: ConversationMessage | undefined;
 
+    // 🧱 F1 durable turn acceptance (audit 2026-08-10): mint ONE exchange id per
+    // member turn and carry it everywhere this turn is written. The server makes
+    // the utterance durable at acceptance under this id; the client's later pair
+    // write reuses it, so ON CONFLICT (exchange_id, seq) collapses the second
+    // write instead of creating a duplicate exchange.
+    //
+    // A resend deliberately REUSES the original id — the member is retrying one
+    // utterance, not authoring a new one, so it must not become two rows.
+    const turnExchangeId: string =
+      (retryOf ? messages.find(m => m.id === retryOf)?.metadata?.exchangeId : undefined) ||
+      (typeof globalThis.crypto?.randomUUID === 'function'
+        ? globalThis.crypto.randomUUID()
+        : `ex-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+
     if (retryOf) {
       // Resend of an already-authored turn: mark it in-flight, append nothing.
       setMessages(prev => markRetrying(prev, retryOf));
@@ -4769,7 +4794,9 @@ I'm not sure what I'm feeling yet.`;
         role: 'user',
         text: cleanedText,
         timestamp: new Date(),
-        source: 'user'
+        source: 'user',
+        // Carried so the later pair write can reuse the same exchange (see above).
+        metadata: { exchangeId: turnExchangeId },
       };
       setMessages(prev => appendMessageCapped(prev, userMessage!));
       onMessageAddedRef.current?.(userMessage);
@@ -5088,6 +5115,9 @@ I'm not sure what I'm feeling yet.`;
           userId: userId || 'anonymous',
           userName: userName || 'Friend',
           sessionId,
+          // 🧱 F1: lets the serving boundary persist this utterance at acceptance
+          // under an id the client can later dedupe against.
+          exchangeId: turnExchangeId,
           localHour: new Date().getHours(), // Client's local time for correct greetings
           mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
 

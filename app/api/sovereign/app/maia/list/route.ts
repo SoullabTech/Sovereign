@@ -84,6 +84,11 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+// F1 durable turn acceptance (audit 2026-08-10): this route is the serving
+// boundary that ACCEPTS a member utterance, so it is where the utterance must
+// become durable — not the browser, later, once a pair exists.
+import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
@@ -277,7 +282,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
@@ -285,6 +290,11 @@ export async function POST(req: NextRequest) {
       userId?: string;
       timezone?: string;
       conversationId?: string;
+      // Client-minted exchange id. Correlates the durable member turn written at
+      // acceptance with the MAIA turn written after generation, and with the
+      // client's own later pair write — which then dedupes instead of doubling.
+      // Destructured out of `meta` deliberately: it is plumbing, not prompt context.
+      exchangeId?: string;
       [key: string]: unknown;
     };
 
@@ -329,6 +339,79 @@ export async function POST(req: NextRequest) {
         `⚠️ Sovereign request rejected in ${duration}ms: missing message`
       );
       return jsonWithCors(req, { error: 'Missing `message` in request body', code: 'NO_MESSAGE' }, 400);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 🧱 TURN ACCEPTANCE BOUNDARY (F1 — durable turn acceptance)
+    //
+    // This is the EARLIEST point at which the system has everything it needs to
+    // call the utterance accepted: the member is authenticated (resolveMemberIdentity,
+    // above), the message is present and well-formed, the client's sessionId is
+    // known, and the Sanctuary posture is decidable from `meta`.
+    //
+    // The invariant this enforces:
+    //   ONCE A MEMBER TURN HAS BEEN ACCEPTED FOR MAIA PROCESSING, THE MEMBER'S
+    //   WORDS MUST NO LONGER DEPEND ON THE CLIENT REMAINING ALIVE.
+    //
+    // ⚠️ PLACEMENT IS LOAD-BEARING, and was corrected during this unit. The first
+    // attempt sat lower — after initializeSessionTable / ensureSession / cognitive
+    // profile — and a client that navigated away 250ms after Send aborted the
+    // handler BEFORE the write was reached, so the member turn was still lost.
+    // Durability must precede the preamble work, not follow it. Anything added
+    // above this block widens the loss window again.
+    //
+    // We deliberately use the client's `sessionId` rather than the resolved
+    // `session.id` (ensureSession echoes the same value back) so this write does
+    // not have to wait on session upsert. Restore reads by this same sessionId.
+    //
+    // Scope discipline: this widens WHEN the same content is written, never WHAT
+    // is written. Sanctuary still refuses (posture is re-enforced inside the
+    // store), and only recognized members are recorded — exactly the population
+    // the authenticated client-side write already covered.
+    // ─────────────────────────────────────────────────────────────────────────
+    const isSanctuary = (meta as any)?.sanctuary === true;
+
+    // 🛡️ IDENTITY GUARD: Only attempt cross-session memory for recognized users
+    // Anonymous sessions (no userId) can still have in-session context but won't
+    // trigger "0 memories found" alarms from cross-session retrieval
+    const isRecognizedUser = typeof userId === 'string' &&
+      userId.length > 0 &&
+      userId !== 'guest' &&
+      userId !== 'anonymous' &&
+      !userId.startsWith('anon:');
+
+    const turnPosture = TurnPosture.resolve({ sanctuary: isSanctuary });
+    // Reuse the client's exchange id when supplied so the later client-side pair
+    // write collapses onto this same exchange instead of duplicating it. Falling
+    // back to requestId keeps older clients working exactly as before.
+    const exchangeId =
+      typeof clientExchangeId === 'string' && clientExchangeId.length > 0
+        ? clientExchangeId
+        : requestId;
+    const acceptedSessionId =
+      typeof sessionId === 'string' && sessionId.trim() ? sessionId.trim() : undefined;
+    let memberTurnDurable = false;
+
+    if (isRecognizedUser && !isSanctuary) {
+      try {
+        memberTurnDurable = await TurnsStore.addExchangeTurn(turnPosture, {
+          userId: userId!,
+          sessionId: acceptedSessionId,
+          role: 'user',
+          content: message,
+          exchangeId,
+        });
+        console.log(
+          `🧱 [MAIA/durability] member turn accepted+durable exchange=${exchangeId.slice(0, 8)} durable=${memberTurnDurable} dt=${msSince(start)}ms`
+        );
+      } catch (durabilityErr: any) {
+        // Never fail the member's turn because bookkeeping failed — but say so
+        // loudly, because this is exactly the silent-loss condition F1 is about.
+        console.error(
+          `❌ [MAIA/durability] member turn NOT durable exchange=${exchangeId.slice(0, 8)}:`,
+          durabilityErr?.message ?? durabilityErr
+        );
+      }
     }
 
     // ⚡ LATENCY FIX: Parallelize session init with cognitive profile + name change detection.
@@ -407,22 +490,13 @@ export async function POST(req: NextRequest) {
 
     // 🧠 MEMORY BUNDLE: Build compressed context from multi-bucket retrieval
     const traceId = randomUUID();
-    const isSanctuary = (meta as any)?.sanctuary === true;
-
-    // 🛡️ IDENTITY GUARD: Only attempt cross-session memory for recognized users
-    // Anonymous sessions (no userId) can still have in-session context but won't
-    // trigger "0 memories found" alarms from cross-session retrieval
-    const isRecognizedUser = typeof userId === 'string' &&
-      userId.length > 0 &&
-      userId !== 'guest' &&
-      userId !== 'anonymous' &&
-      !userId.startsWith('anon:');
 
     const effectiveUserId = isRecognizedUser ? userId : session.id;
     const allowCrossSessionMemory = isRecognizedUser && !isSanctuary;
 
     // 🔍 MEMORY DEBUG: Log identity state for debugging memory issues
     console.log(`🧠 [Route/MemoryDebug] userId="${userId}" isRecognized=${isRecognizedUser} effectiveUserId="${effectiveUserId}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
+
 
     // Resolve memory mode (server-side permission check)
     // 🔧 FIX: Default to 'continuity' for recognized users instead of respecting client's request
@@ -1093,6 +1167,20 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
           episodicRecallAddendum, // 📖 Phase 2 — member-marked moments (episodic layer, substrate lane only)
           placeAddendum, // 🚪 House Presence — facts-only current-room orientation
+          // 🧱 CANONICAL EXCHANGE IDENTITY (F1 / U1 identity unification)
+          //
+          // ONE LOGICAL USER SEND = ONE CANONICAL EXCHANGE ID.
+          //
+          // This is the same id the acceptance-boundary write used above. Passing
+          // it here stops getMaiaResponse from minting a second identity for the
+          // SAME utterance — which is what turned one member send into two stored
+          // exchanges (verification ruling D, 2026-08-10).
+          //
+          // `meta` is the established channel for this: sessionManager's
+          // addConversationExchange already reads `meta.exchangeId` for exactly
+          // this purpose. Placed AFTER ...meta so stale client meta cannot
+          // override the server's canonical identity.
+          exchangeId,
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
@@ -1181,6 +1269,44 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
     // Applied before telemetry so the shape evaluator sees the final anchored text.
     let sovereignText = orchestratorResult.text ?? '';
+
+    // 🧱 MAIA TURN DURABLE (F1 — second half of durable turn acceptance)
+    //
+    // The member's words became durable at acceptance; MAIA's words can only
+    // become durable once they actually exist. That asymmetry is deliberate:
+    // a generation that produced nothing must leave the member's utterance
+    // standing alone rather than being erased alongside it, and must never
+    // fabricate a MAIA turn to keep the pair symmetrical.
+    //
+    // Same exchangeId, seq 1, ON CONFLICT DO NOTHING — so the client's later
+    // pair write for this same turn is a no-op instead of a duplicate.
+    if (memberTurnDurable && sovereignText) {
+      try {
+        await withTimeoutLabeled(
+          'durableMaiaTurn',
+          TurnsStore.addExchangeTurn(turnPosture, {
+            // Same sessionId as the member half, so both rows of the exchange
+            // restore together under the session the client will ask for.
+            userId: userId!,
+            sessionId: acceptedSessionId,
+            role: 'assistant',
+            content: sovereignText,
+            exchangeId,
+          }),
+          5000,
+          start
+        );
+        console.log(`🧱 [MAIA/durability] MAIA turn durable exchange=${exchangeId.slice(0, 8)}`);
+      } catch (durabilityErr: any) {
+        // Member turn already stands. Losing the response here degrades the
+        // record; it must not erase what the member said.
+        console.error(
+          `❌ [MAIA/durability] MAIA turn NOT durable exchange=${exchangeId.slice(0, 8)}:`,
+          durabilityErr?.message ?? durabilityErr
+        );
+      }
+    }
+
     const _conversationMode = (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? null;
     const _convHistory = (meta as any)?.conversationHistory;
     const _historyLen = Array.isArray(_convHistory) ? _convHistory.length : 0;

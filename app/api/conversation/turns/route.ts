@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userMessage, assistantMessage, sessionId, isSanctuary } = body;
+    const { userMessage, assistantMessage, sessionId, isSanctuary, exchangeId: clientExchangeId } = body;
 
     if (!claimMatchesOrNull(body?.userId, memberId)) {
       return NextResponse.json(
@@ -154,7 +154,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const exchangeId = globalThis.crypto.randomUUID();
+    // 🧱 F1 durable turn acceptance (audit 2026-08-10): honour a client-supplied
+    // exchange id. For turns that came through the sovereign route, the server has
+    // ALREADY written both halves durably under this id at acceptance/completion —
+    // so addExchange's ON CONFLICT (exchange_id, seq) makes this call an idempotent
+    // no-op instead of a second exchange for the same utterance.
+    //
+    // Minting a fresh id when none is supplied preserves the prior behaviour
+    // exactly for every other caller/path.
+    const exchangeId =
+      typeof clientExchangeId === 'string' && clientExchangeId.length > 0
+        ? clientExchangeId
+        : globalThis.crypto.randomUUID();
     recordConsentState({ requestId: exchangeId, posture, memberId: userId, sessionId });
     await TurnsStore.addExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
 
