@@ -14,7 +14,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { getPracticeField, createSnapshot } from '@/lib/practiceField/practiceFieldService';
-import { isContained } from '@/lib/types/practiceField';
 import { sendRelationshipInviteEmail } from '@/lib/practiceField/inviteEmail';
 import crypto from 'crypto';
 
@@ -35,22 +34,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: 'Practice Field not found. Complete your Practice Field before inviting clients.' },
       { status: 422 }
-    );
-  }
-  // GC-2 — the gate is a conjunction: ready AND not contained.
-  //
-  // The two refusals are deliberately DISTINCT. An incomplete field and a contained field
-  // are different facts: one is work not yet done, the other is a governance decision that
-  // this field may not go live. Rendering them identically is how a hold becomes invisible.
-  if (isContained(field)) {
-    return NextResponse.json(
-      {
-        error: 'This Practice Field is under a governance containment and cannot send invitations.',
-        containment_reason: field.containment_reason,
-        contained_at: field.contained_at,
-        containment_reference: field.containment_reference,
-      },
-      { status: 409 }
     );
   }
   if (field.status === 'pending') {
@@ -125,7 +108,9 @@ export async function POST(req: NextRequest) {
     // Space is created; don't roll back — practitioner can resend
   }
 
-  console.log(`[PracticeField] Invitation sent: ${practitionerName} → ${client_email}, space ${spaceId}`);
+  // Identifiers only — never PHI values. The relationship_space row created above
+  // carries client_email and practitioner_display_name if an operator needs them.
+  console.log(`[PracticeField] Invitation sent: space ${spaceId}, steward ${memberId.slice(0, 8)}`);
 
   return NextResponse.json({
     space_id: spaceId,

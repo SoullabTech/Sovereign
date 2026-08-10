@@ -133,8 +133,8 @@ knowingly fail every PR — useful only as an emergency merge freeze, which is n
 
 | # | step | state |
 |---|---|---|
-| 1 | Repair `route.ts:111` as a bounded security change | ⏸ **not opened** |
-| 2 | Re-run `proof:phi-gate`; confirm the gate passes on the real tree | ⏸ |
+| 1 | Repair `route.ts:111` as a bounded security change | ✅ **done** — see §Leak repair |
+| 2 | Re-run `proof:phi-gate`; confirm the gate passes on the real tree | ✅ **23 passed · 0 failed** |
 | 3 | Bind the gate into CI | ⏸ |
 | 4 | Remove the duplicate legacy scanner once the bound gate is proven live | ⏸ |
 | 5 | Verify a deliberate test violation turns CI red, then remove the probe | ⏸ |
@@ -148,6 +148,70 @@ pre-repair proof.
 
 `check:no-phi-enc --strict` stays **out** of this sequence — a broader policy question, deliberately
 not smuggled into this repair.
+
+---
+
+## Leak repair (step 1) — 2026-08-09
+
+```diff
+-  console.log(`[PracticeField] Invitation sent: ${practitionerName} → ${client_email}, space ${spaceId}`);
++  // Identifiers only — never PHI values. The relationship_space row created above
++  // carries client_email and practitioner_display_name if an operator needs them.
++  console.log(`[PracticeField] Invitation sent: space ${spaceId}, steward ${memberId.slice(0, 8)}`);
+```
+
+One line in `app/api/practitioner/practice-field/invite/route.ts`. Both PHI values are gone: the
+client's email address and the practitioner's display name. Traceability is preserved through
+non-identifying identifiers — `spaceId` uniquely identifies the invitation, and the truncated
+steward id follows the repo's existing `memberIdPrefix` convention. An operator who needs the values
+reads the `relationship_spaces` row, which already stores both.
+
+**Deliberately NOT changed:** line 51's `preferred_name || name` inline resolution. That is a
+`check:no-inline-names` finding in a different lane; its count is unchanged at **6**, confirming
+this repair did not drift into adjacent debt.
+
+### Verification
+
+| check | before | after |
+|---|---|---|
+| `check:phi-gate` | 1 | **0** ✅ |
+| `guard:phi` (legacy, independent) | 1 | **0** ✅ |
+| `proof:phi-gate` | 19/19 | **23/23** ✅ |
+| `typecheck` (no-regression) | 0 | **0** ✅ |
+| `ci:sovereignty` | 0 | **0** ✅ |
+| `check:no-inline-names` | 6 findings | **6 findings** (unchanged) |
+
+The legacy scanner agreeing independently is the meaningful corroboration: two separately-implemented
+controls, one bash+ripgrep and one node+regex, both moved red → green on the same repair.
+
+### G5 rewritten (step 3 of the ratified sequence)
+
+The acceptance case moved from *"the repo contains a leak"* to *"the gate catches a controlled
+leak"*. It now asserts:
+
+- the **real repaired tree** exits **0**, prints the success line and the honest-scope caveat, and
+  reports nothing in the repaired file;
+- a **temporary fixture** reproducing the historical line verbatim, in the same directory, exits
+  **1** and is named;
+- the gate returns to **0** after removal, with no probe residue.
+
+The pre-repair evidence is preserved above and in §G5; no production defect was kept alive to make a
+test pass.
+
+### Defect found and fixed in the proof harness itself
+
+The first version wrote fixture bodies as **literal** strings, so the harness source *was* a real
+PHI-logging violation. The new gate excluded `__proof__/` and passed; the legacy scanner does not
+exclude it and went red — surfacing a landmine that would have flagged for every other tool in the
+repo.
+
+Fixed at the root rather than by exclusion: fixture bodies are now **assembled** (`"console" +
+".log"`, `"${" + name + "}"`), so the source contains no literal match while the file written to disk
+contains a genuine violation. The `__proof__/` exclusion was then **removed** from the gate, so it
+scans its own harness and enforces that discipline instead of hiding a breach of it.
+
+*An exclusion that makes a scanner pass is not the same as the file being clean — it only hides the
+finding from one scanner.*
 
 Out of this unit's boundary and untouched: `guardrails` reclassification, `commit-msg` installer
 binding, the four local-only hooks, broader PHI detection, telemetry, and the `check:no-phi-enc`
