@@ -89,6 +89,10 @@ jest_dx/
 jest_*/
 .jest-cache/
 
+# tsx compile cache (npx tsx writes tsx-<uid>/). Sibling of the jest rule above —
+# a `git add -A` published 20 of these on 2026-08-09.
+tsx-*/
+
 # Optional REPL history
 .node_repl_history
 
