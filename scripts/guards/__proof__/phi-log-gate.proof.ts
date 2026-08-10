@@ -55,6 +55,36 @@ function runGate(env: NodeJS.ProcessEnv = {}): { code: number; out: string } {
   return { code: r.status ?? -1, out: `${r.stdout ?? ""}${r.stderr ?? ""}` };
 }
 
+/**
+ * Fixture bodies are ASSEMBLED, never written as literals.
+ *
+ * A proof file containing a literal PHI-logging line is itself a violation — and
+ * will be flagged by this gate, by the legacy scanner, and by anything else that
+ * greps the repo. Relying on an exclusion to hide that would make the test suite
+ * a permanent false positive for every other tool. Splitting the sink token keeps
+ * this source clean while the file written to disk contains a genuine violation.
+ */
+const SINK = "console" + ".log";
+const interp = (name: string) => "${" + name + "}";
+
+/** A real PHI-logging violation, assembled. `shape: "historical"` reproduces line 111 verbatim. */
+function phiFixture(shape: "historical" | "minimal"): string {
+  if (shape === "historical") {
+    return (
+      "const practitionerName = 'x';\nconst client_email = 'y';\nconst spaceId = 'z';\n" +
+      SINK +
+      "(`[PracticeField] Invitation sent: " +
+      interp("practitionerName") +
+      " → " +
+      interp("client_email") +
+      ", space " +
+      interp("spaceId") +
+      "`);\n"
+    );
+  }
+  return "const client_email = 'x';\n" + SINK + "(`sent to " + interp("client_email") + "`);\n";
+}
+
 /** A throwaway bin dir whose `git` behaves as instructed. */
 function stubBin(script: string): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phigate-"));
@@ -64,14 +94,38 @@ function stubBin(script: string): string {
 
 console.log("\n🔐 PHI log gate — adversarial proof\n");
 
-// ── G5: the real defect is the acceptance case ──────────────────────────────
-console.log("G5  real acceptance case (live client_email leak)");
+// ── G5: repaired steady state + controlled reproduction ─────────────────────
+// Until 2026-08-09 this block asserted exit 1 against a REAL leak at
+// ${KNOWN_LEAK}:111. That leak is now repaired, so the acceptance case moved
+// from "the repo contains a leak" to "the gate catches a controlled leak" —
+// a production defect must never be preserved just to keep a test green.
+// The pre-repair evidence is recorded in docs/ops/PHI_GATE_REPAIR_2026-08-09.md §G5.
+console.log("G5  acceptance — repaired tree passes, controlled fixture still caught");
 {
   const { code, out } = runGate();
-  check("gate exits 1 (VIOLATION) on the current tree", code === 1, `got ${code}`);
-  check(`names ${KNOWN_LEAK}`, out.includes(KNOWN_LEAK));
-  check("names the specific line 111", out.includes(`${KNOWN_LEAK}:111`));
-  check("does NOT print a success line", !out.includes("✅ PHI log gate:"));
+  check("gate exits 0 (PASS) on the real repaired tree", code === 0, `got ${code}`);
+  check("prints the success line", out.includes("✅ PHI log gate:"));
+  check(`no violation reported in ${KNOWN_LEAK}`, !out.includes(`${KNOWN_LEAK}:`));
+  check("success line still carries the honest-scope caveat", out.includes("NOT proof"));
+}
+{
+  // Reproduce the historical violation verbatim in a throwaway file, in the same
+  // directory the real one lived in, and prove the gate still catches that shape.
+  const fixture = path.join(path.dirname(KNOWN_LEAK), "__phi_fixture__.ts");
+  const abs = path.join(ROOT, fixture);
+  try {
+    fs.writeFileSync(abs, phiFixture("historical"));
+    execFileSync("git", ["add", "-f", fixture], { cwd: ROOT });
+    const { code, out } = runGate();
+    check("controlled reproduction of the historical line → exit 1", code === 1, `got ${code}`);
+    check("names the fixture", out.includes(fixture));
+    check("does NOT print a success line", !out.includes("✅ PHI log gate:"));
+  } finally {
+    execFileSync("git", ["rm", "-q", "-f", "--cached", fixture], { cwd: ROOT });
+    fs.rmSync(abs, { force: true });
+  }
+  const { code } = runGate();
+  check("gate returns to PASS after fixture removal", code === 0, `got ${code}`);
 }
 
 // ── G1: enumeration cannot fail open ────────────────────────────────────────
@@ -120,7 +174,7 @@ console.log("\nG4  scope — former 1,162-file blind spot");
     "scripts/__phi_probe__.ts",   // top-level scripts/ — excluded by `scripts/**`
     "hooks/__phi_probe__.ts",
   ];
-  const body = "const client_email = 'x';\nconsole.log(`sent to ${client_email}`);\n";
+  const body = phiFixture("minimal");
   const created: string[] = [];
   try {
     for (const p of probes) {

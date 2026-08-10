@@ -55,9 +55,13 @@ const MIGRATION_RE = /^database\/migrations\/.*\.sql$/;
 // Documented exclusions — the ONLY files removed from the declared population.
 // Test files are NOT excluded (verified 2026-08-09: 173 test files, zero
 // pattern hits, so they add no noise and excluding them would be a blind spot).
+//
+// The proof harness is deliberately NOT excluded. It builds its fixture bodies by
+// string assembly precisely so its own source stays clean; excluding it would let
+// a literal violation hide there and would leave the file a permanent false
+// positive for every other scanner in the repo.
 const EXCLUSIONS: Array<{ re: RegExp; why: string }> = [
   { re: /^scripts\/guards\/phi-log-gate\.ts$/, why: "this gate — contains the patterns literally" },
-  { re: /^scripts\/guards\/__proof__\//, why: "the gate's own adversarial proof fixtures" },
   { re: /^scripts\/guards\/phi-no-plaintext-drift\.sh$/, why: "predecessor scanner — contains the patterns literally" },
 ];
 
