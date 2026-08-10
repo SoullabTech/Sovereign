@@ -132,7 +132,19 @@ _claude_permission_mode() {
 
 _build_prompt() {
     local f="$1"
-    jq -r '
+    # Unit 8 precision context router: if the packet declares context_selectors,
+    # JARVIS materializes the exact source ranges itself (with provenance) and
+    # injects them, so the worker never opens whole files. Additive: a packet
+    # without context_selectors produces an empty block and behaves as before.
+    # Fails CLOSED on budget overflow — exit 5 = CONTEXT_BUDGET_EXCEEDED.
+    local frags=""
+    if [ "$(jq -r '(.context_selectors // []) | length' "$f")" -gt 0 ]; then
+        frags="$(node "$PROJECT_DIR/scripts/builder/jarvis-context.mjs" materialize "$f" --repo "$(jq -r '.worktree' "$f")")" || {
+            echo "🛑 [ain-delegate] CONTEXT_BUDGET_EXCEEDED or selector error — worker NOT invoked." >&2
+            exit 5
+        }
+    fi
+    jq -r --arg frags "$frags" '
         "You are executing ONE bounded AIN Builder OS work unit. Do not exceed its scope.\n\n" +
         "OBJECTIVE:\n" + .objective + "\n\n" +
         "GOVERNING AUTHORITY: " + .governing_authority + "\n\n" +
@@ -149,6 +161,7 @@ _build_prompt() {
         "ESCALATION CONDITIONS — if any apply, STOP and print a line starting with exactly `ESCALATE_TO_CLAUDE:` followed by the exact ambiguity. Do not guess:\n" +
         (if (.escalation_conditions | length) > 0 then ([.escalation_conditions[] | ("- " + .)] | join("\n")) else "(none declared beyond the standing authority firewall)" end) + "\n\n" +
         "STANDING AUTHORITY FIREWALL (always in force): you may execute settled decisions. You may NOT silently establish constitutional architecture, member authority, consent semantics, confidentiality semantics, provenance semantics, epistemic authority, destructive migration policy, security boundaries, founder rulings, ontology, or deprecation of important capability. Hitting one of these is an ESCALATE_TO_CLAUDE, not a judgment call.\n\n" +
+        (if ($frags | length) > 0 then $frags + "\n\n" else "" end) +
         "EXPECTED OUTPUT: " + .expected_output + "\n\n" +
         "When done, commit your changes with `git add -A && git commit -m \"...\"` in this worktree. Keep the diff minimal and inside ALLOWED FILES."
     ' "$f"
