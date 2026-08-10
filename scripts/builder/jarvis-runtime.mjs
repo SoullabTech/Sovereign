@@ -35,6 +35,7 @@ import {
 import {
   verifyDelegation, delegationToUnit14, recordUse, publicDelegation, PUBLIC_REFUSAL,
 } from './jarvis-delegation.mjs';
+import { verifyResumption } from './jarvis-authority-gate.mjs';
 
 /**
  * §18/§19 — bridge mode. When set, an enveloped request MUST present a
@@ -235,6 +236,11 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
     // §22 — a safe authority classification only. Never the issuer credential,
     // the raw subject scope, or anything a caller could replay.
     delegation: publicDelegation(r.delegation ? { ...r.delegation, status: 'ACTIVE' } : null),
+    // Lineage is publishable: it is the evidence that this run resumed prior
+    // work by resolution rather than by inference. It names ids, never content.
+    resumes_run_id: r.resumes_run_id ?? null,
+    resolution_id: r.resolution_id ?? null,
+    gate_id: r.gate_id ?? null,
     disposition: r.disposition ?? null, failure_class: r.failure_class ?? null,
     failure_detail: r.failure_detail ?? null, blocked: r.blocked ?? null,
     created_at: r.created_at, updated_at: r.updated_at, finished_at: r.finished_at ?? null,
@@ -355,6 +361,24 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
         return json(res, code, { error: adm.disposition, detail: adm.reason });
       }
 
+      // ── Unit 17: governed resumption ────────────────────────────────────────
+      // A run claiming to resume terminal work must PROVE its lineage, not
+      // assert it. The resolution is re-verified here against its own gate;
+      // nothing the caller says about lineage or scope is trusted.
+      let resumption = null;
+      if (envelope && (envelope.resumes_run_id != null || envelope.resolution_id != null)) {
+        const rv = verifyResumption({
+          resolution_id: envelope.resolution_id,
+          resumes_run_id: envelope.resumes_run_id,
+          requested: envelope.continuation ?? {},
+        }, nowISO());
+        if (!rv.ok) {
+          rt.last_error = { at: nowISO(), message: `resumption refused: ${rv.refusal}` };
+          return json(res, 403, { error: PUBLIC_REFUSAL, detail: 'a valid authority resolution is required to resume terminal work' });
+        }
+        resumption = rv;
+      }
+
       // Packet-level authority (declared lane, write-requesting keys) complements
       // principal-level admission; both must hold.
       const auth = checkAuthority(packet);
@@ -380,6 +404,11 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
             prohibited_targets: verified.prohibited_targets, purpose: verified.purpose,
           }
           : null,
+        // §8 — explicit lineage. The terminal source run is never reopened; this
+        // new run records which resolution closed which gate to admit it.
+        resumes_run_id: resumption?.lineage.resumes_run_id ?? null,
+        resolution_id: resumption?.lineage.resolution_id ?? null,
+        gate_id: resumption?.gate.gate_id ?? null,
         disposition: null, failure_class: null, history: [{ at: nowISO(), from: null, to: 'QUEUED' }],
       };
       saveRun(run);
