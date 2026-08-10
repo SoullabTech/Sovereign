@@ -245,6 +245,14 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
     gate_id: r.gate_id ?? null,
     // §8 — bounded unresolved question, no worker reasoning or evidence body.
     governance_gate: publicGovernanceGate(r.governance_gate),
+    // Unit 20: was set on the run (jarvis-runtime-pipeline.mjs, alongside
+    // governance_gate) but never carried into the public projection — an
+    // omission, not a redaction; every sibling field from that same call site
+    // (result, context, worker) is already public. Required for §12 of the
+    // mandate: a resumed run must be provably continuing prior work, not
+    // restarting it, and that is unobservable from outside the process
+    // without this field.
+    pre_gate_result: r.pre_gate_result ?? null,
     disposition: r.disposition ?? null, failure_class: r.failure_class ?? null,
     failure_detail: r.failure_detail ?? null, blocked: r.blocked ?? null,
     created_at: r.created_at, updated_at: r.updated_at, finished_at: r.finished_at ?? null,

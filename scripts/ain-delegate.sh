@@ -176,6 +176,26 @@ _build_prompt() {
         "STANDING AUTHORITY FIREWALL (always in force): you may execute settled decisions. You may NOT silently establish constitutional architecture, member authority, consent semantics, confidentiality semantics, provenance semantics, epistemic authority, destructive migration policy, security boundaries, founder rulings, ontology, or deprecation of important capability. Hitting one of these is an ESCALATE_TO_CLAUDE, not a judgment call.\n\n" +
         (if ($frags | length) > 0 then $frags + "\n\n" else "" end) +
         "EXPECTED OUTPUT: " + .expected_output + "\n\n" +
+        # Deliberately placed AFTER "EXPECTED OUTPUT", because it OVERRIDES it. The first
+        # live run of this wire put it before, and the worker recognised the authority
+        # limit in prose ("REACHING ROUTE: (unknown - access not granted)") while still
+        # obeying the output template it had been given last. Recognising a boundary and
+        # emitting one are different acts; the emission instruction only governs if it is
+        # the instruction that governs the output.
+        "GOVERNANCE GATE — THIS OVERRIDES THE EXPECTED OUTPUT FORMAT ABOVE (Unit 19):\n" +
+        "If any part of the objective cannot be completed because it needs AUTHORITY you were not granted (evidence you were not shown, a file you may not open, a write/production action you may not take, a decision that is not yours), then you must NOT produce a partial answer, and you must NOT write `unknown`, `not accessible`, `access not granted`, `n/a` or any similar placeholder in the expected output. That case is an AUTHORITY BOUNDARY, and the only correct response to it is a gate.\n" +
+        "Emit it as the LAST line of your response, starting with exactly `GOVERNANCE_GATE:` followed by single-line JSON:\n" +
+        "  GOVERNANCE_GATE: {\"gate_class\":\"<class>\",\"reason\":\"<one sentence>\",\"authority_required\":{\"operation_class\":\"<e.g. WRITE|PRODUCTION|READ>\",\"target\":\"<path or system you need>\"},\"evidence\":[\"<file>:<line>\"]}\n" +
+        "gate_class MUST be exactly one of: FOUNDER_DECISION_REQUIRED, OPERATOR_AUTHORIZATION_REQUIRED, SCOPE_EXPANSION_REQUIRED, CONSTITUTIONAL_AMBIGUITY, WRITE_AUTHORITY_REQUIRED, PRODUCTION_AUTHORIZATION_REQUIRED.\n" +
+        "A gate IDENTIFIES missing authority; it never SUPPLIES it. Never include delegation_id, granted, approved, authorized, resolution_id or any similar field — that is refused as a self-grant.\n" +
+        "A gate is NOT for capacity, rate limits, timeouts, low confidence, needing more compute/tokens, or ordinary clarification. Those are not authority boundaries and are refused.\n" +
+        # Second live-run correction: the worker emitted WRITE_AUTHORITY_REQUIRED on a
+        # fully-granted READ-ONLY run, reasoning that it lacked write access. Read-only
+        # authority is not a missing authority when the objective only asks you to read.
+        # The gate must be scarce or it stops being a boundary signal.
+        "A gate is required ONLY when something the objective explicitly ASKS YOU TO PRODUCE cannot be produced for want of authority. Apply this test before emitting one: name the specific item the objective asked for, and state which authority you were denied that makes it unproducible. If you cannot name both, DO NOT emit a gate.\n" +
+        "Being READ-ONLY is NOT a missing authority when the objective only asks you to read and report — that is the grant working as intended. Never emit WRITE_AUTHORITY_REQUIRED unless the objective actually requires you to modify, create or delete something.\n" +
+        "If you were able to produce every item the objective asked for, do NOT emit a GOVERNANCE_GATE line at all — just answer. Emitting a gate you do not need is a governance failure.\n\n" +
         "When done, commit your changes with `git add -A && git commit -m \"...\"` in this worktree. Keep the diff minimal and inside ALLOWED FILES."
     ' "$f"
 }
@@ -314,6 +334,32 @@ _run_lane() {
     local files_changed_json
     files_changed_json="$(git -C "$wt" diff --name-only "$starting_sha" 2>/dev/null | jq -R . | jq -s . 2>/dev/null || echo '[]')"
 
+    # Unit 20: carry a worker-emitted governance gate (Unit 19) off the transcript and
+    # onto the result contract. Without this the gate organ existed but had no afferent
+    # nerve: jarvis-runtime-pipeline.mjs tests `result.governance_gate !== undefined`,
+    # and this object never carried the key, so a real worker could never pause its run
+    # for missing authority no matter what it printed. Emitted exactly like
+    # ESCALATE_TO_CLAUDE — a line prefix on stdout — because the native lane is toolless.
+    # The LAST such line wins. The gate is a CLAIM: it is passed through verbatim and
+    # validated against the run record by the control plane, never trusted here. A
+    # malformed line is dropped rather than forwarded, so a worker cannot fail its own
+    # run by printing garbage after the prefix; only a well-formed claim gets adjudicated.
+    local gate_json=''
+    if grep -q '^GOVERNANCE_GATE:' "$log" 2>/dev/null; then
+        gate_json="$(grep '^GOVERNANCE_GATE:' "$log" | tail -1 | sed 's/^GOVERNANCE_GATE: *//')"
+        if ! printf '%s' "$gate_json" | jq -e 'type == "object"' >/dev/null 2>&1; then
+            echo "[ain-delegate] GOVERNANCE_GATE line present but not a JSON object — dropped." >&2
+            gate_json=''
+        fi
+    fi
+    # Discriminating control (Unit 20 proof, MUTATE=drop-gate-wire): reproduces the
+    # exact pre-Unit-20 state where the worker still emits the GOVERNANCE_GATE line
+    # but this script never carries it onto the result contract. Not a feature —
+    # test-only, and only active when the env var is explicitly set to this value.
+    if [ "${MUTATE:-}" = "drop-gate-wire" ]; then
+        gate_json=''
+    fi
+
     local escalation_required=false unresolved_questions_json='[]'
     if grep -q '^ESCALATE_TO_CLAUDE:' "$log" 2>/dev/null; then
         escalation_required=true
@@ -364,6 +410,7 @@ _run_lane() {
         --argjson unresolved_questions "$unresolved_questions_json" \
         --arg recommended "$recommended" \
         --arg log_path "$log" \
+        --arg gate_json "$gate_json" \
         --argjson duration_s "$((t1 - t0))" \
         --argjson exit_code "$exit_code" \
         '{
@@ -387,7 +434,12 @@ _run_lane() {
             log_path: $log_path,
             duration_s: $duration_s,
             attempts: 1
-        }' > "$(_result_file "$work_unit_id")"
+        }
+        # The key is ADDED ONLY when a gate was actually emitted. It must stay absent
+        # otherwise: the pipeline branches on `!== undefined`, so an always-present
+        # null would send every ordinary run into gate validation and fail it.
+        + (if $gate_json == "" then {} else {governance_gate: ($gate_json | fromjson)} end)
+        ' > "$(_result_file "$work_unit_id")"
 
     # Observability ledger — one line per delegated run.
     jq -n \

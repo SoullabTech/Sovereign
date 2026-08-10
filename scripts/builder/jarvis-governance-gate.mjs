@@ -297,5 +297,13 @@ export function publicGovernanceGate(g) {
     created_at: g.created_at,
     resolution_type: g.resolution_type ?? null,
     permits_resumption: g.permits_resumption ?? null,
+    // Unit 20: provenance, not reasoning or evidence — a fixed classification of
+    // WHO raised the gate ('worker' vs any future non-worker emitter), no more
+    // sensitive than `reason` (free-text) already exposed above. Without it a
+    // caller reading the public run API has no way to confirm a gate was
+    // self-raised by the worker rather than fabricated by whatever submitted
+    // the run, which is exactly the property Unit 20's live proof needs to
+    // observe rather than take on faith.
+    emitted_by: g.emitted_by ?? null,
   };
 }
