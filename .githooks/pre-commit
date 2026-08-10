@@ -29,4 +29,11 @@ npm run check:no-openai
 # (Green as of 2026-08-09: 1 approved, 1 operational, 55 grandfathered. ~2s.)
 npm run check:no-direct-anthropic
 
+# PHI / sensitive logging gate — same canonical scanner CI runs (sovereignty-gate.yml,
+# step "PHI / sensitive logging gate") and the SAME context branch protection requires
+# on clean-main-no-secrets. This is early local feedback only — CI + the required
+# `sovereignty` context remain the authoritative enforcement boundary; bypassing this
+# hook (--no-verify) does not bypass that. docs/ops/PHI_GATE_REPAIR_2026-08-09.md.
+npm run check:phi-gate
+
 echo "✅ Pre-commit checks passed"
