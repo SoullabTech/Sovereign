@@ -1,8 +1,10 @@
 # JARVIS Desktop D-14P — Signed Presence Proof
 
-**Status:** live device proof spike, executed, blocked before reaching the presence question. **Not a resolution-implementing unit. No JARVIS Desktop built or packaged.**
+**Status:** COMPLETE — INVARIANT UNRESOLVED DUE TO PROVISIONING AUTHORIZATION GAP. **Not a resolution-implementing unit. No JARVIS Desktop built or packaged.**
 **Branch:** `chore/jarvis-desktop-d14p-signed-presence-proof`, off D-14L (`6a36ffd85`), off D-14 (`83f4fdfb1`), off D-13 (`35e6e11eb`).
 **Date:** 2026-08-10. **Device:** Mac Studio, Apple M4 Max, macOS 15.7.8.
+
+> **RECORD CORRECTION (2026-08-10, same-day, before D-14Q started).** The original text below said the SIGKILL evidence "leaves one explanation." That overstated it. The correct, tighter framing: Apple's own documentation independently supports the diagnosis — `keychain-access-groups` is a documented *restricted* entitlement on macOS requiring provisioning-profile authorization, and `-34018`/`errSecMissingEntitlement` is Apple's own documented error for exactly this condition, including when a claimed access group isn't backed by an eligible profile (Apple Developer: TN3125, "Inside Code Signing: Provisioning Profiles"). That makes the finding **well-supported, not merely plausible** — but it does not make it a *proof by elimination*. The precise standing is: **no evidence obtained in D-14P falsifies D-14's architecture, and no presence result was obtained, because key creation never succeeded.** The architecture remains plausible but unproved — stronger than "blocked, therefore the architecture works," which was never claimed but is worth foreclosing explicitly. See D-14Q, authorized same-day, for the unit that resolves this.
 
 ## Goal, restated
 
