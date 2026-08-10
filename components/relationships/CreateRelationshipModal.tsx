@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Realm = 'outer' | 'inner' | 'transpersonal';
 
@@ -48,6 +48,25 @@ export default function CreateRelationshipModal({
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // The doorway the member chose must survive opening the modal.
+  //
+  // BUG (found 2026-08-10, fixed here): `useState(initialRealm ? 'details' : 'realm')`
+  // only evaluates on FIRST mount — and this modal first mounts with `isOpen=false`
+  // and `initialRealm=undefined`. So `step` was pinned to 'realm' forever, and the
+  // empty state's three distinct doorways ("Add a person", "Meet an inner figure",
+  // "Start with what is on your mind") all dumped the member into the same generic
+  // realm picker. The member's choice was collected and then silently discarded —
+  // which is precisely the loss of flow this surface was reported for.
+  useEffect(() => {
+    if (!isOpen) return;
+    setStep(initialRealm ? 'details' : 'realm');
+    setRealm(initialRealm || 'outer');
+    setName('');
+    setBondType('');
+    setNote('');
+    setError('');
+  }, [isOpen, initialRealm]);
 
   if (!isOpen) return null;
 
