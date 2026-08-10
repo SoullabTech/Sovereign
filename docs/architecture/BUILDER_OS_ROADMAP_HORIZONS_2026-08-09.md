@@ -90,6 +90,12 @@ sacrificing reasoning quality.*
 |---|---|---|
 | Claude concurrency governance + worktree isolation | `docs/architecture/BUILDER_OS_CONCURRENCY_GOVERNANCE_2026-08-09.md` | built + proven (54/54), **not yet exercised under real multi-lane load** |
 | Request-rate axis + closed-loop integration | `docs/architecture/BUILDER_OS_RATE_AXIS_AND_LOOP_INTEGRATION_2026-08-09.md` | built + proven (184/184 across 6 suites), **not yet exercised under real multi-lane load** |
+| Non-Claude closed-loop proving case (Kimi) | `docs/ops/AIN_DELEGATION_PROVING_CASE_2026-08-09.md` | `NON_CLAUDE_CLOSED_LOOP: PROVEN` — Kimi executed, JARVIS independently verified and integrated (commit `837f20bcf`) |
+| Canonical Work Unit reconciliation | `docs/architecture/BUILDER_OS_CANONICAL_WORK_UNIT_2026-08-09.md` | built + proven (37/37; 256/256 full regression) — packet file is now the canonical Work Unit; `ain-delegate.sh`/`session.mjs` unmodified |
+
+**MVJ (Minimum Viable JARVIS) sequence status:** Units 1–5 complete and proven. Unit 6
+(Claude as a governed worker adapter) remains **founder-gated** — not started as of this
+entry. Conversational Founder Input Resolution depends on Unit 6 and has not begun.
 
 The concurrency unit was authorized in response to
 `docs/ops/CLAUDE_CODE_RAPID_ALLOTMENT_EXHAUSTION_AUDIT_2026-08-09.md`. It governs *how much

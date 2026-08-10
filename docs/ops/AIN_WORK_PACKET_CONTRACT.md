@@ -1,6 +1,12 @@
 # AIN Work Packet Contract
 
 > Founder-authorized 2026-08-09 as part of the Builder OS delegation control plane (`docs/ops/AIN_DELEGATION_CONTROL_PLANE_2026-08-09.md`). This is the bounded unit of work Claude hands to a delegated execution lane (local Qwen via `maia-code`, or Kimi via `kimi-cc`). It carries **conclusions**, not the archaeology that produced them — Claude may spend 100k tokens understanding a problem; the packet should carry the 2-5k of settled result a delegate needs to execute it.
+>
+> ⭐ **MVJ Unit 5 (2026-08-09): this file is now the canonical Work Unit representation**,
+> extended with optional fields below. Every field on this page continues to mean exactly
+> what it always meant and is consumed by `ain-delegate.sh` exactly as before — nothing
+> here changed. See `docs/architecture/BUILDER_OS_CANONICAL_WORK_UNIT_2026-08-09.md` for
+> the full reconciliation record and `scripts/builder/work-unit.mjs` for the query layer.
 
 ## Storage
 
@@ -37,6 +43,37 @@ Never commit a packet or result file to the repo. If a delegation is worth prese
   "expected_output": "what a successful result looks like, in one or two sentences"
 }
 ```
+
+## Work-Unit-level extension (optional fields, Unit 5)
+
+Everything above this section is the **execution packet** — what a delegate lane actually
+reads. Everything below is **Work-Unit-level**: attempt-invariant facts that belong to the
+durable definition of the work, not to any one delegate run. All of it is **optional** —
+absent on every packet written before 2026-08-09, and defaulted deterministically by
+`scripts/builder/work-unit.mjs`. No existing packet requires editing.
+
+```json
+{
+  "project": "e.g. 'MAIA Memory' — null if unset",
+  "capability": "e.g. 'conversational-memory-phase2' — null if unset",
+  "task_class": "mechanical | archaeology | implementation | testing | migration | verification | security | architecture | governance | deployment — null if unset",
+  "risk_class": "mechanical (default) | ...",
+  "priority": "number or null",
+  "dependencies": ["other work_unit_ids this one builds on — informational only, does NOT drive lifecycle (see reconciliation doc)"],
+  "blockers": ["human-authored strings — presence alone forces lifecycle_state = 'blocked'"],
+  "authorized_acts": ["default: repo.read, repo.write:worktree, tests.run"],
+  "not_authorized_acts": ["default: production.read, production.write, deploy, authority.change"],
+  "integration_actor": "who may commit/merge the verified result — default 'jarvis', never a worker by default",
+  "autonomy_ceiling": "default 'LEVEL_2_IMPLEMENT' — see the Master Directive's autonomy ladder"
+}
+```
+
+**`authorized_acts` / `not_authorized_acts` are structured authority, never a provider
+flag.** `scripts/builder/work-unit.mjs`'s `derivePermissionEnvelope()` turns these into a
+generic capability envelope (`repo_write_scope`, `execute_checks`, `integration_actor`,
+…) — translating that into a specific harness's invocation flags (e.g. Claude Code's
+`--permission-mode`) is an **adapter's** job, deliberately kept out of this file and out
+of the canonical Work Unit itself.
 
 ## Authority firewall (always appended to every packet's prompt, not author-editable)
 
