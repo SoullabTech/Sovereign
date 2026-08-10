@@ -378,3 +378,53 @@ same HEAD; no source, entitlement, bundle-identifier, or signing-identity change
 Resume at §5 (unchanged rerun) once `00006041-00146119217A801C` appears as an enabled **macOS** device on
 team `ZVK2X646Z2` — which this unit can now re-verify in seconds via the same read-only API call before
 spending another build.
+
+## Attempt 4 — supplemental recheck (2026-08-10, same day — device now present)
+
+**What changed vs. Attempt 4's original check.** Nothing about the method — same read-only App Store
+Connect API, same two local keys, same team scope, no portal mutation. Only the wall-clock moment differs.
+
+**Governance baseline.** Worktree/branch/HEAD unchanged (`9d202319`, dirty state unchanged — still just the
+two expected untracked generated paths from Attempt 1). Builder capacity was 0/2 before this claim opened;
+claimed legitimately as `s-9bcd6a15`, no eviction. D-14P not touched.
+
+**Method.** JWT built directly from the same two `.p8` keys already on this machine
+(`AuthKey_36J9MBP9U6.p8`, issuer `2f3ea491-8e65-4769-b503-3c50172f10ab`, matching
+`docs/…/MAIA_TestFlight_Voice_Runbook.md` and `ios/App/fastlane/Fastfile`'s documented `ASC_ISSUER_ID`) —
+ES256-signed with the `cryptography` package (no network library beyond stdlib `urllib`), read-only `GET`
+only. No credential entered into any interface.
+
+**Result (HTTP 200, all queries, 2026-08-10 ~17:29 EDT):**
+
+| Query | Result |
+|---|---|
+| `GET /v1/devices?limit=200` | `total: 2` — the same iPhone, **plus** `id=VF53JB33DT`, `name="Kelly'@ Mac Studio M4"`, `udid=00006041-00146119217A801C`, `platform=MAC_OS`, `status=ENABLED`, `addedDate=2026-08-10T21:21:40Z` |
+| `GET /v1/devices?filter[udid]=00006041-00146119217A801C` | `total: 1` — same record |
+| `GET /v1/devices?filter[platform]=MAC_OS` | `total: 1` — same record |
+| `GET /v1/devices?filter[status]=DISABLED` | `total: 0` |
+
+**Result discipline.**
+- **OBSERVED**: the Mac is now present, `platform=MAC_OS` (not iOS — the earlier hypothesis about a
+  platform-flow mismatch did not end up mattering; whatever flow was used produced a correctly-typed
+  `MAC_OS` entry), `status=ENABLED`, added `2026-08-10T21:21:40Z` — timestamp analysis: that is ~6 minutes
+  *after* Attempt 4's original absent-result queries (~17:15 EDT / 21:15 UTC). The two attempts are not in
+  tension: Attempt 4 accurately reported the registry state at the moment it queried; the founder's
+  registration action landed in the narrow window immediately after.
+- **CORROBORATES, does not contradict**: the founder's own portal observation ("PRESENT ... Type: Mac,
+  registered 2026/08/10") reported in this same conversation. The portal and the authoritative API now
+  agree. Enabled/disabled state — which the portal screenshot could not establish — is resolved: `ENABLED`.
+- **STILL NOT DETERMINABLE from this instrument**: whether a Developer Program License Agreement is
+  pending acceptance. The ASC API exposes no agreements resource (unchanged from the original Attempt 4).
+  This remains the one open precondition from the governing resume mandate ("proceed … only if the API
+  proves the Mac present/enabled and no agreement blocker exists") that only a portal check can answer.
+- **NOT TESTED**: §5 rerun, §7–§10. No build was run in this recheck — read-only verification only, per
+  the explicit instruction not to run the next build until this check completed.
+
+**Classification:** supersedes Attempt 4's DEVICE ABSENT finding with DEVICE PRESENT + ENABLED, effective
+now. Overall D-14Q disposition remains **C — blocked pending confirmation of the one remaining
+precondition (agreement status)**, not yet upgraded to "ready to rerun," per the governing mandate's own
+conjunction (device state AND agreement state both required).
+
+**Minimum human action required:** confirm on developer.apple.com/account (main Account page) whether an
+outstanding Developer Program License Agreement banner is present. If none, Attempt 5 (unchanged
+`xcodebuild -allowProvisioningUpdates build`) is authorized to proceed per the governing resume mandate.
