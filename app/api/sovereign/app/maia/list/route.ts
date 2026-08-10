@@ -112,6 +112,12 @@ import { parseFilingInstruction, applyConversationalKeepResult, type FilingInstr
 // Reference implementation: app/api/between/chat/route.ts lines 1847–1885.
 import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref, loadRecentMarkedEpisodes, loadEpisodicRecallPref } from '@/lib/maia/memoryLoaders';
+// 🔧 GATE 1 — persistent corrigibility (founder ruling
+// docs/governance/FOUNDER_RULING_PERSISTENT_CORRIGIBILITY_GATE1_2026-08-09.md):
+// Layer A in-turn repair + Layer B durable member-authored correction.
+import { buildCorrectionRepairBlock, summarizeCorrectionForLog } from '@/lib/maia/correctionRepair';
+import { persistMemberCorrection, summarizeCorrectionPersistForLog } from '@/lib/maia/correctionPersistence';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
 import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
@@ -760,6 +766,49 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // (lib/sovereign/maiaService.ts lines 1164 and 1170).
     // Gated by the same allowCrossSessionMemory check that gates the existing
     // memory bundle build — recognized user, not sanctuary.
+    // 🔧 GATE 1 — corrigibility. Layer A (in-turn repair) runs for every turn:
+    // it changes one prompt and writes nothing. Layer B (durable consequence)
+    // runs only for recognized members: the member's explicit corrective act is
+    // persisted verbatim with detection provenance, and — at high confidence
+    // with a deterministic referent — the corrected assistant turn loses
+    // current-recall eligibility (supersession, never deletion — F2). Sanctuary
+    // is refused at the store (fail closed); ambiguity fails toward
+    // non-supersession (F5). Detection is recognition of a member-authored act,
+    // never its author (F1/F5).
+    let correctionRepairAddendum: string | undefined;
+    let correctionDetectedThisTurn = false;
+    try {
+      const correctionRepair = buildCorrectionRepairBlock(message, {
+        enabled: process.env.MAIA_CORRECTION_REPAIR_ENABLED !== '0',
+      });
+      correctionDetectedThisTurn = correctionRepair.detected;
+      if (correctionRepair.block) {
+        correctionRepairAddendum = correctionRepair.block;
+      }
+      if (correctionRepair.detected) {
+        console.log('[MAIA] correction-repair', summarizeCorrectionForLog(correctionRepair));
+        if (userId && isRecognizedUser && effectiveUserId) {
+          const persistResult = await persistMemberCorrection(
+            TurnPosture.resolve({ sanctuary: isSanctuary }),
+            {
+              memberId: effectiveUserId,
+              sessionId: session.id ?? null,
+              verbatimText: message,
+              detection: {
+                hasCorrectionSignal: correctionRepair.detected,
+                correctionType: correctionRepair.correctionType,
+                matchedPhrase: correctionRepair.matchedPhrase,
+                confidence: correctionRepair.confidence,
+              },
+            },
+          );
+          console.log('[MAIA] correction-persist', summarizeCorrectionPersistForLog(persistResult));
+        }
+      }
+    } catch (correctionErr) {
+      console.warn('[MAIA] correction wiring error (non-fatal):', correctionErr);
+    }
+
     let memoryInfluenceAddendum: string | undefined;
     let forwardReadinessAddendum: string | undefined;
     // 🧬 Cut 1 — atoms (Layer 5) and health tracking (Layer 15)
@@ -1092,6 +1141,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
           episodicRecallAddendum, // 📖 Phase 2 — member-marked moments (episodic layer, substrate lane only)
+          correctionRepairAddendum, // 🔧 Gate 1 — in-turn correction repair (Layer A; durable consequence handled above)
+          correctionDetected: correctionDetectedThisTurn, // 🔧 Gate 1 — writeback must not re-assert a corrected claim
           placeAddendum, // 🚪 House Presence — facts-only current-room orientation
         },
       }),
@@ -1316,6 +1367,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             memoryMode: 'longterm', // forced for writeback only — sovereign is always longterm-capable
             route: 'sovereign',
             timestamp: new Date(),
+            // 🔧 Gate 1 — a corrective exchange is remembered AS a correction,
+            // never distilled as a standing fact or breakthrough.
+            correctionDetected: correctionDetectedThisTurn,
           });
           if (result.wrote) {
             console.log(`✅ [Sovereign/Writeback] Memory formed: ${result.memoryId} (significance threshold met)`);

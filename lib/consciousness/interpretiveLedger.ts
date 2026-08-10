@@ -40,8 +40,15 @@ import type {
 /**
  * Promote an accumulating hypothesis to the interpretive ledger.
  *
- * This is the moment evidence becomes durable memory.
- * Called only when the OS gate evaluator has determined promotion_worthy = true.
+ * GATE 1 (founder ruling 2026-08-09, F4/F7): promotion is now an OFFERING,
+ * not an acquisition of authority. The entry is written with
+ * routing_influence_weight = 0 and no authority_source — it exists, is
+ * inspectable by the member, and influences nothing. Recurrence may establish
+ * evidence; ONLY a member act (confirm / qualify — see addMemberAnnotation)
+ * may confer routing authority. The DB constraint
+ * ledger_authority_requires_member_act enforces this below application code.
+ * The former weight-0.70-on-promotion rule is constitutionally rejected —
+ * DO NOT RESURRECT.
  *
  * Marks the source hypothesis as 'promoted' and writes the ledger entry.
  * If parent_ledger_entry_id is provided, marks that parent as 'superseded'.
@@ -103,7 +110,7 @@ export async function promoteToLedger(
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
       $11, $12, $13, $14, NOW(),
-      0.70, 'eligible', 5, 0.15, NOW(),
+      0, 'eligible', 5, 0.15, NOW(),
       $15, $16, 0.55,
       'active', $17
     )
@@ -158,6 +165,11 @@ export async function promoteToLedger(
  * Lean routing view — what the conductor and oracle need at conversation start.
  * Returns only active entries above a minimum influence weight.
  * Graceful fallback to [] on error.
+ *
+ * GATE 1 constitutional boundary (F7): `authority_source IS NOT NULL` — an
+ * entry with no member act NEVER reaches routing or a prompt, regardless of
+ * evidence volume, confidence, or weight. This one predicate is the line
+ * recurrence cannot cross.
  */
 export async function loadLedgerForRouting(
   memberId: string,
@@ -177,6 +189,7 @@ export async function loadLedgerForRouting(
       FROM interpretive_ledger
       WHERE member_id = $1
         AND status = 'active'
+        AND authority_source IS NOT NULL
         AND routing_influence_weight >= $2
       ORDER BY routing_influence_weight DESC
       LIMIT 20`,
@@ -282,10 +295,15 @@ export async function markOffered(entryId: string): Promise<void> {
  * not as substantive evidence about the person.
  */
 export async function markDeclined(entryId: string): Promise<void> {
+  // GATE 1: weight arithmetic must respect ledger_authority_requires_member_act —
+  // an entry with no member-granted authority stays at exactly 0.
   await query(
     `UPDATE interpretive_ledger SET
       surfacing_status         = 'held_lightly',
-      routing_influence_weight = GREATEST(0.05, routing_influence_weight * 0.30)
+      routing_influence_weight = CASE
+        WHEN authority_source IS NULL THEN 0
+        ELSE GREATEST(0.05, routing_influence_weight * 0.30)
+      END
     WHERE id = $1`,
     [entryId],
   ).catch(err =>
@@ -294,20 +312,52 @@ export async function markDeclined(entryId: string): Promise<void> {
 }
 
 /**
- * Record that the member accepted / resonated with an interpretation.
- * Increases confidence slightly; keeps surfacing_status 'eligible' for future.
+ * Record that the member resonated with an interpretation.
+ *
+ * GATE 1 (F3/F4): resonance is relational feedback, NOT confirmation.
+ * It adjusts evidence-side confidence and keeps the entry offerable — it does
+ * NOT touch routing_influence_weight and does NOT grant authority. The formal
+ * authority-conferring act is 'confirm' (grantMemberAuthority below).
  */
 export async function markAccepted(entryId: string): Promise<void> {
   await query(
     `UPDATE interpretive_ledger SET
       structural_confidence    = LEAST(1.0, structural_confidence + 0.10),
       composite_confidence     = LEAST(1.0, composite_confidence   + 0.07),
-      routing_influence_weight = LEAST(1.0, routing_influence_weight + 0.10),
       surfacing_status         = 'eligible'
     WHERE id = $1`,
     [entryId],
   ).catch(err =>
     console.error('[InterpretiveLedger] markAccepted failed (non-fatal):', err),
+  );
+}
+
+/**
+ * GATE 1 — the member act that confers routing authority (F1/F7).
+ *
+ * confirm  → authority_source 'member_confirmed', weight 0.70
+ * qualify  → authority_source 'member_qualified', weight 0.70 — the member's
+ *            qualifying words (the annotation text) are the governing text;
+ *            the system's original interpretation remains preserved unchanged.
+ *
+ * This is the ONLY path by which a ledger entry acquires routing weight.
+ * Silence never reaches here; recurrence never reaches here (F4).
+ */
+export async function grantMemberAuthority(
+  entryId: string,
+  memberId: string,
+  kind: 'member_confirmed' | 'member_qualified',
+): Promise<void> {
+  await query(
+    `UPDATE interpretive_ledger SET
+      authority_source         = $2,
+      authority_granted_at     = NOW(),
+      routing_influence_weight = 0.70,
+      surfacing_status         = 'eligible'
+    WHERE id = $1 AND member_id = $3`,
+    [entryId, kind, memberId],
+  ).catch(err =>
+    console.error('[InterpretiveLedger] grantMemberAuthority failed (non-fatal):', err),
   );
 }
 
@@ -370,17 +420,36 @@ export async function addMemberAnnotation(
       break;
 
     case 'clear_influence':
-      // Member removes active routing influence.
-      // Evidence remains intact — this is a sovereignty action, not a data deletion.
+      // Member removes active routing influence (F2-analog for interpretations:
+      // authority is withdrawn; evidence remains intact — a sovereignty action,
+      // not a data deletion). GATE 1: authority_source is stripped and weight
+      // goes to exactly 0, per ledger_authority_requires_member_act.
       await query(
         `UPDATE interpretive_ledger SET
-          routing_influence_weight = 0.02,
+          authority_source         = NULL,
+          routing_influence_weight = 0,
           surfacing_status         = 'cleared_by_member'
          WHERE id = $1`,
         [ledgerEntryId],
       ).catch(err =>
         console.error('[InterpretiveLedger] clear_influence update failed (non-fatal):', err),
       );
+      break;
+
+    case 'confirm':
+      // GATE 1 (F1): "yes, that's true of me" — the member act that confers
+      // routing authority. The interpretation may now inform MAIA as a
+      // member-confirmed understanding, with provenance and date.
+      await grantMemberAuthority(ledgerEntryId, memberId, 'member_confirmed');
+      break;
+
+    case 'qualify':
+      // GATE 1 (F1/F3): "partly — but it's more like…" — authority is granted
+      // to the member's OWN qualifying words (the annotation), which become the
+      // governing text. The system's original interpretation is preserved
+      // unchanged and MAIA's later restatements of the qualification acquire
+      // nothing beyond what the member actually said.
+      await grantMemberAuthority(ledgerEntryId, memberId, 'member_qualified');
       break;
 
     case 'add_context':

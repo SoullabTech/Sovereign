@@ -1231,6 +1231,16 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`📖 [FAST] Episodic recall addendum applied (${episodicRecallAddendum.length} chars)`);
   }
 
+  // 🔧 CORRECTION REPAIR (Gate 1, 2026-08-09): in-turn repair guidance when the
+  // member performed an explicit corrective speech act this turn. Built by the
+  // route via lib/maia/correctionRepair.ts; the durable consequence
+  // (supersession of the corrected turn) is registered separately by
+  // lib/maia/correctionPersistence.ts under the Gate 1 founder ruling.
+  const correctionRepairAddendum = (meta as any)?.correctionRepairAddendum as string | undefined;
+  if (correctionRepairAddendum) {
+    console.log(`🔧 [FAST] Correction repair addendum applied (${correctionRepairAddendum.length} chars)`);
+  }
+
   // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
   // atoms the member chose to keep, plus witnessed practitioner observations rendered
   // with epistemic framing ("a practitioner observed…"). Built by the route via
@@ -1281,7 +1291,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${correctionRepairAddendum ? '\n\n' + correctionRepairAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1572,6 +1582,9 @@ async function corePathResponse(
     // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
     // atoms + witnessed practitioner observations. Injected via appendAllContextAddenda.
     atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
+    // 🔧 CORRECTION REPAIR (Gate 1, 2026-08-09): in-turn repair guidance.
+    // Injected via appendAllContextAddenda.
+    correctionRepairAddendum: (meta as any)?.correctionRepairAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -2084,6 +2097,9 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         (meta as any)?.conversationalRecallAddendum,
         (meta as any)?.episodicRecallAddendum,
         (meta as any)?.atomsAddendum,
+        // 🔧 Gate 1 — in-turn correction repair reaches the DEEP consultation
+        // lane too, so a member's correction is honored at every prompt seam.
+        (meta as any)?.correctionRepairAddendum,
       ].filter(Boolean).join('\n\n');
       if (consultationRecallAddenda) {
         console.log('[MAIA] deep-consultation recall-addenda', { chars: consultationRecallAddenda.length });
@@ -2209,6 +2225,10 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // for DEEP repair too — buildMaiaComprehensivePrompt appends MaiaContext addenda
         // via appendAllContextAddenda (maiaVoice.ts), so this field reaches the prompt.
         atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
+        // 🔧 CORRECTION REPAIR (Gate 1, 2026-08-09): reaches DEEP-repair via
+        // appendAllContextAddenda — a member's correction is honored at every
+        // prompt seam.
+        correctionRepairAddendum: (meta as any)?.correctionRepairAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

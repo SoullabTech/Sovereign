@@ -210,6 +210,7 @@ export async function loadPriorCrossSessionExchanges(
        WHERE user_id = $1
          AND session_id IS NOT NULL
          AND ($2::text IS NULL OR session_id <> $2)
+         AND recall_eligibility = 'eligible'
        ORDER BY created_at DESC
        LIMIT $3`,
       [userId, currentSessionId ?? null, limit],

@@ -34,6 +34,14 @@ export interface WritebackInput {
   memoryMode: MemoryMode;
   route?: string;  // FAST, CORE, DEEP
   timestamp?: Date;
+  /**
+   * GATE 1 (founder ruling 2026-08-09): the route detected an explicit member
+   * correction in this exchange. The writeback must preserve "a meaningful
+   * correction happened" WITHOUT preserving "the corrected claim remains
+   * current truth" — the capsule is typed 'correction', framed as such, and
+   * the exchange is never distilled as a breakthrough insight.
+   */
+  correctionDetected?: boolean;
 }
 
 export interface MemoryCapsule {
@@ -363,6 +371,17 @@ export const MemoryWritebackService = {
     // Build memory capsule (includes Storage X4 distilled trajectory signal)
     const capsule = this.buildCapsule(userMessage, assistantResponse, extractedFacts, significance);
 
+    // GATE 1: a corrective exchange is remembered AS a correction event.
+    // The distilled signal is framed so future retrieval reads "the member
+    // corrected MAIA's understanding here" — never the corrected claim as a
+    // standing fact about the member. Correction keeps its significance
+    // (being corrected is developmentally important); what changes is the
+    // memory's TYPE and frame.
+    if (input.correctionDetected) {
+      capsule.distilledSignal =
+        `member corrected MAIA's prior understanding; ${capsule.distilledSignal}`;
+    }
+
     // Write to developmental_memories
     try {
       const memoryId = await this.writeDevelopmentalMemory({
@@ -375,13 +394,18 @@ export const MemoryWritebackService = {
         facetCode: input.facetCode,
         route: input.route,
         timestamp: input.timestamp,
+        memoryType: input.correctionDetected ? 'correction' : undefined,
       });
 
       console.log(`✅ [MemoryWriteback] Promoted to developmental_memories: ${memoryId}`);
 
       // Check for breakthrough (lowered threshold for spiral-relative awareness)
-      // Breakthroughs at any level are meaningful and worth recording
-      if (significance >= 0.5 || this.isBreakthroughPattern(userMessage, assistantResponse)) {
+      // Breakthroughs at any level are meaningful and worth recording.
+      // GATE 1: a corrective exchange is never distilled as a breakthrough
+      // insight — that path would re-assert the corrected material as an
+      // achieved understanding.
+      if (!input.correctionDetected &&
+          (significance >= 0.5 || this.isBreakthroughPattern(userMessage, assistantResponse))) {
         await this.writeBreakthroughMoment({
           userId,
           sessionId,
@@ -565,6 +589,8 @@ export const MemoryWritebackService = {
     facetCode?: string;
     route?: string;
     timestamp?: Date;
+    /** GATE 1: 'correction' types the row per the developmental_memories CHECK. */
+    memoryType?: 'correction';
   }): Promise<string> {
     const { userId, sessionId, userMessage, assistantResponse, significance, capsule, facetCode, route } = input;
 
@@ -644,9 +670,10 @@ export const MemoryWritebackService = {
       // 'turn_capsule' was never a valid value and was causing writeback to fail loudly
       // after the Phase A column-drift fix exposed the underlying check-constraint drift.
       // 'pattern' is the closest semantic match for a generic significant-exchange memory.
-      // Future work: route specific cases to more precise types (correction when the user
-      // corrects MAIA, effective_practice when significance >= 0.8, etc.) — tracked in Phase B.
-      'pattern',
+      // GATE 1 (2026-08-09): corrective exchanges now route to 'correction' —
+      // the Phase B item for that case is done. Other precise types
+      // (effective_practice when significance >= 0.8, etc.) remain future work.
+      input.memoryType ?? 'pattern',
       JSON.stringify(triggerEvent),
       facetCode || null,
       significance,

@@ -82,6 +82,9 @@ export async function POST(request: NextRequest) {
     'not_now',
     'add_context',
     'clear_influence',
+    // GATE 1 (founder ruling 2026-08-09): the authority-conferring member acts.
+    'confirm',
+    'qualify',
   ];
 
   if (typeof entry_id !== 'string' || !entry_id.trim()) {
@@ -101,11 +104,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // note is for resonates / does_not_resonate / not_now / clear_influence
-  // context is the primary field for add_context
+  // note is for resonates / does_not_resonate / not_now / clear_influence / confirm
+  // context is the primary field for add_context and qualify
   const annotationText =
     (typeof context === 'string' ? context.trim() : '') ||
     (typeof note === 'string' ? note.trim() : '');
+
+  // GATE 1 (F1): a qualification's governing text is the member's OWN words —
+  // the system never authors it on their behalf. Refuse a text-less qualify.
+  if (action === 'qualify' && !annotationText) {
+    return NextResponse.json(
+      { error: "qualify requires the member's qualifying words (context or note)." },
+      { status: 400, headers: canonHeaders(correlationId) },
+    );
+  }
 
   // ── Ownership check ────────────────────────────────────────────────────────
   // Verify the entry exists, belongs to this member, and is active.
