@@ -29,6 +29,17 @@ import {
   executeRun, isLegalTransition, RUN_STATES, TERMINAL_STATES, REPO_ROOT,
   validatePacket, checkAuthority,
 } from './jarvis-runtime-pipeline.mjs';
+import {
+  admitRequest, publicAdmission, objectiveView, ADMISSION,
+} from './jarvis-principal.mjs';
+
+/**
+ * §5/§6 — when set, a bare packet is no longer mapped to the local operator and
+ * every request must declare a principal. Off by default so existing operator
+ * tooling (the Unit 12 Desktop) keeps working; this is the switch a future
+ * bridge deployment turns on.
+ */
+const REQUIRE_PRINCIPAL = process.env.JARVIS_REQUIRE_PRINCIPAL === '1';
 
 // ── §3 local-only boundary ───────────────────────────────────────────────────
 /** Loopback literals only. A hostname is not evidence of a loopback interface. */
@@ -192,6 +203,15 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
 
   const publicRun = (r) => r && ({
     run_id: r.run_id, work_unit_id: r.packet?.work_unit_id, state: r.state,
+    // §8 — enough for a caller to know WHAT BOUNDED WORK this run answers,
+    // without exposing the packet body, member content, or any credential.
+    ...objectiveView(r),
+    ...(publicAdmission(r.admission) ?? {}),
+    // Always present, even for pre-Unit-14 runs, so a caller never has to
+    // distinguish "field missing" from "value absent".
+    request_id: r.request_id ?? r.admission?.request_id ?? null,
+    operation_class: r.operation_class ?? r.admission?.operation_class ?? null,
+    execution_sha: r.context?.execution_head ?? r.packet?.canonical_sha ?? null,
     disposition: r.disposition ?? null, failure_class: r.failure_class ?? null,
     failure_detail: r.failure_detail ?? null, blocked: r.blocked ?? null,
     created_at: r.created_at, updated_at: r.updated_at, finished_at: r.finished_at ?? null,
@@ -245,26 +265,68 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
       }
       const raw = await readBody(req, res);
       if (raw === null) return;
-      let packet;
-      try { packet = JSON.parse(raw); }
+      let body;
+      try { body = JSON.parse(raw); }
       catch { return json(res, 400, { error: 'PACKET_SCHEMA_INVALID', errors: ['body is not valid JSON'] }); }
 
+      // Two accepted shapes. A bare packet is a legacy operator submission (the
+      // Unit 12 Desktop and every existing tool); an enveloped body declares a
+      // principal and its delegation. `work_unit_id` at the top level is the
+      // discriminator because it is required on every packet and never appears
+      // on an envelope.
+      const enveloped = body && typeof body === 'object' && !Array.isArray(body)
+        && body.work_unit_id === undefined && typeof body.packet === 'object';
+      const packet = enveloped ? body.packet : body;
+      const envelope = enveloped ? body : null;
+
+      // Well-formedness is prior to authority: a malformed packet is a bad
+      // request no matter who sent it, and answering 403 there would tell a
+      // caller their authority was the problem when it was not.
       const v = validatePacket(packet);
       if (!v.ok) return json(res, 400, { error: v.failure_class, errors: v.errors });
+
+      // §1 — principal → delegation → admission, decided BEFORE anything is
+      // queued or dispatched. Authority is never inferred from the fact that
+      // the caller could reach this socket.
+      const adm = admitRequest({
+        envelope,
+        packet,
+        now: nowISO(),
+        requirePrincipal: REQUIRE_PRINCIPAL,
+      });
+      if (!adm.ok) {
+        // §6 — a typed admission disposition, never a generic execution failure.
+        const code = adm.disposition === ADMISSION.REFUSE_UNSUPPORTED_OPERATION ? 422 : 403;
+        return json(res, code, { error: adm.disposition, detail: adm.reason });
+      }
+
+      // Packet-level authority (declared lane, write-requesting keys) complements
+      // principal-level admission; both must hold.
       const auth = checkAuthority(packet);
       if (!auth.ok) return json(res, 403, { error: auth.failure_class, detail: auth.detail });
 
       const run = {
         run_id: newRunId(), created_at: nowISO(), state: 'QUEUED', packet,
         runtime_id: rt.runtime_id, runtime_version: rt.version,
+        // §10 — the objective and its request id are recorded on the run at
+        // admission, so a result can never be attributed to the wrong request.
+        request_id: adm.admission.request_id,
+        objective: adm.admission.objective,
+        operation_class: adm.admission.operation_class,
+        admission: adm.admission,
         disposition: null, failure_class: null, history: [{ at: nowISO(), from: null, to: 'QUEUED' }],
       };
       saveRun(run);
-      emit('run.created', { run_id: run.run_id, work_unit_id: packet.work_unit_id, lane: packet.execution_lane });
+      emit('run.created', {
+        run_id: run.run_id, request_id: run.request_id, work_unit_id: packet.work_unit_id,
+        lane: packet.execution_lane, principal_type: adm.admission.principal_type,
+      });
       queue.push(run.run_id);
       drain();
       // 202: the RUNTIME accepted it. Worker capacity is a separate fact (§9).
-      return json(res, 202, { run_id: run.run_id, state: 'QUEUED', accepted_by: rt.runtime_id,
+      return json(res, 202, { run_id: run.run_id, request_id: run.request_id, state: 'QUEUED',
+                              objective: run.objective, operation_class: run.operation_class,
+                              accepted_by: rt.runtime_id,
                               note: 'runtime accepted; worker capacity is evaluated at dispatch' });
     }
 
