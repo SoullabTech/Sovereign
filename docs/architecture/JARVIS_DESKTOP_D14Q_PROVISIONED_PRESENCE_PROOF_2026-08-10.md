@@ -1,6 +1,12 @@
 # JARVIS Desktop D-14Q — Provisioned Presence Proof
 
-**Disposition: D-14Q BLOCKED (Attempt 3) — DEVICE FAILURE persists after founder-confirmed device registration; Hardware-UUID-vs-Provisioning-UDID hypothesis excluded by direct evidence; root cause narrowed to Apple-portal-side state outside Terminal-only means. Classification C (blocked by external/human authority).**
+**Disposition (current, Attempt 5): D-14Q RESOLVED — CLASSIFICATION A.** Valid Apple development
+provisioning causally resolves the `-34018`/SIGKILL key-creation failure found in D-14L/D-14P. Scoped to
+key creation only — the full interactive biometric-presence sequence remains untested. See "Attempt 5"
+section below for full evidence. (Attempts 1–4 below are preserved as written; superseded only in their
+forward disposition, not in their evidence.)
+
+**Disposition (historical, Attempt 3): D-14Q BLOCKED (Attempt 3) — DEVICE FAILURE persists after founder-confirmed device registration; Hardware-UUID-vs-Provisioning-UDID hypothesis excluded by direct evidence; root cause narrowed to Apple-portal-side state outside Terminal-only means. Classification C (blocked by external/human authority).**
 **Branch:** `chore/jarvis-desktop-d14q-provisioned-presence-proof`, off D-14P clean-retest tip (`73f6ef246`).
 **Date:** 2026-08-10 (Attempt 1), 2026-08-10 (Attempt 2, after founder-reported Apple re-auth), 2026-08-10 (Attempt 3, after founder-confirmed device registration). **Device:** Mac Studio, Apple M4 Max, macOS 15.7.8.
 
@@ -428,3 +434,233 @@ conjunction (device state AND agreement state both required).
 **Minimum human action required:** confirm on developer.apple.com/account (main Account page) whether an
 outstanding Developer Program License Agreement banner is present. If none, Attempt 5 (unchanged
 `xcodebuild -allowProvisioningUpdates build`) is authorized to proceed per the governing resume mandate.
+
+## Attempt 5 (2026-08-10, same day — resume after founder-confirmed agreement banner absent; BUILD SUCCEEDED, -34018 BOUNDARY CROSSED)
+
+**Explicit resume authorization received.** Founder personally checked the Apple Developer Account page
+and confirmed no outstanding agreement/review warning is present. Combined with the supplemental recheck's
+device PRESENT + ENABLED (MAC_OS) finding, both preconditions of the governing resume mandate were
+satisfied. Claim reopened as `s-b6b4b2bf` (heartbeat confirmed `ok` before any command). Worktree/branch/HEAD
+unchanged at entry (`3dadf2f1a`); dirty state unchanged (the same two Attempt-1 generated paths). D-14P not
+touched.
+
+### §5 rerun — identical command, unchanged
+
+```
+xcodebuild -project D14QPresenceProof.xcodeproj -scheme D14QPresenceProof \
+  -configuration Debug -destination 'platform=macOS' -allowProvisioningUpdates build
+```
+
+**Exit: BUILD SUCCEEDED.** Full output captured at `xcodebuild-d14q-attempt5.log` (not committed, same
+convention as prior attempts). Decisive lines from the tail of the log:
+
+```
+CodeSign .../D14QPresenceProof.app (in target 'D14QPresenceProof' from project 'D14QPresenceProof')
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "Mac Team Provisioning Profile: *"
+                          (a68812e6-1907-4a27-978d-d0ba500604f0)
+** BUILD SUCCEEDED **
+```
+
+This is the first attempt, across five, in which `-allowProvisioningUpdates` did not refuse. Xcode silently
+registered the App ID and obtained a **wildcard Mac Team Provisioning Profile** (`Mac Team Provisioning
+Profile: *`, UUID `a68812e6-1907-4a27-978d-d0ba500604f0`, created `2026-08-10T22:09:10Z`, expires one year
+later) rather than an App-ID-scoped profile — consistent with `CODE_SIGN_STYLE: Automatic` and a paid
+Individual-team account with no separate App ID pre-registered.
+
+### §7 — Independent provisioning/signing verification (before touching D-14P substrate or running any keychain proof)
+
+Performed with Terminal-native tooling only (`codesign`, `security cms`), not inferred from Xcode labels.
+
+**Signature** (`codesign -dv --verbose=4` on the built `.app`):
+- `Identifier=com.soullab.jarvis.d14q.presenceproof`
+- `TeamIdentifier=ZVK2X646Z2`
+- `Authority=Apple Development: Kelly Nezat (N9DTF6434L)` → WWDR CA → Apple Root CA (full, valid chain)
+- `CandidateCDHash sha256=41a6cc4835a4d346878c160c779419583fdb972f`, signed `Aug 10, 2026 at 6:09:17 PM`
+
+**Effective entitlements** (`codesign -d --entitlements :-`):
+```
+com.apple.application-identifier = ZVK2X646Z2.com.soullab.jarvis.d14q.presenceproof
+com.apple.developer.team-identifier = ZVK2X646Z2
+com.apple.security.get-task-allow = true   (Debug build; expected)
+keychain-access-groups = [ZVK2X646Z2.com.soullab.jarvis.d14q.presenceproof]
+```
+
+**Embedded provisioning profile** (`security cms -D -i .../embedded.provisionprofile`), decoded and cross-checked field by field, not assumed from the filename:
+- `Name`: `Mac Team Provisioning Profile: *`; `UUID`: `a68812e6-1907-4a27-978d-d0ba500604f0`
+- `TeamIdentifier` / `ApplicationIdentifierPrefix`: `ZVK2X646Z2` (both fields, matching)
+- `TeamName`: `Kelly Nezat`; `Platform`: `["OSX"]`
+- `ProvisionedDevices`: `["00006041-00146119217A801C"]` — **exact match** to the founder-registered,
+  API-confirmed Provisioning UDID from Attempt 4's supplemental recheck
+- Profile `Entitlements` dict (the authorization Apple actually granted): `com.apple.application-identifier
+  = ZVK2X646Z2.*`, `keychain-access-groups = [ZVK2X646Z2.*]`, `com.apple.developer.team-identifier =
+  ZVK2X646Z2` — a **wildcard** grant covering any bundle ID under this team, which is why the build's
+  specific `com.soullab.jarvis.d14q.presenceproof` identifier is validly covered without a separate
+  per-App-ID profile.
+- `ExpirationDate`: `2027-08-10T22:09:10Z` (one year); `PPQCheck`: `false`.
+
+**Mutual consistency — established, not inferred from naming:**
+
+| Field | Value | Consistent? |
+|---|---|---|
+| Team (expected `ZVK2X646Z2`) | Certificate `OU`, codesign `TeamIdentifier`, profile `TeamIdentifier`/`ApplicationIdentifierPrefix`, entitlements `com.apple.developer.team-identifier` — **all four independently read as `ZVK2X646Z2`** | ✅ |
+| Bundle identifier (expected `com.soullab.jarvis.d14q.presenceproof`) | `codesign -dv` `Identifier=`, matches `project.yml` | ✅ |
+| Application identifier | `ZVK2X646Z2.com.soullab.jarvis.d14q.presenceproof` (entitlements), covered by profile's `ZVK2X646Z2.*` wildcard grant | ✅ |
+| Keychain access group | `ZVK2X646Z2.com.soullab.jarvis.d14q.presenceproof` (entitlements), covered by profile's `ZVK2X646Z2.*` wildcard grant | ✅ |
+| Signing certificate | `Apple Development: Kelly Nezat (N9DTF6434L)`, embedded in the profile's own `DeveloperCertificates` array (independently decoded, matches the local keychain identity used to sign) | ✅ |
+| Provisioning profile | `a68812e6-…` covers this device (`00006041-…`, exact match), this team, and (via wildcard) this bundle ID | ✅ |
+
+All six elements are mutually consistent — verified field-by-field from the artifacts themselves, not
+assumed from Xcode's UI or from matching labels.
+
+### §9/§10 — D-14Q keychain/presence proof, run against the newly-provisioned identity, substrate unchanged
+
+Per the governing mandate, the *substantive* Security-framework test logic (`presence-proof-v2.swift`, the
+unchanged D-14P clean-retest substrate — H1/H2 already resolved, `kSecUseDataProtectionKeychain` set on
+every call) was not modified. What changed is only the **signing/provisioning wrapper** around it, built to
+mirror D-14P's own method (minimal hand-built `.app` bundle, no Xcode project needed for the substrate
+itself) but now with a **real, valid, Apple-issued provisioning profile** embedded instead of none:
+
+1. Compiled `presence-proof-v2.swift` unchanged via `swiftc` into
+   `d14q-provisioned-proof/D14QKeychainProof.app/Contents/MacOS/D14QKeychainProof`.
+2. New `Info.plist` (`CFBundleIdentifier = com.soullab.jarvis.d14q.presenceproof.keychainproof` — a
+   sibling identifier, distinct from the throwaway SwiftUI vehicle's, still under the same team, so the
+   proof exercises a fresh, never-before-signed bundle rather than reusing build state).
+3. New `keychainproof-entitlements.plist` declaring `keychain-access-groups =
+   [ZVK2X646Z2.com.soullab.jarvis.d14q.presenceproof.keychainproof]`, `com.apple.application-identifier`,
+   `com.apple.developer.team-identifier` — the identical entitlement shape D-14P's Attempt 2/3 used, this
+   time backed by a real profile.
+4. **Embedded the exact `embedded.provisionprofile` Apple issued to the successful Xcode build above**
+   (`a68812e6-…`, unmodified, copied byte-for-byte) — valid for this identifier because of the wildcard
+   grant established in §7.
+5. Signed with the identical certificate (`--sign 42E2C8D83763966C9411E9622B92872D0D3885B4`, "Apple
+   Development: Kelly Nezat (N9DTF6434L)") used by the successful Xcode build — not a different identity.
+6. `spctl -a -vv` reported `rejected` (expected and immaterial: this is Gatekeeper's notarization/App-Store
+   check for a hand-signed dev build launched outside Xcode's debug session — not the AMFI
+   restricted-entitlement gate D-14P's SIGKILL came from; D-14P's own finding was that AMFI, not spctl, was
+   the operative gate).
+
+**Ran the substrate's own commands, unmodified, directly against this signed bundle:**
+
+```
+$ D14QKeychainProof generate
+{"step":"generate","key_type":"SecureEnclave-P256","access_control":"userPresence+privateKeyUsage",
+ "key_creation":"PASS","hypothesis_tested":"H1_dataProtectionKeychain","ok":true,
+ "se_attempt_error":null,"public_key_b64":"BL7tkkzxcc…rI="}
+
+$ D14QKeychainProof export
+{"step":"attempt_export","ok":true,"export_succeeded":true,"osstatus":0}
+
+$ D14QKeychainProof cleanup
+{"osstatus":0,"ok":true,"step":"cleanup"}
+```
+
+**No SIGKILL. No `-34018`. No `errSecMissingEntitlement`.** `SecKeyCreateRandomKey` — the exact call that
+failed with `-34018` in D-14L (bare CLI) and was SIGKILLed by AMFI in D-14P Attempt 2 (real cert, restricted
+entitlement, no profile) — **succeeded**, `osstatus` implicitly `errSecSuccess` (0; the `generate` path only
+emits an explicit `osstatus` field on failure branches, per the substrate's own code — success is `key_creation:
+"PASS"` with no error field populated). The key was created as a **Secure-Enclave-backed P-256 key** with
+`.userPresence + .privateKeyUsage` access control — the exact mechanism D-14 originally recommended and D-14L/
+D-14P could never reach.
+
+`export` returned `osstatus: 0` (`errSecSuccess`) for the `SecItemCopyMatching` **query itself** succeeding
+(the item was found) — this is not evidence that raw private-key bytes were extracted; per the substrate's
+own header comment and D-14P's prior note, `SecKey` items backed by Secure Enclave / access-control never
+yield exportable private material through this query regardless of flags, a documented platform guarantee
+this unit did not need to re-verify to interpret the result correctly. `cleanup` removed the item cleanly
+(`osstatus: 0`).
+
+### Result discipline (per §11 of the mandate)
+
+- **OBSERVED**: identical unmodified `xcodebuild -allowProvisioningUpdates` command now succeeds; the
+  resulting signature, entitlements, and embedded provisioning profile are mutually consistent across all
+  six checked dimensions; the unchanged D-14P Security-framework substrate, signed and provisioned for the
+  first time with a real Apple-issued profile, creates a Secure-Enclave-backed access-controlled `SecKey`
+  without SIGKILL or `-34018`.
+- **INFERRED**: the causal hypothesis D-14Q was built to test — *does valid Apple development provisioning
+  resolve the `-34018`/SIGKILL failure?* — is now directly demonstrated, not merely argued from Apple's
+  documentation (Correction #1 in the D-14P record). The controlled variable was exactly the provisioning
+  wrapper (profile presence, real signing identity, matching entitlements); the substrate code itself was
+  never touched between D-14L (fail), D-14P (fail, precisely diagnosed), and this run (pass).
+- **NOT OVERCLAIMED**: this proves key **creation** crosses the boundary. It does not by itself prove the
+  full 7-step D-14 live-presence sequence (sign 1, sign 2 under fresh biometric presence, cancel/refuse,
+  export-attempt) — `sign` was deliberately not exercised in this unit because it blocks on interactive
+  Touch ID/biometric presence, which this unit cannot supply, and exercising it was not necessary to answer
+  the causal question D-14Q was scoped to test (whether provisioning resolves the entitlement-level
+  blocker, as distinct from the presence-sequence behavior itself). That remains the next unit's job, not
+  retroactively claimed here.
+- **NOT TESTED**: the interactive biometric-presence sign/cancel/export-attempt sequence (D-14's original
+  7-step protocol) — deliberately deferred, not blocked.
+
+### Classification (§11)
+
+**A — PROVISIONING CAUSALLY RESOLVES THE FAILURE**, precisely scoped: valid Apple development provisioning
+resolves the `-34018`/SIGKILL key-**creation** failure. Evidence: (1) provisioning succeeded via the
+identical unmodified command that failed in Attempts 1–4; (2) signing/provisioning consistency independently
+proven across all six checked fields, not inferred from Xcode UI; (3) the controlled Security-framework test
+— unchanged from D-14P — no longer produces `-34018` or SIGKILL, now returns `key_creation: "PASS"` for a
+Secure-Enclave `.userPresence + .privateKeyUsage` key; (4) no unrelated behavioral change explains the
+difference — same machine, same certificate, same substrate code, same entitlement shape; the only variable
+that changed across all five attempts is provisioning-profile presence and validity.
+
+Precision boundary stated explicitly per the mandate's "do not overclaim" instruction: Outcome A is scoped to
+**key creation**, not the full D-14 7-step live-presence invariant, which remains untested pending a
+dedicated next unit that can supply interactive biometric presence.
+
+### Cleanup
+
+- `D14QKeychainProof.app`: the throwaway signed test bundle built for this proof — no key material remains
+  inside it; the one Secure-Enclave key it created was deleted by the substrate's own `cleanup` command
+  (confirmed `osstatus: 0`). Left on local disk (compiled artifact, no secrets), not committed, same
+  disposal convention as prior attempts' build products
+  (`rm -rf d14q-provisioned-proof/D14QKeychainProof.app` at any time).
+- `D14QPresenceProof.app` (the Xcode-built throwaway vehicle) and its `DerivedData`: left on local disk,
+  same convention.
+- `xcodebuild-d14q-attempt5.log`: left alongside prior attempts' logs, not committed.
+- Provisioning-profile directory (`~/Library/MobileDevice/Provisioning Profiles/`): now contains the
+  Xcode-managed copy of `a68812e6-…` — this is Xcode/Apple-managed state, not an artifact of this unit
+  to clean up, and reflects the genuinely-changed baseline (this unit's entire point).
+
+### Commit discipline (§14)
+
+Committed: `keychainproof-entitlements.plist`, this record (Attempt 5 section). Not committed: generated
+`.xcodeproj`, `.app` bundles, `DerivedData`, build/run logs, provisioning-profile material — consistent with
+every prior attempt's convention.
+
+## Disposition (Attempt 5, current — FINAL for this unit)
+
+**D-14Q RESOLVED — CLASSIFICATION A.** Valid Apple development provisioning, obtained via the unmodified
+`xcodebuild -allowProvisioningUpdates` command once the device was registered and enabled and no agreement
+blocker remained, causally resolves the `-34018`/SIGKILL key-creation failure that blocked D-14L and D-14P.
+The unchanged Security-framework substrate now creates a Secure-Enclave-backed, access-controlled `SecKey`
+successfully. This closes D-14Q's governing question. It does **not** authorize D-14P modification, JARVIS
+Desktop packaging, production wiring, or proceeding to the next unit — those require separate authorization,
+per the mandate's explicit D-14P boundary.
+
+### D-14P recommendation (bounded, per the mandate's explicit boundary — not implemented here)
+
+**What D-14Q proved**: the Keychain-ACL-bound presence mechanism D-14 originally recommended is
+implementable on this machine, under this Apple Developer team, once real provisioning exists — the
+blocker was infrastructural (no provisioning profile), not a flaw in the recommended mechanism or its
+Swift implementation.
+
+**What it implies for D-14P**: D-14P's own substrate (`presence-proof-v2.swift`, unchanged and reused
+verbatim here) is ready to be the basis of a real implementation — no code changes indicated by this
+result. The smallest proposed correction is *procedural*, not code: any future JARVIS Desktop build that
+wants to use `keychain-access-groups` must be built with `-allowProvisioningUpdates` (or an equivalent
+provisioning step) against a registered, enabled device on team `ZVK2X646Z2`, using a profile that grants
+that entitlement — exactly the setup this unit now has proof-of-work for.
+
+**Risks**: (1) the profile obtained here is a broad wildcard Mac Team Provisioning Profile, not scoped to a
+specific production App ID — a real JARVIS Desktop release will need its own dedicated App ID and profile,
+which is a new provisioning step, not yet exercised; (2) the interactive biometric-presence sequence (sign
+under fresh Touch ID, cancel/refuse, export-attempt) — D-14's actual 7-step invariant test — remains
+completely untested; Outcome A here is scoped to key creation only; (3) this proof ran as a hand-signed
+Debug build with `get-task-allow=true` (debuggable) — a Release/notarized build path has not been
+exercised and may surface distinct Gatekeeper/notarization requirements beyond what `spctl`'s `rejected`
+result (immaterial to this proof, see §9/§10) already hints at.
+
+**Verification needed before any D-14P work is authorized**: a dedicated next unit running the actual
+7-step biometric-presence sequence (sign 1, sign 2, cancel/refuse, export-attempt) against a signed,
+provisioned build — interactively, with the founder present to supply Touch ID/biometric presence — is the
+correctly-scoped next step, not a resumption of D-14P coding.
