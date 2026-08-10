@@ -1628,7 +1628,14 @@ export async function POST(request: NextRequest) {
     // (pursue-withdraw, overfunctioning, withdrawal, escalation, projection).
     // Writes to relationship_entries + relationship_entry_patterns side table.
     // Does NOT read back into the context block — observation only.
-    observeRelationalContent(userId, message, maiaResponse.coreMessage);
+    // 🔒 RU-0 (2026-08-10): this route has NO sanctuary gate — that is the stated
+    // reason it was retired (410, "pending Sanctuary-governed persistence (S2,
+    // 2026-07-17)"; see the note at line ~437). Since no posture can be determined
+    // here, the observer is told to REFUSE rather than to proceed. Unreachable today
+    // (the 410 returns first), but fail-safe: if the retirement were ever lifted
+    // without a sanctuary gate being added, relational observation stays OFF instead
+    // of silently resuming unguarded.
+    observeRelationalContent(userId, message, maiaResponse.coreMessage, { isSanctuary: true });
 
     // MANIFESTATION CORPUS: substrate-sovereignty observation layer.
     // Captures the turn as raw observational data. Classification fields
