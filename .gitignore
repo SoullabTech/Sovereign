@@ -441,3 +441,7 @@ node-compile-cache/
 # Deploy lane lock (scripts/deploy-lock.sh) — runtime artifact, never committed
 .deploy.lock
 scripts/eval/reports/
+
+# Jest and tsx build caches — regenerated per run, accidentally committed 2026-08-09
+jest_dx/
+tsx-501/
