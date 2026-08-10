@@ -1,8 +1,8 @@
 # JARVIS Desktop D-14Q — Provisioned Presence Proof
 
-**Disposition: D-14Q BLOCKED (Attempt 2) — DEVICE FAILURE (Mac not registered in developer account).**
+**Disposition: D-14Q BLOCKED (Attempt 3) — DEVICE FAILURE persists after founder-confirmed device registration; Hardware-UUID-vs-Provisioning-UDID hypothesis excluded by direct evidence; root cause narrowed to Apple-portal-side state outside Terminal-only means. Classification C (blocked by external/human authority).**
 **Branch:** `chore/jarvis-desktop-d14q-provisioned-presence-proof`, off D-14P clean-retest tip (`73f6ef246`).
-**Date:** 2026-08-10 (Attempt 1), 2026-08-10 (Attempt 2, this section, after founder-reported Apple re-auth). **Device:** Mac Studio, Apple M4 Max, macOS 15.7.8.
+**Date:** 2026-08-10 (Attempt 1), 2026-08-10 (Attempt 2, after founder-reported Apple re-auth), 2026-08-10 (Attempt 3, after founder-confirmed device registration). **Device:** Mac Studio, Apple M4 Max, macOS 15.7.8.
 
 ## Governing sequence
 
@@ -148,8 +148,89 @@ App Development provisioning profiles matching 'com.soullab.jarvis.d14q.presence
 - No key material created — build never produced a signed binary.
 - `xcodebuild-d14q-rerun.log` left alongside the Attempt-1 log as a local build artifact (not committed, same convention).
 
-## Disposition
+## Disposition (Attempt 2)
 
 **D-14Q BLOCKED (Attempt 2) — DEVICE FAILURE: this Mac is not registered as a device on team `ZVK2X646Z2`.**
 
 Per §15 of the mandate: stopping here. Authentication is confirmed resolved (real progress from Attempt 1), but a new, distinct external/Apple-side gap blocks provisioning. Not attempting to register the device through the developer website or any other workaround. Not proceeding to Desktop packaging, Electron integration, production wiring, D-14P modification, or the next JARVIS work unit. Awaiting the founder's device-registration action, after which the identical command reruns unchanged and this unit continues from §7 (profile verification) if it succeeds.
+
+---
+
+## Attempt 3 (2026-08-10, same day — resume after founder-confirmed device registration, correct-identifier lesson)
+
+**Explicit resume authorization received** (Builder claim `s-f0a3c60a`, worktree `jarvis-d14q-provisioned-presence-proof`, branch unchanged). Founder confirmed, explicitly and in-conversation, that the Mac had been registered in Apple Developer → Certificates, Identifiers & Profiles → Devices as:
+
+- Name: `Kelly's Mac Studio`
+- UDID: `00006041-00146119217A801C`
+
+**Correction carried into this attempt, not re-litigated**: Attempt 2's record named the Hardware UUID (`020FECAE-0098-5C2B-B8F5-04732C957291`, from `system_profiler SPHardwareDataType`) as "the minimum human action." That was imprecise. On Apple Silicon, `system_profiler SPHardwareDataType` reports **two distinct fields** — Hardware UUID and Provisioning UDID — and Apple's Devices registration page wants the **Provisioning UDID**, not the Hardware UUID. The value the founder registered, `00006041-00146119217A801C`, **is** the Provisioning UDID, and it matches exactly the destination identifier `xcodebuild` itself reports for this machine (`id:00006041-00146119217A801C, name:My Mac` — confirmed independently in both this attempt's and Attempt 2's build output, not asserted from the founder's report alone). This is recorded as a durable correction for future JARVIS Apple-signing work — not implemented or generalized anywhere in this unit, per the governing mandate's explicit boundary.
+
+### §3 re-verification (state reconciliation before any command)
+
+- Repo: worktree `.../jarvis-d14q-provisioned-presence-proof`, branch `chore/jarvis-desktop-d14q-provisioned-presence-proof`, HEAD `9a9223b7f` — unchanged, matches the authorized continuation commit (`git log --oneline -3` confirmed).
+- Untracked generated artifacts unchanged from Attempt 2 (`D14QPresenceProof.entitlements`, `D14QPresenceProof.xcodeproj/`) — not regenerated, not modified.
+- Signing identities (`security find-identity -v -p codesigning`): **still 3 valid**, byte-identical set to Attempt 2 — `Apple Development: Kelly Nezat (N9DTF6434L)` + two `iPhone Distribution: Kelly Nezat (ZVK2X646Z2)` entries. No drift.
+- Xcode account record (`defaults read com.apple.dt.Xcode.plist IDEProvisioningTeamByIdentifier`): still exactly one team — `teamID = ZVK2X646Z2`, `teamName = "Kelly Nezat"`, `teamType = Individual`, `isFreeProvisioningTeam = 0`. Confirms the authenticated Xcode session is scoped to the correct, expected team (not a stale or wrong account) before attempting the rerun.
+- **A stale rerun log was found already present** at `xcodebuild-d14q-rerun.log` (Attempt 2's artifact, timestamp 16:27 EDT) predating this session's start. Not treated as this attempt's evidence — a fresh, independent rerun was executed and captured separately (`xcodebuild-d14q-attempt3.log`) to avoid conflating stale and current evidence.
+
+### §5 rerun — identical command, unchanged
+
+```
+xcodebuild -project D14QPresenceProof.xcodeproj -scheme D14QPresenceProof \
+  -configuration Debug -destination 'platform=macOS' -allowProvisioningUpdates build
+```
+
+**Exit: BUILD FAILED** (same failure class as Attempt 2). Full output captured at `xcodebuild-d14q-attempt3.log` (not committed, same convention as prior attempts). Timestamp: 2026-08-10 16:46:35 EDT.
+
+Decisive lines (byte-identical in substance to Attempt 2's failure, confirmed via independent rerun rather than assumed from the stale log):
+
+```
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006041-00146119217A801C, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00006041-00146119217A801C, name:My Mac }
+...
+error: Device "Kelly's Mac Studio" isn't registered in your developer account. The device must be
+registered in order to be included in a provisioning profile. (in target 'D14QPresenceProof' from
+project 'D14QPresenceProof')
+error: No profiles for 'com.soullab.jarvis.d14q.presenceproof' were found: Xcode couldn't find any Mac
+App Development provisioning profiles matching 'com.soullab.jarvis.d14q.presenceproof'. (in target
+'D14QPresenceProof' from project 'D14QPresenceProof')
+```
+
+**Decisive observation**: `xcodebuild`'s own destination-resolution line names this Mac's Provisioning UDID as `00006041-00146119217A801C` — the **exact same value** the founder registered. This directly confirms the founder registered the correct identifier (settling the Hardware-UUID-vs-Provisioning-UDID question with hard evidence, not inference) — and yet `-allowProvisioningUpdates` still reports the device as unregistered.
+
+### Phase separation
+
+- **Authentication**: not failing (no login-rejection text; consistent with Attempt 2).
+- **Account/team scoping**: confirmed correct (`ZVK2X646Z2`, matches certificate `OU` and project `DEVELOPMENT_TEAM`).
+- **Device registration**: still failing, with the exact same message as Attempt 2, despite independently confirmed use of the correct Provisioning UDID.
+- **App ID / certificate / profile / signing / build / runtime**: not reached — pre-empted by the device-registration gap, identical to Attempt 2.
+
+### Result discipline (per §11 of the mandate)
+
+- **OBSERVED**: an identical rerun of the exact command, after independently re-verifying account/team/certificate state showed no drift, still fails with Apple's explicit device-registration refusal — for the device whose Provisioning UDID is now independently confirmed (via `xcodebuild`'s own destination report) to match what the founder registered.
+- **INFERRED**: the Hardware-UUID-vs-Provisioning-UDID distinction is resolved and was not the cause of this recurrence — the correct identifier was used. The remaining gap is therefore either (a) registration propagation delay on Apple's infrastructure not yet elapsed at rerun time, or (b) the registration did not persist/save correctly on Apple's side despite the founder's UI confirmation, or (c) a further Apple-side state gap not yet identified (e.g., a pending Program License Agreement acceptance, or the device needing to be associated with this specific App ID/team in a way distinct from the general Devices list). This unit cannot discriminate among (a)/(b)/(c) without either waiting and retrying, or the founder checking the Devices list state directly on developer.apple.com — both outside this unit's remaining terminal-only means.
+- **UNRESOLVED**: whether device registration, once genuinely effective, is sufficient for the profile/build/runtime chain — still not tested, three attempts in.
+- **NOT TESTED**: profile verification (§7), signing-context proof (§8), the Security-framework presence proof (§9) — none reached; no provisioning profile exists yet to inspect or use; the D-14Q presence/keychain proof was NOT run (build never succeeded, so running it would not discriminate anything).
+
+### Classification
+
+**DEVICE FAILURE — recurrence, cause narrowed but not resolved.** Mapped to mandate outcome **C — PROVISIONING REMAINS BLOCKED BY EXTERNAL/HUMAN AUTHORITY.**
+
+- Exact command: the `xcodebuild -allowProvisioningUpdates` invocation shown above, unchanged across all three attempts.
+- Exact error: identical text to Attempt 2 — `Device "Kelly's Mac Studio" isn't registered in your developer account...` plus the downstream `No profiles ... were found`.
+- Evidence for classification: the Hardware-UUID/Provisioning-UDID ambiguity that could have explained Attempt 2's failure is now excluded by direct evidence (`xcodebuild`'s own reported destination UDID matches the founder-registered UDID exactly). The remaining explanation is Apple-account/portal-side state this unit cannot inspect or fix from Terminal alone — propagation timing, an unsaved/incomplete registration, or an adjacent portal gate (e.g. agreements). This is squarely an external/Apple-authority blocker, not a local misconfiguration, not an authentication failure, not a certificate failure (identities unchanged and valid), and not an Xcode tooling failure (identical command behaves consistently and predictably).
+- Minimum human action (not performed by this unit — outside Terminal-only means and outside this unit's authorization to visit/modify the developer portal): the founder directly re-checking developer.apple.com → Certificates, Identifiers & Profiles → Devices to confirm the entry for `Kelly's Mac Studio` / `00006041-00146119217A801C` is actually saved and shows as an active/enabled device (not pending), and separately checking developer.apple.com/account/#/agreements for any unsigned Program License Agreement update that could silently block provisioning-profile generation even with a valid device entry. If both check out, allow more propagation time (Apple's provisioning-profile generation service is not always instantaneous) and rerun the identical command unchanged.
+- Unchanged continuation point: same command, same project, same branch, same HEAD. No source, entitlement, bundle identifier, or signing-identity change was made or is being proposed in this attempt either.
+
+### Cleanup / baseline preserved (Attempt 3)
+
+- Provisioning-profile directory: still absent — unchanged before and after this attempt.
+- No key material created — build never produced a signed binary. Presence/keychain proof was not run (nothing to test).
+- `xcodebuild-d14q-attempt3.log` left alongside the Attempt-1/Attempt-2 logs as a local build artifact (not committed, same convention).
+
+## Disposition (Attempt 3, current)
+
+**D-14Q BLOCKED (Attempt 3) — DEVICE FAILURE persists; Hardware-UUID-vs-Provisioning-UDID hypothesis excluded by direct evidence; root cause narrowed to Apple-portal-side state (propagation, unsaved registration, or an adjacent agreement gate) outside Terminal-only means. Classification C — blocked by external/human authority.**
+
+Per §15 of the mandate: stopping here. Not attempting to check or modify the developer portal directly, not attempting to synthesize GUI/2FA interaction, not proceeding to Desktop packaging, Electron integration, production wiring, D-14P modification, or the next JARVIS work unit. Awaiting founder verification of the Devices/Agreements portal state (or simply more propagation time), after which the identical command reruns unchanged and this unit continues from §7 if it succeeds.
