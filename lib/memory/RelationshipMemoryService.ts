@@ -413,7 +413,9 @@ function generateRelationshipSummary(data: {
   relationshipDuration: number;
   daysSinceLastEncounter: number;
 }): string {
-  const { essence, themes, breakthroughs, relationshipPhase, totalEncounters, relationshipDuration, daysSinceLastEncounter } = data;
+  // CC-U1: `breakthroughs` and `relationshipPhase` are intentionally no longer read here.
+  // They remain on the input type so callers and future governed composition are unchanged.
+  const { essence, themes, totalEncounters, relationshipDuration, daysSinceLastEncounter } = data;
 
   if (!essence) {
     return "First encounter with this person.";
@@ -427,7 +429,11 @@ function generateRelationshipSummary(data: {
     ? "First conversation"
     : `${totalEncounters} conversations over ${relationshipDuration} days`;
 
-  parts.push(`${encounterPhrase} with ${userName} (${relationshipPhase} relationship).`);
+  // CC-U1: relationshipPhase is a system-inferred relational standing derived from a
+  // saturated scalar (morphic_resonance) — it is not a member act and must not be
+  // asserted to MAIA as fact. Elapsed time and encounter count are kept: they are
+  // countable facts about what has actually occurred between them.
+  parts.push(`${encounterPhrase} with ${userName}.`);
 
   // Time since last encounter
   if (daysSinceLastEncounter > 0) {
@@ -448,14 +454,12 @@ function generateRelationshipSummary(data: {
     parts.push(`Working with: ${themeList}.`);
   }
 
-  // Recent breakthrough
-  if (breakthroughs.length > 0 && breakthroughs[0]) {
-    const recent = breakthroughs[0];
-    const daysAgo = Math.floor((Date.now() - recent.timestamp.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysAgo <= 7) {
-      parts.push(`Recent insight: "${recent.insight}"`);
-    }
-  }
+  // CC-U1: breakthrough quotation suppressed.
+  // `breakthrough_moments` rows are written by MemoryWriteback's heuristic
+  // (significance >= 0.5 OR regex match) and store a raw extracted fragment — no
+  // member gesture, no confidence, no referent. Quoting them back as "Recent insight"
+  // presents a machine selection as the member's own recognized breakthrough.
+  // Restore only behind member affirmation standing (CC-U2).
 
   return parts.join(' ');
 }
@@ -540,36 +544,44 @@ export function formatRelationshipMemoryForPrompt(memory: RelationshipMemoryCont
   parts.push(`\n\n🌊 RELATIONSHIP MEMORY:`);
   parts.push(memory.summary);
 
-  // Add deep context for established/deep relationships
-  if (memory.relationshipPhase === 'established' || memory.relationshipPhase === 'deep') {
+  // CC-U1: the `established | deep` gate is removed.
+  // It used relationshipPhase — a system-inferred standing — as authority over how much
+  // MAIA discloses to the member. Disclosure rationing by inferred standing is the same
+  // defect as the awareness-level chain; it does not belong in the formatter.
+  //
+  // Themes and patterns render on their own merit. Note (verified 2026-08-10):
+  // `conversation_themes` and `relationship_patterns` are EMPTY in production and have
+  // no writer anywhere in the codebase, so these blocks emit nothing today. CC-U2 builds
+  // the governed producer; until then this is inert.
 
-    // Themes with context
-    if (memory.themes.length > 0) {
-      parts.push(`\nRecurring themes we've explored:`);
-      memory.themes.slice(0, 3).forEach(theme => {
-        if (theme.context) {
-          parts.push(`  - ${theme.theme}: ${theme.context}`);
-        } else {
-          parts.push(`  - ${theme.theme} (${theme.occurrences} times)`);
-        }
-      });
-    }
-
-    // Recent breakthrough
-    if (memory.recentBreakthrough) {
-      parts.push(`\nRecent breakthrough: "${memory.recentBreakthrough.insight}"`);
-      if (!memory.recentBreakthrough.integrated) {
-        parts.push(`  (Still integrating this insight)`);
+  // Themes with context
+  if (memory.themes.length > 0) {
+    parts.push(`\nRecurring themes we've explored:`);
+    memory.themes.slice(0, 3).forEach(theme => {
+      if (theme.context) {
+        parts.push(`  - ${theme.theme}: ${theme.context}`);
+      } else {
+        parts.push(`  - ${theme.theme} (${theme.occurrences} times)`);
       }
-    }
-
-    // Emerging patterns
-    if (memory.emergingPatterns.length > 0) {
-      parts.push(`\nEmerging patterns: ${memory.emergingPatterns.join(', ')}`);
-    }
+    });
   }
 
-  parts.push(`\nRelationship quality: ${memory.relationshipPhase}, trust ${(memory.trustLevel * 100).toFixed(0)}%, intimacy ${(memory.intimacyLevel * 100).toFixed(0)}%\n`);
+  // CC-U1: `Recent breakthrough: "..."` removed — see generateRelationshipSummary.
+  // The stored insight is a heuristically extracted fragment, not a member-recognized
+  // breakthrough. Restore only behind member affirmation standing (CC-U2).
+
+  // Emerging patterns
+  if (memory.emergingPatterns.length > 0) {
+    parts.push(`\nEmerging patterns: ${memory.emergingPatterns.join(', ')}`);
+  }
+
+  // CC-U1: `Relationship quality: <phase>, trust N%, intimacy N%` removed.
+  // trustLevel was raw `morphic_resonance` (1.00 on 24 of 140 production members) and
+  // intimacyLevel was arithmetic over encounter count + elapsed days. Neither had a
+  // referent, a source, or a member act behind it; rendering them as percentages
+  // manufactured a quantified relational claim the producers never made.
+  // MAIA Oath: "refusal to simulate intimacy, certainty, or power where none is
+  // ethically grounded." No replacement metric is introduced.
 
   return parts.join('\n');
 }
