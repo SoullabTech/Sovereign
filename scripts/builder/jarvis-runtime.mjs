@@ -32,6 +32,21 @@ import {
 import {
   admitRequest, publicAdmission, objectiveView, ADMISSION,
 } from './jarvis-principal.mjs';
+import {
+  verifyDelegation, delegationToUnit14, recordUse, publicDelegation, PUBLIC_REFUSAL,
+} from './jarvis-delegation.mjs';
+
+/**
+ * §18/§19 — bridge mode. When set, an enveloped request MUST present a
+ * verifiable `delegation_id`; inline self-asserted delegation metadata is
+ * refused and there is NO fallback to LOCAL_OPERATOR. Off by default so the
+ * Unit 11/12 operator path is untouched; this is the switch a bridge
+ * deployment turns on.
+ *
+ * LOCAL_OPERATOR compatibility is a compatibility path, NOT the trust
+ * mechanism for a future MAIA bridge.
+ */
+const BRIDGE_MODE = process.env.JARVIS_BRIDGE_MODE === '1';
 
 /**
  * §5/§6 — when set, a bare packet is no longer mapped to the local operator and
@@ -88,9 +103,14 @@ const workerHealth = () => new Promise((resolve) => {
  * __tests__/jarvis-runtime-proof.mjs). Omitted in every real invocation, where the
  * pipeline spawns scripts/ain-delegate.sh itself.
  */
-export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate = undefined } = {}) {
+export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate = undefined,
+  bridgeMode = undefined } = {}) {
   assertLoopback(host);
   initStore();
+
+  // Resolved per runtime instance, not captured at module load, so a bridge
+  // deployment and a test can both set it explicitly.
+  const bridge = bridgeMode ?? BRIDGE_MODE;
 
   const rt = {
     runtime_id: `rt-${randomBytes(4).toString('hex')}`,
@@ -212,6 +232,9 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
     request_id: r.request_id ?? r.admission?.request_id ?? null,
     operation_class: r.operation_class ?? r.admission?.operation_class ?? null,
     execution_sha: r.context?.execution_head ?? r.packet?.canonical_sha ?? null,
+    // §22 — a safe authority classification only. Never the issuer credential,
+    // the raw subject scope, or anything a caller could replay.
+    delegation: publicDelegation(r.delegation ? { ...r.delegation, status: 'ACTIVE' } : null),
     disposition: r.disposition ?? null, failure_class: r.failure_class ?? null,
     failure_detail: r.failure_detail ?? null, blocked: r.blocked ?? null,
     created_at: r.created_at, updated_at: r.updated_at, finished_at: r.finished_at ?? null,
@@ -285,11 +308,43 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
       const v = validatePacket(packet);
       if (!v.ok) return json(res, 400, { error: v.failure_class, errors: v.errors });
 
+      // ── Unit 15: delegation authentication, BEFORE Unit 14 trusts anything ──
+      // Ordering is: request → delegation authentication → Unit 14 validation
+      // /admission → existing runtime governance → execution.
+      let verified = null;
+      let admissionEnvelope = envelope;
+      if (envelope && (envelope.delegation_id != null || bridge)) {
+        const v = verifyDelegation({
+          delegation_id: envelope.delegation_id,
+          principal: envelope.principal,
+          subject_scope: envelope.subject_scope ?? null,
+          operation_class: envelope.operation_class,
+          target: envelope.target,
+        }, nowISO());
+        if (!v.ok) {
+          // §20 — the public surface is coarse; the exact reason is retained in
+          // the runtime log for audit rather than handed to the caller.
+          rt.last_error = { at: nowISO(), message: `delegation refused: ${v.refusal}` };
+          return json(res, 403, { error: PUBLIC_REFUSAL, detail: 'a verified delegation is required for this request' });
+        }
+        verified = v.delegation;
+        // The delegation Unit 14 reasons about is rebuilt from the AUTHORITATIVE
+        // record. Nothing the caller sent survives — so a caller cannot extend
+        // expiry, widen targets, or strip prohibitions (§13, §16).
+        admissionEnvelope = {
+          ...envelope,
+          delegation: delegationToUnit14(verified),
+          subject_scope: verified.subject_scope,
+        };
+      } else if (bridge && !envelope) {
+        return json(res, 403, { error: PUBLIC_REFUSAL, detail: 'a verified delegation is required for this request' });
+      }
+
       // §1 — principal → delegation → admission, decided BEFORE anything is
       // queued or dispatched. Authority is never inferred from the fact that
       // the caller could reach this socket.
       const adm = admitRequest({
-        envelope,
+        envelope: admissionEnvelope,
         packet,
         now: nowISO(),
         requirePrincipal: REQUIRE_PRINCIPAL,
@@ -314,9 +369,21 @@ export function createRuntime({ host = '127.0.0.1', port = 8787, spawnDelegate =
         objective: adm.admission.objective,
         operation_class: adm.admission.operation_class,
         admission: adm.admission,
+        // §21 — audit retains the verified grant this run executed under.
+        delegation: verified
+          ? {
+            delegation_id: verified.delegation_id, issuer: verified.issuer,
+            operation_class: verified.operation_class, allowed_targets: verified.allowed_targets,
+            target: envelope?.target ?? null, subject_scope: verified.subject_scope,
+            issued_at: verified.issued_at, expires_at: verified.expires_at,
+            prohibited_operations: verified.prohibited_operations,
+            prohibited_targets: verified.prohibited_targets, purpose: verified.purpose,
+          }
+          : null,
         disposition: null, failure_class: null, history: [{ at: nowISO(), from: null, to: 'QUEUED' }],
       };
       saveRun(run);
+      if (verified) recordUse(verified.delegation_id, run.request_id);
       emit('run.created', {
         run_id: run.run_id, request_id: run.request_id, work_unit_id: packet.work_unit_id,
         lane: packet.execution_lane, principal_type: adm.admission.principal_type,

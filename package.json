@@ -161,7 +161,8 @@
     "jarvis:proof": "node scripts/builder/__tests__/session-proof.mjs && node scripts/builder/__tests__/orient-proof.mjs && node scripts/builder/__tests__/continue-proof.mjs && node scripts/builder/__tests__/rate-proof.mjs && node scripts/builder/__tests__/loop-governance-proof.mjs && node scripts/builder/__tests__/incident-scenario-proof.mjs",
     "jarvis:desktop": "npm --prefix desktop-app run jarvis",
     "jarvis:desktop:proof": "node scripts/builder/__tests__/jarvis-desktop-proof.mjs",
-    "jarvis:principal:proof": "node scripts/builder/__tests__/jarvis-principal-proof.mjs"
+    "jarvis:principal:proof": "node scripts/builder/__tests__/jarvis-principal-proof.mjs",
+    "jarvis:delegation:proof": "node scripts/builder/__tests__/jarvis-delegation-proof.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
