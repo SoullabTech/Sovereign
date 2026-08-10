@@ -68,6 +68,10 @@ try {
   const SID_A = a.out;
   assert('first write session is admitted', a.code === 0, `exit=${a.code} sid=${SID_A}`);
   assert('a session id was issued', /^s-[0-9a-f]{8}$/.test(SID_A), `got "${SID_A}"`);
+  // Since 2026-08-10 a lease token is issued at open and is required to heartbeat or
+  // sync: a heartbeat asserts ownership, and knowing a session id is not ownership.
+  const TOKEN_A = /BUILDER_LEASE_TOKEN=([0-9a-f]+)/.exec(a.err)?.[1];
+  assert('open issues a lease token for the owner', !!TOKEN_A, 'no token on stderr');
 
   // independently derive what the registry SHOULD have recorded
   const derivedBranchA = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: REPO_A, encoding: 'utf8' }).trim();
@@ -148,7 +152,7 @@ try {
 
   // ═══════════════════════════════════════════════════════════════════════════
   console.log('\n=== PROOF 7: unexpected DIRTY-SET mutation is detected ===');
-  s(['sync', '--session', SID_A, '--reason', 'acknowledged the intruder commit for test purposes']);
+  s(['sync', '--session', SID_A, '--reason', 'acknowledged the intruder commit for test purposes', '--token', TOKEN_A]);
   const cleanAgain = s(['check', '--session', SID_A]);
   assert('acknowledging via sync clears the collision state', cleanAgain.code === 0, `exit=${cleanAgain.code}`);
 

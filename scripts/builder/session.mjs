@@ -165,16 +165,50 @@ function measure(worktree) {
  *   counts_active : conservative for BUDGET (a dead pid still holds capacity until
  *                   a human recovers it, so we never silently free a slot)
  *   recoverable   : conservative for REAPING (needs pid gone AND long quiet)
+ *
+ * A heartbeat is an AUTHORITY ASSERTION — "I still hold execution authority" — not
+ * evidence that something touched the record. Before 2026-08-10 any same-host caller
+ * that knew a session id could refresh any lease, and `check` refreshed it as a side
+ * effect of being *read*. A claim whose registered pid had died could therefore be kept
+ * perpetually fresh by an unidentified writer and never became recoverable, holding a
+ * capacity slot forever (see docs/ops/JARVIS_BUILDER_LIVENESS_AUTHORITY_2026-08-10.md).
+ *
+ * So: only an AUTHENTICATED heartbeat extends the lease. Unauthenticated touches are
+ * recorded separately, as evidence of ambiguity — never as evidence of life.
+ *
+ * PID death and lease freshness are reported as SEPARATE signals; neither alone
+ * defines ownership. `claim_state` is the derived semantic answer.
  */
 function liveness(rec, cfg) {
   const alive = pidAlive(rec.pid);
-  const ageS = (Date.now() - new Date(rec.last_heartbeat || rec.opened_at).getTime()) / 1000;
+  const leaseAgeS = (Date.now() - new Date(rec.last_heartbeat || rec.opened_at).getTime()) / 1000;
   const open = !rec.closed_at && rec.state === 'active';
+  const authenticated = !!rec.lease_fingerprint;
+  const unauthAgeS = rec.last_unauthenticated_touch
+    ? (Date.now() - new Date(rec.last_unauthenticated_touch).getTime()) / 1000 : null;
+  const unauthRecent = unauthAgeS !== null && unauthAgeS <= cfg.stale_after_s;
+  const leaseStale = leaseAgeS > cfg.stale_after_s;
+
+  // Derived ownership. Order matters: a living process outranks every other signal.
+  let claim_state;
+  if (alive) claim_state = 'LIVE';
+  else if (authenticated && !leaseStale) claim_state = 'LIVE';        // legitimate supervisor lease
+  else if (unauthRecent) claim_state = 'AMBIGUOUS_OWNERSHIP';         // something touches it; nobody owns it
+  else if (leaseStale) claim_state = 'STALE';
+  else claim_state = 'QUIET';                                         // recently gone, not yet stale
+
   return {
     pid_alive: alive,
-    heartbeat_age_s: Math.round(ageS),
+    lease_authenticated: authenticated,
+    heartbeat_age_s: Math.round(leaseAgeS),
+    unauthenticated_touch_age_s: unauthAgeS === null ? null : Math.round(unauthAgeS),
+    claim_state,
     counts_active: open,
-    recoverable: open && !alive && ageS > cfg.stale_after_s,
+    // Ordinary recovery is for genuine absence of ownership only.
+    recoverable: open && claim_state === 'STALE',
+    // Ambiguity is never permanently deadlocked: once the LEASE itself has aged past
+    // the threshold, a governed reconciliation becomes available (never plain recover).
+    reconcilable: open && claim_state === 'AMBIGUOUS_OWNERSHIP' && leaseStale,
   };
 }
 
@@ -265,9 +299,17 @@ function cmdOpen() {
     }
   }
 
+  // The lease secret is the smallest primitive that distinguishes "the owner is alive"
+  // from "someone on this host knows the session id". user@host cannot: on a
+  // single-user machine every concurrent lane resolves to the identical owner string.
+  // Only the fingerprint is persisted — the record is world-readable, so storing the
+  // token itself would hand the authority to every reader.
+  const leaseToken = randomBytes(16).toString('hex');
   const rec = {
     session_id: sid, work_unit: unit, branch, worktree, owner: owner(), pid: process.ppid,
     model, mode, opened_at: nowISO(), last_heartbeat: nowISO(), state: 'active',
+    lease_fingerprint: createHash('sha256').update(leaseToken).digest('hex'),
+    last_unauthenticated_touch: null, unauthenticated_touches: 0,
     override: override ? { reason: override, by: owner(), at: nowISO() } : null,
     baseline: mode === 'write' ? measure(worktree) : null,
     baseline_set_at: nowISO(), collisions: [],
@@ -278,6 +320,8 @@ function cmdOpen() {
   console.error(`[builder/session] opened ${sid}  unit=${unit}  mode=${mode}  model=${model}`);
   if (rec.baseline) console.error(`[builder/session] baseline branch=${rec.baseline.branch} head=${String(rec.baseline.head_sha).slice(0, 8)} dirty=${rec.baseline.dirty_count}`);
   if (mode === 'read-only') console.error(`[builder/session] READ-ONLY — no worktree ownership acquired, no write authority.`);
+  console.error(`[builder/session] lease token (keep it; required to heartbeat/sync this claim):`);
+  console.error(`                  BUILDER_LEASE_TOKEN=${leaseToken}`);
   console.log(sid);
 }
 
@@ -288,9 +332,42 @@ function requireRec(id) {
   return rec;
 }
 
+/**
+ * Does this caller hold the lease? Token may arrive by flag or environment so an owning
+ * process can export it once. A claim opened before the lease existed has no fingerprint
+ * and therefore cannot authenticate anyone — such claims degrade to AMBIGUOUS rather than
+ * silently retaining the old "anyone may refresh" authority.
+ */
+function leaseHeld(rec) {
+  const token = opt('--token') || process.env.BUILDER_LEASE_TOKEN || null;
+  if (!rec.lease_fingerprint) return { ok: false, reason: 'claim predates lease authority (no fingerprint)' };
+  if (!token) return { ok: false, reason: 'no lease token supplied' };
+  return createHash('sha256').update(token).digest('hex') === rec.lease_fingerprint
+    ? { ok: true }
+    : { ok: false, reason: 'lease token does not match' };
+}
+
+/** Record an unauthenticated touch as evidence of ambiguity — never as evidence of life. */
+function recordUnauthenticatedTouch(rec, command) {
+  rec.last_unauthenticated_touch = nowISO();
+  rec.unauthenticated_touches = (rec.unauthenticated_touches || 0) + 1;
+  writeRec(rec);
+  ledger({ event: 'unauthenticated_touch', session_id: rec.session_id, command, by: owner() });
+}
+
 function cmdHeartbeat() {
-  const rec = requireRec(opt('--session') || die('usage: heartbeat --session <id>'));
+  const rec = requireRec(opt('--session') || die('usage: heartbeat --session <id> --token <t>'));
   if (rec.state !== 'active') die(`session ${rec.session_id} is ${rec.state}, not active`, 1);
+  const held = leaseHeld(rec);
+  if (!held.ok) {
+    recordUnauthenticatedTouch(rec, 'heartbeat');
+    console.error(`\n🛑 HEARTBEAT REFUSED — ${held.reason}.`);
+    console.error(`   A heartbeat asserts "I still hold execution authority". Knowing a session id`);
+    console.error(`   on this host is not that authority. The lease was NOT extended; this touch is`);
+    console.error(`   recorded as evidence of ambiguous ownership.`);
+    console.error(`   Supply the token printed at open:  --token <t>  or  BUILDER_LEASE_TOKEN=<t>\n`);
+    process.exit(1);
+  }
   rec.last_heartbeat = nowISO();
   writeRec(rec);
   console.log('ok');
@@ -316,8 +393,11 @@ function cmdCheck() {
   if (ownerNow !== rec.owner) moved.push({ field: 'owner', expected: rec.owner, found: ownerNow });
 
   if (moved.length === 0) {
-    rec.last_heartbeat = nowISO();
-    writeRec(rec);
+    // OBSERVATIONAL. `check` answers a question about the WORKTREE ("is the artifact
+    // still stable?"). A heartbeat asserts something about the OWNER ("I am still the
+    // legitimate executor"). Those are different claims with different speakers, and
+    // fusing them meant auditing a claim refreshed it — an investigator could not measure
+    // staleness without destroying it. Observing claim state must never refresh liveness.
     console.log(JSON.stringify({ session_id: rec.session_id, verdict: 'OK', measured: cur }, null, 2));
     return;
   }
@@ -343,6 +423,16 @@ function cmdSync() {
   const rec = requireRec(opt('--session') || die('usage: sync --session <id> --reason "<why>"'));
   const reason = opt('--reason') || die('--reason required — an unexplained baseline reset is indistinguishable from hiding a collision');
   if (rec.mode === 'read-only') die('read-only sessions have no baseline to sync', 1);
+  // sync resets the collision baseline — an owner-only act. Without proof of lease this
+  // would let any caller both re-baseline and refresh another lane's liveness.
+  const heldSync = leaseHeld(rec);
+  if (!heldSync.ok) {
+    recordUnauthenticatedTouch(rec, 'sync');
+    console.error(`\n🛑 SYNC REFUSED — ${heldSync.reason}.`);
+    console.error(`   Resetting a baseline is an ownership act: it declares "I made this change".`);
+    console.error(`   The lease was NOT extended and the baseline was NOT reset.\n`);
+    process.exit(1);
+  }
   const before = rec.baseline;
   rec.baseline = measure(rec.worktree);
   rec.baseline_set_at = nowISO();
@@ -377,8 +467,21 @@ function cmdRecover() {
   const reason = opt('--reason') || die('--reason required — recovery is an audited act');
   const lv = liveness(rec, cfg);
   if (!lv.counts_active) die(`session ${rec.session_id} is ${rec.state} — nothing to recover`, 1);
+  if (lv.claim_state === 'AMBIGUOUS_OWNERSHIP' && !flag('--force')) {
+    console.error(`\n🛑 RECOVERY REFUSED — session ${rec.session_id} is AMBIGUOUS_OWNERSHIP.`);
+    console.error(`   pid ${rec.pid} alive: ${lv.pid_alive}   lease age: ${lv.heartbeat_age_s}s   authenticated: ${lv.lease_authenticated}`);
+    console.error(`   unauthenticated touches: ${rec.unauthenticated_touches || 0} (last ${lv.unauthenticated_touch_age_s}s ago)`);
+    console.error(`   Something is touching this claim, but nothing has proven ownership of it.`);
+    console.error(`   That is a governance question, not a staleness question — ordinary recovery`);
+    console.error(`   cannot answer it. Use the governed path:`);
+    console.error(`     session.mjs reconcile --session ${rec.session_id} --reason "<why>"`);
+    console.error(`   ${lv.reconcilable ? 'The lease has aged past the threshold — reconcile is available now.'
+      : `Available once the lease itself ages past ${cfg.stale_after_s}s.`}\n`);
+    process.exit(1);
+  }
   if (!lv.recoverable && !flag('--force')) {
     console.error(`\n🛑 RECOVERY REFUSED — session ${rec.session_id} does not meet the stale test.`);
+    console.error(`   claim state: ${lv.claim_state}`);
     console.error(`   pid ${rec.pid} alive: ${lv.pid_alive}   quiet for: ${lv.heartbeat_age_s}s   threshold: ${cfg.stale_after_s}s`);
     console.error(`   A session is not abandoned merely because it went quiet.`);
     console.error(`   Both conditions are required: process gone AND quiet past the threshold.`);
@@ -388,10 +491,66 @@ function cmdRecover() {
   rec.state = 'abandoned';
   rec.closed_at = nowISO();
   rec.duration_s = Math.round((new Date(rec.closed_at) - new Date(rec.opened_at)) / 1000);
-  rec.recovered = { at: nowISO(), by: owner(), reason, forced: flag('--force'), pid_alive_at_recovery: lv.pid_alive, quiet_s: lv.heartbeat_age_s };
+  // Exceptional authority must be legible after the fact: what was bypassed, and what the
+  // governor actually believed at the moment of the bypass.
+  rec.recovered = {
+    at: nowISO(), by: owner(), reason, forced: flag('--force'),
+    pid_alive_at_recovery: lv.pid_alive, quiet_s: lv.heartbeat_age_s,
+    claim_state_at_recovery: lv.claim_state,
+    normal_recoverable: lv.recoverable,
+    conflicting_liveness: !lv.pid_alive && lv.claim_state === 'AMBIGUOUS_OWNERSHIP',
+    lease_authenticated: lv.lease_authenticated,
+    unauthenticated_touches: rec.unauthenticated_touches || 0,
+    safeguards_bypassed: flag('--force')
+      ? [!lv.recoverable ? 'stale-test' : null, lv.claim_state === 'AMBIGUOUS_OWNERSHIP' ? 'ambiguous-ownership-gate' : null].filter(Boolean)
+      : [],
+  };
   writeRec(rec);
   ledger({ event: 'recovered', session_id: rec.session_id, work_unit: rec.work_unit, by: owner(), reason, forced: flag('--force') });
   console.error(`[builder/session] recovered ${rec.session_id} — claim released, state=abandoned.`);
+  console.log('ok');
+}
+
+/**
+ * The governed escape from AMBIGUOUS_OWNERSHIP. This is deliberately NOT `--force`:
+ * force bypasses a safeguard, reconcile *discharges* one by proving the thing the
+ * safeguard was protecting. The claim becomes reconcilable only once the lease itself
+ * has aged past the stale threshold — i.e. no authenticated owner has spoken for it in
+ * a full interval — so a genuinely live supervisor can always keep its claim by simply
+ * heartbeating with its token. Ambiguity therefore cannot become a permanent deadlock,
+ * and cannot be used to evict a lane that still holds authority.
+ */
+function cmdReconcile() {
+  const cfg = config();
+  const rec = requireRec(opt('--session') || die('usage: reconcile --session <id> --reason "<why>"'));
+  const reason = opt('--reason') || die('--reason required — reconciliation is an audited act');
+  const lv = liveness(rec, cfg);
+  if (!lv.counts_active) die(`session ${rec.session_id} is ${rec.state} — nothing to reconcile`, 1);
+  if (lv.claim_state !== 'AMBIGUOUS_OWNERSHIP') {
+    die(`session ${rec.session_id} is ${lv.claim_state}, not AMBIGUOUS_OWNERSHIP — use the ordinary path`, 1);
+  }
+  if (!lv.reconcilable) {
+    console.error(`\n🛑 RECONCILE REFUSED — the lease has not yet aged past the threshold.`);
+    console.error(`   lease age ${lv.heartbeat_age_s}s / threshold ${cfg.stale_after_s}s`);
+    console.error(`   An authenticated owner speaking within the interval keeps this claim.\n`);
+    process.exit(1);
+  }
+  rec.state = 'abandoned';
+  rec.closed_at = nowISO();
+  rec.duration_s = Math.round((new Date(rec.closed_at) - new Date(rec.opened_at)) / 1000);
+  rec.reconciled = {
+    at: nowISO(), by: owner(), reason,
+    claim_state_at_reconcile: lv.claim_state,
+    lease_age_s: lv.heartbeat_age_s,
+    unauthenticated_touches: rec.unauthenticated_touches || 0,
+    last_unauthenticated_touch: rec.last_unauthenticated_touch,
+    resolution: 'no authenticated owner spoke for a full stale interval',
+  };
+  writeRec(rec);
+  ledger({ event: 'reconciled', session_id: rec.session_id, work_unit: rec.work_unit, by: owner(), reason,
+           unauthenticated_touches: rec.unauthenticated_touches || 0 });
+  console.error(`[builder/session] reconciled ${rec.session_id} — ambiguous claim released, state=abandoned.`);
+  console.error(`[builder/session] no process was signalled; reconciliation is a governance act.`);
   console.log('ok');
 }
 
@@ -480,8 +639,16 @@ function cmdStatus() {
   if (!active.length) console.log(`  (none)`);
   for (const r of active) {
     const lv = liveness(r, cfg);
-    const warn = lv.recoverable ? '  ⚠ RECOVERABLE (process gone + quiet past threshold)'
-      : (!lv.pid_alive ? '  ⚠ process gone — still holds its claim until recovered' : '');
+    // Operators must not infer ownership from one lower-quality signal while the governor
+    // holds stronger conflicting evidence. PID death alone is no longer the headline cue —
+    // the derived claim_state is, with the raw signals shown beneath it.
+    const warn = lv.claim_state === 'AMBIGUOUS_OWNERSHIP'
+      ? `  🔶 AMBIGUOUS_OWNERSHIP — process dead, lease ${lv.heartbeat_age_s}s old, `
+        + `${rec.unauthenticated_touches || 0} unauthenticated touch(es); no proven owner. `
+        + (lv.reconcilable ? 'reconcile available.' : 'not yet reconcilable.')
+      : lv.recoverable ? '  ⚠ RECOVERABLE (process gone + lease quiet past threshold)'
+      : (!lv.pid_alive && lv.lease_authenticated ? `  ● LIVE via authenticated lease (pid gone, lease ${lv.heartbeat_age_s}s old)`
+      : (!lv.pid_alive ? '  ⚠ process gone — still holds its claim until recovered' : ''));
     console.log(`  ${r.session_id}  ${r.work_unit}`);
     console.log(`      model     ${r.model}   mode ${r.mode}`);
     console.log(`      branch    ${r.branch}`);
@@ -561,20 +728,25 @@ switch (cmd) {
   case 'sync': cmdSync(); break;
   case 'close': cmdClose(); break;
   case 'recover': cmdRecover(); break;
+  case 'reconcile': cmdReconcile(); break;
   case 'status': cmdStatus(); break;
   case 'report': cmdReport(); break;
   default:
-    console.error(`usage: session.mjs <open|heartbeat|check|sync|close|recover|status|report> [flags]
+    console.error(`usage: session.mjs <open|heartbeat|check|sync|close|recover|reconcile|status|report> [flags]
 
   open     --unit <id> --branch <b> [--worktree <p>] [--model <m>] [--read-only]
-           [--queue] [--override "<reason>"]     → prints session_id
-  heartbeat --session <id>
-  check     --session <id>                        → exit 2 on collision
-  sync      --session <id> --reason "<why>"
+           [--queue] [--override "<reason>"]     → prints session_id + lease token
+  heartbeat --session <id> --token <t>            (or BUILDER_LEASE_TOKEN=<t>)
+  check     --session <id>                        → exit 2 on collision — OBSERVATIONAL
+  sync      --session <id> --reason "<why>" --token <t>
   close     --session <id> --state completed|handed-off|paused|abandoned
-  recover   --session <id> --reason "<why>" [--force]
+  recover   --session <id> --reason "<why>" [--force]      stale claims only
+  reconcile --session <id> --reason "<why>"                AMBIGUOUS_OWNERSHIP only
   status    [--json]
   report    [--since <iso>] [--json]
+
+  A heartbeat asserts "I still hold execution authority" and requires the lease token
+  printed at open. Observation (check/status) never refreshes a lease.
 
   home: ${HOME}   (override with AIN_DELEGATION_HOME)
   limit: BUILDER_MAX_CLAUDE_SESSIONS or ${CONFIG} or default ${DEFAULT_MAX}`);
