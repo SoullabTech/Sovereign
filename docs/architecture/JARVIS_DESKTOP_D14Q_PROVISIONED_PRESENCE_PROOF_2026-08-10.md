@@ -234,3 +234,147 @@ App Development provisioning profiles matching 'com.soullab.jarvis.d14q.presence
 **D-14Q BLOCKED (Attempt 3) — DEVICE FAILURE persists; Hardware-UUID-vs-Provisioning-UDID hypothesis excluded by direct evidence; root cause narrowed to Apple-portal-side state (propagation, unsaved registration, or an adjacent agreement gate) outside Terminal-only means. Classification C — blocked by external/human authority.**
 
 Per §15 of the mandate: stopping here. Not attempting to check or modify the developer portal directly, not attempting to synthesize GUI/2FA interaction, not proceeding to Desktop packaging, Electron integration, production wiring, D-14P modification, or the next JARVIS work unit. Awaiting founder verification of the Devices/Agreements portal state (or simply more propagation time), after which the identical command reruns unchanged and this unit continues from §7 if it succeeds.
+
+## Attempt 4 (2026-08-10, same day — remote-state verification via App Store Connect API)
+
+**What changed vs. Attempts 1–3**: nothing local. Attempts 1–3 all ended at the same `xcodebuild` refusal
+and could not discriminate *why*, because every available signal was local. Attempt 4 did not rerun the
+build. It first answered the prior attempts' explicitly-named unresolved question — *does Apple actually
+have this Mac registered?* — using an authoritative, read-only, non-mutating remote source.
+
+### §1 — Governance baseline
+
+- Worktree: `/Users/soullab/MAIA-SOVEREIGN/.claude/worktrees/jarvis-d14q-provisioned-presence-proof`
+- Branch: `chore/jarvis-desktop-d14q-provisioned-presence-proof`
+- HEAD at entry: `c66182b1db897cc97f45bf12ab3e4e4979489e19` — the mandated continuation point, unchanged.
+- Dirty state at entry: 2 untracked paths only — `D14QPresenceProof.entitlements` and
+  `D14QPresenceProof.xcodeproj/` (the Attempt-1 generated provisioning vehicle). No tracked modifications.
+- Builder capacity: 0 / 2 Claude sessions active; D-14Q not owned by any live claim. Claim opened
+  legitimately as `s-1c2a1a26` (write mode). No claim evicted, no forced recovery, no `--no-verify`.
+- D-14P: not read, not modified, not touched.
+
+### §3 — Read-only remote verification (the decisive step)
+
+Established Facts 1–6 were re-checked rather than assumed, and one near-miss correction is recorded below.
+
+**Correction recorded (a re-litigation that was attempted and then withdrawn on evidence):** the
+development certificate's Common Name is `Apple Development: Kelly Nezat (N9DTF6434L)`, which momentarily
+looked like a *second team* contradicting Established Fact 2. It is not. The full subject is:
+
+```
+subject=UID=2Y6RN5Q279, CN=Apple Development: Kelly Nezat (N9DTF6434L), OU=ZVK2X646Z2, O=Kelly Nezat, C=US
+```
+
+`N9DTF6434L` is the **certificate identifier**; the **team** is the `OU`, `ZVK2X646Z2`. Established Fact 2
+stands, and Attempt 3's statement that the certificate OU matches the team was correct. Recorded because the
+mandate requires contradictory-looking evidence to be surfaced and resolved rather than silently dropped.
+
+**Method.** An App Store Connect API key already provisioned on this machine was used to make read-only
+`GET` calls. No credential was entered into any interface, nothing was created, modified, or deleted:
+
+- Key: `~/.appstoreconnect/private_keys/AuthKey_36J9MBP9U6.p8` (issuer `2f3ea491-…-3c50172f10ab`)
+- Team scope confirmed **from the response itself**, not assumed: the returned profile payload carries
+  `ApplicationIdentifierPrefix = ZVK2X646Z2`. The key is querying the correct team.
+- Cross-checked with the second local key (`AuthKey_RZJ852Y4NZ.p8`) — byte-identical device results.
+
+**Results** (all HTTP 200, 2026-08-10 ~17:05 EDT):
+
+| Query | Result |
+|---|---|
+| `GET /v1/devices?limit=200` | `total: 1` — a single `iPhone 16 Pro Max`, UDID `00008140-00163D9922E0801C`, platform `IOS`, status `ENABLED` |
+| `GET /v1/devices?filter[udid]=00006041-00146119217A801C` | `total: 0` — **the Mac Studio is not in the registry** |
+| `GET /v1/devices?filter[platform]=MAC_OS` | `total: 0` — no Mac devices at all on this team |
+| `GET /v1/devices?filter[status]=DISABLED` | `total: 0` — nothing present-but-disabled |
+| `GET /v1/bundleIds?filter[identifier]=com.soullab.jarvis.d14q.presenceproof` | `total: 0` — App ID never created (consistent: `-allowProvisioningUpdates` aborted before creating it) |
+| `GET /v1/profiles?filter[profileType]=MAC_APP_DEVELOPMENT` | `total: 0` — no Mac development profile exists |
+
+**Why the `MAC_OS` query matters (validity control).** A `total: 0` for Mac devices would be worthless if the
+API simply could not represent Mac devices. It can: `filter[platform]=MAC_OS` was **accepted** (HTTP 200 with
+an empty set), not rejected as an invalid enum value (HTTP 400). The empty result is therefore a real
+statement about the registry, not an artifact of the instrument.
+
+### Result discipline
+
+- **OBSERVED**: team `ZVK2X646Z2`'s device registry currently contains exactly one device — an iPhone. The
+  Provisioning UDID `00006041-00146119217A801C` returns zero matches on direct lookup. There are zero Mac
+  devices and zero disabled devices on the team.
+- **INFERRED**: `xcodebuild`'s refusal in Attempts 2 and 3 was **accurate reporting of true remote state**,
+  not a stale cache, not a propagation lag, and not an Xcode tooling defect. The three-way ambiguity
+  Attempt 3 left open — (a) propagation delay / (b) registration did not persist / (c) some other portal
+  gate — collapses: whatever the cause, the device is **not registered now**, ~20 minutes after Attempt 3
+  and after the founder's confirmation. Apple's own API and Xcode agree; there is no
+  remote-state/Xcode disagreement to investigate.
+- **NOT ESTABLISHED — and deliberately not inferred**: *why* the registration is absent. This record does
+  **not** claim the founder's registration attempt failed, was mis-entered, or was not made. It states only
+  what the registry contains right now. A plausible and specific candidate worth the operator's attention:
+  a Mac must be registered with **Platform: macOS**; a Mac UDID entered under the iOS device flow does not
+  produce a Mac device entry. This is a hypothesis for the operator to check, not a finding.
+- **NOT DETERMINABLE from this instrument**: whether an unsigned Apple Developer Program License Agreement
+  is separately pending. The App Store Connect API exposes no agreements resource. This remains an open
+  question for portal inspection, but it is **not** needed to explain the current failure — device absence
+  is already sufficient and specific.
+- **NOT TESTED (unchanged from Attempts 1–3)**: §7 profile verification, §8 signing-context proof, §9/§10
+  the Security-framework presence/keychain proof. No provisioning profile exists to inspect. The D-14 keychain
+  proof was **not** run — running it now would discriminate nothing. The governing question — *does valid
+  Apple development provisioning cross the prior `-34018` boundary?* — remains **untested after four attempts**.
+
+### Supersession of earlier interpretation
+
+Attempt 3's §Classification treated propagation delay and an unsaved registration as live, co-equal
+possibilities, and recommended "allow more propagation time and rerun the identical command." That
+recommendation is **superseded**: rerunning the build is now known to be futile until the device exists.
+Attempt 3's *evidence* and its exclusion of the Hardware-UUID/Provisioning-UDID hypothesis both stand
+unamended — only the forward recommendation changes. Attempts 1–3 are otherwise left as written.
+
+### §5 not executed — deliberately
+
+The mandate authorizes rerunning the unchanged build **only** under §5 (device PRESENT + ENABLED). The device
+is ABSENT, so §7 governs and the build was not rerun. This is a decision, not an omission.
+
+### Classification (§11)
+
+**C — EXTERNAL / APPLE AUTHORITY BLOCKER REMAINS.** Specifically, mandate §7:
+**DEVICE ABSENT FROM TEAM REGISTRY.**
+
+Same disposition letter as Attempt 3, but no longer the same epistemic state: Attempt 3 was blocked *and*
+could not say why; Attempt 4 is blocked with the cause located and the alternatives eliminated.
+
+§7 verification checklist, completed:
+- Correct team — **yes**, `ZVK2X646Z2`, confirmed from the API response payload rather than assumed.
+- Correct Provisioning UDID — **yes**, `00006041-00146119217A801C`, corroborated by `xcodebuild`'s own
+  destination resolution (Established Fact 5).
+- Device quota — **not a factor**; 1 device registered, nowhere near any limit.
+- Does Apple permit registration — **yes**; no quota, membership, or device-status obstruction is visible.
+
+### Minimum human action required
+
+Register this Mac in the Apple Developer portal → Certificates, Identifiers & Profiles → Devices, using:
+
+- **Platform: macOS** (not iOS — see the hypothesis above)
+- **Device ID (UDID):** `00006041-00146119217A801C`
+- **Name:** any; `Kelly's Mac Studio` matches what Xcode reports.
+- Team: `ZVK2X646Z2`
+
+While in the portal, also note whether any outstanding agreement/banner requires acceptance.
+
+Per the safety constraint governing this unit, no Apple account authentication, agreement acceptance, or
+portal mutation was performed or simulated. This unit does not perform the registration.
+
+### Cleanup / baseline preserved (Attempt 4)
+
+- No build was run; no new build log was produced.
+- Provisioning-profile directory: unchanged (no Mac development profile before or after).
+- No App ID, certificate, profile, device, or key material was created, modified, or deleted — locally or at Apple.
+- No key material or presence/keychain proof executed.
+- D-14P: untouched.
+
+## Disposition (Attempt 4, current)
+
+**D-14Q BLOCKED (Attempt 4) — Classification C, mandate §7: DEVICE ABSENT FROM TEAM REGISTRY.** Verified
+against Apple's own authoritative read-only API rather than local caches or portal screenshots. The
+"registered but still refused" paradox of Attempt 3 is resolved: the device is genuinely not registered, and
+`xcodebuild` was telling the truth. Unchanged continuation point — same command, same project, same branch,
+same HEAD; no source, entitlement, bundle-identifier, or signing-identity change was made or is proposed.
+Resume at §5 (unchanged rerun) once `00006041-00146119217A801C` appears as an enabled **macOS** device on
+team `ZVK2X646Z2` — which this unit can now re-verify in seconds via the same read-only API call before
+spending another build.
