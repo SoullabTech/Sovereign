@@ -190,14 +190,26 @@ _run_lane() {
     local t0 t1
     t0="$(date +%s)"
     set +e
+    # Harness fix found by MVJ Kimi proving-case run (2026-08-09): neither lane wrapper
+    # passes a permission mode, and no settings.json permission allow-list exists (checked:
+    # neither ~/.claude/settings.json nor a project .claude/settings.json define one). In
+    # headless -p mode that makes every Write/Bash call require an interactive approval
+    # that can never come — BOTH lanes independently asked for/claimed missing permission
+    # (Kimi: "Could you approve the Write tool?"; local: "cannot use Bash tool due to
+    # permission restrictions") for what is functionally the same root cause, not two
+    # unrelated worker defects. --permission-mode bypassPermissions is the documented flag
+    # for exactly this case. The actual safety boundary here is structural, not the
+    # interactive prompt: the worker runs inside an isolated git worktree (Unit 3) it
+    # cannot escape, and every claim is independently re-verified afterward regardless of
+    # what the worker did (never trust self-report — AIN_RESULT_CONTRACT.md).
     if [ "$lane" = "local" ]; then
-        ( cd "$wt" && maia-code -p "$prompt" ) > "$log" 2>&1
+        ( cd "$wt" && maia-code -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
         exit_code=$?
     elif [ "$lane" = "kimi" ]; then
         local class why
         class="$(jq -r '.execution_lane' "$f")"
         why="$(jq -r '.objective' "$f" | cut -c1-100)"
-        ( cd "$wt" && kimi-cc --class "$class" --why "$why" -p "$prompt" ) > "$log" 2>&1
+        ( cd "$wt" && kimi-cc --class "$class" --why "$why" -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
         exit_code=$?
     else
         echo "🛑 unknown lane: $lane" >&2

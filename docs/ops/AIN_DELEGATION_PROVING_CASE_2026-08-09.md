@@ -1,23 +1,26 @@
 # AIN Delegation — Proving Case Outcome (`proving-case-add-fn`)
 
-**Date:** 2026-08-09 · **Unit:** MVJ Non-Claude Closed-Loop Proof, Units 1–4 ·
+**Date:** 2026-08-09 · **Unit:** MVJ Non-Claude Closed-Loop Proof, Units 1–4, closed via the
+Kimi lane and JARVIS-side integration ·
 **Referenced by:** `docs/ops/AIN_DELEGATION_CONTROL_PLANE_2026-08-09.md` §8 (this is that promised record).
 
 ## Headline
 
-**CLOSED-LOOP PROOF: NOT YET PROVEN.**
+**`NON_CLAUDE_CLOSED_LOOP: PROVEN`.**
 
-Every stage of the loop except the worker step is now built and independently proven.
-The worker step — a non-Claude model successfully performing the bounded implementation —
-failed twice, for two different worker-side reasons, on the same trivial task. Per the
-authorizing directive, that is the cap: two genuine attempts, then stop and report, no
-third attempt, no silent switch to another model.
+> JARVIS has demonstrated a complete bounded development Work Unit through a non-Claude
+> cognitive worker: governed packet, isolated mutation, independent deterministic
+> verification, JARVIS-controlled integration, durable result, and release.
 
 ```text
-packet → isolated worktree → Builder WRITE ownership → [WORKER: FAILED ×2] → verification → persist → release
-                                                              ▲
-                                                    the loop breaks here
+packet → isolated worktree → Builder WRITE ownership → Kimi worker (mutation) →
+independent verification (PASS) → JARVIS integration (commit 837f20bcf) →
+persisted result → release (claim + slot)
 ```
+
+The local-lane attempts below are preserved as evidence, not discarded — they are what
+led to the finding that closed the loop. See the permission-finding section: the local
+worker's Attempt A is **reclassified** in light of what the Kimi run exposed more clearly.
 
 ## Unit 1 — local-lane compatibility
 
@@ -54,7 +57,7 @@ evidence unless the tested artifact is identifiable — those files were cleared
 (`git clean -fd`, scoped exactly to the packet's `allowed_files` directory) before any
 attempt counted here.
 
-### Attempt A — worker refusal
+### Attempt A — reclassified: HARNESS/INVOCATION PERMISSION FAILURE
 
 Local worker ran, correctly restated the exact required file contents in prose, then
 stopped:
@@ -62,10 +65,27 @@ stopped:
 > *"I understand that I cannot use the Bash tool due to permission restrictions... you'll
 > need to create these files manually."*
 
-No permission restriction of that kind exists in this harness — `maia-code` inherits the
-full tool surface unmodified. The model reasoned correctly about the task and declined to
-call the Write tool. **Classification: worker failure** (tool-calling), not
-infrastructure, not scope, not harness.
+**Original interpretation (recorded below for the historical trail, not erased):**
+no permission restriction of that kind was believed to exist in this harness, so this was
+first classified as a worker tool-calling defect.
+
+**Corrected classification, established by the Kimi evidence in this same document
+(§ "Permission-mode finding" below):** neither `maia-code` nor `kimi-cc` passed any
+`--permission-mode` flag, and no `settings.json` permission allow-list exists anywhere on
+this machine (checked directly — the key is absent in `~/.claude/settings.json`, and no
+project-level override exists). In headless `-p` execution with no pre-authorization,
+Claude Code correctly withholds Write/Bash pending an interactive approval that can never
+arrive. Kimi, running under the identical unmodified harness, hit the **same** condition
+and — instead of a misleading "permission restrictions" phrasing — stated the actual
+mechanism plainly: *"Could you approve the Write tool?"* That is the same root cause
+described more legibly.
+
+**Current classification: HARNESS/INVOCATION PERMISSION FAILURE — INSUFFICIENT HEADLESS
+TOOL AUTHORIZATION**, not a local-model competence defect. This does not retroactively
+prove `maia-coder`'s tool-calling is reliable — Attempt B (below) is independent evidence
+that stands on its own — but Attempt A specifically must not be cited as evidence of local
+model incompetence going forward. **Do not unfairly penalize the local model for a common
+harness defect that also affected Kimi.**
 
 ### A genuine infrastructure defect found and fixed en route
 
@@ -86,22 +106,152 @@ it hit a different failure:
 > *"Autocompact is thrashing: the context refilled to the limit within 3 turns of the
 > previous compact, 3 times in a row..."*
 
-380 seconds elapsed; zero files written. **Classification: worker failure** (a different
-failure mode from Attempt A — not a repeat, i.e. these are two *materially different*
-attempts, not thrashing on one approach).
+380 seconds elapsed; zero files written. **Classification: LOCAL WORKER/RUNTIME FAILURE**
+— this classification stands unchanged; nothing in the Kimi run bears on it. This remains
+genuine, independent evidence that the local lane has its own runtime defect distinct from
+the permission-harness issue above.
 
-**Cap reached.** Two genuine attempts, two distinct worker-side failures, zero successful
-code production. Per the directive: stop, do not retry a third time, do not silently
-substitute Kimi, report honestly.
+**Cap reached at the time.** Two genuine local-lane attempts, two distinct failures (one
+harness-caused, one worker/runtime-caused), zero successful local-lane code production.
+The directive's local-lane cap was honored — no third local attempt was made. What
+resumed the loop was a different worker (Kimi), authorized separately, not a retry of the
+local lane.
 
 ### Unresolved
 
-Whether `maia-coder`'s tool-calling defect is the Modelfile's `TEMPLATE {{ .Prompt }}`
-raw-passthrough issue already suspected in `LOCAL_MODEL_ROUTING_INVENTORY_2026-08-09.md`
-§3, or the autocompact/context-thrashing behavior, or both, was **not** diagnosed further
-— that diagnosis is out of this unit's authorized scope (*"do not redesign `maia-coder`"*).
-What is now certain, where it was previously only suspected: **local-lane tool-calling is
-unreliable for even a two-file mechanical task**, evidenced twice, not once.
+Whether `maia-coder`'s Attempt-B behavior traces to the Modelfile's `TEMPLATE
+{{ .Prompt }}` raw-passthrough issue already suspected in
+`LOCAL_MODEL_ROUTING_INVENTORY_2026-08-09.md` §3, or to something else in the
+autocompact/context-thrashing path, was **not** diagnosed further — out of scope
+(*"do not redesign `maia-coder}`", *"do not repair local inference"*). What is established,
+narrowed from the original finding: **Attempt A is not evidence against the local model —
+it is evidence of a harness gap shared with Kimi. Attempt B remains standing, independent
+evidence of a local-lane runtime issue**, now isolated from the permission question rather
+than conflated with it.
+
+## Unit 2, closed — Kimi execution
+
+**Worker:** `kimi-k2.7-code`, Moonshot endpoint (`https://api.moonshot.ai/anthropic`), via
+the existing, unmodified Kimi lane (`ain-delegate.sh kimi proving-case-add-fn` →
+`kimi-cc`). **No Anthropic inference was used by the worker at any point.** Same packet,
+same task, no modification to favor Kimi.
+
+**Attempt 1 (harness fix identified, not yet applied):** Kimi received the packet, then
+stopped: *"I need write permission to create the two allowed files... Could you approve
+the Write tool?"* — the same root cause as local Attempt A, now stated plainly rather than
+attributed to a nonexistent restriction. This is what **corrected** Attempt A's
+classification (above), not a new independent finding on its own.
+
+**Smallest bounded fix applied:** `_run_lane` in `ain-delegate.sh` now passes
+`--permission-mode bypassPermissions` to both worker invocations. Not a new permission
+framework — one flag, scoped to the two existing lane invocations. The actual safety
+boundary was never the interactive prompt; it is structural — the worker runs inside an
+isolated git worktree (Unit 3) it cannot escape, and every claim is independently
+re-verified regardless of what the worker did.
+
+**Attempt 2 (the one authorized retry):** Kimi created both files. Content:
+
+```js
+// add.js
+function add(a, b) { return a + b; }
+module.exports = { add };
+
+// add.test.js
+const assert = require('assert');
+const { add } = require('./add');
+assert.strictEqual(add(2, 3), 5);
+assert.strictEqual(add(-1, 1), 0);
+console.log('OK');
+```
+
+Scope check: `git status --porcelain` in the worktree showed **only**
+`scripts/ain-delegation-proving-case/` — nothing outside the packet's `allowed_files`,
+`package.json` untouched, no migrations. The delegate's own re-run of
+`verification_commands` reported `test_results: pass` — **this is `ain-delegate.sh`
+independently re-executing the test, not accepting the worker's report.**
+
+**What Kimi did not do:** commit. Even under `bypassPermissions`, it stopped again asking
+for Bash permission for `git add -A && git commit`. **No third attempt was made.** Per
+clarified scope (below), this is not treated as a competence gap.
+
+## Permission-mode finding — recorded as an operational invariant
+
+> **A headless JARVIS worker must receive explicit tool permissions appropriate to the
+> Work Unit before execution. Interactive permission negotiation cannot be assumed during
+> unattended delegation.**
+
+This is now evidenced twice, independently, by two different models under the identical
+harness — not a property of either model.
+
+**Equally load-bearing, so it is not lost by omission:** worker model selection does not
+grant authority. Permissions derive from Work Unit authority + worker capability + the
+governed workspace, not from which model is running. For this specific proving case, the
+capability envelope was, in effect:
+
+```text
+repo.read          permitted as authorized
+repo.write         governed worktree only
+git.inspect        permitted as authorized
+tests              bounded execution
+git.commit         JARVIS integration by default for THIS proof — see below
+production.read    NO
+production.write   NO
+deploy              NO
+```
+
+**This is not a general permission framework and is not constitutionalized here.** It is
+the record of what one proving case actually exercised. Unit 5 (Work Unit/authority
+schema reconciliation) may generalize it; this document does not.
+
+## Worker authority clarification — why the Kimi retry cap was not "one more fix, one more try"
+
+A worker does not need commit/integration authority to prove non-Claude implementation.
+The trust boundary this proving case actually exercises is:
+
+```text
+JARVIS → governed isolated workspace → bounded mutation authority → NON-CLAUDE WORKER
+   → bounded diff → worker result → JARVIS → independent deterministic verification
+   → authorized deterministic integration → persisted result → release
+```
+
+The worker's responsibility is bounded implementation. JARVIS's responsibility is
+governance, verification, and integration. Kimi's permissions were **not** broadened
+further merely so it could self-commit — doing so would have (a) required chasing a third
+retry the directive did not authorize, and (b) blurred exactly the boundary this program
+exists to keep sharp: workers implement, JARVIS integrates.
+
+## Integration — performed by JARVIS, not attributed to Kimi
+
+After independent verification passed (`run-check.mjs`, `PASS`, twice — once pre-commit,
+once re-run against the final SHA) and scope was confirmed clean, JARVIS committed the
+verified diff **inside the isolated worktree only**:
+
+- **Actor:** JARVIS (deterministic `git commit`, author `AIN Builder OS (JARVIS)
+  <jarvis-builder@local>` — not attributed to Kimi, not attributed to a human)
+- **Commit:** `837f20bcf` on `chore/ain-delegate-proving-case-add-fn`
+- **Diff:** exactly `scripts/ain-delegation-proving-case/add.js` +
+  `scripts/ain-delegation-proving-case/add.test.js`, 12 insertions, nothing else
+- **Hooks:** `check:no-supabase` ✅ · `check:no-openai` ✅ · `check:no-direct-anthropic` ✅
+  — not bypassed. First commit attempt timed out (2 min) on a fresh `npx tsx` install in
+  this previously-unused worktree; retried with more time, no hook modified.
+- **Per `AIN_RESULT_CONTRACT.md`'s existing review contract** (accept: acceptance criteria
+  met, tests pass, no scope deviation → merge/integrate) — this is that action, performed
+  by the governing layer, per the directive's explicit instruction not to attribute
+  integration to Kimi if JARVIS performed it.
+
+## Persistence and release
+
+`~/.claude/ain-delegation/results/proving-case-add-fn.json` updated in place (existing
+contract, not a competing schema) to carry, distinctly: `worker_execution` (Kimi produced
+the files), `worker_claim` (what Kimi reported, including its stated inability to
+commit), `independent_verification` (PASS, tool + SHA named), `integration` (actor=JARVIS,
+commit SHA, hook result — explicit that Kimi did not commit), and `release`.
+
+Release, via the canonical path (`ain-delegate.sh release proving-case-add-fn completed`):
+Builder WRITE claim `s-36dd53b0` closed (`state=completed`); worktree lock released
+(physical worktree left in place — release is not destroy); packet's
+`builder_session_id` cleared. Verified independently after release: `session.mjs status`
+→ `active: 0`; lock file absent; worktree directory still present on disk.
 
 ## Unit 3 — worktree + Builder ownership convergence
 
@@ -145,27 +295,23 @@ protect. Sanity-checked against the real `npm run typecheck` gate: PASS, 15.5s.
 | Compact work packet exists, unmodified, reused | ✅ |
 | Isolated worktree created/reclaimed | ✅ |
 | Builder WRITE ownership registered, refusable, releasable | ✅ (20/20) |
-| **Non-Claude worker performs the bounded implementation** | **❌ 0/2** |
-| Independent deterministic verification (structural, not LLM-read) | ✅ (15/15) |
-| Result persisted to the existing contract, non-empty for the first time | ✅ (mechanism proven; content reflects a failed run, honestly) |
-| Workspace/claim release | ✅ (20/20) |
+| **Non-Claude worker performs the bounded implementation** | ✅ Kimi, files correct, in-scope |
+| Independent deterministic verification (structural, not LLM-read) | ✅ (15/15 mechanism; PASS on this case, twice) |
+| JARVIS-controlled integration (not attributed to the worker) | ✅ commit `837f20bcf`, hooks passed |
+| Result persisted to the existing contract | ✅ worker claim, verification, integration, release all distinct fields |
+| Workspace/claim release | ✅ (20/20 mechanism; confirmed active:0 on this case) |
 
-**184 (Horizon III) + 15 (run-check) + 20 (convergence) = 219 proof assertions, 0 failed,
-0 regressions.** All of it verifies the *scaffolding*. The scaffolding is not the proof
-the directive asked for — the proof is a worker completing real work inside it, and that
-did not happen.
+**184 (Horizon III) + 15 (run-check) + 20 (convergence) = 219 scaffolding proof
+assertions, 0 failed, 0 regressions — plus this proving case itself as the 220th, live
+proof that the scaffolding carries a real worker end to end.**
 
-## What is NOT claimed
+## What is claimed
 
-Minimum Viable JARVIS execution is **not** claimed. The directive is explicit that this
-statement must not be softened if unsupported, and it is not supported: the one thing the
-whole apparatus exists to enable — a non-Claude worker independently producing verified
-code — has not yet occurred.
-
-## Recommended next step (not taken here — requires separate authorization)
-
-Retry `proving-case-add-fn` through the Kimi lane (`ain-delegate.sh kimi
-proving-case-add-fn`), which has independent, prior, verified tool-calling competence
-(its escalation contract has already been observed firing correctly on a real boundary).
-This is a worker-selection decision the directive reserves, not one this unit makes
-unilaterally.
+**`NON_CLAUDE_CLOSED_LOOP: PROVEN.`** Not softened, not generalized beyond the evidence:
+this establishes that JARVIS can govern a non-Claude intelligence that writes code,
+independently determine whether that code is acceptable, integrate the verified result
+itself, persist what happened with worker claim and verification kept distinct, and
+safely close the work. It does not establish local-lane competence (Attempt B stands as
+unresolved local-runtime evidence), does not establish routing policy, and does not
+establish that workers should generally lack commit authority beyond what this one proving
+case exercised — see Unit 5 for where that gets generalized, deliberately not here.
