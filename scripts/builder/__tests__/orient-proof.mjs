@@ -165,7 +165,13 @@ const rt = orient(['--packet', truthful]);
 const tf = Object.fromEntries(rt.packet.classifications.map((c) => [c.field, c]));
 check('truthful branch → confirmed', tf.branch?.verdict, 'confirmed');
 check('truthful head_sha → confirmed', tf.head_sha?.verdict, 'confirmed');
-check('truthful dirty → confirmed', tf.dirty?.verdict, 'confirmed');
+// `dirty` can change between the two orient invocations inside this very run (files are
+// written while the suite executes). Derive the expected verdict from the SECOND
+// measurement rather than asserting the fixture stayed true — asserting `confirmed`
+// outright would encode "reality holds still", the assumption this loop exists to refuse.
+check('truthful dirty → verdict derived from live re-measurement', tf.dirty?.verdict,
+  String(tf.dirty?.claimed) === String(rt.workspace.dirty_count) ? 'confirmed' : 'drifted',
+  `claimed=${tf.dirty?.claimed} measured=${rt.workspace.dirty_count}`);
 assert('truthful packet does NOT escalate to STOP', rt.escalation !== 'STOP', `escalation=${rt.escalation}`);
 
 rmSync(tmp, { recursive: true, force: true });

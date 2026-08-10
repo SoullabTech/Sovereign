@@ -76,11 +76,27 @@ assert('MUTATION: removing ∅ lines loses the UNKNOWNs (proof is not vacuous)',
 
 console.log('\n=== PROOF 4: drift-probe classification ===');
 const byField = Object.fromEntries(ro.packet.classifications.map((c) => [c.field, c]));
-assert('branch confirmed against live measurement', byField.branch?.verdict === 'confirmed');
-assert('head_sha confirmed against live measurement', byField.head_sha?.verdict === 'confirmed');
-assert('worktree confirmed', byField.worktree?.verdict === 'confirmed');
-assert('dirty may drift and is reported either way',
-  ['confirmed', 'drifted'].includes(byField.dirty?.verdict), `verdict=${byField.dirty?.verdict}`);
+// Drift-capable fields must have their EXPECTED verdict derived at assertion time.
+// Asserting `confirmed` outright would encode "reality holds still" — the very
+// assumption this loop exists to refuse. (Caught 2026-08-09: committing the artifacts
+// moved HEAD, the packet legitimately drifted, and an over-specified assertion failed
+// while the instrument was behaving correctly.)
+const expectVerdict = (claimed, measured) =>
+  String(claimed) === String(measured) ? 'confirmed' : 'drifted';
+const claimOf = (f) => byField[f]?.claimed;
+
+assert('branch verdict matches live measurement',
+  byField.branch?.verdict === expectVerdict(claimOf('branch'), ro.workspace.branch),
+  `verdict=${byField.branch?.verdict}`);
+assert('head_sha verdict matches live measurement (drift is legitimate here)',
+  byField.head_sha?.verdict === expectVerdict(claimOf('head_sha'), ro.workspace.head_sha),
+  `claimed=${claimOf('head_sha')} measured=${ro.workspace.head_sha} verdict=${byField.head_sha?.verdict}`);
+assert('worktree verdict matches live measurement',
+  byField.worktree?.verdict === expectVerdict(claimOf('worktree'), ro.workspace.worktree),
+  `verdict=${byField.worktree?.verdict}`);
+assert('dirty verdict matches live measurement',
+  byField.dirty?.verdict === expectVerdict(claimOf('dirty'), ro.workspace.dirty_count),
+  `claimed=${claimOf('dirty')} measured=${ro.workspace.dirty_count} verdict=${byField.dirty?.verdict}`);
 assert('governing decisions are cite-only, never inherited as fact',
   ro.packet.classifications.some((c) => c.verdict === 'governance_witness' && c.action === 'VERIFY-SOURCE'));
 assert('packet posture is CLAIM SET UNDER TEST', /CLAIM SET UNDER TEST/.test(ro.packet.posture));
