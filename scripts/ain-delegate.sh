@@ -254,7 +254,18 @@ _run_lane() {
     # interactive prompt: the worker runs inside an isolated git worktree (Unit 3) it
     # cannot escape, and every claim is independently re-verified afterward regardless of
     # what the worker did (never trust self-report — AIN_RESULT_CONTRACT.md).
-    if [ "$lane" = "local" ]; then
+    if [ "$lane" = "local-native" ]; then
+        # Unit 9: native transport. No Claude Code CLI, therefore no system prompt,
+        # no tool schemas, no MCP definitions, no auto-loaded CLAUDE.md — the model
+        # sees EXACTLY the packet prompt. Viable only because Unit 8 materializes the
+        # source fragments: a toolless worker needs its evidence handed to it.
+        local pf; pf="$(mktemp -t jarvis-prompt)"
+        printf '%s' "$prompt" > "$pf"
+        ( cd "$wt" && node "$PROJECT_DIR/scripts/builder/jarvis-local-worker.mjs" \
+            run --prompt-file "$pf" ) > "$log" 2>&1
+        exit_code=$?
+        rm -f "$pf"
+    elif [ "$lane" = "local" ]; then
         ( cd "$wt" && maia-code -p "$prompt" --permission-mode bypassPermissions ) > "$log" 2>&1
         exit_code=$?
     elif [ "$lane" = "kimi" ]; then
@@ -445,6 +456,7 @@ case "${1:-}" in
     new)      shift; cmd_new "$@" ;;
     claim)    shift; cmd_claim "$@" ;;
     local)    shift; cmd_local "$@" ;;
+    local-native) shift; _run_lane "local-native" "$@" ;;
     kimi)     shift; cmd_kimi "$@" ;;
     claude)   shift; cmd_claude "$@" ;;
     result)   shift; cmd_result "$@" ;;
@@ -452,7 +464,7 @@ case "${1:-}" in
     escalate) shift; cmd_escalate "$@" ;;
     release)  shift; cmd_release "$@" ;;
     *)
-        echo "usage: $0 {new|claim|local|kimi|claude|result|review|escalate|release} <work_unit_id> [args...]" >&2
+        echo "usage: $0 {new|claim|local|local-native|kimi|claude|result|review|escalate|release} <work_unit_id> [args...]" >&2
         exit 2
         ;;
 esac
