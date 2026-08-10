@@ -38,6 +38,15 @@ disk_free: 6.3Gi
 - ESCALATION_REQUIRED must remain terminal with no outgoing transition. Resumption is
   new-run lineage (resumes_run_id + resolution_id + gate_id), never state resurrection.
   Adding AWAITING_AUTHORITY to make resumption convenient is the change this chain refused.
+- **Alpha acceptance criterion** — JARVIS Alpha is demonstrated when the system can
+  **act, stop, ask, receive, discriminate, resume OR remain stopped, and account
+  durably for why.** Both branches must be live-proven independently: APPROVE →
+  governed resume → actual execution → durable result; REFUSE → remains stopped →
+  no alternate continuation path → durable refusal. A fresh repository-only reader
+  must be able to reconstruct why execution did or did not occur. Alpha may not be
+  awarded from green component proofs, from the APPROVE branch alone, or from a
+  hermetic REFUSE. The NO branch fails silently — a system that ignores refusal
+  looks identical to one never told anything — so it needs the harder proof.
 - Unit 18 must NOT open until all three hold — a run that cannot dispatch produces a
   truthful report answering the wrong question:
   1. worker execution healthy (Ollama up, runtime READY not DEGRADED);
