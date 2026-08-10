@@ -99,6 +99,49 @@ const ESCALATED_RUN = {
   history: [{ at: '1', from: null, to: 'QUEUED' }],
 };
 
+/**
+ * §D-13 — governance_gate shape copied from the real wire contract:
+ * `publicGovernanceGate()` in scripts/builder/jarvis-governance-gate.mjs.
+ * Only the fields that function actually emits are present here — the proof
+ * must not assert against fields the runtime never sends.
+ */
+const OPEN_GATE_RUN = {
+  run_id: 'r-gate-open', work_unit_id: 'wu-gate', state: 'PAUSED_FOR_GOVERNANCE', disposition: null,
+  resumes_run_id: null, resolution_id: null, gate_id: 'gat-abc123',
+  governance_gate: {
+    gate_id: 'gat-abc123', status: 'OPEN', gate_class: 'SCOPE_EXPANSION_REQUIRED',
+    required_resolver_role: 'OPERATOR', reason: 'needs to read a file outside the granted selectors',
+    authority_required: { operation_class: 'READ', target: 'lib/ai/otherService.ts', note: 'cited but not in context' },
+    run_id: 'r-gate-open', request_id: 'req-1', objective_digest: 'digest-1',
+    created_at: '2026-08-10T06:10:00.000Z', resolution_type: null, permits_resumption: null,
+  },
+  history: [{ at: '1', from: null, to: 'QUEUED' }, { at: '2', from: 'VALIDATING_RESULT', to: 'PAUSED_FOR_GOVERNANCE' }],
+};
+
+const RESOLVED_GATE_RUN = {
+  run_id: 'r-gate-resolved', work_unit_id: 'wu-gate-2', state: 'QUEUED', disposition: null,
+  resumes_run_id: 'r-gate-open', resolution_id: 'gres-def456', gate_id: 'gat-abc123',
+  governance_gate: {
+    gate_id: 'gat-abc123', status: 'RESOLVED', gate_class: 'SCOPE_EXPANSION_REQUIRED',
+    required_resolver_role: 'OPERATOR', reason: 'needs to read a file outside the granted selectors',
+    authority_required: { operation_class: 'READ', target: 'lib/ai/otherService.ts', note: 'cited but not in context' },
+    run_id: 'r-gate-open', request_id: 'req-1', objective_digest: 'digest-1',
+    created_at: '2026-08-10T06:10:00.000Z', resolution_type: 'APPROVE', permits_resumption: true,
+  },
+  history: [{ at: '1', from: null, to: 'QUEUED' }],
+};
+
+const UNKNOWN_GATE_CLASS_RUN = {
+  run_id: 'r-gate-unknown', work_unit_id: 'wu-gate-3', state: 'PAUSED_FOR_GOVERNANCE', disposition: null,
+  governance_gate: {
+    gate_id: 'gat-zzz', status: 'OPEN', gate_class: 'SOME_FUTURE_CLASS_NOT_YET_KNOWN',
+    required_resolver_role: 'FOUNDER', reason: 'a class this Desktop build predates',
+    authority_required: null, run_id: 'r-gate-unknown', request_id: 'req-3', objective_digest: 'digest-3',
+    created_at: '2026-08-10T06:11:00.000Z', resolution_type: null, permits_resumption: null,
+  },
+  history: [],
+};
+
 /* ── a stub runtime that speaks the real Unit 11 wire contract ───────────── */
 
 function startStubRuntime() {
@@ -594,6 +637,62 @@ await t('17 authority is READ-ONLY by default and cannot be widened from the UI'
   eq(out.accepted, false);
   eq(out.label, 'AUTHORITY REQUIRED');
   eq(out.failure_class, 'LANE_NOT_PERMITTED');
+});
+
+/* ── §D-13 — Unit 19 governance gate READ-ONLY parity ────────────────────── */
+await t('18 PAUSED_FOR_GOVERNANCE is a known state, not an unrecognised one', async () => {
+  const s = P.stateCopy('PAUSED_FOR_GOVERNANCE');
+  eq(s.known, true, 'PAUSED_FOR_GOVERNANCE must be in RUN_STATES (§6) — the pre-D-13 bug rendered it as unrecognised');
+  eq(s.terminal, false, 'a paused run is resumable, not terminal (§11)');
+  ok(!s.human.includes('does not recognise'), 'must not fall back to the unrecognised-state copy');
+  eq(P.isPausedForGovernance(OPEN_GATE_RUN), true);
+  eq(P.isPausedForGovernance(VERIFIED_RUN), false);
+});
+
+await t('19 an open governance gate renders its runtime-published fields, and nothing more', async () => {
+  const g = P.governanceGateView(OPEN_GATE_RUN);
+  eq(g.present, true);
+  eq(g.gate_id, 'gat-abc123');
+  eq(g.status, 'OPEN');
+  eq(g.gate_class, 'SCOPE_EXPANSION_REQUIRED');
+  eq(g.gate_class_known, true);
+  has(g.gate_class_explanation, 'access beyond what this run was granted');
+  eq(g.resolver_role, 'OPERATOR');
+  eq(g.reason, 'needs to read a file outside the granted selectors');
+  eq(g.authority_required.target, 'lib/ai/otherService.ts');
+  eq(g.resolved, false);
+  eq(g.resolution_type, null);
+  // The runtime accepts exactly two typed resolutions — stated, never offered as a button (§D-13 scope).
+  eq(g.permitted_resolution_types.length, 2);
+  ok(g.permitted_resolution_types.includes('APPROVE'));
+  ok(g.permitted_resolution_types.includes('REFUSE'));
+
+  // An unknown future gate_class is shown verbatim, never smoothed over (§6, §14 pattern reused).
+  const unknown = P.governanceGateView(UNKNOWN_GATE_CLASS_RUN);
+  eq(unknown.gate_class_known, false);
+  eq(unknown.gate_class, 'SOME_FUTURE_CLASS_NOT_YET_KNOWN');
+  has(unknown.gate_class_explanation, 'does not have copy for');
+
+  // A run with no gate at all reports absence plainly.
+  eq(P.governanceGateView(VERIFIED_RUN).present, false);
+});
+
+await t('20 a resolved gate and its lineage are readable, and lineage survives on runs with no gate', async () => {
+  const g = P.governanceGateView(RESOLVED_GATE_RUN);
+  eq(g.resolved, true);
+  eq(g.resolution_type, 'APPROVE');
+  eq(g.permits_resumption, true);
+
+  const lineage = P.lineageView(RESOLVED_GATE_RUN);
+  eq(lineage.resumes_run_id, 'r-gate-open');
+  eq(lineage.resolution_id, 'gres-def456');
+  eq(lineage.gate_id, 'gat-abc123');
+
+  // A run with no lineage reports null fields rather than throwing (§8 pattern).
+  const none = P.lineageView(VERIFIED_RUN);
+  eq(none.resumes_run_id, null);
+  eq(none.resolution_id, null);
+  eq(none.gate_id, null);
 });
 
 /* ── packet-guard conformance (not required by §22, but cheap and load-bearing) */

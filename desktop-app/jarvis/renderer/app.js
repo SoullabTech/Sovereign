@@ -145,14 +145,20 @@ function renderRunList() {
     const s = P.stateCopy(r.state);
     const w = P.workerView(r);
     const obj = P.objectiveView(r, annotations);
+    // §D-13 — a paused-for-governance run is neither a terminal disposition nor
+    // ordinary in-flight progress; it gets its own tone rather than borrowing
+    // "pending"'s dot, which would understate that it is waiting on a person.
+    const paused = P.isPausedForGovernance(r);
+    const rowTone = paused ? 'governance' : d.tone;
     const btn = node('button', {
-      class: `run-item tone-${d.tone}`,
+      class: `run-item tone-${rowTone}`,
       attrs: { type: 'button', 'aria-current': String(r.run_id === selectedId) },
     }, [
       node('span', { class: 'rid', text: r.run_id }),
       node('span', { class: 'robj', text: obj.text ?? r.work_unit_id ?? '(objective not published by the runtime)' }),
       node('span', { class: 'rmeta' }, [
-        node('span', { class: `cite-status tone-${d.tone}`, text: `${d.mark} ${s.terminal ? d.label : r.state}` }),
+        node('span', { class: `cite-status tone-${rowTone}`,
+          text: paused ? `⏸ PAUSED FOR GOVERNANCE` : `${d.mark} ${s.terminal ? d.label : r.state}` }),
         w.lane ? node('span', { class: 'stamp', text: w.lane }) : null,
         node('span', { class: 'stamp', text: shortTime(r.created_at) ?? '' }),
       ]),
@@ -181,14 +187,17 @@ function renderDetail(run) {
   const ver = P.verificationView(run);
   const fail = P.failureClassView(run);
   const rows = P.evidenceRows(run);
+  const gate = P.governanceGateView(run);
+  const lineage = P.lineageView(run);
+  const paused = P.isPausedForGovernance(run);
 
   /* head: disposition + live state */
   const head = node('div', { class: 'detail-head' });
-  head.appendChild(node('div', { class: `disposition tone-${d.tone}` }, [
-    node('span', { class: 'dmark', text: d.mark, attrs: { 'aria-hidden': 'true' } }),
-    node('span', { text: s.terminal ? d.label : `${run.state} — IN FLIGHT` }),
+  head.appendChild(node('div', { class: `disposition tone-${paused ? 'governance' : d.tone}` }, [
+    node('span', { class: 'dmark', text: paused ? '⏸' : d.mark, attrs: { 'aria-hidden': 'true' } }),
+    node('span', { text: paused ? 'PAUSED FOR GOVERNANCE' : (s.terminal ? d.label : `${run.state} — IN FLIGHT`) }),
   ]));
-  head.appendChild(node('p', { class: 'disposition-meaning', text: s.terminal ? d.meaning : s.human }));
+  head.appendChild(node('p', { class: 'disposition-meaning', text: paused ? s.human : (s.terminal ? d.meaning : s.human) }));
 
   const obj = P.objectiveView(run, annotations);
   head.appendChild(node('p', { class: 'detail-objective', text: obj.text ?? run.work_unit_id ?? '' }));
@@ -200,8 +209,42 @@ function renderDetail(run) {
     node('span', { class: 'stamp', text: run.run_id }), copyButton(run.run_id, 'copy run id'),
   ]);
   head.appendChild(ids);
-  if (!s.terminal) head.appendChild(node('div', { class: 'activity' }, [node('span')]));
+  // No pulsing activity bar while paused: the worker is not running, and a
+  // paused run is waiting on a person, not doing work (§D-13, §6).
+  if (!s.terminal && !paused) head.appendChild(node('div', { class: 'activity' }, [node('span')]));
   $detail.appendChild(head);
+
+  /* §D-13 — governance gate, rendered before failure/authority: a paused run
+   * is not a failure, and this is the first thing an operator needs to read. */
+  if (gate.present) {
+    const gbox = node('div', { class: 'governance-box' }, [
+      node('div', { class: 'governance-class', text: `⏸ ${gate.gate_class ?? 'GOVERNANCE GATE'}` }),
+      node('p', { class: 'disposition-meaning', text: gate.gate_class_explanation }),
+    ]);
+    gbox.appendChild(kv([
+      ['Gate id', gate.gate_id, true],
+      ['Status', gate.status],
+      ['Resolver role required', gate.resolver_role],
+      ['Reason', P.redact(gate.reason), true],
+      ['Requested authority — operation', gate.authority_required?.operation_class],
+      ['Requested authority — target', gate.authority_required?.target, true],
+      ['Requested authority — note', P.redact(gate.authority_required?.note), true],
+      ['Requested', shortTime(gate.requested_at)],
+    ]));
+    gbox.appendChild(node('p', { class: 'disposition-meaning', text:
+      `Permitted resolutions: ${gate.permitted_resolution_types.join(' / ')}` }));
+    if (gate.resolved) {
+      gbox.appendChild(kv([
+        ['Resolution', gate.resolution_type],
+        ['Resumable', gate.permits_resumption == null ? null
+          : (gate.permits_resumption ? 'YES — this run returns to QUEUED with a widened grant' : 'NO — this run moves to ESCALATION_REQUIRED')],
+      ]));
+    }
+    gbox.appendChild(node('div', { class: 'row-actions' }, [copyButton(gate.gate_id, 'copy gate id')]));
+    gbox.appendChild(node('p', { class: 'hint', text:
+      'This Desktop can display the gate. It cannot resolve one — resolution requires an authenticated authority channel this Desktop does not yet implement.' }));
+    $detail.appendChild(section('Governance gate', gbox));
+  }
 
   /* §10 escalation / failure — never wearing a success tone */
   if (fail) {
@@ -333,10 +376,14 @@ function renderDetail(run) {
   }
   $detail.appendChild(section('State history', hist));
 
-  /* §8 audit */
+  /* §8 audit + §D-13 lineage — resumes_run_id/resolution_id/gate_id, published
+   * by the runtime on every run (§11) but unrendered here before D-13. */
   $detail.appendChild(section('Audit', kv([
     ['Run id', run.run_id],
     ['Runtime', run.runtime_id],
+    ['Resumes run', lineage.resumes_run_id, true],
+    ['Resolution id', lineage.resolution_id, true],
+    ['Gate id', lineage.gate_id, true],
     ['Packet', run.audit?.packet_path],
     ['Result', run.audit?.result_path],
     ['Log', run.audit?.log_path],

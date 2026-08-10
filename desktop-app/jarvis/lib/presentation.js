@@ -12,10 +12,18 @@
  * the claim. VERIFIED must never be rendered as if it did.
  */
 
-/** Canonical run states, in lifecycle order (§6). */
+/**
+ * Canonical run states, in lifecycle order (§6).
+ *
+ * PAUSED_FOR_GOVERNANCE added D-13 (Unit 19 parity): the runtime can pause a
+ * run pending a governance gate resolution, then resume the SAME run to
+ * QUEUED. Before D-13 this state was absent here, so a paused run rendered as
+ * "State reported by the runtime that this Desktop does not recognise" —
+ * true, but a worse kind of true than naming the state (§6, §14).
+ */
 const RUN_STATES = [
   'QUEUED', 'VALIDATING', 'CONTEXT_ROUTING', 'READY_FOR_WORKER', 'RUNNING',
-  'VALIDATING_RESULT', 'VERIFYING_EVIDENCE',
+  'VALIDATING_RESULT', 'VERIFYING_EVIDENCE', 'PAUSED_FOR_GOVERNANCE',
   'VERIFIED', 'ESCALATION_REQUIRED', 'FAILED', 'CANCELLED',
 ];
 
@@ -40,6 +48,7 @@ const STATE_COPY = {
   RUNNING: 'maia-coder is investigating',
   VALIDATING_RESULT: 'JARVIS is checking the worker returned a valid result contract',
   VERIFYING_EVIDENCE: "JARVIS is checking the worker's citations",
+  PAUSED_FOR_GOVERNANCE: 'Paused pending a governance gate resolution — see Governance below',
   VERIFIED: 'Citations verified against the supplied source material',
   ESCALATION_REQUIRED: 'JARVIS will not sign this off — human authority required',
   FAILED: 'The run did not complete',
@@ -123,6 +132,74 @@ function failureClassView(run) {
     known: Object.prototype.hasOwnProperty.call(FAILURE_CLASS_COPY, fc),
     explanation: FAILURE_CLASS_COPY[fc] ?? 'Failure class reported by the runtime that this Desktop does not have copy for.',
     detail: run.failure_detail ?? null,
+  };
+}
+
+/**
+ * Governance gate surface (§D-13, Unit 19 parity — READ-ONLY).
+ *
+ * Renders exactly the fields the runtime's `publicGovernanceGate()` puts on
+ * the wire (`scripts/builder/jarvis-governance-gate.mjs`) — gate_id, status,
+ * gate_class, required_resolver_role, reason, authority_required, created_at,
+ * resolution_type, permits_resumption. Nothing here is inferred: the runtime
+ * already trims evidence, scope, and resolver-identity fields before this
+ * reaches the Desktop, and this function does not add any of them back.
+ *
+ * D-13 is display-only by design: it makes a paused run legible without
+ * creating a way to cross it. There is no resolve action here, and none
+ * should be added until a founder decision names how a Desktop resolution
+ * would authenticate (§16/§17 principal question — unresolved as of D-13).
+ */
+const GATE_CLASS_COPY = {
+  FOUNDER_DECISION_REQUIRED: 'The worker asked JARVIS to decide something only the founder may decide.',
+  OPERATOR_AUTHORIZATION_REQUIRED: 'The worker needs authority an operator, not JARVIS, must grant.',
+  SCOPE_EXPANSION_REQUIRED: 'The worker needs access beyond what this run was granted.',
+  CONSTITUTIONAL_AMBIGUITY: 'The worker found the governing rules genuinely unclear for this case.',
+  WRITE_AUTHORITY_REQUIRED: 'The worker asked to write. This lane is READ-ONLY — write authority cannot be granted from here.',
+  PRODUCTION_AUTHORIZATION_REQUIRED: 'The worker asked to touch production. Production authorization cannot be granted from here.',
+};
+
+/**
+ * The runtime accepts exactly these two typed resolutions and no others
+ * (`resolveGovernanceGate` in jarvis-governance-gate.mjs: "a typed resolution
+ * (APPROVE | REFUSE) is required"). Stated here as a fixed protocol fact —
+ * this Desktop offers no way to submit either one (§D-13 scope).
+ */
+const PERMITTED_RESOLUTION_TYPES = ['APPROVE', 'REFUSE'];
+
+/** @returns {boolean} true only for the exact state a governance gate pauses a run in (§6). */
+function isPausedForGovernance(run) { return run?.state === 'PAUSED_FOR_GOVERNANCE'; }
+
+/** @param run a run projection from GET /runs/:id or GET /runs (§8). */
+function governanceGateView(run) {
+  const g = run?.governance_gate ?? null;
+  if (!g) return { present: false };
+  const known = Object.prototype.hasOwnProperty.call(GATE_CLASS_COPY, g.gate_class);
+  return {
+    present: true,
+    gate_id: g.gate_id ?? null,
+    status: g.status ?? null,
+    gate_class: g.gate_class ?? null,
+    gate_class_known: known,
+    gate_class_explanation: known ? GATE_CLASS_COPY[g.gate_class]
+      : 'Gate class reported by the runtime that this Desktop does not have copy for.',
+    resolver_role: g.required_resolver_role ?? null,
+    reason: g.reason ?? null,
+    authority_required: g.authority_required ?? null,
+    requested_at: g.created_at ?? null,
+    permitted_resolution_types: PERMITTED_RESOLUTION_TYPES,
+    resolved: g.status === 'RESOLVED',
+    resolution_type: g.resolution_type ?? null,
+    permits_resumption: g.permits_resumption ?? null,
+  };
+}
+
+/** §D-13 — lineage the runtime already publishes on every run (§8, §11), unrendered before now. */
+function lineageView(run) {
+  return {
+    resumes_run_id: run?.resumes_run_id ?? null,
+    resolution_id: run?.resolution_id ?? null,
+    gate_id: run?.gate_id ?? null,
   };
 }
 
@@ -431,6 +508,9 @@ const API = {
   stateCopy,
   dispositionView,
   failureClassView,
+  isPausedForGovernance,
+  governanceGateView,
+  lineageView,
   splitCitation,
   objectiveView,
   evidenceRows,

@@ -24,6 +24,7 @@
   --escalation: #d9a441;
   --failed: #cf6b6b;
   --cancelled: #8d96a3;
+  --governance: #8a8fd1;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 }
@@ -214,12 +215,14 @@ button.copy { padding: 1px 7px; font-size: 10px; font-family: var(--mono); color
 .tone-failed     { color: var(--failed); }
 .tone-cancelled  { color: var(--cancelled); }
 .tone-pending    { color: var(--accent); }
+.tone-governance { color: var(--governance); }
 
 .run-item.tone-verified   { border-left-color: var(--verified); }
 .run-item.tone-escalation { border-left-color: var(--escalation); }
 .run-item.tone-failed     { border-left-color: var(--failed); }
 .run-item.tone-cancelled  { border-left-color: var(--cancelled); }
 .run-item.tone-pending    { border-left-color: var(--accent); }
+.run-item.tone-governance { border-left-color: var(--governance); }
 
 .stamp { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); }
 
@@ -246,6 +249,7 @@ button.copy { padding: 1px 7px; font-size: 10px; font-family: var(--mono); color
 .disposition.tone-failed     { border-color: var(--failed); background: color-mix(in srgb, var(--failed) 10%, transparent); }
 .disposition.tone-cancelled  { border-color: var(--cancelled); background: transparent; }
 .disposition.tone-pending    { border-color: var(--line-strong); color: var(--accent); background: transparent; }
+.disposition.tone-governance { border-color: var(--governance); background: color-mix(in srgb, var(--governance) 10%, transparent); }
 .disposition-meaning { margin: 8px 0 0; color: var(--ink-dim); font-size: 11.5px; max-width: 62ch; }
 
 .section { border-top: 1px solid var(--line); padding: 14px 0; }
@@ -312,6 +316,15 @@ td.mono, .mono { font-family: var(--mono); }
   background: color-mix(in srgb, var(--escalation) 7%, transparent);
 }
 .failure-class { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; }
+
+.governance-box {
+  border: 1px solid color-mix(in srgb, var(--governance) 40%, var(--line-strong));
+  border-left-width: 2px;
+  background: color-mix(in srgb, var(--governance) 7%, transparent);
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+.governance-class { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; color: var(--governance); }
 
 .offline-card {
   border: 1px solid color-mix(in srgb, var(--failed) 40%, var(--line-strong));
