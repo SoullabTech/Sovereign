@@ -124,16 +124,30 @@ is *broader PHI detection*, explicitly outside this lane.
 Two PHI scanners therefore coexist: the old one unreachable behind a red leg, the new one unbound.
 This is deliberate and should not outlive the reclassification unit.
 
-## Binding readiness (boundary H) — not performed
+## Binding readiness (boundary H) — RATIFIED ORDERING, not yet performed
 
-Binding requires one decision first: the gate is **red on the current tree** by design (G5). Binding
-it to CI before `route.ts:111` is fixed lands a red gate on every PR. The options —
+The gate is **red on the current tree** by design (G5). Binding before `route.ts:111` is fixed would
+knowingly fail every PR — useful only as an emergency merge freeze, which is not the intent.
 
-1. fix line 111, then bind (CI green from the start); or
-2. bind first and let the real leak block, making the repair urgent —
+**Ratified sequence (founder, 2026-08-09) — each step is its own authorized unit:**
 
-are a governance call, not an implementation detail. Recommend **(1)**: the acceptance proof is
-already recorded here, so the evidence survives the fix.
+| # | step | state |
+|---|---|---|
+| 1 | Repair `route.ts:111` as a bounded security change | ⏸ **not opened** |
+| 2 | Re-run `proof:phi-gate`; confirm the gate passes on the real tree | ⏸ |
+| 3 | Bind the gate into CI | ⏸ |
+| 4 | Remove the duplicate legacy scanner once the bound gate is proven live | ⏸ |
+| 5 | Verify a deliberate test violation turns CI red, then remove the probe | ⏸ |
+
+Note on step 2: once line 111 is fixed, the G5 acceptance assertions in
+`__proof__/phi-log-gate.proof.ts` will invert — they currently assert exit **1** against the live
+leak. They must be rewritten to assert the *repaired* state (exit 0 on the real tree) with the
+violation reproduced from a temporary fixture, so the acceptance evidence survives the fix rather
+than being deleted with it. The evidence recorded in §G5 above is the durable record of the
+pre-repair proof.
+
+`check:no-phi-enc --strict` stays **out** of this sequence — a broader policy question, deliberately
+not smuggled into this repair.
 
 Out of this unit's boundary and untouched: `guardrails` reclassification, `commit-msg` installer
 binding, the four local-only hooks, broader PHI detection, telemetry, and the `check:no-phi-enc`
