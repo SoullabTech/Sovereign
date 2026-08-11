@@ -28,7 +28,7 @@ import { EntryReader, type JournalEntry } from './EntryReader';
 import { Reflection } from './Reflection';
 import { type ReturnPiece, type ReturnableRow } from './Return';
 import { pickReturn } from '@/lib/journal/return';
-import { type, color, space, focus, hit, quiet, quietGroup, hitBlock, srOnly } from './tokens';
+import { type, color, space, focus, hit, quiet, quietGroup, hitBlock, srOnly, roomVars } from './tokens';
 
 type RoomState =
   | { name: 'arrival' }
@@ -96,19 +96,23 @@ export function JournalRoom() {
     [entries],
   );
 
+  // The room's material is applied once, here, and inherited by every state.
+  // Scoped to this element — no House token is touched (founder ruling 2026-08-11).
+  const inRoom = (surface: React.ReactNode) => <div style={roomVars}>{surface}</div>;
+
   switch (state.name) {
     case 'writing':
-      return (
+      return inRoom(
         <WritingSurface
           variant={state.variant}
           fromQuestion={state.fromQuestion}
           onKeep={keep}
           onLeave={() => setState({ name: 'arrival' })}
-        />
+        />,
       );
 
     case 'reading':
-      return (
+      return inRoom(
         <EntryReader
           entry={state.entry}
           reflecting={state.reflecting}
@@ -125,20 +129,20 @@ export function JournalRoom() {
               onLetItGo={() => setState({ ...state, reflecting: false })}
             />
           )}
-        </EntryReader>
+        </EntryReader>,
       );
 
     case 'browsing':
-      return (
+      return inRoom(
         <Browse
           entries={entries}
           onOpen={openEntry}
           onLeave={() => setState({ name: 'arrival' })}
-        />
+        />,
       );
 
     default:
-      return (
+      return inRoom(
         <Arrival
           ready={ready}
           returnPiece={returnPiece}
@@ -146,7 +150,7 @@ export function JournalRoom() {
           onNoteSomething={() => setState({ name: 'writing', variant: 'note' })}
           onBrowse={() => setState({ name: 'browsing' })}
           onOpenReturn={openEntry}
-        />
+        />,
       );
   }
 }
@@ -180,7 +184,7 @@ function Browse({
     >
       <h1 id="journal-browse-heading" className={srOnly}>Browse the journal</h1>
 
-      <div className="pt-8 sm:pt-10">
+      <div className={`${space.axis} pt-8 sm:pt-10`}>
         <button
           type="button"
           onClick={onLeave}
@@ -190,7 +194,7 @@ function Browse({
         </button>
       </div>
 
-      <div className={`flex-1 ${space.measure} w-full mx-auto pt-12 sm:pt-16 pb-20`}>
+      <div className={`flex-1 ${space.axis} pt-12 sm:pt-16 pb-20`}>
         {entries.length === 0 ? (
           <p className={`${type.meta} ${color.muted}`}>Nothing kept yet.</p>
         ) : (

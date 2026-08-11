@@ -14,11 +14,11 @@ principles:
 reference_surfaces:
   - docs/design/references/JOURNAL_EXPERIENTIAL_REFERENCE_2026-08-10.md
   - docs/design/references/JOURNAL_SLICE1_IMPLEMENTATION_CONTRACT.md
-shared_with_house: House token layer (--sl-* field/surface/signal hierarchy) · provenance voice · gesture language in human verbs · quiet ember accent · the Journal marker as room orientation
-distinct_to_room: writing is the destination, not a control surface — the room opens on a question rather than an inventory, holds one long readable measure for both composing and reading, and lets MAIA appear only after the member has kept something
+shared_with_house: House grammar — the field/ink/signal role structure, provenance voice, gesture language in human verbs, one ember accent per state, the Journal marker as room orientation. The room takes the STRUCTURE from the House; only the material is its own.
+distinct_to_room: ivory paper material with charcoal literary type — Journal is a surface on which writing HAPPENS, not an evening room in which writing is displayed (founder ruling 2026-08-11). Writing is the destination rather than a control surface; the room opens on a question rather than an inventory; one long readable measure serves both composing and reading; MAIA appears only after the member has kept something. Every element hangs off a single compositional axis.
 screenshot_desktop: docs/design/contracts/screenshots/journal-room-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/journal-room-mobile.png
-experience_verification: Walked all five approved states in a browser at 1280x800 and 375x812 against a live dev server with an authenticated dev session — arrival, writing (typed, kept), reading, MAIA reflection (live /api/journal/reflect response), and return. Verified the anniversary selection rule fired, that `Why this?` discloses the literal rule, that `Write from here` carries MAIA's question as context without seeding the member's text, and that a failed keep preserves the writing. Unauthorized House chrome observed and reported, not silently suppressed.
+experience_verification: Founder walk of candidate 79fd8e911 accepted the experience (2026-08-11). Slice 2 material and composition corrections then measured on the running room at 1280x800, 768x1024 and 375x812: ivory field confirmed, single compositional axis at every viewport (all top-level columns share one left edge), 0 WCAG-AA contrast failures on leaf text with inherited opacity composited, 0 tap targets under the 44x24 floor, no horizontal overflow. Two failures were found and fixed during this pass: muted ink at 4.48:1 (0.02 under AA) and an unselected classification toggle compounded to 2.24:1 by opacity-60.
 ---
 
 # Journal — Experience Contract

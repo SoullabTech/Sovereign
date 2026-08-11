@@ -116,7 +116,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
         {variant === 'note' ? 'Note something' : 'Begin writing'}
       </h1>
 
-      <div className="pt-8 sm:pt-10">
+      <div className={`${space.axis} pt-8 sm:pt-10`}>
         <button
           type="button"
           onClick={onLeave}
@@ -126,7 +126,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
         </button>
       </div>
 
-      <div className={`flex-1 ${space.measure} w-full mx-auto pt-10 sm:pt-14 pb-16`}>
+      <div className={`flex-1 ${space.axis} pt-10 sm:pt-14 pb-16`}>
         {/* What MAIA asked, carried as context — not as the member's text. */}
         {fromQuestion && (
           <p className={`mb-8 ${type.meta} ${color.muted}`}>{fromQuestion}</p>
@@ -168,7 +168,10 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
                   /* hitTight, not hit: "day" measured 22px wide — under the
                      24px target-size floor. Widens the hit area only. */
                   className={`${type.meta} ${focus} ${hitTight} ${quiet} ${
-                    entryType === t ? color.secondary : `${color.muted} opacity-60`
+                    // Quietness comes from colour, never opacity: measured
+                    // 2026-08-11, `opacity-60` compounded muted ink to 2.24:1.
+                    // Unselected stays quiet AND stays legible.
+                    entryType === t ? color.secondary : color.muted
                   }`}
                 >
                   {t}

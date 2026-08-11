@@ -42,11 +42,11 @@ export function Arrival({
       aria-labelledby="journal-question"
     >
       {/* Room marker. Small, quiet — orients without explaining. */}
-      <div className={`pt-8 sm:pt-10 ${type.marker} ${color.muted}`}>Journal</div>
+      <div className={`${space.axis} pt-8 sm:pt-10 ${type.marker} ${color.muted}`}>Journal</div>
 
       {/* The question is the largest thing in the room, and most of the
           viewport stays empty. Nothingness is allowed. */}
-      <div className={`flex-1 flex flex-col justify-center ${space.measure} w-full mx-auto py-16`}>
+      <div className={`flex-1 flex flex-col justify-center ${space.axis} py-16`}>
         <h1 id="journal-question" className={`${type.question} ${color.human}`}>
           What is here today?
         </h1>
@@ -80,7 +80,7 @@ export function Arrival({
 
       {/* Browse is tertiary and visually recessive — the reference makes it
           secondary to writing, never a navigation bar. */}
-      <div className="pb-10 sm:pb-12">
+      <div className={`${space.axis} pb-10 sm:pb-12`}>
         <button
           type="button"
           onClick={onBrowse}

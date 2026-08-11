@@ -35,18 +35,54 @@ export const type = {
 } as const;
 
 /**
- * Colour roles, all resolving to House CSS variables.
+ * MATERIAL — ivory, Journal-specific (founder ruling, 2026-08-11).
+ *
+ *   navy  = an evening room in which writing is DISPLAYED
+ *   ivory = a surface on which writing HAPPENS
+ *
+ * Journal's primary human activity is inscription, so the material reinforces the
+ * activity. ⛔ This does NOT make Soullab ivory: these variables are scoped to the
+ * Journal room's own root and change no House token. Every other room continues to
+ * resolve `--sl-*` unchanged.
+ *
+ * PROVENANCE — nothing invented, nothing taken from a neighbouring room's identity
+ * (similarity is not lineage):
+ *   · field / ink     `docs/SOULLAB_DESIGN_CANON.md` light theme — the House's own
+ *                     canonical warm light palette (warm off-white; stone-800/600/500)
+ *   · ember #A55A22   the shipped Journal's own accent, already in
+ *                     `components/journal/UnifiedJournalView.tsx` — Journal's ember,
+ *                     not one borrowed from Author Studio or Studio Field
+ *
+ * Applied once, on the room root in JournalRoom.
+ */
+export const roomVars: Record<string, string> = {
+  '--jr-field': '#F8F7F5',
+  '--jr-ink': '#292524',
+  // The ramp is one step darker than the canon's default light text scale.
+  // Measured on this field 2026-08-11: stone-500 (#78716C) gives 4.48:1 — it
+  // fails AA by 0.02, which is invisible to the eye and still a failure. Ivory
+  // is a lighter field than the canon's cards sit on, so the ramp moves with it.
+  '--jr-ink-secondary': '#44403C',
+  '--jr-ink-muted': '#57534E',
+  '--jr-ember': '#A55A22',
+  '--jr-hairline': 'rgba(214, 211, 209, 0.6)',
+};
+
+/**
+ * Colour roles. The role NAMES are unchanged from the navy candidate — only what
+ * they resolve to has moved. That is what keeps this a material change rather than
+ * a redesign: no component's markup changes.
+ *
  * `accent` is the ember signal — one per state, never decorative.
  */
 export const color = {
-  field: 'bg-[var(--sl-bg-canvas)]',
-  surface: 'bg-[var(--sl-bg-surface)]',
-  human: 'text-[var(--sl-text-primary)]',
-  secondary: 'text-[var(--sl-text-secondary)]',
-  muted: 'text-[var(--sl-text-muted)]',
-  accent: 'text-[var(--sl-accent-primary)]',
-  accentBorder: 'border-[var(--sl-accent-primary)]',
-  hairline: 'border-[var(--sl-border-subtle)]',
+  field: 'bg-[var(--jr-field)]',
+  human: 'text-[var(--jr-ink)]',
+  secondary: 'text-[var(--jr-ink-secondary)]',
+  muted: 'text-[var(--jr-ink-muted)]',
+  accent: 'text-[var(--jr-ember)]',
+  accentBorder: 'border-[var(--jr-ember)]',
+  hairline: 'border-[var(--jr-hairline)]',
 } as const;
 
 /**
@@ -54,6 +90,22 @@ export const color = {
  * spacing claim — the room is defined by what it leaves empty.
  */
 export const space = {
+  /**
+   * THE ROOM'S SINGLE COMPOSITIONAL AXIS (founder ruling, 2026-08-11).
+   *
+   * The desktop walk read as "unfinished" not because the room was empty but
+   * because it had THREE alignments: the `Journal` marker at the page edge, the
+   * writing column centred, and `Browse` back at the page edge. Empty space
+   * either side of a column that nothing else agrees with reads as leftover.
+   *
+   * Every element in every state now hangs off this one axis. The emptiness then
+   * has an organizing relationship to the writing — it becomes the margin of a
+   * page rather than unused canvas.
+   *
+   * ⛔ Not a fix by filling: nothing was added, no box drawn, and the measure is
+   * unchanged.
+   */
+  axis: 'mx-auto w-full max-w-[34rem]',
   /** Long readable measure. Governs writing AND reading — the same column. */
   measure: 'max-w-[34rem]',
   /** Room margin. Generous at every breakpoint; mobile keeps the quiet. */
@@ -67,8 +119,8 @@ export const space = {
  * every interactive element must show focus, quietly but unmistakably.
  */
 export const focus =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sl-accent-primary)] ' +
-  'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sl-bg-canvas)] rounded-sm';
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--jr-ember)] ' +
+  'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--jr-field)] rounded-sm';
 
 /**
  * Touch target. Measured 2026-08-10: the room's text gestures rendered at 21–33px

@@ -58,7 +58,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
         })}
       </h1>
 
-      <div className="pt-8 sm:pt-10">
+      <div className={`${space.axis} pt-8 sm:pt-10`}>
         <button
           type="button"
           onClick={onLeave}
@@ -68,7 +68,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
         </button>
       </div>
 
-      <div className={`flex-1 ${space.measure} w-full mx-auto pt-10 sm:pt-14 pb-20`}>
+      <div className={`flex-1 ${space.axis} pt-10 sm:pt-14 pb-20`}>
         {/* The member's words. Nothing above them, nothing beside them. */}
         <article className={`${type.writing} ${color.human} whitespace-pre-wrap`}>
           {entry.content}
