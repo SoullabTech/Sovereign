@@ -1247,6 +1247,14 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🧬 [FAST] atoms-addendum injected: { chars: ${atomsAddendum.length} } — member-placed portfolio + practitioner observations`);
   }
 
+  // 🔗 RELATIONAL CONTEXT BRIDGE: the relationship the member explicitly handed
+  // off from /relationships/[id]. A member act, so it carries higher standing
+  // than system-retrieved recall and is interpolated after the atoms block.
+  const relationalContextAddendum = (meta as any)?.relationalContextAddendum as string | undefined;
+  if (relationalContextAddendum) {
+    console.log(`🔗 [FAST] relational-context injected: { chars: ${relationalContextAddendum.length} } — member-handed-off relationship`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   // Pronouns are core identity context — surfaced here so MAIA respects them naturally
@@ -1286,7 +1294,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1577,6 +1585,7 @@ async function corePathResponse(
     // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
     // atoms + witnessed practitioner observations. Injected via appendAllContextAddenda.
     atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
+    relationalContextAddendum: (meta as any)?.relationalContextAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -2089,6 +2098,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         (meta as any)?.conversationalRecallAddendum,
         (meta as any)?.episodicRecallAddendum,
         (meta as any)?.atomsAddendum,
+        (meta as any)?.relationalContextAddendum,
       ].filter(Boolean).join('\n\n');
       if (consultationRecallAddenda) {
         console.log('[MAIA] deep-consultation recall-addenda', { chars: consultationRecallAddenda.length });
@@ -2214,6 +2224,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // for DEEP repair too — buildMaiaComprehensivePrompt appends MaiaContext addenda
         // via appendAllContextAddenda (maiaVoice.ts), so this field reaches the prompt.
         atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
+    relationalContextAddendum: (meta as any)?.relationalContextAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

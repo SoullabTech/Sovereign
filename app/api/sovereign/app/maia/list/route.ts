@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
+import { getMemberActiveRelationalContext } from '@/lib/relationships/relationshipContextService';
+import { formatRelationalContextForPrompt } from '@/lib/relationships/formatRelationalContextForPrompt';
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
 import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
@@ -850,6 +852,53 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // meta.episodicRecallAddendum. Does NOT open Themes/Reflections.
     let episodicRecallAddendum: string | undefined;
     let markedEpisodesCount = 0;
+    // 🔗 RELATIONAL CONTEXT BRIDGE — read side.
+    //
+    // The member pressed "Take this to MAIA" on /relationships/[id]; the client
+    // then rides `relationshipContextId` on every POST for the session
+    // (components/OracleConversation.tsx). The reader has existed since the
+    // bridge shipped, but its ONLY importer was app/api/oracle/conversation —
+    // retired 410 (S2, 2026-07-17). Net effect in production: MAIA wrote
+    // relational content on every live turn (observeRelationalContent below)
+    // and never once read it back. This closes that loop on the live route.
+    //
+    // 🔒 SANCTUARY: symmetric with the observeRelationalContent gate below — a
+    // sanctuary turn neither feeds nor reads Relationship Field retrieval.
+    //
+    // Explicit-handoff only. `allowRecentThreadFallback` stays off by the
+    // service's own instruction ("ambient detection is membrane leakage if it
+    // arrives before observation") — every fire here is a known member act.
+    let relationalContextAddendum: string | undefined;
+    let relationalContextId: string | undefined;
+    if (userId && !isSanctuary) {
+      const handoffId = (body as any)?.relationshipContextId;
+      if (typeof handoffId === 'string' && handoffId.length > 0) {
+        try {
+          const relCtx = await getMemberActiveRelationalContext(userId, {
+            relationshipId: handoffId,
+          });
+          if (relCtx) {
+            relationalContextAddendum = formatRelationalContextForPrompt(relCtx);
+            relationalContextId = relCtx.relationshipId;
+            console.log('[MAIA/sovereign] relational-context', {
+              memberIdPrefix: userId.slice(0, 8) + '...',
+              relationshipId: relCtx.relationshipId,
+              mode: relCtx.mode,
+              realm: relCtx.realm,
+              continuitySignals: relCtx.continuitySignals.length,
+              salientThemes: relCtx.salientThemes.length,
+              currentTensions: relCtx.currentTensions.length,
+              chars: relationalContextAddendum.length,
+              emitted: true,
+            });
+          }
+        } catch (err) {
+          // Never block the turn on relational context — matches the Event Arc
+          // convention the service was written against.
+          console.warn('[MAIA/sovereign] relational-context load failed (non-critical):', err);
+        }
+      }
+    }
     // 🧬 Developmental layer — declared outside the memory-orchestrator try block
     // so the count is in scope when buildMemoryHealth() reads it below. Prior bug:
     // loader ran every turn and orchestrator used the rows, but health input was
@@ -1086,6 +1135,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         memoryInfluence: memoryInfluenceAddendum,
         forwardReadiness: forwardReadinessAddendum,
         atoms: atomsAddendum,
+        // 🔗 Relational Context Bridge — observability for the read side.
+        relationalContext: relationalContextAddendum,
         memberWeb: memberWebAddendum || undefined,
         astrology: astrologyAddendum || undefined,
         studio: studioAddendum || undefined,
@@ -1166,6 +1217,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
           episodicRecallAddendum, // 📖 Phase 2 — member-marked moments (episodic layer, substrate lane only)
+          relationalContextAddendum, // 🔗 Relational Context Bridge — member-handed-off relationship (explicit act)
+          relationalContextId, // 🔭 context-inventory: which relationship was handed off
           placeAddendum, // 🚪 House Presence — facts-only current-room orientation
           // 🧱 CANONICAL EXCHANGE IDENTITY (F1 / U1 identity unification)
           //
