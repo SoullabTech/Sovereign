@@ -6,6 +6,31 @@
 
 ---
 
+## ⚠️ Implementation status — founder ruling 2026-08-11
+
+**This schema is retained as designed canon. It does not describe current machine behavior.**
+
+```
+canonical status:            retained
+implementation status:       specified_not_operational
+known code consumers:        0
+reasoning-authority function: NONE
+```
+
+Verified 2026-08-10: `grep -rl "CORPUS_WEIGHTING|corpus_weight|corpusWeight"` across `*.ts`, `*.tsx`, `*.mjs`, `*.js`, `*.sql` returns **zero files**. The only `Tier 1–4` occurrences in code are an unrelated field-safety altitude tier (`app/api/debug/field-safety/route.ts`).
+
+**Why this notice exists.** A Canon document with no consumers creates an authority expectation the system does not honor — a future session could reasonably infer from the existence of canon that weighting already governs retrieval. It does not.
+
+**Scope of this schema — and its boundary.** What is specified here answers: *how strongly should a corpus region shape MAIA's **voice** and intellectual orientation?* It does **not** answer *in what domain may a claim legitimately govern reasoning?* That second question belongs to `authority_scope` (a separate primitive, design authorized 2026-08-11, implementation not yet authorized).
+
+The two may coexist and **neither derives from the other**: high corpus weight does not imply broad authority scope, and low corpus weight does not imply weak truth within the appropriate scope.
+
+**Disposition:** ⛔ not activated · ⛔ not retired. Retained. The substantive design below is unchanged by this notice.
+
+**Lineage:** `docs/architecture/JARVIS_SUPER_LEARNER_AUTHORITY_CLASS_RECOVERY_2026-08-11.md` · `docs/governance/FOUNDER_RULING_SUPER_LEARNER_S22_2026-08-10.md`
+
+---
+
 ## Purpose
 
 Not all corpus material should influence MAIA equally. This schema ensures that MAIA sounds like Soullab — not like a library.
