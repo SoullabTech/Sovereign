@@ -114,6 +114,13 @@ console.log('\n==================== D — prose cannot become a capability ident
   report('renderer has no free-text capability-name input', !rendererJs.includes('id="capability"'));
   report('renderer reads the identifier from the registry-backed select', rendererJs.includes("getElementById('capability-select')"));
   report('renderer gates C0 submission through validateSubmission', rendererJs.includes('CF.validateSubmission('));
+
+  // Regression guard — founder walk 2026-08-11: filtering used to re-render the
+  // whole C0 block, destroying the focused filter input so only the first
+  // typed character survived. Filtering must rewrite options only.
+  report('filter input does not re-render its own subtree',
+    rendererJs.includes("getElementById('cap-filter').addEventListener('input', applyCapabilityFilter)") &&
+    !/addEventListener\('input', renderC0Fields\)/.test(rendererJs));
 }
 
 console.log('\n==================== E — malformed Advanced JSON rejected before routing ====================');

@@ -152,32 +152,48 @@ function renderC0Fields() {
     return;
   }
 
-  const filter = (document.getElementById('cap-filter') || {}).value || '';
-  const q = filter.trim().toLowerCase();
-  const shown = q ? capManifest.filter(c => c.name.toLowerCase().includes(q)) : capManifest;
-  const selected = (document.getElementById('capability-select') || {}).value || (shown[0] && shown[0].name) || '';
-
+  // Built ONCE. Filtering must never re-render this subtree: recreating the
+  // filter input mid-keystroke destroys the focused element and the founder
+  // walk showed exactly that — only the first character survived. Only the
+  // <select>'s options are rewritten as you type.
   host.innerHTML = `
-    <input id="cap-filter" type="text" placeholder="Filter capabilities…" value="${filter}" style="margin-bottom:8px">
-    <select id="capability-select" style="width:100%;margin-bottom:6px">
-      ${shown.map(c => `<option value="${c.name}"${c.name === selected ? ' selected' : ''}>${c.name}</option>`).join('') || '<option value="">— no match —</option>'}
-    </select>
+    <input id="cap-filter" type="text" placeholder="Filter capabilities…" style="margin-bottom:8px">
+    <select id="capability-select" style="width:100%;margin-bottom:6px"></select>
     <div class="cap-meta" id="cap-meta"></div>
     <div id="cap-args"></div>
-    <button class="toggle-adv" id="toggle-adv">${capAdvancedMode ? '← Structured arguments' : 'Advanced: JSON arguments →'}</button>
-    <div id="cap-advanced" style="display:${capAdvancedMode ? '' : 'none'}">
+    <button class="toggle-adv" id="toggle-adv">Advanced: JSON arguments →</button>
+    <div id="cap-advanced" style="display:none">
       <textarea id="cap-args-json" rows="3" placeholder='{"dir":"app/api"}'></textarea>
     </div>
     <div class="hint">${capRegistryInfo.count} capabilities registered · read from ${capRegistryInfo.source}</div>
   `;
 
-  document.getElementById('cap-filter').addEventListener('input', renderC0Fields);
+  capAdvancedMode = false;
+  document.getElementById('cap-filter').addEventListener('input', applyCapabilityFilter);
   document.getElementById('capability-select').addEventListener('change', renderArgFields);
-  document.getElementById('toggle-adv').addEventListener('click', () => {
-    capAdvancedMode = !capAdvancedMode;
-    renderC0Fields();
-  });
+  document.getElementById('toggle-adv').addEventListener('click', toggleAdvanced);
+  applyCapabilityFilter();
+}
+
+function applyCapabilityFilter() {
+  const filterEl = document.getElementById('cap-filter');
+  const sel = document.getElementById('capability-select');
+  if (!filterEl || !sel) return;
+  const q = filterEl.value.trim().toLowerCase();
+  const shown = q ? capManifest.filter(c => c.name.toLowerCase().includes(q)) : capManifest;
+  const keep = sel.value;
+  sel.innerHTML = shown.length
+    ? shown.map(c => `<option value="${c.name}">${c.name}</option>`).join('')
+    : '<option value="">— no match —</option>';
+  if (shown.some(c => c.name === keep)) sel.value = keep;
   renderArgFields();
+}
+
+function toggleAdvanced() {
+  capAdvancedMode = !capAdvancedMode;
+  document.getElementById('toggle-adv').textContent = capAdvancedMode ? '← Structured arguments' : 'Advanced: JSON arguments →';
+  document.getElementById('cap-advanced').style.display = capAdvancedMode ? '' : 'none';
+  document.getElementById('cap-args').style.display = capAdvancedMode ? 'none' : '';
 }
 
 function renderArgFields() {
