@@ -36,6 +36,7 @@ import {
 import { RELATIONAL_METHOD_ADDENDUM } from '@/lib/relationships/relationalWorkingMethod';
 import { enforceArticleIIIConversational } from '@/lib/relationships/articleIIIConversational';
 import { assessActionabilityFloor } from '@/lib/relationships/actionabilityFloor';
+import { correctVerdictOverreach } from '@/lib/relationships/verdictOverreachDetector';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here so the live sovereign route
 // receives the same memory plan + forward-readiness signals that /api/between/chat
@@ -363,6 +364,23 @@ export async function POST(req: NextRequest) {
             .join(' | ')}`,
         );
         deliveredText = guarded.text;
+      }
+
+      // ── VERDICT / ADJUDICATION OVERREACH — STRUCTURAL, separate instrument ──
+      // Different question from Article III: not "does MAIA claim to know the
+      // OTHER person's interior" but "does MAIA settle the MEMBER'S OWN
+      // experience for them" — "That is coercion. You didn't choose freely."
+      // Consent is the member's to determine about their own life; MAIA
+      // deciding it, in either direction, is a sovereignty violation.
+      // Independently frozen from this point: do not fold into Article III.
+      const verdictGuarded = correctVerdictOverreach(deliveredText);
+      if (verdictGuarded.fired) {
+        console.warn(
+          `⛔ [VerdictOverreach] enforced — ${verdictGuarded.corrections
+            .map((c) => c.reason)
+            .join(' | ')}`,
+        );
+        deliveredText = verdictGuarded.text;
       }
 
       // ── ACTIONABILITY FLOOR — OBSERVATION ONLY, never correction ──────────
