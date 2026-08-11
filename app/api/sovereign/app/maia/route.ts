@@ -35,6 +35,7 @@ import {
 } from '@/lib/relationships/resolveExplicitRelationshipId';
 import { RELATIONAL_METHOD_ADDENDUM } from '@/lib/relationships/relationalWorkingMethod';
 import { enforceArticleIIIConversational } from '@/lib/relationships/articleIIIConversational';
+import { assessActionabilityFloor } from '@/lib/relationships/actionabilityFloor';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here so the live sovereign route
 // receives the same memory plan + forward-readiness signals that /api/between/chat
@@ -362,6 +363,28 @@ export async function POST(req: NextRequest) {
             .join(' | ')}`,
         );
         deliveredText = guarded.text;
+      }
+
+      // ── ACTIONABILITY FLOOR — OBSERVATION ONLY, never correction ──────────
+      // Refusing to psychologize or mutualize danger is necessary but not
+      // sufficient: the member must leave with something reachable. This
+      // cannot be corrected here — writing a reachable element would fabricate
+      // text, and appending a resource would be a referral dispenser, which is
+      // jurisdiction- and culture-bound and actively dangerous (leaving is the
+      // most dangerous period in coercive control). So the ABSENCE is made
+      // visible and the correction stays prompt-side, where it belongs.
+      // ⛔ This never alters the reply.
+      const floor = assessActionabilityFloor(deliveredText, message);
+      if (floor.floorMissed) {
+        console.warn(
+          `⚠️ [ActionabilityFloor] MISSED — member disclosed [${floor.riskLabels.join(', ')}] ` +
+            'and the reply offered nothing reachable' +
+            (floor.closedIntrospectively ? ' (closed on an introspective question)' : ''),
+        );
+      } else if (floor.disclosureRisk) {
+        console.log(
+          `✅ [ActionabilityFloor] met — [${floor.riskLabels.join(', ')}] → [${floor.reachableLabels.join(', ')}]`,
+        );
       }
     }
 
