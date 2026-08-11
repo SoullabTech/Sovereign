@@ -338,7 +338,14 @@ export type AnnotationType =
   | 'does_not_resonate'
   | 'not_now'
   | 'add_context'
-  | 'clear_influence';
+  | 'clear_influence'
+  // GATE 1 (founder ruling 2026-08-09): the member acts that confer routing
+  // authority. 'confirm' — "yes, that's true of me". 'qualify' — "partly, but
+  // it's more like…" (the member's words become the governing text). These are
+  // the ONLY paths to routing_influence_weight > 0; recurrence, silence, and
+  // confidence never promote (F4).
+  | 'confirm'
+  | 'qualify';
 
 /**
  * The member's perspective on a ledger entry.

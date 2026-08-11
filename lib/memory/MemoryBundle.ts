@@ -186,6 +186,7 @@ export const MemoryBundleService = {
         FROM conversation_turns
         WHERE user_id = $1
           AND session_id <> $2
+          AND recall_eligibility = 'eligible'
         ORDER BY created_at DESC
         LIMIT 12
       `, [userId, sessionId]);

@@ -110,6 +110,12 @@ export interface MaiaContext {
   // Substrate lane only; does NOT open the Themes/Reflections rooms. See
   // docs/specs/EPISODIC_LAYER_PHASE_2_SPEC_2026-07-13.md.
   episodicRecallAddendum?: string;
+  // 🔧 CORRECTION REPAIR (Gate 1, 2026-08-09): in-turn repair guidance when the
+  // member's message contains an explicit corrective speech act. Layer A only —
+  // the durable consequence (supersession) is registered separately by
+  // lib/maia/correctionPersistence.ts under the founder ruling
+  // FOUNDER_RULING_PERSISTENT_CORRIGIBILITY_GATE1_2026-08-09.md.
+  correctionRepairAddendum?: string;
   // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
   // atoms the member chose to keep, plus witnessed practitioner observations rendered
   // with epistemic framing. Higher authority than system-retrieved conversational
@@ -421,6 +427,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
   { field: 'episodicRecallAddendum',          log: v => `📖 [Episodic Recall] Member-marked moments injected (${v.length} chars)` },
   { field: 'atomsAddendum',                   log: v => `🧬 [Atoms] Member-placed portfolio + practitioner observations injected (${v.length} chars)` },
+  { field: 'correctionRepairAddendum',        log: v => `🔧 [Correction Repair] In-turn repair guidance injected (${v.length} chars)` },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════

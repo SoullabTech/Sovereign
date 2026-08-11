@@ -63,6 +63,11 @@ export const TurnsStore = {
     userId: string,
     limit: number = 12
   ): Promise<Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>> {
+    // GATE 1 (persistent corrigibility): recall_eligibility filter enforced in
+    // SQL, at candidate generation — superseded turns (member-corrected, F2)
+    // cannot regain authority through any downstream ranker or assembler. The
+    // rows themselves are preserved; see getSessionTurns for the unfiltered
+    // per-session historical record.
     const result = await query<{ role: 'user' | 'assistant'; content: string; createdAt: string }>(
       `
       SELECT
@@ -71,6 +76,7 @@ export const TurnsStore = {
         created_at as "createdAt"
       FROM conversation_turns
       WHERE user_id = $1
+        AND recall_eligibility = 'eligible'
       ORDER BY created_at DESC, seq DESC
       LIMIT $2
       `,
