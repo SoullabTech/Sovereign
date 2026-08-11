@@ -1,7 +1,102 @@
 # Journal Deployment Closure
 
-**Status:** ⛔ **STOPPED BEFORE MERGE/DEPLOY, as instructed.** Awaiting founder walk.
+**Standing:** ✅ **JOURNAL ROOM — FOUNDER EXPERIENCE ACCEPTED, deployment corrections pending.**
 **Mandate:** JOURNAL DEPLOYMENT CLOSURE (founder, 2026-08-10) — no new features, no redesign.
+
+---
+
+## −1. FOUNDER EXPERIENCE ACCEPTANCE (2026-08-11)
+
+> **Journal has earned `/journal`.** The question is no longer *whether this should be
+> Journal*. It is *preparing the accepted Journal to replace the old one*.
+
+Accepted on candidate **`79fd8e911`**, walked at 1280 · 768 · 375. The decisive
+evidence was **not** that every visual detail is finished, but that the essential
+states hold:
+
+- arriving invites writing
+- writing gets out of the way
+- keeping returns you to your own words
+- MAIA attends rather than takes over
+- Return feels like continuity rather than recommendation
+- Browse feels like pages rather than records
+- an almost-empty journal still feels complete
+
+⚠️ **Acceptance is of the EXPERIENCE, not of the current pixels.** Four corrections are
+ruled below. Acceptance also **does not** authorize deleting capabilities members
+already have (§−1.4).
+
+### −1.1 Material: ivory, not navy — **ruled**
+
+> navy = an evening room in which writing is **displayed**
+> ivory = a surface on which writing **happens**
+
+Journal's primary human activity is **inscription**, and the material must reinforce
+the activity. Journal's primary material becomes **warm ivory / paper with charcoal
+literary type**.
+
+⛔ **This does not make Soullab ivory.** Ivory is **Journal-specific material
+language**; the deeper House grammar stays shared. Navy was not wrong — the walk
+established it as coherent — it is simply the wrong material for this activity.
+
+**KEEP, unchanged:** serif typography · 34rem reading/writing measure · charcoal
+literary type · ember/amber gestures · restraint · absence of cards · quiet metadata ·
+MAIA at the edge · generous space · existing interaction hierarchy.
+
+**No redesign.**
+
+### −1.2 Desktop composition: fix the axis, not the emptiness — **ruled**
+
+⛔ Do **not** fill the desktop · do **not** add glass boxes · do **not** widen the
+writing measure.
+
+Give the room **one compositional axis**, so the emptiness has an organizing
+relationship to the writing. Bounded correction, not another design pass.
+
+*Mobile being strongest is evidence the architecture is sound* — the wide canvas
+simply needs intentional composition.
+
+### −1.3 Green "Audio enabled" toast: suppress inside Journal — **ruled**
+
+A saturated green `z-index:99999` system notification in the middle of a
+contemplative writing environment is exactly what an inhabitable architecture must be
+able to suppress contextually.
+
+**Scoped as a HOUSE correction, not Journal candidate work:** on Journal's inhabitable
+writing/reading surfaces, do not inject the global *"Audio enabled"* toast into the
+room. ⛔ Do **not** redesign the audio system in this unit.
+
+**Floating MAIA handle and bug-report button: OBSERVE, do not remove.** The toast is
+the demonstrated severe intrusion; one clear finding must not become a global-chrome
+redesign.
+
+### −1.4 ⚠️ Browse continuity — blocks cutover
+
+The new Browse does **not** preserve the old `/journal` access to:
+
+```
+Search · Captures · Scribe · Changes · Decisions
+```
+
+**Acceptance of the room does not authorize silently deleting those capabilities.**
+They belong **behind Browse, not back on the front door** — the writing-first arrival
+is preserved.
+
+### −1.5 Authorized path
+
+```
+79fd8e911  EXPERIENCE ACCEPTED
+      ↓
+Journal Slice 2 — ivory material · desktop axis · Browse continuity
+      ↓
+House correction — suppress Audio toast in Journal
+      ↓
+FINAL FOUNDER WALK
+      ↓
+FREEZE → /journal CUTOVER → PR → MERGE → DEPLOY → PRODUCTION WALK
+```
+
+⛔ **No new Journal functionality beyond preserving what members already have.**
 
 ---
 
