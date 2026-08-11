@@ -12,8 +12,8 @@
  *
  * THE CONSTRAINT THAT SHAPES IT
  *
- * None of this may return to the front door. Arrival stays "What is here today?
- * / Begin writing / Or note something". Everything here lives behind the quiet
+ * None of this may return to the front door. Arrival stays "What would you like to Journal?"
+ * with Begin writing and Or note something. Everything here lives behind the quiet
  * secondary Browse doorway, in the room's own register — chronological lines of
  * the member's material, not a card wall with a filter bar.
  *
