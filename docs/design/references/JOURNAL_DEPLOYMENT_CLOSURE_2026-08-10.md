@@ -82,6 +82,68 @@ Search · Captures · Scribe · Changes · Decisions
 They belong **behind Browse, not back on the front door** — the writing-first arrival
 is preserved.
 
+### −1.4b ⚠️ Data-layer custody collision, 2026-08-11 — evidence preserved, not deleted
+
+While testing Browse continuity, an entry surfaced in `walk.878`'s corpus that this
+session never wrote:
+
+```
+id:      dd06a46f-fe8b-452a-a39d-d8c1c6596e7d
+member:  walk.878 (842acb0f-43e0-47ae-bcee-21e8b3a058de)
+source:  journal_room
+type:    day
+created: 2026-08-11 08:49:21.274099-04
+content: "CUTOVER PROOF 4c19 — written through /journal after the cutover."
+```
+
+**Preserved in place on founder ruling — this is evidence, not residue.** Deleting it
+now would improve the fixture aesthetically while destroying the clearest record that
+an isolated worktree was not actually isolated at the data layer.
+
+**Corroborating signal:** two new entries appeared in `.claude/launch.json` mid-session
+— `journal-cutover` and `journal-candidate` — pointing at worktrees under a different
+session's scratchpad path, never created by this lane.
+
+**Ruled out, by direct read:** the shared checkout's `app/journal/page.tsx` is
+unchanged — still `UnifiedJournalView`. No cutover happened *there*. Whatever wrote
+this entry did so from an isolated worktree, against the **same shared local
+Postgres** this lane's fixture depends on. Git isolation protected the code; nothing
+protected the data.
+
+**Governance check, via Builder OS control plane** (`session.mjs status`, not by
+inspecting the other worktree's source — per standing ruling):
+
+```
+Governed sessions: 2 total — neither Journal-related.
+  s-90e108c2  jarvis-route-a-sub-a-registry   (unrelated, STALE)
+  s-e840e30a  hook-execution-closure          (queued, unrelated)
+
+No claim, work unit, or override references Journal deployment, /journal
+cutover, journal-cutover, or journal-candidate anywhere in the registry.
+```
+
+⚠️ **This lane (`feature/journal-deployment-closure`) is also absent from the Builder
+registry** — it was never opened via `session.mjs open`. Recorded honestly rather than
+omitted: by Builder OS's own accounting, both lanes are currently ungoverned. Absence
+from the registry is not proof a lane lacks authority (a founder ruling could exist
+outside this instrument's visibility) — it is the best available control-plane check,
+and it found nothing for either side.
+
+**Standing: `CUTOVER LANE AUTHORITY: UNKNOWN / UNVERIFIED`.** No claim, ruling, or
+transfer record establishes the other lane's authority. Per founder ruling: *until
+governance evidence says otherwise, this lane remains the authoritative Journal
+deployment lane.*
+
+**Separately observed, not folded into this finding:** the local request-rate
+instrument read `ANOMALOUS` (9.56× baseline, 5-minute window) during this check. Per
+standing discipline (established elsewhere this session): *anomalous ≠ causal
+explanation.* Recorded as an observation, not treated as evidence about the cutover
+collision.
+
+**Consequence:** the founder walk does not resume against `walk.878`. See
+`SHARED_LOCAL_DATABASE_CUSTODY_RACE_2026-08-11.md` §6 for the fresh isolated fixture
+used instead.
+
 ### −1.5 Authorized path
 
 ```
