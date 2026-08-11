@@ -16,9 +16,15 @@ references, and the register of what currently holds which standing.
 |---|---|
 | `EXPERIENTIALLY_APPROVED` | The founder walked this and said yes. The experience is authoritative. |
 | `CANONICAL_IMPLEMENTATION` | The exact code / commit producing it is established and durable. |
+| `NEW_LINEAGE_ESTABLISHED` | A new implementation was built *from* an approved experience, and its first commit is recorded. Not yet walked and approved as an implementation. |
+| `NEEDS_RECOVERY` | An approved experience whose producing code is unidentified. ⚠️ Retire this label once a new lineage is established — "recovery" wrongly implies missing source is still out there waiting to be found. |
 | `PROVISIONAL_REFERENCE` | Useful evidence. Not yet canonical. |
 | `REJECTED` | The founder explicitly rejected this experience. |
 | `SUPERSEDED` | Previously approved, since replaced. Retained as history. |
+
+`NEW_LINEAGE_ESTABLISHED` → `CANONICAL_IMPLEMENTATION` requires the founder to walk
+the built implementation and approve it *as* the implementation. Building from an
+approved experience does not, by itself, make the build approved.
 
 `EXPERIENTIALLY_APPROVED` and `CANONICAL_IMPLEMENTATION` are **independent axes**.
 A reference may hold the first without the second — that is precisely the Journal's
@@ -46,7 +52,7 @@ described as canonical.
 
 | Reference | Experience standing | Implementation standing |
 |---|---|---|
-| **Journal** (arrival · writing · reading · MAIA reflection · return) | `EXPERIENTIALLY_APPROVED` | ⚠️ **NEEDS RECOVERY** — no lineage found in this repository ([finding](JOURNAL_EXPERIENTIAL_REFERENCE_2026-08-10.md#lineage-recovery-result)) |
+| **Journal** (arrival · writing · reading · MAIA reflection · return) | `EXPERIENTIALLY_APPROVED` | `NEW_LINEAGE_ESTABLISHED` — commit `07d4e1dea`, `/journal/room` |
 | **Relationships** | `PROVISIONAL_REFERENCE` — evolving; current pass not accepted | not established; visual redesign paused pending substrate repair + [`RELATIONSHIP_ROOM_CONSTITUTION.md`](../../canon/RELATIONSHIP_ROOM_CONSTITUTION.md) ratification |
 | **Author Studio** phase-b studies (`docs/design/author-studio/phase-b/*.html`) | `PROVISIONAL_REFERENCE` | in-repo static studies; **not** the Journal, despite sharing a literary register |
 | **Now What?** mockups (`docs/design/now-what/mockups/*.html`) | `PROVISIONAL_REFERENCE` | in-repo static studies |
