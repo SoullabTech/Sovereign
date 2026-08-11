@@ -7,6 +7,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
+const { buildManifest } = require('./capability-form.js');
 
 // ---------------------------------------------------------------------------
 // Runtime-root contract. Packaged mode's __dirname resolves inside
@@ -147,6 +148,33 @@ ipcMain.handle('jarvis:status', async () => {
   }
 
   return result;
+});
+
+// ---------------------------------------------------------------------------
+// jarvis:capabilities — the C0 capability manifest, read from the SAME
+// deterministic.mjs the executor imports. Deliberately not a curated list:
+// if a capability is added, removed, or has its schema changed in the
+// registry, this surface changes with it and no Desktop-side edit is needed.
+//
+// The registry declares names and argument schemas only — no descriptions and
+// no categories. Those fields are therefore absent here rather than invented,
+// and the UI must show their absence rather than paper over it.
+// ---------------------------------------------------------------------------
+ipcMain.handle('jarvis:capabilities', async () => {
+  if (!REPO_ROOT) {
+    return { available: false, reason: 'repo root not found — cannot read the deterministic registry', source: null, count: 0, capabilities: [] };
+  }
+  const registryPath = path.join(REPO_ROOT, 'scripts', 'builder', 'deterministic.mjs');
+  try {
+    if (!fs.existsSync(registryPath)) {
+      return { available: false, reason: 'deterministic.mjs not found on this checkout', source: registryPath, count: 0, capabilities: [] };
+    }
+    const mod = await import(`file://${registryPath}?t=${Date.now()}`);
+    const capabilities = buildManifest(mod.CAPABILITIES);
+    return { available: true, reason: null, source: registryPath, count: capabilities.length, capabilities };
+  } catch (e) {
+    return { available: false, reason: `registry import failed: ${e.message.slice(0, 300)}`, source: registryPath, count: 0, capabilities: [] };
+  }
 });
 
 // ---------------------------------------------------------------------------

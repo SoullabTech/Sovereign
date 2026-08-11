@@ -74,20 +74,50 @@ function onConvoKey(e) {
   e.target.value = '';
 }
 
+// ---------------------------------------------------------------------------
+// Work view.
+//
+// The C0 lane used to be two free-text boxes: a capability name and raw JSON.
+// Prose typed into the name box became a capability identifier, failed
+// deterministic matching, and escalated — the router behaving correctly on a
+// bad affordance. Fixed HERE, at the interface boundary: the capability comes
+// from the registry, the arguments come from the registry's own schema, and
+// input that cannot possibly be valid is refused locally instead of being
+// spent on a routing decision. Routing, execution, and authority are untouched.
+// ---------------------------------------------------------------------------
+const CF = window.JarvisCapabilityForm;
+
+// Wording is derived from what each lane ACTUALLY does in this build — see
+// jarvis:submit-task in main.js. C3 promises nothing it does not perform.
+const LANE_HELP = {
+  c0: '<strong>Deterministic capability.</strong> Choose a registered operation and provide its arguments. No model runs; the result is produced by the same registry the terminal uses.',
+  c1: '<strong>Small local task.</strong> Give JARVIS a bounded read-only reasoning task. It runs on the local worker (qwen2.5:7b) and is capped at 4000 input characters — oversized packets are refused, not escalated. Execution is verified; the answer’s correctness is not.',
+  c3: '<strong>Needs real reasoning.</strong> The router will select C3 and explain why, but Desktop Alpha does not invoke Claude — doing so would exercise founder identity without an active founder-driven session. The task is routed and shown to you; execution means opening a Claude Code session.',
+};
+
+let capManifest = [];
+let capRegistryInfo = null;
+let capAdvancedMode = false;
+
+async function loadCapabilities() {
+  const info = await window.jarvis.getCapabilities();
+  capRegistryInfo = info;
+  capManifest = info.capabilities || [];
+  return info;
+}
+
 function renderWork() {
   $main.innerHTML = `
     <div class="card">
       <h3>Submit a bounded task</h3>
-      <label class="hint">Lane hint</label><br>
-      <select id="lane-hint" style="margin:8px 0 12px">
+      <label class="hint">Lane</label><br>
+      <select id="lane-hint" style="margin:8px 0 8px">
         <option value="c0">C0 — deterministic capability</option>
         <option value="c1">C1 — small local task</option>
         <option value="c3">C3 — needs real reasoning</option>
       </select>
-      <div id="c0-fields">
-        <input id="capability" type="text" placeholder="capability name, e.g. inventory.routes" style="margin-bottom:8px">
-        <input id="cap-args" type="text" placeholder='args as JSON, e.g. {"dir":"app/api"}'>
-      </div>
+      <div class="lane-help" id="lane-help">${LANE_HELP.c0}</div>
+      <div id="c0-fields"></div>
       <div id="c1-fields" style="display:none">
         <textarea id="prompt" rows="3" placeholder="Small, bounded prompt for the local model…"></textarea>
       </div>
@@ -95,6 +125,7 @@ function renderWork() {
         <textarea id="description" rows="3" placeholder="Describe the task — router will select C3."></textarea>
       </div>
       <button class="primary" id="submit">Submit</button>
+      <div id="local-errors"></div>
     </div>
     <div id="result"></div>
   `;
@@ -103,19 +134,113 @@ function renderWork() {
     document.getElementById('c0-fields').style.display = laneHint.value === 'c0' ? '' : 'none';
     document.getElementById('c1-fields').style.display = laneHint.value === 'c1' ? '' : 'none';
     document.getElementById('c3-fields').style.display = laneHint.value === 'c3' ? '' : 'none';
+    document.getElementById('lane-help').innerHTML = LANE_HELP[laneHint.value];
+    document.getElementById('local-errors').innerHTML = '';
   });
   document.getElementById('submit').addEventListener('click', submitTask);
+  renderC0Fields();
+}
+
+function renderC0Fields() {
+  const host = document.getElementById('c0-fields');
+  if (!host) return;
+
+  if (!capRegistryInfo) { host.innerHTML = '<div class="hint">Reading the deterministic registry…</div>'; return; }
+  if (!capRegistryInfo.available) {
+    host.innerHTML = `<div class="errors"><div>Capability registry unavailable — ${capRegistryInfo.reason}</div></div>
+      <div class="hint">No capability list is shown rather than a stale one.</div>`;
+    return;
+  }
+
+  const filter = (document.getElementById('cap-filter') || {}).value || '';
+  const q = filter.trim().toLowerCase();
+  const shown = q ? capManifest.filter(c => c.name.toLowerCase().includes(q)) : capManifest;
+  const selected = (document.getElementById('capability-select') || {}).value || (shown[0] && shown[0].name) || '';
+
+  host.innerHTML = `
+    <input id="cap-filter" type="text" placeholder="Filter capabilities…" value="${filter}" style="margin-bottom:8px">
+    <select id="capability-select" style="width:100%;margin-bottom:6px">
+      ${shown.map(c => `<option value="${c.name}"${c.name === selected ? ' selected' : ''}>${c.name}</option>`).join('') || '<option value="">— no match —</option>'}
+    </select>
+    <div class="cap-meta" id="cap-meta"></div>
+    <div id="cap-args"></div>
+    <button class="toggle-adv" id="toggle-adv">${capAdvancedMode ? '← Structured arguments' : 'Advanced: JSON arguments →'}</button>
+    <div id="cap-advanced" style="display:${capAdvancedMode ? '' : 'none'}">
+      <textarea id="cap-args-json" rows="3" placeholder='{"dir":"app/api"}'></textarea>
+    </div>
+    <div class="hint">${capRegistryInfo.count} capabilities registered · read from ${capRegistryInfo.source}</div>
+  `;
+
+  document.getElementById('cap-filter').addEventListener('input', renderC0Fields);
+  document.getElementById('capability-select').addEventListener('change', renderArgFields);
+  document.getElementById('toggle-adv').addEventListener('click', () => {
+    capAdvancedMode = !capAdvancedMode;
+    renderC0Fields();
+  });
+  renderArgFields();
+}
+
+function renderArgFields() {
+  const sel = document.getElementById('capability-select');
+  const meta = document.getElementById('cap-meta');
+  const box = document.getElementById('cap-args');
+  if (!sel || !box || !meta) return;
+  const entry = CF.findCapability(capManifest, sel.value);
+  if (!entry) { meta.textContent = ''; box.innerHTML = ''; return; }
+
+  // The registry declares no descriptions. Say so, rather than inventing one.
+  meta.textContent = entry.has_schema
+    ? `${entry.args.length} argument(s) declared · registry exposes no description for this capability`
+    : 'Registry declares no argument schema for this capability — use Advanced JSON.';
+
+  box.style.display = capAdvancedMode ? 'none' : '';
+  if (!entry.has_schema || entry.args.length === 0) {
+    box.innerHTML = entry.has_schema ? '<div class="hint">This capability takes no arguments.</div>' : '';
+    return;
+  }
+
+  box.innerHTML = entry.args.map(a => {
+    const id = `arg-${a.name}`;
+    const constraints = [];
+    if (a.maxLength !== undefined) constraints.push(`max length ${a.maxLength}`);
+    if (a.min !== undefined) constraints.push(`min ${a.min}`);
+    if (a.max !== undefined) constraints.push(`max ${a.max}`);
+    if (!a.required) constraints.push('optional — leave blank to use the capability’s own default');
+    const field = a.type === 'enum'
+      ? `<select id="${id}" style="width:100%"><option value=""></option>${a.enum.map(v => `<option value="${v}">${v}</option>`).join('')}</select>`
+      : `<input id="${id}" type="text" placeholder="${a.type}">`;
+    return `<div class="arg-field">
+      <label for="${id}">${a.name}${a.required ? '<span class="req">*</span>' : ''} <span style="color:#55555c">(${a.type})</span></label>
+      ${field}
+      ${constraints.length ? `<div class="constraint">${constraints.join(' · ')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function showLocalErrors(errors) {
+  document.getElementById('local-errors').innerHTML = errors.length
+    ? `<div class="errors">${errors.map(e => `<div>${e}</div>`).join('')}</div>`
+    : '';
 }
 
 async function submitTask() {
   const laneHint = document.getElementById('lane-hint').value;
-  const btn = document.getElementById('submit');
-  btn.disabled = true; btn.textContent = 'Routing…';
+  showLocalErrors([]);
   let task;
+
   if (laneHint === 'c0') {
-    let args = {};
-    try { args = JSON.parse(document.getElementById('cap-args').value || '{}'); } catch { /* leave empty */ }
-    task = { capability: document.getElementById('capability').value.trim(), args };
+    // PRE-SUBMIT GATE. Invalid C0 input is refused here — it is never sent to
+    // the router merely to discover that it is invalid.
+    const sel = document.getElementById('capability-select');
+    const check = CF.validateSubmission({
+      manifest: capManifest,
+      capabilityName: sel ? sel.value : '',
+      mode: capAdvancedMode ? 'advanced' : 'structured',
+      rawValues: readStructuredValues(sel ? sel.value : ''),
+      advancedText: (document.getElementById('cap-args-json') || {}).value || '',
+    });
+    if (!check.ok) { showLocalErrors(check.errors); return; }
+    task = check.task; // identical payload shape to what is valid today
   } else if (laneHint === 'c1') {
     const p = document.getElementById('prompt').value;
     task = { bounded_for_local: true, input_chars: p.length, prompt: p };
@@ -123,11 +248,39 @@ async function submitTask() {
     task = { description: document.getElementById('description').value };
   }
 
+  const btn = document.getElementById('submit');
+  btn.disabled = true; btn.textContent = 'Routing…';
   const res = await window.jarvis.submitTask(task);
   btn.disabled = false; btn.textContent = 'Submit';
+  renderResult(res);
+}
 
+function readStructuredValues(capName) {
+  const entry = CF.findCapability(capManifest, capName);
+  if (!entry) return {};
+  const out = {};
+  for (const a of entry.args) {
+    const el = document.getElementById(`arg-${a.name}`);
+    if (el) out[a.name] = el.value;
+  }
+  return out;
+}
+
+function renderResult(res) {
   const laneClass = res.execution_lane || 'C3';
+  const t = res.task || {};
+  const invocation = t.capability
+    ? `<div class="card">
+        <h3>Invocation</h3>
+        <div class="row"><span class="label">Capability</span><span class="kv">${t.capability}</span></div>
+        <div class="row"><span class="label">Arguments</span><span class="kv">${JSON.stringify(t.args || {})}</span></div>
+        <div class="row"><span class="label">Execution status</span><span class="kv">${res.status}</span></div>
+        <div class="row"><span class="label">Verification status</span><span class="kv">${CF.describeVerification(res.verification)}</span></div>
+      </div>`
+    : '';
+
   document.getElementById('result').innerHTML = `
+    ${invocation}
     <div class="card">
       <h3>Result</h3>
       <div class="row"><span class="label">Selected lane</span><span class="lane-badge ${laneClass}">${res.execution_lane || 'REJECTED'}</span></div>
@@ -171,7 +324,7 @@ function render() {
 
 (async function init() {
   render();
-  await refreshStatus();
+  await Promise.all([refreshStatus(), loadCapabilities()]);
   render();
   setInterval(async () => { await refreshStatus(); if (currentView === 'home' || currentView === 'system') render(); }, 15000);
 })();
