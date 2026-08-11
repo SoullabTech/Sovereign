@@ -43,6 +43,7 @@
       "lib/consciousness/LLMProvider.ts",
       "lib/consciousness/MAIAUnifiedConsciousness.ts",
       "lib/consciousness/relationalCheckin.ts",
+      "lib/relationships/verdictJudge.ts",
       "lib/consultation/claude-consultation-service.ts",
       "lib/content-pipeline/extractor.ts",
       "lib/content-pipeline/qualityFilter.ts",
@@ -83,7 +84,8 @@
       "app/api/practitioner/practice-field/draft/route.ts": "Practice Field draft (added 2026-07-01). Cognitive surface, pins Haiku.",
       "app/api/studio/with-me/sessions/[sessionId]/synthesize/route.ts": "With-Me session synthesis (added 2026-06-24). Cognitive surface, pins Sonnet.",
       "lib/maia/principleExtractor.ts": "Principle extractor (added 2026-06-24). Cognitive surface, pins Haiku.",
-      "scripts/walk-relational-navigation.ts": "Dev walk harness for the relational-navigation route (added 2026-05-22). Not member-facing; migrates alongside its route."
+      "scripts/walk-relational-navigation.ts": "Dev walk harness for the relational-navigation route (added 2026-05-22). Not member-facing; migrates alongside its route.",
+      "lib/relationships/verdictJudge.ts": "Bounded LLM verdict-overreach classifier (added 2026-08-11), built after two regex patch cycles left explicit-coercion transcripts at 0/4 truly clean. Pins claude-haiku-4-5-20251001 (this codebase's established cheap-classification tier, per lib/consciousness/LLMProvider.ts). Detection only — never rewrites, never touches member text. Same directory and allowlist tier as its sibling lib/consciousness/relationalCheckin.ts, whose call shape it follows rather than inventing a new client pattern."
     }
   }
 }
