@@ -147,7 +147,16 @@ console.log('\n==================== F — existing execution path preserved ====
   const mainJs = code('main.js');
   report('main.js still routes every submitted task through router.mjs', mainJs.includes("'router.mjs'") && mainJs.includes('const decision = route(task);'));
   report('C0 execution still goes through runCapability', mainJs.includes('runCapability(task.capability, task.args || {}, REPO_ROOT)'));
-  report('no Desktop-side execution shortcut', !mainJs.includes('execSync(') && (mainJs.match(/execFileSync\(/g) || []).length === 1);
+  // Was: "exactly one execFileSync". That count-based proxy broke when the
+  // founder-ruled Alpha floor added F3 (git provenance reads) and F2 (running
+  // the governor). The property it stood for is asserted directly instead:
+  // no shell, and no execFileSync whose COMMAND is renderer-supplied.
+  const execCmds = [...mainJs.matchAll(/execFileSync\(\s*'([^']+)'/g)].map(m => m[1]);
+  report('no Desktop-side execution shortcut',
+    !mainJs.includes('execSync(') &&
+    execCmds.length > 0 && execCmds.every(c => c === 'node' || c === 'git'),
+    execCmds.join(', '));
+  report('no execFileSync takes a renderer-supplied command', !/execFileSync\(\s*(task|req|args|input)/.test(mainJs));
 }
 
 console.log('\n==================== G — C1 unchanged ====================');
@@ -169,8 +178,13 @@ console.log('\n==================== H — no new authority ===================='
 {
   const preload = code('preload.js');
   const channels = [...preload.matchAll(/ipcRenderer\.invoke\('([^']+)'/g)].map(m => m[1]).sort();
-  report('preload exposes exactly status + capabilities + submit-task',
-    JSON.stringify(channels) === JSON.stringify(['jarvis:capabilities', 'jarvis:status', 'jarvis:submit-task']), channels.join(', '));
+  // Four channels as of the Alpha floor ruling (2026-08-11): jarvis:governance-action
+  // was explicitly authorized for F2. It is still not NEW authority — it runs the
+  // governor's own CLI — so it is asserted alongside the delegation check below.
+  report('preload exposes exactly the four authorized channels',
+    JSON.stringify(channels) === JSON.stringify(['jarvis:capabilities', 'jarvis:governance-action', 'jarvis:status', 'jarvis:submit-task']), channels.join(', '));
+  report('the governance channel delegates to the governor, inventing no authority',
+    code('main.js').includes('GOV.buildGovernanceArgv') && !/['"](recover|reconcile)['"]/.test(code('main.js')));
   report('no general IPC / shell bridge added', !preload.includes('exec') && !preload.includes('send('));
 
   const mainJs = code('main.js');

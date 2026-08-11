@@ -2,7 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>JARVIS</title>
+<!-- No static <title>. The window title carries the ARTIFACT IDENTITY (F5) and is
+     set by the main process; a hard-coded title here would silently override it
+     after load, which is how the identity vanished during the 2026-08-11 walk. -->
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -64,6 +66,14 @@
   .errors div { color: #f87171; font-size: 12px; }
   .toggle-adv { background: none; border: none; color: #60a5fa; font-size: 12px; padding: 0; cursor: pointer; margin: 4px 0 8px; }
   .kv { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #b8b8c0; }
+  .claim { border-bottom: 1px solid #16171a; padding-bottom: 8px; margin-bottom: 8px; }
+  .claim:last-child { border-bottom: none; }
+  .acts { display: flex; gap: 6px; margin-top: 6px; }
+  button.act { background: #1c1d20; border: 1px solid #26272b; color: #c8c8d0; padding: 4px 12px;
+               border-radius: 6px; cursor: pointer; font-size: 12px; }
+  button.act:hover { background: #26272b; color: #fff; }
+  .act-box { background: #0e0f11; border: 1px solid #26272b; border-radius: 8px; padding: 12px; margin-top: 8px; }
+  .act-box input, .act-box select { margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -77,6 +87,8 @@
   </header>
   <main id="main"></main>
   <script src="capability-form.js"></script>
+  <script src="governance.js"></script>
+  <script src="provenance.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

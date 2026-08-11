@@ -1,19 +1,29 @@
 {
   "name": "jarvis-desktop",
   "version": "0.1.0-alpha",
-  "description": "JARVIS operational console — a separate surface from MAIA Desktop. Presentation over canonical Builder OS / router state. No business logic duplicated here.",
+  "description": "JARVIS operational console \u2014 a separate surface from MAIA Desktop. Presentation over canonical Builder OS / router state. No business logic duplicated here.",
   "main": "src/main.js",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "pack": "electron-builder --mac --dir"
+    "pack": "npm run stamp && electron-builder --mac --dir",
+    "stamp": "node -e \"const{execFileSync}=require('child_process');const fs=require('fs');const sha=execFileSync('git',['rev-parse','--short','HEAD'],{encoding:'utf8'}).trim();fs.writeFileSync('src/build-info.json',JSON.stringify({app_build_sha:sha,built_at:new Date().toISOString()},null,2));console.log('stamped build-info.json',sha)\"",
+    "dist": "npm run stamp && electron-builder --mac"
   },
   "build": {
     "appId": "life.soullab.jarvis",
     "productName": "JARVIS",
-    "directories": { "output": "dist", "buildResources": "build-resources" },
-    "files": ["src/**/*"],
-    "mac": { "category": "public.app-category.developer-tools", "identity": "Apple Development: Kelly Nezat (N9DTF6434L)" }
+    "directories": {
+      "output": "dist",
+      "buildResources": "build-resources"
+    },
+    "files": [
+      "src/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "identity": "Apple Development: Kelly Nezat (N9DTF6434L)"
+    }
   },
   "devDependencies": {
     "electron": "^28.0.0",

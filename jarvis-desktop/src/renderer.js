@@ -27,6 +27,24 @@ async function refreshStatus() {
   return lastStatus;
 }
 
+function provenanceRows(p) {
+  if (!p) return '';
+  // F3: two identities, rendered as two rows that can never be read as one.
+  return `
+    <div class="card">
+      <h3>Which JARVIS is this?</h3>
+      <div class="row">
+        <div><div class="label">Artifact identity</div><div class="detail">${p.artifact.detail}</div></div>
+        <span class="state ${p.artifact.state}">${p.artifact.state}</span>
+      </div>
+      <div class="row">
+        <div><div class="label">Execution substrate</div><div class="detail">${p.substrate.detail}</div></div>
+        <span class="state ${p.substrate.state}">${p.substrate.state}</span>
+      </div>
+      ${p.self_binding_satisfied ? '' : '<div class="hint">These are two independent facts. This Desktop cannot yet name both cleanly — treat readings accordingly.</div>'}
+    </div>`;
+}
+
 function renderHome() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
@@ -36,6 +54,15 @@ function renderHome() {
       <input id="convo" type="text" placeholder='Ask: "What&apos;s happening?" · "What&apos;s broken?" · "What needs my decision?"'>
     </div>
     <div id="convo-answer"></div>
+    ${provenanceRows(s.provenance)}
+    <div class="card">
+      <h3>Claims — governed action</h3>
+      ${renderSessionActions(s.sessions || [])}
+    </div>
+    <div class="card">
+      <h3>Governance holds ${holds.length ? `(${holds.length})` : ''}</h3>
+      ${holds.length ? holds.map(h => `<div class="row"><span>${h.unit}${h.id ? ' — ' + h.id : ''}</span><span class="state HELD">${h.claim_state || 'HELD'}</span></div>`).join('') : '<div class="hint">None observed.</div>'}
+    </div>
     <div class="card">
       <h3>System health</h3>
       ${stateRow('Builder OS', s.builder_os)}
@@ -44,13 +71,76 @@ function renderHome() {
       ${stateRow('Claude lane', s.claude_lane)}
       ${stateRow('Desktop runtime', s.desktop_runtime)}
     </div>
-    <div class="card">
-      <h3>Governance holds ${holds.length ? `(${holds.length})` : ''}</h3>
-      ${holds.length ? holds.map(h => `<div class="row"><span>${h.unit}${h.id ? ' — ' + h.id : ''}</span><span class="state HELD">${h.claim_state || 'HELD'}</span></div>`).join('') : '<div class="hint">None observed.</div>'}
-    </div>
-    <div class="hint">Observed ${s.observed_at} · repo ${s.repo_root}</div>
+    <div class="hint">Observed ${s.observed_at}</div>
   `;
   document.getElementById('convo').addEventListener('keydown', onConvoKey);
+  wireSessionActions();
+}
+
+// F2 — the acts offered come from the GOVERNOR's own liveness flags. Desktop
+// never invents availability, and never invites an act it knows is refusable.
+function renderSessionActions(sessions) {
+  if (!sessions.length) return '<div class="hint">No active claims.</div>';
+  return sessions.map((sess, i) => {
+    const acts = GOV.availableActionsFor(sess);
+    const lv = sess.liveness || {};
+    return `<div class="claim" data-i="${i}">
+      <div class="row">
+        <div>
+          <div class="label">${sess.session_id} — ${sess.work_unit}</div>
+          <div class="detail">${sess.mode || '?'} · ${sess.branch || '?'} · heartbeat ${lv.heartbeat_age_s ?? '?'}s</div>
+        </div>
+        <span class="state ${lv.claim_state === 'LIVE' ? 'AVAILABLE' : 'HELD'}">${lv.claim_state || '?'}</span>
+      </div>
+      <div class="acts">
+        ${acts.map(a => `<button class="act" data-act="${a}" data-session="${sess.session_id}">${a}</button>`).join('')}
+      </div>
+      <div class="act-form" id="act-form-${sess.session_id}"></div>
+    </div>`;
+  }).join('');
+}
+
+function wireSessionActions() {
+  document.querySelectorAll('button.act').forEach(btn => {
+    btn.addEventListener('click', () => openActForm(btn.dataset.session, btn.dataset.act));
+  });
+}
+
+function openActForm(sessionId, action) {
+  const host = document.getElementById(`act-form-${sessionId}`);
+  if (!host) return;
+  const spec = GOV.ACTIONS[action];
+  host.innerHTML = `
+    <div class="act-box">
+      <div class="hint">${spec.description}</div>
+      ${spec.needs_reason ? `<input id="act-reason" type="text" placeholder="Reason — this act is audited">` : ''}
+      ${spec.needs_state ? `<select id="act-state">${GOV.CLOSE_STATES.map(v => `<option value="${v}">${v}</option>`).join('')}</select>` : ''}
+      <div><button class="primary" id="act-confirm">Confirm ${action}</button>
+      <button class="toggle-adv" id="act-cancel">Cancel</button></div>
+      <div id="act-result"></div>
+    </div>`;
+  document.getElementById('act-cancel').addEventListener('click', () => { host.innerHTML = ''; });
+  document.getElementById('act-confirm').addEventListener('click', async () => {
+    const req = {
+      action, sessionId,
+      reason: (document.getElementById('act-reason') || {}).value || '',
+      state: (document.getElementById('act-state') || {}).value || '',
+    };
+    const pre = GOV.buildGovernanceArgv(req);
+    const out = document.getElementById('act-result');
+    if (!pre.ok) { out.innerHTML = `<div class="errors">${pre.errors.map(e => `<div>${e}</div>`).join('')}</div>`; return; }
+    const btn = document.getElementById('act-confirm');
+    btn.disabled = true; btn.textContent = 'Asking the governor…';
+    const res = await window.jarvis.governanceAction(req);
+    btn.disabled = false; btn.textContent = `Confirm ${action}`;
+    // The governor's verdict, verbatim. A refusal renders as a refusal.
+    out.innerHTML = `
+      <div class="row"><span class="label">Governor</span><span class="state ${res.outcome === 'ok' ? 'AVAILABLE' : 'UNAVAILABLE'}">${res.label}</span></div>
+      ${res.invoked ? `<div class="detail kv">${res.invoked}</div>` : ''}
+      ${res.detail ? `<pre>${res.detail}</pre>` : ''}
+      ${res.errors && res.errors.length ? `<div class="errors">${res.errors.map(e => `<div>${e}</div>`).join('')}</div>` : ''}`;
+    await refreshStatus();
+  });
 }
 
 function onConvoKey(e) {
@@ -86,6 +176,8 @@ function onConvoKey(e) {
 // spent on a routing decision. Routing, execution, and authority are untouched.
 // ---------------------------------------------------------------------------
 const CF = window.JarvisCapabilityForm;
+const GOV = window.JarvisGovernance;
+const PROV = window.JarvisProvenance;
 
 // Wording is derived from what each lane ACTUALLY does in this build — see
 // jarvis:submit-task in main.js. C3 promises nothing it does not perform.
@@ -325,6 +417,7 @@ function renderSystem() {
       ${stateRow('Memory / Postgres', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — no reachability check wired.' })}
       ${stateRow('Production', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — requires SSH; out of scope for a local console.' })}
     </div>
+    ${provenanceRows(s.provenance)}
     <div class="card">
       <h3>Builder OS detail</h3>
       <pre>${JSON.stringify(s.builder_os.detail, null, 2)}</pre>
