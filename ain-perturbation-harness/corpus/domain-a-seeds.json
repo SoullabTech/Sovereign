@@ -1,0 +1,53 @@
+{
+  "_comment": "Domain A seeds. State is STRUCTURE, not prose. Prose is rendered from this by src/render.mjs, so every presentation transform is mechanical and no generator model touches the corpus. groundTruth is derived from structure by src/groundtruth.mjs and is NOT hand-written here — it is asserted per-seed only as a redundant check that the derivation is correct.",
+  "seeds": [
+    {
+      "id": "A01",
+      "setting": "friendship",
+      "participants": { "X": { "name": "Marcus", "gender": "m" }, "Y": { "name": "Devi", "gender": "f" } },
+      "act": { "type": "betrays", "agent": "X", "recipient": "Y", "detail": "repeated something told in confidence to a mutual acquaintance" },
+      "response": { "type": "withdraws", "agent": "Y", "target": "X", "detail": "stopped answering messages" }
+    },
+    {
+      "id": "A02",
+      "setting": "workplace",
+      "participants": { "X": { "name": "Priya", "gender": "f" }, "Y": { "name": "Tomas", "gender": "m" } },
+      "act": { "type": "betrays", "agent": "X", "recipient": "Y", "detail": "presented shared work as their own to the director" },
+      "response": { "type": "withdraws", "agent": "Y", "target": "X", "detail": "began routing all communication through email only" }
+    },
+    {
+      "id": "A03",
+      "setting": "family",
+      "participants": { "X": { "name": "Eli", "gender": "nb" }, "Y": { "name": "Ruth", "gender": "f" } },
+      "act": { "type": "betrays", "agent": "X", "recipient": "Y", "detail": "disclosed a diagnosis that had been shared privately" },
+      "response": { "type": "withdraws", "agent": "Y", "target": "X", "detail": "declined the next three invitations" }
+    },
+    {
+      "id": "A04",
+      "setting": "friendship",
+      "participants": { "X": { "name": "Nadia", "gender": "f" }, "Y": { "name": "Owen", "gender": "m" } },
+      "act": { "type": "breaks_promise", "agent": "X", "recipient": "Y", "detail": "did not appear at something they had committed to attend" },
+      "response": { "type": "confronts", "agent": "Y", "target": "X", "detail": "said directly that it had happened before" }
+    },
+    {
+      "id": "A05",
+      "setting": "workplace",
+      "participants": { "X": { "name": "Sam", "gender": "nb" }, "Y": { "name": "Grace", "gender": "f" } },
+      "act": { "type": "protects", "agent": "X", "recipient": "Y", "detail": "absorbed criticism that was aimed at them" },
+      "response": { "type": "approaches", "agent": "Y", "target": "X", "detail": "asked to talk more often" }
+    },
+    {
+      "id": "A06",
+      "setting": "family",
+      "participants": { "X": { "name": "Halim", "gender": "m" }, "Y": { "name": "Jonah", "gender": "m" } },
+      "act": { "type": "withholds", "agent": "X", "recipient": "Y", "detail": "knew of a decision affecting them and did not say" },
+      "response": { "type": "withdraws", "agent": "Y", "target": "X", "detail": "stopped initiating contact" }
+    }
+  ],
+  "namePool": [
+    { "name": "Ines", "gender": "f" }, { "name": "Kwame", "gender": "m" }, { "name": "Ari", "gender": "nb" },
+    { "name": "Lena", "gender": "f" }, { "name": "Yusuf", "gender": "m" }, { "name": "Roan", "gender": "nb" },
+    { "name": "Mira", "gender": "f" }, { "name": "Petro", "gender": "m" }, { "name": "Wren", "gender": "nb" }
+  ],
+  "settingPool": ["friendship", "workplace", "family", "neighbours", "collaboration"]
+}

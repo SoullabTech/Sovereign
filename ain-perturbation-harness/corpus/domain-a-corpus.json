@@ -1,0 +1,1682 @@
+{
+  "built_from": "domain-a-seeds.json",
+  "spec": "docs/specs/RELATIONAL_GEOMETRY_SPECIFICATION.md",
+  "deterministic": true,
+  "generator_model_used": false,
+  "deferred_conditions": [
+    "A-P5-metaphor",
+    "A-P4-literary"
+  ],
+  "deferred_reason": "Metaphor and literary register cannot be rendered mechanically. Including them would require a generator model and reintroduce the confound this corpus removes. Declared, not silently dropped — presentation-invariance figures from this corpus therefore do NOT cover metaphor.",
+  "probes": [
+    {
+      "id": "P1",
+      "closed": true,
+      "text": "Whose trust was violated? Answer with one name, or \"neither\", or \"both\"."
+    },
+    {
+      "id": "P2",
+      "closed": true,
+      "text": "Who is more likely to initiate contact next? Answer with one name, or \"neither\", or \"both\"."
+    },
+    {
+      "id": "P3",
+      "closed": true,
+      "text": "Who, if anyone, owes repair? Answer with one name, or \"neither\", or \"both\"."
+    },
+    {
+      "id": "P4",
+      "closed": false,
+      "text": "What would repair require?"
+    },
+    {
+      "id": "P5",
+      "closed": false,
+      "text": "What is the risk if nothing changes?"
+    }
+  ],
+  "counts": {
+    "seeds": 6,
+    "items": 102,
+    "by_class": {
+      "baseline": 6,
+      "presentation": 48,
+      "structural": 24,
+      "null": 24
+    }
+  },
+  "items": [
+    {
+      "item_id": "A01::baseline",
+      "seed_id": "A01",
+      "condition": "baseline",
+      "class": "baseline",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-P1",
+      "seed_id": "A01",
+      "condition": "A-P1",
+      "class": "presentation",
+      "names": {
+        "X": "Kwame",
+        "Y": "Lena"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Kwame betrayed Lena — he repeated something told in confidence to a mutual acquaintance. Lena withdrew from Kwame: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-P2",
+      "seed_id": "A01",
+      "condition": "A-P2",
+      "class": "presentation",
+      "names": {
+        "X": "Ines",
+        "Y": "Yusuf"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Ines betrayed Yusuf — she repeated something told in confidence to a mutual acquaintance. Yusuf withdrew from Ines: he stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-P3",
+      "seed_id": "A01",
+      "condition": "A-P3",
+      "class": "presentation",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-P4",
+      "seed_id": "A01",
+      "condition": "A-P4",
+      "class": "presentation",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Dyad, friendship context. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-P6",
+      "seed_id": "A01",
+      "condition": "A-P6",
+      "class": "presentation",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Devi withdrew from Marcus: she stopped answering messages. That followed what had happened earlier: Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance."
+    },
+    {
+      "item_id": "A01::A-P7",
+      "seed_id": "A01",
+      "condition": "A-P7",
+      "class": "presentation",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. It landed hard. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages. The whole thing sat there afterward."
+    },
+    {
+      "item_id": "A01::A-P8",
+      "seed_id": "A01",
+      "condition": "A-P8",
+      "class": "presentation",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Devi was betrayed by Marcus — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-P1+P8",
+      "seed_id": "A01",
+      "condition": "A-P1+P8",
+      "class": "presentation",
+      "names": {
+        "X": "Kwame",
+        "Y": "Lena"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Lena was betrayed by Kwame — he repeated something told in confidence to a mutual acquaintance. Lena withdrew from Kwame: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-S1",
+      "seed_id": "A01",
+      "condition": "A-S1",
+      "class": "structural",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "X",
+        "P2": "Y",
+        "P3": "Y"
+      },
+      "text": "Two friends. Devi betrayed Marcus — she repeated something told in confidence to a mutual acquaintance. Marcus withdrew from Devi: he stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-S2",
+      "seed_id": "A01",
+      "condition": "A-S2",
+      "class": "structural",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "Y",
+        "P3": "X"
+      },
+      "text": "Two friends. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi moved toward Marcus: she started reaching out more often."
+    },
+    {
+      "item_id": "A01::A-S3",
+      "seed_id": "A01",
+      "condition": "A-S3",
+      "class": "structural",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "X",
+        "P3": "neither"
+      },
+      "text": "Two friends. Marcus protected Devi — he absorbed something difficult on their behalf. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-S1x2",
+      "seed_id": "A01",
+      "condition": "A-S1x2",
+      "class": "structural",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-N0.0",
+      "seed_id": "A01",
+      "condition": "A-N0.0",
+      "class": "null",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Marcus betrayed Devi, and he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-N0.1",
+      "seed_id": "A01",
+      "condition": "A-N0.1",
+      "class": "null",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "So — two friends. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-N0.2",
+      "seed_id": "A01",
+      "condition": "A-N0.2",
+      "class": "null",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two, friends. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages."
+    },
+    {
+      "item_id": "A01::A-N0.3",
+      "seed_id": "A01",
+      "condition": "A-N0.3",
+      "class": "null",
+      "names": {
+        "X": "Marcus",
+        "Y": "Devi"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Marcus betrayed Devi — he repeated something told in confidence to a mutual acquaintance. Devi withdrew from Marcus: she stopped answering messages. That is the situation."
+    },
+    {
+      "item_id": "A02::baseline",
+      "seed_id": "A02",
+      "condition": "baseline",
+      "class": "baseline",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-P1",
+      "seed_id": "A02",
+      "condition": "A-P1",
+      "class": "presentation",
+      "names": {
+        "X": "Lena",
+        "Y": "Petro"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Lena betrayed Petro — she presented shared work as their own to the director. Petro withdrew from Lena: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-P2",
+      "seed_id": "A02",
+      "condition": "A-P2",
+      "class": "presentation",
+      "names": {
+        "X": "Roan",
+        "Y": "Petro"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Roan betrayed Petro — they presented shared work as their own to the director. Petro withdrew from Roan: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-P3",
+      "seed_id": "A02",
+      "condition": "A-P3",
+      "class": "presentation",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-P4",
+      "seed_id": "A02",
+      "condition": "A-P4",
+      "class": "presentation",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Dyad, workplace context. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-P6",
+      "seed_id": "A02",
+      "condition": "A-P6",
+      "class": "presentation",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Tomas withdrew from Priya: he began routing all communication through email only. That followed what had happened earlier: Priya betrayed Tomas — she presented shared work as their own to the director."
+    },
+    {
+      "item_id": "A02::A-P7",
+      "seed_id": "A02",
+      "condition": "A-P7",
+      "class": "presentation",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. It landed hard. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only. The whole thing sat there afterward."
+    },
+    {
+      "item_id": "A02::A-P8",
+      "seed_id": "A02",
+      "condition": "A-P8",
+      "class": "presentation",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Tomas was betrayed by Priya — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-P1+P8",
+      "seed_id": "A02",
+      "condition": "A-P1+P8",
+      "class": "presentation",
+      "names": {
+        "X": "Lena",
+        "Y": "Petro"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Petro was betrayed by Lena — she presented shared work as their own to the director. Petro withdrew from Lena: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-S1",
+      "seed_id": "A02",
+      "condition": "A-S1",
+      "class": "structural",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "X",
+        "P2": "Y",
+        "P3": "Y"
+      },
+      "text": "Two colleagues. Tomas betrayed Priya — he presented shared work as their own to the director. Priya withdrew from Tomas: she began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-S2",
+      "seed_id": "A02",
+      "condition": "A-S2",
+      "class": "structural",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "Y",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas moved toward Priya: he started reaching out more often."
+    },
+    {
+      "item_id": "A02::A-S3",
+      "seed_id": "A02",
+      "condition": "A-S3",
+      "class": "structural",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "X",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Priya protected Tomas — she absorbed something difficult on their behalf. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-S1x2",
+      "seed_id": "A02",
+      "condition": "A-S1x2",
+      "class": "structural",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-N0.0",
+      "seed_id": "A02",
+      "condition": "A-N0.0",
+      "class": "null",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Priya betrayed Tomas, and she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-N0.1",
+      "seed_id": "A02",
+      "condition": "A-N0.1",
+      "class": "null",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "So — two colleagues. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-N0.2",
+      "seed_id": "A02",
+      "condition": "A-N0.2",
+      "class": "null",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two, colleagues. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only."
+    },
+    {
+      "item_id": "A02::A-N0.3",
+      "seed_id": "A02",
+      "condition": "A-N0.3",
+      "class": "null",
+      "names": {
+        "X": "Priya",
+        "Y": "Tomas"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Priya betrayed Tomas — she presented shared work as their own to the director. Tomas withdrew from Priya: he began routing all communication through email only. That is the situation."
+    },
+    {
+      "item_id": "A03::baseline",
+      "seed_id": "A03",
+      "condition": "baseline",
+      "class": "baseline",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-P1",
+      "seed_id": "A03",
+      "condition": "A-P1",
+      "class": "presentation",
+      "names": {
+        "X": "Wren",
+        "Y": "Ines"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Wren betrayed Ines — they disclosed a diagnosis that had been shared privately. Ines withdrew from Wren: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-P2",
+      "seed_id": "A03",
+      "condition": "A-P2",
+      "class": "presentation",
+      "names": {
+        "X": "Petro",
+        "Y": "Ines"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Petro betrayed Ines — he disclosed a diagnosis that had been shared privately. Ines withdrew from Petro: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-P3",
+      "seed_id": "A03",
+      "condition": "A-P3",
+      "class": "presentation",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two neighbours. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-P4",
+      "seed_id": "A03",
+      "condition": "A-P4",
+      "class": "presentation",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Dyad, family context. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-P6",
+      "seed_id": "A03",
+      "condition": "A-P6",
+      "class": "presentation",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Ruth withdrew from Eli: she declined the next three invitations. That followed what had happened earlier: Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately."
+    },
+    {
+      "item_id": "A03::A-P7",
+      "seed_id": "A03",
+      "condition": "A-P7",
+      "class": "presentation",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. It landed hard. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations. The whole thing sat there afterward."
+    },
+    {
+      "item_id": "A03::A-P8",
+      "seed_id": "A03",
+      "condition": "A-P8",
+      "class": "presentation",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Ruth was betrayed by Eli — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-P1+P8",
+      "seed_id": "A03",
+      "condition": "A-P1+P8",
+      "class": "presentation",
+      "names": {
+        "X": "Wren",
+        "Y": "Ines"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Ines was betrayed by Wren — they disclosed a diagnosis that had been shared privately. Ines withdrew from Wren: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-S1",
+      "seed_id": "A03",
+      "condition": "A-S1",
+      "class": "structural",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "X",
+        "P2": "Y",
+        "P3": "Y"
+      },
+      "text": "Two members of the same family. Ruth betrayed Eli — she disclosed a diagnosis that had been shared privately. Eli withdrew from Ruth: they declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-S2",
+      "seed_id": "A03",
+      "condition": "A-S2",
+      "class": "structural",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "Y",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth moved toward Eli: she started reaching out more often."
+    },
+    {
+      "item_id": "A03::A-S3",
+      "seed_id": "A03",
+      "condition": "A-S3",
+      "class": "structural",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "X",
+        "P3": "neither"
+      },
+      "text": "Two members of the same family. Eli protected Ruth — they absorbed something difficult on their behalf. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-S1x2",
+      "seed_id": "A03",
+      "condition": "A-S1x2",
+      "class": "structural",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-N0.0",
+      "seed_id": "A03",
+      "condition": "A-N0.0",
+      "class": "null",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Eli betrayed Ruth, and they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-N0.1",
+      "seed_id": "A03",
+      "condition": "A-N0.1",
+      "class": "null",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "So — two members of the same family. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-N0.2",
+      "seed_id": "A03",
+      "condition": "A-N0.2",
+      "class": "null",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two, members of the same family. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations."
+    },
+    {
+      "item_id": "A03::A-N0.3",
+      "seed_id": "A03",
+      "condition": "A-N0.3",
+      "class": "null",
+      "names": {
+        "X": "Eli",
+        "Y": "Ruth"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Eli betrayed Ruth — they disclosed a diagnosis that had been shared privately. Ruth withdrew from Eli: she declined the next three invitations. That is the situation."
+    },
+    {
+      "item_id": "A04::baseline",
+      "seed_id": "A04",
+      "condition": "baseline",
+      "class": "baseline",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-P1",
+      "seed_id": "A04",
+      "condition": "A-P1",
+      "class": "presentation",
+      "names": {
+        "X": "Ines",
+        "Y": "Yusuf"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Ines broke Yusuf — she did not appear at something they had committed to attend. Yusuf confronted Ines: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-P2",
+      "seed_id": "A04",
+      "condition": "A-P2",
+      "class": "presentation",
+      "names": {
+        "X": "Ari",
+        "Y": "Yusuf"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Ari broke Yusuf — they did not appear at something they had committed to attend. Yusuf confronted Ari: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-P3",
+      "seed_id": "A04",
+      "condition": "A-P3",
+      "class": "presentation",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two people working on something together. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-P4",
+      "seed_id": "A04",
+      "condition": "A-P4",
+      "class": "presentation",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Dyad, friendship context. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-P6",
+      "seed_id": "A04",
+      "condition": "A-P6",
+      "class": "presentation",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Owen confronted Nadia: he said directly that it had happened before. That followed what had happened earlier: Nadia broke Owen — she did not appear at something they had committed to attend."
+    },
+    {
+      "item_id": "A04::A-P7",
+      "seed_id": "A04",
+      "condition": "A-P7",
+      "class": "presentation",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. It landed hard. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before. The whole thing sat there afterward."
+    },
+    {
+      "item_id": "A04::A-P8",
+      "seed_id": "A04",
+      "condition": "A-P8",
+      "class": "presentation",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Owen was broke by Nadia — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-P1+P8",
+      "seed_id": "A04",
+      "condition": "A-P1+P8",
+      "class": "presentation",
+      "names": {
+        "X": "Ines",
+        "Y": "Yusuf"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Yusuf was broke by Ines — she did not appear at something they had committed to attend. Yusuf confronted Ines: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-S1",
+      "seed_id": "A04",
+      "condition": "A-S1",
+      "class": "structural",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "X",
+        "P2": "Y",
+        "P3": "Y"
+      },
+      "text": "Two friends. Owen broke Nadia — he did not appear at something they had committed to attend. Nadia confronted Owen: she said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-S2",
+      "seed_id": "A04",
+      "condition": "A-S2",
+      "class": "structural",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "Y",
+        "P3": "X"
+      },
+      "text": "Two friends. Nadia broke Owen — she did not appear at something they had committed to attend. Owen moved toward Nadia: he started reaching out more often."
+    },
+    {
+      "item_id": "A04::A-S3",
+      "seed_id": "A04",
+      "condition": "A-S3",
+      "class": "structural",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "X",
+        "P3": "neither"
+      },
+      "text": "Two friends. Nadia protected Owen — she absorbed something difficult on their behalf. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-S1x2",
+      "seed_id": "A04",
+      "condition": "A-S1x2",
+      "class": "structural",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-N0.0",
+      "seed_id": "A04",
+      "condition": "A-N0.0",
+      "class": "null",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Nadia broke Owen, and she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-N0.1",
+      "seed_id": "A04",
+      "condition": "A-N0.1",
+      "class": "null",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "So — two friends. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-N0.2",
+      "seed_id": "A04",
+      "condition": "A-N0.2",
+      "class": "null",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two, friends. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before."
+    },
+    {
+      "item_id": "A04::A-N0.3",
+      "seed_id": "A04",
+      "condition": "A-N0.3",
+      "class": "null",
+      "names": {
+        "X": "Nadia",
+        "Y": "Owen"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two friends. Nadia broke Owen — she did not appear at something they had committed to attend. Owen confronted Nadia: he said directly that it had happened before. That is the situation."
+    },
+    {
+      "item_id": "A05::baseline",
+      "seed_id": "A05",
+      "condition": "baseline",
+      "class": "baseline",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-P1",
+      "seed_id": "A05",
+      "condition": "A-P1",
+      "class": "presentation",
+      "names": {
+        "X": "Roan",
+        "Y": "Mira"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Roan protected Mira — they absorbed criticism that was aimed at them. Mira moved toward Roan: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-P2",
+      "seed_id": "A05",
+      "condition": "A-P2",
+      "class": "presentation",
+      "names": {
+        "X": "Yusuf",
+        "Y": "Mira"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Yusuf protected Mira — he absorbed criticism that was aimed at them. Mira moved toward Yusuf: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-P3",
+      "seed_id": "A05",
+      "condition": "A-P3",
+      "class": "presentation",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two friends. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-P4",
+      "seed_id": "A05",
+      "condition": "A-P4",
+      "class": "presentation",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Dyad, workplace context. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-P6",
+      "seed_id": "A05",
+      "condition": "A-P6",
+      "class": "presentation",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Grace moved toward Sam: she asked to talk more often. That followed what had happened earlier: Sam protected Grace — they absorbed criticism that was aimed at them."
+    },
+    {
+      "item_id": "A05::A-P7",
+      "seed_id": "A05",
+      "condition": "A-P7",
+      "class": "presentation",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. It landed hard. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often. The whole thing sat there afterward."
+    },
+    {
+      "item_id": "A05::A-P8",
+      "seed_id": "A05",
+      "condition": "A-P8",
+      "class": "presentation",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Grace was protected by Sam — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-P1+P8",
+      "seed_id": "A05",
+      "condition": "A-P1+P8",
+      "class": "presentation",
+      "names": {
+        "X": "Roan",
+        "Y": "Mira"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Mira was protected by Roan — they absorbed criticism that was aimed at them. Mira moved toward Roan: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-S1",
+      "seed_id": "A05",
+      "condition": "A-S1",
+      "class": "structural",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "X",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Grace protected Sam — she absorbed criticism that was aimed at them. Sam moved toward Grace: they asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-S2",
+      "seed_id": "A05",
+      "condition": "A-S2",
+      "class": "structural",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "X",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Sam protected Grace — they absorbed criticism that was aimed at them. Grace withdrew from Sam: she stopped initiating contact."
+    },
+    {
+      "item_id": "A05::A-S3",
+      "seed_id": "A05",
+      "condition": "A-S3",
+      "class": "structural",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "Y",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Sam betrayed Grace — they repeated something told in confidence to a mutual acquaintance. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-S1x2",
+      "seed_id": "A05",
+      "condition": "A-S1x2",
+      "class": "structural",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-N0.0",
+      "seed_id": "A05",
+      "condition": "A-N0.0",
+      "class": "null",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Sam protected Grace, and they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-N0.1",
+      "seed_id": "A05",
+      "condition": "A-N0.1",
+      "class": "null",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "So — two colleagues. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-N0.2",
+      "seed_id": "A05",
+      "condition": "A-N0.2",
+      "class": "null",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two, colleagues. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often."
+    },
+    {
+      "item_id": "A05::A-N0.3",
+      "seed_id": "A05",
+      "condition": "A-N0.3",
+      "class": "null",
+      "names": {
+        "X": "Sam",
+        "Y": "Grace"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "Y",
+        "P3": "neither"
+      },
+      "text": "Two colleagues. Sam protected Grace — they absorbed criticism that was aimed at them. Grace moved toward Sam: she asked to talk more often. That is the situation."
+    },
+    {
+      "item_id": "A06::baseline",
+      "seed_id": "A06",
+      "condition": "baseline",
+      "class": "baseline",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-P1",
+      "seed_id": "A06",
+      "condition": "A-P1",
+      "class": "presentation",
+      "names": {
+        "X": "Petro",
+        "Y": "Kwame"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Petro withheld Kwame — Petro knew of a decision affecting them and did not say. Kwame withdrew from Petro: Kwame stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-P2",
+      "seed_id": "A06",
+      "condition": "A-P2",
+      "class": "presentation",
+      "names": {
+        "X": "Mira",
+        "Y": "Ari"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Mira withheld Ari — she knew of a decision affecting them and did not say. Ari withdrew from Mira: they stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-P3",
+      "seed_id": "A06",
+      "condition": "A-P3",
+      "class": "presentation",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two colleagues. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-P4",
+      "seed_id": "A06",
+      "condition": "A-P4",
+      "class": "presentation",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Dyad, family context. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-P6",
+      "seed_id": "A06",
+      "condition": "A-P6",
+      "class": "presentation",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Jonah withdrew from Halim: Jonah stopped initiating contact. That followed what had happened earlier: Halim withheld Jonah — Halim knew of a decision affecting them and did not say."
+    },
+    {
+      "item_id": "A06::A-P7",
+      "seed_id": "A06",
+      "condition": "A-P7",
+      "class": "presentation",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. It landed hard. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact. The whole thing sat there afterward."
+    },
+    {
+      "item_id": "A06::A-P8",
+      "seed_id": "A06",
+      "condition": "A-P8",
+      "class": "presentation",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Jonah was withheld by Halim — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-P1+P8",
+      "seed_id": "A06",
+      "condition": "A-P1+P8",
+      "class": "presentation",
+      "names": {
+        "X": "Petro",
+        "Y": "Kwame"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Kwame was withheld by Petro — Petro knew of a decision affecting them and did not say. Kwame withdrew from Petro: Kwame stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-S1",
+      "seed_id": "A06",
+      "condition": "A-S1",
+      "class": "structural",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "X",
+        "P2": "Y",
+        "P3": "Y"
+      },
+      "text": "Two members of the same family. Jonah withheld Halim — Jonah knew of a decision affecting them and did not say. Halim withdrew from Jonah: Halim stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-S2",
+      "seed_id": "A06",
+      "condition": "A-S2",
+      "class": "structural",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "Y",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah moved toward Halim: Jonah started reaching out more often."
+    },
+    {
+      "item_id": "A06::A-S3",
+      "seed_id": "A06",
+      "condition": "A-S3",
+      "class": "structural",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "neither",
+        "P2": "X",
+        "P3": "neither"
+      },
+      "text": "Two members of the same family. Halim protected Jonah — Halim absorbed something difficult on their behalf. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-S1x2",
+      "seed_id": "A06",
+      "condition": "A-S1x2",
+      "class": "structural",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-N0.0",
+      "seed_id": "A06",
+      "condition": "A-N0.0",
+      "class": "null",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Halim withheld Jonah, and Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-N0.1",
+      "seed_id": "A06",
+      "condition": "A-N0.1",
+      "class": "null",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "So — two members of the same family. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-N0.2",
+      "seed_id": "A06",
+      "condition": "A-N0.2",
+      "class": "null",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two, members of the same family. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact."
+    },
+    {
+      "item_id": "A06::A-N0.3",
+      "seed_id": "A06",
+      "condition": "A-N0.3",
+      "class": "null",
+      "names": {
+        "X": "Halim",
+        "Y": "Jonah"
+      },
+      "ground_truth": {
+        "P1": "Y",
+        "P2": "X",
+        "P3": "X"
+      },
+      "text": "Two members of the same family. Halim withheld Jonah — Halim knew of a decision affecting them and did not say. Jonah withdrew from Halim: Jonah stopped initiating contact. That is the situation."
+    }
+  ]
+}
