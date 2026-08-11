@@ -6,6 +6,58 @@
  */
 import { enforceArticleIIIConversational as enforce } from '../articleIIIConversational';
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PERMANENT REGRESSION INVARIANT — MARK, NEVER DELETE
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Founder ruling, 2026-08-10. Not a test case — a standing constraint on every
+ * present and future version of relational Article III enforcement, on ANY
+ * route.
+ *
+ * A relational guardrail that strips a member's report of another person's
+ * threatening words would be epistemically tidy and humanly dangerous: it
+ * silences disclosure at the exact moment disclosure matters most.
+ *
+ * THE INVARIANT — enforcement may MARK, hedge, or attribute MAIA's own
+ * characterizations. It may NEVER delete content the member supplied. If a
+ * future implementation reintroduces drop-semantics for reported speech or
+ * reported actions, this block fails loudly and by name.
+ *
+ * ⛔ Any new enforcement adapter, on any route, MUST be added to
+ * `IMPLEMENTATIONS` so it inherits this invariant instead of re-deriving it.
+ */
+describe('INVARIANT: mark-not-delete — member disclosure is never removed', () => {
+  const IMPLEMENTATIONS: Array<[string, (r: string, m: string) => { text: string }]> = [
+    ['conversational adapter — app/api/sovereign/app/maia', enforce],
+    // ← add every future route adapter here (e.g. /list) as it is built.
+  ];
+
+  /** Reported speech and reported actions: the channel harm is disclosed through. */
+  const DISCLOSURES: Array<[string, string]> = [
+    ['He told me he would take the kids if I left.', 'He told you he would take the kids if you left.'],
+    ['He said he would make sure I left with nothing.', 'He said he would make sure you left with nothing.'],
+    ['He goes through my phone most nights.', 'He goes through your phone most nights.'],
+    ['He grabbed my wrist when I tried to leave.', 'He grabbed your wrist when you tried to leave.'],
+    ['He turned up outside my building at eleven at night.', 'He turned up outside your building at eleven at night.'],
+    ['He keeps asking until I say yes.', 'He keeps asking until you say yes.'],
+    ['He moved me off the project after I went to HR.', 'He moved you off the project after you went to HR.'],
+  ];
+
+  describe.each(IMPLEMENTATIONS)('%s', (_name, impl) => {
+    it.each(DISCLOSURES)('preserves reported harm verbatim: %s', (memberSaid, maiaReflected) => {
+      expect(impl(maiaReflected, memberSaid).text).toContain(maiaReflected);
+    });
+
+    it('keeps the disclosure while refusing the unowned characterization', () => {
+      const member = 'He told me he would take the kids if I left. I think he hates me.';
+      const reply = 'He told you he would take the kids if you left. He hates you.';
+      const out = impl(reply, member).text;
+      expect(out).toContain('He told you he would take the kids if you left.');
+      expect(out).not.toMatch(/(?:^|\s)He hates you\./);
+    });
+  });
+});
+
 describe('T4 — DIRECT REPORTED FACT survives (the most important case)', () => {
   // A guardrail that weakens, hedges, or strips supplied coercive content
   // because it concerns another person is WORSE THAN NO GUARDRAIL.
