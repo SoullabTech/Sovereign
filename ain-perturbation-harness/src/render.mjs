@@ -63,11 +63,12 @@ export function render(ep, opts = {}) {
 
   const A = ep.participants[ep.act.agent];
   const R = ep.participants[ep.act.recipient];
-  const rAgent = ep.participants[ep.response.agent];
-  const rTarget = ep.participants[ep.response.target];
+  const hasResponse = !!ep.response;
+  const rAgent = hasResponse ? ep.participants[ep.response.agent] : null;
+  const rTarget = hasResponse ? ep.participants[ep.response.target] : null;
 
   const actVerb = ACT_VERB[ep.act.type].active(A.gender);
-  const respVerb = RESPONSE_VERB[ep.response.type](rAgent.gender);
+  const respVerb = hasResponse ? RESPONSE_VERB[ep.response.type](rAgent.gender) : null;
 
   // Gender is only OBSERVABLE if the prose uses pronouns. But a pronoun whose
   // referent is ambiguous would introduce a confound worse than the one it fixes,
@@ -85,15 +86,31 @@ export function render(ep, opts = {}) {
     actClause = `${A.name} ${actVerb} ${R.name} — ${he(A)} ${ep.act.detail}`;
   }
 
-  const respClause = `${rAgent.name} ${respVerb} ${rTarget.name}: ${he(rAgent)} ${ep.response.detail}`;
+  // Domain B additions. Both branches are strict no-ops for Domain A episodes,
+  // which always have a response and never an instigator — Domain A is frozen at
+  // c8ed036cf and its rendered bytes must not move.
+  if (ep.act.instigator) {
+    const I = ep.participants[ep.act.instigator];
+    actClause = `${actClause}, at ${I.name}'s urging`;
+  }
+  if (ep.witness_of) {
+    const W = ep.participants[ep.witness_of];
+    actClause = `${actClause}. ${ep.participants.C.name} saw it happen; ${ep.participants.C.name} is close to ${W.name}`;
+  }
+
+  const respClause = hasResponse
+    ? `${rAgent.name} ${respVerb} ${rTarget.name}: ${he(rAgent)} ${ep.response.detail}`
+    : null;
 
   const frame = register === 'clinical'
     ? `Dyad, ${ep.setting} context.`
     : SETTING_FRAME[ep.setting] ?? SETTING_FRAME.friendship;
 
-  const body = order === 'retro'
-    ? `${cap(respClause)}. That followed what had happened earlier: ${actClause}.`
-    : `${cap(actClause)}. ${cap(respClause)}.`;
+  const body = !respClause
+    ? `${cap(actClause)}.`
+    : order === 'retro'
+      ? `${cap(respClause)}. That followed what had happened earlier: ${actClause}.`
+      : `${cap(actClause)}. ${cap(respClause)}.`;
 
   const t = INTENSITY[intensity] ?? INTENSITY.flat;
   return `${frame} ${t.pre}${body}${t.post}`.replace(/\s+/g, ' ').trim();
