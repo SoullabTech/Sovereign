@@ -20,6 +20,23 @@ interface EntryForDetection {
 export interface UnresolvedThread {
   type: 'rupture_without_repair' | 'repeating_tension' | 'charged_then_silent';
   description: string;
+  /**
+   * The member's own recorded moment this rests on.
+   *
+   * WHY THIS EXISTS. Every relationship that had ever held a rupture received
+   * the identical sentence — "A rupture has not yet reached repair." — in flat
+   * declarative fact-voice, in a bordered box of its own. The one line on the
+   * page claiming to perceive something about THIS relationship said the same
+   * thing about every relationship. A template is not perception.
+   *
+   * Carrying the anchor lets the room name WHEN the member wrote the thing
+   * this was derived from, so the sentence is particular to their record and
+   * visibly derived FROM it rather than pronounced OVER it. Constitution
+   * Article III: MAIA may help the member perceive, never convert perception
+   * into certainty. Article II: an observation may never read as a member's
+   * own declaration.
+   */
+  anchoredAt: string | null;
 }
 
 const TENSION_SIGNALS = ['tension', 'avoidance', 'resentment', 'pressure', 'distance'];
@@ -50,7 +67,11 @@ export function detectUnresolvedThreads(entries: EntryForDetection[]): Unresolve
   if (lastRuptureIndex >= 0 && !hasRepairAfter) {
     threads.push({
       type: 'rupture_without_repair',
-      description: 'A rupture has not yet reached repair.',
+      // Points at the member's own act — the moment THEY marked as broken —
+      // rather than asserting a state of the relationship. The room renders
+      // the date, which is what makes it this relationship's and no other's.
+      description: 'you marked something as broken here, and nothing since is marked as mended',
+      anchoredAt: sorted[lastRuptureIndex].createdAt,
     });
   }
 
@@ -67,7 +88,8 @@ export function detectUnresolvedThreads(entries: EntryForDetection[]): Unresolve
     if (tensionCount >= 2) {
       threads.push({
         type: 'repeating_tension',
-        description: 'Tension or avoidance has appeared in multiple recent check-ins.',
+        description: `you named tension or avoidance in ${tensionCount} of your last ${recentCheckins.length} check-ins`,
+        anchoredAt: recentCheckins[recentCheckins.length - 1].createdAt,
       });
     }
   }
@@ -82,7 +104,8 @@ export function detectUnresolvedThreads(entries: EntryForDetection[]): Unresolve
     if (daysSince >= 7 && wasCharged) {
       threads.push({
         type: 'charged_then_silent',
-        description: 'The field was charged, and it has been a while since you checked in.',
+        description: `you last checked in feeling ${lastCheckin.fieldToneSnapshot!.replace(/_/g, ' ')}`,
+        anchoredAt: lastCheckin.createdAt,
       });
     }
   }

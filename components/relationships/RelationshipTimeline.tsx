@@ -19,23 +19,35 @@ export interface TimelineEntry {
   createdAt: string;
 }
 
+/**
+ * Plain words, quietly set. These were uppercase, letter-spaced and coloured —
+ * visually louder than both the dates and the member's own content — so
+ * twenty-five years of a life read as a taxonomy of event types rather than as
+ * a life. The label is now the smallest, dimmest thing in the row; the words
+ * win.
+ */
 const KIND_LABELS: Record<string, string> = {
-  checkin: 'Check-in',
-  note: 'Note',
-  reflection: 'Reflection',
-  threshold: 'Threshold',
-  rupture: 'Rupture',
-  repair: 'Repair',
+  checkin: 'checked in',
+  note: 'wrote',
+  reflection: 'noticed',
+  threshold: 'marked a change',
+  rupture: 'marked something broken',
+  repair: 'marked something mended',
 };
 
-// Visual weight: border color + label styling per kind
+/**
+ * Visual weight lives in the LEFT RULE, not in the label. Turning points the
+ * member marked themselves (something broke / mended / changed) carry a warmer
+ * rule; ordinary moments stay quiet. Every label itself is the same dim stone,
+ * so no kind shouts over another person's life.
+ */
 const KIND_STYLES: Record<string, { border: string; label: string }> = {
-  checkin:    { border: 'border-jade-sage/40',   label: 'text-jade-sage' },       // primary
-  threshold:  { border: 'border-jade-copper/50', label: 'text-jade-copper' },     // emphasized
-  rupture:    { border: 'border-red-400/40',     label: 'text-red-400/80' },      // accented
-  repair:     { border: 'border-jade-malachite/40', label: 'text-jade-malachite' }, // accented (positive)
-  reflection: { border: 'border-jade-jade/30',   label: 'text-jade-jade/70' },    // moderate
-  note:       { border: 'border-jade-forest/30', label: 'text-jade-mineral' },    // quiet
+  checkin:    { border: 'border-stone-600/40',  label: 'text-stone-500' },
+  threshold:  { border: 'border-amber-700/50',  label: 'text-stone-500' },
+  rupture:    { border: 'border-amber-800/70',  label: 'text-stone-500' },
+  repair:     { border: 'border-amber-500/50',  label: 'text-stone-500' },
+  reflection: { border: 'border-stone-700/40',  label: 'text-stone-500' },
+  note:       { border: 'border-stone-800/60',  label: 'text-stone-500' },
 };
 
 /**
@@ -110,29 +122,21 @@ export default function RelationshipTimeline({
         <div key={entry.id}>
         {showYearBreak && (
           <div className="flex items-center gap-3 pt-4 pb-3">
-            <span className="text-xs text-jade-mineral/50 font-light tabular-nums">{entryYear}</span>
-            <span className="flex-1 h-px bg-jade-forest/25" />
+            <span className="text-xs text-stone-400/50 font-light tabular-nums">{entryYear}</span>
+            <span className="flex-1 h-px bg-stone-900/25" />
           </div>
         )}
         <div className={`border-l-2 ${style.border} pl-4 py-1`}>
           <div className="flex items-center flex-wrap gap-2 mb-1.5">
-            <span className={`text-xs ${style.label} uppercase tracking-wider`}>
-              {KIND_LABELS[entry.kind] || entry.kind}
+            <span className={`text-[11px] ${style.label} font-light`}>
+              {isObserved ? 'MAIA noticed' : `you ${KIND_LABELS[entry.kind] || entry.kind}`}
             </span>
-            <span className="text-xs text-jade-mineral/60" title={fullDate(entry.createdAt)}>
+            <span className="text-[11px] text-stone-600" title={fullDate(entry.createdAt)}>
               {formatDate(entry.createdAt)}
             </span>
             {entry.fieldToneSnapshot && (
-              <span className="text-xs text-jade-mineral/60 capitalize">
+              <span className="text-[11px] text-stone-600 lowercase">
                 — {entry.fieldToneSnapshot.replace(/_/g, ' ')}
-              </span>
-            )}
-            {isObserved && (
-              <span
-                className="text-[10px] text-jade-mineral/45 font-light italic"
-                title="MAIA noticed this in conversation and filed it here. It is an observation, not something you wrote."
-              >
-                noticed, not written
               </span>
             )}
           </div>
@@ -142,26 +146,38 @@ export default function RelationshipTimeline({
               {entry.feltSignals && entry.feltSignals.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {entry.feltSignals.map((s, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-jade-forest/20 border border-jade-sage/15 text-jade-mineral">
+                    <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-stone-900/20 border border-stone-700/15 text-stone-400">
                       {s}
                     </span>
                   ))}
                 </div>
               )}
               {entry.freeText && (
-                <p className="text-sm text-jade-jade/80 font-light italic">&ldquo;{entry.freeText}&rdquo;</p>
+                <p className="text-sm text-stone-200/80 font-light italic">&ldquo;{entry.freeText}&rdquo;</p>
               )}
               {entry.maiaReflection && (
-                <p className="text-sm text-jade-mineral font-light">{entry.maiaReflection}</p>
+                <p className="text-sm text-stone-400 font-light">{entry.maiaReflection}</p>
               )}
               {entry.suggestedMovement && (
-                <p className="text-xs text-jade-copper font-light mt-1">{entry.suggestedMovement}</p>
+                <p className="text-xs text-amber-600 font-light mt-1">{entry.suggestedMovement}</p>
               )}
             </div>
           )}
 
+          {/* The member's own words, warm and brighter than every label
+              around them. Machine-noticed content stays visibly cooler and
+              dimmer, so observation never wears the member's voice. */}
           {entry.kind !== 'checkin' && entry.content && (
-            <p className="text-sm text-jade-jade/80 font-light">{entry.content}</p>
+            <p
+              className={
+                isObserved
+                  ? 'text-sm text-stone-400 font-light'
+                  : 'text-[15px] text-[#ece0d2] font-light leading-relaxed'
+              }
+              style={isObserved ? undefined : { fontFamily: 'Spectral, Georgia, serif' }}
+            >
+              {entry.content}
+            </p>
           )}
         </div>
         </div>
@@ -173,9 +189,10 @@ export default function RelationshipTimeline({
       {remaining > 0 && (
         <div className="pt-3">
           <button
+            type="button"
             onClick={onLoadEarlier}
             disabled={loadingEarlier}
-            className="text-xs text-jade-mineral/70 hover:text-jade-sage transition-colors font-light disabled:opacity-40"
+            className="text-xs text-stone-400/70 hover:text-stone-300 transition-colors font-light disabled:opacity-40"
           >
             {loadingEarlier
               ? 'Going further back…'

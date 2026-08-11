@@ -109,7 +109,7 @@ const NOTE_PROMPTS: Record<NoteKind, string> = {
 
 /** Quiet section label — present for orientation, never shouting for attention. */
 function Quiet({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-xs text-jade-sage/70 tracking-wide mb-3 font-light">{children}</h2>;
+  return <h2 className="text-xs text-stone-300/70 tracking-wide mb-3 font-light">{children}</h2>;
 }
 
 export default function RelationshipDetailPage() {
@@ -120,6 +120,7 @@ export default function RelationshipDetailPage() {
   interface UnresolvedThread {
     type: string;
     description: string;
+    anchoredAt: string | null;
   }
 
   const [relationship, setRelationship] = useState<RelationshipDetail | null>(null);
@@ -216,6 +217,30 @@ export default function RelationshipDetailPage() {
     }
   };
 
+  /**
+   * Keep what the member wrote, exactly as they wrote it.
+   *
+   * No MAIA turn, no detection, no interpretation, no confidence value — which
+   * is precisely what makes the resulting entry MEMBER-AUTHORED rather than
+   * "noticed, not written". This is the gesture that makes Article VIII true:
+   * the room retains its meaning when MAIA is declined or unavailable.
+   */
+  const keepWhatTheyWrote = useCallback(async (text: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/relationships/${id}/entries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'note', content: text }),
+      });
+      const data = await res.json();
+      if (!data?.success) return false;
+      await fetchDetail();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [id, fetchDetail]);
+
   const saveName = async () => {
     const trimmed = editName.trim();
     if (!trimmed || trimmed === relationship?.name) {
@@ -239,18 +264,18 @@ export default function RelationshipDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border border-jade-sage/30 rounded-full animate-spin" style={{ borderTopColor: 'var(--jade-jade, #a8c7a0)' }} />
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0e17]">
+        <div className="w-8 h-8 border border-stone-700/30 rounded-full animate-spin" style={{ borderTopColor: '#b4703a' }} />
       </div>
     );
   }
 
   if (error || !relationship) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0e17]">
         <div className="text-center">
-          <p className="text-jade-mineral mb-4">{error || 'Not found'}</p>
-          <button onClick={() => router.push('/relationships')} className="text-sm text-jade-sage hover:text-jade-jade transition-colors">
+          <p className="text-stone-400 mb-4">{error || 'Not found'}</p>
+          <button onClick={() => router.push('/relationships')} className="text-sm text-stone-300 hover:text-stone-200 transition-colors">
             Back to field
           </button>
         </div>
@@ -262,11 +287,15 @@ export default function RelationshipDetailPage() {
   const isContainer = relationship.origin === 'system';
 
   return (
-    <div className="min-h-screen relative">
+    /* Navy field, ember light. A deep blue-black room rather than a black
+       terminal, with the only real warmth coming from the member's own words
+       — no glow, no wash, no atmosphere painted around them. */
+    <div className="min-h-screen relative bg-[#0a0e17]">
       <div className="max-w-2xl mx-auto px-6 py-10">
         <button
+          type="button"
           onClick={() => router.push('/relationships')}
-          className="text-xs text-jade-mineral/70 hover:text-jade-sage transition-colors mb-10 block"
+          className="text-xs text-stone-500 hover:text-amber-200/70 transition-colors mb-10 block"
         >
           &larr; Relational Field
         </button>
@@ -279,10 +308,10 @@ export default function RelationshipDetailPage() {
             anyone by guessing. UNKNOWN REMAINS UNKNOWN. */}
         {isContainer && (
           <div className="mb-8">
-            <h1 className="text-2xl font-extralight text-jade-mineral tracking-wide mb-3">
+            <h1 className="text-2xl font-extralight text-stone-400 tracking-wide mb-3">
               Not yet placed
             </h1>
-            <p className="text-sm text-jade-mineral/75 font-light leading-relaxed max-w-lg">
+            <p className="text-sm text-stone-400/75 font-light leading-relaxed max-w-lg">
               Things you said in conversation that sounded relational, which we couldn&apos;t
               tell who they were about. We won&apos;t guess. This is our unfinished work — it
               is kept here so nothing of yours is lost, not because it belongs to anyone.
@@ -298,12 +327,15 @@ export default function RelationshipDetailPage() {
               onChange={e => setEditName(e.target.value)}
               onBlur={saveName}
               onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
-              className="text-4xl font-extralight text-jade-jade tracking-wide bg-transparent border-b border-jade-sage/30 outline-none w-full"
+              className="text-4xl font-extralight text-amber-100/75 tracking-wide bg-transparent border-b border-amber-800/40 outline-none w-full"
             />
           ) : (
+            /* Lamplight, not terminal-green. The name is warm but deliberately
+               dimmer than the member's own sentence below it — the person is
+               named; what the member said about them is what glows. */
             <h1
               onClick={() => { setEditName(relationship.name); setEditingName(true); }}
-              className="text-4xl font-extralight text-jade-jade tracking-wide cursor-text hover:text-jade-sage/90 transition-colors"
+              className="text-4xl font-extralight text-amber-100/75 tracking-wide cursor-text hover:text-amber-100 transition-colors"
               title="Click to rename"
             >
               {relationship.name}
@@ -311,12 +343,12 @@ export default function RelationshipDetailPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-jade-mineral/70 mb-6">
+        <div className="flex items-center gap-3 text-xs text-stone-400/70 mb-6">
           {relationship.bondType && (
             <span className="capitalize">{relationship.bondType.replace(/_/g, ' ')}</span>
           )}
           {relationship.realm !== 'outer' && (
-            <span className="text-jade-copper capitalize">{relationship.realm}</span>
+            <span className="text-amber-600 capitalize">{relationship.realm}</span>
           )}
         </div>
 
@@ -325,7 +357,7 @@ export default function RelationshipDetailPage() {
             on this page is quieter than this sentence on purpose. */}
         {relationship.note && (
           <p
-            className="text-2xl leading-[1.6] text-jade-silver font-extralight"
+            className="text-2xl leading-[1.6] text-[#f2e6d8] font-extralight"
             style={{ fontFamily: 'Spectral, Georgia, serif' }}
           >
             {relationship.note}
@@ -338,17 +370,17 @@ export default function RelationshipDetailPage() {
             other person, and let a reading from months ago pass as current.
             `lastCheckinAt` was fetched, typed, and never shown at all. */}
         {fieldState?.fieldTone && (
-          <p className="mt-5 text-sm text-jade-mineral/85 font-light flex items-center gap-2 flex-wrap">
+          <p className="mt-5 text-sm text-stone-400/85 font-light flex items-center gap-2 flex-wrap">
             <FieldToneIndicator tone={fieldState.fieldTone} size="sm" />
             <span>
               is how you sensed things here
               {fieldState.lastCheckinAt ? (
                 <>
                   {' '}on {onDate(fieldState.lastCheckinAt)}
-                  <span className="text-jade-mineral/55"> — {ageInWords(fieldState.lastCheckinAt)}</span>
+                  <span className="text-stone-400/55"> — {ageInWords(fieldState.lastCheckinAt)}</span>
                 </>
               ) : (
-                <span className="text-jade-mineral/55"> — the last time you checked in</span>
+                <span className="text-stone-400/55"> — the last time you checked in</span>
               )}
             </span>
           </p>
@@ -361,36 +393,16 @@ export default function RelationshipDetailPage() {
             fully usable if she is declined, unavailable, or simply not wanted.
             The room keeps its whole meaning without her. */}
         {!isContainer && (
-          <>
-            <RelationshipConversation
-              relationshipId={id}
-              name={relationship.name}
-              bondType={relationship.bondType}
-              note={relationship.note}
-            />
-            <button
-              onClick={() => { setShowAddNote(true); setShowCheckin(false); setShowMore(true); }}
-              className="mt-3 text-xs text-jade-mineral/70 hover:text-jade-sage transition-colors font-light"
-            >
-              …or just write it down, for yourself
-            </button>
-          </>
+          <RelationshipConversation
+            relationshipId={id}
+            name={relationship.name}
+            bondType={relationship.bondType}
+            note={relationship.note}
+            onWriteDown={keepWhatTheyWrote}
+          />
         )}
 
         {/* ── Only what has something to say ──────────────────────────────── */}
-
-        {unresolvedThreads.length > 0 && (
-          <section className="mt-12">
-            <Quiet>Something remains open</Quiet>
-            <div className="space-y-2">
-              {unresolvedThreads.map((thread, i) => (
-                <div key={i} className="px-4 py-3 rounded-lg border border-jade-copper/20 bg-jade-forest/5">
-                  <p className="text-sm text-jade-mineral font-light">{thread.description}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* ── NEXT MOVEMENT — relocated, not removed ──────────────────────────
             A standalone "A next movement" heading greeted the member on
@@ -414,17 +426,17 @@ export default function RelationshipDetailPage() {
             {fieldState.activeSignals && fieldState.activeSignals.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {fieldState.activeSignals.map((s, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-jade-forest/20 border border-jade-sage/15 text-jade-mineral">
+                  <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-stone-900/20 border border-stone-700/15 text-stone-400">
                     {s}
                   </span>
                 ))}
               </div>
             )}
             {fieldState.dominantPattern && (
-              <p className="text-xs text-jade-mineral mb-1">{fieldState.dominantPattern}</p>
+              <p className="text-xs text-stone-400 mb-1">{fieldState.dominantPattern}</p>
             )}
             {fieldState.developmentalTheme && (
-              <p className="text-xs text-jade-copper font-light">{fieldState.developmentalTheme}</p>
+              <p className="text-xs text-amber-600 font-light">{fieldState.developmentalTheme}</p>
             )}
           </section>
         )}
@@ -432,6 +444,24 @@ export default function RelationshipDetailPage() {
         {hasHistory && (
           <section className="mt-12">
             <Quiet>{isContainer ? 'What is held here' : 'Together, over time'}</Quiet>
+
+            {/* Derived noticing — moved OUT of arrival and INTO looking back.
+                It no longer greets the member above their own words in a
+                bordered box speaking in fact-voice. It is attributed to MAIA,
+                phrased as noticing rather than verdict, anchored to the date of
+                the member's OWN entry it was derived from, and it renders only
+                when it has a real anchor — so silence is what happens when
+                there is nothing particular to say. */}
+            {unresolvedThreads
+              .filter((t) => t.anchoredAt)
+              .map((thread, i) => (
+                <p key={i} className="mb-4 text-sm text-stone-400 font-light leading-relaxed">
+                  <span className="text-stone-500">MAIA notices, reading back: </span>
+                  {thread.description}
+                  <span className="text-stone-500"> — {onDate(thread.anchoredAt!)}.</span>
+                </p>
+              ))}
+
             <RelationshipTimeline
               entries={entries}
               total={history?.total}
@@ -445,11 +475,12 @@ export default function RelationshipDetailPage() {
             Hidden for system containers: there is no relationship here to
             check in on or repair, and offering those would dress the system's
             unfinished work as a bond. */}
-        <section className={isContainer ? 'hidden' : 'mt-14 pt-6 border-t border-jade-forest/20'}>
+        <section className={isContainer ? 'hidden' : 'mt-14 pt-6 border-t border-stone-800/20'}>
           {!showMore && !showCheckin && !showAddNote && (
             <button
+              type="button"
               onClick={() => setShowMore(true)}
-              className="text-xs text-jade-mineral/60 hover:text-jade-sage transition-colors font-light"
+              className="text-xs text-stone-400/60 hover:text-stone-300 transition-colors font-light"
             >
               Other ways to be with this
             </button>
@@ -459,6 +490,7 @@ export default function RelationshipDetailPage() {
             <div className="space-y-4">
               <div className="flex flex-wrap gap-4 text-xs font-light">
                 <button
+                  type="button"
                   onClick={() => {
                     // Refetch on CLOSE as well as on complete. A check-in writes its
                     // entry and field state before the member dismisses the panel, so
@@ -468,38 +500,42 @@ export default function RelationshipDetailPage() {
                     setShowCheckin(!showCheckin);
                     setShowAddNote(false);
                   }}
-                  className="text-jade-sage hover:text-jade-jade transition-colors"
+                  className="text-stone-300 hover:text-stone-200 transition-colors"
                 >
                   {showCheckin ? 'Not now' : 'Check in'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => { setShowAddNote(!showAddNote); setShowCheckin(false); }}
-                  className="text-jade-sage hover:text-jade-jade transition-colors"
+                  className="text-stone-300 hover:text-stone-200 transition-colors"
                 >
                   {showAddNote ? 'Not now' : 'Write something down'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => router.push(`/labtools/relational-field?relationshipId=${id}`)}
-                  className="text-jade-mineral/70 hover:text-jade-sage transition-colors"
+                  className="text-stone-400/70 hover:text-stone-300 transition-colors"
                 >
                   Sense the tone
                 </button>
                 <button
+                  type="button"
                   onClick={() => router.push(`/labtools/dynamics-map?relationshipId=${id}`)}
-                  className="text-jade-mineral/70 hover:text-jade-sage transition-colors"
+                  className="text-stone-400/70 hover:text-stone-300 transition-colors"
                 >
                   Notice the pattern
                 </button>
                 <button
+                  type="button"
                   onClick={() => router.push(`/labtools/repair-path?relationshipId=${id}`)}
-                  className="text-jade-mineral/70 hover:text-jade-sage transition-colors"
+                  className="text-stone-400/70 hover:text-stone-300 transition-colors"
                 >
                   When something has broken
                 </button>
               </div>
 
               {showCheckin && (
-                <div className="p-4 rounded-lg border border-jade-sage/15 bg-jade-forest/5">
+                <div className="p-4 rounded-lg border border-stone-700/15 bg-stone-900/5">
                   <CheckInFlow
                     relationshipId={id}
                     relationshipName={relationship.name}
@@ -509,7 +545,7 @@ export default function RelationshipDetailPage() {
               )}
 
               {showAddNote && (
-                <div className="p-4 rounded-lg border border-jade-sage/15 bg-jade-forest/5">
+                <div className="p-4 rounded-lg border border-stone-700/15 bg-stone-900/5">
                   {/* All five kinds the API has always accepted. `rupture` and
                       `repair` were missing here while the OBSERVER could write
                       a rupture — the machine could name what broke and the
@@ -518,12 +554,13 @@ export default function RelationshipDetailPage() {
                   <div className="flex flex-wrap gap-2 mb-3">
                     {NOTE_KINDS.map(({ kind, label }) => (
                       <button
+                        type="button"
                         key={kind}
                         onClick={() => setNoteKind(kind)}
                         className={`px-2.5 py-1 rounded-full text-xs transition-all ${
                           noteKind === kind
-                            ? 'bg-jade-forest/40 text-jade-jade border border-jade-sage/40'
-                            : 'bg-jade-shadow/40 text-jade-mineral border border-jade-forest/30'
+                            ? 'bg-stone-900/40 text-stone-200 border border-stone-700/40'
+                            : 'bg-stone-900/40 text-stone-400 border border-stone-800/30'
                         }`}
                       >
                         {label}
@@ -535,12 +572,13 @@ export default function RelationshipDetailPage() {
                     onChange={(e) => setNoteContent(e.target.value)}
                     rows={3}
                     placeholder={NOTE_PROMPTS[noteKind]}
-                    className="w-full px-3 py-2 rounded-lg bg-jade-shadow border border-jade-sage/20 text-jade-jade placeholder:text-jade-mineral/40 focus:outline-none focus:border-jade-sage/50 text-sm resize-none mb-3"
+                    className="w-full px-3 py-2 rounded-lg bg-stone-900 border border-stone-700/20 text-stone-200 placeholder:text-stone-400/40 focus:outline-none focus:border-stone-700/50 text-sm resize-none mb-3"
                   />
                   <button
+                    type="button"
                     onClick={handleSaveNote}
                     disabled={savingNote || !noteContent.trim()}
-                    className="px-4 py-1.5 rounded-lg bg-jade-forest/30 border border-jade-sage/25 text-jade-jade text-xs font-light hover:bg-jade-forest/45 transition-all disabled:opacity-40"
+                    className="px-4 py-1.5 rounded-lg bg-stone-900/30 border border-stone-700/25 text-stone-200 text-xs font-light hover:bg-stone-900/45 transition-all disabled:opacity-40"
                   >
                     {savingNote ? 'Saving...' : 'Save'}
                   </button>

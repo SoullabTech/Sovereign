@@ -77,38 +77,40 @@ export default function RelationshipFieldPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0e17]">
         <div className="text-center">
-          <div className="w-8 h-8 border border-jade-sage/30 rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: 'var(--jade-jade, #a8c7a0)' }} />
-          <p className="text-sm text-jade-mineral font-light tracking-wide">Loading relational field...</p>
+          <div className="w-8 h-8 border border-stone-700/30 rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: '#b4703a' }} />
+          <p className="text-sm text-stone-400 font-light tracking-wide">Loading relational field...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative bg-[#0a0e17]">
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex items-start justify-between mb-10">
           <div>
             <button
+              type="button"
               onClick={() => router.push('/maia')}
               className="text-xs text-stone-500 hover:text-amber-400/80 transition-colors mb-3 flex items-center gap-1"
             >
               <span className="text-[10px]">&#8592;</span> Back to MAIA
             </button>
-            <h1 className="text-3xl font-extralight text-jade-jade tracking-wide mb-2">
+            <h1 className="text-3xl font-extralight text-stone-200 tracking-wide mb-2">
               Relational Field
             </h1>
-            <p className="text-sm text-jade-mineral font-light max-w-md">
+            <p className="text-sm text-stone-400 font-light max-w-md">
               The living patterns of your relationships — outer and inner — made visible.
             </p>
           </div>
           {hasAny && (
             <button
+              type="button"
               onClick={() => { setCreateRealm(undefined); setShowCreate(true); }}
-              className="px-4 py-2 rounded-lg bg-jade-forest/30 border border-jade-sage/25 text-jade-jade text-sm font-light hover:bg-jade-forest/45 transition-all flex-shrink-0"
+              className="px-4 py-2 rounded-lg bg-stone-900/30 border border-stone-700/25 text-stone-200 text-sm font-light hover:bg-stone-900/45 transition-all flex-shrink-0"
             >
               + Add
             </button>
@@ -132,7 +134,7 @@ export default function RelationshipFieldPage() {
               if (!items || items.length === 0) return null;
               return (
                 <div key={realm}>
-                  <h2 className="text-xs text-jade-sage uppercase tracking-wider mb-3">
+                  <h2 className="text-xs text-stone-300 uppercase tracking-wider mb-3">
                     {REALM_HEADERS[realm]}
                   </h2>
                   <div className="space-y-2">
@@ -153,11 +155,11 @@ export default function RelationshipFieldPage() {
         {/* What the system has not been able to place. Named as the system's
             own unfinished work — never as a person, never among people. */}
         {containers.length > 0 && (
-          <div className="mt-14 pt-6 border-t border-jade-forest/20">
-            <h2 className="text-xs text-jade-mineral/70 tracking-wide mb-2 font-light">
+          <div className="mt-14 pt-6 border-t border-stone-800/20">
+            <h2 className="text-xs text-stone-400/70 tracking-wide mb-2 font-light">
               Not yet placed
             </h2>
-            <p className="text-xs text-jade-mineral/60 font-light mb-3 max-w-md leading-relaxed">
+            <p className="text-xs text-stone-400/60 font-light mb-3 max-w-md leading-relaxed">
               Things you&apos;ve said in conversation that sounded relational, which we
               couldn&apos;t tell who they were about. This is our unfinished work, not a
               relationship — it&apos;s here so nothing of yours is lost.
@@ -165,11 +167,12 @@ export default function RelationshipFieldPage() {
             <div className="space-y-2">
               {containers.map((c) => (
                 <button
+                  type="button"
                   key={c.id}
                   onClick={() => router.push(`/relationships/${c.id}`)}
-                  className="w-full text-left px-4 py-2.5 rounded-lg border border-dashed border-jade-forest/40 bg-transparent hover:border-jade-sage/30 transition-colors"
+                  className="w-full text-left px-4 py-2.5 rounded-lg border border-dashed border-stone-800/40 bg-transparent hover:border-stone-700/30 transition-colors"
                 >
-                  <span className="text-sm text-jade-mineral/80 font-light">
+                  <span className="text-sm text-stone-400/80 font-light">
                     Unplaced material
                   </span>
                 </button>

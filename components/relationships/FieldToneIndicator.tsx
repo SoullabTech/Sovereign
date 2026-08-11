@@ -2,16 +2,16 @@
 
 // Matches CANONICAL_TONES from lib/consciousness/relationalCheckin.ts
 const TONE_COLORS: Record<string, string> = {
-  open: 'bg-jade-jade/60',
-  contracted: 'bg-jade-forest/60',
-  unclear: 'bg-jade-mineral/30',
+  open: 'bg-stone-300/60',
+  contracted: 'bg-stone-900/60',
+  unclear: 'bg-stone-600/30',
   tense: 'bg-red-400/40',
   warm: 'bg-amber-400/60',
-  distant: 'bg-jade-mineral/40',
+  distant: 'bg-stone-600/40',
   fragile: 'bg-amber-300/40',
-  active: 'bg-jade-malachite/60',
-  quiet: 'bg-jade-sage/40',
-  unresolved: 'bg-jade-copper/40',
+  active: 'bg-amber-600/60',
+  quiet: 'bg-stone-500/40',
+  unresolved: 'bg-amber-700/40',
 };
 
 export default function FieldToneIndicator({
@@ -29,7 +29,7 @@ export default function FieldToneIndicator({
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className={`${sizeClass} rounded-full ${colorClass}`} />
-      <span className="text-xs text-jade-mineral capitalize">{tone.replace(/_/g, ' ')}</span>
+      <span className="text-xs text-stone-400 capitalize">{tone.replace(/_/g, ' ')}</span>
     </span>
   );
 }

@@ -37,22 +37,23 @@ export default function RelationshipCard({
 }) {
   const realmIcon = {
     outer: null,
-    inner: <span className="text-xs text-jade-copper">inner</span>,
-    transpersonal: <span className="text-xs text-jade-copper">transpersonal</span>,
+    inner: <span className="text-xs text-amber-600">inner</span>,
+    transpersonal: <span className="text-xs text-amber-600">transpersonal</span>,
   };
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="w-full text-left px-5 py-4 rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all duration-200 group"
+      className="w-full text-left px-5 py-4 rounded-lg border border-stone-700/20 bg-stone-900/10 hover:bg-stone-900/20 hover:border-stone-700/30 transition-all duration-200 group"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-jade-jade font-light truncate">{relationship.name}</span>
+            <span className="text-stone-200 font-light truncate">{relationship.name}</span>
             {realmIcon[relationship.realm]}
           </div>
-          <div className="flex items-center gap-3 text-xs text-jade-mineral">
+          <div className="flex items-center gap-3 text-xs text-stone-400">
             {relationship.bondType && (
               <span className="capitalize">{relationship.bondType.replace(/_/g, ' ')}</span>
             )}
@@ -64,7 +65,7 @@ export default function RelationshipCard({
         <div className="flex-shrink-0 pt-1 text-right">
           <FieldToneIndicator tone={relationship.fieldTone} />
           {relationship.activeSignals && relationship.activeSignals.length > 0 && (
-            <div className="mt-1 text-[10px] text-jade-mineral/60">
+            <div className="mt-1 text-[10px] text-stone-400/60">
               {relationship.activeSignals.slice(0, 3).join(' + ')}
             </div>
           )}
