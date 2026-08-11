@@ -23,7 +23,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params;
-    const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '20'), 50);
+    // Depth is the design target, not recency: the room must be able to reach
+    // the beginning of a long relationship, so the ceiling is generous.
+    const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '50'), 200);
     const offset = parseInt(request.nextUrl.searchParams.get('offset') || '0');
 
     // Verify ownership

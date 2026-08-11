@@ -27,7 +27,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
 
     const relationship = await queryOne(
-      `SELECT id, name, realm, bond_type, note, created_at, updated_at
+      `SELECT id, name, realm, bond_type, note, origin, created_at, updated_at
        FROM member_relationships
        WHERE id = $1 AND member_id = $2 AND archived_at IS NULL`,
       [id, session.memberId]
@@ -46,14 +46,30 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       [id]
     );
 
-    // Recent entries
+    // History.
+    //
+    // A relationship must become MORE representable as history accumulates,
+    // not less. This query used to stop at a silent `LIMIT 20` — a 25-year
+    // relationship simply lost its past with no indication that anything had
+    // been withheld. A record that quietly stops is worse than one that says
+    // where it stops, so the page size is larger AND the true total is
+    // returned, so the room can say what remains and go get it.
+    const HISTORY_PAGE_SIZE = 100;
+
     const entries = await query(
       `SELECT id, kind, felt_signals, free_text, maia_reflection, pattern_hint,
               field_tone_snapshot, suggested_movement, content, confidence, created_at
        FROM relationship_entries
        WHERE relationship_id = $1 AND member_id = $2
        ORDER BY created_at DESC
-       LIMIT 20`,
+       LIMIT $3`,
+      [id, session.memberId, HISTORY_PAGE_SIZE]
+    );
+
+    const totalRow = await queryOne(
+      `SELECT COUNT(*)::int AS total, MIN(created_at) AS first_at
+       FROM relationship_entries
+       WHERE relationship_id = $1 AND member_id = $2`,
       [id, session.memberId]
     );
 
@@ -65,6 +81,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         realm: relationship.realm,
         bondType: relationship.bond_type,
         note: relationship.note,
+        // Provenance of the ROW: 'member' = the member made this;
+        // 'system' = a container the system created for what it could not
+        // resolve. Says nothing about the entries inside it.
+        origin: relationship.origin || 'member',
         createdAt: relationship.created_at,
         updatedAt: relationship.updated_at,
       },
@@ -89,6 +109,12 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         confidence: e.confidence,
         createdAt: e.created_at,
       })),
+      // Say where the record stops, and where it began.
+      history: {
+        total: totalRow?.total ?? entries.rows.length,
+        returned: entries.rows.length,
+        firstAt: totalRow?.first_at ?? null,
+      },
       unresolvedThreads: detectUnresolvedThreads(entries.rows.map(e => ({
         kind: e.kind,
         feltSignals: e.felt_signals,

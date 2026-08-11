@@ -10,6 +10,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
+import {
+  resolveExplicitRelationshipId,
+  logAttachmentOutcome,
+} from '@/lib/relationships/resolveExplicitRelationshipId';
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
 import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
@@ -1433,7 +1437,19 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // 🔒 SANCTUARY MODE: a sanctuary turn must never feed relational observation or signal
     // persistence — its content must not become available to Relationship Field retrieval.
     if (userId && message && orchestratorResult.text && !isSanctuary) {
-      observeRelationalContent(userId, message, orchestratorResult.text, { isSanctuary });
+      // 🔗 EXPLICIT RELATIONSHIP CONTEXT — symmetry with the high-traffic route.
+      // No client sends `consciousnessContext.relationshipId` here today, so
+      // this resolves to `{ status: 'none' }` and behavior is unchanged. It is
+      // threaded anyway so the two live routes cannot drift apart again.
+      const attachment = await resolveExplicitRelationshipId(meta);
+      logAttachmentOutcome('sovereign/app/maia/list', attachment);
+      const attachedRelationshipId =
+        attachment.status === 'attached' ? attachment.relationshipId : null;
+
+      observeRelationalContent(userId, message, orchestratorResult.text, {
+        isSanctuary,
+        explicitRelationshipId: attachedRelationshipId,
+      });
 
       // 🌊 RELATIONAL FIELD CARD: Phase 4 detection (fire-and-forget).
       try {
@@ -1445,7 +1461,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             typeof turnIdRaw === 'number' && Number.isFinite(turnIdRaw) && turnIdRaw > 0
               ? turnIdRaw
               : null;
-          persistDetectedSignal(userId, detected, null, sourceTurnId).catch((err) => {
+          persistDetectedSignal(userId, detected, attachedRelationshipId, sourceTurnId).catch((err) => {
             console.warn('[relationalSignals] persist error (non-blocking):', err?.message || err);
           });
         }

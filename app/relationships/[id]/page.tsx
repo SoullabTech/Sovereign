@@ -44,7 +44,37 @@ interface RelationshipDetail {
   realm: string;
   bondType: string | null;
   note: string | null;
+  /** 'system' = a container the system made for what it could not resolve. */
+  origin?: 'member' | 'system';
   createdAt: string;
+}
+
+interface HistoryMeta {
+  total: number;
+  returned: number;
+  firstAt: string | null;
+}
+
+/**
+ * How long ago, in words. Sensing has an age: a tone recorded four months ago
+ * is not this relationship's present condition, and rendering it undated let
+ * stale sensing read as current.
+ */
+function ageInWords(dateStr: string): string {
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
+  const months = Math.round(days / 30);
+  if (months < 18) return months === 1 ? 'a month ago' : `${months} months ago`;
+  const years = Math.round(days / 365);
+  return years === 1 ? 'a year ago' : `${years} years ago`;
+}
+
+function onDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString([], {
+    month: 'long', day: 'numeric', year: 'numeric',
+  });
 }
 
 interface FieldState {
@@ -54,6 +84,28 @@ interface FieldState {
   developmentalTheme: string | null;
   lastCheckinAt: string | null;
 }
+
+type NoteKind = 'note' | 'reflection' | 'threshold' | 'rupture' | 'repair';
+
+/**
+ * The member's own vocabulary for the condition of their relationship, in
+ * plain language rather than schema words. Offered, never required.
+ */
+const NOTE_KINDS: ReadonlyArray<{ kind: NoteKind; label: string }> = [
+  { kind: 'note',       label: 'something happened' },
+  { kind: 'reflection', label: "something I'm noticing" },
+  { kind: 'threshold',  label: 'something changed' },
+  { kind: 'rupture',    label: 'something broke' },
+  { kind: 'repair',     label: 'something mended' },
+];
+
+const NOTE_PROMPTS: Record<NoteKind, string> = {
+  note: 'What happened?',
+  reflection: 'What are you noticing?',
+  threshold: 'What shifted?',
+  rupture: 'What broke, in your experience of it?',
+  repair: 'What found its way back?',
+};
 
 /** Quiet section label — present for orientation, never shouting for attention. */
 function Quiet({ children }: { children: React.ReactNode }) {
@@ -73,6 +125,8 @@ export default function RelationshipDetailPage() {
   const [relationship, setRelationship] = useState<RelationshipDetail | null>(null);
   const [fieldState, setFieldState] = useState<FieldState | null>(null);
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
+  const [history, setHistory] = useState<HistoryMeta | null>(null);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
   const [unresolvedThreads, setUnresolvedThreads] = useState<UnresolvedThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -80,7 +134,12 @@ export default function RelationshipDetailPage() {
   const [showAddNote, setShowAddNote] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [noteContent, setNoteContent] = useState('');
-  const [noteKind, setNoteKind] = useState<'note' | 'reflection' | 'threshold'>('note');
+  // The member may name the condition of their own relationship. The API has
+  // always accepted `rupture` and `repair`, and the OBSERVER could write a
+  // rupture — while no member-facing surface offered either. That is an
+  // inversion of authorship: the machine could say something broke and the
+  // person it happened to could not.
+  const [noteKind, setNoteKind] = useState<NoteKind>('note');
   const [savingNote, setSavingNote] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [editName, setEditName] = useState('');
@@ -96,6 +155,7 @@ export default function RelationshipDetailPage() {
       setRelationship(data.relationship);
       setFieldState(data.fieldState);
       setEntries(data.entries || []);
+      setHistory(data.history || null);
       setUnresolvedThreads(data.unresolvedThreads || []);
     } catch {
       setError('Could not load relationship.');
@@ -103,6 +163,27 @@ export default function RelationshipDetailPage() {
       setLoading(false);
     }
   }, [id]);
+
+  /**
+   * Reach further back. History must get RICHER as it accumulates — a room
+   * that silently stopped at the twentieth moment made a long relationship
+   * less representable the longer it went on.
+   */
+  const loadEarlier = useCallback(async () => {
+    if (loadingEarlier) return;
+    setLoadingEarlier(true);
+    try {
+      const res = await fetch(`/api/relationships/${id}/entries?limit=100&offset=${entries.length}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.entries)) {
+        setEntries((prev) => [...prev, ...data.entries]);
+      }
+    } catch {
+      // silent — the existing history stays on screen
+    } finally {
+      setLoadingEarlier(false);
+    }
+  }, [id, entries.length, loadingEarlier]);
 
   useEffect(() => {
     fetchDetail();
@@ -177,8 +258,8 @@ export default function RelationshipDetailPage() {
     );
   }
 
-  const latestMovement = entries.find(e => e.suggestedMovement)?.suggestedMovement;
   const hasHistory = entries.length > 0;
+  const isContainer = relationship.origin === 'system';
 
   return (
     <div className="min-h-screen relative">
@@ -191,7 +272,25 @@ export default function RelationshipDetailPage() {
         </button>
 
         {/* ── Who, and what the member has said about them ────────────────── */}
-        <div className="mb-2">
+
+        {/* A container the system made for what it could not resolve. It is
+            legible as such — never dressed as a person. Everything in it stays
+            reachable; nothing is deleted, and nothing here is attributed to
+            anyone by guessing. UNKNOWN REMAINS UNKNOWN. */}
+        {isContainer && (
+          <div className="mb-8">
+            <h1 className="text-2xl font-extralight text-jade-mineral tracking-wide mb-3">
+              Not yet placed
+            </h1>
+            <p className="text-sm text-jade-mineral/75 font-light leading-relaxed max-w-lg">
+              Things you said in conversation that sounded relational, which we couldn&apos;t
+              tell who they were about. We won&apos;t guess. This is our unfinished work — it
+              is kept here so nothing of yours is lost, not because it belongs to anyone.
+            </p>
+          </div>
+        )}
+
+        <div className={isContainer ? 'hidden' : 'mb-2'}>
           {editingName ? (
             <input
               autoFocus
@@ -212,34 +311,71 @@ export default function RelationshipDetailPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-jade-mineral/70 mb-7">
+        <div className="flex items-center gap-3 text-xs text-jade-mineral/70 mb-6">
           {relationship.bondType && (
             <span className="capitalize">{relationship.bondType.replace(/_/g, ' ')}</span>
           )}
           {relationship.realm !== 'outer' && (
             <span className="text-jade-copper capitalize">{relationship.realm}</span>
           )}
-          {/* Tone belongs beside the person, not in a panel of its own. */}
-          {fieldState?.fieldTone && <FieldToneIndicator tone={fieldState.fieldTone} size="md" />}
         </div>
 
-        {/* The member's own words — the living material of this room, at full size. */}
+        {/* The member's own words — the brightest thing in the room.
+            Not a caption under a label; the substance itself. Everything else
+            on this page is quieter than this sentence on purpose. */}
         {relationship.note && (
           <p
-            className="text-xl leading-relaxed text-jade-jade/85 font-extralight"
+            className="text-2xl leading-[1.6] text-jade-silver font-extralight"
             style={{ fontFamily: 'Spectral, Georgia, serif' }}
           >
             {relationship.note}
           </p>
         )}
 
-        {/* ── MAIA, already here ──────────────────────────────────────────── */}
-        <RelationshipConversation
-          relationshipId={id}
-          name={relationship.name}
-          bondType={relationship.bondType}
-          note={relationship.note}
-        />
+        {/* Sensing, in words, attributed to the member and DATED.
+            It used to render as an undated coloured dot beside the person's
+            name — which drew the member's own sensing as an attribute of the
+            other person, and let a reading from months ago pass as current.
+            `lastCheckinAt` was fetched, typed, and never shown at all. */}
+        {fieldState?.fieldTone && (
+          <p className="mt-5 text-sm text-jade-mineral/85 font-light flex items-center gap-2 flex-wrap">
+            <FieldToneIndicator tone={fieldState.fieldTone} size="sm" />
+            <span>
+              is how you sensed things here
+              {fieldState.lastCheckinAt ? (
+                <>
+                  {' '}on {onDate(fieldState.lastCheckinAt)}
+                  <span className="text-jade-mineral/55"> — {ageInWords(fieldState.lastCheckinAt)}</span>
+                </>
+              ) : (
+                <span className="text-jade-mineral/55"> — the last time you checked in</span>
+              )}
+            </span>
+          </p>
+        )}
+
+        {/* ── The hearth ──────────────────────────────────────────────────────
+            Speaking is the reason this place exists, and it is a HUMAN gesture
+            first. MAIA is company at the fire, not the fire: writing something
+            down sits right beside speaking to her, reachable in one move and
+            fully usable if she is declined, unavailable, or simply not wanted.
+            The room keeps its whole meaning without her. */}
+        {!isContainer && (
+          <>
+            <RelationshipConversation
+              relationshipId={id}
+              name={relationship.name}
+              bondType={relationship.bondType}
+              note={relationship.note}
+            />
+            <button
+              onClick={() => { setShowAddNote(true); setShowCheckin(false); setShowMore(true); }}
+              className="mt-3 text-xs text-jade-mineral/70 hover:text-jade-sage transition-colors font-light"
+            >
+              …or just write it down, for yourself
+            </button>
+          </>
+        )}
 
         {/* ── Only what has something to say ──────────────────────────────── */}
 
@@ -256,14 +392,19 @@ export default function RelationshipDetailPage() {
           </section>
         )}
 
-        {latestMovement && (
-          <section className="mt-12">
-            <Quiet>A next movement</Quiet>
-            <p className="text-[15px] text-jade-jade/90 font-light italic leading-relaxed">
-              {latestMovement}
-            </p>
-          </section>
-        )}
+        {/* ── NEXT MOVEMENT — relocated, not removed ──────────────────────────
+            A standalone "A next movement" heading greeted the member on
+            arrival with the newest suggestion the system had, no matter how
+            old or how irrelevant. That harms the bereaved and the estranged
+            most: no relationship owes the software a next step. A relationship
+            may simply be HELD — remembered, witnessed, grieved, honoured,
+            accompanied — and nothing needs fixing.
+
+            The capability is preserved in full. Each movement is still
+            rendered by RelationshipTimeline, at the moment it was authored,
+            dated and attached to the check-in that produced it. Its reveal
+            condition is therefore the member's own gesture: it appears when
+            they turn to look back, and never asks for anything on arrival. */}
 
         {(fieldState?.dominantPattern ||
           (fieldState?.activeSignals && fieldState.activeSignals.length > 0) ||
@@ -290,13 +431,21 @@ export default function RelationshipDetailPage() {
 
         {hasHistory && (
           <section className="mt-12">
-            <Quiet>Together, over time</Quiet>
-            <RelationshipTimeline entries={entries} />
+            <Quiet>{isContainer ? 'What is held here' : 'Together, over time'}</Quiet>
+            <RelationshipTimeline
+              entries={entries}
+              total={history?.total}
+              onLoadEarlier={loadEarlier}
+              loadingEarlier={loadingEarlier}
+            />
           </section>
         )}
 
-        {/* ── One quiet invitation, holding everything else ───────────────── */}
-        <section className="mt-14 pt-6 border-t border-jade-forest/20">
+        {/* ── One quiet invitation, holding everything else ─────────────────
+            Hidden for system containers: there is no relationship here to
+            check in on or repair, and offering those would dress the system's
+            unfinished work as a bond. */}
+        <section className={isContainer ? 'hidden' : 'mt-14 pt-6 border-t border-jade-forest/20'}>
           {!showMore && !showCheckin && !showAddNote && (
             <button
               onClick={() => setShowMore(true)}
@@ -361,18 +510,23 @@ export default function RelationshipDetailPage() {
 
               {showAddNote && (
                 <div className="p-4 rounded-lg border border-jade-sage/15 bg-jade-forest/5">
-                  <div className="flex gap-2 mb-3">
-                    {(['note', 'reflection', 'threshold'] as const).map((k) => (
+                  {/* All five kinds the API has always accepted. `rupture` and
+                      `repair` were missing here while the OBSERVER could write
+                      a rupture — the machine could name what broke and the
+                      person it happened to could not. Offered, never demanded:
+                      'note' stays the default and no kind must be chosen. */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {NOTE_KINDS.map(({ kind, label }) => (
                       <button
-                        key={k}
-                        onClick={() => setNoteKind(k)}
+                        key={kind}
+                        onClick={() => setNoteKind(kind)}
                         className={`px-2.5 py-1 rounded-full text-xs transition-all ${
-                          noteKind === k
+                          noteKind === kind
                             ? 'bg-jade-forest/40 text-jade-jade border border-jade-sage/40'
                             : 'bg-jade-shadow/40 text-jade-mineral border border-jade-forest/30'
                         }`}
                       >
-                        {k}
+                        {label}
                       </button>
                     ))}
                   </div>
@@ -380,7 +534,7 @@ export default function RelationshipDetailPage() {
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
                     rows={3}
-                    placeholder={noteKind === 'threshold' ? 'What shifted?' : noteKind === 'reflection' ? 'What are you noticing?' : 'What happened?'}
+                    placeholder={NOTE_PROMPTS[noteKind]}
                     className="w-full px-3 py-2 rounded-lg bg-jade-shadow border border-jade-sage/20 text-jade-jade placeholder:text-jade-mineral/40 focus:outline-none focus:border-jade-sage/50 text-sm resize-none mb-3"
                   />
                   <button

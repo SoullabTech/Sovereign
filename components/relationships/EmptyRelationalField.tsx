@@ -41,10 +41,16 @@ export default function EmptyRelationalField({ onAddPerson, onAddInner, onStartF
           <div className="text-xs text-jade-mineral">An archetype, inner part, or voice within. Name what you are in relation to.</div>
         </button>
 
-        <div className="w-full max-w-sm mx-auto block px-6 py-4 rounded-lg border border-jade-forest/20 bg-jade-shadow/20 text-left opacity-70">
-          <div className="text-jade-sage font-light mb-1">Let patterns emerge</div>
-          <div className="text-xs text-jade-mineral">As you talk with MAIA, relational threads will surface naturally.</div>
-        </div>
+        {/* Deliberately NOT an affordance — there is nothing here to press. It
+            was styled exactly like the three buttons above it (same border,
+            same panel, same shape, merely dimmed) and so read as a disabled
+            option, which made the page look partly broken. It is a plain
+            sentence now: something that happens on its own, described rather
+            than offered. */}
+        <p className="max-w-sm mx-auto text-xs text-jade-mineral/70 font-light leading-relaxed pt-2">
+          Or simply talk with MAIA. Relational threads surface on their own — you
+          don&apos;t have to set anything up first.
+        </p>
       </div>
 
       <div className="w-16 h-px bg-gradient-to-r from-transparent via-jade-sage/30 to-transparent mx-auto mb-6" />

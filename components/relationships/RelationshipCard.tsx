@@ -11,6 +11,8 @@ export interface RelationshipSummary {
   activeSignals: string[] | null;
   lastCheckinAt: string | null;
   createdAt: string;
+  /** Row provenance. 'system' rows are containers, not people. */
+  origin?: 'member' | 'system';
 }
 
 function formatRelativeTime(dateStr: string): string {

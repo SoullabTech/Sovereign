@@ -50,15 +50,30 @@ export default function RelationshipFieldPage() {
     setShowCreate(true);
   };
 
+  // ── Infrastructure is not relationship ───────────────────────────────────
+  //
+  // The relational observer creates a container to hold conversation material
+  // whose relationship it could not resolve. That container used to render in
+  // "People in your life" alongside the member's actual people — the system's
+  // own uncertainty wearing the face of a human being. That is a category
+  // error, not a display bug.
+  //
+  // It is separated by PROVENANCE (`origin`), never by matching its name:
+  // a name is renameable by the member and would silently break the boundary.
+  // Nothing is deleted or hidden — everything inside stays reachable, shown as
+  // what it actually is: the system's unfinished work, not a relationship.
+  const people = relationships.filter((r) => r.origin !== 'system');
+  const containers = relationships.filter((r) => r.origin === 'system');
+
   // Group by realm
-  const grouped = relationships.reduce<Record<Realm, RelationshipSummary[]>>((acc, r) => {
+  const grouped = people.reduce<Record<Realm, RelationshipSummary[]>>((acc, r) => {
     const realm = (r.realm || 'outer') as Realm;
     if (!acc[realm]) acc[realm] = [];
     acc[realm].push(r);
     return acc;
   }, { outer: [], inner: [], transpersonal: [] });
 
-  const hasAny = relationships.length > 0;
+  const hasAny = people.length > 0;
 
   if (loading) {
     return (
@@ -132,6 +147,34 @@ export default function RelationshipFieldPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* What the system has not been able to place. Named as the system's
+            own unfinished work — never as a person, never among people. */}
+        {containers.length > 0 && (
+          <div className="mt-14 pt-6 border-t border-jade-forest/20">
+            <h2 className="text-xs text-jade-mineral/70 tracking-wide mb-2 font-light">
+              Not yet placed
+            </h2>
+            <p className="text-xs text-jade-mineral/60 font-light mb-3 max-w-md leading-relaxed">
+              Things you&apos;ve said in conversation that sounded relational, which we
+              couldn&apos;t tell who they were about. This is our unfinished work, not a
+              relationship — it&apos;s here so nothing of yours is lost.
+            </p>
+            <div className="space-y-2">
+              {containers.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => router.push(`/relationships/${c.id}`)}
+                  className="w-full text-left px-4 py-2.5 rounded-lg border border-dashed border-jade-forest/40 bg-transparent hover:border-jade-sage/30 transition-colors"
+                >
+                  <span className="text-sm text-jade-mineral/80 font-light">
+                    Unplaced material
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

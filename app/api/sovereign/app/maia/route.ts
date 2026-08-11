@@ -28,6 +28,10 @@ import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSes
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
+import {
+  resolveExplicitRelationshipId,
+  logAttachmentOutcome,
+} from '@/lib/relationships/resolveExplicitRelationshipId';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here so the live sovereign route
 // receives the same memory plan + forward-readiness signals that /api/between/chat
@@ -362,8 +366,22 @@ export async function POST(req: NextRequest) {
     probeAuthPosture(req); // [auth-posture] Phase 0 — log-only, high-traffic sample point
     const observerMemberId = userId || req.headers.get('x-member-id') || session?.id;
     if (observerMemberId && message && orchestratorResult.text && !isSanctuary) {
+      // 🔗 EXPLICIT RELATIONSHIP CONTEXT — "I am in this person's room".
+      // Resolved INSIDE the sanctuary guard on purpose: explicit context must
+      // never become a Sanctuary bypass, and a sanctuary turn performs no
+      // relational lookup at all. Ownership is proved against the SERVER
+      // session, never against `observerMemberId` — that value prefers a
+      // body-supplied `userId`, so validating body-against-body would
+      // authorize nothing. A refused id falls back to unattached behavior and
+      // is logged distinguishably; it is never silently reassigned.
+      const attachment = await resolveExplicitRelationshipId(meta);
+      logAttachmentOutcome('sovereign/app/maia', attachment);
+      const attachedRelationshipId =
+        attachment.status === 'attached' ? attachment.relationshipId : null;
+
       observeRelationalContent(observerMemberId, message, orchestratorResult.text, {
         isSanctuary,
+        explicitRelationshipId: attachedRelationshipId,
       });
 
       // 🌊 RELATIONAL FIELD CARD: lightweight detection for /maia field card.
@@ -379,7 +397,7 @@ export async function POST(req: NextRequest) {
             typeof turnIdRaw === 'number' && Number.isFinite(turnIdRaw) && turnIdRaw > 0
               ? turnIdRaw
               : null;
-          persistDetectedSignal(observerMemberId, detected, null, sourceTurnId).catch((err) => {
+          persistDetectedSignal(observerMemberId, detected, attachedRelationshipId, sourceTurnId).catch((err) => {
             console.warn('[relationalSignals] persist error (non-blocking):', err?.message || err);
           });
         }

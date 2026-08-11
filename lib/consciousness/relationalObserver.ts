@@ -112,6 +112,26 @@ function detectRelationalContent(userMessage: string, maiaResponse: string): Rel
  */
 export interface RelationalObservationPosture {
   isSanctuary: boolean;
+
+  /**
+   * The relationship this turn is explicitly ABOUT, when the member spoke from
+   * inside that relationship's room.
+   *
+   * ⚠️ MUST ALREADY BE VALIDATED. The caller is responsible for having proved
+   * server-side that this id exists, is not archived, and belongs to the
+   * session member — see `lib/relationships/resolveExplicitRelationshipId.ts`.
+   * This function is fire-and-forget, so a refusal raised here could not
+   * surface to anyone; validation has to happen where it is still observable.
+   *
+   * `undefined` ⇒ exactly today's behavior: the member's `Unresolved Relational
+   * Field` catch-all, created on demand.
+   *
+   * Explicit context OUTRANKS inference, always. When this is present the
+   * observer's own counterpart detection is demoted to non-authoritative: it
+   * may still populate kind, confidence and pattern hints — it may not select
+   * the target.
+   */
+  explicitRelationshipId?: string | null;
 }
 
 /**
@@ -136,7 +156,7 @@ export function observeRelationalContent(
     return;
   }
   // Run detection + persistence in background
-  _observeAsync(memberId, userMessage, maiaResponse).catch(err => {
+  _observeAsync(memberId, userMessage, maiaResponse, posture.explicitRelationshipId ?? null).catch(err => {
     console.warn('[RelationalObserver] Background error (non-blocking):', err.message);
   });
 }
@@ -145,6 +165,7 @@ async function _observeAsync(
   memberId: string,
   userMessage: string,
   maiaResponse: string,
+  explicitRelationshipId: string | null,
 ): Promise<void> {
   const detection = detectRelationalContent(userMessage, maiaResponse);
 
@@ -154,30 +175,52 @@ async function _observeAsync(
 
   console.log(`🔗 [RelationalObserver] Detected: confidence=${detection.confidence.toFixed(2)} signals=[${detection.signals.join(',')}] kind=${detection.entryKind} bond=${detection.bondType}`);
 
-  // Find or create an "unassigned" relationship for this member
-  // (observations accumulate here until the member explicitly maps them)
+  // ── Where does this observation belong? ──────────────────────────────────
+  //
+  // Explicit context outranks inference. If the member spoke from inside a
+  // specific relationship's room, the material belongs to THAT relationship —
+  // the detection above still supplies kind, confidence and pattern hints, but
+  // it no longer chooses the target.
+  //
+  // The id arriving here has ALREADY been proved owned, unarchived, and
+  // session-bound by the route (`resolveExplicitRelationshipId`). This function
+  // cannot validate it meaningfully: `memberId` here may be a client-supplied
+  // body id, so checking one against the other would authorize nothing.
   let relationshipId: string | null = null;
 
-  // Check for existing "Unresolved Relational Field" catch-all
-  const existing = await queryOne(
-    `SELECT id FROM member_relationships
-     WHERE member_id = $1 AND name = 'Unresolved Relational Field' AND archived_at IS NULL`,
-    [memberId]
-  );
-
-  if (existing) {
-    relationshipId = existing.id;
+  if (explicitRelationshipId) {
+    relationshipId = explicitRelationshipId;
+    console.log(`🔗 [RelationalObserver] Explicit relationship context: ${relationshipId}`);
   } else {
-    // Create the catch-all relationship
-    const row = await insertOne('member_relationships', {
-      member_id: memberId,
-      name: 'Unresolved Relational Field',
-      realm: 'outer',
-      bond_type: null,
-      note: 'Auto-created by relational observer. Observations from conversation accumulate here until you map them to specific relationships.',
-    });
-    relationshipId = row.id;
-    console.log(`🔗 [RelationalObserver] Created catch-all relationship: ${relationshipId}`);
+    // ── else: unchanged pre-existing behavior ──────────────────────────────
+    // No explicit context. Observations accumulate in the member's system
+    // catch-all until they are placed. This container is INFRASTRUCTURE, not a
+    // relationship — see the `origin` column and the member-facing separation
+    // in app/relationships/page.tsx.
+    const existing = await queryOne(
+      `SELECT id FROM member_relationships
+       WHERE member_id = $1 AND origin = 'system' AND archived_at IS NULL
+       ORDER BY created_at ASC
+       LIMIT 1`,
+      [memberId]
+    );
+
+    if (existing) {
+      relationshipId = existing.id;
+    } else {
+      // Create the catch-all container, marked as the system's own unfinished
+      // work so it can never masquerade as a person in the member's list.
+      const row = await insertOne('member_relationships', {
+        member_id: memberId,
+        name: 'Unresolved Relational Field',
+        realm: 'outer',
+        bond_type: null,
+        origin: 'system',
+        note: 'Auto-created by relational observer. Observations from conversation accumulate here until you map them to specific relationships.',
+      });
+      relationshipId = row.id;
+      console.log(`🔗 [RelationalObserver] Created catch-all container: ${relationshipId}`);
+    }
   }
 
   // Pattern detection v2 — structural, multi-hit. Runs on the user message

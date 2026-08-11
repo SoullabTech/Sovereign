@@ -20,7 +20,7 @@ export async function GET() {
 
     const result = await query(
       `SELECT
-        r.id, r.name, r.realm, r.bond_type, r.note, r.created_at, r.updated_at,
+        r.id, r.name, r.realm, r.bond_type, r.note, r.origin, r.created_at, r.updated_at,
         fs.field_tone, fs.active_signals, fs.dominant_pattern, fs.last_checkin_at
       FROM member_relationships r
       LEFT JOIN relationship_field_state fs ON fs.relationship_id = r.id
@@ -37,6 +37,9 @@ export async function GET() {
         realm: row.realm,
         bondType: row.bond_type,
         note: row.note,
+        // 'system' rows are containers the system created for what it could
+        // not resolve. They are not people and must not render among them.
+        origin: row.origin || 'member',
         fieldTone: row.field_tone,
         activeSignals: row.active_signals,
         dominantPattern: row.dominant_pattern,
