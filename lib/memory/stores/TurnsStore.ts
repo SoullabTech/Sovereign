@@ -175,6 +175,60 @@ export const TurnsStore = {
   },
 
   /**
+   * Store ONE turn of an exchange, idempotently, at an explicit seq.
+   *
+   * DURABLE TURN ACCEPTANCE (F1, audit 2026-08-10): the member's utterance must
+   * become durable when the system ACCEPTS it, not when the browser later
+   * reports a completed pair. `addExchange` can only write once both halves
+   * exist, so a member turn whose generation never completed — or whose client
+   * unloaded first — was never recorded at all. This writer lets the serving
+   * boundary persist each half at the moment it genuinely exists:
+   *   seq 0 = member utterance, durable at acceptance (before generation)
+   *   seq 1 = MAIA response, durable only once it actually exists
+   *
+   * Idempotent on (exchange_id, seq): a retry, a re-render, or a later
+   * client-side pair write carrying the SAME exchangeId is dropped by
+   * ON CONFLICT DO NOTHING rather than duplicated.
+   *
+   * SANCTUARY (S1) and provenance (S5) are enforced exactly as in addExchange —
+   * this is a narrower write, not a weaker one.
+   */
+  async addExchangeTurn(
+    posture: TurnPosture,
+    opts: {
+      userId: string;
+      sessionId?: string;
+      role: 'user' | 'assistant';
+      content: string;
+      exchangeId: string;
+    }
+  ): Promise<boolean> {
+    if (!contentWritable(posture, `TurnsStore.addExchangeTurn:${opts.role}`, opts.sessionId)) {
+      return false;
+    }
+    const provenance = mintTurnProvenance(posture, opts.role, opts.exchangeId, opts.sessionId);
+    if (!provenance) {
+      return false; // mint refused — no durable object without provenance (S5)
+    }
+    const seq = opts.role === 'user' ? 0 : 1;
+    await query(
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
+       VALUES ($1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb)
+       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+      [
+        opts.userId,
+        opts.sessionId ?? null,
+        opts.role,
+        opts.content,
+        opts.exchangeId,
+        seq,
+        JSON.stringify(provenance.toJson()),
+      ]
+    );
+    return true;
+  },
+
+  /**
    * Store a user message and assistant response pair.
    *
    * SANCTUARY (S1, boundary-enforced): `posture` is REQUIRED and must be a

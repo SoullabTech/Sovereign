@@ -526,6 +526,11 @@ type MaiaRequest = {
   input: string;
   meta?: Record<string, unknown> & {
     reqId?: string | null;  // Correlation with [Audit:*] logs
+    // Canonical exchange identity for this member send, minted by the calling
+    // boundary. When present, every persistence path in this request uses it
+    // instead of minting its own — see the exchangeId resolution in
+    // getMaiaResponse and sessionManager.addConversationExchange.
+    exchangeId?: string;
   };
   includeAudio?: boolean;
   voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
@@ -2372,7 +2377,22 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // TurnsStore.addExchange in the tail. Both used to write the same exchange
   // with exchange_id NULL, and ON CONFLICT (exchange_id, seq) cannot fire on
   // NULL — so one member action persisted as two exchanges (four rows).
-  const exchangeId = randomUUID();
+  //
+  // 🧱 CANONICAL IDENTITY (U1 identity unification, 2026-08-10): when the calling
+  // boundary has ALREADY minted an identity for this member send — and, crucially,
+  // already written the member's utterance durably under it at acceptance — reuse
+  // it. Minting here regardless is what re-created the very defect described
+  // above, this time with two non-NULL ids instead of two NULLs: the route's
+  // acceptance write and this tail write described the same utterance under
+  // different identities, so ON CONFLICT could not collapse them.
+  //
+  // Fallback mint preserves every caller that has no upstream id — the dormant
+  // /api/sovereign/app/maia route and the internal maiaOrchestrator paths —
+  // whose behaviour is unchanged.
+  const exchangeId =
+    typeof meta?.exchangeId === 'string' && meta.exchangeId.length > 0
+      ? meta.exchangeId
+      : randomUUID();
   // S5: record the resolved posture server-side (content-free) so writers and
   // audits can verify against a record instead of call-chain arguments.
   // Shares the exchange id so the consent record and the persisted turns
