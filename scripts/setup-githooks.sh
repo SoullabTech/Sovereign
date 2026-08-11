@@ -55,4 +55,18 @@ cp "$(git rev-parse --show-toplevel)/.githooks/pre-push" "$HOOKS_DIR/pre-push"
 chmod +x "$HOOKS_DIR/pre-push"
 echo "✅ pre-push hook installed (branch guard + secrets + large files)"
 
+# ── Commit-msg: message policy ──────────────────────────────────────────────
+# Body is versioned at .githooks/commit-msg — installed verbatim, same one-copy
+# rule as pre-commit and pre-push.
+#
+# This install was MISSING until 2026-08-10. The hook was committed but no
+# documented bootstrap step ever placed it, so a fresh clone silently enforced
+# nothing from commit-msg while this machine happened to have a copy from some
+# other route. A control that exists only on one developer machine is an
+# environmental condition, not governance — see
+# docs/ops/GIT_HOOK_CUSTODY_AUDIT_2026-08-10.md.
+cp "$(git rev-parse --show-toplevel)/.githooks/commit-msg" "$HOOKS_DIR/commit-msg"
+chmod +x "$HOOKS_DIR/commit-msg"
+echo "✅ commit-msg hook installed (message policy)"
+
 echo "✅ git hooks installed (worktree-safe, beads-compatible)"
