@@ -125,7 +125,9 @@ export async function POST(req: NextRequest) {
     // Space is created; don't roll back — practitioner can resend
   }
 
-  console.log(`[PracticeField] Invitation sent: ${practitionerName} → ${client_email}, space ${spaceId}`);
+  // Identifiers only — never PHI values. The relationship_space row created above
+  // carries client_email and practitioner_display_name if an operator needs them.
+  console.log(`[PracticeField] Invitation sent: space ${spaceId}, steward ${memberId.slice(0, 8)}`);
 
   return NextResponse.json({
     space_id: spaceId,

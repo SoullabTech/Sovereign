@@ -1,0 +1,60 @@
+name: Sovereignty Gate
+
+# Binds the pre-existing `ci:sovereignty` aggregate (package.json) to a CI boundary.
+# It was defined and green but had ZERO callers — no workflow invoked it. This file
+# supplies the missing reachability; it deliberately does NOT rewrite the checks.
+#
+# Legs (all verified green + capable of failing, 2026-08-09):
+#   check:no-supabase · check:no-vendor-voices · check:voice-provenance
+#   check:no-openai   · lib/tts/__tests__/voiceIdentityContract.test.ts (29 tests)
+#
+# PHI / sensitive logging gate (added 2026-08-10, docs/ops/PHI_GATE_REPAIR_2026-08-09.md
+# step 3): calls the canonical `check:phi-gate` command directly — no PHI-matching
+# policy is duplicated in this YAML. `if: always()` so it runs and reports
+# independently of the Sovereignty checks step above it, keeping the two boundaries'
+# pass/fail causally distinguishable in the job log even if both were ever violated
+# at once.
+#
+# ⛔ Do NOT add `|| true` / `|| echo` to any step here. A job that runs a check and
+# swallows its exit status is a green-looking control, not a control. See
+# docs/ops/CONTROL_BINDING_AUDIT_2026-08-09.md.
+
+on:
+  pull_request:
+  push:
+    branches: [main, clean-main-no-secrets]
+
+concurrency:
+  group: sovereignty-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sovereignty:
+    runs-on: ubuntu-latest
+    env:
+      TZ: UTC
+      LC_ALL: C
+      CI: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      # Single step, unguarded exit status. `ci:sovereignty` is an && chain, so the
+      # first failing leg short-circuits and the non-zero exit fails the job.
+      - name: Sovereignty checks
+        run: npm run ci:sovereignty
+
+      # Unguarded exit status. Calls the canonical scripts/guards/phi-log-gate.ts via
+      # its npm script only — no matching logic lives here. if: always() so this step
+      # runs and reports on its own even if the step above already failed the job.
+      - name: PHI / sensitive logging gate
+        if: always()
+        run: npm run check:phi-gate

@@ -11,31 +11,14 @@ HOOKS_DIR="$(git rev-parse --git-common-dir)/hooks"
 mkdir -p "$HOOKS_DIR"
 
 # ── Sovereignty pre-commit checks (branch guard + supabase + provider governance)
-# NOTE: check:no-direct-anthropic is intentionally NOT here — it is currently RED
-# on pre-existing debt and would block every commit; it runs in CI (ci:sovereignty)
-# instead. These three are green and must pass to commit.
+# Body is versioned at .githooks/pre-commit and installed VERBATIM — same pattern
+# as pre-push below, so there is exactly one copy to maintain. This installer no
+# longer carries its own hook body: the previous heredoc diverged from the
+# versioned file for months and made .githooks/pre-commit read as a gate it was
+# not. Only green checks belong in that file; see
+# docs/ops/PRECOMMIT_RECONCILIATION_2026-08-09.md.
 write_sovereignty_checks() {
-  cat > "$1" << 'HOOK'
-#!/usr/bin/env bash
-set -euo pipefail
-echo "🔒 Sovereignty pre-commit check..."
-
-# Branch guard — only commit on approved branches.
-# Allowlist is the shared single source of truth (also read by pre-push).
-BRANCH="$(git branch --show-current)"
-scripts/check-branch-allowed.sh COMMIT "$BRANCH"
-echo "✅ Branch guard: committing to '$BRANCH' (allowed)"
-
-export GIT_PRE_COMMIT=1
-
-# Supabase ban
-npm run check:no-supabase
-
-# Provider governance — no NEW OpenAI surfaces (docs/canon/PROVIDER_GOVERNANCE.md)
-npm run check:no-openai
-
-echo "✅ Pre-commit checks passed"
-HOOK
+  cp "$(git rev-parse --show-toplevel)/.githooks/pre-commit" "$1"
   chmod +x "$1"
 }
 
