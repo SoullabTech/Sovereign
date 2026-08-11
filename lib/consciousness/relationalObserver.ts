@@ -239,6 +239,10 @@ async function _observeAsync(
     content: detection.summary,
     confidence: detection.confidence,
     pattern_hint: topHit?.patternId ?? null,
+    // Hardcoded at the call site, never resolved from a request. Correct
+    // attachment files this material under the right person; it does not turn
+    // MAIA's summary into the member's own declaration.
+    provenance: 'observer_derived',
   });
 
   // Fan out all concurrent pattern hits to the side table. Expires_at gives

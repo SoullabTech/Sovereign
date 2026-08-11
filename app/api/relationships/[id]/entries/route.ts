@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, insertOne } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { constrainForDisplay } from '@/lib/relationships/articleIIIBoundary';
+import { resolveWriteProvenance, MEMBER_AUTHORED } from '@/lib/relationships/entryProvenance';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const entries = await query(
       `SELECT id, kind, felt_signals, free_text, maia_reflection, pattern_hint,
-              field_tone_snapshot, suggested_movement, content, confidence, created_at
+              field_tone_snapshot, suggested_movement, content, confidence, provenance, created_at
        FROM relationship_entries
        WHERE relationship_id = $1 AND member_id = $2
        ORDER BY created_at DESC
@@ -54,12 +56,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         kind: e.kind,
         feltSignals: e.felt_signals,
         freeText: e.free_text,
-        maiaReflection: e.maia_reflection,
+        maiaReflection: constrainForDisplay(e.maia_reflection, 'reflection'),
         patternHint: e.pattern_hint,
         fieldToneSnapshot: e.field_tone_snapshot,
-        suggestedMovement: e.suggested_movement,
+        suggestedMovement: constrainForDisplay(e.suggested_movement, 'movement'),
         content: e.content,
         confidence: e.confidence,
+        provenance: e.provenance,
         createdAt: e.created_at,
       })),
     });
@@ -98,11 +101,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
     }
 
+    // WHO is writing — not merely whose record this is. A valid session proves
+    // which member record the write belongs to; it does NOT prove a human
+    // member typed it. Derived server-side, never accepted from the body.
+    const { provenance, reason } = resolveWriteProvenance(request);
+    if (provenance !== MEMBER_AUTHORED) {
+      console.warn(
+        `[relationships/entries] non-member write → provenance=${provenance} (${reason}); ` +
+          'will not render as the member\'s own words',
+      );
+    }
+
     const row = await insertOne('relationship_entries', {
       relationship_id: id,
       member_id: session.memberId,
       kind,
       content: content.trim(),
+      provenance,
     });
 
     // Update relationship's updated_at

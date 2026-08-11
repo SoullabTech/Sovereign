@@ -13,6 +13,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { constrainToMemberExperience } from '@/lib/relationships/articleIIIBoundary';
 
 export interface CheckInInput {
   relationshipName: string;
@@ -117,7 +118,7 @@ function buildRecentContext(entries: CheckInInput['recentEntries']): string {
 
 function buildPrompt(input: CheckInInput): string {
   const realmGuide = {
-    outer: 'This is a relationship with another person. Focus on the interpersonal field — what is spoken and unspoken between two people.',
+    outer: 'This is a relationship with another person. You have never met that person and have no access to them. Focus on THE MEMBER\'S OWN EXPERIENCE of the relationship — what they notice, carry, avoid, or long for. What is unspoken is unspoken FOR THEM; you cannot know what it means to the other person.',
     inner: 'This is a relationship with an inner figure or part of the psyche. Focus on the intrapsychic field — what this part carries, what it protects, what it needs, how the member relates to it. Honor inner figures as real presences, not problems to fix.',
     transpersonal: 'This is a relationship with something larger — the sacred, vocation, nature, ancestors. Focus on the quality of connection — devotion, awe, resistance, longing, calling. Do not theologize.',
   };
@@ -136,12 +137,23 @@ ${buildRecentContext(input.recentEntries)}
 
 Respond with exactly four labeled sections. Each should be 1-2 sentences maximum.
 
-REFLECTION: Mirror back what you notice. Not analysis. Not interpretation. Just clear seeing.
+REFLECTION: Mirror back what you notice IN WHAT THEY TOLD YOU. Not analysis. Not interpretation. Just clear seeing.
 PATTERN: If something repeats across entries, name it simply. If not enough history, say "Not enough history yet."
-FIELD_TONE: One word or short phrase for the current atmosphere in this field.
-MOVEMENT: One grounded next step. Not advice. The next honest move.
+FIELD_TONE: One word or short phrase for the atmosphere AS THE MEMBER DESCRIBES IT.
+MOVEMENT: One thing they might do, offered and fully declinable. Never an instruction. If nothing needs doing, say so — a relationship may simply be held.
 
 FIELD_TONE must be exactly one of: open, contracted, unclear, tense, warm, distant, fragile, active, quiet, unresolved. Choose the closest match.
+
+THE BOUNDARY YOU MAY NOT CROSS (this outranks every other instruction):
+You have never met ${input.relationshipName}. You have one person's account. You therefore may NOT:
+- state what the other person feels, wants, thinks, intends, or means;
+- say that the two of them agreed, understood, or share anything — silence is not consent, and a shared moment is not a mutual state you can see;
+- assert any "between you" / "you both" / "neither of you" condition as fact;
+- convert ambiguity into certainty in any direction.
+Every sentence must survive being read aloud with the prefix "In your experience, ...". If it cannot, rewrite it as the member's own experience or leave it out.
+WRONG: "That omission was its own kind of agreement between you."
+RIGHT: "I wonder whether the shared silence carried some meaning for you."
+Where you would have to claim the other person's interior to say anything at all, say less. Silence is permitted and preferred over overreach.
 
 Constraints:
 - Do not diagnose. Do not prescribe. Do not flatten.
@@ -168,21 +180,27 @@ function parseResponse(text: string, entryCount: number): CheckInResult {
   // Reflection: max 2 sentences, strip markdown
   let reflection = cleanOutput(sections.REFLECTION || 'Something is present here, even if not yet clear.');
   reflection = truncateToSentences(reflection, 2);
+  reflection = constrainToMemberExperience(reflection);
+  // Nothing survived the boundary — say only what is true of the member.
+  if (!reflection) reflection = 'Something is present here, even if not yet clear.';
 
   // Pattern: enforce honesty with low data
   let patternHint = cleanOutput(sections.PATTERN || 'Not enough history yet.');
   if (entryCount < 3) {
     patternHint = 'Not enough history yet.';
   } else {
-    patternHint = truncateToSentences(patternHint, 1);
+    patternHint = constrainToMemberExperience(truncateToSentences(patternHint, 1))
+      || 'Not enough history yet.';
   }
 
   // Field tone: normalize to closed vocabulary
   const fieldTone = normalizeFieldTone(cleanOutput(sections.FIELD_TONE || 'unclear'));
 
   // Movement: max 1 sentence, strip markdown
-  let suggestedMovement = cleanOutput(sections.MOVEMENT || 'Pause and notice what you are feeling.');
-  suggestedMovement = truncateToSentences(suggestedMovement, 1);
+  // A movement that cannot be offered without claiming the other person's
+  // interior is not offered at all. Nothing needing doing is a real answer.
+  let suggestedMovement = cleanOutput(sections.MOVEMENT || '');
+  suggestedMovement = constrainToMemberExperience(truncateToSentences(suggestedMovement, 1));
 
   return { reflection, patternHint, fieldTone, suggestedMovement };
 }

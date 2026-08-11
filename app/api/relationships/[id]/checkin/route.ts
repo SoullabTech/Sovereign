@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, insertOne } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { performRelationalCheckin } from '@/lib/consciousness/relationalCheckin';
+import { resolveWriteProvenance, MEMBER_AUTHORED } from '@/lib/relationships/entryProvenance';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,6 +94,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })),
     });
 
+    // A check-in row is MIXED authorship: `free_text` and `felt_signals` are
+    // the member's, `maia_reflection` and `suggested_movement` are MAIA's. The
+    // row-level class describes the member's part; the UI attributes each
+    // field to its own voice rather than letting them inherit the row's label.
+    const { provenance, reason } = resolveWriteProvenance(request);
+    if (provenance !== MEMBER_AUTHORED) {
+      console.warn(`[relationships/checkin] non-member write → provenance=${provenance} (${reason})`);
+    }
+
     // Store the check-in entry
     const entry = await insertOne('relationship_entries', {
       relationship_id: id,
@@ -104,6 +114,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       pattern_hint: result.patternHint,
       field_tone_snapshot: result.fieldTone,
       suggested_movement: result.suggestedMovement,
+      provenance,
     });
 
     // Upsert field state (lazily created on first check-in)

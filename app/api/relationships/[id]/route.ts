@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { constrainForDisplay } from '@/lib/relationships/articleIIIBoundary';
 import { detectUnresolvedThreads } from '@/lib/consciousness/unresolvedThreads';
 
 export const dynamic = 'force-dynamic';
@@ -58,7 +59,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     const entries = await query(
       `SELECT id, kind, felt_signals, free_text, maia_reflection, pattern_hint,
-              field_tone_snapshot, suggested_movement, content, confidence, created_at
+              field_tone_snapshot, suggested_movement, content, confidence, provenance, created_at
        FROM relationship_entries
        WHERE relationship_id = $1 AND member_id = $2
        ORDER BY created_at DESC
@@ -100,13 +101,20 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         id: e.id,
         kind: e.kind,
         feltSignals: e.felt_signals,
+        // The member's own words pass through untouched — always.
         freeText: e.free_text,
-        maiaReflection: e.maia_reflection,
-        patternHint: e.pattern_hint,
+        // MAIA's words do not. Rows written before the Article III boundary
+        // existed still hold claims about the other person ("that omission was
+        // its own kind of agreement between you"). Those are WITHHELD at read
+        // rather than rewritten in place — the same discipline as the
+        // provenance work: never edit what a member's record already contains.
+        maiaReflection: constrainForDisplay(e.maia_reflection, 'reflection'),
+        patternHint: constrainForDisplay(e.pattern_hint, 'pattern'),
         fieldToneSnapshot: e.field_tone_snapshot,
-        suggestedMovement: e.suggested_movement,
+        suggestedMovement: constrainForDisplay(e.suggested_movement, 'movement'),
         content: e.content,
         confidence: e.confidence,
+        provenance: e.provenance,
         createdAt: e.created_at,
       })),
       // Say where the record stops, and where it began.

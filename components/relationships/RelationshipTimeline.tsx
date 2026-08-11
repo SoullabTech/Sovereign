@@ -16,6 +16,13 @@ export interface TimelineEntry {
    * now rendered rather than silently returned by the API and dropped.
    */
   confidence?: number | string | null;
+  /**
+   * WHICH ACTOR authored this — the only thing that may decide whether a row
+   * speaks in the member's voice. `confidence` used to stand in for this and
+   * could not carry it: it distinguishes observer-written from everything
+   * else and says nothing about who was at the keyboard.
+   */
+  provenance?: string | null;
   createdAt: string;
 }
 
@@ -33,6 +40,18 @@ const KIND_LABELS: Record<string, string> = {
   threshold: 'marked a change',
   rupture: 'marked something broken',
   repair: 'marked something mended',
+};
+
+/**
+ * What a NON-member row says it is. Each class names its own actor plainly, so
+ * nothing can quietly borrow the member's voice — least of all an automated
+ * walk that inherited a live session.
+ */
+const PROVENANCE_LABELS: Record<string, string> = {
+  observer_derived: 'MAIA noticed',
+  maia_authored: 'MAIA wrote',
+  system_generated: 'added by the system',
+  test_fixture: 'not yours — written during testing',
 };
 
 /**
@@ -86,6 +105,19 @@ function yearOf(dateStr: string): number {
   return new Date(dateStr).getFullYear();
 }
 
+/**
+ * Whose voice this is. Deliberately the quietest thing in its block — the
+ * attribution has to be unmissable when looked for and invisible when not,
+ * so a life does not read as a transcript of labelled speakers.
+ */
+function Voice({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="block text-[10px] text-stone-600 font-light mb-0.5 tracking-wide">
+      {children}
+    </span>
+  );
+}
+
 export default function RelationshipTimeline({
   entries,
   total,
@@ -111,10 +143,15 @@ export default function RelationshipTimeline({
     <div className="space-y-4">
       {entries.map((entry) => {
         const style = KIND_STYLES[entry.kind] || KIND_STYLES.note;
-        // Observer-written entries carry a confidence value; member-written
-        // ones do not. Rendering it keeps machine observation visibly distinct
-        // from what the member said themselves.
-        const isObserved = entry.confidence !== null && entry.confidence !== undefined;
+        // Only a row an actual member authored may speak as "you". Everything
+        // else — observer, MAIA, system, agent walk — says what it is. Rows
+        // predating the provenance column fall back to the old evidence
+        // (`confidence` was set exclusively by the observer) rather than
+        // being promoted into the member's voice by default.
+        const isMemberVoice = entry.provenance
+          ? entry.provenance === 'member_authored'
+          : entry.confidence === null || entry.confidence === undefined;
+        const isObserved = !isMemberVoice;
         const entryYear = yearOf(entry.createdAt);
         const showYearBreak = lastYear !== null && entryYear !== lastYear;
         lastYear = entryYear;
@@ -129,7 +166,9 @@ export default function RelationshipTimeline({
         <div className={`border-l-2 ${style.border} pl-4 py-1`}>
           <div className="flex items-center flex-wrap gap-2 mb-1.5">
             <span className={`text-[11px] ${style.label} font-light`}>
-              {isObserved ? 'MAIA noticed' : `you ${KIND_LABELS[entry.kind] || entry.kind}`}
+              {isMemberVoice
+                ? `you ${KIND_LABELS[entry.kind] || entry.kind}`
+                : PROVENANCE_LABELS[entry.provenance || 'observer_derived'] || 'MAIA noticed'}
             </span>
             <span className="text-[11px] text-stone-600" title={fullDate(entry.createdAt)}>
               {formatDate(entry.createdAt)}
@@ -141,25 +180,55 @@ export default function RelationshipTimeline({
             )}
           </div>
 
+          {/* ── NESTED AUTHORSHIP ──────────────────────────────────────────
+              A check-in row is not one voice. It stacks three epistemically
+              different objects, and only the first belongs to the member:
+              their own sensing, MAIA's reflection, and MAIA's suggested
+              movement. They used to sit unlabelled under a single heading of
+              "you checked in", so MAIA's reading — and, worse, MAIA's
+              directives — inherited the member's voice.
+
+              Observation and suggestion are also NOT the same act. Noticing
+              describes; suggesting proposes movement, and the member is
+              entitled to see which one they are receiving. Each keeps its own
+              attribution, in the same plain quiet language used at row level. */}
           {entry.kind === 'checkin' && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {entry.feltSignals && entry.feltSignals.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {entry.feltSignals.map((s, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-stone-900/20 border border-stone-700/15 text-stone-400">
+                    <span key={i} className="px-2 py-0.5 rounded-full text-[11px] bg-stone-900/30 border border-stone-700/30 text-stone-400">
                       {s}
                     </span>
                   ))}
                 </div>
               )}
               {entry.freeText && (
-                <p className="text-sm text-stone-200/80 font-light italic">&ldquo;{entry.freeText}&rdquo;</p>
+                <div>
+                  <Voice>you</Voice>
+                  <p
+                    className="text-[15px] text-[#ece0d2] font-light leading-relaxed"
+                    style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                  >
+                    {entry.freeText}
+                  </p>
+                </div>
               )}
               {entry.maiaReflection && (
-                <p className="text-sm text-stone-400 font-light">{entry.maiaReflection}</p>
+                <div>
+                  <Voice>MAIA noticed</Voice>
+                  <p className="text-sm text-stone-400 font-light leading-relaxed">
+                    {entry.maiaReflection}
+                  </p>
+                </div>
               )}
               {entry.suggestedMovement && (
-                <p className="text-xs text-amber-600 font-light mt-1">{entry.suggestedMovement}</p>
+                <div>
+                  <Voice>MAIA suggested</Voice>
+                  <p className="text-sm text-amber-200/55 font-light leading-relaxed">
+                    {entry.suggestedMovement}
+                  </p>
+                </div>
               )}
             </div>
           )}

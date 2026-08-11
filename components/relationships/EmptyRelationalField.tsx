@@ -32,7 +32,9 @@ export default function EmptyRelationalField({ onAddPerson, onAddInner, onStartF
           className="w-full max-w-sm mx-auto block px-6 py-4 rounded-lg border border-stone-700/30 bg-stone-900/20 hover:bg-stone-900/30 transition-colors text-left"
         >
           <div className="text-stone-200 font-light mb-1">Add a person</div>
-          <div className="text-xs text-stone-400">Someone in your life. Begin mapping the field between you.</div>
+          {/* "the field between you" asserts a shared state nobody here can
+              see. What this room holds is one person's experience of it. */}
+          <div className="text-xs text-stone-400">Someone in your life. Begin keeping what you notice.</div>
         </button>
 
         <button
