@@ -4,7 +4,7 @@
  * Journal Room — State 1: Arrival.
  *
  * Approved reference:
- *   JOURNAL · What is here today? · Begin writing · Or note something
+ *   JOURNAL · What would you like to Journal? · Begin writing · Or note something
  *   member writing before organization · Browse secondary
  *
  * MUST NOT appear here (contract §4 state 1): search · filters · category tabs ·
@@ -50,7 +50,7 @@ export function Arrival({
           viewport stays empty. Nothingness is allowed. */}
       <div className={`flex-1 flex flex-col justify-center ${spine} py-16`}>
         <h1 id="journal-question" className={`${type.question} ${color.human}`}>
-          What is here today?
+          What would you like to Journal?
         </h1>
 
         <div className={space.breathing}>

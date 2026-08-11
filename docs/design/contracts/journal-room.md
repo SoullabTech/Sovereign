@@ -53,7 +53,7 @@ Everything else in it is subordinate to that, including MAIA.
 
 ## Arrival
 
-> **What is here today?**
+> **What would you like to Journal?**
 
 The question is the largest thing in the room, and most of the surface is empty.
 There is no inventory to survey on arrival: three gestures, one of which is
