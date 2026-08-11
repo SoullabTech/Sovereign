@@ -186,7 +186,10 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // expected shape. Deep re-verification is the caller's job (as proven
       // in the live Route A proof); the console surfaces what it can cheaply
       // confirm itself without duplicating capability logic.
-      response.verification = { checked: 'capability registered + exit_code present', pass: typeof r.exit_code === 'number' };
+      // C0: an independent check genuinely establishes the RESULT is correct
+      // (proven in the live Route A proof — a separate code path re-derives
+      // the same fact). "Verification: PASS" is warranted here.
+      response.verification = { kind: 'result', label: 'Verification', checked: 'capability registered + exit_code present', pass: typeof r.exit_code === 'number' };
     } catch (e) {
       response.status = 'failed';
       response.result = { error: e.message };
@@ -201,7 +204,19 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       const body = await res.json();
       response.result = { response: body.response, model: body.model };
       response.status = 'completed';
-      response.verification = { checked: 'HTTP 200 from local Ollama endpoint, model field matches request', pass: res.ok && body.model === 'qwen2.5:7b' };
+      // C1: this checks that the local worker actually ran and identified
+      // itself correctly. It does NOT check whether the ANSWER is correct —
+      // qwen2.5:7b has been observed to answer a known-answer classification
+      // wrong (2026-08-11 founder walk). "Verification: PASS" would silently
+      // imply correctness it does not establish. Kept as two separate,
+      // honestly-labeled facts instead of one collapsed badge.
+      response.verification = {
+        kind: 'execution',
+        label: 'Execution verified',
+        checked: 'HTTP 200 from local Ollama endpoint, model field matches request',
+        pass: res.ok && body.model === 'qwen2.5:7b',
+        correctness: 'unverified',
+      };
     } catch (e) {
       response.status = 'failed';
       response.result = { error: e.message };

@@ -134,7 +134,8 @@ async function submitTask() {
       <div class="row"><span class="label">Cost class</span><span>${res.cost_class || '—'}</span></div>
       <div class="row"><span class="label">Status</span><span>${res.status}</span></div>
       <div class="row"><span class="label">Reason</span><span style="text-align:right;max-width:400px">${res.reason}</span></div>
-      ${res.verification ? `<div class="row"><span class="label">Verification</span><span class="state ${res.verification.pass ? 'AVAILABLE' : 'UNAVAILABLE'}">${res.verification.pass ? 'PASS' : 'FAIL'}</span></div>` : ''}
+      ${res.verification ? `<div class="row"><span class="label">${res.verification.label || 'Verification'}</span><span class="state ${res.verification.pass ? 'AVAILABLE' : 'UNAVAILABLE'}">${res.verification.pass ? 'PASS' : 'FAIL'}</span></div>` : ''}
+      ${res.verification && res.verification.kind === 'execution' ? `<div class="row"><span class="label">Result correctness</span><span class="state UNKNOWN">${res.verification.correctness.toUpperCase()}</span></div>` : ''}
       <h3 style="margin-top:14px">Raw result</h3>
       <pre>${JSON.stringify(res.result, null, 2)}</pre>
     </div>
