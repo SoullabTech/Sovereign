@@ -2,7 +2,19 @@
 set -euo pipefail
 MSG_FILE="$1"
 
-if rg -n "Co-Authored-By:\s*Claude|Generated with.*Claude Code" "$MSG_FILE" >/dev/null; then
+# Attribution gate — POSIX `grep -E` only. No `rg`, no `npx`, no network.
+#
+# This previously used `rg`, which is NOT a declared dependency. A missing
+# binary makes `if <cmd>` return 127, bash reads that as "no match", and the
+# hook SILENTLY ACCEPTS the commit. Proven fail-open 2026-08-10 —
+# docs/ops/JARVIS_HOOK_CUSTODY_CLOSURE_PROOF_2026-08-10.md §4.
+# Governance must never become permissive because a machine happens to lack a tool.
+command -v grep >/dev/null 2>&1 || {
+  echo "❌ commit-msg cannot run: 'grep' not found. Refusing the commit (fail closed)."
+  exit 1
+}
+
+if grep -Eq 'Co-Authored-By:[[:space:]]*Claude|Generated with.*Claude Code' "$MSG_FILE"; then
   echo "❌ Commit message contains Claude attribution. Remove it and retry."
   exit 1
 fi
