@@ -103,10 +103,23 @@ describe('the member Journal route', () => {
     expect(gated).toEqual([]);
   });
 
-  it('renders the shared Journal view rather than its own copy', () => {
+  it('renders the accepted Journal Room, not its own copy', () => {
+    // CUTOVER (2026-08-11): this route rendered UnifiedJournalView until the
+    // Journal Room (frozen candidate 250d08714, founder-accepted per
+    // docs/design/references/JOURNAL_DEPLOYMENT_CLOSURE_2026-08-10.md) took
+    // over. UnifiedJournalView still exists and still backs /labtools/journal
+    // — this assertion changed because the route's TARGET changed, not
+    // because the "thin wrapper, not a reimplementation" guard stopped
+    // mattering. See the "no second journal product" describe block below
+    // for what replaces the old one-implementation invariant.
     const page = read(MEMBER_JOURNAL_PAGE);
-    expect(page).toMatch(/UnifiedJournalView/);
-    // A page that re-implemented the 893-line view would not be this small.
+    expect(page).toMatch(/JournalRoom/);
+    // Comments describe history (this file's own docstring names
+    // UnifiedJournalView while explaining the cutover) — strip comments
+    // before checking what actually renders, same discipline `code()` applies
+    // elsewhere in this file.
+    expect(code(page)).not.toMatch(/UnifiedJournalView/);
+    // A page that re-implemented the room would not be this small.
     expect(page.split('\n').length).toBeLessThan(60);
   });
 });
@@ -171,19 +184,51 @@ describe('native bundling of the member Journal', () => {
   });
 });
 
-// ── 7: one implementation, two entry points ──────────────────────────────────
-describe('no second journal product', () => {
-  it('both entry points render the same shared view', () => {
-    expect(read(MEMBER_JOURNAL_PAGE)).toMatch(/UnifiedJournalView/);
+// ── 7: two surfaces, deliberately, not an accidental fork ────────────────────
+// CUTOVER (2026-08-11) changed the invariant this block guards. Before, one
+// implementation (UnifiedJournalView) backed both entry points, and "a second
+// journal product" meant an accidental, unauthorized parallel build — the
+// failure mode worth a named guard.
+//
+// Post-cutover there ARE two implementations, and that is the ruled shape, not
+// a regression: JournalRoom (frozen candidate 250d08714, founder-accepted)
+// backs the member-facing /journal and /journal/room; UnifiedJournalView
+// keeps backing /labtools/journal, the founder/practitioner Lab Tools surface,
+// untouched by this cutover on purpose (see
+// docs/design/references/JOURNAL_DEPLOYMENT_CLOSURE_2026-08-10.md §3 "Old
+// Journal" — retire/reroute only what is necessary, preserve rollback).
+//
+// What "no second journal product" now means: no THIRD, undeclared
+// implementation, and neither surface secretly reimplements the other.
+describe('two Journal surfaces, deliberately — not a second journal product', () => {
+  const ROOM_PAGE = 'app/journal/room/page.tsx';
+  const ROOM_IMPL = 'components/journal/room/JournalRoom.tsx';
+
+  it('the member surface (/journal and /journal/room) renders the same room component', () => {
+    expect(read(MEMBER_JOURNAL_PAGE)).toMatch(/JournalRoom/);
+    expect(read(ROOM_PAGE)).toMatch(/JournalRoom/);
+  });
+
+  it('the Lab Tools surface still renders UnifiedJournalView, untouched by cutover', () => {
     expect(read(LABTOOLS_JOURNAL_PAGE)).toMatch(/UnifiedJournalView/);
   });
 
-  it('the shared view is the only place the implementation lives', () => {
-    expect(read(SHARED_VIEW).split('\n').length).toBeGreaterThan(500);
+  it('neither surface reimplements the other — both entry-point files stay thin', () => {
+    expect(read(MEMBER_JOURNAL_PAGE).split('\n').length).toBeLessThan(60);
+    expect(read(ROOM_PAGE).split('\n').length).toBeLessThan(60);
     expect(read(LABTOOLS_JOURNAL_PAGE).split('\n').length).toBeLessThan(60);
   });
 
-  it('the shared view never hard-codes a /labtools return', () => {
+  it('the substantial implementations exist exactly where declared', () => {
+    // UnifiedJournalView (Lab Tools) stays large — it was never rebuilt.
+    expect(read(SHARED_VIEW).split('\n').length).toBeGreaterThan(500);
+    // The room is composed of several small, named-state files, not one
+    // monolith — that decomposition is load-bearing to the room's own design
+    // contract (docs/design/contracts/journal-room.md), not incidental.
+    expect(existsSync(path.join(REPO, ROOM_IMPL))).toBe(true);
+  });
+
+  it('the shared Lab Tools view never hard-codes a /labtools return', () => {
     // The back destination belongs to the entry point, via backHref.
     expect(code(read(SHARED_VIEW))).not.toMatch(/router\.push\(\s*['"`]\/labtools['"`]\s*\)/);
   });
