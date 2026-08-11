@@ -7,6 +7,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
+const { decideCorrectness } = require('./correctness');
 
 // ---------------------------------------------------------------------------
 // Runtime-root contract. Packaged mode's __dirname resolves inside
@@ -196,14 +197,69 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
     }
   } else if (decision.execution_lane === 'C1') {
     try {
+      // ── canonical evidence substrate ───────────────────────────────────────
+      // Imported, never reimplemented. materializePacket() builds the ONLY
+      // context the worker is shown, and verifyEvidence() scores the answer's
+      // citations for containment inside exactly those fragments. Both come
+      // from the canonical modules adopted byte-exact in 0bec4eb24 — a
+      // Desktop-local copy would fork the verifier and defeat the point.
+      //
+      // Only these two functions are called. executeRun(), ain-delegate.sh,
+      // the planner, the orchestrator and the queue are NEVER invoked from
+      // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
+      // importing it for verifyEvidence() does not wake the delegate path.
+      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
+      const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
+
+      const selectors = Array.isArray(task.context_selectors) ? task.context_selectors : [];
+      let fragments = [];
+      let materialization_error = null;
+      if (selectors.length) {
+        // Fail closed: an unresolvable selector must not silently degrade into
+        // "no evidence required". materializeOne throws on any invalid selector.
+        try {
+          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+        } catch (e) {
+          materialization_error = e.message;
+        }
+      }
+
+      // The citation syntax is stated because the verifier enforces an exact
+      // machine-readable form. Asking for "citations" in prose and then scoring
+      // path.ext:NN produces false refusals of correct answers — the defect
+      // recorded as D8 in docs/ops/JARVIS_PLANNER_ROUTER_ALPHA.md.
+      const prompt = fragments.length
+        ? `${renderFragments(fragments)}\n\nAnswer using ONLY the numbered source above. `
+          + `Cite every claim inline in the exact form path/to/file.ext:LINE `
+          + `(colon, no space) — for example scripts/builder/router.mjs:42. `
+          + `Prose such as "on line 42" does not count as a citation. `
+          + `Cite only lines present in the source above.\n\n${task.prompt}`
+        : task.prompt;
+
       const res = await fetch('http://127.0.0.1:11434/api/generate', {
         method: 'POST',
-        body: JSON.stringify({ model: 'qwen2.5:7b', prompt: task.prompt, stream: false }),
+        body: JSON.stringify({ model: 'qwen2.5:7b', prompt, stream: false }),
         signal: AbortSignal.timeout(30000),
       });
       const body = await res.json();
       response.result = { response: body.response, model: body.model };
       response.status = 'completed';
+
+      const evidence = fragments.length ? verifyEvidence(body.response || '', fragments) : null;
+
+      // Correctness is decided by the canonical verifier alone. Execution
+      // success never implies it — that collapse is what let a fabricated
+      // capability ("EnumerateApiRoutes … register_capabilities.py:42") read as
+      // verified during the 2026-08-11 founder walk. The mapping lives in its
+      // own module so it is testable without Electron.
+      const { correctness, correctness_reason } = decideCorrectness({
+        materialization_error,
+        fragmentCount: fragments.length,
+        evidence,
+      });
+
       // C1: this checks that the local worker actually ran and identified
       // itself correctly. It does NOT check whether the ANSWER is correct —
       // qwen2.5:7b has been observed to answer a known-answer classification
@@ -215,7 +271,11 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         label: 'Execution verified',
         checked: 'HTTP 200 from local Ollama endpoint, model field matches request',
         pass: res.ok && body.model === 'qwen2.5:7b',
-        correctness: 'unverified',
+        correctness,
+        correctness_reason,
+        correctness_method: fragments.length ? 'canonical verifyEvidence() — materialized-fragment containment' : null,
+        fragments_offered: fragments.length,
+        evidence,
       };
     } catch (e) {
       response.status = 'failed';
