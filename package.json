@@ -166,7 +166,10 @@
     "jarvis:authority:proof": "node scripts/builder/__tests__/jarvis-authority-channel-proof.mjs",
     "jarvis:gate:proof": "node scripts/builder/__tests__/jarvis-gate-resumption-proof.mjs",
     "jarvis:alpha:walk": "node scripts/builder/__tests__/jarvis-alpha-proving-walk.mjs",
-    "jarvis:governance:proof": "node scripts/builder/__tests__/jarvis-governance-gate-proof.mjs"
+    "jarvis:governance:proof": "node scripts/builder/__tests__/jarvis-governance-gate-proof.mjs",
+    "jarvis:observer": "npm --prefix desktop-app run observer",
+    "jarvis:observe": "node scripts/builder/jarvis-observer.mjs",
+    "jarvis:observer:proof": "node scripts/builder/__tests__/jarvis-observer-negative-controls.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- No external origin is reachable. The renderer cannot open a socket. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'none'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<title>JARVIS — Observer</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --line:#21262d; --tx:#c9d1d9; --dim:#7d8590;
+    --observed:#3fb950; --derived:#58a6ff; --inferred:#d29922; --unavailable:#f85149; --unknown:#6e7681;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+       font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:20px}
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  h1{font-size:15px;margin:0;letter-spacing:.02em}
+  .sub{color:var(--dim);font-size:11px}
+  button{background:var(--panel);color:var(--tx);border:1px solid var(--line);
+         border-radius:6px;padding:4px 12px;cursor:pointer;font:inherit;font-size:11px}
+  button:hover{border-color:var(--derived)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;margin-top:16px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);
+     margin:0 0 10px;font-weight:600}
+  .row{display:flex;align-items:baseline;gap:8px;padding:2px 0}
+  .k{color:var(--dim);min-width:140px;flex-shrink:0}
+  .v{word-break:break-word}
+  /* Class is carried by a glyph as well as colour — the difference between
+     "unhealthy" and "cannot determine" must survive a screenshot. */
+  .m{width:1.1em;flex-shrink:0;text-align:center;font-weight:700}
+  .OBSERVED .m{color:var(--observed)} .DERIVED .m{color:var(--derived)}
+  .INFERRED .m{color:var(--inferred)} .UNAVAILABLE .m{color:var(--unavailable)}
+  .UNKNOWN .m{color:var(--unknown)}
+  .UNAVAILABLE .v,.UNKNOWN .v{color:var(--dim);font-style:italic}
+  .why{color:var(--dim);font-size:11px;padding-left:calc(1.1em + 148px)}
+  .note{color:var(--dim);font-size:10.5px;margin:-4px 0 8px}
+  #attention .row{padding:5px 0;border-bottom:1px solid var(--line)}
+  #attention .row:last-child{border-bottom:none}
+  .fresh{display:flex;justify-content:space-between;padding:2px 0}
+  .live{color:var(--observed)} .stale{color:var(--inferred)}
+  .unavailable{color:var(--unavailable)} .unknown{color:var(--unknown)}
+  .legend{margin-top:16px;color:var(--dim);font-size:10.5px}
+  .ro{border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:10px;color:var(--dim)}
+</style>
+</head>
+<body>
+  <header>
+    <h1>WHAT IS JARVIS DOING?</h1>
+    <span class="ro">READ-ONLY</span>
+    <span class="sub" id="composed">observing…</span>
+    <button id="refresh">Refresh</button>
+  </header>
+  <div class="note">Observer renders existing authority. It changes nothing it observes.</div>
+
+  <section style="margin-top:14px">
+    <h2>Needs you</h2>
+    <div id="attention"></div>
+  </section>
+
+  <div class="grid">
+    <section><h2>Claims &amp; capacity</h2><div id="claims"></div></section>
+    <section>
+      <h2>Rate pressure</h2>
+      <div class="note">Independent of concurrency — a proxy is not the variable.</div>
+      <div id="rate"></div>
+    </section>
+    <section><h2>Runtime &amp; governance</h2><div id="runtime"></div></section>
+    <section><h2>Git</h2><div id="git"></div></section>
+    <section><h2>Production</h2><div id="production"></div></section>
+    <section>
+      <h2>Freshness</h2>
+      <div class="note">Per family. One refresh does not make everything current.</div>
+      <div id="freshness"></div>
+    </section>
+  </div>
+
+  <div class="legend">
+    ● observed &nbsp;·&nbsp; ◈ derived &nbsp;·&nbsp; ▲ inferred &nbsp;·&nbsp;
+    ✕ unavailable &nbsp;·&nbsp; ? unknown
+    &nbsp;—&nbsp; “unavailable” means Observer could not determine this, which is not the same as a bad state.
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

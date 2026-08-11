@@ -18,7 +18,8 @@
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
     "dist:linux": "electron-builder --linux",
-    "pack": "electron-builder --dir"
+    "pack": "electron-builder --dir",
+    "observer": "electron jarvis/observer-main.js"
   },
   "build": {
     "appId": "com.soullab.maia",
