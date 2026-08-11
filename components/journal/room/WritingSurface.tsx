@@ -106,6 +106,19 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
     }
   }
 
+  // Fixed at mount rather than read on every render: a stamp that ticked while
+  // the member was mid-sentence would be movement in a room whose whole register
+  // is stillness. This is when they sat down.
+  const [startedAt] = useState(() => new Date());
+  const stamp = startedAt.toLocaleString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
   return (
     <main
       className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
@@ -128,6 +141,18 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
       </div>
 
       <div className={`flex-1 ${spine} pt-10 sm:pt-14 pb-16`}>
+        {/* When this is being written.
+            The surface opened with no date at all — a blank field under a bare
+            marker, which reads as a text box rather than a page. A page in a
+            notebook is dated; that stamp is also what the entry is filed under
+            once it is kept, so showing it here is telling the member the truth
+            about what they are making, not decorating the field. Rendered from
+            the client's own clock at mount, and never sent — the row's
+            authoritative created_at is set server-side on keep. */}
+        <p className={`mb-8 ${type.meta} ${color.muted}`}>
+          <time dateTime={startedAt.toISOString()}>{stamp}</time>
+        </p>
+
         {/* What MAIA asked, carried as context — not as the member's text. */}
         {fromQuestion && (
           <p className={`mb-8 ${type.meta} ${color.muted}`}>{fromQuestion}</p>
