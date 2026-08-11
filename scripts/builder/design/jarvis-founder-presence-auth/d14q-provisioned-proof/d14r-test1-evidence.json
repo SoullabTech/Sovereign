@@ -1,0 +1,17 @@
+{
+  "public_key_b64": "BGgT1X32yxNGYNuiJNZlvEKkv7GanjApTKAjmBdH0u5fcHHblexPzZb06hriRp2YpqATg0GGA8XLErSZhNN/14E=",
+  "signatures": [
+    {
+      "label": "test1",
+      "condition": "continuously unlocked session",
+      "message": "D-14R Test 1: first authorized signature, founder physically present",
+      "signature_b64": "MEQCIFcbAK5Z/0F4wOLz1bCKa2wKTXO0Nv53/qDsjFOj4R/GAiA5T7JJaYQ+1XLCgNmHbAFn3YICfXdsmGsYF5y8zTk/rA=="
+    },
+    {
+      "label": "test1-postunlock",
+      "condition": "immediately after fresh lock/password-unlock boundary",
+      "message": "D-14R Test 1 discriminator: signing immediately after fresh lock/unlock boundary",
+      "signature_b64": "MEYCIQDQCyEbQIUoM2hApWI3to1u6KI7X/SoCqyLxZ9viQjCnAIhALYQBFlycapnGQPlb3p8fEKFIBBHXEc7ONk3rkTwxG8H"
+    }
+  ]
+}
