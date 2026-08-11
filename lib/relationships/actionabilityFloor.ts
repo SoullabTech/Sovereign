@@ -43,6 +43,36 @@ const DISCLOSURE_RISK: Array<{ re: RegExp; label: string }> = [
   { re: /\bblocked\s+(?:him|her|them)\b[^.]*\b(?:new|different|unknown)\s+numbers?\b|\bkeeps?\s+(?:turning|showing)\s+up\b|\bfollow(?:s|ed|ing)\s+me\b|\boutside\s+my\s+(?:building|house|work)\b/i, label: 'stalking' },
   { re: /\bafter\s+i\s+(?:reported|complained|went\s+to\s+hr|raised)\b|\bretaliat/i, label: 'retaliation' },
   { re: /\bwon[’']?t\s+let\s+me\b|\bcontrols?\s+(?:my|the)\s+(?:money|finances|visa|passport|access)\b|\bnot\s+allowed\s+to\b/i, label: 'coercive control' },
+
+  /**
+   * THREAT-CONDITIONED COMPLIANCE — "if I didn't … he'd …".
+   *
+   * The highest-severity point on the consent spectrum was invisible: the
+   * sexual-coercion pattern matched only wear-down phrasing, so a reported
+   * threat used to obtain compliance registered nothing at all.
+   *
+   * ⚠️ The conditional ALONE is far too broad — "if I didn't do the dishes
+   * she'd be annoyed" is ordinary life. So the consequence must ALSO be a
+   * reported ACTION the other person would take, from a bounded list.
+   * Emotional consequences (annoyed, upset, hurt, disappointed) are
+   * deliberately absent: emotional severity does not establish safety risk.
+   */
+  {
+    re: /(?:\bif\s+i\s+(?:did\s?n[’']?t|do\s?n[’']?t|refused?|said\s+no|say\s+no|left|leave|stopped?)\b[^.?!]{0,90}?\b(?:he|she|they)(?:[’']d|\s+would|\s+will|\s+was\s+going\s+to)\b|\b(?:he|she|they)\s+(?:said|told\s+me)\s+(?:that\s+)?if\s+i\b)[^.?!]{0,90}?\b(?:(?:tell|telling|show|send|post|share)\s+(?:my|his|her|their|everyone|people|them\s+(?:what|about)|(?:the\s+)?(?:photos?|pictures?|videos?|messages?|screenshots?))|expose|out\s+me|take\s+(?:the\s+)?(?:kids|children|everything)|hurt|hit|kill|report\s+me|fire\s+me|evict|kick\s+me\s+out|throw\s+me\s+out|cut\s+me\s+off|stop\s+paying|ruin|destroy|make\s+sure|leave\s+me\s+with\s+nothing)\b/i,
+    label: 'threat-conditioned compliance',
+  },
+
+  /**
+   * FORECLOSED CHOICE — "I couldn't say no", "no wasn't an option".
+   *
+   * A reported condition about whether refusal was AVAILABLE, not a feeling
+   * about it. "I didn't want to say no" is preference, not capacity, and is
+   * deliberately excluded.
+   */
+  {
+    re: /\b(?:could\s?n[’']?t|could\s+not|was\s?n[’']?t\s+able\s+to|not\s+able\s+to|not\s+allowed\s+to|no\s+way\s+to)\s+(?:have\s+)?(?:said?|say)\s+no\b|\b(?:did\s?n[’']?t|do\s?n[’']?t)\s+think\s+i\s+could\s+(?:have\s+)?(?:said?|say)\s+no\b|\bno\s+was\s?n[’']?t\s+(?:really\s+)?an\s+option\b|\bsaying\s+no\s+was\s?n[’']?t\s+(?:really\s+)?(?:an\s+option|possible|safe)\b/i,
+    label: 'foreclosed choice',
+  },
 ];
 
 /**

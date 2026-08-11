@@ -75,3 +75,29 @@ describe('the module never alters the reply', () => {
     );
   });
 });
+
+/**
+ * Instrument repair 2026-08-11 — reported CONDITIONS AND ACTIONS only.
+ * Emotional severity must never establish risk: humiliation, betrayal and
+ * degradation stay ordinary relational work by standing founder ruling.
+ */
+describe('threat-conditioned compliance and foreclosed choice', () => {
+  const risk = (t: string) => assess('', t).disclosureRisk;
+
+  it.each([
+    ["He said if I didn't sleep with him he'd tell my sister what I said.", 'threat to expose'],
+    ['He told me that if I refused he would post the photos.', 'threat to publish'],
+    ["He said if I didn't drop it he'd throw me out.", 'threat of eviction'],
+    ["I said yes. But I don't think I could have said no, not really.", 'foreclosed choice'],
+    ["Saying no wasn't really an option.", 'foreclosed choice'],
+  ])('detects a reported condition: %s (%s)', (text) => expect(risk(text)).toBe(true));
+
+  it.each([
+    ["If I didn't do the dishes she'd be annoyed for the evening.", 'emotional consequence only'],
+    ["If I didn't come home on time he'd probably worry.", 'worry, not threat'],
+    ["He said if I didn't want to go he would tell them we were staying in.", 'benign conditional'],
+    ['He humiliated me in front of everyone. It was degrading.', 'emotional magnitude'],
+    ['He read out my private messages at the party and everyone laughed.', 'betrayal, ordinary'],
+    ["I said yes. I didn't want to say no because I hate confrontation.", 'preference, not capacity'],
+  ])('does NOT fire on: %s (%s)', (text) => expect(risk(text)).toBe(false));
+});
