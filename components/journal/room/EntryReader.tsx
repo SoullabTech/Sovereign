@@ -24,14 +24,24 @@ export interface JournalEntry {
   created_at: string;
 }
 
-/** Time reads as lived, not as a timestamp. */
+/**
+ * Time reads as lived, not as a timestamp.
+ *
+ * The hour is included because an entry is a record of a moment, and "August 11"
+ * alone cannot tell the member whether they wrote it before dawn or after a hard
+ * evening — which is often the first thing they want to know on returning. The
+ * year still appears only when it is not this one; a date does not need to
+ * announce what the member already knows.
+ */
 function livedDate(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleString('en-US', {
     month: 'long',
     day: 'numeric',
     ...(d.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
+    hour: 'numeric',
+    minute: '2-digit',
   });
 }
 
