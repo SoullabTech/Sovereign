@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import RelationshipCard, { type RelationshipSummary } from '@/components/relationships/RelationshipCard';
 import EmptyRelationalField from '@/components/relationships/EmptyRelationalField';
 import CreateRelationshipModal from '@/components/relationships/CreateRelationshipModal';
+import RelationalFieldConversation from '@/components/relationships/RelationalFieldConversation';
 
 type Realm = 'outer' | 'inner' | 'transpersonal';
 
@@ -89,15 +90,26 @@ export default function RelationshipFieldPage() {
   return (
     <div className="min-h-screen relative bg-[#0a0e17]">
       <div className="max-w-3xl mx-auto px-6 py-10">
-        {/* Header */}
+        {/* Header
+            ── "Back to MAIA" was removed as a prominent MAIA-branded CTA
+            (founder correction, 2026-08-10-turn-two): this page yanking a
+            member to a whole different surface mid-thought is the exact
+            full-exit disruption this build has been removing from the
+            individual rooms all session — "Take this to MAIA" used to do the
+            same thing there before RelationshipConversation.tsx replaced it.
+            A plain, quiet way back to the app shell is still useful for
+            reasons that have nothing to do with relationships, so it stays —
+            just as an unbranded back-arrow, not a competing invitation next
+            to the inline conversation below. */}
         <div className="flex items-start justify-between mb-10">
           <div>
             <button
               type="button"
               onClick={() => router.push('/maia')}
-              className="text-xs text-stone-500 hover:text-amber-400/80 transition-colors mb-3 flex items-center gap-1"
+              aria-label="Back"
+              className="text-xs text-stone-600 hover:text-stone-400 transition-colors mb-3 flex items-center gap-1"
             >
-              <span className="text-[10px]">&#8592;</span> Back to MAIA
+              <span className="text-[10px]">&#8592;</span> Home
             </button>
             <h1 className="text-3xl font-extralight text-stone-200 tracking-wide mb-2">
               Relational Field
@@ -116,6 +128,12 @@ export default function RelationshipFieldPage() {
             </button>
           )}
         </div>
+
+        {/* MAIA, already here — the same room-based pattern as the
+            individual relationship rooms, before any specific person is
+            picked. See components/relationships/RelationalFieldConversation.tsx
+            for why no relationshipId is ever sent from this surface. */}
+        {hasAny && <RelationalFieldConversation />}
 
         {/* Empty state */}
         {!hasAny && (
