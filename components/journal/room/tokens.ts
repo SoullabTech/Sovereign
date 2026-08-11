@@ -91,6 +91,33 @@ export const hit = 'inline-flex items-center min-h-[44px]';
 export const hitBlock = 'min-h-[44px]';
 
 /**
+ * Touch target for gestures whose LABEL is short.
+ *
+ * Measured 2026-08-10 (accessibility pass on e8a23efe7): `hit` fixes height but
+ * says nothing about width, so the writing surface's `day` / `dream` toggles
+ * rendered 22px wide — under the 24px floor of WCAG 2.5.8 Target Size (Minimum).
+ * A one- or two-syllable word simply is not wide enough on its own.
+ *
+ * As with `hit`, this widens the HIT AREA and not the visual weight: the type
+ * stays the same size and the gesture stays quiet.
+ */
+export const hitTight = 'inline-flex items-center justify-center min-h-[44px] min-w-[44px]';
+
+/**
+ * Visually hidden, but present for assistive technology.
+ *
+ * The room's register is "software recedes", which means most states carry no
+ * visible title — correct for the eye, and a real defect for a screen reader:
+ * measured 2026-08-10, the writing, reading and browsing states each rendered a
+ * <main> with no heading and no accessible name, so a member arriving by
+ * keyboard or screen reader was told nothing about where they had landed.
+ *
+ * The fix is a heading that exists in the accessibility tree only. Nothing on
+ * screen changes.
+ */
+export const srOnly = 'sr-only';
+
+/**
  * Touch target for gestures that must each occupy their own line.
  *
  * `hit` uses inline-flex, which OVERRIDES a sibling `block` class — on the

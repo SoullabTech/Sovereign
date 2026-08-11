@@ -21,7 +21,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { type, color, space, focus, hit, quiet } from './tokens';
+import { type, color, space, focus, hit, hitTight, quiet, srOnly } from './tokens';
 
 export type EntryType = 'day' | 'dream';
 
@@ -107,7 +107,15 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
   }
 
   return (
-    <main className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}>
+    <main
+      className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
+      aria-labelledby="journal-writing-heading"
+    >
+      {/* Named for assistive technology only — the room stays visually untitled. */}
+      <h1 id="journal-writing-heading" className={srOnly}>
+        {variant === 'note' ? 'Note something' : 'Begin writing'}
+      </h1>
+
       <div className="pt-8 sm:pt-10">
         <button
           type="button"
@@ -157,7 +165,9 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
                   type="button"
                   onClick={() => setEntryType(t)}
                   aria-pressed={entryType === t}
-                  className={`${type.meta} ${focus} ${hit} ${quiet} ${
+                  /* hitTight, not hit: "day" measured 22px wide — under the
+                     24px target-size floor. Widens the hit area only. */
+                  className={`${type.meta} ${focus} ${hitTight} ${quiet} ${
                     entryType === t ? color.secondary : `${color.muted} opacity-60`
                   }`}
                 >

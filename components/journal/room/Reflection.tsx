@@ -66,7 +66,7 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
 
   if (error) {
     return (
-      <section className="mt-12" aria-live="polite">
+      <section className="mt-12" aria-live="polite" aria-label="MAIA">
         <p className={`${type.meta} ${color.muted}`}>{error}</p>
         <button
           type="button"
@@ -82,7 +82,7 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
   if (!body) {
     // Quiet waiting. MAIA does not narrate her own processing.
     return (
-      <section className="mt-12" aria-live="polite" aria-busy="true">
+      <section className="mt-12" aria-live="polite" aria-busy="true" aria-label="MAIA is reading">
         <span className="sr-only">Waiting for MAIA</span>
         <div className={`h-px w-16 ${color.accent} opacity-30 animate-pulse motion-reduce:animate-none`} aria-hidden="true" />
       </section>
@@ -90,7 +90,7 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
   }
 
   return (
-    <section className={`mt-12 ${motion}`} aria-live="polite">
+    <section className={`mt-12 ${motion}`} aria-live="polite" aria-label="What MAIA noticed and asked">
       <div>
         <p className={`${type.maiaLabel} ${color.muted}`}>MAIA noticed</p>
         <p className={`mt-2 ${type.maiaBody} ${color.secondary}`}>{body.noticed}</p>

@@ -16,7 +16,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { type, color, space, focus, hit, quiet } from './tokens';
+import { type, color, space, focus, hit, quiet, srOnly } from './tokens';
 
 export interface JournalEntry {
   id: string;
@@ -47,7 +47,17 @@ export interface EntryReaderProps {
 
 export function EntryReader({ entry, onReflect, onLeave, reflecting, children }: EntryReaderProps) {
   return (
-    <main className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}>
+    <main
+      className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
+      aria-labelledby="journal-reading-heading"
+    >
+      {/* The entry's own date names this state for assistive technology. */}
+      <h1 id="journal-reading-heading" className={srOnly}>
+        Entry from {new Date(entry.created_at).toLocaleDateString('en-US', {
+          weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+        })}
+      </h1>
+
       <div className="pt-8 sm:pt-10">
         <button
           type="button"

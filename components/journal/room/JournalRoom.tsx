@@ -28,7 +28,7 @@ import { EntryReader, type JournalEntry } from './EntryReader';
 import { Reflection } from './Reflection';
 import { type ReturnPiece, type ReturnableRow } from './Return';
 import { pickReturn } from '@/lib/journal/return';
-import { type, color, space, focus, hit, quiet, quietGroup, hitBlock } from './tokens';
+import { type, color, space, focus, hit, quiet, quietGroup, hitBlock, srOnly } from './tokens';
 
 type RoomState =
   | { name: 'arrival' }
@@ -174,7 +174,12 @@ function Browse({
   };
 
   return (
-    <main className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}>
+    <main
+      className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
+      aria-labelledby="journal-browse-heading"
+    >
+      <h1 id="journal-browse-heading" className={srOnly}>Browse the journal</h1>
+
       <div className="pt-8 sm:pt-10">
         <button
           type="button"
