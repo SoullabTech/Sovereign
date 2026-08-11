@@ -144,6 +144,31 @@ collision.
 `SHARED_LOCAL_DATABASE_CUSTODY_RACE_2026-08-11.md` §6 for the fresh isolated fixture
 used instead.
 
+### −1.4c Final walk — passed, on an isolated fixture
+
+**Fixture:** `journal.deploy.250d08714.f857eb`, created solely for this walk, seeded
+with exactly 3 entries (2 for the anniversary/Return rule, 1 spacer), zero rows
+before, four after (3 seed + 1 written live during the walk), one capsule created
+(correctly `sourceType: 'journal'`, correctly excluded from Browse's Captures).
+**Retired immediately after** — member, entries, capsule and session all deleted;
+confirmed zero rows remaining under that username.
+
+**Candidate walked:** `250d08714` (Slice 2 + Browse continuity + audio-toast House
+correction, all three committed).
+
+| Check | Result |
+|---|---|
+| Writing feels primary | ✅ arrival opens on the question; writing surface has no chrome |
+| Paper material holds | ✅ ivory field, charcoal ink, ember gesture — unchanged from Slice 2 |
+| Single axis holds | ✅ measured: all top-level columns share one left edge at 1280 (368), 768 (112), 375 (24) |
+| Browse continuity intact | ✅ writing default, 4 kept entries listed correctly, Captures/Scribe/Changes/Decisions reachable via "Also here" |
+| No global toast intrudes | ✅ confirmed suppressed on arrival via rendered-DOM check (not the earlier false script-text match); confirmed still shown on `/maia` |
+| Reflect works | ✅ live `/api/journal/reflect` response — MAIA noticed/asked, both grounded in the entry's own words |
+| Return works | ✅ anniversary rule fired correctly on the seeded one-year-back entry; `Why this?` disclosed the literal rule |
+| Mobile/tablet/a11y clean | ✅ 0 contrast failures, 0 tap-target failures, no overflow at 375/768/1280 |
+
+**Result: PASS.**
+
 ### −1.5 Authorized path
 
 ```
