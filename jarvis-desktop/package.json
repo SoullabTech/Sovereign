@@ -1,0 +1,22 @@
+{
+  "name": "jarvis-desktop",
+  "version": "0.1.0-alpha",
+  "description": "JARVIS operational console — a separate surface from MAIA Desktop. Presentation over canonical Builder OS / router state. No business logic duplicated here.",
+  "main": "src/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --mac --dir"
+  },
+  "build": {
+    "appId": "life.soullab.jarvis",
+    "productName": "JARVIS",
+    "directories": { "output": "dist", "buildResources": "build-resources" },
+    "files": ["src/**/*"],
+    "mac": { "category": "public.app-category.developer-tools", "identity": "Apple Development: Kelly Nezat (N9DTF6434L)" }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}
