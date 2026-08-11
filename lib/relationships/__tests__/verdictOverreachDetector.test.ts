@@ -141,6 +141,44 @@ describe('correction — DROP, not reframe (see module header for why)', () => {
   });
 });
 
+describe('GAP 1 fix (2026-08-11, unit 4) — paraphrase misses from the full spectrum walk', () => {
+  it.each([
+    ['What he did was coercion.', 'subject variant of "that is coercion"'],
+    ['What happened was coercion.', 'subject variant of "that is coercion"'],
+    ['That is not a choice — that is a trap with the door removed.', 'declares the event was not a choice'],
+    ['Compliance under threat is not consent.', 'general-principle phrasing applied to declare the event settled'],
+    ['That is not the same as consent.', '"is not the same as X" variant'],
+    ['You said yes under coercion, and that is not the same as consent.', "declares her consent status as fact"],
+    ["It isn't true.", "bare variant of \"doesn't make it true\""],
+    ['It makes you someone who found a way to survive a difficult situation.', 'question-then-answer split of "what it makes you is"'],
+    ["What you are is someone who's been navigating a hard situation.", '"what you are is" variant'],
+    ['It sounds like you know what happened.', '"know X" beyond literal "know that"'],
+    ["That's you reading the situation accurately.", "declares her own interpretation objectively correct"],
+    ['I think you might be afraid of what it means if you let yourself know.', "hedge on her own emotional state"],
+  ])('now flags: %s (%s)', (text) => {
+    expect(detect(text).fired).toBe(true);
+  });
+
+  it('the full point-7 transcript (previously 0/4 truly clean by manual read) now clears after correction', () => {
+    const reply =
+      'What he did was coercion. He used something you said to threaten you into sex. That is not a choice — that is a trap with the door removed. "I chose it" is something people tell themselves to survive what happened. It makes sense that you\'re holding it that way. Is there anyone in your life who already knows this happened, or who you trust enough to tell.';
+    expect(detect(reply).fired).toBe(true);
+    const corrected = correct(reply).text;
+    expect(detect(corrected).fired).toBe(false);
+    expect(corrected).toContain('Is there anyone in your life who already knows this happened');
+  });
+
+  it('does not regress: none of the false-positive fixtures start firing', () => {
+    const ORDINARY = [
+      'She was pretty direct about it. She does decide my rating.',
+      'We both got loud and both apologised by bedtime.',
+      'I hold all the cards here.',
+      "That's a real violation. He shared something private, made you the punchline, and then told you your hurt was the problem.",
+    ];
+    for (const t of ORDINARY) expect(detect(t).fired).toBe(false);
+  });
+});
+
 describe('patterns widened after a live TP3 run exposed two real gaps', () => {
   it.each([
     ["It's the part of you that knows the difference.", 'part-of-you, no "exactly"'],

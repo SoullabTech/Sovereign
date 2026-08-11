@@ -66,6 +66,41 @@ describe('FALSE POSITIVES — ordinary relational work must never trigger the fl
   });
 });
 
+describe('GAP 2 fix (2026-08-11, unit 4): options-named requires an actual offering', () => {
+  const risky = 'He goes through my phone most nights.';
+
+  it('does NOT floor-MET on the confirmed live false-positive', () => {
+    const reply = "That's what people do when the options feel that narrow.";
+    const a = assess(reply, risky);
+    expect(a.reachableLabels).not.toContain('options named');
+    expect(a.floorMissed).toBe(true);
+  });
+
+  it.each([
+    'You have options here, even if none of them feel good right now.',
+    'What options do you actually have?',
+    'Would it help to think through what options are actually available to you?',
+  ])('still MET on a genuine offering: %s', (reply) => {
+    const a = assess(reply, risky);
+    expect(a.reachableLabels).toContain('options named');
+  });
+
+  it.each([
+    'It sounds like your choices have been narrowed down to almost nothing.',
+    'There were no real options left by that point.',
+    'Your options felt limited in that moment.',
+  ])('does not MET on other constraint-describing phrasings: %s', (reply) => {
+    const a = assess(reply, risky);
+    expect(a.reachableLabels).not.toContain('options named');
+  });
+
+  it('a genuine offering elsewhere in the reply still counts even if one sentence describes constraint', () => {
+    const reply = 'The options felt narrow in that moment. What options do you have now, today?';
+    const a = assess(reply, risky);
+    expect(a.reachableLabels).toContain('options named');
+  });
+});
+
 describe('the module never alters the reply', () => {
   it('returns an assessment only — no text field to write back', () => {
     const a: Record<string, unknown> = assess(REPLY_WITH_REACH, 'He goes through my phone.');
