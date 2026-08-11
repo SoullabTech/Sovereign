@@ -2,16 +2,375 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "journal-cutover-closure-lane",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/maia-wt-journal-cutover",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3477"
+      ],
+      "port": 3477,
+      "autoPort": true
+    },
+    {
+      "name": "journal-cutover",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/825da82f-4ed8-4d9f-9857-8017b6772944/scratchpad/cutover",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3476"
+      ],
+      "port": 3476,
+      "autoPort": true
+    },
+    {
+      "name": "journal-candidate",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/825da82f-4ed8-4d9f-9857-8017b6772944/scratchpad/candidate",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3474"
+      ],
+      "port": 3474,
+      "autoPort": true
+    },
+    {
+      "name": "journal-room",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/MAIA-SOVEREIGN",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3472"
+      ],
+      "port": 3472,
+      "autoPort": true
+    },
+    {
+      "name": "journal-closure",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/maia-wt-journal-closure",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3473"
+      ],
+      "port": 3473,
+      "autoPort": true
+    },
+    {
+      "name": "relroom",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/MAIA-SOVEREIGN-worktrees/rel-room",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3455"
+      ],
+      "port": 3455,
+      "autoPort": true
+    },
+    {
+      "name": "continuity",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/b3d4c4b7-816f-4464-a813-d8b24004d163/scratchpad/wt-continuity",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3447"
+      ],
+      "port": 3447,
+      "autoPort": true
+    },
+    {
+      "name": "ontology",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/worktrees/now-what-ontology",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3448"
+      ],
+      "port": 3448,
+      "autoPort": true
+    },
+    {
+      "name": "silentloss",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/worktrees/fix-now-what-silent-loss",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3446"
+      ],
+      "port": 3446,
+      "autoPort": true
+    },
+    {
+      "name": "nowwhat-fields",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/MAIA-SOVEREIGN",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3445"
+      ],
+      "port": 3445,
+      "autoPort": true
+    },
+    {
+      "name": "ptrfix",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/wt-ptr",
+        "run",
+        "dev"
+      ],
+      "port": 3078,
+      "autoPort": true
+    },
+    {
+      "name": "c3fw",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/wt-c3",
+        "run",
+        "dev"
+      ],
+      "port": 3078,
+      "autoPort": true
+    },
+    {
+      "name": "c3walk",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/wt-c3",
+        "run",
+        "dev"
+      ],
+      "port": 3077,
+      "autoPort": true
+    },
+    {
+      "name": "walk878",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/805c9662-5444-4558-9de0-448f090895a5/scratchpad/arrange-wt",
+        "run",
+        "dev"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
       "name": "production",
       "runtimeExecutable": "echo",
-      "runtimeArgs": ["production server already running via Docker+Caddy"],
+      "runtimeArgs": [
+        "production server already running via Docker+Caddy"
+      ],
       "port": 80
+    },
+    {
+      "name": "start-writing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/maia-wt-start-writing",
+        "run",
+        "dev"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "writers-field",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/maia-wt-writers-field",
+        "run",
+        "dev"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "bf1",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/648fc945-8501-494e-aa47-0c21e416dec2/scratchpad/bf1",
+        "run",
+        "dev"
+      ],
+      "port": 3311,
+      "autoPort": true
+    },
+    {
+      "name": "groupadd",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/237c4866-43ad-4dfb-b4f6-1b43d9ae6c18/scratchpad/wt-group-add",
+        "run",
+        "dev"
+      ],
+      "port": 3420,
+      "autoPort": true
     },
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "home-activation",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/maia-wt-home-copy",
+        "run",
+        "dev"
+      ],
+      "port": 3412,
+      "autoPort": true
+    },
+    {
+      "name": "workfield-p1",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/d1557d81-2deb-491d-8db8-b577cef78fa0/scratchpad/wt-phase1",
+        "run",
+        "dev"
+      ],
+      "port": 3413,
+      "autoPort": true
+    },
+    {
+      "name": "s1",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/b93b7abf-cc06-411d-a909-e8ecefe3ad9e/scratchpad/s1",
+        "run",
+        "dev"
+      ],
+      "port": 3415,
+      "autoPort": true
+    },
+    {
+      "name": "invite-walk",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/b93b7abf-cc06-411d-a909-e8ecefe3ad9e/scratchpad/wt-phase1-verify",
+        "run",
+        "dev"
+      ],
+      "port": 3414,
+      "autoPort": true
+    },
+    {
+      "name": "work-home",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/00d6b87b-273c-4cb7-9acd-c1f19ba7eeec/scratchpad/wt-r1",
+        "run",
+        "dev"
+      ],
+      "port": 3421,
+      "autoPort": true
+    },
+    {
+      "name": "writer-canvas",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/MAIA-SOVEREIGN-worktrees/writer-canvas-v01",
+        "run",
+        "dev"
+      ],
+      "port": 3430,
+      "autoPort": true
+    },
+    {
+      "name": "canvas-door",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/private/tmp/claude-501/-Users-soullab-MAIA-SOVEREIGN/03c9d920-d81b-4160-af9d-758b4986da0a/scratchpad/wt-canvas-door",
+        "run",
+        "dev"
+      ],
+      "port": 3435,
+      "autoPort": true
+    },
+    {
+      "name": "jondi-audit",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/maia-audit-d2db55d7b",
+        "run",
+        "dev"
+      ],
+      "port": 3460,
+      "autoPort": true
+    },
+    {
+      "name": "phase1-walk",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/soullab/MAIA-SOVEREIGN/.claude/worktrees/rc-verify",
+        "run",
+        "dev"
+      ],
+      "port": 3210,
       "autoPort": true
     }
   ]
