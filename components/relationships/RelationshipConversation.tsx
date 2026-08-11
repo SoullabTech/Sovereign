@@ -21,12 +21,15 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { buildRelationalWorkingFrame } from '@/lib/relationships/relationalWorkingMethod';
 
 interface Props {
   relationshipId: string;
   name: string;
   bondType?: string | null;
   note?: string | null;
+  /** The live thing in this room — the member's most recent own words. */
+  currentDynamic?: string | null;
   /**
    * Keep what the member wrote, WITHOUT sending it to MAIA.
    *
@@ -47,7 +50,7 @@ interface Turn {
   text: string;
 }
 
-export default function RelationshipConversation({ relationshipId, name, bondType, note, onWriteDown }: Props) {
+export default function RelationshipConversation({ relationshipId, name, bondType, note, currentDynamic, onWriteDown }: Props) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -83,16 +86,18 @@ export default function RelationshipConversation({ relationshipId, name, bondTyp
     // ever observed or stored. The frame rides in `conversationHistory`, which
     // MAIA reads for context and which nothing persists — sent on the first
     // turn alone, so she does not keep re-introducing the person.
+    // The frame now also carries the WORKING METHOD — how to work something
+    // live with another person, the know/imagine instrument, the third-party
+    // boundary, and the safety guardrail that stops mutual-dynamics work where
+    // it would do harm. Orientation, never a script; see the module.
     const frame =
       turns.length === 0
         ? [
             {
               role: 'user',
-              content: [
-                `[Context — I am writing from ${name}'s room${bondType ? `, ${bondType.replace(/_/g, ' ')}` : ''}.`,
-                note ? ` What I have written about them: "${note}"` : '',
-                ']',
-              ].join(''),
+              content: buildRelationalWorkingFrame({ name, bondType, note, currentDynamic }),
+              userMessage: buildRelationalWorkingFrame({ name, bondType, note, currentDynamic }),
+              maiaResponse: '',
             },
           ]
         : [];
@@ -104,11 +109,23 @@ export default function RelationshipConversation({ relationshipId, name, bondTyp
         body: JSON.stringify({
           message: text,
           sessionId: sessionIdRef.current,
+          // ⚠️ TWO SHAPES ON PURPOSE — this channel was silently dead.
+          // `lib/sovereign/maiaService.ts` builds its recent-conversation
+          // context with `ex.userMessage` / `ex.maiaResponse`, while this room
+          // (and the `{ role, content }` type declared elsewhere in that same
+          // file) sent `role`/`content`. Every field the service read came back
+          // `undefined`, so the frame — the person, the note, the live dynamic,
+          // and now the working method — never reached MAIA at all. Her answers
+          // were coming from the bare message and her general disposition.
+          // Sending both shapes fixes the delivery without touching the shared
+          // service, which other surfaces depend on.
           conversationHistory: [
             ...frame,
             ...turns.map((t) => ({
               role: t.role === 'maia' ? 'assistant' : 'user',
               content: t.text,
+              userMessage: t.role === 'member' ? t.text : '',
+              maiaResponse: t.role === 'maia' ? t.text : '',
             })),
           ],
           consciousnessContext: {
@@ -189,19 +206,28 @@ export default function RelationshipConversation({ relationshipId, name, bondTyp
         className="w-full px-4 py-3 rounded-xl bg-stone-900/40 border border-stone-700/50 text-stone-100 placeholder:text-stone-500 focus:outline-none focus:border-amber-700/45 text-[15px] font-light resize-none transition-colors"
       />
 
-      {/* Two ways to use what you just wrote. Speaking to MAIA, and keeping it
-          for yourself — the second reachable without her, in one press, acting
-          on the very text under the cursor. `type="button"` on both: an
-          untyped <button> defaults to submit, and a stray submit is exactly
-          how a member's words got swallowed here before. */}
-      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-2">
+      {/* ── The primary gesture ────────────────────────────────────────────
+          A DELIBERATE REVERSAL. This control was made the quietest thing on
+          the page to prove the room stands without MAIA. That was right while
+          the question was whether the room had a spine of its own; it is wrong
+          now that the room's actual purpose is working a live dynamic WITH
+          her. "Begin" was also generic SaaS — it names the software's state,
+          not the member's intent. "Work with this" names what they came to do.
+
+          The keep-for-yourself path stays fully functional and unhidden beside
+          it: Article VIII still holds, and the room still works if MAIA is
+          unavailable. Demoted in emphasis, never in capability.
+
+          `type="button"` on both — an untyped <button> defaults to submit, and
+          a stray submit is exactly how a member's words got swallowed here. */}
+      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-3">
         <button
           type="button"
           onClick={send}
           disabled={sending || !draft.trim()}
-          className="px-4 py-1.5 rounded-lg bg-amber-900/25 border border-amber-700/35 text-amber-100/90 text-sm font-light hover:bg-amber-900/40 transition-all disabled:opacity-30"
+          className="px-5 py-2.5 rounded-lg bg-amber-800/35 border border-amber-600/45 text-amber-50 text-[15px] font-light hover:bg-amber-800/55 hover:border-amber-500/60 transition-all disabled:opacity-25"
         >
-          {sending ? 'MAIA is listening…' : turns.length ? 'Send' : 'Begin'}
+          {sending ? 'MAIA is listening…' : turns.length ? 'Stay with this' : 'Work with this'}
         </button>
 
         {onWriteDown && (
@@ -209,9 +235,9 @@ export default function RelationshipConversation({ relationshipId, name, bondTyp
             type="button"
             onClick={writeDown}
             disabled={keeping || !draft.trim()}
-            className="text-xs text-stone-400 hover:text-amber-200/80 transition-colors font-light disabled:opacity-30 disabled:hover:text-stone-400"
+            className="text-[13px] text-stone-400 hover:text-amber-200/80 transition-colors font-light disabled:opacity-30 disabled:hover:text-stone-400"
           >
-            {keeping ? 'Keeping…' : '…or just keep this, for yourself'}
+            {keeping ? 'Keeping…' : 'or just keep this, for yourself'}
           </button>
         )}
 

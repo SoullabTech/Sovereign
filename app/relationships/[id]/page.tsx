@@ -286,6 +286,33 @@ export default function RelationshipDetailPage() {
   const hasHistory = entries.length > 0;
   const isContainer = relationship.origin === 'system';
 
+  // What is live with this person right now.
+  //
+  // The member's most recent OWN words in this room — entries are returned
+  // newest-first, so the first member-authored one is the latest. Only
+  // member_authored qualifies: MAIA's observation is not what is happening
+  // with someone, and an agent walk is not either. Falls back to the standing
+  // note, which is still the member's own writing.
+  const latestMemberEntry = entries.find(
+    (e) => e.provenance === 'member_authored' && (e.content || e.freeText),
+  );
+  const currentDynamic = latestMemberEntry
+    ? { text: (latestMemberEntry.content || latestMemberEntry.freeText)!, at: latestMemberEntry.createdAt }
+    : relationship.note
+      ? { text: relationship.note, at: null as string | null }
+      : null;
+  // Don't echo the standing note twice when it IS the present dynamic.
+  const noteIsSeparate = Boolean(relationship.note && latestMemberEntry);
+  // A divider with nothing under it is scaffolding announcing emptiness — the
+  // exact failure this room was reshaped to remove. No supporting material, no
+  // supporting section.
+  const hasSupportingMaterial = Boolean(
+    noteIsSeparate ||
+      hasHistory ||
+      fieldState?.fieldTone ||
+      (fieldState?.activeSignals && fieldState.activeSignals.length > 0),
+  );
+
   return (
     /* Navy field, ember light. A deep blue-black room rather than a black
        terminal, with the only real warmth coming from the member's own words
@@ -352,52 +379,56 @@ export default function RelationshipDetailPage() {
           )}
         </div>
 
-        {/* The member's own words — the brightest thing in the room.
-            Not a caption under a label; the substance itself. Everything else
-            on this page is quieter than this sentence on purpose. */}
-        {relationship.note && (
-          <p
-            className="text-2xl leading-[1.6] text-[#f2e6d8] font-extralight"
-            style={{ fontFamily: 'Spectral, Georgia, serif' }}
-          >
-            {relationship.note}
-          </p>
+        {/* ── THE PRESENT DYNAMIC ─────────────────────────────────────────────
+            The first thing this screen must answer is "what is happening with
+            this person NOW?" — not "what is the history of this relationship?"
+            Arriving used to mean landing on the standing description and then
+            a long archive; the live thing had nowhere to be.
+
+            The current dynamic is the member's most recent OWN words in this
+            room, falling back to what they wrote about the person. Only
+            member-authored material qualifies: MAIA's observations are not
+            what is happening with someone, and an agent's walk certainly is
+            not. It is the largest, warmest text on the page, and everything
+            historical below is deliberately quieter than it. */}
+        {!isContainer && (
+          <div className="mb-2">
+            {currentDynamic ? (
+              <p
+                className="text-[27px] leading-[1.5] text-[#f6ead9] font-extralight"
+                style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              >
+                {currentDynamic.text}
+              </p>
+            ) : (
+              /* Not an empty state and not a chore — an open question, in the
+                 same voice and weight the answer will have. */
+              <p
+                className="text-[27px] leading-[1.5] text-stone-500 font-extralight"
+                style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              >
+                What&apos;s here with {relationship.name} today?
+              </p>
+            )}
+            {currentDynamic?.at && (
+              <p className="mt-2 text-[11px] text-stone-600 font-light">
+                you, {ageInWords(currentDynamic.at)}
+              </p>
+            )}
+          </div>
         )}
 
-        {/* Sensing, in words, attributed to the member and DATED.
-            It used to render as an undated coloured dot beside the person's
-            name — which drew the member's own sensing as an attribute of the
-            other person, and let a reading from months ago pass as current.
-            `lastCheckinAt` was fetched, typed, and never shown at all. */}
-        {fieldState?.fieldTone && (
-          <p className="mt-5 text-sm text-stone-400/85 font-light flex items-center gap-2 flex-wrap">
-            <FieldToneIndicator tone={fieldState.fieldTone} size="sm" />
-            <span>
-              is how you sensed things here
-              {fieldState.lastCheckinAt ? (
-                <>
-                  {' '}on {onDate(fieldState.lastCheckinAt)}
-                  <span className="text-stone-400/55"> — {ageInWords(fieldState.lastCheckinAt)}</span>
-                </>
-              ) : (
-                <span className="text-stone-400/55"> — the last time you checked in</span>
-              )}
-            </span>
-          </p>
-        )}
-
-        {/* ── The hearth ──────────────────────────────────────────────────────
-            Speaking is the reason this place exists, and it is a HUMAN gesture
-            first. MAIA is company at the fire, not the fire: writing something
-            down sits right beside speaking to her, reachable in one move and
-            fully usable if she is declined, unavailable, or simply not wanted.
-            The room keeps its whole meaning without her. */}
+        {/* ── Work it ─────────────────────────────────────────────────────────
+            The primary gesture sits directly under the live dynamic, where the
+            eye already is. MAIA opens already holding this person, this
+            relationship, and the words above — no generic handoff. */}
         {!isContainer && (
           <RelationshipConversation
             relationshipId={id}
             name={relationship.name}
             bondType={relationship.bondType}
             note={relationship.note}
+            currentDynamic={currentDynamic?.text ?? null}
             onWriteDown={keepWhatTheyWrote}
           />
         )}
@@ -418,32 +449,68 @@ export default function RelationshipDetailPage() {
             condition is therefore the member's own gesture: it appears when
             they turn to look back, and never asks for anything on arrival. */}
 
-        {(fieldState?.dominantPattern ||
-          (fieldState?.activeSignals && fieldState.activeSignals.length > 0) ||
-          fieldState?.developmentalTheme) && (
-          <section className="mt-12">
-            <Quiet>What has been present</Quiet>
-            {fieldState.activeSignals && fieldState.activeSignals.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {fieldState.activeSignals.map((s, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-stone-900/20 border border-stone-700/15 text-stone-400">
-                    {s}
-                  </span>
-                ))}
-              </div>
-            )}
-            {fieldState.dominantPattern && (
-              <p className="text-xs text-stone-400 mb-1">{fieldState.dominantPattern}</p>
-            )}
-            {fieldState.developmentalTheme && (
-              <p className="text-xs text-amber-600 font-light">{fieldState.developmentalTheme}</p>
-            )}
-          </section>
-        )}
+        {/* ── SUPPORTING MATERIAL ─────────────────────────────────────────────
+            Everything below is evidence for the work above, not the point of
+            the page. It is demoted in hierarchy — never capped, hidden, or
+            deleted. The 25-year rendering still reaches the beginning. */}
+        <div
+          className={
+            hasSupportingMaterial
+              ? 'mt-16 pt-8 border-t border-stone-800/60 space-y-10'
+              : 'hidden'
+          }
+        >
+
+          {/* The standing description, once the room has something more live
+              in it. Still the member's own words — just no longer the loudest
+              thing when something is actually happening today. */}
+          {noteIsSeparate && (
+            <section>
+              <Quiet>How you&apos;ve described {relationship.name}</Quiet>
+              <p className="text-[15px] leading-relaxed text-stone-300 font-light"
+                 style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                {relationship.note}
+              </p>
+            </section>
+          )}
+
+          {/* Signals the member SELECTED during a check-in, and the tone MAIA
+              CLASSIFIED from what they wrote. These are two different acts and
+              used to render as one undifferentiated float of tags — system
+              classification presented as fact, the row-label defect one level
+              up. Each now says whose it is. */}
+          {((fieldState?.activeSignals && fieldState.activeSignals.length > 0) ||
+            fieldState?.fieldTone) && (
+            <section>
+              {fieldState.activeSignals && fieldState.activeSignals.length > 0 && (
+                <>
+                  <Quiet>You&apos;ve named</Quiet>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {fieldState.activeSignals.map((s, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-stone-900/30 border border-stone-700/30 text-stone-300">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+              {fieldState.fieldTone && (
+                <p className="text-sm text-stone-500 font-light flex items-center gap-2 flex-wrap">
+                  <span className="text-stone-600">MAIA read this as</span>
+                  <FieldToneIndicator tone={fieldState.fieldTone} size="sm" />
+                  {fieldState.lastCheckinAt && (
+                    <span className="text-stone-600">
+                      from what you wrote on {onDate(fieldState.lastCheckinAt)} — {ageInWords(fieldState.lastCheckinAt)}
+                    </span>
+                  )}
+                </p>
+              )}
+            </section>
+          )}
 
         {hasHistory && (
-          <section className="mt-12">
-            <Quiet>{isContainer ? 'What is held here' : 'Together, over time'}</Quiet>
+          <section>
+            <Quiet>{isContainer ? 'What is held here' : 'Earlier between you'}</Quiet>
 
             {/* Derived noticing — moved OUT of arrival and INTO looking back.
                 It no longer greets the member above their own words in a
@@ -470,6 +537,7 @@ export default function RelationshipDetailPage() {
             />
           </section>
         )}
+        </div>
 
         {/* ── One quiet invitation, holding everything else ─────────────────
             Hidden for system containers: there is no relationship here to

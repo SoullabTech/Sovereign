@@ -30,8 +30,10 @@ import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSign
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
 import {
   resolveExplicitRelationshipId,
+  readRequestedRelationshipId,
   logAttachmentOutcome,
 } from '@/lib/relationships/resolveExplicitRelationshipId';
+import { RELATIONAL_METHOD_ADDENDUM } from '@/lib/relationships/relationalWorkingMethod';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here so the live sovereign route
 // receives the same memory plan + forward-readiness signals that /api/between/chat
@@ -222,6 +224,25 @@ export async function POST(req: NextRequest) {
     // Loaders are graceful — empty arrays on failure, conversation continues.
     // Skipped for sanctuary sessions and anon/guest users.
     const isSanctuary = !!(meta as any)?.sanctuary;
+
+    // 🤝 RELATIONAL WORKING METHOD — how MAIA works something live with another
+    // person: the know/imagine instrument, the reply shape, the third-party
+    // boundary, and the safety guardrail that stops mutual-dynamics work where
+    // it would do harm.
+    //
+    // Server-owned constant, applied only when the turn genuinely came from a
+    // Relationship Room. The client says WHICH relationship; it never supplies
+    // the method, so this cannot become a prompt-injection surface.
+    //
+    // Skipped entirely under Sanctuary, like every other relational path here.
+    const relationalMethodAddendum =
+      !isSanctuary && readRequestedRelationshipId(meta)
+        ? RELATIONAL_METHOD_ADDENDUM
+        : undefined;
+    if (relationalMethodAddendum) {
+      console.log('🤝 [relational] working-method addendum applied');
+    }
+
     let memoryInfluenceAddendum: string | undefined;
     let forwardReadinessAddendum: string | undefined;
     if (!isSanctuary && userId && userId !== 'guest' && !userId.startsWith('anon:')) {
@@ -298,6 +319,11 @@ export async function POST(req: NextRequest) {
           // addenda cannot be overridden by stale client-supplied meta.
           memoryInfluenceAddendum,
           forwardReadinessAddendum,
+          // 🤝 RELATIONAL WORKING METHOD — placed AFTER ...meta, with the same
+          // reasoning as the memory addenda above: server-built, so a client
+          // cannot inject or override prompt text. The room supplies only WHICH
+          // relationship it is (validated), never the method itself.
+          ...(relationalMethodAddendum ? { relationalMethodAddendum } : {}),
         },
       }),
       SOVEREIGN_TIMEOUT_MS,

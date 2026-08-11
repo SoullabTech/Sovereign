@@ -1129,6 +1129,14 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🔮 [FAST] Reflection lens applied: ${reflectionLensAddendum.split('\n')[0]}`);
   }
 
+  // 🤝 RELATIONAL WORKING METHOD: how to work something live with another
+  // person — know/imagine, reply shape, third-party boundary, safety guardrail.
+  // Set SERVER-SIDE by the conversation route, for Relationship Room turns only.
+  const relationalMethodAddendum = (meta as any)?.relationalMethodAddendum as string | undefined;
+  if (relationalMethodAddendum) {
+    console.log('🤝 [FAST] Relational working method applied');
+  }
+
   // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
   const governorAddendum = (meta as any)?.governorAddendum as string | undefined;
   if (governorAddendum) {
@@ -1281,7 +1289,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${relationalMethodAddendum ? '\n\n' + relationalMethodAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 

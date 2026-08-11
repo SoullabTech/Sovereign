@@ -13,8 +13,8 @@ const BOND_TYPES: Record<Realm, string[]> = {
 const REALM_LABELS: Record<Realm, { title: string; subtitle: string; notePrompt: string }> = {
   outer: {
     title: 'A person in my life',
-    subtitle: 'Someone you are in relationship with',
-    notePrompt: 'What brought this person to mind?',
+    subtitle: 'Someone in your life',
+    notePrompt: "What's here with them right now?",
   },
   inner: {
     title: 'An inner figure',
@@ -125,24 +125,24 @@ export default function CreateRelationshipModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative bg-jade-night border border-jade-sage/20 rounded-xl max-w-md w-full mx-4 p-6 shadow-2xl">
+      <div className="relative bg-[#0a0e17] border border-stone-700/20 rounded-xl max-w-md w-full mx-4 p-6 shadow-2xl">
         {step === 'realm' && (
           <>
-            <h3 className="text-lg font-light text-jade-jade mb-1">Begin a relationship</h3>
-            <p className="text-xs text-jade-mineral mb-6">What kind of field are you entering?</p>
+            <h3 className="text-lg font-light text-stone-200 mb-1">Begin a relationship</h3>
+            <p className="text-xs text-stone-400 mb-6">What kind of field are you entering?</p>
             <div className="space-y-3">
               {(Object.keys(REALM_LABELS) as Realm[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => handleSelectRealm(r)}
-                  className="w-full text-left px-4 py-3 rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/25 hover:border-jade-sage/35 transition-all"
+                  className="w-full text-left px-4 py-3 rounded-lg border border-stone-700/20 bg-stone-900/10 hover:bg-stone-900/25 hover:border-stone-700/35 transition-all"
                 >
-                  <div className="text-jade-jade font-light">{REALM_LABELS[r].title}</div>
-                  <div className="text-xs text-jade-mineral">{REALM_LABELS[r].subtitle}</div>
+                  <div className="text-stone-200 font-light">{REALM_LABELS[r].title}</div>
+                  <div className="text-xs text-stone-400">{REALM_LABELS[r].subtitle}</div>
                 </button>
               ))}
             </div>
-            <button onClick={handleClose} className="mt-4 text-xs text-jade-mineral hover:text-jade-sage transition-colors">
+            <button onClick={handleClose} className="mt-4 text-xs text-stone-400 hover:text-stone-400 transition-colors">
               Cancel
             </button>
           </>
@@ -150,26 +150,26 @@ export default function CreateRelationshipModal({
 
         {step === 'details' && (
           <>
-            <h3 className="text-lg font-light text-jade-jade mb-1">
+            <h3 className="text-lg font-light text-stone-200 mb-1">
               {REALM_LABELS[realm].title}
             </h3>
-            <p className="text-xs text-jade-mineral mb-5">{REALM_LABELS[realm].subtitle}</p>
+            <p className="text-xs text-stone-400 mb-5">{REALM_LABELS[realm].subtitle}</p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-jade-sage mb-1.5 uppercase tracking-wider">Name</label>
+                <label className="block text-xs text-stone-500 font-light mb-2">Their name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={realm === 'inner' ? 'e.g. The Inner Critic' : realm === 'transpersonal' ? 'e.g. My Calling' : 'e.g. Sarah'}
-                  className="w-full px-3 py-2 rounded-lg bg-jade-shadow border border-jade-sage/20 text-jade-jade placeholder:text-jade-mineral/40 focus:outline-none focus:border-jade-sage/50 text-sm"
+                  className="w-full px-3 py-2 rounded-lg bg-stone-900 border border-stone-700/20 text-stone-200 placeholder:text-stone-400/40 focus:outline-none focus:border-stone-700/50 text-sm"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-jade-sage mb-1.5 uppercase tracking-wider">Bond type <span className="text-jade-mineral">(optional)</span></label>
+                <label className="block text-xs text-stone-500 font-light mb-2">Who are they to you <span className="text-stone-400">(optional)</span></label>
                 <div className="flex flex-wrap gap-1.5">
                   {BOND_TYPES[realm].map((bt) => (
                     <button
@@ -177,8 +177,8 @@ export default function CreateRelationshipModal({
                       onClick={() => setBondType(bondType === bt ? '' : bt)}
                       className={`px-2.5 py-1 rounded-full text-xs transition-all ${
                         bondType === bt
-                          ? 'bg-jade-forest/40 text-jade-jade border border-jade-sage/40'
-                          : 'bg-jade-shadow/40 text-jade-mineral border border-jade-forest/30 hover:border-jade-sage/30'
+                          ? 'bg-stone-900/40 text-stone-200 border border-stone-700/40'
+                          : 'bg-stone-900/40 text-stone-400 border border-stone-800/30 hover:border-stone-700/30'
                       }`}
                     >
                       {bt.replace(/_/g, ' ')}
@@ -188,14 +188,14 @@ export default function CreateRelationshipModal({
               </div>
 
               <div>
-                <label className="block text-xs text-jade-sage mb-1.5 uppercase tracking-wider">
-                  {REALM_LABELS[realm].notePrompt} <span className="text-jade-mineral">(optional)</span>
+                <label className="block text-xs text-stone-500 font-light mb-2">
+                  {REALM_LABELS[realm].notePrompt} <span className="text-stone-400">(optional)</span>
                 </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg bg-jade-shadow border border-jade-sage/20 text-jade-jade placeholder:text-jade-mineral/40 focus:outline-none focus:border-jade-sage/50 text-sm resize-none"
+                  className="w-full px-3 py-2 rounded-lg bg-stone-900 border border-stone-700/20 text-stone-200 placeholder:text-stone-400/40 focus:outline-none focus:border-stone-700/50 text-sm resize-none"
                 />
               </div>
 
@@ -205,16 +205,16 @@ export default function CreateRelationshipModal({
                 <button
                   onClick={handleSubmit}
                   disabled={submitting || !name.trim()}
-                  className="px-5 py-2 rounded-lg bg-jade-forest/40 border border-jade-sage/30 text-jade-jade text-sm font-light hover:bg-jade-forest/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-5 py-2 rounded-lg bg-stone-900/40 border border-stone-700/30 text-stone-200 text-sm font-light hover:bg-stone-900/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Creating...' : 'Begin'}
                 </button>
                 {!initialRealm && (
-                  <button onClick={() => setStep('realm')} className="text-xs text-jade-mineral hover:text-jade-sage transition-colors">
+                  <button onClick={() => setStep('realm')} className="text-xs text-stone-400 hover:text-stone-400 transition-colors">
                     Back
                   </button>
                 )}
-                <button onClick={handleClose} className="text-xs text-jade-mineral hover:text-jade-sage transition-colors ml-auto">
+                <button onClick={handleClose} className="text-xs text-stone-400 hover:text-stone-400 transition-colors ml-auto">
                   Cancel
                 </button>
               </div>
