@@ -130,16 +130,37 @@ _claude_permission_mode() {
     fi
 }
 
+# R2 (founder ruling 2026-08-11): a READ-ONLY lane's prompt must not contain a
+# write or commit instruction. Read-only is a capability contract, not a
+# suggestion — and the previous template contradicted itself: it declared
+# "Your authority is READ-ONLY" in established_facts, then listed the packet's
+# files under "ALLOWED FILES" and closed by telling the worker to
+# `git add -A && git commit`. A compliant worker reads that as a licence to
+# edit, so the read-only lane failed BY CONSTRUCTION and the LOCAL_WORKER_WROTE
+# guard refused behaviour the contract had invited (proof: run r-e3448ee96d,
+# docs/ops/JARVIS_PLANNER_ROUTER_ALPHA.md §13).
+#
+# Read-only is keyed off execution_lane == "local-native", which is exactly the
+# signal jarvis-runtime-pipeline.mjs's checkAuthority() uses (READ_ONLY_LANES).
+# Deliberately NOT a second definition of read-only.
+#
+# Scope of this change, per the ruling: the read-only branch only. Write-
+# authorized lanes emit a byte-identical prompt to before. The write-detection
+# guard is untouched — mutation still fails as LOCAL_WORKER_WROTE.
 _build_prompt() {
     local f="$1"
     jq -r '
+        (.execution_lane == "local-native") as $ro |
         "You are executing ONE bounded AIN Builder OS work unit. Do not exceed its scope.\n\n" +
+        (if $ro then "AUTHORITY: READ-ONLY. You may INSPECT files. You may NOT modify them.\n\n" else "" end) +
         "OBJECTIVE:\n" + .objective + "\n\n" +
         "GOVERNING AUTHORITY: " + .governing_authority + "\n\n" +
         "ESTABLISHED FACTS (do not re-derive or re-litigate):\n" +
         (if (.established_facts | length) > 0 then ([.established_facts[] | ("- " + .)] | join("\n")) else "(none)" end) + "\n\n" +
-        "ALLOWED FILES:\n" +
-        (if (.allowed_files | length) > 0 then ([.allowed_files[] | ("- " + .)] | join("\n")) else "(unrestricted — but stay minimal)" end) + "\n\n" +
+        (if $ro then "READABLE FILES (inspect only — do NOT modify):\n" else "ALLOWED FILES:\n" end) +
+        (if (.allowed_files | length) > 0 then ([.allowed_files[] | ("- " + .)] | join("\n"))
+         elif $ro then "(unrestricted read — but stay minimal)"
+         else "(unrestricted — but stay minimal)" end) + "\n\n" +
         "PROHIBITED FILES/ACTIONS:\n" +
         (if (.prohibited_files_actions | length) > 0 then ([.prohibited_files_actions[] | ("- " + .)] | join("\n")) else "(none declared)" end) + "\n\n" +
         "ACCEPTANCE CRITERIA:\n" +
@@ -150,7 +171,16 @@ _build_prompt() {
         (if (.escalation_conditions | length) > 0 then ([.escalation_conditions[] | ("- " + .)] | join("\n")) else "(none declared beyond the standing authority firewall)" end) + "\n\n" +
         "STANDING AUTHORITY FIREWALL (always in force): you may execute settled decisions. You may NOT silently establish constitutional architecture, member authority, consent semantics, confidentiality semantics, provenance semantics, epistemic authority, destructive migration policy, security boundaries, founder rulings, ontology, or deprecation of important capability. Hitting one of these is an ESCALATE_TO_CLAUDE, not a judgment call.\n\n" +
         "EXPECTED OUTPUT: " + .expected_output + "\n\n" +
-        "When done, commit your changes with `git add -A && git commit -m \"...\"` in this worktree. Keep the diff minimal and inside ALLOWED FILES."
+        (if $ro then
+          "REQUIRED CITATION FORMAT — read this carefully, the run is refused without it.\n" +
+          "Every claim you make must be cited in the exact machine-readable form `path/to/file.ext:LINE`, with the path and the line number joined by a colon and NO space, for example:\n" +
+          "  scripts/builder/jarvis-local-worker.mjs:33\n" +
+          "A line range is written `path/to/file.ext:START-END`, for example scripts/builder/jarvis-local-worker.mjs:37-42.\n" +
+          "Prose such as \"defined on line 33\" or naming the file in one sentence and the line in another does NOT count as a citation and will be scored as zero evidence — the verifier matches this exact pattern and nothing else. Cite only lines that appear in the fragments you were given; a citation outside them is treated as fabricated. Put the citation inline with each claim.\n\n" +
+          "READ-ONLY LANE — you hold NO write authority in this worktree. Do not create, edit, move, delete, stage or commit any file. This applies to the files listed above as well: they are yours to READ, not to change. Do not write your findings to a file, and do not run `git add`, `git commit`, or any other mutating command. Return your answer as your reply text only. Any mutation of this worktree fails the run as LOCAL_WORKER_WROTE — the objective is not served by editing anything."
+        else
+          "When done, commit your changes with `git add -A && git commit -m \"...\"` in this worktree. Keep the diff minimal and inside ALLOWED FILES."
+        end)
     ' "$f"
 }
 
@@ -432,6 +462,17 @@ case "${1:-}" in
     new)      shift; cmd_new "$@" ;;
     claim)    shift; cmd_claim "$@" ;;
     local)    shift; cmd_local "$@" ;;
+    # jarvis-runtime-pipeline.mjs spawns `ain-delegate.sh local-native <id>` —
+    # 'local-native' is the PACKET's execution_lane (READ_ONLY_LANES), which the
+    # pipeline passed straight through as the subcommand. No such subcommand
+    # existed, so every real /runs execution fell into the usage branch and
+    # exited 2, which the pipeline reported as CONTENDED_OR_UNKNOWN_LANE — a
+    # contention failure class for what was actually a name mismatch. It went
+    # unnoticed because every runtime proof injects ctx.spawnDelegate and stubs
+    # this process out: the real seam had no coverage at all.
+    # Aliased rather than renamed — the packet lane name is load-bearing in the
+    # runtime's authority check and across the existing proofs.
+    local-native) shift; cmd_local "$@" ;;
     kimi)     shift; cmd_kimi "$@" ;;
     claude)   shift; cmd_claude "$@" ;;
     result)   shift; cmd_result "$@" ;;
