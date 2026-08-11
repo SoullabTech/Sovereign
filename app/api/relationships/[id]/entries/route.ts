@@ -101,6 +101,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       member_id: session.memberId,
       kind,
       content: content.trim(),
+      // Member-authored entry — an explicit act, not conversational observation.
+      // See 20260812000002; the mint gate accepts 'normal' only.
+      posture_at_creation: 'normal',
     });
 
     // Update relationship's updated_at

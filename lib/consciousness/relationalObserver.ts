@@ -130,13 +130,30 @@ export function observeRelationalContent(
   maiaResponse: string,
   posture: RelationalObservationPosture,
 ): void {
+  // 🔒 Fail closed on an INDETERMINATE posture (founder ruling 2026-08-11,
+  // Person Continuity Step 1). RU-0 made this argument required, but types are
+  // erased at runtime and both call sites are route handlers fed by dynamic
+  // input. A posture we cannot read is not a normal posture — it is an unknown
+  // one, and unknown must never become durable relational material.
+  //
+  // Loud, unlike the sanctuary refusal below: an unreadable posture is a
+  // programming defect worth surfacing, and saying so leaks nothing about a
+  // member.
+  if (typeof posture?.isSanctuary !== 'boolean') {
+    console.warn(
+      '[RelationalObserver] REFUSED: posture indeterminate — no relational write. ' +
+      'observeRelationalContent requires an explicit { isSanctuary: boolean }.'
+    );
+    return;
+  }
   if (posture.isSanctuary) {
     // Silent by design: logging the refusal per-turn would itself leak the fact
     // and cadence of sanctuary use into ordinary logs.
     return;
   }
-  // Run detection + persistence in background
-  _observeAsync(memberId, userMessage, maiaResponse).catch(err => {
+  // Posture is determinable and non-sanctuary. Every row this write produces
+  // states that explicitly — the DB mint gate accepts nothing else.
+  _observeAsync(memberId, userMessage, maiaResponse, 'normal').catch(err => {
     console.warn('[RelationalObserver] Background error (non-blocking):', err.message);
   });
 }
@@ -145,6 +162,7 @@ async function _observeAsync(
   memberId: string,
   userMessage: string,
   maiaResponse: string,
+  postureAtCreation: 'normal',
 ): Promise<void> {
   const detection = detectRelationalContent(userMessage, maiaResponse);
 
@@ -175,6 +193,7 @@ async function _observeAsync(
       realm: 'outer',
       bond_type: null,
       note: 'Auto-created by relational observer. Observations from conversation accumulate here until you map them to specific relationships.',
+      posture_at_creation: postureAtCreation,
     });
     relationshipId = row.id;
     console.log(`🔗 [RelationalObserver] Created catch-all relationship: ${relationshipId}`);
@@ -196,6 +215,7 @@ async function _observeAsync(
     content: detection.summary,
     confidence: detection.confidence,
     pattern_hint: topHit?.patternId ?? null,
+    posture_at_creation: postureAtCreation,
   });
 
   // Fan out all concurrent pattern hits to the side table. Expires_at gives
@@ -212,6 +232,7 @@ async function _observeAsync(
         confidence: hit.confidence,
         evidence: hit.evidence,
         expires_at: expiresAt.toISOString(),
+        posture_at_creation: postureAtCreation,
       });
     }
     console.log(

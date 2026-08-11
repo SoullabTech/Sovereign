@@ -98,6 +98,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       relationship_id: id,
       member_id: session.memberId,
       kind: 'checkin',
+      // Member-authored check-in — an explicit act, not conversational
+      // observation. See 20260812000002; the mint gate accepts 'normal' only.
+      posture_at_creation: 'normal',
       felt_signals: safeSignals,
       free_text: freeText?.trim() || null,
       maia_reflection: result.reflection,

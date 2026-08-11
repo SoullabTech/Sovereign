@@ -74,6 +74,11 @@ export async function POST(request: NextRequest) {
       realm: safeRealm,
       bond_type: bondType || null,
       note: note || null,
+      // Member-authored gesture in the Relationships room — an explicit act by
+      // an authenticated member, not observation of a conversation turn. It has
+      // no sanctuary posture to inherit, so it states 'normal' directly. The DB
+      // mint gate accepts nothing else (20260812000002).
+      posture_at_creation: 'normal',
     });
 
     return NextResponse.json({
