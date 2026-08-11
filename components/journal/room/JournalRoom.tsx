@@ -1,0 +1,212 @@
+'use client';
+
+/**
+ * Journal Room — Slice 1.
+ *
+ * The five approved reference states and the transitions between them.
+ *
+ *   arrival ──"Begin writing"──▶ writing ──"Keep this"──▶ reading
+ *      │                                                     │
+ *      ├──"Or note something"──▶ note ──"Keep this"───────────┤
+ *      │                                            "Reflect with MAIA"
+ *      ├──"Browse"──▶ browsing ──▶ reading                    ▼
+ *      │                                                  reflection
+ *      └──Return piece──▶ reading            "Write from here" ⟳ / "Let it go" ⟳
+ *
+ * IMPLEMENTATION LINEAGE: NEW. Built from the approved experiential reference;
+ * no prior code lineage was recoverable. This is not a reconstruction.
+ *
+ * @see docs/design/references/JOURNAL_EXPERIENTIAL_REFERENCE_2026-08-10.md
+ * @see docs/design/references/JOURNAL_SLICE1_IMPLEMENTATION_CONTRACT.md
+ */
+
+import { useCallback, useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/http/apiBase';
+import { Arrival } from './Arrival';
+import { WritingSurface, type EntryType } from './WritingSurface';
+import { EntryReader, type JournalEntry } from './EntryReader';
+import { Reflection } from './Reflection';
+import { selectReturnPiece, type ReturnPiece } from './Return';
+import { type, color, space, focus } from './tokens';
+
+type RoomState =
+  | { name: 'arrival' }
+  | { name: 'writing'; variant: 'writing' | 'note'; fromQuestion?: string }
+  | { name: 'reading'; entry: JournalEntry; reflecting: boolean }
+  | { name: 'browsing' };
+
+export function JournalRoom() {
+  const [state, setState] = useState<RoomState>({ name: 'arrival' });
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [ready, setReady] = useState(false);
+  const [returnPiece, setReturnPiece] = useState<ReturnPiece | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/journal/quick/list?limit=100');
+      const json = await res.json().catch(() => null);
+      const rows: JournalEntry[] = json?.success && Array.isArray(json.entries) ? json.entries : [];
+      setEntries(rows);
+      setReturnPiece(selectReturnPiece(rows, new Date()));
+    } catch {
+      // A journal that cannot reach the server still opens; it simply has
+      // nothing older to show. Writing remains possible.
+    } finally {
+      setReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const keep = useCallback(
+    async (content: string, entryType: EntryType) => {
+      const res = await apiFetch('/api/journal/quick/list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryType, content, source: 'journal_room' }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!json?.success || !json.entryId) throw new Error('keep failed');
+
+      // Read the kept entry straight back so the reading state shows exactly
+      // what was stored, rather than a local echo of it.
+      const entry: JournalEntry = {
+        id: json.entryId,
+        content,
+        created_at: json.createdAt ?? new Date().toISOString(),
+      };
+      setState({ name: 'reading', entry, reflecting: false });
+      void load();
+    },
+    [load],
+  );
+
+  const openEntry = useCallback(
+    (entryId: string) => {
+      const entry = entries.find((e) => e.id === entryId);
+      if (entry) setState({ name: 'reading', entry, reflecting: false });
+    },
+    [entries],
+  );
+
+  switch (state.name) {
+    case 'writing':
+      return (
+        <WritingSurface
+          variant={state.variant}
+          fromQuestion={state.fromQuestion}
+          onKeep={keep}
+          onLeave={() => setState({ name: 'arrival' })}
+        />
+      );
+
+    case 'reading':
+      return (
+        <EntryReader
+          entry={state.entry}
+          reflecting={state.reflecting}
+          onReflect={() => setState({ ...state, reflecting: true })}
+          onLeave={() => setState({ name: 'arrival' })}
+        >
+          {state.reflecting && (
+            <Reflection
+              entryId={state.entry.id}
+              onWriteFromHere={(question) =>
+                setState({ name: 'writing', variant: 'writing', fromQuestion: question })
+              }
+              // Transient: dropping the component drops the reflection. Nothing persists.
+              onLetItGo={() => setState({ ...state, reflecting: false })}
+            />
+          )}
+        </EntryReader>
+      );
+
+    case 'browsing':
+      return (
+        <Browse
+          entries={entries}
+          onOpen={openEntry}
+          onLeave={() => setState({ name: 'arrival' })}
+        />
+      );
+
+    default:
+      return (
+        <Arrival
+          ready={ready}
+          returnPiece={returnPiece}
+          onBeginWriting={() => setState({ name: 'writing', variant: 'writing' })}
+          onNoteSomething={() => setState({ name: 'writing', variant: 'note' })}
+          onBrowse={() => setState({ name: 'browsing' })}
+          onOpenReturn={openEntry}
+        />
+      );
+  }
+}
+
+/**
+ * Browse — navigation necessity only (Work Unit §13).
+ *
+ * The reference names `Browse` as secondary on arrival but specifies no browse
+ * surface, so this is kept to the minimum that makes kept writing reachable: the
+ * member's own first lines, in time order. Deliberately NOT a listing product —
+ * no search, no filters, no categories, no cards, no counts.
+ */
+function Browse({
+  entries,
+  onOpen,
+  onLeave,
+}: {
+  entries: JournalEntry[];
+  onOpen: (id: string) => void;
+  onLeave: () => void;
+}) {
+  const firstLine = (s: string) => {
+    const line = s.replace(/\s+/g, ' ').trim();
+    return line.length > 90 ? `${line.slice(0, 90).trimEnd()}…` : line;
+  };
+
+  return (
+    <main className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}>
+      <div className="pt-8 sm:pt-10">
+        <button
+          type="button"
+          onClick={onLeave}
+          className={`${type.marker} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+        >
+          Journal
+        </button>
+      </div>
+
+      <div className={`flex-1 ${space.measure} w-full mx-auto pt-12 sm:pt-16 pb-20`}>
+        {entries.length === 0 ? (
+          <p className={`${type.meta} ${color.muted}`}>Nothing kept yet.</p>
+        ) : (
+          <ul className="space-y-8">
+            {entries.map((e) => (
+              <li key={e.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpen(e.id)}
+                  className={`block text-left ${focus} group w-full`}
+                >
+                  <span className={`${type.writing} ${color.human} group-hover:opacity-80 transition-opacity`}>
+                    {firstLine(e.content)}
+                  </span>
+                  <span className={`block mt-1 ${type.meta} ${color.muted}`}>
+                    {new Date(e.created_at).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </main>
+  );
+}

@@ -50,6 +50,7 @@
     "check:no-sha256-passwords": "bash scripts/check-no-sha256-passwords.sh",
     "check:no-inline-names": "npx tsx scripts/check-no-inline-names.ts",
     "check:dark-text-opacity": "bash scripts/check-dark-text-opacity.sh",
+    "check:design-canon": "npx tsx scripts/check-design-canon.ts",
     "check:no-phi-enc": "npx tsx scripts/check-no-phi-enc-in-responses.ts",
     "check:phi-inventory": "npx tsx scripts/check-phi-columns-inventory.ts",
     "check:refusals": "npx tsx tests/constitutional/refusal-registry/index.ts",

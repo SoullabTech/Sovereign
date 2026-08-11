@@ -34,6 +34,13 @@ npm run check:no-supabase
 # Provider governance — no NEW OpenAI surfaces (docs/canon/PROVIDER_GOVERNANCE.md)
 npm run check:no-openai
 
+# Design canon — member-facing UI needs an Experience Contract.
+# Safe in pre-commit (unlike check:no-direct-anthropic) because it is a RATCHET:
+# GIT_PRE_COMMIT=1 scopes it to STAGED files only, so it asks nothing of the
+# ~1,400 pre-existing surfaces. You pay only for the room you actually touch.
+# See docs/design/contracts/README.md
+npm run check:design-canon
+
 echo "✅ Pre-commit checks passed"
 HOOK
   chmod +x "$1"
