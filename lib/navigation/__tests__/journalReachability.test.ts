@@ -103,11 +103,17 @@ describe('the member Journal route', () => {
     expect(gated).toEqual([]);
   });
 
-  it('renders the shared Journal view rather than its own copy', () => {
-    const page = read(MEMBER_JOURNAL_PAGE);
-    expect(page).toMatch(/UnifiedJournalView/);
-    // A page that re-implemented the 893-line view would not be this small.
-    expect(page.split('\n').length).toBeLessThan(60);
+  it('renders the Journal Room, and renders it rather than re-implementing it', () => {
+    // CUTOVER (2026-08-11): /journal serves the Journal Room. Assert against
+    // code, not the file — the previous version of this test matched
+    // `UnifiedJournalView` anywhere in the source, so a page that merely
+    // MENTIONED the old view in a comment passed while rendering something
+    // else entirely. A guard that a docstring can satisfy is not a guard.
+    const page = code(read(MEMBER_JOURNAL_PAGE));
+    expect(page).toMatch(/JournalRoom/);
+    expect(page).not.toMatch(/UnifiedJournalView/);
+    // A page that re-implemented the room would not be this small.
+    expect(read(MEMBER_JOURNAL_PAGE).split('\n').length).toBeLessThan(60);
   });
 });
 
@@ -172,15 +178,28 @@ describe('native bundling of the member Journal', () => {
 });
 
 // ── 7: one implementation, two entry points ──────────────────────────────────
-describe('no second journal product', () => {
-  it('both entry points render the same shared view', () => {
-    expect(read(MEMBER_JOURNAL_PAGE)).toMatch(/UnifiedJournalView/);
-    expect(read(LABTOOLS_JOURNAL_PAGE)).toMatch(/UnifiedJournalView/);
+describe('what the cutover changed, and what it preserved', () => {
+  // Before 2026-08-11 both entry points rendered ONE implementation. They no
+  // longer do, deliberately: /journal is the member's accepted Journal Room,
+  // and /labtools/journal keeps the legacy view so the cutover deletes nothing
+  // and founders can still compare. Asserting sameness here would now be
+  // asserting a fiction.
+  it('the member route serves the Room', () => {
+    expect(code(read(MEMBER_JOURNAL_PAGE))).toMatch(/JournalRoom/);
   });
 
-  it('the shared view is the only place the implementation lives', () => {
+  it('the legacy view is preserved, not deleted, behind the founder entry point', () => {
+    expect(existsSync(path.join(REPO, SHARED_VIEW))).toBe(true);
+    expect(code(read(LABTOOLS_JOURNAL_PAGE))).toMatch(/UnifiedJournalView/);
     expect(read(SHARED_VIEW).split('\n').length).toBeGreaterThan(500);
     expect(read(LABTOOLS_JOURNAL_PAGE).split('\n').length).toBeLessThan(60);
+  });
+
+  it('the Room is one implementation, not a copy per entry point', () => {
+    // Exactly one page renders JournalRoom besides the room's own route.
+    const roomRoute = code(read('app/journal/room/page.tsx'));
+    expect(roomRoute).toMatch(/JournalRoom/);
+    expect(code(read(MEMBER_JOURNAL_PAGE))).toMatch(/from '@\/components\/journal\/room\/JournalRoom'/);
   });
 
   it('the shared view never hard-codes a /labtools return', () => {
