@@ -349,10 +349,22 @@ export async function POST(req: NextRequest) {
     }
 
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
+    // 🔒 SANCTUARY MODE (RU-0, 2026-08-10): a sanctuary turn must never feed relational
+    // observation or signal persistence — its content must not become available to
+    // Relationship Field retrieval. This guard was present on the near-idle sibling
+    // route (`./list/route.ts`) but MISSING here, on the route carrying ~99.6% of live
+    // conversation traffic, so the containment boundary was effectively unenforced.
+    // `observeRelationalContent` is not a logger: it auto-creates a `member_relationships`
+    // row and writes `relationship_entries` whose content is MAIA's own summary of the
+    // member's relational material. Those tables carry no `posture_at_creation`, so a
+    // sanctuary-origin row could not be identified — let alone removed — afterwards.
+    // Enforced by app/api/sovereign/app/maia/__tests__/relationalSanctuaryGuard.test.ts.
     probeAuthPosture(req); // [auth-posture] Phase 0 — log-only, high-traffic sample point
     const observerMemberId = userId || req.headers.get('x-member-id') || session?.id;
-    if (observerMemberId && message && orchestratorResult.text) {
-      observeRelationalContent(observerMemberId, message, orchestratorResult.text);
+    if (observerMemberId && message && orchestratorResult.text && !isSanctuary) {
+      observeRelationalContent(observerMemberId, message, orchestratorResult.text, {
+        isSanctuary,
+      });
 
       // 🌊 RELATIONAL FIELD CARD: lightweight detection for /maia field card.
       // Fire-and-forget. Silent below the confidence threshold. Never blocks.

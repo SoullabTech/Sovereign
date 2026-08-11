@@ -35,6 +35,7 @@ import {
   Library,
   Bookmark,
   Briefcase,
+  Heart,
   Orbit,
   Users,
   Wind,
@@ -134,6 +135,27 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     nativePolicy: 'native',
     nativeReady: false, // PR 2
     returnBehavior: 'back-to-maia',
+    group: 'life',
+  },
+  {
+    id: 'relationships',
+    label: 'Relational Field',
+    icon: Heart,
+    tooltip: 'Outer and inner relationships, made visible',
+    kind: 'route',
+    // Founder requirement (2026-08-10): Relationship is a HOUSE function — this
+    // is its canonical member-facing home. The surface already existed and was
+    // in member-triggered use; it was simply unreachable from the House, findable
+    // only via the MAIA right panel, a legacy /dashboard link, and a seedPrompt
+    // returnTo. No new relationship system is introduced: this routes to the
+    // EXISTING /relationships surface over the EXISTING /api/relationships +
+    // member_relationships model, and reuses that surface's own vocabulary. The
+    // deeper relational memory (RelationshipAnamnesis, relational signals) stays
+    // shared underneath MAIA and is deliberately NOT duplicated into the House.
+    route: '/relationships',
+    audience: 'all',
+    nativePolicy: 'web', // /relationships is not in the native bundle; honest bridge on native
+    returnBehavior: 'web-bridge',
     group: 'life',
   },
   {

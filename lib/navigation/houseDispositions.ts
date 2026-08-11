@@ -208,6 +208,13 @@ export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
 export const DESTINATION_EXCEPTIONS: Record<string, string> = {
   maia: 'Center. Not a boundary — it is the place you return to.',
   'living-field': 'MAIA_WORLDS member world, never a boundary transition.',
+  relationships:
+    "The member's own relational field — a place inside MAIA, not a boundary " +
+    'transition. NOT a MAIA_WORLDS entry: it was removed from the rail 2026-07-05 ' +
+    '("surfaced only a contextual panel with no process behind it"). Restored as a ' +
+    'House door by founder requirement 2026-08-10 — Relationship is a House function. ' +
+    'That requirement governs PLACEMENT only; it does not assert the process the ' +
+    '2026-07-05 note was waiting for, and must not be read as claiming one.',
   journal: 'MAIA_WORLDS member world.',
   anchor: 'MAIA_WORLDS member world.',
   ideas: 'MAIA_WORLDS member world.',

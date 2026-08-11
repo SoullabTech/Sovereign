@@ -100,14 +100,41 @@ function detectRelationalContent(userMessage: string, maiaResponse: string): Rel
 }
 
 /**
+ * The turn's consent posture. REQUIRED — not optional, and deliberately not
+ * defaulted.
+ *
+ * RU-0 (2026-08-10): containment previously depended entirely on each caller
+ * remembering an `!isSanctuary` condition. One of the two callers — the route
+ * carrying ~99.6% of live conversation traffic — did not have it, and nothing
+ * in the type system said otherwise. Making posture a required argument turns
+ * "remember the guard" into a compile error, so a future call site cannot omit
+ * it silently. The typecheck gate is the enforcement.
+ */
+export interface RelationalObservationPosture {
+  isSanctuary: boolean;
+}
+
+/**
  * Observe a conversation turn for relational content.
  * Fire-and-forget — never awaited, never blocks.
+ *
+ * 🔒 Refuses outright under Sanctuary. This is defence in depth: the call sites
+ * also guard, but the boundary must not rest on a single conditional. Sanctuary
+ * is canon-declared an ABSOLUTE boundary — nothing from a sanctuary session may
+ * be saved, extracted, or inferred into long-term memory, and this function
+ * writes `member_relationships` + `relationship_entries` + pattern rows.
  */
 export function observeRelationalContent(
   memberId: string,
   userMessage: string,
   maiaResponse: string,
+  posture: RelationalObservationPosture,
 ): void {
+  if (posture.isSanctuary) {
+    // Silent by design: logging the refusal per-turn would itself leak the fact
+    // and cadence of sanctuary use into ordinary logs.
+    return;
+  }
   // Run detection + persistence in background
   _observeAsync(memberId, userMessage, maiaResponse).catch(err => {
     console.warn('[RelationalObserver] Background error (non-blocking):', err.message);
