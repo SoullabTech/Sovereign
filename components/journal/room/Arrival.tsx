@@ -14,7 +14,7 @@
  * (Work Unit §13). Nothing is here "because the existing component had it."
  */
 
-import { type, color, space, focus, motion, hit, hitStack, quiet } from './tokens';
+import { type, color, space, focus, motion, hit, hitStack, quiet, spine, roomMaterial } from './tokens';
 import { Return, type ReturnPiece } from './Return';
 
 export interface ArrivalProps {
@@ -39,14 +39,16 @@ export function Arrival({
   return (
     <main
       className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
+      style={roomMaterial as React.CSSProperties}
       aria-labelledby="journal-question"
     >
-      {/* Room marker. Small, quiet — orients without explaining. */}
-      <div className={`pt-8 sm:pt-10 ${type.marker} ${color.muted}`}>Journal</div>
+      {/* Room marker. Small, quiet — orients without explaining. On the spine,
+          so it belongs to the same composition as the writing. */}
+      <div className={`${spine} pt-8 sm:pt-10 ${type.marker} ${color.muted}`}>Journal</div>
 
       {/* The question is the largest thing in the room, and most of the
           viewport stays empty. Nothingness is allowed. */}
-      <div className={`flex-1 flex flex-col justify-center ${space.measure} w-full mx-auto py-16`}>
+      <div className={`flex-1 flex flex-col justify-center ${spine} py-16`}>
         <h1 id="journal-question" className={`${type.question} ${color.human}`}>
           What is here today?
         </h1>
@@ -80,7 +82,7 @@ export function Arrival({
 
       {/* Browse is tertiary and visually recessive — the reference makes it
           secondary to writing, never a navigation bar. */}
-      <div className="pb-10 sm:pb-12">
+      <div className={`${spine} pb-10 sm:pb-12`}>
         <button
           type="button"
           onClick={onBrowse}

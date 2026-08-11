@@ -16,7 +16,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { type, color, space, focus, hit, quiet, srOnly } from './tokens';
+import { type, color, space, focus, hit, quiet, srOnly, spine, roomMaterial } from './tokens';
 
 export interface JournalEntry {
   id: string;
@@ -49,6 +49,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
   return (
     <main
       className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
+      style={roomMaterial as React.CSSProperties}
       aria-labelledby="journal-reading-heading"
     >
       {/* The entry's own date names this state for assistive technology. */}
@@ -58,7 +59,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
         })}
       </h1>
 
-      <div className="pt-8 sm:pt-10">
+      <div className={`${spine} pt-8 sm:pt-10`}>
         <button
           type="button"
           onClick={onLeave}
@@ -68,7 +69,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
         </button>
       </div>
 
-      <div className={`flex-1 ${space.measure} w-full mx-auto pt-10 sm:pt-14 pb-20`}>
+      <div className={`flex-1 ${spine} pt-10 sm:pt-14 pb-20`}>
         {/* The member's words. Nothing above them, nothing beside them. */}
         <article className={`${type.writing} ${color.human} whitespace-pre-wrap`}>
           {entry.content}

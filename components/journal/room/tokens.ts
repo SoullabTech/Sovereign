@@ -35,6 +35,36 @@ export const type = {
 } as const;
 
 /**
+ * The room's material (founder ruling, 2026-08-11).
+ *
+ * Walked at 79fd8e911, the navy field did not break any Journal behaviour — but
+ * it pulled the room toward "screen" rather than "surface". Journal's primary
+ * activity is inscription, and a room for writing benefits from feeling like
+ * something that RECEIVES language rather than an interface presenting it.
+ *
+ * The correction is material only. Nothing structural, typographic or spatial
+ * changes: this re-points the House colour variables to paper values FOR THIS
+ * ROOM ONLY, so every existing `var(--sl-…)` class in the room re-materialises
+ * without a single component's classes being rewritten. The House layer is
+ * untouched, and no other surface is affected.
+ *
+ * Values are chosen to pass WCAG AA against the paper field, measured rather
+ * than guessed — the navy expression got its contrast from light-on-dark, so
+ * the muted and accent roles had to go DARKER here, not merely invert.
+ *
+ * @see docs/design/contracts/journal-room.md
+ */
+export const roomMaterial = {
+  '--sl-bg-canvas': '#F2ECE1',
+  '--sl-bg-surface': '#F7F2E9',
+  '--sl-text-primary': '#241F19',
+  '--sl-text-secondary': '#544B3E',
+  '--sl-text-muted': '#6B6153',
+  '--sl-accent-primary': '#8C4A1B',
+  '--sl-border-subtle': 'rgba(120, 100, 72, 0.22)',
+} as const;
+
+/**
  * Colour roles, all resolving to House CSS variables.
  * `accent` is the ember signal — one per state, never decorative.
  */
@@ -61,6 +91,22 @@ export const space = {
   /** Vertical breathing above the primary gesture. */
   breathing: 'mt-10 sm:mt-12',
 } as const;
+
+/**
+ * The room's compositional spine (founder ruling, 2026-08-11).
+ *
+ * Walked at 79fd8e911, the room had THREE left edges: the "Journal" marker and
+ * the "Browse" doorway sat at the page margin (~24px) while every piece of
+ * content sat on the centred measure (~248px). Nothing aligned to anything, so
+ * the generous emptiness read as leftover rather than intended — content that
+ * had failed to fill its container.
+ *
+ * One axis fixes it without removing any air: the marker, the writing column
+ * and the doorway all hang from the same left edge. Emptiness that relates to
+ * a spine reads as composition; emptiness that relates to nothing reads as
+ * unfinished.
+ */
+export const spine = 'w-full max-w-[34rem] mx-auto';
 
 /**
  * Focus. Accessibility is not waived by experiential fidelity (Work Unit §14):
