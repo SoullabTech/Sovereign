@@ -5,6 +5,62 @@
 
 ---
 
+## 0. JOURNAL DEPLOYMENT CUSTODY RULING (founder, 2026-08-11)
+
+> **The custody line is now explicit.** It was settled by ruling rather than by
+> whoever committed next — which is how the first collision happened.
+
+| | |
+|---|---|
+| **Authoritative candidate** | `79fd8e911` |
+| **Deployment custody** | `feature/journal-deployment-closure` |
+| **Worktree** | `/Users/soullab/maia-wt-journal-closure` (isolated) |
+| **All other Journal lanes** | **READ-ONLY** with respect to candidate files until custody releases |
+
+This lane owns the candidate **through founder walk, cutover preparation, PR, and
+merge.**
+
+### Files other lanes may not modify while custody holds
+
+```
+app/journal/room/**
+components/journal/room/**
+app/api/journal/reflect/**
+lib/journal/return.ts
+lib/journal/__tests__/return.test.ts
+candidate contracts / reference evidence
+cutover files once opened
+```
+
+Other lanes **may** preserve unrelated work separately — e.g. the uncommitted
+`components/journal/QuickJournalSheet.tsx` change present in the shared checkout at
+the time of this ruling. That file is **not** in the candidate set.
+
+### Authorized sequence
+
+1. **Founder walk** on exact candidate `79fd8e911` — fixtures: **≥3 kept entries, at
+   least one with a qualifying historical date**, so Return is meaningfully exercised.
+2. Founder decides: room feels right · navy/space composition accepted, **or an exact
+   correction named**.
+3. If accepted → **FREEZE candidate.**
+4. Open bounded `/journal` cutover unit **in this same custody lane**.
+5. Prove: `/journal` → accepted room · existing data preserved · write/keep · Browse ·
+   existing entry opens · Reflect · Return · mobile/tablet/a11y regressions = 0.
+6. Open normal PR.
+7. **STOP before merge/deploy** unless separately authorized.
+
+### On the corrections in this record
+
+Founder ruling, recorded verbatim in substance: *the repeated corrections are a
+strength of the record, not an embarrassment. The final candidate is more trustworthy
+because the false defect, wrong runner, wrong probe, and wrong assumptions were
+withdrawn instead of turned into fixes.*
+
+⚠️ This is the standard the cutover unit inherits: **a withdrawn claim is a better
+outcome than a fix applied to working code.**
+
+---
+
 ## 1. Custody — established
 
 | | |
