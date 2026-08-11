@@ -115,6 +115,12 @@ export interface MaiaContext {
   // with epistemic framing. Higher authority than system-retrieved conversational
   // recall, so appended after it. Built by lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt.
   atomsAddendum?: string;
+  // 🔗 RELATIONAL CONTEXT BRIDGE: the relationship the member explicitly handed
+  // off from /relationships/[id] ("Take this to MAIA"). Member act, not ambient
+  // detection. Entry kinds are member-authored; themes/tensions are system
+  // inference and are framed as such, with no recency claim — see
+  // lib/relationships/formatRelationalContextForPrompt.ts.
+  relationalContextAddendum?: string;
 }
 
 /**
@@ -421,6 +427,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
   { field: 'episodicRecallAddendum',          log: v => `📖 [Episodic Recall] Member-marked moments injected (${v.length} chars)` },
   { field: 'atomsAddendum',                   log: v => `🧬 [Atoms] Member-placed portfolio + practitioner observations injected (${v.length} chars)` },
+  { field: 'relationalContextAddendum',       log: v => `🔗 [Relational Context] Member-handed-off relationship injected (${v.length} chars)` },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
