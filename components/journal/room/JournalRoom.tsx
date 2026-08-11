@@ -26,9 +26,10 @@ import { Arrival } from './Arrival';
 import { WritingSurface, type EntryType } from './WritingSurface';
 import { EntryReader, type JournalEntry } from './EntryReader';
 import { Reflection } from './Reflection';
+import { Browse } from './Browse';
 import { type ReturnPiece, type ReturnableRow } from './Return';
 import { pickReturn } from '@/lib/journal/return';
-import { type, color, space, focus, hit, quiet, quietGroup, hitBlock, srOnly, roomVars } from './tokens';
+import { roomVars } from './tokens';
 
 type RoomState =
   | { name: 'arrival' }
@@ -153,75 +154,4 @@ export function JournalRoom() {
         />,
       );
   }
-}
-
-/**
- * Browse — navigation necessity only (Work Unit §13).
- *
- * The reference names `Browse` as secondary on arrival but specifies no browse
- * surface, so this is kept to the minimum that makes kept writing reachable: the
- * member's own first lines, in time order. Deliberately NOT a listing product —
- * no search, no filters, no categories, no cards, no counts.
- */
-function Browse({
-  entries,
-  onOpen,
-  onLeave,
-}: {
-  entries: JournalEntry[];
-  onOpen: (id: string) => void;
-  onLeave: () => void;
-}) {
-  const firstLine = (s: string) => {
-    const line = s.replace(/\s+/g, ' ').trim();
-    return line.length > 90 ? `${line.slice(0, 90).trimEnd()}…` : line;
-  };
-
-  return (
-    <main
-      className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
-      aria-labelledby="journal-browse-heading"
-    >
-      <h1 id="journal-browse-heading" className={srOnly}>Browse the journal</h1>
-
-      <div className={`${space.axis} pt-8 sm:pt-10`}>
-        <button
-          type="button"
-          onClick={onLeave}
-          className={`${type.marker} ${color.muted} ${focus} ${hit} ${quiet}`}
-        >
-          Journal
-        </button>
-      </div>
-
-      <div className={`flex-1 ${space.axis} pt-12 sm:pt-16 pb-20`}>
-        {entries.length === 0 ? (
-          <p className={`${type.meta} ${color.muted}`}>Nothing kept yet.</p>
-        ) : (
-          <ul className="space-y-8">
-            {entries.map((e) => (
-              <li key={e.id}>
-                <button
-                  type="button"
-                  onClick={() => onOpen(e.id)}
-                  /* hitBlock, not hit: rows wrap, so they take the height floor only. */
-                  className={`block text-left ${focus} ${hitBlock} group w-full`}
-                >
-                  <span className={`${type.writing} ${color.human} ${quietGroup}`}>
-                    {firstLine(e.content)}
-                  </span>
-                  <span className={`block mt-1 ${type.meta} ${color.muted}`}>
-                    {new Date(e.created_at).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </main>
-  );
 }
