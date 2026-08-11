@@ -169,6 +169,21 @@ correction, all three committed).
 
 **Result: PASS.**
 
+### −1.4d ❄️ FROZEN (founder authorization, 2026-08-11)
+
+```
+JOURNAL CANDIDATE:  250d08714 (full: 250d08714928707f829e42cce1cafba3aa44f37b)
+TAG:                journal-candidate-frozen-250d08714
+STATUS:             FOUNDER EXPERIENCE ACCEPTED
+                     DEPLOYMENT CORRECTIONS COMPLETE
+                     FINAL WALK PASSED
+                     FROZEN FOR CUTOVER
+```
+
+⛔ **Do not modify accepted Journal behavior unless the cutover exposes a genuine
+deployment blocker.** This is integration, not design. See §2 onward for the cutover
+unit.
+
 ### −1.5 Authorized path
 
 ```
