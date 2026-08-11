@@ -36,4 +36,10 @@ npm run check:no-direct-anthropic
 # hook (--no-verify) does not bypass that. docs/ops/PHI_GATE_REPAIR_2026-08-09.md.
 npm run check:phi-gate
 
+# Design canon — member-facing UI needs an Experience Contract.
+# Green by construction because it is a RATCHET: GIT_PRE_COMMIT=1 scopes it to
+# STAGED files only, so it asks nothing of the ~1,400 pre-existing surfaces.
+# You pay only for the room you actually touch. docs/design/contracts/README.md
+npm run check:design-canon
+
 echo "✅ Pre-commit checks passed"
