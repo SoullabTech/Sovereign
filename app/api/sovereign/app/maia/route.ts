@@ -37,6 +37,7 @@ import { RELATIONAL_METHOD_ADDENDUM } from '@/lib/relationships/relationalWorkin
 import { enforceArticleIIIConversational } from '@/lib/relationships/articleIIIConversational';
 import { assessActionabilityFloor } from '@/lib/relationships/actionabilityFloor';
 import { correctVerdictOverreach } from '@/lib/relationships/verdictOverreachDetector';
+import { judgeVerdictOverreach } from '@/lib/relationships/verdictJudge';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here so the live sovereign route
 // receives the same memory plan + forward-readiness signals that /api/between/chat
@@ -403,6 +404,31 @@ export async function POST(req: NextRequest) {
         console.log(
           `✅ [ActionabilityFloor] met — [${floor.riskLabels.join(', ')}] → [${floor.reachableLabels.join(', ')}]`,
         );
+      }
+
+      // ── VERDICT JUDGE — OBSERVER ONLY, built because two regex patch
+      // cycles left explicit-coercion transcripts at 0/4 truly clean.
+      // Answers exactly one question: does this reply settle the member's
+      // own experience, consent, agency, or inner state as fact? Logged
+      // alongside the regex verdict detector for direct comparison.
+      // ⛔ Never alters `deliveredText`. Fire-and-forget would lose the
+      // result before it could be logged against this turn, so it is
+      // awaited — but its outcome influences nothing about what is sent.
+      // A future correction step is a separate authorization, not implied
+      // by this wiring.
+      try {
+        const judged = await judgeVerdictOverreach(deliveredText);
+        if (judged.unavailable) {
+          console.warn('⚖️ [VerdictJudge] unavailable — classification could not run');
+        } else if (judged.verdictPresent) {
+          console.warn(
+            `⚖️ [VerdictJudge] VERDICT_PRESENT=true confidence=${judged.confidence} reason="${judged.reason}" evidence="${judged.evidenceSpan}"`,
+          );
+        } else {
+          console.log(`⚖️ [VerdictJudge] clean confidence=${judged.confidence}`);
+        }
+      } catch (judgeErr) {
+        console.warn('⚖️ [VerdictJudge] error (non-blocking):', (judgeErr as Error)?.message || judgeErr);
       }
     }
 
