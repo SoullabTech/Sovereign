@@ -3,8 +3,14 @@
 **Date:** 2026-08-11 · **Status:** PLAN ONLY — no schema or data mutation performed.
 **Authorizing ruling:** D4 Founder Ruling — House Corpus Admission (2026-08-11).
 **Proofs this rests on:** `WISDOM_CORPUS_D4_RATIFICATION_PROOF_2026-08-11.md`,
-`WISDOM_CORPUS_D2_CONVERSATION_WITH_MAYA_PROVENANCE_2026-08-11.md`,
+`WISDOM_CORPUS_D3_PROVENANCE_AUDIT_2026-08-11.md`,
 `ORIENTATION_AWARE_RETRIEVAL_PHASE1_2_FINDINGS_2026-08-11.md`.
+
+> **Withdrawn upstream.** An earlier D2 Maya-scoped provenance document was
+> withdrawn and is not part of this repository. No proposition in this plan
+> depends on it. The transcript provenance finding it once carried is held by
+> D3, which audits the same four artifacts and records EXCLUDE RECOMMENDED
+> for each.
 
 ---
 
@@ -148,11 +154,13 @@ hardening — extend `scripts/check-*` guards with a repo scan rejecting any
 `INSERT INTO library_source_admissions` outside this one route. That third is
 optional for v1 but is what makes the rule structural rather than conventional.
 
-## 4. First content — the D2 exclusions (ruling item 11)
+## 4. First content — the transcript exclusions (ruling item 11)
 
 The mechanism *is* the exclusion mechanism; no special-case code path is needed.
-Four `excluded` rows, `admission_basis` citing the D2 proof, inserted through the
-founder route by an explicit gesture — **not** by migration seed data, which
+Four `excluded` rows, `admission_basis` citing the D3 provenance audit
+(`WISDOM_CORPUS_D3_PROVENANCE_AUDIT_2026-08-11.md`, which classifies all four as
+`MAIA CONVERSATION / TRANSCRIPT` and records **EXCLUDE RECOMMENDED** for each),
+inserted through the founder route by an explicit gesture — **not** by migration seed data, which
 would be an automated write.
 
 ```

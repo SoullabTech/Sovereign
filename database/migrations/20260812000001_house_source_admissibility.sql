@@ -4,7 +4,6 @@
 -- Spec: docs/specs/HOUSE_SOURCE_ADMISSIBILITY_RECORD_PLAN_2026-08-11.md
 -- Proofs: docs/architecture/WISDOM_CORPUS_D4_RATIFICATION_PROOF_2026-08-11.md (§3, §7)
 --         docs/architecture/WISDOM_CORPUS_D3_PROVENANCE_AUDIT_2026-08-11.md
---         docs/architecture/WISDOM_CORPUS_D2_CONVERSATION_WITH_MAYA_PROVENANCE_2026-08-11.md
 -- Depends on: library_sources (20260130000001), members (20260103000001)
 --
 -- WHY A SEPARATE TABLE, NOT A COLUMN ON library_sources:

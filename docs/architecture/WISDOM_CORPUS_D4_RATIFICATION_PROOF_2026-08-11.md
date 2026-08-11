@@ -1,7 +1,12 @@
 # Wisdom Corpus D4 — Compositional ratification proof
 
 **Date:** 2026-08-11 · **Mode:** READ ONLY — no status updates, no ratification, no exclusion, no migration, no deployment.
-**Upstream:** `WISDOM_CORPUS_D2_CONVERSATION_WITH_MAYA_PROVENANCE_2026-08-11.md`.
+**Upstream:** the earlier D2 Maya-scoped provenance pass, whose document was
+subsequently **withdrawn** and is not part of this repository. Nothing in this
+proof rests on it: §8's finding is self-evidenced — the four sources were
+re-read from production in this pass and the rows are reproduced inline — and
+the provenance analysis proper belongs to
+`WISDOM_CORPUS_D3_PROVENANCE_AUDIT_2026-08-11.md`, as §8 itself states.
 
 ---
 
@@ -232,8 +237,10 @@ either require inventing a house-ratification authority (a founder decision, §1
 or writing `ratified` by script — which the doctrine forbids outright (*"AI
 suggestions never advance state"*).
 
-Checksums are the durable anchor: D2 §A records them precisely so admission can
-be re-verified against content rather than trusting ids.
+Checksums are the durable anchor: the four source ids and their checksums are
+recorded in `docs/specs/HOUSE_SOURCE_ADMISSIBILITY_RECORD_PLAN_2026-08-11.md` §4,
+so admission can be re-verified against content rather than trusting ids. (The
+withdrawn D2 document is not the record for this and is not relied on.)
 
 ## 10. Founder decisions required before D3 (Phase 6 — kept separate)
 
