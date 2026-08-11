@@ -1,0 +1,306 @@
+/**
+ * JARVIS Unit 14 — principal identity + delegated authority (§1–§7)
+ *
+ * The Unit 11/12 runtime trusts *possession of the loopback socket*: reach
+ * 127.0.0.1:8787 and you are, in effect, the operator. That is sound while the
+ * only client is a desktop app on the operator's own machine. It stops being
+ * sound the moment a multi-tenant server (MAIA) is a client, because every
+ * member conversation would inherit operator authority by transitivity.
+ *
+ * This module introduces the three things that were collapsed into one:
+ *
+ *   PRINCIPAL          who is requesting
+ *   DELEGATION         what that principal is authorized to request
+ *   EXECUTION AUTHORITY what the runtime may do once admitted
+ *
+ * The relationship is strictly ordered and never short-circuited:
+ *
+ *   principal → delegated authority → admission decision → execution authority
+ *
+ * Never:  client can reach runtime → therefore authorized.
+ *
+ * Nothing here executes anything, reads member data, or connects MAIA. It
+ * decides admission, and it is deliberately pure so the security properties are
+ * testable without a runtime.
+ */
+
+import { randomBytes } from 'node:crypto';
+
+// ── §2 principal vocabulary ──────────────────────────────────────────────────
+/** Deliberately small. Roles not needed yet are not modelled yet. */
+export const PRINCIPAL_TYPES = Object.freeze([
+  'OPERATOR', 'MEMBER', 'PRACTITIONER', 'MAIA', 'SYSTEM_AUTOMATION', 'UNKNOWN',
+]);
+
+/** Operation classes, from the Unit 13 taxonomy. */
+export const OPERATION_CLASSES = Object.freeze([
+  'R1A_SYSTEM_READ', 'R1B_MEMBER_READ', 'R2_COMPUTE',
+  'R3_PROPOSAL', 'R4_WRITE', 'R5_PRODUCTION', 'R6_GOVERNANCE',
+]);
+
+/**
+ * §2 anti-transitivity ceiling — the MOST a principal type may EVER be
+ * delegated, regardless of what a delegation document claims for itself.
+ *
+ * This is the load-bearing table. A forged or over-broad delegation cannot lift
+ * a principal above its ceiling, so "MAIA acting for a member" can never reach
+ * an operator-only class even if the request says it may.
+ *
+ * OPERATOR's ceiling includes classes the runtime cannot currently execute
+ * (R3/R4). That is intentional and is what makes the distinction meaningful:
+ * for an operator those classes are refused as UNSUPPORTED (the authority is
+ * plausible, the capability is absent); for MAIA they are refused as OUT OF
+ * SCOPE (the authority itself is not delegable). Same HTTP outcome today,
+ * different reason, and the reason is the security property.
+ */
+export const PRINCIPAL_CEILINGS = Object.freeze({
+  OPERATOR: ['R1A_SYSTEM_READ', 'R2_COMPUTE', 'R3_PROPOSAL', 'R4_WRITE'],
+  MEMBER: ['R1A_SYSTEM_READ', 'R2_COMPUTE'],
+  PRACTITIONER: ['R1A_SYSTEM_READ', 'R2_COMPUTE'],
+  MAIA: ['R1A_SYSTEM_READ', 'R2_COMPUTE'],
+  SYSTEM_AUTOMATION: ['R1A_SYSTEM_READ'],
+  UNKNOWN: [],
+});
+
+/** What the runtime can actually execute today (Unit 11 lane reality). */
+export const EXECUTABLE_CLASSES = Object.freeze(['R1A_SYSTEM_READ', 'R2_COMPUTE']);
+
+/** Classes that mutate. Never executable in this unit, by anyone. */
+export const MUTATING_CLASSES = Object.freeze(['R4_WRITE', 'R5_PRODUCTION', 'R6_GOVERNANCE']);
+
+// ── admission dispositions (§6, §14 of Unit 13) ──────────────────────────────
+export const ADMISSION = Object.freeze({
+  ACCEPT: 'ACCEPT',
+  PRINCIPAL_REQUIRED: 'PRINCIPAL_REQUIRED',
+  AUTHORITY_NOT_ESTABLISHED: 'AUTHORITY_NOT_ESTABLISHED',
+  DELEGATION_EXPIRED: 'DELEGATION_EXPIRED',
+  REFUSE_SCOPE: 'REFUSE_SCOPE',
+  REFUSE_UNSUPPORTED_OPERATION: 'REFUSE_UNSUPPORTED_OPERATION',
+});
+
+export const newRequestId = () => `req-${randomBytes(5).toString('hex')}`;
+
+// ── §9 objective contract ────────────────────────────────────────────────────
+export const OBJECTIVE_MAX = 240;
+
+/**
+ * Bound an objective to a short, non-sensitive, displayable summary.
+ * Answers "what was JARVIS asked to do?" and nothing else. Control characters
+ * are stripped so the value is safe to render in any surface.
+ */
+export function boundObjective(text) {
+  if (typeof text !== 'string') return null;
+  const clean = text.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!clean) return null;
+  return clean.length <= OBJECTIVE_MAX ? clean : `${clean.slice(0, OBJECTIVE_MAX - 1)}…`;
+}
+
+/**
+ * §5 operator compatibility. A bare packet — how the Unit 12 Desktop and every
+ * existing operator tool submit — is admitted as the local operator, so
+ * existing use keeps working unchanged. This is a *narrow* compatibility
+ * mapping, not a default: it applies only when no principal is declared at all,
+ * and `requirePrincipal` closes it entirely.
+ */
+export function operatorEnvelopeFor(packet) {
+  return {
+    principal: { id: 'local-operator', type: 'OPERATOR' },
+    delegation: {
+      operation_class: 'R1A_SYSTEM_READ',
+      authority_source: 'LOCAL_OPERATOR_SESSION',
+      subject_scope: null,
+      allowed_targets: null,
+      prohibited_operations: MUTATING_CLASSES.slice(),
+      purpose: 'operator-initiated local inspection',
+      expires_at: null,
+    },
+    operation_class: 'R1A_SYSTEM_READ',
+    objective: packet?.objective ?? null,
+    legacy_operator: true,
+  };
+}
+
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * §3/§6 — decide admission for a request.
+ *
+ * @param {object}  args
+ * @param {object}  args.envelope      principal + delegation + objective + operation_class
+ * @param {object}  args.packet        the execution packet (never carries authority)
+ * @param {string} [args.now]          ISO time, injected so expiry is testable
+ * @param {boolean}[args.requirePrincipal] when true, a bare packet is refused
+ *                                     rather than mapped to the local operator
+ * @returns {{ok: boolean, disposition: string, reason?: string, admission?: object}}
+ */
+export function admitRequest({ envelope, packet, now = new Date().toISOString(), requirePrincipal = false } = {}) {
+  const deny = (disposition, reason) => ({ ok: false, disposition, reason });
+
+  // A declared-but-empty envelope is not the same as no envelope. The first is
+  // a malformed bridge request; the second is a legacy operator call.
+  const declared = isObj(envelope);
+  if (!declared) {
+    if (requirePrincipal) {
+      return deny(ADMISSION.PRINCIPAL_REQUIRED,
+        'no principal declared; this runtime requires an explicit principal for every request');
+    }
+    envelope = operatorEnvelopeFor(packet);
+  }
+
+  const principal = envelope.principal;
+  if (!isObj(principal) || typeof principal.type !== 'string') {
+    return deny(ADMISSION.PRINCIPAL_REQUIRED, 'principal.type is required');
+  }
+  if (!PRINCIPAL_TYPES.includes(principal.type)) {
+    return deny(ADMISSION.AUTHORITY_NOT_ESTABLISHED, `unrecognised principal type '${principal.type}'`);
+  }
+  // §6 — UNKNOWN is a real, terminal value. It never falls back to operator.
+  if (principal.type === 'UNKNOWN') {
+    return deny(ADMISSION.AUTHORITY_NOT_ESTABLISHED,
+      'principal is UNKNOWN; authority cannot be established and is never assumed');
+  }
+  if (typeof principal.id !== 'string' || !principal.id.trim()) {
+    return deny(ADMISSION.PRINCIPAL_REQUIRED, 'principal.id is required');
+  }
+
+  const delegation = envelope.delegation;
+  if (!isObj(delegation)) {
+    return deny(ADMISSION.AUTHORITY_NOT_ESTABLISHED,
+      'no delegation presented; identity alone authorizes nothing');
+  }
+  if (typeof delegation.authority_source !== 'string' || !delegation.authority_source.trim()) {
+    return deny(ADMISSION.AUTHORITY_NOT_ESTABLISHED, 'delegation.authority_source is required');
+  }
+
+  // §3 expiry
+  if (delegation.expires_at != null) {
+    const exp = Date.parse(delegation.expires_at);
+    if (Number.isNaN(exp)) {
+      return deny(ADMISSION.AUTHORITY_NOT_ESTABLISHED, 'delegation.expires_at is not a valid timestamp');
+    }
+    if (exp <= Date.parse(now)) {
+      return deny(ADMISSION.DELEGATION_EXPIRED, `delegation expired at ${delegation.expires_at}`);
+    }
+  }
+
+  const requested = envelope.operation_class ?? delegation.operation_class;
+  if (!OPERATION_CLASSES.includes(requested)) {
+    return deny(ADMISSION.REFUSE_UNSUPPORTED_OPERATION, `unknown operation class '${requested}'`);
+  }
+
+  // The delegation must actually cover the requested class. A delegation for
+  // reading never widens to cover anything else (§4 of Unit 13: no escalation).
+  const granted = Array.isArray(delegation.operation_class)
+    ? delegation.operation_class
+    : [delegation.operation_class];
+  if (!granted.includes(requested)) {
+    return deny(ADMISSION.REFUSE_SCOPE,
+      `delegation grants ${granted.join(', ')}; request asks for ${requested}`);
+  }
+
+  // Explicit negative list is honoured before any positive reasoning.
+  const prohibited = Array.isArray(delegation.prohibited_operations) ? delegation.prohibited_operations : [];
+  if (prohibited.includes(requested)) {
+    return deny(ADMISSION.REFUSE_SCOPE, `delegation explicitly prohibits ${requested}`);
+  }
+
+  // §2 ceiling — the anti-transitivity rule. Checked against the PRINCIPAL TYPE,
+  // never against the delegation, so an over-broad delegation cannot lift a
+  // principal above what its type may ever hold.
+  const ceiling = PRINCIPAL_CEILINGS[principal.type] ?? [];
+  if (!ceiling.includes(requested)) {
+    return deny(ADMISSION.REFUSE_SCOPE,
+      `${requested} is not delegable to principal type ${principal.type}`);
+  }
+
+  // §7 member scope. A subject-scoped delegation may not be turned on a
+  // different subject, and a principal acting for a member never thereby
+  // becomes the operator.
+  const requestScope = envelope.subject_scope ?? principal.subject_scope ?? null;
+  const grantedScope = delegation.subject_scope ?? null;
+  if (requestScope != null && grantedScope != null && requestScope !== grantedScope) {
+    return deny(ADMISSION.REFUSE_SCOPE,
+      'requested subject scope is outside the delegated subject scope');
+  }
+  if (requestScope != null && grantedScope == null && principal.type !== 'OPERATOR') {
+    return deny(ADMISSION.REFUSE_SCOPE,
+      'request carries a subject scope that the delegation does not grant');
+  }
+
+  // Execution reality: authority may be sound while capability is absent. These
+  // are different refusals and are reported differently on purpose.
+  if (MUTATING_CLASSES.includes(requested)) {
+    return deny(ADMISSION.REFUSE_UNSUPPORTED_OPERATION,
+      `${requested} mutates; this runtime executes read-only classes only`);
+  }
+  if (!EXECUTABLE_CLASSES.includes(requested)) {
+    return deny(ADMISSION.REFUSE_UNSUPPORTED_OPERATION,
+      `${requested} is not executable by this runtime`);
+  }
+
+  const objective = boundObjective(envelope.objective ?? packet?.objective);
+  if (!objective) {
+    return deny(ADMISSION.AUTHORITY_NOT_ESTABLISHED,
+      'a bounded objective is required so the result can be truthfully attributed');
+  }
+
+  return {
+    ok: true,
+    disposition: ADMISSION.ACCEPT,
+    admission: {
+      request_id: typeof envelope.request_id === 'string' && envelope.request_id.trim()
+        ? envelope.request_id.trim()
+        : newRequestId(),
+      objective,
+      operation_class: requested,
+      principal_type: principal.type,
+      // Identifiers stay opaque and internal. `authority_source` is retained
+      // for audit but never published (§14) — it can name a credential.
+      principal_id: principal.id,
+      authority_source: delegation.authority_source,
+      authority_class: principal.type === 'OPERATOR' ? 'LOCAL_OPERATOR' : 'DELEGATED',
+      subject_scope: grantedScope ?? requestScope ?? null,
+      purpose: typeof delegation.purpose === 'string' ? boundObjective(delegation.purpose) : null,
+      expires_at: delegation.expires_at ?? null,
+      legacy_operator: envelope.legacy_operator === true,
+      admitted_at: now,
+    },
+  };
+}
+
+/**
+ * §8/§14 — the public projection of an admission.
+ *
+ * Everything that could carry a credential, a member identity, or private
+ * packet content is dropped here rather than filtered later. `subject_scope`
+ * becomes a boolean presence flag: whether a run was member-scoped is
+ * operationally meaningful; *which member* is not the runtime's to publish.
+ */
+export function publicAdmission(admission) {
+  if (!admission) return null;
+  return {
+    request_id: admission.request_id ?? null,
+    operation_class: admission.operation_class ?? null,
+    principal_type: admission.principal_type ?? null,
+    authority_class: admission.authority_class ?? null,
+    member_scope_present: admission.subject_scope != null,
+    purpose: admission.purpose ?? null,
+    admitted_at: admission.admitted_at ?? null,
+  };
+}
+
+/**
+ * §11 — objective visibility, fail-closed.
+ *
+ * Three honest states, no fabrication and no inference from result prose:
+ *   `admitted`      recorded at admission (Unit 14 onward)
+ *   `legacy_packet` read verbatim from the stored packet of a pre-Unit-14 run
+ *   `unavailable`   genuinely absent — said plainly
+ */
+export function objectiveView(run) {
+  const recorded = boundObjective(run?.objective);
+  if (recorded) return { objective: recorded, objective_status: 'admitted' };
+  const fromPacket = boundObjective(run?.packet?.objective);
+  if (fromPacket) return { objective: fromPacket, objective_status: 'legacy_packet' };
+  return { objective: null, objective_status: 'unavailable' };
+}
