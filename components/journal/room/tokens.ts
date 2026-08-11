@@ -1,0 +1,197 @@
+/**
+ * Journal Room — register.
+ *
+ * Derived from the House token layer (docs/canon/SOULLAB_THEME.md). Per that
+ * canon the room modulates the SIGNAL layer only — "the field stays continuous."
+ * Nothing here invents a second palette vocabulary.
+ *
+ * The approved experiential reference specifies no literal colour values, and
+ * no values are inherited from Author Studio, Studio Field, Studio Threshold or
+ * Wisdom Keepers. Similarity is not lineage (Work Unit §5). What the reference
+ * DOES specify is register: quiet · spacious · literary · writing-first · ember
+ * restraint · software recedes.
+ *
+ * @see docs/design/references/JOURNAL_EXPERIENTIAL_REFERENCE_2026-08-10.md
+ * @see docs/design/references/JOURNAL_SLICE1_IMPLEMENTATION_CONTRACT.md
+ */
+
+/**
+ * Type roles. The visual-grammar law's four-layer hierarchy puts the member's
+ * OWN words at the meaning layer — so the member's writing and the room's one
+ * question are serif; everything the software says about itself is small sans.
+ */
+export const type = {
+  /** The arrival question. The largest thing in the room. */
+  question: 'font-serif text-[clamp(1.75rem,4.5vw,2.75rem)] leading-[1.25] tracking-[-0.01em]',
+  /** The member's own writing — reading and composing share one measure. */
+  writing: 'font-serif text-[clamp(1.0625rem,1.6vw,1.1875rem)] leading-[1.75]',
+  /** Room marker. Quiet, small, never competing. */
+  marker: 'font-sans text-[0.6875rem] tracking-[0.18em] uppercase',
+  /** Provenance and time. Beneath the writing, never above it. */
+  meta: 'font-sans text-[0.8125rem] leading-relaxed',
+  /** MAIA's two labelled statements. */
+  maiaLabel: 'font-sans text-[0.625rem] tracking-[0.18em] uppercase',
+  maiaBody: 'font-serif text-[clamp(1rem,1.5vw,1.0625rem)] leading-[1.7]',
+} as const;
+
+/**
+ * The room's material (founder ruling, 2026-08-11).
+ *
+ * Walked at 79fd8e911, the navy field did not break any Journal behaviour — but
+ * it pulled the room toward "screen" rather than "surface". Journal's primary
+ * activity is inscription, and a room for writing benefits from feeling like
+ * something that RECEIVES language rather than an interface presenting it.
+ *
+ * The correction is material only. Nothing structural, typographic or spatial
+ * changes: this re-points the House colour variables to paper values FOR THIS
+ * ROOM ONLY, so every existing `var(--sl-…)` class in the room re-materialises
+ * without a single component's classes being rewritten. The House layer is
+ * untouched, and no other surface is affected.
+ *
+ * Values are chosen to pass WCAG AA against the paper field, measured rather
+ * than guessed — the navy expression got its contrast from light-on-dark, so
+ * the muted and accent roles had to go DARKER here, not merely invert.
+ *
+ * @see docs/design/contracts/journal-room.md
+ */
+export const roomMaterial = {
+  '--sl-bg-canvas': '#F2ECE1',
+  '--sl-bg-surface': '#F7F2E9',
+  '--sl-text-primary': '#241F19',
+  '--sl-text-secondary': '#544B3E',
+  '--sl-text-muted': '#6B6153',
+  '--sl-accent-primary': '#8C4A1B',
+  '--sl-border-subtle': 'rgba(120, 100, 72, 0.22)',
+} as const;
+
+/**
+ * Colour roles, all resolving to House CSS variables.
+ * `accent` is the ember signal — one per state, never decorative.
+ */
+export const color = {
+  field: 'bg-[var(--sl-bg-canvas)]',
+  surface: 'bg-[var(--sl-bg-surface)]',
+  human: 'text-[var(--sl-text-primary)]',
+  secondary: 'text-[var(--sl-text-secondary)]',
+  muted: 'text-[var(--sl-text-muted)]',
+  accent: 'text-[var(--sl-accent-primary)]',
+  accentBorder: 'border-[var(--sl-accent-primary)]',
+  hairline: 'border-[var(--sl-border-subtle)]',
+} as const;
+
+/**
+ * Space. The reference's "spaciousness" and "software recedes" are mostly a
+ * spacing claim — the room is defined by what it leaves empty.
+ */
+export const space = {
+  /** Long readable measure. Governs writing AND reading — the same column. */
+  measure: 'max-w-[34rem]',
+  /** Room margin. Generous at every breakpoint; mobile keeps the quiet. */
+  room: 'px-6 sm:px-8 md:px-10',
+  /** Vertical breathing above the primary gesture. */
+  breathing: 'mt-10 sm:mt-12',
+} as const;
+
+/**
+ * The room's compositional spine (founder ruling, 2026-08-11).
+ *
+ * Walked at 79fd8e911, the room had THREE left edges: the "Journal" marker and
+ * the "Browse" doorway sat at the page margin (~24px) while every piece of
+ * content sat on the centred measure (~248px). Nothing aligned to anything, so
+ * the generous emptiness read as leftover rather than intended — content that
+ * had failed to fill its container.
+ *
+ * One axis fixes it without removing any air: the marker, the writing column
+ * and the doorway all hang from the same left edge. Emptiness that relates to
+ * a spine reads as composition; emptiness that relates to nothing reads as
+ * unfinished.
+ */
+export const spine = 'w-full max-w-[34rem] mx-auto';
+
+/**
+ * Focus. Accessibility is not waived by experiential fidelity (Work Unit §14):
+ * every interactive element must show focus, quietly but unmistakably.
+ */
+export const focus =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sl-accent-primary)] ' +
+  'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sl-bg-canvas)] rounded-sm';
+
+/**
+ * Touch target. Measured 2026-08-10: the room's text gestures rendered at 21–33px
+ * tall — below the 44px minimum — at every viewport from 375 to 1280.
+ *
+ * The fix expands the HIT AREA without touching visual weight: the type stays the
+ * same size and the gesture stays quiet. Making these look like buttons would have
+ * failed the reference ("software recedes") while fixing the accessibility defect.
+ */
+export const hit = 'inline-flex items-center min-h-[44px]';
+
+/**
+ * Touch target for block-level gestures whose content may wrap (the return
+ * excerpt, browse rows). `inline-flex` would fight their block layout and
+ * vertically centre wrapped text, so these take the height floor only.
+ *
+ * Measured 2026-08-10: a short one-line excerpt rendered 30px tall, so "it wraps,
+ * therefore it is tall enough" was wrong — the floor is needed here too.
+ */
+export const hitBlock = 'min-h-[44px]';
+
+/**
+ * Touch target for gestures whose LABEL is short.
+ *
+ * Measured 2026-08-10 (accessibility pass on e8a23efe7): `hit` fixes height but
+ * says nothing about width, so the writing surface's `day` / `dream` toggles
+ * rendered 22px wide — under the 24px floor of WCAG 2.5.8 Target Size (Minimum).
+ * A one- or two-syllable word simply is not wide enough on its own.
+ *
+ * As with `hit`, this widens the HIT AREA and not the visual weight: the type
+ * stays the same size and the gesture stays quiet.
+ */
+export const hitTight = 'inline-flex items-center justify-center min-h-[44px] min-w-[44px]';
+
+/**
+ * Visually hidden, but present for assistive technology.
+ *
+ * The room's register is "software recedes", which means most states carry no
+ * visible title — correct for the eye, and a real defect for a screen reader:
+ * measured 2026-08-10, the writing, reading and browsing states each rendered a
+ * <main> with no heading and no accessible name, so a member arriving by
+ * keyboard or screen reader was told nothing about where they had landed.
+ *
+ * The fix is a heading that exists in the accessibility tree only. Nothing on
+ * screen changes.
+ */
+export const srOnly = 'sr-only';
+
+/**
+ * Touch target for gestures that must each occupy their own line.
+ *
+ * `hit` uses inline-flex, which OVERRIDES a sibling `block` class — on the
+ * arrival surface that silently collapsed "Begin writing" and "Or note
+ * something" onto a single line. Block-level flex keeps them stacked.
+ * Caught by looking at the render; the tap-target measurement passed throughout.
+ */
+export const hitStack = 'flex items-center min-h-[44px]';
+
+/**
+ * The room's only hover treatment, carrying its own reduced-motion opt-out.
+ *
+ * Measured 2026-08-10: `prefers-reduced-motion: reduce` left the room's
+ * transitions running, because the opt-out lived on the `motion` token while the
+ * gestures used a bare `transition-opacity`. Centralising it here is what makes
+ * the guarantee hold — a per-element variant is a promise each call site can
+ * forget to keep.
+ */
+export const quiet =
+  'transition-opacity hover:opacity-80 motion-reduce:transition-none';
+
+/** As `quiet`, but driven by a parent marked `group`. */
+export const quietGroup =
+  'transition-opacity group-hover:opacity-80 motion-reduce:transition-none';
+
+/**
+ * Motion: arrive/reveal only. Nothing announces itself — and nothing moves at all
+ * for a member who has asked the system to stop moving.
+ */
+export const motion =
+  'transition-opacity duration-500 ease-out motion-reduce:transition-none';

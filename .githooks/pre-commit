@@ -19,6 +19,19 @@ echo "✅ Branch guard: committing to '$BRANCH' (allowed)"
 
 export GIT_PRE_COMMIT=1
 
+# ── Dependency preflight — governance NEVER fetches at hook time ─────────────
+# The checks below run `npx tsx`. On a fresh clone with no node_modules, npx
+# reaches for the NETWORK and this hook HANGS instead of failing closed (proven
+# 2026-08-10, docs/ops/JARVIS_HOOK_CUSTODY_CLOSURE_PROOF_2026-08-10.md §5).
+# Committed governance executes only pinned local dependencies established from
+# package-lock.json, or refuses with an actionable message.
+if [ ! -x node_modules/.bin/tsx ]; then
+  echo "❌ Pre-commit blocked: repository dependencies are not installed."
+  echo "   Run:  npm ci"
+  echo "   Governance hooks never download dependencies at hook time."
+  exit 1
+fi
+
 # Supabase ban (docs/canon — local PostgreSQL only)
 npm run check:no-supabase
 
