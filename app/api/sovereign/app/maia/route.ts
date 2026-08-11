@@ -34,6 +34,7 @@ import {
   logAttachmentOutcome,
 } from '@/lib/relationships/resolveExplicitRelationshipId';
 import { RELATIONAL_METHOD_ADDENDUM } from '@/lib/relationships/relationalWorkingMethod';
+import { enforceArticleIIIConversational } from '@/lib/relationships/articleIIIConversational';
 
 // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — wired here so the live sovereign route
 // receives the same memory plan + forward-readiness signals that /api/between/chat
@@ -340,9 +341,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── ARTICLE III — STRUCTURAL enforcement on the conversational reply ──
+    //
+    // The narrowest boundary able to inspect the COMPLETED response before it
+    // becomes user-visible. Scoped to Relationship Room turns only, so general
+    // MAIA conversation is untouched; a Sanctuary turn never reaches here with
+    // a relationship id, so it is excluded by construction.
+    //
+    // This is a HARD BOUNDARY. The guidance in relationalWorkingMethod.ts is
+    // convention the model may ignore — and did: "She probably does keep a
+    // running tally" reached a member with that prompt rule already in force.
+    let deliveredText: string = orchestratorResult.text;
+    if (relationalMethodAddendum && typeof deliveredText === 'string') {
+      const guarded = enforceArticleIIIConversational(deliveredText, message);
+      if (guarded.fired) {
+        console.warn(
+          `⛔ [ArticleIII/conversational] enforced — ${guarded.actions
+            .filter((a) => a.kind !== 'kept')
+            .map((a) => `${a.kind}: ${(a as any).reason}`)
+            .join(' | ')}`,
+        );
+        deliveredText = guarded.text;
+      }
+    }
+
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
-      message: orchestratorResult.text,
+      message: deliveredText,
       // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing
