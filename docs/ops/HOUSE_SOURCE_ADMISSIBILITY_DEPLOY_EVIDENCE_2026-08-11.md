@@ -119,6 +119,32 @@ scanned only implementation files for `docs/…`-shaped paths; the second matche
 genuine authoritative dependencies (repairs 3 and 5). The audit above is by **classification**,
 not by string match, and supersedes both.
 
+### 2.3 D4 §2 citation bound to a retrievable blob (founder ruling 2026-08-11)
+
+D4 cited `docs/design/practitioner-portal/PRACTITIONER_PUBLISHING_PRODUCTION_MEASUREMENT_2026-08-06.md:123`,
+a path **not reachable from trunk** and therefore absent from this PR's tree. The citation was
+carried in unchanged from `bc9359931`; it is unrelated to D2 and to admissibility.
+
+The document **is** recoverable. It is preserved on two unmerged branches —
+`chore/practitioner-publishing-phase` (`de2baadda`) and
+`chore/rehabilitation-corpus-provenance` (`c42cfe4a3`) — which carry the **byte-identical** blob
+`cd91d457f1e3ae2d6828a5301d8c08b0f334a397`. Its recorded measurement
+(`review_status = uploaded   practitioner_scoped = false   count = 2228`) was read from that blob
+and **matches D4's claim exactly**, so the citation was accurate — only unresolvable.
+
+The citation is now bound to the **blob**, with its non-trunk status stated explicitly, so it
+resolves whether or not either branch is ever merged. The document was deliberately **not**
+imported into this PR: doing so would have pulled 225 lines of unrelated practitioner-publishing
+material into a Class A admissibility review and broken the `UNRELATED FILES = 0` property. No
+new citation convention was invented — the reference simply names where the evidence actually is.
+D4 §2 measures the same figure directly and independently, so this citation is **corroboration,
+not load-bearing evidence**.
+
+⚠️ **A second apparent dangling path, `app/maia/route.ts`, is not one.** It is prose shorthand at
+ORIENTATION §120; the canonical full path `app/api/sovereign/app/maia/route.ts` appears at §135 of
+the same document and exists in tree. Automated path extraction that keys on substrings will
+mis-flag it.
+
 ### Commit purity
 
 `af0833b4b` — **6 implementation files, 0 unrelated:**

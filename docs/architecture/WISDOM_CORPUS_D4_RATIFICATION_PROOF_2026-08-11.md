@@ -96,9 +96,25 @@ gesture from `ratified` is labelled **"Withdraw from MAIA."**
 | `ratified_by` non-null | **0** |
 | Distinct `review_status` values in production | **`uploaded`** (one value) |
 
-Consistent with the independent prior measurement in
-`docs/design/practitioner-portal/PRACTITIONER_PUBLISHING_PRODUCTION_MEASUREMENT_2026-08-06.md:123`
-(`review_status = uploaded, practitioner_scoped = false, count = 2228`).
+Consistent with the independent prior measurement recorded in
+`docs/design/practitioner-portal/PRACTITIONER_PUBLISHING_PRODUCTION_MEASUREMENT_2026-08-06.md`
+(`review_status = uploaded   practitioner_scoped = false   count = 2228`).
+
+> **Citation provenance — this document is not on trunk.** It is *not* reachable from
+> `clean-main-no-secrets` and is therefore not present in this PR's tree. It is preserved on two
+> unmerged branches, `chore/practitioner-publishing-phase` (`de2baadda`) and
+> `chore/rehabilitation-corpus-provenance` (`c42cfe4a3`), which carry the **byte-identical**
+> blob `cd91d457f1e3ae2d6828a5301d8c08b0f334a397`. Retrieve it with:
+>
+> ```
+> git show cd91d457f1e3ae2d6828a5301d8c08b0f334a397
+> ```
+>
+> The measured line is at that blob's §"Lifecycle distribution". The citation is bound to the
+> blob rather than to a line number in an unreachable path, so it resolves independently of
+> whether either branch is ever merged. **This is corroboration, not load-bearing evidence:**
+> the same figure is measured directly and independently by this proof's own §2 table above, so
+> nothing here depends on the cited document being merged.
 
 ## 3. Who/what can write `ratified` (Phase 1 — transition authority)
 
