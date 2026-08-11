@@ -26,8 +26,9 @@ import { Arrival } from './Arrival';
 import { WritingSurface, type EntryType } from './WritingSurface';
 import { EntryReader, type JournalEntry } from './EntryReader';
 import { Reflection } from './Reflection';
-import { selectReturnPiece, type ReturnPiece } from './Return';
-import { type, color, space, focus } from './tokens';
+import { type ReturnPiece, type ReturnableRow } from './Return';
+import { pickReturn } from '@/lib/journal/return';
+import { type, color, space, focus, hit, quiet, quietGroup, hitBlock } from './tokens';
 
 type RoomState =
   | { name: 'arrival' }
@@ -47,7 +48,11 @@ export function JournalRoom() {
       const json = await res.json().catch(() => null);
       const rows: JournalEntry[] = json?.success && Array.isArray(json.entries) ? json.entries : [];
       setEntries(rows);
-      setReturnPiece(selectReturnPiece(rows, new Date()));
+      // Selection lives in lib/journal/return.ts and nowhere else (founder
+      // ruling, 2026-08-10). The rows are widened with `createdAt` because that
+      // is the field the selector reads; nothing else about them is touched.
+      const selectable: ReturnableRow[] = rows.map((r) => ({ ...r, createdAt: r.created_at }));
+      setReturnPiece(pickReturn(selectable));
     } catch {
       // A journal that cannot reach the server still opens; it simply has
       // nothing older to show. Writing remains possible.
@@ -174,7 +179,7 @@ function Browse({
         <button
           type="button"
           onClick={onLeave}
-          className={`${type.marker} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+          className={`${type.marker} ${color.muted} ${focus} ${hit} ${quiet}`}
         >
           Journal
         </button>
@@ -190,9 +195,10 @@ function Browse({
                 <button
                   type="button"
                   onClick={() => onOpen(e.id)}
-                  className={`block text-left ${focus} group w-full`}
+                  /* hitBlock, not hit: rows wrap, so they take the height floor only. */
+                  className={`block text-left ${focus} ${hitBlock} group w-full`}
                 >
-                  <span className={`${type.writing} ${color.human} group-hover:opacity-80 transition-opacity`}>
+                  <span className={`${type.writing} ${color.human} ${quietGroup}`}>
                     {firstLine(e.content)}
                   </span>
                   <span className={`block mt-1 ${type.meta} ${color.muted}`}>

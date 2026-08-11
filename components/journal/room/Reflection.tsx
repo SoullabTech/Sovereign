@@ -22,7 +22,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
-import { type, color, focus, motion } from './tokens';
+import { type, color, focus, motion, hit, quiet } from './tokens';
 
 interface ReflectionBody {
   noticed: string;
@@ -71,7 +71,7 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
         <button
           type="button"
           onClick={onLetItGo}
-          className={`mt-4 ${type.meta} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+          className={`mt-4 ${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
         >
           Let it go
         </button>
@@ -84,7 +84,7 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
     return (
       <section className="mt-12" aria-live="polite" aria-busy="true">
         <span className="sr-only">Waiting for MAIA</span>
-        <div className={`h-px w-16 ${color.accent} opacity-30 animate-pulse`} aria-hidden="true" />
+        <div className={`h-px w-16 ${color.accent} opacity-30 animate-pulse motion-reduce:animate-none`} aria-hidden="true" />
       </section>
     );
   }
@@ -105,14 +105,14 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
         <button
           type="button"
           onClick={() => onWriteFromHere(body.asked)}
-          className={`${type.meta} ${color.accent} ${focus} hover:opacity-80 transition-opacity`}
+          className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
         >
           Write from here
         </button>
         <button
           type="button"
           onClick={onLetItGo}
-          className={`${type.meta} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+          className={`${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
         >
           Let it go
         </button>

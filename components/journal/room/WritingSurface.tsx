@@ -21,7 +21,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { type, color, space, focus } from './tokens';
+import { type, color, space, focus, hit, quiet } from './tokens';
 
 export type EntryType = 'day' | 'dream';
 
@@ -112,7 +112,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
         <button
           type="button"
           onClick={onLeave}
-          className={`${type.marker} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+          className={`${type.marker} ${color.muted} ${focus} ${hit} ${quiet}`}
         >
           Journal
         </button>
@@ -144,7 +144,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
               type="button"
               onClick={keep}
               disabled={keeping}
-              className={`${type.meta} ${color.accent} ${focus} hover:opacity-80 transition-opacity
+              className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}
                 disabled:opacity-40`}
             >
               {keeping ? 'Keeping…' : 'Keep this'}
@@ -157,7 +157,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
                   type="button"
                   onClick={() => setEntryType(t)}
                   aria-pressed={entryType === t}
-                  className={`${type.meta} ${focus} transition-opacity hover:opacity-80 ${
+                  className={`${type.meta} ${focus} ${hit} ${quiet} ${
                     entryType === t ? color.secondary : `${color.muted} opacity-60`
                   }`}
                 >

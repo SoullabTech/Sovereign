@@ -14,7 +14,7 @@
  * (Work Unit §13). Nothing is here "because the existing component had it."
  */
 
-import { type, color, space, focus, motion } from './tokens';
+import { type, color, space, focus, motion, hit, hitStack, quiet } from './tokens';
 import { Return, type ReturnPiece } from './Return';
 
 export interface ArrivalProps {
@@ -55,7 +55,7 @@ export function Arrival({
           <button
             type="button"
             onClick={onBeginWriting}
-            className={`block ${type.writing} ${color.accent} ${focus} text-left hover:opacity-80 transition-opacity`}
+            className={`${type.writing} ${color.accent} ${focus} ${hitStack} text-left ${quiet}`}
           >
             Begin writing
           </button>
@@ -63,7 +63,7 @@ export function Arrival({
           <button
             type="button"
             onClick={onNoteSomething}
-            className={`block mt-3 ${type.meta} ${color.secondary} ${focus} text-left hover:opacity-80 transition-opacity`}
+            className={`mt-3 ${type.meta} ${color.secondary} ${focus} ${hitStack} text-left ${quiet}`}
           >
             Or note something
           </button>
@@ -84,7 +84,7 @@ export function Arrival({
         <button
           type="button"
           onClick={onBrowse}
-          className={`${type.meta} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+          className={`${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
         >
           Browse
         </button>

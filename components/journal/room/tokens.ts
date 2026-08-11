@@ -70,5 +70,55 @@ export const focus =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sl-accent-primary)] ' +
   'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sl-bg-canvas)] rounded-sm';
 
-/** Motion: arrive/reveal only. Nothing announces itself. */
-export const motion = 'transition-opacity duration-500 ease-out';
+/**
+ * Touch target. Measured 2026-08-10: the room's text gestures rendered at 21–33px
+ * tall — below the 44px minimum — at every viewport from 375 to 1280.
+ *
+ * The fix expands the HIT AREA without touching visual weight: the type stays the
+ * same size and the gesture stays quiet. Making these look like buttons would have
+ * failed the reference ("software recedes") while fixing the accessibility defect.
+ */
+export const hit = 'inline-flex items-center min-h-[44px]';
+
+/**
+ * Touch target for block-level gestures whose content may wrap (the return
+ * excerpt, browse rows). `inline-flex` would fight their block layout and
+ * vertically centre wrapped text, so these take the height floor only.
+ *
+ * Measured 2026-08-10: a short one-line excerpt rendered 30px tall, so "it wraps,
+ * therefore it is tall enough" was wrong — the floor is needed here too.
+ */
+export const hitBlock = 'min-h-[44px]';
+
+/**
+ * Touch target for gestures that must each occupy their own line.
+ *
+ * `hit` uses inline-flex, which OVERRIDES a sibling `block` class — on the
+ * arrival surface that silently collapsed "Begin writing" and "Or note
+ * something" onto a single line. Block-level flex keeps them stacked.
+ * Caught by looking at the render; the tap-target measurement passed throughout.
+ */
+export const hitStack = 'flex items-center min-h-[44px]';
+
+/**
+ * The room's only hover treatment, carrying its own reduced-motion opt-out.
+ *
+ * Measured 2026-08-10: `prefers-reduced-motion: reduce` left the room's
+ * transitions running, because the opt-out lived on the `motion` token while the
+ * gestures used a bare `transition-opacity`. Centralising it here is what makes
+ * the guarantee hold — a per-element variant is a promise each call site can
+ * forget to keep.
+ */
+export const quiet =
+  'transition-opacity hover:opacity-80 motion-reduce:transition-none';
+
+/** As `quiet`, but driven by a parent marked `group`. */
+export const quietGroup =
+  'transition-opacity group-hover:opacity-80 motion-reduce:transition-none';
+
+/**
+ * Motion: arrive/reveal only. Nothing announces itself — and nothing moves at all
+ * for a member who has asked the system to stop moving.
+ */
+export const motion =
+  'transition-opacity duration-500 ease-out motion-reduce:transition-none';

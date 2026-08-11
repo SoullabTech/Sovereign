@@ -16,7 +16,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { type, color, space, focus } from './tokens';
+import { type, color, space, focus, hit, quiet } from './tokens';
 
 export interface JournalEntry {
   id: string;
@@ -52,7 +52,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
         <button
           type="button"
           onClick={onLeave}
-          className={`${type.marker} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+          className={`${type.marker} ${color.muted} ${focus} ${hit} ${quiet}`}
         >
           Journal
         </button>
@@ -72,7 +72,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
             <button
               type="button"
               onClick={onReflect}
-              className={`${type.meta} ${color.accent} ${focus} hover:opacity-80 transition-opacity`}
+              className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
             >
               Reflect with MAIA
             </button>

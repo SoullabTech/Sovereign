@@ -14,75 +14,35 @@
  *
  * MUST NOT appear (contract §4 state 5): carousel · "Recommended for you" ·
  * relevance % · multiple suggestions · "Because you wrote about X".
+ *
+ * CONSOLIDATION (founder ruling, 2026-08-10). This file used to carry its own
+ * `selectReturnPiece` — a second, untested implementation of the same epistemic
+ * contract, with two calendar rules and an undated reason string. It has been
+ * removed. Selection now lives in exactly one place, `lib/journal/return.ts`,
+ * which carries five calendar rules, the `ReturnStrategy` claim classes, a
+ * dated and countable account for `Why this?`, and 17 tests — including the
+ * negative control that swaps every entry's text for noise and asserts the same
+ * entry still returns. That control is what proves the selector is genuinely
+ * date-derived rather than merely claiming to be.
+ *
+ * This file is now PRESENTATION ONLY. If you find yourself adding a date
+ * comparison here, it belongs in lib/journal/return.ts, under test.
  */
 
 import { useState } from 'react';
-import { type, color, focus } from './tokens';
+import { type, color, focus, hit, quiet, quietGroup, hitBlock } from './tokens';
+import { passageOf, type ReturnedEntry } from '@/lib/journal/return';
 
-export interface ReturnPiece {
-  entryId: string;
-  excerpt: string;
-  /** Shown to the member. Factual, derived from the date alone. */
-  reason: string;
-  /** The literal selection rule, disclosed by `Why this?`. */
-  rule: string;
-}
-
-interface JournalRow {
+/** The room's row shape, widened with the field `pickReturn` reads. */
+export interface ReturnableRow {
   id: string;
   content: string;
   created_at: string;
+  createdAt: string;
 }
 
-const DAY_MS = 86_400_000;
-
-/**
- * Pure, deterministic selection. Given the member's entries and "now", exactly
- * one piece (or none) is chosen, by date arithmetic only.
- *
- * Rules are tried in order; the first that matches fires, and its `rule` string
- * is what `Why this?` shows.
- */
-export function selectReturnPiece(rows: JournalRow[], now: Date): ReturnPiece | null {
-  // Only look back past the last week — returning today's writing is not a return.
-  const older = rows.filter((r) => now.getTime() - new Date(r.created_at).getTime() > 7 * DAY_MS);
-  if (older.length === 0) return null;
-
-  const excerptOf = (s: string) => {
-    const flat = s.replace(/\s+/g, ' ').trim();
-    return flat.length > 220 ? `${flat.slice(0, 220).trimEnd()}…` : flat;
-  };
-
-  // Rule 1 — this day, a previous year.
-  const anniversary = older.find((r) => {
-    const d = new Date(r.created_at);
-    return (
-      d.getMonth() === now.getMonth() &&
-      d.getDate() === now.getDate() &&
-      d.getFullYear() < now.getFullYear()
-    );
-  });
-  if (anniversary) {
-    const years = now.getFullYear() - new Date(anniversary.created_at).getFullYear();
-    return {
-      entryId: anniversary.id,
-      excerpt: excerptOf(anniversary.content),
-      reason: years === 1 ? 'You wrote this a year ago today.' : `You wrote this ${years} years ago today.`,
-      rule: 'This entry was written on today’s date in an earlier year. Nothing about its content was considered.',
-    };
-  }
-
-  // Rule 2 — the oldest thing kept.
-  const oldest = older.reduce((a, b) =>
-    new Date(a.created_at) <= new Date(b.created_at) ? a : b,
-  );
-  return {
-    entryId: oldest.id,
-    excerpt: excerptOf(oldest.content),
-    reason: 'This is the oldest thing you kept.',
-    rule: 'This is simply your earliest entry by date. Nothing about its content was considered.',
-  };
-}
+/** What the view receives: the chosen entry plus the reason it was chosen. */
+export type ReturnPiece = ReturnedEntry<ReturnableRow>;
 
 export function Return({
   piece,
@@ -95,15 +55,17 @@ export function Return({
 
   return (
     <section aria-label="Something earlier">
-      <p className={`${type.meta} ${color.muted}`}>{piece.reason}</p>
+      <p className={`${type.meta} ${color.muted}`}>{piece.why}</p>
 
       <button
         type="button"
-        onClick={() => onOpen(piece.entryId)}
-        className={`block mt-3 text-left ${focus} group`}
+        onClick={() => onOpen(piece.entry.id)}
+        /* hitBlock, not hit: a short one-line excerpt measured 30px tall, so it
+           needs the height floor — but inline-flex would centre wrapped text. */
+        className={`block mt-3 text-left ${focus} ${hitBlock} group`}
       >
-        <span className={`${type.writing} ${color.secondary} group-hover:opacity-80 transition-opacity`}>
-          {piece.excerpt}
+        <span className={`${type.writing} ${color.secondary} ${quietGroup}`}>
+          {passageOf(piece.entry.content)}
         </span>
       </button>
 
@@ -111,13 +73,15 @@ export function Return({
         type="button"
         onClick={() => setShowRule((v) => !v)}
         aria-expanded={showRule}
-        className={`mt-3 ${type.meta} ${color.muted} ${focus} hover:opacity-80 transition-opacity`}
+        className={`mt-3 ${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
       >
         Why this?
       </button>
 
+      {/* The account, verbatim from the selector — dates, counts, and what was
+          not measured. Never a re-description written for the view. */}
       {showRule && (
-        <p className={`mt-2 ${type.meta} ${color.muted} max-w-[30rem]`}>{piece.rule}</p>
+        <p className={`mt-2 ${type.meta} ${color.muted} max-w-[30rem]`}>{piece.account}</p>
       )}
     </section>
   );
