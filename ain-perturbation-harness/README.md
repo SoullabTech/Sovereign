@@ -77,6 +77,47 @@ It refuted **the declared structure of my own operators, twice.** `V` and `A` we
 
 Corpus identity `d30a95a50e4364c8…`, commit `c8ed036cf`. The renderer was extended for Domain B (instigator, witness, absent response); every branch is a strict no-op for A, verified by hash on each rebuild. **No improvements to A while B is in use** unless the verifier exposes an actual defect — a benchmark that keeps moving cannot be compared against.
 
+## Scoring
+
+```bash
+node ain-perturbation-harness/src/score.mjs --selftest
+node ain-perturbation-harness/src/score.mjs --run <run.json> [--json]
+```
+
+Model-agnostic: it knows nothing about any provider and consumes a normalized answer record. Domain A answers are participant **names as presented**; the scorer inverts them to role keys via `item.names`, so invariance is measured on **roles** and a rename can never look like a changed judgment.
+
+Reports a **profile, never a scalar** — a system that is highly invariant but structurally insensitive is doing something very different from one that is sensitive but noisy. Every figure is `correct / scorable`, never a bare percentage.
+
+```
+DOMAIN A   baseline_accuracy · presentation_invariance · structural_sensitivity
+           reversal_sensitivity · null_robustness
+DOMAIN B   step_accuracy · composition_consistency · identity_return
+           order_sensitive · information_loss
+           steps-right / composite-wrong          <- the diagnostic B exists for
+```
+
+Two rules baked in:
+
+1. **Unscorable is not incorrect.** A missing answer is `unanswered`, reported separately, never folded into the error count.
+2. **Eligibility comes from ground truth, not transform labels.** A structural transform that leaves ground truth unchanged is not a failed sensitivity case — it is not a sensitivity case at all.
+
+Invariance and robustness are measured against the **baseline answer**, not against truth: the question is stability of judgment, and a system can be stably wrong. Accuracy is reported separately by `baseline_accuracy` so the two never blur.
+
+### The self-test proves the metric has teeth before any model exists
+
+`--selftest` synthesizes two runs and asserts the scorer separates them:
+
+| run | steps | composition | identity-return | caught |
+|---|---|---|---|---|
+| `oracle` (answers from ground truth) | 384/384 | **192/192** | 18/18 | 0 |
+| `local_matcher` (steps correct, composite = union of step labels) | 384/384 | **162/192** | **0/18** | **30** |
+
+`local_matcher` is exactly the failure mode Domain B was built to catch: locally competent, globally inconsistent. It is perfect on every step and caught on precisely the 30 teeth triples. If the scorer could not separate these, it would not be an instrument regardless of what any model later scores.
+
+### ⚠️ Declared scoring gap
+
+`undefined_case_handling` reports **`NOT_SCORABLE`**. The corpus records 24 undefined operator pairs but emits **no probe items** for them, so a model confidently inventing a defined composite cannot be observed. Closing this needs a Domain B v2 amendment adding an applicability probe. B is frozen at `d6164dd8e` — unfreezing is a founder decision, not a scorer decision.
+
 ## Not yet built
 
-`score.mjs` and the model runner. Per the A+B freeze, scoring reports a **profile, not a scalar**: presentation invariance · structural sensitivity · null robustness · composition consistency · reversal sensitivity. Resist collapsing these — a system that is highly invariant but structurally insensitive is doing something very different from one that is sensitive but noisy. The shape is the finding.
+The model adapter, and first baseline.
