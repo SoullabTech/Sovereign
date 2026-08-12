@@ -196,6 +196,10 @@ jobs:
               { kind: 'prefix', v: 'docs/architecture/governance/' },
               { kind: 'exact',  v: 'docs/GOVERNANCE_MENTOR_COVENANT.md' },
               { kind: 'exact',  v: '.github/workflows/covenant-gates.yml' },
+              // auto-labeler WRITES the classification this gate READS. It is part
+              // of the governed mechanism, not evidence about it — which is the
+              // distinction that keeps the conformance harness out (see note below).
+              { kind: 'exact',  v: '.github/workflows/auto-labeler.yml' },
               { kind: 'exact',  v: '.github/pull_request_template.md' },
               { kind: 'exact',  v: 'docs/architecture/audits/MIR-001_MAIA_HEALTH_MAP_2026-08-12.md' }
               // NOTE: the conformance harness is deliberately NOT listed here.
