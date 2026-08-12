@@ -189,7 +189,12 @@ t('R1 APPROVE confers only the delta the gate asked for; REFUSE confers nothing'
   eq(r.gate.permits_resumption, false);
 
   // Classes that can never become runnable do not permit resumption even on APPROVE.
-  const write = validateWorkerGate({ ...GOOD, gate_class: 'WRITE_AUTHORITY_REQUIRED' }, RUN).gate;
+  // Unit 21: a WRITE gate is only ADMISSIBLE under a mutating grant, so this
+  // fixture now supplies the one grant that could legitimately produce it. That
+  // strengthens the assertion rather than weakening it — even a properly admitted
+  // WRITE gate must not become runnable in this unit.
+  const write = validateWorkerGate({ ...GOOD, gate_class: 'WRITE_AUTHORITY_REQUIRED' }, RUN,
+    { grantedOperationClass: 'R4_WRITE' }).gate;
   const w = resolveGovernanceGate(write, operator(), { resolution_type: 'APPROVE' });
   eq(w.gate.permits_resumption, false, 'approving a WRITE gate must not make it runnable in this unit');
 });

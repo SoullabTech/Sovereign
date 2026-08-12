@@ -380,8 +380,24 @@ export async function executeRun(run, ctx) {
       operation_class: run.operation_class ?? run.admission?.operation_class ?? null,
       allowed_targets: run.delegation?.allowed_targets ?? [],
     };
-    const gv = validateWorkerGate(result.governance_gate, run, { heldAuthority: held }, nowISO());
+    // Unit 21 (D): the admissible gate set is derived from the GRANTED objective
+    // contract, not from what the worker claims it needs.
+    const gv = validateWorkerGate(result.governance_gate, run,
+      { heldAuthority: held, grantedOperationClass: held.operation_class }, nowISO());
+    // Unit 21 (always-record): the admissibility decision is persisted on the run
+    // whether or not the gate was admitted. Recording a gate is not accepting a
+    // gate — a refused gate is still evidence, and over-emission must be
+    // measurable rather than invisible.
+    if (gv.admissibility) run.gate_admissibility = gv.admissibility;
     if (!gv.ok) {
+      if (gv.refusal === 'GATE_INADMISSIBLE_FOR_GRANT') {
+        ctx.emit('governance.gate_refused_inadmissible', {
+          run_id: run.run_id,
+          gate_class: gv.admissibility?.worker_assertion?.gate_class ?? null,
+          granted_operation_class: held.operation_class ?? null,
+          admissible: gv.admissibility?.derived_admissible_gate_classes ?? [],
+        });
+      }
       return fail('GOVERNANCE_GATE_INVALID', `${gv.refusal}: ${gv.reason}`);
     }
     // Pre-gate evidence is preserved on the run so resumption continues the same

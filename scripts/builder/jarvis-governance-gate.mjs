@@ -30,6 +30,7 @@
  */
 
 import { randomBytes, createHash } from 'node:crypto';
+import { MUTATING_CLASSES } from './jarvis-principal.mjs';
 
 // ── §3 gate classes — closed taxonomy ────────────────────────────────────────
 /**
@@ -70,7 +71,67 @@ export const GATE_REFUSAL = Object.freeze({
   GATE_SELF_GRANT: 'GATE_SELF_GRANT',
   GATE_EVIDENCE_UNATTRIBUTABLE: 'GATE_EVIDENCE_UNATTRIBUTABLE',
   GATE_ALREADY_OPEN: 'GATE_ALREADY_OPEN',
+  /** Unit 21 (D) — the gate presupposes an act this grant never authorised. */
+  GATE_INADMISSIBLE_FOR_GRANT: 'GATE_INADMISSIBLE_FOR_GRANT',
 });
+
+// ── Unit 21 — admissibility declared at grant time (founder ruling: D + A) ───
+//
+// The defect this closes: on a fully-granted READ-ONLY objective a worker emitted
+// WRITE_AUTHORITY_REQUIRED. A read-only objective does not *withhold* write
+// authority — it does not *involve* it. There is no write the worker was asked to
+// perform, so there is no write authority it can lack. That is a category error,
+// not a boundary report, and the happy path falsely paused.
+//
+// Two prompt-level narrowings were tried and failed. Prompt text is the wrong
+// layer for an admissibility invariant: it argues with the worker's judgement
+// instead of bounding the worker's choice set. So the invariant moves into the
+// CONTRACT — the admissible set is derived from what the objective was GRANTED,
+// before the worker executes, and is checked against what the worker emitted.
+//
+// ⚠️ SCOPE LIMIT — this is class-level admissibility ONLY.
+// It answers "may a gate of this CLASS arise under this grant?" It does NOT
+// answer "may this run reach that particular target?" — the operation-bound
+// authority derivation that R1-A still requires (`R1A_SYSTEM_READ` alone is far
+// too broad; see jarvis-delegation.mjs §60). Those solve different edges and are
+// compatible. This is precisely why SCOPE_EXPANSION_REQUIRED remains admissible
+// under every read grant: target-level reach is unresolved and must stay raisable.
+// ⛔ Do not let this table become a substitute for that derivation.
+
+/**
+ * Gate classes admissible under ANY grant. Each names a boundary about *reach*
+ * or *decision*, never about mutation rights, so none presupposes an act the
+ * objective did not request.
+ */
+export const UNCONDITIONALLY_ADMISSIBLE_GATES = Object.freeze([
+  'FOUNDER_DECISION_REQUIRED',
+  'OPERATOR_AUTHORIZATION_REQUIRED',
+  'SCOPE_EXPANSION_REQUIRED',
+  'CONSTITUTIONAL_AMBIGUITY',
+]);
+
+/** Gate classes admissible only when the grant itself carries the matching act. */
+export const CONDITIONALLY_ADMISSIBLE_GATES = Object.freeze({
+  // Admissible only if the objective was granted a mutating class — only then is
+  // there a write the worker could have been asked to perform.
+  WRITE_AUTHORITY_REQUIRED: (granted) => MUTATING_CLASSES.includes(granted),
+  // Production is narrower still: only a production grant can lack production authority.
+  PRODUCTION_AUTHORIZATION_REQUIRED: (granted) => granted === 'R5_PRODUCTION',
+});
+
+/**
+ * D — derive the admissible gate set from the GRANTED objective contract.
+ *
+ * @param {string|null} grantedOperationClass  the run's granted operation class
+ * @returns {string[]} admissible gate class names, sorted
+ */
+export function deriveAdmissibleGateClasses(grantedOperationClass) {
+  const granted = typeof grantedOperationClass === 'string' ? grantedOperationClass : null;
+  const conditional = Object.entries(CONDITIONALLY_ADMISSIBLE_GATES)
+    .filter(([, admits]) => granted != null && admits(granted))
+    .map(([name]) => name);
+  return [...UNCONDITIONALLY_ADMISSIBLE_GATES, ...conditional].sort();
+}
 
 export const GATE_STATUS = Object.freeze({
   OPEN: 'OPEN', RESOLVED: 'RESOLVED', REFUSED: 'REFUSED', SUPERSEDED: 'SUPERSEDED',
@@ -139,6 +200,64 @@ export function validateWorkerGate(claim, run, opts = {}, now = new Date().toISO
     return deny(GATE_REFUSAL.GATE_CLASS_UNKNOWN, `unknown gate class '${cls}'`);
   }
 
+  // ── Unit 21 (D + A + always-record) ────────────────────────────────────────
+  //
+  // Decided BEFORE the instance checks below. The class-level question ("could a
+  // gate of this class ever arise under this grant?") precedes the instance
+  // question ("do we already hold what it asks for?"), so an inadmissible gate is
+  // refused as inadmissible rather than masked by a narrower refusal.
+  //
+  // A — the worker's testimony is preserved verbatim and never translated. We do
+  // not map WRITE_AUTHORITY_REQUIRED onto its tidier neighbour: on the observed
+  // corpus 3 of 5 such gates carried authority_required.operation_class = WRITE,
+  // so reclassifying would falsify what the worker actually said. The contract
+  // fails; the claim survives intact as evidence.
+  const reqPeek = isObj(claim.authority_required) ? claim.authority_required : {};
+  const grantedClass = opts.grantedOperationClass
+    ?? (isObj(opts.heldAuthority) ? opts.heldAuthority.operation_class : null)
+    ?? null;
+  const admissibleClasses = deriveAdmissibleGateClasses(grantedClass);
+  const isAdmissible = admissibleClasses.includes(cls);
+
+  // Always-record: emitted regardless of outcome, on the deny path and the ok
+  // path alike. Recording a gate is not accepting a gate — a refused gate is
+  // still evidence, and over-emission must be measurable rather than invisible.
+  const admissibility = {
+    worker_assertion: {
+      gate_class: cls,
+      reason: bound(claim.reason, 600),
+      authority_required: {
+        operation_class: reqPeek.operation_class ?? null,
+        target: reqPeek.target ?? null,
+      },
+    },
+    proposed_operation_class: reqPeek.operation_class ?? null,
+    granted_authority: {
+      operation_class: grantedClass,
+      allowed_targets: Array.isArray(opts.heldAuthority?.allowed_targets)
+        ? opts.heldAuthority.allowed_targets.slice() : [],
+    },
+    derived_admissible_gate_classes: admissibleClasses,
+    comparison_result: isAdmissible ? 'ADMISSIBLE' : 'INADMISSIBLE_FOR_GRANT',
+    evidence: Array.isArray(claim.evidence) ? claim.evidence.filter((e) => typeof e === 'string').slice(0, 20) : [],
+    emitted_by: 'worker',
+    disposition: isAdmissible ? 'GATE_ADMITTED' : 'GATE_REFUSED_INADMISSIBLE',
+    decided_at: now,
+    // Names the layer that decided, so this is never mistaken for worker testimony.
+    decided_by: 'control_plane:unit_21_admissibility',
+  };
+
+  if (!isAdmissible) {
+    return {
+      ok: false,
+      refusal: GATE_REFUSAL.GATE_INADMISSIBLE_FOR_GRANT,
+      reason: `gate class '${cls}' is not admissible under granted operation class `
+        + `'${grantedClass ?? 'NONE'}' (admissible: ${admissibleClasses.join(', ')}) — `
+        + 'the gate presupposes an act this objective never requested',
+      admissibility,
+    };
+  }
+
   const reason = bound(claim.reason);
   if (!reason) return deny(GATE_REFUSAL.GATE_MALFORMED, 'a bounded reason is required');
 
@@ -185,7 +304,11 @@ export function validateWorkerGate(claim, run, opts = {}, now = new Date().toISO
   const spec = GATE_CLASSES[cls];
   return {
     ok: true,
+    admissibility,
     gate: {
+      // Unit 21 — the admissibility decision travels WITH the gate it admitted,
+      // so a persisted gate always carries the contract check that let it exist.
+      admissibility,
       gate_id: newGateId(),
       status: GATE_STATUS.OPEN,
       // Bound to the run and the exact objective it was executing.
