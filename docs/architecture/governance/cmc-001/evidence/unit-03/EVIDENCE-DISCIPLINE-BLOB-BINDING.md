@@ -1,3 +1,13 @@
+> **SUPERSEDED 2026-08-12** by \`../unit-04/SOURCE-IDENTITY-RESOLUTION-DISCIPLINE.md\`.
+>
+> Not withdrawn and not rewritten. The evidence and reasoning below stand. This record is
+> superseded because its *scope* was too narrow: it framed the hazard as "ambiguous filenames."
+> Unit 4 reconciliation established 327 colliding basenames across 2,581 files (24% of the tree),
+> and a worse class — an *identifier* (`memoryBridge`), not a filename, resolvable only through
+> import lineage. The superseding rule binds source identity by resolution, not by name.
+>
+> Preserved per CMC-001 §XXIV: mark superseded, preserve why, do not erase.
+
 # CMC-001 · EVIDENCE DISCIPLINE — Blob Binding for Ambiguous Filenames
 
 Ruled by founder act 2026-08-12, arising from Unit 3 evidence.
