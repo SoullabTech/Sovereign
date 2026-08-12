@@ -10,15 +10,29 @@ echo "🔧 Installing git hooks..."
 HOOKS_DIR="$(git rev-parse --git-common-dir)/hooks"
 mkdir -p "$HOOKS_DIR"
 
-# ── Sovereignty pre-commit checks (branch guard + supabase + provider governance)
-# Body is versioned at .githooks/pre-commit and installed VERBATIM — same pattern
-# as pre-push below, so there is exactly one copy to maintain. This installer no
-# longer carries its own hook body: the previous heredoc diverged from the
-# versioned file for months and made .githooks/pre-commit read as a gate it was
-# not. Only green checks belong in that file; see
-# docs/ops/PRECOMMIT_RECONCILIATION_2026-08-09.md.
-write_sovereignty_checks() {
-  cp "$(git rev-parse --show-toplevel)/.githooks/pre-commit" "$1"
+# ── The dispatcher: MECHANISM into the shared dir, POLICY left in the revision ──
+# The hooks dir above is COMMON to every linked worktree, but .githooks/ is tracked
+# and therefore differs per revision. Copying a revision's policy here (what this
+# installer did until 2026-08-11, via `cp .../.githooks/pre-commit`) makes one
+# worktree's contract govern all the others — proven that day to BOTH block a
+# worktree at an older revision (`Missing script: "check:design-canon"`) AND to
+# silently run a stale, weaker policy in worktrees at newer revisions.
+#
+# #1013's no-drift property is preserved, not reverted: installed == committed
+# still holds — the installed file is .githooks/dispatch verbatim. What changes is
+# that the shared file now carries no policy to drift from. Policy is resolved at
+# hook time from the invoking worktree's own revision.
+#
+# ⛔ Never reintroduce a `cp .githooks/<hook>` into HOOKS_DIR. See .githooks/dispatch.
+DISPATCH_SRC="$(git rev-parse --show-toplevel)/.githooks/dispatch"
+
+if [ ! -f "$DISPATCH_SRC" ]; then
+  echo "❌ Cannot install hooks: $DISPATCH_SRC is missing from this revision." >&2
+  exit 1
+fi
+
+install_dispatcher() {
+  cp "$DISPATCH_SRC" "$1"
   chmod +x "$1"
 }
 
@@ -27,8 +41,8 @@ if [ -f "$WRAPPER" ] && grep -q 'pre-commit.old' "$WRAPPER"; then
   # A chaining wrapper (e.g. bd/beads) owns pre-commit: it runs pre-commit.old,
   # then its own logic (the beads flush). Install our checks into that chained
   # target so the wrapper is PRESERVED, never clobbered.
-  write_sovereignty_checks "$HOOKS_DIR/pre-commit.old"
-  echo "✅ sovereignty checks installed → pre-commit.old (chaining wrapper preserved)"
+  install_dispatcher "$HOOKS_DIR/pre-commit.old"
+  echo "✅ dispatcher installed → pre-commit.old (chaining wrapper preserved)"
 
   # The wrapper must resolve pre-commit.old worktree-safely. The bd default uses a
   # relative ".git/hooks/pre-commit.old", which FAILS from worktrees and silently
@@ -43,17 +57,16 @@ if [ -f "$WRAPPER" ] && grep -q 'pre-commit.old' "$WRAPPER"; then
   fi
 else
   # No chaining wrapper — we own pre-commit directly (already worktree-safe path).
-  write_sovereignty_checks "$WRAPPER"
-  echo "✅ sovereignty checks installed → pre-commit"
+  install_dispatcher "$WRAPPER"
+  echo "✅ dispatcher installed → pre-commit"
 fi
 
 # ── Pre-push: branch guard + secrets + large files ──────────────────────────
-# Body is versioned at .githooks/pre-push (branch allowlist shared with
-# pre-commit via scripts/check-branch-allowed.sh) — installed verbatim so
-# there is exactly one copy to maintain.
-cp "$(git rev-parse --show-toplevel)/.githooks/pre-push" "$HOOKS_DIR/pre-push"
-chmod +x "$HOOKS_DIR/pre-push"
-echo "✅ pre-push hook installed (branch guard + secrets + large files)"
+# Policy versioned at .githooks/pre-push (branch allowlist shared with pre-commit
+# via scripts/check-branch-allowed.sh); dispatched per-revision like pre-commit.
+# The dispatcher execs, so the ref list on stdin reaches the policy untouched.
+install_dispatcher "$HOOKS_DIR/pre-push"
+echo "✅ dispatcher installed → pre-push (branch guard + secrets + large files)"
 
 # ── Commit-msg: message policy ──────────────────────────────────────────────
 # Body is versioned at .githooks/commit-msg — installed verbatim, same one-copy
@@ -65,8 +78,10 @@ echo "✅ pre-push hook installed (branch guard + secrets + large files)"
 # other route. A control that exists only on one developer machine is an
 # environmental condition, not governance — see
 # docs/ops/GIT_HOOK_CUSTODY_AUDIT_2026-08-10.md.
-cp "$(git rev-parse --show-toplevel)/.githooks/commit-msg" "$HOOKS_DIR/commit-msg"
-chmod +x "$HOOKS_DIR/commit-msg"
-echo "✅ commit-msg hook installed (message policy)"
+# The dispatcher forwards "$@", so the policy still receives the message-file path
+# as $1 exactly as Git passed it.
+install_dispatcher "$HOOKS_DIR/commit-msg"
+echo "✅ dispatcher installed → commit-msg (message policy)"
 
-echo "✅ git hooks installed (worktree-safe, beads-compatible)"
+echo "✅ git hooks installed (worktree-safe, beads-compatible, revision-aware)"
+echo "   Policy is resolved per-worktree from that worktree's .githooks/ — see .githooks/dispatch"

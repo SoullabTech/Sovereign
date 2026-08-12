@@ -1,0 +1,108 @@
+#!/bin/sh
+# ============================================================================
+# GOVERNANCE DISPATCHER — MECHANISM ONLY. NO POLICY MAY EVER LIVE IN THIS FILE.
+# ============================================================================
+#
+# WHY THIS EXISTS
+#   Git hooks are installed once into the COMMON git dir and are therefore
+#   shared by every linked worktree. Governance policy, by contrast, is tracked
+#   in `.githooks/` and is therefore SPECIFIC TO A REVISION. Copying a revision's
+#   policy into the shared location (what setup-githooks.sh used to do, via
+#   `cp "$(git rev-parse --show-toplevel)/.githooks/pre-commit"`) makes one
+#   worktree's contract govern all the others.
+#
+#   That produced two failures at once, observed 2026-08-11:
+#     - a worktree at a revision PREDATING a check could not satisfy it and
+#       could not commit at all (`Missing script: "check:design-canon"`);
+#     - worktrees at NEWER revisions silently ran a stale policy that had lost
+#       `check:no-direct-anthropic`, `check:phi-gate` and the dependency
+#       preflight — enforcement was weaker than the repository believed.
+#
+#   Note that #1013's fix was correct and is preserved: installed == committed,
+#   so the hook cannot drift. It is only *incoherent under worktrees*, where
+#   there is no single "the" committed revision. Identity with one revision is
+#   non-identity with the other N-1. This dispatcher keeps the no-drift property
+#   by making the shared file carry no policy to drift from.
+#
+# THE INVARIANT
+#   For any worktree W at revision R, `git commit` in W executes the policy
+#   defined by R — never a policy copied from another worktree or branch.
+#
+# THE RULE FOR EDITORS
+#   If you are about to add a check to this file, you are in the wrong file.
+#   Checks belong in `.githooks/<hook>`, where they are versioned with the code
+#   they govern. This file may only ever locate and exec that file.
+#
+# See docs/ops/PRECOMMIT_RECONCILIATION_2026-08-09.md,
+#     docs/ops/JARVIS_HOOK_CUSTODY_CLOSURE_PROOF_2026-08-10.md
+# ============================================================================
+set -u
+
+# ── 1. Which hook are we standing in for? ───────────────────────────────────
+# Derived from our own installed name, never from an argument, so the same file
+# serves every hook. `pre-commit.old` is the beads chaining target: the beads
+# wrapper owns `pre-commit` and calls `pre-commit.old`, so that name dispatches
+# the `pre-commit` policy.
+hook_name=${0##*/}
+case "$hook_name" in
+  *.old) hook_name=${hook_name%.old} ;;
+esac
+
+# ── 2. Which worktree invoked us? ───────────────────────────────────────────
+# Asked of Git rather than assumed from $PWD. Git runs hooks with cwd at the
+# worktree top, but GUIs and wrappers do not all honour that, and --show-toplevel
+# is correct from any directory inside the worktree.
+top=$(git rev-parse --show-toplevel 2>/dev/null) || top=''
+
+if [ -z "$top" ]; then
+  echo "❌ ${hook_name}: cannot resolve the invoking worktree." >&2
+  echo "   'git rev-parse --show-toplevel' failed, so the revision-local governance" >&2
+  echo "   policy cannot be located. Refusing rather than running an unknown policy." >&2
+  exit 1
+fi
+
+policy="$top/.githooks/$hook_name"
+
+# ── 3. Fail CLOSED ──────────────────────────────────────────────────────────
+# A revision whose policy cannot be found or executed does not get a free pass.
+# Governance must never become permissive because a file is missing — that is
+# the same defect class as commit-msg failing open on a missing `rg` binary
+# (JARVIS_HOOK_CUSTODY_CLOSURE_PROOF_2026-08-10.md §4).
+if [ ! -f "$policy" ]; then
+  echo "❌ ${hook_name}: no governance policy at this revision." >&2
+  echo "   Expected: $policy" >&2
+  echo "   This revision predates tracked hook governance, or the file was removed." >&2
+  echo "   Rebase onto a revision that carries .githooks/, or restore the file." >&2
+  exit 1
+fi
+
+if [ ! -r "$policy" ]; then
+  echo "❌ ${hook_name}: governance policy is not readable: $policy" >&2
+  exit 1
+fi
+
+# ── 4. Exec the revision-local policy ───────────────────────────────────────
+# exec replaces this process, which preserves stdin, stdout, stderr and the
+# exit status exactly — pre-push reads refs on stdin and must not be disturbed.
+# "$@" forwards hook arguments verbatim (commit-msg's message-file path,
+# pre-push's remote name and URL).
+if [ -x "$policy" ]; then
+  exec "$policy" "$@"
+fi
+
+# Tracked mode is 100755, but a worktree checked out with core.fileMode=false or
+# a restrictive umask can land it non-executable. Fall back to the interpreter
+# named in its own shebang rather than guessing, so `set -o pipefail` and other
+# bash-isms in the policy keep working under a POSIX-only /bin/sh.
+shebang=$(head -n 1 "$policy")
+case "$shebang" in
+  '#!'*)
+    interp=${shebang#\#!}
+    # shellcheck disable=SC2086 # deliberate word-split: "/usr/bin/env bash" is two words
+    exec $interp "$policy" "$@"
+    ;;
+  *)
+    echo "❌ ${hook_name}: policy is not executable and declares no interpreter: $policy" >&2
+    exit 1
+    ;;
+esac
