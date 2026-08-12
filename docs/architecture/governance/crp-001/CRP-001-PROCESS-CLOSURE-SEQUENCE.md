@@ -31,6 +31,59 @@ Step 2 carries three attached items:
 
 ---
 
+## Step 3 ledger — three states, not collapsed
+
+`mergeStateStatus: BLOCKED` on PR #1039 is the **correct** state, not a
+failure condition and not something to work around. Three distinct things are
+being tracked separately, and collapsing any two of them is the inflation this
+program exists to prevent:
+
+```text
+CLASSIFICATION SATISFIED     ✅  Class A attached; covenant-gates passes
+APPROVAL SATISFIED           ❌  Class A human approval state incomplete
+CANONICAL CUSTODY SATISFIED  ❌  #1039 unmerged; artifacts are not yet
+                                 canonical-trunk facts
+```
+
+**Two things must not happen while waiting:**
+
+1. **`covenant-gates: pass` is not substantive approval.** It is a
+   constitutional check that a classification exists and its obligations are
+   declared. The gate says so itself: *"Merge authority — approvals, required
+   reviewers, branch protection — belongs to GitHub, not this workflow."*
+2. **Later approval must not retroactively make `8da6ea5e7` canonical before
+   the merge.** Approval changes the *approval* state. Only the merge changes
+   the *custody* state, and only from the merge commit forward.
+
+**Ledger, in substance:**
+
+> **CRP-001 Step 3** — execution complete; Class A classification resolved;
+> approval pending; canonicalization pending merge.
+> **CRP-001 Step 4** — **BLOCKED — canonical custody prerequisite
+> unsatisfied.**
+
+No MAIA work crosses that boundary.
+
+### Remaining order — no step may be skipped
+
+```text
+Class A approvals
+   ↓
+all required checks green
+   ↓
+merge #1039
+   ↓
+bind the new canonical trunk SHA
+   ↓
+verify both paths + blob identities on that SHA
+   ↓
+declare canonical custody PROVEN
+   ↓
+unblock Step 4
+```
+
+---
+
 ## Step 3 — enforcement rejects a unit lacking
 
 - referent;
