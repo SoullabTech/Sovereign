@@ -42,15 +42,24 @@
    * with the substrate's SHA.
    */
   function artifactIdentity({ buildInfo, isPackaged }) {
-    if (buildInfo && typeof buildInfo.app_build_sha === 'string' && buildInfo.app_build_sha) {
-      return {
-        app_build_sha: buildInfo.app_build_sha,
-        built_at: buildInfo.built_at || null,
-        packaged: !!isPackaged,
-        state: 'AVAILABLE',
-        detail: `Desktop build ${buildInfo.app_build_sha}${buildInfo.built_at ? ` · packaged ${buildInfo.built_at}` : ''}`,
-      };
-    }
+    // isPackaged is checked FIRST, and a stamp is never consulted for an
+    // unpackaged process.
+    //
+    // The stamp used to be checked first, so a dev run could read a
+    // build-info.json left behind by an earlier `npm run pack` and report
+    // "Desktop build 2d9eb671c · packaged <time>" — an artifact identity the
+    // running process did not possess. Verified against the real module on
+    // 2026-08-11: state AVAILABLE, window titled "JARVIS — build 2d9eb671c",
+    // from a process running straight off the source tree.
+    //
+    // Electron's app.isPackaged is the only thing that can answer "am I a
+    // built artifact", because it is a property of how THIS process was
+    // launched. A file on disk is a claim about some other process. The stamp
+    // may therefore say WHICH build this is; it may never establish THAT this
+    // is a build. The generated stamp now also lives outside the source tree
+    // (see readBuildInfo in main.js), so this ordering is belt AND braces:
+    // even if packaging leaked a stamp back into src/, it could no longer
+    // elevate a dev process's identity.
     if (!isPackaged) {
       return {
         app_build_sha: null,
@@ -58,6 +67,15 @@
         packaged: false,
         state: 'UNKNOWN',
         detail: 'Running unpackaged from source — this Desktop has no build identity. Its behaviour is whatever the source tree currently says.',
+      };
+    }
+    if (buildInfo && typeof buildInfo.app_build_sha === 'string' && buildInfo.app_build_sha) {
+      return {
+        app_build_sha: buildInfo.app_build_sha,
+        built_at: buildInfo.built_at || null,
+        packaged: true,
+        state: 'AVAILABLE',
+        detail: `Desktop build ${buildInfo.app_build_sha}${buildInfo.built_at ? ` · packaged ${buildInfo.built_at}` : ''}`,
       };
     }
     return {

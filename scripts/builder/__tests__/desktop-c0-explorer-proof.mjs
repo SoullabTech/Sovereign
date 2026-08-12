@@ -146,7 +146,12 @@ console.log('\n==================== F — existing execution path preserved ====
 
   const mainJs = code('main.js');
   report('main.js still routes every submitted task through router.mjs', mainJs.includes("'router.mjs'") && mainJs.includes('const decision = route(task);'));
-  report('C0 execution still goes through runCapability', mainJs.includes('runCapability(task.capability, task.args || {}, REPO_ROOT)'));
+  // The root is read through currentRoot() rather than a REPO_ROOT const now,
+  // so Preferences can rebind the substrate without relaunching. Still pinned
+  // exactly: what matters is that C0 executes via runCapability against the
+  // RESOLVED root, so changing either half forces a re-read here.
+  report('C0 execution still goes through runCapability against the resolved root',
+    mainJs.includes('runCapability(task.capability, task.args || {}, currentRoot())'));
   // Was: "exactly one execFileSync". That count-based proxy broke when the
   // founder-ruled Alpha floor added F3 (git provenance reads) and F2 (running
   // the governor). The property it stood for is asserted directly instead:
@@ -181,8 +186,15 @@ console.log('\n==================== H — no new authority ===================='
   // Four channels as of the Alpha floor ruling (2026-08-11): jarvis:governance-action
   // was explicitly authorized for F2. It is still not NEW authority — it runs the
   // governor's own CLI — so it is asserted alongside the delegation check below.
-  report('preload exposes exactly the four authorized channels',
-    JSON.stringify(channels) === JSON.stringify(['jarvis:capabilities', 'jarvis:governance-action', 'jarvis:status', 'jarvis:submit-task']), channels.join(', '));
+  // Was four; the three repo-* channels are the Preferences binding surface,
+  // added so the installed app can be pointed at a checkout without Terminal.
+  // Kept EXACT rather than relaxed to a subset check — the point of this guard
+  // is that the IPC surface cannot widen unnoticed.
+  report('preload exposes exactly the seven authorized channels',
+    JSON.stringify(channels) === JSON.stringify([
+      'jarvis:capabilities', 'jarvis:choose-repo', 'jarvis:clear-repo',
+      'jarvis:governance-action', 'jarvis:repo-config', 'jarvis:status', 'jarvis:submit-task',
+    ]), channels.join(', '));
   report('the governance channel delegates to the governor, inventing no authority',
     code('main.js').includes('GOV.buildGovernanceArgv') && !/['"](recover|reconcile)['"]/.test(code('main.js')));
   report('no general IPC / shell bridge added', !preload.includes('exec') && !preload.includes('send('));

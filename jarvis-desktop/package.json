@@ -8,7 +8,7 @@
     "start": "electron .",
     "pack": "npm run stamp && electron-builder --mac --dir",
     "install:app": "npm run pack && rm -rf /Applications/JARVIS.app && ditto dist/mac-arm64/JARVIS.app /Applications/JARVIS.app && echo 'installed -> /Applications/JARVIS.app'",
-    "stamp": "node -e \"const{execFileSync}=require('child_process');const fs=require('fs');const sha=execFileSync('git',['rev-parse','--short','HEAD'],{encoding:'utf8'}).trim();fs.writeFileSync('src/build-info.json',JSON.stringify({app_build_sha:sha,built_at:new Date().toISOString()},null,2));console.log('stamped build-info.json',sha)\"",
+    "stamp": "node -e \"const{execFileSync}=require('child_process');const fs=require('fs');const sha=execFileSync('git',['rev-parse','--short','HEAD'],{encoding:'utf8'}).trim();fs.mkdirSync('build',{recursive:true});fs.writeFileSync('build/build-info.json',JSON.stringify({app_build_sha:sha,built_at:new Date().toISOString()},null,2));console.log('stamped build/build-info.json',sha)\"",
     "dist": "npm run stamp && electron-builder --mac"
   },
   "build": {
@@ -20,6 +20,12 @@
     },
     "files": [
       "src/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build/build-info.json",
+        "to": "build-info.json"
+      }
     ],
     "mac": {
       "category": "public.app-category.developer-tools",

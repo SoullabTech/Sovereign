@@ -125,9 +125,24 @@ function currentRoot() { return RESOLVED.root; }
 const REPO_ROOT_MODE = app.isPackaged ? 'packaged' : 'dev';
 
 // --- F3: artifact identity, stamped at package time -----------------------
+//
+// The stamp is read from Contents/Resources/, NOT from __dirname (the source
+// tree). It used to be written to src/build-info.json by `npm run stamp`, which
+// meant a packaging run left a file behind that a later `npm start` would read
+// and report as its own build identity. Two independent guards now:
+//
+//   1. Location — the stamp is generated into build/ and shipped as an
+//      extraResource, so it physically cannot appear in src/ and a dev process
+//      has nothing to pick up.
+//   2. Gate — unpackaged returns null before touching the filesystem at all, so
+//      even a stamp restored into place by hand cannot elevate a dev identity.
+//
+// The second guard is the load-bearing one: it is a fact about THIS process
+// rather than about what happens to be on disk near it.
 function readBuildInfo() {
+  if (!app.isPackaged) return null;
   try {
-    return JSON.parse(fs.readFileSync(path.join(__dirname, 'build-info.json'), 'utf8'));
+    return JSON.parse(fs.readFileSync(path.join(process.resourcesPath, 'build-info.json'), 'utf8'));
   } catch {
     return null;
   }
