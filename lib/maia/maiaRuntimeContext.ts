@@ -129,6 +129,11 @@ export type PromptBlockSummary = {
     memoryInfluence: boolean;
     forwardReadiness: boolean;
     atoms: boolean;
+    /**
+     * Relational Context Bridge — the member-handed-off relationship block
+     * (explicit act: "Take this to MAIA" on /relationships/[id]). Never ambient.
+     */
+    relationalContext: boolean;
     memberWeb: boolean;
     astrology: boolean;
     studio: boolean;
@@ -178,6 +183,13 @@ export type MaiaRuntimeContextInputs = {
     memoryInfluence?: string;
     forwardReadiness?: string;
     atoms?: string;
+    /**
+     * Relational Context Bridge — the member-handed-off relationship block
+     * (explicit act: "Take this to MAIA" on /relationships/[id]). Never ambient.
+     * Emission detail lives in the [MAIA/sovereign] relational-context log line,
+     * which also carries the relationshipId; only presence + size are inventoried here.
+     */
+    relationalContext?: string;
     memberWeb?: string;
     astrology?: string;
     studio?: string;
@@ -284,6 +296,7 @@ function summarizePromptBlock(
     (addenda.memoryInfluence?.length ?? 0) +
     (addenda.forwardReadiness?.length ?? 0) +
     (addenda.atoms?.length ?? 0) +
+    (addenda.relationalContext?.length ?? 0) +
     (addenda.memberWeb?.length ?? 0) +
     (addenda.astrology?.length ?? 0) +
     (addenda.studio?.length ?? 0) +
@@ -298,6 +311,7 @@ function summarizePromptBlock(
       memoryInfluence: !!addenda.memoryInfluence,
       forwardReadiness: !!addenda.forwardReadiness,
       atoms: !!addenda.atoms,
+      relationalContext: !!addenda.relationalContext,
       memberWeb: !!addenda.memberWeb,
       astrology: !!addenda.astrology,
       studio: !!addenda.studio,
