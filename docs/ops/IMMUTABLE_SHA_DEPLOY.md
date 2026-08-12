@@ -1,6 +1,40 @@
 # Immutable-SHA Deploy — "build a commit, not a checkout"
 
-**Status:** Proposed structural control for review (not yet deployed).
+**Status:** **DEPLOYED and in force.** Verified in production 2026-08-12.
+
+> **Status correction — 2026-08-12.** This document previously read
+> *"Proposed structural control for review (not yet deployed)."* That was **stale**, and
+> the former text is preserved here rather than erased.
+>
+> Read-only inspection of the production host (`minisforum`, 192.168.0.104 — the actual
+> server for `soullab.life`) established that the control **is deployed and produced the
+> running artifact**:
+>
+> - `scripts/deploy-production.sh` sources `scripts/deploy-context.sh` (tracked, commit
+>   `d27c09c9d`, 2026-07-27), which resolves a named SHA → `git archive <SHA> | tar -x`
+>   into an isolated directory → exports `MAIA_BUILD_CONTEXT` and `GIT_COMMIT` →
+>   `compose build --build-arg GIT_COMMIT` → rollback tagging →
+>   `deploy_ctx_verify_running` **fail-closed** provenance assert before migrations and
+>   smoke tests.
+> - Guarded by `scripts/deploy-lock.sh` flock and the `DEPLOY_LANE_TOKEN` build-arg
+>   tripwire, which has no compose default — so a bare `compose up --build` fails.
+> - **Content proof, not self-report:** the `package.json` blob inside the running image
+>   `sha256:32ccf1eac5c7d1b587e88fc793697d8889539c0a25593d3c8ce5cea482178aeb` equals the
+>   blob at commit `e5f2c5fa2`, and **differs** from the blob at the production
+>   checkout's HEAD (`7c9dd5192…`). The image was built from the commit, **not** from the
+>   working tree.
+> - Baked `GIT_COMMIT=e5f2c5fa2` (image `Config.Env` and `docker history` ARG) **equals**
+>   the runtime `GIT_COMMIT` — no injection divergence.
+>
+> This matters because the production checkout is **468 commits behind** origin and
+> carries a dirty `M Caddyfile`. The incident this document describes is genuinely
+> closed *for the application image*: the dirty checkout cannot contaminate it.
+>
+> **Scope limit — the guarantee is partial.** The Caddy edge is **not** covered. It is
+> bind-mounted live from that same dirty working tree
+> (`~/MAIA-SOVEREIGN/Caddyfile` → `/etc/caddy/Caddyfile:ro`), so production edge
+> configuration can still change without a commit, review, or deploy. Recorded
+> separately as a configuration-governance finding; **not** remediated here.
 **Origin incident:** 2026-07-27 shared-checkout deploy race
 (memory `reference_shared_checkout_deploy_incident`).
 **Companion to:** the deploy-lane lock (`docs/ops/DEPLOY_LANE_TOKEN.md`,
