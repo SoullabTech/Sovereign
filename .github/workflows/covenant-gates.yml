@@ -174,7 +174,11 @@ jobs:
               { kind: 'exact',  v: 'docs/GOVERNANCE_MENTOR_COVENANT.md' },
               { kind: 'exact',  v: '.github/workflows/covenant-gates.yml' },
               { kind: 'exact',  v: '.github/pull_request_template.md' },
-              { kind: 'exact',  v: 'docs/architecture/audits/MIR-001_MAIA_HEALTH_MAP_2026-08-12.md' }
+              { kind: 'exact',  v: 'docs/architecture/audits/MIR-001_MAIA_HEALTH_MAP_2026-08-12.md' },
+              // D5: the gate's own proof substrate. Exact file only — not scripts/**,
+              // not a generic tests directory. A suite that gates enforcement cannot
+              // live off-repo; that would recreate the custody defect being fixed.
+              { kind: 'exact',  v: 'scripts/governance/covenant-gates-conformance.mjs' }
             ];
             const pathAdmissible = p =>
               BOOTSTRAP_ALLOWLIST.some(r => r.kind === 'prefix' ? p.startsWith(r.v) : p === r.v);
