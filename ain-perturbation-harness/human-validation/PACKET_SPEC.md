@@ -37,6 +37,12 @@ B and D fall short of 8 because the entire single-category pool contains only 6 
 
 **Why the mandatory rule is capped.** A first build included *all* 36 `W.R`/`R.W` items, putting 78% of the packet in two operator pairs and badly skewing the category marginals — which distorts κ, since κ corrects against expected agreement computed from those marginals. The cap keeps every repaired case-type covered while preserving balance. Caught and fixed before freeze.
 
+### ⚠️ Scope limit on any passing result — binding
+
+> **Human validation applies to the sampled single-category ontology only. Multi-category determinability remains unvalidated.**
+
+A PASS here may **not** be restated as *"Domain B v2 prose is human validated."* The validation claim cannot exceed the surface the instrument actually touched. `score-raters.mjs` prints this boundary as part of its PASS output so the result and its limit travel together.
+
 ### ⚠️ Declared coverage gap
 
 **12 items whose ground truth carries more than one third-person category are excluded** from human validation. The instrument is single-select; multi-select would complicate κ and the rater task. Consequence: **combination cases are not human-validated in this round.** Recorded here, not dropped silently.
@@ -75,7 +81,7 @@ Categories are presented to raters as neutral letters **A–E with plain-languag
 | gate | threshold | basis |
 |---|---|---|
 | **Inter-rater agreement** | Fleiss' κ **≥ 0.60** across ≥3 raters | Spec §C1, by explicit analogy |
-| **Agreement with ground truth** | majority answer matches ground truth on **≥ 0.85** of items | ⚠️ **Newly chosen for this unit — not spec-derived.** Recorded as a judgment call so it cannot later be presented as inherited. |
+| **Agreement with ground truth** | majority answer matches ground truth on **≥ 0.85** of items | ⚠️ **A pre-registered validation threshold introduced for Domain B v2. It is not inherited canon and is not retrospectively adjustable.** Declared before any observation capable of influencing it, and held fixed. If 0.84 comes back, nobody gets to discover afterward that 0.80 would have been reasonable. |
 
 Both gates must pass. They test different things:
 
@@ -98,9 +104,37 @@ Both gates must pass. They test different things:
 |---|---|
 | packet built and blinding-verified | ✅ |
 | protocol, sample, seed, thresholds frozen | ✅ |
-| raters recruited | ⛔ **outstanding — requires people** |
+| **founder ruling** | **PREPARATION: PASS** — packet frozen before exposure · sampling permitted by governing spec · stratification pre-registered · blinding mechanically verified · κ threshold inherited by explicit analogy and frozen · truth threshold newly introduced, declared, and frozen · multi-category limitation declared · anti-rescue rule binding |
+| human observations | **0 / 3** |
+| raters recruited | ⛔ **outstanding — requires people, not instruments** |
 | responses collected | ⛔ |
 | agreement computed | ⛔ |
 | **Phase 2 model contact** | ⛔ **NOT AUTHORIZED** |
 
 `adapter-v2.mjs` refuses to contact a model without `--i-have-authorization` and names this requirement as the blocker. The stop is executable, not a note.
+
+---
+
+## 8. Execution order — once, in this sequence
+
+```
+3 raters collected
+        ↓
+freeze responses          (store verbatim; no edits after this point)
+        ↓
+unseal ANSWER_KEY.json
+        ↓
+score ONCE
+        ↓
+κ ≥ .60 AND truth ≥ .85 ?
+       /            \
+     YES             NO
+      │               │
+ Phase 2         corpus evidence
+ eligible        → v3 amendment
+                   no rescue
+```
+
+⛔ No fourth rater because three were inconvenient. No dropped item because everyone disliked it. No reseed. No reinterpretation of a threshold. No post-hoc clarification of an item a rater found ambiguous — **their confusion is measurement, not friction to be helped away.**
+
+If a rater asks what an item means: they record it under Notes and move on. Do not explain.

@@ -104,7 +104,20 @@ function report(raterAnswers, key) {
   }
   for (const nte of notes) console.log(`\nNOTE  ${nte}`);
   const pass = kappaPass && truthPass && raters.length >= MIN_RATERS;
-  console.log(`\n${pass ? 'PASS — ontology determinability validated independently' : 'FAIL — prose is under-determined; this is corpus evidence, and requires a v3 amendment. Do NOT add raters, loosen categories, drop items, or reseed.'}`);
+  if (pass) {
+    // A passing result must carry its own boundary, or it will be quoted without one.
+    console.log('\nPASS — ontology determinability validated independently.');
+    console.log('SCOPE OF THIS CLAIM — quote it with the result, not separately:');
+    console.log('  Human validation applies to the sampled single-category ontology only.');
+    console.log('  Multi-category determinability remains UNVALIDATED (12 items excluded;');
+    console.log('  the instrument is single-select). This is NOT "Domain B v2 prose is');
+    console.log('  human validated" — the claim cannot exceed the surface the instrument touched.');
+  } else {
+    console.log('\nFAIL — prose is under-determined. This is corpus evidence, not rater failure,');
+    console.log('and requires a v3 amendment. Do NOT add a fourth rater because three were');
+    console.log('inconvenient, drop an item everyone disliked, reseed, reinterpret a threshold,');
+    console.log('or issue a post-hoc clarification. (spec §172)');
+  }
   return pass;
 }
 
