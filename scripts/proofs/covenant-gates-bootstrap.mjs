@@ -43,7 +43,9 @@ async function run({ labels = [], body = '', files = [], comments = [], headSha 
       pulls: { listFiles: async () => ({ data: files.map(filename => ({ filename })) }) },
       issues: {
         listComments: async () => ({ data: comments.map((c, i) => ({
-          id: 1000 + i, body: c.body, user: { login: c.author }, created_at: '2026-08-12T00:00:00Z'
+          id: 1000 + i, body: c.body,
+          user: { login: c.author, type: c.type || 'User' },
+          created_at: '2026-08-12T00:00:00Z'
         })) }),
         createComment: async ({ body }) => { posted.push(body); },
         updateComment: async ({ body }) => { posted.push(body); }
@@ -136,6 +138,32 @@ P('R3c', 'Class B with rollback plan passes; no disposition engine applied',
   { labels: ['class-b'], body: '[x] Revert commit is sufficient', files: ['lib/api/routing.ts'] },
   { forbidText: /BOOTSTRAP_NO_COUNCIL|Council #1/ });
 
+// -- family 4 · actor provenance (RGE-001 actor-identity ruling) --------------
+N('R4a', 'Bot-authored signoff cannot satisfy founder authority',
+  { labels: ['class-a'], body: DECL, files: GOV_FILES,
+    comments: [{ author: 'github-actions[bot]', type: 'Bot',
+                 body: `/covenant-signoff role=founder-steward sha=${SHA_A}` }] },
+  { expectText: /requires a Founder-Steward signoff/i });
+
+N('R4b', "the gate's OWN emitted guidance cannot be re-read as a signoff",
+  { labels: ['class-a'], body: DECL, files: GOV_FILES,
+    comments: [{ author: 'github-actions[bot]', type: 'Bot',
+                 body: `Comment: \`/covenant-signoff role=founder-steward sha=${SHA_A}\`` }] },
+  { expectText: /requires a Founder-Steward signoff/i });
+
+P('R4c', 'ledger states provenance cannot distinguish human from agent',
+  { labels: ['class-a'], body: DECL, files: GOV_FILES, comments: [founderSignoff(SHA_A)] },
+  { expectText: /actor_provenance\s+credential principal only/i });
+
+// -- family 5 · classification must be unambiguous (covenant §191) ------------
+N('R5a', 'two class labels → ambiguous classification',
+  { labels: ['class-a', 'class-b'], body: DECL, files: GOV_FILES, comments: [founderSignoff(SHA_A)] },
+  { expectText: /Ambiguous classification/i });
+
+P('R5b', 'exactly one class label → no ambiguity failure',
+  { labels: ['class-a'], body: DECL, files: GOV_FILES, comments: [founderSignoff(SHA_A)] },
+  { forbidText: /Ambiguous classification/i });
+
 // -- the positive control, shaped like real #1039 -----------------------------
 P('POS', 'positive control — real #1039 shape',
   { labels: ['class-a'], body: `Some body.\n\n${DECL}\n`, files: GOV_FILES, comments: [founderSignoff(SHA_A)] },
@@ -187,7 +215,7 @@ for (const c of cases) {
           const github = { rest: {
             pulls: { listFiles: async () => ({ data: (c.input.files || []).map(filename => ({ filename })) }) },
             issues: {
-              listComments: async () => ({ data: (c.input.comments || []).map((x, i) => ({ id: 1000 + i, body: x.body, user: { login: x.author }, created_at: 'T' })) }),
+              listComments: async () => ({ data: (c.input.comments || []).map((x, i) => ({ id: 1000 + i, body: x.body, user: { login: x.author, type: x.type || 'User' }, created_at: 'T' })) }),
               createComment: async ({ body }) => posted.push(body),
               updateComment: async ({ body }) => posted.push(body) } } };
           const core = { setFailed: m => { failed = m; } };
