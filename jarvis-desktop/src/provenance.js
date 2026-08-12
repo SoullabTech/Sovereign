@@ -23,10 +23,17 @@
 
   const RESOLUTION = {
     ENV: 'explicit-env',          // JARVIS_REPO_ROOT was set and verified
+    CONFIG: 'explicit-config',    // founder named it in Preferences; persisted and re-verified
     DEFAULT: 'implicit-default',  // hard-coded candidate happened to verify — NOT truth
     WALK: 'dev-walk',             // dev mode walked up from the running source
     NONE: 'unresolved',
   };
+
+  // CONFIG ranks with ENV, not with DEFAULT. The distinction this module exists
+  // to protect is not "how many hops did it take" but "did anyone CHOOSE this
+  // substrate". A persisted Preferences selection is a founder's explicit act
+  // that survived a relaunch; a hard-coded candidate that happens to verify is
+  // still a checkout nobody named. Only the latter is DEGRADED.
 
   /**
    * ARTIFACT IDENTITY.
@@ -70,7 +77,7 @@
       return {
         resolved_repo_root: null, resolved_repo_head: null, resolved_repo_dirty: null,
         resolution: RESOLUTION.NONE, state: 'UNAVAILABLE',
-        detail: 'No execution substrate resolved — set JARVIS_REPO_ROOT to a checkout carrying the canonical markers.',
+        detail: 'No execution substrate resolved — choose a repository in JARVIS ▸ Preferences (⌘,). It must be a checkout carrying the canonical Builder OS markers. The selection is remembered across launches; JARVIS_REPO_ROOT still works but is no longer required.',
       };
     }
     const headTxt = head || 'unknown';
@@ -81,7 +88,7 @@
       return {
         resolved_repo_root: repoRoot, resolved_repo_head: head || null, resolved_repo_dirty: dirty === undefined ? null : dirty,
         resolution, state: 'DEGRADED',
-        detail: `${base} — reached by IMPLICIT DEFAULT, not by explicit configuration. This Desktop is executing a sibling checkout it was not told to use. Set JARVIS_REPO_ROOT to make the binding explicit.`,
+        detail: `${base} — reached by IMPLICIT DEFAULT, not by explicit configuration. This Desktop is executing a sibling checkout it was not told to use. Choose it deliberately in Preferences (⌘,) to make the binding explicit and persistent.`,
       };
     }
     if (head && dirty) {

@@ -3,13 +3,35 @@
 // read or invoked via the same code paths terminal execution uses. No
 // business logic is duplicated here, and no arbitrary shell execution is
 // exposed to the renderer.
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 const { buildManifest } = require('./capability-form.js');
 const PROV = require('./provenance.js');
 const GOV = require('./governance.js');
+const RepoConfig = require('./repo-config.js');
+const { childEnv } = require('./child-env.js');
+
+// ---------------------------------------------------------------------------
+// Instance identity.
+//
+// The single-instance lock below is keyed on the userData directory, which
+// Electron derives from the app name — so the dev build and the installed
+// build were requesting the SAME lock. Whichever started first won, and the
+// other called app.quit() and exited 0 with no output. That is precisely the
+// "JARVIS.app won't launch" symptom investigated on 2026-08-11: a dev instance
+// had been holding the lock since 19:48, and `killall JARVIS` never matched it
+// because the dev process is named `Electron`, not `JARVIS`.
+//
+// The F5 comment below says "one lock per artifact identity". That was the
+// intent; keying on the app name did not implement it. Dev and packaged are
+// genuinely different artifacts operating potentially different substrates, so
+// they get genuinely different userData — and therefore different locks. Two
+// packaged copies still collide, which is what F5 actually wanted to prevent.
+if (!app.isPackaged) {
+  app.setPath('userData', path.join(app.getPath('appData'), 'jarvis-desktop-dev'));
+}
 
 // ---------------------------------------------------------------------------
 // Runtime-root contract. Packaged mode's __dirname resolves inside
@@ -44,27 +66,62 @@ function findRepoRootDevMode(start) {
   return null;
 }
 
+// The installed app must find its substrate without Terminal help, so the
+// order below is: what the founder explicitly named (env, then persisted
+// config), and only then the hard-coded candidate — which stays DEGRADED
+// because nobody chose it. Nothing here binds to a Claude worktree: worktrees
+// are development substrates and are expected to disappear.
+//
+// A configured root is RE-VERIFIED on every launch, not trusted because it was
+// once valid. A repo that has been moved or deleted must read as a problem the
+// founder can see and fix, not as a silent fallback to somewhere else.
 function findRepoRootPackagedMode() {
-  // F3: HOW the root was reached is part of the answer. A hard-coded candidate
-  // that happens to verify is NOT established truth — it is a sibling checkout
-  // this app was never told to use, and it is reported as such (DEGRADED) so
-  // the founder is never silently executing an unnamed substrate.
+  const cfgForConflict = RepoConfig.readConfig(app.getPath('appData'));
+
   if (process.env.JARVIS_REPO_ROOT && isValidRepoRoot(process.env.JARVIS_REPO_ROOT)) {
-    return { root: process.env.JARVIS_REPO_ROOT, resolution: PROV.RESOLUTION.ENV };
+    // An environment variable outranking a saved choice is defensible — but
+    // only if the founder can SEE it. On macOS this variable can be set at the
+    // launchd level (`launchctl setenv`), in which case every Finder, Dock and
+    // Spotlight launch inherits it invisibly and no Terminal is involved. A
+    // founder who then picks a repository in Preferences would watch the app
+    // keep using a different one, with nothing on screen explaining why. That
+    // is the exact failure this app's provenance discipline exists to prevent,
+    // so the conflict is reported rather than silently resolved.
+    const conflict =
+      cfgForConflict.present && cfgForConflict.repo_root !== process.env.JARVIS_REPO_ROOT
+        ? `JARVIS_REPO_ROOT is set in the launch environment (${process.env.JARVIS_REPO_ROOT}) and OVERRIDES your saved choice (${cfgForConflict.repo_root}). If it is set at the launchd level, every Finder/Dock launch inherits it. Clear it with:  launchctl unsetenv JARVIS_REPO_ROOT  (then quit and relaunch JARVIS).`
+        : null;
+    return { root: process.env.JARVIS_REPO_ROOT, resolution: PROV.RESOLUTION.ENV, configProblem: conflict };
   }
+
+  const cfg = cfgForConflict;
+  if (cfg.present && isValidRepoRoot(cfg.repo_root)) {
+    return { root: cfg.repo_root, resolution: PROV.RESOLUTION.CONFIG, configProblem: null };
+  }
+  // Distinguish "configured but no longer valid" from "never configured" —
+  // they need different responses and the founder deserves to know which.
+  const configProblem = cfg.problem
+    ? cfg.problem
+    : cfg.present
+      ? `configured repository no longer carries the canonical markers: ${cfg.repo_root}`
+      : null;
+
   if (isValidRepoRoot('/Users/soullab/MAIA-SOVEREIGN')) {
-    return { root: '/Users/soullab/MAIA-SOVEREIGN', resolution: PROV.RESOLUTION.DEFAULT };
+    return { root: '/Users/soullab/MAIA-SOVEREIGN', resolution: PROV.RESOLUTION.DEFAULT, configProblem };
   }
-  return { root: null, resolution: PROV.RESOLUTION.NONE };
+  return { root: null, resolution: PROV.RESOLUTION.NONE, configProblem };
 }
 
-const RESOLVED = app.isPackaged
+// Mutable: Preferences can rebind the substrate at runtime. Everything that
+// reads it does so through currentRoot() rather than closing over the value,
+// so a rebind takes effect without a relaunch.
+let RESOLVED = app.isPackaged
   ? findRepoRootPackagedMode()
   : (() => {
       const r = findRepoRootDevMode(__dirname);
-      return { root: r, resolution: r ? PROV.RESOLUTION.WALK : PROV.RESOLUTION.NONE };
+      return { root: r, resolution: r ? PROV.RESOLUTION.WALK : PROV.RESOLUTION.NONE, configProblem: null };
     })();
-const REPO_ROOT = RESOLVED.root;
+function currentRoot() { return RESOLVED.root; }
 const REPO_ROOT_MODE = app.isPackaged ? 'packaged' : 'dev';
 
 // --- F3: artifact identity, stamped at package time -----------------------
@@ -80,8 +137,8 @@ function readBuildInfo() {
 function readSubstrateVersion(root) {
   if (!root) return { head: null, dirty: null };
   try {
-    const head = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-    const porcelain = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
+    const head = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8', env: childEnv(process.env).env }).trim();
+    const porcelain = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', env: childEnv(process.env).env });
     return { head, dirty: porcelain.trim().length > 0 };
   } catch {
     return { head: null, dirty: null };
@@ -89,11 +146,11 @@ function readSubstrateVersion(root) {
 }
 
 function currentProvenance() {
-  const sub = readSubstrateVersion(REPO_ROOT);
+  const sub = readSubstrateVersion(currentRoot());
   return PROV.describeProvenance({
     buildInfo: readBuildInfo(),
     isPackaged: app.isPackaged,
-    repoRoot: REPO_ROOT,
+    repoRoot: currentRoot(),
     resolution: RESOLVED.resolution,
     head: sub.head,
     dirty: sub.dirty,
@@ -103,8 +160,14 @@ function currentProvenance() {
 // F5: two JARVIS builds running at once made every reading ambiguous during
 // the 2026-08-11 walk. One lock per artifact identity; the title then names
 // which artifact this window is, so two windows can never be confused again.
+// The `return` is load-bearing, not tidiness: app.quit() only *requests* the
+// quit, so without it the whole module kept initialising — registering IPC
+// handlers and a whenReady window — while shutting down. Whatever it did in
+// that window it did silently, which is part of why this exit was so hard to
+// read from the outside.
 if (!app.requestSingleInstanceLock()) {
   app.quit();
+  return;
 }
 app.on('second-instance', () => {
   if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
@@ -131,7 +194,190 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+// ---------------------------------------------------------------------------
+// Substrate binding at runtime — Preferences.
+//
+// Rebinding is deliberately NOT a silent convenience. It re-verifies the
+// candidate against the same canonical markers used at startup, refuses
+// anything that fails them, and persists only what passed. A rejected
+// selection leaves the previous binding untouched: a mistyped or moved folder
+// must never quietly detach the console from its substrate.
+// ---------------------------------------------------------------------------
+let prefsWindow = null;
+
+function repoConfigState() {
+  const cfg = RepoConfig.readConfig(app.getPath('appData'));
+  const root = currentRoot();
+  return {
+    active_repo_root: root,
+    resolution: RESOLVED.resolution,
+    valid: root ? isValidRepoRoot(root) : false,
+    mode: REPO_ROOT_MODE,
+    config_path: cfg.path,
+    config_present: cfg.present,
+    config_repo_root: cfg.repo_root,
+    config_set_at: cfg.set_at,
+    config_set_by: cfg.set_by,
+    problem: RESOLVED.configProblem || cfg.problem || null,
+    // Named so the Preferences surface can explain WHY a root is degraded
+    // rather than just colouring it — the DEFAULT case is the one a founder
+    // most needs to notice and convert into a deliberate choice.
+    explicit: RESOLVED.resolution === PROV.RESOLUTION.CONFIG || RESOLVED.resolution === PROV.RESOLUTION.ENV,
+    markers: CANONICAL_MARKERS.map((parts) => parts.join('/')),
+  };
+}
+
+function broadcastRepoChange() {
+  const state = repoConfigState();
+  for (const w of BrowserWindow.getAllWindows()) {
+    if (!w.isDestroyed()) w.webContents.send('jarvis:repo-changed', state);
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setTitle(PROV.windowTitle(currentProvenance().artifact));
+  }
+}
+
+function bindRepoRoot(candidate, setBy) {
+  if (!candidate) return { ok: false, reason: 'no directory chosen' };
+  if (!isValidRepoRoot(candidate)) {
+    return {
+      ok: false,
+      reason: `Not a canonical Sovereign checkout — missing one or more required markers (${CANONICAL_MARKERS.map(p => p.join('/')).join(', ')}).`,
+      candidate,
+    };
+  }
+  RepoConfig.writeConfig(app.getPath('appData'), candidate, setBy);
+  RESOLVED = { root: candidate, resolution: PROV.RESOLUTION.CONFIG, configProblem: null };
+  broadcastRepoChange();
+  return { ok: true, reason: null, candidate };
+}
+
+async function chooseRepoInteractive(parentWindow) {
+  const res = await dialog.showOpenDialog(parentWindow || mainWindow || null, {
+    title: 'Choose the Sovereign repository JARVIS should operate against',
+    message: 'Select a checkout carrying the canonical Builder OS markers.',
+    properties: ['openDirectory'],
+    defaultPath: currentRoot() || app.getPath('home'),
+    buttonLabel: 'Use this repository',
+  });
+  if (res.canceled || !res.filePaths || !res.filePaths.length) {
+    return { ok: false, reason: 'cancelled', candidate: null };
+  }
+  const out = bindRepoRoot(res.filePaths[0], 'preferences');
+  if (!out.ok) {
+    await dialog.showMessageBox(parentWindow || mainWindow || null, {
+      type: 'warning',
+      message: 'That folder is not a Sovereign checkout',
+      detail: `${out.reason}\n\nThe previous binding is unchanged.`,
+      buttons: ['OK'],
+    });
+  }
+  return out;
+}
+
+function openPreferences() {
+  if (prefsWindow && !prefsWindow.isDestroyed()) { prefsWindow.focus(); return; }
+  prefsWindow = new BrowserWindow({
+    width: 620,
+    height: 460,
+    title: 'JARVIS Preferences',
+    backgroundColor: '#0a0b0d',
+    parent: mainWindow || undefined,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  prefsWindow.loadFile(path.join(__dirname, 'preferences.html'));
+  prefsWindow.on('closed', () => { prefsWindow = null; });
+}
+
+function buildMenu() {
+  const template = [
+    {
+      label: 'JARVIS',
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { label: 'Preferences…', accelerator: 'Command+,', click: () => openPreferences() },
+        { type: 'separator' },
+        { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
+    { label: 'Edit', submenu: [{ role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' }, { role: 'toggleDevTools' },
+        { type: 'separator' },
+        {
+          label: 'Reveal configuration in Finder',
+          click: () => shell.showItemInFolder(RepoConfig.configPath(app.getPath('appData'))),
+        },
+      ],
+    },
+    { label: 'Window', submenu: [{ role: 'minimize' }, { role: 'zoom' }, { role: 'close' }] },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+// First run (or a substrate that has gone away): ask, rather than launching
+// into a console whose every panel reads UNKNOWN with no way to fix it from
+// inside the app. Only prompts in packaged mode — dev mode resolves by walking
+// its own source tree and does not need a binding.
+async function ensureBindingOnFirstRun() {
+  if (!app.isPackaged) return;
+  if (currentRoot() && RESOLVED.resolution !== PROV.RESOLUTION.DEFAULT) return;
+  // Asked once. A founder who declined keeps the fallback and can still bind
+  // it any time from Preferences — the DEGRADED state stays visible there and
+  // on the console, so declining hides nothing.
+  if (RepoConfig.promptSeen(app.getPath('appData'))) return;
+
+  const degraded = RESOLVED.resolution === PROV.RESOLUTION.DEFAULT;
+  const { response } = await dialog.showMessageBox(mainWindow || null, {
+    type: degraded ? 'question' : 'warning',
+    message: degraded
+      ? 'JARVIS has not been told which repository to use'
+      : 'JARVIS could not find a repository to operate against',
+    detail: [
+      RESOLVED.configProblem ? `${RESOLVED.configProblem}\n` : '',
+      degraded
+        ? `It found ${currentRoot()} by falling back to a hard-coded candidate. That checkout was never named by you, so JARVIS is reporting it as DEGRADED rather than treating it as chosen.`
+        : 'No checkout carrying the canonical Builder OS markers was found.',
+      '',
+      'Choosing a repository stores it under ~/Library/Application Support/JARVIS/ and it will be remembered on every future launch.',
+    ].filter(Boolean).join('\n'),
+    buttons: ['Choose Repository…', 'Continue Without Choosing'],
+    defaultId: 0,
+    cancelId: 1,
+  });
+  RepoConfig.markPromptSeen(app.getPath('appData'), response === 0 ? 'chose' : 'declined');
+  if (response === 0) await chooseRepoInteractive(mainWindow);
+}
+
+ipcMain.handle('jarvis:repo-config', async () => repoConfigState());
+ipcMain.handle('jarvis:choose-repo', async (evt) => {
+  const w = BrowserWindow.fromWebContents(evt.sender);
+  const out = await chooseRepoInteractive(w);
+  return { ...out, state: repoConfigState() };
+});
+ipcMain.handle('jarvis:clear-repo', async () => {
+  RepoConfig.clearConfig(app.getPath('appData'));
+  // Re-resolve from scratch so the surface shows what the app would ACTUALLY
+  // do on a cold launch now — not a cached memory of the binding just removed.
+  RESOLVED = findRepoRootPackagedMode();
+  broadcastRepoChange();
+  return repoConfigState();
+});
+
+app.whenReady().then(async () => {
+  buildMenu();
+  createWindow();
+  await ensureBindingOnFirstRun();
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
@@ -143,7 +389,7 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 ipcMain.handle('jarvis:status', async () => {
   const result = {
     observed_at: new Date().toISOString(),
-    repo_root: REPO_ROOT || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
+    repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
     repo_root_mode: REPO_ROOT_MODE,
     provenance: currentProvenance(),
     sessions: [],
@@ -155,11 +401,11 @@ ipcMain.handle('jarvis:status', async () => {
     desktop_runtime: { state: 'AVAILABLE', detail: `Electron ${process.versions.electron}, node ${process.versions.node}` },
   };
 
-  if (!REPO_ROOT) return result;
+  if (!currentRoot()) return result;
 
   // Builder OS — the same session.mjs terminal execution uses.
   try {
-    const raw = execFileSync('node', ['scripts/builder/session.mjs', 'status', '--json'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 15000 });
+    const raw = execFileSync('node', ['scripts/builder/session.mjs', 'status', '--json'], { cwd: currentRoot(), encoding: 'utf8', timeout: 15000, env: childEnv(process.env).env });
     const j = JSON.parse(raw);
     result.builder_os = {
       state: 'AVAILABLE',
@@ -183,7 +429,7 @@ ipcMain.handle('jarvis:status', async () => {
   // Route A — the deterministic registry is either present with its own
   // proof passing, or it is not. No middle state is invented.
   try {
-    const registryPath = path.join(REPO_ROOT, 'scripts', 'builder', 'deterministic.mjs');
+    const registryPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
     if (fs.existsSync(registryPath)) {
       const mod = await import(`file://${registryPath}?t=${Date.now()}`);
       const count = Object.keys(mod.CAPABILITIES || {}).length;
@@ -225,10 +471,10 @@ ipcMain.handle('jarvis:status', async () => {
 // and the UI must show their absence rather than paper over it.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:capabilities', async () => {
-  if (!REPO_ROOT) {
+  if (!currentRoot()) {
     return { available: false, reason: 'repo root not found — cannot read the deterministic registry', source: null, count: 0, capabilities: [] };
   }
-  const registryPath = path.join(REPO_ROOT, 'scripts', 'builder', 'deterministic.mjs');
+  const registryPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
   try {
     if (!fs.existsSync(registryPath)) {
       return { available: false, reason: 'deterministic.mjs not found on this checkout', source: registryPath, count: 0, capabilities: [] };
@@ -247,9 +493,9 @@ ipcMain.handle('jarvis:capabilities', async () => {
 // C3 is selected and explained but NOT auto-executed (explicit §8 stance).
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
-  if (!REPO_ROOT) return { status: 'error', reason: 'repo root not found — cannot route' };
-  const routerPath = path.join(REPO_ROOT, 'scripts', 'builder', 'router.mjs');
-  const detPath = path.join(REPO_ROOT, 'scripts', 'builder', 'deterministic.mjs');
+  if (!currentRoot()) return { status: 'error', reason: 'repo root not found — cannot route' };
+  const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
+  const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
 
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
   const decision = route(task);
@@ -270,7 +516,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   if (decision.execution_lane === 'C0') {
     try {
       const { runCapability } = await import(`file://${detPath}?t=${Date.now()}`);
-      const r = runCapability(task.capability, task.args || {}, REPO_ROOT);
+      const r = runCapability(task.capability, task.args || {}, currentRoot());
       response.result = r;
       response.status = 'completed';
       // Independent verification: a second, structurally different check —
@@ -330,7 +576,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
 // here upgrades an outcome the governor declined, and `--force` is unreachable.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
-  if (!REPO_ROOT) {
+  if (!currentRoot()) {
     return { ok: false, outcome: 'usage', label: 'NO SUBSTRATE', detail: 'No execution substrate resolved — cannot reach session.mjs.', errors: [] };
   }
   const built = GOV.buildGovernanceArgv(req || {});
@@ -338,7 +584,7 @@ ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
     return { ok: false, outcome: 'invalid', label: 'NOT SENT', detail: null, errors: built.errors };
   }
   try {
-    const stdout = execFileSync('node', built.argv, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const stdout = execFileSync('node', built.argv, { cwd: currentRoot(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env });
     const r = GOV.interpretExit(0, stdout, '');
     return { ok: true, ...r, errors: [], invoked: built.argv.join(' ') };
   } catch (e) {
