@@ -1,0 +1,269 @@
+{
+  "sealed": true,
+  "warning": "MUST NOT be shown to raters, and must not be opened until all rater responses are collected and stored.",
+  "corpus": "domain-b-v2-corpus.json (8a3ee854bbdb49ed)",
+  "seed": 20260811,
+  "per_stratum": 8,
+  "category_map": {
+    "A": "third_party_added",
+    "B": "witness_bound_to_agent",
+    "C": "witness_bound_to_recipient",
+    "D": "witness_rebound",
+    "E": null
+  },
+  "excluded_multi_category_items": 12,
+  "items": [
+    {
+      "n": 1,
+      "key": "A05::W.R::composite",
+      "pair": "W.R",
+      "truth_letter": "B",
+      "truth_token": "witness_bound_to_agent"
+    },
+    {
+      "n": 2,
+      "key": "A03::T.R::step1",
+      "pair": "T.R",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 3,
+      "key": "A05::V.D::composite",
+      "pair": "V.D",
+      "truth_letter": "E",
+      "truth_token": null
+    },
+    {
+      "n": 4,
+      "key": "A02::T.D::step1",
+      "pair": "T.D",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 5,
+      "key": "A04::W.R::composite",
+      "pair": "W.R",
+      "truth_letter": "B",
+      "truth_token": "witness_bound_to_agent"
+    },
+    {
+      "n": 6,
+      "key": "A03::W.R::step2",
+      "pair": "W.R",
+      "truth_letter": "D",
+      "truth_token": "witness_rebound"
+    },
+    {
+      "n": 7,
+      "key": "A02::R.W::step1",
+      "pair": "R.W",
+      "truth_letter": "E",
+      "truth_token": null
+    },
+    {
+      "n": 8,
+      "key": "A05::R.A::step1",
+      "pair": "R.A",
+      "truth_letter": "E",
+      "truth_token": null
+    },
+    {
+      "n": 9,
+      "key": "A01::W.T::step1",
+      "pair": "W.T",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 10,
+      "key": "A06::W.R::composite",
+      "pair": "W.R",
+      "truth_letter": "B",
+      "truth_token": "witness_bound_to_agent"
+    },
+    {
+      "n": 11,
+      "key": "A01::W.R::composite",
+      "pair": "W.R",
+      "truth_letter": "B",
+      "truth_token": "witness_bound_to_agent"
+    },
+    {
+      "n": 12,
+      "key": "A06::W.R::step2",
+      "pair": "W.R",
+      "truth_letter": "D",
+      "truth_token": "witness_rebound"
+    },
+    {
+      "n": 13,
+      "key": "A02::R.W::composite",
+      "pair": "R.W",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 14,
+      "key": "A05::W.R::step2",
+      "pair": "W.R",
+      "truth_letter": "D",
+      "truth_token": "witness_rebound"
+    },
+    {
+      "n": 15,
+      "key": "A06::R.T::step2",
+      "pair": "R.T",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 16,
+      "key": "A01::W.R::step1",
+      "pair": "W.R",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 17,
+      "key": "A05::V.W::composite",
+      "pair": "V.W",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 18,
+      "key": "A01::R.W::step1",
+      "pair": "R.W",
+      "truth_letter": "E",
+      "truth_token": null
+    },
+    {
+      "n": 19,
+      "key": "A06::V.T::step1",
+      "pair": "V.T",
+      "truth_letter": "E",
+      "truth_token": null
+    },
+    {
+      "n": 20,
+      "key": "A02::W.R::composite",
+      "pair": "W.R",
+      "truth_letter": "B",
+      "truth_token": "witness_bound_to_agent"
+    },
+    {
+      "n": 21,
+      "key": "A02::W.R::step2",
+      "pair": "W.R",
+      "truth_letter": "D",
+      "truth_token": "witness_rebound"
+    },
+    {
+      "n": 22,
+      "key": "A03::T.A::step1",
+      "pair": "T.A",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 23,
+      "key": "A05::V.V::step1",
+      "pair": "V.V",
+      "truth_letter": "E",
+      "truth_token": null
+    },
+    {
+      "n": 24,
+      "key": "A03::T.D::step1",
+      "pair": "T.D",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 25,
+      "key": "A03::A.A::composite",
+      "pair": "A.A",
+      "truth_letter": "E",
+      "truth_token": null
+    },
+    {
+      "n": 26,
+      "key": "A02::R.W::step2",
+      "pair": "R.W",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 27,
+      "key": "A01::W.R::step2",
+      "pair": "W.R",
+      "truth_letter": "D",
+      "truth_token": "witness_rebound"
+    },
+    {
+      "n": 28,
+      "key": "A02::T.D::composite",
+      "pair": "T.D",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 29,
+      "key": "A01::R.T::step2",
+      "pair": "R.T",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 30,
+      "key": "A04::W.R::step2",
+      "pair": "W.R",
+      "truth_letter": "D",
+      "truth_token": "witness_rebound"
+    },
+    {
+      "n": 31,
+      "key": "A01::R.W::step2",
+      "pair": "R.W",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 32,
+      "key": "A06::V.T::step2",
+      "pair": "V.T",
+      "truth_letter": "A",
+      "truth_token": "third_party_added"
+    },
+    {
+      "n": 33,
+      "key": "A02::W.R::step1",
+      "pair": "W.R",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 34,
+      "key": "A01::R.W::composite",
+      "pair": "R.W",
+      "truth_letter": "C",
+      "truth_token": "witness_bound_to_recipient"
+    },
+    {
+      "n": 35,
+      "key": "A03::W.R::composite",
+      "pair": "W.R",
+      "truth_letter": "B",
+      "truth_token": "witness_bound_to_agent"
+    },
+    {
+      "n": 36,
+      "key": "A04::V.R::step1",
+      "pair": "V.R",
+      "truth_letter": "E",
+      "truth_token": null
+    }
+  ]
+}
