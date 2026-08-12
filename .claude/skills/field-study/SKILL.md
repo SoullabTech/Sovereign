@@ -9,6 +9,10 @@ Method: `docs/specs/developmental-environment/FIELD_STUDY_METHOD_CANDIDATE_2026-
 **Read it before doing anything else.** This skill is the execution harness; the method is
 the authority.
 
+**Governing authority:** [`docs/governance/JARVIS_STEWARDSHIP_CONSTITUTION_2026-08-12.md`](../../../docs/governance/JARVIS_STEWARDSHIP_CONSTITUTION_2026-08-12.md).
+Constitutional §1, §6 and the north star govern what a study is *for*; the method above
+governs how one is run.
+
 ## Ordering is the philosophy — do not reorder
 
 Most UX methods begin with tools. This one begins with **constraints on the observer**.
