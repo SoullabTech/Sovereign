@@ -17,8 +17,8 @@ prerequisite the validator cannot be written without.
 | --- | --- | --- | --- |
 | 1 | Freeze `CRP-001-UNIT-RETURN-SCHEMA-v1` as candidate house schema | assistant | **DONE** — sha256 `fac499a6…`, `CRP-001-SCHEMA-FREEZE-RECORD.md` |
 | 2 | Founder rulings **C1–C4** | founder | **CLOSED 2026-08-12** — `CRP-001-STEP2-RULINGS.md` (C1=D2, C2=N/A, C3=F1 bound prospectively, C4=G2) |
-| 3 | Rule canonical custody / home for CRP governance objects | founder | **CLOSED 2026-08-12** — ruled, executed, PR [#1039](https://github.com/SoullabTech/Sovereign/pull/1039), commit `6ac323061` on `chore/crp-001-governance-custody` |
-| 4 | Define + freeze the **chain registry** | — | **NEXT** — unblocked once #1039 merges |
+| 3 | Rule canonical custody / home for CRP governance objects | founder | **EXECUTION COMPLETE / CANONICALIZATION PENDING MERGE** — PR [#1039](https://github.com/SoullabTech/Sovereign/pull/1039), branch `chore/crp-001-governance-custody`. Remote durable custody PROVEN; canonical-trunk custody NOT yet effective. |
+| 4 | Define + freeze the **chain registry** | — | **BLOCKED until #1039 merges** |
 | 5 | Implement validator / enforcement | — | OPEN, blocked on 4 |
 | 6 | Run adversarial conformance suite | — | OPEN, blocked on 5 |
 | — | First MAIA repair unit | — | BLOCKED on 1–6 |

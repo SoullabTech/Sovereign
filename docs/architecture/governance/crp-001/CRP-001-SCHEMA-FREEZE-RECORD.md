@@ -42,14 +42,21 @@ v1 as frozen includes, beyond the founder's original schema:
 - §3 classification ↔ disposition mapping;
 - §6 enforcement, still OPEN.
 
-## 4. The freeze location is volatile — RESOLVED 2026-08-12
+## 4. The freeze location is volatile — **PENDING MERGE**, not resolved
 
-> **Resolved by Step 3.** This schema now lives at
+> **Step 3 execution is complete; canonicalization is NOT yet effective.**
+> Durable *remote branch* custody is proven. Canonical-trunk custody waits on
+> PR #1039 merging into `clean-main-no-secrets`. Until then this schema is
+> **preserved and proposed, not canonical** — the same
+> preserved ≠ canonical distinction CRP exists to hold.
+>
+> Proposed location:
 > `docs/architecture/governance/crp-001/CRP-001-UNIT-RETURN-SCHEMA-v1.md` in
 > `github.com/SoullabTech/Sovereign`, commit `6ac3230611b2eadeac6688f368a39769ed78834c`,
 > blob `ab2ae3a7879a7df8ccbdcea67c31682990880bbb`, based on
 > `origin/clean-main-no-secrets` @ `969841012d7e1353ff73e570f00f53c0f7792a2b`.
-> The sha256 below is unchanged and now has a canonical ref behind it.
+> The sha256 below is unchanged and has a *branch* ref behind it; it gains a
+> canonical ref on merge.
 > The `/Users/soullab` copy is a **stale mirror**, not the schema.
 >
 > The original finding is preserved below as authored, because the reasoning

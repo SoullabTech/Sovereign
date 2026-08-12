@@ -71,15 +71,31 @@ recoverable. **Custody in the repository is not placement in an executor's
 context** — but a cold executor with repository access can reach it, which the
 off-canon location previously made unlikely by accident rather than by rule.
 
-**Flagged for founder:** if executor exclusion needs to be structural rather
-than instructional, this file should move to a founder-only location. Recorded
-as an open question; not decided here.
+**Recorded as OQ-1 in `CRP-001-OPEN-QUESTIONS.md`.** Not decided here, and
+deliberately not solved opportunistically inside this PR — it is an
+access/context-governance problem, not a custody problem.
 
 ## 5. What this commit does and does not establish
 
-**Establishes:** these exact bytes are durably preserved in the canonical
-repository from this commit onward, with a remote ref, a commit SHA and blob
-identity — so a later reader on another machine can verify them.
+**Establishes:** these exact bytes are durably preserved on a **remote
+branch** from this commit onward, with a ref, commit SHA and blob identity —
+so a later reader on another machine can verify them.
+
+**Does not yet establish canonical custody.** Until PR #1039 merges into
+`clean-main-no-secrets`, these objects are **preserved and proposed, not
+canonical**:
+
+```text
+STEP 3 EXECUTION              COMPLETE
+remote durable custody        PROVEN
+byte preservation             PROVEN
+governance path               PROPOSED via PR #1039
+canonical-trunk custody       PENDING MERGE
+STEP 4                        BLOCKED until #1039 merges
+```
+
+Calling them canonical before the merge would reproduce the
+preserved ≠ published ≠ canonical inflation this program exists to prevent.
 
 **Does not establish:**
 
@@ -98,8 +114,9 @@ later document may cite this commit as if it did.
 ```text
 STEP 1  schema freeze                   DONE
 STEP 2  C1–C4                           CLOSED
-STEP 3  canonical custody               this commit
-STEP 4  chain registry                  OPEN
+STEP 3  custody execution               COMPLETE
+        canonicalization                PENDING MERGE (#1039)
+STEP 4  chain registry                  BLOCKED on merge
 STEP 5  validator / enforcement         OPEN
 STEP 6  adversarial conformance suite   OPEN
         first MAIA repair unit          BLOCKED
