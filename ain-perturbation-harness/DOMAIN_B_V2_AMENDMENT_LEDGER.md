@@ -115,7 +115,9 @@ Recorded **before** any model contact. sha256, first 16 hex.
 | `src/operators-v2.mjs` | `5d12b8f8f4121e0e` | v2 |
 | `src/render-v2.mjs` | `5a3746bf70c119b0` | v2 |
 | `src/verify-b-v2.mjs` | `50cf05c8364ec1b7` | v2 |
-| `src/score.mjs` | `57196417895a6664` | v1 scorer — **not yet extended for v2** |
+| `src/score.mjs` | `57196417895a6664` | v1 scorer — **unchanged; never extended** |
+| `src/score-v2.mjs` | `75b7f9a1ce7123a1` | v2 scorer — **separate file** (precondition 1) |
+| `src/adapter-v2.mjs` | `cbbdd0fd7a8e5ce1` | v2 adapter — applicability-first ordering (precondition 2) |
 | `src/adapter.mjs` | `8ac4af50da943968` | transport |
 
 v1 hashes are byte-identical to their pre-baseline values. v2 modules are **self-contained duplicates** rather than shared imports, so no v2 edit can move v1's bytes even by accident.
@@ -137,6 +139,51 @@ Stated now so they can be wrong. **These are not acceptance criteria.**
 4. **`INAPPLICABLE` is harder than `UNDEFINED` for both substrates.** Absence ("there is no response to remove") is more visible in text than presence-blocking ("a witness is already here"). Predicted gap direction: `UNDEFINED` > `INAPPLICABLE`.
 5. **The step→composite degradation persists.** It was measured on the surviving rail and should not be an artifact of the W ambiguity. If it disappears, v1's headline finding was contaminated.
 6. **`witness_rebound` will be under-reported** — it requires noticing that an unchanged clause means something different because its surroundings moved.
+
+---
+
+---
+
+## 7. Phase 2 preconditions — status
+
+Items 1 and 2 are complete. Neither involves model contact.
+
+| # | precondition | status | artifact |
+|---|---|---|---|
+| 1 | Applicability scored as a **separate** dimension; must not alter or absorb the composition score | **DONE** | `src/score-v2.mjs` — a **new file**. `score.mjs` (`57196417895a6664`) is neither edited nor imported, so v1↔v2 composition comparability is structural, not a promise. |
+| 2 | Applicability judged **before** any downstream change-label task | **DONE** | `src/adapter-v2.mjs` — strict per-pair ordering; `--dry-run` verifies it with zero network calls. |
+| 3 | **Independent human raters** for ontology/prose determinability | ⛔ **OUTSTANDING** | Cannot be discharged by any automated proxy. `adapter-v2.mjs` **refuses to contact a model** without `--i-have-authorization`, and prints this list when refused. |
+
+### Applicability is a gate, not merely a dimension
+
+```
+operator pair
+   -> applicability judgment
+   -> DEFINED? -- no --> score applicability ONLY
+       |
+      yes
+       -> step judgments -> composite judgment -> change taxonomy
+```
+
+**The gate keys on the system's own judgment, not on ground truth.** A system that correctly says "this composition does not exist" must not then be penalized on a change-label task that its own answer made meaningless. When it declares a pair non-DEFINED, that pair's downstream labels are **recorded** (`gate.change_items_recorded`) and **excluded from every composition figure** — recorded, not interpreted.
+
+Ground-truth-blocked pairs have no triple by construction, so the gate exists specifically for the case where a system declines a composition the corpus *does* provide.
+
+### `score-v2.mjs` self-test — the gate is proven before use
+
+| synthetic run | applicability | gated pairs | composition scorable | caught |
+|---|---|---|---|---|
+| `oracle` | 216/216 | 0 | 192/192 | 0 |
+| `decliner` — declines every pair, then answers the change task badly | 12/216 | **192** | **0** (576 labels recorded) | — |
+| `local_matcher` — correct applicability, composite = union of steps | 216/216 | 0 | 162/192 | **30/30 teeth** |
+
+The `decliner` row is the gate property: a system that declines everything is scored on applicability alone, and its bad change labels appear nowhere in the composition figures — while the `local_matcher` row shows the teeth survive gating intact.
+
+### Adapter ordering — verified without model contact
+
+`--dry-run`: 216 pairs (192 with change probes, 24 applicability-only), 792 probes total. Per-pair order is applicability → step1 → step2 → composite, strictly awaited. **PASS — every change probe is preceded by an applicability probe for its pair.**
+
+⛔ **No model has seen Domain B v2.** The adapter refuses to run without explicit authorization and names precondition 3 as the blocker.
 
 ---
 
