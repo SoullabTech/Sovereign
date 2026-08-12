@@ -1,0 +1,407 @@
+{
+  "version": "1.0.0",
+  "frozen": "2026-08-11",
+  "note": "Synthetic fixtures only. No member content, no production identifiers (Sanctuary). Each item: 4 atom-like statements, one load-bearing (lb_index), a 2-hop question, a minimal load-bearing edit that flips the answer, and a magnitude-matched control edit on a non-load-bearing atom that must NOT flip the answer.",
+  "items": [
+    {
+      "id": "P01", "domain": "scheduling",
+      "atoms": ["I moved my weekly therapy session to Thursday mornings.", "I always go for a run before any morning appointment.", "My partner works from home on Wednesdays.", "I keep Friday afternoons free for deep work."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which weekday do I go for a run before an appointment?",
+      "canonical_answer": "thursday", "canonical_aliases": [],
+      "perturbed_atom": "I moved my weekly therapy session to Tuesday mornings.",
+      "perturbed_answer": "tuesday", "perturbed_aliases": [],
+      "control_atom": "My partner works from home on Mondays."
+    },
+    {
+      "id": "P02", "domain": "medication",
+      "atoms": ["I take my thyroid pill at 6am.", "I wait 45 minutes after the thyroid pill before drinking coffee.", "My pharmacy is on Oak Street.", "I keep the bottle in the kitchen drawer."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What is the earliest time I drink coffee?",
+      "canonical_answer": "6:45am", "canonical_aliases": ["6:45 am", "6:45", "645am"],
+      "perturbed_atom": "I take my thyroid pill at 7am.",
+      "perturbed_answer": "7:45am", "perturbed_aliases": ["7:45 am", "7:45", "745am"],
+      "control_atom": "My pharmacy is on Pine Street."
+    },
+    {
+      "id": "P03", "domain": "travel",
+      "atoms": ["My flight lands in Denver at 3pm.", "I always book the airport shuttle for two hours after landing.", "I travel with a carry-on only.", "I prefer an aisle seat."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time is my shuttle booked for?",
+      "canonical_answer": "5pm", "canonical_aliases": ["5:00pm", "5 pm", "5:00 pm"],
+      "perturbed_atom": "My flight lands in Denver at 1pm.",
+      "perturbed_answer": "3pm", "perturbed_aliases": ["3:00pm", "3 pm", "3:00 pm"],
+      "control_atom": "I travel with a checked bag only."
+    },
+    {
+      "id": "P04", "domain": "routine",
+      "atoms": ["My gym closes at 9pm.", "I leave the gym 30 minutes before it closes.", "I park in the north lot.", "I bring my own towel."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do I leave the gym?",
+      "canonical_answer": "8:30pm", "canonical_aliases": ["8:30 pm", "8:30", "830pm"],
+      "perturbed_atom": "My gym closes at 10pm.",
+      "perturbed_answer": "9:30pm", "perturbed_aliases": ["9:30 pm", "9:30", "930pm"],
+      "control_atom": "I park in the south lot."
+    },
+    {
+      "id": "P05", "domain": "social",
+      "atoms": ["Book club meets the first Monday of the month.", "I finish the book two days before book club.", "We meet at Ana's apartment.", "We rotate who picks the next book."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which weekday do I finish the book?",
+      "canonical_answer": "saturday", "canonical_aliases": [],
+      "perturbed_atom": "Book club meets the first Friday of the month.",
+      "perturbed_answer": "wednesday", "perturbed_aliases": [],
+      "control_atom": "We meet at Ravi's apartment."
+    },
+    {
+      "id": "P06", "domain": "commute",
+      "atoms": ["My train departs at 7:15am.", "I arrive at the platform 20 minutes before departure.", "I ride in the quiet car.", "I buy a monthly pass."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do I arrive at the platform?",
+      "canonical_answer": "6:55am", "canonical_aliases": ["6:55 am", "6:55"],
+      "perturbed_atom": "My train departs at 8:15am.",
+      "perturbed_answer": "7:55am", "perturbed_aliases": ["7:55 am", "7:55"],
+      "control_atom": "I ride in the front car."
+    },
+    {
+      "id": "P07", "domain": "routine",
+      "atoms": ["I walk the dog for 40 minutes each evening.", "The walk starts right after dinner, which is at 6pm.", "The dog is a border collie.", "We take the loop around the reservoir."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time does the evening walk end?",
+      "canonical_answer": "6:40pm", "canonical_aliases": ["6:40 pm", "6:40"],
+      "perturbed_atom": "I walk the dog for 50 minutes each evening.",
+      "perturbed_answer": "6:50pm", "perturbed_aliases": ["6:50 pm", "6:50"],
+      "control_atom": "The dog is a golden retriever."
+    },
+    {
+      "id": "P08", "domain": "learning",
+      "atoms": ["My Italian class is on Wednesdays.", "I do the homework the night before class.", "The class is held online.", "There are nine other students."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which night do I do the homework?",
+      "canonical_answer": "tuesday", "canonical_aliases": [],
+      "perturbed_atom": "My Italian class is on Saturdays.",
+      "perturbed_answer": "friday", "perturbed_aliases": [],
+      "control_atom": "The class is held downtown."
+    },
+    {
+      "id": "P09", "domain": "food",
+      "atoms": ["I meal prep on Sundays.", "I cook enough for the four days that follow.", "I use glass containers.", "I shop at the co-op."],
+      "lb_index": 1, "control_index": 2,
+      "question": "What is the last weekday my meal prep covers?",
+      "canonical_answer": "thursday", "canonical_aliases": [],
+      "perturbed_atom": "I cook enough for the three days that follow.",
+      "perturbed_answer": "wednesday", "perturbed_aliases": [],
+      "control_atom": "I use plastic containers."
+    },
+    {
+      "id": "P10", "domain": "family",
+      "atoms": ["My sister arrives on the 14th.", "She stays for six nights.", "She is flying into the north terminal.", "She is bringing the photo albums."],
+      "lb_index": 1, "control_index": 2,
+      "question": "On what date does my sister leave?",
+      "canonical_answer": "the 20th", "canonical_aliases": ["20th", "20"],
+      "perturbed_atom": "She stays for five nights.",
+      "perturbed_answer": "the 19th", "perturbed_aliases": ["19th", "19"],
+      "control_atom": "She is flying into the south terminal."
+    },
+    {
+      "id": "P11", "domain": "health",
+      "atoms": ["My dentist appointment is in March.", "I schedule the follow-up exactly six months later.", "The office validates parking.", "I always ask for the early slot."],
+      "lb_index": 0, "control_index": 2,
+      "question": "In which month is my follow-up appointment?",
+      "canonical_answer": "september", "canonical_aliases": [],
+      "perturbed_atom": "My dentist appointment is in April.",
+      "perturbed_answer": "october", "perturbed_aliases": [],
+      "control_atom": "The office does not validate parking."
+    },
+    {
+      "id": "P12", "domain": "housing",
+      "atoms": ["My lease ends on June 30.", "I give notice sixty days before the lease ends.", "The apartment is on the third floor.", "The building allows cats."],
+      "lb_index": 0, "control_index": 2,
+      "question": "In which month do I give notice?",
+      "canonical_answer": "may", "canonical_aliases": [],
+      "perturbed_atom": "My lease ends on July 30.",
+      "perturbed_answer": "june", "perturbed_aliases": [],
+      "control_atom": "The apartment is on the fifth floor."
+    },
+    {
+      "id": "P13", "domain": "routine",
+      "atoms": ["I wake at 5:30am on weekdays.", "I meditate for 20 minutes immediately after waking.", "I use a wool cushion.", "I keep the window cracked."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time does my meditation end?",
+      "canonical_answer": "5:50am", "canonical_aliases": ["5:50 am", "5:50"],
+      "perturbed_atom": "I wake at 6:00am on weekdays.",
+      "perturbed_answer": "6:20am", "perturbed_aliases": ["6:20 am", "6:20"],
+      "control_atom": "I use a cork cushion."
+    },
+    {
+      "id": "P14", "domain": "work",
+      "atoms": ["My deadline is Friday at noon.", "I submit drafts a full day before any deadline.", "The draft is 12 pages.", "My editor prefers plain text."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which weekday do I submit the draft?",
+      "canonical_answer": "thursday", "canonical_aliases": [],
+      "perturbed_atom": "My deadline is Monday at noon.",
+      "perturbed_answer": "sunday", "perturbed_aliases": [],
+      "control_atom": "The draft is 20 pages."
+    },
+    {
+      "id": "P15", "domain": "medication",
+      "atoms": ["I refill my prescription every 14 days.", "The last refill was on the 3rd.", "The pharmacy texts me when it is ready.", "I use the generic version."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On what date is my next refill?",
+      "canonical_answer": "the 17th", "canonical_aliases": ["17th", "17"],
+      "perturbed_atom": "I refill my prescription every 21 days.",
+      "perturbed_answer": "the 24th", "perturbed_aliases": ["24th", "24"],
+      "control_atom": "The pharmacy emails me when it is ready."
+    },
+    {
+      "id": "P16", "domain": "family",
+      "atoms": ["My daughter's recital is at 4pm.", "I leave work ninety minutes before any family event.", "The recital is at the community hall.", "She is playing second violin."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do I leave work?",
+      "canonical_answer": "2:30pm", "canonical_aliases": ["2:30 pm", "2:30"],
+      "perturbed_atom": "My daughter's recital is at 5pm.",
+      "perturbed_answer": "3:30pm", "perturbed_aliases": ["3:30 pm", "3:30"],
+      "control_atom": "The recital is at the school gym."
+    },
+    {
+      "id": "P17", "domain": "fitness",
+      "atoms": ["I swim on Tuesdays and Thursdays.", "I skip the sauna on the second swim day of each week.", "I swim 30 laps.", "The pool is 25 meters."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which weekday do I skip the sauna?",
+      "canonical_answer": "thursday", "canonical_aliases": [],
+      "perturbed_atom": "I swim on Mondays and Wednesdays.",
+      "perturbed_answer": "wednesday", "perturbed_aliases": [],
+      "control_atom": "I swim 40 laps."
+    },
+    {
+      "id": "P18", "domain": "errands",
+      "atoms": ["The farmers market runs from 8am to 1pm.", "I go one hour before it closes.", "I bring a canvas tote.", "I always buy eggs first."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do I arrive at the farmers market?",
+      "canonical_answer": "12pm", "canonical_aliases": ["noon", "12:00pm", "12 pm", "12:00 pm"],
+      "perturbed_atom": "The farmers market runs from 8am to 2pm.",
+      "perturbed_answer": "1pm", "perturbed_aliases": ["1:00pm", "1 pm", "1:00 pm"],
+      "control_atom": "I bring a wicker basket."
+    },
+    {
+      "id": "P19", "domain": "work",
+      "atoms": ["My coworker Dana handles Friday deploys.", "I review whatever Dana deploys on the next business day.", "Dana sits on the fourth floor.", "We use a shared runbook."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which weekday do I do the review?",
+      "canonical_answer": "monday", "canonical_aliases": [],
+      "perturbed_atom": "My coworker Dana handles Tuesday deploys.",
+      "perturbed_answer": "wednesday", "perturbed_aliases": [],
+      "control_atom": "Dana sits on the sixth floor."
+    },
+    {
+      "id": "P20", "domain": "learning",
+      "atoms": ["I started the course in week 2.", "The course runs eight weeks from when I started.", "The course is asynchronous.", "There is a final project."],
+      "lb_index": 0, "control_index": 2,
+      "question": "In which week does the course end for me?",
+      "canonical_answer": "week 10", "canonical_aliases": ["10", "week ten"],
+      "perturbed_atom": "I started the course in week 4.",
+      "perturbed_answer": "week 12", "perturbed_aliases": ["12", "week twelve"],
+      "control_atom": "The course is live."
+    },
+    {
+      "id": "P21", "domain": "maintenance",
+      "atoms": ["My car service is due at 60,000 miles.", "I book the appointment 500 miles early.", "The car is a hatchback.", "The garage opens at 7am."],
+      "lb_index": 0, "control_index": 2,
+      "question": "At what mileage do I book the appointment?",
+      "canonical_answer": "59,500", "canonical_aliases": ["59500", "59,500 miles", "59500 miles"],
+      "perturbed_atom": "My car service is due at 80,000 miles.",
+      "perturbed_answer": "79,500", "perturbed_aliases": ["79500", "79,500 miles", "79500 miles"],
+      "control_atom": "The car is a sedan."
+    },
+    {
+      "id": "P22", "domain": "finance",
+      "atoms": ["Rent is due on the 10th.", "I transfer the money three days before rent is due.", "I pay by bank transfer.", "The landlord sends a receipt."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On what date do I transfer the money?",
+      "canonical_answer": "the 7th", "canonical_aliases": ["7th", "7"],
+      "perturbed_atom": "Rent is due on the 15th.",
+      "perturbed_answer": "the 12th", "perturbed_aliases": ["12th", "12"],
+      "control_atom": "I pay by check."
+    },
+    {
+      "id": "P23", "domain": "travel",
+      "atoms": ["My flight is at 9am on Saturday.", "The check-in window opens 24 hours before the flight.", "I fly economy.", "I always pick a window seat."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which weekday does my check-in window open?",
+      "canonical_answer": "friday", "canonical_aliases": [],
+      "perturbed_atom": "My flight is at 9am on Sunday.",
+      "perturbed_answer": "saturday", "perturbed_aliases": [],
+      "control_atom": "I fly premium economy."
+    },
+    {
+      "id": "P24", "domain": "routine",
+      "atoms": ["My bedtime is 10:30pm.", "I journal for 15 minutes ending right at bedtime.", "I write in a leather notebook.", "I use a fountain pen."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do I start journaling?",
+      "canonical_answer": "10:15pm", "canonical_aliases": ["10:15 pm", "10:15"],
+      "perturbed_atom": "My bedtime is 11:00pm.",
+      "perturbed_answer": "10:45pm", "perturbed_aliases": ["10:45 pm", "10:45"],
+      "control_atom": "I write in a linen notebook."
+    },
+    {
+      "id": "P25", "domain": "family",
+      "atoms": ["My mother's birthday is the 8th.", "I mail her card five days ahead.", "She prefers handwritten cards.", "I always include a photo."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On what date do I mail the card?",
+      "canonical_answer": "the 3rd", "canonical_aliases": ["3rd", "3"],
+      "perturbed_atom": "My mother's birthday is the 12th.",
+      "perturbed_answer": "the 7th", "perturbed_aliases": ["7th", "7"],
+      "control_atom": "She prefers printed cards."
+    },
+    {
+      "id": "P26", "domain": "work",
+      "atoms": ["Standup is at 9:30am.", "I prepare my notes 15 minutes before standup.", "Standup runs 10 minutes.", "We meet in the small room."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do I prepare my notes?",
+      "canonical_answer": "9:15am", "canonical_aliases": ["9:15 am", "9:15"],
+      "perturbed_atom": "Standup is at 10:00am.",
+      "perturbed_answer": "9:45am", "perturbed_aliases": ["9:45 am", "9:45"],
+      "control_atom": "Standup runs 20 minutes."
+    },
+    {
+      "id": "P27", "domain": "health",
+      "atoms": ["I fast for 16 hours starting at 8pm.", "I break the fast with eggs.", "I drink black coffee while fasting.", "I track it in an app."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time does my fast end?",
+      "canonical_answer": "12pm", "canonical_aliases": ["noon", "12:00pm", "12 pm", "12:00 pm"],
+      "perturbed_atom": "I fast for 14 hours starting at 8pm.",
+      "perturbed_answer": "10am", "perturbed_aliases": ["10:00am", "10 am", "10:00 am"],
+      "control_atom": "I drink only water while fasting."
+    },
+    {
+      "id": "P28", "domain": "errands",
+      "atoms": ["The library holds books for 7 days.", "My hold started on the 5th.", "The library is on Elm Street.", "I have three books waiting."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What is the last date I can pick up the books?",
+      "canonical_answer": "the 12th", "canonical_aliases": ["12th", "12"],
+      "perturbed_atom": "The library holds books for 10 days.",
+      "perturbed_answer": "the 15th", "perturbed_aliases": ["15th", "15"],
+      "control_atom": "The library is on Cedar Street."
+    },
+    {
+      "id": "P29", "domain": "work",
+      "atoms": ["My performance review is in Q3.", "I gather feedback the quarter before the review.", "My reviewer is the department head.", "The form is four pages."],
+      "lb_index": 0, "control_index": 2,
+      "question": "In which quarter do I gather feedback?",
+      "canonical_answer": "q2", "canonical_aliases": ["quarter 2", "second quarter"],
+      "perturbed_atom": "My performance review is in Q4.",
+      "perturbed_answer": "q3", "perturbed_aliases": ["quarter 3", "third quarter"],
+      "control_atom": "My reviewer is the team lead."
+    },
+    {
+      "id": "P30", "domain": "commute",
+      "atoms": ["I take the 8:40 ferry.", "The crossing takes 35 minutes.", "I sit on the upper deck.", "I buy coffee on board."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do I arrive on the other side?",
+      "canonical_answer": "9:15", "canonical_aliases": ["9:15am", "9:15 am"],
+      "perturbed_atom": "I take the 9:40 ferry.",
+      "perturbed_answer": "10:15", "perturbed_aliases": ["10:15am", "10:15 am"],
+      "control_atom": "I sit on the lower deck."
+    },
+    {
+      "id": "P31", "domain": "admin",
+      "atoms": ["My visa expires in November.", "I apply for renewal four months before expiry.", "The application is filed online.", "I need two photographs."],
+      "lb_index": 0, "control_index": 2,
+      "question": "In which month do I apply for renewal?",
+      "canonical_answer": "july", "canonical_aliases": [],
+      "perturbed_atom": "My visa expires in September.",
+      "perturbed_answer": "may", "perturbed_aliases": [],
+      "control_atom": "The application is filed by mail."
+    },
+    {
+      "id": "P32", "domain": "fitness",
+      "atoms": ["I run 5 miles on Saturdays.", "My long run is double my Saturday distance.", "I run on trails.", "I use a chest strap monitor."],
+      "lb_index": 0, "control_index": 2,
+      "question": "How far is my long run?",
+      "canonical_answer": "10 miles", "canonical_aliases": ["10", "ten miles"],
+      "perturbed_atom": "I run 6 miles on Saturdays.",
+      "perturbed_answer": "12 miles", "perturbed_aliases": ["12", "twelve miles"],
+      "control_atom": "I run on pavement."
+    },
+    {
+      "id": "P33", "domain": "social",
+      "atoms": ["The workshop is on the 22nd.", "Registration closes a week before the workshop.", "The workshop costs 80 dollars.", "Lunch is included."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On what date does registration close?",
+      "canonical_answer": "the 15th", "canonical_aliases": ["15th", "15"],
+      "perturbed_atom": "The workshop is on the 30th.",
+      "perturbed_answer": "the 23rd", "perturbed_aliases": ["23rd", "23"],
+      "control_atom": "The workshop costs 120 dollars."
+    },
+    {
+      "id": "P34", "domain": "food",
+      "atoms": ["My sourdough starter needs feeding every 12 hours.", "I fed it at 7am.", "The starter lives in a glass jar.", "I use rye flour."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time is the next feeding?",
+      "canonical_answer": "7pm", "canonical_aliases": ["7:00pm", "7 pm", "7:00 pm"],
+      "perturbed_atom": "My sourdough starter needs feeding every 8 hours.",
+      "perturbed_answer": "3pm", "perturbed_aliases": ["3:00pm", "3 pm", "3:00 pm"],
+      "control_atom": "The starter lives in a ceramic crock."
+    },
+    {
+      "id": "P35", "domain": "health",
+      "atoms": ["I have physical therapy on Monday and Thursday.", "I ice my knee the evening of each session.", "The clinic is a ten-minute drive.", "My therapist is named Priya."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which two evenings do I ice my knee?",
+      "canonical_answer": "monday and thursday", "canonical_aliases": ["thursday and monday", "monday, thursday"],
+      "perturbed_atom": "I have physical therapy on Tuesday and Friday.",
+      "perturbed_answer": "tuesday and friday", "perturbed_aliases": ["friday and tuesday", "tuesday, friday"],
+      "control_atom": "The clinic is a twenty-minute drive."
+    },
+    {
+      "id": "P36", "domain": "work",
+      "atoms": ["My podcast episode drops on the 20th.", "I record two weeks before release.", "The episode runs 45 minutes.", "I edit it myself."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On what date do I record?",
+      "canonical_answer": "the 6th", "canonical_aliases": ["6th", "6"],
+      "perturbed_atom": "My podcast episode drops on the 25th.",
+      "perturbed_answer": "the 11th", "perturbed_aliases": ["11th", "11"],
+      "control_atom": "The episode runs 60 minutes."
+    },
+    {
+      "id": "P37", "domain": "social",
+      "atoms": ["The conference keynote is at 10am.", "Doors open an hour and a half before the keynote.", "The keynote is in Hall B.", "Badges are picked up at the desk."],
+      "lb_index": 0, "control_index": 2,
+      "question": "What time do the doors open?",
+      "canonical_answer": "8:30am", "canonical_aliases": ["8:30 am", "8:30"],
+      "perturbed_atom": "The conference keynote is at 11am.",
+      "perturbed_answer": "9:30am", "perturbed_aliases": ["9:30 am", "9:30"],
+      "control_atom": "The keynote is in Hall D."
+    },
+    {
+      "id": "P38", "domain": "routine",
+      "atoms": ["I water the plants every third day.", "I last watered on the 9th.", "I use filtered water.", "The ferns are by the window."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On what date do I next water the plants?",
+      "canonical_answer": "the 12th", "canonical_aliases": ["12th", "12"],
+      "perturbed_atom": "I water the plants every fourth day.",
+      "perturbed_answer": "the 13th", "perturbed_aliases": ["13th", "13"],
+      "control_atom": "I use tap water."
+    },
+    {
+      "id": "P39", "domain": "finance",
+      "atoms": ["My credit card statement closes on the 18th.", "I pay the balance five days after the statement closes.", "The card earns travel points.", "The limit was raised last year."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On what date do I pay the balance?",
+      "canonical_answer": "the 23rd", "canonical_aliases": ["23rd", "23"],
+      "perturbed_atom": "My credit card statement closes on the 20th.",
+      "perturbed_answer": "the 25th", "perturbed_aliases": ["25th", "25"],
+      "control_atom": "The card earns cash back."
+    },
+    {
+      "id": "P40", "domain": "work",
+      "atoms": ["I teach on Mondays and Wednesdays.", "Office hours are the day after each teaching day.", "My office is room 214.", "I hold them for one hour."],
+      "lb_index": 0, "control_index": 2,
+      "question": "On which two weekdays are my office hours?",
+      "canonical_answer": "tuesday and thursday", "canonical_aliases": ["thursday and tuesday", "tuesday, thursday"],
+      "perturbed_atom": "I teach on Tuesdays and Thursdays.",
+      "perturbed_answer": "wednesday and friday", "perturbed_aliases": ["friday and wednesday", "wednesday, friday"],
+      "control_atom": "My office is room 318."
+    }
+  ]
+}
