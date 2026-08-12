@@ -1,0 +1,31 @@
+  25/678  0.47/s  errors 0
+  50/678  0.47/s  errors 0
+  75/678  0.47/s  errors 0
+  100/678  0.47/s  errors 0
+  125/678  0.50/s  errors 0
+  150/678  0.53/s  errors 0
+  175/678  0.55/s  errors 0
+  200/678  0.57/s  errors 0
+  225/678  0.58/s  errors 0
+  250/678  0.59/s  errors 0
+  275/678  0.60/s  errors 0
+  300/678  0.61/s  errors 0
+  325/678  0.62/s  errors 0
+  350/678  0.62/s  errors 0
+  375/678  0.63/s  errors 0
+  400/678  0.64/s  errors 0
+  425/678  0.64/s  errors 0
+  450/678  0.64/s  errors 0
+  475/678  0.64/s  errors 0
+  500/678  0.65/s  errors 0
+  525/678  0.65/s  errors 0
+  550/678  0.65/s  errors 0
+  575/678  0.66/s  errors 0
+  600/678  0.66/s  errors 0
+  625/678  0.66/s  errors 0
+  650/678  0.67/s  errors 0
+  675/678  0.67/s  errors 0
+
+ollama-qwen3_32b: 678 tasks, 0 transport errors, 1011s
+raw:  runs/raw-ollama-qwen3_32b.jsonl
+run:  runs/run-ollama-qwen3_32b.json

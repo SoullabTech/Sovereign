@@ -126,7 +126,16 @@ export function score(run) {
 
   /* ---------------- Domain B ---------------- */
   const bAns = {};
-  for (const r of run.domain_b ?? []) bAns[`${r.triple_id}::${r.role}`] = norm(r.tokens);
+  const bOutOfVocab = [];
+  const VOCAB = new Set(B.change_vocabulary);
+  for (const r of run.domain_b ?? []) {
+    const toks = norm(r.tokens);
+    // Out-of-vocabulary tokens are RECORDED, never coerced or dropped. An answer
+    // outside the closed vocabulary still scores as incorrect — silently mapping it
+    // to the nearest legal token would be model-specific repair.
+    for (const t of toks) if (!VOCAB.has(t)) bOutOfVocab.push(`${r.triple_id}::${r.role}=${t}`);
+    bAns[`${r.triple_id}::${r.role}`] = toks;
+  }
 
   const b = {
     step_accuracy: tally(),
@@ -199,6 +208,8 @@ export function score(run) {
     undefined_case_handling: undefinedHandling,
     unresolved_answers: unresolved.slice(0, 20),
     unresolved_count: unresolved.length,
+    out_of_vocab_b: bOutOfVocab.slice(0, 20),
+    out_of_vocab_b_count: bOutOfVocab.length,
     corpus: { domain_a_items: A.counts.items, domain_b_triples: B.counts.triples },
   };
 }
@@ -276,6 +287,6 @@ else {
     for (const [k, v] of Object.entries(result.domain_b)) if (v && typeof v === 'object') line(k, v);
     console.log(`  steps-right / composite-wrong  ${result.domain_b.steps_correct_composite_wrong}  (teeth available ${result.domain_b.teeth_available})`);
     console.log(`UNDEFINED HANDLING  ${result.undefined_case_handling.status} — ${result.undefined_case_handling.pairs_probed}/${result.undefined_case_handling.pairs_recorded} probed`);
-    if (result.unresolved_count) console.log(`UNRESOLVED ANSWERS  ${result.unresolved_count}`);
+    console.log(`UNRESOLVED (A)  ${result.unresolved_count}   OUT-OF-VOCAB (B)  ${result.out_of_vocab_b_count}`);
   }
 }

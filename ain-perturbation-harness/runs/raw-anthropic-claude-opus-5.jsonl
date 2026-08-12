@@ -1,0 +1,678 @@
+{"id":"A01::A-P2","domain":"a","error":null,"raw":"{\"P1\": \"Yusuf\", \"P2\": \"Ines\", \"P3\": \"Ines\"}"}
+{"id":"A01::A-P1","domain":"a","error":null,"raw":"{\"P1\": \"Lena\", \"P2\": \"Kwame\", \"P3\": \"Kwame\"}"}
+{"id":"A01::baseline","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-P4","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-P3","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-P7","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-P6","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-P8","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-P1+P8","domain":"a","error":null,"raw":"{\"P1\": \"Lena\", \"P2\": \"Kwame\", \"P3\": \"Kwame\"}"}
+{"id":"A01::A-S1","domain":"a","error":null,"raw":"{\"P1\": \"Marcus\", \"P2\": \"Devi\", \"P3\": \"Devi\"}"}
+{"id":"A01::A-S2","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Devi\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-S1x2","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-S3","domain":"a","error":null,"raw":"{\"P1\": \"Marcus\", \"P2\": \"Marcus\", \"P3\": \"Devi\"}"}
+{"id":"A01::A-N0.0","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-N0.1","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-N0.3","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A01::A-N0.2","domain":"a","error":null,"raw":"{\"P1\": \"Devi\", \"P2\": \"Marcus\", \"P3\": \"Marcus\"}"}
+{"id":"A02::A-P1","domain":"a","error":null,"raw":"{\"P1\": \"Petro\", \"P2\": \"Lena\", \"P3\": \"Lena\"}"}
+{"id":"A02::baseline","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-P3","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-P2","domain":"a","error":null,"raw":"{\"P1\": \"Petro\", \"P2\": \"Roan\", \"P3\": \"Roan\"}"}
+{"id":"A02::A-P4","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-P6","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-P8","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-P7","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-P1+P8","domain":"a","error":null,"raw":"{\"P1\": \"Petro\", \"P2\": \"Lena\", \"P3\": \"Lena\"}"}
+{"id":"A02::A-S2","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Tomas\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-S3","domain":"a","error":null,"raw":"{\"P1\": \"Priya\", \"P2\": \"Priya\", \"P3\": \"Tomas\"}"}
+{"id":"A02::A-S1","domain":"a","error":null,"raw":"{\"P1\": \"Priya\", \"P2\": \"Tomas\", \"P3\": \"Tomas\"}"}
+{"id":"A02::A-S1x2","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-N0.1","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-N0.0","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-N0.2","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A02::A-N0.3","domain":"a","error":null,"raw":"{\"P1\": \"Tomas\", \"P2\": \"Priya\", \"P3\": \"Priya\"}"}
+{"id":"A03::A-P1","domain":"a","error":null,"raw":"{\"P1\": \"Ines\", \"P2\": \"Wren\", \"P3\": \"Wren\"}"}
+{"id":"A03::A-P2","domain":"a","error":null,"raw":"{\"P1\": \"Ines\", \"P2\": \"Petro\", \"P3\": \"Petro\"}"}
+{"id":"A03::A-P3","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-P4","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::baseline","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-P6","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-P7","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-P8","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-P1+P8","domain":"a","error":null,"raw":"{\"P1\": \"Ines\", \"P2\": \"Wren\", \"P3\": \"Wren\"}"}
+{"id":"A03::A-S1","domain":"a","error":null,"raw":"{\"P1\": \"Eli\", \"P2\": \"Ruth\", \"P3\": \"Ruth\"}"}
+{"id":"A03::A-S3","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Eli\", \"P3\": \"Ruth\"}"}
+{"id":"A03::A-S2","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Ruth\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-N0.0","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-N0.1","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-S1x2","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-N0.3","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A03::A-N0.2","domain":"a","error":null,"raw":"{\"P1\": \"Ruth\", \"P2\": \"Eli\", \"P3\": \"Eli\"}"}
+{"id":"A04::baseline","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-P3","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-P1","domain":"a","error":null,"raw":"{\"P1\": \"Yusuf\", \"P2\": \"Ines\", \"P3\": \"Ines\"}"}
+{"id":"A04::A-P2","domain":"a","error":null,"raw":"{\"P1\": \"Yusuf\", \"P2\": \"Ari\", \"P3\": \"Ari\"}"}
+{"id":"A04::A-P6","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-P4","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-P7","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-S1","domain":"a","error":null,"raw":"{\"P1\": \"Nadia\", \"P2\": \"Owen\", \"P3\": \"Owen\"}"}
+{"id":"A04::A-P8","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-S3","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-S2","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Owen\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-P1+P8","domain":"a","error":null,"raw":"{\"P1\": \"Yusuf\", \"P2\": \"Ines\", \"P3\": \"Ines\"}"}
+{"id":"A04::A-S1x2","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-N0.0","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-N0.1","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-N0.2","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A04::A-N0.3","domain":"a","error":null,"raw":"{\"P1\": \"Owen\", \"P2\": \"Nadia\", \"P3\": \"Nadia\"}"}
+{"id":"A05::baseline","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P1","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Mira\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P4","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P6","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P2","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Mira\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P3","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P1+P8","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Mira\", \"P3\": \"neither\"}"}
+{"id":"A05::A-S1","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Sam\", \"P3\": \"neither\"}"}
+{"id":"A05::A-S3","domain":"a","error":null,"raw":"{\"P1\": \"Grace\", \"P2\": \"Grace\", \"P3\": \"Sam\"}"}
+{"id":"A05::A-S2","domain":"a","error":null,"raw":"{\"P1\": \"Sam\", \"P2\": \"Sam\", \"P3\": \"Grace\"}"}
+{"id":"A05::A-S1x2","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P7","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-N0.1","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-N0.0","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-N0.2","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-P8","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A05::A-N0.3","domain":"a","error":null,"raw":"{\"P1\": \"neither\", \"P2\": \"Grace\", \"P3\": \"neither\"}"}
+{"id":"A06::baseline","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-P1","domain":"a","error":null,"raw":"{\"P1\": \"Kwame\", \"P2\": \"Petro\", \"P3\": \"Petro\"}"}
+{"id":"A06::A-P2","domain":"a","error":null,"raw":"{\"P1\": \"Ari\", \"P2\": \"Mira\", \"P3\": \"Mira\"}"}
+{"id":"A06::A-P3","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-P4","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-P6","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-P7","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-P1+P8","domain":"a","error":null,"raw":"{\"P1\": \"Kwame\", \"P2\": \"Petro\", \"P3\": \"Petro\"}"}
+{"id":"A06::A-S1","domain":"a","error":null,"raw":"{\"P1\": \"Halim\", \"P2\": \"Jonah\", \"P3\": \"Jonah\"}"}
+{"id":"A06::A-S3","domain":"a","error":null,"raw":"{\"P1\": \"Halim\", \"P2\": \"Halim\", \"P3\": \"Jonah\"}"}
+{"id":"A06::A-S2","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Jonah\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-S1x2","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-P8","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-N0.0","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-N0.2","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A06::A-N0.1","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A01::R.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::R.R::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A01::R.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::A-N0.3","domain":"a","error":null,"raw":"{\"P1\": \"Jonah\", \"P2\": \"Halim\", \"P3\": \"Halim\"}"}
+{"id":"A01::R.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::R.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::R.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A01::R.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::R.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::R.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::R.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A01::R.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::R.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::R.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::R.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::R.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A01::R.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::R.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::R.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A01::V.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::V.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A01::V.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::V.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::V.V::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A01::V.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::V.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::V.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::V.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"act_flipped\"]}"}
+{"id":"A01::V.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::V.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::V.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A01::V.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::V.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::V.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::V.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::V.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::V.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::A.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::A.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::A.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A01::A.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::A.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::A.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::A.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::A.A::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A01::A.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::A.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A01::A.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::A.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::A.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::A.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::A.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::A.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A01::A.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::A.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A01::T.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A01::T.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::T.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::T.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::T.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A01::T.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::T.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::T.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_recipient\"]}"}
+{"id":"A01::T.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::T.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::T.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::T.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A01::T.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\", \"witness_bound_to_agent\"]}"}
+{"id":"A01::W.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::W.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"witness_bound_to_agent\"]}"}
+{"id":"A01::T.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::W.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A01::W.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::T.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::W.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A01::W.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::W.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::W.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::W.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::W.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::W.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_agent\"]}"}
+{"id":"A01::W.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::W.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::W.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::D.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::D.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A01::D.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::W.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\", \"witness_bound_to_recipient\"]}"}
+{"id":"A01::D.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A01::D.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::D.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A01::D.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::D.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A01::D.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\", \"witness_bound_to_agent\"]}"}
+{"id":"A01::D.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A01::D.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::R.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::R.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A01::D.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::R.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::R.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A02::R.R::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A02::R.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::R.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A02::R.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::R.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::R.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A02::R.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A02::R.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::R.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::R.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::R.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::R.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::R.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A02::R.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::V.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A02::V.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::V.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::V.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::V.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::V.V::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A02::V.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::V.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A02::V.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::V.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A02::V.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A02::V.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::V.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::V.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::V.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::V.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::V.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::A.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::V.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::A.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::A.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A02::A.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::A.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::A.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::A.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::A.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::A.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A02::A.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A02::A.A::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A02::A.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::A.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::A.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::A.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::A.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::A.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A02::T.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::A.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::T.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::T.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::T.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A02::T.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::T.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::T.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A02::T.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::T.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::T.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::T.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_recipient\"]}"}
+{"id":"A02::T.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::T.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::T.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\"]}"}
+{"id":"A02::T.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A02::W.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::W.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"witness_bound_to_agent\"]}"}
+{"id":"A02::W.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::W.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A02::W.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_agent\"]}"}
+{"id":"A02::W.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::W.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::W.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::D.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::D.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A02::D.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A02::D.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A02::D.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::D.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A02::D.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::D.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A02::D.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A02::D.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\"]}"}
+{"id":"A02::D.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A02::D.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::R.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::R.R::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A03::R.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::R.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::R.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::R.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::R.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A03::R.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::R.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A03::R.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::R.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A03::R.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::R.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::R.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::R.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::R.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A03::V.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::R.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::V.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A03::R.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::V.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::V.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::V.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::V.V::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A03::V.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::V.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::V.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A03::V.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A03::V.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::V.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::V.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::V.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::V.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::V.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::A.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::A.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::V.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::V.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::A.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::A.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A03::A.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::A.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::A.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::A.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A03::A.A::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A03::A.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::A.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::A.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A03::A.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::A.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::A.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::A.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::A.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::T.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::T.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::A.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A03::T.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A03::T.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::T.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::T.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A03::T.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::T.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A03::T.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::T.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::T.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_recipient\"]}"}
+{"id":"A03::T.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::T.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::T.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\", \"witness_bound_to_agent\"]}"}
+{"id":"A03::W.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"witness_bound_to_agent\"]}"}
+{"id":"A03::T.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A03::W.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A03::W.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::W.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_agent\"]}"}
+{"id":"A03::W.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::W.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::W.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::D.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A03::D.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::D.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A03::D.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A03::D.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A03::D.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::D.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A03::D.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A03::D.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\", \"witness_bound_to_agent\"]}"}
+{"id":"A03::D.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::D.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A03::D.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::R.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::R.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::R.R::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A04::R.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::R.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A04::R.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::R.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::R.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::R.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A04::R.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::R.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A04::R.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::R.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A04::R.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::R.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::R.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::R.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::V.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::R.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A04::V.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::V.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A04::V.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::V.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::V.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::V.V::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A04::V.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::V.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A04::V.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::V.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::V.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::V.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::V.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::V.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::V.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::A.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::V.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::V.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::A.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::A.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A04::A.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::A.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::A.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::A.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::A.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A04::A.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::A.A::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A04::A.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::A.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::A.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::A.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::A.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::A.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::A.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::A.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A04::T.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::T.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A04::T.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::T.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::T.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_recipient\"]}"}
+{"id":"A04::T.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::T.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::W.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::W.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A04::W.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::T.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A04::W.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::W.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::W.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_agent\"]}"}
+{"id":"A04::W.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::D.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::W.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::D.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::D.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A04::D.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::D.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A04::D.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A04::D.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A04::D.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A04::D.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::D.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A04::D.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\"]}"}
+{"id":"A05::R.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A04::D.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::R.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::R.R::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A05::R.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::R.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A05::R.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::R.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A05::R.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::R.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::R.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::R.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::R.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A05::R.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::R.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::R.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::R.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::R.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::R.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A05::V.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::V.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::V.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::V.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::V.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A05::V.V::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A05::V.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A05::V.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::V.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::V.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::V.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A05::V.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A05::V.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::V.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::V.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::V.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::V.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::V.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::A.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::A.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::A.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.A::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A05::A.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A05::A.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A05::A.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::A.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::A.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::A.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::A.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\", \"third_party_added\"]}"}
+{"id":"A05::T.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::T.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::T.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::T.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A05::T.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A05::T.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::T.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::T.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::T.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_recipient\"]}"}
+{"id":"A05::T.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::T.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::T.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A05::T.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::T.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\"]}"}
+{"id":"A05::W.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A05::T.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A05::W.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A05::W.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"witness_bound_to_agent\"]}"}
+{"id":"A05::W.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_agent\"]}"}
+{"id":"A05::W.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::W.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::W.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::D.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A05::W.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::D.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::D.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A05::D.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::D.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::D.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\", \"third_party_added\"]}"}
+{"id":"A05::D.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A05::D.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A05::D.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\"]}"}
+{"id":"A05::D.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A05::D.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A05::D.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::R.R::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A06::R.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::R.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::R.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::R.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A06::R.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::R.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::R.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::R.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A06::R.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::R.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A06::R.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::R.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::R.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::R.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::R.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::R.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::V.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_flipped\"]}"}
+{"id":"A06::V.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::V.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::V.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::R.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A06::V.V::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A06::V.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::V.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A06::V.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::V.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::V.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::V.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A06::V.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::V.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::V.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::V.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::V.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::V.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::V.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::A.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::A.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::A.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::A.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"act_flipped\"]}"}
+{"id":"A06::A.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::A.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_flipped\"]}"}
+{"id":"A06::A.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::A.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::A.A::composite","domain":"b","error":null,"raw":"{\"changed\": []}"}
+{"id":"A06::A.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::A.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::A.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::A.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A06::A.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::A.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::A.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::A.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A06::A.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::T.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::T.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::T.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::T.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\"]}"}
+{"id":"A06::T.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\"]}"}
+{"id":"A06::T.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::T.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::T.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::T.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\"]}"}
+{"id":"A06::T.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::T.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::T.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::T.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"witness_bound_to_recipient\"]}"}
+{"id":"A06::T.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"response_removed\"]}"}
+{"id":"A06::T.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::W.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.V::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"witness_bound_to_agent\"]}"}
+{"id":"A06::W.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"third_party_added\", \"witness_bound_to_agent\"]}"}
+{"id":"A06::W.V::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\"]}"}
+{"id":"A06::W.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.V::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::W.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.D::step1","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::W.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::W.D::step2","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::W.D::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::D.R::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::D.R::step2","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\"]}"}
+{"id":"A06::D.A::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::D.R::composite","domain":"b","error":null,"raw":"{\"changed\": [\"roles_reversed\", \"response_removed\"]}"}
+{"id":"A06::D.A::composite","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\", \"response_removed\"]}"}
+{"id":"A06::D.T::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\"]}"}
+{"id":"A06::D.T::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::D.W::step1","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\"]}"}
+{"id":"A06::D.A::step2","domain":"b","error":null,"raw":"{\"changed\": [\"act_flipped\"]}"}
+{"id":"A06::D.W::step2","domain":"b","error":null,"raw":"{\"changed\": [\"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::D.W::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\", \"witness_bound_to_recipient\"]}"}
+{"id":"A06::D.T::composite","domain":"b","error":null,"raw":"{\"changed\": [\"response_removed\", \"third_party_added\"]}"}

@@ -1,0 +1,5120 @@
+{
+  "provider": "ollama",
+  "model": "qwen3:32b",
+  "corpus_a_items": 102,
+  "corpus_b_triples": 192,
+  "tasks_attempted": 678,
+  "transport_errors": 0,
+  "elapsed_s": 1011,
+  "domain_a": [
+    {
+      "item_id": "A01::A-P2",
+      "answers": {
+        "P1": "Yusuf",
+        "P2": "Ines",
+        "P3": "Ines"
+      }
+    },
+    {
+      "item_id": "A01::A-P1",
+      "answers": {
+        "P1": "Lena",
+        "P2": "Kwame",
+        "P3": "Kwame"
+      }
+    },
+    {
+      "item_id": "A01::baseline",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-P3",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-P4",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-P6",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-P7",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-P8",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-P1+P8",
+      "answers": {
+        "P1": "Lena",
+        "P2": "Kwame",
+        "P3": "Kwame"
+      }
+    },
+    {
+      "item_id": "A01::A-S1",
+      "answers": {
+        "P1": "Marcus",
+        "P2": "Devi",
+        "P3": "Devi"
+      }
+    },
+    {
+      "item_id": "A01::A-S2",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Devi",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-S3",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Devi",
+        "P3": "Devi"
+      }
+    },
+    {
+      "item_id": "A01::A-S1x2",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-N0.0",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-N0.1",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-N0.2",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A01::A-N0.3",
+      "answers": {
+        "P1": "Devi",
+        "P2": "Marcus",
+        "P3": "Marcus"
+      }
+    },
+    {
+      "item_id": "A02::baseline",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-P1",
+      "answers": {
+        "P1": "Petro",
+        "P2": "neither",
+        "P3": "Lena"
+      }
+    },
+    {
+      "item_id": "A02::A-P2",
+      "answers": {
+        "P1": "Petro",
+        "P2": "Petro",
+        "P3": "Roan"
+      }
+    },
+    {
+      "item_id": "A02::A-P3",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-P4",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-P6",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-P7",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-P8",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-P1+P8",
+      "answers": {
+        "P1": "Petro",
+        "P2": "Lena",
+        "P3": "Lena"
+      }
+    },
+    {
+      "item_id": "A02::A-S1",
+      "answers": {
+        "P1": "Priya",
+        "P2": "Tomas",
+        "P3": "Tomas"
+      }
+    },
+    {
+      "item_id": "A02::A-S2",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Tomas",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-S3",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Tomas"
+      }
+    },
+    {
+      "item_id": "A02::A-S1x2",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-N0.0",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-N0.1",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-N0.2",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A02::A-N0.3",
+      "answers": {
+        "P1": "Tomas",
+        "P2": "Priya",
+        "P3": "Priya"
+      }
+    },
+    {
+      "item_id": "A03::baseline",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-P1",
+      "answers": {
+        "P1": "Ines",
+        "P2": "Wren",
+        "P3": "Wren"
+      }
+    },
+    {
+      "item_id": "A03::A-P2",
+      "answers": {
+        "P1": "Ines",
+        "P2": "Petro",
+        "P3": "Petro"
+      }
+    },
+    {
+      "item_id": "A03::A-P3",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-P4",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-P6",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-P7",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-P8",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-P1+P8",
+      "answers": {
+        "P1": "Ines",
+        "P2": "Wren",
+        "P3": "Wren"
+      }
+    },
+    {
+      "item_id": "A03::A-S1",
+      "answers": {
+        "P1": "Eli",
+        "P2": "Ruth",
+        "P3": "Ruth"
+      }
+    },
+    {
+      "item_id": "A03::A-S2",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-S3",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Ruth"
+      }
+    },
+    {
+      "item_id": "A03::A-S1x2",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-N0.0",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-N0.1",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-N0.2",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A03::A-N0.3",
+      "answers": {
+        "P1": "Ruth",
+        "P2": "Eli",
+        "P3": "Eli"
+      }
+    },
+    {
+      "item_id": "A04::baseline",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-P1",
+      "answers": {
+        "P1": "Yusuf",
+        "P2": "Ines",
+        "P3": "Ines"
+      }
+    },
+    {
+      "item_id": "A04::A-P2",
+      "answers": {
+        "P1": "Yusuf",
+        "P2": "Ari",
+        "P3": "Ari"
+      }
+    },
+    {
+      "item_id": "A04::A-P3",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-P4",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-P6",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-P7",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-P8",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-P1+P8",
+      "answers": {
+        "P1": "Yusuf",
+        "P2": "Ines",
+        "P3": "Ines"
+      }
+    },
+    {
+      "item_id": "A04::A-S1",
+      "answers": {
+        "P1": "Nadia",
+        "P2": "Owen",
+        "P3": "Owen"
+      }
+    },
+    {
+      "item_id": "A04::A-S2",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-S3",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Owen"
+      }
+    },
+    {
+      "item_id": "A04::A-S1x2",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-N0.0",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-N0.1",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-N0.2",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A04::A-N0.3",
+      "answers": {
+        "P1": "Owen",
+        "P2": "Nadia",
+        "P3": "Nadia"
+      }
+    },
+    {
+      "item_id": "A05::baseline",
+      "answers": {
+        "P1": "neither",
+        "P2": "Grace",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A05::A-P1",
+      "answers": {
+        "P1": "Mira",
+        "P2": "Mira",
+        "P3": "Roan"
+      }
+    },
+    {
+      "item_id": "A05::A-P2",
+      "answers": {
+        "P1": "neither",
+        "P2": "Mira",
+        "P3": "Yusuf"
+      }
+    },
+    {
+      "item_id": "A05::A-P3",
+      "answers": {
+        "P1": "neither",
+        "P2": "Grace",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A05::A-P4",
+      "answers": {
+        "P1": "neither",
+        "P2": "Grace",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A05::A-P6",
+      "answers": {
+        "P1": "neither",
+        "P2": "Grace",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A05::A-P7",
+      "answers": {
+        "P1": "Grace",
+        "P2": "Grace",
+        "P3": "Sam"
+      }
+    },
+    {
+      "item_id": "A05::A-P8",
+      "answers": {
+        "P1": "Grace",
+        "P2": "Grace",
+        "P3": "Sam"
+      }
+    },
+    {
+      "item_id": "A05::A-P1+P8",
+      "answers": {
+        "P1": "neither",
+        "P2": "Mira",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A05::A-S1",
+      "answers": {
+        "P1": "neither",
+        "P2": "Sam",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A05::A-S2",
+      "answers": {
+        "P1": "Grace",
+        "P2": "Grace",
+        "P3": "Grace"
+      }
+    },
+    {
+      "item_id": "A05::A-S3",
+      "answers": {
+        "P1": "Grace",
+        "P2": "Grace",
+        "P3": "Sam"
+      }
+    },
+    {
+      "item_id": "A05::A-S1x2",
+      "answers": {
+        "P1": "neither",
+        "P2": "Grace",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A05::A-N0.0",
+      "answers": {
+        "P1": "Grace",
+        "P2": "Grace",
+        "P3": "Grace"
+      }
+    },
+    {
+      "item_id": "A05::A-N0.1",
+      "answers": {
+        "P1": "Grace",
+        "P2": "Grace",
+        "P3": "Sam"
+      }
+    },
+    {
+      "item_id": "A05::A-N0.2",
+      "answers": {
+        "P1": "Grace",
+        "P2": "Grace",
+        "P3": "Sam"
+      }
+    },
+    {
+      "item_id": "A05::A-N0.3",
+      "answers": {
+        "P1": "neither",
+        "P2": "Grace",
+        "P3": "neither"
+      }
+    },
+    {
+      "item_id": "A06::baseline",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-P1",
+      "answers": {
+        "P1": "Kwame",
+        "P2": "Petro",
+        "P3": "Petro"
+      }
+    },
+    {
+      "item_id": "A06::A-P2",
+      "answers": {
+        "P1": "Ari",
+        "P2": "Mira",
+        "P3": "Mira"
+      }
+    },
+    {
+      "item_id": "A06::A-P3",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-P4",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-P6",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-P7",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-P8",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-P1+P8",
+      "answers": {
+        "P1": "Kwame",
+        "P2": "Kwame",
+        "P3": "Petro"
+      }
+    },
+    {
+      "item_id": "A06::A-S1",
+      "answers": {
+        "P1": "Halim",
+        "P2": "Jonah",
+        "P3": "Jonah"
+      }
+    },
+    {
+      "item_id": "A06::A-S2",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-S3",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Jonah"
+      }
+    },
+    {
+      "item_id": "A06::A-S1x2",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-N0.0",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "neither",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-N0.1",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-N0.2",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    },
+    {
+      "item_id": "A06::A-N0.3",
+      "answers": {
+        "P1": "Jonah",
+        "P2": "Halim",
+        "P3": "Halim"
+      }
+    }
+  ],
+  "domain_b": [
+    {
+      "triple_id": "A01::R.R",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.V",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.V",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.A",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.T",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::R.T",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::R.W",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::R.W",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A01::R.D",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::R.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::R.D",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.R",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.V",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.A",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.T",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::V.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.W",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::V.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.D",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::V.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::V.D",
+      "role": "composite",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::A.R",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.V",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.V",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.A",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.T",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::A.T",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::A.W",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::A.W",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::A.D",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::A.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::A.D",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::T.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::T.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::T.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::T.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::T.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::T.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::T.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::T.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::T.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::T.W",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::T.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A01::T.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A01::T.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::T.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::T.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::W.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A01::W.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::W.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::W.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::W.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.T",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A01::W.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::W.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::W.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::D.R",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::D.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::D.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::D.A",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::D.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::D.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A01::D.T",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::D.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::D.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::D.W",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A01::D.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A01::D.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::R.R",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.R",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A02::R.V",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.V",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.A",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.T",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::R.T",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::R.W",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::R.W",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::R.D",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::R.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::R.D",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.R",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.V",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.V",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A02::V.A",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.T",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::V.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.W",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::V.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.D",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::V.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::V.D",
+      "role": "composite",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::A.R",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.V",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.V",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.A",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.A",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A02::A.T",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::A.T",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::A.W",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::A.W",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::A.D",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::A.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::A.D",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::T.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::T.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::T.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::T.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::T.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::T.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::T.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::T.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::T.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::T.W",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::T.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A02::T.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A02::T.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::T.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::T.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped",
+        "witness_bound_to_agent",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A02::W.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::W.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::W.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::W.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.T",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A02::W.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::W.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::W.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::D.R",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::D.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::D.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::D.A",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::D.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::D.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A02::D.T",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::D.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::D.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::D.W",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A02::D.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A02::D.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::R.R",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.V",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.V",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.A",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.T",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::R.T",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::R.W",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::R.W",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A03::R.D",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::R.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::R.D",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.R",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.V",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.A",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.T",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::V.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.W",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::V.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.D",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::V.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::V.D",
+      "role": "composite",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::A.R",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.V",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.V",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.A",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.T",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::A.T",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::A.W",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::A.W",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::A.D",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::A.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::A.D",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::T.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::T.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::T.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::T.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::T.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::T.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::T.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::T.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::T.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::T.W",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::T.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A03::T.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A03::T.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::T.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::T.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::W.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A03::W.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::W.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::W.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::W.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.T",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A03::W.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::W.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::W.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::D.R",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::D.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::D.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::D.A",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::D.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::D.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A03::D.T",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::D.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::D.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::D.W",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A03::D.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A03::D.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::R.R",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.R",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A04::R.V",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.V",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.A",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.T",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::R.T",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::R.W",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::R.W",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A04::R.D",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::R.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::R.D",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.R",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.V",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.V",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A04::V.A",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.T",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::V.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.W",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::V.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.D",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::V.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::V.D",
+      "role": "composite",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::A.R",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.V",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.V",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.A",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.A",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A04::A.T",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::A.T",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::A.W",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::A.W",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::A.D",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::A.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::A.D",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::T.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::T.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::T.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::T.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::T.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::T.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::T.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::T.A",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::T.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::T.W",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::T.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::T.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::T.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::T.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::T.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::W.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::W.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::W.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::W.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::W.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.T",
+      "role": "step1",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::W.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A04::W.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::W.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::D.R",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::D.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::D.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::D.A",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::D.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::D.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A04::D.T",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::D.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::D.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::D.W",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A04::D.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A04::D.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::R.R",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.V",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.V",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.A",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.T",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::R.T",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.W",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::R.W",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A05::R.D",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::R.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::R.D",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.R",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.V",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.A",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.T",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::V.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.W",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::V.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.D",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::V.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::V.D",
+      "role": "composite",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::A.R",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.V",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.V",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.A",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.T",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::A.T",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::A.W",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::A.W",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::A.D",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::A.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::A.D",
+      "role": "composite",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::T.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::T.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::T.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::T.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::T.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::T.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::T.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::T.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::T.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::T.W",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::T.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A05::T.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A05::T.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::T.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::T.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A05::W.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A05::W.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::W.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::W.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::W.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.T",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A05::W.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::W.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::W.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::D.R",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::D.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::D.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::D.A",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::D.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::D.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A05::D.T",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::D.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::D.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::D.W",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A05::D.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A05::D.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::R.R",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.R",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A06::R.V",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.V",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.A",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.A",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.T",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::R.T",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::R.W",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::R.W",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A06::R.D",
+      "role": "step1",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::R.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::R.D",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.R",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "response_flipped",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.V",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.V",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A06::V.A",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.T",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::V.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.W",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::V.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.D",
+      "role": "step1",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::V.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::V.D",
+      "role": "composite",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::A.R",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.V",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.V",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.A",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.A",
+      "role": "composite",
+      "tokens": []
+    },
+    {
+      "triple_id": "A06::A.T",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::A.T",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::A.W",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::A.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.D",
+      "role": "step1",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::A.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::A.D",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::T.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::T.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::T.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::T.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::T.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::T.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::T.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::T.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::T.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::T.W",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::T.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A06::T.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A06::T.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::T.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::T.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::W.R",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::W.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::W.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A06::W.V",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::W.V",
+      "role": "step2",
+      "tokens": [
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::W.V",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::W.A",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::W.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::W.A",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::W.T",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::W.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_agent"
+      ]
+    },
+    {
+      "triple_id": "A06::W.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A06::W.D",
+      "role": "step1",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::W.D",
+      "role": "step2",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::W.D",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::D.R",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::D.R",
+      "role": "step2",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::D.R",
+      "role": "composite",
+      "tokens": [
+        "roles_reversed",
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::D.A",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::D.A",
+      "role": "step2",
+      "tokens": [
+        "act_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::D.A",
+      "role": "composite",
+      "tokens": [
+        "act_flipped",
+        "response_flipped"
+      ]
+    },
+    {
+      "triple_id": "A06::D.T",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::D.T",
+      "role": "step2",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::D.T",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    },
+    {
+      "triple_id": "A06::D.W",
+      "role": "step1",
+      "tokens": [
+        "response_removed"
+      ]
+    },
+    {
+      "triple_id": "A06::D.W",
+      "role": "step2",
+      "tokens": [
+        "third_party_added",
+        "witness_bound_to_recipient"
+      ]
+    },
+    {
+      "triple_id": "A06::D.W",
+      "role": "composite",
+      "tokens": [
+        "third_party_added"
+      ]
+    }
+  ]
+}
