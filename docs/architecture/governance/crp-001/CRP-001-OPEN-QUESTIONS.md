@@ -118,6 +118,39 @@ covenant's own stewards.
 
 ---
 
+## OQ-3 · The Class A approval gate is not mechanically enforced
+
+**Raised by:** reading branch protection on `clean-main-no-secrets` while
+evaluating the #1039 merge predicate.
+
+**The measurement.** `required_approving_review_count: 1`;
+`dismiss_stale_reviews: false`; `require_last_push_approval: false`;
+required contexts `build`, `check-diagrams`, `sovereignty`;
+`covenant-gates` **not** among them; `enforce_admins: false`; no rulesets.
+
+**The gap.** The covenant's Class A gate — Founder-Steward + 2 Council + 1
+Mentor — exists only as text. Mechanically, one approval merges a Class A
+change, and the workflow that checks classification is not required to pass.
+Approvals also survive onto commits pushed after them.
+
+**Why this is not a CRP problem to solve.** CRP-001 §17 holds that authority
+and scope are control-plane and not adjustable by an execution unit. Tightening
+branch protection is a repository-governance act, not a custody act, and doing
+it inside #1039 would be exactly the opportunistic scope widening Step 3 was
+ruled against.
+
+**What would close it.** A repository-governance decision on whether covenant
+classes are enforced mechanically (required checks, CODEOWNERS, review counts
+per class) or remain procedural obligations honored by operators. Either answer
+is legitimate; the current state is that the covenant *reads* as enforcement
+and *behaves* as convention.
+
+**Status:** OPEN. Not blocking #1039 — but it means `mergeStateStatus:
+BLOCKED` currently reflects pending required checks, **not** missing Class A
+approvals. Nothing mechanical is waiting for those.
+
+---
+
 ## LOG
 
 - **2026-08-12** — OQ-1 and OQ-2 opened during Step 3 execution.
@@ -125,3 +158,5 @@ covenant's own stewards.
   `class-a` applied. Precedent recorded. Merge waits on the Class A approval
   state actually being satisfied — the label is a classification, not an
   approval.
+- **2026-08-12** — OQ-3 opened: Class A approval gate is procedural, not
+  mechanically enforced.

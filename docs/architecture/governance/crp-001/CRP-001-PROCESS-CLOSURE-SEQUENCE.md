@@ -64,6 +64,68 @@ CANONICAL CUSTODY SATISFIED  ❌  #1039 unmerged; artifacts are not yet
 
 No MAIA work crosses that boundary.
 
+### Merge predicate — evaluated against the CURRENT head
+
+The head is now `e48f4ae8e`. The merge predicate is evaluated against the
+current head, never inherited from an earlier one. All must hold
+**simultaneously, on the head being merged**:
+
+1. `class-a` classification still present;
+2. `covenant-gates` passes on the new head;
+3. every required check green on the new head;
+4. Founder-Steward + 2 Council + 1 Mentor approvals currently satisfied;
+5. no repository rule has dismissed or invalidated approvals due to the new commit;
+6. PR actually mergeable under branch protection.
+
+> **Approval attaches to the review state of the PR / current diff.
+> Custody attaches only to the merged bytes on canonical trunk.**
+
+### ⚠ Enforcement gap — measured, not assumed
+
+Branch protection on `clean-main-no-secrets`, read 2026-08-12:
+
+```text
+required_status_checks         build, check-diagrams, sovereignty   strict: true
+required_approving_review_count 1
+dismiss_stale_reviews          false
+require_last_push_approval     false
+require_code_owner_reviews     false
+enforce_admins                 false
+rulesets                       none
+```
+
+Three consequences, none of them theoretical:
+
+**(a) The Class A approval gate is not mechanically enforced.** The covenant
+requires Founder-Steward + 2 Council votes + 1 Mentor. GitHub requires **one**
+approving review. Nothing mechanical distinguishes a Class A merge from a
+Class C merge. The covenant gate is *constitutional*, and — see (c) — it is
+not even a required check. **A Class A change can be merged with 1 of its 4
+required covenant approvals and GitHub will permit it.**
+
+**(b) Approvals are NOT dismissed by new commits.** `dismiss_stale_reviews:
+false` and `require_last_push_approval: false` together mean an approval given
+on one head **persists onto later commits the approver never saw**. Condition
+5 above is therefore structurally satisfied for the wrong reason: nothing can
+dismiss an approval because nothing is watching.
+
+> **Operational consequence, binding on this PR:** once review begins, **no
+> further commits are pushed to this branch.** With stale-dismissal off, a
+> post-approval push would silently carry an approval onto unreviewed bytes —
+> the precise inflation this program exists to prevent, performed by us, on
+> the artifact that defines the prohibition. `e48f4ae8e` + this commit is the
+> final ledger state before review.
+
+**(c) `covenant-gates` is not a required status check.** Required contexts are
+`build`, `check-diagrams`, `sovereignty` only. The covenant gate runs and
+reports, but branch protection does not require it to pass. Its own disclaimer
+is accurate in a way that cuts against it: *"Merge authority… belongs to
+GitHub, not this workflow"* — and GitHub is not asking.
+
+None of this is a reason to work around anything. It is recorded because the
+program's premise is that unenforced rules are not enforcement, and this is an
+unenforced rule discovered in the program's own merge path. Raised as **OQ-3**.
+
 ### Remaining order — no step may be skipped
 
 ```text
@@ -81,6 +143,14 @@ declare canonical custody PROVEN
    ↓
 unblock Step 4
 ```
+
+**Two ledger transitions, never one.** *"PR merged"* is an **event**.
+*"Canonical custody proven"* is a **verification result**. The second does not
+follow from the first; it follows from identifying the actual merge
+commit / trunk SHA, confirming each of the ten artifact paths exists at that
+SHA, and comparing blob OIDs and bytes against the approved source artifacts.
+`CANONICAL CUSTODY SATISFIED` moves ❌ → ✅ only on that verification, and only
+for the paths actually verified.
 
 ---
 
