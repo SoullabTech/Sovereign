@@ -90,7 +90,7 @@
   /**
    * SUBSTRATE IDENTITY — the checkout whose code actually executes.
    */
-  function substrateIdentity({ repoRoot, resolution, head, dirty }) {
+  function substrateIdentity({ repoRoot, resolution, head, dirty, conflictingConfigRoot }) {
     if (!repoRoot) {
       return {
         resolved_repo_root: null, resolved_repo_head: null, resolved_repo_dirty: null,
@@ -101,6 +101,27 @@
     const headTxt = head || 'unknown';
     const dirtyTxt = dirty === null || dirty === undefined ? 'unknown' : String(!!dirty);
     const base = `${repoRoot} @ ${headTxt}, dirty=${dirtyTxt}`;
+
+    // CONFLICTED AUTHORITY. env legitimately outranks a saved choice — that
+    // precedence is intentional and is NOT changed here. What was wrong is that
+    // the override read as clean: Preferences said "your choice is being
+    // overridden" while this card said AVAILABLE / green at the same moment.
+    // One surface contradicting another is the same class of defect as silence.
+    //
+    // So the substrate stays truthfully bound to the ENV root — runtime
+    // authority is unchanged — but it is reported DEGRADED, because a state
+    // needing operator remediation is not a clean state. No new vocabulary:
+    // DEGRADED already means "real, usable, and not what you should leave it as".
+    const conflicted =
+      resolution === RESOLUTION.ENV && conflictingConfigRoot && conflictingConfigRoot !== repoRoot;
+    if (conflicted) {
+      return {
+        resolved_repo_root: repoRoot, resolved_repo_head: head || null,
+        resolved_repo_dirty: dirty === undefined ? null : dirty,
+        resolution, state: 'DEGRADED', conflict: { governing: repoRoot, overridden_config_root: conflictingConfigRoot },
+        detail: `${base} — GOVERNED BY JARVIS_REPO_ROOT, which is overriding your saved choice (${conflictingConfigRoot}). The environment wins by design; this is flagged because your explicit selection is not in effect. Clear it with:  launchctl unsetenv JARVIS_REPO_ROOT  (then quit and relaunch JARVIS).`,
+      };
+    }
 
     if (resolution === RESOLUTION.DEFAULT) {
       return {
@@ -134,9 +155,14 @@
       identities_distinct: true,
       // True when the Desktop can name BOTH facts. This is the F3 condition —
       // not "does it run", but "can it say who it is and what it is acting on".
+      // A conflicted override cannot report clean satisfaction: the substrate is
+      // known, but it is not the one the founder selected. `substrate.conflict`
+      // is redundant with state !== AVAILABLE today and is asserted anyway, so a
+      // future state change cannot quietly re-admit a conflicted substrate here.
       self_binding_satisfied:
         artifact.state === 'AVAILABLE' &&
         substrate.state === 'AVAILABLE' &&
+        !substrate.conflict &&
         substrate.resolution !== RESOLUTION.DEFAULT,
     };
   }

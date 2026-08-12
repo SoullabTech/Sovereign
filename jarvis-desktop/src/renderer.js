@@ -41,6 +41,7 @@ function provenanceRows(p) {
         <div><div class="label">Execution substrate</div><div class="detail">${p.substrate.detail}</div></div>
         <span class="state ${p.substrate.state}">${p.substrate.state}</span>
       </div>
+      ${p.substrate.conflict ? `<div class="errors"><div>Your saved repository choice (${p.substrate.conflict.overridden_config_root}) is NOT in effect. JARVIS_REPO_ROOT governs by design; clear it with <span class="kv">launchctl unsetenv JARVIS_REPO_ROOT</span> then quit and relaunch.</div></div>` : ''}
       ${p.self_binding_satisfied ? '' : '<div class="hint">These are two independent facts. This Desktop cannot yet name both cleanly — treat readings accordingly.</div>'}
     </div>`;
 }

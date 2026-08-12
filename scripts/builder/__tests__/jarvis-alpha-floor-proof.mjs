@@ -182,6 +182,66 @@ console.log('\n==================== F3 — dual provenance, never collapsed ====
   report('the artifact keeps its distinct JARVIS identity', pkg.build.appId === 'life.soullab.jarvis');
 }
 
+console.log('\n=========== B — repo-root authority: conflict must not read clean ===========');
+{
+  // Precedence is ESTABLISHED and unchanged: env outranks a saved choice by
+  // design. What is asserted here is surface CONSISTENCY — a state that needs
+  // operator remediation must not simultaneously render as clean/green.
+  const A_ROOT = '/repo/saved', B_ROOT = '/repo/env';
+  const base = { buildInfo: { app_build_sha: 'bld1' }, isPackaged: true, head: 'h1', dirty: false };
+
+  // A — ENV only, valid root
+  const a = PROV.describeProvenance({ ...base, repoRoot: B_ROOT, resolution: PROV.RESOLUTION.ENV, conflictingConfigRoot: null });
+  report('A · ENV only → AVAILABLE, clean', a.substrate.state === 'AVAILABLE' && !a.substrate.conflict && a.self_binding_satisfied === true, a.substrate.state);
+
+  // B — CONFIG only, valid root
+  const b = PROV.describeProvenance({ ...base, repoRoot: A_ROOT, resolution: PROV.RESOLUTION.CONFIG, conflictingConfigRoot: null });
+  report('B · CONFIG only → AVAILABLE, clean', b.substrate.state === 'AVAILABLE' && !b.substrate.conflict && b.self_binding_satisfied === true, b.substrate.state);
+
+  // C — ENV + CONFIG agree
+  const c = PROV.describeProvenance({ ...base, repoRoot: B_ROOT, resolution: PROV.RESOLUTION.ENV, conflictingConfigRoot: B_ROOT });
+  report('C · ENV + CONFIG same root → AVAILABLE, clean', c.substrate.state === 'AVAILABLE' && !c.substrate.conflict && c.self_binding_satisfied === true, c.substrate.state);
+
+  // D — the previously untested divergence path
+  const d = PROV.describeProvenance({ ...base, repoRoot: B_ROOT, resolution: PROV.RESOLUTION.ENV, conflictingConfigRoot: A_ROOT });
+  report('D · runtime still uses ENV — precedence NOT inverted', d.substrate.resolved_repo_root === B_ROOT, d.substrate.resolved_repo_root);
+  report('D · resolution still reports explicit-env', d.substrate.resolution === PROV.RESOLUTION.ENV);
+  report('D · substrate is DEGRADED, not green AVAILABLE', d.substrate.state === 'DEGRADED', d.substrate.state);
+  report('D · self_binding_satisfied does NOT falsely report clean', d.self_binding_satisfied === false);
+  report('D · the overridden saved root is named', d.substrate.conflict && d.substrate.conflict.overridden_config_root === A_ROOT);
+  report('D · the governing root is named', d.substrate.conflict && d.substrate.conflict.governing === B_ROOT);
+  report('D · remediation is stated', /launchctl unsetenv JARVIS_REPO_ROOT/.test(d.substrate.detail));
+  report('D · substrate head/dirty still reported', d.substrate.resolved_repo_head === 'h1' && d.substrate.resolved_repo_dirty === false);
+  report('D · artifact identity untouched by the conflict', d.artifact.state === 'AVAILABLE' && d.artifact.app_build_sha === 'bld1');
+  report('D · identities still not collapsed', d.identities_distinct === true);
+
+  // E — invalid / unresolved behaviour unchanged
+  const e = PROV.describeProvenance({ buildInfo: null, isPackaged: true, repoRoot: null, resolution: PROV.RESOLUTION.NONE, conflictingConfigRoot: A_ROOT });
+  report('E · unresolved stays UNAVAILABLE regardless of conflict input', e.substrate.state === 'UNAVAILABLE');
+  const e2 = PROV.describeProvenance({ ...base, repoRoot: '/d', resolution: PROV.RESOLUTION.DEFAULT, conflictingConfigRoot: null });
+  report('E · implicit default still DEGRADED', e2.substrate.state === 'DEGRADED' && e2.self_binding_satisfied === false);
+
+  // A conflict is only meaningful against ENV — CONFIG cannot conflict with itself.
+  const f = PROV.describeProvenance({ ...base, repoRoot: A_ROOT, resolution: PROV.RESOLUTION.CONFIG, conflictingConfigRoot: '/repo/other' });
+  report('conflict flag applies to ENV only, never to a CONFIG resolution', f.substrate.state === 'AVAILABLE' && !f.substrate.conflict);
+
+  // Wiring: the resolver must hand the fact through, and every return path must
+  // carry the field so an absent key can never be read as "no conflict".
+  const mainJs = code('main.js');
+  report('resolver passes conflictingConfigRoot into provenance', /conflictingConfigRoot: RESOLVED\.conflictingConfigRoot/.test(mainJs));
+  const resolverLiterals = (mainJs.match(/\{[^{}]*\bresolution:[^{}]*\}/g) || [])
+    .filter(l => /\broot:/.test(l));
+  report('every resolver return declares conflictingConfigRoot',
+    resolverLiterals.length >= 5 && resolverLiterals.every(l => l.includes('conflictingConfigRoot')),
+    `${resolverLiterals.length} resolver literal(s)`);
+  report('the Preferences surface still carries the conflict as a problem',
+    /problem: RESOLVED\.configProblem/.test(mainJs));
+  report('precedence unchanged — env is still tested before saved config',
+    mainJs.indexOf('process.env.JARVIS_REPO_ROOT && isValidRepoRoot') < mainJs.indexOf('cfg.present && isValidRepoRoot(cfg.repo_root)'));
+  report('renderer surfaces the conflict where the substrate is displayed',
+    code('renderer.js').includes('p.substrate.conflict'));
+}
+
 console.log('\n==================== F5 — continuity hygiene ====================');
 {
   const mainJs = code('main.js');

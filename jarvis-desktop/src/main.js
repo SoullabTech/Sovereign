@@ -91,12 +91,19 @@ function findRepoRootPackagedMode() {
       cfgForConflict.present && cfgForConflict.repo_root !== process.env.JARVIS_REPO_ROOT
         ? `JARVIS_REPO_ROOT is set in the launch environment (${process.env.JARVIS_REPO_ROOT}) and OVERRIDES your saved choice (${cfgForConflict.repo_root}). If it is set at the launchd level, every Finder/Dock launch inherits it. Clear it with:  launchctl unsetenv JARVIS_REPO_ROOT  (then quit and relaunch JARVIS).`
         : null;
-    return { root: process.env.JARVIS_REPO_ROOT, resolution: PROV.RESOLUTION.ENV, configProblem: conflict };
+    return {
+      root: process.env.JARVIS_REPO_ROOT,
+      resolution: PROV.RESOLUTION.ENV,
+      configProblem: conflict,
+      // Structured, not just prose: the provenance surface needs the fact, not
+      // the sentence, so it can degrade rather than re-parse a message.
+      conflictingConfigRoot: conflict ? cfgForConflict.repo_root : null,
+    };
   }
 
   const cfg = cfgForConflict;
   if (cfg.present && isValidRepoRoot(cfg.repo_root)) {
-    return { root: cfg.repo_root, resolution: PROV.RESOLUTION.CONFIG, configProblem: null };
+    return { root: cfg.repo_root, resolution: PROV.RESOLUTION.CONFIG, configProblem: null, conflictingConfigRoot: null };
   }
   // Distinguish "configured but no longer valid" from "never configured" —
   // they need different responses and the founder deserves to know which.
@@ -107,9 +114,9 @@ function findRepoRootPackagedMode() {
       : null;
 
   if (isValidRepoRoot('/Users/soullab/MAIA-SOVEREIGN')) {
-    return { root: '/Users/soullab/MAIA-SOVEREIGN', resolution: PROV.RESOLUTION.DEFAULT, configProblem };
+    return { root: '/Users/soullab/MAIA-SOVEREIGN', resolution: PROV.RESOLUTION.DEFAULT, configProblem, conflictingConfigRoot: null };
   }
-  return { root: null, resolution: PROV.RESOLUTION.NONE, configProblem };
+  return { root: null, resolution: PROV.RESOLUTION.NONE, configProblem, conflictingConfigRoot: null };
 }
 
 // Mutable: Preferences can rebind the substrate at runtime. Everything that
@@ -119,7 +126,7 @@ let RESOLVED = app.isPackaged
   ? findRepoRootPackagedMode()
   : (() => {
       const r = findRepoRootDevMode(__dirname);
-      return { root: r, resolution: r ? PROV.RESOLUTION.WALK : PROV.RESOLUTION.NONE, configProblem: null };
+      return { root: r, resolution: r ? PROV.RESOLUTION.WALK : PROV.RESOLUTION.NONE, configProblem: null, conflictingConfigRoot: null };
     })();
 function currentRoot() { return RESOLVED.root; }
 const REPO_ROOT_MODE = app.isPackaged ? 'packaged' : 'dev';
@@ -167,6 +174,7 @@ function currentProvenance() {
     isPackaged: app.isPackaged,
     repoRoot: currentRoot(),
     resolution: RESOLVED.resolution,
+    conflictingConfigRoot: RESOLVED.conflictingConfigRoot || null,
     head: sub.head,
     dirty: sub.dirty,
   });
@@ -262,7 +270,7 @@ function bindRepoRoot(candidate, setBy) {
     };
   }
   RepoConfig.writeConfig(app.getPath('appData'), candidate, setBy);
-  RESOLVED = { root: candidate, resolution: PROV.RESOLUTION.CONFIG, configProblem: null };
+  RESOLVED = { root: candidate, resolution: PROV.RESOLUTION.CONFIG, configProblem: null, conflictingConfigRoot: null };
   broadcastRepoChange();
   return { ok: true, reason: null, candidate };
 }
