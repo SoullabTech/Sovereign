@@ -29,3 +29,21 @@ Search-engine summaries attributed the arXiv paper *Teleodynamic Learning* (arXi
 Had the summary been trusted, the ledger would have recorded a peer-venue ML publication that does not exist for this author, materially inflating the evidence base for C-4.
 
 **Standing lesson for future claim audits:** fetch the primary. A search summary is a pointer, never a source. Recorded because this class of error is silent and self-confirming.
+
+---
+
+## F-3 — Positive-control invariant for evaluation harnesses
+
+**Status: STANDING RULE, adopted 2026-08-11.** Derived from deviation D-3 (`RESULTS.md`).
+
+> **Every retrieval or reasoning benchmark must include at least one positive-control arm whose expected performance is high enough that uniform failure exposes harness defects.**
+
+**Origin.** The probe's first clean run returned 0/40 on *every* arm. It read as a decisive negative finding about the memory layer. The actual cause was a one-line extraction bug: the response `content` array is `[thinking, text]` on `claude-opus-5`, and the extractor read `content[0].text`, silently yielding `''` for all 120 calls.
+
+**Why this is a general rule and not an anecdote.** A harness defect degrades all arms *equally*. It therefore preserves the appearance of a controlled comparison while destroying its content — the between-arm structure still looks intact, so nothing in the result signals that anything is wrong. Uniform null results are consequently the **least** self-evidencing outcome an evaluation can produce, not the most.
+
+Only the ceiling arm made the defect visible, and only because its expected value was high enough that 0/40 was implausible on its face. Had the design been the founder-specified A/B/C alone, the bug would have survived into the record.
+
+**Applies to:** any future MAIA/AIN evaluation rail — retrieval, reasoning, safety classification, routing accuracy.
+
+**Related:** [[project_six_category_artifact_typology]] — this is the evaluation-layer analogue of *declaration is not liveness*: a measured null is not a finding until the instrument is shown to be capable of registering a non-null.

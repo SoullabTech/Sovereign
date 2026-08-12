@@ -14,7 +14,15 @@ Recorded, not silently amended. All three were discovered by failed runs; failed
 | **D-2** | `max_tokens` 64 → 512 | The model emits a `thinking` block before the text block; 34 of 64 tokens went to thinking on a trivial item, risking answer truncation. |
 | **D-3** | Text extraction now joins all `type==='text'` blocks | Original extractor read `content[0].text`, which is the `thinking` block. It silently returned `''` for all 120 calls, scoring every arm 0/40 — including the full-context ceiling. Caught because **Arm D at 0/40 was implausible**, not because anything errored. |
 
-D-3 is worth keeping visible: a scoring pipeline that returns a uniform null result across all arms looks like a clean negative finding. The ceiling arm is what exposed it. Any future rail should keep a known-good ceiling for exactly this reason.
+### D-3 generalizes — POSITIVE-CONTROL INVARIANT
+
+D-3 is not merely a bug report. It establishes a standing rule for this project's evaluation work:
+
+> **Every retrieval or reasoning benchmark must include at least one positive-control arm whose expected performance is high enough that uniform failure exposes harness defects.**
+
+Without Arm D, `0/40` across every arm was fully presentable as a clean negative finding — *"the memory layer contributes nothing"* — and would have been internally publishable as evidence of model or architecture incapacity. It was in fact a one-line extraction bug reading the `thinking` block instead of the `text` block.
+
+Note the asymmetry that makes this dangerous: a harness defect degrades **all** arms equally, so it preserves the *appearance* of a controlled comparison while destroying its content. Uniform null results are therefore the least self-evidencing outcome in an evaluation, not the most. A ceiling arm is the cheapest available defense.
 
 ## Primary result
 
@@ -50,7 +58,13 @@ Median Jaccard = 1.000 ✓. CI = [0.200, 0.475], excludes zero ✗. → **Not fa
 **H0 FALSIFIED?** Criterion: attribution-delta CI excludes zero **AND** mean cosine displacement significantly larger for load-bearing than control edits.
 CI excludes zero ✓. Displacement LB (0.055) is **~3× smaller** than control (0.154) — the opposite of the required direction ✗. → **H0 not falsified.**
 
-**Neither criterion triggered. H0 survives.** No post-hoc threshold adjustment was made.
+**Neither criterion triggered.** No post-hoc threshold adjustment was made.
+
+⚠️ **Say what survives, not merely that something did.** The precise claim:
+
+> The null hypothesis that **embedding displacement fails to track logical load-bearingness** remains compatible with the data. The probe does **not** establish learned relational geometry.
+
+"H0 survives" on its own is too loose — it invites the reader to supply their own H0. The surviving null is specific and narrow, and it is a claim about *the embedding space*, not about AIN's memory as a whole.
 
 ## What actually happened
 
@@ -66,6 +80,18 @@ The mechanism is unambiguous:
 Retrieval surfaced the decisive fact **47.5%** of the time. Of four retrieved atoms, on average only **1.5** came from the relevant item — the other 2.5 were cross-item distractors. When the decisive fact was missing, Arm A did not hallucinate; it correctly said `UNKNOWN`. The failure is **retrieval recall**, not model reasoning and not fabrication.
 
 The embedding measurement explains why. A minimal edit that **reverses the correct answer** (`Thursday`→`Tuesday`) moves the vector by 0.055. An incidental edit that **changes nothing** (`Oak Street`→`Pine Street`) moves it by 0.154 — roughly three times as far. The embedding space is systematically *less* sensitive to the semantically load-bearing change than to a decorative one. Cosine proximity in this space does not track logical relevance.
+
+### The result separates three layers usually blurred together
+
+| Layer | Question | This probe's verdict |
+|---|---|---|
+| **Storage / persistence** | Does the fact exist? | Yes — held constant by construction; the pooled store always contained it |
+| **Retrieval** | Is the right fact surfaced? | **No, 52.5% of the time.** This is the bottleneck |
+| **Reasoning / use** | Is a received fact used correctly? | Largely yes — 27/38 when the decisive atom arrived; 36/40 at ceiling |
+
+The probe should **not** be read as "AIN memory works" or "AIN memory doesn't work." It localizes the defect: *when the correct fact reaches the model, the model generally uses it; the dominant failure is upstream of reasoning.*
+
+The architectural reading of the displacement result: **semantic similarity is not relational or causal importance.** A logically decisive reversal can be geometrically small; a cosmetically larger but irrelevant change can sit farther away. Vector proximity is therefore a poor *sole* criterion for recall whenever the task turns on what changed, what governs, what contradicts, or what is currently true.
 
 ## Permitted statements (from the frozen interpretation table)
 
