@@ -1,0 +1,893 @@
+{
+  "frozen_protocol": "PRE_REGISTRATION.md",
+  "model": "claude-opus-5",
+  "K": 4,
+  "seed": 20260811,
+  "n_items": 40,
+  "pooled_atoms": 160,
+  "flip_rate": {
+    "A": {
+      "ok": 0,
+      "denom": 0,
+      "rate": null
+    },
+    "B": {
+      "ok": 0,
+      "denom": 0,
+      "rate": null
+    },
+    "D": {
+      "ok": 0,
+      "denom": 0,
+      "rate": null
+    }
+  },
+  "attribution_delta_A_minus_B": {
+    "point": 0,
+    "ci95": [
+      0,
+      0
+    ]
+  },
+  "A_minus_D": {
+    "point": 0,
+    "ci95": [
+      0,
+      0
+    ]
+  },
+  "retrieval": {
+    "median_jaccard_canonical_vs_perturbed": 1,
+    "mean_jaccard": 1,
+    "mean_cosine_displacement_load_bearing": 0.054855216231464,
+    "mean_cosine_displacement_control": 0.1538258281362086,
+    "lb_recall_at_K": 0.475,
+    "mean_own_item_atoms_in_topK": 1.5
+  },
+  "control_variant_correct": {
+    "A": 0,
+    "D": 0
+  },
+  "errors": [
+    {
+      "id": "P25",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtCrcsvGjijpuFpQStd\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtDFMcQFHMkqeZaDHEZ\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtCt1y8JSCLVfd6h41V\"}"
+    },
+    {
+      "id": "P25",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtDchVssQeTajppzWoz\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtDzqm9gN3edN2oAkhq\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtDdKCxiXwgwFBRyPkP\"}"
+    },
+    {
+      "id": "P25",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtENaiMtMmQe2AqR1RF\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtENDtM6xXsuw4ERDSM\"}"
+    },
+    {
+      "id": "P07",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtEk5nF9khD6ycqpCgv\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtF7YN7zAeArhABRPFs\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtEk3oK8qivj95Jkc1u\"}"
+    },
+    {
+      "id": "P07",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtFUiLi53VQeozQXo2H\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtFrfC9WG3BDkP9149P\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtFVEqgucF6ALMRK84M\"}"
+    },
+    {
+      "id": "P07",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtGEEimGrEAEMKuGHr5\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtGEAWLsUfyDsaTKRb8\"}"
+    },
+    {
+      "id": "P18",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtGbeL9Y2duwGWL9u81\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtGykrrD2QBkRa1qDg1\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtGbzfqHd2JwfxFuvPL\"}"
+    },
+    {
+      "id": "P18",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtHN72Yb6ipizLaRRS8\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtHkrFRKr5n2Wx4eHGa\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtHNFTV4zVrKJi2uv23\"}"
+    },
+    {
+      "id": "P18",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtJ8PJ9mTQiM5NDexWB\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtJ8R2rMWZ7JmvQHDo3\"}"
+    },
+    {
+      "id": "P37",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtJX1aydXqrCRsQL9Zj\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtJtpWMthTZNSBGf3GU\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtJWmhKhxzMgwjtcXEi\"}"
+    },
+    {
+      "id": "P37",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtKG9eVcNK2QytqXZTd\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtKdr8EnkGmxia1Pkz9\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtKGR2WM4vWrUh8Hzfh\"}"
+    },
+    {
+      "id": "P37",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtL1UskHcgdgTwgXLHe\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtL1cKTMdQATwENfiGH\"}"
+    },
+    {
+      "id": "P23",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtLR2ipdtrXedactR9F\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtLnjCTNpPqB8Pnyp52\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtLQoLAndmRHHNKW6uT\"}"
+    },
+    {
+      "id": "P23",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtMB8qLjY1Q3itad4qa\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtMb2m8XDnRWU7PxqLB\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtMBUv48qMZJT8czNg8\"}"
+    },
+    {
+      "id": "P23",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtMzA4LFQwKTijXrgJN\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtN17rYzAfxoswixPok\"}"
+    },
+    {
+      "id": "P11",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtNRAxa7zydB4CrbDQF\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtNnapeHeiEQkzmnQ2W\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtNRFB4JdETzK2EANEf\"}"
+    },
+    {
+      "id": "P11",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtPAtzzTL8nzoGmX59q\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtPZWHoZUyDxNP4jNKs\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtPAA6bSwCchcxofSSN\"}"
+    },
+    {
+      "id": "P11",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtPwRQZ86HgWXNVfQ2Q\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtPwKDEPFxoVyJJ1fir\"}"
+    },
+    {
+      "id": "P27",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtQJs1MCZZTLt1qF6Ca\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtQhcyNCJLXzpjw2D1r\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtQK7t7voTLBkr6SsDn\"}"
+    },
+    {
+      "id": "P27",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtR6tx1VTjPYPzVRvtL\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtRUiN5aCiRZVDdu1Bh\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtR5AmiDyKtQzZyUG5x\"}"
+    },
+    {
+      "id": "P27",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtRr5zeLSe1QyP9o9hu\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtRrczThHTtUojVpbJw\"}"
+    },
+    {
+      "id": "P10",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtSGXfeEjUrRzBpSUPP\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtSedwgFYpEYjrMeYUY\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtSGTT4UjMiRPTAb5eh\"}"
+    },
+    {
+      "id": "P10",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtT27me6MtgspHPwZCK\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtTRwV8SS7sq78wcAaf\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtT2EU9cJZ2m9nTyD9Y\"}"
+    },
+    {
+      "id": "P10",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtTpurnVpF1iGjquu2X\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtTpxavTjvzfEswDYzn\"}"
+    },
+    {
+      "id": "P01",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtUCLhp9Hdnv2y9qJwj\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtUa1gsgWhBJAheUtnU\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtUCWNuDpb8eFKNof3v\"}"
+    },
+    {
+      "id": "P01",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtUwPKEEeqWeVjwdwhw\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtVJhDyGknfRttWmbwr\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtUwHNNTWXLpWQQmJXh\"}"
+    },
+    {
+      "id": "P01",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtVfwQhqQM8cx3Rgwyt\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtVg8KhSt5LcMw43HPX\"}"
+    },
+    {
+      "id": "P09",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtW42hd8ReRsQQybkUP\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtWTGwXocRycB5HZ5uQ\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtW5dSRAWJj8SxLPuyX\"}"
+    },
+    {
+      "id": "P09",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtWqvTesZPaLtp1t4QS\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtXDawuA8nBso9aY3k5\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtWr9rWnsE6r2WheT1G\"}"
+    },
+    {
+      "id": "P09",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtXctuRUpc8oqLesY68\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtXazJx4JyCpjGepQdc\"}"
+    },
+    {
+      "id": "P34",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtXzVvUfQhGVkk8mH8a\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtYPhSWNmAdcB5XfnBn\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtXzccudbYQC4dAYsA8\"}"
+    },
+    {
+      "id": "P34",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtYme3Uv31XbfaySdY3\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtZ9J32WwztC67Djp1h\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtYmgmp8gjgfeySuB3C\"}"
+    },
+    {
+      "id": "P34",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtZWie87rF5kUN98FJ3\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtZX6TpvFVeDHziwvu9\"}"
+    },
+    {
+      "id": "P20",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtZvqTsZxrQuVWRRsfh\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtaJ8dZo3fS6i1qFkqK\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtZtSbr3aEuYCBKfAuR\"}"
+    },
+    {
+      "id": "P20",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtagN6Y3XWVL6f6kEH9\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtb3wdBp6QkAffpFwVJ\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtafhR5Se5i6p44pM1P\"}"
+    },
+    {
+      "id": "P20",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtbRRwvXPVjnPJLNt3f\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtbRQDZbN4dFhXRJR9t\"}"
+    },
+    {
+      "id": "P19",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtbns3qBDfPKzbhmzmf\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtcAZ2DGg6MCEaTCan8\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtbnpKdREyCYsE4dwdk\"}"
+    },
+    {
+      "id": "P19",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtcXwPjgqm2SvioHPRz\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtcv4REJLQj7R9TYxof\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtcY6aCYq7jjXbu8uGn\"}"
+    },
+    {
+      "id": "P19",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtdHcTghAJGJvjzm3rH\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtdHW1oRASGErLQPy5r\"}"
+    },
+    {
+      "id": "P30",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtdgRuSCwcteQ13zHeD\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwte7UHoL2KU39h7YD2X\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtdfUMPbytcfpMPu4gB\"}"
+    },
+    {
+      "id": "P30",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwteV7Ho5mVEA9LNcNR1\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtetn5jKGkzATM6UDRZ\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwteXc7Pwv55WxuB8XGD\"}"
+    },
+    {
+      "id": "P30",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtfGGQSo55gsgqsc4GH\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtfGgCtuesbok8Cz2pv\"}"
+    },
+    {
+      "id": "P08",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtffUQn4pwLcwyn35rD\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtg2qYEHutLJo51XzJy\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtfe8nx8Q8bxTzbA4ym\"}"
+    },
+    {
+      "id": "P08",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtgQDAYNqLRNobLEX4R\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtgnHTyDG4JnsiVbBBs\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtgQhvtM1CT21G25XLX\"}"
+    },
+    {
+      "id": "P08",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwth9vDZY4q4GzpE8MYB\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwthARDzHmvm3FbBMYUj\"}"
+    },
+    {
+      "id": "P24",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwthYy3fb4HjcJx3g1Ko\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwthwKDGKPNtxNUh9Ajt\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwthZptZKdgmsYnc9zQ7\"}"
+    },
+    {
+      "id": "P24",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtiJbsxLDayiCWRiwtn\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtigLb53saKXyjfNPon\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtiJrG1yxEDM9GhziMU\"}"
+    },
+    {
+      "id": "P24",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtj4BEponfv3e5tiqGc\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtj3gUMkUAP2HCoPco2\"}"
+    },
+    {
+      "id": "P33",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtjRoFRk35waZkSTMSv\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtjoUjJxLTTUmyPfkep\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtjRinR63mKvX7msRTR\"}"
+    },
+    {
+      "id": "P33",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtkAt6PvjYVVswxhyDh\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtkZMSsteXw1B2mv7yu\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtkBCwTSEvDxcGtSRVQ\"}"
+    },
+    {
+      "id": "P33",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtkwYgdqu1wNTGdkqZY\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtkwG5EkhT4DDEscjJH\"}"
+    },
+    {
+      "id": "P28",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtmKJdgGvH96ndKBiaj\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtmgzc4juyqYYtWCtdv\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtmKPqaUhZeN5JJwwZn\"}"
+    },
+    {
+      "id": "P28",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtn4iKPjr74rTCYwK1P\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtnTJsS9nGmcycCtuRR\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtn5tGGnQHjep2Yya8j\"}"
+    },
+    {
+      "id": "P28",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtnpnSnkLEYn5sK4G1f\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtnpkxXUttaGUiZ2DMj\"}"
+    },
+    {
+      "id": "P38",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtoCgaGkCj8AoK13Bjc\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtoaguCE2avYiqiGBkH\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtoCn2nn1TCd5xj5hU7\"}"
+    },
+    {
+      "id": "P38",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtoxQN9ELYMgUYie8VM\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtpLV9jT1NRJUWAH79W\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtowzJp1cwm4xKmUJ7N\"}"
+    },
+    {
+      "id": "P38",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtphkq7mjHtbYhR4U75\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtpjM5EpxbW9WYyuCmd\"}"
+    },
+    {
+      "id": "P14",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtq72obaDzAhgiuZDSu\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtqUpV5wcX5QMrTDW7q\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtq772AukmyeaQf1gnC\"}"
+    },
+    {
+      "id": "P14",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtqsLa3tfkmSSrrN4ES\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtrEWYT9xwqyJrza399\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtqs2iRgnN4xuxFP2HY\"}"
+    },
+    {
+      "id": "P14",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtrbqC3FaB1RrtzTqUr\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtrbrgB3kCas2ausAsj\"}"
+    },
+    {
+      "id": "P35",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtryKmA3B7WcSfZbcP5\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtsM2yj56XHiMkFfPeM\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtryA6DVDoRrdFWDE6e\"}"
+    },
+    {
+      "id": "P35",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtsk3LMeobVux1RiTDT\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtt7HX2z6DRpaSGWhMj\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtsjVLfyexZpDjj8rLA\"}"
+    },
+    {
+      "id": "P35",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwttUbRcdK1VM13FdUZS\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwttWVXNCudyWeYDL78J\"}"
+    },
+    {
+      "id": "P26",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwttu4b2pYKPcd53TafB\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtuHAce1djapas4nJJ3\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwttssePYgbqMHsjynnN\"}"
+    },
+    {
+      "id": "P26",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtueVWdzyqK9EHwtNRH\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwtv2cXwq9dxTkAQCU5n\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtufMrTeucgnU3cXWkq\"}"
+    },
+    {
+      "id": "P26",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtvQLzniUxECFc88xWZ\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtvQEJCey7d5o7n2UXF\"}"
+    },
+    {
+      "id": "P21",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtvnYEHv71QbEZzPnco\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtwAa3oW5ewEdzb5T6c\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtvmgtM28vk8p18qhu8\"}"
+    },
+    {
+      "id": "P21",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtwXvBVV794bnoPTPW1\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtwvP3VKCWtAuvqGq7f\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtwYYt87fS8HCXH6i7K\"}"
+    },
+    {
+      "id": "P21",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtxHhCYw9WDbEM3N8WQ\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtxHNc5EhPFKVGdXKWS\"}"
+    },
+    {
+      "id": "P03",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtxfPBQAb97J5cytMtL\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwty7hDR133RB7ZLnupM\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtxkKqW8imqQDr7kxAr\"}"
+    },
+    {
+      "id": "P03",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtyXSTygM1xp1NU4W4V\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtyuGdTEyGaTtZEDQZR\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtyVU9qjX3ijGvQcqQA\"}"
+    },
+    {
+      "id": "P03",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtzGx77fzc2JbRVf3Zq\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtzGuNuRvzHxAkxYvNo\"}"
+    },
+    {
+      "id": "P04",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtzeYt1KR16m3ujTCYw\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu128AJMw8hAc56EYG6\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwtzefKmLVctbWLNX34R\"}"
+    },
+    {
+      "id": "P04",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu1PSoxrptcqnZBqKbV\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu1mTdoub8y7wQ3Aogm\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu1Py4NsEQ8R498fCJU\"}"
+    },
+    {
+      "id": "P04",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu28yh8q8vvtyZ6KgwC\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu28wDLFg7qXCToj5WF\"}"
+    },
+    {
+      "id": "P22",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu2WHMDuX48eJz7XM8z\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu2sgxPjSGPESqufjLT\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu2WHM8KRgPPCiGuams\"}"
+    },
+    {
+      "id": "P22",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu3F463JDrkrv8Sr9oA\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu3ca9eueb7zDcoQs4W\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu3FJUacJvtbP1K8dvb\"}"
+    },
+    {
+      "id": "P22",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu3ytoTx1mVpXUrco5X\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu3ztLB6K55Tww1zaB2\"}"
+    },
+    {
+      "id": "P13",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu4NsR1MxGjpsV8NdJD\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu4mEaDSF8rsoUZTkSp\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu4NR8fL5oTX9ZBFq4R\"}"
+    },
+    {
+      "id": "P13",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu58fvA6hJy6h7biFMV\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu5WMPzoa8KXAuaBgeU\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu58jtRwH6J3sZrtMQv\"}"
+    },
+    {
+      "id": "P13",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu5sjmq9tH6AKumu9vf\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu5tFmjzCUL6sMayc6Q\"}"
+    },
+    {
+      "id": "P17",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu6GFMmwEzejEhYoeHd\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu6dvqWR3rRKXCC29Y6\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu6GAePQ28dS2SFbQf7\"}"
+    },
+    {
+      "id": "P17",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu71MgqVBSWndZZvyWh\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu7PZg1Gvw8z36ci37t\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu71Cm6A5boVbpb9oCf\"}"
+    },
+    {
+      "id": "P17",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu7kktCnNaK9qSRaKaf\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu7ku4xhgx27aZ4NetF\"}"
+    },
+    {
+      "id": "P29",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu88kxvWvyMfGKcYNba\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu8Wcrc8Ke1oEPbZUaN\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu88zbit5xrjer3W9DH\"}"
+    },
+    {
+      "id": "P29",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu8u8hAHRnRWZdjT1HS\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu9GTqh744BKzdoc4TW\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu8tHbTizcmvDy2bXcg\"}"
+    },
+    {
+      "id": "P29",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu9dbq6HBGdbM37XVHX\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011Cdwu9ejJATHnDG8YbSvSG\"}"
+    },
+    {
+      "id": "P02",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuA4fxQPpu8YkXDSaLV\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuARzMajmuWZCwe3cBE\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuA2VjKXxd9vdCLwqjX\"}"
+    },
+    {
+      "id": "P02",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuAoRCoXpciGWrTiMTa\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuBB2DrxzVMb2C7uUES\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuAoZdy37gncAiT1rT4\"}"
+    },
+    {
+      "id": "P02",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuBYMNDyMsx7jXXkVvu\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuBYTa6RyuvZqn4PL2H\"}"
+    },
+    {
+      "id": "P05",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuBuuQskJgh9zLiY2t3\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuCHipn9vccDncqoGWd\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuBv1cUeiwXVEJED1rS\"}"
+    },
+    {
+      "id": "P05",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuCf8SSrxX6m6S2iq4d\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuD3BF4U6ZNh8NEa3nF\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuCfWWUyPLu5QpfBv4e\"}"
+    },
+    {
+      "id": "P05",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuDQg4VXxzowmXPVKwi\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuDUP3zmQsEoDRW9X3s\"}"
+    },
+    {
+      "id": "P36",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuDvgbkQ5mB1XHHCcAs\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuEHfuX4LQAumzjd23P\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuDv6d3MsXbsk3CebdD\"}"
+    },
+    {
+      "id": "P36",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuEewaqXTdf8F9VzULU\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuF3JjrT2SFmCoWnz8S\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuEf9z1wzPMv9kXAe3k\"}"
+    },
+    {
+      "id": "P36",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuFR8txzk3AgtUmL6eH\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuFQukd9Quk45o7VW74\"}"
+    },
+    {
+      "id": "P12",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuFnyZDKGrZRFKNdu4d\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuGAjkJb9mZWjSfsgXA\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuFoK9G4rn7NriEK3XR\"}"
+    },
+    {
+      "id": "P12",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuGZFq5AvJZgge2nqVG\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuGvm9N5Eh9BfYWY3QD\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuGYAqn1hctCkrAvung\"}"
+    },
+    {
+      "id": "P12",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuHJb4D6Ebm5t2hzBpB\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuHJveS2Sqa2R6w9cam\"}"
+    },
+    {
+      "id": "P39",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuHgszhz5tnXHumneHj\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuJ4Rnj9kvPKRUj2KbX\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuHgo3NdJspBxBfTXLM\"}"
+    },
+    {
+      "id": "P39",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuJSDURAgWwdTSb5QyY\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuJojmvGxuEcwoLFVFj\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuJS3oUgRMUcpq62BVM\"}"
+    },
+    {
+      "id": "P39",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuKBE6VycdBHFk3Qxuh\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuKCQHszS5JmRxB9A7k\"}"
+    },
+    {
+      "id": "P40",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuKb1LQNXUn8CySWZnS\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuKxURETCnUefLHjPT2\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuKajxrFTMjVD1P82KG\"}"
+    },
+    {
+      "id": "P40",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuLKqJXDfWiGtaKQnBQ\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuLhHtWKQso4DdNHLSP\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuLKxVRH7vAwBvY6Jw4\"}"
+    },
+    {
+      "id": "P40",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuM4gFcSzRR9jkktC1J\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuM4jykeDvht9Rv5Gdf\"}"
+    },
+    {
+      "id": "P32",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuMS8qqd4jZz9nVp7cS\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuMq7hvpoGzZo4UU9c7\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuMSvTzoRVjdSVMqT7S\"}"
+    },
+    {
+      "id": "P32",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuNCmx51diveCUFtEqi\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuNaDJ5JUZfKUaNMR14\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuNCoBtfb7onB76uDuH\"}"
+    },
+    {
+      "id": "P32",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuNwgd1PmAFA2uPupTN\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuNwponVdsf3A52oR7n\"}"
+    },
+    {
+      "id": "P06",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuPKHtXvp8kY5DkoyjT\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuPgpwcearJbyCnB6sS\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuPKM7jc522YY94VdKf\"}"
+    },
+    {
+      "id": "P06",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuQ4CpJZnERq9HBL8hK\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuQSdwYaNRtmTqARfW3\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuQ3qV7BeaEcsBQ1jEJ\"}"
+    },
+    {
+      "id": "P06",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuQp4nuZDE3mmAmw8wW\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuQpGwWw6QekGT3uGpE\"}"
+    },
+    {
+      "id": "P31",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuRCnXi9YsAzGPboPdK\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuRaL513QdcbTuhVXeB\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuRC3sZWzVgmxVseUKB\"}"
+    },
+    {
+      "id": "P31",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuRwqdynVVgcbihKdBb\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuSL4rVsAtQAkMSGmmW\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuRwiCN321tBEH4jMFS\"}"
+    },
+    {
+      "id": "P31",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuShbQi4VzQp7Kk3uKH\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuSi6vRq6Xq8MuhwbTE\"}"
+    },
+    {
+      "id": "P15",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuT68Eo7Krn5PjApaXV\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuTT8nfYuDuq8drpSe1\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuT5YkwSKhHZdiHg6UZ\"}"
+    },
+    {
+      "id": "P15",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuTpApay3FMHaWjta19\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuUDBfqNK1tsCZmkjgj\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuTqRyQgHaNp8TrftF1\"}"
+    },
+    {
+      "id": "P15",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuUaYJkKzNWwMZSvWYr\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuUagVDBxE2nVsJ4vRN\"}"
+    },
+    {
+      "id": "P16",
+      "variant": "canonical",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuUy39sWoE5FgJx8Lp4\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuVLRGro6czZRMXc3hM\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuUxQCmvVo991jRpEye\"}"
+    },
+    {
+      "id": "P16",
+      "variant": "perturbed",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuVhoQ48cwYM4YYwQ6P\"}",
+      "B_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuW5KT46n9dnct6B3d5\"}",
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuVhiSSm1X2CcWKCn9z\"}"
+    },
+    {
+      "id": "P16",
+      "variant": "control",
+      "A_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuWSMVHTdNuJjUNu5Xn\"}",
+      "B_err": null,
+      "D_err": "HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CdwuWSmJFSw2XBp3yFtZV\"}"
+    }
+  ]
+}

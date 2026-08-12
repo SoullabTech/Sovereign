@@ -71,12 +71,22 @@ async function ask(context, question) {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-api-key': KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: MODEL, max_tokens: 64, temperature: 0, system: SYSTEM, messages: [{ role: 'user', content: userText }] }),
+        // DEVIATION D-1 (2026-08-11): pre-registration froze temperature:0, but the API
+        // rejects it — "`temperature` is deprecated for this model" (HTTP 400) on claude-opus-5.
+        // Parameter removed; model default applies. Recorded, not silently amended.
+        // DEVIATION D-2 (2026-08-11): max_tokens 64 -> 512. claude-opus-5 emits a `thinking`
+        // block before the text block; 34 of 64 tokens went to thinking on a trivial item,
+        // risking truncation of the answer itself. Budget raised; contract otherwise unchanged.
+        body: JSON.stringify({ model: MODEL, max_tokens: 512, system: SYSTEM, messages: [{ role: 'user', content: userText }] }),
         signal: AbortSignal.timeout(90000),
       });
       if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 200));
       const j = await r.json();
-      return { text: (j.content?.[0]?.text ?? '').trim(), model: j.model, sentContext: userText };
+      // DEVIATION D-3 (2026-08-11): response content is [thinking, text] on claude-opus-5.
+      // Original extractor read content[0].text and silently yielded '' on every call.
+      // Now concatenates all type==='text' blocks. Scoring rules themselves unchanged.
+      const textOut = (j.content ?? []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+      return { text: textOut, model: j.model, stop: j.stop_reason, sentContext: userText };
     } catch (e) { if (attempt === 2) return { text: null, error: String(e.message), sentContext: userText }; await new Promise(s => setTimeout(s, 1500 * (attempt + 1))); }
   }
 }
