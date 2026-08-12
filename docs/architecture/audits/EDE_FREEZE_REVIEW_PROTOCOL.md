@@ -154,8 +154,46 @@ paraphrase-stable instrument — **not simply another experiment number.**
 matches on *invariance*. ⚠️ Recorded so a future review does not mistake it for EDE output or for
 adoption of the paraphrase rule. ⛔ Proximity confers no authority to inspect or absorb it.
 
-## 6. Amendment log
+## 6. Scheduler composition status — ⛔ NOT YET PROVEN
+
+⚠️ **Scheduler existence ≠ executable unattended review.** Founder ruling, 2026-08-11.
+
+```
+protocol                  VALIDATED          all 7 checks executed, baselines recorded
+protocol commit           9c175c8f7
+schedule                  CREATED            ~/.claude/scheduled-tasks/ede-freeze-review/SKILL.md
+monthly persistence       ESTABLISHED        on-disk task, 4,155 bytes, prompt intact
+command permissions       PRE-APPROVED       see below — established by inspection, not execution
+unattended executability  ⛔ NOT YET PROVEN
+first real scheduled run  Sep 1, 10:13 local
+```
+
+**Permission surface — verified without executing.** Every command the protocol issues carries an
+exact `allow` rule in `.claude/settings.local.json`, and no `deny` rule intersects:
+`Bash(git grep:*)` · `Bash(git log:*)` · `Bash(git ls-files:*)` · `Bash(git ls-tree:*)` ·
+`Bash(git status:*)` · `Bash(git add:*)` · `Bash(git commit:*)` · `Bash(git diff:*)` ·
+`Bash(grep:*)`. A catch-all `ask: Bash(*)` exists but every protocol command is explicitly allowed.
+⇒ **A "Run now" is NOT required for permission setup.**
+
+⛔ **What remains unproven is the EDGE, not the endpoints.** Two endpoints are verified — the
+scheduler holds the task, and the commands are allowlisted — but *whether a scheduled run resolves
+permissions from this project's settings and completes without intervention* is a distinct fact that
+neither endpoint establishes. Also unverified: Read/Write tool permissions for the protocol file and
+for a drift record (these are not Bash rules).
+
+**The remaining proof, when the founder chooses to take it** — small, and deliberately not taken here:
+
+> **Scheduler execution proof**: invoke the task **through the scheduler itself**, not by manually
+> running the protocol. Verify all seven checks execute, no permission interaction is required,
+> UNCHANGED produces **no commit**, and the task records/completes normally. **Record it as a test
+> run**, not as permission setup. Then stop — no EDE experiment, no lattice reopening, no audit sweep.
+
+⛔ Until that run succeeds, this monthly control is **held, not proven**, and ⛔ must not be described
+as an established recurring safeguard.
+
+## 7. Amendment log
 
 | date | change | authorizing act |
 |---|---|---|
 | 2026-08-11 | created; all 7 checks executed and baselines recorded; 4 broken checks repaired before first use | founder request following the freeze |
+| 2026-08-11 | §6 added — scheduler composition recorded as NOT YET PROVEN; permission surface verified by inspection without executing | founder ruling: *scheduler existence ≠ executable unattended review* |
