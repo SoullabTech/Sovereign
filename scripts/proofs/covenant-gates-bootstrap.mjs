@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 
 const WF = process.argv[2];
+const LABELER = process.argv[3] || (WF && WF.replace('covenant-gates.yml', 'auto-labeler.yml'));
 const SHA_A = 'a'.repeat(40);
 const SHA_B = 'b'.repeat(40);
 
@@ -240,6 +241,49 @@ for (const c of cases) {
 
   if (errs.length) { fail++; console.log(`❌ ${c.id}  ${c.name}`); errs.forEach(e => console.log(`      ${e}`)); }
   else { pass++; console.log(`✅ ${c.id}  ${c.name}`); }
+}
+
+// ── auto-labeler §191 conformance ───────────────────────────────────────────
+// The gate REJECTS ambiguous classification; the labeler must not CREATE it.
+// Tested together so the two workflows cannot drift apart again.
+async function runLabeler({ labels = [], files = [] }) {
+  const added = [];
+  const script = extractScript(LABELER);
+  const fn = new Function('github', 'context', 'core', `return (async () => { ${script} })()`);
+  const context = { repo: { owner: 'o', repo: 'r' }, payload: { pull_request: {
+    number: 1, body: '', labels: labels.map(name => ({ name })) } } };
+  const github = { rest: {
+    pulls: { listFiles: async () => ({ data: files.map(filename => ({ filename })) }) },
+    issues: {
+      addLabels: async ({ labels }) => added.push(...labels),
+      createLabel: async () => {} } } };
+  await fn(github, context, { info: () => {} });
+  return added;
+}
+
+const labelerCases = [
+  { id: 'L1', name: 'workflow change on an already class-a PR adds NO second class',
+    input: { labels: ['class-a'], files: ['.github/workflows/covenant-gates.yml'] },
+    check: a => a.includes('class-b') ? 'added class-b onto an existing class-a' : null },
+  { id: 'L2', name: 'does not silently REPLACE an existing classification',
+    input: { labels: ['class-c'], files: ['.github/workflows/covenant-gates.yml'] },
+    check: a => a.some(l => ['class-a','class-b','class-c','frontier-dependent'].includes(l))
+      ? `mutated classification: ${a.join(',')}` : null },
+  { id: 'L3', name: 'UNclassified PR still gets its automatic class (no regression)',
+    input: { labels: [], files: ['.github/workflows/covenant-gates.yml'] },
+    check: a => a.includes('class-b') ? null : `expected class-b, got ${a.join(',') || '(none)'}` },
+  { id: 'L4', name: 'non-classification labels still apply to a classified PR',
+    input: { labels: ['class-a'], files: ['lib/ai/providers/anthropic.ts'] },
+    check: a => a.includes('frontier-check') ? null : `expected frontier-check, got ${a.join(',') || '(none)'}` }
+];
+
+for (const c of labelerCases) {
+  let err = null;
+  try { err = c.check(await runLabeler(c.input)); }
+  catch (e) { err = `HARNESS ERROR: ${e.message}`; }
+  if (err) { fail++; console.log(`❌ ${c.id}  ${c.name}`); console.log(`      ${err}`); }
+  else { pass++; console.log(`✅ ${c.id}  ${c.name}`); }
+  cases.push(c);
 }
 
 console.log(`\n${pass} passed, ${fail} failed, ${cases.length} total`);
