@@ -70,15 +70,58 @@ validator, the conformance suite — will produce governance-only PRs against
 this same gate. Classifying this one by instinct sets an unstated precedent
 for all of them.
 
-**What would close it.** A founder ruling on how governance-only changes
-classify, and whether the covenant needs an explicit category rather than
-forcing each such PR into a class designed for code.
+### RULING — 2026-08-12 — **CLASS A**
 
-**Status:** OPEN — and this one **is** blocking: PR #1039 cannot merge without
-a classification, and Step 4 is blocked on that merge.
+> **Governance-only is not equivalent to low-risk. The diff canonicalizes
+> authority over member-memory observability.**
+
+Not because it changes runtime behavior — it does not — but because it changes
+the **governing authority under which future runtime behavior may inspect and
+handle member memory data**.
+
+```text
+#1039
+
+Runtime behavior changed:       NO
+Product code changed:           NO
+Governance authority changed:   YES
+Privacy/memory handling:        YES
+Classification:                 CLASS A
+```
+
+**Classification follows the behavioral effect of the artifact, not the file
+type.**
+
+Approval path is the covenant's Class A path exactly: **Founder-Steward + 2
+Council votes + 1 Mentor**. The `covenant-signoff` bootstrap bridge may be
+used **only** for missing independent *approvals* — it cannot turn an A into
+a C.
+
+### Precedent established
+
+```text
+Governance documentation that merely RECORDS an already-governing fact
+→ classification follows the effect of the recording, possibly lower.
+
+Governance documentation that CREATES / RATIFIES / CANONICALIZES
+an authority over privacy, consent, sovereignty, identity, or memory
+→ Class A even if runtime code is untouched.
+```
+
+#1039 is the second case. Future CRP governance PRs are classified against
+this distinction, not against the fact that their diffs are Markdown.
+
+**Status:** **CLOSED** by ruling. The covenant's open question — whether the
+covenant itself should carry an explicit governance-artifact category rather
+than deriving it per-PR — is **not** closed by this ruling and is left to the
+covenant's own stewards.
 
 ---
 
 ## LOG
 
 - **2026-08-12** — OQ-1 and OQ-2 opened during Step 3 execution.
+- **2026-08-12** — OQ-2 **CLOSED**: founder ruled #1039 **Class A**.
+  `class-a` applied. Precedent recorded. Merge waits on the Class A approval
+  state actually being satisfied — the label is a classification, not an
+  approval.
