@@ -2914,6 +2914,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         forwardReadiness: !!m.forwardReadinessAddendum,
         studio: !!m.studioAddendum,
         episodic: !!m.episodicRecallAddendum, // Phase 2, 2026-07-13 — member-marked moments
+        // 🔗 Relational Context Bridge (40e7b8039) — member-handed-off relationship.
+        // Reaches the prompt on every tier that has a prompt seam: FAST (template
+        // interpolation), CORE (MaiaContext → buildMaiaWisePrompt), DEEP-primary
+        // (consultation recall addenda) and DEEP-repair (buildMaiaComprehensivePrompt),
+        // so it belongs in an inventory that reports what reaches the prompt. Boolean
+        // only — this map states availability, never which relationship record.
+        relationalContext: !!m.relationalContextAddendum,
         dreams: false,   // layer not wired
       };
       const evidenceProviders = [
@@ -2925,6 +2932,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         available.knowledgeGate && 'knowledgeGate',
         available.memoryOrchestrator && 'memoryOrchestrator',
         available.episodic && 'episodicRecall',
+        available.relationalContext && 'relationalContext',
       ].filter(Boolean);
       console.log('[MAIA] context-inventory', {
         conversationId: sessionId,
