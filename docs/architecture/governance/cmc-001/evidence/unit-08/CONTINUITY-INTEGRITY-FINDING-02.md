@@ -48,3 +48,45 @@ Until both are resolved, classify the surface as **`UNRESOLVED`**, not `CLIENT_R
 ## No repair
 
 None authorized, none proposed. §XIX applies. Note also the standing sequencing constraint: on DEEP, regeneration is currently the only continuity delivery mechanism, so changes in this area must restore normal-path continuity **first**.
+
+---
+
+# AMENDMENT 01 — 2026-08-12, on Unit 9 closure
+
+**The narrow statement above is superseded on the reachability axis and on scope.** The original wording is preserved unedited per §XXIV; this amendment records what changed and why.
+
+## Reachability — resolved
+
+The finding previously read *"static reachability is supported, but end-to-end exploitability is not yet proven,"* and classified the surface `UNRESOLVED` pending two residuals. Unit 9 closed both.
+
+**Residual 1 — `getDepthConfig()` return set.** Resolved: `lib/consciousness/conversationContext.ts:74`, blob `ac6c116891c43773ca4255b60be5be061e897fd0`. Adaptive: 200 / 400 / 800. Classic: 100 / 200 / 300. **Minimum across every branch is 100. No branch can yield `maxTokens <= 50`.** The sole `depthConfig`-into-context writer (`lib/consciousness/maiaOrchestrator.ts:521`) is unreachable from either in-scope route.
+
+**Residual 2 — route body validation.** Absence established exhaustively over both route blobs: no zod/yup/joi/ajv/valibot/schema/safeParse/sanitize/allowlist/pick/omit/stripUnknown on the meta channel; `validatePlaceContext` allow-lists `body.place` only; `middleware.ts` matches both paths but reads no body; no `delete meta.*`, `sanitizeMeta`, or `ALLOWED_META` in `maiaService.ts`.
+
+**Classification: `CLIENT_REACHABLE` at the application layer — both routes, neither blocked.**
+
+## Scope — widened
+
+The finding named `maiaService.ts:2180` as the feeder, scoping it to the DEEP repair path. That is **the narrower of two**. The broader feeder is:
+
+**`lib/sovereign/maiaService.ts:1540`** — `conversationContext: (meta as any).conversationContext as any` — on the **primary FAST/CORE** path, feeding `buildMaiaWisePrompt` (guard `lib/sovereign/maiaVoice.ts:543`, interpolation `:551`).
+
+So this is not a repair-path edge case. It affects the primary conversational path.
+
+## The structural point
+
+Because no server-side value can satisfy `maxTokens <= 50`, **the branch is unreachable by the server and reachable only from the request body.** It is dead code from the server's perspective and live code from a client's.
+
+That is why it persisted: nothing in normal operation ever executes it, so nothing ever surfaced it.
+
+## Remaining qualifier — the deployment edge
+
+`CLIENT_REACHABLE` is an **application-layer** verdict. Unit 9 names the Caddy edge (referenced at `middleware.ts:375`) as outside the repository and **not statically closable**. If that edge strips or allow-lists request bodies, the surface may be blocked in deployment while open in the application.
+
+A bounded read-only unit is authorized to classify the edge as `EDGE_BLOCKED` / `EDGE_PASSES` / `UNRESOLVED`. Until it returns, **do not state that the surface is exploitable in production** — state that it is reachable in the application and that the deployment boundary is unverified.
+
+## Continuity consequence — unchanged and now wider
+
+The addenda-suppression consequence is unchanged in kind and wider in scope: on the primary path as well as DEEP repair, this branch displaces normal prompt assembly and every context addendum with it.
+
+No repair authorized. §XIX applies. The DEEP repair-sequencing constraint continues to apply to any change in this area.
