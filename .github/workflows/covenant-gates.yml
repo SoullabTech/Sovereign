@@ -9,13 +9,30 @@
 #     an explanatory PR comment. It does NOT count approvals or gate on human
 #     review; that authority lives in GitHub, not in this workflow.
 #
-# Removed in this redesign: the FOUNDERS/MENTORS/GUARDIAN_CIRCLE approval engine,
+# Removed in that redesign: the FOUNDERS/MENTORS/GUARDIAN_CIRCLE approval engine,
 # per-class approval counting, and the `covenant-signoff` bootstrap bridge — all
 # of which reimplemented (and diverged from) GitHub's own review model.
 #
-# Until a second human GitHub collaborator exists, this repo is single-owner +
-# admin-merge, NOT independent two-person review. That is a property of GitHub
-# access, enforced by branch protection — this workflow does not pretend otherwise.
+# AMENDMENT (RGE-001, ruling B', 2026-08-12):
+#   #561's objection stands and is preserved: this workflow does NOT count
+#   GitHub review objects and does NOT recreate GitHub's approval engine.
+#   What is added is different in kind — a CONSTITUTIONAL DISPOSITION engine
+#   that asks "what disposition exists for this exact head SHA?" GitHub keeps
+#   merge authority; this becomes the admissibility check GitHub is configured
+#   to require before exercising it.
+#
+#   Measured 2026-08-12: the repository requires ZERO approving reviews for any
+#   change of any class. The covenant's Class A gate was therefore enforced by
+#   nothing. That — not a review deadlock — is the defect B' addresses.
+#
+#   The purpose of B' is NOT to manufacture independence that does not exist.
+#   It is to make the repository's actual governance state mechanically
+#   enforceable, SHA-bound, and impossible to confuse with independent
+#   multi-person review.
+#
+# Until a second human GitHub collaborator exists, this repo is single-owner,
+# NOT independent two-person review. This workflow does not pretend otherwise —
+# it prints the absence into the ledger on every Class A run.
 
 name: Covenant Gates
 
@@ -129,6 +146,167 @@ jobs:
             }
 
             // ═══════════════════════════════════════════════════════════════
+            // CONSTITUTIONAL DISPOSITION ENGINE  (RGE-001 ruling B′)
+            //
+            // This does NOT count GitHub review objects and does NOT recreate
+            // GitHub's approval engine — that was #561's correct objection.
+            // It asks one question: "What constitutional disposition exists
+            // for THIS EXACT head SHA?"  GitHub remains the merge execution
+            // mechanism; this is the constitutional admissibility mechanism.
+            //
+            // Ruled in RGE-001 §12/§15/§16 (D1–D4).
+            // ═══════════════════════════════════════════════════════════════
+
+            const FOUNDERS        = ['Soullab'];           // Founder-Steward (human)
+            const SERVICE_IDS     = ['SoullabCovenant'];   // Mentor/service identity — NOT a constitutional vote
+            const GUARDIAN_CIRCLE = [];                    // Council. Empty = unappointed. Add usernames when appointed.
+
+            const headSha = pr.head.sha;                   // full 40-char
+            const lc = s => String(s || '').toLowerCase();
+            const inList = (login, list) => list.some(u => lc(u) === lc(login));
+
+            // ── D1 · governance-bootstrap scope is DERIVED, never self-declared ──
+            // A label or checkbox would be asserted by the same operator this
+            // gate constrains. Path membership is objective and diffable.
+            // The MIR path is an EXACT exception, not the audits tree.
+            const BOOTSTRAP_ALLOWLIST = [
+              { kind: 'prefix', v: 'docs/architecture/governance/' },
+              { kind: 'exact',  v: 'docs/GOVERNANCE_MENTOR_COVENANT.md' },
+              { kind: 'exact',  v: '.github/workflows/covenant-gates.yml' },
+              { kind: 'exact',  v: '.github/pull_request_template.md' },
+              { kind: 'exact',  v: 'docs/architecture/audits/MIR-001_MAIA_HEALTH_MAP_2026-08-12.md' }
+            ];
+            const pathAdmissible = p =>
+              BOOTSTRAP_ALLOWLIST.some(r => r.kind === 'prefix' ? p.startsWith(r.v) : p === r.v);
+            const inadmissiblePaths = changedPaths.filter(p => !pathAdmissible(p));
+            const governanceBootstrapScope = changedPaths.length > 0 && inadmissiblePaths.length === 0;
+
+            // ── D2 · SHA-bound signoff acts, parsed from PR comments ─────────
+            // Identity = GitHub-authenticated comment author (not self-asserted).
+            // Freshness = declared SHA must equal the CURRENT head, so any new
+            // push invalidates every prior signoff automatically.
+            // Deliberately NOT a GitHub Review object: requiring one recreates
+            // the self-approval deadlock #561 was fixing.
+            const SIGNOFF_RE = /^\s*\/covenant-signoff\s+role=([a-z-]+)\s+sha=([0-9a-f]{7,40})\s*$/im;
+            let signoffActs = [];
+            try {
+              const { data: cmts } = await github.rest.issues.listComments({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number, per_page: 100
+              });
+              for (const c of cmts) {
+                for (const line of String(c.body || '').split('\n')) {
+                  const m = line.match(SIGNOFF_RE);
+                  if (!m) continue;
+                  signoffActs.push({
+                    role: lc(m[1]), sha: lc(m[2]), author: c.user && c.user.login,
+                    commentId: c.id, at: c.created_at,
+                    fresh: lc(m[2]) === lc(headSha)   // full-SHA match required
+                  });
+                }
+              }
+            } catch (e) {
+              console.log(`⚠️ Could not read signoff comments: ${e.message}`);
+            }
+
+            const staleActs = signoffActs.filter(a => !a.fresh);
+            const freshActs = signoffActs.filter(a => a.fresh);
+
+            const founderSignoff = freshActs.find(a =>
+              a.role === 'founder-steward' && inList(a.author, FOUNDERS));
+
+            // ── D3 · a service identity may attest, never vote ───────────────
+            const serviceAttestation = freshActs.find(a =>
+              a.role === 'service-attestation' && inList(a.author, SERVICE_IDS));
+
+            // Any attempt to dress a service identity (or anyone) as an
+            // independent Mentor/Council vote is a hard failure, not a warning.
+            const impersonation = freshActs.filter(a =>
+              (a.role === 'council' || a.role === 'mentor') &&
+              !inList(a.author, GUARDIAN_CIRCLE));
+
+            // Real Council acts, only meaningful once a Circle is appointed.
+            const councilActs = freshActs.filter(a =>
+              a.role === 'council' && inList(a.author, GUARDIAN_CIRCLE));
+
+            let disposition = null;
+            const ledger = [];
+
+            if (effectiveClass === 'class-a') {
+              for (const bad of impersonation) {
+                failures.push(
+                  `Identity violation: @${bad.author} claimed role=\`${bad.role}\` but is not an appointed Guardian Circle member. ` +
+                  `Service identities and non-Council accounts may not stand in for constitutional Council/Mentor votes (RGE-001 D3).`
+                );
+              }
+
+              const councilAppointed = GUARDIAN_CIRCLE.length > 0;
+
+              if (councilAppointed) {
+                // Normal Class A path. BOOTSTRAP_NO_COUNCIL is automatically
+                // unavailable the moment a Circle exists — no lingering fallback.
+                if (!founderSignoff) failures.push('Class A: Founder-Steward signoff required for the current head SHA.');
+                if (councilActs.length < 2) failures.push(`Class A: 2 Council signoffs required for the current head SHA (have ${councilActs.length}).`);
+                if (failures.length === 0) disposition = 'CLASS_A_SATISFIED';
+              } else {
+                // ── E2 · BOOTSTRAP_NO_COUNCIL, narrowly ────────────────────
+                // Admissible ONLY to establish/repair/canonicalize the
+                // governance mechanism itself. Not equivalent to Class A
+                // approval; does not authorize ordinary Class A product change.
+                const declaresNotSatisfied = /independent_council_review:\s*NOT SATISFIED/i.test(body);
+
+                if (!governanceBootstrapScope) {
+                  failures.push(
+                    'Class A cannot be satisfied: Guardian Circle is unappointed, and this PR is outside governance-bootstrap scope. ' +
+                    (inadmissiblePaths.length
+                      ? `Out-of-scope paths: ${inadmissiblePaths.slice(0, 8).join(', ')}${inadmissiblePaths.length > 8 ? ` (+${inadmissiblePaths.length - 8} more)` : ''}. `
+                      : 'No files changed. ') +
+                    'Ordinary Class A changes remain blocked until a Guardian Circle exists (RGE-001 E1) or a separate founder amendment is made.'
+                  );
+                }
+                if (!founderSignoff) {
+                  failures.push(
+                    'BOOTSTRAP_NO_COUNCIL requires a Founder-Steward signoff bound to the current head SHA. ' +
+                    `Comment: \`/covenant-signoff role=founder-steward sha=${headSha}\`` +
+                    (staleActs.length ? ` (${staleActs.length} stale signoff(s) found for an earlier SHA — superseded by a newer push.)` : '')
+                  );
+                }
+                if (!declaresNotSatisfied) {
+                  failures.push('BOOTSTRAP_NO_COUNCIL requires the PR body to state, verbatim: `independent_council_review: NOT SATISFIED`');
+                }
+                if (failures.length === 0) disposition = 'BOOTSTRAP_NO_COUNCIL';
+              }
+
+              // Truthful ledger — absence is displayed, never quietly skipped.
+              ledger.push('```text');
+              ledger.push('CLASS A');
+              ledger.push(`head_sha            ${headSha}`);
+              ledger.push(`Founder-Steward     ${founderSignoff ? `SATISFIED — @${founderSignoff.author} (comment ${founderSignoff.commentId}, ${founderSignoff.at})` : 'NOT SATISFIED'}`);
+              if (GUARDIAN_CIRCLE.length > 0) {
+                ledger.push(`Council             ${councilActs.length}/2 SATISFIED`);
+                ledger.push('mentor_status       per appointed roster');
+              } else {
+                ledger.push('mentor_status       NOT_INDEPENDENTLY_SATISFIED — no independent Mentor; service identity does not vote');
+                ledger.push('Council #1          NOT AVAILABLE — Guardian Circle unappointed');
+                ledger.push('Council #2          NOT AVAILABLE — Guardian Circle unappointed');
+              }
+              if (serviceAttestation) {
+                ledger.push('service_attestation:');
+                ledger.push(`  identity          ${serviceAttestation.author}`);
+                ledger.push('  identity_class    service');
+                ledger.push('  constitutional_mentor_vote  NO');
+              }
+              ledger.push(`governance_scope    ${governanceBootstrapScope ? 'governance_bootstrap' : 'OUT OF SCOPE'}`);
+              ledger.push(`disposition         ${disposition || 'NONE — BLOCKED'}`);
+              ledger.push(`independent review  NOT SATISFIED`);
+              ledger.push('```');
+
+              if (labels.includes('covenant-signoff')) {
+                console.log('ℹ️ `covenant-signoff` label present. It carries NO authority under B′ — ' +
+                            'a label is not an identity-bound, SHA-bound act. It is ignored.');
+              }
+            }
+
+            // ═══════════════════════════════════════════════════════════════
             // DIAGNOSTICS + RESULT  (sticky, actionable PR comment)
             // ═══════════════════════════════════════════════════════════════
 
@@ -150,6 +328,18 @@ jobs:
               }
               if (fails.some(f => /Frontier verification/i.test(f))) {
                 tips.push('- **Frontier** — add a `Verified by Mentor:` line for external-dependency changes.');
+              }
+              if (fails.some(f => /Founder-Steward signoff|BOOTSTRAP_NO_COUNCIL requires a Founder/i.test(f))) {
+                tips.push('- **Signoff** — comment `/covenant-signoff role=founder-steward sha=<full head SHA>`. It must name the CURRENT head; any new push invalidates it.');
+              }
+              if (fails.some(f => /independent_council_review/i.test(f))) {
+                tips.push('- **Disposition declaration** — add `independent_council_review: NOT SATISFIED` to the PR body. The weaker disposition must be stated, not implied.');
+              }
+              if (fails.some(f => /outside governance-bootstrap scope/i.test(f))) {
+                tips.push('- **Scope** — `BOOTSTRAP_NO_COUNCIL` covers governance-substrate work only. Split product changes into their own PR; they stay blocked until a Guardian Circle exists.');
+              }
+              if (fails.some(f => /Identity violation/i.test(f))) {
+                tips.push('- **Identity** — service and non-Council accounts cannot stand in for Council/Mentor votes. Use `role=service-attestation`, which is recorded as `constitutional_mentor_vote: NO`.');
               }
               return tips;
             }
@@ -179,7 +369,8 @@ jobs:
                 `**Unmet:**\n` +
                 failures.map(f => `- ${f}`).join('\n') + `\n\n` +
                 (tips.length ? `**How to clear this gate:**\n${tips.join('\n')}\n\n` : '') +
-                `> This gate validates *constitutional* obligations only. **Merge authority — approvals, required reviewers, branch protection — belongs to GitHub**, not this workflow.\n\n` +
+                (ledger.length ? `**Constitutional ledger:**\n${ledger.join('\n')}\n\n` : '') +
+                `> This gate validates *constitutional* obligations and disposition. **Merge execution — branch protection and merge authority — belongs to GitHub**, not this workflow.\n\n` +
                 `_Re-runs automatically on label change or new commit._ · [Covenant](../docs/GOVERNANCE_MENTOR_COVENANT.md)`;
               await upsertGateComment(commentBody, true);
 
@@ -193,5 +384,13 @@ jobs:
             } else {
               console.log(`✅ Covenant Gates passed for ${effectiveClass} — constitutional obligations satisfied.`);
               // Clear a prior red comment if present; don't spam green on clean PRs.
-              await upsertGateComment(`### ✅ Covenant Gates passed (\`${effectiveClass}\`)\n\nConstitutional obligations satisfied. Merge eligibility is determined by GitHub branch protection.`, false);
+              const okBody =
+                `### ✅ Covenant Gates passed (\`${effectiveClass}\`)\n\n` +
+                (disposition ? `**Disposition: \`${disposition}\`**\n\n` : '') +
+                (ledger.length ? `${ledger.join('\n')}\n\n` : '') +
+                (disposition === 'BOOTSTRAP_NO_COUNCIL'
+                  ? `> \`BOOTSTRAP_NO_COUNCIL\` is **weaker than Class A on purpose and visibly**. It records one Founder authorizing a narrowly bounded governance-bootstrap act, with the absence of independent Mentor/Council governance made mechanically visible. It is **not** Class A approval and does **not** authorize ordinary Class A product changes. It disappears automatically once a Guardian Circle is appointed.\n\n`
+                  : '') +
+                `Merge eligibility is determined by GitHub branch protection.`;
+              await upsertGateComment(okBody, disposition === 'BOOTSTRAP_NO_COUNCIL');
             }
