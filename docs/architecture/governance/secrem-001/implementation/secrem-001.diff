@@ -1,0 +1,141 @@
+diff --git a/lib/sovereign/maiaVoice.ts b/lib/sovereign/maiaVoice.ts
+index 8ea2f62ab..029c0cbf1 100644
+--- a/lib/sovereign/maiaVoice.ts
++++ b/lib/sovereign/maiaVoice.ts
+@@ -535,37 +535,16 @@ export function buildMaiaWisePrompt(context: MaiaContext, userInput?: string, co
+     return buildSimpleMaiaPrompt(context);
+   }
+ 
+-  // 🌀 MAIA-PAI KERNEL INTEGRATION: Check for conversation depth constraints
+-  const maiaPaiConfig = context.conversationContext?.depthConfig;
+-  const conversationDepth = context.conversationContext?.depth;
+-
+-  // If MAIA-PAI kernel has strict depth limits, override with simple response
+-  if (maiaPaiConfig && conversationDepth === 'opening' && maiaPaiConfig.maxTokens <= 50) {
+-    console.log(`🌀 MAIA-PAI OVERRIDE: ${conversationDepth} conversation detected, using minimal response (${maiaPaiConfig.maxTokens} tokens max)`);
+-    return `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
+-
+-📅 Today is ${getSimpleDateString(context.timezone)}.
+-
+-🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+-
+-${maiaPaiConfig.depthGuidance}
+-
+-CRITICAL:
+-- NO explanations of what you can do
+-- NO offers of help or services
+-- NO "I'm here to..." statements
+-- Just respond naturally like a friend
+-- Focus on THEM, not you
+-- Keep it conversational and brief
+-
+-Examples of good opening responses:
+-- "Hi there!"
+-- "Hey, how's it going?"
+-- "Good to see you."
+-- "What's up?"
+-
+-Context: ${context.summary || 'New conversation beginning.'}`;
+-  }
++  // SECREM-001: the MAIA-PAI depthConfig short-circuit that formerly stood here was
++  // removed. `context.conversationContext` reaches this function only as a passthrough
++  // of client-supplied request `meta` (maiaService.ts, enhanced-maia-service.ts), so the
++  // guard let a caller substitute its own system prompt via `depthConfig.depthGuidance`
++  // and suppress canonical context assembly via `depthConfig.maxTokens <= 50`. No
++  // server-produced depthConfig ever reached it: the only server producer
++  // (ConversationContext.getDepthConfig, lib/consciousness/conversationContext.ts) is
++  // consumed solely by maiaOrchestrator, which does not import this module, and its
++  // smallest producible maxTokens is 200 — the guard predicate was unsatisfiable for
++  // every legitimate value. FAST/CORE now always builds the canonical prompt below.
+ 
+   // 🗣️ AWARENESS-BASED LANGUAGE ADAPTATION
+   let awarenessLevel: AwarenessLevel = 'everyday';
+@@ -955,82 +934,12 @@ export function buildMaiaComprehensivePrompt(
+   context: MaiaContext,
+   conversationHistory?: any[]
+ ): ComprehensiveVoiceAnalysis & { prompt: string } {
+-  // 🌀 MAIA-PAI KERNEL INTEGRATION: Check for conversation depth constraints
+-  const maiaPaiConfig = context.conversationContext?.depthConfig;
+-  const conversationDepth = context.conversationContext?.depth;
+-
+-  // If MAIA-PAI kernel has strict depth limits, return simple prompt structure
+-  if (maiaPaiConfig && conversationDepth === 'opening' && maiaPaiConfig.maxTokens <= 50) {
+-    console.log(`🌀 MAIA-PAI COMPREHENSIVE OVERRIDE: ${conversationDepth} conversation, bypassing complex voice analysis`);
+-
+-    const simpleAnalysis: ComprehensiveVoiceAnalysis = {
+-      inputComplexity: {
+-        complexity: 'simple',
+-        responseStyle: 'casual',
+-        reasoning: 'MAIA-PAI kernel override for opening conversation',
+-        indicators: {
+-          wordCount: input.split(' ').length,
+-          questionDepth: 0,
+-          existentialMarkers: 0,
+-          personalIntimacy: 0,
+-          philosophicalConcepts: 0,
+-          urgency: 'low'
+-        }
+-      },
+-      awarenessProfile: {
+-        primaryLevel: 'newcomer',
+-        confidence: 100,
+-        intelligenceDimensions: {
+-          analytical: 0, emotional: 0, intuitive: 0,
+-          transpersonal: 0, embodied: 0, relational: 100
+-        },
+-        communicationStyle: {
+-          preferredComplexity: 'simple',
+-          depthReadiness: 'minimal',
+-          frameworkFamiliarity: 'none'
+-        }
+-      },
+-      conventionsResult: {
+-        promptAdditions: '',
+-        conventionsApplied: [],
+-        communicationStrategy: {
+-          primaryApproach: 'brief-greeting',
+-          emotionalTone: 'warm',
+-          depthLevel: 'minimal',
+-          structurePreference: 'simple'
+-        }
+-      },
+-      finalVoiceLevel: 'minimal-opening',
+-      adaptationReasoning: 'MAIA-PAI kernel enforcing opening conversation brevity'
+-    };
+-
+-    const simplePrompt = `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
+-
+-📅 Today is ${getSimpleDateString(context.timezone)}.
+-
+-${maiaPaiConfig.depthGuidance}
+-
+-CRITICAL:
+-- NO explanations of what you can do
+-- NO offers of help or services
+-- NO "I'm here to..." statements
+-- Just respond naturally like a friend
+-- Focus on THEM, not you
+-- Keep it conversational and brief
+-
+-Examples of good opening responses:
+-- "Hi there!"
+-- "Hey, how's it going?"
+-- "Good to see you."
+-- "What's up?"
+-
+-Context: ${context.summary || 'New conversation beginning.'}`;
+-
+-    return {
+-      ...simpleAnalysis,
+-      prompt: simplePrompt
+-    };
+-  }
++  // SECREM-001: the MAIA-PAI depthConfig short-circuit that formerly stood here was
++  // removed, for the same reason as its FAST/CORE twin in buildMaiaWisePrompt above.
++  // On this path it additionally returned before appendAllContextAddenda, so a
++  // client-supplied depthConfig could strip every DEEP addendum from the prompt.
++  // DEEP repair now always runs buildComprehensiveVoicePrompt + the shared addenda
++  // channel below.
+ 
+   // DEEP repair path joins FAST+CORE addenda channel via shared helper.
+   // Closes §II.B of ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md. §II.C
