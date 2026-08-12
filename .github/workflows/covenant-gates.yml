@@ -98,6 +98,23 @@ jobs:
             const reqs = effectiveClass ? REQUIREMENTS[effectiveClass] : null;
             const failures = [];
 
+            // Covenant §191: "Check exactly one class box ... or apply the matching
+            // class-* label." More than one classification is not a tie to be broken
+            // by precedence — it is an ambiguous constitutional record. Precedence
+            // still resolves BEHAVIOUR correctly, but a human reading the labels
+            // cannot tell which class governs, and classification is the one thing
+            // that must never be ambiguous.
+            const declaredClasses = [
+              hasClassA && 'class-a', hasFrontier && 'frontier-dependent',
+              hasClassB && 'class-b', hasClassC && 'class-c'
+            ].filter(Boolean);
+            if (declaredClasses.length > 1) {
+              failures.push(
+                `Ambiguous classification: ${declaredClasses.join(', ')}. Covenant §191 requires exactly one. ` +
+                `Precedence resolves this to \`${effectiveClass}\` for enforcement, but the recorded state is ambiguous — remove the others.`
+              );
+            }
+
             if (!effectiveClass) {
               failures.push('No change classification found — check a Class box in the PR body, or apply a `class-a` / `class-b` / `class-c` / `frontier-dependent` label.');
             } else {
@@ -207,6 +224,19 @@ jobs:
                 owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number, per_page: 100
               });
               for (const c of cmts) {
+                // RGE-001 actor-identity ruling: agent/service possession of
+                // credentials does not confer founder authority. A Bot-authored
+                // comment can never satisfy a founder-authoritative requirement,
+                // regardless of repository permissions.
+                //
+                // This also closes a live near-miss: THIS WORKFLOW emits the literal
+                // signoff syntax (with a real role and a real head SHA) in its own
+                // failure guidance. Line-anchoring defeats the parse today, but that
+                // is one brittle layer. Author-type is the durable one.
+                if (c.user && c.user.type === 'Bot') {
+                  console.log(`↩︎ Ignoring signoff-shaped content from Bot @${c.user.login} — automated actors cannot satisfy founder authority.`);
+                  continue;
+                }
                 for (const line of String(c.body || '').split('\n')) {
                   const m = line.match(SIGNOFF_RE);
                   if (!m) continue;
@@ -311,6 +341,10 @@ jobs:
               ledger.push(`governance_scope    ${governanceBootstrapScope ? 'governance_bootstrap' : 'OUT OF SCOPE'}`);
               ledger.push(`disposition         ${disposition || 'NONE — BLOCKED'}`);
               ledger.push(`independent review  NOT SATISFIED`);
+              ledger.push('actor_provenance    credential principal only — this gate CANNOT currently');
+              ledger.push('                    distinguish human-founder action from agent action under');
+              ledger.push('                    the same account. Credential separation is required');
+              ledger.push('                    hardening, not a satisfied property.');
               ledger.push('```');
 
               if (labels.includes('covenant-signoff')) {
@@ -385,6 +419,7 @@ jobs:
                 (tips.length ? `**How to clear this gate:**\n${tips.join('\n')}\n\n` : '') +
                 (ledger.length ? `**Constitutional ledger:**\n${ledger.join('\n')}\n\n` : '') +
                 `> This gate validates *constitutional* obligations and disposition. **Merge execution — branch protection and merge authority — belongs to GitHub**, not this workflow.\n\n` +
+                `> **This comment is the canonical current-state witness.** It is upserted in place and always reflects the current head. GitHub check-run history is append-only, so a commit can permanently carry both a success and a failure under the name \`covenant-gates\` (e.g. the opened→labeled window). Read this comment, not the check-run list.\n\n` +
                 `_Re-runs automatically on label change or new commit._ · [Covenant](../docs/GOVERNANCE_MENTOR_COVENANT.md)`;
               await upsertGateComment(commentBody, true);
 
