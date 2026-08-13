@@ -100,6 +100,59 @@ import {
 } from '@/lib/maia/prompts/memoryCanonGuard';
 
 // =============================================================================
+// CROSS-SESSION PAIRING (PH2-001 TODAY, items 1+2)
+// =============================================================================
+
+/**
+ * Pair a flat turn sequence into conversation exchanges.
+ *
+ * Replaces a fixed `i += 2` stride, which assumed the fetched sequence begins with
+ * a user turn and alternates perfectly. TurnsStore.getRecentTurns fetches DESC and
+ * reverses, so slice alignment depends on the parity of the member's stored turns —
+ * and turn writes are explicitly non-fatal by design ("Never fail the member's turn
+ * because bookkeeping failed"). One historical dropped write therefore shifted parity
+ * permanently: every later slice began on an assistant turn, every role check failed,
+ * and the member's entire cross-session history vanished on the first turn of a
+ * session, silently, indefinitely.
+ *
+ * This scan advances one turn at a time and pairs each user turn with the next
+ * assistant turn, tolerating a leading orphan, a trailing orphan, and consecutive
+ * turns of the same role.
+ *
+ * Purely reconstructive: it composes turns already fetched this turn. It retrieves
+ * nothing new and grants the result no authority it did not already have.
+ */
+export function pairCrossSessionTurns(
+  turns: Array<{ role?: string; content?: string; createdAt?: unknown }> | null | undefined
+): Array<{ userMessage: string; maiaResponse: string; timestamp: unknown }> {
+  const pairs: Array<{ userMessage: string; maiaResponse: string; timestamp: unknown }> = [];
+  if (!Array.isArray(turns)) return pairs;
+
+  let i = 0;
+  while (i < turns.length) {
+    const userTurn = turns[i];
+    if (userTurn?.role !== 'user') { i += 1; continue; }
+
+    // Find the next assistant turn. Intervening user turns are skipped rather than
+    // aborting the scan; the most recent user turn before the reply is the one paired.
+    let j = i + 1;
+    while (j < turns.length && turns[j]?.role !== 'assistant') {
+      if (turns[j]?.role === 'user') i = j;
+      j += 1;
+    }
+    if (j >= turns.length) break; // trailing user turn with no reply yet
+
+    pairs.push({
+      userMessage: turns[i]?.content ?? '',
+      maiaResponse: turns[j]?.content ?? '',
+      timestamp: turns[i]?.createdAt,
+    });
+    i = j + 1;
+  }
+  return pairs;
+}
+
+// =============================================================================
 // MEMORY AUTHORITY & IDENTITY PROTECTION
 // =============================================================================
 
@@ -1504,21 +1557,17 @@ async function corePathResponse(
   // 🔄 CROSS-SESSION RECALL: Convert fetched turns to conversation exchanges
   let effectiveHistory = conversationHistory;
   if (crossSessionTurns && crossSessionTurns.length > 0 && conversationHistory.length === 0) {
-    const pairs: any[] = [];
-    for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
-      const userTurn = crossSessionTurns[i];
-      const assistantTurn = crossSessionTurns[i + 1];
-      if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
-        pairs.push({
-          userMessage: userTurn.content,
-          maiaResponse: assistantTurn.content,
-          timestamp: userTurn.createdAt
-        });
-      }
-    }
+    const pairs = pairCrossSessionTurns(crossSessionTurns);
     if (pairs.length > 0) {
       effectiveHistory = pairs.slice(-4);
       console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
+    } else {
+      // PH2-001 item 2: continuity was fetched and yielded nothing usable. Previously
+      // this branch produced no output at all, so the loss was invisible.
+      console.warn(
+        `⚠️ [Cross-Session Recall CORE] ABSENT: fetched ${crossSessionTurns.length} turns, ` +
+        `produced 0 usable exchanges - member receives no cross-session continuity this turn`
+      );
     }
   }
 
@@ -1528,7 +1577,10 @@ async function corePathResponse(
   // Build context with light consciousness insights
   const context: MaiaContext = {
     sessionId,
-    summary: `Conversation: ${conversationContext.profile.dominantElement} element, ${conversationHistory.length + 1} turns`,
+    // PH2-001 item 3: count the history actually injected, not the session-scoped
+    // fetch. With cross-session recall active these diverge, and MAIA was told "1 turns"
+    // while four prior exchanges sat in her context.
+    summary: `Conversation: ${conversationContext.profile.dominantElement} element, ${effectiveHistory.length + 1} turns`,
     memberProfile: conversationContext.memberProfile,
     wisdomAdaptation: conversationContext.wisdomAdaptation,
     consciousnessInsights: {
@@ -1884,21 +1936,16 @@ The current user has not provided their name. Address them as "friend" or "there
       const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 10);
       if (crossSessionTurns.length > 0) {
         // Convert turns to conversation exchange format
-        const pairs: any[] = [];
-        for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
-          const userTurn = crossSessionTurns[i];
-          const assistantTurn = crossSessionTurns[i + 1];
-          if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
-            pairs.push({
-              userMessage: userTurn.content,
-              maiaResponse: assistantTurn.content,
-              timestamp: userTurn.createdAt
-            });
-          }
-        }
+        const pairs = pairCrossSessionTurns(crossSessionTurns);
         if (pairs.length > 0) {
           effectiveHistory = pairs.slice(-5); // Last 5 exchanges for DEEP path
           console.log(`🔄 [Cross-Session Recall DEEP] Loaded ${pairs.length} exchanges from previous sessions`);
+        } else {
+          // PH2-001 item 2: fetched but unusable - previously silent.
+          console.warn(
+            `⚠️ [Cross-Session Recall DEEP] ABSENT: fetched ${crossSessionTurns.length} turns, ` +
+            `produced 0 usable exchanges - member receives no cross-session continuity this turn`
+          );
         }
       }
     } catch (err) {
@@ -2899,6 +2946,35 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // error must never block generation. See memory: project_epistemic_observability_layer.
     try {
       const m = meta as any;
+
+      // 🔎 TIER-SCOPED COMPOSITION (PBR-002, 2026-08-13)
+      //
+      // The contract above is composition — "context that actually reaches the prompt" —
+      // not availability. Two fields could not honour it.
+      //
+      // `memoryInfluenceAddendum` and `forwardReadinessAddendum` are read ONLY inside
+      // fastPathResponse (:1199, :1205) and interpolated ONLY into the FAST template
+      // (:1297). They have no field on MaiaContext, are absent from ADDENDA_SPECS, and
+      // are not assembled by the CORE (:1571ff) or DEEP (:2200ff) context builders. On a
+      // CORE or DEEP turn they cannot reach the prompt — yet `!!m.<field>` reported them
+      // as reaching it, and `evidenceProviders` then listed memoryOrchestrator as an
+      // evidence provider for that turn. Against observed prevalence (CORE 72.8% /
+      // FAST 27.2%) that is the majority of turns.
+      //
+      // Availability is not composition. The flags below now answer the question the
+      // contract actually asks. Availability is NOT discarded: anything suppressed here
+      // is reported under `availableButNotComposed`, so the gap stays visible instead of
+      // becoming a silent false.
+      //
+      // This is a truthfulness repair only. It does NOT change which addenda reach which
+      // tier. Whether memory-orchestrator influence should become tier-independent is a
+      // deliberate product decision, deferred by founder ruling 2026-08-13.
+      const FAST_ONLY_ADDENDA = ['memoryInfluenceAddendum', 'forwardReadinessAddendum'] as const;
+      const isFastTier = processingProfile === 'FAST';
+      const availableButNotComposed = isFastTier
+        ? []
+        : FAST_ONLY_ADDENDA.filter(f => !!m[f]);
+
       const available = {
         conversationalRecall: !!m.conversationalRecallAddendum,
         atoms: {
@@ -2910,8 +2986,10 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         wuXing: !!m.wuxingSnapshotAddendum,
         memberWeb: !!m.memberWebAddendum,
         knowledgeGate: !!m.knowledgeGateAddendum,
-        memoryOrchestrator: !!m.memoryInfluenceAddendum,
-        forwardReadiness: !!m.forwardReadinessAddendum,
+        // FAST-only — see PBR-002 above. False on CORE/DEEP because the field cannot
+        // reach those prompts, not because it was absent from meta.
+        memoryOrchestrator: isFastTier && !!m.memoryInfluenceAddendum,
+        forwardReadiness: isFastTier && !!m.forwardReadinessAddendum,
         studio: !!m.studioAddendum,
         episodic: !!m.episodicRecallAddendum, // Phase 2, 2026-07-13 — member-marked moments
         dreams: false,   // layer not wired
@@ -2931,6 +3009,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         userId: effectiveUserId ? String(effectiveUserId).slice(0, 8) + '...' : null,
         routingTier: processingProfile,
         available,
+        // PBR-002: present in meta but structurally unable to reach this tier's prompt.
+        // Empty on FAST. Non-empty here is a wiring gap, not a data gap.
+        availableButNotComposed,
         evidenceProviders,
         representationsConsidered: null,
         representationsOffered: null,

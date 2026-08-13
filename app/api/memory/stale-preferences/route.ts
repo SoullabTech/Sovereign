@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;
 import { PreferenceConfirmationStore } from '@/lib/memory/stores/PreferenceConfirmationStore';
+import { query } from '@/lib/db/postgres';
 
 // Skip during static export (Capacitor builds)
 
@@ -101,7 +102,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await PreferenceConfirmationStore.record({
+    // PH2-001 item 4: prove ownership before mutating. Previously this route accepted
+    // a caller-supplied memoryId with no check, while the store's writers filter on
+    // `WHERE id = $1` alone — so a request could withdraw or resurrect another member's
+    // understanding, and stamp confirmed_by_user = true on it. The sibling caller
+    // (app/api/memory/patterns/[patternId]/feedback/route.ts) already proves ownership
+    // this way; this route now matches it.
+    const ownership = await query<{ id: string }>(
+      `SELECT id FROM developmental_memories WHERE id = $1 AND user_id = $2`,
+      [memoryId, userId]
+    );
+    if (ownership.rows.length === 0) {
+      return NextResponse.json({ error: 'Memory not found' }, { status: 404 });
+    }
+
+    const outcome = await PreferenceConfirmationStore.record({
       userId,
       memoryId,
       action,
@@ -109,8 +124,21 @@ export async function POST(req: NextRequest) {
       triggeredBy: 'manual',
     });
 
+    // PH2-001 item 5: report truthfully. The confirmation event was recorded, but if
+    // the member had withdrawn this understanding the standing was NOT restored, and
+    // the caller must not read `ok: true` as "it is active again".
+    if (!outcome.standingChanged) {
+      return NextResponse.json({
+        ok: true,
+        applied: false,
+        refusedReason: outcome.refusedReason,
+        message: `Confirmation recorded, but standing unchanged: this record was withdrawn by the member`,
+      });
+    }
+
     return NextResponse.json({
       ok: true,
+      applied: true,
       message: `Preference ${action}`,
     });
   } catch (err) {

@@ -115,7 +115,7 @@ export async function POST(
     const confirmationAction = actionMap[action];
 
     // Record the feedback using PreferenceConfirmationStore
-    const confirmationId = await PreferenceConfirmationStore.record({
+    const confirmationOutcome = await PreferenceConfirmationStore.record({
       userId,
       memoryId: patternId,
       action: confirmationAction,
@@ -136,10 +136,19 @@ export async function POST(
       );
     }
 
+    // PH2-001 item 5: same seam as stale-preferences. A confirm against a record the
+    // member previously withdrew is refused; the event is audited but standing is
+    // unchanged, and the caller must not read `ok: true` as "it is active again".
     return NextResponse.json({
       ok: true,
-      message: `Pattern ${action}ed`,
-      confirmationId,
+      applied: confirmationOutcome.standingChanged,
+      ...(confirmationOutcome.standingChanged
+        ? {}
+        : { refusedReason: confirmationOutcome.refusedReason }),
+      message: confirmationOutcome.standingChanged
+        ? `Pattern ${action}ed`
+        : `Confirmation recorded, but standing unchanged: this pattern was withdrawn by the member`,
+      confirmationId: confirmationOutcome.confirmationId,
       patternId,
       patternKey: pattern.pattern_key,
     });

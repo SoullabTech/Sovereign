@@ -1192,6 +1192,29 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         // why attribution must come from this explicit literal instead.
         originRoute: '/api/sovereign/app/maia/list',
         meta: {
+          // 🔒 PROMPT-AUTHORITY INVARIANT (PBR-001, 2026-08-12)
+          //
+          //   Client-carried metadata may not override server-authored context that
+          //   enters MAIA's system prompt.
+          //
+          // `meta` is the client request-body rest-spread (see the destructure at the
+          // top of this handler): every unrecognised key the caller sends lands in it.
+          // This spread previously sat BELOW the server-built fields, so a caller could
+          // supply e.g. `memberWebAddendum` and overwrite the server's value. Those
+          // fields are read straight out of meta by maiaService (`memberWebAddendum` at
+          // :1180) and interpolated into the FAST system prompt (:1297) — i.e. the same
+          // authority inversion SECREM-001 closed on the depthConfig channel.
+          //
+          // Moving the spread to the TOP restores the invariant for every server-authored
+          // field at once, rather than re-sorting them one at a time and having the next
+          // addition land on the wrong side. Client meta still reaches downstream
+          // consumers that legitimately read it (sanctuary, pronouns, userName, surface,
+          // studioContext, conversationHistory, mode); it simply cannot win a collision
+          // with a field this handler computed.
+          //
+          // Statically established from source. Production exploitability NOT demonstrated
+          // and deliberately not tested.
+          ...meta,
           chatType: 'sovereign-interface',
           endpoint: '/api/sovereign/app/maia',
           safeMode: SAFE_MODE,
@@ -1213,7 +1236,6 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
-          ...meta,
           // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — placed AFTER ...meta so server-built
           // addenda cannot be overridden by stale client-supplied meta.
           memoryInfluenceAddendum,
