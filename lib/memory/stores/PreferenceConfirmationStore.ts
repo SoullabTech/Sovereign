@@ -31,11 +31,30 @@ export interface RecordConfirmationInput {
   triggeredBy?: ConfirmationTrigger;
 }
 
+/**
+ * Outcome of a confirmation attempt. `standingChanged` is false when the row was
+ * withdrawn by the member and the confirmation was therefore refused.
+ */
+export interface RecordConfirmationResult {
+  confirmationId: string;
+  standingChanged: boolean;
+  refusedReason?: 'withdrawn_by_member';
+}
+
 export const PreferenceConfirmationStore = {
   /**
    * Record a preference confirmation event
    */
-  async record(input: RecordConfirmationInput): Promise<string> {
+  /**
+   * PH2-001 item 5: the return distinguishes "the audit event was written" from
+   * "the record's standing changed". A confirmation against a member-withdrawn row
+   * is refused by the predicate below; the attempt is still a real event and is still
+   * audited, but the caller must not infer that standing was restored. Silence about
+   * failure is a defect when the caller would reasonably infer success.
+   */
+  async record(input: RecordConfirmationInput): Promise<RecordConfirmationResult> {
+    let standingChanged = true;
+    let refusedReason: 'withdrawn_by_member' | undefined;
     const result = await query<{ id: string }>(
       `
       INSERT INTO preference_confirmations (
@@ -57,7 +76,7 @@ export const PreferenceConfirmationStore = {
 
     // Also update the memory's last_confirmed_at
     if (input.action === 'confirmed' || input.action === 'updated') {
-      await query(
+      const applied = await query(
         `
         UPDATE developmental_memories
         SET
@@ -65,9 +84,20 @@ export const PreferenceConfirmationStore = {
           confirmed_by_user = true,
           valid_to = NULL
         WHERE id = $1
+          -- PH2-001 item 5: a confirmation may refresh a live record. It may NOT
+          -- resurrect a withdrawn one. No staleness-expiry mechanism exists anywhere
+          -- in the system, so every valid_to = NOW() is member-originated: restoring
+          -- an expired row is necessarily restoring a member-yielded understanding.
+          -- Correction is not temporary disagreement. New evidence may create a new
+          -- perception; it may not resurrect the old assertion.
+          AND (valid_to IS NULL OR valid_to > NOW())
         `,
         [input.memoryId]
       );
+      if ((applied.rowCount ?? 0) === 0) {
+        standingChanged = false;
+        refusedReason = 'withdrawn_by_member';
+      }
     } else if (input.action === 'expired') {
       await query(
         `
@@ -90,7 +120,11 @@ export const PreferenceConfirmationStore = {
       );
     }
 
-    return result.rows[0]?.id ?? '';
+    return {
+      confirmationId: result.rows[0]?.id ?? '',
+      standingChanged,
+      ...(refusedReason ? { refusedReason } : {}),
+    };
   },
 
   /**

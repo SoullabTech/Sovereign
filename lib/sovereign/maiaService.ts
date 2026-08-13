@@ -100,6 +100,59 @@ import {
 } from '@/lib/maia/prompts/memoryCanonGuard';
 
 // =============================================================================
+// CROSS-SESSION PAIRING (PH2-001 TODAY, items 1+2)
+// =============================================================================
+
+/**
+ * Pair a flat turn sequence into conversation exchanges.
+ *
+ * Replaces a fixed `i += 2` stride, which assumed the fetched sequence begins with
+ * a user turn and alternates perfectly. TurnsStore.getRecentTurns fetches DESC and
+ * reverses, so slice alignment depends on the parity of the member's stored turns —
+ * and turn writes are explicitly non-fatal by design ("Never fail the member's turn
+ * because bookkeeping failed"). One historical dropped write therefore shifted parity
+ * permanently: every later slice began on an assistant turn, every role check failed,
+ * and the member's entire cross-session history vanished on the first turn of a
+ * session, silently, indefinitely.
+ *
+ * This scan advances one turn at a time and pairs each user turn with the next
+ * assistant turn, tolerating a leading orphan, a trailing orphan, and consecutive
+ * turns of the same role.
+ *
+ * Purely reconstructive: it composes turns already fetched this turn. It retrieves
+ * nothing new and grants the result no authority it did not already have.
+ */
+export function pairCrossSessionTurns(
+  turns: Array<{ role?: string; content?: string; createdAt?: unknown }> | null | undefined
+): Array<{ userMessage: string; maiaResponse: string; timestamp: unknown }> {
+  const pairs: Array<{ userMessage: string; maiaResponse: string; timestamp: unknown }> = [];
+  if (!Array.isArray(turns)) return pairs;
+
+  let i = 0;
+  while (i < turns.length) {
+    const userTurn = turns[i];
+    if (userTurn?.role !== 'user') { i += 1; continue; }
+
+    // Find the next assistant turn. Intervening user turns are skipped rather than
+    // aborting the scan; the most recent user turn before the reply is the one paired.
+    let j = i + 1;
+    while (j < turns.length && turns[j]?.role !== 'assistant') {
+      if (turns[j]?.role === 'user') i = j;
+      j += 1;
+    }
+    if (j >= turns.length) break; // trailing user turn with no reply yet
+
+    pairs.push({
+      userMessage: turns[i]?.content ?? '',
+      maiaResponse: turns[j]?.content ?? '',
+      timestamp: turns[i]?.createdAt,
+    });
+    i = j + 1;
+  }
+  return pairs;
+}
+
+// =============================================================================
 // MEMORY AUTHORITY & IDENTITY PROTECTION
 // =============================================================================
 
@@ -1504,53 +1557,16 @@ async function corePathResponse(
   // 🔄 CROSS-SESSION RECALL: Convert fetched turns to conversation exchanges
   let effectiveHistory = conversationHistory;
   if (crossSessionTurns && crossSessionTurns.length > 0 && conversationHistory.length === 0) {
-    // 🔧 TOLERANT PAIRING (CTR-001, 2026-08-13)
-    //
-    // This previously strode `i += 2` and required role 'user' at every even index.
-    // That assumes the fetched sequence is perfectly alternating and starts on a user
-    // turn. A single orphan — a leading assistant turn, a member send whose MAIA turn
-    // was never written, a tier that returned early before logging its side — shifts
-    // the parity for EVERY subsequent turn, so the loop yields zero pairs and the
-    // member's entire cross-session continuity silently disappears. One missing row
-    // erased all of it.
-    //
-    // The scan below pairs each 'user' turn with the assistant turn immediately after
-    // it and skips anything that does not pair. It is strictly MORE tolerant: every
-    // pair the stride found is still found, so this cannot lose an exchange that
-    // previously survived.
-    //
-    // Deliberately NOT added: no new retrieval source, no reordering, no relevance
-    // ranking, no widening of the fetch. The `.slice(-4)` cap below is unchanged, so
-    // the volume reaching the prompt is identical — this recovers pairs that were
-    // being dropped, it does not admit more memory.
-    const pairs: any[] = [];
-    for (let i = 0; i < crossSessionTurns.length - 1; i++) {
-      const userTurn = crossSessionTurns[i];
-      if (userTurn?.role !== 'user') continue;
-      const assistantTurn = crossSessionTurns[i + 1];
-      if (assistantTurn?.role !== 'assistant') continue;
-      pairs.push({
-        userMessage: userTurn.content,
-        maiaResponse: assistantTurn.content,
-        timestamp: userTurn.createdAt
-      });
-      i++; // consume the assistant turn so it cannot open a second pair
-    }
+    const pairs = pairCrossSessionTurns(crossSessionTurns);
     if (pairs.length > 0) {
       effectiveHistory = pairs.slice(-4);
       console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
     } else {
-      // 🔇 ZERO-PAIR VISIBILITY (CTR-001)
-      //
-      // This log MUST stay outside the success branch. Previously the only emission
-      // was inside `if (pairs.length > 0)`, so the failure case — turns fetched,
-      // nothing paired, continuity absent from the prompt — produced complete silence.
-      // An absent log is indistinguishable from a member who simply has no history,
-      // which is how a continuity failure reads as a continuity non-event.
+      // PH2-001 item 2: continuity was fetched and yielded nothing usable. Previously
+      // this branch produced no output at all, so the loss was invisible.
       console.warn(
-        `🔇 [Cross-Session Recall CORE] Zero pairs from ${crossSessionTurns.length} fetched turns — ` +
-        `roles=[${crossSessionTurns.map((t: any) => t?.role ?? 'null').join(',')}] — ` +
-        `no prior exchanges reached this prompt`
+        `⚠️ [Cross-Session Recall CORE] ABSENT: fetched ${crossSessionTurns.length} turns, ` +
+        `produced 0 usable exchanges - member receives no cross-session continuity this turn`
       );
     }
   }
@@ -1561,17 +1577,9 @@ async function corePathResponse(
   // Build context with light consciousness insights
   const context: MaiaContext = {
     sessionId,
-    // 📏 TRUTHFUL SUMMARY (CTR-001, 2026-08-13)
-    //
-    // This counted `conversationHistory`, not `effectiveHistory`. The cross-session
-    // branch above only runs when `conversationHistory.length === 0`, so whenever
-    // recall actually worked the summary read "1 turns" while up to four prior
-    // exchanges were in the prompt — systematically wrong in exactly the case where
-    // continuity was functioning, and reaching the model as context.
-    //
-    // `effectiveHistory` is the history that composes into this prompt. Counting it
-    // makes the summary a statement about what was injected rather than about a
-    // variable that the enclosing branch has already established is empty.
+    // PH2-001 item 3: count the history actually injected, not the session-scoped
+    // fetch. With cross-session recall active these diverge, and MAIA was told "1 turns"
+    // while four prior exchanges sat in her context.
     summary: `Conversation: ${conversationContext.profile.dominantElement} element, ${effectiveHistory.length + 1} turns`,
     memberProfile: conversationContext.memberProfile,
     wisdomAdaptation: conversationContext.wisdomAdaptation,
@@ -1928,21 +1936,16 @@ The current user has not provided their name. Address them as "friend" or "there
       const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 10);
       if (crossSessionTurns.length > 0) {
         // Convert turns to conversation exchange format
-        const pairs: any[] = [];
-        for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
-          const userTurn = crossSessionTurns[i];
-          const assistantTurn = crossSessionTurns[i + 1];
-          if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
-            pairs.push({
-              userMessage: userTurn.content,
-              maiaResponse: assistantTurn.content,
-              timestamp: userTurn.createdAt
-            });
-          }
-        }
+        const pairs = pairCrossSessionTurns(crossSessionTurns);
         if (pairs.length > 0) {
           effectiveHistory = pairs.slice(-5); // Last 5 exchanges for DEEP path
           console.log(`🔄 [Cross-Session Recall DEEP] Loaded ${pairs.length} exchanges from previous sessions`);
+        } else {
+          // PH2-001 item 2: fetched but unusable - previously silent.
+          console.warn(
+            `⚠️ [Cross-Session Recall DEEP] ABSENT: fetched ${crossSessionTurns.length} turns, ` +
+            `produced 0 usable exchanges - member receives no cross-session continuity this turn`
+          );
         }
       }
     } catch (err) {
