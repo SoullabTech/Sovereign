@@ -1631,10 +1631,45 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This effect is defined early but the actual ref assignment happens later via another effect
 
   // ==================== RECORDING STATE CALLBACK ====================
+  // ⛑️ Safety net for a claimed activation. Answers the standing acceptance
+  // question — "what concrete operation will clear me?" — for the sites that claim
+  // isActivating outside the holoflower tap path (which arms its own timeout).
+  //
+  // ⛔ It degrades ONLY to a truthful `delayed`. It must never set 'failed':
+  // elapsed time is not an authoritative failure event. That distinction is the
+  // whole finding of this unit — a blind timer previously rendered
+  // `Tap to try again` while iOS showed the microphone still live.
+  const armActivationSafetyNet = useCallback((reason: string) => {
+    if (activatingTimeoutRef.current) clearTimeout(activatingTimeoutRef.current);
+    activatingTimeoutRef.current = setTimeout(() => {
+      activatingTimeoutRef.current = null;
+      setIsActivating(false);
+      setMicRequestState(prev => (prev === 'pending' ? 'delayed' : prev));
+      console.warn(`⏳ [voice] activation (${reason}) unconfirmed after 6s — reporting delay, NOT failure`);
+    }, 6000);
+  }, []);
+
   // Sync isListening state from ContinuousConversation to parent
   // This is the SOURCE OF TRUTH for whether mic is actually live
   const handleRecordingStateChange = useCallback((isRecording: boolean) => {
     console.log('📡 Recording state changed:', isRecording, '(this is mic truth)');
+    // ⛔ NO DIVERGENCE WITNESS HERE — deliberately, and this is the reasoning:
+    // a witness inside this callback CANNOT observe the failure it would exist for.
+    // The suspected condition is "mic live but this callback never delivered"; a
+    // detector placed inside the mechanism whose absence is the hypothesis only runs
+    // when the mechanism already worked. It would also false-positive on every
+    // normal start, since `setIsListening(isRecording)` below has not run yet at
+    // this point, so the mirror is legitimately still false.
+    //
+    // The usable witness is member-observable and needs no code: the OS microphone
+    // indicator read against MAIA's caption.
+    //   Listening        + indicator ON   → converged, expected
+    //   Still preparing…  + indicator ON  → ⚠️ activation reached the mic but this
+    //                                       callback did not fire — the defect is
+    //                                       event PROPAGATION, not state authority
+    //   Still preparing…  + indicator OFF → activation never reached mic truth;
+    //                                       investigate startListening / platform
+    //   Tap to try again                  → a real caught exception; read its name
     // Clear any pending activating timeout - mic has responded
     if (activatingTimeoutRef.current) {
       clearTimeout(activatingTimeoutRef.current);
@@ -2662,14 +2697,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // lifecycle concern. See: continuous talk-mode parity goal.
       if (streamingVoiceMode) {
         console.log('🎤 [StreamingVoice] Hands-free mode - requesting mic restart');
-        setIsListening(true);
-        setIsActivating(false);
-
+        // isActivating is claimed ONLY where activation is actually attempted.
+        // startListening here is gated on streamingVoiceMode AND lastSendWasVoiceRef,
+        // so setting isActivating unconditionally would strand the caption at
+        // "Preparing to listen…" on every turn those guards decline.
         setTimeout(() => {
           if (streamingVoiceMode) {
             setIsMuted(false);
             console.log('🎤 [StreamingVoice] Calling startListening after 300ms');
-            if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('streaming_response_complete');
+            if (lastSendWasVoiceRef.current) {
+              setIsActivating(true);
+              armActivationSafetyNet('streaming_response_complete');
+              voiceSession.methods.startListening('streaming_response_complete');
+            }
           }
         }, 300);
       }
@@ -2709,9 +2749,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setIsAudioPlaying(false);
     setIsMicrophonePaused(false);
 
-    // Flip to listening immediately (user is speaking)
-    setIsListening(true);
-    setIsActivating(false);
+    // ⛔ CLAIMS NOTHING, deliberately. This path stops MAIA and schedules NO mic
+    // reactivation — verified: it ends at toast('✋ Interrupted') with deps
+    // [stopStreamingVoice]. Setting isActivating(true) here would assert an
+    // activation in flight when none is, which is the same epistemic mistake as the
+    // optimistic isListening(true) this unit removed. Mic state is left entirely to
+    // handleRecordingStateChange.
 
     // Brief visual feedback
     toast('✋ Interrupted', { duration: 1000 });
@@ -2808,16 +2851,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setIsAudioPlaying(false);
       setIsResponding(false);
       setIsMicrophonePaused(false);
-      setIsListening(true);
-      setIsActivating(false);
-
       // Reset the progress timer
       lastAudioProgressRef.current = Date.now();
 
-      // Actually restart the mic
+      // Actually restart the mic — isActivating claimed only inside the same guards
+      // that gate the attempt, so a declined restart cannot strand the caption.
       if (voiceSession.state.capabilities.canStartListening) {
         console.log(`🐕 [WATCHDOG] Force-restarting microphone (${reason})...`);
-        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('watchdog_recovery');
+        if (lastSendWasVoiceRef.current) {
+          setIsActivating(true);
+          armActivationSafetyNet('watchdog_recovery');
+          voiceSession.methods.startListening('watchdog_recovery');
+        }
       }
 
       toast('⚠️ Voice recovered', { duration: 2000 });
@@ -3767,7 +3812,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // It is presentation-only: it never gates audio, never re-implements the mic
   // path, and cannot desync into a second source of truth — `isListening`
   // remains authoritative for whether voice is actually live.
-  type MicRequestState = 'idle' | 'pending' | 'failed';
+  // 'delayed' exists so ELAPSED TIME can never manufacture failure. Founder ruling
+  // 2026-08-13, after production evidence: the screen showed `Tap to try again`
+  // while iOS's orange privacy indicator showed the microphone still active — the
+  // UI and the mic lifecycle disagreed, and a blind 6s timer was the liar.
+  // 'failed' is now reachable ONLY from an authoritative failure event.
+  type MicRequestState = 'idle' | 'pending' | 'delayed' | 'failed';
   const [micRequestState, setMicRequestState] = useState<MicRequestState>('idle');
   // Reuses the holoflower's already-tested activation handler rather than
   // duplicating it. A P0 recoverability fix must not introduce a second,
@@ -3779,9 +3829,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     if (micRequestState !== 'pending') return;
     if (isListening) { setMicRequestState('idle'); return; }
+    // Time elapsed WITHOUT mic truth is not evidence that activation failed.
+    // It is evidence that activation is slow. Say only that.
     const t = setTimeout(() => {
-      setMicRequestState(prev => (prev === 'pending' ? 'failed' : prev));
-      console.warn('🎤 [P0] mic activation did not reach listening within 6s — offering retry');
+      setMicRequestState(prev => (prev === 'pending' ? 'delayed' : prev));
+      console.warn('🎤 [P0] activation still in flight after 6s — reporting delay, NOT failure');
     }, 6000);
     return () => clearTimeout(t);
   }, [micRequestState, isListening]);
@@ -8292,6 +8344,14 @@ I'm not sure what I'm feeling yet.`;
                     const msg = error?.message || String(error);
                     console.error('[voice] startListening FAILED', name, msg, error);
 
+                    // ⭐ THE AUTHORITATIVE FAILURE EVENT — and currently the ONLY
+                    // source of 'failed'. Session error phase is NOT wired into this
+                    // state (an earlier comment claimed it was; that was an
+                    // overclaim, deleted). Never reachable from elapsed time. The
+                    // reason stays in observability; the member sees a recoverable
+                    // state, not an error code.
+                    setMicRequestState('failed');
+
                     // IMPORTANT: do NOT switch to text automatically.
                     // Keep the user in voice mode and show what to do.
                     setIsActivating(false);
@@ -8957,13 +9017,33 @@ I'm not sure what I'm feeling yet.`;
                 textShadow: '0 0 12px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35)',
               }}
               aria-live="polite"
+              aria-label={
+                isListening
+                  ? 'MAIA is listening'
+                  : micRequestState === 'failed'
+                  ? "Voice didn't start. Tap to try again."
+                  : micRequestState === 'delayed'
+                  ? 'Still preparing to listen'
+                  : (isActivating || micRequestState === 'pending')
+                  ? 'Preparing to listen'
+                  : 'Tap to speak with MAIA'
+              }
             >
-              {micRequestState === 'failed'
-                ? 'Tap to try again'
-                : micRequestState === 'pending'
-                ? 'Preparing to listen\u2026'
-                : isListening
+              {/* ORDER IS THE INVARIANT, not a style choice.
+                  `isListening` (authoritative mic truth, written ONLY by
+                  handleRecordingStateChange) is tested FIRST, so MAIA can never
+                  display a failed/retry state while the microphone is actually
+                  live — the exact contradiction the production screenshots caught.
+                  And `Listening` can never appear merely because voice mode was
+                  requested: nothing but mic truth reaches this branch. */}
+              {isListening
                 ? 'Listening'
+                : micRequestState === 'failed'
+                ? 'Tap to try again'
+                : micRequestState === 'delayed'
+                ? 'Still preparing\u2026'
+                : (isActivating || micRequestState === 'pending')
+                ? 'Preparing to listen\u2026'
                 : 'Tap to Speak'}
             </span>
           </div>
