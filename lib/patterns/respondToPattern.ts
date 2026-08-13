@@ -60,7 +60,7 @@ export async function respondToPattern(params: {
     `UPDATE pattern_ledger
      SET
        -- PH2-001 add-on A: the ELSE branch preserves standing and is now REACHABLE.
-       -- Its only caller previously typed `response` as 'confirmed' | 'rejected', so
+       -- Its only caller previously typed response as confirmed|rejected only, so
        -- every ambiguous answer was mapped to 'confirmed' and this branch was dead.
        status              = CASE WHEN $1 = 'confirmed' THEN 'confirmed'
                                   WHEN $1 = 'rejected'  THEN 'rejected'
