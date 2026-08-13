@@ -1539,6 +1539,33 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // run in setTimeout/requestAnimationFrame where a state value would be a stale
   // closure (see the note at ~line 2558).
   const lastSendWasVoiceRef = useRef(true);
+
+  // ⛑️ P0 — truthful acknowledgement of an explicit Speak act.
+  //
+  // GOVERNING RULE (founder ruling 2026-08-13): elapsed time may QUALIFY
+  // uncertainty; it may not manufacture failure or success. So this state has
+  // no timer->failed transition. `failed` is set ONLY by an authoritative
+  // failure event (a caught exception from the activation operation).
+  // Elapsed time only softens the wording from "Preparing" to "Still preparing".
+  //
+  // Presentation-only: it never gates audio and never re-implements the mic
+  // path. `isListening` remains authoritative for whether voice is actually live.
+  type MicRequestState = 'idle' | 'pending' | 'failed';
+  const [micRequestState, setMicRequestState] = useState<MicRequestState>('idle');
+  const [micPreparingLong, setMicPreparingLong] = useState(false);
+
+  // Confirmation by the real event: listening actually started.
+  useEffect(() => {
+    if (isListening) { setMicRequestState('idle'); setMicPreparingLong(false); }
+  }, [isListening]);
+
+  // Elapsed time qualifies the wait. It does NOT conclude failure.
+  useEffect(() => {
+    if (micRequestState !== 'pending') { setMicPreparingLong(false); return; }
+    const t = setTimeout(() => setMicPreparingLong(true), 6000);
+    return () => clearTimeout(t);
+  }, [micRequestState]);
+
   const isMicrophonePausedRef = useRef(false);
   const lastVoiceErrorRef = useRef<number>(0);
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
@@ -5099,7 +5126,7 @@ I'm not sure what I'm feeling yet.`;
         setMaiaResponseText(fallbackText);
 
         // Speak the fallback if voice is enabled
-        if (!showChatInterface && voiceEnabled && maiaReady) {
+        if (!showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat) {
           handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
         }
         return;
@@ -5263,7 +5290,7 @@ I'm not sure what I'm feeling yet.`;
         setMaiaResponseText(fallbackText);
 
         // Speak the fallback if voice is enabled
-        if (!showChatInterface && voiceEnabled && maiaReady) {
+        if (!showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat) {
           handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
         }
         return;
@@ -5343,7 +5370,7 @@ I'm not sure what I'm feeling yet.`;
         setIsResponding(false);
         setMaiaResponseText(fallbackText);
 
-        if (!showChatInterface && voiceEnabled && maiaReady) {
+        if (!showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat) {
           handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
         }
         return;
@@ -5390,7 +5417,7 @@ I'm not sure what I'm feeling yet.`;
         const { deriveChunkProsodyLegacy } = await import('@/lib/voice/prosodyFromPFI');
 
         // Initialize audio queue for voice mode
-        const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
+        const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
         // ECHO SUPPRESSION: Define cooldown for streaming audio path
         const streamingCooldownMs = 200; // Brief breathing space — reduced for more natural turn handoff
@@ -6023,8 +6050,18 @@ I'm not sure what I'm feeling yet.`;
 
       // Play audio response with Maia's voice - ALWAYS in voice mode
       // 🔥 SKIP if we already used streaming audio (audioQueue handled it)
-      const usedStreamingAudio = isStreaming && !showChatInterface && voiceEnabled && maiaReady;
-      const shouldSpeak = !usedStreamingAudio && (!showChatInterface || (showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat));
+      const usedStreamingAudio = isStreaming && !showChatInterface && voiceEnabled && maiaReady && enableVoiceInChat;
+      // 🔊 MODALITY INDEPENDENCE (founder ruling 2026-08-13): member INPUT modality
+      // and MAIA OUTPUT modality are orthogonal. All four cells must be real:
+      //   type + silent · type + spoken · speak + silent · speak + spoken
+      // The 4th cell (speak + silent) did NOT exist: voice mode forced audible
+      // output because these gates tested only `!showChatInterface`, ignoring the
+      // member's explicit `enableVoiceInChat` choice. A member who turned MAIA's
+      // voice OFF and then tapped Speak got unexpected audio — their stated
+      // preference silently overridden by a mode switch. Safe by default:
+      // `enableVoiceInChat` defaults to TRUE, so voice mode stays audible unless
+      // the member turned it off.
+      const shouldSpeak = !usedStreamingAudio && enableVoiceInChat && (!showChatInterface || (showChatInterface && voiceEnabled && maiaReady));
 
       // If we used streaming audio, add message to history now (will show if "Show Text" is enabled)
       if (usedStreamingAudio && isInVoiceMode) {
@@ -8592,7 +8629,13 @@ I'm not sure what I'm feeling yet.`;
                 textShadow: '0 0 12px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35)',
               }}
             >
-              {isListening ? 'Listening' : 'Tap to Speak'}
+              {micRequestState === 'failed'
+                ? 'Tap to try again'
+                : micRequestState === 'pending'
+                ? (micPreparingLong ? 'Still preparing\u2026' : 'Preparing to listen\u2026')
+                : isListening
+                ? 'Listening'
+                : 'Tap to Speak'}
             </span>
           </div>
         )}
@@ -9531,7 +9574,64 @@ I'm not sure what I'm feeling yet.`;
                           immediately to its left. Icon/onClick/behavior
                           unchanged. */}
                       <button
-                        onClick={() => setShowChatInterface(false)}
+                        onClick={() => {
+                          // 🎙️ ATOMIC TRANSITION (P0 — speak-button-arms-mic).
+                          // This previously did ONLY `setShowChatInterface(false)`,
+                          // moving the visible UI into voice mode while leaving
+                          // `lastSendWasVoiceRef` at whatever the last turn set.
+                          // After a TYPED turn that ref is deliberately false (the
+                          // consent boundary in `handleTextMessage`: typed input is
+                          // not voice re-consent), and every auto-restart path is
+                          // gated `if (lastSendWasVoiceRef.current)`. Net effect:
+                          // member taps "Speak", the voice field appears, and the
+                          // mic is never armed. It looked intermittent only because
+                          // it still worked when the member had not yet typed.
+                          //
+                          // The consent boundary is NOT weakened — it is honored
+                          // more precisely: tapping "Speak" IS an explicit member
+                          // gesture to speak, so this handler is the right place to
+                          // record voice consent. Auto-re-arm after a typed turn
+                          // stays prohibited; only this deliberate tap re-arms.
+                          //
+                          // Mirrors the already-working audio-enable sequence
+                          // (UI -> unmute -> enableAudio -> startListening) so both
+                          // entry points into voice mode leave identical state.
+                          setShowChatInterface(false);
+                          setIsMuted(false);
+                          lastSendWasVoiceRef.current = true;
+                          setMicRequestState('pending');
+                          enableAudio().then(() => {
+                            setTimeout(async () => {
+                              if (voiceSession.state.capabilities.canStartListening) {
+                                await voiceSession.methods.startListening('speak_button_gesture');
+                                console.log('🎤 [mode] Speak tapped — mic armed');
+                              } else {
+                                // NOT a failure. `canStartListening` is
+                                // `phase === 'idle' && !error && !isSpeaking && !isProcessing`
+                                // (hooks/useVoiceSession.ts), so it is transiently false
+                                // whenever MAIA is still speaking/processing or the session
+                                // has not reached idle. That is "not ready yet", not
+                                // "cannot" — and `failed` may only mean an event has
+                                // ESTABLISHED that activation failed.
+                                //
+                                // The one authoritative signal here is the session's own
+                                // recoverable-error phase; everything else stays `pending`,
+                                // where elapsed time will soften the wording instead of
+                                // concluding failure.
+                                const sessionError = voiceSession.state.error;
+                                console.warn('🎤 [mode] Speak tapped but canStartListening=false', {
+                                  phase: voiceSession.state.phase,
+                                  hasError: !!sessionError,
+                                });
+                                if (sessionError) setMicRequestState('failed');
+                              }
+                            }, 100);
+                          }).catch((err) => {
+                            // Authoritative failure event — the only route to 'failed'.
+                            console.warn('🎤 [mode] Speak tap: enableAudio failed', err);
+                            setMicRequestState('failed');
+                          });
+                        }}
                         className="flex min-h-[32px] items-center gap-1.5 rounded-full px-2 text-xs font-medium text-white/30 transition-colors hover:text-white/60"
                         title="Speak instead of typing"
                         aria-label="Switch to speaking"
