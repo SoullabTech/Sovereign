@@ -1186,6 +1186,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         input: message,
         includeAudio: includeAudio || false,
         voiceProfile: voiceProfile,
+        // R1 serving-route witness (2026-08-13): declared at the HTTP boundary. Note
+        // meta.endpoint below reports the SIBLING path '/api/sovereign/app/maia' — a
+        // pre-existing mislabel left untouched by this diagnostic — which is exactly
+        // why attribution must come from this explicit literal instead.
+        originRoute: '/api/sovereign/app/maia/list',
         meta: {
           chatType: 'sovereign-interface',
           endpoint: '/api/sovereign/app/maia',

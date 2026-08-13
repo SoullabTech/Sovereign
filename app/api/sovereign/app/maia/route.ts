@@ -281,6 +281,10 @@ export async function POST(req: NextRequest) {
         input: message,
         includeAudio: includeAudio || false,
         voiceProfile: voiceProfile,
+        // R1 serving-route witness (2026-08-13): declared at the HTTP boundary so the
+        // turn record can be bound to the route that served it. meta.endpoint is NOT
+        // usable for this — the /list sibling sets that field to this same path.
+        originRoute: '/api/sovereign/app/maia',
         meta: {
           chatType: 'sovereign-interface',
           endpoint: '/api/sovereign/app/maia',

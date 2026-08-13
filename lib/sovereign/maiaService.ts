@@ -3362,6 +3362,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             consciousnessData: consciousnessData,
             usedClaudeConsult: consciousnessData?.claudeConsultation ? true : false,
             // NOTE: cognition/bloomMeta not in logMaiaTurn interface - stored separately
+            // R1 serving-route witness (2026-08-13): forwarded with NO fallback, by
+            // design. The corpus callosum call below defaults to
+            // '/api/sovereign/app/maia' when a route declares nothing, which is why
+            // agent_runs.origin_route cannot discriminate the two serving routes.
+            // Here an undeclared origin must persist as NULL so "unattributed" stays
+            // visibly distinct from "attributed".
+            originRoute,
           }
         );
       }

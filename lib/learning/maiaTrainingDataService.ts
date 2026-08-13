@@ -115,6 +115,7 @@ export interface MaiaTurn {
   consciousness_depth_achieved?: number;
   observer_insights?: Record<string, any>;
   evolution_triggers?: string[];
+  origin_route?: string;
   created_at: Date;
 }
 
@@ -161,6 +162,12 @@ export interface LogTurnRequest {
   // Extended consciousness data
   observerInsights?: Record<string, any>;
   evolutionTriggers?: string[];
+  // R1 serving-route witness (2026-08-13). The literal path of the route that served
+  // this turn, declared at the HTTP boundary. Deliberately NOT derived from
+  // meta.endpoint: /api/sovereign/app/maia/list declares its sibling's path there,
+  // so meta.endpoint cannot distinguish the two routes. Optional — a caller that
+  // does not declare an origin leaves the column NULL.
+  originRoute?: string;
 }
 
 export interface AddFeedbackRequest {
@@ -215,16 +222,22 @@ export class MaiaTrainingDataService {
 
       const turnId = result.rows[0]?.turn_id;
 
-      // Store extended consciousness data if provided
-      if ((request.observerInsights || request.evolutionTriggers) && turnId) {
+      // Store extended consciousness data + serving-route attribution if provided.
+      // COALESCE so a field that was not supplied never clobbers an existing value;
+      // on a freshly inserted row every target is NULL, so behavior is unchanged for
+      // the pre-existing two columns.
+      if ((request.observerInsights || request.evolutionTriggers || request.originRoute) && turnId) {
         await pool.query(
           `UPDATE maia_turns
-           SET observer_insights = $1, evolution_triggers = $2
+           SET observer_insights  = COALESCE($1::jsonb, observer_insights),
+               evolution_triggers = COALESCE($2::text[], evolution_triggers),
+               origin_route       = COALESCE($4::text, origin_route)
            WHERE id = $3`,
           [
             request.observerInsights ? JSON.stringify(request.observerInsights) : null,
             request.evolutionTriggers,
-            turnId
+            turnId,
+            request.originRoute ?? null
           ]
         );
       }
@@ -489,6 +502,8 @@ export async function logMaiaTurn(
       topScore: number | null;
     };
     retrievalContextActive?: boolean;
+    // R1 serving-route witness (2026-08-13) — literal path of the serving route.
+    originRoute?: string;
   } = {}
 ): Promise<number> {
   // Fold use-frame telemetry into the existing observerInsights JSONB so we
@@ -516,7 +531,8 @@ export async function logMaiaTurn(
     consciousnessDepth: metadata.consciousnessData?.depth,
     observerInsights,
     evolutionTriggers: metadata.consciousnessData?.evolutionTriggers,
-    usedClaudeConsult: metadata.usedClaudeConsult
+    usedClaudeConsult: metadata.usedClaudeConsult,
+    originRoute: metadata.originRoute
   });
 }
 
