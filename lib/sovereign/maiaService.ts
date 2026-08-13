@@ -1504,21 +1504,54 @@ async function corePathResponse(
   // 🔄 CROSS-SESSION RECALL: Convert fetched turns to conversation exchanges
   let effectiveHistory = conversationHistory;
   if (crossSessionTurns && crossSessionTurns.length > 0 && conversationHistory.length === 0) {
+    // 🔧 TOLERANT PAIRING (CTR-001, 2026-08-13)
+    //
+    // This previously strode `i += 2` and required role 'user' at every even index.
+    // That assumes the fetched sequence is perfectly alternating and starts on a user
+    // turn. A single orphan — a leading assistant turn, a member send whose MAIA turn
+    // was never written, a tier that returned early before logging its side — shifts
+    // the parity for EVERY subsequent turn, so the loop yields zero pairs and the
+    // member's entire cross-session continuity silently disappears. One missing row
+    // erased all of it.
+    //
+    // The scan below pairs each 'user' turn with the assistant turn immediately after
+    // it and skips anything that does not pair. It is strictly MORE tolerant: every
+    // pair the stride found is still found, so this cannot lose an exchange that
+    // previously survived.
+    //
+    // Deliberately NOT added: no new retrieval source, no reordering, no relevance
+    // ranking, no widening of the fetch. The `.slice(-4)` cap below is unchanged, so
+    // the volume reaching the prompt is identical — this recovers pairs that were
+    // being dropped, it does not admit more memory.
     const pairs: any[] = [];
-    for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
+    for (let i = 0; i < crossSessionTurns.length - 1; i++) {
       const userTurn = crossSessionTurns[i];
+      if (userTurn?.role !== 'user') continue;
       const assistantTurn = crossSessionTurns[i + 1];
-      if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
-        pairs.push({
-          userMessage: userTurn.content,
-          maiaResponse: assistantTurn.content,
-          timestamp: userTurn.createdAt
-        });
-      }
+      if (assistantTurn?.role !== 'assistant') continue;
+      pairs.push({
+        userMessage: userTurn.content,
+        maiaResponse: assistantTurn.content,
+        timestamp: userTurn.createdAt
+      });
+      i++; // consume the assistant turn so it cannot open a second pair
     }
     if (pairs.length > 0) {
       effectiveHistory = pairs.slice(-4);
       console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
+    } else {
+      // 🔇 ZERO-PAIR VISIBILITY (CTR-001)
+      //
+      // This log MUST stay outside the success branch. Previously the only emission
+      // was inside `if (pairs.length > 0)`, so the failure case — turns fetched,
+      // nothing paired, continuity absent from the prompt — produced complete silence.
+      // An absent log is indistinguishable from a member who simply has no history,
+      // which is how a continuity failure reads as a continuity non-event.
+      console.warn(
+        `🔇 [Cross-Session Recall CORE] Zero pairs from ${crossSessionTurns.length} fetched turns — ` +
+        `roles=[${crossSessionTurns.map((t: any) => t?.role ?? 'null').join(',')}] — ` +
+        `no prior exchanges reached this prompt`
+      );
     }
   }
 
@@ -1528,7 +1561,18 @@ async function corePathResponse(
   // Build context with light consciousness insights
   const context: MaiaContext = {
     sessionId,
-    summary: `Conversation: ${conversationContext.profile.dominantElement} element, ${conversationHistory.length + 1} turns`,
+    // 📏 TRUTHFUL SUMMARY (CTR-001, 2026-08-13)
+    //
+    // This counted `conversationHistory`, not `effectiveHistory`. The cross-session
+    // branch above only runs when `conversationHistory.length === 0`, so whenever
+    // recall actually worked the summary read "1 turns" while up to four prior
+    // exchanges were in the prompt — systematically wrong in exactly the case where
+    // continuity was functioning, and reaching the model as context.
+    //
+    // `effectiveHistory` is the history that composes into this prompt. Counting it
+    // makes the summary a statement about what was injected rather than about a
+    // variable that the enclosing branch has already established is empty.
+    summary: `Conversation: ${conversationContext.profile.dominantElement} element, ${effectiveHistory.length + 1} turns`,
     memberProfile: conversationContext.memberProfile,
     wisdomAdaptation: conversationContext.wisdomAdaptation,
     consciousnessInsights: {
