@@ -2899,6 +2899,35 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // error must never block generation. See memory: project_epistemic_observability_layer.
     try {
       const m = meta as any;
+
+      // 🔎 TIER-SCOPED COMPOSITION (PBR-002, 2026-08-13)
+      //
+      // The contract above is composition — "context that actually reaches the prompt" —
+      // not availability. Two fields could not honour it.
+      //
+      // `memoryInfluenceAddendum` and `forwardReadinessAddendum` are read ONLY inside
+      // fastPathResponse (:1199, :1205) and interpolated ONLY into the FAST template
+      // (:1297). They have no field on MaiaContext, are absent from ADDENDA_SPECS, and
+      // are not assembled by the CORE (:1571ff) or DEEP (:2200ff) context builders. On a
+      // CORE or DEEP turn they cannot reach the prompt — yet `!!m.<field>` reported them
+      // as reaching it, and `evidenceProviders` then listed memoryOrchestrator as an
+      // evidence provider for that turn. Against observed prevalence (CORE 72.8% /
+      // FAST 27.2%) that is the majority of turns.
+      //
+      // Availability is not composition. The flags below now answer the question the
+      // contract actually asks. Availability is NOT discarded: anything suppressed here
+      // is reported under `availableButNotComposed`, so the gap stays visible instead of
+      // becoming a silent false.
+      //
+      // This is a truthfulness repair only. It does NOT change which addenda reach which
+      // tier. Whether memory-orchestrator influence should become tier-independent is a
+      // deliberate product decision, deferred by founder ruling 2026-08-13.
+      const FAST_ONLY_ADDENDA = ['memoryInfluenceAddendum', 'forwardReadinessAddendum'] as const;
+      const isFastTier = processingProfile === 'FAST';
+      const availableButNotComposed = isFastTier
+        ? []
+        : FAST_ONLY_ADDENDA.filter(f => !!m[f]);
+
       const available = {
         conversationalRecall: !!m.conversationalRecallAddendum,
         atoms: {
@@ -2910,8 +2939,10 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         wuXing: !!m.wuxingSnapshotAddendum,
         memberWeb: !!m.memberWebAddendum,
         knowledgeGate: !!m.knowledgeGateAddendum,
-        memoryOrchestrator: !!m.memoryInfluenceAddendum,
-        forwardReadiness: !!m.forwardReadinessAddendum,
+        // FAST-only — see PBR-002 above. False on CORE/DEEP because the field cannot
+        // reach those prompts, not because it was absent from meta.
+        memoryOrchestrator: isFastTier && !!m.memoryInfluenceAddendum,
+        forwardReadiness: isFastTier && !!m.forwardReadinessAddendum,
         studio: !!m.studioAddendum,
         episodic: !!m.episodicRecallAddendum, // Phase 2, 2026-07-13 — member-marked moments
         dreams: false,   // layer not wired
@@ -2931,6 +2962,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         userId: effectiveUserId ? String(effectiveUserId).slice(0, 8) + '...' : null,
         routingTier: processingProfile,
         available,
+        // PBR-002: present in meta but structurally unable to reach this tier's prompt.
+        // Empty on FAST. Non-empty here is a wiring gap, not a data gap.
+        availableButNotComposed,
         evidenceProviders,
         representationsConsidered: null,
         representationsOffered: null,
