@@ -478,3 +478,81 @@ fast image-level rollback path to it — R3 reconciliation must rebuild from sou
 
 Recorded as a bounded observation, not a defect to fix here: `RETAIN_SHA_TAGS=3` is
 time-ordered and has no notion of "this image is the subject of an open investigation."
+
+---
+
+# ⛔ MAJOR CORRECTION — §III is superseded. Both amnesia turns came from a memoryless voice route.
+
+R1 bound the serving route on 2026-08-13 ~15:55Z. The answer was **not** any route this
+investigation had been reasoning about.
+
+## What R1 actually returned
+
+- **iOS witness: NO ROW.** Nothing above `173902` was created. Speech recognition completed
+  (`VOICE TRACE` reached the full phrase) but the client never turned it into a request. The
+  iOS failure is **upstream of `getMaiaResponse` and upstream of `maia_turns`** — neither
+  memory nor routing stranded it. Separately bounded; belongs to the voice repair lane.
+- **PWA witness: row `173903`, `origin_route` = NULL.** NULL was the informative outcome: it
+  means *neither declaring route served it*. The runtime log named the actual path:
+
+```
+🔊 [StreamConversation] Message: "R1 PWA witness can you hear me"
+[ClaudeService] Streaming response for: "R1 PWA witness..."
+```
+
+## The fourth continuity contract
+
+`app/api/voice/stream-conversation/route.ts`, measured on the deployed tree:
+
+| symbol | count |
+|---|---|
+| `logMaiaTurn` | 2 — writes `maia_turns` directly; profile hardcoded `'CORE'` |
+| `ClaudeService` | 3 — reaches the model directly |
+| `getMaiaResponse`, `buildMaiaRuntimeContext` | 0 |
+| `scrubMemoryAmnesia`, `MEMORY_CANON_GUARD` | **0** |
+| `loadRelationshipMemory`, `loadSignificantMoments`, `loadMemberMemoryAtomsForPrompt`, `developmentalMemory` | **0** |
+
+It bypasses `maiaService` entirely. **No memory of any kind is loaded, and no amnesia guard
+runs.** Sanctuary IS respected (local `sanctuary` flag gates the logging).
+
+## The correction to §III
+
+§III characterized PWA turn `173899` as a **guard coverage defect** — a forbidden phrase
+escaping the deployed regex on an otherwise-governed `/list` path with "substantial memory
+context assembled." **That is withdrawn.**
+
+Evidence (read-only, 2026-08-13): turn `173903` is a *confirmed* StreamConversation turn, and
+its signature is three hardcoded literals from that route. Turns `173899`–`173902` carry the
+identical signature:
+
+| id | primary_engine | used_claude_consult | profile | latency_ms |
+|---|---|---|---|---|
+| 173899 (PWA witness) | claude-3-sonnet | t | CORE | 6049 |
+| 173900 | claude-3-sonnet | t | CORE | 6989 |
+| 173901 | claude-3-sonnet | t | CORE | 3416 |
+| 173902 (iOS witness) | claude-3-sonnet | t | CORE | 4451 |
+| **173903 (CONFIRMED StreamConversation)** | claude-3-sonnet | t | CORE | 2084 |
+
+The `maiaService` path sets `primary_engine` from `meta.engine \|\| 'deepseek-r1'` and *computes*
+FAST/CORE/DEEP. A pinned `claude-3-sonnet` + `used_claude_consult=true` + always-`CORE` is the
+StreamConversation fingerprint.
+
+⚠️ **Evidence class:** this is a **fingerprint match against a confirmed exemplar**, not a
+per-turn log binding. Pre-deploy logs are unrecoverable (below). It is strong — same signature,
+same latency band, both sessions were voice — but it is inference, not runtime trace.
+
+### What this means
+
+**MAIA was not evading a guard. She was describing her actual situation.** On
+`stream-conversation` she has no memory at all, so "I don't have persistent memory between
+conversations" was *true on that path*. Two separately-diagnosed defects (a PWA regex escape and
+an iOS route-governance gap) collapse into **one cause**: PWA and iOS voice both travel a route
+that bypasses the entire memory architecture.
+
+§II's two-contracts finding stands and is now **four** contracts, with a concrete P0 target.
+
+## ⚠️ Ops lesson — the deploy destroyed the incident's own logs
+
+`docker logs maia-sovereign --since 14:40 --until 15:00` returns **0 lines**. The 15:41 deploy
+recreated the container, discarding every log line from the incident window. The diagnostic
+deploy destroyed the forensic record it was deployed to obtain. Recorded, not repaired.
