@@ -146,41 +146,41 @@ function OAuthSuccessContent() {
         className="mb-6"
       >
         {status === 'processing' && (
-          <div className="w-12 h-12 mx-auto border-4 border-emerald-300 border-t-emerald-600 rounded-full" />
+          <div className="w-10 h-10 mx-auto border-2 border-white/15 border-t-amber-300/80 rounded-full" />
         )}
         {status === 'success' && (
-          <div className="w-12 h-12 mx-auto bg-emerald-500 rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          <div className="w-10 h-10 mx-auto rounded-full border border-amber-300/40 bg-amber-300/10 flex items-center justify-center">
+            <svg className="w-5 h-5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
         )}
         {status === 'error' && (
-          <div className="w-12 h-12 mx-auto bg-red-500 rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+          <div className="w-10 h-10 mx-auto rounded-full border border-red-400/40 bg-red-400/10 flex items-center justify-center">
+            <svg className="w-5 h-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
         )}
       </motion.div>
 
       {/* Message */}
-      <p className="text-xl font-light text-teal-800">{message}</p>
+      <p className="text-lg font-light text-slate-300">{message}</p>
 
       {/* Debug info for errors */}
       {status === 'error' && errorCode && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left max-w-md mx-auto">
-          <p className="text-sm font-mono text-red-800">
+        <div className="mt-6 p-4 bg-white/5 border border-red-400/25 rounded-lg text-left max-w-md mx-auto">
+          <p className="text-sm font-mono text-red-300">
             <strong>Error Code:</strong> {errorCode}
           </p>
           {errorDetail && (
-            <p className="text-sm font-mono text-red-700 mt-1">
+            <p className="text-sm font-mono text-red-300/80 mt-1">
               <strong>Detail:</strong> {errorDetail}
             </p>
           )}
           <button
             onClick={() => router.push('/signin')}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+            className="mt-4 px-4 py-2 bg-white/10 border border-white/15 text-slate-200 rounded-lg text-sm hover:bg-white/15"
           >
             Return to Sign In
           </button>
@@ -202,9 +202,9 @@ function LoadingFallback() {
         </div>
       </div>
       <div className="mb-6">
-        <div className="w-12 h-12 mx-auto border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" />
+        <div className="w-10 h-10 mx-auto border-2 border-white/15 border-t-amber-300/80 rounded-full animate-spin" />
       </div>
-      <p className="text-xl font-light text-teal-800">Completing sign in...</p>
+      <p className="text-lg font-light text-slate-300">Completing sign in...</p>
     </div>
   );
 }
@@ -217,13 +217,15 @@ function LoadingFallback() {
  */
 export default function OAuthSuccessPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden flex items-center justify-center">
-      {/* Background gradient */}
+    <main className="relative min-h-[100dvh] overflow-hidden flex items-center justify-center bg-soullab-core">
+      {/* Field — same navy canvas as /signin and /maia, so the handoff between
+          them reads as one continuous place rather than a flash of another app.
+          The former teal/emerald gradient here was legacy and jarring. */}
       <div
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 pointer-events-none"
         style={{
           background:
-            'linear-gradient(145deg, #f0fdf4 0%, #dcfce7 30%, #d1fae5 50%, #ccfbf1 70%, #cffafe 100%)',
+            'radial-gradient(58% 40% at 50% 12%, rgba(124,94,170,0.16), rgba(90,70,150,0.05) 40%, transparent 60%)',
         }}
       />
       <Suspense fallback={<LoadingFallback />}>
