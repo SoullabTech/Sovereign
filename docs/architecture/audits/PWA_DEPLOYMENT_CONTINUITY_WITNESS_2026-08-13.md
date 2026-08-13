@@ -443,3 +443,38 @@ this column.
   bounded and unabsorbed.
 - R2's two-contracts finding stands independently of R1.
 - R1 is **not yet bound**: a fresh PWA turn and a fresh iOS turn, post-deploy, are what close it.
+
+## R1 deployment — landed 2026-08-13 15:41Z
+
+Deployed via `scripts/deploy-production.sh deploy 4b5e04a1e` (full path — the migration
+required it). Evidence from the deploy log, not from an exit code:
+
+- `[deploy-ctx] DEPLOY TARGET (immutable): 4b5e04a1e` — materialized by `git archive`
+- `[deploy-ctx:ok] Running container provenance verified: GIT_COMMIT=4b5e04a1e == asserted 4b5e04a1e`
+- migration applied: `→ 20260813000001_maia_turns_origin_route.sql` — BEGIN / ALTER TABLE /
+  CREATE INDEX / COMMENT / COMMIT; `Applied 1 new migrations (491 already applied)`
+- all 15 containers healthy; smoke tests PASS incl. Constitutional verification
+  (Co-Lab + Memory + Relationships + Development + MAIA)
+- `4b5e04a1e` is a fast-forward descendant of the SHA it replaced (`78ea266c5`) — this
+  deploy removed nothing that was live.
+
+Production baseline captured immediately before the first witness turns:
+`max(maia_turns.id) = 173902`, rows with `origin_route IS NOT NULL` = **0**, total = 173423.
+Any turn with `id > 173902` is new; any non-null `origin_route` is attributable to this change.
+
+### ⚠️ CORRECTION — the 6f56f1926 image no longer exists on the host
+
+An earlier note in this lane observed that the memory build's image was still present on
+minisforum and called it "recoverable as an image." **This deploy pruned it:**
+
+```
+[deploy-tag] Pruning stale rollback tag: maia-sovereign:6f56f1926 (created 2026-08-13T11:03:09Z)
+[deploy-tag] SHA-tag retention: kept newest 3, removed 1 (RETAIN_SHA_TAGS=3)
+```
+
+The **commit** `6f56f1926` is untouched and checked out at `/Users/soullab/ph2-today`
+(branch `feature/ph2-001-final-candidate`), so no work is lost. What is lost is the
+fast image-level rollback path to it — R3 reconciliation must rebuild from source.
+
+Recorded as a bounded observation, not a defect to fix here: `RETAIN_SHA_TAGS=3` is
+time-ordered and has no notion of "this image is the subject of an open investigation."
