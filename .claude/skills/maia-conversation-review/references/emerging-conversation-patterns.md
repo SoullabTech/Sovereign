@@ -29,8 +29,34 @@ consent, for which MAIA's canon has no provision.
 > other voices in the room.
 
 Anything here requiring a persistently open mic is **blocked on that ruling**, not merely unbuilt.
-Record the interaction insight; do not build the listening. This rider was added by JARVIS and is
-awaiting founder ratification — treat it as binding until ruled otherwise.
+Record the interaction insight; do not build the listening.
+
+### ✅ RATIFIED (founder, 2026-08-13) — binding, with one refinement
+
+> *"A member can consent to MAIA listening to the member. They cannot thereby consent on behalf of
+> everybody whose speech happens to enter the microphone."*
+
+**Scope — the rider is retained across:** continuous/full-duplex listening · proactive listening ·
+speaker discrimination · acoustic/paralinguistic processing · ambient/resident presence · **Session
+Room**.
+
+Founder flagged the specific drift risk: the **resident-desktop** vision ("available throughout the
+day") could otherwise slide into ambient collection surprisingly easily.
+
+**REFINEMENT — incidental detection is not retention.** Detecting *whether speech exists* is not
+automatically equivalent to retaining or semantically processing third-party speech. A privacy
+boundary may eventually be designable:
+
+```
+audio reaches device → local speaker/intent discrimination → non-member speech
+DISCARDED before semantic processing or persistence
+```
+
+That could materially change what consent is required. ⛔ But it must be **architecturally proven, not
+assumed because processing happens locally.** Local ≠ private; the discard must be demonstrable.
+
+**Session Room holds a higher bar:** if MAIA is perceiving client speech as *meaningful content*,
+explicit governed consent applies regardless of where processing occurs.
 
 ---
 
