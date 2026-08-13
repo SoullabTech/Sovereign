@@ -25,15 +25,26 @@ export async function POST(
       ? (body.resonanceResponse as ResonanceResponse)
       : null;
 
-    // Derive status from resonance if not explicitly provided
-    const responseValue: 'confirmed' | 'rejected' =
+    // Derive status from resonance if not explicitly provided.
+    //
+    // PH2-001 add-on A: "partly", "explore" and "not_now" previously mapped to
+    // 'confirmed'. The comment said "to preserve status", but 'confirmed' is the one
+    // value that CHANGES it — respondToPattern's preserve branch (`ELSE status`) was
+    // unreachable from this, its only caller. So a member saying "not now" about a
+    // pattern they had already rejected restored it to confirmed, and ambivalence was
+    // recorded as agreement.
+    //
+    // Ambivalence is not agreement. The system may not assign stronger standing than
+    // the member actually expressed. The member's real answer is still recorded in
+    // `resonance_response` and `member_response`; only the STANDING is preserved.
+    const responseValue: 'confirmed' | 'rejected' | 'preserve' =
       body.response === 'confirmed' || body.response === 'rejected'
         ? body.response
         : resonanceResponse === 'fits'
           ? 'confirmed'
           : resonanceResponse === 'no'
             ? 'rejected'
-            : 'confirmed'; // partly/explore/not_now keep as confirmed to preserve status
+            : 'preserve'; // partly / explore / not_now — record the answer, keep the standing
 
     const responseText =
       typeof body.responseText === 'string' && body.responseText.trim().length > 0
