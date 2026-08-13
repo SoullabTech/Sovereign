@@ -144,4 +144,17 @@ check('the member\'s actual answer is still recorded', () => {
 });
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
-if (fail > 0) process.exit(1);
+
+// See ph2-001-today-release.test.ts for the rationale: this file is both a tsx
+// script and a Jest-collected suite. Register a genuine assertion under Jest so a
+// passing harness exits green and a failing one fails legibly; keep the script
+// exit code under tsx.
+const _jestIt = (globalThis as any).it as undefined | ((n: string, f: () => void) => void);
+const _jestExpect = (globalThis as any).expect as any;
+if (typeof _jestIt === 'function') {
+  _jestIt('PH2-001 add-on A harness reports zero failures', () => {
+    _jestExpect({ pass, fail }).toEqual({ pass, fail: 0 });
+  });
+} else if (fail > 0) {
+  process.exit(1);
+}

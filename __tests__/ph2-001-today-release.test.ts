@@ -198,4 +198,20 @@ check('neither route claims plain success on a refused confirmation', () => {
 });
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
-if (fail > 0) process.exit(1);
+
+// This file is a script (`npx tsx __tests__/ph2-001-today-release.test.ts`) that
+// also sits in __tests__/, so Jest collects it. Under Jest it previously reported
+// "Your test suite must contain at least one test" — a RED process exit for a
+// harness that actually passed 22/22 — and a real failure would have killed the
+// worker via process.exit(). "Red but really green" must not exist in a release
+// gate, so register a genuine assertion when running under Jest and keep the
+// script exit code when running under tsx.
+const _jestIt = (globalThis as any).it as undefined | ((n: string, f: () => void) => void);
+const _jestExpect = (globalThis as any).expect as any;
+if (typeof _jestIt === 'function') {
+  _jestIt('PH2-001 TODAY release harness reports zero failures', () => {
+    _jestExpect({ pass, fail }).toEqual({ pass, fail: 0 });
+  });
+} else if (fail > 0) {
+  process.exit(1);
+}

@@ -24,6 +24,13 @@
 import { NextRequest } from 'next/server';
 import os from 'os';
 import { getClaudeService } from '@/lib/services/ClaudeService';
+// R2 (2026-08-13): voice must inhabit the SAME continuity contract as text MAIA.
+// Before this, PWA voice reached ClaudeService with no memory loaded and no memory
+// canon guard — which is why MAIA truthfully said she had no memory on this path.
+// Reuses the shared composer (MemoryBundleService), not /list's route-specific logic.
+import { MemoryBundleService } from '@/lib/memory/MemoryBundle';
+import { MEMORY_CANON_GUARD_PROMPT } from '@/lib/maia/prompts/memoryCanonGuard';
+import { guardVoiceChunk, advanceVoiceGuardTail } from '@/lib/maia/prompts/voiceStreamGuard';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
@@ -1100,8 +1107,55 @@ export async function POST(req: NextRequest) {
         // Compose voice system prompt: council lens first (interpretive framing),
         // then identity-layer context (natal chart + transits). Either may be undefined
         // independently; joined only when at least one is present.
+        // ── R2: CANONICAL CONTINUITY SUBSTRATE ───────────────────────────
+        // Voice gets the SAME contributors as text MAIA, via the shared composer
+        // (MemoryBundleService — the same entry point maiaOrchestrator uses). A
+        // reduced voice-memory profile would just be a fifth MAIA.
+        //
+        // Fire-safe by construction: memory failure degrades this turn to the prior
+        // (memoryless) behavior rather than breaking voice. But when it degrades we
+        // record hasLoadedContext=false, so the amnesia guard below stays HONEST —
+        // MAIA may truthfully say she cannot recall when nothing was in fact loaded.
+        let voiceMemoryContext = '';
+        let voiceMemoryLoaded = false;
+        // Rolling detection window for the streaming canon guard — carries just
+        // enough already-emitted text to catch a violation split across chunks.
+        let voiceGuardTail = '';
+        if (userId) {
+          try {
+            const bundle = await MemoryBundleService.build({
+              userId,
+              currentInput: message,
+              sessionId: effectiveSessionId,
+              scope: 'cross_session',
+              maxBullets: 5,
+            });
+            if (bundle) {
+              voiceMemoryContext = MemoryBundleService.formatForPrompt(bundle) || '';
+              voiceMemoryLoaded = voiceMemoryContext.length > 0;
+              console.log(
+                `📦 [Voice/MemoryBundle] bullets=${bundle.memoryBullets?.length ?? 0} ` +
+                `encounters=${bundle.relationshipSnapshot?.encounterCount ?? 0} ` +
+                `loaded=${voiceMemoryLoaded}`
+              );
+            }
+          } catch (memErr: any) {
+            // R4 TRIPWIRE: if this ever reports a uuid cast failure on a `voice-`
+            // prefixed session id, the UUID defect has become load-bearing for
+            // restoration and must stop being separately bounded.
+            console.warn('⚠️ [Voice/MemoryBundle] continuity load failed (non-blocking):', memErr?.message || memErr);
+          }
+        }
+
         const voiceSystemPrompt =
-          [councilPromptSection, identityContext?.astrologyAddendum]
+          [
+            councilPromptSection,
+            identityContext?.astrologyAddendum,
+            voiceMemoryContext,
+            // Same memory posture text/list ships. Included even when nothing loaded:
+            // the canon governs how MAIA speaks about memory, not only when she has it.
+            MEMORY_CANON_GUARD_PROMPT,
+          ]
             .filter((s): s is string => !!s && s.length > 0)
             .join('\n\n') || undefined;
         if (councilResolution.guide.id !== 'auto' || councilResolution.source === 'auto_integrator') {
@@ -1131,25 +1185,56 @@ export async function POST(req: NextRequest) {
               });
             }
 
+            // ── R2: MEMORY CANON GUARD, APPLIED TO THE STREAM ─────────────
+            // Text MAIA scrubs a completed response. Voice cannot: by the time a
+            // response is "complete" the member has already read and HEARD it. So
+            // the guard runs per sentence, before anything leaves the server.
+            //
+            // hasLoadedContext reflects what this turn actually loaded — so when
+            // continuity genuinely failed, MAIA is still permitted to say so.
+            // Probes the chunk AND the boundary it forms with already-emitted text,
+            // so a violation split across two chunks cannot reach the member.
+            const canonVerdict = guardVoiceChunk(identityCheck.sanitized, {
+              recentTail: voiceGuardTail,
+              hasLoadedContext: voiceMemoryLoaded,
+            });
+            if (canonVerdict.scrubbed) {
+              console.warn('[Voice] §V amnesia posture intercepted mid-stream:', {
+                index: chunk.index,
+                reason: canonVerdict.reason,
+                originalText: identityCheck.sanitized.substring(0, 80),
+                hasLoadedContext: voiceMemoryLoaded,
+              });
+            }
+            // Single safe text for EVERY downstream consumer — screen, transcript,
+            // and audio. Nothing bypasses this value.
+            const safeText = canonVerdict.safeText;
+            voiceGuardTail = advanceVoiceGuardTail(voiceGuardTail, safeText);
+
             // Emit text immediately so UI can show it
             emit('text', {
               index: chunk.index,
-              text: identityCheck.sanitized,
+              text: safeText,
               timestamp: Date.now(),
               identity_checked: !identityCheck.safe,
+              memory_canon_checked: canonVerdict.scrubbed,
+              memory_canon_reason: canonVerdict.reason,
             });
 
             if (chunk.index === 0) {
               timer.mark('text_0_emitted');
             }
 
-            // Accumulate the safe (identity-checked) text, not raw
-            fullResponse += identityCheck.sanitized + ' ';
+            // Accumulate the safe (identity + canon checked) text, not raw
+            fullResponse += safeText + ' ';
             sentenceCount = chunk.index + 1;
 
             // TTS per-sentence render with fallback (PersonaPlex → OpenAI → Kokoro)
+            // ⚠️ Was `chunk.text` (RAW): audio spoke text the screen had been
+            // protected from, so both guards leaked audibly. Member-visible
+            // protection includes what MAIA says out loud.
             const chunkIndex = chunk.index;
-            const chunkText = chunk.text;
+            const chunkText = safeText;
 
             // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
             // Generate SSML from original text (before shaping) so SSML-capable engines
@@ -1313,6 +1398,9 @@ export async function POST(req: NextRequest) {
                   latencyMs,
                   element: wisdomPayload?.element || element,
                   usedClaudeConsult: true,
+                  // R1: this route was invisible to route attribution — turn 173903
+                  // landed with origin_route NULL and only the runtime log named it.
+                  originRoute: '/api/voice/stream-conversation',
                 }
               ).catch(err => console.warn('⚠️ [TRAINING] Voice turn logging failed:', err));
             }
