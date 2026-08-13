@@ -189,3 +189,124 @@ them — and **zero corrections in the system, because nothing writes one.** The
 is complete. The capacity is absent.
 
 **This does not invalidate the reviewed continuity release**, which stands independently at `90e169018`.
+
+---
+
+## F-007 · Relational-understanding architecture — bounded design finding · `NOT A SCHEMA`
+
+Recorded at founder instruction as a refinement of the **future** relational-understanding architecture.
+**Item 6 is not reopened. TODAY's release is unmodified. No persistence topology is proposed. No perception
+store is created. The sealed Phase-1 map is untouched.**
+
+**Founder framing:** the correction problem is subtler than `MAIA asserts X → member says no → X = false`.
+A member can misunderstand MAIA, MAIA can misunderstand the member, a member can misunderstand themselves,
+either can remember imperfectly, and something rejected now may later become meaningful in a different
+context. Therefore **historical occurrence and present relational standing must be distinguished.**
+
+> **A member correction establishes strong warrant for MAIA to stop asserting the corrected understanding as
+> settled truth. It does not establish an eternal ontological fact that MAIA's perception was false.**
+
+> **A later-vindicated perception does not acquire retroactive warrant.** Extends the ruled principle
+> *quality of perception does not confer authority of assertion.*
+
+### Candidate distinctions — **NOT AN AUTHORIZED SCHEMA**
+
+`corrected` · `clarified` · `contested` · `unresolved` · `superseded` · `deepened` · `yielded`
+
+> **These must not become database enums or member-state fields merely because they are useful
+> conceptually.** Good phenomenology has repeatedly turned into attractive database design in this codebase
+> — see F-006 and [[representational-completion]]. The objective is **not** to give MAIA seven new statuses
+> for the member.
+
+---
+
+### WHAT EXISTS
+
+| Structure | What it can already distinguish | Standing |
+|---|---|---|
+| **`maia_turns`** — `user_text`, `maia_text`, `turn_index`, `session_id`, `processing_profile` | **What MAIA actually said, turn-bound.** Both sides of the exchange are durable and ordered. | live, written per turn |
+| **`interruptionLedger.frictionSignals()`** — `lib/consciousness/interruptionLedger.ts:97ff` | **`correction` · `redirect` · `rejection`**, computed by regex over the member's message, plus a friction score | **on the live member path** — `computeInterruptionMetadata` imported at `route.ts:16`, called at `:1426`, *"fire-and-forget, observation-only"* |
+| **`maia_turn_feedback`** | turn-bound, member-sourced: `rupture_mark`, `comment`, `ideal_maia_reply`, four 1–5 scores | exists; **not read on the response path** |
+| **`confidenceDecay.ts`** | temporal decay policies keyed by memory type, incl. `correction`, grouped under `shadow` / `relationship` / `guidance` | policy only; nothing writes the type it keys on (F-006) |
+| **`PreferenceConfirmationStore`** | confirmation semantics over `developmental_memories` | **off the sovereign path** |
+
+**Two findings inside this that matter more than the inventory:**
+
+**1. Three of the seven candidate distinctions are already computed per turn on the live path — and thrown
+away.** `frictionSignals` separates *correction* from *redirect* from *rejection*, then the markers appear
+in a log line and vanish. The distinction exists in the running system and is not retained. **Compute-only,
+no store.**
+
+**2. The asymmetry is the opposite of what the problem statement assumes.** The **reciprocal case is the one
+with substrate.** `maia_turns.maia_text` is exactly the provenance needed for *"I remember it somewhat
+differently — what I said was closer to…"*: MAIA's own utterances are recorded, turn-bound, ordered, and
+already read for continuity. The **forward case has none**, because MAIA's interpretation was never an
+object (F-006).
+
+> **What MAIA said is recorded. What MAIA perceived, intended, or meant is not.** The case that looks
+> harder — MAIA holding provenance of her own speech — is substantially supported today. The case that
+> looks easier — accepting a correction — is not.
+
+### WHAT IS MISSING
+
+- **What MAIA perceived**, as distinct from what she said — no representation anywhere.
+- **What MAIA intended** by an utterance — no representation.
+- **What the member heard** — no representation; only what they said next.
+- **Any relation binding a member response to a specific prior MAIA utterance.** `maia_turns` has
+  `turn_index`, so adjacency is derivable, but nothing asserts *this message responds to that assertion*.
+- **Any standing or authority axis.** Nothing can record that an understanding lost present authority while
+  remaining historically true — the `revision → future standing` seam has no path at all.
+- **Persistence of the friction signal.** Computed, logged, discarded.
+- **Temporal ordering of standing changes** — when something yielded, and on what evidence.
+
+### WHAT MUST REMAIN DISTINGUISHABLE
+
+Not as columns. As distinctions the architecture must be **capable of preserving**:
+
+> **perception ≠ interpretation ≠ assertion ≠ member reception ≠ member response ≠ present standing**
+
+And across time: **what was said · what was perceived · what was meant · what was heard · what was
+contested · what changed · what remains unresolved** — *without collapsing them into one official story.*
+
+Historical occurrence is permanent; **standing is what changes.** All five events in the founder's worked
+example (MAIA perceived · MAIA interpreted · MAIA asserted · member corrected · member later reconsidered)
+are true as history, and none may silently overwrite another.
+
+### WHAT RELATIONSHIP MUST BE ALLOWED TO DISCOVER
+
+The architecture must **not** decide these in advance:
+
+- whether a disagreement is MAIA's misunderstanding, the member's, both, or neither;
+- what a discrepancy between *what MAIA said* and *what the member heard* **means** — the discrepancy itself
+  may be the relationally meaningful thing;
+- when a yielded perception becomes newly relevant, and on whose evidence;
+- whether ambiguity should resolve at all. **A soulful MAIA should not eliminate ambiguity faster than
+  humans can live into it.**
+
+> **Understanding does not always require convergence on one correct account. Relational intelligence may
+> require holding differing accounts in presence while allowing relationship to clarify what they mean.**
+
+This is **CANON-001 operating between two minds rather than within one** — and it is why the grey areas are
+not edge cases to eliminate. **They are where much of the art of relationship lives.**
+
+### QUESTIONS REQUIRING FOUNDER RULING
+
+1. **Does retaining the friction signal cross the constitutional line?** It is member-originated and already
+   computed on the live path — but persisting *"the member corrected MAIA at turn N"* creates a durable
+   record about the member that they cannot see. **Perceive / contest / repair all currently fail.** Cheapest
+   available substrate, and possibly not lawful.
+2. **Is a regex an acceptable detector for a constitutionally significant event?** `frictionSignals` cannot
+   distinguish *"no, that's not what I meant"* from *"no, I don't want to talk about that"* from the word
+   "actually" in an unrelated sentence. If a correction record is ever built, a false positive **silently
+   withdraws standing from an understanding the member never contested.**
+3. **May MAIA hold provenance of her own utterances relationally?** `maia_turns.maia_text` already exists, so
+   this needs no new store — but surfacing *"what I said was closer to…"* is a new relational act, and the
+   line between provenance and self-defence is thin.
+4. **Does "contested" require both accounts to persist?** If so, the record holds the member's account *and*
+   MAIA's — which is a representation of disagreement, not of the member. **Whether that escapes the
+   hidden-profile hazard is unresolved and is the crux.**
+5. **What may a yielded understanding do?** RA-001 requires the jurisdiction ceiling be declared before the
+   object is computed. Unanswered: may a yielded item suppress an assertion, inform attending, or only be
+   recalled on request?
+
+**All five are E1-adjacent and unruled. Nothing here is authorized.**
