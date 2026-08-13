@@ -1927,22 +1927,40 @@ The current user has not provided their name. Address them as "friend" or "there
     try {
       const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 10);
       if (crossSessionTurns.length > 0) {
-        // Convert turns to conversation exchange format
+        // 🔧 TOLERANT PAIRING (CTR-001, DEEP path)
+        //
+        // CTR-001 repaired the CORE path but left this one striding `i += 2`, so the
+        // two tiers would ship divergent: one recovers from a single orphaned turn,
+        // the other still loses a member's entire cross-session continuity to it.
+        // This is the identical scan used on CORE above — same shape deliberately, so
+        // the paths cannot drift again.
+        //
+        // Deliberately NOT added: no new retrieval source, no reordering, no relevance
+        // ranking, no widening of the fetch. The `.slice(-5)` cap is unchanged.
         const pairs: any[] = [];
-        for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
+        for (let i = 0; i < crossSessionTurns.length - 1; i++) {
           const userTurn = crossSessionTurns[i];
+          if (userTurn?.role !== 'user') continue;
           const assistantTurn = crossSessionTurns[i + 1];
-          if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
-            pairs.push({
-              userMessage: userTurn.content,
-              maiaResponse: assistantTurn.content,
-              timestamp: userTurn.createdAt
-            });
-          }
+          if (assistantTurn?.role !== 'assistant') continue;
+          pairs.push({
+            userMessage: userTurn.content,
+            maiaResponse: assistantTurn.content,
+            timestamp: userTurn.createdAt
+          });
+          i++; // consume the assistant turn so it cannot open a second pair
         }
         if (pairs.length > 0) {
           effectiveHistory = pairs.slice(-5); // Last 5 exchanges for DEEP path
           console.log(`🔄 [Cross-Session Recall DEEP] Loaded ${pairs.length} exchanges from previous sessions`);
+        } else {
+          // 🔇 ZERO-PAIR VISIBILITY (CTR-001, DEEP path) — same emission shape as CORE
+          // above, deliberately, so the two tiers cannot diverge in diagnostics either.
+          console.warn(
+            `🔇 [Cross-Session Recall DEEP] Zero pairs from ${crossSessionTurns.length} fetched turns — ` +
+            `roles=[${crossSessionTurns.map((t: any) => t?.role ?? 'null').join(',')}] — ` +
+            `no prior exchanges reached this prompt`
+          );
         }
       }
     } catch (err) {

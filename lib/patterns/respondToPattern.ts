@@ -4,7 +4,13 @@ import type { MemberPattern } from './getMemberPatterns';
 export async function respondToPattern(params: {
   patternId: string;
   memberId: string;
-  response: 'confirmed' | 'rejected';
+  /**
+   * PH2-001 add-on A. `'preserve'` records the member's response WITHOUT changing the
+   * pattern's standing. Ambivalence is not agreement: "partly", "explore" and "not now"
+   * are real answers, but none of them asserts that the pattern is true of the member —
+   * and none of them should be able to restore a pattern the member previously rejected.
+   */
+  response: 'confirmed' | 'rejected' | 'preserve';
   resonanceResponse?: string;
   responseText?: string;
 }): Promise<MemberPattern | null> {
@@ -12,7 +18,9 @@ export async function respondToPattern(params: {
   const practitionerResult = await queryOne<MemberPattern>(
     `UPDATE member_patterns
      SET
-       status               = $1,
+       -- PH2-001 add-on A: only an explicit confirm or reject changes standing.
+       status               = CASE WHEN $1 IN ('confirmed', 'rejected') THEN $1
+                                   ELSE status END,
        member_response      = $2,
        member_responded_at  = now()
      WHERE id        = $3
@@ -51,6 +59,9 @@ export async function respondToPattern(params: {
   }>(
     `UPDATE pattern_ledger
      SET
+       -- PH2-001 add-on A: the ELSE branch preserves standing and is now REACHABLE.
+       -- Its only caller previously typed `response` as 'confirmed' | 'rejected', so
+       -- every ambiguous answer was mapped to 'confirmed' and this branch was dead.
        status              = CASE WHEN $1 = 'confirmed' THEN 'confirmed'
                                   WHEN $1 = 'rejected'  THEN 'rejected'
                                   ELSE status END,
