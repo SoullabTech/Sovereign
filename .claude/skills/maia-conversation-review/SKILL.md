@@ -345,6 +345,21 @@ together — and if so, what principle belongs in MAIA?* Ten domains, a six-fiel
 five-verdict scale (WATCH · PROTOTYPE · DESIGN INPUT · ADOPT · REFUSE), a standing refusal test, and a
 ledger.
 
+Companion vision: **[`references/living-field-as-body-language.md`](references/living-field-as-body-language.md)**
+— *"The Living Field should become MAIA's body language. Not her body. Her body language."* Carries the
+seven attentional gestures, the five silences, and the relational palette with meaning attached.
+
+⭐ **The one rule from it that applies to ALL field work, now, not just future work:**
+
+> **Animate what MAIA knows about her own conversational state before animating what MAIA infers about
+> the member's inner state.**
+
+MAIA reliably knows whether she is listening, waiting, retrieving, responding, speaking, or has yielded
+— those may drive the field. Whether the member is sad, afraid or resistant is inference and must stay
+tentative. ⛔ No visual emotion detection (*"you sound sad" → blue field*); acoustic cues are evidence,
+never truth. And ⛔ never mistake **technical silence** (dropped audio, stalled connection) for
+contemplative silence — say the technical thing.
+
 Three things to carry even without loading it:
 
 - ⭐ **The ledger is kept completely separate from the defect backlog** (founder ruling). Full-duplex
