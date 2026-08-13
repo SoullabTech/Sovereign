@@ -100,3 +100,92 @@ which is the defect definition that was set. Whether client-overridable `fieldWo
 was **not traced**, and the route is dormant.
 
 > **Untraced is not cleared.** Recorded so the distinction survives.
+
+---
+
+## F-006 · Item 6 — `NOT_CONSTRUCTIBLE_TODAY` · no stable referent for the corrected understanding
+
+Bounded read-only pass over `developmental_memories`, run against the four founder questions
+(schema → writer → reader → provenance) at `feature/ph2-001-implementation-base` @ `90e169018`.
+
+**Governing distinction, founder-stated:**
+
+> **A table containing the word "correction" is not yet a correction substrate.**
+
+### Q1 · Schema — the vocabulary exists
+
+`developmental_memories.memory_type` carries a CHECK constraint admitting **`correction`** alongside
+`effective_practice, ineffective_practice, spiral_transition, breakthrough_emergence, ain_deliberation,
+pattern, emergent_pattern`. Fields observed: `user_id`, `memory_type`, `trigger_event` (JSONB),
+`facet_code`, `significance`, `entity_tags[]`, `session_id`, content text, `formed_at`, `visibility`.
+
+**No `turn_id`.** Binding is to a session, not to the exchange in which an understanding was asserted.
+
+### Q2 · Writer — nothing ever writes a correction
+
+**Decisive.** No code anywhere writes `memory_type = 'correction'`. The single writer,
+`lib/memory/MemoryWriteback.ts`, **hardcodes `'pattern'`** for every capsule, and says so:
+
+> *"Future work: route specific cases to more precise types (correction when the user corrects MAIA,
+> effective_practice when significance >= 0.8, etc.) — tracked in Phase B."*
+
+The only correction-related logic is a significance heuristic at `:478`:
+
+```
+// Correction pattern (learning opportunity)
+if (/no,|actually|not quite|that's not|i meant/i.test(userMessage)) score += 0.2;
+```
+
+That **nudges the retention probability of a memory**. It does not label the exchange, isolate the
+correction, or record what was corrected. The resulting row is typed `'pattern'` and is indistinguishable
+from any other significant exchange.
+
+### Q3 · Reader — the readers that exist are off-path, and do not meet the writer
+
+Two queries filter on the type: `lib/memory/DevelopmentalMemory.ts:334`
+(`memory_type IN ('ineffective_practice','correction')`) and
+`lib/memory/stores/PreferenceConfirmationStore.ts:185`. **Neither module is imported by
+`lib/sovereign/**` or `app/api/sovereign/**`** — neither is on the member response path.
+
+The one live read that *is* on the path, `lib/sovereign/maiaService.ts:3268`, filters
+`memory_type = 'emergent_pattern'` — which the writer also never writes. **Writer and readers do not
+meet on any type.**
+
+### Q4 · Identity and provenance — X has no referent
+
+The row stores the member's message and a distilled signal. **It never records the specific understanding
+MAIA asserted.** There is no field naming what was corrected, and no turn binding by which to find it.
+
+> **X was never recorded as an object. The correction→X relation therefore cannot exist, let alone be
+> traversed later.**
+
+Item 6's contract requires *"X remains historically recoverable as something MAIA once perceived."* What is
+recoverable today is only what MAIA once **said**, as prose inside a turn — and yielding an utterance is not
+yielding an understanding.
+
+### Classification
+
+> **`NOT_CONSTRUCTIBLE_TODAY`** — not for want of effort, and not because the substrate is missing entirely,
+> but because **the corrected object has no identity in the system.**
+
+Two independent blockers, either sufficient alone:
+
+| | Blocker |
+|---|---|
+| **B1** | **No referent for X.** Creating a perception record is the withheld-perception store — constitutionally restricted under RA-001, `NOT RULED` (Addendum 1 · E1), and forbidden by Item 6's own contract clause *no new member scalar/profile/aggregate*. |
+| **B2** | **No lawful correction signal.** Detection by classifying member utterances is a new inference about the member (forbidden by the contract). An explicit member act would require a new member-facing surface (product change, unauthorized). |
+
+### Founder guard, honoured
+
+> *Do not let "correction record exists" get upgraded into "correction affects future standing."*
+
+Here **even the first is false.** No correction record is ever written.
+
+### Representational completion — a textbook instance
+
+An enum value `correction`; a type union annotated `'correction' // User corrected MAIA`; confidence-decay
+policies listing corrections under `shadow`, `relationship` and `guidance`; two reader queries filtering for
+them — and **zero corrections in the system, because nothing writes one.** The vocabulary of the capacity
+is complete. The capacity is absent.
+
+**This does not invalidate the reviewed continuity release**, which stands independently at `90e169018`.
