@@ -10,6 +10,14 @@
 
 import { withTimeout } from '@/lib/utils/withTimeout';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+// `crypto.randomUUID()` exists ONLY in a secure context (HTTPS or localhost).
+// Over plain HTTP on a LAN IP — exactly the Phase-1 fast-lane witness path in
+// docs/engineering/MOBILE_CONVERSATION_VERIFICATION_LOOP.md — Safari leaves it
+// undefined, and every call here threw `crypto.randomUUID is not a function`,
+// which surfaced to the member as a failed sign-in. generateUUID() is the
+// project's existing guarded helper (already used by lib/identity/explorerId.ts
+// and lib/auth/deviceTrust.ts); this file simply was not using it.
+import { generateUUID } from '@/lib/utils/uuid';
 
 // Hard fallback for iOS/Capacitor - NEVER use relative /api on mobile
 const FALLBACK_API_BASE_URL = 'https://soullab.life';
@@ -471,14 +479,14 @@ export function getOrCreateVisitorId(): string {
     }
 
     // Generate new stable visitor ID (16 hex chars for collision safety at scale)
-    const newId = `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    const newId = `anon_${generateUUID().replace(/-/g, '').slice(0, 16)}`;
     localStorage.setItem(VISITOR_ID_KEY, newId);
     console.log('[visitor] Created stable visitor ID:', newId);
     return newId;
   } catch {
     // localStorage blocked (private mode, etc) - generate per-session ID
     // This is better than nothing, at least accumulates within a single session
-    return `anon_session_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    return `anon_session_${generateUUID().replace(/-/g, '').slice(0, 16)}`;
   }
 }
 
