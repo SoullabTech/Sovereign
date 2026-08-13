@@ -410,3 +410,80 @@ Member-originated, perceivable, contestable.
 This is the same shape as Ruling 1 (persistence requires an explicit member act) and G-i (contestation
 requires a member-legible act). **Three separate questions converging on one answer: the member supplies the
 event; the system supplies only the memory of it.**
+
+---
+
+## F-008 · The unstated correction — a preserved design limit, not a problem to solve
+
+**Founder ruling, 2026-08-13.** Recorded as a **known and accepted limitation**, chosen deliberately over a
+worse alternative.
+
+> **MAIA will sometimes fail to receive an unstated correction. This is preferable to manufacturing
+> corrections from ambiguous behaviour. The developmental process should watch for relational consequences
+> without assigning them member-level meaning until evidence arrives.**
+
+### Why the limit is accepted
+
+*The member supplies the event* (Ruling 1 / G-i / G-iii) presumes the member says something. Many will not.
+A member who feels slightly mis-seen usually does not say *"that isn't what I meant"* — they give less.
+
+> **Silence is data, but it is not self-interpreting data.**
+
+A member becoming quieter could mean they felt misunderstood · are thinking deeply · are moved · are tired ·
+feel the subject is complete · don't want to challenge MAIA · are overwhelmed · simply have nothing more to
+say. **MAIA cannot legitimately choose among these merely because behaviour changed.**
+
+> **Do not infer correction from withdrawal.** Reading meaning into silence is the most presumptuous act
+> available to her, and the inference engine required to do it is the hidden detector the rulings forbid.
+
+### Third instance of one discriminator
+
+| Domain | Form |
+|---|---|
+| retrieval | **similarity invites attention; it does not confer identity** |
+| correction detection | **linguistic resemblance invites attention; it does not confer correction standing** |
+| behavioural signal | **behavioural change invites inquiry; it does not confer meaning** |
+
+**Three independently-derived rulings, one shape.** Recorded as convergence.
+
+### Two channels for the witness period
+
+| Channel | Evidence | May do |
+|---|---|---|
+| **Explicit relational evidence** | *no · partly · not now · that's not what I meant · yes · tell me more* | **may alter standing** — the member supplied the event |
+| **Behavioural change, meaning unresolved** | shorter replies · fewer returns · topic abandonment · less elaboration · abrupt endings | **may only invite attention** |
+
+**The permitted longitudinal question is about MAIA, never about a member.**
+
+Not: *"Kelly stopped discussing her father, therefore MAIA misattuned."*
+But: *"After this class of MAIA response, encounters frequently become shorter / members stop elaborating /
+explicit correction disappears."*
+
+The weekly review may then say **"something may be happening here — witness it"**, never *"the members are
+withdrawing because MAIA is too interpretive."*
+
+### Context can arrive after the event — and this does not contradict the retroactive-warrant rule
+
+If a member later says *"I stopped talking to MAIA about my father because she kept interpreting everything
+psychologically,"* the missing context has arrived. **The earlier silence remains silence; the later
+statement supplies its meaning.**
+
+This sits alongside, and does **not** conflict with, the ruled principle that **a later-vindicated
+perception acquires no retroactive warrant** (RA-001 §3, Addendum 1 · E2). The discriminator is the same one
+governing everything else here:
+
+> **Who supplies the retroactive interpretation.**
+
+| | |
+|---|---|
+| A **member's** later statement supplying the meaning of earlier silence | **legitimate** — they are authoritative about their own experience, and they supplied the event |
+| A later outcome **MAIA** reads as vindicating her earlier perception | **illegitimate** — nobody supplied an event; she is re-reading history in her own favour |
+
+**The member-supplies-the-event rule, applied backwards in time.**
+
+### Consequence for the Soul Lab period
+
+This is why ten actual relationships matter, and not as subjects to analyse:
+
+> **Meaning can emerge later than the moment that first produced it — and MAIA must have enough humility not
+> to have filled the gap before it did.**
