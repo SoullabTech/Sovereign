@@ -360,3 +360,53 @@ which is precisely the *"she still thinks she was right"* channel Ruling 5 exclu
 > **Restraint implemented as instruction is still content.** Whether a yielded item can be present-for-
 > suppression without becoming present-for-influence is **unresolved**, and it is the first thing any yield
 > design must answer.
+
+### G-ii · candidate resolution — founder, 2026-08-13 · `NOT RULED`
+
+> **Yielded does not mean "present but forbidden." It means "not ordinarily admitted."**
+
+Separates **historical recoverability** from **ordinary prompt presence**. Yielded material is not
+continuously loaded in order to be suppressed; it becomes retrievable only when the relational history
+itself is genuinely at issue.
+
+**This lands exactly on an axis already named.** Against the seven-axis decomposition (F-007 / Addendum 2)
+and the forensic seam chain `persisted ≠ retrieved ≠ admitted ≠ composed ≠ sent ≠ influential`, a yielded
+understanding is:
+
+| Axis | State |
+|---|---|
+| existence | **retained** — history is not erased |
+| provenance | **retained** — why it was ever held stays traversable |
+| availability | **retained** — recoverable when relevant |
+| **attention / admitted** | **withheld — this is where yielding acts** |
+| standing | withdrawn |
+| expression | not asserted |
+
+> **Yielding operates at the `admitted` seam, not at `existence` and not at `expression`.** That is a
+> precise location in vocabulary the programme already has, and it resolves G-ii: restraint is no longer
+> implemented as an instruction inside the prompt, so it is no longer content.
+
+**Convergent, recorded as convergence and not confirmation** — the founder reached this without invoking the
+axis decomposition.
+
+### G-iii · the admission trigger is the remaining hazard — `NOT RULED`
+
+*"Not ordinarily admitted"* requires something to decide when the extraordinary case obtains.
+
+> **If MAIA decides that context calls for a yielded interpretation, she has re-admitted her own rejected
+> understanding on her own judgment.** That is the *"she still thinks she was right"* channel Ruling 5
+> excludes, reached by a longer route.
+
+A relevance or retrieval mechanism scoring yielded material back into admission is a classifier deciding
+when a rejected interpretation returns — which Ruling 2 forbids for the inbound direction and which is no
+more lawful outbound.
+
+**The founder's own example is the safe form:** *when the member explicitly revisits that disagreement.*
+Member-originated, perceivable, contestable.
+
+> **Provisional requirement, for ruling: the admission trigger for yielded material must be
+> member-originated, or yielded material is self-restoring.**
+
+This is the same shape as Ruling 1 (persistence requires an explicit member act) and G-i (contestation
+requires a member-legible act). **Three separate questions converging on one answer: the member supplies the
+event; the system supplies only the memory of it.**
