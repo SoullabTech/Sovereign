@@ -310,3 +310,53 @@ not edge cases to eliminate. **They are where much of the art of relationship li
    recalled on request?
 
 **All five are E1-adjacent and unruled. Nothing here is authorized.**
+
+### F-007 · FOUNDER RULINGS — 2026-08-13
+
+**Guiding principle:**
+
+> **Prefer storing what happened between MAIA and the member over storing what MAIA privately concluded
+> about the member.**
+
+> **Before storing MAIA's internal interpretation, ask whether the relational event itself contains enough
+> information to preserve disagreement, correction, clarification, or yielding.**
+
+| # | Ruling |
+|---|---|
+| **1** | **Friction signal — NOT YET.** Compute-only may remain observation-only. **Do not persist "the member corrected MAIA at turn N" as durable relational state.** Derivation from the member's words does not make the classification member-originated; the classification is still system interpretation. **The cheapest substrate is not automatically the lawful substrate.** Any future persistence must come from an **explicit member act**, or live in a **structurally separated evaluation layer with no relational standing**. |
+| **2** | **Regex — NOT SUFFICIENT for standing change.** It may serve as attention/candidate detection only. Extends the ruled principle: *similarity invites attention; it does not confer identity* → **linguistic resemblance to correction invites attention; it does not confer correction standing.** |
+| **3** | **Provenance of MAIA's own utterances — PERMITTED.** MAIA already said those words; retaining them is not a hidden psychological representation of the member. **She may use it to establish what she actually said — never to settle what the member experienced, heard, inferred, or felt.** Both can be true: *MAIA said X* and *the member experienced it as Y*. **The discrepancy belongs to relationship.** This is what keeps provenance from becoming self-defence. |
+| **4** | **`contested` — PERMITTED as a concept; the object is the disagreement.** Not `member-profile says A / MAIA-profile says B`, but: *at encounter N, MAIA offered interpretation X; the member did not assent / offered a different account; no single account acquired settled standing.* **Architecture, not yet a database enum.** |
+| **5** | **Yielded — RESTRAINT ONLY.** May **prevent MAIA from silently reasserting the interpretation as settled current truth**, and may remain historically recoverable. May **not** steer future interpretation · change elemental attending · change routing · alter bandwidth · become a member preference · rank alternative interpretations · or quietly influence MAIA because she still thinks she was right. **Yielded may suppress assertion and support historical recall. It gets no positive influence jurisdiction.** |
+
+### Two consequences of these rulings — `NOT RULED`
+
+**G-i · Ruling 2 and the guiding principle are in tension, and resolving it may shrink the problem.**
+
+Storing *"at encounter N, accounts differed"* requires something to decide that they differed — and Ruling 2
+forbids the cheap detector from making that decision. So the relational-event store inherits the detection
+problem it was meant to avoid.
+
+Unless the event is stored **without classification** — in which case *"MAIA said X at turn N, the member
+responded Y at turn N+1"* **already exists** in `maia_turns` (`user_text`, `maia_text`, `turn_index`).
+
+> **Taken to its conclusion, the first lawful structure may not be new storage at all.** The gap narrows
+> from *build a relational-event store* to a single question: **how does anything become marked as
+> contested without an unlawful detector?**
+
+That is a much smaller and much sharper question than Item 6 began with.
+
+**G-ii · Suppression requires presence. You cannot suppress what you do not mention.**
+
+For MAIA not to reassert X, X must be in her context at generation time — as *"this was offered and not
+assented to; do not present it as settled."* **The yielded content is therefore in the prompt every turn it
+applies.**
+
+This does not contradict Ruling 5, but it means the ceiling **"suppression only, no positive influence"**
+cannot be enforced by absence. A yielded understanding is necessarily visible to the generator, and a model
+that sees *"do not assert that she is angry"* has nonetheless been told that anger was once perceived —
+which is precisely the *"she still thinks she was right"* channel Ruling 5 excludes.
+
+> **Restraint implemented as instruction is still content.** Whether a yielded item can be present-for-
+> suppression without becoming present-for-influence is **unresolved**, and it is the first thing any yield
+> design must answer.
