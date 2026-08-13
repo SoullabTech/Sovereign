@@ -1540,6 +1540,84 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // closure (see the note at ~line 2558).
   const lastSendWasVoiceRef = useRef(true);
 
+  // ♿ PHOTOSENSITIVITY GUARD — respect the OS reduced-motion setting.
+  // The holoflower glows are the largest animated areas on this surface; when
+  // the member has asked the system for less motion, amplitude reactivity is
+  // switched off entirely rather than merely slowed. Live-updating (not a
+  // one-shot read) so toggling the OS setting takes effect without a reload.
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!mq) return;
+    setPrefersReducedMotion(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  // 🌌 AURORA ENVELOPE (accessibility-critical — see WCAG 2.3.1)
+  //
+  // Raw `voiceAmplitude` tracks speech at syllable rate (~4–8 Hz). Binding a
+  // large glowing area's opacity straight to it produced a sharp field pulse
+  // that flashed several times per second — a photosensitive-seizure risk, not
+  // a style preference. This envelope low-passes it into an aurora: a slow
+  // swell that never resolves into a countable beat.
+  //
+  // ── Rhythm: breath underneath, speech on top ──────────────────────────
+  // Founder ruling 2026-08-13: *"A slow 4–8 second breathing envelope
+  // underneath very gently smoothed speech energy."* The field's BRIGHTNESS
+  // belongs to the breath alone; speech energy only widens and moves the light
+  // (see the aurora blocks in the render — amplitude drives breadth and drift,
+  // never opacity). That separation is what makes the field read as a presence
+  // accompanying speech rather than an audio visualizer performing each
+  // syllable: MAIA does not have to light up per word to be present.
+  //
+  // Periods share no common multiple, so the three layers never re-align into a
+  // countable beat — the eye reads drift, not pulse.
+  //
+  // ⛔ HARD LIMIT — offered rhythm, never applied rhythm. The field may hold a
+  // steady, honest rhythm the member is free to entrain to or ignore. It may
+  // NOT detect the member's arousal, breath, or speech tempo and then shift its
+  // own rate to *lead* their state somewhere. A fixed rhythm is an invitation;
+  // an adaptive rhythm that locks onto a person and paces-and-leads them is
+  // covert state induction, which the non-manipulation and no-attachment-capture
+  // vows forbid outright. So: these constants are CONSTANT. Speech energy may
+  // modulate breadth (so the member can see who is speaking); it must never
+  // modulate PERIOD. Any future proposal to make the rhythm adaptive is a canon
+  // question for the founder, not an implementation detail.
+  const AURORA_BREATH_S = 7;    // breathing core — the ruled 4–8s envelope
+  const AURORA_MID_S = 11;      // non-harmonic with BREATH — no common beat
+  const AURORA_VEIL_S = 17;     // non-harmonic with both — slowest wander
+  //
+  // Asymmetric attack/release is what makes it read as aurora rather than
+  // metronome — it rises gently and falls even more slowly, so the light
+  // spreads and lingers instead of snapping back between syllables. Deliberately
+  // slow on both edges ("very gently smoothed"): this envelope is meant to track
+  // the *presence* of speech, not its waveform.
+  // rAF-driven so the decay keeps running after amplitude updates stop.
+  const [auroraLevel, setAuroraLevel] = useState(0);
+  const auroraTargetRef = useRef(0);
+  useEffect(() => { auroraTargetRef.current = voiceAmplitude; }, [voiceAmplitude]);
+  useEffect(() => {
+    if (prefersReducedMotion) { setAuroraLevel(0); return; }
+    let raf = 0;
+    let current = 0;
+    const ATTACK = 0.020;  // per-frame approach when rising  (~0.8s to 63%)
+    const RELEASE = 0.008; // per-frame approach when falling (~2.1s to 63%)
+    const tick = () => {
+      const target = auroraTargetRef.current;
+      const k = target > current ? ATTACK : RELEASE;
+      current += (target - current) * k;
+      // Quantize to 1/100 so React re-renders only on perceptible change.
+      setAuroraLevel(Math.round(current * 100) / 100);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [prefersReducedMotion]);
+
+
+
+
   // ⛑️ P0 — truthful acknowledgement of an explicit Speak act.
   //
   // GOVERNING RULE (founder ruling 2026-08-13): elapsed time may QUALIFY
@@ -8226,6 +8304,53 @@ I'm not sure what I'm feeling yet.`;
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3 }}
                 >
+                  {/* 🌌 AURORA — member speaking / MAIA listening.
+                      Ultraviolet identity preserved: this is how the member
+                      knows the field is theirs, distinct from MAIA's teal.
+                      Softened by the same discipline as the teal aurora.
+
+                      Two defects removed here, not one:
+                      (1) all three layers drove opacity from raw
+                          `voiceAmplitude` through 40–60ms transitions
+                          (0.7→1.0, 0.75→1.0, 0.8→1.0) — syllable-rate
+                          large-area flashing, past WCAG 2.3.1;
+                      (2) `voiceAmplitude > 0.1 ? undefined : [...]` handed
+                          control back and forth between Framer's animation
+                          and the inline style every time amplitude crossed
+                          0.1 — so speech hovering near the threshold caused
+                          repeated abrupt swaps, a flicker source all on its
+                          own, independent of (1). Coupling is now continuous:
+                          one envelope, no threshold, no handoff. */}
+
+                  {/* ── SAFETY MECHANICS ONLY — palette/atmosphere HELD ────
+                      Colors, sizes, blur, gradients and geometry are UNCHANGED
+                      from the original field. The identity/atmosphere redesign
+                      (member = ultraviolet; MAIA = deep indigo opening into soft
+                      silver-grey luminosity, pre-dawn/mineral rather than "lit
+                      up"; gold reserved for rare semantic or sacred emphasis)
+                      is HELD design work with its own ruling, pending trace #4.
+                      It must not land silently through a safety repair.
+
+                      Fixed here, and only this:
+                      (1) opacity no longer derives from raw `voiceAmplitude`.
+                          Speech modulates at 4–8 Hz; bound to opacity through a
+                          30–70ms transition on a large glowing area that is
+                          luminance flashing past the WCAG 2.3.1 three-per-second
+                          threshold — a seizure risk, not a style preference.
+                          Brightness is now a slow fixed breath; amplitude
+                          touches scale (breadth) only.
+                      (2) the `voiceAmplitude > 0.1 ? undefined : [...]` ternary
+                          is gone. It swapped animation ownership between Framer
+                          and the inline style whenever amplitude crossed 0.1, so
+                          speech hovering near the threshold flickered on its own
+                          — a defect independent of (1).
+                      (3) scale reads `auroraLevel` (the slewed rAF envelope)
+                          through a long transition, so a hard amplitude step
+                          arrives as a swell, never a snap.
+                      (4) prefers-reduced-motion stills the reactivity while
+                          KEEPING the field visible — the who-is-speaking signal
+                          is never removed, only held still. */}
+
                   {/* Outermost diffuse ultraviolet field - ambient glow */}
                   <motion.div
                     className="absolute rounded-full"
@@ -8234,21 +8359,19 @@ I'm not sure what I'm feeling yet.`;
                       height: '500px',
                       background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(124, 58, 237, 0.3) 30%, rgba(139, 92, 246, 0.15) 60%, transparent 100%)',
                       filter: 'blur(40px)',
-                      transform: `scale(${1 + voiceAmplitude * 0.3})`,
-                      opacity: 0.7 + voiceAmplitude * 0.3,
-                      transition: 'transform 0.06s ease-out, opacity 0.06s ease-out',
+                      transform: `scale(${1 + auroraLevel * 0.10})`,
+                      transition: 'transform 1.6s ease-out',
                     }}
-                    animate={{
-                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.05, 1],
-                      opacity: voiceAmplitude > 0.1 ? undefined : [0.7, 0.85, 0.7],
+                    animate={prefersReducedMotion ? { opacity: 0.75 } : {
+                      opacity: [0.7, 0.85, 0.7],
                     }}
-                    transition={{
-                      duration: 2,
-                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
-                      ease: "easeInOut"
+                    transition={prefersReducedMotion ? { duration: 0.4 } : {
+                      duration: AURORA_BREATH_S,
+                      repeat: Infinity,
+                      ease: "easeInOut",
                     }}
                   />
-                  {/* Outer ultraviolet ring - voice reactive */}
+                  {/* Outer ultraviolet ring - voice reactive (breadth only) */}
                   <motion.div
                     className="absolute rounded-full"
                     style={{
@@ -8256,21 +8379,19 @@ I'm not sure what I'm feeling yet.`;
                       height: '380px',
                       background: 'radial-gradient(circle, rgba(139, 92, 246, 0.7) 0%, rgba(139, 92, 246, 0.5) 40%, rgba(167, 139, 250, 0.25) 70%, transparent 100%)',
                       filter: 'blur(25px)',
-                      transform: `scale(${1 + voiceAmplitude * 0.4})`,
-                      opacity: 0.75 + voiceAmplitude * 0.25,
-                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                      transform: `scale(${1 + auroraLevel * 0.14})`,
+                      transition: 'transform 1.6s ease-out',
                     }}
-                    animate={{
-                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.08, 1],
-                      opacity: voiceAmplitude > 0.1 ? undefined : [0.75, 0.95, 0.75],
+                    animate={prefersReducedMotion ? { opacity: 0.85 } : {
+                      opacity: [0.75, 0.95, 0.75],
                     }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
-                      ease: "easeInOut"
+                    transition={prefersReducedMotion ? { duration: 0.4 } : {
+                      duration: AURORA_MID_S,
+                      repeat: Infinity,
+                      ease: "easeInOut",
                     }}
                   />
-                  {/* Inner ultraviolet glow - more reactive to voice */}
+                  {/* Inner ultraviolet glow - most reactive (breadth only) */}
                   <motion.div
                     className="absolute rounded-full"
                     style={{
@@ -8278,18 +8399,16 @@ I'm not sure what I'm feeling yet.`;
                       height: '240px',
                       background: 'radial-gradient(circle, rgba(167, 139, 250, 0.85) 0%, rgba(139, 92, 246, 0.5) 50%, transparent 70%)',
                       filter: 'blur(18px)',
-                      transform: `scale(${1 + voiceAmplitude * 0.6})`,
-                      opacity: 0.8 + voiceAmplitude * 0.2,
-                      transition: 'transform 0.04s ease-out, opacity 0.04s ease-out',
+                      transform: `scale(${1 + auroraLevel * 0.20})`,
+                      transition: 'transform 1.6s ease-out',
                     }}
-                    animate={{
-                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.12, 1],
-                      opacity: voiceAmplitude > 0.1 ? undefined : [0.8, 1, 0.8],
+                    animate={prefersReducedMotion ? { opacity: 0.9 } : {
+                      opacity: [0.8, 1, 0.8],
                     }}
-                    transition={{
-                      duration: 1.2,
-                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
-                      ease: "easeInOut"
+                    transition={prefersReducedMotion ? { duration: 0.4 } : {
+                      duration: AURORA_VEIL_S,
+                      repeat: Infinity,
+                      ease: "easeInOut",
                     }}
                   />
                 </motion.div>
@@ -8306,6 +8425,60 @@ I'm not sure what I'm feeling yet.`;
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3 }}
                 >
+                  {/* 🌌 AURORA — MAIA speaking.
+                      The teal/green identity is load-bearing: it is how the
+                      member tells MAIA's voice from their own (ultraviolet).
+                      That signal is unchanged. What changed is its DELIVERY.
+
+                      Previously a single 200px disc drove opacity 0.6→1.0
+                      straight from raw `voiceAmplitude` through a 50ms
+                      transition. Because speech amplitude modulates at
+                      syllable rate (~4–8 Hz), that produced a large-area
+                      luminance flash several times per second — over the
+                      WCAG 2.3.1 three-flashes-per-second threshold, i.e. a
+                      photosensitive-seizure risk rather than a style choice.
+
+                      Now: three soft layers, each drifting on its own
+                      NON-HARMONIC period (9s / 13s / 17s). Because the
+                      periods share no common multiple, the layers never
+                      re-align into a countable beat — the eye reads drift,
+                      not pulse. Amplitude still modulates the light, but
+                      gently (≤0.16 opacity) and slewed over ~800ms via the
+                      aurora envelope, so no flash can form. Lateral x/y
+                      travel gives the ribbon movement aurora actually has;
+                      the offset hues (teal · emerald · cyan) cross-fade at
+                      different rates, reading as slow hue travel without
+                      animating a gradient string. */}
+
+                  {/* ── SAFETY MECHANICS ONLY — palette/atmosphere HELD ────
+                      Colors, sizes, blur, gradients and geometry are UNCHANGED
+                      from the original field. The identity/atmosphere redesign
+                      (member = ultraviolet; MAIA = deep indigo opening into soft
+                      silver-grey luminosity, pre-dawn/mineral rather than "lit
+                      up"; gold reserved for rare semantic or sacred emphasis)
+                      is HELD design work with its own ruling, pending trace #4.
+                      It must not land silently through a safety repair.
+
+                      Fixed here, and only this:
+                      (1) opacity no longer derives from raw `voiceAmplitude`.
+                          Speech modulates at 4–8 Hz; bound to opacity through a
+                          30–70ms transition on a large glowing area that is
+                          luminance flashing past the WCAG 2.3.1 three-per-second
+                          threshold — a seizure risk, not a style preference.
+                          Brightness is now a slow fixed breath; amplitude
+                          touches scale (breadth) only.
+                      (2) the `voiceAmplitude > 0.1 ? undefined : [...]` ternary
+                          is gone. It swapped animation ownership between Framer
+                          and the inline style whenever amplitude crossed 0.1, so
+                          speech hovering near the threshold flickered on its own
+                          — a defect independent of (1).
+                      (3) scale reads `auroraLevel` (the slewed rAF envelope)
+                          through a long transition, so a hard amplitude step
+                          arrives as a swell, never a snap.
+                      (4) prefers-reduced-motion stills the reactivity while
+                          KEEPING the field visible — the who-is-speaking signal
+                          is never removed, only held still. */}
+
                   {/* Outer aethereal ring */}
                   <motion.div
                     className="absolute rounded-full"
@@ -8315,17 +8488,17 @@ I'm not sure what I'm feeling yet.`;
                       background: 'radial-gradient(circle, rgba(20, 184, 166, 0.5) 0%, rgba(94, 234, 212, 0.25) 40%, rgba(45, 212, 191, 0.1) 70%, transparent 100%)',
                       filter: 'blur(20px)',
                     }}
-                    animate={{
+                    animate={prefersReducedMotion ? { opacity: 0.65, scale: 1 } : {
                       scale: [1, 1.06, 1],
                       opacity: [0.5, 0.8, 0.5],
                     }}
-                    transition={{
-                      duration: 2,
+                    transition={prefersReducedMotion ? { duration: 0.4 } : {
+                      duration: AURORA_BREATH_S,
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
                   />
-                  {/* Inner aethereal glow - reactive to voice amplitude */}
+                  {/* Inner aethereal glow - voice reactive (breadth only) */}
                   <motion.div
                     className="absolute rounded-full"
                     style={{
@@ -8333,9 +8506,16 @@ I'm not sure what I'm feeling yet.`;
                       height: '200px',
                       background: 'radial-gradient(circle, rgba(94, 234, 212, 0.6) 0%, rgba(20, 184, 166, 0.35) 50%, transparent 70%)',
                       filter: 'blur(15px)',
-                      transform: `scale(${1 + voiceAmplitude * 0.3})`,
-                      opacity: 0.6 + voiceAmplitude * 0.4,
-                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                      transform: `scale(${1 + auroraLevel * 0.16})`,
+                      transition: 'transform 1.6s ease-out',
+                    }}
+                    animate={prefersReducedMotion ? { opacity: 0.7 } : {
+                      opacity: [0.6, 0.8, 0.6],
+                    }}
+                    transition={prefersReducedMotion ? { duration: 0.4 } : {
+                      duration: AURORA_MID_S,
+                      repeat: Infinity,
+                      ease: "easeInOut",
                     }}
                   />
                 </motion.div>
@@ -8502,9 +8682,9 @@ I'm not sure what I'm feeling yet.`;
                     // Solid gradient from center, spreading outward
                     background: 'radial-gradient(circle, rgba(138, 43, 226, 0.35) 0%, rgba(148, 0, 211, 0.25) 30%, rgba(106, 27, 154, 0.15) 55%, rgba(94, 53, 177, 0.08) 75%, transparent 100%)',
                     filter: 'blur(20px)',
-                    transform: `scale(${1 + voiceAmplitude * 0.6})`,
-                    opacity: 0.5 + voiceAmplitude * 0.5,
-                    transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                    transform: `scale(${1 + auroraLevel * 0.6})`,
+                    opacity: 0.5 + auroraLevel * 0.15,
+                    transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                   }}
                 />
 
@@ -8516,9 +8696,9 @@ I'm not sure what I'm feeling yet.`;
                     height: '500px',
                     background: 'radial-gradient(circle, rgba(156, 39, 176, 0.2) 0%, rgba(123, 31, 162, 0.12) 40%, rgba(94, 53, 177, 0.06) 65%, transparent 100%)',
                     filter: 'blur(30px)',
-                    transform: `scale(${1 + voiceAmplitude * 0.8})`,
-                    opacity: 0.4 + voiceAmplitude * 0.4,
-                    transition: 'transform 0.06s ease-out, opacity 0.06s ease-out',
+                    transform: `scale(${1 + auroraLevel * 0.8})`,
+                    opacity: 0.4 + auroraLevel * 0.15,
+                    transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                   }}
                 />
 
@@ -8530,9 +8710,9 @@ I'm not sure what I'm feeling yet.`;
                     height: '650px',
                     background: 'radial-gradient(circle, rgba(126, 87, 194, 0.12) 0%, rgba(149, 117, 205, 0.08) 35%, rgba(103, 58, 183, 0.04) 60%, transparent 100%)',
                     filter: 'blur(40px)',
-                    transform: `scale(${1 + voiceAmplitude * 1.0})`,
-                    opacity: 0.35 + voiceAmplitude * 0.35,
-                    transition: 'transform 0.07s ease-out, opacity 0.07s ease-out',
+                    transform: `scale(${1 + auroraLevel * 1.0})`,
+                    opacity: 0.35 + auroraLevel * 0.15,
+                    transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                   }}
                 />
 
@@ -8544,9 +8724,9 @@ I'm not sure what I'm feeling yet.`;
                     height: '250px',
                     background: 'radial-gradient(circle, rgba(186, 85, 211, 0.4) 0%, rgba(138, 43, 226, 0.3) 40%, rgba(148, 0, 211, 0.15) 70%, transparent 100%)',
                     filter: 'blur(12px)',
-                    transform: `scale(${1 + voiceAmplitude * 0.5})`,
-                    opacity: 0.6 + voiceAmplitude * 0.4,
-                    transition: 'transform 0.04s ease-out, opacity 0.04s ease-out',
+                    transform: `scale(${1 + auroraLevel * 0.5})`,
+                    opacity: 0.6 + auroraLevel * 0.15,
+                    transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                   }}
                 />
 
@@ -8576,9 +8756,9 @@ I'm not sure what I'm feeling yet.`;
                         : 'radial-gradient(circle, rgba(94, 234, 212, 0.3) 0%, rgba(20, 184, 166, 0.08) 60%, transparent 100%)',
                       filter: `blur(${18 + i * 8}px)`,
                       // Dynamic scale based on voice amplitude
-                      transform: `scale(${1 + voiceAmplitude * (0.3 + i * 0.15)})`,
-                      opacity: 0.3 + voiceAmplitude * 0.5,
-                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                      transform: `scale(${1 + auroraLevel * (0.3 + i * 0.15)})`,
+                      opacity: 0.3 + auroraLevel * 0.15,
+                      transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                     }}
                   />
                 ))}
@@ -8591,9 +8771,9 @@ I'm not sure what I'm feeling yet.`;
                     height: '200px',
                     background: 'radial-gradient(circle, rgba(45, 212, 191, 0.35) 0%, rgba(20, 184, 166, 0.15) 50%, transparent 70%)',
                     filter: 'blur(25px)',
-                    transform: `scale(${1 + voiceAmplitude * 0.5})`,
-                    opacity: 0.4 + voiceAmplitude * 0.6,
-                    transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                    transform: `scale(${1 + auroraLevel * 0.5})`,
+                    opacity: 0.4 + auroraLevel * 0.15,
+                    transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                   }}
                 />
 
@@ -8605,9 +8785,9 @@ I'm not sure what I'm feeling yet.`;
                     height: '120px',
                     background: 'radial-gradient(circle, rgba(94, 234, 212, 0.5) 0%, rgba(45, 212, 191, 0.3) 40%, rgba(20, 184, 166, 0.15) 70%, transparent 100%)',
                     filter: 'blur(15px)',
-                    transform: `scale(${1 + voiceAmplitude * 0.8})`,
-                    opacity: 0.5 + voiceAmplitude * 0.5,
-                    transition: 'transform 0.03s ease-out, opacity 0.03s ease-out',
+                    transform: `scale(${1 + auroraLevel * 0.8})`,
+                    opacity: 0.5 + auroraLevel * 0.15,
+                    transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                   }}
                 />
               </motion.div>
@@ -9404,9 +9584,9 @@ I'm not sure what I'm feeling yet.`;
                         style={{
                           background: 'radial-gradient(circle, rgba(64, 224, 208, 0.7) 0%, transparent 70%)',
                           filter: 'blur(20px)',
-                          transform: `scale(${1 + voiceAmplitude * 0.6})`,
-                          opacity: 0.4 + voiceAmplitude * 0.6,
-                          transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                          transform: `scale(${1 + auroraLevel * 0.6})`,
+                          opacity: 0.4 + auroraLevel * 0.15,
+                          transition: 'transform 1.6s ease-out, opacity 1.2s ease-out',
                         }}
                       />
                     )}
