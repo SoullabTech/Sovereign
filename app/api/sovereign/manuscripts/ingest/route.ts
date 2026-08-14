@@ -21,6 +21,7 @@ export const maxDuration = 120; // large .docx/.pdf extraction can take a moment
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — generous for a full book file
 const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     // Log marker: counts only, never content.
     console.log(
-      `[MAIA/press] manuscript ingest { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/press] manuscript ingest { memberRef: ${memberRef(memberId)}, ` +
         `format: ${result.format}, chars: ${result.text.length}, warnings: ${result.warnings.length} }`,
     );
 

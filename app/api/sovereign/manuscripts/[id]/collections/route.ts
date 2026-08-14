@@ -23,6 +23,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       [memberId, id, name.trim()],
     );
     console.log(
-      `[MAIA/press] collection created { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/press] collection created { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${id}, collectionId: ${result.rows[0].id} }`,
     );
     return NextResponse.json(

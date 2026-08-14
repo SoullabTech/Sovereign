@@ -31,6 +31,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { countMemberMemoryAtomStates } from './memoryAtomsLoader';
+import { memberRef } from '../privacy/memberRef';
 import {
   MEMORY_SELECTION_POLICY_VERSION,
   ATOM_SELECTION_POLICY_REASONS,
@@ -211,7 +212,7 @@ export function recordMemoryTransitions(inputs: TransitionInputs): void {
       }
 
       console.log('[MAIA] memory-transition', {
-        memberIdPrefix: inputs.memberId.slice(0, 8) + '...',
+        memberRef: memberRef(inputs.memberId),
         policy: MEMORY_SELECTION_POLICY_VERSION,
         atoms: {
           available: atomCounts?.stored ?? null,

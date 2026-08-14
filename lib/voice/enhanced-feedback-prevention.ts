@@ -133,14 +133,22 @@ export class EnhancedFeedbackPrevention {
         // Check if this matches Maya's recent outputs
         for (const phrase of this.recentMayaPhrases) {
           if (this.isSimilarText(transcript, phrase)) {
-            console.log(`🔇 Detected echo: "${transcript}" matches Maya's "${phrase}"`);
+            // CONTAINMENT: `transcript` is whatever the microphone captured. The
+            // echo classifier may be wrong, so it can be the member speaking —
+            // it never reaches the log, and no digest/prefix of it substitutes.
+            // `phrase` is Maya's OWN prior output (a system string sourced from
+            // recentMayaPhrases, not from the transcript) and is retained as the
+            // diagnostic that identifies which output echoed.
+            console.log(`🔇 Detected echo of Maya's "${phrase}"`);
             return true;
           }
         }
 
         // Check for common Maya response patterns
         if (this.isMayaPattern(transcript)) {
-          console.log(`🔇 Detected Maya pattern: "${transcript}"`);
+          // CONTAINMENT: same reasoning — the captured transcript may be the
+          // member, so only the fact of the pattern match is logged.
+          console.log(`🔇 Detected Maya pattern in captured speech`);
           return true;
         }
       }

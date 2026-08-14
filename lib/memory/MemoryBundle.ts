@@ -15,6 +15,7 @@ import { TurnsStore } from './stores/TurnsStore';
 import { generateLocalEmbedding } from './embeddings';
 import { calculateDecayedConfidence } from './confidenceDecay';
 import { ConversationMemoryUsesStore } from './stores/ConversationMemoryUsesStore';
+import { memberRef } from '../privacy/memberRef';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -82,7 +83,7 @@ export const MemoryBundleService = {
   async build(input: BuildBundleInput): Promise<MemoryBundle> {
     const { userId, currentInput, sessionId, traceId, facet, scope = 'cross_session', maxBullets = 5 } = input;
 
-    console.log(`📦 [MemoryBundle] Building for user: ${userId}`);
+    console.log(`📦 [MemoryBundle] Building for user: ${memberRef(userId)}`);
 
     // Parallel retrieval from all buckets
     const [recentTurns, semanticMemories, breakthroughs, relationshipData] = await Promise.all([

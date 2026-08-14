@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { extractQuotes } from '@/lib/analysis/extractQuotes';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 const MAX_QUOTES_PER_SECTION = 6;
 
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
     // Log marker: counts only, never content.
     console.log(
-      `[MAIA/press] manuscript candidates { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/press] manuscript candidates { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${id}, section: ${s.position}, candidates: ${candidates.length}, ` +
         `rejected: ${result.rejected.length}, provider: ${result.provider} }`,
     );

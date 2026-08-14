@@ -50,6 +50,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { extractQuotes } from '@/lib/analysis/extractQuotes';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 /** Journal-bridged episodic rows (see app/api/journal/quick — bridgeToEpisodicMemory). */
 interface JournalRow {
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     // Discoverable log marker. Counts only, never content.
     console.log(
-      `[MAIA/sovereign] quote candidates { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/sovereign] quote candidates { memberRef: ${memberRef(memberId)}, ` +
         `entries: ${spans.length}, candidates: ${candidates.length}, ` +
         `rejected: ${result.rejected.length}, provider: ${result.provider} }`,
     );

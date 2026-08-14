@@ -25,6 +25,7 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { renderMemberBook, type MemberBookSection } from '@/lib/manuscript/render/renderMemberBook';
 import { UNTITLED_EXPRESSION } from '@/lib/manuscript/untitledExpression';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 type Format = 'pdf' | 'epub';
 
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   }
 
   console.log(
-    `[MAIA/press] manuscript rendered { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+    `[MAIA/press] manuscript rendered { memberRef: ${memberRef(memberId)}, ` +
       `manuscriptId: ${id}, format: ${format}, sections: ${result.sectionCount}, ` +
       `pages: ${result.pageCount ?? 'n/a'}, sizeKB: ${Math.round(result.sizeBytes / 1024)} }`,
   );

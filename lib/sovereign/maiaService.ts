@@ -59,6 +59,15 @@ import {
 import { TurnsStore } from '../memory/stores/TurnsStore';
 import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemoryUsesStore';
 import { memoryOrchestrator, type SessionRecallContext } from '../memory/MemoryOrchestrator';
+// 📡 CC-A: per-turn memory provenance telemetry. Observational only — see module contract.
+import {
+  buildTurnMemoryProvenance,
+  emitTurnMemoryProvenance,
+  classifyBundleState,
+  fallbackReasonFor,
+  digest,
+  type MemorySourceOutcome,
+} from '../memory/provenance/turnMemoryProvenance';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT, AINShapeContext } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 import { deriveActiveThread } from '../consciousness/activeThread';
@@ -98,6 +107,7 @@ import {
   MEMORY_CANON_GUARD_PROMPT,
   FORBIDDEN_AMNESIA_PATTERNS,
 } from '@/lib/maia/prompts/memoryCanonGuard';
+import { memberRef } from '../privacy/memberRef';
 
 // =============================================================================
 // CROSS-SESSION PAIRING (PH2-001 TODAY, items 1+2)
@@ -845,26 +855,98 @@ async function fastPathResponse(
 
   // 🧠 MEMORY BUNDLE: Use compressed context from multi-bucket retrieval if available
   // 🔒 SANCTUARY: Ignore memoryBundle (it contains cross-session recalled context)
-  let memoryContext = isSanctuary ? undefined : (meta as any).memoryContext as string | undefined;
+  // 📡 CC-A: capture the route-supplied bundle separately from the working variable so the
+  // absent / present-but-empty distinction survives. `memoryContext` below is byte-identical
+  // to what this line previously assigned — the fork's behavior is unchanged.
+  const routeMemoryContext = isSanctuary ? undefined : (meta as any).memoryContext as string | undefined;
+  let memoryContext = routeMemoryContext;
   const hasMemoryBundle = isSanctuary ? false : !!(meta as any).memoryBundle;
+
+  // 📡 CC-A: observational only. Nothing below this comment may influence retrieval,
+  // ranking, selection, fallback behavior, prompt content, or member-facing behavior.
+  const memProvBundleState = classifyBundleState(routeMemoryContext, { sanctuary: isSanctuary });
+  const memProvSources: MemorySourceOutcome[] = [
+    {
+      sourceClass: 'route_memory_bundle',
+      requested: true,
+      returnedMaterial: memProvBundleState === 'present_nonempty',
+      itemCount: (meta as any)?.memoryBundle?.memoryBullets?.length,
+    },
+  ];
+  let memProvFallbackInvoked = false;
+  let memProvOrchestratorDirect = false;
+  let memProvFallbackSupplied = false;
+  const memProvFallbackReason = fallbackReasonFor(memProvBundleState, {
+    hasMemberIdentity: !!effectiveUserId,
+  });
 
   // 🔧 MEMORY FALLBACK: If no memory bundle was provided, fetch directly from MemoryOrchestrator
   // This ensures memory continuity even if the route layer didn't build a bundle
+  // ⚠️ CC-A NOTE (observation, not a change): `!memoryContext` is true both when the route
+  // supplied nothing and when it supplied an empty string. This fork cannot distinguish an
+  // absent canonical bundle from a canonical retrieval that legitimately returned nothing.
+  // CC-A only measures that; containment is CC-B and is NOT authorized here.
   if (!memoryContext && !isSanctuary && effectiveUserId) {
+    memProvFallbackInvoked = true;
+    memProvOrchestratorDirect = true;
     try {
-      console.log(`🧠 [FAST/MemoryFallback] No memoryContext from route - fetching from MemoryOrchestrator for user=${effectiveUserId.slice(0, 8)}...`);
+      console.log(`🧠 [FAST/MemoryFallback] No memoryContext from route - fetching from MemoryOrchestrator for user=${memberRef(effectiveUserId)}`);
       const recall = await memoryOrchestrator.getSessionRecallContext(effectiveUserId);
       if (recall && (recall.relationshipContext || recall.recentTurns?.length || recall.recentBreakthroughs?.length)) {
         memoryContext = memoryOrchestrator.formatRecallForPrompt(recall);
+        memProvFallbackSupplied = true;
+        memProvSources.push({
+          sourceClass: 'memory_orchestrator_recall',
+          requested: true,
+          returnedMaterial: true,
+          itemCount: recall.recentTurns?.length ?? 0,
+        });
         console.log(`🧠 [FAST/MemoryFallback] Retrieved recall: relationship=${!!recall.relationshipContext}, turns=${recall.recentTurns?.length ?? 0}, breakthroughs=${recall.recentBreakthroughs?.length ?? 0}`);
         console.log(`🧠 [FAST/MemoryFallback] Formatted context: ${memoryContext.length} chars`);
       } else {
+        memProvSources.push({
+          sourceClass: 'memory_orchestrator_recall',
+          requested: true,
+          returnedMaterial: false,
+          itemCount: 0,
+        });
         console.log(`🧠 [FAST/MemoryFallback] No recall data found for this user`);
       }
     } catch (recallErr) {
+      memProvSources.push({
+        sourceClass: 'memory_orchestrator_recall',
+        requested: true,
+        returnedMaterial: false,
+        errorClass: (recallErr as Error)?.name ?? 'Error',
+      });
       console.warn(`⚠️ [FAST/MemoryFallback] Failed to fetch recall (non-fatal):`, recallErr);
     }
   }
+
+  // 📡 CC-A: emit the turn's memory provenance. Telemetry only — see module contract.
+  emitTurnMemoryProvenance(
+    buildTurnMemoryProvenance({
+      route: ((meta as any)?.originRoute as string | undefined) ?? 'unknown',
+      tier: 'FAST',
+      turnId: (meta as any)?.turnId as string | undefined,
+      sessionRef: digest((meta as any)?.sessionId as string | undefined),
+      memberRef: digest(effectiveUserId),
+      sanctuary: isSanctuary,
+      bundleState: memProvBundleState,
+      bundleConsulted: true,
+      fallbackInvoked: memProvFallbackInvoked,
+      fallbackReason: memProvFallbackReason,
+      memoryOrchestratorDirect: memProvOrchestratorDirect,
+      contextOrigin: memProvFallbackSupplied
+        ? 'fallback'
+        : memoryContext && memoryContext.length > 0
+          ? 'canonical_bundle'
+          : 'none',
+      sources: memProvSources,
+      contextDigest: digest(memoryContext),
+      contextChars: memoryContext?.length ?? 0,
+    })
+  );
 
   // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded source texts
   const ainKnowledgeContext = (meta as any).ainKnowledgeContext as string | undefined;
@@ -1452,6 +1534,31 @@ async function corePathResponse(
   if (isSanctuary) {
     console.log('🛡️ [CORE] Sanctuary mode active - skipping all memory recall');
   }
+
+  // 📡 CC-A: CORE does not read meta.memoryContext at all. That is an architectural fact,
+  // not an error — the canonical memory bundle reaches FAST only. Recorded so the absence
+  // is observable rather than inferred. Observational only.
+  emitTurnMemoryProvenance(
+    buildTurnMemoryProvenance({
+      route: ((meta as any)?.originRoute as string | undefined) ?? 'unknown',
+      tier: 'CORE',
+      turnId: (meta as any)?.turnId as string | undefined,
+      sessionRef: digest(sessionId),
+      memberRef: digest(effectiveUserId ?? undefined),
+      sanctuary: isSanctuary,
+      bundleState: classifyBundleState((meta as any)?.memoryContext as string | undefined, {
+        sanctuary: isSanctuary,
+      }),
+      bundleConsulted: false,
+      fallbackInvoked: false,
+      fallbackReason: 'not_attempted',
+      memoryOrchestratorDirect: false,
+      contextOrigin: 'none',
+      sources: [{ sourceClass: 'route_memory_bundle', requested: false, returnedMaterial: false }],
+      contextChars: 0,
+    })
+  );
+
   // SANCTUARY (S1): per-turn posture for every content writer on this path.
   const turnPosture = TurnPosture.resolve(meta);
 
@@ -1862,6 +1969,29 @@ async function deepPathResponse(
   if (isSanctuaryDeep) {
     console.log('🛡️ [DEEP] Sanctuary mode active - skipping all memory recall');
   }
+
+  // 📡 CC-A: DEEP does not read meta.memoryContext either. Recorded for the same reason as
+  // CORE — so the absence of the canonical bundle on this tier is witnessed, not assumed.
+  emitTurnMemoryProvenance(
+    buildTurnMemoryProvenance({
+      route: ((meta as any)?.originRoute as string | undefined) ?? 'unknown',
+      tier: 'DEEP',
+      turnId: (meta as any)?.turnId as string | undefined,
+      sessionRef: digest(sessionId),
+      memberRef: digest(effectiveUserId ?? undefined),
+      sanctuary: isSanctuaryDeep,
+      bundleState: classifyBundleState((meta as any)?.memoryContext as string | undefined, {
+        sanctuary: isSanctuaryDeep,
+      }),
+      bundleConsulted: false,
+      fallbackInvoked: false,
+      fallbackReason: 'not_attempted',
+      memoryOrchestratorDirect: false,
+      contextOrigin: 'none',
+      sources: [{ sourceClass: 'route_memory_bundle', requested: false, returnedMaterial: false }],
+      contextChars: 0,
+    })
+  );
 
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -2509,7 +2639,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           }
           if (identity.hasBirthData || identity.userName || identity.pronouns) {
             console.log(
-              `🌟 [MaiaService] Identity layer filled for ${String(effectiveUserId).substring(0, 8)}... ` +
+              `🌟 [MaiaService] Identity layer filled for ${memberRef(effectiveUserId)} ` +
                 `(natal=${needsAstrology && !!identity.astrologyAddendum}, ` +
                 `name=${needsUserName && !!identity.userName}, ` +
                 `pronouns=${needsPronouns && !!identity.pronouns})`,
@@ -3006,7 +3136,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       ].filter(Boolean);
       console.log('[MAIA] context-inventory', {
         conversationId: sessionId,
-        userId: effectiveUserId ? String(effectiveUserId).slice(0, 8) + '...' : null,
+        userId: memberRef(effectiveUserId),
         routingTier: processingProfile,
         available,
         // PBR-002: present in meta but structurally unable to reach this tier's prompt.
@@ -3183,8 +3313,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     // 🔄 CROSS-SESSION TURNS: Store to user-keyed table for cross-session recall
     console.log('🧠 [TurnsStore] attempting persist', {
-      effectiveUserId,
-      userId,
+      effectiveUserId: memberRef(effectiveUserId),
+      userId: memberRef(userId),
       explorerId: (meta as any)?.explorerId,
       sessionId,
       db: process.env.DATABASE_URL ?? '(no DATABASE_URL env)',
@@ -3203,7 +3333,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       } else {
         try {
           await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text, exchangeId);
-          console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
+          console.log(`✅ [TurnsStore] Persisted exchange for ${memberRef(effectiveUserId)}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);
           // Non-blocking - don't fail the response
@@ -3554,7 +3684,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // 🌱 EXPANSION EVENT DETECTION (silent; does not affect decisions/executor)
       // Detects growth moments in user text for longitudinal analysis
       const EXPANSION_EVENTS_ENABLED = process.env.EXPANSION_EVENTS_ENABLED === '1';
-      console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', effectiveUserId);
+      console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', memberRef(effectiveUserId));
       // 🔒 SANCTUARY: never store user text in expansion_events (defense-in-depth; turnId is 0 in sanctuary)
       if (!isSanctuary && EXPANSION_EVENTS_ENABLED && turnId) {
         try {

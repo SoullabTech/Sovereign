@@ -357,8 +357,13 @@ export class TemporalConsciousness {
       };
     });
 
-    // Log the emergence event
-    console.log(`🌟 Transcendent emergence: ${symbol} - ${insight}`);
+    // CONTAINMENT: `insight` is NOT a system string. synthesizeInsight() joins
+    // ParadoxSeed.context verbatim, and those contexts are the member's own
+    // exchange text (UnifiedMemoryInterface.logExperience passes `content`
+    // straight into logTension). So the insight carries member-authored content
+    // and must not reach a log sink — nor may a digest/excerpt of it. `symbol`
+    // is a fixed system glyph and stays.
+    console.log(`🌟 Transcendent emergence: ${symbol} (seeds: ${pattern.length})`);
   }
 
   /**
