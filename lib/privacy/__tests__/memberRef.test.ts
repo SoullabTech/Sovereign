@@ -18,7 +18,10 @@ import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import { memberRef } from '../memberRef';
 
-const FIXTURE_UUID = '49ae4717-2b3a-4189-b25d-2bef95b1a45a';
+// Synthetic. NEVER use a real member identifier as a fixture: it places member
+// data in source, in git history, and in CI logs — the exact exposure this unit
+// exists to remove. The assertions below hold for any input value.
+const FIXTURE_UUID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 const FIXTURE_EMAIL = 'fixture.member@example.test';
 
 describe('memberRef — the derivation itself', () => {
