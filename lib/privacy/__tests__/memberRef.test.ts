@@ -13,7 +13,9 @@
  * failure mode these controls exist to prevent.
  */
 
-import { execFileSync } from 'child_process';
+import { execFileSync, spawnSync } from 'child_process';
+import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
+import { join } from 'path';
 import { memberRef } from '../memberRef';
 
 const FIXTURE_UUID = '49ae4717-2b3a-4189-b25d-2bef95b1a45a';
@@ -127,18 +129,101 @@ describe('POSITIVE CONTROL — observability survives containment', () => {
 
 describe('the mechanical guard', () => {
   const GUARD = 'scripts/guards/member-id-log-gate.ts';
+  const ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
+  const BASELINE = join(ROOT, 'member-id-log-baseline.json');
 
-  it('passes on the contained tree', () => {
-    const out = execFileSync('npx', ['--no-install', 'tsx', GUARD], { encoding: 'utf8' });
-    expect(out).toContain('No raw member identifiers reaching logging sinks');
+  /** Run the gate; never throws, so exit code and output are both assertable. */
+  function runGuard(args: string[] = []): { status: number; out: string } {
+    const r = spawnSync('npx', ['--no-install', 'tsx', GUARD, ...args], {
+      encoding: 'utf8',
+      cwd: ROOT,
+    });
+    return { status: r.status ?? -1, out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+  }
+
+  it('passes on the contained tree, with the outstanding debt reported', () => {
+    const { status, out } = runGuard();
+    expect(status).toBe(0);
+    expect(out).toContain('No NEW raw member identifiers reaching logging sinks');
+    // The baselined debt must stay VISIBLE on every run. A silent baseline is how a
+    // ratchet quietly becomes a permanent exemption.
+    expect(out).toMatch(/baselined debt: \d+ pre-existing violation/);
   });
 
-  it('scans top-level files, not only nested ones', () => {
-    // Regression pin: `git ls-files -- 'lib/memory/**/*.ts'` silently excludes
+  it('scans application scope, not only the four original directories', () => {
+    // Regression pin 1: `git ls-files -- 'lib/memory/**/*.ts'` silently excludes
     // `lib/memory/Foo.ts`, because git's `**/` requires an intervening directory. That
     // defect made the guard report green while blind to 23 files.
-    const out = execFileSync('npx', ['--no-install', 'tsx', GUARD], { encoding: 'utf8' });
+    // Regression pin 2: the original scope was 121 files across four directories. The
+    // behavior-scope widening must not silently narrow back.
+    const { out } = runGuard();
     const scanned = Number(/scanned (\d+) source file/.exec(out)?.[1] ?? 0);
-    expect(scanned).toBeGreaterThan(100);
+    expect(scanned).toBeGreaterThan(1000);
+  });
+
+  describe('the ratchet', () => {
+    it('FAILS on a NEW violation that is not in the baseline', () => {
+      // The probe must be git-TRACKED (intent-to-add is enough) — the population is
+      // enumerated from `git ls-files`, so an untracked file would be invisible and this
+      // test would pass vacuously.
+      const probe = join(ROOT, 'lib', 'privacy', '__ratchet_probe_new__.ts');
+      const rel = 'lib/privacy/__ratchet_probe_new__.ts';
+      try {
+        writeFileSync(probe, 'export function probe(userId: string) {\n  console.log("[Probe]", { userId });\n}\n');
+        spawnSync('git', ['add', '-N', rel], { cwd: ROOT });
+        const { status, out } = runGuard();
+        expect(status).toBe(1);
+        expect(out).toContain('NEW violation');
+        expect(out).toContain(rel);
+      } finally {
+        spawnSync('git', ['rm', '--cached', '-q', '--force', rel], { cwd: ROOT });
+        if (existsSync(probe)) unlinkSync(probe);
+      }
+      // …and the tree is clean again, proving the failure came from the probe.
+      expect(runGuard().status).toBe(0);
+    });
+
+    it('FAILS when a baseline entry no longer exists, so the baseline cannot rot', () => {
+      const original = readFileSync(BASELINE, 'utf8');
+      try {
+        const doctored = JSON.parse(original);
+        doctored.entries.push({
+          file: 'lib/privacy/__no_such_file__.ts',
+          kind: 'raw identifier emitted as a logged property',
+          excerpt: 'console.log("fabricated", { userId });',
+          count: 1,
+          lines: [1],
+        });
+        writeFileSync(BASELINE, JSON.stringify(doctored, null, 2));
+        const { status, out } = runGuard();
+        expect(status).toBe(1);
+        expect(out).toContain('no longer exist');
+        expect(out).toContain('__no_such_file__');
+      } finally {
+        writeFileSync(BASELINE, original);
+      }
+      expect(runGuard().status).toBe(0);
+    });
+
+    it('REFUSES to record a baseline without the explicit --accept-current flag', () => {
+      const before = readFileSync(BASELINE, 'utf8');
+      const { status, out } = runGuard(['--update']);
+      expect(status).toBe(1);
+      expect(out).toContain('Refusing to write');
+      // The governed act must be a no-op without the flag — not "writes anyway, exits 1".
+      expect(readFileSync(BASELINE, 'utf8')).toBe(before);
+    });
+
+    it('is BLOCKED (exit 2), never a pass, when the baseline is unreadable', () => {
+      const original = readFileSync(BASELINE, 'utf8');
+      try {
+        writeFileSync(BASELINE, '{ not json');
+        const { status, out } = runGuard();
+        expect(status).toBe(2); // NOT 0 — a control that cannot check must not report a pass
+        expect(out).toContain('BLOCKED');
+      } finally {
+        writeFileSync(BASELINE, original);
+      }
+    });
   });
 });
