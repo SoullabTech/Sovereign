@@ -1,13 +1,17 @@
 # C1 — Studio Naming and Containment: Ruling Surface
 
 > ```text
-> STATUS ............... RULING SURFACE — awaiting founder authority
-> DECISION STATE ....... AWAITING_AUTHORITY
-> AUTHORITY ............ Kelly, and only Kelly
-> IMPLEMENTATION ....... NONE. No route, label, or document renamed by this file.
+> STATUS ............... ✅ RULED by the founder, 2026-08-14 (Kelly)
+> DECISION STATE ....... CLOSED — see §7 for the ruling as issued
+> AUTHORITY ............ Kelly
+> IMPLEMENTATION ....... authorized narrowly by §7.4; see §7.5 for what the
+>                        mechanical verification actually permitted (nothing)
 > W8 ................... OPEN; unchanged
 > MEMBER RELEASE ....... NOT AUTHORIZED
 > ```
+>
+> ⚠️ **§2 point 1 of this document was WRONG when written and is corrected in §7.1.**
+> Writer's Studio *does* have a ruled route. Read §7 before §2.
 >
 > **Referents**: canonical `c8bab43aa` · lane
 > `feature/writers-studio-member-upgrade-2026-08-14` @ `8874a1ecd` · production `b14d96ed8`
@@ -170,3 +174,102 @@ is **not** corrected back to one — it stays two, in kind.
 Phase 2 (Canvas reconciliation) unblocks. The copy corrections in §4 point 5 join the first
 implementation slice rather than becoming their own lane. Nothing else in the programme
 sequence moves, and the W1–W8 walk remains the sole path to release.
+
+---
+
+# 7. THE RULING AS ISSUED — founder, 2026-08-14
+
+## 7.1 ⚠️ Correction the founder made to this surface
+
+**§2 point 1 was wrong.** It stated that Writer's Studio has no ruled route, reading the
+`⏳ UNRULED` marker in the 2026-08-04 canon §5 and concluding that code had moved ahead of
+authority. A later founder ruling had already closed it.
+
+**`7076f785d`** (2026-08-05, canonical), verbatim:
+
+> *RULED 2026-08-05 (Kelly): the Writer's Studio does not live under `/press`. Writing is
+> the practice; a book is one expression of it — `/press` remains the Manuscript Room's
+> address (the long-form instrument), and the practice environment moves to
+> `/writers-studio`. **This settles the route question the
+> WRITER_STUDIO_AUTHOR_STUDIO_DISTINCTION held open.***
+
+The route was ruled, and the code implements the ruling rather than outrunning it. The
+lesson generalizes: **a `⏳ UNRULED` marker records the state at its own date, not the state
+now.** Search forward for the ruling that closed it before repeating the marker.
+
+## 7.2 The ruling
+
+```text
+WRITER'S STUDIO ... member-facing creative / practice environment
+                    ruled address: /writers-studio  ⛔ do not reopen
+PRESS EDITOR ...... edition-making specialization (canonical distinction,
+                    not a new invention)
+AUTHOR STUDIO ..... retired as a member-facing product/place NAME;
+                    the architecture it named is NOT retired or collapsed
+BOOK STUDIO ....... unchanged by C1
+```
+
+Containment, as ruled:
+
+```text
+Writer's Studio
+    └── the creator's continuing practice / Work
+            ├── Writer Canvas ....... living manuscript
+            └── Press Editor ........ edition-making specialization
+```
+
+**This is not a return to one environment. It preserves the division.**
+
+Where a member-visible "Author Studio" string refers to the edition-making specialization,
+it becomes **Press Editor** — *a rename-in-place of the referent, not replacement of the
+referent.* **The thing survives; the vocabulary gets clearer.**
+
+## 7.3 Narrow supersession of "Rename nothing"
+
+⛔ **"Rename nothing" is superseded for this ruled naming correction ONLY.** It does not
+authorize: route moves · architectural consolidation · Book Studio renaming · data/schema
+migration · mass symbol cleanup · rewriting historical governance documents · changing
+historical commit language · merging Writer's Studio and Press Editor · treating "Author
+Studio" as though it never existed.
+
+**Historical documents keep the name where that is what they actually ruled at the time.**
+Future and member-facing product language stops presenting it as a current room name. This
+preserves provenance instead of laundering the new name backward through history.
+
+## 7.4 Press Editor ≠ automatically Book Studio
+
+⛔ This ruling must not be used to rename or collapse Book Studio. The canonical Press Editor
+record establishes the editor as *the field where an Edition is made*; it does **not**
+establish that every existing Book Studio surface is identical to Press Editor. If Book
+Studio is a broader publishing environment and Press Editor is one instrument within it,
+that distinction survives. C1 does not solve that adjacent ontology.
+
+## 7.5 The four member-visible strings — mechanically verified, ALL FLAGGED
+
+The founder authorized replacement with *Press Editor* **only** where a string actually
+refers to the edition-making specialization, required mechanical verification of each
+referent, and required flagging rather than guessing otherwise.
+
+Verified against canonical `c8bab43aa`:
+
+| # | Location | Destination | Referent | Verdict |
+|---|---|---|---|---|
+| 1 | `app/writers-studio/canvas/page.tsx:291` | `href="/writers-studio"` | the practice environment | ⚠️ **FLAG** — house concept |
+| 2 | `app/press/manuscript/page.tsx:650` | `href="/press/studio"` → redirects to `/writers-studio` | the practice environment | ⚠️ **FLAG** — house concept |
+| 3 | `app/press/manuscript/page.tsx:697` | *"Import into Author Studio"* button; its own comment: *"Names the threshold being crossed, not the file transfer"* — the threshold is entry into the Studio environment | the practice environment | ⚠️ **FLAG** — house concept |
+| 4 | `app/press/manuscript/page.tsx:864` | `href="/press/studio"` → redirects to `/writers-studio` | the practice environment | ⚠️ **FLAG** — house concept |
+
+**Result: zero of four qualify for the authorized Press Editor rename.** All four are
+back-links or thresholds into the **Writer's Studio house**, mislabeled with the retired
+name. String 2's own code comment settles it beyond doubt: *"arriving here from the House was
+a one-way trip into an upload form with no Studio around it."* That is the environment.
+
+⛔ **Nothing was changed.** A blind text replacement would have renamed four house
+back-links into the publishing specialization — pointing members at an edition-making room
+they were never entering. The verification requirement is what caught it.
+
+**Flagged for founder disposition**: these four say "Author Studio" while linking to
+`/writers-studio`, whose ruled House label is *"Writer's Studio"*. Under §7.2 they must stop
+presenting a retired name as a current room name, but the correct replacement is
+**"Writer's Studio"**, not "Press Editor" — a different act from the one authorized. Held as
+`AWAITING_AUTHORITY`, tracked in the programme ledger. It does not block Phase 2.

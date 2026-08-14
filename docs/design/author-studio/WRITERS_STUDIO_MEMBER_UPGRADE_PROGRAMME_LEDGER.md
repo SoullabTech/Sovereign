@@ -52,8 +52,9 @@ a7f7d9396 ==#995  docs/design/author-studio/WRITER_CANVAS_AND_PRESS_EDITOR_DIVIS
 
 ```text
 CUSTODY / DESIGN BINDINGS ........ COMPLETE
-C1 HOUSE NAMING .................. AWAITING FOUNDER RULING
-CANVAS RECONCILIATION ............ NOT STARTED
+C1 HOUSE NAMING .................. RULED 2026-08-14
+C1 COPY CORRECTION (4 strings) ... AWAITING_AUTHORITY (non-blocking)
+CANVAS RECONCILIATION ............ IN PROGRESS (Phase 2 unblocked)
 WRITER'S DESK .................... NOT STARTED
 ARRANGEMENT ...................... DESIGN ESTABLISHED / BUILD NOT STARTED
 PRESS EDITOR SUBSTRATE ........... BOUND / IMPLEMENTATION NOT STARTED
@@ -78,12 +79,33 @@ PROGRAMME CLOSURE ................ PENDING
 > repeatedly existed only on unmerged branches while canonical code cited it. Before
 > concluding any Studio capability or ruling is absent, search the preserve branches.
 
-### C1 — AWAITING FOUNDER RULING
+### C1 — RULED 2026-08-14 (Kelly)
 
-Ruling surface: `docs/design/author-studio/C1_STUDIO_NAMING_RULING_SURFACE_2026-08-14.md`.
-One bounded decision, six points, options analysis inside, recommendation stated.
-Blocks Phase 2. ⛔ No route rename, label change, or member-facing terminology change before
-the ruling.
+Record: `docs/design/author-studio/C1_STUDIO_NAMING_RULING_SURFACE_2026-08-14.md` §7.
+
+```text
+WRITER'S STUDIO ... practice environment · /writers-studio · RULED (7076f785d, 2026-08-05)
+PRESS EDITOR ...... edition-making specialization · RULED
+AUTHOR STUDIO ..... retired as a member-facing NAME; architecture NOT collapsed
+BOOK STUDIO ....... unchanged by C1
+```
+
+**Rename-in-place, never collapse-in-place.** "Rename nothing" is superseded for this one
+naming correction only — not for routes, consolidation, Book Studio, schema, mass symbol
+cleanup, or rewriting historical documents. Historical records keep the name where that is
+what they ruled at the time.
+
+⚠️ **Correction absorbed**: the surface's §2 claim that Writer's Studio had no ruled route
+was wrong. `7076f785d` settled it on 2026-08-05. A `⏳ UNRULED` marker states its own date,
+not the present — search forward for the ruling that closed it.
+
+#### C1 copy correction — AWAITING_AUTHORITY, non-blocking
+
+All four member-visible "Author Studio" strings were mechanically verified. **Zero refer to
+the edition-making specialization**; all four are back-links or thresholds into the Writer's
+Studio house, mislabeled with the retired name. The authorized *Press Editor* replacement
+therefore applies to none of them, and nothing was changed. Correct replacement is
+"Writer's Studio" — a different act from the one authorized. Detail: ruling record §7.5.
 
 ### Return — ACCEPTANCE CONTRACT REQUIRED
 
