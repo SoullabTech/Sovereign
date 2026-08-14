@@ -23,6 +23,8 @@ export interface CurrentManuscript {
   sectionCount: number;
   charCount: number;
   keepCount: number;
+  /** When the member last WROTE here (working-draft updated_at). NULL = never. */
+  lastWrittenAt: string | null;
 }
 
 export type ManuscriptPhase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error';

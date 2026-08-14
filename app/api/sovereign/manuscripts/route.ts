@@ -45,11 +45,21 @@ export async function GET(request: NextRequest) {
       section_count: string;
       char_count: string;
       keep_count: string;
+      last_written_at: string | null;
     }>(
       `SELECT m.id, m.title, m.created_at,
               (SELECT count(*) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS section_count,
               (SELECT coalesce(sum(length(s.body)), 0) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS char_count,
-              (SELECT count(*) FROM manuscript_keeps k WHERE k.manuscript_id = m.id) AS keep_count
+              (SELECT count(*) FROM manuscript_keeps k WHERE k.manuscript_id = m.id) AS keep_count,
+              -- WRITING ACTIVITY, not row mutation. The working draft's
+              -- updated_at moves when the member actually writes (autosave
+              -- touches it); NULL means no draft exists and therefore no
+              -- writing has happened here. Studio Home uses this — and never
+              -- living_works.updated_at — to decide whether a work is
+              -- genuinely continuable. A Work row changing does not establish
+              -- that this is where the writer last worked.
+              (SELECT d.updated_at FROM manuscript_working_drafts d
+                WHERE d.manuscript_id = m.id) AS last_written_at
          FROM member_manuscripts m
         WHERE m.member_id = $1
         ORDER BY m.created_at DESC`,
@@ -63,6 +73,7 @@ export async function GET(request: NextRequest) {
         sectionCount: Number(r.section_count),
         charCount: Number(r.char_count),
         keepCount: Number(r.keep_count),
+        lastWrittenAt: r.last_written_at,
       })),
     });
   } catch (err) {
