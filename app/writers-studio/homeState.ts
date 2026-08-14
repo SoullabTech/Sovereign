@@ -58,10 +58,29 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
     .filter((m) => !claimed.has(m.id))
     .sort((a, b) => b.charCount - a.charCount);
 
-  /** Writing activity for a work — never the work row's own updatedAt. */
+  /**
+   * Writing activity for a work — never the work row's own updatedAt, and
+   * never a draft row's timestamp alone.
+   *
+   * ⚠️ A working-draft row can exist with `updated_at` set and zero content:
+   * `/manuscripts/blank` creates the draft alongside the blank manuscript, and
+   * reuses untouched blanks rather than minting duplicates. So a draft
+   * timestamp proves a row was touched, not that a person wrote. Requiring
+   * BOTH a timestamp and actual characters is what keeps this an act rather
+   * than a mutation — the same distinction that disqualified
+   * `living_work.updatedAt`, one layer down.
+   *
+   * Observed live 2026-08-14: a work bound to a 0-char manuscript whose draft
+   * row was stamped hours earlier was promoted to the CONTINUE hero and
+   * rendered "No writing yet · written 6 hours ago" — two clauses that
+   * contradict each other, offering continuation of nothing.
+   */
   const writtenAt = (w: LivingWork): number => {
     const id = manuscriptIdOf(w);
-    return id ? time(byId.get(id)?.lastWrittenAt) : 0;
+    if (!id) return 0;
+    const m = byId.get(id);
+    if (!m || m.charCount <= 0) return 0;
+    return time(m.lastWrittenAt);
   };
 
   const written = works.filter((w) => writtenAt(w) > 0).sort((a, b) => writtenAt(b) - writtenAt(a));

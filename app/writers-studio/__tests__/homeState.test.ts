@@ -135,4 +135,25 @@ describe('Studio Home — arrival state', () => {
     expect(a.kind).toBe('continue');
     expect(a.imported.map((m) => m.id)).toEqual(['m9']);
   });
+
+  it('⛔ an EMPTY manuscript with a draft timestamp never produces CONTINUE', () => {
+    /* Observed live 2026-08-14. /manuscripts/blank creates a working-draft row
+       alongside the blank manuscript and reuses untouched blanks, so a draft
+       timestamp can exist with zero content. The Home promoted that work to
+       the hero and rendered "No writing yet · written 6 hours ago". A row
+       being touched is not a person writing. */
+    const a = arrivalFor([work('w1', { title: 'Test', updatedAt: iso(0), manuscriptId: 'm-blank' })], [
+      ms('m-blank', { lastWrittenAt: iso(0), chars: 0 }),
+    ]);
+    expect(a.kind).toBe('orient');
+    expect(a.resume).toBeNull();
+  });
+
+  it('a work with one real character IS continuable', () => {
+    const a = arrivalFor([work('w1', { updatedAt: iso(9), manuscriptId: 'm1' })], [
+      ms('m1', { lastWrittenAt: iso(0), chars: 1 }),
+    ]);
+    expect(a.kind).toBe('continue');
+    expect(a.resume?.id).toBe('w1');
+  });
 });
