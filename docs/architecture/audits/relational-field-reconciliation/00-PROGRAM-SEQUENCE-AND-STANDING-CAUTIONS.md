@@ -19,6 +19,62 @@ Not overwritten. Not lost. Built in parallel and never connected to the mains.
 
 ---
 
+## 🔄 STANDING UPDATE — 2026-08-14 (measured, not asserted)
+
+⚠️ **The referent moved. Applying the ratified rule:** *if the referent changes,
+dependent evidence becomes stale; the system may detect and mark that staleness,
+but it may not change authority on its own.*
+
+```
+trunk       c8bab43aa
+production  b14d96ed8      /api/health → "version":"b14d96ed8"
+
+RELATIONAL FIELD GOVERNANCE ......... COMPLETE
+TRAFFIC WITNESS ..................... PASSED historically at 22200f967
+                                      CURRENT-BINDING STATUS: STALE / RE-WITNESS REQUIRED
+PRODUCTION-ONLY CC-A COMMIT ......... PRESENT
+TRUNK ↔ PRODUCTION RECONCILIATION ... PENDING BEFORE ANY FUTURE DEPLOY
+HELD FUTURE DIRECTION ............... PRESERVED, NOT AUTHORIZED
+RELATIONAL FIELD BUILD .............. NOT YET AUTHORIZED  (authority unchanged)
+```
+
+### ⛔⛔ TRUNK AND PRODUCTION HAVE DIVERGED — base `22200f967`
+
+Verified **two-directionally** (production is not an ancestor of trunk **and**
+trunk is not an ancestor of production).
+
+⚠️ **BOTH SIDES CARRY CODE.** This is not docs-vs-code.
+
+| | commit | code |
+|---|---|---|
+| **production only** | `b14d96ed8` *feat(cc-a): per-turn memory provenance telemetry (observational only)* | `lib/memory/provenance/turnMemoryProvenance.ts` (+test), **`lib/sovereign/maiaService.ts`**, `scripts/witness/cc-a-memory-provenance-witness.ts` |
+| **trunk only** | 14 commits, mostly docs/custody — but `17bf9d4f3` *fix(relational): bind essence retrieval to session; end resonance-score laundering* | `app/api/relationship-essence/route.ts`, `lib/memory/RelationshipMemoryService.ts` |
+
+⛔ **Do NOT deploy current trunk blindly** — it would drop the live CC-A
+telemetry. ⛔ Do not merge production→trunk blindly either; trunk carries a
+relational-essence session-binding fix production lacks. Reconciliation is a
+deliberate act, ⛔ not a fast-forward in either direction.
+
+### Why the witness is STALE despite favourable indicators
+
+Measured at the current production ref: `22200f967` **is** an ancestor of
+`b14d96ed8`; `DECLARATION_CAPABLE_SOURCES` is still present (3 occurrences);
+rupture rows remain **97 — unchanged**, while signals moved 440 → **442** and
+entries 1190 → **1196**, so the write path is live.
+
+⭐⭐ **Favourable indicators do not rebind a witness.** The witness was bound to
+`22200f967`; production is `b14d96ed8`; CC-A additionally touches
+`lib/sovereign/maiaService.ts`, a shared service on the conversation path. ⛔ The
+correct standing is STALE / RE-WITNESS REQUIRED — not "still passing."
+⛔ Marking staleness changes **no** authority.
+
+⭐ This is precisely the discrepancy a persistent JARVIS should have detected
+mechanically — `production changed` + `witness bound to old referent` — without
+either party remembering the two facts are coupled. Here it was caught by a
+founder checking GitHub, then confirmed by measurement.
+
+---
+
 ## ⚖️ Authority stack — 2026-08-13
 
 ⛔ **Do not collapse these levels.** Ratified *design* authority is not
