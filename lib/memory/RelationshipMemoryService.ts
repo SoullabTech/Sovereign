@@ -427,7 +427,12 @@ function generateRelationshipSummary(data: {
     ? "First conversation"
     : `${totalEncounters} conversations over ${relationshipDuration} days`;
 
-  parts.push(`${encounterPhrase} with ${userName} (${relationshipPhase} relationship).`);
+  // Founder ruling, 2026-08-14: the raw recurrence fact (how many conversations,
+  // over how many days) may be stated. The DERIVED relational label may not —
+  // `relationshipPhase` is computed from `morphic_resonance`, itself
+  // `min(0.1 + encounterCount * 0.1, 1.0)`. Emitting "(established relationship)"
+  // converts a frequency counter into relational meaning, which is prohibited.
+  parts.push(`${encounterPhrase} with ${userName}.`);
 
   // Time since last encounter
   if (daysSinceLastEncounter > 0) {
@@ -528,7 +533,33 @@ export async function saveRelationshipPattern(
 }
 
 /**
- * Format relationship memory for prompt inclusion
+ * Format relationship memory for prompt inclusion.
+ *
+ * ⛔ PROVENANCE BOUNDARY — founder ruling, 2026-08-14.
+ *
+ * > Encounter frequency, elapsed persistence, or any derived resonance score
+ * > may not be represented to MAIA as trust, intimacy, readiness, relationship
+ * > phase, or other relational meaning unless that meaning has an
+ * > independently authorized provenance. Such a score may not gate increased
+ * > disclosure of member material merely because its numeric value increased.
+ *
+ * Before this ruling, `morphic_resonance` — which is nothing but
+ * `min(0.1 + encounterCount * 0.1, 1.0)` (`RelationshipAnamnesisPostgres.ts:113`)
+ * — reached the live prompt at FAST, CORE and DEEP as a literal
+ * `trust {NN}%, intimacy {NN}%`, and the phase derived from it gated whether
+ * themes, breakthroughs and emerging patterns were disclosed at all. A
+ * frequency counter was thereby laundered into relational truth AND into
+ * escalating disclosure. Established by runtime witness at `22200f967`
+ * (`RF_RELATIONSHIP_ESSENCE_AUTHORITY_TRACE_2026-08-14.md`).
+ *
+ * Both are removed here. `trustLevel` / `intimacyLevel` / `relationshipPhase`
+ * remain on the context as non-authoritative operational data, and stored
+ * `morphic_resonance` is untouched — but none of them may be spoken to the
+ * model or used to decide what the model is told.
+ *
+ * ⚠️ `presence_quality` is deliberately NOT in scope. The witness established
+ * it is loaded and carried but never composed into this prompt; whether it
+ * carries authority elsewhere is a separate, still-open question.
  */
 export function formatRelationshipMemoryForPrompt(memory: RelationshipMemoryContext): string {
   if (!memory.essence) {
@@ -540,36 +571,36 @@ export function formatRelationshipMemoryForPrompt(memory: RelationshipMemoryCont
   parts.push(`\n\n🌊 RELATIONSHIP MEMORY:`);
   parts.push(memory.summary);
 
-  // Add deep context for established/deep relationships
-  if (memory.relationshipPhase === 'established' || memory.relationshipPhase === 'deep') {
-
-    // Themes with context
-    if (memory.themes.length > 0) {
-      parts.push(`\nRecurring themes we've explored:`);
-      memory.themes.slice(0, 3).forEach(theme => {
-        if (theme.context) {
-          parts.push(`  - ${theme.theme}: ${theme.context}`);
-        } else {
-          parts.push(`  - ${theme.theme} (${theme.occurrences} times)`);
-        }
-      });
-    }
-
-    // Recent breakthrough
-    if (memory.recentBreakthrough) {
-      parts.push(`\nRecent breakthrough: "${memory.recentBreakthrough.insight}"`);
-      if (!memory.recentBreakthrough.integrated) {
-        parts.push(`  (Still integrating this insight)`);
+  // Themes with context.
+  //
+  // Authority note (founder ruling, 2026-08-14): what follows is disclosed
+  // because the CALLER explicitly requested it (`includeThemes`,
+  // `includeBreakthroughs`, `includePatterns`, `maxThemes`, `maxBreakthroughs`
+  // — set per processing tier), never because a resonance score crossed a
+  // threshold. Do not reintroduce a score-derived condition here.
+  if (memory.themes.length > 0) {
+    parts.push(`\nRecurring themes we've explored:`);
+    memory.themes.slice(0, 3).forEach(theme => {
+      if (theme.context) {
+        parts.push(`  - ${theme.theme}: ${theme.context}`);
+      } else {
+        parts.push(`  - ${theme.theme} (${theme.occurrences} times)`);
       }
-    }
+    });
+  }
 
-    // Emerging patterns
-    if (memory.emergingPatterns.length > 0) {
-      parts.push(`\nEmerging patterns: ${memory.emergingPatterns.join(', ')}`);
+  // Recent breakthrough
+  if (memory.recentBreakthrough) {
+    parts.push(`\nRecent breakthrough: "${memory.recentBreakthrough.insight}"`);
+    if (!memory.recentBreakthrough.integrated) {
+      parts.push(`  (Still integrating this insight)`);
     }
   }
 
-  parts.push(`\nRelationship quality: ${memory.relationshipPhase}, trust ${(memory.trustLevel * 100).toFixed(0)}%, intimacy ${(memory.intimacyLevel * 100).toFixed(0)}%\n`);
+  // Emerging patterns
+  if (memory.emergingPatterns.length > 0) {
+    parts.push(`\nEmerging patterns: ${memory.emergingPatterns.join(', ')}`);
+  }
 
   return parts.join('\n');
 }
