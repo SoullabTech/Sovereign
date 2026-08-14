@@ -152,6 +152,79 @@ is expected to remember*.
 
 ---
 
+## ⭐⭐⭐ The JARVIS execution grammar (founder, 2026-08-14)
+
+**Design maxim — founder states this should sit near the top of the JARVIS
+Desktop architecture:**
+
+> **Build gates that fire. Automate the work, never the authority.**
+
+### The distinction it rests on
+
+| | asks |
+|---|---|
+| **memory** | *what happened before?* |
+| **operational standing** | *what is true now, what remains unresolved, what has changed, and what actions are currently permitted?* |
+
+⭐ The second is what JARVIS Desktop lacks. ⛔ It is **not** "better memory."
+
+### The grammar
+
+```
+durable standing
+  → bind referent
+  → measure reality
+  → compare against standing
+  → detect discrepancy
+  → fire gate
+  → delegate bounded work
+  → record evidence
+  → update standing
+  → stop at reserved authority
+```
+
+⭐⭐ **Referent binding at every transition** is the founder's addition, and it is
+the step whose absence produced both of this session's errors: a real measurement
+bound to the wrong referent, read as a fact about the world (a working tree read
+as a ref; a one-directional ancestor test read as divergence).
+
+### The worked example this session produced
+
+A future JARVIS must detect, **without anyone remembering the facts are coupled**:
+
+```
+production changed
++ traffic witness still open
+= prior witness may no longer bind current production
+```
+
+and change standing **mechanically**:
+
+```
+TRAFFIC WITNESS
+  previous referent: 22200f967
+  current production: <new SHA>
+  STATUS: STALE / RE-WITNESS REQUIRED
+  BUILD AUTHORITY: unchanged
+```
+
+⛔ **No reasoning is needed to notice it.** Reasoning enters only afterwards, to
+decide what the discrepancy *means*. ⭐ And note what does **not** move: detecting
+staleness never alters build authority.
+
+⭐ **Why this matters more than more autonomous reasoning:** it lets JARVIS become
+**more autonomous operationally while less likely to overreach epistemically or
+constitutionally.** Autonomy belongs in measurement, verification, discrepancy
+detection, and governed state transition. **Authority remains external to the
+agent.**
+
+⚠️ **Placement note:** installing this maxim and grammar into the JARVIS Desktop
+architecture proper is a **separate act in a governed lane** (the
+`resident-presence` skill governs desktop/resident work and holds it as a
+research horizon). ⛔ Not done here. This record preserves the direction only.
+
+---
+
 ## ⛔ The first unit, when authorized
 
 ⚠️ **A source paper/draft is referenced but was NOT read** — it did not appear in
