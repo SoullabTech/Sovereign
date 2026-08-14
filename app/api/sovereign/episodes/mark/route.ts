@@ -75,6 +75,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 interface MarkedEpisodeRow {
   id: number;
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest) {
 
     // Discoverable log marker. Count only, never content.
     console.log(
-      `[MAIA/sovereign] episodic moments listed { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/sovereign] episodic moments listed { memberIdPrefix: ${memberRef(memberId)}, ` +
         `count: ${result.rows.length} }`,
     );
 
@@ -210,7 +211,7 @@ export async function POST(request: NextRequest) {
     // than admitted on trust.
     if (sessionId === null) {
       console.log(
-        `[MAIA/sovereign] episodic mark refused (no provenance) { memberIdPrefix: ${memberId.slice(0, 8)} }`,
+        `[MAIA/sovereign] episodic mark refused (no provenance) { memberIdPrefix: ${memberRef(memberId)} }`,
       );
       return NextResponse.json(
         {
@@ -272,7 +273,7 @@ export async function POST(request: NextRequest) {
       // The member's own Sanctuary session: name the boundary honestly.
       // Metadata only (session id, member prefix) — never content.
       console.log(
-        `[MAIA/sovereign] episodic mark refused (sanctuary) { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+        `[MAIA/sovereign] episodic mark refused (sanctuary) { memberIdPrefix: ${memberRef(memberId)}, ` +
           `sessionId: ${sessionId} }`,
       );
       return NextResponse.json(
@@ -289,7 +290,7 @@ export async function POST(request: NextRequest) {
       // denial for all three, revealing nothing about whether the session
       // exists or whose it is.
       console.log(
-        `[MAIA/sovereign] episodic mark refused (unresolvable provenance) { memberIdPrefix: ${memberId.slice(0, 8)} }`,
+        `[MAIA/sovereign] episodic mark refused (unresolvable provenance) { memberIdPrefix: ${memberRef(memberId)} }`,
       );
       return NextResponse.json(
         {
@@ -317,7 +318,7 @@ export async function POST(request: NextRequest) {
     // Discoverable log marker. Member data minimized: prefix + counts only,
     // never the verbatim content.
     console.log(
-      `[MAIA/sovereign] episodic moment marked { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/sovereign] episodic moment marked { memberIdPrefix: ${memberRef(memberId)}, ` +
         `episodeId: ${result.rows[0].episode_id}, verbatimChars: ${verbatimText.length}, ` +
         `hasTurn: ${turnId !== null}, hasSession: ${sessionId !== null} }`,
     );
@@ -381,7 +382,7 @@ export async function DELETE(request: NextRequest) {
 
     // Discoverable log marker. Never content, never the verbatim text.
     console.log(
-      `[MAIA/sovereign] episodic moment unmarked { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/sovereign] episodic moment unmarked { memberIdPrefix: ${memberRef(memberId)}, ` +
         `episodeId: ${episodeId} }`,
     );
 

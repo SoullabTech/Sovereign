@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
@@ -120,7 +121,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     console.log(
-      `[MAIA/press] manuscript removed { memberIdPrefix: ${memberId.slice(0, 8)}, manuscriptId: ${id} }`,
+      `[MAIA/press] manuscript removed { memberIdPrefix: ${memberRef(memberId)}, manuscriptId: ${id} }`,
     );
     return NextResponse.json({ removed: true });
   } catch (err) {

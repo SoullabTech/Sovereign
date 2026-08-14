@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
           console.log('[MAIA/sovereign] memory-plan', summarizePlanForLog(memoryPlan));
         } else {
           console.log('[MAIA/sovereign] memory-plan inactive', {
-            userId,
+            userId: memberRef(userId),
             developmentalCount: recentDevelopmentalMemories.length,
             themeCount: recentThemeSignals.length,
             msgLen: message.length,

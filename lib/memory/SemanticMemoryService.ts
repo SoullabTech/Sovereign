@@ -1,5 +1,5 @@
-import { memberRef } from '../privacy/memberRef';
 // @ts-nocheck - Memory prototype, not type-checked
+import { memberRef } from '../privacy/memberRef';
 /**
  * SEMANTIC MEMORY SERVICE
  *
@@ -160,7 +160,7 @@ export class SemanticMemoryService {
       }
 
       console.log('✅ Interaction recorded:', {
-        userId,
+        userId: memberRef(userId),
         element: detectedElement,
         engagement: engagementScore,
         effectiveness: effectivenessScore

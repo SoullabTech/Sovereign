@@ -662,7 +662,7 @@ export const MemoryWritebackService = {
     // Confirms writeback is actually landing AND reports signal quality so we can
     // observe degraded-vs-distilled rate. See MAIA_MEMORY_CANON_v1.0.md §VII.
     console.log('[MemoryWriteback] success', {
-      userId,
+      userId: memberRef(userId),
       memoryType: 'pattern',
       memoryId: insertedId,
       facetCode: facetCode || null,

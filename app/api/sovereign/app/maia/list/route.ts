@@ -318,7 +318,7 @@ export async function POST(req: NextRequest) {
         typeof bodyUserId === 'string' && bodyUserId.length > 0
           ? (bodyUserId === userId ? 'matches-session' : 'ignored')
           : 'absent',
-      finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
+      finalUserId: userId ? memberRef(userId) : 'null',
     });
 
     // Validate and sanitize timezone (default to UTC if invalid)
@@ -738,7 +738,7 @@ export async function POST(req: NextRequest) {
       const t_web_ms = Date.now() - t_web_start;
       const ctxDesc = describeLiveContext(memberLiveCtx);
       console.log(
-        `🕸️ [CONTEXT] user=${effectiveUserId.slice(0, 8)} ` +
+        `🕸️ [CONTEXT] user=${memberRef(effectiveUserId)} ` +
         `patterns=${ctxDesc.patterns} summaries=${ctxDesc.sessions} ` +
         `journals=${ctxDesc.journal} essence=${ctxDesc.hasEssence ? 'Y' : 'N'} ` +
         `t_web=${t_web_ms}ms dt=${msSince(start)}ms`
@@ -882,7 +882,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             relationalContextAddendum = formatRelationalContextForPrompt(relCtx);
             relationalContextId = relCtx.relationshipId;
             console.log('[MAIA/sovereign] relational-context', {
-              memberIdPrefix: userId.slice(0, 8) + '...',
+              memberIdPrefix: memberRef(userId),
               relationshipId: relCtx.relationshipId,
               mode: relCtx.mode,
               realm: relCtx.realm,
@@ -1064,7 +1064,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     } else {
       console.log('[MAIA/sovereign] memory orchestrator skipped', {
         reason: isSanctuary ? 'sanctuary' : !userId ? 'no-userid' : 'anon-or-unrecognized',
-        userId: userId ? userId.slice(0, 8) + '...' : null,
+        userId: userId ? memberRef(userId) : null,
       });
     }
 
@@ -1076,7 +1076,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const markedBreakthroughCount = atomsResult.filter((a) => a.isBreakthrough).length;
     if (markedBreakthroughCount > 0) {
       console.info('[MAIA/sovereign] breakthrough surfaced:', {
-        memberIdPrefix: userId ? userId.slice(0, 8) : null,
+        memberIdPrefix: userId ? memberRef(userId) : null,
         markedCount: markedBreakthroughCount,
       });
     }
@@ -1311,7 +1311,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       if (_memoryScrub) {
         console.warn('[MAIA] §V scrub fired', {
           rid: requestId,
-          userId: effectiveUserId ? `${String(effectiveUserId).slice(0, 8)}...` : null,
+          userId: memberRef(effectiveUserId),
           original_preview: orchestratorResult.text.slice(0, 200),
           replacement_preview: _memoryScrub.slice(0, 200),
         });

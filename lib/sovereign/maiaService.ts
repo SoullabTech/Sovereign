@@ -2639,7 +2639,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           }
           if (identity.hasBirthData || identity.userName || identity.pronouns) {
             console.log(
-              `🌟 [MaiaService] Identity layer filled for ${String(effectiveUserId).substring(0, 8)}... ` +
+              `🌟 [MaiaService] Identity layer filled for ${memberRef(effectiveUserId)} ` +
                 `(natal=${needsAstrology && !!identity.astrologyAddendum}, ` +
                 `name=${needsUserName && !!identity.userName}, ` +
                 `pronouns=${needsPronouns && !!identity.pronouns})`,
@@ -3136,7 +3136,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       ].filter(Boolean);
       console.log('[MAIA] context-inventory', {
         conversationId: sessionId,
-        userId: effectiveUserId ? String(effectiveUserId).slice(0, 8) + '...' : null,
+        userId: memberRef(effectiveUserId),
         routingTier: processingProfile,
         available,
         // PBR-002: present in meta but structurally unable to reach this tier's prompt.
@@ -3313,8 +3313,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     // 🔄 CROSS-SESSION TURNS: Store to user-keyed table for cross-session recall
     console.log('🧠 [TurnsStore] attempting persist', {
-      effectiveUserId,
-      userId,
+      effectiveUserId: memberRef(effectiveUserId),
+      userId: memberRef(userId),
       explorerId: (meta as any)?.explorerId,
       sessionId,
       db: process.env.DATABASE_URL ?? '(no DATABASE_URL env)',
@@ -3684,7 +3684,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // 🌱 EXPANSION EVENT DETECTION (silent; does not affect decisions/executor)
       // Detects growth moments in user text for longitudinal analysis
       const EXPANSION_EVENTS_ENABLED = process.env.EXPANSION_EVENTS_ENABLED === '1';
-      console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', effectiveUserId);
+      console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', memberRef(effectiveUserId));
       // 🔒 SANCTUARY: never store user text in expansion_events (defense-in-depth; turnId is 0 in sanctuary)
       if (!isSanctuary && EXPANSION_EVENTS_ENABLED && turnId) {
         try {
