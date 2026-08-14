@@ -12,6 +12,7 @@
 
 import { query as dbQuery } from '@/lib/db/postgres';
 import { lattice } from './ConsciousnessMemoryLattice';
+import { memberRef } from '../privacy/memberRef';
 
 /**
  * RelationshipEssence type - duplicated here to avoid client-only import
@@ -505,7 +506,20 @@ export async function saveBreakthroughMoment(
       VALUES ($1, NOW(), $2, $3, false, $4)
     `, [userId, insight, element, relatedThemes]);
 
-    console.log(`💡 [BREAKTHROUGH] Saved for ${userId}: "${insight}"`);
+    // CONTAINMENT: the member's breakthrough text never reaches a log sink.
+    // Not the text, and not any digest/prefix/fingerprint of it either — a
+    // handle on an insight is still a handle on that insight. The event and
+    // its member correlation survive; the content does not.
+    //
+    // ⚖️ Founder-ruled union, 2026-08-14. This is the one authorized manual
+    // conflict resolution of the privacy integration — the line where the two
+    // guarantees meet. The identifier line contained WHO (memberRef) but left
+    // the insight exposed; the content line removed WHAT but left the raw id.
+    // Neither was wrong; neither was complete. This is their intersection, and
+    // it introduces nothing neither branch authorized:
+    //   event occurrence  yes · member correlation  derived memberRef
+    //   raw member id     no  · member content      no  · content digest  no
+    console.log(`💡 [BREAKTHROUGH] Saved for ${memberRef(userId)}`);
   } catch (error) {
     console.warn('⚠️ Could not save breakthrough moment:', error);
   }

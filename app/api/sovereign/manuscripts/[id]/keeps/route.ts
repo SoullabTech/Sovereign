@@ -21,6 +21,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 /** Whitespace/curly-quote-normalized containment check (mirror of extractQuotes' tolerance). */
 function containsVerbatim(haystack: string, needle: string): boolean {
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
     // Log marker: counts/sizes only, never content.
     console.log(
-      `[MAIA/press] passage kept { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/press] passage kept { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${id}, keepId: ${result.rows[0].id}, chars: ${text.length} }`,
     );
     return NextResponse.json(
