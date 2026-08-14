@@ -79,7 +79,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
     // Log marker: counts/sizes only, never content.
     console.log(
-      `[MAIA/press] passage kept { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/press] passage kept { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${id}, keepId: ${result.rows[0].id}, chars: ${text.length} }`,
     );
     return NextResponse.json(

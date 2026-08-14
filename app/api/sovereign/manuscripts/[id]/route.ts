@@ -121,7 +121,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     console.log(
-      `[MAIA/press] manuscript removed { memberIdPrefix: ${memberRef(memberId)}, manuscriptId: ${id} }`,
+      `[MAIA/press] manuscript removed { memberRef: ${memberRef(memberId)}, manuscriptId: ${id} }`,
     );
     return NextResponse.json({ removed: true });
   } catch (err) {

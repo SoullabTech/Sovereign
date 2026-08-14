@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     // Discoverable log marker. Counts only, never content.
     console.log(
-      `[MAIA/sovereign] quote candidates { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/sovereign] quote candidates { memberRef: ${memberRef(memberId)}, ` +
         `entries: ${spans.length}, candidates: ${candidates.length}, ` +
         `rejected: ${result.rejected.length}, provider: ${result.provider} }`,
     );

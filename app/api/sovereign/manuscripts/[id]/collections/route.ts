@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       [memberId, id, name.trim()],
     );
     console.log(
-      `[MAIA/press] collection created { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/press] collection created { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${id}, collectionId: ${result.rows[0].id} }`,
     );
     return NextResponse.json(

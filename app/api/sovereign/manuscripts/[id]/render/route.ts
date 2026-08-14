@@ -154,7 +154,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   }
 
   console.log(
-    `[MAIA/press] manuscript rendered { memberIdPrefix: ${memberRef(memberId)}, ` +
+    `[MAIA/press] manuscript rendered { memberRef: ${memberRef(memberId)}, ` +
       `manuscriptId: ${id}, format: ${format}, sections: ${result.sectionCount}, ` +
       `pages: ${result.pageCount ?? 'n/a'}, sizeKB: ${Math.round(result.sizeBytes / 1024)} }`,
   );

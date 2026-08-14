@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     // Log marker: counts only, never content.
     console.log(
-      `[MAIA/press] manuscript ingest { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/press] manuscript ingest { memberRef: ${memberRef(memberId)}, ` +
         `format: ${result.format}, chars: ${result.text.length}, warnings: ${result.warnings.length} }`,
     );
 

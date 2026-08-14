@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
 
     // Discoverable log marker. Count only, never content.
     console.log(
-      `[MAIA/sovereign] episodic moments listed { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/sovereign] episodic moments listed { memberRef: ${memberRef(memberId)}, ` +
         `count: ${result.rows.length} }`,
     );
 
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
     // than admitted on trust.
     if (sessionId === null) {
       console.log(
-        `[MAIA/sovereign] episodic mark refused (no provenance) { memberIdPrefix: ${memberRef(memberId)} }`,
+        `[MAIA/sovereign] episodic mark refused (no provenance) { memberRef: ${memberRef(memberId)} }`,
       );
       return NextResponse.json(
         {
@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
       // The member's own Sanctuary session: name the boundary honestly.
       // Metadata only (session id, member prefix) — never content.
       console.log(
-        `[MAIA/sovereign] episodic mark refused (sanctuary) { memberIdPrefix: ${memberRef(memberId)}, ` +
+        `[MAIA/sovereign] episodic mark refused (sanctuary) { memberRef: ${memberRef(memberId)}, ` +
           `sessionId: ${sessionId} }`,
       );
       return NextResponse.json(
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
       // denial for all three, revealing nothing about whether the session
       // exists or whose it is.
       console.log(
-        `[MAIA/sovereign] episodic mark refused (unresolvable provenance) { memberIdPrefix: ${memberRef(memberId)} }`,
+        `[MAIA/sovereign] episodic mark refused (unresolvable provenance) { memberRef: ${memberRef(memberId)} }`,
       );
       return NextResponse.json(
         {
@@ -318,7 +318,7 @@ export async function POST(request: NextRequest) {
     // Discoverable log marker. Member data minimized: prefix + counts only,
     // never the verbatim content.
     console.log(
-      `[MAIA/sovereign] episodic moment marked { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/sovereign] episodic moment marked { memberRef: ${memberRef(memberId)}, ` +
         `episodeId: ${result.rows[0].episode_id}, verbatimChars: ${verbatimText.length}, ` +
         `hasTurn: ${turnId !== null}, hasSession: ${sessionId !== null} }`,
     );
@@ -382,7 +382,7 @@ export async function DELETE(request: NextRequest) {
 
     // Discoverable log marker. Never content, never the verbatim text.
     console.log(
-      `[MAIA/sovereign] episodic moment unmarked { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/sovereign] episodic moment unmarked { memberRef: ${memberRef(memberId)}, ` +
         `episodeId: ${episodeId} }`,
     );
 

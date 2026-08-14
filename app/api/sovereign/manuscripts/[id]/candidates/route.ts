@@ -86,7 +86,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
     // Log marker: counts only, never content.
     console.log(
-      `[MAIA/press] manuscript candidates { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/press] manuscript candidates { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${id}, section: ${s.position}, candidates: ${candidates.length}, ` +
         `rejected: ${result.rejected.length}, provider: ${result.provider} }`,
     );

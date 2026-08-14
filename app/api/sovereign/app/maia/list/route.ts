@@ -882,7 +882,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             relationalContextAddendum = formatRelationalContextForPrompt(relCtx);
             relationalContextId = relCtx.relationshipId;
             console.log('[MAIA/sovereign] relational-context', {
-              memberIdPrefix: memberRef(userId),
+              memberRef: memberRef(userId),
               relationshipId: relCtx.relationshipId,
               mode: relCtx.mode,
               realm: relCtx.realm,
@@ -1076,7 +1076,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const markedBreakthroughCount = atomsResult.filter((a) => a.isBreakthrough).length;
     if (markedBreakthroughCount > 0) {
       console.info('[MAIA/sovereign] breakthrough surfaced:', {
-        memberIdPrefix: userId ? memberRef(userId) : null,
+        memberRef: userId ? memberRef(userId) : null,
         markedCount: markedBreakthroughCount,
       });
     }

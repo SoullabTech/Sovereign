@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     // Log marker: counts only, never content.
     console.log(
-      `[MAIA/press] manuscript saved { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/press] manuscript saved { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${manuscriptId}, sections: ${clean.length} }`,
     );
     return NextResponse.json({ id: manuscriptId, sectionCount: clean.length }, { status: 201 });

@@ -132,7 +132,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       ).rows[0];
 
     console.log(
-      `[MAIA/press] material brought { memberIdPrefix: ${memberRef(memberId)}, ` +
+      `[MAIA/press] material brought { memberRef: ${memberRef(memberId)}, ` +
         `workId: ${id}, type: ${materialType}, sentence: ${sentence ? 'written' : 'unwritten'} }`
     );
     return NextResponse.json(
