@@ -3117,10 +3117,10 @@
     {
       "file": "lib/consciousness/maia-spiralogic-oracle.ts",
       "kind": "raw identifier interpolated into a logging sink",
-      "excerpt": "console.log(`Recorded breakthrough for ${memberId}: ${breakthrough.breakthrough_description}`);",
+      "excerpt": "`Recorded breakthrough for ${memberId} (dimensions: ${breakthrough.dimensions_affected.length})`,",
       "count": 1,
       "lines": [
-        723
+        729
       ]
     },
     {
@@ -3519,7 +3519,7 @@
       "excerpt": "logger.error(\"Failed to build Mastery Voice context\", { userId, error });",
       "count": 1,
       "lines": [
-        1055
+        1068
       ]
     },
     {
@@ -3528,7 +3528,7 @@
       "excerpt": "logger.info('Oracle feedback received', { userId, helpful: feedback.helpful, resonance: feedback.resonance });",
       "count": 1,
       "lines": [
-        1305
+        1318
       ]
     },
     {
@@ -3537,7 +3537,7 @@
       "excerpt": "logger.info(\"Mastery Voice applied\", { userId });",
       "count": 1,
       "lines": [
-        989
+        1002
       ]
     },
     {
@@ -3546,7 +3546,7 @@
       "excerpt": "logger.info(\"Personal Oracle settings updated\", { userId, requestId });",
       "count": 1,
       "lines": [
-        385
+        398
       ]
     },
     {
@@ -3555,7 +3555,7 @@
       "excerpt": "logger.info(\"Processing voice response\", { userId, element });",
       "count": 1,
       "lines": [
-        973
+        986
       ]
     },
     {
@@ -3564,7 +3564,7 @@
       "excerpt": "logger.info(\"Updating Personal Oracle settings\", { userId, requestId });",
       "count": 1,
       "lines": [
-        374
+        387
       ]
     },
     {
@@ -3573,9 +3573,9 @@
       "excerpt": "userId,",
       "count": 3,
       "lines": [
-        1017,
-        1025,
-        1160
+        1030,
+        1038,
+        1173
       ]
     },
     {

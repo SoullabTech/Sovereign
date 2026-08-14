@@ -29,6 +29,7 @@ jest.mock('@/lib/db/postgres', () => ({
 jest.mock('../ConsciousnessMemoryLattice', () => ({ lattice: {} }));
 
 import { saveBreakthroughMoment } from '../RelationshipMemoryService';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 // A fixture distinctive enough that an accidental substring match is not
 // plausible, and containing no token the containment line could legitimately
@@ -129,9 +130,16 @@ describe('saveBreakthroughMoment — POSITIVE: the event and its diagnostics sur
     expect(captured()).toContain('[BREAKTHROUGH]');
   });
 
-  it('still carries member correlation for the event', async () => {
+  it('still carries member correlation for the event — as memberRef, not the raw id', async () => {
+    // UPDATED at the privacy integration, 2026-08-14. This previously asserted the
+    // RAW member id appeared, which was correct on the content-containment branch
+    // (memberRef did not exist at that base). The founder-ruled union now emits
+    // `memberRef(userId)`, so asserting the raw id would assert the very leak the
+    // identifier unit closed. Correlation must survive; the identifier must not.
     await saveBreakthroughMoment(MEMBER_ID, MEMBER_INSIGHT, 'water', []);
-    expect(captured()).toContain(MEMBER_ID);
+    const out = captured();
+    expect(out).toContain(memberRef(MEMBER_ID));
+    expect(out).not.toContain(MEMBER_ID);
   });
 
   it('still persists the insight — containment is about the LOG, not the record', async () => {
