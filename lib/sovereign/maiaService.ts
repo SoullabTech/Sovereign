@@ -107,6 +107,7 @@ import {
   MEMORY_CANON_GUARD_PROMPT,
   FORBIDDEN_AMNESIA_PATTERNS,
 } from '@/lib/maia/prompts/memoryCanonGuard';
+import { memberRef } from '../privacy/memberRef';
 
 // =============================================================================
 // CROSS-SESSION PAIRING (PH2-001 TODAY, items 1+2)
@@ -889,7 +890,7 @@ async function fastPathResponse(
     memProvFallbackInvoked = true;
     memProvOrchestratorDirect = true;
     try {
-      console.log(`🧠 [FAST/MemoryFallback] No memoryContext from route - fetching from MemoryOrchestrator for user=${effectiveUserId.slice(0, 8)}...`);
+      console.log(`🧠 [FAST/MemoryFallback] No memoryContext from route - fetching from MemoryOrchestrator for user=${memberRef(effectiveUserId)}`);
       const recall = await memoryOrchestrator.getSessionRecallContext(effectiveUserId);
       if (recall && (recall.relationshipContext || recall.recentTurns?.length || recall.recentBreakthroughs?.length)) {
         memoryContext = memoryOrchestrator.formatRecallForPrompt(recall);
@@ -3332,7 +3333,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       } else {
         try {
           await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text, exchangeId);
-          console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
+          console.log(`✅ [TurnsStore] Persisted exchange for ${memberRef(effectiveUserId)}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);
           // Non-blocking - don't fail the response

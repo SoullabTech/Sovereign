@@ -158,6 +158,7 @@ import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 // Skip during static export (Capacitor builds)
 
@@ -497,7 +498,7 @@ export async function POST(req: NextRequest) {
     const allowCrossSessionMemory = isRecognizedUser && !isSanctuary;
 
     // 🔍 MEMORY DEBUG: Log identity state for debugging memory issues
-    console.log(`🧠 [Route/MemoryDebug] userId="${userId}" isRecognized=${isRecognizedUser} effectiveUserId="${effectiveUserId}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
+    console.log(`🧠 [Route/MemoryDebug] userId="${memberRef(userId)}" isRecognized=${isRecognizedUser} effectiveUserId="${memberRef(effectiveUserId)}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
 
 
     // Resolve memory mode (server-side permission check)
@@ -530,7 +531,7 @@ export async function POST(req: NextRequest) {
       // Memory bundle (parallel leg 1)
       shouldBuildMemory
         ? (async () => {
-            console.log(`🧠 [Route/MemoryBundle] ATTEMPTING retrieval for user="${effectiveUserId}" mode="${memoryMode}"`);
+            console.log(`🧠 [Route/MemoryBundle] ATTEMPTING retrieval for user="${memberRef(effectiveUserId)}" mode="${memoryMode}"`);
             try {
               return await withTimeoutLabeled(
                 'MemoryBundleService.build',
@@ -921,7 +922,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         // (emitted ↔ discoverable) of the substrate-crossing scaffold.
         console.log('[MAIA/sovereign] developmental-block', {
           count: recentDevelopmentalMemories.length,
-          userId: userId.slice(0, 8) + '...',
+          userId: memberRef(userId),
         });
 
         const memoryPlan = buildMemoryInfluencePlan({
@@ -947,7 +948,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA/sovereign] memory-plan', summarizePlanForLog(memoryPlan));
         } else {
           console.log('[MAIA/sovereign] memory-plan inactive', {
-            userId: userId.slice(0, 8) + '...',
+            userId: memberRef(userId),
             developmentalCount: recentDevelopmentalMemories.length,
             themeCount: recentThemeSignals.length,
             msgLen: message.length,
@@ -961,7 +962,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         const atomsBlock = formatAtomsForPrompt(loadedAtoms);
         if (atomsBlock) {
           atomsAddendum = atomsBlock;
-          console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: userId.slice(0, 8) + '...' });
+          console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: memberRef(userId) });
         } else {
           console.log('[MAIA/sovereign] atoms: none surfacable for this member');
         }
@@ -989,7 +990,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA] conversational-block', {
             candidateCount: priorCrossSessionExchanges.length,
             ...summarizePriorExchangesForLog(conversationalRecall),
-            userId: userId.slice(0, 8) + '...',
+            userId: memberRef(userId),
           });
         } catch (err) {
           console.warn('[MAIA] conversational-block error (non-fatal):', err);
@@ -1015,7 +1016,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA] episodic-block', {
             candidateCount: markedEpisodes.length,
             ...summarizeMarkedEpisodesForLog(episodicRecall),
-            userId: userId.slice(0, 8) + '...',
+            userId: memberRef(userId),
           });
         } catch (err) {
           console.warn('[MAIA] episodic-block error (non-fatal):', err);
@@ -1689,14 +1690,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
               destination: filing.destination,
             };
             console.log('[MAIA/sovereign] keep filed:', {
-              userId: userId.slice(0, 8) + '...',
+              userId: memberRef(userId),
               destination: filing.destination,
               atomId: atom.id,
             });
           } else {
             responseData.keepIntent = { kind: 'filing_confirmation', instruction: filing };
             console.log('[MAIA/sovereign] keep awaiting-confirm:', {
-              userId: userId.slice(0, 8) + '...',
+              userId: memberRef(userId),
               destination: filing.destination,
             });
           }

@@ -1,3 +1,4 @@
+import { memberRef } from '../privacy/memberRef';
 // @ts-nocheck - Memory prototype, not type-checked
 /**
  * SEMANTIC MEMORY SERVICE
@@ -638,7 +639,7 @@ export class SemanticMemoryService {
             { transition }
           );
 
-          console.log(`🔮 EMERGENT PATTERN: User ${userId} transitions ${transition.from}→${transition.to}`);
+          console.log(`🔮 EMERGENT PATTERN: User ${memberRef(userId)} transitions ${transition.from}→${transition.to}`);
         }
       }
     } catch (error) {

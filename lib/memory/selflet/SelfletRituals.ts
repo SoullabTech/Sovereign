@@ -24,6 +24,7 @@ import {
   Element,
   getMetamorphosisSymbol,
 } from './types';
+import { memberRef } from '../../privacy/memberRef';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET RITUALS SERVICE
@@ -105,7 +106,7 @@ export class SelfletRitualService {
     const currentSelflet = await selfletChain.getCurrentSelflet(userId);
 
     if (!currentSelflet) {
-      console.log(`[SELFLET RITUALS] No current selflet for ${userId}, skipping message recording`);
+      console.log(`[SELFLET RITUALS] No current selflet for ${memberRef(userId)}, skipping message recording`);
       return;
     }
 

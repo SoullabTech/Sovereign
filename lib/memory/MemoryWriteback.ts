@@ -17,6 +17,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
+import { memberRef } from '../privacy/memberRef';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -340,7 +341,7 @@ export const MemoryWritebackService = {
     }
 
     // Longterm mode: analyze and write
-    console.log(`[MemoryWriteback] Analyzing exchange for user: ${userId}`);
+    console.log(`[MemoryWriteback] Analyzing exchange for user: ${memberRef(userId)}`);
 
     // SECURITY GATE: Block sensitive data from ever entering memory
     if (containsSensitiveData(userMessage)) {

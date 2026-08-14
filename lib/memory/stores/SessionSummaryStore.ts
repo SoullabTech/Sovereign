@@ -13,6 +13,7 @@
  */
 
 import { query } from '../../db/postgres';
+import { memberRef } from '../../privacy/memberRef';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -77,7 +78,7 @@ export const SessionSummaryStore = {
     } catch (err) {
       // Handle FK violation gracefully (member doesn't exist)
       if (err instanceof Error && err.message.includes('violates foreign key')) {
-        console.warn(`[SessionSummaryStore] Member ${memberId.slice(0, 8)} not found in members table, skipping`);
+        console.warn(`[SessionSummaryStore] Member ${memberRef(memberId)} not found in members table, skipping`);
         return;
       }
       throw err;
