@@ -107,17 +107,36 @@ the whole relationship).
 | Act | Meaning | Effect on the record |
 |---|---|---|
 | **Affirm** | *"still true"* | updates `affirmed_at`. Nothing else changes |
-| **Correct** | *"that's not what I meant"* | creates a **new Declaration**; the prior one gets `superseded_by`. ⛔ Both are retained. The original wording is never rewritten |
-| **Supersede** | *"true then, not now"* | same mechanism, different meaning — the prior remains **historically true**, no longer current |
+| **Correct** | *"that's not what I meant"* | creates a **new Declaration**; the prior one gets `superseded_by`. ⛔ The predecessor becomes **unavailable as an expression of the member's meaning**, while **immutable lineage is retained**. The original wording is never rewritten |
+| **Supersede** | *"true then, not now"* | same mechanism, different meaning — the prior is **preserved as dated history**, offerable **only with provenance and continuing consent** |
 | **Withdraw** | *"stop using this"* | sets `retrieval_consent = false`. ⛔ Retrieval stops **immediately**; the row is not deleted |
-| **Release** | *"remove it"* | member-initiated deletion — the only path that destroys, and only ever member-initiated |
+| **Release** | *"stop making this available"* | ⭐ **marks permission — it never destroys.** Governs relational availability only |
+| **Erase** | *"destroy this"* | ⭐ **the only path that destroys.** Separately named act. ⛔ Its deletion, audit, backup and propagation semantics **require their own contract** and are NOT specified here |
 
 ⭐ **Correct and Supersede share a mechanism and differ in meaning** — so the
 member's intent must be captured explicitly, not inferred from the edit. A system
 that guesses which one happened is authoring meaning again.
 
+> ⚖️ **Founder ruling 2026-08-13 (D-1, D-2).** Release marks permission; it never
+> destroys. Destruction is `Erase`, a separately named act with its own contract.
+> This resolves the prior contradiction between this section and §9, which
+> described Release as a permission state while this table called it deletion.
+> **Release governs relational availability; Erase governs destruction.**
+
 ⛔ **No system process may perform any of these five acts.** Not decay, not
 cleanup, not a migration.
+
+> ⚖️ **Founder ruling 2026-08-13 (D-7).** Two further member acts were proposed
+> by the design inquiry. ⛔ **They are not combined with each other, and neither
+> joins declaration lineage.**
+>
+> - **`HOLD`** — belongs at the **threshold before declaration**. It creates **no
+>   relational assertion** at all. It exists for the interval between an
+>   experience and its nameability.
+> - **`Repudiate`** — challenges **authenticity**: *"I did not author this."* It
+>   invokes **quarantine and integrity review**, ⛔ **not** semantic correction.
+>
+> ⭐ The declaration lineage above remains distinct from both.
 
 ---
 
@@ -128,14 +147,41 @@ MAIA may retrieve and offer an assertion **iff all hold**:
 1. it is **DECLARED** (or **OBSERVED** and offered explicitly as MAIA's own), and
 2. `retrieval_consent` is true, and
 3. it is **not withdrawn**, and
-4. it is current — or, if superseded, offered **as history with its date**, never
-   as the present.
+4. it satisfies **both** of the two conditions below, which were previously
+   collapsed into the single word *"current"*:
+
+   ⭐ **Founder ruling 2026-08-13 — two meanings, never one bit:**
+
+   - **Lineage standing** — whether the declaration has been corrected or
+     superseded.
+   - **Present offerability** — whether consent, release, sharing scope, expiry
+     and context permit its use *now*.
+
+   ⛔ **Both are computed from events at read time. Neither may become a cached
+   authority bit.** A superseded declaration may still be offered **as history
+   with its date**, never as the present.
 
 The offer must carry its provenance in the utterance itself:
 
-> *"You wrote in June: 'we've stopped calling'. Is that still how it is?"*
+> *"You wrote in June: 'we've stopped calling.'"*
 
 ⛔ Never: *"Your relationship with X is distant."*
+
+> ⚖️ **Correction 2026-08-13.** This section previously closed that exemplar with
+> *"Is that still how it is?"* — **withdrawn.** `RELATIONSHIP_ROOM_CONSTITUTION.md`
+> Article VII forbids any surface asking whether a condition has changed, and
+> **canon governs a design document.** MAIA may offer the record and may ask about
+> **the record**; she may never ask whether the relationship has changed. Member
+> controls concern the record: **keep · correct · supersede · withdraw · release ·
+> erase.**
+
+> ⚖️ **Founder ruling 2026-08-13 — the see/say boundary.** The existing doctrine
+> *"What you are given to see is not what you are given to say"*
+> (`lib/relationships/buildRelationalContextBlock.ts`) does **not** necessarily
+> contradict attributable offering. It governs the boundary: ⛔ **perception
+> alone never licenses speech**; ⭐ an **attributable, consented member
+> declaration** may be offered under the RF-R5 protocol. This resolves the
+> apparent conflict JRF-04 raised (X-6) without discarding either instrument.
 
 ⭐ This is the governing movement made concrete —
 **retrieve → attribute → offer → ask → receive correction.**
@@ -162,6 +208,33 @@ is the declaration, with their words, not the classifier's.
 
 ⭐ This is the same lesson as the containment chokepoint: **prefer a boundary
 whose shape makes the violation impossible over one that forbids it.**
+
+> ⚖️ **Founder ruling 2026-08-13 (D-4) — evidence standard for this section.**
+> *A governing document may not describe a boundary as live structural containment
+> without an exact code referent and a mutation-failing test.*
+>
+> **Referent, verified at exact production SHA `22200f967`:**
+> `lib/relationships/relationshipSignalService.ts:169` —
+> `const DECLARATION_CAPABLE_SOURCES: ReadonlySet<string> = new Set();`
+> gating `ruptureState` at **write** (`:178`, `insertRelationalSignal`) and at
+> **read** (`:285`, `rowToSignal`). Empty by intent, fail-closed.
+>
+> ⚠️ **Second prong only partially met.**
+> `lib/relationships/__tests__/ruptureContainment.test.ts` is **entirely
+> source-text assertion** — `readFileSync` + regex `toMatch`; it never executes
+> `insertRelationalSignal` or `rowToSignal`. It **does** fail under text mutation
+> of the containment itself (adding either source to the set breaks `:81`), so it
+> pins those two chokepoints in text. It establishes **nothing about runtime
+> behaviour**, and would not catch a new caller reading `row.rupture_state`
+> directly. **Runtime containment is NOT ESTABLISHED.**
+>
+> ⛔ Accordingly: the containment described here is a **deployed code fact** and
+> **not** a verified runtime fact. Do not cite it as the latter.
+>
+> ⚠️ **Provenance of this note.** The JRF design inquiry reported this constant as
+> existing only in documents. That finding was true of `d41b8b355` and **false of
+> production**; the inquiry searched a tree predating the containment by two days.
+> Recorded in `inquiry/JRF-08A-EXACT-REFERENT-RECONCILIATION.md`.
 
 ---
 

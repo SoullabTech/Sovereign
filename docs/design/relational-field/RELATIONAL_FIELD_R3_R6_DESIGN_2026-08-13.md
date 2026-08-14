@@ -52,8 +52,13 @@ understood · **a visible history of what changed and when**.
 ## 3. MAIA enters as witness
 
 > *"You previously described this relationship as feeling distant. Today you are
-> speaking about renewed tenderness. Does that feel like a real change, or are
-> both experiences present?"*
+> speaking about renewed tenderness. Both are in the record."*
+
+> ⚖️ **Correction 2026-08-13.** This exemplar previously closed with *"Does that
+> feel like a real change, or are both experiences present?"* — **withdrawn.**
+> `RELATIONSHIP_ROOM_CONSTITUTION.md` Article VII forbids any surface asking
+> whether a condition has changed. MAIA may present **the record**; the member
+> decides what it means and whether to act on it.
 
 Preserves time, contradiction, provenance, and the person's authority — the
 opposite of declaring someone "ruptured."
@@ -70,14 +75,42 @@ boundary involved?"* **The taxonomy serves the person.**
 | Water | Feeling, attachment, tenderness, grief, resonance |
 | Earth | Events, commitments, boundaries, safety, embodied reality |
 | Air | Communication, assumptions, interpretation, misunderstanding |
-| Aether | The relationship as a whole and what is trying to emerge |
+| Aether | The relationship as a whole |
+
+> ⚖️ **Founder ruling 2026-08-13 (D-8).** *"…and what is trying to emerge"* is
+> **struck.** It is a Recognition-layer assertion, and
+> `docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` forbids manufacturing
+> higher-order meaning. Aether may support **integrative posture** but may never
+> manufacture an emergent meaning. ⭐ If the **member** asks that question, MAIA may
+> accompany their inquiry **without asserting that an emergence exists.**
+> ⛔ Phrasing it as a question does not launder it: asking *"what's trying to
+> emerge here?"* has already asserted that something is.
+
+> ⚖️ **Founder ruling 2026-08-13 (D-5) — the selection principle.**
+> **What MAIA chooses to retrieve, arrange, foreground, or omit can itself
+> communicate an interpretation.** Meaning-bearing presentation **is expression**:
+> system-selected ordering, prominence, badges, omission and juxtaposition are
+> governed exactly as utterances are. ⚠️ This closes the gap a text-only reading
+> leaves open — a structural reading carries no provenance, no quotable words, and
+> no handle to correct.
+> ⭐ **Not** automatically interpretation: neutral deterministic chronology, and
+> organization the **member** selected.
 
 ## 5. Member-recognized patterns
 
 ⛔ Only **after multiple attributable moments exist**. e.g. *"This concern has
 appeared in three conversations."* · *"You often become responsible for restoring
 contact."* · *"Your stated boundary and your recent action seem to differ."* ·
-*"You corrected my earlier understanding; I will carry the correction forward."*
+*"You corrected my earlier understanding."*
+
+> ⚖️ **Founder ruling 2026-08-13 (D-3) — anti-laundering holds.**
+> *"…I will carry the correction forward"* is **struck.** A member-authored
+> correction **to a declaration** may persist as a **new declaration event**. A
+> correction of **MAIA's observation** does **not** authorize the observation to
+> persist: before RF-R6, ⭐ **only the member's resulting words may carry
+> forward.** ⛔ A2 §8③ governs — OBSERVED assertions remain in-turn only.
+> This resolves the collision JRF-07 identified between A1 §5 and A2 §8③, in
+> A2's favour.
 
 ⭐ **A pattern joins the field only when the member recognizes, modifies, or
 explicitly preserves it.**
@@ -90,6 +123,15 @@ corrected · whether MAIA may use it · **Keep / Correct / Release**.
 > This is where the field becomes genuinely different from ordinary AI memory.
 
 ## 7. Shared relational space — later
+
+> ⚖️ **Founder ruling 2026-08-13 (D-6) — composition, not filtering.**
+> ⛔ Shared-space composition **must begin from a separately authorized input
+> set.** Filtering a private composition afterward is **too late** — selection
+> has already happened, and what MAIA chooses to foreground or omit itself
+> communicates the private material it was selected from.
+> ⭐ Retrieval consent applies **only to the member's own private field.**
+> Sharing requires a **separate, attributable consent event** naming the
+> declaration, the recipient or space, the purpose, and its revocability.
 
 Two consented people, **memories and meanings kept distinct**: Kelly's
 experience · the other person's experience · shared declarations · MAIA's
