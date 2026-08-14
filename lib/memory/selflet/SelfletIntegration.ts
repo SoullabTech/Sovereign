@@ -29,6 +29,7 @@ import {
   Element,
   ReflectionPrompt,
 } from './types';
+import { memberRef } from '../../privacy/memberRef';
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT LOADING
@@ -546,7 +547,7 @@ export async function ensureInitialSelflet(
       essenceSummary: options?.essenceSummary ?? 'Beginning of the journey',
     });
 
-    console.log(`[SELFLET] ✅ Initial selflet created for ${userId}`);
+    console.log(`[SELFLET] ✅ Initial selflet created for ${memberRef(userId)}`);
   } catch (error) {
     // Graceful - tables may not exist yet
     console.log('[SELFLET] Could not ensure initial selflet:', error);

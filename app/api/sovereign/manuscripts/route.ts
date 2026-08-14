@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { segment, MAX_SECTIONS, type SectionInput } from '@/lib/manuscript/ingest/segment';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 const MAX_TEXT_CHARS = 2_000_000; // ~a very long book; hard cap for sanity
 
@@ -180,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     // Log marker: counts only, never content.
     console.log(
-      `[MAIA/press] manuscript saved { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/press] manuscript saved { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${manuscriptId}, sections: ${clean.length} }`,
     );
     return NextResponse.json({ id: manuscriptId, sectionCount: clean.length }, { status: 201 });

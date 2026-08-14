@@ -6,6 +6,7 @@ import { RelationshipContextStore, type RelationshipContext } from './stores/Rel
 import { TurnsStore } from './stores/TurnsStore';
 import { BreakthroughStore } from './stores/BreakthroughStore';
 import { containsSensitiveData } from './sensitivePatterns';
+import { memberRef } from '../privacy/memberRef';
 
 const prisma = new PrismaClient();
 
@@ -617,7 +618,7 @@ export class MemoryOrchestrator {
     try {
       // Persist to database for cross-session recall
       await TurnsStore.addExchange(posture, userId, sessionId, userMessage, assistantResponse);
-      console.log(`[MEMORY] Stored exchange for user ${userId}`);
+      console.log(`[MEMORY] Stored exchange for user ${memberRef(userId)}`);
     } catch (error) {
       console.error('Session memory update error:', error);
     }

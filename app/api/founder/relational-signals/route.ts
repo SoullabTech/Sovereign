@@ -78,10 +78,43 @@ function parseLimit(v: string | null): number {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GUARD — founder-only. Layout already gates the page; we guard the API too.
+// GUARD — founder-only. Layout gates the page; the API guards itself as well.
 //
-// v1: any authenticated session can hit this; the page layout enforces the
-// feature flag. If you want to lock harder later, add a role check here.
+// ⚠️ CORRECTED 2026-08-14. This comment previously read "v1: any authenticated
+// session can hit this" — stale and misleading. The handler calls
+// `requireFounder()` BEFORE it queries anything, and that helper fails closed
+// when FOUNDER_MEMBER_IDS is unset. The executable boundary was already correct;
+// the comment described a state that no longer existed, which is exactly what
+// misleads the next investigator.
+//
+// ⚖️ DECLARED FORENSIC EXCEPTION — founder ruling 2026-08-14.
+//
+// This route deliberately reads the RAW stored `rupture_state` rather than going
+// through `rowToSignal`, which withholds it. That is intended, not a containment
+// defect: routing this through the governed reader would make the forensic
+// surface unable to show that the database contains a value the serving path
+// deliberately withholds — destroying the audit it exists to perform.
+//
+// The invariant is therefore NOT "no consumer may see raw rupture_state". It is:
+//   No member-facing, MAIA-facing, or ordinary application consumer may receive
+//   raw inferred rupture state. A specifically declared founder forensic surface
+//   may inspect the stored assertion as EVIDENCE OF SYSTEM BEHAVIOUR.
+//
+// ⭐ Forensics may see what the system did without thereby authorizing the system
+// to believe or say what it did. Raw forensic visibility does not increase the
+// assertion's authority.
+//
+// Conditions binding this exception:
+//   · founder authentication stays enforced INSIDE the handler, not middleware
+//   · raw `rupture_state` is presented as stored detector output, never as
+//     "what the relationship is"
+//   · it must never feed MAIA prompts, member surfaces, automated tuning, or
+//     another persistence layer
+//   · founder review verdicts must not strengthen, validate, or re-author the
+//     inference
+//   · ⛔ any OTHER raw reader remains a bypass until separately classified
+//
+// Record: docs/architecture/audits/relational-field-reconciliation/RE_WITNESS_b8eb2c626_2026-08-14.md
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function requireSession() {
