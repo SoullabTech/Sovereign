@@ -54,7 +54,9 @@ a7f7d9396 ==#995  docs/design/author-studio/WRITER_CANVAS_AND_PRESS_EDITOR_DIVIS
 CUSTODY / DESIGN BINDINGS ........ COMPLETE
 C1 HOUSE NAMING .................. RULED 2026-08-14
 C1 COPY CORRECTION (4 strings) ... AUTHORIZED / BLOCKED_ON_GATE
-EXPERIENCE CONTRACTS ............. ABSENT — blocks ALL member-facing work
+EXPERIENCE CONTRACTS ............. AUTHORIZED 2026-08-14 (contracts only)
+  · Writer Canvas ................ DRAFT — founder review, then live walk
+  · Manuscript Room .............. STOP — identity contradiction, ruling required
 CANVAS RECONCILIATION ............ BLOCKED_ON_GATE (same cause)
 WRITER'S DESK .................... NOT STARTED
 ARRANGEMENT ...................... DESIGN ESTABLISHED / BUILD NOT STARTED
@@ -226,3 +228,46 @@ complete.
 bind → reconstruct → obtain authority → design → build → test → remediate
      → restart the member walk → admit → deploy → witness → close
 ```
+
+
+---
+
+## Experience Contract unit — 2026-08-14
+
+**Authorized**: a bounded design unit creating Experience Contracts for the two blocked
+rooms. Contracts only — not the copy correction, not Phase 2, not Desk, Arrangement, Press
+Editor implementation, or deployment. ⛔ No exemption, no `--no-verify`, no false structural
+classification.
+
+### Writer Canvas — DRAFT
+
+`docs/design/author-studio/WRITER_CANVAS_EXPERIENCE_CONTRACT_DRAFT_2026-08-14.md`
+
+Every clause recovered from governed sources with inline citation; nothing redesigned.
+Deliberately **not** installed in `docs/design/contracts/` — the gate parses every file there
+and existence-checks screenshots, so installing a contract without them would break the gate
+for **every lane in the repository**.
+
+Remaining: founder review → live walk (desktop + mobile screenshots, real
+`experience_verification`) → move frontmatter into `docs/design/contracts/writer-canvas.md`.
+
+⚠️ **Walk dependency**: these routes are `minTier: 'free'` — authentication required before
+the door. A real member session against a running dev server is not yet established, and no
+contract may be installed with an invented walk.
+
+### Manuscript Room — STOP
+
+`docs/design/author-studio/MANUSCRIPT_ROOM_IDENTITY_CONTRADICTION_2026-08-14.md`
+
+Two governed sources give incompatible answers to *what human activity does
+`/press/manuscript` serve* — the field a contract exists to fix:
+
+- **Three-Layer Ruling (2026-07-30, ratified)**: Layer 3 = *close work inside one
+  manuscript*, owning Working Draft **and** Export/Your Book.
+- **Writer Canvas ⊥ Press Editor (2026-08-05, founder)**: composition and edition-production
+  are two fields, deliberately separated.
+
+The room's contents straddle the division line drawn six days after it was assembled. Neither
+text repeals the other. Surfaced, not reconciled, per the authorization. Recommendation
+carried in the file (Option 2). `/press/manuscript` stays blocked for member-facing changes
+until ruled; Writer Canvas surfaces are unaffected.
