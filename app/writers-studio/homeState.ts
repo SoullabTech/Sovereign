@@ -62,7 +62,10 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
    * Writing activity for a work — never the work row's own updatedAt, and
    * never a draft row's timestamp alone.
    *
-   * ⚠️ A working-draft row can exist with `updated_at` set and zero content:
+   * ⚠️ Two ways a draft timestamp lies about authorship, both found in
+   * production rather than reasoned about:
+   *
+   * 1. A working-draft row can exist with `updated_at` set and zero content:
    * `/manuscripts/blank` creates the draft alongside the blank manuscript, and
    * reuses untouched blanks rather than minting duplicates. So a draft
    * timestamp proves a row was touched, not that a person wrote. Requiring
@@ -70,10 +73,19 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
    * than a mutation — the same distinction that disqualified
    * `living_work.updatedAt`, one layer down.
    *
-   * Observed live 2026-08-14: a work bound to a 0-char manuscript whose draft
-   * row was stamped hours earlier was promoted to the CONTINUE hero and
-   * rendered "No writing yet · written 6 hours ago" — two clauses that
-   * contradict each other, offering continuation of nothing.
+   *    Observed live: a work bound to a 0-char manuscript whose draft row was
+   *    stamped hours earlier was promoted to the CONTINUE hero and rendered
+   *    "No writing yet · written 6 hours ago" — two clauses contradicting each
+   *    other, offering continuation of nothing.
+   *
+   * 2. A SEEDED IMPORT stamps `updated_at` at creation. 374,697 characters
+   *    arrive with created_at == updated_at and are never touched again. The
+   *    charCount guard alone cannot see this — the characters are real, they
+   *    were simply never written HERE.
+   *
+   * (2) is now excluded at the API boundary: `lastWrittenAt` is NULL unless
+   * `updated_at > created_at`, so this module receives a member act or nothing.
+   * The guard below still requires characters, so both failures are closed.
    */
   const writtenAt = (w: LivingWork): number => {
     const id = manuscriptIdOf(w);
