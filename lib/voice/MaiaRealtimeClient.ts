@@ -128,7 +128,11 @@ export class MaiaRealtimeClient {
     // Listen for audio transcripts
     this.session.on('conversation.item.input_audio_transcription.completed', (event: any) => {
       if (event.transcript) {
-        console.log('🎤 User said:', event.transcript);
+        // CONTAINMENT: member speech is member-authored content and is not
+        // logged; no digest, prefix or excerpt stands in for it.
+        console.log('🎤 User transcript received', {
+          chars: String(event.transcript).length,
+        });
         this.config.onTranscript(event.transcript, true);
       }
     });

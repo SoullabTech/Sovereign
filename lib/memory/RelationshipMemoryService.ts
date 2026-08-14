@@ -505,7 +505,11 @@ export async function saveBreakthroughMoment(
       VALUES ($1, NOW(), $2, $3, false, $4)
     `, [userId, insight, element, relatedThemes]);
 
-    console.log(`💡 [BREAKTHROUGH] Saved for ${userId}: "${insight}"`);
+    // CONTAINMENT: the member's breakthrough text never reaches a log sink.
+    // Not the text, and not any digest/prefix/fingerprint of it either — a
+    // handle on an insight is still a handle on that insight. The event and
+    // its member correlation survive; the content does not.
+    console.log(`💡 [BREAKTHROUGH] Saved for ${userId}`);
   } catch (error) {
     console.warn('⚠️ Could not save breakthrough moment:', error);
   }

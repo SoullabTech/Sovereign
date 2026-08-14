@@ -409,7 +409,11 @@ You are the witnessing presence. Trust the unfolding.`
 
       case 'conversation.item.input_audio_transcription.completed':
         if (data.transcript) {
-          console.log('🎤 User said:', data.transcript);
+          // CONTAINMENT: member speech is member-authored content and is not
+          // logged; no digest, prefix or excerpt stands in for it.
+          console.log('🎤 User transcript received', {
+            chars: String(data.transcript).length,
+          });
           this.config.onTranscript(data.transcript, true);
         }
         break;
