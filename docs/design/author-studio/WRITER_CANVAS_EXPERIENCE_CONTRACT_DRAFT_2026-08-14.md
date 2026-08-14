@@ -29,7 +29,9 @@
 room: Writer Canvas
 human_activity: writing — a creator continuing a work that is already theirs, mid-motion
 surfaces:
-  - app/writers-studio/page.tsx
+  # app/writers-studio/page.tsx REMOVED 2026-08-14 (step 4 split). That file is Studio Home —
+  # a different human activity (arrive · orient · choose) governed by its own contract.
+  # Contract boundary follows human activity, not filesystem ancestry.
   - app/writers-studio/canvas/**
   - components/canvas/**
 change_class: experiential
