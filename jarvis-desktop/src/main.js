@@ -12,6 +12,7 @@ const PROV = require('./provenance.js');
 const GOV = require('./governance.js');
 const RepoConfig = require('./repo-config.js');
 const { childEnv } = require('./child-env.js');
+const MECH = require('./builder-mechanism.js');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -420,9 +421,21 @@ ipcMain.handle('jarvis:status', async () => {
     route_a: { state: 'UNKNOWN', detail: null },
     local_worker: { state: 'UNKNOWN', detail: null },
     claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop Alpha does not auto-execute it (see §8 security stance) — this console itself runs the Claude Code session that built it.' },
+    builder_mechanism: { state: 'UNKNOWN', detail: null },
     governance_holds: [],
     desktop_runtime: { state: 'AVAILABLE', detail: `Electron ${process.versions.electron}, node ${process.versions.node}` },
   };
+
+  // Builder work-unit mechanism — resolved from the BOUND root only, and
+  // re-evaluated on every status call, so a repo re-binding is reflected without
+  // a relaunch. Reported before the early return, because "no repository bound"
+  // is itself the honest answer for this row rather than a silent UNKNOWN.
+  {
+    const ms = MECH.mechanismState(currentRoot());
+    result.builder_mechanism = ms.available
+      ? { state: 'AVAILABLE', detail: `governed work-unit lane '${ms.lane}' (read-only); mechanism at ${ms.source}` }
+      : { state: 'UNAVAILABLE', detail: ms.reason };
+  }
 
   if (!currentRoot()) return result;
 
@@ -511,9 +524,59 @@ ipcMain.handle('jarvis:capabilities', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// jarvis:submit-task — the ONLY execution surface. Routes through the same
+// jarvis:mechanism-status — is the governed work-unit mechanism reachable from
+// the BOUND root? Read-only, no execution. Recomputed per call so that changing
+// the repo binding re-evaluates availability without a relaunch. There is no
+// fallback to any other checkout or to a bundled copy: see builder-mechanism.js.
+// ---------------------------------------------------------------------------
+ipcMain.handle('jarvis:mechanism-status', async () => MECH.mechanismState(currentRoot()));
+
+// ---------------------------------------------------------------------------
+// jarvis:run-work-unit — Desktop access to the governed Builder work-unit
+// mechanism, admitting only its authorized `local-native` read-only lane.
+//
+// This is NOT "C3 execution". C3 remains routed-but-not-executed by
+// jarvis:submit-task below, because the mechanism's own checkAuthority admits
+// READ_ONLY_LANES only — that is the mechanism enforcing an existing authority
+// boundary, not an unfinished wire here.
+//
+// Desktop performs NO admission of its own. It hands the packet to executeRun,
+// which runs validatePacket + checkAuthority first and routes any worker-emitted
+// gate through validateWorkerGate itself. A refusal is returned AS a refusal,
+// with the mechanism's own failure_class and detail; nothing here upgrades,
+// retries, or reinterprets an outcome the mechanism produced.
+//
+// The lane is pinned to AUTHORIZED_LANE rather than taken from the caller. That
+// is scope, not authority: had the renderer been able to name a lane, the
+// mechanism would still refuse anything outside READ_ONLY_LANES.
+// ---------------------------------------------------------------------------
+ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
+  const root = currentRoot();
+  if (!root) {
+    return { submitted: false, outcome: 'MECHANISM_UNAVAILABLE', reason: 'no execution substrate is bound — bind a repository before submitting work units', mechanism: MECH.mechanismState(null), run: null, events: [] };
+  }
+  const packet = {
+    ...(req && typeof req === 'object' ? req.packet : null),
+    execution_lane: MECH.AUTHORIZED_LANE,
+  };
+  try {
+    return await MECH.runWorkUnit(root, packet, {});
+  } catch (e) {
+    // An unexpected throw is a Desktop-side fault and is labelled as one, so it
+    // is never mistaken for a governed refusal by the mechanism.
+    return { submitted: false, outcome: 'DESKTOP_FAULT', reason: String(e.message).slice(0, 300), mechanism: MECH.mechanismState(root), run: null, events: [] };
+  }
+});
+
+// ---------------------------------------------------------------------------
+// jarvis:submit-task — the router execution surface. Routes through the same
 // router.mjs / deterministic.mjs terminal execution uses. No arbitrary shell.
 // C3 is selected and explained but NOT auto-executed (explicit §8 stance).
+//
+// Since 2026-08-14 this is no longer the ONLY execution surface: the governed
+// work-unit mechanism above is a second one, on a different lane vocabulary
+// (`local-native`, not C0/C1/C3) and with its own authority checks. The two do
+// not overlap, and neither is a route into the other.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   if (!currentRoot()) return { status: 'error', reason: 'repo root not found — cannot route' };

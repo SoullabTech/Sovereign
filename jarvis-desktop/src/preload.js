@@ -16,6 +16,13 @@ contextBridge.exposeInMainWorld('jarvis', {
   submitTask: (task) => ipcRenderer.invoke('jarvis:submit-task', task),
   governanceAction: (req) => ipcRenderer.invoke('jarvis:governance-action', req),
 
+  // Governed Builder work-unit mechanism. `runWorkUnit` carries a packet only —
+  // the lane is pinned in main to the single authorized read-only lane and is
+  // deliberately NOT a renderer-supplied value, so a buggy or compromised
+  // renderer cannot name a lane at all. Admission remains the mechanism's.
+  getMechanismStatus: () => ipcRenderer.invoke('jarvis:mechanism-status'),
+  runWorkUnit: (packet) => ipcRenderer.invoke('jarvis:run-work-unit', { packet }),
+
   getRepoConfig: () => ipcRenderer.invoke('jarvis:repo-config'),
   chooseRepo: () => ipcRenderer.invoke('jarvis:choose-repo'),
   clearRepo: () => ipcRenderer.invoke('jarvis:clear-repo'),

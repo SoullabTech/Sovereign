@@ -70,6 +70,7 @@ function renderHome() {
       ${stateRow('Route A (deterministic)', s.route_a)}
       ${stateRow('Local worker (Ollama)', s.local_worker)}
       ${stateRow('Claude lane', s.claude_lane)}
+      ${stateRow('Builder work-unit mechanism', s.builder_mechanism)}
       ${stateRow('Desktop runtime', s.desktop_runtime)}
     </div>
     <div class="hint">Observed ${s.observed_at}</div>
@@ -414,6 +415,7 @@ function renderSystem() {
       ${stateRow('Route A', s.route_a)}
       ${stateRow('Local worker', s.local_worker)}
       ${stateRow('Claude lane', s.claude_lane)}
+      ${stateRow('Builder work-unit mechanism', s.builder_mechanism)}
       ${stateRow('Desktop runtime', s.desktop_runtime)}
       ${stateRow('Memory / Postgres', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — no reachability check wired.' })}
       ${stateRow('Production', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — requires SSH; out of scope for a local console.' })}
