@@ -91,8 +91,13 @@
 
 }
 
+(strip_client_authz) {
+    request_header -X-Maia-Roles
+    request_header -X-Maia-Tier
+}
 
 :80 {
+    import strip_client_authz
     import deny_disabled_routes
     @streaming {
         path /api/voice/stream-conversation
@@ -124,17 +129,20 @@
 
 # Redirect www to apex (prevents WebAuthn ORIGIN_MISMATCH)
 www.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     redir https://soullab.life{uri} permanent
 }
 
 # MAIA application
 maia.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     reverse_proxy maia-sovereign:3000
 }
 
 soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # ═══════════════════════════════════════════════════════════════════════════
     # CORS for API requests (iOS/Capacitor app support)
@@ -391,6 +399,7 @@ soullab.life {
 # Middleware rewrites jondi.soullab.life/* → /fields/jondi/*
 # ═══════════════════════════════════════════════════════════════════════════════
 jondi.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
@@ -418,6 +427,7 @@ jondi.soullab.life {
 
 # Middleware rewrites kelly.soullab.life/* → /fields/kelly/*
 kelly.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
@@ -445,6 +455,7 @@ kelly.soullab.life {
 
 # Middleware rewrites nathan.soullab.life/* → /fields/nathan/*
 nathan.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
@@ -473,6 +484,7 @@ nathan.soullab.life {
 # Old Head Plaster - Astro SSR with Virtual Daragh
 # ═══════════════════════════════════════════════════════════════════════════════
 oldhead.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # Reverse proxy to OldHead Astro container
     reverse_proxy oldhead:4321 {
@@ -506,6 +518,7 @@ oldhead.soullab.life {
 # Chart Subdomain - Birth Chart Calculator Funnel
 # ═══════════════════════════════════════════════════════════════════════════════
 chart.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # Rewrite root to /chart page
     rewrite / /chart
@@ -541,6 +554,7 @@ chart.soullab.life {
 # Elemental Alchemy Audiobook
 # ═══════════════════════════════════════════════════════════════════════════════
 elementalalchemy.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # Rewrite root to audiobook page
     rewrite / /labtools/elemental-alchemy
@@ -576,6 +590,7 @@ elementalalchemy.soullab.life {
 # Loralee Starweaver - Stellium Astrology Portal
 # ═══════════════════════════════════════════════════════════════════════════════
 loralee.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # Handle root path - rewrite to portal without trailing slash
     handle / {
@@ -648,6 +663,7 @@ loralee.soullab.life {
 # Demo Plaster - White-Label Demo Site
 # ═══════════════════════════════════════════════════════════════════════════════
 demo.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # Reverse proxy to Demo Plaster container
     reverse_proxy demo:4322 {
@@ -711,6 +727,7 @@ jlmasterhandyman.com, www.jlmasterhandyman.com {
 }
 
 jeremy.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     redir https://jlmasterhandyman.com{uri} permanent
 }
@@ -721,6 +738,7 @@ jeremy.soullab.life {
 # All API requests from frontends route here.
 # MAIA API is the backbone for all Soullab products.
 api.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # Reverse proxy to MAIA API container
     reverse_proxy maia-api:3001 {
@@ -761,6 +779,7 @@ api.soullab.life {
 # Marc Studio - Music Production Site
 # ═══════════════════════════════════════════════════════════════════════════════
 marc.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     reverse_proxy app:3000 {
         header_up Host {host}
@@ -790,6 +809,7 @@ marc.soullab.life {
 # Rude Boy Baking - Artisan Bakery Site
 # ═══════════════════════════════════════════════════════════════════════════════
 rudeboy.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     reverse_proxy rudeboy-baking:4323 {
         header_up Host {host}
@@ -823,6 +843,7 @@ rudeboy.soullab.life {
 # WebSocket gateway to the self-hosted strfry relay (maia-nostr-relay:7777).
 # TLS terminated here by Caddy; backend uses plain WebSocket over Docker network.
 nostr.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     @ws {
         header Connection *Upgrade*
@@ -869,6 +890,7 @@ nostr.soullab.life {
 # publicly here — it is reachable only from the internal Docker network (the maia app), never the
 # public internet (defense in depth; design §6.1 C2b). DNS: add livekit.soullab.life -> public IP.
 livekit.soullab.life {
+    import strip_client_authz
     import deny_disabled_routes
     # ALLOWLIST (default-deny): only the WebSocket signaling upgrade is proxied. Everything else on
     # 7880 — the Twirp management API, /rtc/validate, etc. — is blocked publicly (the room-mgmt API
@@ -908,6 +930,7 @@ livekit.soullab.life {
 
 # Health check endpoint for load balancers
 :8080 {
+    import strip_client_authz
     import deny_disabled_routes
     respond /health 200
 }
