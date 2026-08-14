@@ -86,11 +86,12 @@ can I begin — wherever the last sitting stopped.
 
 **The way back up must always be visible.** This is a ruled property, not a preference: before
 the return link existed, arriving here from the House was a one-way trip into an upload form.
-The link now reads **Writer's Studio** (C1, 2026-08-14) — pending the blocked copy correction.
+The return link currently reads **"Author Studio."** C1 has ruled **"Writer's Studio"** as the
+correct language; that correction remains authorized and blocked until this contract gate closes.
 
 ## Gestures
 
-| Gesture | Language used | Why this wording |
+| Gesture | Specified language | Why this wording |
 |---|---|---|
 | Return to the environment | **← Writer's Studio** | The way up is never hidden |
 | Bring in an existing manuscript | **Import into Writer's Studio** | Names the threshold crossed, not the file transfer |
@@ -120,11 +121,13 @@ provenance correction.*
 
 **Relationship**: the manuscript's identity as the member named it.
 
-**Authored fact**: the manuscript text · kept revisions and their notes · keeps and
-collections the member made.
+**Authored fact**: the manuscript text · kept revisions and their member-authored notes ·
+keeps and collections the member made — **including the words held in autosave**. Copying
+authored words into an autosave store does not change their authority class.
 
 **Operational continuity state** (carries no authored meaning, never rendered as such): the
-autosaved working draft · which tab was last open · scroll position.
+active draft/revision pointer · last-open tab · scroll position · save/checkpoint status
+needed to resume.
 
 **Does not persist**: anything inferred about the member.
 
