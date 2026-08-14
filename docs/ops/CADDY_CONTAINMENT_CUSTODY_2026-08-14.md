@@ -52,6 +52,39 @@ The host carries other uncommitted changes. They were **not** absorbed merely fo
 | `(strip_client_authz)` + 20 imports | `request_header -X-Maia-Roles` / `-X-Maia-Tier` — strips client-supplied role/tier headers | **a second uncustodied live security control**; needs its own unit |
 | `staging.soullab.life` site block | SMCC iOS staging → `maia-staging:3000` | unrelated infra; needs its own unit |
 
+`strip_client_authz` is **independently security-relevant**, not incidental adjacency: 40 live
+header-delete operations preventing client-forged role/tier headers. It earns its own custody
+lane with its own provenance, necessity test, mutation control, and admission decision — it does
+not get smuggled into this unit merely because it sits in the same file. Bundling it here would
+have converted a 105-line authorized security unit into custody for 136 lines of accumulated
+runtime history, which is precisely the substitution this method exists to prevent.
+
+**Why subtraction was the right method.** The candidate was produced by removing the
+non-authorized items from the live file, rather than by re-authoring the deny rules against
+canonical. Re-authoring would have reproduced the four denies correctly and *silently carried the
+adjacent units along with them* — or silently dropped them — with no step at which the difference
+had to be named. Subtraction forced every host-only line to be classified as included or excluded
+before the candidate existed, which is what surfaced `strip_client_authz` at all.
+
+## What is, and is not, durable after this commit
+
+State the scope precisely — the imprecise version ("edge containment is not durable") understates
+what was achieved, and the over-claim ("edge configuration is now under custody") overstates it:
+
+```
+DENY CONTAINMENT ................. DURABLE IN SOURCE CUSTODY
+    the four deny rules are no longer hostage to the host filesystem
+
+COMPLETE LIVE EDGE CONFIGURATION . NOT YET REPRODUCIBLE FROM CUSTODY
+    the combined runtime artifact still is hostage, because two further
+    live units remain host-only
+```
+
+The distinction matters operationally. A `git checkout -- Caddyfile` on minisforum can no longer
+destroy the deny rules *irrecoverably* — they can be reconstructed from source. It would still
+destroy `strip_client_authz` and the staging block irrecoverably. So the freeze below is not
+belt-and-braces for the denies; it is the **only** thing protecting the other two.
+
 ## ⚠️ This commit MUST NOT be deployed over the host Caddyfile
 
 The reconciled file is a strict subset of what is running. Copying it onto minisforum would
