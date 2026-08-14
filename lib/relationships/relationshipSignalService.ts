@@ -107,10 +107,77 @@ function safeTurnId(v: unknown): number | null {
   return Math.trunc(v);
 }
 
+/**
+ * RUPTURE CONTAINMENT — founder ruling 2026-08-13.
+ *
+ * > "Inferred rupture/strain detection may not persist a relationship-state
+ * > assertion until the substrate can preserve relationship identity,
+ * > originating evidence, authorship/provenance, and correctability."
+ *
+ * `rupture_state` is the strongest claim this table can make: that a human
+ * relationship is broken. Today it is decided by an UNANCHORED SUBSTRING MATCH
+ * on the member's message (`detectRelationalSignal.ts`: `userLower.includes(kw)`
+ * over 14 strings including 'broken', 'divorce', 'break up' — not tokenized, not
+ * negation-aware). "My laptop is broken" matches. "I don't want to break up with
+ * him" matches.
+ *
+ * And the resulting row is epistemically unrecoverable. Production, 2026-08-13:
+ * 0 of 440 rows carry `relationship_id`; 0 of 440 carry `source_turn_id`
+ * (including 51 written AFTER that column existed); 440 of 440 are
+ * `source='maia_conversation'`, because the CHECK constraint has no
+ * member-declaration value at all. The assertion is stored while the
+ * relationship it concerns, the sentence it came from, and any member authorship
+ * are all absent. Every further write compounds evidence that cannot afterwards
+ * be responsibly interpreted.
+ *
+ * The gate sits HERE — the single persistence chokepoint every writer passes
+ * through — rather than in the detector, so a future inferred writer is contained
+ * by default instead of having to remember. Detection still runs; the rest of the
+ * signal still persists. Only the ASSERTION is withheld.
+ *
+ * ⛔ This is not a cleanup. The existing 44 `ruptured` + 53 `strained` rows are
+ * untouched and preserved as forensic evidence — no deletion, no backfill, no
+ * reinterpretation (founder ruling). See
+ * docs/architecture/audits/relational-field-reconciliation/RUPTURE_CONTAINMENT_QUESTION_2026-08-13.md
+ *
+ * TO LIFT: restore the value only once a row can carry relationship identity, its
+ * originating turn, explicit authorship, and a member correction path — i.e.
+ * after RU-1 provenance.
+ *
+ * ⚠️ WHY THIS SET IS EMPTY — founder correction, 2026-08-13.
+ *
+ * A first draft of this gate exempted `labtool_manual`, reasoning "containment is
+ * on inference, never on declaration." That was wrong, and wrong in exactly the
+ * way this whole programme keeps finding: **a technical provenance label was
+ * granted more human meaning than the evidence warrants.** "Manual" says a tool
+ * path wrote the row — an operator, a form, a script. It does not establish that
+ * a *member authored the assertion*. Provenance is not authorship.
+ *
+ * The schema cannot currently represent declaration at all: the CHECK constraint
+ * permits only 'maia_conversation' and 'labtool_manual', and no row carries any
+ * independent field proving member authorship of a rupture state. So under the
+ * present substrate **no source qualifies**, and the honest set is empty.
+ *
+ * The invariant: only an explicitly representable and positively proven member
+ * declaration may persist a rupture state. Anything else fails closed.
+ *
+ * ⛔ Do NOT add a value here to make a surface work. A source belongs in this set
+ * only after the schema gains a genuine provenance vocabulary (member-declared /
+ * MAIA-observed / inferred / imported) — which this containment unit deliberately
+ * does NOT invent.
+ */
+const DECLARATION_CAPABLE_SOURCES: ReadonlySet<string> = new Set();
+
 /** Persist one relational signal. Returns the inserted row id. */
 export async function insertRelationalSignal(input: InsertInput): Promise<string | null> {
   const source = safeSource(input.source);
   if (!input.memberId || !source) return null;
+
+  // Fail closed: withhold the relationship-state assertion unless this source can
+  // positively prove member authorship. Today none can.
+  const ruptureState = DECLARATION_CAPABLE_SOURCES.has(source)
+    ? safeRupture(input.ruptureState)
+    : null;
 
   try {
     const row = await insertOne<{ id: string }>('member_relational_signals', {
@@ -118,7 +185,7 @@ export async function insertRelationalSignal(input: InsertInput): Promise<string
       relationship_id: input.relationshipId || null,
       counterpart_label: safeCounterpart(input.counterpartLabel),
       tone: safeTone(input.tone),
-      rupture_state: safeRupture(input.ruptureState),
+      rupture_state: ruptureState,
       dynamic_tags: safeDynamicTags(input.dynamicTags),
       frameworks_applied: safeFrameworks(input.frameworksApplied),
       source,
@@ -200,13 +267,32 @@ function rowToSignal(row: SignalRow): RelationshipSignal {
       : typeof row.source_turn_id === 'number'
         ? row.source_turn_id
         : Number(row.source_turn_id);
+
+  // RUPTURE CONTAINMENT — READ SIDE. Founder ruling 2026-08-13:
+  //   "No inferred state may render as first-person/member-authored language.
+  //    Until the schema can actually represent member declaration, existing rows
+  //    fail closed rather than appearing as 'Something is broken.'"
+  //
+  // Contained HERE — the single row→signal chokepoint that every reader passes
+  // through — rather than in the card that renders it. Same reasoning as the
+  // write gate: a boundary held at one UI component protects that component;
+  // a boundary held at the serve edge protects every consumer that exists or is
+  // built later, including the iOS shell, and means the unsupported assertion
+  // never leaves the server at all.
+  //
+  // The 97 historical rows keep their stored value untouched; they simply stop
+  // being handed to anything that could speak them in the member's voice.
+  const ruptureState = DECLARATION_CAPABLE_SOURCES.has(String(row.source))
+    ? safeRupture(row.rupture_state)
+    : null;
+
   return {
     id: row.id,
     memberId: row.member_id,
     relationshipId: row.relationship_id,
     counterpartLabel: safeCounterpart(row.counterpart_label),
     tone: safeTone(row.tone),
-    ruptureState: safeRupture(row.rupture_state),
+    ruptureState,
     dynamicTags: safeDynamicTags(row.dynamic_tags ?? []),
     frameworksApplied: row.frameworks_applied ?? [],
     source: (row.source as SignalSource) ?? 'maia_conversation',
