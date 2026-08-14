@@ -53,8 +53,9 @@ a7f7d9396 ==#995  docs/design/author-studio/WRITER_CANVAS_AND_PRESS_EDITOR_DIVIS
 ```text
 CUSTODY / DESIGN BINDINGS ........ COMPLETE
 C1 HOUSE NAMING .................. RULED 2026-08-14
-C1 COPY CORRECTION (4 strings) ... AWAITING_AUTHORITY (non-blocking)
-CANVAS RECONCILIATION ............ IN PROGRESS (Phase 2 unblocked)
+C1 COPY CORRECTION (4 strings) ... AUTHORIZED / BLOCKED_ON_GATE
+EXPERIENCE CONTRACTS ............. ABSENT — blocks ALL member-facing work
+CANVAS RECONCILIATION ............ BLOCKED_ON_GATE (same cause)
 WRITER'S DESK .................... NOT STARTED
 ARRANGEMENT ...................... DESIGN ESTABLISHED / BUILD NOT STARTED
 PRESS EDITOR SUBSTRATE ........... BOUND / IMPLEMENTATION NOT STARTED
@@ -99,7 +100,42 @@ what they ruled at the time.
 was wrong. `7076f785d` settled it on 2026-08-05. A `⏳ UNRULED` marker states its own date,
 not the present — search forward for the ruling that closed it.
 
-#### C1 copy correction — AWAITING_AUTHORITY, non-blocking
+#### PROGRAMME BLOCKER — no Experience Contract exists for these rooms
+
+Discovered 2026-08-14 while landing the authorized four-string copy correction.
+
+`scripts/check-design-canon.ts` is a **blocking** pre-commit gate (`process.exit(1)`). It
+refuses any commit touching a member-facing surface that no Experience Contract governs:
+
+```
+Member-facing surfaces with no Experience Contract:
+  · app/press/manuscript/page.tsx
+  · app/writers-studio/canvas/page.tsx
+```
+
+`docs/design/contracts/` contains exactly one contract — `journal-room.md`. **Neither the
+Writer's Studio nor the Manuscript Room has one.**
+
+**Scope of the block**: not specific to the copy correction. It blocks *every* member-facing
+change to these surfaces — the four-string fix, Phase 2 Canvas reconciliation, Phase 3
+Writer's Desk, Phase 4 Arrangement, Phase 5 Press Editor UI. The programme cannot reach a
+member through these files until contracts exist.
+
+**Why this is above the implementation boundary.** A contract declares *what this room is
+for · arrival state · gestures · the House/Room split · governing law · screenshot evidence*.
+That is the experiential floor plan `docs/design/INHABITABLE_ARCHITECTURE.md` requires to be
+agreed **before** component mapping. Authoring it is a design act about what the rooms are —
+new scope from an unexpected finding, which JARVIS does not own.
+
+**Two workarounds were available and both refused.** `--no-verify` launders a gate.
+`change_class: structural` ("not experiential… screenshots not required") would be a false
+claim: a member reads a different word, which is the definition of experiential.
+
+**Held**: `AUTHORIZED / BLOCKED_ON_GATE` — blocked work, not an open question. The four
+referents are verified and the edits are deterministic; they were reverted rather than
+committed, so nothing is stranded.
+
+#### C1 copy correction — AUTHORIZED, blocked above
 
 All four member-visible "Author Studio" strings were mechanically verified. **Zero refer to
 the edition-making specialization**; all four are back-links or thresholds into the Writer's
