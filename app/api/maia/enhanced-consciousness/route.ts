@@ -117,7 +117,12 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`🧠 Enhanced consciousness processing: "${userMessage}" (Session: ${sessionId})`);
+    // CONTAINMENT: userMessage is the member's own words and does not reach the
+    // log. No digest, prefix or excerpt substitutes. Session correlation and
+    // non-identifying size survive so the route stays diagnosable.
+    console.log(
+      `🧠 Enhanced consciousness processing (${String(userMessage).length} chars) (Session: ${sessionId})`,
+    );
 
     const integration = initializeEnhancedIntegration(sessionId);
 

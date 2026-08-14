@@ -720,7 +720,14 @@ export class MAIASpiralogicOracle {
   private async recordBreakthroughMoment(memberId: string, breakthrough: BreakthroughRecord): Promise<void> {
     const map = await this.getMemberSpiralogicMap(memberId);
     map.breakthrough_moments.push(breakthrough);
-    console.log(`Recorded breakthrough for ${memberId}: ${breakthrough.breakthrough_description}`);
+    // CONTAINMENT: breakthrough_description is the member's own account of their
+    // experience (processBreakthroughExperience passes experienceDescription
+    // through verbatim). It does not reach a log sink — and no digest, prefix or
+    // excerpt of it may be substituted. Event + correlation + non-content
+    // diagnostics only.
+    console.log(
+      `Recorded breakthrough for ${memberId} (dimensions: ${breakthrough.dimensions_affected.length})`,
+    );
   }
 }
 

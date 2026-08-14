@@ -47,6 +47,13 @@ const config = {
       tsconfig: {
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
+        // The transform already claimed `.tsx`, but with no `jsx` setting
+        // ts-jest emitted the JSX untouched and Jest died on the first `<`.
+        // No suite matched by THIS config is a `.tsx` file, so this affects
+        // only `.tsx` MODULES imported by a `.ts` test — which previously
+        // could not be imported at all. `.ts` files are unaffected: JSX is
+        // not valid there, so the option has nothing to act on.
+        jsx: 'react-jsx',
       },
     }],
   },
