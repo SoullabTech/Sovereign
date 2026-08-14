@@ -55,6 +55,7 @@ import {
   renderAssembledContext,
   type AssembledBlock,
 } from '@/lib/maia/context-assembly/contextAssembly';
+import { memberRef } from '../privacy/memberRef';
 import {
   getPracticeFieldById,
   getPracticeFieldBySlug,
@@ -197,7 +198,7 @@ async function assemblePresenceContext(
     if (recall.block) blocks.push({ key: 'conversational', text: recall.block });
 
     console.log(`[${roomTag}/presence] assembled`, {
-      memberIdPrefix: memberId.slice(0, 8),
+      memberRef: memberRef(memberId),
       developmental: developmental.length,
       atoms: atoms.length,
       priorExchanges: prior.length,
