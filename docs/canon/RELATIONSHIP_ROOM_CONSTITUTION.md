@@ -1,13 +1,21 @@
 # The Relationship Room Constitution
 
-> **Status: RULINGS INCORPORATED 2026-08-14 — pending effective ratification on trunk binding.**
+> **Status: ⚖️ RATIFIED EFFECTIVE 2026-08-14 — binding successor Constitution for the
+> Relational Field.**
 >
-> The six founder rulings of **2026-08-13** and the ratified **RF-R3 provenance boundary** are
-> incorporated into this text without redesign. ⛔ **This document does not thereby declare
-> itself ratified or effective.** Under the founder's act, effective ratification is recorded
-> only *after* this artifact is placed on canonical trunk and the resulting commit is bound —
-> a separate act, not performed by this incorporation (founder ruling ⑥: trunk reachability is
-> a precondition of the ratifying act; `RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`).
+> The six founder rulings of **2026-08-13** and the ratified **RF-R3 provenance boundary** were
+> incorporated into this text without redesign, placed on canonical trunk, and the resulting
+> commit bound — satisfying founder ruling ⑥ (trunk reachability is a precondition of the
+> ratifying act; `RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`).
+>
+> **Ratified referent:** trunk commit `04fa58727`, blob
+> `3070517539d7ced02b03d5e0c062bbea6f9105eb`. The ratifying act, its exact scope, and what it
+> deliberately does **NOT** ratify:
+> `docs/governance/RELATIONSHIP_ROOM_CONSTITUTION_RATIFICATION_ACT_2026-08-14.md`.
+>
+> ⛔ **Ratification binds this TEXT, not the system's conformance to it.** It does not ratify
+> runtime claims, historical database interpretations, or any implementation as conforming.
+> ⛔ **BUILD AUTHORITY REMAINS CLOSED.**
 >
 > Incorporated material is marked inline with **⚖️ INCORPORATED — founder ratification
 > 2026-08-13**. Sources: `docs/governance/RELATIONSHIP_ROOM_CONSTITUTION_RATIFICATION_BRIEF_2026-08-13.md`
