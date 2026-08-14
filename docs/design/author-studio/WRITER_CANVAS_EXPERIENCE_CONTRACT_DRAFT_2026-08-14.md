@@ -1,10 +1,12 @@
 # Writer Canvas — Experience Contract (DRAFT, not yet installed)
 
 > ```text
-> STATUS ............... DRAFT — awaiting founder review, then a live walk
+> STATUS ............... ✅ APPROVED IN PRINCIPLE by the founder, 2026-08-14,
+>                        subject only to two provenance-class corrections
+>                        (applied — see "What persists"). No redesign authorized.
 > INSTALLED ............ NO. Deliberately NOT in docs/design/contracts/.
-> BINDING .............. NO. Not binding until the founder reviews it and the
->                        evidence fields are filled by an actual walk.
+> BINDING .............. NO. Binding on install, which requires the walk.
+> NEXT ................. the authenticated walk
 > BLOCKS ............... nothing; installs nothing; renames nothing
 > ```
 >
@@ -132,11 +134,29 @@ the work is the only thing that cannot disappear.
 
 ## What persists, and what does not
 
-**Persists because it is relationship** *(calm-computing check, Q5)*: the work's name and its
-becoming · the folded Window as a standing offer.
+*Three provenance classes, kept separate on purpose. Collapsing them is how operational state
+starts being read as member meaning.*
 
-**Persists as authored fact**: declared expressions · belongings and their sentences · kept
-revisions · the last gesture and open instrument.
+**Persists because it is relationship** — the member's relationship to the work: the work's
+name and its becoming.
+
+**Persists as authored fact** — things the member did: declared expressions · belongings and
+their sentences · kept revisions.
+
+**Operational continuity state** — what the room needs to reopen where it was, carrying no
+authored meaning and never to be rendered as such: the last gesture · the open instrument.
+
+**Room affordance / invariant** — a property of the room rather than of the member: the folded
+Window. It is a standing offer that exists whether or not the member has ever opened it.
+
+> ⚠️ **Founder correction, 2026-08-14 — recorded because it refines a cited source.** The
+> Room Map's calm-computing check answers Q5 (*"what persists because it represents
+> relationship?"*) with *"the work's name and becoming … and the folded Window (the standing
+> offer of reflection)."* The founder ruled the Window out of that class: it is a room
+> affordance, not relational memory. Likewise *last gesture / open instrument*, which this
+> draft had placed under authored fact, are operational continuity state — not authored
+> meaning. **The room's behaviour is unchanged; only the provenance classification is
+> corrected.** No redesign was authorized and none was made.
 
 **Does not persist**: which drawer was open · anything inferred about the member. Doorway
 intentions and starting conditions configure only *which instrument opens* and *which drawers

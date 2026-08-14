@@ -55,8 +55,9 @@ CUSTODY / DESIGN BINDINGS ........ COMPLETE
 C1 HOUSE NAMING .................. RULED 2026-08-14
 C1 COPY CORRECTION (4 strings) ... AUTHORIZED / BLOCKED_ON_GATE
 EXPERIENCE CONTRACTS ............. AUTHORIZED 2026-08-14 (contracts only)
-  · Writer Canvas ................ DRAFT — founder review, then live walk
-  · Manuscript Room .............. STOP — identity contradiction, ruling required
+  · Writer Canvas ................ APPROVED IN PRINCIPLE → WALK
+  · Manuscript Room .............. PURPOSE RULED → DRAFT → WALK
+AUTHENTICATED WALK ............... ⛔ BLOCKED — JARVIS cannot obtain a session
 CANVAS RECONCILIATION ............ BLOCKED_ON_GATE (same cause)
 WRITER'S DESK .................... NOT STARTED
 ARRANGEMENT ...................... DESIGN ESTABLISHED / BUILD NOT STARTED
@@ -271,3 +272,75 @@ The room's contents straddle the division line drawn six days after it was assem
 text repeals the other. Surfaced, not reconciled, per the authorization. Recommendation
 carried in the file (Option 2). `/press/manuscript` stays blocked for member-facing changes
 until ruled; Writer Canvas surfaces are unaffected.
+
+
+---
+
+## The authenticated walk — blocked on JARVIS's side, ready for a founder-performed witness
+
+**Authorized** (founder, 2026-08-14): a dedicated test member or founder-authenticated dev
+session against the exact code referent, synthetic content, authentication through the normal
+UI. ⛔ No credentials, cookies, session tokens, or member identifiers in evidence files.
+*"The witness may be Kelly-performed and JARVIS-recorded if JARVIS cannot itself obtain an
+authenticated browser session."*
+
+### Why JARVIS cannot obtain one
+
+`lib/auth/getMemberFromRequest.ts` accepts **only** a verified `maia_session` cookie or an
+`x-session-token` resolved against `auth_sessions`. A bare `x-member-id` is explicitly
+rejected — its header comment records that a previous version trusted it and that doing so
+let any caller impersonate any member.
+
+**There is no dev or test bypass.** Grepped for `DEV_MEMBER_ID`, `TEST_MEMBER`, `DEV_BYPASS`,
+`ALLOW_DEV_AUTH`, `devSession` across `lib/**`, `middleware.ts`, `config/**` — none exist.
+
+⚠️ **A partial path exists and must be refused.** `middleware.ts` `isAuthenticated()` returns
+true on a bare `x-member-id` header — that is the *route* gate ("who may enter the door"),
+deliberately distinct from *API* authorization ("which data operations are permitted"), a
+split the Three-Layer Ruling §3 states explicitly. Walking in that way would render an
+unauthenticated room whose data calls 401. It would produce screenshots of an empty room and
+call them a walk. **Refused.**
+
+The only remaining routes to a session are entering a password — which JARVIS does not do
+under any circumstances — or minting an `auth_sessions` row directly, which is changing
+runtime and fabricating an authentication. Both refused.
+
+**Therefore**: `STOP`, per the founder's own condition.
+
+### The walk script, ready to perform
+
+Same protocol for both rooms. Referent: the lane commit under contract; record it exactly.
+
+```text
+ROUTES     /writers-studio  →  /writers-studio/canvas      (Writer Canvas)
+           /press/manuscript                                (Manuscript Room)
+VIEWPORTS  desktop 1280×800   ·   mobile 375×812
+CONTENT    synthetic / non-sensitive only
+CAPTURE    commit + runtime referent · route · timestamp · arrival state ·
+           gestures actually exercised · any visible contract violation
+FILES      docs/design/contracts/screenshots/writer-canvas-{desktop,mobile}.png
+           docs/design/contracts/screenshots/manuscript-room-{desktop,mobile}.png
+EXCLUDE    ⛔ credentials · cookies · session tokens · member identifiers
+```
+
+**Gestures to exercise, drawn from the drafts' own claims** — each is a clause the walk
+tests, not a feature tour:
+
+*Writer Canvas* — arrive and confirm the work appears mid-motion, named by its becoming (not
+a blank pane, not a capability inventory) · confirm both edges are folded on arrival · open
+the Work drawer and tend identity · bring a material in with a sentence · confirm Structure
+is **absent**, not empty, when no structure exists · open the Window and confirm MAIA is
+invited rather than present.
+
+*Manuscript Room* — arrive and confirm the manuscript opens where it was left · confirm the
+way back up is visible from every state · write and confirm autosave holds · keep a version ·
+attempt to leave with unsaved words and confirm the exit guard fires.
+
+⚠️ Expected and correct to observe: the return links still read **"Author Studio"**. The copy
+correction that fixes them is `AUTHORIZED / BLOCKED_ON_GATE` — blocked by the very gate these
+contracts exist to open. Record it as observed; it is not a contract violation, it is the
+known blocked unit.
+
+**JARVIS will record**: transcribe the witness into each contract's `experience_verification`,
+move both frontmatters into `docs/design/contracts/`, and run the gate to confirm it passes
+naturally — no exemption, no `--no-verify`.
