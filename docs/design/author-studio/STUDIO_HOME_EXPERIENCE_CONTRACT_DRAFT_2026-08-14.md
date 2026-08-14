@@ -134,8 +134,17 @@ as Refining?"* Refused: *"You are now in the Refinement Stage"*, unless member-a
 **Recovered, not invented**: `WRITER_CANVAS_ROOM_MAP` §"Orientation, not measurement" already
 rules a stage phrase sourced strictly from member-authored acts, with the corrigibility
 mechanism attached — *"The member may rename their stage in their own words at any time, and
-their word wins"* (lines 154–155). The genuinely new surface is narrower than it looks: the
-visual track when member-sourced, plus member-defined milestones and intentions.
+their word wins"* (lines 154–155). The genuinely new design space is exactly four items:
+
+1. visual orientation / track based on legitimate member-authored state
+2. member-defined milestones
+3. member-defined intentions
+4. potentially factual progress indicators derived from those acts
+
+Everything else is **recovery** of the existing member-authored stage grammar — *gathering ·
+shaping · drafting · renewing · sharing*, with the member's own wording winning — which is
+already the constitutional mechanism for "Where I am". Do not invent a new developmental
+system; the existing one mostly needs to be surfaced well.
 
 ## Which earlier exclusions survive
 
