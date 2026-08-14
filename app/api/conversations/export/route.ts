@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const revalidate = false;
 
@@ -7,11 +8,83 @@ export const revalidate = false;
 /**
  * Conversation Export API
  *
- * Exports user conversations in various formats:
+ * Exports the AUTHENTICATED member's own conversations in various formats:
  * - Markdown (.md) - Default, readable format
  * - JSON (.json) - Machine readable with full metadata
  * - Plain Text (.txt) - Simple text format
+ *
+ * ---------------------------------------------------------------------------
+ * SECURITY PERIMETER (2026-08-14) — read before changing anything here.
+ * ---------------------------------------------------------------------------
+ * BEFORE: `userId` was taken from the query string / request body and used
+ * directly in SQL with no session resolution and no ownership check. The route
+ * had no `accessMatrix` rule, and `ACCESS_CONTROL_MODE` is unset in production
+ * (permissive Mode A), so unmapped routes pass through the middleware. Any
+ * unauthenticated caller could name any member as the export subject.
+ *
+ * AFTER: the export subject is the member on the VERIFIED session
+ * (`getMemberIdFromRequest` → `auth_sessions`). A caller-supplied `userId` can
+ * no longer choose whose history is exported — see EXPORT SUBJECT below.
+ *
+ * NOTE ON DEFENCE IN DEPTH: the `accessMatrix` rule added for this path is a
+ * perimeter, NOT the authority. `middleware.ts:isAuthenticated()` accepts a
+ * bare `x-member-id` header as "authenticated" without verifying it, so the
+ * middleware alone would still admit a forged identity. The binding gate is
+ * `getMemberIdFromRequest` in this handler, which resolves identity from an
+ * `auth_sessions`-backed token and rejects a mismatching claim. Do not remove
+ * the route-level check on the grounds that "middleware already covers it".
+ *
+ * ---------------------------------------------------------------------------
+ * DATASOURCE IS DELIBERATELY LEFT BROKEN.
+ * ---------------------------------------------------------------------------
+ * `EXPORT_SOURCE_TABLE` below names a relation that DOES NOT EXIST in any
+ * environment (verified against production 2026-08-14: `relation
+ * "conversation_messages" does not exist`). An authenticated member exporting
+ * their own history still fails at the query. That is the intended intermediate
+ * state: a secure broken endpoint.
+ *
+ * DO NOT "fix" this by renaming the table to `conversation_turns`. That store
+ * holds ~40k turns across ~212 members and carries NO Sanctuary column, so a
+ * rename would silently ship an export path that cannot honour the Sanctuary
+ * boundary. Binding a real source is a separate, governed unit that must first
+ * produce a field map (subject column, session identity, role vocabulary, text
+ * columns, `visibility`, Sanctuary/session mode, withheld material, permitted
+ * metadata, ordering, session selection).
+ *
+ * `lib/auth/__tests__/conversationExportPerimeter.test.ts` fails if this
+ * constant changes without that unit landing.
  */
+
+/**
+ * The relation this export path reads.
+ *
+ * Guarded: changing this value is a data-contract act, not a bug fix. See the
+ * DATASOURCE block above and the accompanying perimeter test.
+ */
+export const EXPORT_SOURCE_TABLE = 'conversation_messages';
+
+/**
+ * Sanctuary exclusion predicate for the bound source.
+ *
+ * `null` means: this source has no established Sanctuary semantics, therefore
+ * no Sanctuary material can be proven excluded from it. The current source is
+ * non-existent and returns nothing, so the exclusion holds vacuously — that is
+ * the ONLY reason `null` is tolerable today.
+ *
+ * Any source that can actually return rows MUST supply a real predicate here
+ * before it is bound. "It is the member's own data" does not override the
+ * Sanctuary boundary; Sanctuary content is categorically excluded from this
+ * path absent a separate founder ruling establishing lawful export semantics
+ * for it (MAIA Canon — Sanctuary Mode invariants 1, 6).
+ *
+ * FOUNDER TRIPWIRE (2026-08-14) — the governing sentence for this path:
+ *
+ *   "No successful conversation export may be enabled until a concrete
+ *    Sanctuary classification source for exported conversation data has been
+ *    identified and enforced. The present absence of returned data is not a
+ *    durable Sanctuary control."
+ */
+export const EXPORT_SANCTUARY_EXCLUSION: string | null = null;
 
 interface ExportOptions {
   format: 'markdown' | 'json' | 'txt';
@@ -220,28 +293,48 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    // -----------------------------------------------------------------
+    // EXPORT SUBJECT — the verified member, and only ever the verified
+    // member. Resolved BEFORE any conversation query is constructed.
+    // -----------------------------------------------------------------
+    const userId = await getMemberIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
 
-    // Parse parameters
-    const userId = searchParams.get('userId');
+    // A caller-supplied `userId` is accepted for backward compatibility but
+    // carries NO authority: it cannot widen or redirect the subject. If it
+    // names someone else, that is a subject-widening attempt — refuse rather
+    // than silently exporting the caller's own data under another name.
+    const claimedUserId = searchParams.get('userId');
+    if (claimedUserId && claimedUserId !== userId) {
+      console.warn(
+        '[conversations/export] userId parameter does not match authenticated member — refusing (subject-widening attempt)'
+      );
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'You may only export your own conversations.' },
+        { status: 403 }
+      );
+    }
+
     const sessionId = searchParams.get('sessionId');
     const format = (searchParams.get('format') || 'markdown') as 'markdown' | 'json' | 'txt';
     const includeMetadata = searchParams.get('includeMetadata') === 'true';
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    // Validate required parameters
-    if (!userId) {
-      return NextResponse.json({
-        error: 'User ID is required',
-        usage: 'GET /api/conversations/export?userId=<userId>&format=markdown|json|txt&sessionId=<optional>&includeMetadata=true|false&startDate=<ISO>&endDate=<ISO>'
-      }, { status: 400 });
-    }
-
     // Build query using local postgres (sovereignty-compliant)
     const { query: pgQuery } = await import('@/lib/db/postgres');
 
-    let sql = 'SELECT * FROM conversation_messages WHERE user_id = $1';
+    // OWNERSHIP BY CONSTRUCTION: the subject predicate is the verified member
+    // and is never caller-controlled. A supplied `sessionId` is ANDed with it,
+    // so a guessed or foreign session simply matches nothing — it cannot be
+    // used to probe for another member's sessions. See the uniform not-found
+    // response below, which makes "not yours" and "does not exist"
+    // indistinguishable.
+    let sql = `SELECT * FROM ${EXPORT_SOURCE_TABLE} WHERE user_id = $1`;
     const params: any[] = [userId];
     let paramIndex = 2;
 
@@ -279,6 +372,8 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Uniform not-found: a foreign/guessed sessionId and a genuinely empty
+    // result are indistinguishable. Do not add a message that separates them.
     if (!messages || messages.length === 0) {
       return NextResponse.json({
         error: 'No conversations found for the specified criteria'
@@ -342,9 +437,16 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Same perimeter as GET — the subject is the verified member, resolved
+    // before any conversation query is constructed.
+    const userId = await getMemberIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
-      userId,
+      userId: claimedUserId,
       sessionIds = [],
       format = 'markdown',
       includeMetadata = false,
@@ -352,16 +454,22 @@ export async function POST(request: NextRequest) {
       title
     } = body;
 
-    if (!userId) {
-      return NextResponse.json({
-        error: 'User ID is required'
-      }, { status: 400 });
+    // A body-supplied `userId` carries no authority (see GET).
+    if (claimedUserId && claimedUserId !== userId) {
+      console.warn(
+        '[conversations/export] body userId does not match authenticated member — refusing (subject-widening attempt)'
+      );
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'You may only export your own conversations.' },
+        { status: 403 }
+      );
     }
 
     // Build query using local postgres (sovereignty-compliant)
     const { query: pgQuery } = await import('@/lib/db/postgres');
 
-    let sql = 'SELECT * FROM conversation_messages WHERE user_id = $1';
+    // Ownership by construction — see GET.
+    let sql = `SELECT * FROM ${EXPORT_SOURCE_TABLE} WHERE user_id = $1`;
     const params: any[] = [userId];
     let paramIndex = 2;
 

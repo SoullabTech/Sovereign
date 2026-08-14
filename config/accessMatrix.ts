@@ -487,6 +487,15 @@ export const ACCESS_RULES: AccessRule[] = [
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
+  // Conversation export — mapped explicitly so it never depends on the
+  // permissive unmapped-route default (ACCESS_CONTROL_MODE, #717), which is
+  // what left it publicly reachable until 2026-08-14. This rule is perimeter
+  // only, NOT the authority: isAuthenticated() above accepts a bare
+  // x-member-id header without verifying it. The binding gate is
+  // getMemberIdFromRequest() inside the route, which resolves the export
+  // subject from an auth_sessions-backed token.
+  { prefix: '/api/conversations', minTier: 'free', notes: 'Conversation export — auth required; export subject is the verified session member (route-enforced), never a caller-supplied userId' },
+
   // Studio API - session room, bookings, scribe markers, live prompts
   { prefix: '/api/studio', minTier: 'free', notes: 'Studio API' },
 
