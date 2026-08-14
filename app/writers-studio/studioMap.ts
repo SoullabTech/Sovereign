@@ -84,6 +84,19 @@ export const IMPORT_HREF = '/press/manuscript?import=1';
  */
 export const CANVAS_HREF = '/writers-studio/canvas';
 
+/**
+ * The room, entered by identity. Navigation completeness (founder ruling,
+ * 2026-08-05, on the local acceptance walkthrough): the acceptance criterion
+ * is not "the Canvas renders" but "a member naturally arrives there through
+ * the intended architecture" — all entry paths lead into the Writer Canvas;
+ * the Working Draft remains reachable from inside the room and the rail.
+ *
+ * Lives here, not in a page, because Studio Home and the project card are both
+ * doors into the same room and must not drift apart on how they name it.
+ */
+export const canvasFor = (manuscriptId: string) =>
+  `${CANVAS_HREF}?m=${encodeURIComponent(manuscriptId)}`;
+
 export const STUDIO_MAP: StudioGroup[] = [
   {
     id: 'home',
