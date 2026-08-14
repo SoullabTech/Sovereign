@@ -158,6 +158,7 @@ import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 // Skip during static export (Capacitor builds)
 
@@ -317,7 +318,7 @@ export async function POST(req: NextRequest) {
         typeof bodyUserId === 'string' && bodyUserId.length > 0
           ? (bodyUserId === userId ? 'matches-session' : 'ignored')
           : 'absent',
-      finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
+      finalUserId: userId ? memberRef(userId) : 'null',
     });
 
     // Validate and sanitize timezone (default to UTC if invalid)
@@ -497,7 +498,7 @@ export async function POST(req: NextRequest) {
     const allowCrossSessionMemory = isRecognizedUser && !isSanctuary;
 
     // 🔍 MEMORY DEBUG: Log identity state for debugging memory issues
-    console.log(`🧠 [Route/MemoryDebug] userId="${userId}" isRecognized=${isRecognizedUser} effectiveUserId="${effectiveUserId}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
+    console.log(`🧠 [Route/MemoryDebug] userId="${memberRef(userId)}" isRecognized=${isRecognizedUser} effectiveUserId="${memberRef(effectiveUserId)}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
 
 
     // Resolve memory mode (server-side permission check)
@@ -530,7 +531,7 @@ export async function POST(req: NextRequest) {
       // Memory bundle (parallel leg 1)
       shouldBuildMemory
         ? (async () => {
-            console.log(`🧠 [Route/MemoryBundle] ATTEMPTING retrieval for user="${effectiveUserId}" mode="${memoryMode}"`);
+            console.log(`🧠 [Route/MemoryBundle] ATTEMPTING retrieval for user="${memberRef(effectiveUserId)}" mode="${memoryMode}"`);
             try {
               return await withTimeoutLabeled(
                 'MemoryBundleService.build',
@@ -737,7 +738,7 @@ export async function POST(req: NextRequest) {
       const t_web_ms = Date.now() - t_web_start;
       const ctxDesc = describeLiveContext(memberLiveCtx);
       console.log(
-        `🕸️ [CONTEXT] user=${effectiveUserId.slice(0, 8)} ` +
+        `🕸️ [CONTEXT] user=${memberRef(effectiveUserId)} ` +
         `patterns=${ctxDesc.patterns} summaries=${ctxDesc.sessions} ` +
         `journals=${ctxDesc.journal} essence=${ctxDesc.hasEssence ? 'Y' : 'N'} ` +
         `t_web=${t_web_ms}ms dt=${msSince(start)}ms`
@@ -881,7 +882,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             relationalContextAddendum = formatRelationalContextForPrompt(relCtx);
             relationalContextId = relCtx.relationshipId;
             console.log('[MAIA/sovereign] relational-context', {
-              memberIdPrefix: userId.slice(0, 8) + '...',
+              memberRef: memberRef(userId),
               relationshipId: relCtx.relationshipId,
               mode: relCtx.mode,
               realm: relCtx.realm,
@@ -921,7 +922,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         // (emitted ↔ discoverable) of the substrate-crossing scaffold.
         console.log('[MAIA/sovereign] developmental-block', {
           count: recentDevelopmentalMemories.length,
-          userId: userId.slice(0, 8) + '...',
+          userId: memberRef(userId),
         });
 
         const memoryPlan = buildMemoryInfluencePlan({
@@ -947,7 +948,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA/sovereign] memory-plan', summarizePlanForLog(memoryPlan));
         } else {
           console.log('[MAIA/sovereign] memory-plan inactive', {
-            userId: userId.slice(0, 8) + '...',
+            userId: memberRef(userId),
             developmentalCount: recentDevelopmentalMemories.length,
             themeCount: recentThemeSignals.length,
             msgLen: message.length,
@@ -961,7 +962,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         const atomsBlock = formatAtomsForPrompt(loadedAtoms);
         if (atomsBlock) {
           atomsAddendum = atomsBlock;
-          console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: userId.slice(0, 8) + '...' });
+          console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: memberRef(userId) });
         } else {
           console.log('[MAIA/sovereign] atoms: none surfacable for this member');
         }
@@ -989,7 +990,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA] conversational-block', {
             candidateCount: priorCrossSessionExchanges.length,
             ...summarizePriorExchangesForLog(conversationalRecall),
-            userId: userId.slice(0, 8) + '...',
+            userId: memberRef(userId),
           });
         } catch (err) {
           console.warn('[MAIA] conversational-block error (non-fatal):', err);
@@ -1015,7 +1016,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log('[MAIA] episodic-block', {
             candidateCount: markedEpisodes.length,
             ...summarizeMarkedEpisodesForLog(episodicRecall),
-            userId: userId.slice(0, 8) + '...',
+            userId: memberRef(userId),
           });
         } catch (err) {
           console.warn('[MAIA] episodic-block error (non-fatal):', err);
@@ -1063,7 +1064,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     } else {
       console.log('[MAIA/sovereign] memory orchestrator skipped', {
         reason: isSanctuary ? 'sanctuary' : !userId ? 'no-userid' : 'anon-or-unrecognized',
-        userId: userId ? userId.slice(0, 8) + '...' : null,
+        userId: userId ? memberRef(userId) : null,
       });
     }
 
@@ -1075,7 +1076,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const markedBreakthroughCount = atomsResult.filter((a) => a.isBreakthrough).length;
     if (markedBreakthroughCount > 0) {
       console.info('[MAIA/sovereign] breakthrough surfaced:', {
-        memberIdPrefix: userId ? userId.slice(0, 8) : null,
+        memberRef: userId ? memberRef(userId) : null,
         markedCount: markedBreakthroughCount,
       });
     }
@@ -1310,7 +1311,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       if (_memoryScrub) {
         console.warn('[MAIA] §V scrub fired', {
           rid: requestId,
-          userId: effectiveUserId ? `${String(effectiveUserId).slice(0, 8)}...` : null,
+          userId: memberRef(effectiveUserId),
           original_preview: orchestratorResult.text.slice(0, 200),
           replacement_preview: _memoryScrub.slice(0, 200),
         });
@@ -1689,14 +1690,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
               destination: filing.destination,
             };
             console.log('[MAIA/sovereign] keep filed:', {
-              userId: userId.slice(0, 8) + '...',
+              userId: memberRef(userId),
               destination: filing.destination,
               atomId: atom.id,
             });
           } else {
             responseData.keepIntent = { kind: 'filing_confirmation', instruction: filing };
             console.log('[MAIA/sovereign] keep awaiting-confirm:', {
-              userId: userId.slice(0, 8) + '...',
+              userId: memberRef(userId),
               destination: filing.destination,
             });
           }

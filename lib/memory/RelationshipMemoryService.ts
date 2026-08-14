@@ -12,6 +12,7 @@
 
 import { query as dbQuery } from '@/lib/db/postgres';
 import { lattice } from './ConsciousnessMemoryLattice';
+import { memberRef } from '../privacy/memberRef';
 
 /**
  * RelationshipEssence type - duplicated here to avoid client-only import
@@ -505,7 +506,7 @@ export async function saveBreakthroughMoment(
       VALUES ($1, NOW(), $2, $3, false, $4)
     `, [userId, insight, element, relatedThemes]);
 
-    console.log(`💡 [BREAKTHROUGH] Saved for ${userId}: "${insight}"`);
+    console.log(`💡 [BREAKTHROUGH] Saved for ${memberRef(userId)}: "${insight}"`);
   } catch (error) {
     console.warn('⚠️ Could not save breakthrough moment:', error);
   }
