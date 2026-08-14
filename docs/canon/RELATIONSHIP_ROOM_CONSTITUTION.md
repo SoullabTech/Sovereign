@@ -1,14 +1,31 @@
 # The Relationship Room Constitution
 
-> **Status: PROPOSED — awaiting founder ratification. Recorded 2026-08-10.**
-> Recording is not a state change. Ratification occurs only through an explicit act of the
-> designated authority (`RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`). Articles II–IV,
+> **Status: RULINGS INCORPORATED 2026-08-14 — pending effective ratification on trunk binding.**
+>
+> The six founder rulings of **2026-08-13** and the ratified **RF-R3 provenance boundary** are
+> incorporated into this text without redesign. ⛔ **This document does not thereby declare
+> itself ratified or effective.** Under the founder's act, effective ratification is recorded
+> only *after* this artifact is placed on canonical trunk and the resulting commit is bound —
+> a separate act, not performed by this incorporation (founder ruling ⑥: trunk reachability is
+> a precondition of the ratifying act; `RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`).
+>
+> Incorporated material is marked inline with **⚖️ INCORPORATED — founder ratification
+> 2026-08-13**. Sources: `docs/governance/RELATIONSHIP_ROOM_CONSTITUTION_RATIFICATION_BRIEF_2026-08-13.md`
+> and `docs/design/relational-field/RF-R3_PROVENANCE_BOUNDARY_2026-08-13.md`.
+>
+> ⛔ The unnumbered **Relationship Room Promise** at the foot of this document is **HELD OUT
+> of ratification** (founder ruling ④) and carries no constitutional authority.
+>
+> Originally recorded 2026-08-10 as PROPOSED. Recording is not a state change. Ratification
+> occurs only through an explicit act of the designated authority
+> (`RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`). Articles II–IV,
 > VIII and IX restate or extend founder rulings R3–R7 already ratified into
 > `docs/design/reviews/RELATIONSHIP_PAGE_RELATIONAL_EXPERIENCE_AUDIT_2026-08-10.md`; the
 > remainder is proposed law.
 >
 > ⛔ **This document authorizes no code, no schema, no migration, no UI.** It is law about
 > what a Relationship Room *is*, written before design resumes. It is not a specification.
+> ⛔ **Build authority remains CLOSED.**
 
 **Evidence base** (read; not restated): the Relational Experience Audit of 2026-08-10 and
 its three discovery lanes. Where those conflict, the synthesis governs.
@@ -70,6 +87,26 @@ system-authored material must be visibly distinguishable, and the member must be
 correct or withdraw what the system wrote about their relationship. Authorship includes
 the authority to decline to name anything at all.
 
+> ⚖️ **INCORPORATED — founder ratification 2026-08-13 (RF-R3 provenance boundary).**
+> Three sources of statement are not enough to keep the record honest. **Six things must
+> remain separable at all times in this system. They are not degrees of one scale, and they
+> may never be merged, collapsed, or substituted for one another:**
+>
+> 1. **Member declaration** — what the member said, in the member's own words.
+> 2. **MAIA observation** — what MAIA noticed in conversation, attributed to MAIA and offered
+>    as MAIA's own.
+> 3. **Inference** — classifier, detector or heuristic output, with a confidence value.
+> 4. **Unknown / unresolved** — the absence of any of the above. A real epistemic state, not
+>    an empty field awaiting resolution (Article VI).
+> 5. **Permission to retain or retrieve** — whether the material may be kept, and whether MAIA
+>    may bring it back.
+> 6. **Permission to share or speak** — whether it may be uttered, and to whom.
+>
+> ⛔ Holding a thing is not permission to retrieve it. ⛔ Permission to retrieve is not
+> permission to speak it. ⛔ Not knowing is not the same as having nothing. ⛔ No one of these
+> six may be derived from another by the system. **Article XIII** states the boundary that
+> keeps them apart.
+
 ## III — THE BETWEEN
 
 **PRINCIPLE.** **The Between is phenomenological before it is inferential.** It is where
@@ -106,6 +143,42 @@ unattributed.
 retroactive person assignment; from the moment explicit room identity exists and survives,
 history begins compounding. A thin true history is worth more than a full invented one.
 
+> ⚖️ **INCORPORATED — founder ruling ③, 2026-08-13. The belonging rule, ratified as
+> principle.**
+> Where explicit relationship context exists, relational material **must preserve that
+> belonging through persistence and recall** — not merely at the moment of creation, but
+> across every store it passes through and every path by which it is read back.
+> ⭐ **Where belonging is ambiguous, preserve the ambiguity.** ⛔ The system may never guess a
+> relationship merely in order to achieve attachment. An unattached true record is correct;
+> an attached guessed one is a fabrication of relational history.
+> ⚠️ This states an **obligation of this article**, not a property the present system has.
+
+> ⚖️ **INCORPORATED — founder ruling ①, 2026-08-13. Scope of "that room", and where
+> Sanctuary attaches.** ⚠️ Ruled **NARROWLY**, diverging from the ratification brief's
+> recommendation to scope it broadly; the founder's ruling governs.
+>
+> **A Relationship Room is the member-owned, relationship-specific experiential space keyed
+> to a durable relationship identity.**
+>
+> **Sanctuary attaches to relational persistence, inference, recall and surfacing — not
+> merely to navigation into the room.** It is not a property of a page the member walked into;
+> it governs whether relational material is retained at all, whether anything may be inferred
+> from it, whether it may be recalled, and whether it may be surfaced.
+>
+> ⭐ Sanctuary **protects the member's relational interiority.** ⛔ It does **not** pretend
+> that the absent other person has consented to, or authored, the member's private
+> experience. The protection runs to the member's inner life; it makes no claim on behalf of
+> anyone who is not present.
+
+> ⚖️ **INCORPORATED — founder ruling ⑤, 2026-08-13. Portability extends to Relationship
+> Rooms.** The canon-level invariant of `docs/specs/RELATIONSHIP_MEMORY_V1.md` §8 governs this object
+> too: **a member must be able to carry, inspect, correct, withdraw, and where appropriate
+> delete their relational memory.**
+>
+> ⛔ This confers **no ownership over the other person's identity or independent data.** What
+> is portable is the member's own relational memory — their words, their record, their
+> account of their own life. The other person is not an asset of the member's export.
+
 ## V — WORKED AND HELD
 
 **PRINCIPLE.** Relational life divides two ways. **WORKED** — something presently invites
@@ -122,6 +195,14 @@ step.**
 **IMPLICATION.** A room that merely *omits* a next step is not a room that *knows nothing
 is owed*. Where a relationship is held, the machinery that produces prompts, elapsed-time
 signals and unresolved threads should be incapable of firing rather than merely quiet.
+
+> ⚖️ **INCORPORATED — founder's note, 2026-08-13. On ATTUNE → ILLUMINATE → INVITE.**
+> MAIA's conversational shape ending in **INVITE** is **not** a contradiction of *"no
+> relationship owes the software a next step."* An invitation may be: *stay here* · *notice
+> this* · *say nothing yet* · *let this remain unresolved* · *return when something changes*.
+>
+> ⭐ The governing principle: **MAIA may offer possibility; it must not manufacture
+> obligation.** An invitation that can only be satisfied by action is not an invitation.
 
 ## VI — CONDITION OF BEING
 
@@ -172,6 +253,24 @@ another's interior state · manufacture relational certainty · require movement
 the verdict and returns the member's own prior words, because a recommendation to contact
 or not contact another human is a consequential prediction about that person. A visible
 refusal is a feature of the room; a silent absence is not.
+
+> ⚖️ **INCORPORATED — founder ruling ②, 2026-08-13. This article does NOT pre-authorize
+> MAIA-authored outreach.**
+>
+> ⭐ **Preserved:** MAIA helping someone discern what they feel, what they mean, what they
+> need, and what they want to communicate. That is the whole of what *"help prepare a
+> communication"* grants.
+>
+> The distinction that governs: ⭐ *"help me discover what I want to say"* **belongs** in this
+> room. ⛔ *"write what I should say to this person"* **crosses into synthetic
+> participation** and does not.
+>
+> ⛔ The anti-feature at `docs/RELATIONAL_LEDGER_ANTI_FEATURES.md` §7 — **no AI-written
+> outreach** — **remains controlling** until explicitly revisited. Ratifying this article does
+> not revisit it.
+>
+> ⭐ **MAIA witnesses and illuminates the field; it does not become one of its human
+> participants.**
 
 ## IX — THIRD-PARTY SOVEREIGNTY
 
@@ -241,9 +340,111 @@ vested authority in the member's act of naming; the estranged parent and the new
 cannot be asked to name, so II now states that authorship includes the authority to decline
 to name.
 
+## XIII — THE PROVENANCE BOUNDARY
+
+> ⚖️ **INCORPORATED — founder ratification 2026-08-13.** This article carries the ratified
+> RF-R3 provenance boundary (`docs/design/relational-field/RF-R3_PROVENANCE_BOUNDARY_2026-08-13.md`)
+> into constitutional text without redesign. ⛔ It creates no schema and authorizes no
+> implementation. It is appended rather than inserted so that Articles I–XII keep the numbers
+> that shipped code and three governance documents already cite. Article XII's soul test was
+> applied to I–XII as recorded there; it is not restated here as having been applied to XIII.
+
+**PRINCIPLE.** **A declaration is an EVENT, not a field.** Declaration standing arises
+**only** from an authenticated member gesture, preserved with the member's **immutable
+wording** and attached to a **specific relationship at creation**. ⛔ No caller-assigned
+label, inferred value, imported passage, or downstream transformation can create that
+standing. Eligibility to speak as a declaration comes from the existence of a declaration
+event — ⛔ never from the value of a column.
+
+**BOUNDARY — what a declaration must carry.** The **immutable source wording**
+(`declared_text`, write-once — never edited, normalized, model-rewritten or summarized); the
+**authenticated actor**; a **server-side gesture witness** (route, method, session/auth event
+identifier, server timestamp — ⛔ never client-asserted); and a **relationship referent
+required at creation**. ⛔ A declaration with no referent cannot exist.
+
+**BOUNDARY — promotion is structurally unavailable.** ⛔ Inference, observation, import and
+classification can **never** be promoted into declaration. Not because a rule forbids it, but
+because a declaration requires a past authenticated gesture and immutable member wording that
+an inference does not have and cannot be given. There is no function that manufactures a past
+authenticated act, and none may be written. A classifier output can become a declaration only
+by a member being shown it and *saying something* — and what they say is the declaration, in
+their words, not the classifier's. ⭐ **Prefer a boundary whose shape makes the violation
+impossible over one that merely forbids it.**
+
+**BOUNDARY — eligibility is computed, never cached as authority.**
+⭐⭐ **Eligibility is computed from the declaration event and its subsequent lineage.** ⛔ It
+may never be copied into a mutable authority field. No denormalized `is_eligible` /
+`is_current` flag may become the thing consulted. A cache may exist **as performance only**,
+explicitly non-authoritative, and **reconciled against the authoritative declaration state
+before use**. `cache for performance ≠ cache as authority` — a convenient copy is how
+provenance decays back into a label.
+
+**BOUNDARY — the member's acts stay distinct.** **Affirm · Correct · Supersede · Withdraw ·
+Release** are five different acts with five different meanings. ⛔ The system may **never**
+infer which one a member intended, and ⛔ no system process — decay, cleanup, migration — may
+perform any of them.
+⭐ **Release is not retraction.** *Release concerns permission for the declaration to remain
+available for relational use.* ⛔ It must **not** be interpreted as a statement that the
+original experience was false. A member removing something is exercising authority over its
+use, not recanting their life.
+
+**BOUNDARY — the settled rulings of 2026-08-13.**
+
+1. **The 18 existing member-created entries are NOT retro-eligible.** They remain unproven,
+   not declarations. ⭐ They **may** be presented to members for new affirmation, correction
+   or restatement — and any resulting declaration **begins with that new authenticated act**.
+   ⛔ It is never backdated.
+2. **`retrieval_consent` is FALSE when unanswered.** ⛔ **Storage does not imply permission**
+   to retrieve or offer. **Silence creates no consent.** Retrieval becomes available only
+   through an explicit member act.
+3. **OBSERVED assertions are in-turn only** until RF-R6 establishes their standing,
+   visibility, correction, expiry and recognition boundaries. They may inform the immediate
+   response; ⛔ they may not persist as member-level relational knowledge. **The
+   anti-laundering test below applies in full.**
+4. **Declarations receive a dedicated table.** The constraints are constitutive, not optional
+   metadata, and ⛔ must not be retrofitted onto `relationship_entries`.
+5. ⛔ **No declaration value may be added to `member_relational_signals.source`.**
+
+**BOUNDARY — the general invariant.**
+
+> ⭐⭐⭐ **No representation of the system may acquire more authority simply by being copied
+> into a more durable or more convenient store.**
+
+This applies to: **memory summaries · derived profiles · caches · indexes · embeddings ·
+prompts · reports · database projections · and MAIA's accumulated understanding of a person.**
+Wherever a representation is copied somewhere more durable or more convenient, the same rule
+holds. Nothing becomes present relational truth merely because the system persisted,
+inferred, cached, logged, or previously believed it.
+
+**BOUNDARY — the anti-laundering test.** This is a **test**, not a ban on particular table
+names:
+
+> **If a store permits the assertion to be recovered later as knowledge about the
+> relationship, it is persistence — regardless of whether the implementation calls it
+> telemetry, metadata, analytics, agent state, or memory.**
+
+⛔ Logging, metrics, agent-run metadata and debug records may not become a back door through
+which an observation persists. The question is never what the store is named; it is whether
+the assertion can be read back as knowledge.
+
+**IMPLICATION.** MAIA's offer must carry its provenance **in the utterance itself** —
+*"You wrote in June: 'we've stopped calling.'"* ⛔ Never: *"Your relationship with X is
+distant."* A superseded declaration may still be offered **as history with its date**, never
+as the present. MAIA may offer the record and may ask about **the record**; ⛔ she may never
+ask whether the relationship has changed (Article VII). The member's controls concern the
+record: **keep · correct · supersede · withdraw · release · erase.**
+
 ---
 
 # THE RELATIONSHIP ROOM PROMISE
+
+> ⚖️ **HELD OUT OF RATIFICATION — founder ruling ④, 2026-08-13.** ⛔ The Promise below is
+> **not constitutional text and carries no constitutional authority.** It remains proposed
+> member-facing copy, pending the behaviour it describes. It states in the present tense
+> conduct that Article II simultaneously records as presently inverted; under
+> `docs/canon/MARKETING_CLAIM_DISCIPLINE.md`, a ratified promise is an outward claim about
+> today, and *"we do not tell tomorrow's story as if it were today's."*
+> ⛔ Unsourced claims must not acquire constitutional authority by proximity to Articles I–XIII.
 
 When you enter a room for someone in your life, you will find your own words first, kept as
 you wrote them. Nothing here will tell you who that person is — we have never met them, and
