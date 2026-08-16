@@ -183,6 +183,51 @@ const getInsightColor = (type: string) => {
 };
 
 // ---------------------------------------------------------------------------
+// Meeting launcher — platform detection + capture guidance
+// ---------------------------------------------------------------------------
+// We launch the meeting in a browser tab and capture that tab's audio via
+// getDisplayMedia. We deliberately do NOT run a meeting bot or relay audio
+// anywhere — mic + tab audio stay local. A web page cannot force Teams/Zoom to
+// stay in the browser (the service may redirect to the desktop app), so the
+// guidance is preemptive per-platform, not a claim that we detected the app.
+
+type MeetingPlatform = 'meet' | 'zoom' | 'teams' | 'other';
+
+function detectMeetingPlatform(url: string): MeetingPlatform {
+  const u = url.trim().toLowerCase();
+  if (u.includes('meet.google.com')) return 'meet';
+  if (u.includes('zoom.us') || u.startsWith('zoommtg:')) return 'zoom';
+  if (u.includes('teams.microsoft.com') || u.includes('teams.live.com') || u.startsWith('msteams:')) return 'teams';
+  return 'other';
+}
+
+const MEETING_PLATFORM_GUIDANCE: Record<
+  MeetingPlatform,
+  { label: string; tone: 'good' | 'ok' | 'warn'; note: string }
+> = {
+  meet: {
+    label: 'Google Meet',
+    tone: 'good',
+    note: "Recommended. Opens in a Chrome tab and joins as you (no guest prompt). After Start, pick the Meet tab and check 'Share tab audio'.",
+  },
+  zoom: {
+    label: 'Zoom',
+    tone: 'ok',
+    note: "Choose 'Join from your browser' when it opens. If the desktop app opens instead, only your mic records.",
+  },
+  teams: {
+    label: 'Microsoft Teams',
+    tone: 'warn',
+    note: "Choose 'Continue on this browser'. If Teams opens the desktop app, only your mic records - desktop Teams can't be captured here without virtual audio routing.",
+  },
+  other: {
+    label: 'Meeting link',
+    tone: 'ok',
+    note: "Keep the meeting in a browser tab. After Start, pick that tab and check 'Share tab audio' for two-way recording.",
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -204,7 +249,9 @@ export default function SessionRoomPage() {
   const [localSessionTitle, setLocalSessionTitle] = useState('');
   const [captureTabAudio, setCaptureTabAudio] = useState(false);
   const [blockedFeedbackSent, setBlockedFeedbackSent] = useState(false);
-  const [videoRoomUrl, setVideoRoomUrl] = useState<string | null>(null);
+  // In-room meeting launcher: paste/select a Meet/Zoom/Teams link. Pre-fills
+  // from the practitioner's configured video_room_url, editable per session.
+  const [meetingLink, setMeetingLink] = useState('');
 
   // Past sessions / history review
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
@@ -269,6 +316,13 @@ export default function SessionRoomPage() {
       !!navigator.mediaDevices &&
       typeof navigator.mediaDevices.getDisplayMedia === 'function',
     [],
+  );
+
+  // Detected meeting platform (null until a link is present) — drives the
+  // per-platform capture guidance shown under the launcher.
+  const meetingPlatform = useMemo(
+    () => (meetingLink.trim() ? detectMeetingPlatform(meetingLink) : null),
+    [meetingLink],
   );
 
   // If a previously-set toggle persists in an unsupported environment, coerce off.
@@ -337,7 +391,8 @@ export default function SessionRoomPage() {
       try {
         const res = await apiFetch('/api/studio/settings?key=video_room_url');
         const data = await res.json();
-        if (data?.value) setVideoRoomUrl(data.value);
+        // Seed the launcher field unless the practitioner already typed one.
+        if (data?.value) setMeetingLink((prev) => prev || data.value);
       } catch {
         // non-critical — Session Room works without it
       }
@@ -591,6 +646,77 @@ ${insightsSection}
 
   // ── Render ──────────────────────────────────────────────────────────
 
+  // Meeting launcher — defined ONCE, rendered in BOTH idle and recording so a
+  // practitioner can (re)open the meeting tab mid-session. Idle and recording
+  // are mutually exclusive phases, so only one instance is ever on screen.
+  const meetingLauncher = (
+    <div className="mb-4">
+      <label className="text-xs text-slate-500 uppercase tracking-wider block mb-2">
+        Meeting (optional)
+      </label>
+      <div className="flex gap-2">
+        <input
+          type="url"
+          inputMode="url"
+          value={meetingLink}
+          onChange={(e) => setMeetingLink(e.target.value)}
+          placeholder="Paste a Meet, Zoom, or Teams link"
+          className="flex-1 min-w-0 bg-[#1e1e38] border border-slate-800/50 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-sm"
+        />
+        <a
+          href={meetingLink.trim() ? meetingLink : undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-disabled={!meetingLink.trim()}
+          onClick={(e) => {
+            if (!meetingLink.trim()) {
+              e.preventDefault();
+              return;
+            }
+            logMeetingAudioEvent('meeting_audio_launch_opened', {
+              platform: meetingPlatform ?? 'other',
+              container,
+            });
+          }}
+          className={`flex items-center justify-center gap-2 px-4 rounded-lg border text-sm whitespace-nowrap transition-all ${
+            meetingLink.trim()
+              ? 'border-slate-700/50 bg-slate-800/40 text-slate-300 hover:border-slate-600 hover:text-white'
+              : 'border-slate-800/50 bg-[#1e1e38] text-slate-600 cursor-not-allowed'
+          }`}
+        >
+          <Video className="w-4 h-4" />
+          Open
+        </a>
+      </div>
+
+      {meetingPlatform && (
+        <p
+          className={`mt-2 flex items-start gap-1.5 text-[11px] ${
+            MEETING_PLATFORM_GUIDANCE[meetingPlatform].tone === 'good'
+              ? 'text-teal-400/90'
+              : MEETING_PLATFORM_GUIDANCE[meetingPlatform].tone === 'warn'
+                ? 'text-amber-400/90'
+                : 'text-slate-500'
+          }`}
+        >
+          <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+          <span>
+            <span className="font-medium">
+              {MEETING_PLATFORM_GUIDANCE[meetingPlatform].label}:
+            </span>{' '}
+            {MEETING_PLATFORM_GUIDANCE[meetingPlatform].note}
+          </span>
+        </p>
+      )}
+
+      <p className="mt-1.5 text-[10px] text-slate-600">
+        Opens in a browser tab and joins the call (a second time if
+        you&apos;re already in it &mdash; if so, skip this and keep your
+        existing window).
+      </p>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#1a1a2e] p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
@@ -770,6 +896,10 @@ ${insightsSection}
               />
             </div>
 
+            {/* Meeting launcher (single instance — see `meetingLauncher` const;
+                also rendered during recording so the tab can be reopened). */}
+            {meetingLauncher}
+
             {/* Tab audio capture toggle */}
             <div className="mb-4">
               {displayMediaSupported ? (
@@ -794,9 +924,11 @@ ${insightsSection}
                       Add meeting audio
                     </div>
                     <p className="text-xs text-slate-500 mt-1">
-                      Recommended: use the browser version of Teams, Zoom, or Meet.
-                      Choose the meeting tab and enable &quot;Share tab audio.&quot;
-                      Desktop meeting apps may require advanced audio routing.
+                      Google Meet in Chrome is the recommended path. After you
+                      start, choose the meeting tab and enable &quot;Share tab
+                      audio.&quot; Desktop Teams/Zoom apps may record mic-only
+                      unless routed through browser tab audio or a virtual audio
+                      device.
                     </p>
                   </div>
                 </label>
@@ -895,31 +1027,8 @@ ${insightsSection}
               </div>
             )}
 
-            {/* Open video call — shown when a video room URL is configured in Settings → Integrations.
-                Annotated so practitioners understand this JOINS the external meeting and can
-                double-join if they are already in the call. */}
-            {videoRoomUrl && (
-              <div className="mb-3">
-                <a
-                  href={videoRoomUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-700/50 bg-slate-800/40 text-slate-300 hover:border-slate-600 hover:text-white transition-all text-sm"
-                >
-                  <Video className="w-4 h-4" />
-                  Open meeting{' '}
-                  <span className="text-slate-500">(joins as another participant)</span>
-                </a>
-                <p className="mt-1.5 flex items-start gap-1.5 text-[11px] text-slate-500">
-                  <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
-                  <span>
-                    Opens the meeting link from Settings &rarr; Integrations. If you&apos;re already
-                    in the call (especially in a desktop app), this adds you a second time &mdash;
-                    skip it and keep your existing window.
-                  </span>
-                </p>
-              </div>
-            )}
+            {/* Meeting launch moved up into the "Meeting (optional)" launcher
+                (paste/select link → open tab → Add meeting audio). */}
 
             {/* Start button */}
             <button
@@ -1216,6 +1325,10 @@ ${insightsSection}
                 shared AND when a shared tab stops mid-session). Display only — does not touch
                 capture, consent, Sanctuary, or transcription. */}
             <AudioSourcesStatus hasTabAudio={ctx.hasTabAudio} />
+
+            {/* Meeting launcher — same single instance as idle. Lets the
+                practitioner reopen the meeting tab without stopping the session. */}
+            <div className="mt-4">{meetingLauncher}</div>
 
             {/* Two-column: Transcript + Interactive Rail */}
             <div className="grid lg:grid-cols-2 gap-4">
