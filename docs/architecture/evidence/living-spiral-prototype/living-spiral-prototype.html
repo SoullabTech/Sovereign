@@ -1,0 +1,598 @@
+<title>Living Spiral — Synthetic Visual Prototype</title>
+<style>
+:root{
+  --ground:#E7EBEC; --plate:#DDE3E4; --ink:#0B1013; --ink-2:#3D4A4E; --ink-3:#6C7B80;
+  --rule:#C3CDCF; --rule-2:#AEBBBE;
+  --phos:#127C87; --phos-dim:#8FBFC4;
+  --attn:#9A6414; --attn-bg:#F0DCBE;
+  --contra:#93316E; --contra-bg:#F0D6E6;
+  --void:#B9C4C6;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#0B1013; --plate:#111A1D; --ink:#DCE6E8; --ink-2:#9AAAAE; --ink-3:#6C7B80;
+    --rule:#222F33; --rule-2:#33454A;
+    --phos:#3FB8C4; --phos-dim:#1E5A61;
+    --attn:#D8973C; --attn-bg:#3A2A11;
+    --contra:#C2559B; --contra-bg:#3A1830;
+    --void:#1A2427;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B1013; --plate:#111A1D; --ink:#DCE6E8; --ink-2:#9AAAAE; --ink-3:#6C7B80;
+  --rule:#222F33; --rule-2:#33454A; --phos:#3FB8C4; --phos-dim:#1E5A61;
+  --attn:#D8973C; --attn-bg:#3A2A11; --contra:#C2559B; --contra-bg:#3A1830; --void:#1A2427;
+}
+:root[data-theme="light"]{
+  --ground:#E7EBEC; --plate:#DDE3E4; --ink:#0B1013; --ink-2:#3D4A4E; --ink-3:#6C7B80;
+  --rule:#C3CDCF; --rule-2:#AEBBBE; --phos:#127C87; --phos-dim:#8FBFC4;
+  --attn:#9A6414; --attn-bg:#F0DCBE; --contra:#93316E; --contra-bg:#F0D6E6; --void:#B9C4C6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 20px 56px}
+
+header{border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:16px}
+h1{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;margin:0 0 4px}
+.sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.7}
+.sub b{color:var(--ink-2);font-weight:600}
+
+.bar{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 6px}
+button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--ink-2);
+  background:transparent;border:1px solid var(--rule-2);padding:5px 9px;cursor:pointer;
+  border-radius:2px}
+button:hover{border-color:var(--phos);color:var(--ink)}
+button:focus-visible{outline:2px solid var(--phos);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--phos);border-color:var(--phos);color:var(--ground)}
+.barlabel{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);align-self:center;margin-right:4px}
+
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+
+.panel{background:var(--plate);border:1px solid var(--rule);border-radius:3px}
+.panel h2{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin:0;padding:9px 12px;border-bottom:1px solid var(--rule);font-weight:600}
+.pad{padding:12px}
+svg{display:block;width:100%;height:auto}
+.scen{font-family:var(--mono);font-size:11.5px;padding:10px 12px;border-bottom:1px solid var(--rule);
+  color:var(--ink-2);line-height:1.65}
+.scen b{color:var(--ink);font-weight:600}
+
+.readout{font-family:var(--mono);font-size:11.5px;line-height:1.75}
+.row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px;padding:3px 0;
+  border-bottom:1px dotted var(--rule)}
+.row:last-child{border-bottom:0}
+.k{color:var(--ink-3);letter-spacing:.05em}
+.v{color:var(--ink);word-break:break-word}
+.v.dim{color:var(--ink-3)}
+/* The binding_method block wraps rather than scrolling. A bright horizontal
+   scrollbar under a readout reads as a filled progress meter — and this system
+   refuses scalar vitality, so no chrome may accidentally imply a quantity.
+   Any residual scrollbar is rendered thin and neutral. */
+.chain{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);line-height:1.9;
+  background:var(--ground);border:1px solid var(--rule);border-radius:2px;padding:8px 10px;
+  overflow-x:auto;white-space:pre-wrap;word-break:break-word;
+  scrollbar-width:thin;scrollbar-color:var(--rule-2) transparent}
+.chain::-webkit-scrollbar{height:5px}
+.chain::-webkit-scrollbar-track{background:transparent}
+.chain::-webkit-scrollbar-thumb{background:var(--rule-2);border-radius:0}
+
+.chip{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+  padding:2px 6px;border-radius:2px;border:1px solid;text-transform:uppercase}
+.chip.attn{color:var(--attn);border-color:var(--attn);background:var(--attn-bg)}
+.chip.contra{color:var(--contra);border-color:var(--contra);background:var(--contra-bg)}
+.chip.ok{color:var(--phos);border-color:var(--phos-dim);background:transparent}
+.chip.void{color:var(--ink-3);border-color:var(--rule-2);background:transparent;
+  border-style:dashed}
+
+.fail{margin-top:10px;border:1px dashed var(--rule-2);border-radius:2px;padding:9px 11px;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7}
+.fail b{color:var(--attn);font-weight:600;letter-spacing:.08em}
+
+.counters{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;
+  padding:9px 12px;border-top:1px solid var(--rule);color:var(--ink-3)}
+.counters b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:7px 14px;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-2)}
+.legend div{display:flex;align-items:center;gap:7px}
+.legend svg{width:20px;height:20px;flex:0 0 20px}
+.hint{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding:8px 12px;
+  border-top:1px solid var(--rule)}
+.mark{cursor:pointer}
+.mark:focus-visible{outline:2px solid var(--phos)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+footer{margin-top:22px;border-top:1px solid var(--rule);padding-top:12px;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.8}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Living Spiral · Synthetic Visual Prototype</h1>
+  <div class="sub">
+    Projection of <b>synthetic assertions</b> governed by the accepted semantic contract
+    (<b>sha256 ebfebb5a…</b>, 624 lines, commit 21db7685c).<br>
+    Prototype only. No telemetry, no emitters, no store, no production connection, no Run Record.
+    Every mark, edge, motion and absence below resolves to a synthetic <b>assertion_id</b> —
+    <b>nothing is decorative</b>.
+  </div>
+</header>
+
+<div class="bar" id="fixbar"><span class="barlabel">Fixture</span></div>
+<div class="bar">
+  <span class="barlabel">Alias</span>
+  <button id="aliasBtn" aria-pressed="false">operational_element → Fire / Water / Earth / Air / Aether</button>
+  <span class="barlabel" style="margin-left:8px">Theme</span>
+  <button id="themeBtn">invert</button>
+</div>
+
+<div class="cols">
+  <div class="panel">
+    <h2>The plate — assertions by operational layer</h2>
+    <div class="scen" id="scen"></div>
+    <div class="pad"><svg id="plate" viewBox="0 0 560 560" role="img"
+      aria-label="Concentric plate of synthetic assertions"></svg></div>
+    <div class="counters" id="counters"></div>
+    <div class="hint">Click any mark to interrogate it. A mark that cannot complete the
+      interrogation path is a contract violation, not a missing feature.</div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Interrogation path — §10.1</h2>
+      <div class="pad readout" id="inspect"></div>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <h2>Reading the plate</h2>
+      <div class="pad legend" id="legend"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Concentric geometry only. The bands are <b>operational_layer</b> — an evidence-adequacy ordering,
+  <b>never</b> an authority direction, and not the member ring ladder (§3.4).
+  <code>intention</code> sits alongside the adequacy chain rather than beneath it — O1 remains
+  <b>UNRESOLVED</b> and is drawn as a detached arc, not a fifth ring (§3.3).
+</footer>
+</div>
+
+<script>
+"use strict";
+/* ————————————————————————————————————————————————————————————————
+   SYNTHETIC ASSERTIONS. This is the whole truth of the prototype:
+   nothing renders that is not derived from these records. (§1)
+   ———————————————————————————————————————————————————————————————— */
+const EL = ["transformation","conveyance","consolidation","discrimination","composition"];
+const ALIAS = {transformation:"Fire",conveyance:"Water",consolidation:"Earth",
+               discrimination:"Air",composition:"Aether"};
+const SWAP  = {transformation:"A",conveyance:"B",consolidation:"C",discrimination:"D",composition:"E"};
+const LAYERS = ["encounter","standing","enactment","declaration"]; // adequacy chain, outer→inner
+let aliasOn = false;
+
+function a(o){ return Object.assign({
+  presence:"present", observation:"observed", temporal:"current", epistemic:"established",
+  stillness:null, disturbance:null, elements:[], motion:null, edges:[]
+}, o); }
+
+const BASE = [
+  a({id:"A1",subject:"maia-sovereign",predicate:"running_provenance",object:"21db7685c",
+     layer:"standing",elements:["consolidation"],evidence:"GIT_COMMIT of the running container",
+     evidenceClass:"custody witness",custody:"production-witnessed",authority:"deploy-lane record",
+     resolver:"docker exec printenv",domain:"the running container's environment",
+     scope:"minisforum",query:"GIT_COMMIT"}),
+  a({id:"A2",subject:"comms_delivery_queue",predicate:"depth_changed",object:"41 → 12",
+     layer:"enactment",elements:["conveyance"],motion:"M2 transition",
+     evidence:"queue depth sampled at departure and arrival",evidenceClass:"runtime trace",
+     custody:"deployed",authority:"none required",resolver:"queue depth sampler",
+     domain:"comms_delivery_queue rows",scope:"production",query:"count(*) where state='pending'"}),
+  /* Ordinary discrimination. A decision is a phenomenon, NOT an attention state —
+     it renders in the phenomenon channel. Only F7/F14 raise it to a disturbance. */
+  a({id:"A3",subject:"wisdom_router",predicate:"selected_tier",object:"CORE",
+     layer:"enactment",elements:["discrimination"],
+     evidence:"router decision recorded at the branch point",evidenceClass:"runtime trace",
+     custody:"deployed",authority:"none required",resolver:"router branch log",
+     domain:"tier selection for this turn",scope:"production",query:"processing_profile"}),
+  a({id:"A4",subject:"corpus_callosum",predicate:"integrated_voices",object:"8 → 1 response",
+     layer:"enactment",elements:["composition"],epistemic:"provisional",
+     evidence:"parts available in meta; assembly point unwitnessed",evidenceClass:"code-read",
+     custody:"deployed",authority:"none required",resolver:"meta object inspection",
+     domain:"the response meta payload — NOT the assembly point",scope:"FAST tier",
+     query:"meta.voices[]"}),
+  a({id:"A5",subject:"member_daily_anchors",predicate:"row_count",object:"0",
+     layer:"declaration",elements:["consolidation"],presence:"zero",stillness:"equilibrium",
+     evidence:"exact count(*) measured",evidenceClass:"runtime trace",custody:"production-witnessed",
+     authority:"none required",resolver:"psql count",domain:"member_daily_anchors table",
+     scope:"maia_consciousness",query:"select count(*)"}),
+  a({id:"A6",subject:"episodic_memory_service",predicate:"live_callers",object:"none",
+     layer:"declaration",elements:["consolidation"],presence:"none",stillness:"awaiting",
+     evidence:"import graph search returned no callers",evidenceClass:"code-read",
+     custody:"committed",authority:"frozen — Cat-3",resolver:"ripgrep over import graph",
+     domain:"tracked .ts sources; NOT runtime dispatch",scope:"repo @ 21db7685c",
+     query:"EpisodicMemoryService"}),
+  a({id:"A7",subject:"member (operator walk)",predicate:"met_anchor_surface",object:"reached /maia/anchor",
+     layer:"encounter",elements:["discrimination"],evidence:"operator device witness",
+     evidenceClass:"member/operator witness",custody:"production-witnessed",
+     authority:"member gesture",resolver:"device walk",domain:"rendered iOS WebView",
+     scope:"soullab.life",query:"anchor history route"}),
+  a({id:"I1",subject:"Living Spiral Phase 1",predicate:"authorized_scope",object:"semantic contract only",
+     layer:"intention",elements:["discrimination"],evidence:"founder ruling §4",
+     evidenceClass:"authority record",custody:"canonical",authority:"founder ruling 2026-08-16",
+     resolver:"governance record read",domain:"docs/governance/*.md",scope:"repo",
+     query:"FOUNDER_RULING_LIVING_SPIRAL_SEMANTIC_JURISDICTION"})
+];
+
+function clone(){ return BASE.map(x=>Object.assign({},x)); }
+
+/* Each fixture states the required classification AND the plausible wrong behaviour
+   it discriminates against — the paper fixture, made visual. (§11) */
+const F = {
+  BASE:{t:"Baseline",d:"Normal operation. High activity, <b>zero disturbance</b> — F6. Activity is visible without any attention signal.",
+    fail:"read a busy system as unhealthy", build:()=>clone()},
+
+  F1:{t:"F1 telemetry disappears",d:"A telemetry source is removed entirely. The plate is <b>cut open</b>: no mark can occupy an unobserved sector.",
+    fail:"render calm / green / nothing — or record the aperture loss as a fact about the subject",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A2");
+      x.observation="unobserved";x.presence="unknown";x.stillness=null;x.temporal=null;
+      x.disturbance="unobserved_where_expected";x.object="—";x.motion=null;
+      x.evidence="no admissible telemetry covers this condition";x.evidenceClass="—";
+      x.resolver="(none — source removed)";x.domain="(nothing resolvable)";return s;}},
+
+  F2:{t:"F2 source becomes stale — and the two axes stay composable",d:"Last write 6h ago, threshold 15m. <b>M4 decay</b> fires on the <b>temporal</b> axis; the witness stays <b>established about its valid_as_of</b>. All three combinations are on the plate at once: <b>A1 established+stale</b> · <b>A4 provisional+current</b> · <b>A2 provisional+stale</b>.",
+    fail:"keep showing the last value as current — demote the historic witness to stale as though it had never been established — or collapse temporal and epistemic standing into one glyph",
+    build:()=>{const s=clone();
+      const x=s.find(v=>v.id==="A1"); // established + stale — OUTER cue only
+      x.temporal="stale";x.motion="M4 decay (temporal-axis)";x.age="6h 02m (threshold 15m)";
+      x.note="epistemic_status unchanged: established about valid_as_of";
+      const y=s.find(v=>v.id==="A2"); // provisional + stale — BOTH cues
+      y.temporal="stale";y.epistemic="provisional";y.age="41m (threshold 15m)";
+      y.motion="M4 decay (temporal-axis)";
+      y.note="both axes carry a cue independently — neither implies the other";
+      const z=s.find(v=>v.id==="A4"); // provisional + current — INNER cue only
+      z.epistemic="provisional";z.temporal="current";
+      z.note="unsettled claim, freshly witnessed — provisional does not imply stale";
+      return s;}},
+
+  F3:{t:"F3 contradictory provenance",d:"Two sources assert a different GIT_COMMIT for one container. Both are drawn. <b>Neither is dimmed, hidden, averaged, or preferred.</b>",
+    fail:"prefer the newer, or average, or hide one",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A1");
+      x.epistemic="contradicted";x.object="21db7685c";x.pairId="A1b";
+      const y=a({id:"A1b",subject:"maia-sovereign",predicate:"running_provenance",object:"b1399f693",
+        layer:"standing",elements:["consolidation"],epistemic:"contradicted",pairId:"A1",
+        evidence:"health endpoint provenance field",evidenceClass:"runtime trace",
+        custody:"production-witnessed",authority:"none required",resolver:"GET /api/health",
+        domain:"the health handler's reported build",scope:"soullab.life",query:"provenance.commit"});
+      s.push(y);return s;}},
+
+  F5:{t:"F5 polling without motion",d:"Metrics polled <b>200×</b>. Object identical every time. <b>M3 restatement only</b> — freshness refreshes, and the plate does not move.",
+    fail:"animate continuously — manufacturing the appearance of life from re-polling",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A2");
+      x.motion=null;x.restatements=200;x.object="12";x.note="200 restatements · 0 motion events";
+      return s;}},
+
+  F7:{t:"F7 low activity + authority block",d:"Near-zero activity. One <b>authority_blocked</b> item. The attention signal stays <b>fully visible</b> — quietness never mutes it.",
+    fail:"let low activity mute the signal",
+    build:()=>{const s=clone().filter(v=>["A3","A5","A6","I1"].includes(v.id));
+      const x=s.find(v=>v.id==="A3");
+      x.predicate="refused_build";x.object="lane token absent";x.disturbance="authority_blocked";
+      x.subject="pre-deploy-gate";x.authority="deploy-lane governance";
+      x.resolver="Dockerfile deploy-lane tripwire";
+      x.domain="build invocations of docker-compose.production.yml";x.scope="minisforum";
+      x.query="DEPLOY_LANE_TOKEN";x.evidence="deploy-lane tripwire refusal";
+      s.find(v=>v.id==="A5").stillness="equilibrium";return s;}},
+
+  F9:{t:"F9 partially bound substrate",d:"Container bound on <b>1 of 5</b> criteria. <code>consolidation @ provisional</code>, and everything downstream is <code>unknown</code>.",
+    fail:"treat it as established and answer questions from it",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A1");
+      x.epistemic="provisional";x.note="bound on 1 of 5 criteria";
+      const d=s.find(v=>v.id==="A7");d.presence="unknown";d.observation="observed";
+      d.note="downstream of a provisionally-bound referent";return s;}},
+
+  F10:{t:"F10 available parts, unwitnessed assembly",d:"Component present in <code>meta</code>; the assembly point is unwitnessed. <b>Provisional composition</b> — a dashed edge, never a solid one.",
+    fail:"assert composition @ established from availability — the PBR-002 class",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A4");
+      x.epistemic="provisional";x.edges=[{to:"A2",kind:"composition",evidenced:false}];return s;}},
+
+  F11:{t:"F11 co-occurrence without composition",d:"Two services run in the same second on one path. <b>No edge is drawn at all.</b> Co-location is joint manifestation, not composition.",
+    fail:"draw a naked edge between them",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A4");
+      x.jointWith="A2";x.note="JOINT MANIFESTATION / CAUSAL RELATION UNESTABLISHED";
+      x.edges=[];return s;}},
+
+  F13:{t:"F13 lawful evidence withdrawal",d:"Sanctuary expiry. <b>M7 withdrawal</b> fires and presence goes to <code>unknown</code> — it does not revert to healthy.",
+    fail:"revert to healthy, or retain the payload to keep the view stable",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A7");
+      x.presence="unknown";x.motion="M7 withdrawal";x.object="—";x.temporal=null;
+      x.evidence="evidence lawfully withdrawn (Sanctuary expiry)";x.evidenceClass="—";
+      x.note="payload not retained; no replay";return s;}},
+
+  F14:{t:"F14 governed refusal",d:"A gate refuses a deploy. <code>discrimination @ established</code> plus an <b>authority_blocked</b> disturbance — a <b>non-fault, possibly resumable</b> stop.",
+    fail:"classify a refusal as an error",
+    build:()=>{const s=clone();const x=s.find(v=>v.id==="A3");
+      x.subject="pre-deploy-gate";x.predicate="refused_build";x.object="lane token absent";
+      x.disturbance="authority_blocked";x.authority="deploy-lane governance";
+      x.resolver="Dockerfile deploy-lane tripwire";
+      x.domain="build invocations of docker-compose.production.yml";x.scope="minisforum";
+      x.query="DEPLOY_LANE_TOKEN";x.evidence="deploy-lane tripwire refusal";
+      x.note="non-fault stop · may be resumable · not a completed objective";return s;}},
+
+  F15:{t:"F15 first observation ≠ emergence",d:"A (subject, predicate) asserted for the first time ever. <b>M1 first_observation — not motion.</b> What changed was the observer.",
+    fail:"render it as emergence / birth / a new thing starting",
+    build:()=>{const s=clone();
+      s.push(a({id:"A8",subject:"provenance_tombstones",predicate:"row_count",object:"3",
+        layer:"declaration",elements:["consolidation"],motion:"M1 first_observation (NOT motion)",
+        firstSeen:true,evidence:"first sampling of this pair",evidenceClass:"runtime trace",
+        custody:"production-witnessed",authority:"none required",resolver:"psql count",
+        domain:"provenance_tombstones",scope:"maia_consciousness",query:"select count(*)",
+        note:"no prior evidenced absence exists, so emergence is NOT assertable"}));
+      return s;}}
+};
+
+const ORDER=["BASE","F1","F2","F3","F5","F7","F9","F10","F11","F13","F14","F15"];
+let cur="BASE", sel=null;
+
+/* —— geometry —— */
+const CX=280, CY=290, RING={encounter:238,standing:196,enactment:154,declaration:112};
+function pos(as,i,n){
+  if(as.layer==="intention") return {x:78,y:56,intent:true};
+  /* Marks occupy the arc from ~3 o'clock, clockwise through 6 and 9, stopping
+     before 12. The entire top arc is reserved as the layer-label gutter, so a
+     stratum name can never collide with a mark or its element caption. */
+  const r=RING[as.layer]||112;
+  const START=0.45, SPAN=3.45;   // ends ~44° short of 12 o'clock
+  const t = n<=1 ? 1.6 : START + i*(SPAN/(n-1));
+  return {x:CX+r*Math.cos(t), y:CY+r*Math.sin(t)};
+}
+function label(e){ return aliasOn ? ALIAS[e] : e; }
+
+/* —— mark glyphs: presence & observation are DIFFERENT CHANNELS —— */
+function glyph(as,p){
+  const g=[], id=as.id;
+  // observation channel: unobserved = a hole in the plate. No mark may sit in it.
+  if(as.observation==="unobserved"){
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="15" fill="var(--ground)" stroke="var(--rule-2)"
+      stroke-width="1" stroke-dasharray="3 3"/>`);
+    g.push(`<path d="M${p.x-9},${p.y-9} L${p.x+9},${p.y+9} M${p.x-9},${p.y+9} L${p.x+9},${p.y-9}"
+      stroke="var(--rule-2)" stroke-width="1"/>`);
+    g.push(`<text x="${p.x}" y="${p.y+28}" text-anchor="middle" font-family="var(--mono)"
+      font-size="8.5" fill="var(--ink-3)">${id} · unobserved</text>`);
+    return g.join("");
+  }
+  if(as.observation==="not_applicable"){
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="12" fill="none" stroke="var(--rule-2)"
+      stroke-width="1"/><line x1="${p.x-8}" y1="${p.y+8}" x2="${p.x+8}" y2="${p.y-8}"
+      stroke="var(--rule-2)" stroke-width="1"/>`);
+    return g.join("");
+  }
+  const contra = as.epistemic==="contradicted";
+  const stroke = contra?"var(--contra)":(as.disturbance?"var(--attn)":"var(--phos)");
+  /* TWO INDEPENDENT AXES, TWO INDEPENDENT CUES — they must be able to coexist:
+       provisional + current · established + stale · provisional + stale
+     epistemic provisionality → INNER dashed core
+     temporal staleness       → OUTER dashed halo
+     Collapsing them into one glyph would reintroduce the category error the
+     amendment round removed from the contract. */
+  const prov  = as.epistemic==="provisional";
+  const stale = as.temporal==="stale";
+
+  // presence channel: fill pattern (unchanged by either cue)
+  if(as.presence==="present"){
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="11" fill="${stroke}" fill-opacity="${prov?0.14:0.9}"
+      stroke="${stroke}" stroke-width="1"/>`);
+  } else if(as.presence==="zero"){
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="11" fill="none" stroke="${stroke}" stroke-width="1"/>`);
+    g.push(`<line x1="${p.x-6}" y1="${p.y}" x2="${p.x+6}" y2="${p.y}" stroke="${stroke}"
+      stroke-width="2.5"/>`); // a measured zero: a reading at baseline
+  } else if(as.presence==="none"){
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="11" fill="none" stroke="${stroke}"
+      stroke-width="1" stroke-dasharray="1.5 3"/>`); // no instance exists
+  } else { // unknown — hatched, cannot be read as anything
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="11" fill="url(#hatch)" stroke="var(--ink-3)"
+      stroke-width="1"/>`);
+    g.push(`<text x="${p.x}" y="${p.y+3.5}" text-anchor="middle" font-family="var(--mono)"
+      font-size="10" fill="var(--ink-3)">?</text>`);
+  }
+  // epistemic cue — INNER: the core of the claim is not settled
+  if(prov){
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="5" fill="none" stroke="${stroke}"
+      stroke-width="1.2" stroke-dasharray="2 2"/>`);
+  }
+  // temporal cue — OUTER: the evidence no longer reaches the present
+  if(stale){
+    g.push(`<circle cx="${p.x}" cy="${p.y}" r="15.5" fill="none" stroke="${stroke}"
+      stroke-width="1" stroke-dasharray="2 4" stroke-opacity="0.85"/>`);
+    g.push(`<line x1="${p.x+11}" y1="${p.y-11}" x2="${p.x+18}" y2="${p.y-18}"
+      stroke="${stroke}" stroke-width="1" stroke-opacity="0.85"/>`);
+  }
+  // motion is drawn ONLY where a motion class fired
+  if(as.motion && !/first_observation/.test(as.motion)){
+    g.push(`<path d="M${p.x-22},${p.y} L${p.x-13},${p.y}" stroke="${stroke}" stroke-width="1.2"
+      marker-end="url(#arw)"/>`);
+  }
+  if(as.firstSeen){ // first observation: a tick, never a trail
+    g.push(`<line x1="${p.x}" y1="${p.y-18}" x2="${p.x}" y2="${p.y-13}" stroke="var(--phos)" stroke-width="1.4"/>`);
+  }
+  if(as.stillness){
+    g.push(`<rect x="${p.x-13}" y="${p.y-13}" width="26" height="26" fill="none"
+      stroke="${stroke}" stroke-width="0.8" stroke-opacity="0.5"/>`);
+  }
+  /* One caption per mark, below it. Two stacked captions (element above, id below)
+     collided with the neighbouring ring's marks. */
+  const cap = as.elements.length ? `${id} · ${as.elements.map(label).join("·")}` : id;
+  g.push(`<text x="${p.x}" y="${p.y+26}" text-anchor="middle" font-family="var(--mono)"
+    font-size="8.5" fill="var(--ink-3)">${cap}</text>`);
+  return g.join("");
+}
+
+function render(){
+  const set=F[cur].build();
+  document.getElementById("scen").innerHTML=
+    `<b>${F[cur].t}</b> — ${F[cur].d}`;
+
+  const byLayer={}; LAYERS.concat("intention").forEach(l=>byLayer[l]=[]);
+  set.forEach(x=>(byLayer[x.layer]=byLayer[x.layer]||[]).push(x));
+  const P={};
+  Object.keys(byLayer).forEach(l=>byLayer[l].forEach((x,i)=>P[x.id]=pos(x,i,byLayer[l].length)));
+
+  let s=`<defs>
+    <pattern id="hatch" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-3)" stroke-width="1.1"/></pattern>
+    <marker id="arw" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 z" fill="currentColor"/></marker>
+  </defs>`;
+
+  /* Labels sit on a punched-out plate patch so the ring line never runs through
+     the type, and they are set in --ink-2 rather than --ink-3 so the strata stay
+     readable without squinting. Marks are angularly offset away from 12 o'clock
+     (see pos()), so the label gutter stays clear. */
+  LAYERS.forEach(l=>{
+    s+=`<circle cx="${CX}" cy="${CY}" r="${RING[l]}" fill="none" stroke="var(--rule)"
+        stroke-width="1"/>`;
+    const w=l.length*6.6+14, y=CY-RING[l];
+    s+=`<rect x="${CX-w/2}" y="${y-8}" width="${w}" height="15" fill="var(--plate)"/>`;
+    s+=`<text x="${CX}" y="${y+3.5}" text-anchor="middle" font-family="var(--mono)"
+        font-size="9.5" font-weight="600" letter-spacing="1.7"
+        fill="var(--ink-2)">${l.toUpperCase()}</text>`;
+  });
+  // O1: intention drawn detached — NOT a fifth ring
+  s+=`<path d="M40,96 a58,58 0 0 1 62,-46" fill="none" stroke="var(--rule-2)" stroke-width="1"
+      stroke-dasharray="4 3"/>
+      <text x="34" y="118" font-family="var(--mono)" font-size="9" letter-spacing="1.4"
+      fill="var(--ink-3)">INTENTION · orthogonal (O1)</text>`;
+
+  set.forEach(x=>{ // edges only where evidenced at the assembly point
+    (x.edges||[]).forEach(e=>{
+      const A=P[x.id],B=P[e.to]; if(!A||!B) return;
+      s+=`<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="var(--phos)"
+        stroke-width="1" ${e.evidenced?"":'stroke-dasharray="4 3" stroke-opacity="0.7"'}/>`;
+    });
+    if(x.jointWith&&P[x.jointWith]){ // co-occurrence: explicitly NO edge
+      const A=P[x.id],B=P[x.jointWith];
+      s+=`<text x="${(A.x+B.x)/2}" y="${(A.y+B.y)/2}" text-anchor="middle"
+        font-family="var(--mono)" font-size="8" fill="var(--ink-3)">no edge — causal relation unestablished</text>`;
+    }
+    if(x.pairId&&P[x.pairId]){ // contradiction: both, neither preferred
+      const A=P[x.id],B=P[x.pairId];
+      s+=`<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="var(--contra)"
+        stroke-width="1" stroke-dasharray="2 2"/>`;
+    }
+  });
+
+  set.forEach(x=>{
+    const p=P[x.id]; if(!p) return;
+    s+=`<g class="mark" tabindex="0" role="button" data-id="${x.id}"
+        aria-label="assertion ${x.id}">${glyph(x,p)}</g>`;
+  });
+
+  document.getElementById("plate").innerHTML=s;
+  document.querySelectorAll(".mark").forEach(g=>{
+    const go=()=>{sel=g.dataset.id;inspect(set);};
+    g.addEventListener("click",go);
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
+  });
+
+  const motions=set.filter(x=>x.motion&&!/first_observation/.test(x.motion)).length;
+  const rest=set.reduce((n,x)=>n+(x.restatements||0),0);
+  const dist=set.filter(x=>x.disturbance).length;
+  const unobs=set.filter(x=>x.observation==="unobserved").length;
+  document.getElementById("counters").innerHTML=
+    `<span>assertions <b>${set.length}</b></span>
+     <span>motion events <b>${motions}</b></span>
+     <span>restatements <b>${rest}</b></span>
+     <span>attention <b>${dist}</b></span>
+     <span>unobserved <b>${unobs}</b></span>`;
+
+  if(!sel||!set.find(x=>x.id===sel)) sel=set[0].id;
+  inspect(set);
+}
+
+function inspect(set){
+  const x=set.find(v=>v.id===sel); if(!x) return;
+  const R=(k,v,dim)=>`<div class="row"><div class="k">${k}</div><div class="v ${dim?'dim':''}">${v}</div></div>`;
+  let chips="";
+  if(x.disturbance==="authority_blocked")
+    chips+=`<span class="chip attn">authority_blocked · non-fault · may be resumable</span> `;
+  else if(x.disturbance) chips+=`<span class="chip attn">${x.disturbance}</span> `;
+  if(x.epistemic==="contradicted") chips+=`<span class="chip contra">contradicted · both retained</span> `;
+  if(x.epistemic==="provisional") chips+=`<span class="chip void">provisional</span> `;
+  if(x.observation==="unobserved") chips+=`<span class="chip void">unobserved — aperture, not a fact about the subject</span> `;
+
+  document.getElementById("inspect").innerHTML=
+    (chips?`<div style="margin-bottom:9px">${chips}</div>`:"")+
+    R("assertion_id",x.id)+
+    R("subject",x.subject)+
+    R("predicate",x.predicate)+
+    R("object",x.object)+
+    R("element[]",x.elements.map(label).join(" · ")||"—")+
+    R("layer",x.layer)+
+    R("presence_value",x.presence)+
+    R("observation",x.observation)+
+    R("temporal",x.temporal||"— (no current-state claim)",!x.temporal)+
+    R("epistemic",x.epistemic)+
+    R("stillness_kind",x.stillness||"— (not asserted)",!x.stillness)+
+    R("motion",x.motion||"none",!x.motion)+
+    (x.age?R("age",x.age):"")+
+    (x.restatements?R("restatements",x.restatements+" · motion events 0"):"")+
+    (x.note?R("note",x.note):"")+
+    R("evidence",x.evidence)+
+    R("evidence_class",x.evidenceClass)+
+    R("custody",x.custody)+
+    R("authority",x.authority)+
+    `<div class="chain" style="margin-top:10px">binding_method
+  resolver  ${x.resolver}
+  domain    ${x.domain}
+  scope     ${x.scope}
+  query     ${x.query}
+
+pattern → phenomenon → assertion → evidence → binding_method → temporal → authority</div>`+
+    `<div class="fail"><b>A FAILING IMPLEMENTATION WOULD INSTEAD</b><br>${F[cur].fail}</div>`;
+}
+
+/* —— legend: the five absence/observation states, visually distinct —— */
+document.getElementById("legend").innerHTML=[
+  ["present","<circle cx='10' cy='10' r='7' fill='var(--phos)'/>"],
+  ["zero (measured)","<circle cx='10' cy='10' r='7' fill='none' stroke='var(--phos)'/><line x1='5' y1='10' x2='15' y2='10' stroke='var(--phos)' stroke-width='2'/>"],
+  ["none (no instance)","<circle cx='10' cy='10' r='7' fill='none' stroke='var(--phos)' stroke-dasharray='1.5 3'/>"],
+  ["unknown","<circle cx='10' cy='10' r='7' fill='url(#h2)' stroke='var(--ink-3)'/>"],
+  ["unobserved (aperture)","<circle cx='10' cy='10' r='8' fill='var(--ground)' stroke='var(--rule-2)' stroke-dasharray='3 3'/><path d='M5,5 L15,15 M5,15 L15,5' stroke='var(--rule-2)'/>"],
+  ["not_applicable","<circle cx='10' cy='10' r='7' fill='none' stroke='var(--rule-2)'/><line x1='5' y1='15' x2='15' y2='5' stroke='var(--rule-2)'/>"],
+  ["provisional (epistemic)","<circle cx='10' cy='10' r='7' fill='var(--phos)' fill-opacity='0.14' stroke='var(--phos)'/><circle cx='10' cy='10' r='3.2' fill='none' stroke='var(--phos)' stroke-dasharray='2 2'/>"],
+  ["stale (temporal)","<circle cx='10' cy='10' r='6' fill='var(--phos)'/><circle cx='10' cy='10' r='9' fill='none' stroke='var(--phos)' stroke-dasharray='2 4'/>"],
+  ["provisional + stale","<circle cx='10' cy='10' r='6' fill='var(--phos)' fill-opacity='0.14' stroke='var(--phos)'/><circle cx='10' cy='10' r='2.8' fill='none' stroke='var(--phos)' stroke-dasharray='2 2'/><circle cx='10' cy='10' r='9' fill='none' stroke='var(--phos)' stroke-dasharray='2 4'/>"],
+  ["stillness (typed)","<rect x='3' y='3' width='14' height='14' fill='none' stroke='var(--phos)' stroke-opacity='0.5'/><circle cx='10' cy='10' r='5' fill='var(--phos)'/>"],
+  ["attention (typed)","<circle cx='10' cy='10' r='7' fill='var(--attn)' fill-opacity='0.9' stroke='var(--attn)'/>"],
+  ["contradiction pair","<circle cx='6' cy='10' r='4' fill='var(--contra)'/><circle cx='14' cy='10' r='4' fill='var(--contra)'/><line x1='6' y1='10' x2='14' y2='10' stroke='var(--contra)' stroke-dasharray='2 2'/>"]
+].map(([t,g])=>`<div><svg viewBox="0 0 20 20"><defs><pattern id="h2" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-3)" stroke-width="1.1"/></pattern></defs>${g}</svg><span>${t}</span></div>`).join("");
+
+/* —— controls —— */
+const fb=document.getElementById("fixbar");
+ORDER.forEach(k=>{
+  const b=document.createElement("button");
+  b.textContent = k==="BASE" ? "baseline" : k;
+  b.setAttribute("aria-pressed", k===cur);
+  b.onclick=()=>{cur=k;sel=null;
+    [...fb.querySelectorAll("button")].forEach(o=>o.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");render();};
+  fb.appendChild(b);
+});
+const ab=document.getElementById("aliasBtn");
+ab.onclick=()=>{aliasOn=!aliasOn;ab.setAttribute("aria-pressed",aliasOn);
+  ab.textContent = aliasOn
+    ? "operational_element → A / B / C / D / E  (swap test: behaviour unchanged)"
+    : "operational_element → Fire / Water / Earth / Air / Aether";
+  if(aliasOn){Object.keys(ALIAS).forEach(k=>ALIAS[k]=SWAP[k]);}
+  else{ALIAS.transformation="Fire";ALIAS.conveyance="Water";ALIAS.consolidation="Earth";
+       ALIAS.discrimination="Air";ALIAS.composition="Aether";}
+  render();};
+document.getElementById("themeBtn").onclick=()=>{
+  const r=document.documentElement;
+  const dark=getComputedStyle(r).getPropertyValue("--ground").trim().startsWith("#0B");
+  r.setAttribute("data-theme",dark?"light":"dark");};
+
+render();
+</script>
