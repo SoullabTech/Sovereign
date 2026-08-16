@@ -14,6 +14,7 @@ import {
   createCapsule,
   distillCapsuleFromText,
 } from '@/lib/capsules';
+import { createMemberMemoryAtomFromKeep } from '@/lib/psyche/keepFromSource';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,6 +59,18 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(`[API] Created capsule ${capsule.id} for member ${memberId.slice(0, 8)}`);
+
+    // Bridge capsule → semantic atom substrate. Fire-and-forget: the capsule
+    // response is the member-facing result; atom-write failure is logged via
+    // the [atoms-adapter] marker but does not block. Every capsule creation
+    // is a member Keep gesture; the atom is its continuity anchor.
+    // (Audit: docs/architecture/KEEP_CAPTURE_TO_ATOMS_AUDIT_2026-05-26.md)
+    void createMemberMemoryAtomFromKeep({
+      memberId,
+      sourceType: 'reflection',
+      sourceId: capsule.id,
+      title: capsule.title,
+    });
 
     return NextResponse.json({ capsule }, { status: 201 });
   } catch (error) {
