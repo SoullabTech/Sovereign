@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 /**
  * POST /api/elemental-alchemy/practices/complete
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      userId,
+      userId: suppliedUserId,
       practiceId,
       element,
       durationSeconds,
@@ -23,9 +24,24 @@ export async function POST(req: NextRequest) {
       journeyContext,
     } = body;
 
-    if (!userId || !practiceId) {
+    // ACTOR from the verified session only. Before 2026-08-16 this handler took
+    // its actor from body.userId — actor and subject were the same client-supplied
+    // field, so a caller needed nothing but a member id to write a completion
+    // attributed to anyone. Decided BEFORE any member-data access.
+    const userId = await getMemberIdFromRequest(req);
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { success: false, error: 'userId and practiceId are required' },
+        { success: false, error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
+      );
+    }
+
+    if (!practiceId) {
+      return NextResponse.json(
+        { success: false, error: 'practiceId is required' },
         { status: 400 }
       );
     }
@@ -92,12 +108,18 @@ export async function GET(req: NextRequest) {
   }
   try {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
+    const suppliedUserId = searchParams.get('userId');
 
+    // ACTOR from the verified session. `?userId=` is a redundant echo of the
+    // caller and never establishes identity.
+    const userId = await getMemberIdFromRequest(req);
     if (!userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { success: false, error: 'userId is required' },
-        { status: 400 }
+        { success: false, error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 

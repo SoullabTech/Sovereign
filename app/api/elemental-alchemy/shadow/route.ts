@@ -23,6 +23,7 @@ import {
   getShadowPatternHistory,
 } from '@/lib/features/ShadowIntegrationTracker';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Skip during static export (Capacitor builds)
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      userId,
+      userId: suppliedUserId,
       shadowPatternId,
       facet,
       shadowPattern,
@@ -48,8 +49,21 @@ export async function POST(request: NextRequest) {
       notes,
     } = body;
 
+    // ACTOR from the verified session. body.userId is a redundant echo of the
+    // caller and never establishes identity. Decided before any member-data write.
+    const userId = await getMemberIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
+      );
+    }
+
     // Validate required fields
-    if (!userId || !facet || !shadowPattern || !intensity || !noticeMethod || !awareness) {
+    if (!facet || !shadowPattern || !intensity || !noticeMethod || !awareness) {
       return NextResponse.json(
         {
           error: 'Required fields: userId, facet, shadowPattern, intensity, noticeMethod, awareness',
@@ -160,14 +174,19 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const suppliedUserId = searchParams.get('userId');
     const windowDays = parseInt(searchParams.get('windowDays') || '30');
     const patternId = searchParams.get('patternId');
 
+    // ACTOR from the verified session; `?userId=` is a redundant echo only.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
@@ -304,6 +323,46 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // ACTOR first — an unauthenticated caller learns nothing beyond 401.
+    const actorId = await getMemberIdFromRequest(request);
+    if (!actorId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // ⛔ FAIL CLOSED — no mutation is possible here, by design, for now.
+    //
+    // This handler previously updated ea_shadow_patterns keyed on a caller-supplied
+    // patternId alone, with no owner reference of any kind: possession of an id was
+    // the whole authorization. It cannot be repaired by substituting the actor,
+    // because the target table carries NO owner column in any environment.
+    //
+    // The domain model is not ambiguous — ShadowPattern.userId exists and
+    // ShadowIntegrationTracker already enforces `pattern.userId !== userId` when
+    // recording an instance. A shadow pattern belongs to exactly one member. What
+    // is missing is persistence of that already-defined contract, not the contract.
+    //
+    // Ownership may NOT be inferred from: body.userId · ?userId= · possession of
+    // patternId · the in-process shadowPatternsCache (process-local Maps, explicitly
+    // unimplemented persistence) · a join through ea_shadow_instances (a pattern with
+    // zero instances would then have no provable owner).
+    //
+    // Enablement requires ea_shadow_patterns.user_id UUID NOT NULL REFERENCES
+    // members(id), after which this becomes:
+    //   UPDATE ea_shadow_patterns SET ... WHERE id = $1 AND user_id = $actorId
+    //   RETURNING id   -- 404 on zero rows, never revealing another member's pattern
+    //
+    // Founder ruling 2026-08-16: authenticate, then fail closed. Mutation DISALLOWED.
+    return NextResponse.json(
+      {
+        error: 'Not implemented',
+        message:
+          'Updating a shadow pattern is unavailable pending persistent ownership. ' +
+          'No change was made.',
+      },
+      { status: 501 }
+    );
+
+    // eslint-disable-next-line no-unreachable
     const body = await request.json();
     const { patternId, status, integrationNotes } = body;
 

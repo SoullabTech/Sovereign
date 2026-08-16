@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const revalidate = false;
 import { askTheBook, BookQuery } from '@/lib/features/AskTheBookService';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Skip during static export (Capacitor builds)
 
@@ -30,12 +31,24 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    const { userId, question, context, forceElement } = body;
+    const { userId: suppliedUserId, question, context, forceElement } = body;
+
+    // ACTOR from the verified session; body.userId is a redundant echo only.
+    const userId = await getMemberIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
+      );
+    }
 
     // Validate required fields
-    if (!userId || !question) {
+    if (!question) {
       return NextResponse.json(
-        { error: 'userId and question are required' },
+        { error: 'question is required' },
         { status: 400 }
       );
     }
@@ -152,13 +165,18 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const suppliedUserId = searchParams.get('userId');
     const limit = parseInt(searchParams.get('limit') || '10');
 
+    // ACTOR from the verified session; `?userId=` is a redundant echo only.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
@@ -221,6 +239,12 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { queryId, wasHelpful, timeSpent } = body;
 
+    // ACTOR first — an unauthenticated caller learns only 401.
+    const actorId = await getMemberIdFromRequest(request);
+    if (!actorId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     if (!queryId) {
       return NextResponse.json(
         { error: 'queryId is required' },
@@ -228,17 +252,30 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Update query feedback
-    await query(
+    // ACTOR -> RESOURCE. Previously this updated on queryId alone: possession of
+    // an id was the whole authorization. Unlike shadow PATCH, an ownership
+    // predicate IS expressible here — ea_book_queries.user_id is written by this
+    // route's own POST — so the row is constrained to the actor rather than the
+    // endpoint being closed.
+    //
+    // 404 on zero rows, deliberately: a distinct 403 would confirm that another
+    // member's queryId exists.
+    const updated = await query(
       `
       UPDATE ea_book_queries
       SET
         was_helpful = $2,
         time_spent_seconds = $3
       WHERE id = $1
+        AND user_id = $4
+      RETURNING id
       `,
-      [queryId, wasHelpful, timeSpent]
+      [queryId, wasHelpful, timeSpent, actorId]
     );
+
+    if (updated.rows.length === 0) {
+      return NextResponse.json({ error: 'Query not found' }, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,
