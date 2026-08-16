@@ -257,11 +257,21 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   // This supersedes the placement half of the three-way practitioner-door
   // conflict (founder direction 2026-07-13 "mount at the bottom of /now-what,
   // no separate /studio address" · built reality /studio · sketch
-  // /practitioner/login). The SERVER-GATE half is NOT ruled here: 'founder' is
-  // the closest gate this registry can express (HouseAudience is 'all' |
-  // 'founder') and matches the Circles / Vision Studio precedent. Whether a
-  // non-practitioner should receive this door at all — absent server-side
-  // rather than filtered — remains open. Do not read this entry as settling it.
+  // /practitioner/login). The SERVER-GATE half is NOT ruled here, and the
+  // audience widening below does not rule it either.
+  //
+  // AUDIENCE (founder direction 2026-08-16, superseding the 'founder' gate):
+  // the door opens for every member during beta — "make sure it is on all
+  // member the House fields". What this does and does not do:
+  //   - It changes DISCOVERABILITY only. /studio was already reachable by URL
+  //     to any authenticated member; the House now names it.
+  //   - It grants NO new capability. app/studio/layout.tsx calls
+  //     /api/studio/whoami and, for a non-practitioner, replaces the route with
+  //     /studio/create — the practice-creation threshold. No caseload, client,
+  //     or session data renders for a member who is not a practitioner.
+  //   - It leaves the server-gate question exactly as open as it was. A member
+  //     who walks through meets the create flow, not a refusal; whether that is
+  //     the right meeting is still unruled.
   {
     id: 'pro-studio',
     label: 'Pro Studio',
@@ -269,7 +279,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     tooltip: 'Your practice workspace',
     kind: 'route',
     route: '/studio',
-    audience: 'founder',
+    audience: 'all', // beta: every member sees the door (was 'founder' until 2026-08-16)
     nativePolicy: 'web', // /studio is not in the native bundle; bridge on native
     returnBehavior: 'web-bridge',
     group: 'rooms',
