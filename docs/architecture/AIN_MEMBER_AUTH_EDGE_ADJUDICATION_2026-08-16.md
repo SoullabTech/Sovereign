@@ -156,4 +156,85 @@ and would convert a visible defect into a hidden one.
 question**. Flipping it to `strict` is not a repair for §3 and could deny live traffic across 920
 routes; it needs its own unit with its own evidence.
 
+---
+
+## §7 Unit 2 — runtime witness (2026-08-16)
+
+```text
+PRE-REPAIR BYPASS    WITNESSED — isolated synthetic environment
+POST-REPAIR DENIAL   WITNESSED — same environment, same fixture, same requests
+PRODUCTION EXPLOIT   NOT CLAIMED — production was never probed
+INVALID WITNESS      0 results in either run
+```
+
+### 7.1 Isolation, proven rather than asserted
+
+```text
+host              localhost   (inet_server_addr ::1/128)
+database          maia_consciousness_test
+schema            FULL local schema — 702/702 tables, 0 restore errors
+rows before seed  0 across all 702 tables, measured per-table
+identities        synthetic A + B only; no real member record was copied
+```
+
+Full-schema restore was used deliberately: a selective `pg_dump -t` does not carry dependency
+objects, and a fixture missing a type or sequence produces a `500` that reads like a denial.
+
+The harness **fail-closed**, proven by four refusals that each exited 3 for the stated reason — no
+`DATABASE_URL`, the real dev database, a `minisforum` host, and a LAN-IP host — and it re-verified
+`current_database()` and `inet_server_addr()` *after* connecting rather than trusting the DSN.
+
+⚠️ **A live hazard was found and avoided:** `lib/db/postgres.ts:19` falls back to
+`postgresql://soullab@localhost:5432/maia_consciousness` when `DATABASE_URL` is unset, and the repo's
+`dev` script is `env -u DATABASE_URL next dev` — it *strips* the variable. Running the probe through
+`npm run dev` would have silently exercised the real local database. `next dev` was invoked directly
+with an explicit DSN instead.
+
+### 7.2 Referent binding
+
+Each server was tied to its source by content, not by directory name: separate worktrees, separate
+`.next` output, unique ports, clean trees, and a per-tree assertion of which actor source the route
+files actually contain.
+
+```text
+PRE-REPAIR   02a79e907   field actor-from-param 1 · beads actor-from-header 2
+REPAIRED     66d5d60c2   field actor-from-session 1 · beads actor-from-session 2
+```
+
+The synthetic marker `BRAVO SYNTHETIC` exists in no other database, so its presence in a response is
+itself proof of which database the running server was bound to.
+
+### 7.3 The matrix — same fixture, same requests, same database
+
+| Case | pre-repair `02a79e907` | repaired `66d5d60c2` |
+|---|---|---|
+| FIELD  no credential + subject B | **200 + B's data** | **401** |
+| FIELD  spoofed `x-member-id: B` only | **200 + B's data** | **401** |
+| FIELD  session A + subject B | **200 + B's data** | **403** *"You may only act on your own data."* |
+| FIELD  session A + subject A | 200 + A's data | 200 + A's data |
+| FIELD  session A + no subject | 400 `memberId required` | 200 + A's data |
+| BEADS  GET `x-member-id: B`, no session | **200 + B's balance and sent beads** | **401** |
+| BEADS  POST `x-member-id: B`, no session | **200 — B's account MUTATED** | **401 — db unchanged** |
+| BEADS  POST session A (authorized A→A) | 401 (route had no session concept) | 200 — **only A mutated** |
+
+**The mutation, by value.** Pre-repair, a caller holding no session at all decremented **B's**
+`beads_remaining` 5 → 4 and inserted a `gift_passkeys` row attributed to **B** (1 → 2). A was
+untouched. Email delivery failed only because `RESEND_API_KEY` was unset — in an environment with
+that key, the same request would also have sent mail carrying B's name.
+
+Post-repair, against a fixture reset to identical measured values, the same unauthenticated request
+returned 401 and **B's account was untouched** (beads 5, gifts 1), while the authorized A→A request
+mutated **only A** (beads 5 → 4, gifts 1 → 2).
+
+### 7.4 What this establishes, and what it does not
+
+**Establishes** — the defect was real and reachable over HTTP, not merely inferable from source; the
+repair is causally responsible for the denial, because environment, fixture, database, and requests
+were held identical and only the source referent changed.
+
+⛔ **Does not establish** — that the bypass was ever exploited, that production is or was exploitable,
+or anything about real member data. **No production system was contacted and no real member's data
+was read.** Production remains at `39cc97d87` and does not contain this repair, so the *deployed*
+system still runs the pre-repair code.
+
 ⛔ **Nothing in this document authorizes a code change, a config change, or a deploy.**
