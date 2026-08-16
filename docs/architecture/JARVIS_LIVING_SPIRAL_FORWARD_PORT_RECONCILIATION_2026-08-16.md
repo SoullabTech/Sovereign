@@ -60,11 +60,20 @@ successor artifact, not custody of the evidence awaiting witness.
 
 ### 1 · Three cited referents do not exist on canonical
 
-| cited path | standing on `a059264ea` |
-|---|---|
-| `scripts/builder/orient.mjs` | **MISSING** |
-| `scripts/builder/epistemic-guard.mjs` | **MISSING** |
-| `scripts/governance/escalation-guard.py` | **MISSING** |
+| cited path | at `a059264ea` | at `0863838cb` (current) |
+|---|---|---|
+| `scripts/builder/orient.mjs` | MISSING | **STILL ABSENT** |
+| `scripts/builder/epistemic-guard.mjs` | MISSING | ✅ **NOW PRESENT** — admitted by PR #1054 |
+| `scripts/governance/escalation-guard.py` | MISSING | **STILL ABSENT** |
+
+⚠️ **Canonical moved during this lane** (`a059264ea` → `0863838cb`), and one cited referent became
+real: PR #1054 admitted `scripts/builder/epistemic-guard.mjs` as an authoritative CI gate. The
+contract lists it as ***(CANDIDATE)*** evidence — that candidate is now canonical, which is the
+candidate mechanism working as designed, not a defect.
+
+⛔ **Erratum E1 is unaffected.** `orient.mjs` remains absent at `0863838cb`, so the withdrawn
+inheritance claim stays withdrawn. Verified against current canonical, not assumed from the
+earlier base.
 
 Severity differs by claim type:
 
