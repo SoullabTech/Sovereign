@@ -6301,7 +6301,19 @@ I'm not sure what I'm feeling yet.`;
                       setTimeout(() => attemptMicRestart(attempt + 1), 300);
                     }
                   } else {
-                    console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
+                    // 🔥 FIX (2026-05-22, PR 17): voice session may still be finalizing from
+                    // the previous turn when audio ends — canStartListening returns false
+                    // momentarily. Without retry here, the entire mic-restart logic silently
+                    // bails and the user is stuck tapping the holoflower manually to break
+                    // through. Tara confirmed this UX on Pixel 8a — "had to hit speak a couple
+                    // times before she could listen." Same retry pattern as the canRestart=false
+                    // branch above.
+                    if (attempt < 8) {
+                      console.log(`⏸️ [NON-STREAM] Voice session not ready yet (attempt ${attempt}), retrying in 300ms...`);
+                      setTimeout(() => attemptMicRestart(attempt + 1), 300);
+                    } else {
+                      console.log('⏸️ [NON-STREAM] Voice session unavailable after 8 attempts — giving up');
+                    }
                   }
                 };
 
@@ -6365,15 +6377,25 @@ I'm not sure what I'm feeling yet.`;
       setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
     } finally {
-      // 🔥 CRITICAL FIX: Only reset isResponding for TEXT mode
-      // For VOICE mode, isResponding is managed by StreamingAudioQueue.onComplete
-      // Setting it here would cause teal visualizer to cut out mid-speech!
-      const isVoiceStreaming = !showChatInterface && voiceEnabled;
+      // 🔥 CRITICAL: Only reset isResponding for TEXT mode here.
+      // In VOICE mode, isResponding has already been reset by either:
+      //   - StreamingAudioQueue.onComplete (streaming path), OR
+      //   - The inner finally at line ~5609 (non-streaming path, where maiaSpeak resolved).
+      // Setting it AGAIN here would cause the teal visualizer to cut out mid-speech
+      // on the streaming path.
+      //
+      // 🏷️ RENAME (2026-05-22, PR 17): variable is now `isVoiceMode` not `isVoiceStreaming`.
+      // The check only distinguishes voice-mode-vs-text-mode — it does NOT verify whether
+      // streaming actually happened. On Android, CapacitorHttp intercepts SSE so voice mode
+      // is ALWAYS non-streaming. The old name was misleading: it implied streaming had run,
+      // when really we just need to skip the redundant reset that the inner-finally / audio-
+      // queue already performed.
+      const isVoiceMode = !showChatInterface && voiceEnabled;
 
       console.log('🧹 Message processing complete', {
-        isVoiceStreaming,
+        isVoiceMode,
         isAudioPlaying: isAudioPlayingRef.current,
-        willResetResponding: !isVoiceStreaming
+        willResetResponding: !isVoiceMode
       });
 
       setIsProcessing(false);
@@ -6385,12 +6407,13 @@ I'm not sure what I'm feeling yet.`;
         console.log('🌀 [LENS CONSENT] Cleared pending consent after processing');
       }
 
-      // Only reset isResponding for text mode - voice mode handles this in onComplete
-      if (!isVoiceStreaming) {
+      // Only reset isResponding for text mode — voice mode's inner finally / audio queue
+      // already handled it (see comment above the isVoiceMode declaration).
+      if (!isVoiceMode) {
         setIsResponding(false);
         console.log('🔇 [TEXT MODE] Reset isResponding=false');
       } else {
-        console.log('🔊 [VOICE MODE] Keeping isResponding - audio queue will reset when complete');
+        console.log('🔊 [VOICE MODE] Skipping isResponding reset — inner finally / audio queue owns it');
       }
 
       setCurrentMotionState('idle');
