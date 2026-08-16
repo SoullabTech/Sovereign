@@ -23,6 +23,29 @@ CUSTODY           assigned to the amending lane 2026-08-16 (amendment custody on
 AUTHORSHIP        UNRESOLVED — not established by the custody act or by acceptance
 ```
 
+## Erratum record
+
+**E1 — provenance claim only. Founder-authorized 2026-08-16.**
+
+```text
+PRE-ERRATUM CONTENT       sha256 ebfebb5aa6f496e8ce8023b030c7a3576d598448954620c303ffb6b2f626fbfe
+                          34,755 B · 624 lines — the ACCEPTED semantic content
+OLD CLAIM (verbatim)      "(inherited from `scripts/builder/orient.mjs`, where this rule is
+                          already executable)"
+REASON FOR AMENDMENT      referent absent on canonical a059264ea; the cited file exists only on
+                          the stale source lineage and was never canonical
+SEMANTIC CHANGE           NONE — the no-inference rule is unchanged and remains accepted
+PROVENANCE CLAIM CHANGE   YES — canonical executable inheritance is withdrawn
+POST-ERRATUM HASH         recorded in JARVIS_LIVING_SPIRAL_FORWARD_PORT_RECONCILIATION_2026-08-16.md
+                          (a file cannot contain its own hash)
+```
+
+⚠️ **`ebfebb5a…` is now the historical pre-erratum referent.** ⛔ It must no longer be advertised as
+this file's current byte identity. Where it still appears in frozen evidence — the preserved
+prototype HTML and its nine rendered frames — it is **correct and must not be edited**: those
+artifacts were captured against that content, and re-rendering them would destroy custody of the
+evidence awaiting witness.
+
 ⛔ Custody is **not** authorship. Acceptance is of the **semantics**, not of authorship, and not of
 any implementation. The architecture below is the predecessor's; the six corrections plus the M4
 temporal-axis completion are the only semantic changes.
@@ -463,7 +486,13 @@ assertion's `presence_value` is whatever the evidence established *then*, carrie
 `temporal_status: stale` — it is **not** silently rewritten to `unknown`.
 
 > ⛔⛔ **Neither `presence_value` nor `observation_status` may be filled by inference from another
-> field** (inherited from `scripts/builder/orient.mjs`, where this rule is already executable).
+> field.** This rule is **governed directly by this contract**.
+>
+> ⚠️ **Erratum E1 (2026-08-16).** An earlier revision cited `scripts/builder/orient.mjs` as an
+> existing canonical implementation "where this rule is already executable." That file exists only
+> on the stale source lineage and is **not present on canonical `a059264ea`**. ⛔ **No canonical
+> executable inheritance is claimed for this rule.** The rule itself is unchanged and remains
+> accepted. See §Erratum record.
 >
 > ⛔⛔ **No absence value on either axis implies health, at any layer, under any composition.**
 

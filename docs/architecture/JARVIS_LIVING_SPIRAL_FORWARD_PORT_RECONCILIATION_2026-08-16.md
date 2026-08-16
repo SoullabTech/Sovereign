@@ -75,27 +75,62 @@ Severity differs by claim type:
   **and behaviour** claim, and it is **false on current canonical**. It was true only on the source
   lane, which is not canonical and is not being promoted.
 
-⛔ Not repaired here. Amending an `ACCEPTED` contract's semantic content is a governance act, not a
-reconciliation act. The defect is recorded so it cannot be inherited silently.
+✅ **REPAIRED under founder authorization 2026-08-16** — erratum E1, provenance claim only. See
+§Erratum E1 below. The two *(CANDIDATE)* entries were left alone: a candidate that does not yet
+exist is a coherent proposal, not a false assertion.
 
-⚠️ Wider implication, outside this lane: `scripts/governance/escalation-guard.py` is described in
-the project anchor as the mechanical `PreToolUse` enforcement of the founder-escalation contract.
-It is absent from canonical. **Prose escalation discipline currently has no executable enforcement
-on `a059264ea`.** Reported only; no repair attempted.
+### 1b · Escalation guard — status only, no conclusion drawn
 
-### 2 · `JOP-05A` has no referent on canonical
+```text
+scripts/governance/escalation-guard.py     ABSENT ON CANONICAL
+CLAIM OF MECHANICAL ENFORCEMENT BY PATH    NOT ESTABLISHED
+EQUIVALENT ENFORCEMENT ELSEWHERE           NOT YET DETERMINED
+LIVING SPIRAL ADMISSION DEPENDENCY         NO
+```
 
-A full-tree search of `a059264ea` finds only **`JOP-00`** and **`JOP-01`**. No `JOP-05` or `JOP-05A`
-identifier exists in any tracked file. The jurisdiction rules named under that label cannot be
-bound, applied, or verified until the referent is established.
+⚠️ **Correction to an earlier draft of this record.** A prior revision stated that "prose escalation
+discipline currently has no executable enforcement on `a059264ea`." That overreached: absence of
+that **path** was proved; absence of **enforcement** was not. Whether this is stale documentation,
+renamed or relocated enforcement, equivalent hook enforcement elsewhere, or a genuinely missing
+constitutional guard is **undetermined** and requires a separate read-only trace.
 
-⛔ `JOP-01` was **not** treated as satisfying `JOP-05A`. Names are not identity.
+⛔ Do not recreate `escalation-guard.py` from the stale branch merely because the project anchor
+names it. ⛔ Do not assert the escalation contract *is* mechanically enforced by that file until a
+trace establishes what actually enforces it.
 
-### 3 · Suite counts differ from the figures carried in planning prose
+### 2 · `JOP` jurisdiction standing — corrected
 
-Planning prose referenced "36 JOP-01" and "188 JOP-00". The first matches. The second does not:
-`jop-00-negative-controls.test.mjs` reports **14 tests across 3 suites**, not 188. The counts above
-are the measured current totals; the prose figure should not be used as an acceptance threshold.
+Founder correction, 2026-08-16. An earlier instruction described "now-canonical JOP-01/JOP-05A
+rules"; `JOP-05A` is not canonical. The correct standing is:
+
+```text
+JOP-01     CANONICAL
+JOP-05A    PLANNED / NOT YET BOUND
+JOP-02     Living Spiral forward-port — in admission (this lane)
+```
+
+A full-tree search of `a059264ea` finds only `JOP-00` and `JOP-01`. ⛔ `JOP-01` was **not** treated
+as satisfying `JOP-05A`. Names are not identity.
+
+**No correction was needed in the recovered corpus.** `JOP-05A` appears in **none** of the 14
+forward-ported files — the only occurrences are in this reconciliation record. A jurisdiction ruling
+may legitimately state requirements a future `JOP-05A` must satisfy; it may not speak as though
+`JOP-05A` already exists. Nothing in the recovered files does so.
+
+### 3 · Suite accounting — corrected
+
+The figure "188" was used loosely as "JOP-00". It was an **aggregate assertion/regression count
+across several Desktop suites**, not the measured size of JOP-00. It is not an architectural fact
+and must not be used as an acceptance threshold. Measured on this reconstruction:
+
+```text
+jop-00-negative-controls     14 tests   14 pass   0 fail
+jop-01-legibility            36 tests   36 pass   0 fail
+c1-evidence-containment       1 test     1 pass   0 fail
+wire-local-native            15 tests   15 pass   0 fail
+                             ─────────────────────────────
+TOTAL                        66 tests   66 pass   0 fail
+```
 
 ### 4 · The contract forbids what a deployment plan would assume
 
@@ -110,6 +145,48 @@ RUN/ASSERTION SUBSTRATE  NOT CREATED OR AUTHORIZED HERE
 
 The next gate is **founder pixel witness of the synthetic prototype**, not implementation. Any plan
 that proceeds from acceptance directly to building the surface skips that gate.
+
+## Erratum E1 — exactly which bytes changed, and why
+
+Founder-authorized 2026-08-16: **factual/provenance corrections only, no semantic reopening.**
+
+```text
+OLD ACCEPTED CONTRACT HASH   ebfebb5aa6f496e8ce8023b030c7a3576d598448954620c303ffb6b2f626fbfe
+                             34,755 B · 624 lines  → now the HISTORICAL PRE-ERRATUM referent
+OLD CLAIM (verbatim)         "(inherited from `scripts/builder/orient.mjs`, where this rule is
+                             already executable)"
+REASON FOR AMENDMENT         referent absent on canonical a059264ea
+SEMANTIC CHANGE              NONE
+PROVENANCE CLAIM CHANGE      YES — canonical executable inheritance withdrawn
+NEW CONTRACT HASH            7193d1236cc231191d57f07347ac87bce167fae00c81f13e39b217fe82f5d46c
+                             37,904 B · 677 lines
+```
+
+⛔ `ebfebb5a…` must no longer be advertised as the contract's current byte identity.
+
+**Two files amended. Twelve unchanged.**
+
+| path | standing |
+|---|---|
+| `JARVIS_LIVING_SPIRAL_SEMANTIC_CONTRACT_2026-08-16.md` | **AMENDED** — E1 erratum + rule sentence |
+| `evidence/living-spiral-prototype/WITNESS_MANIFEST.md` | **AMENDED** — pre/post-erratum standing |
+| 9 frames · `living-spiral-prototype.html` · `capture-witness.js` · founder ruling | **byte-identical to source** |
+
+⚠️ **The prototype HTML still cites `ebfebb5a…` and was deliberately left untouched.** It is frozen
+evidence: the nine frames were rendered against that text, and its own identity `2acf9367…` is
+declared in the manifest. Editing it would break that identity, invalidate all nine frames, and
+destroy custody of the corpus awaiting founder witness. The citation is **correct for that
+artifact** — it records what the prototype was rendered against, not what the contract now says.
+
+### Re-proof after the amendment
+
+```text
+WITNESS MANIFEST         11/11 verify · 0 fail · 0 absent  (manifest declares no self-hash,
+                         so amending it cannot disturb its own result)
+SABOTAGE CONTROL         mutated prototype html → f0b048e77375 ≠ 2acf93678627 — check can go red
+UNAMENDED PATHS          12/12 byte-identical to source at 90fb1c98a
+JARVIS DESKTOP SUITES    66/66 pass, 0 fail — unchanged by the amendment
+```
 
 ## Explicitly not done
 

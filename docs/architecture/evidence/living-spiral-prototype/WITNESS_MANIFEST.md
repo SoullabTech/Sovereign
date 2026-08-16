@@ -6,7 +6,12 @@
 
 ```text
 status:                 SYNTHETIC PROTOTYPE — PRESERVED EVIDENCE
-semantic contract:      ACCEPTED  (sha256 ebfebb5a… · 624 lines · commit 21db7685c)
+semantic contract:      ACCEPTED  (semantics unchanged)
+  as captured here:     sha256 ebfebb5a… · 624 lines · commit 21db7685c  [PRE-ERRATUM]
+  current file:         amended by erratum E1 (2026-08-16) — provenance claim only, no
+                        semantic change. Current hash in the forward-port reconciliation
+                        record. ⛔ Frames were rendered against the PRE-ERRATUM text and are
+                        NOT re-rendered; that citation is correct for this evidence.
 prototype acceptance:   HELD — founder pixel witness pending
 implementation authority: NONE
 ```
