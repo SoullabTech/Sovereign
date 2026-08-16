@@ -485,15 +485,276 @@ function renderSystem() {
   `;
 }
 
+// ── JOP-02 Living Spiral ─────────────────────────────────────────────────────
+// A PROJECTION of the same governed derivation Home renders. It reads
+// `lastStatus` through legibility -> spiral and nothing else: no IPC of its own,
+// no endpoint, no store, no verifier. If the projection could not establish
+// something, this draws the aperture rather than filling it in.
+//
+// Rings are named by STANDING CLASS, deliberately. A ring must never be
+// readable as "further out = more canonical" — custody position is not in this
+// evidence chain at all, and is shown as written text, never as geometry.
+const SP_RINGS = [
+  { key: 'OBSERVED OPERATIONAL', match: s => s === 'READY' || s === 'WORKING' },
+  { key: 'NOT AUTHORIZED',       match: s => s === 'NEEDS_AUTHORITY' },
+  { key: 'IMPEDED',              match: s => s === 'NEEDS_SETUP' || s === 'DEGRADED' || s === 'BLOCKED' || s === 'FAILED' },
+  { key: 'NOT OBSERVED',         match: s => s === 'UNVERIFIED' },
+];
+// Canonical operational_element values (semantic contract §2, ACCEPTED).
+const SP_PHEN = ['transformation', 'conveyance', 'consolidation', 'discrimination', 'composition'];
+
+function spRingIndex(standing) {
+  const i = SP_RINGS.findIndex(r => r.match(standing));
+  return i === -1 ? SP_RINGS.length - 1 : i;   // unrecognised sits at NOT OBSERVED
+}
+
+function renderSpiral() {
+  const st = lastStatus;
+  if (!st) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
+  const sp = JarvisSpiral.projectSpiral(JarvisLegibility.deriveOperatorView(st));
+
+  const C = 250, R0 = 76, STEP = 44;
+  const rOf = i => R0 + i * STEP;
+  const byId = {};
+  const placed = sp.nodes.map((n, idx) => {
+    const ring = spRingIndex(n.standing);
+    const sector = Math.max(0, SP_PHEN.indexOf(n.phenomenon));
+    const peers = sp.nodes.filter(m => m.phenomenon === n.phenomenon && spRingIndex(m.standing) === ring);
+    const within = peers.indexOf(n);
+    // Arc-length spread: a fixed angle collapses to nothing at small radii, which
+    // is what overprinted the labels on the all-READY plate. ~74px of arc per
+    // peer, capped so a crowded sector cannot bleed into its neighbour.
+    const rr = rOf(ring);
+    const perPeer = Math.min(30, (74 / (2 * Math.PI * rr)) * 360);
+    const spread = peers.length > 1 ? (within - (peers.length - 1) / 2) * perPeer : 0;
+    const ang = (sector * 72 - 90 + spread) * Math.PI / 180;
+    // Labels sit RADIALLY OUTWARD of their mark and anchor by angle. Centred
+    // labels collided across adjacent sectors: 72 degrees at the inner radius is
+    // ~78px of arc against ~120px of text. Radial placement makes neighbouring
+    // sectors diverge instead of converge.
+    const cos = Math.cos(ang), sin = Math.sin(ang);
+    const anchor = cos > 0.35 ? 'start' : (cos < -0.35 ? 'end' : 'middle');
+    const pad = anchor === 'middle' ? 0 : 11;
+    const pt = { ...n, x: C + cos * rr, y: C + sin * rr, ring, idx,
+                 lx: C + cos * (rr + 4) + (anchor === 'start' ? pad : anchor === 'end' ? -pad : 0),
+                 // Radial anchoring separates ADJACENT SECTORS. Peers inside one
+                 // sector at the top/bottom both anchor 'middle' and land on the
+                 // same baseline, so they still need a vertical stagger.
+                 ly: C + sin * (rr + 4) + (anchor === 'middle'
+                       ? (sin < 0 ? -12 - (within % 2) * 14 : 17 + (within % 2) * 14)
+                       : 4 + (within % 2) * 13),
+                 anchor };
+    byId[n.id] = pt;
+    return pt;
+  });
+
+  // Colour carries ONE meaning each. Aperture is a dashed void, never a fill:
+  // "we did not look" must not occupy the same visual channel as "it is bad".
+  const dotFor = (n) => {
+    if (n.disturbance && n.disturbance.kind === 'UNOBSERVED') return { cls: 'sp-aperture', r: 6 };
+    if (n.disturbance && n.disturbance.needs_attention) return { cls: 'sp-dot sp-attention', r: 6.5 };
+    return { cls: 'sp-dot sp-observed', r: 6 };
+  };
+
+  const rings = SP_RINGS.map((r, i) => `
+    <circle class="sp-ring" cx="${C}" cy="${C}" r="${rOf(i)}"></circle>
+    <text class="sp-ring-lab" x="${C}" y="${C - rOf(i) + 10}" text-anchor="middle">${r.key}</text>`).join('');
+  const spokes = SP_PHEN.map((ph, i) => {
+    const a = (i * 72 - 90 + 36) * Math.PI / 180;
+    const la = (i * 72 - 90) * Math.PI / 180, lr = rOf(SP_RINGS.length - 1) + 22;
+    return `<line class="sp-spoke" x1="${C}" y1="${C}" x2="${C + Math.cos(a) * rOf(SP_RINGS.length - 1)}" y2="${C + Math.sin(a) * rOf(SP_RINGS.length - 1)}"></line>
+      <text class="sp-phen" x="${C + Math.cos(la) * lr}" y="${C + Math.sin(la) * lr}" text-anchor="middle">${ph}</text>`;
+  }).join('');
+  const edges = sp.edges.map(e => {
+    const a = byId[e.from], b = byId[e.to];
+    if (!a || !b) return '';
+    return `<line class="sp-edge" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><title>${e.kind} — ${e.evidence}</title></line>`;
+  }).join('');
+  const nodes = placed.map(n => {
+    const d = dotFor(n);
+    return `<g class="sp-node" data-id="${n.id}" tabindex="0">
+      <circle class="${d.cls}" cx="${n.x}" cy="${n.y}" r="${d.r}"></circle>
+      <text x="${n.lx}" y="${n.ly}" text-anchor="${n.anchor}">${n.label.length > 24 ? n.label.slice(0, 22) + '…' : n.label}</text>
+      <title>${n.id} — ${n.standing}${n.reason ? '\n' + n.reason : ''}\nmotion: ${n.motion.state} (${n.motion.reason})</title>
+    </g>`;
+  }).join('');
+
+  $main.innerHTML = `
+    <div class="spiral-wrap">
+      <div>
+        <div class="spiral-plate">
+          <svg viewBox="-40 0 580 510" role="img" aria-label="Operational field. ${sp.nodes.length} nodes; ${sp.edges.length} evidenced edges.">
+            ${rings}${spokes}${edges}${nodes}
+          </svg>
+        </div>
+        <p class="sp-axis-note">
+          <b>Ring = state</b>, each one labelled with what it asserts. Not
+          progress, not importance, not health — an outer ring is not "further
+          along". <b>Direction = activity</b>, a grouping name only; rename all
+          five and nothing else moves.
+        </p>
+        <p class="sp-axis-note">
+          <b>Pipeline position (local &rarr; canonical): no source yet.</b>
+          Written here rather than drawn — geometry would look like an answer.
+        </p>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Needs attention ${sp.attention.length ? `(${sp.attention.length})` : ''}</h3>
+          ${sp.attention.length
+            ? sp.attention.map(a => `<div class="row"><div><div class="label">${a.id}</div><div class="why">${a.reason || ''}</div></div></div>`).join('')
+            : '<div class="hint">Nothing needs you. Not a claim everything is fine — only that nothing checked is blocked.</div>'}
+        </div>
+        <div class="card">
+          <h3>Not knowable yet</h3>
+          <div class="hint" style="margin:0 0 8px">Listed even when nothing is wrong. A screen that goes quiet here is hiding what it does not know.</div>
+          ${sp.apertures.map(a => {
+            // The projection keeps precise wording because it is the evidence
+            // record. The screen says the same thing in ordinary English, and
+            // keeps the exact wording underneath rather than replacing it.
+            const plain = {
+              'motion': { t: 'Whether things are getting better or worse',
+                          w: 'JARVIS does not keep a history yet, so it cannot compare this moment to any earlier one.' },
+              'custody layer (radial axis)': { t: 'How far along something is (local &rarr; canonical)',
+                          w: 'JARVIS can see how each thing is doing, but not where it sits in the pipeline. So that is written in words, never drawn as distance.' },
+              'active work': { t: 'What work is running right now',
+                          w: 'The part that tracks running work could not be read, so nothing here means "no work" — only "not seen".' },
+            }[a.subject] || { t: a.subject, w: a.limit };
+            return `<div class="sp-aperture-card">
+              <div class="s">${plain.t}</div>
+              <div class="l">${plain.w}</div>
+              <div class="c">${a.consequence}</div></div>`;
+          }).join('')}
+        </div>
+        <div class="card">
+          <h3>Evidenced links</h3>
+          ${sp.edges.length
+            ? sp.edges.map(e => `<div class="row sp-edge-row" data-from="${e.from}" data-to="${e.to}" style="cursor:pointer"><div><div class="label">${e.from} → ${e.to}</div><div class="why">${e.kind}</div><div class="src">${e.evidence}</div></div></div>`).join('')
+            : '<div class="hint">No links drawn. Two things both working is not evidence they are connected.</div>'}
+        </div>
+        <div id="sp-inspector"></div>
+        <div class="card">
+          <h3>Marks</h3>
+          <div class="sp-legend">
+            <b>solid</b> — checked, working. Not a claim the system is healthy.<br>
+            <b>amber</b> — something observable is in the way.<br>
+            <b>hollow dashed</b> — not checked. Not missing, not broken: unlooked-at.<br>
+            <b>dashed line</b> — a link with evidence behind it. Click for the exact words.<br>
+            <b>no movement shown</b> — no history kept, so trend is not answerable.<br>
+            <b>click anything</b> — what it is, how JARVIS knows, how current, whether it needs you.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hint">Read at ${sp.observed_at || 'unknown'} · same information as Home, drawn differently</div>`;
+
+  document.querySelectorAll('.sp-node').forEach(g => {
+    const open = () => spInspect(sp, g.dataset.id);
+    g.addEventListener('click', open);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+  document.querySelectorAll('.sp-edge-row').forEach(r => {
+    r.addEventListener('click', () => spInspectEdge(sp, r.dataset.from, r.dataset.to));
+  });
+}
+
+// The inspector answers in ORDINARY LANGUAGE first, with the evidentiary chain
+// immediately beneath it. Readability must not hide provenance, and provenance
+// must not make the surface unusable without developer vocabulary.
+function spField(k, v, cls) {
+  if (v === null || v === undefined || v === '') return '';
+  return `<div class="row"><div><div class="label">${k}</div><div class="${cls || 'why'}">${v}</div></div></div>`;
+}
+
+function spPlainState(v) {
+  // Machine tokens get an ordinary-English gloss. The token stays visible so
+  // provenance is not hidden, but it is never the only thing on the row.
+  const gloss = {
+    READY: 'working', WORKING: 'working right now',
+    UNVERIFIED: 'not checked', NEEDS_SETUP: 'needs setting up',
+    NEEDS_AUTHORITY: 'not allowed, on purpose', DEGRADED: 'partly working',
+    BLOCKED: 'stopped by a rule', FAILED: 'tried and failed',
+    UNOBSERVED: 'not measured', PERMITTED: 'allowed', IMPEDED: 'something is in the way',
+    BY_DESIGN: 'deliberately switched off', ESTABLISHED: 'firmly evidenced',
+  }[v];
+  return gloss ? `${gloss} <span class="src" style="display:inline">(${v})</span>` : v;
+}
+
+function spInspect(sp, id) {
+  const i = JarvisSpiral.inspectNode(sp, id);
+  const host = document.getElementById('sp-inspector');
+  if (!i || !host) return;
+  const T = i.temporal;
+  host.innerHTML = `
+    <div class="card">
+      <p class="headline" style="font-size:17px;margin-top:0">${i.plain.says}</p>
+      <p class="sentence">${i.plain.caveat}</p>
+
+      <h3 style="margin-top:18px">What it is</h3>
+      ${spField('Does', i.assertion.describes)}
+      ${spField('Activity', `${(i.phenomenon.means || i.phenomenon.value)} <span class="src" style="display:inline">${i.phenomenon.value}</span>`)}
+
+      <h3 style="margin-top:18px">State</h3>
+      ${spField('Now', spPlainState(i.assertion.standing))}
+      ${spField('Because', i.assertion.reason)}
+
+      <h3 style="margin-top:18px">How JARVIS knows</h3>
+      ${spField('Read from', i.evidence.source, 'src')}
+      ${spField('Read nothing', i.evidence.absent)}
+      ${spField('', 'Re-displayed from what the build system reported. This screen checks nothing itself.', 'src')}
+
+      <h3 style="margin-top:18px">How current</h3>
+      ${spField('Screen refreshed', T.snapshot_observed_at, 'src')}
+      ${spField('This item last checked', spPlainState(T.node_freshness))}
+      ${spField('', 'The refresh time is the screen&rsquo;s, not this item&rsquo;s.', 'src')}
+      ${spField('Trend', spPlainState(T.motion))}
+      ${spField('', 'No history kept yet &mdash; better or worse is not answerable.', 'src')}
+
+      <h3 style="margin-top:18px">Authority</h3>
+      ${spField('Disposition', spPlainState(i.authority.disposition))}
+      ${spField('Because', i.authority.governing_reason)}
+      ${i.authority.remediation
+        ? `<div class="row"><div><div class="label">Fix</div><div class="fix">&rarr; ${i.authority.remediation}</div></div></div>`
+        : (i.authority.disposition === 'BY_DESIGN'
+            ? spField('Fix', 'None exists. Off on purpose &mdash; no action of yours turns it on.')
+            : '')}
+      ${spField('Needs you', (i.authority.attention && i.authority.attention.needs_attention)
+          ? 'Yes &mdash; something observable is in the way.' : 'No.')}
+
+      <h3 style="margin-top:18px">Pipeline position</h3>
+      ${spField('local &rarr; canonical', spPlainState(i.custody.state))}
+      ${spField('', `${i.custody.reason}. Written, never drawn &mdash; distance from centre means something else.`, 'src')}
+    </div>`;
+  host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function spInspectEdge(sp, from, to) {
+  const i = JarvisSpiral.inspectEdge(sp, from, to);
+  const host = document.getElementById('sp-inspector');
+  if (!host) return;
+  if (!i) { host.innerHTML = '<div class="card"><div class="hint">No evidence for this link, so there is nothing to show. JARVIS does not draw a line it cannot justify.</div></div>'; return; }
+  host.innerHTML = `
+    <div class="card">
+      <p class="headline" style="font-size:17px;margin-top:0">${i.plain.says}</p>
+      <p class="sentence">${i.plain.caveat}</p>
+      ${spField('Link', `${i.relation === 'BLOCKS_OBSERVATION' ? 'one is stopping the other being checked' : i.relation} <span class="src" style="display:inline">${i.relation}</span>`)}
+      ${spField('Justified by', i.licence, 'src')}
+      ${spField('Between', i.source_assertions.map(a => `${a.id} <span class="src" style="display:inline">${a.standing}</span>`).join(' &nbsp;&middot;&nbsp; '))}
+      ${spField('Strength', spPlainState(i.causal_standing))}
+    </div>`;
+  host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
 function render() {
   if (currentView === 'home') renderHome();
   else if (currentView === 'work') renderWork();
   else if (currentView === 'system') renderSystem();
+  else if (currentView === 'spiral') renderSpiral();
 }
 
 (async function init() {
   render();
   await Promise.all([refreshStatus(), loadCapabilities()]);
   render();
-  setInterval(async () => { await refreshStatus(); if (currentView === 'home' || currentView === 'system') render(); }, 15000);
+  setInterval(async () => { await refreshStatus(); if (currentView !== 'work') render(); }, 15000);
 })();
