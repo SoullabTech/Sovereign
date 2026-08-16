@@ -271,7 +271,7 @@ not referenced by it.
 | M1 | `first_observation` | first assertion about a `(subject, predicate)` | **no** — establishes that we have begun to see, not that anything began |
 | M2 | `transition` | object changed between two evidenced assertions | yes |
 | M3 | `restatement` | re-witnessed, object identical | **no** — refreshes temporal standing only |
-| M4 | `decay` | no restatement within the freshness threshold | **yes** — epistemic-axis motion |
+| M4 | `decay` | no restatement within the freshness threshold | **yes** — temporal-axis motion |
 | M5 | `divergence` | a new assertion contradicts a live one | yes |
 | M6 | `resolution` | a disturbance's stated `resolution_condition` is met | yes |
 | M7 | `withdrawal` | evidence became inadmissible or was removed | **yes** — status → `unknown` |
