@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, Settings2, ChevronDown, ChevronUp, Info, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiFetch } from '@/lib/http/apiBase';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { MiniHoloflower } from '@/components/holoflower/MiniHoloflower';
@@ -172,6 +172,15 @@ export default function AstrologyPage() {
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasBirthData, setHasBirthData] = useState(false);
+  // Distinct from !hasBirthData: the server could not name the authenticated
+  // member, so we do not know whether birth data exists. Unavailable ≠ absent.
+  //   'signed-out'  — 401/403. Deterministic. The remedy is to sign in, and
+  //                   saying "just now" here would make a permanent state look
+  //                   transient and invite futile reloads.
+  //   'unreachable' — 5xx / transport. Genuinely transient; retry is the remedy.
+  // Both refuse the cache; they differ only in what they truthfully tell the
+  // person to do about it.
+  const [unresolvedReason, setUnresolvedReason] = useState<'signed-out' | 'unreachable' | null>(null);
   const [elementalBalance, setElementalBalance] = useState({
     fire: 0.28,
     water: 0.38,
@@ -333,19 +342,70 @@ export default function AstrologyPage() {
   useEffect(() => {
     const loadChartData = async () => {
       try {
-        // Get member ID from localStorage
-        const storedUser = localStorage.getItem('beta_user');
-        const memberId = storedUser ? JSON.parse(storedUser)?.id : null;
-        console.log('[Astrology] Loading chart data, memberId:', memberId);
-
-        // 1. First try to fetch from profile API (database)
-        if (memberId) {
+        // Client-cached identity plays NO part in resolving member birth data.
+        // It previously did two harmful things here:
+        //   1. it GATED this lookup — yet /api/members/profile resolves the
+        //      member from a verified session credential (maia_session cookie or
+        //      x-session-token, validated against auth_sessions) and ignores any
+        //      client-supplied id. A missing or stale `beta_user` therefore had
+        //      no authority over the ANSWER, only over whether we bothered to
+        //      ASK; gating on it silently presented an authenticated member with
+        //      a chart as "no birth data".
+        //   2. it served as FALLBACK — see the removal note below.
+        //
+        // 1. AUTHORITATIVE: ask the server who the authenticated member is.
+        //    Unconditional. Via apiFetch so x-session-token accompanies the
+        //    request on Safari/Capacitor, where cookie transport is unavailable
+        //    and a plain same-origin fetch would arrive unauthenticated.
+        //    NOTE: a 401 here includes the deliberate hard-fail when a client
+        //    identity CLAIM diverges from the session (getMemberFromRequest
+        //    rejects rather than substituting). That must stay a rejection —
+        //    fallback below must not "helpfully" resolve a different member.
+        // Set when the server REFUSES to name the member (401/403) — either no
+        // session at all, or a client identity CLAIM that diverged from the
+        // session and was rejected by getMemberIdFromRequest. In that state the
+        // local caches below are NOT safe to read: they carry a member identity
+        // the server has declined to confirm, so trusting them would let this UI
+        // undo the very impersonation guard the server just enforced.
+        // A transport/network failure is deliberately NOT this — see the catch.
+        // TRUE only when the server POSITIVELY named the authenticated member.
+        // Anything else — 401/403 (will not say), 5xx (could not answer),
+        // network error, malformed body — leaves this false.
+        //
+        // Why "could not answer" is treated as strictly as "will not say":
+        // neither local cache can establish its own owner.
+        //   • birthChartData carries NO member id at all, and is cleared in
+        //     exactly one place in the entire app (app/journey/page.tsx) — not
+        //     by clearAuthState, not by /signout. It SURVIVES sign-out and
+        //     account switch.
+        //   • beta_user does carry a server-returned id and IS cleared on
+        //     sign-out and overwritten on sign-in — but this page cannot verify
+        //     that id equals the authenticated member without the very call
+        //     that just failed.
+        // So a stale cache can present one member's birth field under another
+        // member's session with no server rejection involved at all. Server
+        // unavailability must not become a second route to the same defect.
+        let memberEstablished = false;
+        // 401/403 — the server REFUSED to name the member: no session at all, or
+        // a client identity claim that diverged from the session and was rejected
+        // by getMemberIdFromRequest. Both are deterministic, and for both the
+        // honest remedy is to sign in. Left false for 5xx/transport, which are
+        // transient and where retry is the honest remedy.
+        let authRefused = false;
+        {
           try {
             console.log('[Astrology] Fetching from profile API...');
-            const profileRes = await fetch(apiUrl(`/api/members/profile?id=${encodeURIComponent(memberId)}`));
+            const profileRes = await apiFetch('/api/members/profile');
             console.log('[Astrology] Profile API response status:', profileRes.status);
+            if (profileRes.status === 401 || profileRes.status === 403) {
+              authRefused = true;
+            }
             if (profileRes.ok) {
               const profile = await profileRes.json();
+              // The server has now named the authenticated member. Whatever it
+              // says about birthData — present or absent — is AUTHORITATIVE for
+              // this member, and outranks any cache.
+              memberEstablished = true;
               console.log('[Astrology] Profile data:', profile);
               if (profile.birthData?.date) {
                 console.log('[Astrology] Found birth data in profile:', profile.birthData);
@@ -413,88 +473,58 @@ export default function AstrologyPage() {
           }
         }
 
-        // 2. Check beta_user.birthData in localStorage (Settings saves here)
-        if (storedUser) {
-          try {
-            const user = JSON.parse(storedUser);
-            if (user.birthData?.date) {
-              const birthData = user.birthData;
-              const dateStr = typeof birthData.date === 'string'
-                ? birthData.date.split('T')[0]
-                : new Date(birthData.date).toISOString().split('T')[0];
-              const timeStr = birthData.time
-                ? (birthData.time.includes(':') ? birthData.time.substring(0, 5) : birthData.time)
-                : '12:00';
-              const location = birthData.location || {
-                lat: 30.4515, lng: -91.1871, name: 'Default Location', timezone: 'America/Chicago',
-              };
-
-              const chartRes = await fetch('/api/astrology/birth-chart', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: dateStr, time: timeStr, location, houseSystem: 'porphyry' }),
-              });
-
-              if (chartRes.ok) {
-                const chartJson2 = await chartRes.json();
-                const fullChart = { ...chartJson2.data, date: dateStr, time: timeStr, location, houseSystem: 'porphyry' };
-                localStorage.setItem('birthChartData', JSON.stringify(fullChart));
-                setChartData(fullChart);
-                if (chartJson2.alienPatterns) setAlienPatterns(chartJson2.alienPatterns);
-                setHasBirthData(true);
-                calculateElementalBalance(fullChart);
-                setLoading(false);
-                return;
-              }
-            }
-          } catch (parseErr) {
-            console.error('Error parsing beta_user:', parseErr);
-          }
+        // ── THE AUTHORITATIVE LOOKUP IS TERMINAL, BOTH WAYS ──────────────────
+        //
+        // UNAVAILABLE ≠ ABSENT. These are different states and must not collapse
+        // into the same screen.
+        if (!memberEstablished) {
+          // The server did not name the member: no session, a rejected identity
+          // claim, a 5xx, or a transport failure. We do not know whose browser
+          // this is, so we cannot know whose chart the caches hold. Render
+          // "unknown", never someone's cached chart.
+          console.warn('[Astrology] authenticated member not established — refusing unbound local cache');
+          setUnresolvedReason(authRefused ? 'signed-out' : 'unreachable');
+          setHasBirthData(false);
+          setLoading(false);
+          return;
         }
 
-        // 3. Check birthChartData localStorage (legacy/journey flow)
-        const savedChartJson = localStorage.getItem('birthChartData');
-        if (savedChartJson) {
-          const savedChart = JSON.parse(savedChartJson);
+        // The member IS established and we reached here, so the server's answer
+        // for THIS member was "no birth data" (or the chart computation failed).
+        // Either way the server has spoken for this member and outranks a cache
+        // that cannot prove whose it is. This is the legitimate empty state.
+        console.log('[Astrology] member established, no authoritative birth data — legitimate empty state');
+        setHasBirthData(false);
+        setLoading(false);
+        return;
 
-          // If we have calculated chart data (with planets), use it directly
-          if (savedChart.sun && savedChart.moon && savedChart.ascendant) {
-            setChartData(savedChart);
-            setHasBirthData(true);
-            if (savedChart.houseSystem && HOUSE_SYSTEMS.some(h => h.value === savedChart.houseSystem)) {
-              setHouseSystem(savedChart.houseSystem);
-            }
-            calculateElementalBalance(savedChart);
-            setLoading(false);
-            return;
-          }
-
-          // If we only have birth data (not calculated), recalculate
-          if (savedChart.date && savedChart.time && savedChart.location) {
-            const res = await fetch('/api/astrology/birth-chart', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                date: savedChart.date,
-                time: savedChart.time,
-                location: savedChart.location,
-                houseSystem: savedChart.houseSystem || 'porphyry',
-              }),
-            });
-
-            if (res.ok) {
-              const resJson = await res.json();
-              const fullChart = { ...savedChart, ...resJson.data };
-              localStorage.setItem('birthChartData', JSON.stringify(fullChart));
-              setChartData(fullChart);
-              if (resJson.alienPatterns) setAlienPatterns(resJson.alienPatterns);
-              setHasBirthData(true);
-              setLoading(false);
-              return;
-            }
-          }
-        }
-
+        // ── BRANCHES 2 AND 3 REMOVED (2026-08-16) ────────────────────────────
+        // They resolved member birth data from localStorage:
+        //   beta_user.birthData   — carries a server-returned id, cleared on
+        //                           sign-out, overwritten on sign-in, but this
+        //                           page cannot verify that id equals the
+        //                           authenticated member without the very call
+        //                           that would have already answered.
+        //   birthChartData        — carries NO member id at all, and is removed
+        //                           in exactly one place in the whole app
+        //                           (app/journey/page.tsx). It SURVIVES sign-out
+        //                           and account switch.
+        // Neither can establish its own owner, so neither may be read before the
+        // authenticated member is known — and once known, the server's answer is
+        // authoritative and they are redundant. Reading them was a live path for
+        // presenting one member's birth field under another member's session.
+        //
+        // Removed rather than left unreachable: TypeScript drops control-flow
+        // narrowing in unreachable code, so the dead branches failed the
+        // no-regression gate — and dead code that reads unbound identity caches
+        // misleads the next reader about what this page does.
+        //
+        // RESTORING OFFLINE/DEGRADED CHART VIEWING is a product decision that is
+        // AWAITING_AUTHORITY, and does NOT mean reinstating this code. It means
+        // BINDING the cache: write { memberId: <server-verified>, birthData,
+        // validAsOf } at every write site (this page, app/journey/page.tsx,
+        // lib/hooks/useBirthChart.ts) and permit fallback only when the
+        // authenticated member equals that id. Prior shape: git show HEAD~:app/astrology/page.tsx
         // No valid chart data found
         setLoading(false);
         setHasBirthData(false);
@@ -659,17 +689,64 @@ export default function AstrologyPage() {
           <div className="mx-auto mb-6 flex justify-center">
             <MiniHoloflower size={80} isDayMode={false} animated={true} />
           </div>
-          <h2 className="text-2xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint Awaits</h2>
-          <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
-            Enter your birth details to unlock your personalized astrological map
-          </p>
-          <Link
-            href="/journey"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
-          >
-            <Sparkles className="w-5 h-5" />
-            Enter Birth Details
-          </Link>
+          {unresolvedReason ? (
+            <>
+              {/* UNAVAILABLE ≠ ABSENT. We could not establish the authenticated
+                  member, so we do not know whether birth data exists. Saying
+                  "enter your birth details" here would assert an absence we have
+                  NOT established, and would invite someone who already has a
+                  chart to re-enter it — the exact confusion that started this
+                  investigation.
+                  The two reasons are told apart because the honest remedy
+                  differs: signing in vs waiting. Offering "try again" to a
+                  signed-out person makes a permanent state look transient. */}
+              <h2 className="text-2xl font-bold text-dune-amber mb-2">
+                {unresolvedReason === 'signed-out'
+                  ? 'Sign in to see your chart'
+                  : 'We couldn’t reach your chart'}
+              </h2>
+              <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
+                {unresolvedReason === 'signed-out'
+                  ? 'Your chart is tied to your account, so we need to know who you are before we can show it.'
+                  : 'We couldn’t confirm your account just now, so we’re not showing a chart rather than risk showing the wrong one.'}
+              </p>
+              {unresolvedReason === 'signed-out' ? (
+                <Link
+                  href="/signin"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Sign in
+                </Link>
+              ) : (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Try again
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Genuine absence: the server named the member and said they have
+                  no birth data. The /journey destination is deliberately
+                  UNCHANGED — where "Enter Birth Details" should lead is a
+                  separate product ruling, outside this repair unit. */}
+              <h2 className="text-2xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint Awaits</h2>
+              <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
+                Enter your birth details to unlock your personalized astrological map
+              </p>
+              <Link
+                href="/journey"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
+              >
+                <Sparkles className="w-5 h-5" />
+                Enter Birth Details
+              </Link>
+            </>
+          )}
         </div>
       </div>
     );
