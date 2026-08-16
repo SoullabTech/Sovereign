@@ -39,7 +39,7 @@ function provenanceRows(p) {
       ${organRow(JarvisLegibility.describeProvenanceRow('Artifact identity', p.artifact))}
       ${organRow(JarvisLegibility.describeProvenanceRow('Execution substrate', p.substrate))}
       ${p.substrate.conflict ? `<div class="errors"><div>Your saved repository choice (${p.substrate.conflict.overridden_config_root}) is NOT in effect. JARVIS_REPO_ROOT governs by design; clear it with <span class="kv">launchctl unsetenv JARVIS_REPO_ROOT</span> then quit and relaunch.</div></div>` : ''}
-      ${p.self_binding_satisfied ? '' : '<div class="hint">These are two independent facts. This Desktop cannot yet name both cleanly — treat readings accordingly.</div>'}
+      ${p.self_binding_satisfied ? '' : '<div class="hint">Which build this is, and which checkout it is operating on, are two separate facts — and right now they do not both have a confirmed answer. Nothing is wrong; it means you cannot yet say "this build was made from this checkout".</div>'}
     </div>`;
 }
 
@@ -47,13 +47,17 @@ function provenanceRows(p) {
 // A state badge with no reason is not an acceptable founder-facing fact; that
 // is the whole defect this unit exists to remove.
 function organRow(o) {
+  // Order matters: WHAT IT IS, then what's wrong, then what to do. A row must
+  // never bottom out at an internal identifier — that is a legible-looking
+  // screen rather than a legible one.
   return `<div class="row">
     <div>
       <div class="label">${o.name}</div>
+      ${o.describes ? `<div class="why">${o.describes}</div>` : ''}
+      ${o.note ? `<div class="why">${o.note}</div>` : ''}
       ${o.reason ? `<div class="why">${o.reason}</div>` : ''}
       ${o.remediation ? `<div class="fix">→ ${o.remediation}</div>`
         : (o.state !== 'READY' && o.by_design ? '<div class="fix">→ No operator action grants this. It is absent by design.</div>' : '')}
-      ${o.evidence ? `<div class="src">${o.evidence}</div>` : ''}
     </div>
     <span class="state ${o.state}">${o.state.replace('_', ' ')}</span>
   </div>`;

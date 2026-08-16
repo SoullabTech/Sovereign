@@ -245,8 +245,11 @@ describe('FOUNDER-WALK REGRESSIONS — a badge alone is never a founder-facing f
     const r = L.describeProvenanceRow('Artifact identity', { state: 'UNKNOWN', detail: 'JARVIS — dev (unpackaged)' });
     assert.equal(r.state, L.UNVERIFIED);
     assert.ok(r.reason, 'a bare UNKNOWN badge is the defect this unit exists to remove');
-    assert.match(r.reason, /normal when running from source/i, 'must not read as broken');
-    assert.ok(r.remediation);
+    // The reason is the mechanism's own detail, verbatim. The reassurance lives
+    // in the remediation — appending it to the reason produced the
+    // double-written sentence the second walk flagged.
+    assert.equal(r.reason, 'JARVIS — dev (unpackaged)');
+    assert.match(r.remediation, /nothing to fix while developing/i, 'must not read as broken');
     assert.equal(r.by_design, true);
   });
 
@@ -262,6 +265,38 @@ describe('FOUNDER-WALK REGRESSIONS — a badge alone is never a founder-facing f
       const r = L.describeProvenanceRow('x', { state: raw });
       assert.ok(L.NON_OPERATIONAL.includes(r.state));
     }
+  });
+});
+
+describe('SECOND WALK — no row may bottom out at an internal identifier', () => {
+  test('every organ says WHAT IT IS in plain language', () => {
+    for (const o of L.deriveOperatorView(READY_STATE).organs) {
+      assert.ok(o.describes, `${o.name} must describe itself — a READY row otherwise shows only an id`);
+      assert.doesNotMatch(o.describes, /jarvis:status|_[a-z]+\./, `${o.name} description must not be jargon`);
+      assert.ok(o.describes.length > 15, `${o.name} description must be a sentence`);
+    }
+  });
+
+  test('a READY organ is never left with nothing but a badge', () => {
+    for (const o of L.deriveOperatorView(READY_STATE).organs) {
+      if (o.state !== L.READY) continue;
+      assert.ok(o.describes || o.note, `${o.name}: READY rows still need to say what they are`);
+    }
+  });
+
+  test('READY provenance keeps its detail rather than rendering bare', () => {
+    const r = L.describeProvenanceRow('Execution substrate', { state: 'AVAILABLE', detail: 'operating against /repo @ abc123, dirty=false' });
+    assert.equal(r.state, L.READY);
+    assert.ok(r.note, 'a READY substrate row must still show what it is bound to');
+    assert.ok(r.describes);
+  });
+
+  test('the unstamped provenance sentence is not double-written', () => {
+    const r = L.describeProvenanceRow('Artifact identity',
+      { state: 'UNKNOWN', detail: 'Running unpackaged from source — this Desktop has no build identity.' });
+    assert.equal(r.reason, 'Running unpackaged from source — this Desktop has no build identity.');
+    assert.doesNotMatch(r.reason, /identity stamp/, 'must not append a second clause saying the same thing');
+    assert.ok(r.remediation, 'the remedy is still carried, just not glued onto the reason');
   });
 });
 

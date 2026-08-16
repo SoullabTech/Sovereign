@@ -93,11 +93,34 @@ function splitBindingSentinel(repoRoot) {
   return { reason: s.slice(0, i).trim(), remediation: s.slice(i + 1).trim() };
 }
 
+/**
+ * What each organ IS, in a sentence a founder can read.
+ *
+ * Second founder-walk defect (2026-08-16): a READY row showed no reason (correct
+ * — nothing is wrong) and therefore rendered with only its evidence id beneath
+ * it, e.g. `jarvis:status.route_a`. A screen whose only explanation is an
+ * internal identifier has not been made legible; it has been made to look
+ * legible. Names like "Route A" and "Deterministic registry" are ours, not the
+ * founder's, so each one says what it does.
+ */
+const DESCRIPTIONS = Object.freeze({
+  'Builder execution mechanism': 'Runs bounded work units against this checkout, read-only.',
+  'Builder OS': 'Tracks who is working on what, and stops two lanes claiming the same unit.',
+  'Deterministic registry': 'The fixed set of actions JARVIS can take without a language model.',
+  'Local model worker': 'A model running on this machine, used for work that stays local.',
+  'Claude reasoning': 'Claude is available to think through work with you.',
+  'Automatic C3 execution': 'Letting JARVIS run Claude work on its own, unattended.',
+  'Desktop runtime': 'This application itself.',
+  'Artifact identity': 'Which build of JARVIS this window is.',
+  'Execution substrate': 'The checkout this window is actually operating on.',
+});
+
 function organ(name, raw, opts = {}) {
   const state = mapState(raw?.state, opts);
   const detail = typeof raw?.detail === 'string' ? raw.detail : null;
   return {
     name,
+    describes: DESCRIPTIONS[name] || null,
     state,
     reason: state === READY ? null : (detail || opts.reason || null),
     remediation: state === READY ? null : (opts.remediation ?? null),
@@ -142,10 +165,12 @@ function deriveOperatorView(status) {
   const dependent = (name, raw, key) => {
     if (unbound && (!raw || raw.state === 'UNKNOWN')) {
       return {
-        name, state: UNVERIFIED,
+        name,
+        describes: DESCRIPTIONS[name] || null,
+        state: UNVERIFIED,
         reason: 'Not observed — no repository is bound, so this was never probed.',
         remediation: 'Bind a Sovereign checkout, then re-check.',
-        evidence: `jarvis:status.${key} (not reached)`,
+        evidence: `not reached`,
       };
     }
     return organ(name, raw, { evidence: `jarvis:status.${key}` });
@@ -164,18 +189,20 @@ function deriveOperatorView(status) {
   // read as executable.
   const claudeReasoning = {
     name: 'Claude reasoning',
+    describes: DESCRIPTIONS['Claude reasoning'],
     state: mapState(s.claude_lane?.state),
     reason: null,
     remediation: null,
-    evidence: 'jarvis:status.claude_lane',
+    evidence: null,
   };
   const claudeExecution = {
     name: 'Automatic C3 execution',
+    describes: DESCRIPTIONS['Automatic C3 execution'],
     state: NEEDS_AUTHORITY,
     reason: 'Not authorized. The router may select C3; this Desktop does not execute it.',
     remediation: null, // deliberate: no operator act grants this
     by_design: true,
-    evidence: 'jarvis:status.claude_lane.detail',
+    evidence: null,
   };
 
   const runtime = organ('Desktop runtime', s.desktop_runtime, { evidence: 'jarvis:status.desktop_runtime' });
@@ -275,15 +302,19 @@ function describeProvenanceRow(name, row) {
   const unstamped = state === UNVERIFIED;
   return {
     name,
+    describes: DESCRIPTIONS[name] || null,
     state,
+    // The mechanism's own detail already explains this. Appending a second
+    // sentence produced the double-written line the walk flagged, so the detail
+    // is used as-is and only the remediation is added.
     reason: state === READY ? null
-      : (unstamped
-          ? (detail ? `${detail} — this build carries no identity stamp, which is normal when running from source.` : 'No identity stamp — running from source rather than a packaged build.')
-          : detail),
+      : (detail || 'No identity stamp — running from source rather than a packaged build.'),
     remediation: state === READY ? null
       : (unstamped ? 'Nothing to fix while developing. A packaged build stamps its own identity.' : null),
     by_design: unstamped,
-    evidence: 'jarvis:status.provenance',
+    // READY provenance still shows its detail, so this row is never a bare badge.
+    note: state === READY ? detail : null,
+    evidence: null,
   };
 }
 
