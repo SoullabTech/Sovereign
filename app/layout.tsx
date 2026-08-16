@@ -8,6 +8,7 @@ import { SystemHealthProvider } from "@/components/providers/SystemHealthProvide
 import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
 import FlagsDebug from "@/components/FlagsDebug";
 import { CapacitorBoot } from "@/components/CapacitorBoot";
+import { NativeSessionHydrator } from "@/components/NativeSessionHydrator";
 import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { BetaBanner } from "@/components/BetaBanner";
@@ -202,6 +203,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
         <BetaBanner />
         <CapacitorBoot />
+        <NativeSessionHydrator />
         <FlagsDebug />
         <AppErrorBoundary>
         {/* Global "Report a bug" affordance — self-renders only for signed-in members */}
