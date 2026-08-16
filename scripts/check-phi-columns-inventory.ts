@@ -106,6 +106,20 @@ const ACCESSOR_SPECS: AccessorSpec[] = [
       "getCase",
     ],
   },
+  {
+    // Encrypted from birth (20260730000001) — no plaintext `content` sibling, so
+    // there is no dual-write stage and therefore no getEncryptedColumnsForInsert.
+    // Reads decrypt or they fail; there is no plaintext path to degrade into.
+    // @see docs/security/free-text-phi-doctrine.md
+    file: "lib/security/phiAccessors/practitionerClientNotes.ts",
+    tables: ["practitioner_client_notes"],
+    requiredExports: [
+      "encryptClientNoteContent",
+      "decryptClientNoteContent",
+      "decryptClientNoteRow",
+      "sanitizeClientNoteRow",
+    ],
+  },
 ];
 
 // Tables that must have ENCRYPTED columns
@@ -118,6 +132,9 @@ const REQUIRED_ENCRYPTED_TABLES = [
   "practitioner_cases",
   "supervision_transcript_segments",
   "practice_transcript_segments",
+  // Encrypted from birth with no plaintext sibling — downgrading content_enc to
+  // PLAINTEXT in the inventory is a genuine bad delta the gate must catch.
+  "practitioner_client_notes",
 ];
 
 // =============================================================================
