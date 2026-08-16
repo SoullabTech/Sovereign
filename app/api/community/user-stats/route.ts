@@ -33,19 +33,32 @@ export async function GET(request: NextRequest) {
     const conversations = parseInt(conversationsResult.rows[0]?.count || '0');
     const memories = parseInt(memoriesResult.rows[0]?.count || '0');
 
-    // "Posts" could be community posts (if table exists) - for now use 0
-    // "Comments" = conversation turns (interactions with MAIA)
-    // "Hearts" = reactions given (if table exists) - for now use 0
-    // "Breakthroughs" = breakthrough_moments
+    // Real community stats from community_posts table
+    let communityPosts = 0;
+    let communityComments = 0;
+    let heartsReceived = 0;
+    try {
+      const [postsResult, commentsResult, heartsResult] = await Promise.all([
+        query('SELECT COUNT(*) as count FROM community_posts WHERE user_id = $1', [userId]),
+        query('SELECT COUNT(*) as count FROM community_comments WHERE user_id = $1', [userId]).catch(() => ({ rows: [{ count: '0' }] })),
+        query('SELECT COALESCE(SUM(heart_count), 0) as count FROM community_posts WHERE user_id = $1', [userId]),
+      ]);
+      communityPosts = parseInt(postsResult.rows[0]?.count || '0');
+      communityComments = parseInt(commentsResult.rows[0]?.count || '0');
+      heartsReceived = parseInt(heartsResult.rows[0]?.count || '0');
+    } catch {
+      // Tables may not exist yet — graceful zero
+    }
 
     return NextResponse.json({
       success: true,
       stats: {
-        posts: 0, // No community posts table yet
-        comments: conversations, // Conversation turns with MAIA
-        hearts: 0, // No reactions table yet
+        posts: communityPosts,
+        comments: communityComments,
+        hearts: heartsReceived,
         breakthroughs: breakthroughs,
-        memories: memories // Bonus: developmental memories
+        memories: memories,
+        conversations: conversations // MAIA conversation turns (separate from community comments)
       },
       userId,
       timestamp: new Date().toISOString()
