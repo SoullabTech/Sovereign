@@ -30,53 +30,100 @@ async function refreshStatus() {
 function provenanceRows(p) {
   if (!p) return '';
   // F3: two identities, rendered as two rows that can never be read as one.
+  // JOP-01: both now go through the same derivation as every other row, so an
+  // unstamped dev build reads as "no stamp, normal from source" rather than a
+  // bare UNKNOWN that contradicts the headline.
   return `
     <div class="card">
       <h3>Which JARVIS is this?</h3>
-      <div class="row">
-        <div><div class="label">Artifact identity</div><div class="detail">${p.artifact.detail}</div></div>
-        <span class="state ${p.artifact.state}">${p.artifact.state}</span>
-      </div>
-      <div class="row">
-        <div><div class="label">Execution substrate</div><div class="detail">${p.substrate.detail}</div></div>
-        <span class="state ${p.substrate.state}">${p.substrate.state}</span>
-      </div>
+      ${organRow(JarvisLegibility.describeProvenanceRow('Artifact identity', p.artifact))}
+      ${organRow(JarvisLegibility.describeProvenanceRow('Execution substrate', p.substrate))}
       ${p.substrate.conflict ? `<div class="errors"><div>Your saved repository choice (${p.substrate.conflict.overridden_config_root}) is NOT in effect. JARVIS_REPO_ROOT governs by design; clear it with <span class="kv">launchctl unsetenv JARVIS_REPO_ROOT</span> then quit and relaunch.</div></div>` : ''}
-      ${p.self_binding_satisfied ? '' : '<div class="hint">These are two independent facts. This Desktop cannot yet name both cleanly — treat readings accordingly.</div>'}
+      ${p.self_binding_satisfied ? '' : '<div class="hint">Which build this is, and which checkout it is operating on, are two separate facts — and right now they do not both have a confirmed answer. Nothing is wrong; it means you cannot yet say "this build was made from this checkout".</div>'}
     </div>`;
+}
+
+// JOP-01 — every non-ready organ renders STATE · REASON · REMEDIATION · SOURCE.
+// A state badge with no reason is not an acceptable founder-facing fact; that
+// is the whole defect this unit exists to remove.
+function organRow(o) {
+  // Order matters: WHAT IT IS, then what's wrong, then what to do. A row must
+  // never bottom out at an internal identifier — that is a legible-looking
+  // screen rather than a legible one.
+  return `<div class="row">
+    <div>
+      <div class="label">${o.name}</div>
+      ${o.describes ? `<div class="why">${o.describes}</div>` : ''}
+      ${o.note ? `<div class="why">${o.note}</div>` : ''}
+      ${o.reason ? `<div class="why">${o.reason}</div>` : ''}
+      ${o.remediation ? `<div class="fix">→ ${o.remediation}</div>`
+        : (o.state !== 'READY' && o.by_design ? '<div class="fix">→ No operator action grants this. It is absent by design.</div>' : '')}
+    </div>
+    <span class="state ${o.state}">${o.state.replace('_', ' ')}</span>
+  </div>`;
 }
 
 function renderHome() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
-  const holds = (s.governance_holds || []);
+  const v = JarvisLegibility.deriveOperatorView(s);
+  const b = v.binding;
+  const group = (title, list) => list.length
+    ? `<div class="card"><h3>${title}</h3>${list.map(organRow).join('')}</div>` : '';
+
   $main.innerHTML = `
     <div class="convo-input">
-      <input id="convo" type="text" placeholder='Ask: "What&apos;s happening?" · "What&apos;s broken?" · "What needs my decision?"'>
+      <input id="convo" type="text" placeholder="What do you want to happen?">
     </div>
     <div id="convo-answer"></div>
+
+    <div class="card">
+      <p class="headline">${v.headline}</p>
+      <p class="sentence">${v.sentence}</p>
+    </div>
+
+    <div class="card">
+      <h3>Sovereign binding</h3>
+      <div class="row">
+        <div>
+          <div class="label">${b.bound ? b.root : 'No repository connected'}</div>
+          ${b.reason ? `<div class="why">${b.reason}</div>` : ''}
+          ${b.remediation ? `<div class="fix">→ ${b.remediation}</div>` : ''}
+          <div class="src">source: live status · found by ${b.mode === 'dev' ? 'running from inside this checkout' : 'the configured repository path'}</div>
+        </div>
+        <span class="state ${b.state}">${b.state.replace('_', ' ')}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Needs you ${v.needs_founder.items.length ? `(${v.needs_founder.items.length})` : ''}</h3>
+      ${v.needs_founder.items.length
+        ? v.needs_founder.items.map(h => `<div class="row">
+            <div>
+              <div class="label">${h.unit}${h.id ? ` — ${h.id}` : ''}</div>
+              <div class="why">${h.means}</div>
+              <div class="fix">→ ${h.remediation}</div>
+            </div>
+            <span class="state HELD">${h.claim_state || 'HELD'}</span>
+          </div>`).join('')
+        : `<div class="hint">${v.needs_founder.summary}</div>`}
+    </div>
+
+    <div class="card">
+      <h3>Active work</h3>
+      <div class="hint">${v.active_work.summary}</div>
+      ${v.active_work.sessions.length ? renderSessionActions(v.active_work.sessions) : ''}
+    </div>
+
+    ${group('Can do now', v.capabilities.available)}
+    ${group('Not working / not verified', v.capabilities.unverified)}
+    ${group('Not authorized', v.capabilities.not_authorized)}
+
     ${provenanceRows(s.provenance)}
-    <div class="card">
-      <h3>Claims — governed action</h3>
-      ${renderSessionActions(s.sessions || [])}
-    </div>
-    <div class="card">
-      <h3>Governance holds ${holds.length ? `(${holds.length})` : ''}</h3>
-      ${holds.length ? holds.map(h => `<div class="row"><span>${h.unit}${h.id ? ' — ' + h.id : ''}</span><span class="state HELD">${h.claim_state || 'HELD'}</span></div>`).join('') : '<div class="hint">None observed.</div>'}
-    </div>
-    <div class="card">
-      <h3>System health</h3>
-      ${stateRow('Builder OS', s.builder_os)}
-      ${stateRow('Route A (deterministic)', s.route_a)}
-      ${stateRow('Local worker (Ollama)', s.local_worker)}
-      ${stateRow('Claude lane', s.claude_lane)}
-      ${stateRow('Builder work-unit mechanism', s.builder_mechanism)}
-      ${stateRow('Desktop runtime', s.desktop_runtime)}
-    </div>
-    <div class="hint">Observed ${s.observed_at}</div>
+    <div class="hint">Observed ${v.observed_at || 'unknown'}</div>
   `;
   document.getElementById('convo').addEventListener('keydown', onConvoKey);
-  wireSessionActions();
+  if (v.active_work.sessions.length) wireSessionActions();
 }
 
 // F2 — the acts offered come from the GOVERNOR's own liveness flags. Desktop
