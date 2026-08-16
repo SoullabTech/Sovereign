@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id')
+  // ACTOR from the verified session. The previous check tested only that an
+  // `x-member-id` header was PRESENT, which reads as authentication and is not:
+  // any non-empty value passed. Because the supplied id is not used before the
+  // model call, that also left an open LLM endpoint — a fabricated UUID bought
+  // a tier:'core' generation with attacker-controlled `question` text, which was
+  // then persisted verbatim as an 'insight' attributed to the claimed member.
+  //
+  // This gate stays where the old one was — ahead of the segment queries AND the
+  // model call — so refusal precedes both expensive generation and attributed
+  // persistence, not merely the INSERT.
+  const memberId = await getMemberIdFromRequest(request)
 
   if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {

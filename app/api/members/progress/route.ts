@@ -9,15 +9,25 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export async function POST(request: NextRequest) {
   try {
-    const { memberId, step, complete, youthOnboarded } = await request.json();
+    const { memberId: suppliedMemberId, step, complete, youthOnboarded } = await request.json();
 
+    // ACTOR from the verified session. This handler writes the identity row
+    // itself — onboarded, onboarding_step, youth_onboarded — so a supplied id
+    // could force any member past the orientation the flow exists to deliver.
+    // memberId is now OPTIONAL: /faq already posts without one, which the old
+    // 400 rejected and silently swallowed.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedMemberId && suppliedMemberId !== memberId) {
       return NextResponse.json(
-        { error: 'Member ID required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
@@ -89,12 +99,19 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
+    const suppliedMemberId = searchParams.get('memberId');
 
+    // ACTOR from the verified session. The prior GET also acted as a member
+    // existence oracle — 404 vs 200 distinguished a real member UUID from a
+    // fabricated one; requiring a session closes that too.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedMemberId && suppliedMemberId !== memberId) {
       return NextResponse.json(
-        { error: 'Member ID required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 

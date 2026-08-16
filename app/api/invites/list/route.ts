@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -15,12 +16,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ invites: [], inviteTree: [], stats: {}, member: {} });
   }
   try {
-    const memberId = request.nextUrl.searchParams.get('memberId');
+    const suppliedMemberId = request.nextUrl.searchParams.get('memberId');
 
+    // ACTOR from the verified session, decided BEFORE the global expiry write
+    // and before any read. This route returned, on a supplied UUID: pending
+    // invite PASSKEYS (a live registration credential), intended recipient names
+    // and emails, personal notes, and a depth-3 recursive member graph naming
+    // third parties with no relationship to the caller.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedMemberId && suppliedMemberId !== memberId) {
       return NextResponse.json(
-        { error: 'Member ID is required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 

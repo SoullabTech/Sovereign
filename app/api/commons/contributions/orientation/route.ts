@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
   try {
@@ -29,12 +30,17 @@ async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: R
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
+    const suppliedMemberId = searchParams.get('memberId');
 
+    // ACTOR from the verified session; `?memberId=` is a redundant echo only.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedMemberId && suppliedMemberId !== memberId) {
       return NextResponse.json(
-        { error: 'Missing memberId parameter' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
@@ -82,12 +88,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { memberId } = body as { memberId: string };
+    const { memberId: suppliedMemberId } = body as { memberId?: string };
 
+    // ACTOR from the verified session. This UPSERT marks a SAFETY orientation
+    // complete; on a supplied id it could be set for a member who never saw it.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedMemberId && suppliedMemberId !== memberId) {
       return NextResponse.json(
-        { error: 'Missing memberId' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
