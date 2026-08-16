@@ -300,6 +300,28 @@ describe('SECOND WALK — no row may bottom out at an internal identifier', () =
   });
 });
 
+describe('PACKAGED WALK REGRESSIONS — the raw sentinel token must not reach the founder', () => {
+  test('the literal "UNKNOWN (packaged mode)" is translated, not printed', () => {
+    const r = L.splitBindingSentinel(
+      'UNKNOWN (packaged mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers');
+    assert.doesNotMatch(r.reason, /UNKNOWN/, 'a bare UNKNOWN must never survive to the surface');
+    assert.match(r.reason, /no eligible sovereign checkout/i);
+    assert.match(r.reason, /packaged/, 'the mode is still reported — only the raw token is dropped');
+    assert.match(r.remediation, /JARVIS_REPO_ROOT/);
+    assert.match(r.raw, /^UNKNOWN/, 'the raw sentinel is preserved for evidence, just not displayed');
+  });
+
+  test('a real path is passed through untouched', () => {
+    assert.equal(L.splitBindingSentinel('/Users/soullab/MAIA-SOVEREIGN').reason, '/Users/soullab/MAIA-SOVEREIGN');
+  });
+
+  test('the unbound binding row carries no UNKNOWN anywhere', () => {
+    const b = L.deriveOperatorView(UNBOUND).binding;
+    assert.doesNotMatch(JSON.stringify({ r: b.reason, m: b.remediation }), /UNKNOWN/);
+    assert.equal(b.bound, false);
+  });
+});
+
 describe('SABOTAGE — no path may upgrade a refusal into health', () => {
   test('every non-AVAILABLE raw state maps to a non-operational founder state', () => {
     for (const raw of ['UNAVAILABLE', 'DEGRADED', 'UNKNOWN', null, undefined, 'LANE_NOT_PERMITTED', 'FAILED', 'nonsense']) {
