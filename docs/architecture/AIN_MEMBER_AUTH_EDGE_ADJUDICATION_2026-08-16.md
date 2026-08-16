@@ -111,6 +111,39 @@ RUNTIME FALSIFICATION            OUTSTANDING — needs authority + a non-product
 REPAIR                           NOT AUTHORIZED
 ```
 
+### §6.1 Closure — repair merged, canonical custody established (2026-08-16)
+
+⭐ **`CANONICAL CUSTODY  ESTABLISHED`** for the two confirmed routes, recorded only after the
+six-step closure below returned evidence — not inferred from the merge succeeding.
+
+```text
+PR                        #1060, ordinary governed merge (no --admin, no squash, no amend)
+accepted repair commit    35946898e   — preserved as an ancestor
+authorized head           92083df2d   — freshly authorized after the base moved
+merge commit              66d5d60c2   — re-resolved, equals canonical tip (not assumed)
+required gates            6/6 green on the authorized head
+```
+
+1. `origin/clean-main-no-secrets` re-resolved → `66d5d60c2`.
+2. Merge SHA bound: PR merge commit **is** the canonical tip.
+3. `35946898e` **and** `92083df2d` confirmed ancestors of canonical.
+4. The 12 actor→subject controls re-run from a **fresh detached checkout of `66d5d60c2`** —
+   12 passed · 0 failed.
+5. Both repaired routes and the proof file present in the merge tree, and verified to *carry* the
+   repair: `getMemberIdFromRequest` present in both · `memberRef()` in `maia/field` ·
+   **zero** occurrences of the raw `?memberId=` actor, the `x-member-id` actor, or `.slice(0, 8)`.
+6. Recorded.
+
+⚠️ **A first pass of check 5 ran under a shell quoting fault and returned `0` from a *failed*
+command.** Those zeros were discarded and the check re-run, because a zero produced by a broken
+command is indistinguishable from a zero produced by absence. The counts above come from the
+re-run only.
+
+⛔ **No deployment or runtime claim follows from this.** Merge is custody, not liveness. Production
+was observed at `GIT_COMMIT=39cc97d87` (container created 2026-08-14) and therefore does **not**
+contain this repair. `cross-account exposure` remains `NOT WITNESSED`; Unit 2 is the instrument
+that would change that, and it has not run.
+
 **Recommended ruling, carrying its reasoning.** Open the repair unit for `/api/maia/field` and
 `/api/members/beads` on the source evidence alone, without waiting for the runtime probe. The founder
 rule was *don't fix an edge smell before knowing whether it is merely misleading or actually
