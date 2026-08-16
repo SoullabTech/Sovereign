@@ -713,11 +713,7 @@ function spInspect(sp, id) {
       <h3 style="margin-top:18px">Authority</h3>
       ${spField('Disposition', spPlainState(i.authority.disposition))}
       ${spField('Because', i.authority.governing_reason)}
-      ${i.authority.remediation
-        ? `<div class="row"><div><div class="label">Fix</div><div class="fix">&rarr; ${i.authority.remediation}</div></div></div>`
-        : (i.authority.disposition === 'BY_DESIGN'
-            ? spField('Fix', 'None exists. Off on purpose &mdash; no action of yours turns it on.')
-            : '')}
+      ${spField('Fix', JarvisSpiral.remediationCell(i.authority), 'fix')}
       ${spField('Needs you', (i.authority.attention && i.authority.attention.needs_attention)
           ? 'Yes &mdash; something observable is in the way.' : 'No.')}
 
