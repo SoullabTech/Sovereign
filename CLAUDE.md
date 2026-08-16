@@ -110,6 +110,8 @@ If this is not clear, re-read the Anchor and PROJECT_CONTEXT.md before proceedin
 
 This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any change that violates the oath is invalid, regardless of technical merit.
 
+**[Claude Code Governance](./docs/canon/CLAUDE_CODE_GOVERNANCE.md)** — Treat Claude Code as executor/diagnostician/patcher, not architect or system memory. Reusable session openers live in `.claude/prompts/`.
+
 ## Infrastructure (Single Source of Truth)
 
 **⚠️ STOP — READ THIS BEFORE ANY INFRASTRUCTURE ASSUMPTIONS ⚠️**
