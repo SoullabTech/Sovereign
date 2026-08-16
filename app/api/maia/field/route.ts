@@ -22,6 +22,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
+import { memberRef } from '@/lib/privacy/memberRef'
 
 export async function GET(request: NextRequest) {
   const suppliedId = request.nextUrl.searchParams.get('memberId')
@@ -39,8 +40,13 @@ export async function GET(request: NextRequest) {
   // caller; naming anyone else is the shape of a cross-member read and succeeds
   // at nothing. Decided BEFORE any query below.
   if (suppliedId && suppliedId !== memberId) {
+    // Correlation is genuinely needed here — a refusal is an incident signal and
+    // an operator must be able to follow one actor across a log window. So this
+    // takes preference-order 2 from lib/privacy/memberRef.ts: a stable one-way
+    // token, never the raw identifier and never a .slice() of it (a truncation
+    // is a fragment of the id, still directly matchable against the real value).
     console.warn(
-      `⛔ [maia/field] refused cross-member access: caller=${memberId.slice(0, 8)}… requested=${suppliedId.slice(0, 8)}…`
+      `⛔ [maia/field] refused cross-member access: caller=${memberRef(memberId)} requested=${memberRef(suppliedId)}`
     )
     return NextResponse.json(
       { error: 'Forbidden', message: 'You may only act on your own data.' },
