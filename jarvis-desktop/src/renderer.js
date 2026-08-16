@@ -500,7 +500,8 @@ const SP_RINGS = [
   { key: 'IMPEDED',              match: s => s === 'NEEDS_SETUP' || s === 'DEGRADED' || s === 'BLOCKED' || s === 'FAILED' },
   { key: 'NOT OBSERVED',         match: s => s === 'UNVERIFIED' },
 ];
-const SP_PHEN = ['TRANSFORMATION', 'FLOW', 'STANDING', 'DISCERNMENT', 'INTEGRATION'];
+// Canonical operational_element values (semantic contract §2, ACCEPTED).
+const SP_PHEN = ['transformation', 'conveyance', 'consolidation', 'discrimination', 'composition'];
 
 function spRingIndex(standing) {
   const i = SP_RINGS.findIndex(r => r.match(standing));
@@ -587,17 +588,14 @@ function renderSpiral() {
           </svg>
         </div>
         <p class="sp-axis-note">
-          <b>How far out a dot sits = how it is doing</b>, and each ring is
-          labelled with what it means. It is <b>not</b> how finished, how
-          important, or how healthy something is — an outer ring is not
-          "further along". <b>Which direction a dot sits = what kind of activity
-          it is</b>, which is just a name for grouping; renaming those five
-          would change nothing.
+          <b>Ring = state</b>, each one labelled with what it asserts. Not
+          progress, not importance, not health — an outer ring is not "further
+          along". <b>Direction = activity</b>, a grouping name only; rename all
+          five and nothing else moves.
         </p>
         <p class="sp-axis-note">
-          <b>Where things sit in the pipeline (local &rarr; canonical): not measured.</b>
-          JARVIS has no source for that yet, so it is written here in words rather
-          than drawn on the wheel — because drawing it would look like an answer.
+          <b>Pipeline position (local &rarr; canonical): no source yet.</b>
+          Written here rather than drawn — geometry would look like an answer.
         </p>
       </div>
       <div>
@@ -605,11 +603,11 @@ function renderSpiral() {
           <h3>Needs attention ${sp.attention.length ? `(${sp.attention.length})` : ''}</h3>
           ${sp.attention.length
             ? sp.attention.map(a => `<div class="row"><div><div class="label">${a.id}</div><div class="why">${a.reason || ''}</div></div></div>`).join('')
-            : '<div class="hint">Nothing needs you right now. That is not JARVIS saying everything is fine — only that nothing it actually checked is blocked.</div>'}
+            : '<div class="hint">Nothing needs you. Not a claim everything is fine — only that nothing checked is blocked.</div>'}
         </div>
         <div class="card">
-          <h3>What JARVIS could not find out</h3>
-          <div class="hint" style="margin:0 0 8px">These stay listed even when nothing is wrong. A screen that goes quiet here would be hiding what it does not know.</div>
+          <h3>Not knowable yet</h3>
+          <div class="hint" style="margin:0 0 8px">Listed even when nothing is wrong. A screen that goes quiet here is hiding what it does not know.</div>
           ${sp.apertures.map(a => {
             // The projection keeps precise wording because it is the evidence
             // record. The screen says the same thing in ordinary English, and
@@ -629,31 +627,26 @@ function renderSpiral() {
           }).join('')}
         </div>
         <div class="card">
-          <h3>Links JARVIS can justify</h3>
+          <h3>Evidenced links</h3>
           ${sp.edges.length
             ? sp.edges.map(e => `<div class="row sp-edge-row" data-from="${e.from}" data-to="${e.to}" style="cursor:pointer"><div><div class="label">${e.from} → ${e.to}</div><div class="why">${e.kind}</div><div class="src">${e.evidence}</div></div></div>`).join('')
-            : '<div class="hint">No links are drawn. Two things both working is not evidence they are connected, so JARVIS does not draw a line between them.</div>'}
+            : '<div class="hint">No links drawn. Two things both working is not evidence they are connected.</div>'}
         </div>
         <div id="sp-inspector"></div>
         <div class="card">
-          <h3>What the marks mean</h3>
+          <h3>Marks</h3>
           <div class="sp-legend">
-            <b>solid blue dot</b> — JARVIS checked this and it is working. That is
-            not the same as saying the system is healthy.<br>
-            <b>amber dot</b> — something observable is in the way and may need you.<br>
-            <b>hollow dashed ring</b> — JARVIS did <i>not</i> check this. It is not
-            saying the thing is missing or broken — only that it did not look.<br>
-            <b>dashed line</b> — a link JARVIS can actually justify. Click it to
-            read the exact words that justify it.<br>
-            <b>nothing showing movement</b> — JARVIS keeps no history yet, so it
-            cannot tell you whether anything is getting better or worse.<br>
-            <b>click any dot</b> to see what it is, how JARVIS knows, how current
-            it is, and whether it needs you.
+            <b>solid</b> — checked, working. Not a claim the system is healthy.<br>
+            <b>amber</b> — something observable is in the way.<br>
+            <b>hollow dashed</b> — not checked. Not missing, not broken: unlooked-at.<br>
+            <b>dashed line</b> — a link with evidence behind it. Click for the exact words.<br>
+            <b>no movement shown</b> — no history kept, so trend is not answerable.<br>
+            <b>click anything</b> — what it is, how JARVIS knows, how current, whether it needs you.
           </div>
         </div>
       </div>
     </div>
-    <div class="hint">Screen read at ${sp.observed_at || 'unknown'} · this is the same information the Home tab shows, drawn differently</div>`;
+    <div class="hint">Read at ${sp.observed_at || 'unknown'} · same information as Home, drawn differently</div>`;
 
   document.querySelectorAll('.sp-node').forEach(g => {
     const open = () => spInspect(sp, g.dataset.id);
@@ -694,49 +687,43 @@ function spInspect(sp, id) {
   const T = i.temporal;
   host.innerHTML = `
     <div class="card">
-      <h3>What you clicked</h3>
-      <p class="headline" style="font-size:16px">${i.plain.says}</p>
+      <p class="headline" style="font-size:17px;margin-top:0">${i.plain.says}</p>
       <p class="sentence">${i.plain.caveat}</p>
 
-      <h3 style="margin-top:16px">What is this?</h3>
-      ${spField('What it does', i.assertion.describes)}
-      ${spField('Kind of activity', `${(i.phenomenon.means || i.phenomenon.value)} <span class="src" style="display:inline">(${i.phenomenon.value})</span>`)}
-      ${spField('', 'This is only a name for where the dot sits on the wheel. It does not change what anything means.', 'src')}
+      <h3 style="margin-top:18px">What it is</h3>
+      ${spField('Does', i.assertion.describes)}
+      ${spField('Activity', `${(i.phenomenon.means || i.phenomenon.value)} <span class="src" style="display:inline">${i.phenomenon.value}</span>`)}
 
-      <h3 style="margin-top:16px">What is JARVIS saying about it?</h3>
-      ${spField('State', spPlainState(i.assertion.standing))}
-      ${spField('Why', i.assertion.reason)}
+      <h3 style="margin-top:18px">State</h3>
+      ${spField('Now', spPlainState(i.assertion.standing))}
+      ${spField('Because', i.assertion.reason)}
 
-      <h3 style="margin-top:16px">How does JARVIS know?</h3>
-      ${spField('It read this', i.evidence.source, 'src')}
-      ${spField('Nothing was read', i.evidence.absent)}
-      ${spField('', 'This screen only re-displays what the build system already reported. It never checks anything itself.', 'src')}
+      <h3 style="margin-top:18px">How JARVIS knows</h3>
+      ${spField('Read from', i.evidence.source, 'src')}
+      ${spField('Read nothing', i.evidence.absent)}
+      ${spField('', 'Re-displayed from what the build system reported. This screen checks nothing itself.', 'src')}
 
-      <h3 style="margin-top:16px">How up to date is this?</h3>
-      ${spField('The whole screen was read at', T.snapshot_observed_at, 'src')}
-      ${spField('', 'That is when the screen was refreshed — not proof that this particular item was checked then.', 'src')}
-      ${spField('When this item was last checked', spPlainState(T.node_freshness))}
-      ${spField('', T.node_freshness_reason)}
-      ${spField('Whether it is changing', spPlainState(T.motion))}
-      ${spField('', `${T.motion_reason} — JARVIS keeps no history yet, so it cannot tell you if this is getting better or worse.`)}
+      <h3 style="margin-top:18px">How current</h3>
+      ${spField('Screen refreshed', T.snapshot_observed_at, 'src')}
+      ${spField('This item last checked', spPlainState(T.node_freshness))}
+      ${spField('', 'The refresh time is the screen&rsquo;s, not this item&rsquo;s.', 'src')}
+      ${spField('Trend', spPlainState(T.motion))}
+      ${spField('', 'No history kept yet &mdash; better or worse is not answerable.', 'src')}
 
-      <h3 style="margin-top:16px">What is allowed here?</h3>
-      ${spField('Status', spPlainState(i.authority.disposition))}
-      ${spField('Why', i.authority.governing_reason)}
+      <h3 style="margin-top:18px">Authority</h3>
+      ${spField('Disposition', spPlainState(i.authority.disposition))}
+      ${spField('Because', i.authority.governing_reason)}
       ${i.authority.remediation
-        ? `<div class="row"><div><div class="label">What would fix it</div><div class="fix">&rarr; ${i.authority.remediation}</div></div></div>`
+        ? `<div class="row"><div><div class="label">Fix</div><div class="fix">&rarr; ${i.authority.remediation}</div></div></div>`
         : (i.authority.disposition === 'BY_DESIGN'
-            ? spField('What would fix it', 'Nothing. This is meant to be off, and no action of yours turns it on.')
+            ? spField('Fix', 'None exists. Off on purpose &mdash; no action of yours turns it on.')
             : '')}
-      ${i.authority.attention
-        ? spField('Does this need you?', i.authority.attention.needs_attention
-            ? 'Yes — something observable is in the way.'
-            : 'No.')
-        : spField('Does this need you?', 'No.')}
+      ${spField('Needs you', (i.authority.attention && i.authority.attention.needs_attention)
+          ? 'Yes &mdash; something observable is in the way.' : 'No.')}
 
-      <h3 style="margin-top:16px">Where is it in the pipeline?</h3>
-      ${spField('Position (local &rarr; canonical)', spPlainState(i.custody.state))}
-      ${spField('', `${i.custody.reason}. Nothing on the wheel shows this — the distance from the centre means something else entirely.`, 'src')}
+      <h3 style="margin-top:18px">Pipeline position</h3>
+      ${spField('local &rarr; canonical', spPlainState(i.custody.state))}
+      ${spField('', `${i.custody.reason}. Written, never drawn &mdash; distance from centre means something else.`, 'src')}
     </div>`;
   host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
@@ -745,16 +732,15 @@ function spInspectEdge(sp, from, to) {
   const i = JarvisSpiral.inspectEdge(sp, from, to);
   const host = document.getElementById('sp-inspector');
   if (!host) return;
-  if (!i) { host.innerHTML = '<div class="card"><div class="hint">There is no evidence for this connection, so there is nothing to show. JARVIS does not draw a line unless something said the two are linked.</div></div>'; return; }
+  if (!i) { host.innerHTML = '<div class="card"><div class="hint">No evidence for this link, so there is nothing to show. JARVIS does not draw a line it cannot justify.</div></div>'; return; }
   host.innerHTML = `
     <div class="card">
-      <h3>What you clicked</h3>
-      <p class="headline" style="font-size:16px">${i.plain.says}</p>
+      <p class="headline" style="font-size:17px;margin-top:0">${i.plain.says}</p>
       <p class="sentence">${i.plain.caveat}</p>
-      ${spField('Kind of connection', `${i.relation === 'BLOCKS_OBSERVATION' ? 'one thing is stopping the other from being checked' : i.relation} <span class="src" style="display:inline">(${i.relation})</span>`)}
-      ${spField('The exact words that justify this line', i.licence, 'src')}
-      ${spField('Between', i.source_assertions.map(a => `${a.id} (${spPlainState(a.standing)})`).join(' &nbsp;&middot;&nbsp; '))}
-      ${spField('How solid is this link', spPlainState(i.causal_standing))}
+      ${spField('Link', `${i.relation === 'BLOCKS_OBSERVATION' ? 'one is stopping the other being checked' : i.relation} <span class="src" style="display:inline">${i.relation}</span>`)}
+      ${spField('Justified by', i.licence, 'src')}
+      ${spField('Between', i.source_assertions.map(a => `${a.id} <span class="src" style="display:inline">${a.standing}</span>`).join(' &nbsp;&middot;&nbsp; '))}
+      ${spField('Strength', spPlainState(i.causal_standing))}
     </div>`;
   host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }

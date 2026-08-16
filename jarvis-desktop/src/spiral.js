@@ -12,10 +12,18 @@
 //   AUTHORITATIVE EVIDENCE → governed derivation → legibility.js → THIS → grammar
 //
 // Jurisdiction (founder ruling 2026-08-16): operator instrument, JARVIS Desktop
-// only. A member is NEVER an inferred node. The phenomenon names below are the
-// canonical JARVIS operational vocabulary — Fire/Water/Earth/Air/Aether belong
-// to MAIA's Spiralogic and are deliberately not used here, because identical
-// names collapse distinct referents.
+// only. A member is NEVER an inferred node.
+//
+// The five `operational_element` values below are the CANONICAL vocabulary from
+// docs/architecture/JARVIS_LIVING_SPIRAL_SEMANTIC_CONTRACT_2026-08-16.md §2
+// (status ACCEPTED). This lane previously used a provisional set
+// (TRANSFORMATION/FLOW/STANDING/DISCERNMENT/INTEGRATION); keeping it would have
+// created exactly the semantic fork the contract exists to prevent.
+//
+// §2.1–2.5 declare display aliases Fire/Water/Earth/Air/Aether. This surface
+// deliberately does NOT render them: the jurisdiction ruling requires that no
+// elemental alias be needed to understand the JARVIS graph, and the contract
+// permits aliases without requiring their display. Both hold by omitting them.
 
 'use strict';
 
@@ -29,25 +37,25 @@
 // Not a stored category, not queryable, not a reasoning input. It is an angular
 // position chosen for display. Nothing downstream may branch on it.
 const PHENOMENA = Object.freeze({
-  TRANSFORMATION: 'something is becoming or changing',
-  FLOW:           'something is moving between organs',
-  STANDING:       'something is held, persisted, established',
-  DISCERNMENT:    'something is differentiating, selecting, evaluating',
-  INTEGRATION:    'several things are forming a larger whole',
+  transformation: 'something is becoming or changing',
+  conveyance:     'something is moving between organs',
+  consolidation:  'something is held, persisted, established',
+  discrimination: 'something is differentiating, selecting, evaluating',
+  composition:    'several things are forming a larger whole',
 });
 
 /** Display placement only. A node's meaning comes from its assertion, never here. */
 const PLACEMENT = Object.freeze({
-  'Builder execution mechanism': 'TRANSFORMATION',
-  'Builder OS':                  'INTEGRATION',
-  'Deterministic registry':      'DISCERNMENT',
-  'Local model worker':          'TRANSFORMATION',
-  'Claude reasoning':            'DISCERNMENT',
-  'Automatic C3 execution':      'DISCERNMENT',
-  'Desktop runtime':             'STANDING',
-  'Artifact identity':           'STANDING',
-  'Execution substrate':         'STANDING',
-  'Sovereign binding':           'FLOW',
+  'Builder execution mechanism': 'transformation',
+  'Builder OS':                  'composition',
+  'Deterministic registry':      'discrimination',
+  'Local model worker':          'transformation',
+  'Claude reasoning':            'discrimination',
+  'Automatic C3 execution':      'discrimination',
+  'Desktop runtime':             'consolidation',
+  'Artifact identity':           'consolidation',
+  'Execution substrate':         'consolidation',
+  'Sovereign binding':           'conveyance',
 });
 
 /**
@@ -112,7 +120,7 @@ function nodeFrom(organ) {
     id: organ.name,
     label: organ.name,
     describes: organ.describes || null,
-    phenomenon: PLACEMENT[organ.name] || 'STANDING',   // presentation only
+    phenomenon: PLACEMENT[organ.name] || 'consolidation',   // presentation only
     standing: organ.state,                             // the governed assertion, verbatim
     reason: organ.reason || null,
     remediation: organ.remediation || null,
@@ -142,7 +150,7 @@ function projectSpiral(view) {
       id: 'Sovereign binding',
       label: v.binding.bound ? v.binding.root : 'No repository connected',
       describes: 'The checkout JARVIS is operating on.',
-      phenomenon: 'FLOW',
+      phenomenon: 'conveyance',
       standing: v.binding.state,
       reason: v.binding.reason || null,
       remediation: v.binding.remediation || null,
