@@ -163,6 +163,106 @@ describe('7. motion is UNOBSERVED without lawful history', () => {
   });
 });
 
+// ── founder inspector contract ───────────────────────────────────────────────
+describe('INSPECTOR — every node answers the six questions', () => {
+  test('all six fields are present for every node in every fixture', () => {
+    for (const fx of [UNBOUND, READY]) {
+      const sp = proj(fx);
+      for (const n of sp.nodes) {
+        const i = S.inspectNode(sp, n.id);
+        for (const k of ['phenomenon', 'assertion', 'evidence', 'binding', 'temporal', 'authority']) {
+          assert.ok(i[k], `${n.id} must answer ${k}`);
+        }
+        assert.ok(i.plain.says && i.plain.caveat, `${n.id} must answer in ordinary language first`);
+      }
+    }
+  });
+
+  test('plain language leads, and never states health or absence', () => {
+    const sp = proj(READY);
+    const ready = S.inspectNode(sp, 'Sovereign binding');
+    assert.match(ready.plain.says, /operational/i);
+    assert.match(ready.plain.caveat, /not a health claim/i);
+
+    const unobs = S.inspectNode(proj(UNBOUND), 'Builder OS');
+    assert.match(unobs.plain.says, /was not observed/i);
+    // The assertion line must never claim absence. The caveat's entire job is to
+    // DENY absence, so it is allowed — and required — to use the word.
+    assert.doesNotMatch(unobs.plain.says, /\bnone\b|\babsent\b|\bmissing\b|\bdoes not exist\b/i,
+      'the plain statement must report the observation limit, never the subject being gone');
+    assert.match(unobs.plain.caveat, /not a statement that the subject is absent/i);
+  });
+
+  test('BY_DESIGN offers NO remediation — a fake fix is a lie told to look helpful', () => {
+    const i = S.inspectNode(proj(READY), 'Automatic C3 execution');
+    assert.equal(i.authority.disposition, 'BY_DESIGN');
+    assert.equal(i.authority.remediation, null);
+    assert.equal(i.authority.attention.needs_attention, false);
+  });
+
+  test('attention is TYPED, never scored', () => {
+    const i = S.inspectNode(proj(UNBOUND), 'Builder execution mechanism');
+    assert.equal(i.authority.attention.typed, 'IMPEDED');
+    assert.equal(typeof i.authority.attention.needs_attention, 'boolean');
+    assert.doesNotMatch(JSON.stringify(i.authority.attention), /[0-9]+(\.[0-9]+)?\s*[%]|severity|score/i);
+  });
+
+  test('the inspector never invents custody, and reports the aperture instead', () => {
+    const i = S.inspectNode(proj(READY), 'Desktop runtime');
+    assert.equal(i.custody.state, 'UNOBSERVED');
+    assert.equal(i.custody.encoded_spatially, false);
+  });
+});
+
+describe('INSPECTOR — the three temporal facts stay separate', () => {
+  test('a view timestamp is NEVER presented as node freshness', () => {
+    const sp = proj(READY);
+    assert.ok(sp.snapshot.observed_at, 'the snapshot does have a time');
+    for (const n of sp.nodes) {
+      const t = S.inspectNode(sp, n.id).temporal;
+      assert.equal(t.snapshot_observed_at, sp.snapshot.observed_at, 'snapshot time is reported at view scope');
+      assert.equal(t.node_freshness, 'UNOBSERVED', `${n.id}: the view's time is not this organ's observation`);
+      assert.match(t.node_freshness_reason, /no per-organ observation timestamp/i);
+      assert.notEqual(t.node_freshness, t.snapshot_observed_at, 'collapsing these is the defect this test exists for');
+    }
+  });
+
+  test('the snapshot declares what it is NOT evidence of', () => {
+    assert.match(proj(READY).snapshot.not, /not.*observed at this time|evidence that any individual organ/i);
+  });
+
+  test('motion and freshness are separate apertures, both UNOBSERVED', () => {
+    for (const n of proj(READY).nodes) {
+      assert.equal(n.motion.state, 'UNOBSERVED');
+      assert.equal(n.freshness.state, 'UNOBSERVED');
+      assert.notEqual(n.motion.reason, n.freshness.reason, 'two different missing sources, two different reasons');
+    }
+  });
+});
+
+describe('INSPECTOR — an edge without licence does not exist', () => {
+  test('an evidenced edge exposes relation, licence, sources and standing', () => {
+    const sp = proj(UNBOUND);
+    const e = sp.edges[0];
+    const i = S.inspectEdge(sp, e.from, e.to);
+    assert.equal(i.relation, 'BLOCKS_OBSERVATION');
+    assert.match(i.licence, /no repository is bound/i);
+    assert.equal(i.source_assertions.length, 2);
+    assert.equal(i.causal_standing, 'ESTABLISHED');
+  });
+
+  test('removing the licence removes the edge — no relation survives unjustified', () => {
+    const sp = proj(UNBOUND);
+    const e = sp.edges[0];
+    const stripped = { ...sp, edges: sp.edges.map(x => ({ ...x, evidence: null })) };
+    assert.equal(S.inspectEdge(stripped, e.from, e.to), null);
+  });
+
+  test('an edge that was never drawn cannot be inspected into existence', () => {
+    assert.equal(S.inspectEdge(proj(READY), 'Builder OS', 'Desktop runtime'), null);
+  });
+});
+
 // ── the nasty one ────────────────────────────────────────────────────────────
 describe('REGRESSION — a fully-READY system must not become a glowing "healthy" one', () => {
   test('all organs READY + no assembly evidence + no temporal evidence', () => {

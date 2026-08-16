@@ -68,6 +68,26 @@ function motionFor(/* node */) {
   });
 }
 
+/**
+ * THREE facts that a UI cleanup would happily collapse into one:
+ *
+ *   the view was produced at T
+ *     ≠ this organ was independently observed at T
+ *       ≠ this organ's state is current
+ *
+ * The lawful source supplies only the first. So the snapshot timestamp is
+ * reported at view scope, and every node's own freshness is UNOBSERVED. Stamping
+ * the view's time onto each organ would manufacture per-organ observation that
+ * never happened — the same error as inventing custody rings.
+ */
+function freshnessFor(/* node */) {
+  return Object.freeze({
+    state: 'UNOBSERVED',
+    reason: 'no per-organ observation timestamp is supplied by the lawful source',
+    do_not_infer_from: 'the view-level snapshot timestamp',
+  });
+}
+
 /** States that are not operational. Mirrors legibility; never widens it. */
 const NON_OPERATIONAL = ['NEEDS_SETUP', 'NEEDS_AUTHORITY', 'DEGRADED', 'BLOCKED', 'FAILED', 'UNVERIFIED'];
 
@@ -99,6 +119,7 @@ function nodeFrom(organ) {
     evidence: organ.evidence || null,
     by_design: !!organ.by_design,
     motion: motionFor(organ),
+    freshness: freshnessFor(organ),
     disturbance: disturbanceFor(organ),
   };
 }
@@ -128,6 +149,7 @@ function projectSpiral(view) {
       evidence: 'jarvis:status.repo_root',
       by_design: false,
       motion: motionFor(),
+      freshness: freshnessFor(),
       disturbance: v.binding.state === 'READY' ? null
         : { kind: 'IMPEDED', reason: v.binding.reason || null, needs_attention: true },
     });
@@ -135,6 +157,11 @@ function projectSpiral(view) {
 
   return {
     observed_at: v.observed_at || null,
+    snapshot: Object.freeze({
+      observed_at: v.observed_at || null,
+      scope: 'whole operator-view snapshot',
+      not: 'evidence that any individual organ was observed at this time',
+    }),
     // The axes declare their own meaning, so the renderer cannot let a viewer
     // read "farther out = more canonical". Radius is STANDING. Custody position
     // is a separate, unobserved dimension and is never encoded spatially.
@@ -203,5 +230,92 @@ function aperturesFor(view, nodes) {
   return a;
 }
 
-  return { PHENOMENA, PLACEMENT, NON_OPERATIONAL, motionFor, disturbanceFor, edgesFrom, aperturesFor, projectSpiral };
+
+// ── founder inspector ────────────────────────────────────────────────────────
+// Interrogability, not new truth. Every field below is read from the projection;
+// nothing is computed about the world here. Plain language comes FIRST so the
+// surface is usable without developer vocabulary, and the evidentiary chain sits
+// immediately beneath it so provenance is never hidden behind that readability.
+
+/** One ordinary sentence, then the standing disclaimer that stops a misreading. */
+function plainly(node) {
+  const subject = node.label === node.id ? node.id : `${node.id} (${node.label})`;
+  switch (node.standing) {
+    case 'READY':
+    case 'WORKING':
+      return { says: `${subject} is operational.`,
+               caveat: 'This is an observed standing, not a health claim.' };
+    case 'NEEDS_AUTHORITY':
+      return { says: `${subject} is not authorized.`,
+               caveat: 'Absent by design. No operator action grants it, and nothing is broken.' };
+    case 'UNVERIFIED':
+      return { says: `${subject} was not observed.`,
+               caveat: 'This is a limit of the observation, not a statement that the subject is absent.' };
+    default:
+      return { says: `${subject} is impeded.`,
+               caveat: 'Something observable is preventing it from operating.' };
+  }
+}
+
+/**
+ * The six-field node contract. `remediation` is deliberately null for BY_DESIGN:
+ * offering a fix for something no act can grant would be a lie the surface tells
+ * to look helpful.
+ */
+function inspectNode(spiral, id) {
+  const sp = spiral || {};
+  const n = (sp.nodes || []).find(x => x.id === id);
+  if (!n) return null;
+  const byDesign = !!n.by_design;
+  return {
+    plain: plainly(n),
+    phenomenon: { value: n.phenomenon, means: PHENOMENA[n.phenomenon] || null,
+                  note: 'presentation alias only — it names where the mark sits, never what it means' },
+    assertion: { standing: n.standing, describes: n.describes || null, reason: n.reason || null },
+    evidence: { source: n.evidence || null,
+                absent: !n.evidence ? 'no evidence pointer was supplied for this node' : null },
+    binding: { via: 'legibility.deriveOperatorView', from: n.evidence || null,
+               note: 'this projection reads the governed derivation and nothing else' },
+    temporal: {
+      snapshot_observed_at: (sp.snapshot && sp.snapshot.observed_at) || null,
+      snapshot_scope: (sp.snapshot && sp.snapshot.scope) || null,
+      node_freshness: n.freshness ? n.freshness.state : 'UNOBSERVED',
+      node_freshness_reason: n.freshness ? n.freshness.reason : null,
+      motion: n.motion ? n.motion.state : 'UNOBSERVED',
+      motion_reason: n.motion ? n.motion.reason : null,
+    },
+    authority: {
+      disposition: byDesign ? 'BY_DESIGN'
+        : (n.standing === 'UNVERIFIED' ? 'UNOBSERVED'
+        : (n.standing === 'READY' || n.standing === 'WORKING' ? 'PERMITTED' : 'IMPEDED')),
+      governing_reason: n.reason || null,
+      remediation: byDesign ? null : (n.remediation || null),
+      attention: n.disturbance ? { typed: n.disturbance.kind, needs_attention: n.disturbance.needs_attention } : null,
+    },
+    custody: sp.axes ? sp.axes.custody : null,
+  };
+}
+
+/**
+ * The four-field edge contract. An edge with no licence does not exist: this
+ * returns null rather than a relation with an empty justification.
+ */
+function inspectEdge(spiral, from, to) {
+  const sp = spiral || {};
+  const e = (sp.edges || []).find(x => x.from === from && x.to === to);
+  if (!e || !e.evidence) return null;
+  const src = (sp.nodes || []).filter(n => n.id === e.from || n.id === e.to)
+    .map(n => ({ id: n.id, standing: n.standing }));
+  return {
+    plain: { says: `${e.from} is preventing ${e.to} from being observed.`,
+             caveat: 'This relation is drawn only because the mechanism said so in its own words.' },
+    relation: e.kind,
+    licence: e.evidence,
+    source_assertions: src,
+    causal_standing: 'ESTABLISHED',
+  };
+}
+
+  return { PHENOMENA, PLACEMENT, NON_OPERATIONAL, motionFor, freshnessFor, disturbanceFor, edgesFrom, aperturesFor,
+           plainly, inspectNode, inspectEdge, projectSpiral };
 });
