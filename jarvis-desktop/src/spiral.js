@@ -305,6 +305,31 @@ function inspectNode(spiral, id) {
 }
 
 /**
+ * The remediation cell's content, or null when NO remediation surface may exist.
+ *
+ * Founder ruling 2026-08-16 (installed Witness B). `inspectNode` already sets
+ * `remediation: null` for BY_DESIGN — the projection was correct. The renderer
+ * nevertheless synthesised a "Fix" row carrying a refusal placeholder, so a
+ * deliberately-off capability presented an action surface with an apology in it.
+ *
+ * ⛔ BY_DESIGN + remediation:null renders NOTHING — no Fix label, no row, no
+ * placeholder occupying remediation UI. Returning null is load-bearing: spField()
+ * emits '' for null, so the row disappears rather than becoming empty or
+ * apologetic. A placeholder in a remediation slot reads as "a fix exists and was
+ * withheld", which is the opposite of what BY_DESIGN means.
+ *
+ * This lives here, not inline in renderer.js, because renderer.js touches
+ * `document` at load and cannot be imported under node — a rule that must
+ * survive regression has to be somewhere node:test can execute it.
+ */
+function remediationCell(authority) {
+  if (!authority) return null;
+  const r = authority.remediation;
+  if (r === null || r === undefined || r === '') return null;
+  return `&rarr; ${r}`;
+}
+
+/**
  * The four-field edge contract. An edge with no licence does not exist: this
  * returns null rather than a relation with an empty justification.
  */
@@ -325,5 +350,5 @@ function inspectEdge(spiral, from, to) {
 }
 
   return { PHENOMENA, PLACEMENT, NON_OPERATIONAL, motionFor, freshnessFor, disturbanceFor, edgesFrom, aperturesFor,
-           plainly, inspectNode, inspectEdge, projectSpiral };
+           plainly, inspectNode, inspectEdge, projectSpiral, remediationCell };
 });
