@@ -19,6 +19,7 @@ import {
 } from '@/lib/features/DailyAlchemyService';
 import { query } from '@/lib/db/postgres';
 import { Element } from '@/lib/consciousness/spiralogic-core';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Skip during static export (Capacitor builds)
 
@@ -32,15 +33,20 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const suppliedUserId = searchParams.get('userId');
     const date = searchParams.get('date'); // Optional: YYYY-MM-DD
     const type = searchParams.get('type'); // Optional: morning, midday, evening
     const plan = searchParams.get('plan'); // Optional: 'week' for weekly plan
 
+    // ACTOR from the verified session; `?userId=` is a redundant echo only.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
@@ -114,11 +120,23 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, type, element, timeSpent } = body;
+    const { userId: suppliedUserId, type, element, timeSpent } = body;
 
-    if (!userId || !type || !element) {
+    // ACTOR from the verified session; body.userId is a redundant echo only.
+    const userId = await getMemberIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { error: 'userId, type, and element are required' },
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
+      );
+    }
+
+    if (!type || !element) {
+      return NextResponse.json(
+        { error: 'type and element are required' },
         { status: 400 }
       );
     }

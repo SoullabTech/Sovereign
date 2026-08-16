@@ -20,6 +20,7 @@ import {
   detectCurrentFacet,
 } from '@/lib/features/ElementalJourneyTracker';
 import { query, insertOne, findOne, updateOne } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Skip during static export (Capacitor builds)
 
@@ -33,12 +34,17 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const suppliedUserId = searchParams.get('userId');
 
+    // ACTOR from the verified session; `?userId=` is a redundant echo only.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
@@ -136,12 +142,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, update, messages } = body;
+    const { userId: suppliedUserId, update, messages } = body;
 
+    // ACTOR from the verified session; body.userId is a redundant echo only.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (suppliedUserId && suppliedUserId !== userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Forbidden', message: 'You may only act on your own data.' },
+        { status: 403 }
       );
     }
 
