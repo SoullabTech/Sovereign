@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline';" />
+<title>JARVIS Preferences</title>
+<style>
+  :root {
+    --bg: #0a0b0d; --fg: #e6e8ea; --muted: #8b929b; --line: #1e2228;
+    --ok: #5e8f72; --warn: #b8860b; --bad: #a65a5a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 22px 24px; background: var(--bg); color: var(--fg);
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+  h1 { font-size: 15px; font-weight: 600; margin: 0 0 2px; letter-spacing: .01em; }
+  .sub { color: var(--muted); margin: 0 0 18px; font-size: 12px; }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+  .row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  .row:last-child { margin-bottom: 0; }
+  .k { color: var(--muted); min-width: 116px; flex-shrink: 0; font-size: 12px; }
+  .v { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all; }
+  .badge {
+    display: inline-block; padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; letter-spacing: .04em; border: 1px solid currentColor;
+  }
+  .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .problem { color: var(--bad); font-size: 12px; margin-top: 10px; }
+  .actions { display: flex; gap: 10px; margin-top: 6px; }
+  button {
+    font: inherit; color: var(--fg); background: #14171b; border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 14px; cursor: pointer;
+  }
+  button:hover { border-color: #2d333c; }
+  button.primary { border-color: var(--warn); color: #e8c88a; }
+  ul.markers { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+  ul.markers li { font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+</style>
+</head>
+<body>
+  <h1>Repository</h1>
+  <p class="sub">The checkout JARVIS reads state from and routes work through.</p>
+  <div id="main">Loading…</div>
+  <script src="preferences.js"></script>
+</body>
+</html>
