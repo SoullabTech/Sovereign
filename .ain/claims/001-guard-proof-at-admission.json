@@ -1,0 +1,10 @@
+{
+  "id": "JARVIS-ADMISSION-001",
+  "status": "OBSERVATION",
+  "assertion": "The epistemic guard proof harness reports 49 passed and 0 failed against guard blob cd015f5b9eb0acf34d58d719d1d13b0bcacdb37d.",
+  "evidence": [
+    { "kind": "executable_gate",
+      "detail": "node scripts/builder/__tests__/epistemic-guard-proof.mjs -> 49 passed / 0 failed",
+      "ref": "scripts/builder/__tests__/epistemic-guard-proof.mjs" }
+  ]
+}
