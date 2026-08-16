@@ -34,6 +34,21 @@
   .state.UNAVAILABLE { background: #3a1414; color: #f87171; }
   .state.UNKNOWN { background: #1e1e22; color: #8a8a92; }
   .state.HELD { background: #241a3a; color: #c4b5fd; }
+  /* JOP-01 founder vocabulary. UNVERIFIED is deliberately NOT red: "we did not
+     look" must not read as "it is broken". NEEDS_AUTHORITY is deliberately not
+     red either — absent-by-design is not a fault. */
+  .state.READY { background: #10321f; color: #4ade80; }
+  .state.WORKING { background: #0f2a33; color: #5ec8e0; }
+  .state.NEEDS_SETUP { background: #3a2a10; color: #fbbf24; }
+  .state.NEEDS_AUTHORITY { background: #241a3a; color: #c4b5fd; }
+  .state.BLOCKED { background: #3a1414; color: #f87171; }
+  .state.FAILED { background: #3a1414; color: #f87171; }
+  .state.UNVERIFIED { background: #1e1e22; color: #8a8a92; border: 1px dashed #3a3a42; }
+  .headline { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
+  .sentence { color: #9a9aa2; font-size: 13.5px; line-height: 1.55; margin: 0; }
+  .why { color: #8a8a92; font-size: 12px; margin-top: 4px; }
+  .fix { color: #7fb2e0; font-size: 12px; margin-top: 3px; }
+  .src { color: #4a4a52; font-size: 11px; margin-top: 3px; font-family: ui-monospace, Menlo, monospace; }
   .detail { color: #6a6a72; font-size: 12px; margin-top: 4px; max-width: 460px; text-align: right; }
   .card { background: #111214; border: 1px solid #1c1d20; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
   .card h3 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a7a82; font-weight: 600; }
@@ -86,6 +101,7 @@
     </nav>
   </header>
   <main id="main"></main>
+  <script src="legibility.js"></script>
   <script src="capability-form.js"></script>
   <script src="governance.js"></script>
   <script src="provenance.js"></script>
