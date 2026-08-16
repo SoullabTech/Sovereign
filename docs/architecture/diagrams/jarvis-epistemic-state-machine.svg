@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 980" width="1200" height="980" font-family="ui-sans-serif,-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+<style>
+  :root { color-scheme: light dark; }
+  .bg    { fill:#f6f4f1; } .panel { fill:#ffffff; stroke:#d8d3cc; }
+  .ink   { fill:#16202e; } .muted { fill:#6b7a8d; } .rule { stroke:#d8d3cc; }
+  .rung  { fill:#eef3fa; stroke:#2d4a7c; }
+  .amber { fill:#fbf3e2; stroke:#b8862b; } .amberT { fill:#8a6318; }
+  .teal  { fill:#e9f6f4; stroke:#2f8079; } .tealT  { fill:#22635d; }
+  .off   { fill:#f2f0ed; stroke:#b9b2a8; }
+  .refuse{ fill:#fbeceb; stroke:#b4483f; } .refuseT{ fill:#96382f; }
+  .arrow { stroke:#2d4a7c; fill:none; } .arrowM { stroke:#9aa5b4; fill:none; }
+  .navyT { fill:#2d4a7c; }
+  @media (prefers-color-scheme: dark) {
+    .bg    { fill:#0e151f; } .panel { fill:#141d2a; stroke:#2a3648; }
+    .ink   { fill:#e9eff7; } .muted { fill:#8fa0b5; } .rule { stroke:#2a3648; }
+    .rung  { fill:#16233a; stroke:#6f9bd8; }
+    .amber { fill:#2a2110; stroke:#d9a441; } .amberT { fill:#e6b95c; }
+    .teal  { fill:#0f2422; stroke:#3fa9a0; } .tealT  { fill:#63c3bb; }
+    .off   { fill:#1a2130; stroke:#3d4859; }
+    .refuse{ fill:#2b1512; stroke:#c9584f; } .refuseT{ fill:#e08a80; }
+    .arrow { stroke:#6f9bd8; } .arrowM { stroke:#5b6a7e; }
+    .navyT { fill:#8fb4e8; }
+  }
+  .t   { font-size:13px; }
+  .lbl { font-size:15px; font-weight:640; letter-spacing:.02em; }
+  .sm  { font-size:11.5px; }
+  .hd  { font-size:12px; font-weight:700; letter-spacing:.12em; }
+</style>
+
+<rect class="bg" width="1200" height="980"/>
+<text class="ink" x="36" y="46" font-size="24" font-weight="700">JARVIS — the epistemic nervous system</text>
+<text class="muted" x="36" y="70" class="t" font-size="13">Drawn from <tspan font-family="ui-monospace,Menlo,monospace">scripts/builder/epistemic-guard.mjs</tspan> as it actually executes — not from the sketch. Three orthogonal axes, not one ladder.</text>
+<line class="rule" x1="36" y1="88" x2="1164" y2="88"/>
+
+<!-- ================= AXIS 1 : STATUS ================= -->
+<text class="navyT hd" x="36" y="118">AXIS 1 · STATUS — what the guard ranks</text>
+<rect class="panel" x="36" y="132" width="357" height="620" rx="8"/>
+
+<rect class="rung" x="56" y="164" width="317" height="54" rx="6"/>
+<text class="ink lbl" x="74" y="188">INVARIANT</text>
+<text class="muted sm" x="74" y="206">rank 3 · governing rule</text>
+<text class="amberT sm" x="253" y="197" font-weight="700">authority, not measurement</text>
+
+<path class="arrow" d="M214 240 L214 224" stroke-width="1.6" marker-end="url(#a)"/>
+<rect class="rung" x="56" y="244" width="317" height="54" rx="6"/>
+<text class="ink lbl" x="74" y="268">PROVEN</text>
+<text class="muted sm" x="74" y="286">rank 2 · survived a defined proof</text>
+<text class="muted sm" x="253" y="277">needs a named rival</text>
+
+<path class="arrow" d="M214 320 L214 304" stroke-width="1.6" marker-end="url(#a)"/>
+<rect class="rung" x="56" y="324" width="317" height="54" rx="6"/>
+<text class="ink lbl" x="74" y="348">OBSERVATION</text>
+<text class="muted sm" x="74" y="366">rank 1 · running system seen</text>
+
+<path class="arrow" d="M214 400 L214 384" stroke-width="1.6" marker-end="url(#a)"/>
+<rect class="rung" x="56" y="404" width="317" height="54" rx="6"/>
+<text class="ink lbl" x="74" y="428">HYPOTHESIS</text>
+<text class="muted sm" x="74" y="446">rank 0 · needs no evidence — thinking is free</text>
+
+<text class="muted sm" x="56" y="486">G5 · no rung skipped · no rise on rereading · new evidence required</text>
+
+<rect class="off" x="56" y="500" width="317" height="232" rx="6"/>
+<text class="ink hd" x="74" y="524">OFF-LADDER — unranked, not rungs</text>
+<text class="ink t" x="74" y="552" font-weight="640">CORRECTION</text><text class="muted sm" x="74" y="568">seven rungs required · self-ratification refused</text>
+<text class="ink t" x="74" y="596" font-weight="640">HEURISTIC</text><text class="muted sm" x="74" y="612">requires a prior instance of failing</text>
+<text class="ink t" x="74" y="640" font-weight="640">STALE</text><text class="muted sm" x="74" y="656">was true · currentness unverified · needs the SHA</text>
+<text class="refuseT t" x="74" y="684" font-weight="640">SUPERSEDED — terminal</text><text class="muted sm" x="74" y="700">a replaced claim cannot be revived</text>
+<text class="muted sm" x="74" y="722">evidence pinned to another SHA is typed STALE, never passed</text>
+
+<!-- ================= AXIS 2 : WITNESS ================= -->
+<text class="tealT hd" x="421" y="118">AXIS 2 · WITNESS CLASS — who can establish it</text>
+<rect class="panel" x="421" y="132" width="357" height="620" rx="8"/>
+
+<rect class="teal" x="441" y="164" width="317" height="76" rx="6"/>
+<text class="ink lbl" x="459" y="190">SOURCE-ESTABLISHED</text>
+<text class="muted sm" x="459" y="208">mechanism exists in the code that ships</text>
+<text class="muted sm" x="459" y="226">adjudicable mechanically — a model must not rule here</text>
+
+<rect class="teal" x="441" y="256" width="317" height="76" rx="6"/>
+<text class="ink lbl" x="459" y="282">RUNTIME-WITNESSED</text>
+<text class="muted sm" x="459" y="300">the running system was observed doing it</text>
+<text class="muted sm" x="459" y="318">deployed SHA + trace, not inference from source</text>
+
+<rect class="teal" x="441" y="348" width="317" height="76" rx="6"/>
+<text class="ink lbl" x="459" y="374">MEMBER-WITNESSED</text>
+<text class="muted sm" x="459" y="392">a person met it and it did something for them</text>
+<text class="muted sm" x="459" y="410">human only — permanently</text>
+
+<rect class="amber" x="441" y="446" width="317" height="86" rx="6"/>
+<text class="amberT t" x="459" y="472" font-weight="700">The machine may prove the door works.</text>
+<text class="amberT t" x="459" y="492" font-weight="700">It cannot prove the person walked through it.</text>
+<text class="muted sm" x="459" y="514">synthetic gestures never establish consent, adoption,</text>
+<text class="muted sm" x="459" y="528">authorship, recognition, or release-by-member</text>
+
+<rect class="off" x="441" y="548" width="317" height="184" rx="6"/>
+<text class="refuseT hd" x="459" y="572">⚠ THE GAP THIS PICTURE FOUND</text>
+<text class="ink sm" x="459" y="596">These three are DOCTRINE — carried in memory,</text>
+<text class="ink sm" x="459" y="612">binding on you and on any helper.</text>
+<text class="ink sm" x="459" y="636">They are <tspan font-weight="700">not</tspan> in the guard's status enum.</text>
+<text class="ink sm" x="459" y="652">The instrument cannot refuse a claim for citing</text>
+<text class="ink sm" x="459" y="668">the wrong <tspan font-style="italic">witness class</tspan> — only the wrong evidence.</text>
+<text class="muted sm" x="459" y="694">Axis 1 executes. Axis 2 is prose. That asymmetry is</text>
+<text class="muted sm" x="459" y="710">the real state of the nervous system today.</text>
+
+<!-- ================= AXIS 3 : LIVENESS ================= -->
+<text class="amberT hd" x="806" y="118">AXIS 3 · LIVENESS SCOPE — G7, must be named</text>
+<rect class="panel" x="806" y="132" width="358" height="620" rx="8"/>
+
+<rect class="amber" x="826" y="164" width="318" height="72" rx="6"/>
+<text class="ink lbl" x="844" y="190">deployed_exercised</text>
+<text class="muted sm" x="844" y="210">code + schema shipped and exercised</text>
+<text class="muted sm" x="844" y="226">— proof rows count</text>
+
+<rect class="amber" x="826" y="252" width="318" height="72" rx="6"/>
+<text class="ink lbl" x="844" y="278">in_use_by_members</text>
+<text class="muted sm" x="844" y="298">a production observation of member rows</text>
+<text class="muted sm" x="844" y="314">— proof rows do NOT count</text>
+
+<rect class="off" x="826" y="340" width="318" height="56" rx="6"/>
+<text class="ink lbl" x="844" y="366">neither</text>
+<text class="muted sm" x="844" y="384">the honest default</text>
+
+<text class="refuseT t" x="826" y="424" font-weight="700">Saying "live" without naming which one</text>
+<text class="refuseT t" x="826" y="442" font-weight="700">is a refusal, not a style note.</text>
+
+<rect class="off" x="826" y="462" width="318" height="270" rx="6"/>
+<text class="ink hd" x="844" y="486">WHY THIS AXIS EXISTS</text>
+<text class="muted sm" x="844" y="512">2026-08-09 · member_daily_anchors</text>
+<text class="ink t" x="844" y="534" font-weight="700">0 rows</text>
+<text class="muted sm" x="844" y="554">— gate real, code live, nobody there</text>
+<text class="muted sm" x="844" y="582">2026-08-09 · member_memory_atoms</text>
+<text class="ink t" x="844" y="604" font-weight="700">142 rows · 0 breakthroughs</text>
+<text class="muted sm" x="844" y="624">— all unattributed-historical</text>
+<text class="muted sm" x="844" y="652">2026-04-08 · member_spiral_state</text>
+<text class="ink t" x="844" y="674" font-weight="700">last write</text>
+<text class="muted sm" x="844" y="694">— documented as wired; lane retired</text>
+<text class="muted sm" x="844" y="718">Each was once described as LIVE.</text>
+
+<!-- ================= REFUSALS ================= -->
+<line class="rule" x1="36" y1="782" x2="1164" y2="782"/>
+<text class="refuseT hd" x="36" y="812">THE SEVEN REFUSALS — a verdict, not an error (exit 1)</text>
+
+<rect class="panel" x="36" y="828" width="128" height="112" rx="8"/>
+<text class="ink lbl" x="66" y="878">CLAIM</text>
+<text class="muted sm" x="52" y="898">seeking promotion</text>
+
+<g class="arrowM" stroke-width="1.4" fill="none">
+  <path d="M164 884 C 200 884, 200 852, 236 852"/>
+  <path d="M164 884 C 200 884, 200 884, 236 884"/>
+  <path d="M164 884 C 200 884, 200 916, 236 916"/>
+</g>
+
+<g>
+  <rect class="refuse" x="236" y="832" width="300" height="34" rx="5"/>
+  <text class="ink sm" x="250" y="854"><tspan font-weight="700">G1</tspan> CANONICAL-PATH · route named, traffic unproven</text>
+  <rect class="refuse" x="236" y="872" width="300" height="34" rx="5"/>
+  <text class="ink sm" x="250" y="894"><tspan font-weight="700">G2</tspan> EDGE-PROOF · two endpoints are not an edge</text>
+  <rect class="refuse" x="236" y="912" width="300" height="34" rx="5"/>
+  <text class="ink sm" x="250" y="934"><tspan font-weight="700">G3</tspan> TELEMETRY · the label defaults where it matters</text>
+
+  <rect class="refuse" x="552" y="832" width="300" height="34" rx="5"/>
+  <text class="ink sm" x="566" y="854"><tspan font-weight="700">G4</tspan> INDEX-LIVENESS · zero indexed rows</text>
+  <rect class="refuse" x="552" y="872" width="300" height="34" rx="5"/>
+  <text class="ink sm" x="566" y="894"><tspan font-weight="700">G5</tspan> PROMOTION · rung skipped, or rose on rereading</text>
+  <rect class="refuse" x="552" y="912" width="300" height="34" rx="5"/>
+  <text class="ink sm" x="566" y="934"><tspan font-weight="700">G6</tspan> CORRECTION · seven rungs, self-ratification refused</text>
+
+  <rect class="refuse" x="868" y="872" width="140" height="34" rx="5"/>
+  <text class="ink sm" x="880" y="894"><tspan font-weight="700">G7</tspan> LIVENESS-SCOPE</text>
+</g>
+
+<g class="arrowM" stroke-width="1.4" fill="none">
+  <path d="M536 849 C 545 849, 545 889, 552 889" opacity=".5"/>
+  <path d="M852 889 L 868 889" marker-end="url(#am)"/>
+  <path d="M1008 889 L 1036 889" marker-end="url(#am)"/>
+</g>
+
+<rect class="refuse" x="1036" y="856" width="128" height="66" rx="8" stroke-width="2"/>
+<text class="refuseT" x="1062" y="896" font-size="17" font-weight="700">REFUSE</text>
+
+<text class="muted sm" x="36" y="966">Guard proof 49 passed · 0 failed at this checkout. ⚠ Wired into no hook, gate, or CI path — the nervous system is intact and not connected to a muscle.</text>
+
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2d4a7c"/></marker>
+  <marker id="am" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9aa5b4"/></marker>
+</defs>
+</svg>
