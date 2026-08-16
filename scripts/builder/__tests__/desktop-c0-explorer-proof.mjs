@@ -175,8 +175,35 @@ console.log('\n==================== G — C1 unchanged ====================');
   report('oversized C1 still refused, not escalated', over.status === 'rejected_oversized' && over.execution_lane === null);
 
   const mainJs = code('main.js');
-  report('C1 execution + honest verification split untouched',
-    mainJs.includes("kind: 'execution'") && mainJs.includes("correctness: 'unverified'"));
+  // ── JCR-PROOF-01 (2026-08-16) — RE-SPECIFIED, not relaxed ────────────────
+  // Old: main.js must contain both `kind: 'execution'` and the literal
+  // `correctness: 'unverified'`.
+  //
+  // The hardcoded placeholder is the precise thing the C1 evidence-containment
+  // delta was built to remove, so the old assertion could not survive the
+  // composition the founder authorized. What it was protecting is the SPLIT:
+  // a process exiting 0 says the thing RAN, never that the answer is RIGHT.
+  //
+  // The contract now: execution success must never imply correctness, and
+  // correctness must be DERIVED from the canonical verifier.
+  report('execution results are still labelled as execution',
+    mainJs.includes("kind: 'execution'"));
+  report('the hardcoded unverified placeholder is GONE, not restored',
+    !mainJs.includes("correctness: 'unverified'"));
+  // NB: `includes('decideCorrectness')` is NOT sufficient — the import line alone
+  // satisfies it, so the guard passed while the call site was bypassed (caught by
+  // sabotage control, 2026-08-16). Assert the CALL, and that the verdict is bound
+  // to its return value rather than assigned from a literal.
+  report('correctness is DERIVED — decideCorrectness is actually CALLED',
+    /=\s*decideCorrectness\s*\(/.test(mainJs));
+  report('correctness is never assigned from a literal verdict',
+    !/correctness\s*[:=]\s*'(verified|failed|unverified)'/.test(mainJs));
+  report('the basis for correctness is carried, not just the verdict',
+    mainJs.includes('correctness_reason'));
+  report('execution success alone never sets correctness verified',
+    !/exit_code\s*===?\s*0\s*(&&|\?)[^\n]*correctness\s*:\s*'verified'/.test(mainJs));
+  report('the verifier itself is NOT reimplemented Desktop-side',
+    !/function\s+verifyEvidence|verifyEvidence\s*=\s*(function|\()/.test(mainJs));
 }
 
 console.log('\n==================== H — no new authority ====================');
@@ -190,10 +217,16 @@ console.log('\n==================== H — no new authority ===================='
   // added so the installed app can be pointed at a checkout without Terminal.
   // Kept EXACT rather than relaxed to a subset check — the point of this guard
   // is that the IPC surface cannot widen unnoticed.
-  report('preload exposes exactly the seven authorized channels',
+  // JCR-PROOF-01 (2026-08-16) — NINE, reviewed, still EXACT. The two additions
+  // (`mechanism-status`, `run-work-unit`) are the founder-ruled C0→Builder wire.
+  // Kept as an exact list: a subset check would let the next widening through
+  // silently, which is the one thing this guard exists to prevent. That it went
+  // red on 029b7aa98 rather than passing quietly is the guard working.
+  report('preload exposes exactly the nine reviewed channels',
     JSON.stringify(channels) === JSON.stringify([
       'jarvis:capabilities', 'jarvis:choose-repo', 'jarvis:clear-repo',
-      'jarvis:governance-action', 'jarvis:repo-config', 'jarvis:status', 'jarvis:submit-task',
+      'jarvis:governance-action', 'jarvis:mechanism-status', 'jarvis:repo-config',
+      'jarvis:run-work-unit', 'jarvis:status', 'jarvis:submit-task',
     ]), channels.join(', '));
   report('the governance channel delegates to the governor, inventing no authority',
     code('main.js').includes('GOV.buildGovernanceArgv') && !/['"](recover|reconcile)['"]/.test(code('main.js')));

@@ -5,7 +5,7 @@
 // This suite proves only F2, F3 and the F5 hygiene — and, as strictly, proves
 // the things the ruling forbade: no new authority, no alternative semantics,
 // no collapsing of the two identities.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -266,8 +266,28 @@ console.log('\n==================== exclusions the ruling required =============
   const all = ['main.js', 'renderer.js', 'governance.js', 'provenance.js', 'preload.js'].map(code).join('\n');
   report('no orient.mjs donor port', !all.includes('orient.mjs'));
   report('no continue.mjs donor port', !all.includes('continue.mjs'));
-  report('no runtime/pipeline substrate pulled in from lineage A',
-    !all.includes('jarvis-runtime') && !all.includes('runtime-pipeline'));
+  // ── JCR-PROOF-01 (2026-08-16) — RE-SPECIFIED, not relaxed ────────────────
+  // Old: no Desktop source may mention 'jarvis-runtime' at all.
+  //
+  // That was right while the mechanism was off-trunk and the risk was a PORTED
+  // COPY. It became wrong the moment the cluster became canonical (#1043):
+  // Desktop is now REQUIRED to reference the one canonical substrate, and a
+  // string-match cannot tell "imports the canonical module" from "copied it in
+  // here" — so honouring the invariant tripped the guard defending it.
+  //
+  // The contract the guard actually defends is NO DESKTOP-LOCAL IMPLEMENTATION.
+  // These fail if anyone later copies the runtime, pipeline or verifier into
+  // jarvis-desktop/, and also if Desktop stops resolving the canonical one.
+  const desktopFiles = readdirSync(src);
+  report('no Desktop-local runtime/pipeline/verifier implementation file',
+    !desktopFiles.some(f => /(runtime|pipeline|verify-?evidence)/i.test(f)),
+    desktopFiles.join(', '));
+  report('no Desktop-local copy of the canonical verifier',
+    !/function\s+verifyEvidence|verifyEvidence\s*=\s*(function|\()/.test(all));
+  report('Desktop DOES reference the canonical mechanism (a fork would not)',
+    all.includes('jarvis-runtime-pipeline'));
+  report('the mechanism is resolved from the BOUND root, not a nearby copy',
+    code('builder-mechanism.js').includes('mechanismDir'));
   report('no model work added', !all.includes('anthropic') && !all.includes('claude-opus'));
   const preload = code('preload.js');
   const channels = [...preload.matchAll(/ipcRenderer\.invoke\('([^']+)'/g)].map(m => m[1]).sort();
@@ -280,10 +300,26 @@ console.log('\n==================== exclusions the ruling required =============
   // subset-check would let the next addition through silently. Note also that
   // none of the three lets the renderer SET a path — chooseRepo runs the native
   // dialog in main, so validation and persistence never cross the bridge.
-  report('preload exposes exactly the seven sanctioned channels',
+  // JCR-PROOF-01 (2026-08-16) — the list is NINE, reviewed, and still EXACT.
+  //
+  // The guard caught a real widening and that fact is preserved, not erased:
+  // Alpha Floor added `mechanism-status` and `run-work-unit` for the C0→Builder
+  // wire and did not update its own guard, so this assertion has been red on
+  // 029b7aa98 itself. Both additions are authorized — they are the wire the
+  // founder ruled on — and each is named below so the next addition still has
+  // to come here and argue for itself. Deliberately NOT loosened to
+  // "at least these": a subset check lets the next one through silently.
+  report('preload exposes exactly the nine reviewed channels',
     JSON.stringify(channels) === JSON.stringify([
-      'jarvis:capabilities', 'jarvis:choose-repo', 'jarvis:clear-repo',
-      'jarvis:governance-action', 'jarvis:repo-config', 'jarvis:status', 'jarvis:submit-task',
+      'jarvis:capabilities',       // read: capability registry
+      'jarvis:choose-repo',        // native picker; renderer cannot SET a path
+      'jarvis:clear-repo',         // unbind
+      'jarvis:governance-action',  // runs the governor's own CLI, invents nothing
+      'jarvis:mechanism-status',   // read: is the bound repo carrying the mechanism
+      'jarvis:repo-config',        // read: current binding
+      'jarvis:run-work-unit',      // the governed local-native wire (C0→Builder)
+      'jarvis:status',             // read: runtime status
+      'jarvis:submit-task',        // routed submission; C3 is NOT executed
     ]), channels.join(', '));
   // The original guard only counted invoke() channels, so a push channel could
   // have been added without it noticing. Pin those too.
