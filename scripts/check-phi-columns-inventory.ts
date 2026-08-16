@@ -220,12 +220,38 @@ function checkInventoryCompleteness(columns: PHIColumn[]): string[] {
 // MAIN
 // =============================================================================
 
+/**
+ * `--emit-discrepancies` prints the discrepancy set as JSON to stdout and exits 0.
+ *
+ * It is a REPORTING mode, not a gate: it never decides anything. It exists so a
+ * no-regression comparator can compute CONSISTENCY(HEAD) and CONSISTENCY(PROPOSED)
+ * with the SAME logic and diff them as sets. The default path below is untouched
+ * and remains the full-repo audit.
+ *
+ * Each string is a stable semantic identity — keyed to the table / column / file
+ * that is inconsistent, never to line numbers or output ordering — which is what
+ * makes set difference meaningful across two trees.
+ *
+ * @see docs/governance/FOUNDER_RULING_PHI_INVENTORY_GATE_2026-08-16.md
+ */
+const EMIT_DISCREPANCIES = process.argv.includes("--emit-discrepancies");
+
 function main() {
-  console.log("🔍 Checking PHI columns inventory...\n");
+  // In emit mode, progress chatter must not contaminate stdout — JSON only.
+  const log = EMIT_DISCREPANCIES
+    ? (...a: unknown[]) => console.error(...a)
+    : (...a: unknown[]) => console.log(...a);
+
+  log("🔍 Checking PHI columns inventory...\n");
 
   const inventoryPath = path.join(process.cwd(), "docs/security/phi-columns.md");
 
   if (!fs.existsSync(inventoryPath)) {
+    if (EMIT_DISCREPANCIES) {
+      // A missing inventory is itself a discrepancy, not a comparator crash.
+      process.stdout.write(JSON.stringify(["PHI columns inventory not found: docs/security/phi-columns.md"]) + "\n");
+      process.exit(0);
+    }
     console.error("❌ PHI columns inventory not found: docs/security/phi-columns.md\n");
     process.exit(1);
   }
@@ -233,23 +259,29 @@ function main() {
   const inventoryContent = fs.readFileSync(inventoryPath, "utf8");
   const columns = parseInventory(inventoryContent);
 
-  console.log(`   Found ${columns.length} PHI column entries in inventory\n`);
+  log(`   Found ${columns.length} PHI column entries in inventory\n`);
 
   const errors: string[] = [];
 
   // Check 1: Accessor files exist and have required exports
-  console.log("   Checking accessor files...");
+  log("   Checking accessor files...");
   for (const spec of ACCESSOR_SPECS) {
     errors.push(...checkAccessorExists(spec));
   }
 
   // Check 2: No dead code (isPHIEncryptionEnabled)
-  console.log("   Checking for dead code...");
+  log("   Checking for dead code...");
   errors.push(...checkNoDeadCode());
 
   // Check 3: Inventory completeness
-  console.log("   Checking inventory completeness...\n");
+  log("   Checking inventory completeness...\n");
   errors.push(...checkInventoryCompleteness(columns));
+
+  if (EMIT_DISCREPANCIES) {
+    // Sorted for stable output; the comparator treats it as a set regardless.
+    process.stdout.write(JSON.stringify([...errors].sort()) + "\n");
+    process.exit(0);
+  }
 
   if (errors.length > 0) {
     console.error("❌ PHI inventory check failed:\n");
@@ -260,10 +292,10 @@ function main() {
     process.exit(1);
   }
 
-  console.log("✅ PHI columns inventory check passed.\n");
-  console.log(`   • ${ACCESSOR_SPECS.length} accessor files verified`);
-  console.log(`   • ${REQUIRED_ENCRYPTED_TABLES.length} encrypted tables covered`);
-  console.log(`   • No dead encryption flags found\n`);
+  log("✅ PHI columns inventory check passed.\n");
+  log(`   • ${ACCESSOR_SPECS.length} accessor files verified`);
+  log(`   • ${REQUIRED_ENCRYPTED_TABLES.length} encrypted tables covered`);
+  log(`   • No dead encryption flags found\n`);
 }
 
 main();
