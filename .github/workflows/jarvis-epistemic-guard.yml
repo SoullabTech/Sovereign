@@ -1,0 +1,62 @@
+# JARVIS EPISTEMIC GUARD — authoritative CI admission gate.
+#
+# Founder ruling 2026-08-16:
+#   CI blocks on `adjudicate`, never on `scan`.
+#   `scan` remains local/advisory because this project's own measured evidence
+#   (128 findings across 58 of 298 files) shows it is unsuitable as a
+#   repository-wide blocking surface. It is deliberately absent from this file.
+#
+# SCOPE of what a green run establishes, exactly and no further:
+#   Axis 1 enforced in authoritative CI against submitted, well-formed claim
+#   records, with canonical ledger history available to G5.
+#
+#   A green run does NOT establish that claims are true, that fabricated
+#   evidence was detected, or that inadmissible claims cannot enter by any
+#   other route.
+
+name: JARVIS Epistemic Guard
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets, main]
+
+permissions:
+  contents: read
+
+jobs:
+  epistemic-admission:
+    name: Axis 1 — authoritative adjudication
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head with full history
+        uses: actions/checkout@v4
+        with:
+          # full history: the gate reads canonical ledger state from the BASE
+          # commit, never from the PR checkout
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The guard must prove itself before it is allowed to judge anything.
+      - name: Guard self-proof
+        run: node scripts/builder/__tests__/epistemic-guard-proof.mjs
+
+      # The gate must prove it fails closed before it is allowed to gate.
+      - name: CI gate fail-closed proof
+        run: node scripts/builder/__tests__/epistemic-ci-proof.mjs
+
+      - name: Adjudicate submitted claim records against canonical history
+        env:
+          JARVIS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/builder/epistemic-ci.mjs --base "$JARVIS_BASE_SHA"
+
+      # Runs only when a prior step failed. `if: failure()` is the fail-closed
+      # posture: a crashed or cancelled job never reports success.
+      - name: Explain refusal
+        if: failure()
+        run: |
+          echo "::error title=Epistemic admission refused::A claim record could not carry the status it requested, or the proposed ledger delta did not match the independently computed result."
+          echo "This is a verdict, not an error. See docs/ops/JARVIS_EPISTEMIC_GUARDRAILS_2026-08-11.md."
