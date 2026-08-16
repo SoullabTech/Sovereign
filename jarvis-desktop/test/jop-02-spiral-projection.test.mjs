@@ -200,6 +200,46 @@ describe('INSPECTOR — every node answers the six questions', () => {
     assert.equal(i.authority.attention.needs_attention, false);
   });
 
+  // ── PRESENTATION LAYER ────────────────────────────────────────────────────
+  // The test above proves the PROJECTION is right. Installed Witness B found the
+  // projection right and the SCREEN still wrong: the renderer synthesised a "Fix"
+  // row carrying "None exists. Off on purpose…" for exactly the BY_DESIGN case
+  // where remediation is null. Data-layer coverage could not see it, because the
+  // data layer was never the defect. These assert the rendered decision.
+  test('BY_DESIGN renders NO remediation surface at all — not even an empty one', () => {
+    const i = S.inspectNode(proj(READY), 'Automatic C3 execution');
+    assert.equal(i.authority.disposition, 'BY_DESIGN');
+    // null is load-bearing: spField() emits '' for null, so the row vanishes
+    // instead of becoming an apologetic placeholder in a remediation slot.
+    assert.equal(S.remediationCell(i.authority), null,
+      'a placeholder occupying remediation UI reads as "a fix exists and was withheld"');
+  });
+
+  test('a real remediation still renders, unchanged', () => {
+    assert.equal(S.remediationCell({ disposition: 'IMPEDED', remediation: 'bind a repository' }),
+      '&rarr; bind a repository');
+  });
+
+  test('empty-string and absent remediation are treated as no surface, not as content', () => {
+    for (const a of [{ remediation: '' }, { remediation: undefined }, {}, null]) {
+      assert.equal(S.remediationCell(a), null);
+    }
+  });
+
+  test('the renderer no longer carries a BY_DESIGN remediation placeholder', () => {
+    // Source-level guard — weaker evidence than the behavioural assertions above,
+    // and stated as such. renderer.js touches `document` at load and cannot be
+    // imported here, so this is what closes the bypass route: reintroducing the
+    // placeholder inline, without going through remediationCell().
+    const r = readFileSync(path.join(SRC, 'renderer.js'), 'utf8');
+    assert.doesNotMatch(r, /None exists\. Off on purpose/i,
+      'the refusal placeholder must not return to the remediation slot');
+    assert.doesNotMatch(r, /disposition\s*===\s*'BY_DESIGN'\s*\?[\s\S]{0,120}?spField\('Fix'/,
+      'the renderer must not branch on BY_DESIGN to synthesise a Fix row');
+    assert.match(r, /spField\('Fix',\s*JarvisSpiral\.remediationCell/,
+      'the renderer must delegate the remediation decision, not re-derive it');
+  });
+
   test('attention is TYPED, never scored', () => {
     const i = S.inspectNode(proj(UNBOUND), 'Builder execution mechanism');
     assert.equal(i.authority.attention.typed, 'IMPEDED');
