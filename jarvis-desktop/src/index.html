@@ -44,6 +44,13 @@
   .state.BLOCKED { background: #3a1414; color: #f87171; }
   .state.FAILED { background: #3a1414; color: #f87171; }
   .state.UNVERIFIED { background: #1e1e22; color: #8a8a92; border: 1px dashed #3a3a42; }
+  /* A precedence fact is not an error. Two valid answers exist and one governs
+     by design — that must be visible without being alarming, or the founder
+     learns to distrust every coloured panel on the screen. */
+  .precedence { background: #16202e; border: 1px solid #24344a; border-left: 2px solid #5ec8e0;
+                color: #9fb6c8; font-size: 12.5px; line-height: 1.6; padding: 10px 12px;
+                border-radius: 4px; margin-top: 10px; }
+  .precedence b { color: #cfe3ef; display: block; margin-bottom: 4px; }
   .headline { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
   .sentence { color: #9a9aa2; font-size: 13.5px; line-height: 1.55; margin: 0; }
   .why { color: #8a8a92; font-size: 12px; margin-top: 4px; }

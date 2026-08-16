@@ -89,8 +89,17 @@ function isUnbound(repoRoot) {
 function splitBindingSentinel(repoRoot) {
   const s = String(repoRoot || '');
   const i = s.indexOf('—');
-  if (i === -1) return { reason: s, remediation: null };
-  return { reason: s.slice(0, i).trim(), remediation: s.slice(i + 1).trim() };
+  const rawReason = i === -1 ? s : s.slice(0, i).trim();
+  const remediation = i === -1 ? null : s.slice(i + 1).trim();
+  // Packaged-walk defect (2026-08-16): the sentinel's own leading token is the
+  // literal string "UNKNOWN (packaged mode)". Rendering it verbatim put a bare
+  // UNKNOWN back on the founder-facing screen — the exact thing this unit
+  // removes. The mode is kept; the raw token is not.
+  const mode = /\(([a-z]+) mode\)/.exec(rawReason);
+  const reason = /^UNKNOWN\b/.test(rawReason)
+    ? `No eligible Sovereign checkout was resolved${mode ? ` (${mode[1]} build)` : ''}.`
+    : rawReason;
+  return { reason, remediation, raw: rawReason };
 }
 
 /**
