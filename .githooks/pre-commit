@@ -15,7 +15,14 @@ npm run check:no-supabase
 SUPABASE_EXIT=$?
 
 # 2. No inline name logic (preferred_name || name drift)
-npm run check:no-inline-names
+#    RATCHET (founder ruling 2026-08-16): GIT_PRE_COMMIT=1 makes this delta-aware —
+#    it fails only on violations THIS change introduces, measured against the same
+#    file's content in HEAD. Pre-existing violations remain repository debt and are
+#    surfaced by the unscoped `npm run check:no-inline-names` audit, which is what
+#    CI and remediation use. A pre-commit gate governs the proposed change; it does
+#    not make every unrelated commit responsible for historical debt.
+#    See docs/governance/FOUNDER_RULING_NO_INLINE_NAMES_GATE_2026-08-16.md
+GIT_PRE_COMMIT=1 npm run check:no-inline-names
 NAMES_EXIT=$?
 
 # 3. No PHI encryption columns in responses
