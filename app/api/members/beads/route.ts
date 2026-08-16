@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { Resend } from 'resend';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Lazy-load Resend client
 function getResendClient() {
@@ -205,9 +206,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const memberId = request.headers.get('x-member-id');
+    // ACTOR from the verified session. The `x-member-id` header is a claim, not
+    // a credential: before 2026-08-16 this route accepted it directly, so any
+    // caller could read another member's bead balance and their sent-bead
+    // history including recipient names and email addresses.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get member's beads_remaining (default to DEFAULT_BEADS if column doesn't exist yet)
@@ -252,9 +257,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const memberId = request.headers.get('x-member-id');
+    // ACTOR from the verified session. This is the write boundary: the operation
+    // below inserts a gift_passkeys row attributed to the actor, decrements THAT
+    // member's beads_remaining, and sends an email carrying their name. Accepting
+    // the `x-member-id` header as identity — the behaviour before 2026-08-16 —
+    // let an unauthenticated caller spend another member's beads and send mail
+    // in their name.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
