@@ -106,18 +106,61 @@ for (const s of structural) {
 if (structural.length > 1)
   block('STRUCTURAL-ROW-UNEXPECTED', `${structural.length} structural rows appended`, 'at most one genesis row may ever exist');
 
-// ── 3. claim records — required, not optional. Absence fails closed. ─────────
-let claimFiles = [];
-if (!existsSync(CLAIMS_DIR)) {
-  block('CLAIM-MISSING', `${CLAIMS_DIR} does not exist — a required epistemic run cannot read zero claims as success`,
-    `submit at least one claim record under ${CLAIMS_DIR}/`);
-} else {
-  claimFiles = readdirSync(CLAIMS_DIR).filter((f) => f.endsWith('.json')).sort();
-  if (claimFiles.length === 0) {
-    block('CLAIM-MISSING', `no claim records found in ${CLAIMS_DIR} — the easiest way around an epistemic guard must not be to skip epistemics`,
-      `submit at least one claim record under ${CLAIMS_DIR}/`);
+// ── 3. claim records — the BASE-RELATIVE SUBMISSION DELTA ────────────────────
+// Founder ruling 2026-08-16 (R1–R4):
+//   A claim file already present at the PR base is PRIOR EVIDENCE, not a new
+//   submission. It is not re-adjudicated merely because it still exists in the
+//   head tree. The authoritative submitted set is HEAD claims MINUS BASE claims.
+//
+//   The previous implementation enumerated every .json in the head checkout and
+//   demanded one freshly appended transition for each. That made an already
+//   admitted claim look resubmitted on every PR, so canonical adjudicated
+//   against ITSELF was refused — and the ledger would have degraded from a
+//   record of epistemic transitions into a merge log.
+//
+// ⛔ This does NOT relax immutability: a base claim that is modified or deleted
+//    still blocks (R3). Only the SELECTION semantics changed, never the custody.
+const baseClaimFiles = (() => {
+  if (!BASE) return [];
+  const r = git(['ls-tree', '--name-only', `${BASE}:${CLAIMS_DIR}`]);
+  if (r.status !== 0) { note.push(`no claims directory at ${BASE.slice(0, 12)} — every head claim is a new submission (genesis case)`); return []; }
+  return r.stdout.split('\n').map((s) => s.trim()).filter((f) => f.endsWith('.json')).sort();
+})();
+
+const baseClaimBytes = (f) => {
+  const r = git(['show', `${BASE}:${CLAIMS_DIR}/${f}`]);
+  return r.status === 0 ? r.stdout : null;
+};
+
+// R3 — canonical claim records are immutable. Correct by NEW claim identity,
+// never by rewriting the historical submission.
+for (const f of baseClaimFiles) {
+  const p = path.join(CLAIMS_DIR, f);
+  if (!existsSync(p)) {
+    block('CLAIM-HISTORY-MUTATION', `${f} exists at the base but was deleted in this PR`,
+      'a claim already in canonical history is immutable evidence; submit a new claim identity instead of deleting the old one');
+    continue;
+  }
+  const before = baseClaimBytes(f);
+  if (before !== null && before !== readFileSync(p, 'utf8')) {
+    block('CLAIM-HISTORY-MUTATION', `${f} exists at the base but its bytes were modified in this PR`,
+      'a claim already in canonical history is immutable evidence; submit a new claim/revision identity instead of rewriting it');
   }
 }
+
+// R2 — submitted = HEAD minus BASE, deterministic filename order.
+const headClaimFiles = existsSync(CLAIMS_DIR)
+  ? readdirSync(CLAIMS_DIR).filter((f) => f.endsWith('.json')).sort()
+  : [];
+const baseSet = new Set(baseClaimFiles);
+const claimFiles = headClaimFiles.filter((f) => !baseSet.has(f));
+
+// R4 — zero new claims is NOT a failure. #1054 scopes Axis 1 to claims actually
+// submitted; demanding one per PR would manufacture epistemic activity. A rule
+// that certain changes MUST submit a claim belongs in a separate classifier, not
+// smuggled into the adjudicator.
+if (claimFiles.length) note.push(`submitted claim delta: ${claimFiles.join(', ')}`);
+else note.push(`no new claim records relative to ${(BASE || 'none').slice(0, 12)} — no epistemic submission in this PR`);
 
 // ── 4/5. independently adjudicate, derive expected rows, compare to proposal ──
 const tmp = mkdtempSync(path.join(tmpdir(), 'jarvis-ci-'));
@@ -189,30 +232,40 @@ for (const [i, f] of claimFiles.entries()) {
   results.push({ claim: claim.id, verdict: derived.verdict });
 }
 
+// R4 — for N newly submitted claims there must be exactly N derived transition
+// rows. A row appended with no new claim behind it is the inverse failure and
+// blocks here: the ledger records epistemic transitions, never merges.
 if (transitions.length > claimFiles.length)
-  block('LEDGER-DELTA-MISMATCH', `${transitions.length} adjudicated rows appended for ${claimFiles.length} claim record(s)`,
-    'append exactly one adjudicated row per submitted claim');
+  block('LEDGER-DELTA-MISMATCH', `${transitions.length} adjudicated row(s) appended for ${claimFiles.length} newly submitted claim record(s)`,
+    claimFiles.length === 0
+      ? 'this PR submits no new claim, so it may not append a transition row; a transition requires a submission'
+      : 'append exactly one adjudicated row per newly submitted claim');
 
 // ── verdict ──────────────────────────────────────────────────────────────────
 const out = {
   gate: 'jarvis-epistemic-ci', enforcement_mode: ENFORCEMENT_MODE,
   base: BASE || null, head: git(['rev-parse', HEAD]).stdout.trim() || null,
   canonical_rows: canonicalBytes.split('\n').filter(Boolean).length,
-  claims: claimFiles.length, appended_rows: transitions.length, structural_rows: structural.length,
+  claims_at_base: baseClaimFiles.length,
+  claims_submitted: claimFiles.length, appended_rows: transitions.length, structural_rows: structural.length,
   results, notes: note, blocks,
-  verdict: blocks.length ? 'BLOCKED' : 'PASS',
+  verdict: blocks.length ? 'BLOCKED'
+    : (claimFiles.length === 0 && transitions.length === 0 ? 'PASS / NOT_APPLICABLE' : 'PASS'),
 };
 
 if (AS_JSON) console.log(JSON.stringify(out, null, 2));
 else {
   console.log(`JARVIS EPISTEMIC CI — enforcement_mode=${ENFORCEMENT_MODE}`);
-  console.log(`base ${(BASE || 'none').slice(0, 12)} · canonical rows ${out.canonical_rows} · claims ${out.claims} · appended ${out.appended_rows}`);
+  console.log(`base ${(BASE || 'none').slice(0, 12)} · canonical rows ${out.canonical_rows} · claims at base ${out.claims_at_base} · submitted ${out.claims_submitted} · appended ${out.appended_rows}`);
   note.forEach((n) => console.log(`  note: ${n}`));
   results.forEach((r) => console.log(`  ${r.verdict === 'PERMITTED' ? '✓' : '✗'} ${r.claim} → ${r.verdict}`));
   if (blocks.length) {
     console.log(`\n⛔ BLOCKED — ${blocks.length} condition(s):`);
     blocks.forEach((b) => console.log(`  [${b.rule}] ${b.why}\n      required: ${b.required}`));
-  } else console.log(`\n✅ PASS — every submitted claim was independently adjudicated and matches the proposed ledger delta.`);
+  } else if (out.verdict === 'PASS / NOT_APPLICABLE') {
+    console.log(`\n✅ PASS / NOT_APPLICABLE — this PR submits no new claim record and appends no ledger row.`);
+    console.log(`   Axis 1 governs submitted claims; it does not require every PR to invent one.`);
+  } else console.log(`\n✅ PASS — every newly submitted claim was independently adjudicated and matches the proposed ledger delta.`);
 }
 
 process.exit(blocks.length ? 1 : 0);
