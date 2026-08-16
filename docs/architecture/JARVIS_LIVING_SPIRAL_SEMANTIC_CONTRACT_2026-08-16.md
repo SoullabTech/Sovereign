@@ -4,22 +4,46 @@
 **Phase:** 1 — semantic contract only
 **Authority:** [`FOUNDER_RULING_LIVING_SPIRAL_SEMANTIC_JURISDICTION_2026-08-16.md`](../governance/FOUNDER_RULING_LIVING_SPIRAL_SEMANTIC_JURISDICTION_2026-08-16.md) §4
 **Predecessor:** [`JARVIS_LIVING_SPIRAL_PHASE0_RECONCILIATION_2026-08-16.md`](./JARVIS_LIVING_SPIRAL_PHASE0_RECONCILIATION_2026-08-16.md)
-**Status:** `PROPOSED (AMENDED)` — awaiting the **narrow acceptance check**. Next gate is acceptance,
-**not** implementation.
+**Status:** ⭐ **`ACCEPTED`** — founder ruling 2026-08-16, on the narrow acceptance check.
+Next gate is the **synthetic visual prototype**. ⛔ Implementation remains **NOT AUTHORIZED**.
 
 **Amendment provenance.** This is the amended successor to a predecessor returned for amendment.
 
 ```text
-PREDECESSOR   sha256 e29bdfe14444477ce53bab6589bd1595e7bbd3d8be15d4e87a462c42a94f70aa
-              28,372 B · 519 lines · PROPOSED / RETURNED FOR AMENDMENT
-AMENDMENT     six bounded corrections, founder ruling 2026-08-16
-              docs/governance/FOUNDER_RULING_LIVING_SPIRAL_CONTRACT_AMENDMENT_2026-08-16.md
-CUSTODY       assigned to the amending lane 2026-08-16 (amendment custody only)
-AUTHORSHIP    UNRESOLVED — original authorship is not established by this custody act
+PREDECESSOR       sha256 e29bdfe14444477ce53bab6589bd1595e7bbd3d8be15d4e87a462c42a94f70aa
+                  28,372 B · 519 lines · PROPOSED / RETURNED FOR AMENDMENT
+AMENDMENT         six bounded corrections + A4 completion, founder ruling 2026-08-16
+                  docs/governance/FOUNDER_RULING_LIVING_SPIRAL_CONTRACT_AMENDMENT_2026-08-16.md
+ACCEPTED CONTENT  sha256 ebfebb5aa6f496e8ce8023b030c7a3576d598448954620c303ffb6b2f626fbfe
+                  34,755 B · 624 lines · committed 21db7685c
+                  ⚠️ That hash covers the accepted SEMANTIC CONTENT — i.e. this file as of
+                  21db7685c, before this status stamp. A file cannot contain its own hash;
+                  the stamp itself carries no semantic change.
+CUSTODY           assigned to the amending lane 2026-08-16 (amendment custody only)
+AUTHORSHIP        UNRESOLVED — not established by the custody act or by acceptance
 ```
 
-⛔ Custody is **not** authorship and **not** acceptance. The architecture below is the predecessor's;
-the six corrections are the only semantic changes.
+⛔ Custody is **not** authorship. Acceptance is of the **semantics**, not of authorship, and not of
+any implementation. The architecture below is the predecessor's; the six corrections plus the M4
+temporal-axis completion are the only semantic changes.
+
+**Standing established by the acceptance ruling:**
+
+```text
+SEMANTIC CONTRACT        ACCEPTED
+operational_layer        still PROVISIONAL as specified (§3.3)
+O1 / O2 / O3 / O4 / O5   unchanged (§13)
+SYNTHETIC PROTOTYPE      AUTHORIZED AS NEXT GATE
+IMPLEMENTATION           NOT AUTHORIZED
+LIVE TELEMETRY           NOT AUTHORIZED
+RUN/ASSERTION SUBSTRATE  NOT CREATED OR AUTHORIZED HERE
+```
+
+⚠️ **Carried observation, not a defect and not blocking** (founder, 2026-08-16): M8 admits
+`none`/`zero` → `present`, which is coherent because `none` means no instance while `zero` can mean
+an evidenced zero level of the phenomenon. ⛔ Do not paraphrase M8 globally as "absence → presence"
+where `zero` is involved; the rule as written in §4 is explicit and does not invent prior
+existence or nonexistence.
 
 > ⛔ **This contract authorizes no code.** No UI, no telemetry, no emitter change, no graph store,
 > no production connection. It defines meanings and the tests those meanings must survive.
