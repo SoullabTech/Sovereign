@@ -45,9 +45,17 @@ describe('getHouseDestinations — audience filtering', () => {
     // Other practitioner/steward rooms still hidden from members.
     expect(member).not.toContain('circles');
     expect(member).not.toContain('vision-studio');
-    expect(member).not.toContain('pro-studio');
     expect(member).toContain('ideas');
     expect(member).toContain('studio');
+  });
+
+  // Founder direction 2026-08-16 (beta): Pro Studio's door is open to every
+  // member, superseding its 'founder' gate. This asserts DISCOVERABILITY, not
+  // authorization — /studio sends a non-practitioner to /studio/create, and the
+  // server-gate question the entry's comment records stays open.
+  it('Pro Studio reaches every member during beta', () => {
+    expect(getHouseDestinations(false).map((d) => d.id)).toContain('pro-studio');
+    expect(getHouseDestinations(true).map((d) => d.id)).toContain('pro-studio');
   });
 
   it('shows practitioner/steward-only destinations to founders/practitioners', () => {
