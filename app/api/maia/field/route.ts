@@ -1,25 +1,51 @@
 // GET /api/maia/field
 // Returns field perception bundle for orientation
 // Aggregates: relationship context, active patterns, recent breakthroughs
-// Used by MCP: get_member_field
+//
+// AUTHORITY — self-scoped. The ACTOR is the verified session; the `?memberId=`
+// query parameter is a redundant echo of the caller and never establishes
+// identity. Before 2026-08-16 this route derived the subject directly from that
+// parameter, validating only its UUID *format* and never its ownership: any
+// caller holding a member UUID could read that member's relationship context,
+// patterns, and breakthroughs with no credential at all.
+//
+// Contract determination (2026-08-16): self-only. No in-repo caller exists —
+// no UI component and no MCP server in `mcp-servers/**` references this route.
+// The former `Used by MCP: get_member_field` note points at `maia-mcp/server.ts`,
+// which is NOT present in this repository (cited in MTH-001; artifact unconfirmed).
+// No practitioner or delegated path was found, so no delegation is preserved.
+// ⚠️ If an out-of-repo consumer exists, it is now denied and must present a
+// verified credential rather than a bare member id — that is the intended outcome.
 
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 
 export async function GET(request: NextRequest) {
-  const memberId = request.nextUrl.searchParams.get('memberId')
+  const suppliedId = request.nextUrl.searchParams.get('memberId')
   const sinceDays = Math.min(parseInt(request.nextUrl.searchParams.get('sinceDays') || '30'), 90)
 
+  // ACTOR — from the verified session only, via the canonical hardened resolver.
+  // This is NOT a local identity resolver: getMemberIdFromRequest is the single
+  // authority (auth_sessions-backed; refuses a bare x-member-id claim).
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId) {
-    return NextResponse.json({ error: 'memberId required' }, { status: 400 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Validate UUID format
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  if (!uuidRegex.test(memberId)) {
-    return NextResponse.json({ error: 'Invalid memberId format' }, { status: 400 })
+  // ACTOR -> SUBJECT. A supplied id is tolerated only as a redundant echo of the
+  // caller; naming anyone else is the shape of a cross-member read and succeeds
+  // at nothing. Decided BEFORE any query below.
+  if (suppliedId && suppliedId !== memberId) {
+    console.warn(
+      `⛔ [maia/field] refused cross-member access: caller=${memberId.slice(0, 8)}… requested=${suppliedId.slice(0, 8)}…`
+    )
+    return NextResponse.json(
+      { error: 'Forbidden', message: 'You may only act on your own data.' },
+      { status: 403 }
+    )
   }
 
   try {
