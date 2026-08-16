@@ -485,15 +485,140 @@ function renderSystem() {
   `;
 }
 
+// ── JOP-02 Living Spiral ─────────────────────────────────────────────────────
+// A PROJECTION of the same governed derivation Home renders. It reads
+// `lastStatus` through legibility -> spiral and nothing else: no IPC of its own,
+// no endpoint, no store, no verifier. If the projection could not establish
+// something, this draws the aperture rather than filling it in.
+//
+// Rings are named by STANDING CLASS, deliberately. A ring must never be
+// readable as "further out = more canonical" — custody position is not in this
+// evidence chain at all, and is shown as written text, never as geometry.
+const SP_RINGS = [
+  { key: 'OBSERVED OPERATIONAL', match: s => s === 'READY' || s === 'WORKING' },
+  { key: 'NOT AUTHORIZED',       match: s => s === 'NEEDS_AUTHORITY' },
+  { key: 'IMPEDED',              match: s => s === 'NEEDS_SETUP' || s === 'DEGRADED' || s === 'BLOCKED' || s === 'FAILED' },
+  { key: 'NOT OBSERVED',         match: s => s === 'UNVERIFIED' },
+];
+const SP_PHEN = ['TRANSFORMATION', 'FLOW', 'STANDING', 'DISCERNMENT', 'INTEGRATION'];
+
+function spRingIndex(standing) {
+  const i = SP_RINGS.findIndex(r => r.match(standing));
+  return i === -1 ? SP_RINGS.length - 1 : i;   // unrecognised sits at NOT OBSERVED
+}
+
+function renderSpiral() {
+  const st = lastStatus;
+  if (!st) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
+  const sp = JarvisSpiral.projectSpiral(JarvisLegibility.deriveOperatorView(st));
+
+  const C = 250, R0 = 58, STEP = 44;
+  const rOf = i => R0 + i * STEP;
+  const byId = {};
+  const placed = sp.nodes.map((n, idx) => {
+    const ring = spRingIndex(n.standing);
+    const sector = Math.max(0, SP_PHEN.indexOf(n.phenomenon));
+    const peers = sp.nodes.filter(m => m.phenomenon === n.phenomenon && spRingIndex(m.standing) === ring);
+    const within = peers.indexOf(n);
+    const spread = peers.length > 1 ? (within - (peers.length - 1) / 2) * 15 : 0;
+    const ang = (sector * 72 - 90 + spread) * Math.PI / 180;
+    const pt = { ...n, x: C + Math.cos(ang) * rOf(ring), y: C + Math.sin(ang) * rOf(ring), ring, idx };
+    byId[n.id] = pt;
+    return pt;
+  });
+
+  // Colour carries ONE meaning each. Aperture is a dashed void, never a fill:
+  // "we did not look" must not occupy the same visual channel as "it is bad".
+  const dotFor = (n) => {
+    if (n.disturbance && n.disturbance.kind === 'UNOBSERVED') return { cls: 'sp-aperture', r: 6 };
+    if (n.disturbance && n.disturbance.needs_attention) return { cls: 'sp-dot sp-attention', r: 6.5 };
+    return { cls: 'sp-dot sp-observed', r: 6 };
+  };
+
+  const rings = SP_RINGS.map((r, i) => `
+    <circle class="sp-ring" cx="${C}" cy="${C}" r="${rOf(i)}"></circle>
+    <text class="sp-ring-lab" x="${C}" y="${C - rOf(i) + 10}" text-anchor="middle">${r.key}</text>`).join('');
+  const spokes = SP_PHEN.map((ph, i) => {
+    const a = (i * 72 - 90 + 36) * Math.PI / 180;
+    const la = (i * 72 - 90) * Math.PI / 180, lr = rOf(SP_RINGS.length - 1) + 22;
+    return `<line class="sp-spoke" x1="${C}" y1="${C}" x2="${C + Math.cos(a) * rOf(SP_RINGS.length - 1)}" y2="${C + Math.sin(a) * rOf(SP_RINGS.length - 1)}"></line>
+      <text class="sp-phen" x="${C + Math.cos(la) * lr}" y="${C + Math.sin(la) * lr}" text-anchor="middle">${ph}</text>`;
+  }).join('');
+  const edges = sp.edges.map(e => {
+    const a = byId[e.from], b = byId[e.to];
+    if (!a || !b) return '';
+    return `<line class="sp-edge" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><title>${e.kind} — ${e.evidence}</title></line>`;
+  }).join('');
+  const nodes = placed.map(n => {
+    const d = dotFor(n);
+    return `<g class="sp-node" data-id="${n.id}" tabindex="0">
+      <circle class="${d.cls}" cx="${n.x}" cy="${n.y}" r="${d.r}"></circle>
+      <text x="${n.x}" y="${n.y - 11}" text-anchor="middle">${n.label.length > 26 ? n.label.slice(0, 24) + '…' : n.label}</text>
+      <title>${n.id} — ${n.standing}${n.reason ? '\n' + n.reason : ''}\nmotion: ${n.motion.state} (${n.motion.reason})</title>
+    </g>`;
+  }).join('');
+
+  $main.innerHTML = `
+    <div class="spiral-wrap">
+      <div>
+        <div class="spiral-plate">
+          <svg viewBox="0 0 500 500" role="img" aria-label="Operational field. ${sp.nodes.length} nodes; ${sp.edges.length} evidenced edges.">
+            ${rings}${spokes}${edges}${nodes}
+          </svg>
+        </div>
+        <p class="sp-axis-note">
+          <b>Radius = standing.</b> Rings are named by what they assert. Radius is
+          <b>not</b> custody, maturity, importance, or health — nothing here means
+          "further out is more canonical". <b>Angle = phenomenon</b>, a presentation
+          label only; renaming the five leaves the geometry and the logic unchanged.
+        </p>
+        <p class="sp-axis-note">
+          <b>Custody position: ${sp.axes.custody.state}</b> — ${sp.axes.custody.reason}. It is written here rather than drawn.
+        </p>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Needs attention ${sp.attention.length ? `(${sp.attention.length})` : ''}</h3>
+          ${sp.attention.length
+            ? sp.attention.map(a => `<div class="row"><div><div class="label">${a.id}</div><div class="why">${a.reason || ''}</div></div></div>`).join('')
+            : '<div class="hint">Nothing is typed as needing attention. This is not a claim that the system is healthy — only that nothing observed is impeded.</div>'}
+        </div>
+        <div class="card">
+          <h3>Apertures — what could not be established</h3>
+          ${sp.apertures.map(a => `<div class="sp-aperture-card">
+            <div class="s">${a.subject}</div><div class="l">${a.limit}</div><div class="c">${a.consequence}</div></div>`).join('')}
+        </div>
+        <div class="card">
+          <h3>Evidenced connections</h3>
+          ${sp.edges.length
+            ? sp.edges.map(e => `<div class="row"><div><div class="label">${e.from} → ${e.to}</div><div class="why">${e.kind}</div><div class="src">${e.evidence}</div></div></div>`).join('')
+            : '<div class="hint">No connection is drawn. Composition requires assembly-point evidence; two things both working is co-occurrence, not composition.</div>'}
+        </div>
+        <div class="card">
+          <h3>Reading the marks</h3>
+          <div class="sp-legend">
+            <b>solid cyan</b> — observed operational state. Not "healthy".<br>
+            <b>amber</b> — typed attention, and only that.<br>
+            <b>dashed void</b> — observer aperture. We did not look; the subject is not absent.<br>
+            <b>dashed line</b> — an evidenced relation, quoting its evidence.<br>
+            <b>no motion glyph</b> — motion is UNOBSERVED for every node: no lawful temporal evidence source.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hint">Observed ${sp.observed_at || 'unknown'} · projection of the same governed derivation Home renders</div>`;
+}
+
 function render() {
   if (currentView === 'home') renderHome();
   else if (currentView === 'work') renderWork();
   else if (currentView === 'system') renderSystem();
+  else if (currentView === 'spiral') renderSpiral();
 }
 
 (async function init() {
   render();
   await Promise.all([refreshStatus(), loadCapabilities()]);
   render();
-  setInterval(async () => { await refreshStatus(); if (currentView === 'home' || currentView === 'system') render(); }, 15000);
+  setInterval(async () => { await refreshStatus(); if (currentView !== 'work') render(); }, 15000);
 })();
