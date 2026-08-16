@@ -38,7 +38,14 @@ function provenanceRows(p) {
       <h3>Which JARVIS is this?</h3>
       ${organRow(JarvisLegibility.describeProvenanceRow('Artifact identity', p.artifact))}
       ${organRow(JarvisLegibility.describeProvenanceRow('Execution substrate', p.substrate))}
-      ${p.substrate.conflict ? `<div class="errors"><div>Your saved repository choice (${p.substrate.conflict.overridden_config_root}) is NOT in effect. JARVIS_REPO_ROOT governs by design; clear it with <span class="kv">launchctl unsetenv JARVIS_REPO_ROOT</span> then quit and relaunch.</div></div>` : ''}
+      ${p.substrate.conflict ? `<div class="precedence">
+        <b>Two answers exist, and the environment is winning — by design.</b>
+        JARVIS is operating on <span class="kv">${p.substrate.conflict.governing}</span> because
+        <span class="kv">JARVIS_REPO_ROOT</span> takes precedence. Your saved choice
+        (<span class="kv">${p.substrate.conflict.overridden_config_root}</span>) is not in effect.
+        Nothing is broken — this is flagged so the substrate is never silently substituted.
+        To use your saved choice instead: <span class="kv">launchctl unsetenv JARVIS_REPO_ROOT</span>, then quit and relaunch.
+      </div>` : ''}
       ${p.self_binding_satisfied ? '' : '<div class="hint">Which build this is, and which checkout it is operating on, are two separate facts — and right now they do not both have a confirmed answer. Nothing is wrong; it means you cannot yet say "this build was made from this checkout".</div>'}
     </div>`;
 }
@@ -89,7 +96,9 @@ function renderHome() {
           <div class="label">${b.bound ? b.root : 'No repository connected'}</div>
           ${b.reason ? `<div class="why">${b.reason}</div>` : ''}
           ${b.remediation ? `<div class="fix">→ ${b.remediation}</div>` : ''}
-          <div class="src">source: live status · found by ${b.mode === 'dev' ? 'running from inside this checkout' : 'the configured repository path'}</div>
+          <div class="src">${b.bound
+            ? `source: live status · found by ${b.mode === 'dev' ? 'running from inside this checkout' : 'the configured repository path'}`
+            : 'source: live status · nothing was resolved to look at'}</div>
         </div>
         <span class="state ${b.state}">${b.state.replace('_', ' ')}</span>
       </div>
