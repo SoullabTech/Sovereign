@@ -29,8 +29,15 @@ const ok = (name, cond, detail = '') => {
 
 const sh = (cwd, cmd, args) => spawnSync(cmd, args, { cwd, encoding: 'utf8' });
 
-/** Build a sandbox repo with a canonical base commit; returns {dir, base}. */
-function sandbox({ canonicalLedger = null } = {}) {
+/**
+ * Build a sandbox repo with a canonical base commit; returns {dir, base}.
+ *
+ * `baseClaims` seeds a REALISTIC PRIOR ADMISSION: each claim is adjudicated and
+ * its stamped row appended BEFORE the base commit, so the base looks exactly
+ * like canonical after an earlier PR was admitted. This is what makes the
+ * base-relative delta testable at all.
+ */
+function sandbox({ canonicalLedger = null, baseClaims = [] } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), 'jarvis-ci-proof-'));
   mkdirSync(path.join(dir, 'scripts/builder/__tests__'), { recursive: true });
   mkdirSync(path.join(dir, '.ain/claims'), { recursive: true });
@@ -38,6 +45,7 @@ function sandbox({ canonicalLedger = null } = {}) {
   cpSync(CI_SRC, path.join(dir, 'scripts/builder/epistemic-ci.mjs'));
   sh(dir, 'git', ['init', '-q', '-b', 'main']);
   if (canonicalLedger !== null) writeFileSync(path.join(dir, '.ain/epistemic-ledger.jsonl'), canonicalLedger);
+  for (const c of baseClaims) authorAppend(dir, c);
   writeFileSync(path.join(dir, 'README'), 'base\n');
   sh(dir, 'git', ['add', '-A']);
   sh(dir, 'git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '-m', 'base']);
@@ -55,6 +63,21 @@ const CLAIM_INFLATED = {
   assertion: 'The Daily Anchor consent gate is LIVE in production.',
   evidence: [{ kind: 'project_memory', detail: 'a prior session note' }],
 };
+const CLAIM_OK3 = {
+  id: 'C3', status: 'OBSERVATION',
+  assertion: 'The CI fail-closed proof reports all assertions passing at the named blob.',
+  evidence: [{ kind: 'executable_gate', detail: 'epistemic-ci-proof -> all/0', ref: 'epistemic-ci-proof.mjs' }],
+};
+const CLAIM_OK4 = {
+  id: 'C4', status: 'OBSERVATION',
+  assertion: 'The guard self-proof reports 49 passed and 0 failed at the named blob.',
+  evidence: [{ kind: 'executable_gate', detail: 'epistemic-guard-proof -> 49/0', ref: 'epistemic-guard-proof.mjs' }],
+};
+
+/** Write a claim record WITHOUT adjudicating it — used to prove missing rows block. */
+function writeClaim(dir, claim) {
+  writeFileSync(path.join(dir, '.ain/claims', `${claim.id}.json`), JSON.stringify(claim));
+}
 
 /** Author flow: guard adjudicates + appends, then the row is stamped governing. */
 function authorAppend(dir, claim) {
@@ -98,12 +121,83 @@ console.log('\nJARVIS EPISTEMIC CI — fail-closed proof\n');
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── 3. MISSING CLAIM BLOCKS (the skip-epistemics bypass) ─────────────────────
+// ── 3. ZERO NEW CLAIMS IS A VALID NO-OP ──────────────────────────────────────
+// Founder ruling 2026-08-16 (R4). SUPERSEDES the prior assertion "zero claim
+// records BLOCKS — absence is never success", which was overturned: Axis 1
+// governs SUBMITTED claims, and requiring one per PR manufactures epistemic
+// activity, turning the ledger into a merge log. The bypass this once guarded
+// is now covered by scenario 3c: a row may never be appended without a claim.
 {
   const { dir, base } = sandbox({ canonicalLedger: null });
   const r = runGate(dir, base); const o = verdictOf(r);
-  ok('zero claim records BLOCKS — absence is never success', r.status === 1 && hasRule(o, 'CLAIM-MISSING'));
-  rmSync(dir, { recursive: true, force: true });
+  ok('zero claims, zero ledger delta → PASS / NOT_APPLICABLE',
+    r.status === 0 && o.verdict === 'PASS / NOT_APPLICABLE', `exit ${r.status} verdict ${o.verdict}`);
+}
+
+// ── 3a. THE PERMANENT REGRESSION ─────────────────────────────────────────────
+// Canonical adjudicated against ITSELF must not demand a duplicate transition.
+// This is the defect that blocked every PR after #1054 merged.
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('REGRESSION: canonical vs itself PASSES — an admitted claim is not resubmitted',
+    r.status === 0 && !hasRule(o, 'LEDGER-DELTA-MISMATCH'), `exit ${r.status} verdict ${o.verdict}`);
+  ok('REGRESSION: the base claim is prior evidence, not a submission', o.claims_submitted === 0 && o.claims_at_base === 1);
+}
+
+// ── 3b. BASE-RELATIVE SUBMISSION ─────────────────────────────────────────────
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  authorAppend(dir, CLAIM_OK3);                      // one NEW claim + its row
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('base claim + one new claim + matching row → PASS', r.status === 0 && o.verdict === 'PASS', `exit ${r.status}`);
+  ok('only the new claim was adjudicated', o.claims_submitted === 1 && o.results?.length === 1);
+}
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  writeClaim(dir, CLAIM_OK3);                        // new claim, NO row
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('base claim + one new claim + NO row → BLOCK', r.status === 1 && hasRule(o, 'LEDGER-DELTA-MISMATCH'));
+}
+
+// ── 3c. THE BYPASS THIS GATE STILL CLOSES ────────────────────────────────────
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  authorAppend(dir, CLAIM_OK);                       // re-append a row, no NEW claim
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('ledger row appended with no new claim → BLOCK', r.status === 1 && hasRule(o, 'LEDGER-DELTA-MISMATCH'));
+}
+
+// ── 3d. CANONICAL CLAIM RECORDS ARE IMMUTABLE (R3) ───────────────────────────
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  writeFileSync(path.join(dir, '.ain/claims', `${CLAIM_OK.id}.json`),
+    JSON.stringify({ ...CLAIM_OK, assertion: 'quietly rewritten history' }));
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('modifying a canonical claim record → BLOCK', r.status === 1 && hasRule(o, 'CLAIM-HISTORY-MUTATION'));
+}
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  rmSync(path.join(dir, '.ain/claims', `${CLAIM_OK.id}.json`), { force: true });
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('deleting a canonical claim record → BLOCK', r.status === 1 && hasRule(o, 'CLAIM-HISTORY-MUTATION'));
+}
+
+// ── 3e. CARDINALITY (R4) ─────────────────────────────────────────────────────
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  authorAppend(dir, CLAIM_OK3);                      // two new claims...
+  writeClaim(dir, CLAIM_OK4);                        // ...but only one row
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('two new claims, one row → BLOCK', r.status === 1 && hasRule(o, 'LEDGER-DELTA-MISMATCH'));
+}
+{
+  const { dir, base } = sandbox({ canonicalLedger: null, baseClaims: [CLAIM_OK] });
+  authorAppend(dir, CLAIM_OK3);
+  authorAppend(dir, CLAIM_OK4);
+  const r = runGate(dir, base); const o = verdictOf(r);
+  ok('two new claims, two derived rows → PASS', r.status === 0 && o.verdict === 'PASS', `exit ${r.status}`);
+  ok('both new claims adjudicated, base claim untouched', o.claims_submitted === 2 && o.results?.length === 2);
 }
 
 // ── 4. MALFORMED CLAIM BLOCKS ────────────────────────────────────────────────
