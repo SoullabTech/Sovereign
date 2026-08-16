@@ -36,6 +36,7 @@ import type {
   HoloflowerJournalEntry,
   PetalConfiguration
 } from '@/lib/types/holoflower/journal';
+import { memberRef } from '../../privacy/memberRef';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -355,7 +356,7 @@ export class HoloflowerMemoryIntegration {
    * Analyze multiple journal entries to detect longitudinal patterns
    */
   async detectSoulPatterns(userId: string): Promise<void> {
-    console.log('🔮 [PATTERN DETECTION] Analyzing soul patterns for user:', userId);
+    console.log('🔮 [PATTERN DETECTION] Analyzing soul patterns for user:', memberRef(userId));
 
     try {
       // Get all journal entries for this user

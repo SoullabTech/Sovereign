@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { segment, MAX_SECTIONS, type SectionInput } from '@/lib/manuscript/ingest/segment';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 const MAX_TEXT_CHARS = 2_000_000; // ~a very long book; hard cap for sanity
 
@@ -45,11 +46,45 @@ export async function GET(request: NextRequest) {
       section_count: string;
       char_count: string;
       keep_count: string;
+      last_written_at: string | null;
     }>(
       `SELECT m.id, m.title, m.created_at,
               (SELECT count(*) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS section_count,
               (SELECT coalesce(sum(length(s.body)), 0) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS char_count,
-              (SELECT count(*) FROM manuscript_keeps k WHERE k.manuscript_id = m.id) AS keep_count
+              (SELECT count(*) FROM manuscript_keeps k WHERE k.manuscript_id = m.id) AS keep_count,
+              -- WRITING ACTIVITY — a member act, not a row mutation.
+              --
+              -- ⚠️ CORRECTED 2026-08-14. The previous version returned the raw
+              -- working-draft updated_at and its comment claimed that column
+              -- "moves when the member actually writes". Production disproved
+              -- that: manuscript 33a9233c carries 374,697 characters with
+              -- created_at == updated_at == 08-06 18:02:42 — manuscript, draft
+              -- and its only revision all written in the SAME SECOND by the
+              -- import path, and never touched since. Studio Home would have
+              -- offered to "continue writing" a book nobody had written a word
+              -- of in this system.
+              --
+              -- The discriminator is exact rather than heuristic, and rests on
+              -- an enumeration of every writer to this column on this SHA:
+              --   draft INSERT (seed from sections) — no updated_at → == created
+              --   blank INSERT (empty page)         — no updated_at → == created
+              --   draft UPDATE (save / autosave)    — updated_at = now()  MEMBER
+              --   revisions UPDATE (restore)        — updated_at = now()  MEMBER
+              -- No migration backfills the column. So updated_at can only have
+              -- advanced past created_at through a member act, and equality
+              -- means the row has only ever been created.
+              --
+              -- ⛔ If a future migration, normalisation job, or import-completion
+              -- step ever writes updated_at, this stops being authority and the
+              -- Home needs a dedicated authored-activity signal. Re-run the
+              -- enumeration before trusting it again.
+              --
+              -- NULL = no writing has happened here. Studio Home requires this
+              -- AND charCount > 0 before a Work is continuable, and never uses
+              -- living_works.updated_at, which a rename moves.
+              (SELECT CASE WHEN d.updated_at > d.created_at THEN d.updated_at END
+                 FROM manuscript_working_drafts d
+                WHERE d.manuscript_id = m.id) AS last_written_at
          FROM member_manuscripts m
         WHERE m.member_id = $1
         ORDER BY m.created_at DESC`,
@@ -63,6 +98,7 @@ export async function GET(request: NextRequest) {
         sectionCount: Number(r.section_count),
         charCount: Number(r.char_count),
         keepCount: Number(r.keep_count),
+        lastWrittenAt: r.last_written_at,
       })),
     });
   } catch (err) {
@@ -145,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     // Log marker: counts only, never content.
     console.log(
-      `[MAIA/press] manuscript saved { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/press] manuscript saved { memberRef: ${memberRef(memberId)}, ` +
         `manuscriptId: ${manuscriptId}, sections: ${clean.length} }`,
     );
     return NextResponse.json({ id: manuscriptId, sectionCount: clean.length }, { status: 201 });

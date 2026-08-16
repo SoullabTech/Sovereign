@@ -454,9 +454,21 @@ export const WhisperContinuousConversation = forwardRef<
         }
 
         onTranscript(data.transcription);
-        console.log('✅ Transcription:', data.transcription);
+        // Never log content. The member's own speech does not reach the console;
+        // what survives is that transcription succeeded, how long it took, and a
+        // non-identifying length. NOT a hash, digest, prefix or excerpt.
+        console.log(
+          `✅ Transcription: ${data.transcription.length} chars in ${transcriptionDuration}ms`,
+        );
       } else {
-        console.error('❌ No transcription in response:', data);
+        // Never log content. `data` is the transcription endpoint's response body;
+        // logging it whole would put the member's speech back on the console the
+        // moment the server shape changes. Only the non-content shape is emitted.
+        console.error('❌ No transcription in response', {
+          success: data?.success ?? null,
+          hasTranscription: typeof data?.transcription === 'string',
+          error: data?.error ?? null,
+        });
         try {
           Analytics.transcriptionError({
             type: 'empty_response',

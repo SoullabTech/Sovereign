@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest as getMemberId } from '@/lib/auth/getMemberFromRequest';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
     );
 
     const row = result.rows?.[0];
-    console.log('[principles] saved:', { memberId: memberId.slice(0, 8), title: row?.title });
+    console.log('[principles] saved:', { memberId: memberRef(memberId), title: row?.title });
     return NextResponse.json({ principle: row }, { status: 201 });
   } catch (err) {
     console.error('[principles] POST error', err);

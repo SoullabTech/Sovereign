@@ -32,6 +32,7 @@ import {
   UserSelfletState,
   SelfletActionResult,
 } from './types';
+import { memberRef } from '../../privacy/memberRef';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET CHAIN SERVICE
@@ -117,7 +118,7 @@ export class SelfletChainService {
       return result.rows[0] ? this.parseSelfletNode(result.rows[0]) : null;
     } catch (error) {
       // Table may not exist yet
-      console.log(`[SELFLET] No selflet found for ${userId} (table may not exist)`);
+      console.log(`[SELFLET] No selflet found for ${memberRef(userId)} (table may not exist)`);
       return null;
     }
   }
@@ -782,7 +783,7 @@ export class SelfletChainService {
         countThisSession: perSessionRes.rows[0]?.count_session ?? 0,
       };
     } catch (error) {
-      console.log(`[SELFLET] Error getting user state for ${userId}:`, error);
+      console.log(`[SELFLET] Error getting user state for ${memberRef(userId)}:`, error);
       return { lastSelfletTime: null, lastSelfletTurn: null, countThisSession: 0 };
     }
   }

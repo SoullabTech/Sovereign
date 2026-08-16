@@ -35,6 +35,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 /**
  * The tags a member's own gesture can write onto a thread, and the section of
@@ -261,7 +262,7 @@ export async function GET(request: NextRequest) {
     console.info(
       '[NowWhat/home] read',
       JSON.stringify({
-        memberIdPrefix: memberId.slice(0, 8),
+        memberRef: memberRef(memberId),
         fieldContext,
         decisions: decisions.length,
         commitments: commitments.length,

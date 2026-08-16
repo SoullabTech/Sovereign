@@ -23,6 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { normalizeSentence, refuseBelonging } from '@/lib/livingWork/domain';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 const MAX_TYPE_CHARS = 80;
 const MAX_SENTENCE_CHARS = 2000;
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       ).rows[0];
 
     console.log(
-      `[MAIA/press] material brought { memberIdPrefix: ${memberId.slice(0, 8)}, ` +
+      `[MAIA/press] material brought { memberRef: ${memberRef(memberId)}, ` +
         `workId: ${id}, type: ${materialType}, sentence: ${sentence ? 'written' : 'unwritten'} }`
     );
     return NextResponse.json(

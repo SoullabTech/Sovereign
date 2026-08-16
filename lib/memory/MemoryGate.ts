@@ -1,5 +1,6 @@
 // Server-only: prevent accidental client-side bundling
 import 'server-only';
+import { memberRef } from '../privacy/memberRef';
 
 /**
  * MEMORY PERMISSION GATE
@@ -98,7 +99,7 @@ export function logMemoryGateDenial(
 ): void {
   if (resolution.wasDowngraded) {
     console.warn(`🛡️ [MemoryGate] ${context}: longterm requested but denied`, {
-      userId,
+      userId: memberRef(userId),
       requested: resolution.requested,
       effective: resolution.effective,
       allowLongterm: resolution.allowLongterm,

@@ -113,7 +113,10 @@ export class OrbitFlow {
     console.log('\n╔═══════════════════════════════════════════════════════════════');
     console.log('║  🌊 MICROCOSMIC ORBIT EXECUTION');
     console.log('╚═══════════════════════════════════════════════════════════════\n');
-    console.log(`Query: "${context.userQuery}"\n`);
+    // CONTAINMENT: userQuery is the member's own words. The orbit event and its
+    // shape are diagnosable without them; the text is not logged, and no digest,
+    // prefix or excerpt stands in for it.
+    console.log(`Query received (${context.userQuery?.length ?? 0} chars)\n`);
 
     // Reset separator for new orbit
     this.separator.resetHealth();

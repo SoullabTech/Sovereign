@@ -136,7 +136,13 @@ export class MaiaRealtimeClientDirect {
 
         case 'conversation.item.input_audio_transcription.completed':
           if (data.transcript) {
-            console.log('🎤 User:', data.transcript);
+            // CONTAINMENT: the member's transcribed speech is member-authored
+            // content and does not reach the log. No digest, prefix or excerpt
+            // substitutes for it. The event still emits so the transcription
+            // path stays diagnosable.
+            console.log('🎤 User transcript received', {
+              chars: String(data.transcript).length,
+            });
             this.config.onTranscript(data.transcript, true);
           }
           break;

@@ -1,4 +1,5 @@
 // @ts-nocheck - Memory prototype, not type-checked
+import { memberRef } from '../privacy/memberRef';
 /**
  * SEMANTIC MEMORY SERVICE
  *
@@ -159,7 +160,7 @@ export class SemanticMemoryService {
       }
 
       console.log('✅ Interaction recorded:', {
-        userId,
+        userId: memberRef(userId),
         element: detectedElement,
         engagement: engagementScore,
         effectiveness: effectivenessScore
@@ -638,7 +639,7 @@ export class SemanticMemoryService {
             { transition }
           );
 
-          console.log(`🔮 EMERGENT PATTERN: User ${userId} transitions ${transition.from}→${transition.to}`);
+          console.log(`🔮 EMERGENT PATTERN: User ${memberRef(userId)} transitions ${transition.from}→${transition.to}`);
         }
       }
     } catch (error) {

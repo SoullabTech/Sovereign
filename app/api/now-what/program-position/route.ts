@@ -38,6 +38,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { getPracticeFieldBySlug } from '@/lib/practiceField/practiceFieldService';
+import { memberRef } from '@/lib/privacy/memberRef';
 import {
   GENERAL_PROGRAM,
   sanitizeSlug,
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
 
     console.info(
       '[NowWhat/position] read',
-      JSON.stringify({ memberIdPrefix: memberId.slice(0, 8), fieldSlug, count: positions.length }),
+      JSON.stringify({ memberRef: memberRef(memberId), fieldSlug, count: positions.length }),
     );
     return NextResponse.json({ positions });
   } catch (err: any) {
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
       const departed = await deletePosition(fieldSlug, programSlug, memberId);
       console.info(
         '[NowWhat/position] departed',
-        JSON.stringify({ memberIdPrefix: memberId.slice(0, 8), fieldSlug, programSlug, existed: departed }),
+        JSON.stringify({ memberRef: memberRef(memberId), fieldSlug, programSlug, existed: departed }),
       );
       return NextResponse.json({ ok: true, departed });
     }
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
       await upsertPosition(fieldSlug, programSlug, memberId, cohort.focalPoint, 'member_confirmed');
       console.info(
         '[NowWhat/position] saved',
-        JSON.stringify({ memberIdPrefix: memberId.slice(0, 8), fieldSlug, programSlug, statedBy: 'member_confirmed' }),
+        JSON.stringify({ memberRef: memberRef(memberId), fieldSlug, programSlug, statedBy: 'member_confirmed' }),
       );
       return NextResponse.json({ ok: true, position: { focalPoint: cohort.focalPoint, statedBy: 'member_confirmed' } });
     }
@@ -203,7 +204,7 @@ export async function POST(request: NextRequest) {
     console.info(
       '[NowWhat/position] saved',
       JSON.stringify({
-        memberIdPrefix: memberId.slice(0, 8),
+        memberRef: memberRef(memberId),
         fieldSlug,
         programSlug,
         statedBy: 'member_stated',

@@ -44,7 +44,20 @@ const assessmentService = { processAssessment: async (query: any) => successResp
 const getRelevantMemories = async (userId: string, input: string, limit: number) => [];
 const storeMemoryItem = async (userId: string, content: string, metadata: any) => {};
 // Oracle logger stub for lib version
-const logOracleInsight = async (insight: any) => logger.info('Oracle insight:', insight);
+// CONTAINMENT: the sole caller (storeInteraction, below) passes an object whose
+// `query` field is `query.input` — the member's verbatim words — alongside
+// `response`. Logging the object whole put member-authored content in the sink.
+// Only non-content fields are emitted now; no digest, prefix or excerpt of the
+// query stands in for it. `userId` correlation is left exactly as it already
+// was — identifier posture belongs to a separate unit and is not changed here.
+const logOracleInsight = async (insight: any) =>
+  logger.info('Oracle insight:', {
+    userId: insight?.userId,
+    agentType: insight?.agentType,
+    confidence: insight?.confidence,
+    phase: insight?.metadata?.phase,
+    elementalAlignment: insight?.metadata?.elementalAlignment,
+  });
 // FileMemoryIntegration stub for lib version
 class FileMemoryIntegration {
   formatCitationMetadata(contexts: any) { return []; }

@@ -225,7 +225,7 @@ export class ConsciousnessMemoryLattice {
 
     // DEFENSE-IN-DEPTH: Short-circuit if not permitted to write to long-term memory
     if (memoryMode !== 'longterm') {
-      console.log(`🛡️ [MemoryGate] Lattice integrateEvent denied (not longterm)`, { userId, memoryMode });
+      console.log(`🛡️ [MemoryGate] Lattice integrateEvent denied (not longterm)`, { userId: memberRef(userId), memoryMode });
       // Return empty result - no memory formation, no patterns, no insights
       // Use unique ID to avoid downstream collisions
       const deniedId = (globalThis.crypto as any)?.randomUUID?.() ?? `denied_${Date.now()}_${Math.random().toString(36).slice(2)}`;
