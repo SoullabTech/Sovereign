@@ -167,9 +167,16 @@ OLD CLAIM (verbatim)         "(inherited from `scripts/builder/orient.mjs`, wher
 REASON FOR AMENDMENT         referent absent on canonical a059264ea
 SEMANTIC CHANGE              NONE
 PROVENANCE CLAIM CHANGE      YES — canonical executable inheritance withdrawn
-NEW CONTRACT HASH            7193d1236cc231191d57f07347ac87bce167fae00c81f13e39b217fe82f5d46c
-                             37,904 B · 677 lines
+NEW CONTRACT HASH            0d9c1d6a59e0e4bc1d188284ba446a2e6523515fd2c427e2999a0ea4c77b6f90
+                             38,087 B · 679 lines
 ```
+
+**E1 completion pass.** The first E1 commit corrected the rule sentence but left the original
+amendment-provenance block still labelling `ebfebb5a…` as `ACCEPTED CONTENT` — a stale identity
+presented as current, which is the exact defect E1 exists to prevent. That label now reads
+`ACCEPTED SEMANTICS` and is explicitly stamped `[PRE-ERRATUM] — NOT the current byte identity`.
+Same authority, same class: provenance only, **no semantic change**. Intermediate identity
+`7193d1236c…` was superseded within this lane and never advertised outside it.
 
 ⛔ `ebfebb5a…` must no longer be advertised as the contract's current byte identity.
 

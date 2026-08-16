@@ -14,11 +14,13 @@ PREDECESSOR       sha256 e29bdfe14444477ce53bab6589bd1595e7bbd3d8be15d4e87a462c4
                   28,372 B · 519 lines · PROPOSED / RETURNED FOR AMENDMENT
 AMENDMENT         six bounded corrections + A4 completion, founder ruling 2026-08-16
                   docs/governance/FOUNDER_RULING_LIVING_SPIRAL_CONTRACT_AMENDMENT_2026-08-16.md
-ACCEPTED CONTENT  sha256 ebfebb5aa6f496e8ce8023b030c7a3576d598448954620c303ffb6b2f626fbfe
+ACCEPTED SEMANTICS  sha256 ebfebb5aa6f496e8ce8023b030c7a3576d598448954620c303ffb6b2f626fbfe
                   34,755 B · 624 lines · committed 21db7685c
-                  ⚠️ That hash covers the accepted SEMANTIC CONTENT — i.e. this file as of
-                  21db7685c, before this status stamp. A file cannot contain its own hash;
-                  the stamp itself carries no semantic change.
+                  ⛔ [PRE-ERRATUM] This is NOT the current byte identity of this file.
+                  It is the historical referent for the ACCEPTED SEMANTIC CONTENT — this
+                  file as of 21db7685c, before the status stamp and before erratum E1.
+                  A file cannot contain its own hash; neither the stamp nor E1 carries
+                  any semantic change. Current identity: see §Erratum record.
 CUSTODY           assigned to the amending lane 2026-08-16 (amendment custody only)
 AUTHORSHIP        UNRESOLVED — not established by the custody act or by acceptance
 ```
