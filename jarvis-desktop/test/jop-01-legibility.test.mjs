@@ -209,6 +209,62 @@ describe('DOES ANYTHING NEED ME? — no fabrication in either direction', () => 
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Regressions from the 2026-08-16 founder walk. The walk FAILED on these; the
+// structural proof above had passed while the screen was still unusable, which
+// is precisely why the walk is a required acceptance step and not a formality.
+describe('FOUNDER-WALK REGRESSIONS — a badge alone is never a founder-facing fact', () => {
+  const holdsFor = (claim_state) => L.deriveOperatorView({
+    ...READY_STATE, governance_holds: [{ id: 's1', unit: 'u1', claim_state, held: 'HELD' }],
+  }).needs_founder.items[0];
+
+  test('every hold explains what its state MEANS — walk found bare STALE/CAPACITY badges', () => {
+    for (const cs of ['STALE', 'AMBIGUOUS_OWNERSHIP', 'CAPACITY']) {
+      const h = holdsFor(cs);
+      assert.ok(h.means && h.means.length > 20, `${cs} must say what it means`);
+      assert.ok(h.remediation && h.remediation.length > 10, `${cs} must say what to do`);
+      assert.doesNotMatch(h.means, new RegExp(`^${cs}$`), 'the raw token is not an explanation');
+    }
+  });
+
+  test('the governor\'s own claim_state is preserved, not replaced', () => {
+    assert.equal(holdsFor('STALE').claim_state, 'STALE');
+  });
+
+  test('CAPACITY is explained as not-broken — queueing is not a fault', () => {
+    assert.match(holdsFor('CAPACITY').remediation, /nothing is broken/i);
+  });
+
+  test('an UNRECOGNISED hold state is described as unrecognised, not left bare', () => {
+    const h = holdsFor('SOMETHING_NEW');
+    assert.match(h.means, /unrecognised/i);
+    assert.match(h.means, /SOMETHING_NEW/);
+    assert.ok(h.remediation, 'even an unknown hold must offer a next step');
+  });
+
+  test('provenance rows carry reason + remediation — walk found a bare UNKNOWN', () => {
+    const r = L.describeProvenanceRow('Artifact identity', { state: 'UNKNOWN', detail: 'JARVIS — dev (unpackaged)' });
+    assert.equal(r.state, L.UNVERIFIED);
+    assert.ok(r.reason, 'a bare UNKNOWN badge is the defect this unit exists to remove');
+    assert.match(r.reason, /normal when running from source/i, 'must not read as broken');
+    assert.ok(r.remediation);
+    assert.equal(r.by_design, true);
+  });
+
+  test('a stamped packaged build reads READY with nothing to explain away', () => {
+    const r = L.describeProvenanceRow('Artifact identity', { state: 'AVAILABLE', detail: 'Desktop build abc1234' });
+    assert.equal(r.state, L.READY);
+    assert.equal(r.reason, null);
+    assert.equal(r.remediation, null);
+  });
+
+  test('provenance still cannot be upgraded — a refusal stays non-operational', () => {
+    for (const raw of ['UNAVAILABLE', 'DEGRADED', 'UNKNOWN', undefined]) {
+      const r = L.describeProvenanceRow('x', { state: raw });
+      assert.ok(L.NON_OPERATIONAL.includes(r.state));
+    }
+  });
+});
+
 describe('SABOTAGE — no path may upgrade a refusal into health', () => {
   test('every non-AVAILABLE raw state maps to a non-operational founder state', () => {
     for (const raw of ['UNAVAILABLE', 'DEGRADED', 'UNKNOWN', null, undefined, 'LANE_NOT_PERMITTED', 'FAILED', 'nonsense']) {

@@ -202,7 +202,11 @@ function deriveOperatorView(status) {
   };
 
   // ── needs founder — a technical failure is NOT a founder decision ─────────
-  const holds = Array.isArray(s.governance_holds) ? s.governance_holds : [];
+  // Founder-walk defect (2026-08-16): these rendered as bare badges reading
+  // STALE / CAPACITY. Those are nouns, not requests — a founder cannot act on a
+  // claim_state they have never been told the meaning of. Every hold now
+  // carries what it MEANS and what would resolve it, same contract as an organ.
+  const holds = (Array.isArray(s.governance_holds) ? s.governance_holds : []).map(describeHold);
   const needsFounder = {
     items: holds,
     summary: holds.length === 0
@@ -222,6 +226,64 @@ function deriveOperatorView(status) {
     organs: all,
     active_work: activeWork,
     needs_founder: needsFounder,
+  };
+}
+
+/**
+ * Turn a governor claim_state into something a founder can act on.
+ *
+ * The governor's vocabulary is correct and stays authoritative — `claim_state`
+ * is passed through untouched. What is added is the plain-language meaning and
+ * the act, because "STALE" tells a founder nothing and "CAPACITY" is not even
+ * phrased as a request. An unrecognised claim_state is described as
+ * unrecognised rather than silently rendered as a bare badge again.
+ */
+function describeHold(h) {
+  const base = { ...h };
+  switch (h && h.claim_state) {
+    case 'STALE':
+      return { ...base,
+        means: 'A work claim is still held, but its worker stopped sending heartbeats.',
+        remediation: 'Recover the claim if the work should continue, or close it to release the lane.' };
+    case 'AMBIGUOUS_OWNERSHIP':
+      return { ...base,
+        means: 'Two lanes appear to hold the same claim. Ownership cannot be decided mechanically.',
+        remediation: 'Decide which lane owns this unit, then close the other.' };
+    case 'CAPACITY':
+      return { ...base,
+        means: 'Work is queued because every execution slot is already claimed.',
+        remediation: 'Nothing is broken. Close finished claims to free a slot, or let the queue drain.' };
+    default:
+      return { ...base,
+        means: `Held with an unrecognised state${h && h.claim_state ? ` (${h.claim_state})` : ''}.`,
+        remediation: 'Inspect the session governor directly — this surface cannot explain this state.' };
+  }
+}
+
+/**
+ * Provenance rows go through the SAME mapping as everything else.
+ *
+ * Founder-walk defect (2026-08-16): "Artifact identity — UNKNOWN" was left
+ * rendering raw on the Home screen while this unit claimed to have removed
+ * bare UNKNOWNs. It read as broken; it actually means the app is running from
+ * source rather than a stamped build, which is a normal dev state. An
+ * unstamped dev run is not a fault, and must not be coloured like one.
+ */
+function describeProvenanceRow(name, row) {
+  const state = mapState(row && row.state);
+  const detail = row && typeof row.detail === 'string' ? row.detail : null;
+  const unstamped = state === UNVERIFIED;
+  return {
+    name,
+    state,
+    reason: state === READY ? null
+      : (unstamped
+          ? (detail ? `${detail} — this build carries no identity stamp, which is normal when running from source.` : 'No identity stamp — running from source rather than a packaged build.')
+          : detail),
+    remediation: state === READY ? null
+      : (unstamped ? 'Nothing to fix while developing. A packaged build stamps its own identity.' : null),
+    by_design: unstamped,
+    evidence: 'jarvis:status.provenance',
   };
 }
 
@@ -252,6 +314,7 @@ function operationalSentence({ unbound, mech, claudeReasoning, claudeExecution }
   return {
     STATES, NON_OPERATIONAL,
     READY, WORKING, NEEDS_SETUP, NEEDS_AUTHORITY, DEGRADED, BLOCKED, FAILED, UNVERIFIED,
-    mapState, isUnbound, splitBindingSentinel, deriveOperatorView,
+    mapState, isUnbound, splitBindingSentinel, describeHold, describeProvenanceRow,
+    deriveOperatorView,
   };
 });

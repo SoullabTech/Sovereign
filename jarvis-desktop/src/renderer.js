@@ -30,17 +30,14 @@ async function refreshStatus() {
 function provenanceRows(p) {
   if (!p) return '';
   // F3: two identities, rendered as two rows that can never be read as one.
+  // JOP-01: both now go through the same derivation as every other row, so an
+  // unstamped dev build reads as "no stamp, normal from source" rather than a
+  // bare UNKNOWN that contradicts the headline.
   return `
     <div class="card">
       <h3>Which JARVIS is this?</h3>
-      <div class="row">
-        <div><div class="label">Artifact identity</div><div class="detail">${p.artifact.detail}</div></div>
-        <span class="state ${p.artifact.state}">${p.artifact.state}</span>
-      </div>
-      <div class="row">
-        <div><div class="label">Execution substrate</div><div class="detail">${p.substrate.detail}</div></div>
-        <span class="state ${p.substrate.state}">${p.substrate.state}</span>
-      </div>
+      ${organRow(JarvisLegibility.describeProvenanceRow('Artifact identity', p.artifact))}
+      ${organRow(JarvisLegibility.describeProvenanceRow('Execution substrate', p.substrate))}
       ${p.substrate.conflict ? `<div class="errors"><div>Your saved repository choice (${p.substrate.conflict.overridden_config_root}) is NOT in effect. JARVIS_REPO_ROOT governs by design; clear it with <span class="kv">launchctl unsetenv JARVIS_REPO_ROOT</span> then quit and relaunch.</div></div>` : ''}
       ${p.self_binding_satisfied ? '' : '<div class="hint">These are two independent facts. This Desktop cannot yet name both cleanly — treat readings accordingly.</div>'}
     </div>`;
@@ -88,7 +85,7 @@ function renderHome() {
           <div class="label">${b.bound ? b.root : 'No repository connected'}</div>
           ${b.reason ? `<div class="why">${b.reason}</div>` : ''}
           ${b.remediation ? `<div class="fix">→ ${b.remediation}</div>` : ''}
-          <div class="src">resolution: ${b.mode || 'unknown'} · jarvis:status.repo_root</div>
+          <div class="src">source: live status · found by ${b.mode === 'dev' ? 'running from inside this checkout' : 'the configured repository path'}</div>
         </div>
         <span class="state ${b.state}">${b.state.replace('_', ' ')}</span>
       </div>
@@ -97,7 +94,14 @@ function renderHome() {
     <div class="card">
       <h3>Needs you ${v.needs_founder.items.length ? `(${v.needs_founder.items.length})` : ''}</h3>
       ${v.needs_founder.items.length
-        ? v.needs_founder.items.map(h => `<div class="row"><span>${h.unit}${h.id ? ' — ' + h.id : ''}</span><span class="state HELD">${h.claim_state || 'HELD'}</span></div>`).join('')
+        ? v.needs_founder.items.map(h => `<div class="row">
+            <div>
+              <div class="label">${h.unit}${h.id ? ` — ${h.id}` : ''}</div>
+              <div class="why">${h.means}</div>
+              <div class="fix">→ ${h.remediation}</div>
+            </div>
+            <span class="state HELD">${h.claim_state || 'HELD'}</span>
+          </div>`).join('')
         : `<div class="hint">${v.needs_founder.summary}</div>`}
     </div>
 
