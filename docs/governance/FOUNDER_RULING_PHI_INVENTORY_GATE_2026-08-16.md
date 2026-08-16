@@ -136,6 +136,32 @@ Remediating it is a **separate work unit** and is not authorized here.
 
 ---
 
+## §4b Canonical custody — and a duplicate claimant
+
+**Founder ruling 2026-08-16.** This file is the **canonical** record of the PHI inventory gate
+ruling, by virtue of committed custody (`4a9b3915d`).
+
+A second document exists in the working tree recording the same ruling:
+
+```text
+DUPLICATE RULING RECORD
+path              docs/governance/FOUNDER_RULING_PHI_INVENTORY_PRE_COMMIT_GATE_2026-08-16.md
+content overlap   established (same disposition keys)
+canonical custody absent (untracked)
+owner             concurrent lane / unresolved
+disposition       DO NOT CITE AS CANONICAL
+```
+
+> The reason is **structural, not chronological or qualitative**: canonical custody outranks later
+> prose, file size, and apparent completeness. **A second untracked document cannot silently create
+> a second home for an already-custodied ruling.**
+
+⛔ Not to be deleted, merged, renamed, or adopted by any lane other than its owner. If it carries
+materially unique reasoning, that may later be reconciled **into this record under explicit
+custody**. ⛔ Its existence does **not** reopen the ruling.
+
+---
+
 ## §5 Implementation record
 
 - `scripts/check-phi-columns-inventory.ts` — adds `--emit-discrepancies`, a **reporting** mode
@@ -158,3 +184,28 @@ checking status explicitly; `R0` now BLOCKS on exactly that condition.
 
 ⭐ Standing lesson: **a comparator that cannot measure a tree must block, never treat
 "unmeasurable" as "clean."** An empty result set and an unknown result set are not the same value.
+
+### 5.2 ⛔ The comparator is NOT adopted — standing as ruled 2026-08-16
+
+```text
+PHI comparator
+class: PROVISIONAL
+direct-policy proof: PASS for tested discrepancy class
+real commit-path proof: FAIL
+gate wiring: ABSENT / restored to HEAD
+runtime authority: NONE
+custody: AWAITING_LANE_CUSTODY
+```
+
+The comparator subsequently **failed under a real `git commit`** — `git` exports `GIT_DIR` /
+`GIT_WORK_TREE` into hooks and `git worktree add` inherits them. It failed **closed**; no commit
+was created. `.githooks/pre-commit` was restored to `HEAD` and the ratchet is **unwired**.
+
+⚠️ Therefore **§5's implementation description states what was built, not what governs.** The
+ruling in §2 is canonical and live; the mechanism in §5 has **no runtime authority**.
+
+Preserved evidence, hashes, the verbatim failure witness, and the preserve-before-repair
+inheritance: [`docs/ops/PHI_INVENTORY_COMPARATOR_PRESERVATION_WITNESS_2026-08-16.md`](../ops/PHI_INVENTORY_COMPARATOR_PRESERVATION_WITNESS_2026-08-16.md).
+
+⭐ Acceptance for any successor **must include the actual `git commit` invocation path**:
+`DIRECT POLICY TEST PASSED ≠ PRE-COMMIT INTEGRATION PASSED`.
