@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServicesWithStatus, getIncidents } from '@/lib/monitoring/maiaMonitor';
+import { checkAdminAuth, adminUnauthorized } from '@/lib/admin/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
-  }
+  // R5 (2026-08-16): a bare x-member-id header is NOT authority. Verify an
+  // admin session against auth_sessions before returning ops telemetry.
+  const auth = await checkAdminAuth(request);
+  if (!auth.authed) return adminUnauthorized();
 
   try {
     const [services, incidents] = await Promise.all([

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import os from 'os';
 import { execSync } from 'child_process';
+import { checkAdminAuth, adminUnauthorized } from '@/lib/admin/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,10 +83,9 @@ async function getOllama(): Promise<SystemMetrics['ollama']> {
 }
 
 export async function GET(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 });
-  }
+  // R5 (2026-08-16): verify an admin session before exposing host/container state.
+  const auth = await checkAdminAuth(request);
+  if (!auth.authed) return adminUnauthorized();
 
   const totalBytes = os.totalmem();
   const freeBytes = os.freemem();
