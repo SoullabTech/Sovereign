@@ -1318,6 +1318,24 @@ export async function POST(request: NextRequest) {
       }
     })();
 
+    // ─── POST-TURN WRITE FAN-OUT ────────────────────────────────────────────
+    // Side effects currently execute inline below (logMaiaTurn, storeSessionPattern,
+    // storeConversationMemory, saveRelationshipEssence, upsertSpiralState, persistTrace).
+    //
+    // Intended direction:
+    //   1. buildTurnOutcome(...) → lib/consciousness/turnOutcome.ts
+    //      Assemble a single normalized TurnOutcome from this turn's signals.
+    //      Interpretation only — no writes here.
+    //
+    //   2. executeTurnWrites(outcome) → lib/oracle/executeTurnWrites.ts
+    //      Single boundary that owns all post-turn persistence.
+    //      Keeps interpretation separate from side effects.
+    //      Prepares the route for future event-driven orchestration.
+    //
+    // Trigger: extract when the next sink addition makes inline fan-out feel wrong.
+    // See: docs/oracle-turn-outcome-note.md
+    // ────────────────────────────────────────────────────────────────────────
+
     // 🎓 APPRENTICE LEARNING: Log Claude's wisdom for sovereign system to learn from
     try {
       await logMaiaTurn(
