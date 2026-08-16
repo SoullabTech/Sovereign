@@ -204,6 +204,38 @@ UNAMENDED PATHS          12/12 byte-identical to source at 90fb1c98a
 JARVIS DESKTOP SUITES    66/66 pass, 0 fail — unchanged by the amendment
 ```
 
+## Standing of the contract header — superseded for implementation authority
+
+The admitted contract header carries, unchanged:
+
+```text
+SYNTHETIC PROTOTYPE      AUTHORIZED AS NEXT GATE
+IMPLEMENTATION           NOT AUTHORIZED
+```
+
+⭐ **That records the standing at the moment the semantics were accepted. It is preserved as
+history, not as current programme standing.** Founder ruling 2026-08-16 subsequently granted
+implementation authority for the Living Spiral and its Desktop integration.
+
+⛔ The contract is **not** reopened to erase the stamp. Erasing it would destroy the record of what
+was true at acceptance; a superseding note is the correct instrument. The contract's byte identity
+(`0d9c1d6a…`) is therefore deliberately unchanged by this note.
+
+Two facts that coexist without contradiction:
+
+```text
+PROTOTYPE PIXEL ACCEPTANCE   still UNWITNESSED — an observer-aperture fact
+IMPLEMENTATION AUTHORITY     GRANTED by later founder ruling
+```
+
+⚠️ **A missing pixel witness does not revoke a later authorization.** Failure of the observer to
+obtain evidence is not evidence of failure in the observed — the contract's own governing
+distinction, applied to the contract's own gate.
+
+Likewise `JOP-05A` being unbound constrains what the Spiral may **claim**, not whether it may be
+**built**: with no lawful temporal source, motion renders `UNOBSERVED` and the custody aperture is
+declared. That is the implementation consequence, ⛔ not a reason to freeze `JOP-02`.
+
 ## Explicitly not done
 
 - ⛔ the other 62 branch-local commits were not imported
