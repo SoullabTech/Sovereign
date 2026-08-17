@@ -11,7 +11,7 @@ const { buildManifest } = require('./capability-form.js');
 const PROV = require('./provenance.js');
 const GOV = require('./governance.js');
 const RepoConfig = require('./repo-config.js');
-const { childEnv } = require('./child-env.js');
+const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const MECH = require('./builder-mechanism.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
@@ -529,9 +529,23 @@ ipcMain.handle('jarvis:status', async () => {
 
   if (!currentRoot()) return result;
 
-  // Builder OS — the same session.mjs terminal execution uses.
+  // Builder OS — the same session.mjs terminal execution uses, run by the same
+  // node the terminal uses. A packaged launch inherits no login shell and so no
+  // nvm PATH; resolving the binary is what makes "the same" literally true
+  // rather than aspirational.
+  const nodeBin = resolveNodeBinary();
+  if (!nodeBin.path) {
+    // Named, with the search shown. The raw `spawnSync node ENOENT` this
+    // replaces named neither the cause nor a fix, and read as a broken Builder
+    // OS rather than as a missing runtime.
+    result.builder_os = {
+      state: 'UNCONFIGURED',
+      detail: `no node executable could be resolved, so session.mjs cannot be run. Tried: ${nodeBin.tried.join(', ')}. Set JARVIS_NODE_BIN to an absolute node path, or install node where your login shell can find it.`,
+    };
+    return result;
+  }
   try {
-    const raw = execFileSync('node', ['scripts/builder/session.mjs', 'status', '--json'], { cwd: currentRoot(), encoding: 'utf8', timeout: 15000, env: childEnv(process.env).env });
+    const raw = execFileSync(nodeBin.path, ['scripts/builder/session.mjs', 'status', '--json'], { cwd: currentRoot(), encoding: 'utf8', timeout: 15000, env: childEnv(process.env).env });
     const j = JSON.parse(raw);
     result.builder_os = {
       state: 'AVAILABLE',
@@ -821,8 +835,14 @@ ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
   if (!built.ok) {
     return { ok: false, outcome: 'invalid', label: 'NOT SENT', detail: null, errors: built.errors };
   }
+  // Same resolved runtime as the status probe — a governance act must not run
+  // on a different node from the one that reported the state it acts on.
+  const govNode = resolveNodeBinary();
+  if (!govNode.path) {
+    return { ok: false, outcome: 'invalid', label: 'NOT SENT', detail: `no node executable could be resolved. Tried: ${govNode.tried.join(', ')}.`, errors: ['node-unresolved'] };
+  }
   try {
-    const stdout = execFileSync('node', built.argv, { cwd: currentRoot(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env });
+    const stdout = execFileSync(govNode.path, built.argv, { cwd: currentRoot(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env });
     const r = GOV.interpretExit(0, stdout, '');
     return { ok: true, ...r, errors: [], invoked: built.argv.join(' ') };
   } catch (e) {
