@@ -547,6 +547,30 @@ MOBILE_EXCLUDED_DIRS=(
     # WEB_ONLY is deliberately NOT claimed — this says nothing about its web
     # lifecycle, only that no native surface can reach it.
     "app/the-beginning"
+    # VoiceController smoke test (P12). ⚠ READ THE REASON — it is not the usual one.
+    #
+    # This route is NOT web-only, and the diagnostic is NOT obsolete. It is
+    # native-REQUIRED: it is registered in PHONE_ROUTES and is the Phase 1 smoke
+    # test for the Swift VoiceController / IOSNativeVoiceProvider substrate.
+    #
+    # It is excluded because two established requirements are currently
+    # incompatible under static export:
+    #   - app/voice-controller-test/layout.tsx calls requireFounder(), a
+    #     server-session read. That gate closed a witnessed unauthenticated
+    #     exposure (production GET returned 200 / 30,896 bytes, 2026-07-24) and
+    #     fails closed. It MUST NOT be weakened or client-sided — a client cannot
+    #     assert founder identity.
+    #   - output:'export' cannot prerender a route that reads cookies.
+    # The security boundary wins; the export boundary yields.
+    #
+    # RESULTING CAPABILITY STATE: ON-DEVICE VOICE DIAGNOSTIC = UNMET.
+    # Its PHONE_ROUTES entry in lib/mobile/mobileAllowlist.ts is deliberately
+    # LEFT IN PLACE: it records the intended native capability, and removing it
+    # would silently convert an implementation incompatibility into a product
+    # decision nobody has made. The eventual replacement is likely a diagnostic
+    # surfaced through the native shell rather than a server-gated Next page —
+    # a separate design lane, not authorized here. Founder ruling 2026-08-16 (P12).
+    "app/voice-controller-test"
     # Commons (practitioner circles; apiFetch reads cookies during prerender)
     "app/commons"
     # Commons sub-routes — listed explicitly because the parent "app/commons"
