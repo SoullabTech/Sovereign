@@ -2769,9 +2769,19 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-8 font-sans" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
-      {/* Header - Claude style: minimal */}
-      <div className="flex items-center gap-3 mb-8">
+    <div className="max-w-xl mx-auto px-5 pb-8 font-sans">
+      {/* Header - Claude style: minimal.
+          Sticky + opaque, and the safe-area inset lives HERE rather than on the
+          scrolling container. The container's own padding only held at scroll
+          position 0: once the list moved, this header scrolled away and rows
+          ("MAIA Settings", Voice, Astrology…) travelled under the iPhone status
+          bar, colliding with the clock. Holding the header at the top with the
+          page background behind it keeps that strip covered at every scroll
+          position, and rows disappear beneath the header instead. */}
+      <div
+        className="sticky top-0 z-20 -mx-5 px-5 pb-3 mb-8 flex items-center gap-3 bg-[#0f1419]/95 backdrop-blur-sm"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 1.5rem)' }}
+      >
         <button
           onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
           className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
