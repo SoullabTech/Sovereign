@@ -6,6 +6,7 @@ human_activity: Adjusting how MAIA behaves toward you — voice, memory, consent
 # Surfaces this contract governs. Globs, repo-relative. Support * and **.
 surfaces:
   - components/account/AccountSettings.tsx
+  - app/account/settings/page.tsx
 
 change_class: structural
 structural_rationale: >
@@ -73,6 +74,13 @@ the relevant section findable in one scan and to get out of the way.
   that strip; rows pass beneath it. Padding a scrolling container does not
   satisfy this — it holds only at scroll position 0, and acceptance for this
   surface is therefore tested SCROLLED, never at rest.
+- **A scrolling box on the page shell that does not actually scroll.** The
+  header's protection is `position: sticky`, which binds to the nearest
+  ancestor with a scrolling box. `overflow-y-auto` on `<main>` created such a
+  box while the document did the real scrolling, so the header was pinned to a
+  container with `scrollTop` permanently 0 and was inert. If a future change
+  makes the shell a scroller, it must genuinely be the scroller — otherwise the
+  header silently stops protecting anything while still looking correct at rest.
 
 ## The two brand tests
 
