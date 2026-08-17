@@ -6,6 +6,7 @@ import { LivingFieldCard } from './LivingFieldCard'
 import { SpiralSummaryCard } from './SpiralSummaryCard'
 import { PhaseStatePanel } from './PhaseStatePanel'
 import { LivingEncounterView } from './LivingEncounterView'
+import { ReturnToMaia } from '@/components/navigation/ReturnToMaia'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -51,6 +52,12 @@ export function PersonalLivingFieldDashboard({
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
+
+        {/* The way out. The House opens this room with
+            `returnBehavior: 'back-to-maia'`; until this link existed nothing in
+            the page's whole component closure honoured that, so a member who
+            entered had no route home. */}
+        <ReturnToMaia className="text-stone-500 hover:text-stone-300 text-sm" />
 
         {/* Welcome header */}
         <div className="space-y-2">
