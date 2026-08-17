@@ -501,6 +501,12 @@ MOBILE_EXCLUDED_DIRS=(
     "app/studio/tasks"
     "app/studio/teams"
     "app/studio/services"
+    # Studio fields (P10A drift reconciliation). WEB_ONLY_PREFIXES in
+    # lib/mobile/mobileAllowlist.ts already declares the whole '/studio/' family
+    # web-only; this list enumerates subtrees individually and had drifted from
+    # that authority. Note "app/studio/field" (singular) above is a DIFFERENT
+    # directory — the near-identical name is how the plural was missed.
+    "app/studio/fields"
     # Admin (web-only always)
     "app/admin"
     # Book Studio (desktop authoring environment, web-only)
@@ -518,6 +524,12 @@ MOBILE_EXCLUDED_DIRS=(
     # as evidence about the other patched dynamic routes. Founder ruling
     # 2026-08-16 (P6).
     "app/go"
+    # Session join (client-facing consent gate for an invite token). Carrying out
+    # the instruction already written in app/session/join/[token]/page.tsx:
+    # "NOTE (capacitor): this dynamic route is web-only — exclude it from the iOS
+    # static export." The token is a runtime invite identifier, so no truthful
+    # build-time parameter set exists for it. (P10A)
+    "app/session/join"
     # Commons (practitioner circles; apiFetch reads cookies during prerender)
     "app/commons"
     # Commons sub-routes — listed explicitly because the parent "app/commons"
