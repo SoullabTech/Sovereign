@@ -69,6 +69,20 @@ function mapState(raw, { remediable = true } = {}) {
     case 'AVAILABLE': return READY;
     case 'DEGRADED': return DEGRADED;
     case 'UNAVAILABLE': return remediable ? NEEDS_SETUP : NEEDS_AUTHORITY;
+    // JOP-04. Three raw states the status layer now distinguishes, mapped
+    // explicitly rather than falling through `default`. The fall-through was
+    // SAFE (it lands on UNVERIFIED, never on a healthy state) but it was not
+    // ACCURATE, and accuracy is the entire purpose of this vocabulary.
+    //
+    // UNCONFIGURED is a setup gap: nobody has told JARVIS about the thing, and
+    // an operator act would fix it. UNREACHABLE and NOT PROBED are both
+    // absences of observation — which is precisely how this module's header
+    // defines UNVERIFIED ("the instrument did not run or could not reach") —
+    // and both always carry WHY in their detail, which is the condition that
+    // makes UNVERIFIED legible rather than another bare UNKNOWN.
+    case 'UNCONFIGURED': return NEEDS_SETUP;
+    case 'UNREACHABLE': return UNVERIFIED;
+    case 'NOT PROBED': return UNVERIFIED;
     case 'UNKNOWN':
     case null:
     case undefined: return UNVERIFIED;
@@ -122,6 +136,8 @@ const DESCRIPTIONS = Object.freeze({
   'Desktop runtime': 'This application itself.',
   'Artifact identity': 'Which build of JARVIS this window is.',
   'Execution substrate': 'The checkout this window is actually operating on.',
+  'Memory / Postgres': 'The database MAIA remembers into. Read from the host, never from this console.',
+  'Production': 'The live system at soullab.life. JARVIS does not reach it from here.',
 });
 
 function organ(name, raw, opts = {}) {
@@ -172,7 +188,11 @@ function deriveOperatorView(status) {
   // When nothing is bound these were never probed. Say that, rather than
   // rendering an unobserved organ as UNKNOWN and letting it read as broken.
   const dependent = (name, raw, key) => {
-    if (unbound && (!raw || raw.state === 'UNKNOWN')) {
+    // 'NOT PROBED' joins 'UNKNOWN' here (JOP-04): the status layer now says
+    // NOT PROBED for exactly this situation, and if this branch did not
+    // recognise it the row would keep its state but silently lose its
+    // remediation — a row that explains itself but does not say what to do.
+    if (unbound && (!raw || raw.state === 'UNKNOWN' || raw.state === 'NOT PROBED')) {
       return {
         name,
         describes: DESCRIPTIONS[name] || null,
@@ -190,6 +210,23 @@ function deriveOperatorView(status) {
     dependent('Deterministic registry', s.route_a, 'route_a'),
     dependent('Local model worker', s.local_worker, 'local_worker'),
   ];
+
+  // Declared rather than omitted. Both are absent BY DESIGN — Desktop holds no
+  // database configuration and no production authority — and an absence by
+  // design must still be visible, or the founder is left to wonder whether the
+  // row is missing because nothing was built or because nothing was checked.
+  // Neither row may ever become the thing that opens a connection to prove
+  // itself: a status surface that reaches production to fill in a cell has
+  // granted itself authority nobody gave it.
+  if (s.memory_postgres) {
+    organs.push(organ('Memory / Postgres', s.memory_postgres, { evidence: 'jarvis:status.memory_postgres' }));
+  }
+  if (s.production) {
+    organs.push(organ('Production', s.production, {
+      remediable: false,
+      evidence: 'jarvis:status.production',
+    }));
+  }
 
   // ── Claude: two facts, never one ──────────────────────────────────────────
   // The old row said "Claude lane AVAILABLE", which conflated a reasoning

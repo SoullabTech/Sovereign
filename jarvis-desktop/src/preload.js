@@ -26,6 +26,12 @@ contextBridge.exposeInMainWorld('jarvis', {
   getRepoConfig: () => ipcRenderer.invoke('jarvis:repo-config'),
   chooseRepo: () => ipcRenderer.invoke('jarvis:choose-repo'),
   clearRepo: () => ipcRenderer.invoke('jarvis:clear-repo'),
+
+  // Reveal the BOUND workspace in Finder. Takes no argument by design: the path
+  // is read from the resolved binding inside main, so this cannot be used to
+  // open an arbitrary location the renderer names. It reveals only what JARVIS
+  // has already resolved and is already showing on Home.
+  revealWorkspace: () => ipcRenderer.invoke('jarvis:reveal-workspace'),
   onRepoChanged: (fn) => {
     if (typeof fn !== 'function') return () => {};
     const handler = (_evt, state) => fn(state);

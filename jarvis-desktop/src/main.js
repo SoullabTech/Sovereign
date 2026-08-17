@@ -7,11 +7,12 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron')
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 const { buildManifest } = require('./capability-form.js');
 const PROV = require('./provenance.js');
 const GOV = require('./governance.js');
 const RepoConfig = require('./repo-config.js');
-const { childEnv } = require('./child-env.js');
+const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const MECH = require('./builder-mechanism.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
@@ -124,15 +125,39 @@ function findRepoRootPackagedMode() {
   return { root: null, resolution: PROV.RESOLUTION.NONE, configProblem, conflictingConfigRoot: null };
 }
 
+// Dev mode resolves by upward walk FIRST, because running `npm start` from
+// inside a checkout is an explicit statement about which substrate you mean,
+// and it must keep outranking a saved choice made on some earlier day.
+//
+// JOP-04 defect (founder walk, 2026-08-17). The walk used to be dev mode's
+// ONLY step: a dev launch from a checkout missing the canonical markers fell
+// straight to NONE, ignoring JARVIS_REPO_ROOT and the persisted choice that
+// packaged mode honours — so Work answered "repo root not found — cannot
+// route" while a perfectly valid saved workspace sat unread in config.json,
+// and every dependent System row read UNKNOWN. Dev mode was the mode without
+// a durable resolver, which is backwards: dev is where checkouts move, get
+// rebased onto branches that predate the builder cluster, and lose markers.
+//
+// The walk keeps its precedence; it now falls THROUGH to the same env →
+// config → default ladder instead of off a cliff. No new resolution source is
+// introduced and no fallback is silent — the ladder each step reports is the
+// one packaged mode already reports, so Preferences and the provenance
+// surface explain a dev binding exactly as they explain a packaged one.
+// The ORDER lives in repo-resolution.js so it can be proven without Electron;
+// the SOURCES stay here, so each one still has exactly one implementation.
+const { resolveDevMode } = require('./repo-resolution');
+
 // Mutable: Preferences can rebind the substrate at runtime. Everything that
 // reads it does so through currentRoot() rather than closing over the value,
 // so a rebind takes effect without a relaunch.
 let RESOLVED = app.isPackaged
   ? findRepoRootPackagedMode()
-  : (() => {
-      const r = findRepoRootDevMode(__dirname);
-      return { root: r, resolution: r ? PROV.RESOLUTION.WALK : PROV.RESOLUTION.NONE, configProblem: null, conflictingConfigRoot: null };
-    })();
+  : resolveDevMode({
+      walk: () => findRepoRootDevMode(__dirname),
+      ladder: findRepoRootPackagedMode,
+      launchedFrom: () => __dirname,
+      RESOLUTION: PROV.RESOLUTION,
+    });
 function currentRoot() { return RESOLVED.root; }
 const REPO_ROOT_MODE = app.isPackaged ? 'packaged' : 'dev';
 
@@ -161,14 +186,36 @@ function readBuildInfo() {
 }
 
 // --- F3: substrate identity, read from the checkout that actually executes -
+//
+// `git_connected` is reported as its own fact rather than inferred from
+// `head !== null`. A path can be a real directory, carry all four canonical
+// markers, and still not be a git worktree — and the founder's response to
+// "this is not a repository" is different from "this is a repository I could
+// not read". Collapsing the two would put the Home panel in the position of
+// guessing which one it is looking at.
+//
+// `branch` is empty on a detached HEAD, which is a legitimate state for a
+// worktree cut at a SHA — reported as 'detached' rather than as a failure.
 function readSubstrateVersion(root) {
-  if (!root) return { head: null, dirty: null };
+  const unread = { head: null, dirty: null, branch: null, git_connected: false };
+  if (!root) return unread;
+  const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', env: childEnv(process.env).env }).trim();
   try {
-    const head = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8', env: childEnv(process.env).env }).trim();
+    // Ask git whether this is a worktree FIRST — before reading anything from
+    // it — so a non-repository is named as such instead of surfacing as an
+    // unexplained read failure three fields later.
+    if (git(['rev-parse', '--is-inside-work-tree']) !== 'true') return unread;
+    const head = git(['rev-parse', '--short', 'HEAD']);
+    const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
     const porcelain = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', env: childEnv(process.env).env });
-    return { head, dirty: porcelain.trim().length > 0 };
+    return {
+      head,
+      dirty: porcelain.trim().length > 0,
+      branch: branch === 'HEAD' ? 'detached' : branch,
+      git_connected: true,
+    };
   } catch {
-    return { head: null, dirty: null };
+    return unread;
   }
 }
 
@@ -392,6 +439,14 @@ ipcMain.handle('jarvis:choose-repo', async (evt) => {
   const out = await chooseRepoInteractive(w);
   return { ...out, state: repoConfigState() };
 });
+// No renderer-supplied path: the argument list is empty on purpose, so this
+// can only ever reveal the binding JARVIS itself resolved and is displaying.
+ipcMain.handle('jarvis:reveal-workspace', async () => {
+  const root = currentRoot();
+  if (!root) return { revealed: false, reason: 'no workspace is bound' };
+  shell.showItemInFolder(root);
+  return { revealed: true, root };
+});
 ipcMain.handle('jarvis:clear-repo', async () => {
   RepoConfig.clearConfig(app.getPath('appData'));
   // Re-resolve from scratch so the surface shows what the app would ACTUALLY
@@ -420,10 +475,42 @@ ipcMain.handle('jarvis:status', async () => {
     repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
     repo_root_mode: REPO_ROOT_MODE,
     provenance: currentProvenance(),
+    // The Home ACTIVE WORKSPACE panel reads this and nothing else. It is the
+    // SAME resolution the router uses — not a second read of the binding — so
+    // the panel cannot drift from what Work will actually route against. That
+    // drift is the whole failure mode of 2026-08-17: the screen and the router
+    // disagreeing about which substrate was bound.
+    workspace: (() => {
+      const root = currentRoot();
+      const sub = readSubstrateVersion(root);
+      return {
+        bound: !!root,
+        root: root || null,
+        name: root ? path.basename(root) : null,
+        branch: sub.branch,
+        head: sub.head,
+        dirty: sub.dirty,
+        git_connected: sub.git_connected,
+        resolution: RESOLVED.resolution,
+        problem: root ? null : (RESOLVED.configProblem || 'no repository is bound'),
+      };
+    })(),
     sessions: [],
-    builder_os: { state: 'UNKNOWN', detail: null },
-    route_a: { state: 'UNKNOWN', detail: null },
-    local_worker: { state: 'UNKNOWN', detail: null },
+    // NOT PROBED, not UNKNOWN. These three are probed further down and every
+    // path below overwrites them; if the substrate is unbound we return early
+    // and they stand as-is. "We did not look, and here is why" is a different
+    // fact from "we looked and cannot tell", and only the first is true here.
+    // Leaving bare UNKNOWNs on screen is what made the console read as broken
+    // when it was reporting a specific, fixable condition.
+    builder_os: { state: 'NOT PROBED', detail: 'depends on a bound execution substrate — none is bound' },
+    route_a: { state: 'NOT PROBED', detail: 'depends on a bound execution substrate — none is bound' },
+    local_worker: { state: 'NOT PROBED', detail: 'not probed while no execution substrate is bound' },
+    // Declared so they are visibly accounted for rather than silently absent.
+    // Neither is probed by Desktop, and neither should be: a status row must
+    // never be the thing that opens a database connection or reaches
+    // production. UNCONFIGURED and NOT PROBED are the honest answers.
+    memory_postgres: { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one. Memory/Postgres state is read from the host, not from this console.' },
+    production: { state: 'NOT PROBED', detail: 'requires explicit production/SSH authority, which Desktop does not hold and does not request. Not probed by design.' },
     claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop Alpha does not auto-execute it (see §8 security stance) — this console itself runs the Claude Code session that built it.' },
     builder_mechanism: { state: 'UNKNOWN', detail: null },
     governance_holds: [],
@@ -443,13 +530,65 @@ ipcMain.handle('jarvis:status', async () => {
 
   if (!currentRoot()) return result;
 
-  // Builder OS — the same session.mjs terminal execution uses.
+  // Builder OS — the same session.mjs terminal execution uses, run by the same
+  // node the terminal uses. A packaged launch inherits no login shell and so no
+  // nvm PATH; resolving the binary is what makes "the same" literally true
+  // rather than aspirational.
+  const nodeBin = resolveNodeBinary();
+  if (!nodeBin.path) {
+    // Named, with the search shown. The raw `spawnSync node ENOENT` this
+    // replaces named neither the cause nor a fix, and read as a broken Builder
+    // OS rather than as a missing runtime.
+    result.builder_os = {
+      state: 'UNCONFIGURED',
+      detail: `no node executable could be resolved, so session.mjs cannot be run. Tried: ${nodeBin.tried.join(', ')}. Set JARVIS_NODE_BIN to an absolute node path, or install node where your login shell can find it.`,
+    };
+    return result;
+  }
   try {
-    const raw = execFileSync('node', ['scripts/builder/session.mjs', 'status', '--json'], { cwd: currentRoot(), encoding: 'utf8', timeout: 15000, env: childEnv(process.env).env });
+    const raw = execFileSync(nodeBin.path, ['scripts/builder/session.mjs', 'status', '--json'], { cwd: currentRoot(), encoding: 'utf8', timeout: 15000, env: childEnv(process.env).env });
     const j = JSON.parse(raw);
     result.builder_os = {
       state: 'AVAILABLE',
-      detail: { active: j.active, limit: j.limit, queued: j.queued, sessions: (j.sessions || []).map(s => ({ id: s.session_id, unit: s.work_unit, claim_state: s.liveness?.claim_state, heartbeat_age_s: s.liveness?.heartbeat_age_s })) },
+      detail: {
+        // The machine this builder is running on. Added for JOP-04b: the
+        // acceptance bar for the node-PATH repair names OS, architecture,
+        // release, node and Electron as the proof that Builder OS is
+        // OBSERVABLE from the packaged app rather than merely truthful about
+        // being unobservable.
+        //
+        // These sit ALONGSIDE the governor counts rather than replacing them.
+        // "Builder OS" denotes two different things depending on who is
+        // speaking: the founder's §2 means the builder's operating system,
+        // while this codebase's own description means the session governor
+        // that "tracks who is working on what, and stops two lanes claiming
+        // the same unit". Both are real, and on a day when four sessions
+        // collided over one repo the governor half is not the half to drop.
+        // So the row answers both readings instead of picking one.
+        host: {
+          os: `${os.type()} ${os.release()}`,
+          platform: process.platform,
+          architecture: process.arch,
+          release: os.release(),
+          // `node` is the node the BUILDER runs on — the one that just executed
+          // session.mjs — not process.versions.node, which is the node embedded
+          // inside Electron (18.18.2 here) and has nothing to do with the
+          // governor. The first packaged render of this block reported 18.18.2
+          // beside a node_binary of v22.22.3 and was believed until the two were
+          // read together. Labelling Electron's internal runtime as "node" on a
+          // row about the builder is precisely the quiet inaccuracy this
+          // console exists to refuse, so both are named for what they are.
+          node: nodeBin.version || null,
+          node_binary: nodeBin.path,
+          node_resolved_by: nodeBin.source,
+          electron: process.versions.electron,
+          electron_embedded_node: process.versions.node,
+        },
+        active: j.active,
+        limit: j.limit,
+        queued: j.queued,
+        sessions: (j.sessions || []).map(s => ({ id: s.session_id, unit: s.work_unit, claim_state: s.liveness?.claim_state, heartbeat_age_s: s.liveness?.heartbeat_age_s })),
+      },
     };
     // F2 needs the governor's own liveness flags to decide which acts to offer.
     result.sessions = (j.sessions || []).map(s => ({
@@ -494,7 +633,10 @@ ipcMain.handle('jarvis:status', async () => {
       result.local_worker = { state: 'DEGRADED', detail: `Ollama responded HTTP ${res.status}` };
     }
   } catch (e) {
-    result.local_worker = { state: 'UNAVAILABLE', detail: `Ollama unreachable at 127.0.0.1:11434 — ${e.message.slice(0, 200)}` };
+    // UNREACHABLE, not UNAVAILABLE: the distinction is whether the thing is
+    // absent or merely not answering. A worker that is simply not running is
+    // one launch away from AVAILABLE, and the row should say so.
+    result.local_worker = { state: 'UNREACHABLE', detail: `Ollama unreachable at 127.0.0.1:11434 — ${e.message.slice(0, 200)}` };
   }
 
   return result;
@@ -732,8 +874,14 @@ ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
   if (!built.ok) {
     return { ok: false, outcome: 'invalid', label: 'NOT SENT', detail: null, errors: built.errors };
   }
+  // Same resolved runtime as the status probe — a governance act must not run
+  // on a different node from the one that reported the state it acts on.
+  const govNode = resolveNodeBinary();
+  if (!govNode.path) {
+    return { ok: false, outcome: 'invalid', label: 'NOT SENT', detail: `no node executable could be resolved. Tried: ${govNode.tried.join(', ')}.`, errors: ['node-unresolved'] };
+  }
   try {
-    const stdout = execFileSync('node', built.argv, { cwd: currentRoot(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env });
+    const stdout = execFileSync(govNode.path, built.argv, { cwd: currentRoot(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env });
     const r = GOV.interpretExit(0, stdout, '');
     return { ok: true, ...r, errors: [], invoked: built.argv.join(' ') };
   } catch (e) {
