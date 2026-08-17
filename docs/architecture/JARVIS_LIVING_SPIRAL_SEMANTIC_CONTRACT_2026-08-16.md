@@ -5,7 +5,8 @@
 **Authority:** [`FOUNDER_RULING_LIVING_SPIRAL_SEMANTIC_JURISDICTION_2026-08-16.md`](../governance/FOUNDER_RULING_LIVING_SPIRAL_SEMANTIC_JURISDICTION_2026-08-16.md) §4
 **Predecessor:** [`JARVIS_LIVING_SPIRAL_PHASE0_RECONCILIATION_2026-08-16.md`](./JARVIS_LIVING_SPIRAL_PHASE0_RECONCILIATION_2026-08-16.md)
 **Status:** ⭐ **`ACCEPTED`** — founder ruling 2026-08-16, on the narrow acceptance check.
-Next gate is the **synthetic visual prototype**. ⛔ Implementation remains **NOT AUTHORIZED**.
+⭐ **Amended 2026-08-16 (A2) to admit `derived_assertion`** — see §1.2, §16, and the A2 record below.
+Implementation is **NOT AUTHORIZED** except within the bounded programme A–E of the A2 ruling.
 
 **Amendment provenance.** This is the amended successor to a predecessor returned for amendment.
 
@@ -52,16 +53,49 @@ evidence awaiting witness.
 any implementation. The architecture below is the predecessor's; the six corrections plus the M4
 temporal-axis completion are the only semantic changes.
 
-**Standing established by the acceptance ruling:**
+## Amendment record A2 — `derived_assertion`
+
+**A2 — semantic amendment. Founder ruling 2026-08-16 (founder-legibility programme).**
 
 ```text
-SEMANTIC CONTRACT        ACCEPTED
+PRE-A2 CONTENT            sha256 0d9c1d6a59e0e4bc1d188284ba446a2e6523515fd2c427e2999a0ea4c77b6f90
+                          38,087 B · 679 lines — the ACCEPTED + post-E1 content
+OCCASION                  founder directive: JARVIS Living Spiral shows the wrong layer to the
+                          founder. Reconciled in
+                          JARVIS_LIVING_SPIRAL_FOUNDER_LEGIBILITY_RECONCILIATION_2026-08-16.md
+QUESTION RULED            §1 requires every rendered element to resolve to an assertion_id. Founder
+                          headlines, causal cascades and leverage points resolve to a SET of
+                          assertions plus a rule. Does §1 permit them?
+RULING                    YES — as a first-class assertion type SUBORDINATE to §1, not an
+                          exception to it. A derived assertion has its own assertion_id, so the
+                          invariant is preserved rather than weakened.
+SEMANTIC CHANGE           YES — additive. §1.2 and §16 are new; §12 and §14 gain entries.
+                          ⛔ NO accepted definition, refusal, fixture or evidence binding was
+                          altered, relaxed or removed.
+POST-A2 HASH              recorded in
+                          JARVIS_LIVING_SPIRAL_FOUNDER_LEGIBILITY_RECONCILIATION_2026-08-16.md
+                          (a file cannot contain its own hash)
+```
+
+⛔ **A2 is additive-only.** Every pre-A2 sentence remains in force. Specifically unchanged, and
+re-affirmed by the A2 ruling: radius/`operational_layer` remains **evidence adequacy** (§3, §3.4) and
+not "distance from usable integration"; co-location remains non-causal (§2.5); *newly observed ≠
+newly begun* remains (§4 M1/M8); the elemental/Spiralogic interpretive lens remains outside
+operational jurisdiction (§0.3, jurisdiction R4); `authority_blocked` remains a non-fault resumable
+state (§6.1, ruling A5).
+
+**Standing established by the acceptance ruling, as amended by A2:**
+
+```text
+SEMANTIC CONTRACT        ACCEPTED · AMENDED (A2)
 operational_layer        still PROVISIONAL as specified (§3.3)
 O1 / O2 / O3 / O4 / O5   unchanged (§13)
 SYNTHETIC PROTOTYPE      AUTHORIZED AS NEXT GATE
-IMPLEMENTATION           NOT AUTHORIZED
+IMPLEMENTATION           BOUNDED — authorized ONLY for programme A–E (§16.7); all else NOT AUTHORIZED
 LIVE TELEMETRY           NOT AUTHORIZED
-RUN/ASSERTION SUBSTRATE  NOT CREATED OR AUTHORIZED HERE
+RUN/ASSERTION SUBSTRATE  AUTHORIZED TO BE BUILT under A2 programme item B, bounded to what the
+                         existing temporal grammar (§4, §8) requires. ⛔ This does NOT close O5,
+                         which is governed by the run-provenance document, not by this programme.
 ```
 
 ⚠️ **Carried observation, not a defect and not blocking** (founder, 2026-08-16): M8 admits
@@ -164,6 +198,44 @@ resolve to an `assertion_id`. This is the mechanical form of *"no glow without c
 The admissible question is *"what mode of activity does this assertion describe?"* A single
 component participates in several modes depending on what it is doing, at different times, with
 different evidence. The classification lives on the activity, and therefore so does its evidence.
+
+### 1.2 `derived_assertion` — the second unit *(A2)*
+
+A **derived assertion** is a claim produced by a named deterministic rule over a complete set of
+other assertions. It has its own `assertion_id`. ⭐ **This subordinates derivation to §1 rather than
+excepting it:** the invariant *"every rendered element resolves to an `assertion_id`"* is unchanged.
+What A2 admits is that the cause behind the glow may be **a named rule over a complete input set**
+rather than a single primary observation.
+
+```
+DERIVED ASSERTION
+  assertion_id
+  rule_id
+  rule_version
+  input_assertion_ids[]        complete — §16.2 D2; ⛔ partial sets are inadmissible
+  derived_value / claim        the founder-legible statement
+  epistemic_status             §9  — FLOORED across the transitive closure (§16.2 D8)
+  temporal_status              §8  — FLOORED across the transitive closure (§16.2 D8)
+  derivation_depth             0 for primary; n+1 for a derivation over depth-n inputs
+  generated_at
+  invalidated_at? / superseded_by?
+```
+
+**What a derived assertion may not carry.** These are not omissions; each blocks a specific
+laundering route:
+
+- ⛔ **No `operational_element` of its own** (§2). Element is a property of an *activity*, and
+  deriving is not one of the five operational modes. It may report the **union of its inputs'**
+  elements, explicitly marked inherited. A derivation may never introduce a mode no input asserted.
+- ⛔ **No independent `presence_value` or `observation_status`** (§7). Both are floored from the
+  closure. A derivation cannot see what its inputs could not see.
+- ⛔ **No `subject`/`predicate` absent from its inputs.** A derivation restates and combines; it
+  never introduces a new referent.
+- ⛔ **No `evidence_class` stronger than the weakest in its closure** (JARVIS CORE §B).
+
+> ⭐ **The consequence the founder named, stated mechanically:** with a single bound observation and
+> no predecessor, every derived assertion floors to `provisional` at best. The honest founder
+> headline is not a matter of authorial restraint — it is the only headline the floor permits.
 
 ---
 
@@ -627,6 +699,213 @@ attractive, wrong implementation fails.
     `observation_status: unobserved`, or a first observation rendered as emergence (§4, M1/M8).
 12. Any `stale` written into `epistemic_status` (§4.1, §9).
 
+*Added by A2 — these bind derivation exactly as 1–12 bind primary assertion:*
+
+13. Any derived assertion whose epistemic floor was evaluated over its immediate inputs rather than
+    over its **full transitive closure** (§16.2 D8) — the laundering route.
+14. Any derived assertion over a **partial** input set, or produced by anything other than a
+    registered deterministic rule (§16.1, §16.2 D1–D2).
+15. Any causal chain, cascade, or leverage point rendered across an **unevidenced or hypothesized
+    edge** (§16.3, §16.4) — the walk terminates and names the gap; it never bridges it.
+16. Any derived assertion introducing a `subject`, `predicate`, or `operational_element` that no
+    input asserted (§1.2).
+
+---
+
+## §16 Derivation grammar *(A2 — additive)*
+
+> ⚠️ **Numbering.** §16 sits physically between §12 and §13 on purpose. §13–§15 are closing matter
+> and must continue to close the document. Renumbering an accepted section would break every
+> external citation into this contract — the founder ruling cites §4, §6.1 and §9 by number, and the
+> frozen prototype evidence cites sections it was rendered against. ⛔ **Custody of citations
+> outranks tidiness of ordering.**
+
+### 16.1 The rule registry
+
+Every derivation is produced by a registered rule, never by prose and never by a model.
+
+```text
+RULE
+  rule_id            stable identifier
+  rule_version       semantic version; ANY change to logic or parameter increments it
+  parameters         named, with values — ⛔ no implied thresholds
+  determinism        same inputs + same version ⇒ byte-identical output, always
+  purity             reads only its declared input assertions; no ambient state, no clock
+                     beyond the passed evaluation instant, no network
+```
+
+⛔ **A rule may not be a natural-language instruction to a language model.** If a claim cannot be
+computed deterministically from assertions, it is not a derived assertion — it is prose, and §1
+refuses it.
+
+### 16.2 Governing law — D1–D8
+
+A derived assertion MUST:
+
+| | law |
+|---|---|
+| **D1** | be produced by a **named deterministic rule** (§16.1) |
+| **D2** | record the **complete** input assertion set — ⛔ partial or sampled sets are inadmissible |
+| **D3** | preserve **provenance back to those inputs**, retrievable without re-derivation |
+| **D4** | receive an epistemic status **no stronger than its weakest required input** |
+| **D5** | **never** become `established` if any required input is `provisional`, `emerging`, `ambiguous`, `contradicted`, `superseded`, `unknown`, or temporally `stale` |
+| **D6** | be **recomputed or invalidated** when any input changes, is superseded, or when `rule_version` changes |
+| **D7** | **never manufacture a causal link** from co-location, chronology, visual proximity, or shared status (§2.5) |
+| **D8** | **never become an epistemic laundering layer** — see below |
+
+**D8 — the transitive closure guard.** Derived assertions **may** serve as inputs to further
+derivations. Where they do:
+
+```text
+closure(d)   = the full transitive set of assertions reachable through input_assertion_ids,
+               terminating only in PRIMARY assertions (derivation_depth 0)
+
+REQUIRED     closure(d) is mechanically recoverable for every derived assertion d
+REQUIRED     the epistemic floor (D4/D5) is evaluated across closure(d), NOT across d's
+             immediate inputs
+REQUIRED     the graph is acyclic; a cycle is a defect that invalidates d, never a fixed point
+REQUIRED     derivation_depth is finite and recorded
+```
+
+⛔ **The failure this forecloses**, in the founder's own construction:
+
+```text
+provisional inputs → derived summary → derived summary of summary → authoritative headline
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     REFUSED — the floor is evaluated over the closure, so the headline
+                     inherits `provisional` no matter how many layers intervene
+```
+
+**The floor function**, precisely (this is a rule, not a disposition):
+
+```text
+IF any member of closure(d) is `superseded`
+   → d is INVALID. Recompute against the superseding assertion or invalidate (D6).
+     ⛔ d MUST NOT render in the interim.
+IF any member of closure(d) is `contradicted`
+   → d.epistemic_status = `contradicted`.   ⛔ Do not floor it to `provisional` — that would
+     average a contradiction away, which §9.1 refuses.
+OTHERWISE
+   → d.epistemic_status = the weakest rank present in closure(d), by:
+        established  >  { provisional, emerging }  >  ambiguous  >  unknown
+   → d.epistemic_status = `established` ONLY IF every member of closure(d) is `established`.
+
+TEMPORAL, EVALUATED SEPARATELY AND ALWAYS:
+   IF any member of closure(d) is temporally `stale` (§4.1)
+      → d.temporal_status = `stale`, and d no longer establishes the present.
+   ⛔ `stale` is NEVER written into d.epistemic_status — refusal 12 (§4.1, §9) is unchanged.
+```
+
+### 16.3 Causal walks — cascades are evidenced-edge walks, not narratives
+
+A cascade renders **only** where each dependency edge is itself an assertion carrying its own
+evidence, custody and epistemic status (§1, §10).
+
+```text
+Disk pressure
+  ↓            ← this arrow is an ASSERTION, with an assertion_id, or it does not exist
+Native build blocked
+  ↓            ← likewise
+No bound iPhone witness
+```
+
+- The walk is a derived assertion. Its inputs are **the node assertions and every edge assertion**.
+- Epistemic weakness **propagates through the walk** under §16.2. One `provisional` edge caps the
+  entire chain at `provisional`; one `contradicted` edge renders the chain `contradicted`.
+- ⛔ An unevidenced or hypothesized edge **may not be walked**. The chain terminates at that edge and
+  renders truncated, naming the missing edge — it does not bridge it.
+- ⛔ Adjacency in time, in the render, or in shared status is **not** an edge (§2.5, D7).
+
+⭐ This is why §2.5 survives A2 intact: co-location cannot become a link, because a link with no
+assertion cannot enter the walk in the first place.
+
+### 16.4 `LEV-1` — the leverage-point rule, with its threshold specified
+
+The founder ruling requires the threshold be **specified rather than implied**. It is:
+
+```text
+RULE      LEV-1
+VERSION   1.0.0
+PARAMS    n_min = 2          minimum distinct downstream assertions
+          walk_max_depth = 6
+
+An assertion S is a LEVERAGE POINT iff ALL hold:
+  1. S carries a live disturbance of type `blocked`, `degraded`, `failed`, or
+     `authority_blocked` (§6.1);
+  2. S states a `resolution_condition` (§6.2);
+  3. there exist N ≥ n_min DISTINCT downstream assertions reachable from S by evidenced
+     dependency walks (§16.3), within walk_max_depth;
+  4. each such downstream assertion's own blocking condition names S's condition,
+     transitively — ⛔ not merely "is also blocked";
+  5. resolving S's stated resolution_condition would make those downstream assertions
+     ELIGIBLE TO ADVANCE. ⛔ Eligibility is not advancement, and is not a prediction
+     that they will advance.
+
+IF any edge in any qualifying walk is unevidenced or hypothesized:
+   → S is a CANDIDATE leverage point only, epistemic_status `provisional`,
+     and the unevidenced edge is named in the rendering.
+```
+
+⛔ **A leverage point may never be asserted by counting co-located blocked things.** Condition 4 is
+the whole rule; without it, LEV-1 degenerates into exactly the inference §2.5 refuses.
+
+⛔ Changing `n_min` or `walk_max_depth` changes `rule_version` and triggers recomputation (D6).
+
+### 16.5 `PROJ-1` — founder projection, a relabelling that loses no semantics
+
+```text
+RULE      PROJ-1
+VERSION   1.0.0
+```
+
+| founder region | governed source condition | note |
+|---|---|---|
+| **Alive** | `presence_value: present` ∧ `observation_status: observed` ∧ `temporal_status` fresh ∧ no live disturbance | ⛔ never rendered as "healthy" — §6.3 forbids the scalar and §7 forbids absence-as-health |
+| **Moving** | an evidenced motion of class **M2, M4, M5, M6, M7 or M8** within the window (§4) | ⛔ **M1 and M3 never produce Moving** — first observation is not motion, restatement is not motion |
+| **Stuck** | live disturbance `blocked` · `degraded` · `failed` · `contradicted` (§6.1) | |
+| **Held** | live disturbance `authority_blocked` (§6.1) | ⭐ **"Held" is the founder label; `authority_blocked` is the governed state.** Per ruling A5 it is a non-fault, resumable stop — ⛔ never rendered as failure and never as completed objective |
+| **Unknown** | `presence_value: unknown` ∨ `observation_status: unobserved` ∨ `temporal_status: stale` | ⛔ the three are distinct and may not share visual semantics (§7) |
+| **Needs You** | a live disturbance whose `attention_basis` requires founder authority | ⛔ work JARVIS is already authorized to do may not appear here |
+
+⛔ **A region is a projection, not a state.** An assertion may satisfy more than one region, and the
+projection must render the multiplicity. If a geometry admits only one placement, the precedence
+order must be named **in the rule** and the other memberships must remain retrievable. ⛔ Silent
+precedence is a hidden claim.
+
+⭐ **No semantic loss is required to improve legibility.** PROJ-1 changes labels and grouping. It
+changes no definition, no evidence binding, and no refusal.
+
+### 16.6 Refusals specific to derivation
+
+- ⛔ No derived assertion without a registered `rule_id` + `rule_version`.
+- ⛔ No derived assertion over a partial, sampled, or "representative" input set (D2).
+- ⛔ No floor evaluated over immediate inputs where a deeper closure exists (D8).
+- ⛔ No derived assertion presented without a path to its closure (D3, §10.1).
+- ⛔ No scalar, score, index, or percentage produced by derivation — §12 refusal 3 binds derivation
+  exactly as it binds primary assertion. *"Mostly operational"* is admissible as a rule output over
+  a named partition; *"87% healthy"* is not.
+- ⛔ No derivation may render an `operational_element` its inputs did not assert (§1.2).
+
+### 16.7 The bounded implementation programme this amendment serves
+
+Authorized by the A2 ruling, **in this order**, and nothing else:
+
+```text
+A. DERIVED ASSERTION SEMANTICS    amend this contract narrowly           ← this section
+B. DURABLE ASSERTION STORE        bounded; sufficient for §4 and §8 only
+C. TEMPORAL DERIVATION            predecessor/current comparison via M1–M8
+D. RELATIONSHIP DERIVATION        evidenced dependency walks (§16.3), LEV-1 (§16.4)
+E. FOUNDER PROJECTION + UI        PROJ-1 (§16.5); UI LAST, only after A–D
+```
+
+⛔ **Explicitly NOT authorized by A2:** changing radius semantics · weakening evidence adequacy ·
+relaxing the co-location refusal · inventing causal edges · adding elemental interpretation to
+operational state · changing JARVIS execution authority · absorbing unrelated runtime work ·
+replacing governed assertion semantics with prose summaries.
+
+⭐ **Do not begin at E.** Redesigning the spiral first would produce a prettier rendering of the
+same epistemic limitation.
+
 ---
 
 ## §13 Open — carried forward, not resolved
@@ -662,18 +941,39 @@ This contract should be accepted only if all hold:
    promoted into a condition of the observed.*
 6. **No scalar anywhere** (§6.3).
 7. **The fixtures discriminate** — each names the plausible wrong behaviour it catches (§11).
-8. **Nothing was built** — no UI, telemetry, emitter, store, or production connection.
+8. ~~**Nothing was built**~~ — **superseded by A2.** Condition 8 held for the pre-A2 contract and was
+   satisfied at acceptance. A2 authorizes the bounded programme §16.7 A–E. It is replaced by 8b.
+
+*Added by A2:*
+
+8b. **Nothing is built outside §16.7 A–E**, and E is not begun before A–D stand.
+9. **Derivation is subordinate to §1, not an exception to it** — every derived claim carries its own
+   `assertion_id` (§1.2), so the "no glow without cause" invariant is preserved verbatim.
+10. **The floor is evaluated over the transitive closure**, and is mechanically checkable — not a
+    matter of authorial discipline (§16.2 D8).
+11. **Every threshold is stated as a versioned rule parameter**, never implied — `LEV-1.n_min = 2`
+    is the worked case (§16.4).
+12. **The founder projection loses no semantics** — "Held" relabels `authority_blocked`; the governed
+    state, and ruling A5's non-fault resumable disposition, are unchanged (§16.5).
 
 ---
 
 ## §15 Disposition
 
-> ## **PROPOSED — AWAITING FOUNDER ACCEPTANCE**
+> ## **ACCEPTED · AMENDED (A2)**
 
-Next gate per ruling §4: **founder acceptance of this semantic contract → synthetic visual
-prototype.** Not implementation.
+Pre-A2 this section read `PROPOSED — AWAITING FOUNDER ACCEPTANCE` while the header read `ACCEPTED`.
+⚠️ That inconsistency was real and is recorded rather than quietly erased: the acceptance ruling and
+the forward-port record (*"Standing of the contract header — superseded for implementation
+authority"*) both post-dated this line, and it was never updated. The A2 ruling settles it.
 
-⭐ This item is `AWAITING_AUTHORITY`. Silence, a dismissed prompt, or a timeout leaves it exactly
-there — never `AUTHORIZED`, never `DEFERRED`.
+```text
+SEMANTICS              ACCEPTED, as amended by A2
+IMPLEMENTATION         AUTHORIZED — bounded to §16.7 A–E, in order, and nothing else
+NEXT ACT               §16.7 B — the durable assertion store
+STILL AWAITING         the synthetic prototype's nine frames remain awaiting founder witness;
+                       A2 does not witness them and makes no claim about them
+```
 
-**Stopping here.**
+⭐ Items outside §16.7 A–E remain `AWAITING_AUTHORITY`. Silence, a dismissed prompt, or a timeout
+leaves them exactly there — never `AUTHORIZED`, never `DEFERRED`.
