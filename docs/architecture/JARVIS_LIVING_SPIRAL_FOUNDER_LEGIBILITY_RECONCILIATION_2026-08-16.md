@@ -218,9 +218,62 @@ previously said and why it was wrong.
   derivation exactly as it binds primary assertion — a rule output over a named partition is not a
   score.
 
+### A2 commit custody
+
+⭐ Recorded per founder sequencing step 3 (*record resulting commit SHA + contract identity*). A
+commit cannot contain its own SHA, so this stamp is a follow-up commit — the same structural reason
+the contract's byte identity lives here rather than inside the contract.
+
+```text
+A2 COMMIT            c8f23336d2e323ba01909378f332153c655c4835
+BRANCH               chore/living-spiral-derived-assertion-2026-08-16
+BRANCHED FROM        6d3c0cbc4
+CONTRACT IDENTITY    sha256 08c2a3f5c0faf3a2cb6d8789a1e7ae422ab7ca59a5a56ccac1c32c8b02d87c7c
+                     55,402 B · 979 lines — verified AT the commit, not before it
+WORKING TREE         clean
+PUSHED               NO — not authorized by the A2 ruling; A2 is not yet verifiable from GitHub
+MERGED               NO
+```
+
+### How the hooks were re-established without installing anything
+
+Founder ruling 2026-08-16: no `npm ci`, no `--no-verify`, no cache purge, no disk cleanup. The
+borrowed-dependency mechanism was used instead, and all four proof conditions were met **before** the
+linkage was created:
+
+```text
+HOOK REQUIREMENT     .githooks/pre-commit: test -x node_modules/.bin/tsx   (execute-only)
+DONOR                /Users/soullab/maia-audit-d2db55d7b  (idle, no live process)
+LOCK IDENTITY        sha256 9a85fd408c1e09577e9700d68a64b6ca8c471abec91e63953d543fac62fef86e
+                     1,359,318 B — FULL hash + byte count identical to target, not a prefix match
+RUNTIME              node v22.22.3 · npm 10.9.8 · tsx v4.21.0; package.json engines: node >=18
+SYMLINK SAFETY       node_modules is gitignored (.gitignore:22, confirmed via git check-ignore)
+                     → the linkage was structurally incapable of entering the commit
+GUARD                sequence aborts if a REAL node_modules exists, so nothing could be clobbered
+NEW PACKAGE DISK     zero — one symlink inode
+LINKAGE REMOVED      yes, immediately, on both the failed and successful attempts
+```
+
+⛔ **No gate was disabled.** All governance checks executed and passed against the staged change:
+Supabase ban · provider governance (53 files of migration debt tracked) · no-direct-anthropic
+(1 approved / 1 operational / 55 grandfathered) · PHI log gate (6,223 sources + 447 migrations
+scanned) · design canon.
+
+⚠️ **Two findings surfaced by the gates, neither caused by A2 and neither absorbed into it** (JARVIS
+CORE §D — *do not absorb adjacent defects merely because they were discovered*):
+
+1. **PHI gate warning**, pre-existing: `database/migrations/20260117000001_invites_and_member_columns.sql`
+   *"may add a plaintext PHI column — confirm `_enc` columns exist."* Unrelated to this lane.
+   `DISCOVERED` — reported, not fixed.
+2. **The PHI gate's own scope claim** is worth carrying forward as a model for §16: it reports
+   *"pattern-absence in the declared population — NOT proof that the repository contains no PHI
+   logging."* That is a correctly-floored derived assertion, already in the wild in this codebase.
+
 ### Next act
 
-**§16.7 B — the durable assertion store.** Per the ruling: *do not start by redesigning the spiral.*
+**§16.7 B — the durable assertion store**, now unblocked: A2 holds commit custody, so B would be
+built against semantics that have a recovery point. Per the ruling: *do not start by redesigning the
+spiral.*
 
 ---
 
