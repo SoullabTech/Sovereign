@@ -52,9 +52,27 @@ export interface UtteranceGuardState {
   armed: boolean;
 }
 
-/** Normalization used for identity comparison: case- and whitespace-insensitive. */
+/**
+ * Normalization used for identity comparison.
+ *
+ * Case, whitespace AND terminal punctuation are all discarded, because iOS
+ * revises its final hypothesis as recognition winds down: the same sentence is
+ * emitted first as a bare partial and then re-emitted capitalized and
+ * punctuated. "what is alive" and "What is alive?" are one utterance, and any
+ * comparison that treats them as two will let the duplicate through.
+ */
 export function normalizeUtterance(text: string): string {
-  return text.toLowerCase().trim().replace(/\s+/g, ' ');
+  return text
+    .toLowerCase()
+    .replace(/[.,!?;:'"“”‘’…]+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** True when two transcripts are the same utterance under normalization. */
+export function isSameUtterance(a: string, b: string): boolean {
+  const na = normalizeUtterance(a);
+  return na.length > 0 && na === normalizeUtterance(b);
 }
 
 export function createUtteranceGuardState(): UtteranceGuardState {

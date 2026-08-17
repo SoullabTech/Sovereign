@@ -17,6 +17,7 @@ import {
   noteSpeechContent,
   trySubmitUtterance,
   normalizeUtterance,
+  isSameUtterance,
 } from '../utteranceSubmissionGuard';
 
 /** Collects everything that actually reached `onTranscript`. */
@@ -188,5 +189,54 @@ describe('negative control — the pre-fix logic must fail these same scenarios'
     submit('hello maia', 'processAccumulatedTranscript', 0);
     submit('hello maia', 'processAccumulatedTranscript', 2500);
     expect(sent).toHaveLength(2);
+  });
+});
+
+describe('iOS final-hypothesis revision — the production double-send signature', () => {
+  /**
+   * Production evidence (30 days, before this fix):
+   *   271 duplicate user turns, 212 with NON-NULL but DIFFERENT exchange ids,
+   *   zero matching, average gap 0.30s, 6599/6604 in the SAME session.
+   *
+   * Different exchange ids means the client minted a fresh UUID for each,
+   * i.e. its duplicate check did not match the two strings. iOS re-emits the
+   * final hypothesis capitalized and punctuated, so an exact === compare sees
+   * two different sentences. These tests pin the normalization that closes it.
+   */
+  const REVISIONS: Array<[string, string]> = [
+    ['what is alive in me right now', 'What is alive in me right now?'],
+    ['i need to slow down', 'I need to slow down.'],
+    ['tell me more', 'Tell me more!'],
+    ['okay', 'Okay...'],
+    ['is that it', 'Is that it?'],
+  ];
+
+  it.each(REVISIONS)('treats %j and %j as one utterance', (partial, revised) => {
+    expect(isSameUtterance(partial, revised)).toBe(true);
+  });
+
+  it('refuses the revised hypothesis as a duplicate submission', () => {
+    const { state, sent, submit } = makeConversation();
+    beginUtterance(state);
+    noteSpeechContent(state, 'what is alive in me right now');
+
+    submit('what is alive in me right now', 'partial_silence_timeout_2500ms');
+    // iOS re-emits, capitalized and punctuated, as recognition winds down
+    noteSpeechContent(state, 'What is alive in me right now?');
+    submit('What is alive in me right now?', 'listeningState:stopped');
+
+    expect(sent).toEqual(['what is alive in me right now']);
+  });
+
+  it('still distinguishes genuinely different sentences', () => {
+    expect(isSameUtterance('what is alive', 'what is alive in me')).toBe(false);
+    expect(isSameUtterance('yes', 'no')).toBe(false);
+    expect(isSameUtterance('', '')).toBe(false);
+  });
+
+  describe('negative control — exact === (the pre-fix compare) must fail these', () => {
+    it.each(REVISIONS)('CONTROL: %j !== %j, so the duplicate got through', (partial, revised) => {
+      expect(partial === revised).toBe(false);
+    });
   });
 });

@@ -78,6 +78,7 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
+import { isSameUtterance } from '@/lib/voice/utteranceSubmissionGuard';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -1647,6 +1648,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const isMicrophonePausedRef = useRef(false);
   const lastVoiceErrorRef = useRef<number>(0);
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
+  // Synchronous mirror of the last turn handed to handleTextMessage. A ref, not
+  // state, because two submissions of one utterance can land in the same React
+  // batch — a state read would still show the pre-first-message array and let
+  // the duplicate through. This is the funnel every input passes, typed or spoken.
+  const lastSubmittedTurnRef = useRef<{ text: string; at: number } | null>(null);
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
   const onMemberExpressionRef = useRef(onMemberExpression); // Ref so firing sites don't take a dep on the callback
@@ -4879,12 +4885,20 @@ I'm not sure what I'm feeling yet.`;
       // Resend of an already-authored turn: mark it in-flight, append nothing.
       setMessages(prev => markRetrying(prev, retryOf));
     } else {
-      // ✅ CRITICAL FIX: Check if message already exists before adding (prevents duplicates)
-      const isDuplicate = messages.some(msg =>
-        msg.role === 'user' &&
-        msg.text === cleanedText &&
-        (Date.now() - new Date(msg.timestamp).getTime()) < 2000
-      );
+      // ✅ Duplicate check.
+      //
+      // ⚠️ `messages` is React STATE and is STALE inside this callback when two
+      // submissions land in the same batch — the second read still sees the
+      // array from before the first setMessages committed, so nothing matches
+      // and both go through. Production duplicates averaged 0.30s apart, well
+      // inside this window, and slipped past it exactly that way. The ref below
+      // is written synchronously, so the second call always observes the first.
+      // Comparison is normalized for the same reason as the voice path.
+      const lastSubmit = lastSubmittedTurnRef.current;
+      const isDuplicate =
+        !!lastSubmit &&
+        isSameUtterance(lastSubmit.text, cleanedText) &&
+        Date.now() - lastSubmit.at < 2000;
 
       if (isDuplicate) {
         console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
@@ -4903,6 +4917,8 @@ I'm not sure what I'm feeling yet.`;
         // Carried so the later pair write can reuse the same exchange (see above).
         metadata: { exchangeId: turnExchangeId },
       };
+      // Written BEFORE setMessages so the next call in the same batch sees it.
+      lastSubmittedTurnRef.current = { text: cleanedText, at: Date.now() };
       setMessages(prev => appendMessageCapped(prev, userMessage!));
       onMessageAddedRef.current?.(userMessage);
       // The member has spoken. Typed turns and non-streaming voice turns both land here.
@@ -6479,7 +6495,15 @@ I'm not sure what I'm feeling yet.`;
 
       // If same transcript within 30 seconds, it's a duplicate
       // (covers the full MAIA response cycle: LLM + TTS + playback + mic restart)
-      if (lastText === t && timeSinceLastProcess < 30_000) {
+      //
+      // ⚠️ Compared NORMALIZED, not raw. iOS revises its final hypothesis as
+      // recognition winds down — it adds capitalization and terminal
+      // punctuation — so the same sentence arrives twice as two different
+      // strings ("what is alive" then "What is alive?"). An exact `===` let the
+      // second one straight through, and production carried 212 duplicate turns
+      // in 30 days whose two rows had DIFFERENT exchange ids, average gap 0.30s.
+      // Matching on meaning rather than bytes is what closes it.
+      if (isSameUtterance(lastText, t) && timeSinceLastProcess < 30_000) {
         console.warn(`⚠️ Duplicate transcript detected (${timeSinceLastProcess}ms ago), ignoring:`, t);
         return;
       }

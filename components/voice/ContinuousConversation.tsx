@@ -1286,7 +1286,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return;
       }
 
-      // CRITICAL: Clear accumulated transcript IMMEDIATELY to prevent double-send
+      // 🔒 ORDER IS LOAD-BEARING: consult the guard BEFORE mutating any mic state.
+      // The 2512 build asked the guard AFTER stopping recognition and entering
+      // SUBMITTING, so a refusal returned with the mic stopped and parked in a
+      // state nothing would leave — no response was coming, because nothing was
+      // sent. That stranded the microphone. A refusal must be a no-op.
+      if (!submitUtterance(transcript, 'processAccumulatedTranscript')) {
+        accumulatedTranscript.current = ""; // drop the echo, leave the mic alone
+        return;
+      }
+
+      // Past this point the turn IS being submitted, so state may change.
       accumulatedTranscript.current = "";
       continuationRestartRef.current = false; // turn submitted — next start is a fresh turn
 
@@ -1297,12 +1307,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       setMicState('SUBMITTING', 'processAccumulatedTranscript');
       lastTranscriptSubmittedAtRef.current = Date.now();
-
-      if (!submitUtterance(transcript, 'processAccumulatedTranscript')) {
-        // Refused as a duplicate of the turn we already sent — do NOT latch
-        // isProcessingRef, or the next real utterance would be skipped.
-        return;
-      }
 
       lastSentRef.current = transcript;
       lastSentTimeRef.current = Date.now();
