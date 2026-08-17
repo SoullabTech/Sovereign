@@ -25,6 +25,22 @@ const BUILD_MODE =
   process.env.CAPACITOR_MODE ||
   (process.env.CAPACITOR_BUILD ? 'capacitor' : 'web');
 
+// Marketing version, read from package.json so there is ONE source of truth.
+// BUILD_STAMP in lib/http/apiBase.ts falls back to a hard-coded '1.1.0' when
+// this is unset, and nothing was setting it — so every build shipped claiming
+// 1.1.0 while package.json, CFBundleShortVersionString and the TestFlight
+// record all said 1.2.0. A version string that is wrong on the one surface a
+// member can actually read is worse than an absent one: it is a confident
+// false answer to "which build am I on?". Deriving it here means it cannot
+// drift from the manifest again.
+const APP_VERSION = (() => {
+  try {
+    return require('./package.json').version || 'UNSTAMPED';
+  } catch {
+    return 'UNSTAMPED';
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Member surface ≠ admin/monitor surface. Next's dev indicator (the "N" pill
@@ -40,6 +56,7 @@ const nextConfig = {
     NEXT_PUBLIC_BUILD_BRANCH: BUILD_BRANCH,
     NEXT_PUBLIC_BUILD_TIME: BUILD_TIME,
     NEXT_PUBLIC_BUILD_MODE: BUILD_MODE,
+    NEXT_PUBLIC_VERSION: process.env.NEXT_PUBLIC_VERSION || APP_VERSION,
   },
   typescript: {
     // Use core tsconfig for build - real ship entrypoints (app/**, components, hooks)
