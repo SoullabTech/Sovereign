@@ -315,8 +315,17 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     kind: 'route',
     route: '/astrology',
     audience: 'all',
-    nativePolicy: 'web', // first pass: honest web bridge
-    returnBehavior: 'web-bridge',
+    // Was nativePolicy:'web' — a conservative first pass that has gone stale.
+    // /astrology is not in capacitor-patch-routes.sh's exclusions and the static
+    // export emits astrology.html into the native bundle, so the route is
+    // genuinely reconciled: the two conditions nativeReady documents are both
+    // met. Leaving it 'web' bridged House out to Safari on soullab.life and
+    // landed the member in the Journey threshold — a different room presented as
+    // Astrology, on a device whose native Settings already showed the correct
+    // account birth data. Same product surface on PWA and iOS.
+    nativePolicy: 'native',
+    nativeReady: true,
+    returnBehavior: 'back-to-maia',
     group: 'rooms',
   },
   // Community Library REMOVED from the House (founder direction 2026-08-04).

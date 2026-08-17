@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, Settings2, ChevronDown, ChevronUp, Info, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiFetch } from '@/lib/http/apiBase';
+import { apiFetch, apiUrl } from '@/lib/http/apiBase';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { MiniHoloflower } from '@/components/holoflower/MiniHoloflower';
@@ -35,6 +35,8 @@ import { mapAudienceMode } from '@/lib/content/audienceMode';
 import ZodiacToggle, { type ZodiacSystem, type AyanamsaType } from '@/components/astrology/ZodiacToggle';
 import { calculateAyanamsa, tropicalToSidereal } from '@/lib/astrology/ayanamsaCalculator';
 import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculator';
+import { BirthDataForm } from '@/components/astrology/BirthDataForm';
+import { useBirthChart } from '@/lib/hooks/useBirthChart';
 import type { AlienPattern } from '@/lib/astrology/alienPatterns';
 
 // Elemental colors for planet insights
@@ -191,6 +193,12 @@ export default function AstrologyPage() {
   // Alien patterns (Steinbrecher) — detected from chart
   const [alienPatterns, setAlienPatterns] = useState<AlienPattern[]>([]);
 
+  // Birth entry belongs to this page. The hook owns the save contract, so entry
+  // here writes to the authenticated member profile exactly as every other
+  // surface does — no page-local persistence path.
+  const { save: saveBirthData, error: birthSaveError } = useBirthChart();
+
+
   // Circadian rhythm - detect time of day for color transitions
   const [isDayMode, setIsDayMode] = useState(true);
 
@@ -321,7 +329,7 @@ export default function AstrologyPage() {
     (async () => {
       try {
         setSavedSynastryLoading(true);
-        const res = await fetch(
+        const res = await apiFetch(
           `/api/astrology/synastry/saved?memberId=${encodeURIComponent(memberId)}&limit=3`,
           { cache: 'no-store' }
         );
@@ -433,7 +441,9 @@ export default function AstrologyPage() {
                 console.log('[Astrology] Calculating chart with:', { date: dateStr, time: timeStr, location });
 
                 // Calculate the chart
-                const chartRes = await fetch('/api/astrology/birth-chart', {
+                // Calculator route: apiUrl() for Capacitor host correctness,
+                // plain fetch so it acquires no member/session identity.
+                const chartRes = await fetch(apiUrl('/api/astrology/birth-chart'), {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -536,37 +546,102 @@ export default function AstrologyPage() {
       }
     };
 
-    // Helper function to calculate elemental balance
-    const calculateElementalBalance = (chart: BirthChartData) => {
-      const planets = [
-        chart.sun, chart.moon, chart.mercury, chart.venus,
-        chart.mars, chart.jupiter, chart.saturn
-      ].filter((p): p is PlanetPosition => p != null);
-
-      const elementCounts = { fire: 0, water: 0, earth: 0, air: 0 };
-      const fireSign = ['Aries', 'Leo', 'Sagittarius'];
-      const waterSigns = ['Cancer', 'Scorpio', 'Pisces'];
-      const earthSigns = ['Taurus', 'Virgo', 'Capricorn'];
-      const airSigns = ['Gemini', 'Libra', 'Aquarius'];
-
-      planets.forEach(p => {
-        if (fireSign.includes(p.sign)) elementCounts.fire++;
-        else if (waterSigns.includes(p.sign)) elementCounts.water++;
-        else if (earthSigns.includes(p.sign)) elementCounts.earth++;
-        else if (airSigns.includes(p.sign)) elementCounts.air++;
-      });
-
-      const total = planets.length || 1;
-      setElementalBalance({
-        fire: elementCounts.fire / total,
-        water: elementCounts.water / total,
-        earth: elementCounts.earth / total,
-        air: elementCounts.air / total,
-      });
-    };
-
     loadChartData();
   }, []);
+
+  // Elemental balance from the chart's inner planets. Lifted to component
+  // scope so the load effect and the inline birth-entry path share one
+  // definition. Deliberately placed AFTER the effect: birthDataResolution.test
+  // slices the loader as loadChartData -> calculateElementalBalance to prove no
+  // chart is produced past the identity guard, and defining it earlier collapsed
+  // that slice to empty, silently disabling the check.
+  const calculateElementalBalance = useCallback((chart: BirthChartData) => {
+    const planets = [
+      chart.sun, chart.moon, chart.mercury, chart.venus,
+      chart.mars, chart.jupiter, chart.saturn
+    ].filter((p): p is PlanetPosition => p != null);
+
+    const elementCounts = { fire: 0, water: 0, earth: 0, air: 0 };
+    const fireSign = ['Aries', 'Leo', 'Sagittarius'];
+    const waterSigns = ['Cancer', 'Scorpio', 'Pisces'];
+    const earthSigns = ['Taurus', 'Virgo', 'Capricorn'];
+    const airSigns = ['Gemini', 'Libra', 'Aquarius'];
+
+    planets.forEach(p => {
+      if (fireSign.includes(p.sign)) elementCounts.fire++;
+      else if (waterSigns.includes(p.sign)) elementCounts.water++;
+      else if (earthSigns.includes(p.sign)) elementCounts.earth++;
+      else if (airSigns.includes(p.sign)) elementCounts.air++;
+    });
+
+    const total = planets.length || 1;
+    setElementalBalance({
+      fire: elementCounts.fire / total,
+      water: elementCounts.water / total,
+      earth: elementCounts.earth / total,
+      air: elementCounts.air / total,
+    });
+  }, []);
+
+  /**
+   * Birth data entered on this page.
+   *
+   * Persist first, calculate second. If the profile write does not land, the
+   * hook surfaces a retryable error and no chart is drawn — a chart resting on
+   * birth data that failed to persist is the state that made this page look
+   * like it had forgotten the member.
+   */
+  const handleBirthDataSubmit = async (data: {
+    date: string;
+    time: string;
+    location: { name: string; lat: number; lng: number; timezone: string };
+    houseSystem?: string;
+  }) => {
+    const persisted = await saveBirthData({
+      date: data.date,
+      time: data.time,
+      location: data.location,
+      houseSystem: data.houseSystem || 'porphyry',
+    });
+    if (!persisted) return;
+
+    setLoading(true);
+    try {
+      // Calculator route — identity-free by contract.
+      const chartRes = await fetch(apiUrl('/api/astrology/birth-chart'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: data.date,
+          time: data.time,
+          location: data.location,
+          houseSystem: 'porphyry',
+        }),
+      });
+
+      if (chartRes.ok) {
+        const chartJson = await chartRes.json();
+        const fullChart = {
+          ...chartJson.data,
+          date: data.date,
+          time: data.time,
+          location: data.location,
+          houseSystem: 'porphyry',
+        };
+        setChartData(fullChart);
+        if (chartJson.alienPatterns) setAlienPatterns(chartJson.alienPatterns);
+        setHasBirthData(true);
+        setUnresolvedReason(null);
+        calculateElementalBalance(fullChart);
+      } else {
+        console.error('[Astrology] Chart calculation failed:', chartRes.status);
+      }
+    } catch (error) {
+      console.error('[Astrology] Error calculating chart:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle house system change - recalculate chart with new system
   const handleHouseSystemChange = async (newSystem: HouseSystemType) => {
@@ -583,7 +658,8 @@ export default function AstrologyPage() {
         return;
       }
 
-      const res = await fetch('/api/astrology/birth-chart', {
+      // Calculator route — see the calculator contract in birthDataResolution.test
+      const res = await fetch(apiUrl('/api/astrology/birth-chart'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -613,7 +689,7 @@ export default function AstrologyPage() {
   const fetchTransits = async () => {
     setTransitLoading(true);
     try {
-      const res = await fetch('/api/astrology/current-transits');
+      const res = await fetch(apiUrl('/api/astrology/current-transits'));
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data?.positions) {
@@ -731,20 +807,31 @@ export default function AstrologyPage() {
           ) : (
             <>
               {/* Genuine absence: the server named the member and said they have
-                  no birth data. The /journey destination is deliberately
-                  UNCHANGED — where "Enter Birth Details" should lead is a
-                  separate product ruling, outside this repair unit. */}
-              <h2 className="text-2xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint Awaits</h2>
+                  no birth data. Entry happens HERE. The earlier note left the
+                  destination open as a separate product ruling; that ruling is
+                  now made — /journey is a different room, not an onboarding
+                  funnel for astrology, and bouncing the member there is what
+                  made this page a dead end. The form writes through
+                  useBirthChart.save(), so the chart is calculated only after the
+                  member profile has actually accepted the birth data. */}
+              <h2 className="text-2xl font-bold text-dune-amber mb-2">Your birth chart</h2>
               <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
-                Enter your birth details to unlock your personalized astrological map
+                Add your birth date, time, and place to see your chart.
               </p>
-              <Link
-                href="/journey"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
-              >
-                <Sparkles className="w-5 h-5" />
-                Enter Birth Details
-              </Link>
+              <div className="w-full max-w-xl mx-auto text-left">
+                <BirthDataForm
+                  onSubmit={handleBirthDataSubmit}
+                  loading={loading}
+                  isDayMode={false}
+                  title={null}
+                  subtitle={null}
+                />
+                {birthSaveError && (
+                  <p role="alert" className="mt-4 text-center text-sm font-serif text-amber-300/90">
+                    {birthSaveError}
+                  </p>
+                )}
+              </div>
             </>
           )}
         </div>

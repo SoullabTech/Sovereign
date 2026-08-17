@@ -67,6 +67,17 @@ const OUT_OF_SCOPE = [
   /^components\/(admin|dev)\//,
   /__tests__\//,
   /\.(test|spec|stories)\.tsx$/,
+  // Next.js app-router metadata special files. These emit share-card imagery
+  // and icons for crawlers and link previews — they are not rooms, carry no
+  // human activity, and no member ever inhabits one. Forcing them into the
+  // Experience Contract registry would corrupt what that registry means.
+  //
+  // Deliberately FILENAME-specific and anchored to app/: this is the metadata
+  // file convention, not a path escape. `components/**/icon.tsx` is an ordinary
+  // component and stays in scope. sitemap/robots/manifest are the same class
+  // conceptually but are .ts, so they never reach this gate's .tsx scope and
+  // are not matched here. Founder ruling 2026-08-16.
+  /^app\/(.*\/)?(opengraph-image|twitter-image|icon|apple-icon)\d*\.tsx$/,
 ];
 
 const REQUIRED_ALWAYS = [

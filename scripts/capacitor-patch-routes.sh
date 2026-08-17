@@ -43,6 +43,7 @@ MOBILE_TOP_LEVEL=(
   "intro" "welcome-back" "capture" "journal" "field" "settings"
   "oauth-success" "magic-link-success" "reset-password" "soul-gateway"
   "maia" "labtools" "account"
+  "astrology"  # House → Astrology is a native room, not a web bridge
   "styles"  # CSS assets imported by globals.css — must stay in build
 )
 
@@ -501,12 +502,76 @@ MOBILE_EXCLUDED_DIRS=(
     "app/studio/tasks"
     "app/studio/teams"
     "app/studio/services"
+    # Studio fields (P10A drift reconciliation). WEB_ONLY_PREFIXES in
+    # lib/mobile/mobileAllowlist.ts already declares the whole '/studio/' family
+    # web-only; this list enumerates subtrees individually and had drifted from
+    # that authority. Note "app/studio/field" (singular) above is a DIFFERENT
+    # directory — the near-identical name is how the plural was missed.
+    "app/studio/fields"
     # Admin (web-only always)
     "app/admin"
     # Book Studio (desktop authoring environment, web-only)
     "app/book-studio"
     # Team (desktop practitioner collaboration; layout.tsx uses cookies())
     "app/team"
+    # Go (public web short-link redirect: /go/[handle] -> /signin). Web-only by
+    # nature — nothing in the native bundle resolves inbound short links, and the
+    # destination is a web route. This is a NATIVE BOUNDARY entry, not a fix:
+    # /go/[handle] fails static export with 'missing generateStaticParams()'
+    # even when that export is verifiably present on disk. Three hypotheses were
+    # falsified by experiment (patch-lifecycle revert; stale .next cache; the
+    # injected sync-vs-async form). The Next.js behaviour remains UNATTRIBUTED —
+    # do not read this entry as having explained or fixed it, and do not cite it
+    # as evidence about the other patched dynamic routes. Founder ruling
+    # 2026-08-16 (P6).
+    "app/go"
+    # Session join (client-facing consent gate for an invite token). Carrying out
+    # the instruction already written in app/session/join/[token]/page.tsx:
+    # "NOTE (capacitor): this dynamic route is web-only — exclude it from the iOS
+    # static export." The token is a runtime invite identifier, so no truthful
+    # build-time parameter set exists for it. (P10A)
+    "app/session/join"
+    # Master fields (P11). NATIVE_UNREACHABLE is established: absent from the
+    # native allowlist, no appUrlOpen/universal-link handler exists anywhere in
+    # the app, and all 18 cross-tree references are components/masters/* plus the
+    # field definitions themselves — zero from any native-allowed surface.
+    # This is bundle hygiene, NOT a workaround for the export failure: the
+    # segment is already correctly configured. app/fields/[field]/layout.tsx
+    # exports a truthful generateStaticParams() over getAllActiveSlugs(), and it
+    # MUST NOT be altered — it is correct for the web application. Excluding the
+    # tree avoids shipping 3 slugs x 14 surfaces = 42 unreachable static pages
+    # into the native bundle. Their WEB_ONLY status is unresolved and is not
+    # claimed here; only native unreachability is.
+    "app/fields"
+    # The Beginning (P11). NATIVE_UNREACHABLE established on the same evidence:
+    # allowlist absent, no deep-link entry, zero references outside its own tree.
+    # WEB_ONLY is deliberately NOT claimed — this says nothing about its web
+    # lifecycle, only that no native surface can reach it.
+    "app/the-beginning"
+    # VoiceController smoke test (P12). ⚠ READ THE REASON — it is not the usual one.
+    #
+    # This route is NOT web-only, and the diagnostic is NOT obsolete. It is
+    # native-REQUIRED: it is registered in PHONE_ROUTES and is the Phase 1 smoke
+    # test for the Swift VoiceController / IOSNativeVoiceProvider substrate.
+    #
+    # It is excluded because two established requirements are currently
+    # incompatible under static export:
+    #   - app/voice-controller-test/layout.tsx calls requireFounder(), a
+    #     server-session read. That gate closed a witnessed unauthenticated
+    #     exposure (production GET returned 200 / 30,896 bytes, 2026-07-24) and
+    #     fails closed. It MUST NOT be weakened or client-sided — a client cannot
+    #     assert founder identity.
+    #   - output:'export' cannot prerender a route that reads cookies.
+    # The security boundary wins; the export boundary yields.
+    #
+    # RESULTING CAPABILITY STATE: ON-DEVICE VOICE DIAGNOSTIC = UNMET.
+    # Its PHONE_ROUTES entry in lib/mobile/mobileAllowlist.ts is deliberately
+    # LEFT IN PLACE: it records the intended native capability, and removing it
+    # would silently convert an implementation incompatibility into a product
+    # decision nobody has made. The eventual replacement is likely a diagnostic
+    # surfaced through the native shell rather than a server-gated Next page —
+    # a separate design lane, not authorized here. Founder ruling 2026-08-16 (P12).
+    "app/voice-controller-test"
     # Commons (practitioner circles; apiFetch reads cookies during prerender)
     "app/commons"
     # Commons sub-routes — listed explicitly because the parent "app/commons"
