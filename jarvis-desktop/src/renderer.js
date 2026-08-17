@@ -70,6 +70,91 @@ function organRow(o) {
   </div>`;
 }
 
+/**
+ * ACTIVE WORKSPACE — the first thing Home answers, because it is the first
+ * thing every other panel depends on.
+ *
+ * JOP-04. The founder walk of 2026-08-17 ended at Work with "repo root not
+ * found — cannot route", which is the LAST place that fact should surface: by
+ * then a task has been composed and submitted, and the failure reads as a
+ * routing malfunction rather than as an unbound workspace. Home now states the
+ * binding before any work is composed, so the first useful error arrives
+ * before the founder has spent anything on it.
+ *
+ * `ws` is the SAME resolution the router uses, carried on the status payload —
+ * not an independent read. A panel that re-derived the binding could agree with
+ * the screen and disagree with the router, which is the exact class of drift
+ * this console exists to make impossible.
+ */
+function renderActiveWorkspace(ws, b) {
+  // Older status shapes have no `workspace`. Fall back to the binding view
+  // rather than rendering an empty card that reads as "no workspace".
+  if (!ws) {
+    return `<div class="card"><h3>Active workspace</h3>
+      <div class="row"><div><div class="label">${b.bound ? b.root : 'No repository connected'}</div>
+      <div class="src">source: live status · workspace detail unavailable from this build</div></div>
+      <span class="state ${b.state}">${b.state.replace('_', ' ')}</span></div></div>`;
+  }
+
+  const actions = `
+    <div class="ws-actions">
+      <button id="ws-change">Change Workspace…</button>
+      <button id="ws-refresh">Refresh</button>
+      ${ws.bound ? '<button id="ws-reveal">Reveal in Finder</button>' : ''}
+    </div>`;
+
+  if (!ws.bound) {
+    // Named, not vague. The resolver already knows WHICH condition this is —
+    // never configured, configured-but-moved, or launched from a checkout
+    // without the markers — and that sentence is worth more than a red dot.
+    return `<div class="card">
+      <h3>Active workspace</h3>
+      <div class="row">
+        <div>
+          <div class="label">No workspace bound</div>
+          <div class="why">${ws.problem || 'no repository is bound'}</div>
+          <div class="fix">→ Choose a repository to bind. It must be a git worktree carrying the canonical Builder OS markers.</div>
+          <div class="src">source: live status · resolution ${ws.resolution}</div>
+        </div>
+        <span class="state NEEDS_SETUP">NEEDS SETUP</span>
+      </div>
+      ${actions}
+    </div>`;
+  }
+
+  // Bound, but not a git worktree. Rare and worth its own sentence: the markers
+  // can all be present in a plain directory copy, and that is a real hazard —
+  // it is how a non-checkout ends up looking like a checkout.
+  const gitLine = ws.git_connected
+    ? `<span class="kv">${ws.branch || '?'}</span> · <span class="kv">${ws.head || '?'}</span> · ${ws.dirty === null ? 'worktree unread' : ws.dirty ? 'dirty' : 'clean'}`
+    : '<span class="why">not a git worktree — JARVIS can read the markers here but cannot read a branch or HEAD</span>';
+
+  return `<div class="card">
+    <h3>Active workspace</h3>
+    <div class="row">
+      <div>
+        <div class="label">${ws.name}</div>
+        <div class="path">${ws.root}</div>
+        <div class="ws-git">Git: ${ws.git_connected ? 'connected' : 'not connected'} · ${gitLine}</div>
+        <div class="src">source: live status · resolution ${ws.resolution}</div>
+      </div>
+      <span class="state ${ws.git_connected ? 'READY' : 'DEGRADED'}">${ws.git_connected ? 'READY' : 'DEGRADED'}</span>
+    </div>
+    ${actions}
+  </div>`;
+}
+
+function wireWorkspaceActions() {
+  const change = document.getElementById('ws-change');
+  const refresh = document.getElementById('ws-refresh');
+  const reveal = document.getElementById('ws-reveal');
+  // Rebinding re-resolves in main and broadcasts; refresh() then redraws from
+  // the new status rather than from anything this function remembers.
+  if (change) change.onclick = async () => { await window.jarvis.chooseRepo(); await refreshStatus(); };
+  if (refresh) refresh.onclick = () => refreshStatus();
+  if (reveal) reveal.onclick = () => window.jarvis.revealWorkspace();
+}
+
 function renderHome() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
@@ -89,20 +174,7 @@ function renderHome() {
       <p class="sentence">${v.sentence}</p>
     </div>
 
-    <div class="card">
-      <h3>Sovereign binding</h3>
-      <div class="row">
-        <div>
-          <div class="label">${b.bound ? b.root : 'No repository connected'}</div>
-          ${b.reason ? `<div class="why">${b.reason}</div>` : ''}
-          ${b.remediation ? `<div class="fix">→ ${b.remediation}</div>` : ''}
-          <div class="src">${b.bound
-            ? `source: live status · found by ${b.mode === 'dev' ? 'running from inside this checkout' : 'the configured repository path'}`
-            : 'source: live status · nothing was resolved to look at'}</div>
-        </div>
-        <span class="state ${b.state}">${b.state.replace('_', ' ')}</span>
-      </div>
-    </div>
+    ${renderActiveWorkspace(s.workspace, b)}
 
     <div class="card">
       <h3>Needs you ${v.needs_founder.items.length ? `(${v.needs_founder.items.length})` : ''}</h3>
@@ -132,6 +204,7 @@ function renderHome() {
     <div class="hint">Observed ${v.observed_at || 'unknown'}</div>
   `;
   document.getElementById('convo').addEventListener('keydown', onConvoKey);
+  wireWorkspaceActions();
   if (v.active_work.sessions.length) wireSessionActions();
 }
 
@@ -474,8 +547,14 @@ function renderSystem() {
       ${stateRow('Claude lane', s.claude_lane)}
       ${stateRow('Builder work-unit mechanism', s.builder_mechanism)}
       ${stateRow('Desktop runtime', s.desktop_runtime)}
-      ${stateRow('Memory / Postgres', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — no reachability check wired.' })}
-      ${stateRow('Production', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — requires SSH; out of scope for a local console.' })}
+      ${/* These two used to be literals written into the view, which is why
+            they kept saying UNKNOWN after the status layer learned to say
+            UNCONFIGURED and NOT PROBED: a hardcoded row cannot go stale
+            loudly, it just quietly disagrees with the payload. They now read
+            the same fields Home reads. The fallbacks preserve the old text
+            for a status shape that predates them. */ ''}
+      ${stateRow('Memory / Postgres', s.memory_postgres || { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one.' })}
+      ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
     </div>
     ${provenanceRows(s.provenance)}
     <div class="card">
