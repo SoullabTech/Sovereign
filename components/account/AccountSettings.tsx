@@ -2892,17 +2892,39 @@ export function AccountSettings() {
         )}
       </AnimatePresence>
 
-      {/* Internal: VoiceController Phase 1 smoke test entry point (native only).
-          Removable after Phase 6. See docs/architecture/MAIA_VOICE_CONTROLLER_DESIGN.md */}
+      {/* Internal: VoiceController Phase 1 smoke test — native only.
+          See docs/architecture/MAIA_VOICE_CONTROLLER_DESIGN.md
+
+          This used to be a button that navigated to /voice-controller-test. On
+          native it silently did nothing, because P12 (founder ruling
+          2026-08-16, scripts/capacitor-patch-routes.sh) excludes that route
+          from the static native bundle: its layout calls requireFounder(), a
+          server-session read, and output:'export' cannot prerender a route
+          that reads cookies. The security boundary wins; the export boundary
+          yields. So the destination is absent from the app by decision, while
+          the entry point — rendered ONLY on native — remained. P12 touched
+          just the patch script; nothing pointed it at this control.
+
+          It is now a STATEMENT, not a control, for the reason P12 itself gives
+          for keeping the PHONE_ROUTES entry: removing the surface would
+          "silently convert an implementation incompatibility into a product
+          decision nobody has made". A dead button did the same thing in the
+          opposite direction — it implied a capability that is, in P12's own
+          words, UNMET.
+
+          Deliberately NOT offered here: an "open on the web" link. This page
+          exists to exercise the Swift VoiceController through the Capacitor
+          bridge. Safari has no bridge, so the harness would load and be inert
+          — a door that opens onto nothing is worse than a door marked shut. */}
       {Capacitor.isNativePlatform() && (
         <div className="mt-6 pt-4 border-t border-white/5 text-center">
-          <button
-            type="button"
-            onClick={() => { window.location.href = '/voice-controller-test'; }}
-            className="text-[10px] text-stone-500 hover:text-amber-400 font-mono cursor-pointer"
-          >
-            🧪 Voice Controller Test (internal — Phase 1)
-          </button>
+          <p className="text-[10px] text-stone-500 font-mono">
+            🧪 Voice Controller Test — unavailable on device
+          </p>
+          <p className="mt-1 text-[10px] text-stone-600 font-mono leading-relaxed max-w-xs mx-auto">
+            The Phase 1 harness is founder-gated server-side, which the native
+            build cannot prerender. On-device voice diagnostic is unmet (P12).
+          </p>
         </div>
       )}
 
