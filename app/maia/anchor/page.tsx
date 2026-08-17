@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { ReturnToMaia } from '@/components/navigation/ReturnToMaia';
 import { todayISODate } from '@/lib/maia/dailyAnchor';
 
 function formatDate(iso: string): string {
@@ -116,13 +116,13 @@ export default function AnchorPage() {
     >
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#f8f7f5]/80 border-b border-stone-200/40">
         <div className="max-w-2xl mx-auto px-6 py-5 flex items-center gap-5">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 text-stone-700 hover:text-stone-900 hover:-translate-x-0.5 transition-all"
-            aria-label="Back"
-          >
-            <ArrowLeft className="w-5 h-5" strokeWidth={2} />
-          </button>
+          {/* Was `router.back()` with an unlabelled arrow. Two defects: the
+              history stack is empty on a cold start, a deep link, a restored
+              PWA session or a fresh native WebView — so the only way out of
+              Anchor was a no-op exactly when the member most needed it — and an
+              unlabelled arrow never said where it went. This names the
+              destination the House already declared for this route. */}
+          <ReturnToMaia className="-ml-1 text-stone-700 hover:text-stone-900 text-sm" />
           <div className="h-4 w-px bg-stone-300/60" />
           <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">
             Anchor
