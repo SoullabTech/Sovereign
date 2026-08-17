@@ -4,7 +4,7 @@
 # component: whether its state is TRUE, and whether it can be LEFT.
 # It defines nothing else.
 room: Conversation
-human_activity: using the microphone — and being able to use it again afterwards
+human_activity: using the microphone — being able to use it again afterwards, and being heard once when you speak once
 surfaces:
   - components/voice/ContinuousConversation.tsx
 change_class: structural
@@ -24,6 +24,15 @@ structural_rationale: >
   that strands the microphone. Screenshots are not supplied because the defect
   is a state transition, not a rendering; its evidence is the device trace named
   above and the founder walk on build 2511.
+
+  2512 adds no rendering either. Five submission paths that each called
+  onTranscript directly now pass through one admission guard, and the
+  processAccumulatedTranscript latch moved from five hand-written clears (one of
+  which was missing, latching the guard shut for the rest of the session) to a
+  finally. What the member perceives is subtraction: a message they spoke once
+  no longer arrives twice. Evidence is the guard's behavioural suite plus a
+  negative control that reproduces the double-send against the pre-fix logic;
+  the device witness is Kelly's, and is not claimed here.
 ---
 
 # Native microphone lifecycle — Experience Contract (minimal)
@@ -37,6 +46,17 @@ governs the native microphone lifecycle in
 - `ARMING` must have a bounded recovery path.
 - Background/foreground interruption must not strand the mic.
 - `restart_in_flight` must not remain latched indefinitely.
+
+A fifth invariant is added for 2512, at the same altitude and no wider:
+
+- One spoken utterance produces at most one submission — and the member can
+  still say the same words again as a genuinely separate turn.
+
+That invariant governs utterance admission only. It rules nothing about what
+MAIA does with a submission, how a turn is displayed, or when the member should
+speak. It exists because the same failure family is in view: the microphone
+lifecycle producing an untrue outcome — there, a mic that claimed to listen and
+did not; here, one utterance arriving as two.
 
 No broader Conversation Room experience is ruled here.
 

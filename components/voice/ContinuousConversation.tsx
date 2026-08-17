@@ -11,6 +11,12 @@ import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
+import {
+  createUtteranceGuardState,
+  beginUtterance,
+  noteSpeechContent,
+  trySubmitUtterance,
+} from '@/lib/voice/utteranceSubmissionGuard';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -275,6 +281,39 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastSentRef = useRef<string>("");
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
   const isCallingProcessRef = useRef(false); // CRITICAL: Prevent concurrent processAccumulatedTranscript calls
+
+  // 🎯 THE single admission boundary for spoken turns. Five paths can submit an
+  // accumulated transcript (web silence timer, two native silence timeouts,
+  // native `stopped`, manual stop); before 2512 only the first consulted a
+  // dedup and only the first updated it, so the other four were invisible to
+  // it. Every utterance submission now goes through submitUtterance() below.
+  const utteranceGuardRef = useRef(createUtteranceGuardState());
+
+  /**
+   * Submit one spoken utterance to the conversation. This is the ONLY place
+   * `onTranscript` is called for an accumulated transcript — every silence
+   * timer, stop handler and manual stop routes through here so the guard sees
+   * all of them. Returns true if the utterance was actually sent.
+   */
+  const submitUtterance = useCallback((text: string, source: string): boolean => {
+    const decision = trySubmitUtterance(utteranceGuardRef.current, text);
+    if (!decision.admitted) {
+      console.log(`🚫 [UTTERANCE] Refused (${decision.reason}) from ${source}:`, text);
+      logVoiceEvent('voice_utterance_submission_refused', {
+        source,
+        reason: decision.reason,
+        transcriptLength: text.trim().length,
+      });
+      return false;
+    }
+    console.log(`📤 [UTTERANCE] Admitted from ${source}:`, text);
+    logVoiceEvent('voice_utterance_submission_admitted', {
+      source,
+      transcriptLength: text.trim().length,
+    });
+    onTranscript(text);
+    return true;
+  }, [onTranscript]);
   const isRestartingRef = useRef(false);
   // True only while an onend auto-restart is *continuing the same utterance*.
   // iOS Safari effectively ignores `recognition.continuous`, so it fires onend
@@ -454,6 +493,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         console.log('🔗 [onstart] Continuation restart — preserving accumulated transcript:', accumulatedTranscript.current);
       } else {
         accumulatedTranscript.current = "";
+        // 🎯 A genuinely new turn (not a mid-utterance continuation restart):
+        // arm the guard so identical words count as a new utterance.
+        beginUtterance(utteranceGuardRef.current);
       }
 
       // Clear conversation timeout when user starts speaking
@@ -534,6 +576,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           } else {
             accumulatedTranscript.current = finalTranscript.trim();
           }
+          // New speech content arms the guard when it differs from the turn we
+          // already submitted (see utteranceSubmissionGuard).
+          noteSpeechContent(utteranceGuardRef.current, accumulatedTranscript.current);
         } else if (interimTranscript) {
           console.log('📝 Got INTERIM transcript:', interimTranscript);
           // For interim, show accumulated finals + current interim
@@ -1198,103 +1243,80 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     isCallingProcessRef.current = true;
 
-    const transcript = accumulatedTranscript.current.trim();
-    console.log('🔄 [processAccumulatedTranscript] Called with:', transcript);
+    // 🔒 STRUCTURAL: every return path AND every exception releases the latch.
+    // Before 2512 the "exact duplicate" early-return below forgot to clear it,
+    // which latched the guard true forever — after that, every later call bailed
+    // at "Blocked concurrent processAccumulatedTranscript call" and nothing the
+    // member said was ever submitted again. Silently. Manual clears are the bug
+    // class; do not reintroduce one. Add returns freely — finally owns the latch.
+    try {
+      const transcript = accumulatedTranscript.current.trim();
+      console.log('🔄 [processAccumulatedTranscript] Called with:', transcript);
 
-    if (!transcript) {
-      console.log('⚠️ [processAccumulatedTranscript] No transcript to process');
-      isCallingProcessRef.current = false;
-      return;
-    }
-
-    // CRITICAL FIX: If already processing, don't retry - just skip
-    if (isProcessingRef.current) {
-      console.log('⏳ [ContinuousConversation] Already processing, skipping');
-      isCallingProcessRef.current = false;
-      return;
-    }
-    
-    // ✅ CRITICAL: Prevent duplicate sends with multiple checks
-    const now = Date.now();
-    const normalizedTranscript = transcript.toLowerCase().trim();
-    const lastSentNormalized = lastSentRef.current.toLowerCase().trim();
-
-    // Check 1: Exact match within last 2 seconds
-    if (normalizedTranscript === lastSentNormalized && (now - lastSentTimeRef.current) < 2000) {
-      console.log('🚫 [DEDUP] Blocked duplicate transcript:', transcript);
-      accumulatedTranscript.current = ""; // Clear duplicate
-      return;
-    }
-
-    // Check 2: Very similar transcript (>90% match) within last 1 second
-    if (lastSentNormalized && (now - lastSentTimeRef.current) < 1000) {
-      const similarity = normalizedTranscript.length > 0
-        ? normalizedTranscript.split(' ').filter(word => lastSentNormalized.includes(word)).length / normalizedTranscript.split(' ').length
-        : 0;
-      if (similarity > 0.9) {
-        console.log('🚫 [DEDUP] Blocked similar transcript (similarity:', similarity, '):', transcript);
-        accumulatedTranscript.current = ""; // Clear duplicate
-        isCallingProcessRef.current = false;
+      if (!transcript) {
+        console.log('⚠️ [processAccumulatedTranscript] No transcript to process');
         return;
       }
-    }
 
-    // Check 3: Echo/Feedback Prevention - Block MAIA's own voice patterns
-    // Common MAIA response patterns that indicate echo/feedback loop
-    const maiaPatterns = [
-      'mmm', 'yes', 'there\'s something', 'i can feel', 'what\'s alive',
-      'i notice', 'i\'m curious', 'what does', 'how does that feel',
-      'where do you feel', 'in your body', 'that sensation', 'pause',
-      'what\'s it like', 'like...', 'suspension', 'quality of'
-    ];
+      // CRITICAL FIX: If already processing, don't retry - just skip
+      if (isProcessingRef.current) {
+        console.log('⏳ [ContinuousConversation] Already processing, skipping');
+        return;
+      }
 
-    const looksLikeMaiaVoice = maiaPatterns.some(pattern =>
-      normalizedTranscript.includes(pattern.toLowerCase())
-    );
+      const normalizedTranscript = transcript.toLowerCase().trim();
 
-    if (looksLikeMaiaVoice && normalizedTranscript.split(' ').length < 15) {
-      console.log('🔇 [ECHO BLOCK] Transcript looks like MAIA\'s voice:', transcript);
-      accumulatedTranscript.current = ""; // Clear echo
+      // Echo/Feedback Prevention - Block MAIA's own voice patterns.
+      // (Duplicate-send suppression now lives in the shared utterance guard,
+      // which every submission path consults — see submitUtterance.)
+      const maiaPatterns = [
+        'mmm', 'yes', 'there\'s something', 'i can feel', 'what\'s alive',
+        'i notice', 'i\'m curious', 'what does', 'how does that feel',
+        'where do you feel', 'in your body', 'that sensation', 'pause',
+        'what\'s it like', 'like...', 'suspension', 'quality of'
+      ];
+
+      const looksLikeMaiaVoice = maiaPatterns.some(pattern =>
+        normalizedTranscript.includes(pattern.toLowerCase())
+      );
+
+      if (looksLikeMaiaVoice && normalizedTranscript.split(' ').length < 15) {
+        console.log('🔇 [ECHO BLOCK] Transcript looks like MAIA\'s voice:', transcript);
+        accumulatedTranscript.current = ""; // Clear echo
+        return;
+      }
+
+      // CRITICAL: Clear accumulated transcript IMMEDIATELY to prevent double-send
+      accumulatedTranscript.current = "";
+      continuationRestartRef.current = false; // turn submitted — next start is a fresh turn
+
+      // Stop recognition while processing
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+
+      setMicState('SUBMITTING', 'processAccumulatedTranscript');
+      lastTranscriptSubmittedAtRef.current = Date.now();
+
+      if (!submitUtterance(transcript, 'processAccumulatedTranscript')) {
+        // Refused as a duplicate of the turn we already sent — do NOT latch
+        // isProcessingRef, or the next real utterance would be skipped.
+        return;
+      }
+
+      lastSentRef.current = transcript;
+      lastSentTimeRef.current = Date.now();
+      isProcessingRef.current = true;
+      console.log('✅ [ContinuousConversation] onTranscript callback completed');
+
+      // Will restart when Maya finishes speaking
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 500);
+    } finally {
       isCallingProcessRef.current = false;
-      return;
     }
-
-    lastSentRef.current = transcript;
-    lastSentTimeRef.current = now;
-
-    isProcessingRef.current = true;
-
-    // CRITICAL: Clear accumulated transcript IMMEDIATELY to prevent double-send
-    accumulatedTranscript.current = "";
-    continuationRestartRef.current = false; // turn submitted — next start is a fresh turn
-
-    // Stop recognition while processing
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-
-    // Send transcript
-    console.log('📤 [ContinuousConversation] Sending transcript to parent:', transcript);
-    setMicState('SUBMITTING', 'processAccumulatedTranscript');
-    lastTranscriptSubmittedAtRef.current = Date.now();
-    onTranscript(transcript);
-    console.log('✅ [ContinuousConversation] onTranscript callback completed');
-
-    // Track analytics (disabled for Vercel build)
-    // Analytics.transcriptionSuccess({
-    //   transcription_duration_ms: Date.now() - lastSpeechTime.current,
-    //   transcription_length: transcript.length,
-    //   mode: 'continuous'
-    // });
-
-    // Reset the guard flag immediately
-    isCallingProcessRef.current = false;
-
-    // Will restart when Maya finishes speaking
-    setTimeout(() => {
-      isProcessingRef.current = false;
-    }, 500);
-  }, [onTranscript]);
+  }, [onTranscript, submitUtterance, setMicState]);
 
   // 🔊 Track if audio loop is currently running to prevent duplicates
   const audioLoopRunningRef = useRef(false);
@@ -1878,6 +1900,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // Accumulate transcript
             accumulatedTranscript.current = transcript;
+            // Arms only if this differs from what was already submitted — a
+            // trailing partial repeating the sent hypothesis must not re-arm.
+            noteSpeechContent(utteranceGuardRef.current, transcript);
 
             // 🔥 FALLBACK SILENCE DETECTION: Reset timer on each partial
             // If no partials for 2.5s after speech, auto-submit (audio levels may not fire on iOS)
@@ -1894,10 +1919,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
                 addDebug('⏱️ Auto-submit (2.5s silence)');
                 accumulatedTranscript.current = '';
-                isProcessingRef.current = true;
                 setIsRecording(false);
                 isRecordingRef.current = false;
-                onTranscript(finalTranscript);
+                if (submitUtterance(finalTranscript, 'partial_silence_timeout_2500ms')) {
+                  isProcessingRef.current = true;
+                }
                 // Stop native recognition
                 NativeSpeechRecognition.stop().catch(() => {});
               }
@@ -1991,10 +2017,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   }
                   console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
                   accumulatedTranscript.current = '';
-                  isProcessingRef.current = true;
                   setIsRecording(false);
                   isRecordingRef.current = false;
-                  onTranscript(finalTranscript);
+                  if (submitUtterance(finalTranscript, 'audio_level_silence_timeout_1500ms')) {
+                    isProcessingRef.current = true;
+                  }
                 }
                 nativeSilenceTimerRef.current = null;
               }, 1500); // 1.5s of silence = end of speech (balanced for responsiveness)
@@ -2031,6 +2058,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             console.log('✅ [Native] Mic is LIVE - orange dot should be visible');
             addDebug('✅ MIC IS LIVE - orange dot visible!');
             setMicState('LISTENING', 'listeningState:started');
+            // 🎯 A fresh recognition session opened: whatever is heard from here
+            // is a NEW utterance. This is what lets the member repeat the same
+            // sentence — the guard refuses echoes, not repetition.
+            beginUtterance(utteranceGuardRef.current);
             restartInFlightRef.current = false; // Clear restart-in-flight flag
             backoffStepRef.current = 0; // Reset backoff on successful start
             lastNativeStartAtRef.current = Date.now();
@@ -2051,7 +2082,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               accumulatedTranscript.current = '';
               setIsRecording(false);
               isRecordingRef.current = false;
-              onTranscript(finalTranscript);
+              // The buffer can be re-populated by a trailing partial that iOS
+              // emits after a silence timeout already submitted — the guard is
+              // what stops that echo becoming a second send.
+              submitUtterance(finalTranscript, 'listeningState:stopped');
             }
 
             // 🔥 FIX: Only handle restart logic if user wants continuous conversation
@@ -2496,11 +2530,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const finalTranscript = accumulatedTranscript.current.trim();
       console.log('📤 [stopListening] Processing accumulated transcript:', finalTranscript);
 
-      if (onTranscript && !isProcessingRef.current) {
-        isProcessingRef.current = true;
+      // `onTranscript` is a required prop — no truthiness check needed.
+      if (!isProcessingRef.current) {
         setIsRecording(false);
         onRecordingStateChange?.(false);
-        onTranscript(finalTranscript);
+        if (submitUtterance(finalTranscript, 'stopListening')) {
+          isProcessingRef.current = true;
+        }
       }
       accumulatedTranscript.current = '';
     }

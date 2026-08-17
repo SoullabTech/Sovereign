@@ -67,7 +67,14 @@ export type VoiceDiagEvent =
   | 'ios_voice_final_result_received'
   | 'ios_voice_result_empty'
   | 'ios_voice_error'
-  | 'ios_voice_listening_stopped';
+  | 'ios_voice_listening_stopped'
+  // Utterance admission boundary (2512). Every spoken turn passes through the
+  // shared guard in lib/voice/utteranceSubmissionGuard.ts; these two events
+  // make the decision visible in a device trace. A double-send regression
+  // shows up as two `admitted` events with the same transcriptLength from
+  // different `source` values for one utterance.
+  | 'voice_utterance_submission_admitted'
+  | 'voice_utterance_submission_refused';
 
 type Meta = Record<string, string | number | boolean | null>;
 
