@@ -43,6 +43,7 @@ MOBILE_TOP_LEVEL=(
   "intro" "welcome-back" "capture" "journal" "field" "settings"
   "oauth-success" "magic-link-success" "reset-password" "soul-gateway"
   "maia" "labtools" "account"
+  "astrology"  # House → Astrology is a native room, not a web bridge
   "styles"  # CSS assets imported by globals.css — must stay in build
 )
 
