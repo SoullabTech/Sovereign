@@ -24,6 +24,11 @@ const BUILD_MODE =
   process.env.NEXT_PUBLIC_BUILD_MODE ||
   process.env.CAPACITOR_MODE ||
   (process.env.CAPACITOR_BUILD ? 'capacitor' : 'web');
+// Product version, read from package.json — the same source `npm version` bumps.
+// It was previously unset, so BUILD_STAMP.version fell through to its hardcoded
+// '1.1.0' fallback and the Settings footer reported v1.1 while the app shipped
+// as 1.2.0. Derived, not restated: one authority, no second literal to drift.
+const APP_VERSION = require('./package.json').version;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -40,6 +45,7 @@ const nextConfig = {
     NEXT_PUBLIC_BUILD_BRANCH: BUILD_BRANCH,
     NEXT_PUBLIC_BUILD_TIME: BUILD_TIME,
     NEXT_PUBLIC_BUILD_MODE: BUILD_MODE,
+    NEXT_PUBLIC_VERSION: APP_VERSION,
   },
   typescript: {
     // Use core tsconfig for build - real ship entrypoints (app/**, components, hooks)
