@@ -14,7 +14,6 @@ import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voi
 import {
   createUtteranceGuardState,
   beginUtterance,
-  noteSpeechContent,
   trySubmitUtterance,
 } from '@/lib/voice/utteranceSubmissionGuard';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
@@ -116,7 +115,14 @@ function authorityGuard(args: {
 }
 
 export interface ContinuousConversationProps {
-  onTranscript: (text: string) => void;
+  /**
+   * A completed spoken turn. `meta.utteranceId` identifies the listening
+   * episode it came from — consumers must dedupe on that id rather than on the
+   * text, so iOS hypothesis revisions collapse while a member deliberately
+   * repeating a sentence still produces a second turn. Optional so one-shot
+   * Whisper/fallback callers can keep calling with text alone.
+   */
+  onTranscript: (text: string, meta?: { utteranceId?: string }) => void;
   onInterimTranscript?: (text: string) => void;
   onRecordingStateChange?: (isRecording: boolean) => void;
   onAudioLevelChange?: (amplitude: number, isSpeaking: boolean) => void; // Audio amplitude callback for visualization
@@ -298,7 +304,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const submitUtterance = useCallback((text: string, source: string): boolean => {
     const decision = trySubmitUtterance(utteranceGuardRef.current, text);
     if (!decision.admitted) {
-      console.log(`🚫 [UTTERANCE] Refused (${decision.reason}) from ${source}:`, text);
+      console.log(`🚫 [UTTERANCE] Refused (${decision.reason}) from ${source}`);
       logVoiceEvent('voice_utterance_submission_refused', {
         source,
         reason: decision.reason,
@@ -306,12 +312,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       });
       return false;
     }
-    console.log(`📤 [UTTERANCE] Admitted from ${source}:`, text);
+    console.log(
+      `📤 [UTTERANCE] Admitted from ${source} utterance=${decision.utteranceId.slice(0, 8)}`
+    );
     logVoiceEvent('voice_utterance_submission_admitted', {
       source,
+      utteranceId: decision.utteranceId,
       transcriptLength: text.trim().length,
     });
-    onTranscript(text);
+    // The episode id travels with the turn: it becomes the exchange id on the
+    // wire, so the server's UNIQUE (exchange_id, seq) can collapse anything
+    // that still slips through as one row and one inference.
+    onTranscript(text, { utteranceId: decision.utteranceId });
     return true;
   }, [onTranscript]);
   const isRestartingRef = useRef(false);
@@ -576,9 +588,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           } else {
             accumulatedTranscript.current = finalTranscript.trim();
           }
-          // New speech content arms the guard when it differs from the turn we
-          // already submitted (see utteranceSubmissionGuard).
-          noteSpeechContent(utteranceGuardRef.current, accumulatedTranscript.current);
         } else if (interimTranscript) {
           console.log('📝 Got INTERIM transcript:', interimTranscript);
           // For interim, show accumulated finals + current interim
@@ -1904,9 +1913,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // Accumulate transcript
             accumulatedTranscript.current = transcript;
-            // Arms only if this differs from what was already submitted — a
-            // trailing partial repeating the sent hypothesis must not re-arm.
-            noteSpeechContent(utteranceGuardRef.current, transcript);
 
             // 🔥 FALLBACK SILENCE DETECTION: Reset timer on each partial
             // If no partials for 2.5s after speech, auto-submit (audio levels may not fire on iOS)

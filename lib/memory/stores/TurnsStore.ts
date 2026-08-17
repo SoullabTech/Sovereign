@@ -55,6 +55,19 @@ export interface ConversationTurn {
   parentTurnId?: string;
 }
 
+/**
+ * Outcome of an idempotent turn write.
+ *
+ *   inserted  — a new row; this exchange is being handled for the first time
+ *   duplicate — UNIQUE (exchange_id, seq) suppressed it; already accepted
+ *   refused   — sanctuary or provenance declined the write (never durable)
+ *
+ * `duplicate` is deliberately distinct from `refused`: one means the work is
+ * already done, the other means it must not be done. Collapsing them is what
+ * let duplicate submissions each pay for their own inference.
+ */
+export type TurnWriteOutcome = 'inserted' | 'duplicate' | 'refused';
+
 export const TurnsStore = {
   /**
    * Get recent turns for a user (most recent N, returned in chronological order)
@@ -202,19 +215,24 @@ export const TurnsStore = {
       content: string;
       exchangeId: string;
     }
-  ): Promise<boolean> {
+  ): Promise<TurnWriteOutcome> {
     if (!contentWritable(posture, `TurnsStore.addExchangeTurn:${opts.role}`, opts.sessionId)) {
-      return false;
+      return 'refused';
     }
     const provenance = mintTurnProvenance(posture, opts.role, opts.exchangeId, opts.sessionId);
     if (!provenance) {
-      return false; // mint refused — no durable object without provenance (S5)
+      return 'refused'; // mint refused — no durable object without provenance (S5)
     }
     const seq = opts.role === 'user' ? 0 : 1;
-    await query(
+    // RETURNING makes the ON CONFLICT outcome observable: a suppressed insert
+    // yields zero rows. Previously this returned `true` either way, so a
+    // duplicate exchange was indistinguishable from a fresh one and the caller
+    // had no way to avoid re-running inference for a turn already accepted.
+    const res = await query(
       `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, posture_at_creation, provenance)
        VALUES ($1, $2, $3, $4, $5, $6, clock_timestamp(), 'normal', $7::jsonb)
-       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING
+       RETURNING id`,
       [
         opts.userId,
         opts.sessionId ?? null,
@@ -225,7 +243,22 @@ export const TurnsStore = {
         JSON.stringify(provenance.toJson()),
       ]
     );
-    return true;
+    return (res?.rowCount ?? 0) > 0 ? 'inserted' : 'duplicate';
+  },
+
+  /**
+   * The assistant turn already persisted for an exchange, if any.
+   *
+   * Used to answer a duplicate submission from what was already generated
+   * instead of paying for a second inference.
+   */
+  async getAssistantTurnForExchange(exchangeId: string): Promise<string | null> {
+    const res = await query(
+      `SELECT content FROM conversation_turns
+       WHERE exchange_id = $1 AND seq = 1 LIMIT 1`,
+      [exchangeId]
+    );
+    return res?.rows?.[0]?.content ?? null;
   },
 
   /**

@@ -78,7 +78,6 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
-import { isSameUtterance } from '@/lib/voice/utteranceSubmissionGuard';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -1648,11 +1647,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const isMicrophonePausedRef = useRef(false);
   const lastVoiceErrorRef = useRef<number>(0);
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
-  // Synchronous mirror of the last turn handed to handleTextMessage. A ref, not
-  // state, because two submissions of one utterance can land in the same React
-  // batch — a state read would still show the pre-first-message array and let
-  // the duplicate through. This is the funnel every input passes, typed or spoken.
-  const lastSubmittedTurnRef = useRef<{ text: string; at: number } | null>(null);
+  // Listening episodes already submitted. Insertion-ordered and bounded; a ref
+  // rather than state because two recognition callbacks can land in the same
+  // React batch and a state read would still show the pre-update value.
+  const submittedUtteranceIdsRef = useRef<Set<string>>(new Set());
+  // Turns currently in flight, keyed by exchange id, so a double-fired submit
+  // (double tap, StrictMode double-invoke) cannot open a second request for the
+  // same turn. Cleared when the request settles — NOT a timed window, so a
+  // deliberate repeat after the response lands is always admitted.
+  const inFlightExchangeIdsRef = useRef<Set<string>>(new Set());
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
   const onMemberExpressionRef = useRef(onMemberExpression); // Ref so firing sites don't take a dep on the callback
@@ -4727,7 +4730,12 @@ I'm not sure what I'm feeling yet.`;
   }, [messages, userName]);
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
-  const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
+  const handleTextMessage = useCallback(async (
+    text: string,
+    attachments?: File[],
+    retryOf?: string,
+    opts?: { exchangeId?: string }
+  ) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
@@ -4875,7 +4883,13 @@ I'm not sure what I'm feeling yet.`;
     //
     // A resend deliberately REUSES the original id — the member is retrying one
     // utterance, not authoring a new one, so it must not become two rows.
+    // A spoken turn supplies its listening-episode id here, so every recognition
+    // callback from one episode resolves to ONE exchange — the id the server
+    // then dedupes on via UNIQUE (exchange_id, seq). Without that, each call
+    // minted a fresh UUID and the constraint could never fire; production
+    // carried 212 duplicate turns in 30 days with differing ids and zero matches.
     const turnExchangeId: string =
+      opts?.exchangeId ||
       (retryOf ? messages.find(m => m.id === retryOf)?.metadata?.exchangeId : undefined) ||
       (typeof globalThis.crypto?.randomUUID === 'function'
         ? globalThis.crypto.randomUUID()
@@ -4885,20 +4899,23 @@ I'm not sure what I'm feeling yet.`;
       // Resend of an already-authored turn: mark it in-flight, append nothing.
       setMessages(prev => markRetrying(prev, retryOf));
     } else {
-      // ✅ Duplicate check.
+      // ✅ Duplicate check — on turn IDENTITY, not on text.
       //
-      // ⚠️ `messages` is React STATE and is STALE inside this callback when two
-      // submissions land in the same batch — the second read still sees the
-      // array from before the first setMessages committed, so nothing matches
-      // and both go through. Production duplicates averaged 0.30s apart, well
-      // inside this window, and slipped past it exactly that way. The ref below
-      // is written synchronously, so the second call always observes the first.
-      // Comparison is normalized for the same reason as the voice path.
-      const lastSubmit = lastSubmittedTurnRef.current;
-      const isDuplicate =
-        !!lastSubmit &&
-        isSameUtterance(lastSubmit.text, cleanedText) &&
-        Date.now() - lastSubmit.at < 2000;
+      // The previous check read `messages` from React STATE inside this
+      // callback. That read is stale when two submissions land in the same
+      // batch: the second still sees the array from before the first
+      // setMessages committed, so nothing matched and both went through.
+      // Production duplicates averaged 0.30s apart — comfortably inside its
+      // 2000ms window, and straight past it.
+      //
+      // Replacing it with a text window (even normalized) would silently drop a
+      // member deliberately repeating themselves. So this refuses only a turn
+      // whose exchange id is ALREADY IN FLIGHT — a double-fired submit — and
+      // never a distinct turn that happens to share wording.
+      const isDuplicate = inFlightExchangeIdsRef.current.has(turnExchangeId);
+      if (isDuplicate) {
+        console.log(`🚫 [DEDUP] exchange ${turnExchangeId.slice(0, 8)} already in flight, ignoring re-submit`);
+      }
 
       if (isDuplicate) {
         console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
@@ -4917,8 +4934,6 @@ I'm not sure what I'm feeling yet.`;
         // Carried so the later pair write can reuse the same exchange (see above).
         metadata: { exchangeId: turnExchangeId },
       };
-      // Written BEFORE setMessages so the next call in the same batch sees it.
-      lastSubmittedTurnRef.current = { text: cleanedText, at: Date.now() };
       setMessages(prev => appendMessageCapped(prev, userMessage!));
       onMessageAddedRef.current?.(userMessage);
       // The member has spoken. Typed turns and non-streaming voice turns both land here.
@@ -5117,6 +5132,11 @@ I'm not sure what I'm feeling yet.`;
     // Track user activity
     const trackingUserId = userId || `anon_${sessionId}`;
     userTracker.trackActivity(trackingUserId, 'text');
+
+    // 🔒 Claim this exchange for the duration of the request. Released in the
+    // finally below, so the guard is bounded by the request itself rather than
+    // by a clock — a deliberate repeat after the response lands is admitted.
+    inFlightExchangeIdsRef.current.add(turnExchangeId);
 
     try {
       const controller = new AbortController();
@@ -6381,6 +6401,12 @@ I'm not sure what I'm feeling yet.`;
       setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
     } finally {
+      // 🔓 Release the exchange claim. In `finally` so an abort, timeout or
+      // throw cannot leave the id stuck and silently refuse the member's next
+      // turn — the failure mode that a hand-cleared latch produced elsewhere
+      // in this codebase and that cost a build.
+      inFlightExchangeIdsRef.current.delete(turnExchangeId);
+
       // 🔥 CRITICAL FIX: Only reset isResponding for TEXT mode
       // For VOICE mode, isResponding is managed by StreamingAudioQueue.onComplete
       // Setting it here would cause teal visualizer to cut out mid-speech!
@@ -6460,8 +6486,31 @@ I'm not sure what I'm feeling yet.`;
   }, [handleTextMessage, sessionId]);
 
   // Handle voice transcript from mic button
-  const handleVoiceTranscript = useCallback(async (transcript: string) => {
-    console.log('🎤 handleVoiceTranscript called with:', transcript);
+  const handleVoiceTranscript = useCallback(async (
+    transcript: string,
+    meta?: { utteranceId?: string }
+  ) => {
+    const utteranceId = meta?.utteranceId;
+    console.log('🎤 handleVoiceTranscript called', utteranceId ? `utterance=${utteranceId.slice(0, 8)}` : '(no id)');
+
+    // 🔒 IDENTITY GUARD — one listening episode yields one turn.
+    // Every recognition callback in an episode carries that episode's id, so
+    // iOS re-emitting its hypothesis capitalized and punctuated is refused
+    // here, while a member saying the same sentence in a NEW episode gets a
+    // new id and passes. Synchronous ref: two callbacks in one React batch
+    // must not both read a pre-update value.
+    if (utteranceId) {
+      if (submittedUtteranceIdsRef.current.has(utteranceId)) {
+        console.warn(`⚠️ Utterance ${utteranceId.slice(0, 8)} already submitted, ignoring duplicate callback`);
+        return;
+      }
+      submittedUtteranceIdsRef.current.add(utteranceId);
+      // Bound the set — only recent episodes can plausibly repeat.
+      if (submittedUtteranceIdsRef.current.size > 50) {
+        const oldest = submittedUtteranceIdsRef.current.values().next().value;
+        if (oldest) submittedUtteranceIdsRef.current.delete(oldest);
+      }
+    }
     setInterimTranscript(''); // Clear interim display on final submit
     const t = transcript?.trim();
     if (!t) {
@@ -6493,17 +6542,15 @@ I'm not sure what I'm feeling yet.`;
       const { text: lastText, timestamp: lastTime } = lastProcessedTranscriptRef.current;
       const timeSinceLastProcess = now - lastTime;
 
-      // If same transcript within 30 seconds, it's a duplicate
-      // (covers the full MAIA response cycle: LLM + TTS + playback + mic restart)
-      //
-      // ⚠️ Compared NORMALIZED, not raw. iOS revises its final hypothesis as
-      // recognition winds down — it adds capitalization and terminal
-      // punctuation — so the same sentence arrives twice as two different
-      // strings ("what is alive" then "What is alive?"). An exact `===` let the
-      // second one straight through, and production carried 212 duplicate turns
-      // in 30 days whose two rows had DIFFERENT exchange ids, average gap 0.30s.
-      // Matching on meaning rather than bytes is what closes it.
-      if (isSameUtterance(lastText, t) && timeSinceLastProcess < 30_000) {
+      // ⚠️ TEXT IS NOT IDENTITY. This compared transcripts and dropped anything
+      // matching within 30s. Exact-matching let iOS hypothesis revisions
+      // through ("what is alive" then "What is alive?" are different bytes);
+      // normalizing the compare would close that but silently discard a member
+      // who deliberately repeats a sentence — a worse failure, and invisible to
+      // them. Identity is the listening EPISODE, carried as meta.utteranceId,
+      // and the check below is on that id. This text window survives only for
+      // callers that supply no id at all.
+      if (!utteranceId && lastText === t && timeSinceLastProcess < 30_000) {
         console.warn(`⚠️ Duplicate transcript detected (${timeSinceLastProcess}ms ago), ignoring:`, t);
         return;
       }
@@ -7093,8 +7140,10 @@ I'm not sure what I'm feeling yet.`;
       }
 
       // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
+      // The listening-episode id becomes this turn's exchange id, so the server
+      // can collapse anything that still arrives twice into one row, one call.
       console.log('🌀 Routing voice through THE BETWEEN...');
-      await handleTextMessage(cleanedText);
+      await handleTextMessage(cleanedText, undefined, undefined, { exchangeId: utteranceId });
 
       const duration = Date.now() - voiceStartTime;
       trackEvent.voiceResult(userId || 'anonymous', transcript, duration);

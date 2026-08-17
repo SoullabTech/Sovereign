@@ -397,16 +397,49 @@ export async function POST(req: NextRequest) {
 
     if (isRecognizedUser && !isSanctuary) {
       try {
-        memberTurnDurable = await TurnsStore.addExchangeTurn(turnPosture, {
+        const writeOutcome = await TurnsStore.addExchangeTurn(turnPosture, {
           userId: userId!,
           sessionId: acceptedSessionId,
           role: 'user',
           content: message,
           exchangeId,
         });
+        memberTurnDurable = writeOutcome !== 'refused';
         console.log(
-          `🧱 [MAIA/durability] member turn accepted+durable exchange=${exchangeId.slice(0, 8)} durable=${memberTurnDurable} dt=${msSince(start)}ms`
+          `🧱 [MAIA/durability] member turn exchange=${exchangeId.slice(0, 8)} outcome=${writeOutcome} dt=${msSince(start)}ms`
         );
+
+        // 🔁 IDEMPOTENCY: this exchange was already accepted, so the member is
+        // not asking twice — the transport delivered twice. If the answer has
+        // already been generated, return it instead of paying for a second
+        // inference. Under an invite wave this is the difference between one
+        // model call per utterance and two against a rate-limited upstream.
+        //
+        // If no answer exists yet the first request is still in flight; we fall
+        // through and generate, which is exactly today's behaviour — never worse.
+        if (writeOutcome === 'duplicate') {
+          const existing = await TurnsStore.getAssistantTurnForExchange(exchangeId);
+          if (existing) {
+            console.log(
+              `🔁 [MAIA/idempotency] duplicate exchange=${exchangeId.slice(0, 8)} answered from store, inference SKIPPED dt=${msSince(start)}ms`
+            );
+            // `message` is the key the client reads for MAIA's reply, so a
+            // deduplicated answer is indistinguishable from a fresh one to the
+            // member — they simply see the response they were already getting.
+            return jsonWithCors(req, {
+              message: existing,
+              exchangeId,
+              deduplicated: true,
+              memoryHealth: null,
+              stateVector: null,
+              practiceRecommendation: null,
+              ainState: null,
+            }, 200);
+          }
+          console.warn(
+            `🔁 [MAIA/idempotency] duplicate exchange=${exchangeId.slice(0, 8)} but no answer yet — first request still in flight, generating`
+          );
+        }
       } catch (durabilityErr: any) {
         // Never fail the member's turn because bookkeeping failed — but say so
         // loudly, because this is exactly the silent-loss condition F1 is about.

@@ -1,242 +1,187 @@
 /**
- * Regression proof for the 2512 double-send.
+ * Utterance identity — regression proof for the production double-send.
  *
- * These tests model the ACTUAL native event sequence observed on device:
- * a silence timeout submits, iOS emits one more partial carrying the same
- * hypothesis, and the `listeningState: stopped` handler then submits again.
+ * Production signature this closes (conversation_turns, 2026-08-17):
+ *   271 duplicate consecutive member turns in 30 days, mean gap 0.30s,
+ *   6599/6604 in the SAME session, and 212 of 271 carrying NON-NULL but
+ *   DIFFERENT exchange ids with ZERO matches — proof that the client minted a
+ *   fresh id per submission, leaving UNIQUE (exchange_id, seq) inert.
  *
- * The negative controls matter as much as the assertions. `describe('negative
- * control')` reconstructs the PRE-FIX logic and proves it double-sends on the
- * same input. Without that, a passing suite would not distinguish "the guard
- * works" from "the scenario never fired".
+ * The tests are organised around the two ways this can fail. Refusing a real
+ * repeat is the WORSE failure — it discards member speech invisibly — so it
+ * gets equal weight here, not a footnote.
  */
 
 import {
   createUtteranceGuardState,
   beginUtterance,
-  noteSpeechContent,
   trySubmitUtterance,
-  normalizeUtterance,
-  isSameUtterance,
+  mintUtteranceId,
 } from '../utteranceSubmissionGuard';
 
-/** Collects everything that actually reached `onTranscript`. */
+/** Collects what actually reached onTranscript, with the id each carried. */
 function makeConversation() {
   const state = createUtteranceGuardState();
-  const sent: string[] = [];
+  const sent: Array<{ text: string; utteranceId: string }> = [];
   const submit = (text: string, _source: string) => {
-    if (trySubmitUtterance(state, text).admitted) sent.push(text);
+    const d = trySubmitUtterance(state, text);
+    if (d.admitted) sent.push({ text, utteranceId: d.utteranceId });
+    return d;
   };
   return { state, sent, submit };
 }
 
-describe('utterance submission guard — the reproduced double-send', () => {
-  it('admits ONE send when a trailing partial re-populates the buffer before `stopped`', () => {
+describe('one listening episode yields one submission', () => {
+  it('collapses iOS hypothesis revisions of a single utterance', () => {
     const { state, sent, submit } = makeConversation();
-
-    // mic opens
     beginUtterance(state);
-    // user speaks; recognizer emits partials
-    noteSpeechContent(state, 'what is alive in me right now');
 
-    // path 2: 2500ms silence timeout submits and calls stop()
+    // iOS re-emits the same utterance capitalized and punctuated as
+    // recognition winds down. Different bytes, one utterance.
     submit('what is alive in me right now', 'partial_silence_timeout_2500ms');
-
-    // iOS emits one final partial with the SAME hypothesis while winding down.
-    // This is what re-populated accumulatedTranscript on device.
-    noteSpeechContent(state, 'what is alive in me right now');
-
-    // path 4: `listeningState: stopped` finds a non-empty buffer and submits
-    submit('what is alive in me right now', 'listeningState:stopped');
-
-    expect(sent).toEqual(['what is alive in me right now']);
-  });
-
-  it('admits ONE send when manual stop races the native stopped event', () => {
-    const { state, sent, submit } = makeConversation();
-    beginUtterance(state);
-    noteSpeechContent(state, 'i need to slow down');
-
-    submit('i need to slow down', 'stopListening');
-    submit('i need to slow down', 'listeningState:stopped');
-
-    expect(sent).toEqual(['i need to slow down']);
-  });
-
-  it('admits ONE send when both silence timers fire for the same utterance', () => {
-    const { state, sent, submit } = makeConversation();
-    beginUtterance(state);
-    noteSpeechContent(state, 'tell me more');
-
-    submit('tell me more', 'audio_level_silence_timeout_1500ms');
-    submit('tell me more', 'partial_silence_timeout_2500ms');
-
-    expect(sent).toEqual(['tell me more']);
-  });
-
-  it('refuses the echo regardless of how long the two sends are apart', () => {
-    // The old dedup was a 2000ms window while the silence timer fired at
-    // 2500ms — the window was shorter than the interval it guarded. The
-    // semantic guard has no window, so elapsed time is irrelevant.
-    const { state, sent, submit } = makeConversation();
-    beginUtterance(state);
-    noteSpeechContent(state, 'hello maia');
-
-    submit('hello maia', 'first');
-    submit('hello maia', 'ten minutes later, same utterance, no restart');
-
-    expect(sent).toEqual(['hello maia']);
-  });
-});
-
-describe('utterance submission guard — what must still get through', () => {
-  it('allows the same words again as a genuinely separate utterance after a restart', () => {
-    const { state, sent, submit } = makeConversation();
-
-    beginUtterance(state);
-    noteSpeechContent(state, 'yes');
-    submit('yes', 'turn 1');
-
-    // MAIA responds, mic re-arms — authoritative native `started`
-    beginUtterance(state);
-    noteSpeechContent(state, 'yes');
-    submit('yes', 'turn 2');
-
-    expect(sent).toEqual(['yes', 'yes']);
-  });
-
-  it('allows the same words again when new speech content arrives without a restart', () => {
-    const { state, sent, submit } = makeConversation();
-    beginUtterance(state);
-    noteSpeechContent(state, 'okay');
-    submit('okay', 'turn 1');
-
-    // recognizer keeps going and hears something different, then the same word
-    noteSpeechContent(state, 'okay so');
-    noteSpeechContent(state, 'okay');
-    submit('okay', 'turn 2');
-
-    expect(sent).toEqual(['okay', 'okay']);
-  });
-
-  it('allows distinct utterances within one recognition session', () => {
-    const { state, sent, submit } = makeConversation();
-    beginUtterance(state);
-
-    noteSpeechContent(state, 'first thing');
-    submit('first thing', 'a');
-    noteSpeechContent(state, 'second thing');
-    submit('second thing', 'b');
-
-    expect(sent).toEqual(['first thing', 'second thing']);
-  });
-
-  it('treats case and whitespace differences as the same utterance', () => {
-    const { state, sent, submit } = makeConversation();
-    beginUtterance(state);
-    noteSpeechContent(state, 'Hello   Maia');
-
-    submit('Hello   Maia', 'first');
-    submit('hello maia', 'echo with different casing/spacing');
-
-    expect(sent).toEqual(['Hello   Maia']);
-    expect(normalizeUtterance('Hello   Maia')).toBe('hello maia');
-  });
-
-  it('refuses empty and whitespace-only transcripts without consuming the utterance', () => {
-    const state = createUtteranceGuardState();
-    expect(trySubmitUtterance(state, '').admitted).toBe(false);
-    expect(trySubmitUtterance(state, '   ').admitted).toBe(false);
-    // still armed — an empty submission must not disarm a real one
-    expect(trySubmitUtterance(state, 'real words').admitted).toBe(true);
-  });
-});
-
-describe('negative control — the pre-fix logic must fail these same scenarios', () => {
-  /**
-   * Reconstruction of the behaviour at be5b3b802: a 2000ms exact-match window
-   * consulted and updated ONLY by processAccumulatedTranscript, while the
-   * native paths called onTranscript directly.
-   */
-  function makeLegacyConversation() {
-    let lastSent = '';
-    let lastSentTime = 0;
-    const sent: string[] = [];
-    const submit = (text: string, source: string, now: number) => {
-      if (source === 'processAccumulatedTranscript') {
-        const n = text.toLowerCase().trim();
-        if (n === lastSent.toLowerCase().trim() && now - lastSentTime < 2000) return;
-        lastSent = text;
-        lastSentTime = now;
-      }
-      // every native path bypassed the dedup entirely
-      sent.push(text);
-    };
-    return { sent, submit };
-  }
-
-  it('CONTROL: legacy logic double-sends on the trailing-partial race', () => {
-    const { sent, submit } = makeLegacyConversation();
-    submit('what is alive in me right now', 'partial_silence_timeout_2500ms', 0);
-    submit('what is alive in me right now', 'listeningState:stopped', 120);
-    // This is the defect. If this ever collapses to one entry, the control has
-    // stopped reproducing the bug and the tests above prove nothing.
-    expect(sent).toHaveLength(2);
-  });
-
-  it('CONTROL: legacy window is shorter than the silence interval it guarded', () => {
-    const { sent, submit } = makeLegacyConversation();
-    submit('hello maia', 'processAccumulatedTranscript', 0);
-    submit('hello maia', 'processAccumulatedTranscript', 2500);
-    expect(sent).toHaveLength(2);
-  });
-});
-
-describe('iOS final-hypothesis revision — the production double-send signature', () => {
-  /**
-   * Production evidence (30 days, before this fix):
-   *   271 duplicate user turns, 212 with NON-NULL but DIFFERENT exchange ids,
-   *   zero matching, average gap 0.30s, 6599/6604 in the SAME session.
-   *
-   * Different exchange ids means the client minted a fresh UUID for each,
-   * i.e. its duplicate check did not match the two strings. iOS re-emits the
-   * final hypothesis capitalized and punctuated, so an exact === compare sees
-   * two different sentences. These tests pin the normalization that closes it.
-   */
-  const REVISIONS: Array<[string, string]> = [
-    ['what is alive in me right now', 'What is alive in me right now?'],
-    ['i need to slow down', 'I need to slow down.'],
-    ['tell me more', 'Tell me more!'],
-    ['okay', 'Okay...'],
-    ['is that it', 'Is that it?'],
-  ];
-
-  it.each(REVISIONS)('treats %j and %j as one utterance', (partial, revised) => {
-    expect(isSameUtterance(partial, revised)).toBe(true);
-  });
-
-  it('refuses the revised hypothesis as a duplicate submission', () => {
-    const { state, sent, submit } = makeConversation();
-    beginUtterance(state);
-    noteSpeechContent(state, 'what is alive in me right now');
-
-    submit('what is alive in me right now', 'partial_silence_timeout_2500ms');
-    // iOS re-emits, capitalized and punctuated, as recognition winds down
-    noteSpeechContent(state, 'What is alive in me right now?');
     submit('What is alive in me right now?', 'listeningState:stopped');
 
-    expect(sent).toEqual(['what is alive in me right now']);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].text).toBe('what is alive in me right now');
   });
 
-  it('still distinguishes genuinely different sentences', () => {
-    expect(isSameUtterance('what is alive', 'what is alive in me')).toBe(false);
-    expect(isSameUtterance('yes', 'no')).toBe(false);
-    expect(isSameUtterance('', '')).toBe(false);
+  it('collapses a manual stop racing the native stopped event', () => {
+    const { state, sent, submit } = makeConversation();
+    beginUtterance(state);
+    submit('i need to slow down', 'stopListening');
+    submit('I need to slow down.', 'listeningState:stopped');
+    expect(sent).toHaveLength(1);
   });
 
-  describe('negative control — exact === (the pre-fix compare) must fail these', () => {
-    it.each(REVISIONS)('CONTROL: %j !== %j, so the duplicate got through', (partial, revised) => {
-      expect(partial === revised).toBe(false);
-    });
+  it('collapses both silence timers firing for one episode', () => {
+    const { state, sent, submit } = makeConversation();
+    beginUtterance(state);
+    submit('tell me more', 'audio_level_silence_timeout_1500ms');
+    submit('Tell me more!', 'partial_silence_timeout_2500ms');
+    expect(sent).toHaveLength(1);
+  });
+
+  it('refuses the echo no matter how much time passed — no window to outlast', () => {
+    const { state, sent, submit } = makeConversation();
+    beginUtterance(state);
+    submit('hello maia', 'first');
+    // The old repair was a 2000ms window while the silence timer fired at
+    // 2500ms. Identity has no window, so elapsed time cannot defeat it.
+    submit('hello maia', 'an hour later, same episode, no restart');
+    expect(sent).toHaveLength(1);
+  });
+
+  it('gives every admitted turn a stable id to carry to the server', () => {
+    const { state, sent, submit } = makeConversation();
+    const id = beginUtterance(state);
+    submit('what is alive', 'x');
+    expect(sent[0].utteranceId).toBe(id);
+  });
+});
+
+describe('a member repeating themselves must still be heard', () => {
+  it('admits the identical sentence spoken as a NEW episode', () => {
+    const { state, sent, submit } = makeConversation();
+
+    beginUtterance(state);
+    submit('What is alive?', 'turn 1');
+
+    // MAIA answers, the mic re-arms, native `started` fires.
+    beginUtterance(state);
+    submit('What is alive?', 'turn 2');
+
+    expect(sent).toHaveLength(2);
+    expect(sent[0].utteranceId).not.toBe(sent[1].utteranceId);
+  });
+
+  it('admits it even seconds apart, where a 30s text window would have eaten it', () => {
+    const { state, sent, submit } = makeConversation();
+    beginUtterance(state);
+    submit('What is alive?', 'turn 1');
+    beginUtterance(state); // 10s later, deliberate repeat
+    submit('What is alive?', 'turn 2');
+    expect(sent).toHaveLength(2);
+  });
+
+  it('admits many deliberate repeats in a row', () => {
+    const { state, sent, submit } = makeConversation();
+    for (let i = 0; i < 5; i++) {
+      beginUtterance(state);
+      submit('yes', `turn ${i}`);
+    }
+    expect(sent).toHaveLength(5);
+    expect(new Set(sent.map(s => s.utteranceId)).size).toBe(5);
+  });
+
+  it('admits distinct utterances across consecutive episodes', () => {
+    const { state, sent, submit } = makeConversation();
+    beginUtterance(state);
+    submit('first thing', 'a');
+    beginUtterance(state);
+    submit('second thing', 'b');
+    expect(sent.map(s => s.text)).toEqual(['first thing', 'second thing']);
+  });
+});
+
+describe('refusals and identity hygiene', () => {
+  it('refuses empty and whitespace-only transcripts without consuming the episode', () => {
+    const state = createUtteranceGuardState();
+    beginUtterance(state);
+    expect(trySubmitUtterance(state, '')).toEqual({ admitted: false, reason: 'empty' });
+    expect(trySubmitUtterance(state, '   ')).toEqual({ admitted: false, reason: 'empty' });
+    expect(trySubmitUtterance(state, 'real words').admitted).toBe(true);
+  });
+
+  it('names the refusal reason so a device trace can distinguish the two', () => {
+    const state = createUtteranceGuardState();
+    beginUtterance(state);
+    trySubmitUtterance(state, 'hello');
+    const second = trySubmitUtterance(state, 'hello');
+    expect(second).toEqual({ admitted: false, reason: 'utterance_already_submitted' });
+  });
+
+  it('still assigns an identity when a path submits with no episode open', () => {
+    // Defensive: a transcript must never travel anonymously, or the server has
+    // nothing to dedupe on and we are back to the production failure.
+    const state = createUtteranceGuardState();
+    const d = trySubmitUtterance(state, 'orphan transcript');
+    expect(d.admitted).toBe(true);
+    if (d.admitted) expect(d.utteranceId).toBeTruthy();
+  });
+
+  it('mints unique ids', () => {
+    const ids = new Set(Array.from({ length: 200 }, () => mintUtteranceId()));
+    expect(ids.size).toBe(200);
+  });
+});
+
+describe('negative controls — the two repairs that were rejected', () => {
+  it('CONTROL: exact byte compare fails on every observed iOS revision pair', () => {
+    const pairs: Array<[string, string]> = [
+      ['what is alive in me right now', 'What is alive in me right now?'],
+      ['i need to slow down', 'I need to slow down.'],
+      ['tell me more', 'Tell me more!'],
+    ];
+    // This is why the shipped guard let duplicates through.
+    for (const [a, b] of pairs) expect(a === b).toBe(false);
+  });
+
+  it('CONTROL: a normalized text+time window would discard a deliberate repeat', () => {
+    // The repair proposed before this one. Modelled here so the reason it was
+    // rejected stays visible: it silently drops real member speech.
+    const normalize = (s: string) =>
+      s.toLowerCase().replace(/[.,!?;:]+/g, '').replace(/\s+/g, ' ').trim();
+    const wouldDrop = (a: string, b: string, gapMs: number) =>
+      normalize(a) === normalize(b) && gapMs < 30_000;
+
+    expect(wouldDrop('What is alive?', 'What is alive?', 10_000)).toBe(true);
+
+    // Identity admits that same case, which is the whole point.
+    const { state, sent, submit } = makeConversation();
+    beginUtterance(state);
+    submit('What is alive?', 'turn 1');
+    beginUtterance(state);
+    submit('What is alive?', 'turn 2');
+    expect(sent).toHaveLength(2);
   });
 });

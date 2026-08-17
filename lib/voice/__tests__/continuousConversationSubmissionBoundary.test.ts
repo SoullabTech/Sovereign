@@ -81,6 +81,8 @@ describe('utterance submission has exactly one admission boundary', () => {
   it('arms the guard on authoritative native start and on a genuinely new web turn', () => {
     const arms = SOURCE.match(/beginUtterance\(utteranceGuardRef\.current\)/g) ?? [];
     expect(arms).toHaveLength(2);
+    // Identity must reach the consumer, or the server has nothing to dedupe on.
+    expect(SOURCE).toContain('onTranscript(text, { utteranceId: decision.utteranceId })');
     // The native arm must sit with the authoritative `started` confirmation
     // that 2511 established as the sole owner of LISTENING.
     expect(SOURCE).toMatch(
