@@ -507,6 +507,17 @@ MOBILE_EXCLUDED_DIRS=(
     "app/book-studio"
     # Team (desktop practitioner collaboration; layout.tsx uses cookies())
     "app/team"
+    # Go (public web short-link redirect: /go/[handle] -> /signin). Web-only by
+    # nature — nothing in the native bundle resolves inbound short links, and the
+    # destination is a web route. This is a NATIVE BOUNDARY entry, not a fix:
+    # /go/[handle] fails static export with 'missing generateStaticParams()'
+    # even when that export is verifiably present on disk. Three hypotheses were
+    # falsified by experiment (patch-lifecycle revert; stale .next cache; the
+    # injected sync-vs-async form). The Next.js behaviour remains UNATTRIBUTED —
+    # do not read this entry as having explained or fixed it, and do not cite it
+    # as evidence about the other patched dynamic routes. Founder ruling
+    # 2026-08-16 (P6).
+    "app/go"
     # Commons (practitioner circles; apiFetch reads cookies during prerender)
     "app/commons"
     # Commons sub-routes — listed explicitly because the parent "app/commons"
