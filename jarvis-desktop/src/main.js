@@ -124,15 +124,39 @@ function findRepoRootPackagedMode() {
   return { root: null, resolution: PROV.RESOLUTION.NONE, configProblem, conflictingConfigRoot: null };
 }
 
+// Dev mode resolves by upward walk FIRST, because running `npm start` from
+// inside a checkout is an explicit statement about which substrate you mean,
+// and it must keep outranking a saved choice made on some earlier day.
+//
+// JOP-04 defect (founder walk, 2026-08-17). The walk used to be dev mode's
+// ONLY step: a dev launch from a checkout missing the canonical markers fell
+// straight to NONE, ignoring JARVIS_REPO_ROOT and the persisted choice that
+// packaged mode honours — so Work answered "repo root not found — cannot
+// route" while a perfectly valid saved workspace sat unread in config.json,
+// and every dependent System row read UNKNOWN. Dev mode was the mode without
+// a durable resolver, which is backwards: dev is where checkouts move, get
+// rebased onto branches that predate the builder cluster, and lose markers.
+//
+// The walk keeps its precedence; it now falls THROUGH to the same env →
+// config → default ladder instead of off a cliff. No new resolution source is
+// introduced and no fallback is silent — the ladder each step reports is the
+// one packaged mode already reports, so Preferences and the provenance
+// surface explain a dev binding exactly as they explain a packaged one.
+// The ORDER lives in repo-resolution.js so it can be proven without Electron;
+// the SOURCES stay here, so each one still has exactly one implementation.
+const { resolveDevMode } = require('./repo-resolution');
+
 // Mutable: Preferences can rebind the substrate at runtime. Everything that
 // reads it does so through currentRoot() rather than closing over the value,
 // so a rebind takes effect without a relaunch.
 let RESOLVED = app.isPackaged
   ? findRepoRootPackagedMode()
-  : (() => {
-      const r = findRepoRootDevMode(__dirname);
-      return { root: r, resolution: r ? PROV.RESOLUTION.WALK : PROV.RESOLUTION.NONE, configProblem: null, conflictingConfigRoot: null };
-    })();
+  : resolveDevMode({
+      walk: () => findRepoRootDevMode(__dirname),
+      ladder: findRepoRootPackagedMode,
+      launchedFrom: () => __dirname,
+      RESOLUTION: PROV.RESOLUTION,
+    });
 function currentRoot() { return RESOLVED.root; }
 const REPO_ROOT_MODE = app.isPackaged ? 'packaged' : 'dev';
 
