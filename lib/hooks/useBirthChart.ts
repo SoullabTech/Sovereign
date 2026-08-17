@@ -9,8 +9,14 @@
  * - Account Settings (Birth Chart section)
  *
  * Reads from: server profile → localStorage.birthChartData → localStorage.beta_user.birthData
- * Writes to: all three locations simultaneously
  * Broadcasts: 'birthchart:updated' event for cross-tab sync
+ *
+ * Persistence contract: birth data belongs to the authenticated member account,
+ * not to whichever browser happened to collect it first. localStorage is a cache
+ * for fast reads and for keeping the current session working; the server profile
+ * is canonical. save() therefore returns true ONLY when the server write
+ * succeeded — a local-only write reports failure and sets `error`, because on
+ * iOS a local-only copy is deleted by ITP and the member loses the data.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -33,6 +39,72 @@ export interface BirthData {
 const LS_KEY_CHART = 'birthChartData';
 const LS_KEY_BETA_USER = 'beta_user';
 const BIRTH_CHART_EVENT = 'birthchart:updated';
+
+/**
+ * Members whose legacy-local promotion has already been attempted in this page
+ * session. Without this, a server that keeps rejecting the write would be
+ * re-attempted on every load() — and load() runs on mount, on the
+ * 'birthchart:updated' event, and on cross-tab storage events.
+ */
+const legacyPromotionAttempted = new Set<string>();
+
+type ServerWriteOutcome =
+  | { ok: true }
+  | { ok: false; reason: 'no_session' | 'rejected' | 'unreachable'; message: string };
+
+/**
+ * Write birth data to the member's account. This — not localStorage — is what
+ * makes birth data durable and account-owned. The route derives identity from
+ * the verified session, so no id is sent.
+ *
+ * Must be PUT: /api/members/profile exports only GET and PUT. A PATCH here
+ * returned 405 and, because a 405 is a Response rather than a throw, the old
+ * catch never fired — birth data silently never reached the server, localStorage
+ * looked authoritative, and when iOS Safari/Brave evicted script-writable
+ * storage (ITP caps it at 7 days for sites not installed to the home screen)
+ * the member's birth data vanished.
+ */
+export async function putBirthDataToServer(data: BirthData): Promise<ServerWriteOutcome> {
+  try {
+    const res = await apiFetch('/api/members/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        birthData: {
+          date: data.date,
+          time: data.time,
+          location: data.location,
+        },
+      }),
+    });
+
+    if (res.ok) return { ok: true };
+
+    if (res.status === 401) {
+      return {
+        ok: false,
+        reason: 'no_session',
+        message:
+          'Your session has expired, so your birth details were not saved to your account. Sign in again to save them.',
+      };
+    }
+
+    console.warn('[useBirthChart] Server save rejected:', res.status);
+    return {
+      ok: false,
+      reason: 'rejected',
+      message: `Your birth details could not be saved to your account (server returned ${res.status}). They are held on this device only.`,
+    };
+  } catch (e) {
+    console.warn('[useBirthChart] Server save failed:', e);
+    return {
+      ok: false,
+      reason: 'unreachable',
+      message:
+        'Your birth details could not be saved to your account — the server could not be reached. They are held on this device only.',
+    };
+  }
+}
 
 function safeJsonParse<T>(value: string | null): T | null {
   if (!value) return null;
@@ -104,6 +176,56 @@ export function isBirthDataComplete(data: BirthData | null): boolean {
   );
 }
 
+/**
+ * Mirror an established value into the local cache for fast reads.
+ *
+ * Only ever called with data whose durability is already settled — either the
+ * server write just succeeded, or (on the legacy path) the data already exists
+ * locally and its ownership is proven. Never call this speculatively: a cache
+ * holding a value the server rejected is read by later consumers as current.
+ */
+function mirrorToLocalCache(data: BirthData): void {
+  try {
+    localStorage.setItem(LS_KEY_CHART, JSON.stringify(data));
+
+    const betaUser = safeJsonParse<any>(localStorage.getItem(LS_KEY_BETA_USER)) ?? {};
+    betaUser.birthData = {
+      date: data.date,
+      time: data.time,
+      location: data.location,
+      houseSystem: data.houseSystem,
+    };
+    localStorage.setItem(LS_KEY_BETA_USER, JSON.stringify(betaUser));
+  } catch (e) {
+    // A full or partitioned store is not fatal — the account copy has landed.
+    console.warn('[useBirthChart] Local cache mirror failed:', e);
+  }
+}
+
+/**
+ * Legacy-local birth data that provably belongs to the authenticated member.
+ *
+ * Two populations exist. Members who entered birth data after the server write
+ * was fixed already have it on their account, and any device loads it. Members
+ * who entered it earlier have it only in this browser's localStorage, so a new
+ * device (an iPhone) cannot see it and asks them to enter it again.
+ *
+ * Promotion is only safe when the local copy can be bound to THIS member:
+ * `beta_user.birthData` is written alongside `beta_user.id`, so a matching id is
+ * proof of ownership. `birthChartData` carries no member binding at all — on a
+ * shared or re-signed-in browser it could belong to someone else — so it is
+ * deliberately NOT promotable. If ownership cannot be proven, do not migrate.
+ */
+export function ownedLegacyBirthData(profileId: unknown, betaUser: any): BirthData | null {
+  const serverId = typeof profileId === 'string' ? profileId : null;
+  const localId = typeof betaUser?.id === 'string' ? betaUser.id : null;
+  if (!serverId || !localId || serverId !== localId) return null;
+
+  const local = normalizeBirthData(betaUser?.birthData);
+  if (!local || !isBirthDataComplete(local)) return null;
+  return local;
+}
+
 export function useBirthChart() {
   const [birthData, setBirthData] = useState<BirthData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -133,15 +255,32 @@ export function useBirthChart() {
             if (serverBirth && isBirthDataComplete(serverBirth)) {
               setBirthData(serverBirth);
 
-              // Mirror to localStorage for instant reads
-              localStorage.setItem(LS_KEY_CHART, JSON.stringify(serverBirth));
-              if (betaUser) {
-                betaUser.birthData = serverBirth;
-                localStorage.setItem(LS_KEY_BETA_USER, JSON.stringify(betaUser));
-              }
+              // Canonical value straight from the account — safe to mirror.
+              mirrorToLocalCache(serverBirth);
 
               setIsLoading(false);
               return;
+            }
+
+            // Server has no birth data. One-time promotion of legacy PWA-local
+            // data, but only when it provably belongs to this member.
+            const legacy = ownedLegacyBirthData(profile?.id, betaUser);
+            if (legacy && !legacyPromotionAttempted.has(profile.id)) {
+              legacyPromotionAttempted.add(profile.id);
+              const outcome = await putBirthDataToServer(legacy);
+              if (outcome.ok) {
+                // The account is now canonical for this data.
+                console.info('[useBirthChart] Promoted legacy local birth data to the member account');
+                mirrorToLocalCache(legacy);
+                setBirthData(legacy);
+                setIsLoading(false);
+                return;
+              }
+              // Promotion failed — fall through to the local read below. Unlike a
+              // new edit, the owned local copy is preserved: it already existed,
+              // its ownership is proven, and discarding it would lose the
+              // member's data. It is simply not canonical yet.
+              console.warn('[useBirthChart] Legacy promotion failed:', outcome.reason);
             }
           }
         } catch (e) {
@@ -181,54 +320,27 @@ export function useBirthChart() {
    * Save birth data to all storage locations
    */
   const save = useCallback(async (data: BirthData): Promise<boolean> => {
-    try {
-      // 1) Save to localStorage.birthChartData
-      localStorage.setItem(LS_KEY_CHART, JSON.stringify(data));
+    setError(null);
 
-      // 2) Save to localStorage.beta_user.birthData
-      const betaUser = safeJsonParse<any>(localStorage.getItem(LS_KEY_BETA_USER)) ?? {};
-      betaUser.birthData = {
-        date: data.date,
-        time: data.time,
-        location: data.location,
-        houseSystem: data.houseSystem,
-      };
-      localStorage.setItem(LS_KEY_BETA_USER, JSON.stringify(betaUser));
+    // The account write goes FIRST and nothing local moves until it lands.
+    // Writing the cache first would leave the newest value on the device after a
+    // rejected save, where a later reader picks it up as current — the same
+    // masquerade this contract exists to remove, just one layer down.
+    const outcome = await putBirthDataToServer(data);
 
-      // 3) Save to server profile
-      const memberId = betaUser.id || betaUser.passkey;
-      if (memberId) {
-        try {
-          await apiFetch('/api/members/profile', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: memberId,
-              birthData: {
-                date: data.date,
-                time: data.time,
-                location: data.location,
-              },
-            }),
-          });
-        } catch (e) {
-          console.warn('[useBirthChart] Server save failed:', e);
-          // Don't fail the whole save if server is unavailable
-        }
-      }
-
-      // Update local state
-      setBirthData(data);
-
-      // Broadcast update to other components/tabs
-      emitBirthChartUpdated();
-
-      return true;
-    } catch (e) {
-      console.error('[useBirthChart] Save error:', e);
-      setError('Failed to save birth data');
+    if (!outcome.ok) {
+      // Nothing was mutated: the previous durable value and its cache both stand.
+      // No setBirthData, no emit — a rejected save must not look like a change.
+      setError(outcome.message);
       return false;
     }
+
+    // Persistence established — now the cache and the UI may follow.
+    mirrorToLocalCache(data);
+    setBirthData(data);
+    emitBirthChartUpdated();
+
+    return true;
   }, []);
 
   /**
@@ -245,25 +357,34 @@ export function useBirthChart() {
         localStorage.setItem(LS_KEY_BETA_USER, JSON.stringify(betaUser));
       }
 
-      // Clear server
-      const memberId = betaUser?.id || betaUser?.passkey;
-      if (memberId) {
-        try {
-          await apiFetch('/api/members/profile', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: memberId,
-              birthData: null,
-            }),
-          });
-        } catch (e) {
-          console.warn('[useBirthChart] Server clear failed:', e);
+      // Clear server. Same PATCH → 405 defect as save(): the member was shown a
+      // successful deletion while the server kept the birth data. Consent
+      // boundary, so a failure here must be reported rather than swallowed.
+      let serverCleared = true;
+      try {
+        const res = await apiFetch('/api/members/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ birthData: null }),
+        });
+        if (!res.ok) {
+          console.warn('[useBirthChart] Server clear rejected:', res.status);
+          serverCleared = false;
         }
+      } catch (e) {
+        console.warn('[useBirthChart] Server clear failed:', e);
+        serverCleared = false;
       }
 
+      // The local clear did happen, so reflect it either way — otherwise the UI
+      // would still show data that localStorage no longer holds.
       setBirthData(null);
       emitBirthChartUpdated();
+
+      if (!serverCleared) {
+        setError('Birth data was removed from this device, but the server copy could not be cleared.');
+        return false;
+      }
 
       return true;
     } catch (e) {

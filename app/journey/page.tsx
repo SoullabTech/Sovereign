@@ -111,6 +111,8 @@ export default function AstrologyPage() {
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [birthData, setBirthData] = useState<any>(null); // Store for recalculation
+  // Member-facing message when birth details could not reach the account.
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Responsive chart size — scales to viewport across phone / tablet / desktop / iOS / PWA
   const [chartSize, setChartSize] = useState(600);
@@ -148,7 +150,7 @@ export default function AstrologyPage() {
 
   // useBirthChart hook — loads from server profile first, then localStorage
   // This ensures members with server-saved birth data always see their chart
-  const { birthData: hookBirthData, isLoading: hookLoading, isComplete } = useBirthChart();
+  const { birthData: hookBirthData, isLoading: hookLoading, isComplete, save: saveBirthData } = useBirthChart();
 
   // Alien patterns (Steinbrecher) — detected from chart
   const [alienPatterns, setAlienPatterns] = useState<AlienPattern[]>([]);
@@ -214,7 +216,8 @@ export default function AstrologyPage() {
   // trigger chart calculation so all members with server-saved birth data see their chart
   useEffect(() => {
     if (!hookLoading && isComplete && hookBirthData && !chartData && !loading) {
-      calculateChart(hookBirthData);
+      // Came from the hook (server or mirrored localStorage) — don't write back.
+      calculateChart(hookBirthData, false);
     }
   }, [hookLoading, isComplete, hookBirthData, chartData, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -354,7 +357,17 @@ export default function AstrologyPage() {
             birthDataToLoad.houseSystem = 'porphyry';
           }
           console.log('[Journey] Calculating chart with:', birthDataToLoad);
-          calculateChart(birthDataToLoad);
+          // persist=false. This is a page load, not a member edit, and healing
+          // legacy local data is now owned by useBirthChart's promotion path.
+          // Re-saving here was wrong twice over:
+          //   1. Priority 3 above reads `birthChartData`, which carries no member
+          //      binding — blind-PUTting it would bind whatever this browser
+          //      happens to hold to the signed-in account. That is the exact
+          //      ownership hazard the promotion gate refuses.
+          //   2. Under server-first persistence a rejected write returns false,
+          //      so an offline member would be shown an error and no chart
+          //      instead of the chart their own local copy can already render.
+          calculateChart(birthDataToLoad, false);
         } catch (error) {
           console.error('Failed to calculate chart:', error);
           setLoading(false);
@@ -431,33 +444,33 @@ export default function AstrologyPage() {
   }, [birthData]);
 
   // Fetch chart from API using real ephemeris calculations
-  const calculateChart = async (data: any) => {
+  // `persist` is false when the data already came from the hook (i.e. from the
+  // server), so a plain page load doesn't write back what it just read.
+  const calculateChart = async (data: any, persist: boolean = true) => {
+    setSaveError(null);
     setLoading(true);
-    setBirthData(data);
 
-    // Save birth data to localStorage for future visits
-    localStorage.setItem('birthChartData', JSON.stringify(data));
-
-    // ALSO save to user profile for persistent storage across devices
-    try {
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        const userData = JSON.parse(betaUser);
-        userData.birthData = {
-          date: data.date,
-          time: data.time,
-          location: data.location,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          timezone: data.timezone,
-          houseSystem: data.houseSystem || 'porphyry'
-        };
-        localStorage.setItem('beta_user', JSON.stringify(userData));
-        console.log('✅ Saved birth data to user profile');
+    // Persist through useBirthChart, which is the one path that reaches the
+    // member's account. This page previously wrote only localStorage, so birth
+    // data entered here never reached the server — and on iOS, where
+    // Safari/Brave evict script-writable storage after 7 days, it simply
+    // disappeared and the member was asked to enter it again.
+    //
+    // Persistence comes before the chart: a rejected save must not produce a
+    // chart that looks established. A console warning was not enough — it is
+    // invisible to the member the failure actually costs.
+    if (persist) {
+      const saved = await saveBirthData(data);
+      if (!saved) {
+        setSaveError(
+          "We couldn't save your birth details to your account. Your chart hasn't been updated. Please try again."
+        );
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Failed to save birth data to user profile:', error);
     }
+
+    setBirthData(data);
 
     try {
       const response = await fetch('/api/astrology/birth-chart', {
@@ -594,7 +607,7 @@ export default function AstrologyPage() {
   // Threshold - The invitation unfolds
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center relative overflow-hidden transition-colors duration-[3000ms]
+      <div className={`min-h-[100dvh] flex items-center justify-center relative overflow-hidden transition-colors duration-[3000ms]
         ${isDayMode
           ? 'bg-gradient-to-b from-stone-50 via-amber-50/20 to-stone-100'
           : 'bg-gradient-to-b from-[#0a0a0f] via-[#1a1a2e] to-[#16213e]'
@@ -626,7 +639,7 @@ export default function AstrologyPage() {
   // Birth data form - invitation to calculate chart
   if (!chartData) {
     return (
-      <div className="min-h-screen relative overflow-hidden transition-all duration-1000"
+      <div className="min-h-[100dvh] relative overflow-hidden transition-all duration-1000"
         style={{
           background: isDayMode
             ? 'radial-gradient(circle at 50% 30%, #E8DCC8 0%, #D4C4B0 100%)'
@@ -657,13 +670,23 @@ export default function AstrologyPage() {
           ))}
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 min-h-screen flex items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 min-h-[100dvh] flex items-start md:items-center pt-[calc(env(safe-area-inset-top,0px)+4.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] md:py-12">
           <div className="w-full">
             <BirthDataForm
               onSubmit={calculateChart}
               loading={loading}
               isDayMode={isDayMode}
             />
+            {saveError && (
+              <p
+                role="alert"
+                className={`mt-4 mx-auto max-w-md text-center text-sm ${
+                  isDayMode ? 'text-red-700' : 'text-red-300'
+                }`}
+              >
+                {saveError}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -716,7 +739,10 @@ export default function AstrologyPage() {
   // ═══ ONTOLOGICAL THRESHOLD GATE ═══
   if (entryMode === 'threshold') {
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center"
+      // Mobile: start-aligned and inset below the status bar + fixed MAIA control.
+      // Desktop (md+): symmetric padding restores the original centered presentation.
+      <div
+        className="min-h-[100dvh] relative overflow-x-hidden overflow-y-auto flex items-start md:items-center justify-center pt-[calc(env(safe-area-inset-top,0px)+5rem)] pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] md:pt-8 md:pb-8"
         style={{
           background: 'radial-gradient(ellipse at top, #1e3a5f 0%, #1a2947 20%, #15203a 40%, #0f1729 60%, #0a0f1e 80%, #050911 100%)'
         }}>
@@ -744,7 +770,7 @@ export default function AstrologyPage() {
         {/* Back to MAIA */}
         <Link
           href="/maia"
-          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 text-amber-200 hover:bg-white/20 transition-all duration-300 hover:scale-105"
+          className="fixed left-4 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 text-amber-200 hover:bg-white/20 transition-all duration-300 hover:scale-105"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">MAIA</span>
@@ -765,24 +791,16 @@ export default function AstrologyPage() {
               className="text-stone-400 text-lg font-serif leading-relaxed"
             >
               This is not a tool for analyzing your life.
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 1 }}
-              className="text-stone-300 text-lg font-serif leading-relaxed"
-            >
-              You are not outside this system.
               <br />
-              You are within it.
+              You are not outside this map. You are within it.
             </motion.p>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.4, duration: 1 }}
+              transition={{ delay: 0.9, duration: 1 }}
               className="text-amber-200/80 text-xl font-serif italic"
             >
-              Begin with what is alive.
+              Where would you like to start?
             </motion.p>
           </div>
 
@@ -791,7 +809,7 @@ export default function AstrologyPage() {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.8, duration: 0.8 }}
+              transition={{ delay: 1.2, duration: 0.8 }}
               className="text-amber-400/60 text-sm font-serif"
             >
               Continue with what you just encountered
@@ -802,7 +820,7 @@ export default function AstrologyPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 2.0, duration: 0.8 }}
+            transition={{ delay: 1.4, duration: 0.8 }}
             className="space-y-4"
           >
             <button
@@ -833,7 +851,7 @@ export default function AstrologyPage() {
 
   // The living map - main blueprint interface
   return (
-    <div className="min-h-screen relative overflow-hidden transition-all duration-1000"
+    <div className="min-h-[100dvh] relative overflow-hidden transition-all duration-1000"
       style={{
         background: isDayMode
           ? 'radial-gradient(circle at 50% 30%, #E8DCC8 0%, #D4C4B0 100%)'
@@ -843,7 +861,7 @@ export default function AstrologyPage() {
       {/* Back to MAIA navigation */}
       <Link
         href="/maia"
-        className={`fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
+        className={`fixed left-4 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
           isDayMode
             ? 'bg-amber-100/80 text-amber-800 hover:bg-amber-200/80'
             : 'bg-white/10 text-amber-200 hover:bg-white/20'
@@ -853,10 +871,14 @@ export default function AstrologyPage() {
         <span className="text-sm font-medium">MAIA</span>
       </Link>
 
-      {/* Birth Chart Calculator - Upper Right Corner */}
+      {/* Birth Chart Calculator - Upper Right Corner.
+          persist=false: the calculator only fires onCalculate after its own
+          save() succeeded, so re-saving here would issue a second PUT for data
+          the account already holds — and a transient failure on that redundant
+          write would report "couldn't save" for a save that did land. */}
       <BirthChartCalculator
         isDayMode={isDayMode}
-        onCalculate={calculateChart}
+        onCalculate={(data) => calculateChart(data, false)}
       />
 
       {/* Twilight horizon - hint of sunlight just past dusk */}
@@ -980,7 +1002,8 @@ export default function AstrologyPage() {
       />
 
       {/* Content */}
-      <div className="relative z-10 w-full mx-auto px-0 sm:px-2 md:px-4 pt-1 md:pt-8 pb-32">
+      {/* Mobile top inset clears the status bar plus the fixed MAIA / Edit Chart controls. */}
+      <div className="relative z-10 w-full mx-auto px-0 sm:px-2 md:px-4 pt-[calc(env(safe-area-inset-top,0px)+4.25rem)] md:pt-8 pb-32">
 
         {/* Change entry mode — always available */}
         <div className="text-center mb-2">

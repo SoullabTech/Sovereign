@@ -172,6 +172,8 @@ export default function AstrologyPage() {
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasBirthData, setHasBirthData] = useState(false);
+  // Bumped when birth data is saved, to re-run the chart load.
+  const [reloadKey, setReloadKey] = useState(0);
   const [elementalBalance, setElementalBalance] = useState({
     fire: 0.28,
     water: 0.38,
@@ -536,6 +538,17 @@ export default function AstrologyPage() {
     };
 
     loadChartData();
+  }, [reloadKey]);
+
+  // Re-read the chart when birth data is saved from the inline calculator, so
+  // entering details on this page renders the blueprint without a manual reload.
+  useEffect(() => {
+    const onUpdated = () => {
+      setLoading(true);
+      setReloadKey((k) => k + 1);
+    };
+    window.addEventListener('birthchart:updated', onUpdated);
+    return () => window.removeEventListener('birthchart:updated', onUpdated);
   }, []);
 
   // Handle house system change - recalculate chart with new system
@@ -659,17 +672,17 @@ export default function AstrologyPage() {
           <div className="mx-auto mb-6 flex justify-center">
             <MiniHoloflower size={80} isDayMode={false} animated={true} />
           </div>
-          <h2 className="text-2xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint Awaits</h2>
+          <h2 className="text-2xl font-bold text-dune-amber mb-2">Your birth chart</h2>
           <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
-            Enter your birth details to unlock your personalized astrological map
+            Add your birth date, time, and place to see it.
           </p>
-          <Link
-            href="/journey"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
-          >
-            <Sparkles className="w-5 h-5" />
-            Enter Birth Details
-          </Link>
+          {/* Entry happens here rather than bouncing to /journey. Arriving at
+              Astrology from the House and being thrown to a different room is
+              the disorientation reported on iOS — the room should hold its own
+              threshold gesture. */}
+          <div className="max-w-md mx-auto text-left">
+            <BirthChartCalculator isDayMode={false} variant="inline" />
+          </div>
         </div>
       </div>
     );

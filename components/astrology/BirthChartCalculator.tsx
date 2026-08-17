@@ -33,7 +33,7 @@ export function BirthChartCalculator({
   isDayMode = false,
   variant = 'corner'
 }: BirthChartCalculatorProps) {
-  const { birthData, isLoading, isComplete, save } = useBirthChart();
+  const { birthData, isLoading, isComplete, save, error: saveError } = useBirthChart();
 
   const [isOpen, setIsOpen] = useState(variant === 'inline');
   const [isSaving, setIsSaving] = useState(false);
@@ -209,7 +209,7 @@ export function BirthChartCalculator({
           <div className="flex items-center gap-2">
             <Sparkles className={`w-4 h-4 ${isDayMode ? 'text-amber-600' : 'text-amber-400'}`} />
             <span className={`text-sm font-medium ${isDayMode ? 'text-amber-800' : 'text-amber-200'}`}>
-              Birth Chart Data
+              Birth details
             </span>
           </div>
           {isComplete && (
@@ -228,7 +228,7 @@ export function BirthChartCalculator({
 
   // Corner variant - fixed position with toggle
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed right-4 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-50">
       {/* Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
@@ -276,7 +276,7 @@ export function BirthChartCalculator({
               <div className="flex items-center gap-2">
                 <Sparkles className={`w-4 h-4 ${isDayMode ? 'text-amber-600' : 'text-amber-400'}`} />
                 <span className={`text-sm font-medium ${isDayMode ? 'text-amber-800' : 'text-amber-200'}`}>
-                  Birth Chart Calculator
+                  Birth details
                 </span>
               </div>
               <button
@@ -306,7 +306,7 @@ export function BirthChartCalculator({
             isDayMode ? 'text-amber-700' : 'text-amber-300'
           }`}>
             <Calendar className="w-3.5 h-3.5" />
-            Birth Date
+            Date
           </label>
           <input
             type="date"
@@ -327,7 +327,7 @@ export function BirthChartCalculator({
             isDayMode ? 'text-amber-700' : 'text-amber-300'
           }`}>
             <Clock className="w-3.5 h-3.5" />
-            Birth Time
+            Time
           </label>
           <input
             type="time"
@@ -351,7 +351,7 @@ export function BirthChartCalculator({
             isDayMode ? 'text-amber-700' : 'text-amber-300'
           }`}>
             <MapPin className="w-3.5 h-3.5" />
-            Birth Location
+            Place of birth
           </label>
           <input
             type="text"
@@ -444,15 +444,26 @@ export function BirthChartCalculator({
           ) : (
             <span className="flex items-center justify-center gap-2">
               <Sparkles className="w-4 h-4" />
-              {isComplete ? 'Update Chart' : 'Calculate Birth Chart'}
+              {isComplete ? 'Update chart' : 'Calculate chart'}
             </span>
           )}
         </motion.button>
 
-        {/* Info Text */}
-        <p className={`text-[10px] text-center ${isDayMode ? 'text-amber-600' : 'text-amber-500/60'}`}>
-          Updates all astrological pages instantly
-        </p>
+        {/* A save that did not reach the account must say so. A local-only copy
+            is deleted by iOS ITP after 7 days, so silence here is the defect
+            that made members re-enter their birth details. */}
+        {saveError ? (
+          <p
+            role="alert"
+            className={`text-[11px] text-center ${isDayMode ? 'text-red-700' : 'text-red-300'}`}
+          >
+            {saveError}
+          </p>
+        ) : (
+          <p className={`text-[10px] text-center ${isDayMode ? 'text-amber-600' : 'text-amber-500/60'}`}>
+            Used across every chart.
+          </p>
+        )}
       </div>
     );
   }
