@@ -2152,6 +2152,45 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && micStateRef.current === 'IDLE') {
                     try {
                       setMicState('ARMING', 'hands_free_restart');
+                      // 🛡️ This path had NO watchdog, and that is the whole bug.
+                      // startListening() arms a 2s timeout when it enters ARMING;
+                      // this one did not, so ARMING here was unbounded. The catch
+                      // below only fires on a THROWN error — it cannot see the
+                      // failure that actually happens, which is start() resolving
+                      // while the native `listeningState: started` event never
+                      // arrives. That is precisely what backgrounding does: leave
+                      // MAIA for the House, or take a screenshot of the field, and
+                      // the confirmation is lost. micState then sits in ARMING
+                      // forever and every later tap is refused by the authority
+                      // guard as `mic_state_ARMING` — the mic can never be turned
+                      // back on for the rest of the session.
+                      // Witnessed on device, build 2510: taps at 13:57:25 and
+                      // 13:57:48 both BLOCKED, 23s after the last stop.
+                      // The watchdog owns RECOVERY. It does NOT own the
+                      // ARMING → LISTENING transition — the native
+                      // `listeningState: started` event does, at the handler
+                      // that already sets LISTENING. Declaring LISTENING here
+                      // because start() resolved would replace a stuck-but-
+                      // honest state with a usable-but-lying one: the field
+                      // would show a live microphone that never armed. A
+                      // resolved promise is not a listening microphone.
+                      if (armingTimeoutRef.current) clearTimeout(armingTimeoutRef.current);
+                      armingTimeoutRef.current = setTimeout(async () => {
+                        armingTimeoutRef.current = null;
+                        if (micStateRef.current !== 'ARMING') return;
+                        console.warn('⏱️ [Native] hands-free ARMING timeout — no start confirmation; recovering');
+                        // Stop defensively: the plugin may hold a half-open
+                        // session we never got told about, and re-arming on top
+                        // of one is how the next attempt fails silently too.
+                        try { await NativeSpeechRecognition.stop(); } catch { /* already stopped */ }
+                        isStartingRef.current = false;
+                        restartInFlightRef.current = false;
+                        setIsListening(false);
+                        isListeningRef.current = false;
+                        onRecordingStateChange?.(false);
+                        setMicState('IDLE', 'hands_free_arming_timeout');
+                      }, 3000);
+
                       console.log('🎙️ [Native] Restarting speech recognition (hands-free)...');
                       await NativeSpeechRecognition.start({
                         language: 'en-US',
@@ -2159,12 +2198,27 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                         partialResults: true,
                         popup: false
                       });
-                      console.log('✅ [Native] Restart successful');
-                      setIsListening(true);
-                      isListeningRef.current = true;
+                      // start() resolved. That means the call was accepted, not
+                      // that the microphone is live. State stays ARMING until
+                      // the native event confirms it; the watchdog above is what
+                      // guarantees we cannot sit here forever if it never does.
+                      console.log('✅ [Native] Restart call accepted — awaiting started confirmation');
                     } catch (e: any) {
                       console.warn('⚠️ [Native] Restart failed:', e?.message || e);
+                      if (armingTimeoutRef.current) {
+                        clearTimeout(armingTimeoutRef.current);
+                        armingTimeoutRef.current = null;
+                      }
+                      isStartingRef.current = false;
                       setMicState('IDLE', 'restart_failed');
+                    } finally {
+                      // Bounded by construction: whatever happens above, this
+                      // latch does not outlive the attempt. The device trace
+                      // showed `BLOCKED: restart_in_flight` as well as
+                      // `mic_state_ARMING`, and a latch that can only be cleared
+                      // on the success path is one silent failure away from
+                      // stranding the microphone on its own.
+                      restartInFlightRef.current = false;
                     }
                   } else {
                     console.log('🚫 [Native] Conditions changed, not restarting');
@@ -2653,7 +2707,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     (async () => {
       try {
         const { App } = await import('@capacitor/app');
-        const listener = await App.addListener('appStateChange', ({ isActive }) => {
+        const listener = await App.addListener('appStateChange', async ({ isActive }) => {
           if (!isActive) return;
 
           // Only auto-resume if hands-free is actually enabled
@@ -2663,11 +2717,55 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // Don't fight the rest of the state machine
           if (isSpeakingRef.current) return;
           if (isProcessingRef.current) return;
-          if (restartInFlightRef.current) return;
+
+          // restart_in_flight used to return here, which made this handler
+          // unable to rescue the very case that needs rescuing: the restart
+          // timer that set the latch cannot have survived the background
+          // transition, so on foreground the latch is stale by definition.
+          // Returning on it meant a stranded latch stayed stranded — the trace
+          // showed `BLOCKED: restart_in_flight` alongside `mic_state_ARMING`.
+          if (restartInFlightRef.current) {
+            console.warn('🔁 [AppState] Foregrounded with stale restart_in_flight — clearing');
+            restartInFlightRef.current = false;
+          }
 
           // If iOS killed SR while backgrounding, we come back INTERRUPTED or IDLE
+          // — or ARMING, which this handler used to refuse.
+          //
+          // ARMING is the state that actually strands the microphone. Leaving
+          // MAIA for the House, or taking a screenshot of the field, backgrounds
+          // the app mid-arm; the native start-confirmation never arrives, and we
+          // return foregrounded still in ARMING. Bailing out here meant the one
+          // mechanism that could rescue the mic declined to act on the only
+          // state it needed to rescue — so voice stayed dead for the rest of the
+          // session and no amount of tapping recovered it.
+          //
+          // A foregrounded ARMING is stale by definition: arming is a
+          // sub-second operation, and anything still arming across a background
+          // transition has already lost its audio session. Treat it as IDLE and
+          // let the resume path re-arm honestly.
           const ms = micStateRef.current;
-          if (ms !== 'INTERRUPTED' && ms !== 'IDLE') return;
+          if (ms === 'ARMING') {
+            console.warn('🔁 [AppState] Foregrounded while stuck in ARMING — clearing stale arm');
+            if (armingTimeoutRef.current) {
+              clearTimeout(armingTimeoutRef.current);
+              armingTimeoutRef.current = null;
+            }
+            // Stop before re-arming. Backgrounding may have left a half-open
+            // native session that we were never told about; starting on top of
+            // one reproduces the same silent non-confirmation we are recovering
+            // from. Failure here is expected and ignorable — it means there was
+            // nothing to stop, which is the outcome we want either way.
+            try { await NativeSpeechRecognition.stop(); } catch { /* nothing live */ }
+            isStartingRef.current = false;
+            restartInFlightRef.current = false;
+            setIsListening(false);
+            isListeningRef.current = false;
+            onRecordingStateChange?.(false);
+            setMicState('IDLE', 'foreground_clear_stale_arming');
+          } else if (ms !== 'INTERRUPTED' && ms !== 'IDLE') {
+            return;
+          }
 
           // Extra safety: conversation must still be alive
           if (!isConversationAlive({

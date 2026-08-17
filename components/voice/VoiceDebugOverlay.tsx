@@ -46,6 +46,27 @@ export function VoiceDebugOverlay() {
   useEffect(() => {
     // Only subscribe on Capacitor native — saves a render on web.
     if (!isCapacitorNative()) return;
+
+    // OPT-IN, not automatic. This used to enable itself on every native build,
+    // so a diagnostic panel sat permanently over the conversation for every
+    // TestFlight member — covering MAIA's words and the Keep/Copy row beneath
+    // them. A trace panel is an instrument for whoever is debugging, not
+    // ambient chrome in the member's field; the sovereignty invariant is
+    // observable on intent, invisible by default.
+    //
+    // Kept trivially reachable for the founder walk, since this panel is how
+    // the mic-lifecycle defect was witnessed at all:
+    //   localStorage.setItem('maia_voice_trace', '1')  → on, next launch
+    //   localStorage.removeItem('maia_voice_trace')    → off
+    let optedIn = false;
+    try {
+      optedIn = window.localStorage.getItem('maia_voice_trace') === '1';
+    } catch {
+      // Private mode / storage denied — stay off. Failing closed keeps the
+      // member's field clean, which is the safer direction to fail.
+    }
+    if (!optedIn) return;
+
     setEnabled(true);
     const unsubscribe = subscribeVoiceDebug(setLogs);
     return unsubscribe;
