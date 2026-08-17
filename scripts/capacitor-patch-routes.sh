@@ -530,6 +530,23 @@ MOBILE_EXCLUDED_DIRS=(
     # static export." The token is a runtime invite identifier, so no truthful
     # build-time parameter set exists for it. (P10A)
     "app/session/join"
+    # Master fields (P11). NATIVE_UNREACHABLE is established: absent from the
+    # native allowlist, no appUrlOpen/universal-link handler exists anywhere in
+    # the app, and all 18 cross-tree references are components/masters/* plus the
+    # field definitions themselves — zero from any native-allowed surface.
+    # This is bundle hygiene, NOT a workaround for the export failure: the
+    # segment is already correctly configured. app/fields/[field]/layout.tsx
+    # exports a truthful generateStaticParams() over getAllActiveSlugs(), and it
+    # MUST NOT be altered — it is correct for the web application. Excluding the
+    # tree avoids shipping 3 slugs x 14 surfaces = 42 unreachable static pages
+    # into the native bundle. Their WEB_ONLY status is unresolved and is not
+    # claimed here; only native unreachability is.
+    "app/fields"
+    # The Beginning (P11). NATIVE_UNREACHABLE established on the same evidence:
+    # allowlist absent, no deep-link entry, zero references outside its own tree.
+    # WEB_ONLY is deliberately NOT claimed — this says nothing about its web
+    # lifecycle, only that no native surface can reach it.
+    "app/the-beginning"
     # Commons (practitioner circles; apiFetch reads cookies during prerender)
     "app/commons"
     # Commons sub-routes — listed explicitly because the parent "app/commons"
