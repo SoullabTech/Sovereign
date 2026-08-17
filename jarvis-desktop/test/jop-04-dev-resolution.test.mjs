@@ -108,7 +108,7 @@ describe('JOP-04 dev-mode resolution ladder', () => {
     assert.match(got.configProblem, /no longer carries the canonical markers/);
   });
 
-  test('a failing walk never fabricates a root when the ladder has none', () => {
+  test('THE REGRESSION GUARD: a failing walk never fabricates a root when the ladder has none', () => {
     const got = resolveDevMode({
       walk: () => null,
       ladder: () => ({ root: null, resolution: RESOLUTION.NONE, configProblem: null, conflictingConfigRoot: null }),

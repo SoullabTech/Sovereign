@@ -185,14 +185,36 @@ function readBuildInfo() {
 }
 
 // --- F3: substrate identity, read from the checkout that actually executes -
+//
+// `git_connected` is reported as its own fact rather than inferred from
+// `head !== null`. A path can be a real directory, carry all four canonical
+// markers, and still not be a git worktree — and the founder's response to
+// "this is not a repository" is different from "this is a repository I could
+// not read". Collapsing the two would put the Home panel in the position of
+// guessing which one it is looking at.
+//
+// `branch` is empty on a detached HEAD, which is a legitimate state for a
+// worktree cut at a SHA — reported as 'detached' rather than as a failure.
 function readSubstrateVersion(root) {
-  if (!root) return { head: null, dirty: null };
+  const unread = { head: null, dirty: null, branch: null, git_connected: false };
+  if (!root) return unread;
+  const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', env: childEnv(process.env).env }).trim();
   try {
-    const head = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8', env: childEnv(process.env).env }).trim();
+    // Ask git whether this is a worktree FIRST — before reading anything from
+    // it — so a non-repository is named as such instead of surfacing as an
+    // unexplained read failure three fields later.
+    if (git(['rev-parse', '--is-inside-work-tree']) !== 'true') return unread;
+    const head = git(['rev-parse', '--short', 'HEAD']);
+    const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
     const porcelain = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', env: childEnv(process.env).env });
-    return { head, dirty: porcelain.trim().length > 0 };
+    return {
+      head,
+      dirty: porcelain.trim().length > 0,
+      branch: branch === 'HEAD' ? 'detached' : branch,
+      git_connected: true,
+    };
   } catch {
-    return { head: null, dirty: null };
+    return unread;
   }
 }
 
@@ -416,6 +438,14 @@ ipcMain.handle('jarvis:choose-repo', async (evt) => {
   const out = await chooseRepoInteractive(w);
   return { ...out, state: repoConfigState() };
 });
+// No renderer-supplied path: the argument list is empty on purpose, so this
+// can only ever reveal the binding JARVIS itself resolved and is displaying.
+ipcMain.handle('jarvis:reveal-workspace', async () => {
+  const root = currentRoot();
+  if (!root) return { revealed: false, reason: 'no workspace is bound' };
+  shell.showItemInFolder(root);
+  return { revealed: true, root };
+});
 ipcMain.handle('jarvis:clear-repo', async () => {
   RepoConfig.clearConfig(app.getPath('appData'));
   // Re-resolve from scratch so the surface shows what the app would ACTUALLY
@@ -444,10 +474,42 @@ ipcMain.handle('jarvis:status', async () => {
     repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
     repo_root_mode: REPO_ROOT_MODE,
     provenance: currentProvenance(),
+    // The Home ACTIVE WORKSPACE panel reads this and nothing else. It is the
+    // SAME resolution the router uses — not a second read of the binding — so
+    // the panel cannot drift from what Work will actually route against. That
+    // drift is the whole failure mode of 2026-08-17: the screen and the router
+    // disagreeing about which substrate was bound.
+    workspace: (() => {
+      const root = currentRoot();
+      const sub = readSubstrateVersion(root);
+      return {
+        bound: !!root,
+        root: root || null,
+        name: root ? path.basename(root) : null,
+        branch: sub.branch,
+        head: sub.head,
+        dirty: sub.dirty,
+        git_connected: sub.git_connected,
+        resolution: RESOLVED.resolution,
+        problem: root ? null : (RESOLVED.configProblem || 'no repository is bound'),
+      };
+    })(),
     sessions: [],
-    builder_os: { state: 'UNKNOWN', detail: null },
-    route_a: { state: 'UNKNOWN', detail: null },
-    local_worker: { state: 'UNKNOWN', detail: null },
+    // NOT PROBED, not UNKNOWN. These three are probed further down and every
+    // path below overwrites them; if the substrate is unbound we return early
+    // and they stand as-is. "We did not look, and here is why" is a different
+    // fact from "we looked and cannot tell", and only the first is true here.
+    // Leaving bare UNKNOWNs on screen is what made the console read as broken
+    // when it was reporting a specific, fixable condition.
+    builder_os: { state: 'NOT PROBED', detail: 'depends on a bound execution substrate — none is bound' },
+    route_a: { state: 'NOT PROBED', detail: 'depends on a bound execution substrate — none is bound' },
+    local_worker: { state: 'NOT PROBED', detail: 'not probed while no execution substrate is bound' },
+    // Declared so they are visibly accounted for rather than silently absent.
+    // Neither is probed by Desktop, and neither should be: a status row must
+    // never be the thing that opens a database connection or reaches
+    // production. UNCONFIGURED and NOT PROBED are the honest answers.
+    memory_postgres: { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one. Memory/Postgres state is read from the host, not from this console.' },
+    production: { state: 'NOT PROBED', detail: 'requires explicit production/SSH authority, which Desktop does not hold and does not request. Not probed by design.' },
     claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; Desktop Alpha does not auto-execute it (see §8 security stance) — this console itself runs the Claude Code session that built it.' },
     builder_mechanism: { state: 'UNKNOWN', detail: null },
     governance_holds: [],
@@ -518,7 +580,10 @@ ipcMain.handle('jarvis:status', async () => {
       result.local_worker = { state: 'DEGRADED', detail: `Ollama responded HTTP ${res.status}` };
     }
   } catch (e) {
-    result.local_worker = { state: 'UNAVAILABLE', detail: `Ollama unreachable at 127.0.0.1:11434 — ${e.message.slice(0, 200)}` };
+    // UNREACHABLE, not UNAVAILABLE: the distinction is whether the thing is
+    // absent or merely not answering. A worker that is simply not running is
+    // one launch away from AVAILABLE, and the row should say so.
+    result.local_worker = { state: 'UNREACHABLE', detail: `Ollama unreachable at 127.0.0.1:11434 — ${e.message.slice(0, 200)}` };
   }
 
   return result;
