@@ -22,7 +22,7 @@ import { FieldOrientationHeader } from '@/components/astrology/FieldOrientationH
 import type { SpiralogicEvolutionaryReportData } from '@/lib/astrology/spiralogicReportTypes';
 import type { FieldContext } from '@/lib/astrology/astrologyHandoff';
 import type { AlienPattern } from '@/lib/astrology/alienPatterns';
-import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import { apiFetch, apiUrl } from '@/lib/http/apiBase';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
 import { getSpiralogicPlanetDescription } from '@/lib/astrology/spiralogicHouseMapping';
@@ -148,7 +148,13 @@ export default function AstrologyPage() {
 
   // useBirthChart hook — loads from server profile first, then localStorage
   // This ensures members with server-saved birth data always see their chart
-  const { birthData: hookBirthData, isLoading: hookLoading, isComplete } = useBirthChart();
+  const {
+    birthData: hookBirthData,
+    isLoading: hookLoading,
+    isComplete,
+    save: saveBirthData,
+    error: birthSaveError,
+  } = useBirthChart();
 
   // Alien patterns (Steinbrecher) — detected from chart
   const [alienPatterns, setAlienPatterns] = useState<AlienPattern[]>([]);
@@ -270,7 +276,10 @@ export default function AstrologyPage() {
 
           if (memberId) {
             console.log('[Journey] Fetching birth data from profile API for:', memberId);
-            const profileRes = await fetch(apiUrl(`/api/members/profile?id=${encodeURIComponent(memberId)}`));
+            // Identity resolves from the verified session credential; the route
+            // ignores any client-supplied ?id=. apiFetch carries x-session-token
+            // on native, where cookies are unavailable.
+            const profileRes = await apiFetch('/api/members/profile');
             if (profileRes.ok) {
               const profile = await profileRes.json();
               console.log('[Journey] Profile response:', profile);
@@ -435,32 +444,11 @@ export default function AstrologyPage() {
     setLoading(true);
     setBirthData(data);
 
-    // Save birth data to localStorage for future visits
-    localStorage.setItem('birthChartData', JSON.stringify(data));
-
-    // ALSO save to user profile for persistent storage across devices
-    try {
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        const userData = JSON.parse(betaUser);
-        userData.birthData = {
-          date: data.date,
-          time: data.time,
-          location: data.location,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          timezone: data.timezone,
-          houseSystem: data.houseSystem || 'porphyry'
-        };
-        localStorage.setItem('beta_user', JSON.stringify(userData));
-        console.log('✅ Saved birth data to user profile');
-      }
-    } catch (error) {
-      console.error('Failed to save birth data to user profile:', error);
-    }
 
     try {
-      const response = await fetch('/api/astrology/birth-chart', {
+      // Calculator route: apiUrl() for Capacitor host correctness, plain fetch
+      // so it acquires no member/session identity.
+      const response = await fetch(apiUrl('/api/astrology/birth-chart'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, houseSystem: 'porphyry' }),
@@ -512,6 +500,28 @@ export default function AstrologyPage() {
     }
   };
 
+  /**
+   * Birth data submitted from the form.
+   *
+   * Persistence first, and only then calculation. The shared hook owns the save
+   * contract — it returns false unless the server profile accepted the write —
+   * so a chart is never drawn on top of birth data that failed to persist.
+   */
+  const handleBirthDataSubmit = async (data: any) => {
+    const persisted = await saveBirthData({
+      date: data.date,
+      time: data.time,
+      location: data.location,
+      houseSystem: data.houseSystem || 'porphyry',
+    });
+    if (!persisted) {
+      // useBirthChart has set a retryable error; the form keeps the entered
+      // values so the member can submit again without re-typing.
+      return;
+    }
+    await calculateChart(data);
+  };
+
   useEffect(() => {
     setLoading(false);
   }, []);
@@ -522,7 +532,8 @@ export default function AstrologyPage() {
 
     setTransitsLoading(true);
     try {
-      const response = await fetch('/api/astrology/current-transits', {
+      // Calculator route — identity-free by contract.
+      const response = await fetch(apiUrl('/api/astrology/current-transits'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -657,13 +668,32 @@ export default function AstrologyPage() {
           ))}
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 min-h-screen flex items-center">
+        {/* 100dvh, not min-h-screen: on iOS Safari/WKWebView 100vh excludes the
+            dynamic browser chrome, so vertically centring inside it pushes the
+            threshold under the status bar. Safe-area padding keeps the form
+            clear of the notch and home indicator. */}
+        <div
+          className="relative z-10 max-w-7xl mx-auto px-4 flex items-center"
+          style={{
+            minHeight: '100dvh',
+            paddingTop: 'max(3rem, calc(env(safe-area-inset-top) + 1.5rem))',
+            paddingBottom: 'max(3rem, calc(env(safe-area-inset-bottom) + 1.5rem))',
+          }}
+        >
           <div className="w-full">
             <BirthDataForm
-              onSubmit={calculateChart}
+              onSubmit={handleBirthDataSubmit}
               loading={loading}
               isDayMode={isDayMode}
             />
+            {birthSaveError && (
+              <p
+                role="alert"
+                className="mt-4 text-center text-sm font-serif text-amber-300/90"
+              >
+                {birthSaveError}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -980,7 +1010,10 @@ export default function AstrologyPage() {
       />
 
       {/* Content */}
-      <div className="relative z-10 w-full mx-auto px-0 sm:px-2 md:px-4 pt-1 md:pt-8 pb-32">
+      {/* pt-1 gave mobile content 4px of top inset, so the first element sat
+          under the status bar / Dynamic Island. Real inset on mobile; the
+          md: breakpoint keeps the desktop spacing it already had. */}
+      <div className="relative z-10 w-full mx-auto px-0 sm:px-2 md:px-4 pt-[max(1rem,calc(env(safe-area-inset-top)+0.75rem))] md:pt-8 pb-32">
 
         {/* Change entry mode — always available */}
         <div className="text-center mb-2">
@@ -1023,7 +1056,7 @@ export default function AstrologyPage() {
                   onClick={() => setMapRevealed(true)}
                   className="text-stone-500 hover:text-stone-400 text-sm font-serif transition-colors"
                 >
-                  See where this lives in your field
+                  Open the field map
                 </button>
               </div>
             </div>
@@ -1071,9 +1104,6 @@ export default function AstrologyPage() {
             <h2 className={`text-lg sm:text-xl font-serif mb-1 ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
               Consciousness Field Map
             </h2>
-            <p className={`text-[10px] sm:text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'} font-serif italic mb-1`}>
-              Where your experience finds its place in the field
-            </p>
 
             {/* Start Your Missions CTA + Transit Toggle */}
             <div className="flex items-center justify-center gap-3 mb-2">

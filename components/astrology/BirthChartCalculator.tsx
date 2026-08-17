@@ -228,7 +228,9 @@ export function BirthChartCalculator({
 
   // Corner variant - fixed position with toggle
   return (
-    <div className="fixed top-4 right-4 z-50">
+    // top-4 alone put the Edit Chart control under the status bar / Dynamic
+    // Island on iOS, clipping it. Allow for the safe-area inset.
+    <div className="fixed right-4 z-50 top-[max(1rem,calc(env(safe-area-inset-top)+0.5rem))]">
       {/* Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}

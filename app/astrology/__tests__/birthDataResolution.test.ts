@@ -87,16 +87,31 @@ describe('astrology birth-data resolution — identity contract', () => {
     expect(loader).not.toContain('user.birthData');
   });
 
-  // SCOPE DISCIPLINE: /api/astrology/birth-chart and /current-transits carry no
-  // (see also the identity-rejection describe block below)
-  // identity, auth, or member-scope references — they are deterministic
-  // calculators over supplied birthData. Converting them to apiFetch would
-  // widen the repair with no benefit. This guards against a later well-meant
-  // sweep that "makes everything authenticated".
-  it('leaves the unauthenticated calculator routes on plain fetch', () => {
-    expect(PAGE).toMatch(/fetch\('\/api\/astrology\/birth-chart'/);
+  // CALCULATOR CONTRACT: /api/astrology/birth-chart and /current-transits carry
+  // no identity, auth, or member-scope references — they are deterministic
+  // calculators over supplied birthData.
+  //
+  //   MUST     resolve through apiUrl(), so Capacitor reaches
+  //            https://soullab.life/api/... instead of capacitor://localhost
+  //            (a relative fetch there returns SPA fallback HTML and res.json()
+  //            throws — the defect that opened this repair).
+  //   MUST NOT use apiFetch(), which on native attaches x-session-token,
+  //            x-member-id and x-maia-anon-id. That would give an identity-free
+  //            calculator member/session semantics it has no business holding,
+  //            and would couple it to the credential-header CORS problem being
+  //            repaired separately under T0-C.
+  //
+  // Member-scoped and profile calls go the other way: those MUST use apiFetch.
+  // This still guards against a later sweep that "makes everything
+  // authenticated" — it now also guards the opposite error of leaving a bare
+  // relative path that cannot resolve on device.
+  it('routes the calculators through apiUrl, never apiFetch', () => {
+    expect(PAGE).toMatch(/fetch\(apiUrl\('\/api\/astrology\/birth-chart'\)/);
+    expect(PAGE).toMatch(/fetch\(apiUrl\('\/api\/astrology\/current-transits'\)/);
     expect(PAGE).not.toMatch(/apiFetch\('\/api\/astrology\/birth-chart'/);
     expect(PAGE).not.toMatch(/apiFetch\('\/api\/astrology\/current-transits'/);
+    // No bare relative calculator call may survive — that is the device defect.
+    expect(PAGE).not.toMatch(/fetch\('\/api\/astrology\/(birth-chart|current-transits)'/);
   });
 });
 
@@ -177,9 +192,17 @@ describe('astrology birth-data resolution — the authoritative lookup is termin
     expect(catchBlock).not.toMatch(/authRefused\s*=\s*true/);
   });
 
-  it('leaves the /journey destination untouched on the genuine empty state', () => {
-    // §13: where "Enter Birth Details" should lead is a separate ruling.
-    expect(PAGE).toContain('href="/journey"');
-    expect(PAGE).toContain('Enter Birth Details');
+  it('owns birth entry on the genuine empty state instead of routing away', () => {
+    // §13 left the "Enter Birth Details" destination as a separate product
+    // ruling. That ruling has since been made: genuine absence stays on
+    // /astrology and renders inline birth entry. /journey is a different room,
+    // not an onboarding funnel for astrology — bouncing the member there is
+    // what made this page a dead end.
+    expect(PAGE).not.toContain('href="/journey"');
+    expect(PAGE).toContain('<BirthDataForm');
+    // Entry must write through the shared save contract, so the chart is drawn
+    // only after the member profile has accepted the birth data.
+    expect(PAGE).toMatch(/await saveBirthData\(/);
+    expect(PAGE).toMatch(/if \(!persisted\) return;/);
   });
 });

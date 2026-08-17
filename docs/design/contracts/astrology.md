@@ -3,8 +3,9 @@ room: Astrology
 human_activity: reflective orientation through one's birth chart and chosen astrological lenses — using astrology as a symbolic map for inquiry, not as diagnosis, prediction, or authority over the member
 surfaces:
   - app/astrology/page.tsx
+  - components/astrology/BirthChartCalculator.tsx
 change_class: structural
-structural_rationale: This contract is being introduced to establish room jurisdiction for an existing member-facing surface while a defect/security repair changes implementation plumbing only. The repair binds birth-chart resolution to the authenticated member and refuses unbound local caches; it does not redesign the Astrology experience, alter its visual hierarchy, introduce a new member gesture, or ratify the existing UI as an approved experiential reference. The only member-visible change is that two states which previously rendered as "no birth data" now say what is actually true — signed out, or temporarily unreachable — which corrects a false claim rather than authoring an experience.
+structural_rationale: Introduced to establish room jurisdiction for an existing member-facing surface during a defect/security repair. AMENDED: an earlier version of this sentence claimed the repair "does not introduce a new member gesture." That is no longer true and is corrected here. This unit DOES introduce/reposition a member gesture — birth-data entry now occurs inside the Astrology room rather than sending the member to /journey — and it corrects native safe-area placement of the existing BirthChartCalculator control. This contract change establishes jurisdiction and records the gesture change; it does NOT constitute an experiential walk or approval of the current Astrology composition. A walk remains owed. The room's identity principles are unchanged: the member is established by the server, UNAVAILABLE remains distinct from ABSENT, and no unbound local cache may resolve identity.
 principles:
   - INHABITABLE_ARCHITECTURE — rooms arise from human activity, not data models
   - CONSTITUTIONAL_DIRECTION_OF_AUTHORITY — symbolic interpretation cannot manufacture higher-order truth about the member
@@ -19,11 +20,14 @@ distinct_to_room: the member encounters a symbolic celestial map of their own ch
 
 # Astrology — Experience Contract
 
-**Scope is deliberately narrow.** This contract claims exactly one surface,
-`app/astrology/page.tsx`, because that is the surface actually touched.
+**Scope is deliberately narrow.** This contract claims exactly two surfaces,
+`app/astrology/page.tsx` and `components/astrology/BirthChartCalculator.tsx`,
+because those are the surfaces actually touched. The rest of
 `components/astrology/**` and the lens sub-rooms (`/astrology/vedic`,
 `/chinese`, `/mayan`, `/synastry`, `/report`) are **not** claimed here. Coverage
-grows when those surfaces are themselves touched — not by proximity.
+grows when those surfaces are themselves touched — not by proximity. The
+calculator was added under exactly that rule: its fixed corner control was
+repositioned for the iOS safe area, so it is now touched rather than adjacent.
 
 **Coverage is not retrospective approval.** Introducing this contract does not
 ratify the current Astrology page as an approved experiential reference. It
