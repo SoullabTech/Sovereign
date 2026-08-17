@@ -7,6 +7,7 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron')
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 const { buildManifest } = require('./capability-form.js');
 const PROV = require('./provenance.js');
 const GOV = require('./governance.js');
@@ -549,7 +550,36 @@ ipcMain.handle('jarvis:status', async () => {
     const j = JSON.parse(raw);
     result.builder_os = {
       state: 'AVAILABLE',
-      detail: { active: j.active, limit: j.limit, queued: j.queued, sessions: (j.sessions || []).map(s => ({ id: s.session_id, unit: s.work_unit, claim_state: s.liveness?.claim_state, heartbeat_age_s: s.liveness?.heartbeat_age_s })) },
+      detail: {
+        // The machine this builder is running on. Added for JOP-04b: the
+        // acceptance bar for the node-PATH repair names OS, architecture,
+        // release, node and Electron as the proof that Builder OS is
+        // OBSERVABLE from the packaged app rather than merely truthful about
+        // being unobservable.
+        //
+        // These sit ALONGSIDE the governor counts rather than replacing them.
+        // "Builder OS" denotes two different things depending on who is
+        // speaking: the founder's §2 means the builder's operating system,
+        // while this codebase's own description means the session governor
+        // that "tracks who is working on what, and stops two lanes claiming
+        // the same unit". Both are real, and on a day when four sessions
+        // collided over one repo the governor half is not the half to drop.
+        // So the row answers both readings instead of picking one.
+        host: {
+          os: `${os.type()} ${os.release()}`,
+          platform: process.platform,
+          architecture: process.arch,
+          release: os.release(),
+          node: process.versions.node,
+          node_binary: nodeBin.path,
+          node_resolved_by: nodeBin.source,
+          electron: process.versions.electron,
+        },
+        active: j.active,
+        limit: j.limit,
+        queued: j.queued,
+        sessions: (j.sessions || []).map(s => ({ id: s.session_id, unit: s.work_unit, claim_state: s.liveness?.claim_state, heartbeat_age_s: s.liveness?.heartbeat_age_s })),
+      },
     };
     // F2 needs the governor's own liveness flags to decide which acts to offer.
     result.sessions = (j.sessions || []).map(s => ({
