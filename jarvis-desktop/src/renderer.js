@@ -547,8 +547,14 @@ function renderSystem() {
       ${stateRow('Claude lane', s.claude_lane)}
       ${stateRow('Builder work-unit mechanism', s.builder_mechanism)}
       ${stateRow('Desktop runtime', s.desktop_runtime)}
-      ${stateRow('Memory / Postgres', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — no reachability check wired.' })}
-      ${stateRow('Production', { state: 'UNKNOWN', detail: 'Not probed by Desktop Alpha — requires SSH; out of scope for a local console.' })}
+      ${/* These two used to be literals written into the view, which is why
+            they kept saying UNKNOWN after the status layer learned to say
+            UNCONFIGURED and NOT PROBED: a hardcoded row cannot go stale
+            loudly, it just quietly disagrees with the payload. They now read
+            the same fields Home reads. The fallbacks preserve the old text
+            for a status shape that predates them. */ ''}
+      ${stateRow('Memory / Postgres', s.memory_postgres || { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one.' })}
+      ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
     </div>
     ${provenanceRows(s.provenance)}
     <div class="card">

@@ -570,10 +570,19 @@ ipcMain.handle('jarvis:status', async () => {
           platform: process.platform,
           architecture: process.arch,
           release: os.release(),
-          node: process.versions.node,
+          // `node` is the node the BUILDER runs on — the one that just executed
+          // session.mjs — not process.versions.node, which is the node embedded
+          // inside Electron (18.18.2 here) and has nothing to do with the
+          // governor. The first packaged render of this block reported 18.18.2
+          // beside a node_binary of v22.22.3 and was believed until the two were
+          // read together. Labelling Electron's internal runtime as "node" on a
+          // row about the builder is precisely the quiet inaccuracy this
+          // console exists to refuse, so both are named for what they are.
+          node: nodeBin.version || null,
           node_binary: nodeBin.path,
           node_resolved_by: nodeBin.source,
           electron: process.versions.electron,
+          electron_embedded_node: process.versions.node,
         },
         active: j.active,
         limit: j.limit,
