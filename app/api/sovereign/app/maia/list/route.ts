@@ -90,6 +90,7 @@ import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
 // become durable — not the browser, later, once a pair exists.
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { admitExchange } from '@/lib/memory/exchangeAdmission';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
@@ -409,36 +410,49 @@ export async function POST(req: NextRequest) {
           `🧱 [MAIA/durability] member turn exchange=${exchangeId.slice(0, 8)} outcome=${writeOutcome} dt=${msSince(start)}ms`
         );
 
-        // 🔁 IDEMPOTENCY: this exchange was already accepted, so the member is
-        // not asking twice — the transport delivered twice. If the answer has
-        // already been generated, return it instead of paying for a second
-        // inference. Under an invite wave this is the difference between one
-        // model call per utterance and two against a rate-limited upstream.
+        // 🔁 IDEMPOTENCY — the INSERT above is the ELECTION.
         //
-        // If no answer exists yet the first request is still in flight; we fall
-        // through and generate, which is exactly today's behaviour — never worse.
-        if (writeOutcome === 'duplicate') {
-          const existing = await TurnsStore.getAssistantTurnForExchange(exchangeId);
-          if (existing) {
-            console.log(
-              `🔁 [MAIA/idempotency] duplicate exchange=${exchangeId.slice(0, 8)} answered from store, inference SKIPPED dt=${msSince(start)}ms`
-            );
-            // `message` is the key the client reads for MAIA's reply, so a
-            // deduplicated answer is indistinguishable from a fresh one to the
-            // member — they simply see the response they were already getting.
-            return jsonWithCors(req, {
-              message: existing,
-              exchangeId,
-              deduplicated: true,
-              memoryHealth: null,
-              stateVector: null,
-              practiceRecommendation: null,
-              ainState: null,
-            }, 200);
-          }
-          console.warn(
-            `🔁 [MAIA/idempotency] duplicate exchange=${exchangeId.slice(0, 8)} but no answer yet — first request still in flight, generating`
+        // `ON CONFLICT (exchange_id, seq) DO NOTHING RETURNING id` is atomic:
+        // for one exchange, exactly one concurrent request comes back
+        // 'inserted'. That request, and only that request, may call the model.
+        //
+        // A duplicate with no answer yet does NOT mean "nothing happened, go
+        // ahead" — it means another request owns this exchange and is producing
+        // the answer right now. 2513 fell through and generated here, which
+        // held the row invariant but forfeited the load-bearing one: ONE
+        // inference per human utterance. Under an invite wave that is the
+        // difference between N and 2N calls on a rate-limited upstream.
+        const admission = await admitExchange(writeOutcome, () =>
+          TurnsStore.getAssistantTurnForExchange(exchangeId)
+        );
+
+        if (admission.action === 'serve_existing') {
+          console.log(
+            `🔁 [MAIA/idempotency] exchange=${exchangeId.slice(0, 8)} answered from store, inference SKIPPED dt=${msSince(start)}ms`
           );
+          // `message` is the key the client reads, so a deduplicated answer is
+          // indistinguishable from a fresh one to the member.
+          return jsonWithCors(req, {
+            message: admission.answer,
+            exchangeId,
+            deduplicated: true,
+            memoryHealth: null,
+            stateVector: null,
+            practiceRecommendation: null,
+            ainState: null,
+          }, 200);
+        }
+
+        if (admission.action === 'in_progress') {
+          console.warn(
+            `🔁 [MAIA/idempotency] exchange=${exchangeId.slice(0, 8)} owned by an in-flight request, inference DECLINED dt=${msSince(start)}ms`
+          );
+          return jsonWithCors(req, {
+            exchangeId,
+            status: 'in_progress',
+            deduplicated: true,
+            message: null,
+          }, 202);
         }
       } catch (durabilityErr: any) {
         // Never fail the member's turn because bookkeeping failed — but say so

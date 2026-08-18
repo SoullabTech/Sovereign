@@ -5412,6 +5412,21 @@ I'm not sure what I'm feeling yet.`;
 
       clearTimeout(timeoutId);
 
+      // 🔁 202 IN_PROGRESS: another request already owns this exchange and is
+      // producing the answer. This copy must not render anything — no empty
+      // bubble, no error, no retry. The original request is the one MAIA is
+      // answering, and its response will arrive on its own. Should be rare
+      // (the client identity guard collapses duplicates before they become
+      // HTTP requests); this exists so the server can be strict without the
+      // member seeing a symptom.
+      if (response.status === 202) {
+        const pending = await response.json().catch(() => null);
+        console.warn(
+          `🔁 [OracleConversation] exchange ${String(pending?.exchangeId ?? '').slice(0, 8)} already in flight — dropping duplicate response`
+        );
+        return;
+      }
+
       if (!response.ok) {
         // 🛑 LIMITS ENFORCEMENT: Check for tier-based usage block (429)
         if (response.status === 429) {
