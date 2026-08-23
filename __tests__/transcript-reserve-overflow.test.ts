@@ -64,6 +64,31 @@ function reserveDivBlock(): string {
   return SRC.slice(start, end);
 }
 
+// The reserve's className is a template literal whose two branches are
+// double-quoted class strings. Extract them positionally (overflowing
+// first, non-overflowing second) rather than splitting on `?`/`:` —
+// Tailwind's own breakpoint colon (md:h-60) would be mistaken for the
+// ternary separator.
+function reserveBranches(block: string): [string, string] {
+  // Read the className VALUE only. The element carries a prose comment
+  // that quotes the historical h-48/md:h-60 values, and scraping the
+  // whole block would false-match those instead of the live classes —
+  // the same trap the original suite documented for pb-48/md:pb-60.
+  const cls = block.match(/className=\{`([^`]*)`\}/);
+  expect(cls).not.toBeNull();
+  const branches = [...cls![1].matchAll(/"([^"]*)"/g)].map(m => m[1]);
+  expect(branches).toHaveLength(2);
+  return [branches[0], branches[1]];
+}
+
+function mobileHeightToken(branch: string): string | undefined {
+  return branch.split(/\s+/).find(t => /^h-\d+$/.test(t));
+}
+
+function desktopHeightToken(branch: string): string | undefined {
+  return branch.split(/\s+/).find(t => /^md:h-\d+$/.test(t));
+}
+
 describe('intrinsic content measurement — structurally excludes the reserve', () => {
   it('messageContentIntrinsicRef wraps only the messages, as a sibling of the reserve div (not a parent)', () => {
     const wrapRefIdx = SRC.indexOf('<div ref={messageContentIntrinsicRef}');
@@ -128,21 +153,39 @@ describe('recomputation triggers — content changes AND viewport changes', () =
 });
 
 describe('the reserve itself — conditional, aria-hidden, structurally a flex child not padding', () => {
-  it('renders h-48 (the full founder reserve) when overflowing, h-6 (breathing gap) when not', () => {
+  it('keeps the full founder reserve (md:h-60) when overflowing, a small breathing gap when not', () => {
     const block = reserveDivBlock();
-    expect(block).toMatch(/contentOverflows\s*\n?\s*\? 'h-48 md:h-60 shrink-0'\s*\n?\s*: 'h-6 md:h-60 shrink-0'/);
+    const [overflowingBranch, nonOverflowingBranch] = reserveBranches(block);
+    expect(overflowingBranch).toMatch(/\bmd:h-60\b/);
+    expect(nonOverflowingBranch).not.toMatch(/\bmd:h-60\b/);
   });
 
-  it('desktop keeps md:h-60 in BOTH branches — unaffected by contentOverflows either way', () => {
+  it('mobile uses the small h-6 reserve in BOTH branches (2026-07-28 reading-window fix, unchanged)', () => {
     const block = reserveDivBlock();
-    // Extract the two quoted class strings directly rather than slicing
-    // between `?`/`:` — Tailwind's own breakpoint colon (md:h-60) would
-    // otherwise be mistaken for the ternary's separator.
-    const quoted = [...block.matchAll(/'([^']+)'/g)].map(m => m[1]);
-    expect(quoted).toHaveLength(2);
-    const [overflowingBranch, nonOverflowingBranch] = quoted;
-    expect(overflowingBranch).toMatch(/md:h-60/);
-    expect(nonOverflowingBranch).toMatch(/md:h-60/);
+    const [overflowingBranch, nonOverflowingBranch] = reserveBranches(block);
+    // Mobile base class, i.e. the unprefixed h-* token in each branch.
+    expect(mobileHeightToken(overflowingBranch)).toBe('h-6');
+    expect(mobileHeightToken(nonOverflowingBranch)).toBe('h-6');
+  });
+
+  it('desktop is bottom-anchored too, so a short reply gets a small desktop reserve (founder 2026-08-22)', () => {
+    // SUPERSEDES the previous pin ("desktop keeps md:h-60 in BOTH
+    // branches"). That pin encoded the July decision to scope the
+    // bottom-anchor fix to mobile only (md:block md:min-h-0 on the
+    // wrapper). With desktop now sharing the anchor, an unconditional
+    // md:h-60 would re-open the very gap justify-end just closed: a
+    // short desktop reply measured 496px above the composer at
+    // 1440x900. The large reserve is now earned by overflow, not by
+    // breakpoint — shortness vs. overflow is the governing distinction
+    // at every width.
+    const block = reserveDivBlock();
+    const [, nonOverflowingBranch] = reserveBranches(block);
+    const desktop = desktopHeightToken(nonOverflowingBranch);
+    expect(desktop).toBeDefined();
+    // Small, but not collapsed to nothing: the reply must still breathe.
+    const rem = Number(desktop!.replace('md:h-', ''));
+    expect(rem).toBeGreaterThanOrEqual(6);   // >= 24px
+    expect(rem).toBeLessThanOrEqual(12);     // <= 48px  (founder band)
   });
 
   it('is aria-hidden — decorative spacing, not content', () => {
@@ -158,8 +201,15 @@ describe('the reserve itself — conditional, aria-hidden, structurally a flex c
 });
 
 describe('scope guards', () => {
-  it('does not change the #703/#709 bottom clearance geometry', () => {
-    expect(SRC).toMatch(/bottom: showChatInterface \? '260px' : '220px',/);
+  it('does not change the transcript/composer clearance geometry (measured, with the #703/#709 px as fallback)', () => {
+    // The clearance became DERIVED from the live composer's measured top
+    // edge after this suite was written; the old fixed 260/220 values
+    // survive only as the pre-measurement fallback. Pin the mechanism as
+    // it actually is now, so this guard fails on real drift rather than
+    // failing permanently against superseded source text.
+    expect(SRC).toMatch(/bottom: composerClearancePx != null/);
+    expect(SRC).toMatch(/: \(showChatInterface \? '260px' : '220px'\),/);
+    expect(SRC).toMatch(/const TRANSCRIPT_COMPOSER_GAP_PX = 12;/);
   });
 
   it('does not touch VoiceInteractionBar or its #722 keyboard-inset hook', () => {
