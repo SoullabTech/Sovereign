@@ -34,10 +34,19 @@
  *   exists; scrollTop = 0 correctly reveals the very first message in
  *   proper order (`hasHelloText: true`) — no content trapped by the
  *   known flex/justify-end/overflow pitfall.
- * - Desktop (resized): computed `display: block` (flex properties
- *   present in the stylesheet but inert once display is not flex),
- *   `min-height: 0px` — the md: overrides correctly neutralize the
- *   mobile-only rule.
+ * - Desktop (resized, JULY): computed `display: block`, `min-height:
+ *   0px` — the md: overrides neutralized the mobile-only rule.
+ *
+ * UPDATE 2026-08-22 (founder): the desktop carve-out above is REMOVED.
+ * July's premise — that top-anchoring "reads fine on a tall desktop
+ * viewport" — did not hold: at 1440x900 a two-turn conversation left a
+ * measured 496px gap between the newest reply and the composer. Desktop
+ * now shares the bottom-anchor (no md:block / md:min-h-0), and the
+ * trailing reserve became conditional at desktop too (see
+ * transcript-reserve-overflow.test.ts). Harness measurements, short
+ * transcript: desktop 1440x900 496px -> 44px, 1280x800 252px -> 44px;
+ * mobile 390x844 unchanged at 36px in every case; long transcripts
+ * unchanged at both widths, first message still reachable at scrollTop 0.
  *
  * SCOPE: OracleConversation.tsx only, the message-list wrapper div.
  * No change to the scroll container itself, the #731/#739 guard
@@ -75,17 +84,35 @@ describe('mobile bottom-anchor — short conversations settle at the bottom', ()
     expect(block).not.toMatch(/(?<!min-)h-full\b/);
   });
 
-  it('is a flex column bottom-anchored below the md breakpoint', () => {
+  it('is a flex column bottom-anchored at every width', () => {
     const block = messageListWrapperClassName();
     expect(block).toMatch(/\bflex\b/);
     expect(block).toMatch(/\bflex-col\b/);
     expect(block).toMatch(/\bjustify-end\b/);
   });
 
-  it('explicitly reverts to plain block flow on desktop (md:block md:min-h-0)', () => {
+  it('does NOT revert to block flow on desktop — the anchor now applies at every width (founder 2026-08-22)', () => {
+    // SUPERSEDES the previous pin ("explicitly reverts to plain block
+    // flow on desktop"). July scoped this fix below md because a short
+    // reply "reads fine on a tall desktop viewport" — device evidence
+    // since says otherwise: at 1440x900 a two-turn conversation left a
+    // measured 496px void between the newest reply and the composer,
+    // the same defect class the mobile fix removed. The min-height
+    // reasoning documented above is breakpoint-independent (it degrades
+    // to normal flow the moment content exceeds the box), so the
+    // override is removed rather than duplicated per breakpoint.
     const block = messageListWrapperClassName();
-    expect(block).toMatch(/\bmd:block\b/);
-    expect(block).toMatch(/\bmd:min-h-0\b/);
+    expect(block).not.toMatch(/\bmd:block\b/);
+    expect(block).not.toMatch(/\bmd:min-h-0\b/);
+  });
+
+  it('keeps min-h-full unqualified so the anchor survives at desktop widths', () => {
+    // Guards the specific regression path: re-adding any md:min-h-*
+    // override would silently restore top-anchoring on desktop while
+    // leaving every other assertion in this file green.
+    const block = messageListWrapperClassName();
+    expect(block).toMatch(/\bmin-h-full\b/);
+    expect(block).not.toMatch(/\bmd:min-h-/);
   });
 
   it('preserves the top clearance classes (no regression to #703/#709)', () => {
@@ -129,8 +156,12 @@ describe('scope guards', () => {
     expect(messageListWrapperBlock()).not.toMatch(/lastUserScrollAtRef|RECENT_USER_SCROLL_MS|wasNearBottomRef/);
   });
 
-  it('does not change the #703/#709 bottom clearance geometry', () => {
-    expect(SRC).toMatch(/bottom: showChatInterface \? '260px' : '220px',/);
+  it('does not change the transcript/composer clearance geometry (measured, with the #703/#709 px as fallback)', () => {
+    // See the matching guard in transcript-reserve-overflow.test.ts: the
+    // clearance is derived from the live composer now, and the fixed
+    // 260/220 values remain only as the pre-measurement fallback.
+    expect(SRC).toMatch(/bottom: composerClearancePx != null/);
+    expect(SRC).toMatch(/: \(showChatInterface \? '260px' : '220px'\),/);
   });
 
   it('does not touch VoiceInteractionBar or its #722 keyboard-inset hook', () => {

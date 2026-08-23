@@ -9038,7 +9038,7 @@ I'm not sure what I'm feeling yet.`;
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
                 <div
-                  className="pt-[10.5rem] md:pt-[12rem] min-h-full flex flex-col justify-end md:block md:min-h-0"
+                  className="pt-[10.5rem] md:pt-[12rem] min-h-full flex flex-col justify-end"
                   /* MOBILE BOTTOM-ANCHOR (Issue 1, second mechanism — independent of
                      the scroll-resettle guard fix). Even a perfectly-working
                      scroll-to-bottom cannot move content down when
@@ -9056,9 +9056,16 @@ I'm not sure what I'm feeling yet.`;
                      grows past it too — there's no leftover space left to push
                      to the top, so normal document order and normal
                      overflow-y:auto scrolling on the parent container take
-                     over exactly as before. Desktop explicitly reverts to
-                     plain block flow (md:block md:min-h-0) — this only
-                     changes behavior below the md breakpoint.
+                     over exactly as before.
+
+                     2026-08-22 (founder): desktop now shares this anchor.
+                     The original fix scoped itself to mobile via
+                     md:block md:min-h-0, leaving desktop top-anchored, so a
+                     short reply on a tall viewport ended hundreds of px above
+                     the composer. The min-height reasoning above is
+                     breakpoint-independent — it degrades to normal flow once
+                     content exceeds the box — so the override is removed
+                     rather than duplicated per breakpoint.
 
                      The trailing reserve used to live here as pb-48/md:pb-60
                      padding, applied unconditionally. It now lives as a
@@ -9498,10 +9505,11 @@ I'm not sure what I'm feeling yet.`;
                     gets a small breathing gap instead, so the newest message
                     settles close to the composer rather than carrying a
                     reserve sized for a scroll distance that doesn't exist
-                    here. Desktop keeps md:h-60 in both branches: it reverts
-                    to plain block flow (md:block above) where this fix does
-                    not apply, so its spacing is intentionally unchanged
-                    either way. */}
+                    here. Desktop now follows the same rule (2026-08-22):
+                    it bottom-anchors too, so an unconditional md:h-60 would
+                    re-create the very gap justify-end just closed. The large
+                    reserve is kept for genuinely overflowing desktop
+                    transcripts, where it is a real scroll-end reserve. */}
                 <div
                   aria-hidden="true"
                   /* MOBILE READING WINDOW (device walk 2026-07-28): the h-48
@@ -9511,11 +9519,12 @@ I'm not sure what I'm feeling yet.`;
                      leaving the measured dead-space void beneath every reply.
                      WebKit harness (scratchpad replica, iPhone 17 Pro):
                      newest-line clearance 192px -> 24px, visible lines ~3 ->
-                     ~11. Mobile now always uses the small reserve; desktop
-                     (md:h-60, both branches identical before and after) is
-                     untouched. The contentOverflows machinery stays: the
-                     measurement still guards scroll re-settles elsewhere. */
-                  className="h-6 md:h-60 shrink-0"
+                     ~11. Mobile always uses the small reserve (h-6) in both
+                     branches. Desktop is now conditional: md:h-8 (32px) for a
+                     short, non-overflowing reply so it settles just above the
+                     composer, md:h-60 once the transcript actually overflows
+                     and the reserve buys real scroll-end room. */
+                  className={`shrink-0 ${contentOverflows ? "h-6 md:h-60" : "h-6 md:h-8"}`}
                 />
                 </div>
               )}
