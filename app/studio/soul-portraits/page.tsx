@@ -10,6 +10,13 @@
  *
  * Dark-themed to match the Studio shell (see docs: Studio pages use unconditional dark
  * classes, never `dark:` variants).
+ *
+ * EMPTY STATE IS A CLAIM, NOT A FALLBACK. "No portraits yet." asserts a successful read
+ * that returned zero rows. It is rendered ONLY after a 200 carrying a well-formed
+ * `portraits` array. Every other outcome — non-OK status, unparseable body, transport
+ * failure — surfaces as an explicit read failure. A page that answers "you have nothing"
+ * when it actually means "I could not ask" reads to a member as data loss, and destroys
+ * the evidence needed to tell the two apart.
  */
 
 import { useEffect, useState } from 'react';
@@ -44,14 +51,20 @@ export default function StudioSoulPortraitsPage() {
         const res = await fetch('/api/soul-portrait/mine', { credentials: 'include' });
         if (res.status === 401) {
           setError('Please sign in.');
-          setPortraits([]);
           return;
         }
-        const data = await res.json().catch(() => ({}));
-        setPortraits(Array.isArray(data?.portraits) ? data.portraits : []);
+        if (!res.ok) {
+          setError(`Could not load your portraits (server error ${res.status}). This is a read failure, not an empty archive — nothing has been lost.`);
+          return;
+        }
+        const data = await res.json().catch(() => null);
+        if (!data || !Array.isArray(data.portraits)) {
+          setError('Could not load your portraits (unreadable response). This is a read failure, not an empty archive — nothing has been lost.');
+          return;
+        }
+        setPortraits(data.portraits);
       } catch {
-        setError('Could not load your portraits.');
-        setPortraits([]);
+        setError('Could not reach the server. This is a read failure, not an empty archive — nothing has been lost.');
       }
     })();
   }, []);
@@ -73,7 +86,7 @@ export default function StudioSoulPortraitsPage() {
         </p>
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        {portraits === null && <p className="text-slate-400">Loading…</p>}
+        {portraits === null && !error && <p className="text-slate-400">Loading…</p>}
 
         {portraits !== null && portraits.length === 0 && !error && (
           <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-5">
