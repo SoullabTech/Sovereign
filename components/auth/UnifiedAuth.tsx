@@ -517,10 +517,14 @@ function UnifiedAuthInner() {
               </div>
 
               {/* Password is the one door that works when the email provider is down, so it
-                  is a real affordance — not the lowest-contrast text on the card. */}
-              <div className={`mt-6 pt-4 border-t ${hairlineCls}`}>
-                <button type="button" onClick={() => { setPhase('password'); setError(''); setSendBlocked(false); }} className={outlineBtn}>Use a password instead</button>
-              </div>
+                  is a real affordance — not the lowest-contrast text on the card. Hidden
+                  while sendBlocked: the escape button above is already offering this exact
+                  action, and two password buttons on one card is noise at the worst moment. */}
+              {!sendBlocked && (
+                <div className={`mt-6 pt-4 border-t ${hairlineCls}`}>
+                  <button type="button" onClick={() => { setPhase('password'); setError(''); }} className={outlineBtn}>Use a password instead</button>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
