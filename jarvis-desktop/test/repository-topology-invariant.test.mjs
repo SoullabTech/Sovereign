@@ -20,7 +20,7 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import os from 'node:os';
-import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -95,7 +95,17 @@ t('...and are still DIFFERENT checkouts at DIFFERENT commits', () => {
   assert.equal(TOPO.sameWorktree(operated, secondary), false, 'the two checkouts collapsed into one');
   assert.notEqual(operated.commit, secondary.commit, 'the two checkouts are at the same commit — not a useful test');
   assert.equal(secondary.is_linked_worktree, true, 'a linked worktree was not identified as linked');
-  assert.equal(operated.is_linked_worktree, false, 'the main checkout was misreported as a linked worktree');
+  // Whether the checkout the suite RUNS from is the main one is environmental,
+  // not an invariant. Asserting `false` here quietly required the suite to be
+  // run from the repository's main checkout — and every JARVIS worktree
+  // (jarvis-runtime, jarvis-fix, jarvis-reconcile) is a linked one, so the
+  // assertion failed wherever JARVIS actually lives. That is the same
+  // "the repo" collapse this whole invariant exists to refuse, reproduced
+  // inside its own proof. Ground truth comes from git instead: a linked
+  // worktree has .git as a FILE, the main checkout has it as a DIRECTORY.
+  const operatedIsLinked = statSync(path.join(REPO, '.git')).isFile();
+  assert.equal(operated.is_linked_worktree, operatedIsLinked,
+    `linked-worktree detection disagrees with git for ${REPO}`);
 });
 
 t('building from one worktree and operating another reads as DIVERGED_UNDECLARED', () => {

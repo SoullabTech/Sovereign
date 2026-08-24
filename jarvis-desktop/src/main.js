@@ -18,6 +18,7 @@ const MECH = require('./builder-mechanism.js');
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
+const { deriveSelectors } = require('./evidence-aperture');
 // B1: C1 runs are durable. The record SHAPE lives in its own module so it can be
 // proven without Electron; the canonical store does the writing.
 const C1 = require('./c1-run-record.js');
@@ -975,10 +976,35 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // control re-injects the defect to prove the harness catches it.
       const ctxPath = path.join(root, 'scripts', 'builder', 'jarvis-context.mjs');
       const pipePath = path.join(root, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
-      const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
+      const { materializePacket, renderFragments, budget } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
-      const selectors = Array.isArray(task.context_selectors) ? task.context_selectors : [];
+      // ── evidence aperture (B4) ───────────────────────────────────────────
+      // A caller-declared packet always wins; nothing here overrides an explicit
+      // request. But the Desktop UI has no selector field, so a GUI-submitted C1
+      // task arrived with none and could only ever come back UNVERIFIED. The
+      // aperture derives selectors deterministically from the question using the
+      // registered C0 retrieval capabilities (repo.grep / repo.find_file) and the
+      // canonical budget() limit — no second retrieval system, no second
+      // verifier, no second selector schema.
+      //
+      // It fails CLOSED: when nothing in the question localizes to source it
+      // returns no selectors and the lane reports NO_EVIDENCE_CONTEXT, because
+      // missing evidence must never become confidence.
+      let selectors = Array.isArray(task.context_selectors) ? task.context_selectors : [];
+      let aperture = null;
+      if (!selectors.length && task.prompt) {
+        try {
+          const { runCapability } = await import(`file://${detPath}?t=${Date.now()}`);
+          const derived = deriveSelectors({ prompt: task.prompt, root, runCapability, budget });
+          selectors = derived.selectors;
+          aperture = derived.derivation;
+        } catch (e) {
+          aperture = { method: 'deterministic-grep-aperture', reason: `APERTURE_FAILED — ${String(e.message).slice(0, 200)}` };
+        }
+      } else if (selectors.length) {
+        aperture = { method: 'caller-declared', reason: 'task supplied its own context_selectors' };
+      }
       let fragments = [];
       let materialization_error = null;
       if (selectors.length) {
@@ -1039,6 +1065,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         correctness,
         correctness_reason,
         correctness_method: fragments.length ? 'canonical verifyEvidence() — materialized-fragment containment' : null,
+        aperture,
         fragments_offered: fragments.length,
         evidence,
       };
