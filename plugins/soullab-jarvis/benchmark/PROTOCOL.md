@@ -11,10 +11,22 @@ before/after differential on comparable sessions.
 
 ## Setup — isolated, not canonical
 
+Use the **CLI**, not the `/plugin` dialog. The interactive dialog is a single-line field
+that silently accepts a pasted multi-line block as a path and then reports a misleading
+`Path does not exist`; a bare `.` is also rejected there.
+
 ```bash
-/plugin marketplace add .
-/plugin install soullab-jarvis@soullab
+claude plugin marketplace add ./
+claude plugin install soullab-jarvis@soullab
+claude plugin list
 ```
+
+To return to arm A: `claude plugin uninstall soullab-jarvis`.
+
+⚠️ **Install scope is `user`, not this worktree.** Once installed, the hooks are live in
+every Claude Code session for that user until uninstalled. Run arm A before installing,
+and uninstall when the benchmark ends. Any denial that fires outside the benchmark during
+that window is data — log it as a false denial rather than working around it silently.
 
 Do **not** add the plugin to a committed `.claude/settings.json` and do not enable it
 globally. It stays a candidate until this protocol issues an ADOPT.

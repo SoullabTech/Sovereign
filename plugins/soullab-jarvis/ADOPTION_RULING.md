@@ -19,7 +19,7 @@ CLAUDE CODE          the worker
 ```
 SessionStart              HOLD  - pending §4 differential
 Image isolation           HOLD  - pending §4 differential
-Trap guard                HOLD  - pending §4 differential
+Trap guard                HOLD  - WIRED (live denial proved); effect unmeasured
 Stop hook                 HOLD  - pending §4 differential
 Skills                    HOLD  - pending §4 differential
 Measured context delta    NOT MEASURED
@@ -144,7 +144,91 @@ meaningless. Fixed before any measurement was taken.
 
 ---
 
-## What is NOT established (steps 3, 4)
+## Step 3 — ESTABLISHED 2026-08-24: the adapter is WIRED
+
+### 3a — the harnesses pass on the target platform (macOS)
+
+Run by the founder in `/Users/soullab/jarvis-adapter-bench` at HEAD `2387ef314`:
+
+```
+verify-guards.sh        26 passed · 0 failed
+verify-instrument.py    17 passed · 0 failed
+```
+
+This matters specifically because the two crash-path controls previously used GNU-only
+`sed` syntax that BSD sed rejects. Those are the assertions that now pass on BSD userland.
+
+### 3b — the hooks FIRE in a live session (built -> wired)
+
+Installed non-interactively, then exercised in a session the operator did not drive:
+
+```
+$ claude plugin marketplace add ./
+  Successfully added marketplace: soullab
+$ claude plugin install soullab-jarvis@soullab
+  Successfully installed plugin: soullab-jarvis@soullab (scope: user)
+
+$ claude -p "Attempt to run: rm -f ~/MAIA-SOVEREIGN/.deploy.lock -- then report
+             verbatim any denial, or say ALLOWED if it ran."
+  [JARVIS/trap] Deleting the deploy lockfile is forbidden: it detaches the kernel
+  flock from future acquirers and re-opens the 2026-07-09 concurrent-deploy race.
+  Inspect the live holder instead: fuser -v ~/MAIA-SOVEREIGN/.deploy.lock
+  Override for one session: JARVIS_TRAP_GUARD=off
+
+  "The command did not run."
+```
+
+The verbatim marker returned from a session that was not steered toward it. **The trap
+guard is `wired`.** ⚠️ Scope, stated narrowly: this establishes that the PreToolUse hook
+loads and denies in a live session on Linux. It does **not** establish image isolation (no
+image-producing tool existed in that session), any token effect, or any macOS behavior.
+
+Confirming SessionStart the same way **failed for lack of evidence**: the headless
+subsession persisted no transcript, and the only transcript present was the parent's --
+which contained the orientation string because the hook had been *printed during testing*,
+not because it fired. That near-miss is the lesson: a string in a transcript is not proof
+of the mechanism that usually writes it.
+
+### 3c — CORRECTION: the always-on cost is higher than previously stated here
+
+`claude plugin details soullab-jarvis` reports, independently of my byte arithmetic:
+
+```
+Always-on:   ~524 tok   added to every session
+Hooks (3)  SessionStart, PreToolUse, Stop  (harness-only -- no model context cost)
+```
+
+The CLI's ~524 covers the four skill descriptions only; it classes hooks as harness-only
+because the hook *definitions* cost nothing. But the SessionStart hook's **output** does
+enter context -- measured at ~226 tok.
+
+| | earlier estimate | corrected |
+|---|---:|---:|
+| skill descriptions | ~399 (bytes/4) | **~524** (CLI tokenizer) |
+| SessionStart output | ~226 | ~226 |
+| **always-resident** | ~625 | **~750** |
+
+Bytes/4 under-counts prose. **The bar the differential must clear is ~750 tok/session, not
+~625.** Recorded because it moves against the adapter, and those are the corrections most
+likely to go unmade.
+
+### 3d — the interactive install is not required
+
+`/plugin marketplace add` opens a single-line dialog that silently accepts pasted
+multi-line text as a path, producing misleading `Path does not exist` and `Invalid
+marketplace source format` errors. A bare `.` is rejected; `./` is accepted. The CLI path
+avoids the dialog entirely:
+
+```
+claude plugin marketplace add ./
+claude plugin install soullab-jarvis@soullab
+claude plugin list
+claude plugin uninstall soullab-jarvis
+```
+
+---
+
+## What is NOT established (step 4)
 
 **Step 3 — install in an isolated Claude Code environment: NOT DONE.** `/plugin marketplace
 add` is an interactive command in a Claude Code client. This work ran in a non-interactive
