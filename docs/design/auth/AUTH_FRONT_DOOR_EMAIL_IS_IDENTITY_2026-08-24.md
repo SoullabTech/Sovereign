@@ -58,3 +58,36 @@ carries a password, 11 trusted devices, a practitioner record, and 16 Soul Portr
 in, because Resend refused the send and the UI offered no other path from that state. The working
 route was to abandon the entered email and use the username `Kelly` on the password form. A member
 should never have to discover that.
+
+---
+
+## Live evidence — 2026-08-24 (recorded after the ruling)
+
+The refusal was witnessed in production and is **confirmed quota**, not a hypothesis inferred from
+a code comment:
+
+```
+[EMAIL-CODE] Provider REFUSED the send for kelly@soullab.life —
+  status=error providerCode=monthly_quota_exceeded
+  error=You have reached your monthly email sending quota.
+```
+
+**Blast radius is the whole `sendEmail` surface**, not sign-in alone: email codes, magic links,
+password recovery, reset-password, verification, and invitations all refuse until the Resend account
+is topped up. Operator action; no deploy fixes it.
+
+This is what makes the ruling above load-bearing rather than stylistic. With the provider refusing,
+**there is no email-based route back into any account** — recovery is down alongside entry. A front
+door that treats email as transport has, in this state, no door at all.
+
+The canonical account's credentials at the time of the incident:
+
+```
+username Kelly · has_webauthn = t · preferred_auth_method = password · must_reset_password = f
+```
+
+Both non-email paths were open, and the usernameless passkey flow
+(`authenticate/options/route.ts:51`, discoverable credentials when no username is supplied) required
+typing nothing at all. Neither was surfaced from the state the member was actually in. That gap is
+the defect this ruling exists to close.
+
