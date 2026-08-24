@@ -7,12 +7,22 @@ export const maxDuration = 120; // large .docx/.pdf extraction can take a moment
 /**
  * Soullab Press — Manuscript upload ingest (DOCX / PDF / TXT / MD → text).
  *
- * POST (multipart/form-data, field `file`) → { text, warnings, title }
+ * POST (multipart/form-data, field `file`) → { text, warnings, title, sourceArrivalId }
  *
- * Extraction only. The returned text flows back into the member's own hands:
- * it lands in the upload textarea, the member reviews it, then proceeds through
- * the existing member-confirmed segmentation + save path in ../route.ts.
- * Nothing is stored here. The author's words are carried through unchanged.
+ * The extracted text flows back into the member's own hands: it lands in the
+ * upload textarea, the member reviews it, then proceeds through the existing
+ * member-confirmed segmentation + save path in ../route.ts. The author's words
+ * are carried through unchanged.
+ *
+ * WS-01 — this is also the ONLY moment the arrival itself exists.
+ *
+ * Downstream, the text passes through a member-editable textarea and a
+ * member-editable confirm-cuts preview before anything is written, so nothing
+ * the client sends later can be called "what arrived". So the artifact's exact
+ * bytes and the extraction they produced are placed in custody HERE, before the
+ * member can edit and before any segmentation runs. Custody is recorded even if
+ * the member then abandons the import — an unclaimed arrival is an orphan row a
+ * sweep can collect, which is strictly better than a false claim of custody.
  *
  * Member-scoped by credential — 401 without a verified session. No parameter
  * can name another member; nothing is written.
@@ -22,6 +32,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — generous for a full book file
 const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
@@ -90,11 +101,40 @@ export async function POST(request: NextRequest) {
         `format: ${result.format}, chars: ${result.text.length}, warnings: ${result.warnings.length} }`,
     );
 
+    // Bytes into custody before anything interprets them. A failure here fails
+    // the import: an arrival we could not preserve must not proceed as though
+    // it had been (P0 — Source custody).
+    let sourceArrivalId: string;
+    try {
+      const arrival = await recordArtifactArrival({
+        memberId,
+        bytes: buffer,
+        originalFilename: file.name,
+        mimeType: file.type || null,
+        sourceText: result.text,
+        extractor: result.format,
+      });
+      sourceArrivalId = arrival.id;
+    } catch (err) {
+      console.error('[press/manuscripts/ingest] source custody failed', err);
+      return NextResponse.json(
+        { error: 'We could not take custody of that file. Nothing was saved — please try again.' },
+        { status: 500 },
+      );
+    }
+
+    // Log marker: counts and provenance only, never content.
+    console.log(
+      `[MAIA/press] source custody { memberRef: ${memberRef(memberId)}, ` +
+        `kind: artifact_extraction, bytes: ${buffer.byteLength}, chars: ${result.text.length} }`,
+    );
+
     return NextResponse.json({
       text: result.text,
       warnings: result.warnings,
       title: titleFromFilename(file.name),
       format: result.format,
+      sourceArrivalId,
     });
   } catch (err) {
     console.error('[press/manuscripts/ingest] POST error:', err);

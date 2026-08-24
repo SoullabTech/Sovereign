@@ -28,6 +28,8 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { segment, MAX_SECTIONS, type SectionInput } from '@/lib/manuscript/ingest/segment';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
+import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 
 const MAX_TEXT_CHARS = 2_000_000; // ~a very long book; hard cap for sanity
 
@@ -121,10 +123,13 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { title, text, sections } = (body ?? {}) as {
+    const { title, text, sections, sourceArrivalId, confirmedText } = (body ?? {}) as {
       title?: unknown;
       text?: unknown;
       sections?: unknown;
+      sourceArrivalId?: unknown;
+      /** Save step only: the exact text the member supplied, for a paste. */
+      confirmedText?: unknown;
     };
 
     if (typeof title !== 'string' || title.trim().length === 0) {
@@ -139,7 +144,23 @@ export async function POST(request: NextRequest) {
       if (text.length > MAX_TEXT_CHARS) {
         return NextResponse.json({ error: 'manuscript too large (2MB text max)' }, { status: 400 });
       }
-      return NextResponse.json({ preview: segment(text) });
+      /* WS-01 — the segmentation runs under an omission control.
+       *
+       * This is where arriving text used to disappear: an orphan heading hit
+       * the empty-body skip and was dropped, silently, before the member ever
+       * saw the cuts. The control compares what arrived against what the cuts
+       * account for, and reports rather than repairs — a segmentation that
+       * loses text is a defect to be seen, not smoothed over. It is a log
+       * marker and a response field, never a member-facing error, because the
+       * member's own path must not become the place a machine defect surfaces. */
+      const preview = segment(text);
+      const omission = detectOmission(text, preview);
+      if (!omission.lossless) {
+        console.error(
+          `[MAIA/press] SEGMENTATION LOSS { memberRef: ${memberRef(memberId)}, ${omissionMarker(omission)} }`,
+        );
+      }
+      return NextResponse.json({ preview, lossless: omission.lossless });
     }
 
     // Save step: member-confirmed sections.
@@ -179,12 +200,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log marker: counts only, never content.
+    /* WS-01 — bind the manuscript to its arrival.
+     *
+     * Two paths, and the difference between them is provenance, not plumbing:
+     *
+     *   a file-backed import already has an arrival, taken into custody at
+     *   ingest before the member could edit anything. It is claimed here.
+     *
+     *   a pasted or typed import has no artifact and must never be given one.
+     *   Its authoritative source is the exact text the member supplied at THIS
+     *   act — the confirmation — which is why it is recorded now rather than
+     *   captured earlier from a textarea the member had not finished with.
+     *
+     * A manuscript whose arrival cannot be bound stays labelled
+     * `legacy_interpreted_import` by the column default. It is not failed and
+     * not deleted — the member's words are saved either way — but neither is it
+     * allowed to claim a custody it does not have. */
+    let custody = 'legacy_interpreted_import';
+    try {
+      if (typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0) {
+        if (await claimArrival(sourceArrivalId, manuscriptId, memberId)) {
+          custody = 'source_custodied';
+        }
+      } else if (typeof confirmedText === 'string' && confirmedText.trim().length > 0) {
+        const arrival = await recordSuppliedArrival({ memberId, sourceText: confirmedText });
+        if (await claimArrival(arrival.id, manuscriptId, memberId)) {
+          custody = 'source_custodied';
+        }
+      }
+    } catch (err) {
+      // Custody is additive: failing to record it must not lose the member's
+      // manuscript, which is already saved. The label stays honest instead.
+      console.error('[press/manuscripts] source custody binding failed', err);
+    }
+
+    // Log marker: counts and provenance only, never content.
     console.log(
       `[MAIA/press] manuscript saved { memberRef: ${memberRef(memberId)}, ` +
-        `manuscriptId: ${manuscriptId}, sections: ${clean.length} }`,
+        `manuscriptId: ${manuscriptId}, sections: ${clean.length}, custody: ${custody} }`,
     );
-    return NextResponse.json({ id: manuscriptId, sectionCount: clean.length }, { status: 201 });
+    return NextResponse.json(
+      { id: manuscriptId, sectionCount: clean.length, sourceCustody: custody },
+      { status: 201 },
+    );
   } catch (err) {
     console.error('[press/manuscripts] POST error:', err);
     return NextResponse.json({ error: 'Failed to save manuscript' }, { status: 500 });
