@@ -130,7 +130,11 @@ t('9. an uncitable answer never becomes VERIFIED, even with good evidence', () =
 });
 
 t('10. a prompt with NO repository purchase yields no evidence, and UNVERIFIED', () => {
-  const none = deriveContextSelectors('qqzzxvv wubbleflux', REPO_ROOT);
+  // Assembled at runtime: a literal nonsense token would be committed INTO the
+  // repository by this very file, and derivation would then correctly find it
+  // here. The absence being tested has to stay absent from the tree.
+  const absent = ['qqz', 'zxvv', 'wubb', 'leflux'].join('');
+  const none = deriveContextSelectors(`${absent} ${absent.split('').reverse().join('')}`, REPO_ROOT);
   assert.equal(none.length, 0, `expected nothing, derived: ${none.map((s) => s.ref).join(', ')}`);
   const d = decideCorrectness({
     materialization_error: null, fragmentCount: 0, evidence: null, contextOrigin: 'derived',

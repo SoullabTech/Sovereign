@@ -847,10 +847,19 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
           + `Cite only lines present in the source above.\n\n${task.prompt}`
         : task.prompt;
 
+      // The 30s ceiling was set when a C1 prompt was a bare question. Evidence
+      // makes the prompt an order of magnitude larger — the signup task now
+      // carries ~3.5k tokens of materialized source — and a timeout under that
+      // load would read as an evidence-grounding failure when it is only a
+      // slower prefill. Headroom scales with the evidence actually sent, so the
+      // ungrounded case is unchanged at 30s and a bounded ceiling still applies.
+      const evidenceTokens = fragments.reduce((n, f) => n + (f.est_tokens || 0), 0);
+      const workerTimeoutMs = Math.min(120000, 30000 + evidenceTokens * 10);
+
       const res = await fetch('http://127.0.0.1:11434/api/generate', {
         method: 'POST',
         body: JSON.stringify({ model: 'qwen2.5:7b', prompt, stream: false }),
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(workerTimeoutMs),
       });
       const body = await res.json();
       response.result = { response: body.response, model: body.model };
@@ -890,6 +899,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         context_origin,
         context_selectors: selectors.map((sel) => ({ ref: sel.ref, selector: sel.selector, why: sel.why })),
         derivation_error,
+        worker_timeout_ms: workerTimeoutMs,
         fragments_offered: fragments.length,
         evidence,
       };
