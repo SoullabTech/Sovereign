@@ -14,12 +14,18 @@
  * member's address into production stdout in order to produce evidence. So the
  * redaction lands first.
  *
- * THE INVARIANT. No member-supplied address reaches container stdout on any
- * path through this route. What may be emitted is `memberRef()` — pseudonymous
- * and correlatable, NOT anonymous (lib/privacy/memberRef.ts) — or nothing at
- * all when correlation is not needed. The provider's message id is KEPT: it is
- * provider-issued, not member-derived, and it is the only way to tell "accepted
- * with an id" apart from "accepted and returned nothing".
+ * THE INVARIANT — stated precisely. No full recipient address and no recipient
+ * LOCAL-PART reaches container stdout on any path through this route. Recipient
+ * DOMAIN may be retained as coarse deliverability metadata: `lib/email/sendEmail`
+ * logs `domain` as its own field on purpose, and a domain is a portion of the
+ * supplied address, so the earlier wording ("no member-supplied address reaches
+ * stdout") claimed more than these tests assert. Corrected to what is true.
+ *
+ * What may be emitted is `memberRef()` — pseudonymous and correlatable, NOT
+ * anonymous (lib/privacy/memberRef.ts) — or nothing at all when correlation is
+ * not needed. The provider's message id is KEPT: it is provider-issued, not
+ * member-derived, and it is the only way to tell "accepted with an id" apart
+ * from "accepted and returned nothing".
  *
  * FALSIFICATION. Restore `${normalizedEmail}` to either console.log in
  * ../route.ts and the matching case here fails.
@@ -100,7 +106,7 @@ beforeEach(() => {
   jest.spyOn(console, 'warn').mockImplementation(capture);
 });
 
-describe('no member address reaches container stdout', () => {
+describe('no full recipient address or local-part reaches container stdout', () => {
   it('does not log the address on the SUCCESS path', async () => {
     installDb({ member: { id: MEMBER_ID, name: 'Nathan' } });
     const res = await POST(req());
@@ -128,6 +134,65 @@ describe('no member address reaches container stdout', () => {
   // asserted nothing about the waitlist log — it passed while the raw address
   // was still there. Caught by falsification: reverting the waitlist line alone
   // did not turn it red. The response assertion below is what keeps it honest.
+  // ── 5c.1 — THE ESCAPE HATCH ────────────────────────────────────────────
+  // Every redaction above rewrites a field WE control. The provider's own error
+  // prose is passed through verbatim by both `logSend` and the refusal line, and
+  // a provider echoes back the address it rejected. So the address re-enters
+  // stdout through a field none of the five redactions touch.
+  //
+  // The existing refusal case could not catch this: it models the quota message,
+  // which contains no address. This case models the one that does.
+  it('does not log the address when the PROVIDER ECHOES IT BACK in its error', async () => {
+    installDb({ member: { id: MEMBER_ID, name: 'Nathan' } });
+    mockSend.mockResolvedValue({
+      data: null,
+      error: { name: 'validation_error', message: `Invalid recipient ${EMAIL}` },
+    });
+
+    await POST(req());
+
+    expect(emitted()).not.toContain(EMAIL);
+    expect(emitted()).not.toContain(LOCAL_PART);
+  });
+
+  it('keeps the provider prose, and the domain, after removing the address', async () => {
+    installDb({ member: { id: MEMBER_ID, name: 'Nathan' } });
+    mockSend.mockResolvedValue({
+      data: null,
+      error: { name: 'validation_error', message: `Invalid recipient ${EMAIL}` },
+    });
+
+    await POST(req());
+
+    // The wording is the operator's actionable signal — "invalid recipient" is
+    // a different action from "quota exceeded". It is kept, minus the address.
+    expect(emitted()).toContain('Invalid recipient');
+    expect(emitted()).toContain('<redacted@example.com>');
+    // Domain retained deliberately. This is the part of the address that the
+    // narrowed invariant permits, and it is asserted so the permission stays
+    // visible rather than becoming an unexamined leak.
+    expect(emitted()).toContain('example.com');
+  });
+
+  it('still classifies and reports correctly with the address removed', async () => {
+    installDb({ member: { id: MEMBER_ID, name: 'Nathan' } });
+    mockSend.mockResolvedValue({
+      data: null,
+      error: { name: 'validation_error', message: `Invalid recipient ${EMAIL}` },
+    });
+
+    const res = await POST(req());
+    const body = await res.json();
+
+    // Redaction touches the log line only. Attribution, retry advice and the
+    // member-facing copy are unchanged — 5c.1 changes no auth or send semantics.
+    expect(res.status).toBe(400);
+    expect(body.reason).toBe('email_address_rejected');
+    expect(body.retryable).toBe(false);
+    expect(emitted()).toContain('providerCode=validation_error');
+    expect(emitted()).toContain('failureKind=invalid_recipient');
+  });
+
   it('does not log the address on the WAITLIST path', async () => {
     const prev = process.env.BETA_ALLOWLIST_ENABLED;
     process.env.BETA_ALLOWLIST_ENABLED = '1';

@@ -11,7 +11,9 @@
  *   2. Session creation, logged with `record.username` — a login identifier, so
  *      the same disclosure as the address, not an opaque handle.
  *
- * THE INVARIANT. Neither the address nor the username reaches stdout. Where
+ * THE INVARIANT. Neither the full address (nor its local-part) nor the
+ * username reaches stdout. Recipient DOMAIN is permitted as coarse metadata,
+ * per lib/privacy/redactEmails.ts — this route emits none either way. Where
  * correlation is genuinely needed (session creation) `memberRef()` is emitted:
  * pseudonymous and correlatable, NOT anonymous, and the same token the send
  * path emits for that member.
@@ -95,7 +97,7 @@ beforeEach(() => {
   jest.spyOn(console, 'warn').mockImplementation(capture);
 });
 
-describe('no member identifier reaches container stdout', () => {
+describe('no full address, local-part, or username reaches container stdout', () => {
   it('does not log the address when a NEW address is verified', async () => {
     installCode(null);
 

@@ -35,6 +35,7 @@
 
 import { Resend, type CreateEmailOptions } from 'resend';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { redactEmails } from '@/lib/privacy/redactEmails';
 
 // ============================================================================
 // VERIFIED SENDERS
@@ -306,7 +307,12 @@ function logSend(
     domain,
     status: result.status,
     ...(result.id ? { id: result.id } : {}),
-    ...(result.error ? { error: result.error } : {}),
+    // REDACTED, not dropped. The provider echoes back the address it rejected
+    // ("Invalid recipient a.real.person@example.com"), which would re-enter
+    // stdout through this field and bypass `toRef` above and every route-level
+    // redaction below it. `result.error` itself stays raw for callers that
+    // need it; only what crosses the logging boundary is sanitised.
+    ...(result.error ? { error: redactEmails(result.error) } : {}),
     ...(result.providerCode ? { providerCode: result.providerCode } : {}),
     ...(result.failureKind ? { failureKind: result.failureKind } : {}),
   };
