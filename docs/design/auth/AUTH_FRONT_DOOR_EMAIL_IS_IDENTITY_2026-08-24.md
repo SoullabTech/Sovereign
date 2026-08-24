@@ -123,3 +123,55 @@ tree died, leaving the running container untouched at `e56e502ff` the whole time
 note:** this build takes ~5 minutes; run it detached
 (`setsid nohup … </dev/null >/tmp/deploy.log 2>&1 &`) and tail the log, so an interrupted terminal
 cannot kill it.
+
+---
+
+## Negative witness — PASSED, both halves (2026-08-24, post-deploy)
+
+Captured deliberately **while the quota was still exhausted**, since that window closes on top-up.
+
+**Member-facing**, verbatim from the live UI:
+
+> We can't send codes right now. That's a problem on our side, not yours, and retrying won't help.
+> Please contact support@soullab.life and we'll get you in.
+
+**Server-side**:
+
+```
+[EMAIL-CODE] Provider REFUSED the send for member=88099bb1977c — status=error
+failureKind=quota_exceeded providerCode=monthly_quota_exceeded retryable=false
+error=You have reached your monthly email sending quota.
+```
+
+#1074 delivered three observable changes, not one. Against the pre-deploy line:
+
+| | before (`e56e502ff`) | after (`73106dc90`) |
+|---|---|---|
+| member-facing mailbox | `hello@soullab.life` | `support@soullab.life` |
+| log identity | `kelly@soullab.life` | `member=88099bb1977c` |
+| classification | — | `failureKind=quota_exceeded` |
+| retry guidance | — | `retryable=false` |
+
+The member's email address is **out of the refusal logs** (`e12377d98`), now proven live rather than
+merely merged; and the refusal is classified rather than flattened to prose (`5ce84d10f`).
+
+Chain proven end to end: **provider refuses → server recognizes and classifies → application
+manufactures no success → member sees the truth, and a mailbox that exists.**
+
+### Still blocked
+
+`retryable=false` is accurate: no further attempt can succeed until sending capacity is restored on
+the provider account. That is an account-side action, not a code or deploy action. Every email path
+— codes, magic links, recovery, reset, verification, invitations — stays down until then.
+
+### Positive witness — pending
+
+After capacity is restored, one request, then: a `Code sent` marker carrying a **real, non-empty
+provider message id** and no `quota_exceeded`; the send visible in the Resend dashboard; the email
+arriving; the code completing sign-in. `id: none` is a soft failure, not a pass — an accepted send
+with no message id is precisely the manufactured success this witness exists to rule out.
+
+*(Note for whoever runs it: the success log line's wording was read from the pre-deploy source and
+may have been reworded the same way the refusal line was. Match on the `Code sent` marker and a
+non-empty id, not on an exact string.)*
+
