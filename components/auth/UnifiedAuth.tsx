@@ -85,6 +85,10 @@ function UnifiedAuthInner() {
   const [password, setPassword] = useState('');
   const [showPasswordText, setShowPasswordText] = useState(false);
   const [error, setError] = useState('');
+  // The code-send failed for a reason the member cannot fix by retrying (provider
+  // outage, exhausted send quota). Email is the DEFAULT door, so when it is shut
+  // the card must hand over a working one rather than leaving a dead end.
+  const [sendBlocked, setSendBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
@@ -168,6 +172,7 @@ function UnifiedAuthInner() {
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
     setError('');
+    setSendBlocked(false);
     const clean = email.toLowerCase().trim();
     if (!clean.includes('@')) { setError('Please enter a valid email address.'); return; }
     // Normalize the displayed/stored email to lowercase so the code screen and
@@ -179,13 +184,18 @@ function UnifiedAuthInner() {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: clean }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(data?.error || 'Could not send the code. Please try again.'); return; }
+      if (!res.ok) {
+        setError(data?.error || 'Could not send the code. Please try again.');
+        setSendBlocked(true);
+        return;
+      }
       // Private beta: a non-admitted email is waitlisted server-side (no code sent).
       if (data?.status === 'waitlist') { setPhase('waitlist'); return; }
       setCode('');
       setPhase('code');
     } catch {
       setError('Could not send the code. Please try again.');
+      setSendBlocked(true);
     } finally {
       setIsLoading(false);
     }
@@ -460,9 +470,22 @@ function UnifiedAuthInner() {
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center" style={arrivalSignin ? { fontFamily: 'Spectral, Georgia, serif' } : undefined}>{arrivalSignin ? 'Welcome.' : 'Welcome'}</h1>
               <p className={`text-sm font-light mb-6 text-center leading-relaxed ${arrivalSignin ? 'text-slate-300/95' : 'text-slate-300/80'}`}>{arrivalSignin ? 'Sign in to enter.' : 'Enter your email to continue.'}</p>
               {errorBlock}
+
+              {/* Email is down and retrying will not help — hand over the door that still
+                  works, at full weight, instead of leaving the member at a dead end. */}
+              {sendBlocked && (
+                <button
+                  type="button"
+                  onClick={() => { setPhase('password'); setError(''); setSendBlocked(false); }}
+                  className={`${primaryBtn} mb-4`}
+                >
+                  Sign in with a password instead
+                </button>
+              )}
+
               <form onSubmit={sendCode} className="space-y-3">
                 <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={inputCls} />
-                <button type="submit" disabled={isLoading || !email} className={primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
+                <button type="submit" disabled={isLoading || !email} className={sendBlocked ? outlineBtn : primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
               </form>
 
               {bioAvailable && (
@@ -493,8 +516,10 @@ function UnifiedAuthInner() {
                 </button>
               </div>
 
-              <div className={`mt-6 pt-4 border-t ${hairlineCls} text-center`}>
-                <button type="button" onClick={() => { setPhase('password'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Use a password instead</button>
+              {/* Password is the one door that works when the email provider is down, so it
+                  is a real affordance — not the lowest-contrast text on the card. */}
+              <div className={`mt-6 pt-4 border-t ${hairlineCls}`}>
+                <button type="button" onClick={() => { setPhase('password'); setError(''); setSendBlocked(false); }} className={outlineBtn}>Use a password instead</button>
               </div>
             </motion.div>
           )}
