@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
@@ -17,6 +17,8 @@ import {
 import Worktable from './Worktable';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
+import StructureRail from './StructureRail';
+import type { DeclaredPart, DraftMap } from './manuscriptMap';
 
 /**
  * Writer Canvas — the room. v0.1 of the environment all Writer Studio entry
@@ -49,6 +51,10 @@ import MaterialsDrawer from './MaterialsDrawer';
  *     guess; so does this room).
  *   · any inferred state. The orientation line is authored facts only: the
  *     draft exists, it was last touched at a time.
+ *   · that it knows the shape of the draft. The Structure rail locates the
+ *     member's OWN carried cuts inside the living text (see manuscriptMap.ts);
+ *     it detects nothing, invents no part, and names what it can no longer
+ *     find rather than quietly dropping it.
  */
 
 type DrawerId = 'work' | 'materials' | 'structure' | 'history';
@@ -108,6 +114,52 @@ export default function WriterCanvasPage() {
     updatedAt: string | null;
     revisionCount: number | null;
   } | null>(null);
+
+  // ---- Structure: the member's carried cuts ------------------------------
+  // Read once per manuscript, from the immutable Source. These are the parts
+  // the member confirmed at the import threshold — the system proposes none.
+  // The rail's live ranges come from the table (which holds the text); this
+  // read only supplies identity, order, and the member's own heading words.
+  const [parts, setParts] = useState<DeclaredPart[]>([]);
+  const [draftMap, setDraftMap] = useState<DraftMap | null>(null);
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+  const manuscriptId = manuscript?.id ?? null;
+
+  useEffect(() => {
+    if (!manuscriptId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}`, { method: 'GET' });
+        if (cancelled || !res.ok) return;
+        const data = await res.json();
+        const rows: DeclaredPart[] = Array.isArray(data.sections)
+          ? data.sections.map((sec: { id: string; position: number; heading: string | null }) => ({
+              id: sec.id,
+              position: sec.position,
+              heading: sec.heading,
+            }))
+          : [];
+        if (!cancelled) setParts(rows);
+      } catch {
+        // The rail is an aid, not the work. A failed read leaves the whole
+        // manuscript on the table exactly as before — never an error page over
+        // a draft that loaded fine.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [manuscriptId]);
+
+  // The frame belongs to the manuscript it was opened in.
+  useEffect(() => {
+    setFocusKey(null);
+    setDraftMap(null);
+  }, [manuscriptId]);
+
+  const handleMap = useCallback((m: DraftMap) => setDraftMap(m), []);
+  const handleFocusKey = useCallback((key: string | null) => setFocusKey(key), []);
 
   // History drawer contents — read when opened, re-read after a kept version.
   const [revisions, setRevisions] = useState<RevisionSummary[] | null>(null);
@@ -213,18 +265,18 @@ export default function WriterCanvasPage() {
           />
         );
       case 'structure':
+        /* The rail (S1): a map of the MANUSCRIPT, said so in its own header,
+           never a map of the Work. Doors narrow the table's frame; they do not
+           move, split, or rewrite anything. */
         return manuscript ? (
-          <>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-3">
-              {manuscript.sectionCount} sections, carried in with your import.
-            </p>
-            <Link
-              href={byIdentity(SOURCE_HREF, manuscript.id)}
-              className="text-[13px] underline underline-offset-4 opacity-60 hover:opacity-90"
-            >
-              Read them in the Source
-            </Link>
-          </>
+          <StructureRail
+            expressionLabel={`${manuscriptLabel} — manuscript`}
+            parts={parts}
+            map={draftMap}
+            focusKey={focusKey}
+            onFocusKey={handleFocusKey}
+            sourceHref={byIdentity(SOURCE_HREF, manuscript.id)}
+          />
         ) : null;
       case 'history':
         return (
@@ -279,11 +331,16 @@ export default function WriterCanvasPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      /* On a wide screen the room is exactly one viewport, and the things
+         inside it scroll: otherwise a rail listing two hundred parts grows the
+         page itself, and the writer's first act on opening a chapter is to
+         scroll back up to find the room's head. Narrow screens keep the
+         flowing layout, where a stacked drawer above the field is correct. */
+      className="min-h-screen md:h-screen md:overflow-hidden flex flex-col"
       style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
     >
       {/* ── The head of the room: what am I working on, and where am I. ── */}
-      <header className="px-6 md:px-10 pt-6 pb-5">
+      <header className="shrink-0 px-6 md:px-10 pt-6 pb-5">
         <Link
           href="/writers-studio"
           className="inline-block text-[11px] tracking-[0.2em] uppercase opacity-40 hover:opacity-75 mb-3"
@@ -360,7 +417,11 @@ export default function WriterCanvasPage() {
 
         {drawer && (
           <aside
-            className="md:w-72 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
+            /* Structure is a rail, not a note: a long book's parts need room to
+               be read down. The other drawers keep their quieter width. */
+            className={`shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto ${
+              drawer === 'structure' ? 'md:w-80 max-h-[45vh] md:max-h-none' : 'md:w-72'
+            }`}
             style={{ borderColor: PRESS.ruleSoft }}
           >
             <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">
@@ -400,6 +461,10 @@ export default function WriterCanvasPage() {
           {manuscript && (
             <Worktable
               manuscriptId={manuscript.id}
+              parts={parts}
+              focusKey={focusKey}
+              onMap={handleMap}
+              onFocusKey={handleFocusKey}
               onMeta={setDraftMeta}
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
             />
