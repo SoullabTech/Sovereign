@@ -1,5 +1,38 @@
 # AUTH FRONT DOOR — EMAIL IS IDENTITY, NOT TRANSPORT
 
+> ## AUTH EMAIL INCIDENT — status (founder ruling, 2026-08-24)
+>
+> ```text
+> negative witness        COMPLETE
+> truthful refusal        PROVEN LIVE
+> quota classification    PROVEN LIVE
+> enumeration safety      PROVEN LIVE
+> PII-safe logging slice  PROVEN
+> observed broader impact NOT ESTABLISHED
+>
+> Resend capacity         EXHAUSTED
+> positive witness        ONLY REMAINING PROOF
+> ```
+>
+> **KNOWN** — Resend transport was unavailable to all recipients · #1074 handled a real quota
+> refusal truthfully · recorded email-code attempts in the observed window were the founder's ·
+> enumeration parity held for member vs non-member addresses.
+>
+> **NOT KNOWN** — whether anyone else attempted authentication during the outage · rate-limited
+> attempts may leave no token-table trace.
+>
+> Classified as an **infrastructure outage, not a demonstrated user-impact incident.**
+>
+> **To close:** restore Resend capacity, then one controlled request requiring the whole chain —
+> provider acceptance → real message ID → visible provider send → inbox receipt → code authenticates
+> successfully. If all five hold, the Resend incident closes. **No further architecture or auth work
+> is to be pulled into it.**
+>
+> **Frozen, and not part of this incident:** portrait movement · account consolidation · session
+> cleanup · passkey repair.
+
+---
+
 **Status: RULED, NOT IMPLEMENTED.** Founder ruling 2026-08-24. Deliberately *not* bundled with the
 2026-08-24 email delivery incident — that is a provider/deploy problem; this is a design problem.
 Sequencing: deploy #1074 first so the live system tells the truth about send failures, *then* take
