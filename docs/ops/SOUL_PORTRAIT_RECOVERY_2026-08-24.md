@@ -1,4 +1,4 @@
-# Soul Portrait "disappearance" — Phase 1 finding (read-only)
+# Soul Portrait "disappearance" — CLOSED (read-only witness returned)
 
 **Date**: 2026-08-24 · **Canonical branch**: `clean-main-no-secrets` · **Tip audited**: `e56e502ff`
 
@@ -155,3 +155,86 @@ appear in Studio would **not** be recovery — it would be manufacturing ownersh
 about real, named people, one of whom (Larry Closs) is currently withdrawn precisely because his
 consent has not been obtained. That is a new consent-bearing feature decision for Kelly, not an
 incident remedy.
+
+---
+
+# WITNESS RESULT — 2026-08-24T19:47:52Z — **BRANCH 3: ACCOUNT/OWNERSHIP SPLIT**
+
+Run from the Mac Studio against production. Classification: **rows exist under another Kelly
+member ID.** The two-email hypothesis is confirmed. Nothing is lost, and **no write is required.**
+
+## The split
+
+| member_id | username | email | created | portraits | live sessions |
+|---|---|---|---|---|---|
+| `ce284751-e457-42f6-89b6-bc07d0876682` | Kelly | **kelly@soullab.life** | 2026-01-23 | **16** | 3 |
+| `49ae4717-2b3a-4189-b25d-2bef95b1a45a` | soullab13cab | **soullab1@gmail.com** | 2026-02-03 | **0** | 35 ← *current browser* |
+| `ed52e28f-…` | info | info@soullab.life | 2026-03-24 | 0 | 1 |
+
+18 rows total: 16 Kelly (`ce284751`), 1 Jondi, 1 Cece Campbell. The browser is simply signed into
+the Kelly account that has none. `/api/soul-portrait/mine` returning `[]` is the owner filter
+working correctly on the wrong account — not deletion, not a filter bug.
+
+Kelly's 16, most recent first: James McCullen · Tess Miller · Susan Bragg · Eric Stiller ·
+Cece Campbell · Kristen Nezat · Cathrine Abbot Jones · Maia Pastor · Kimberly Daugherty ·
+Stephen Clayton · Jason Ruder · Catherine ×2 · Andrea Fagan ×2 · `liveness-test-delete-me`.
+Span 2026-07-08 → **2026-08-23** — active as of yesterday.
+
+## Correction to the Phase 1 reading
+
+Phase 1 concluded the 12 registry files were what Kelly was picturing. **That was wrong, or at best
+half of it.** Kelly's memory of "MANY Soul Portraits" in Studio was accurate and referred to real
+DB rows — 16 of them — created through `/soul-portrait/generate`. The Phase 1 findings still stand
+on their own terms (registry intact, disjoint from the table, no deleting code), but the narrowed
+"DB-backed history UNKNOWN" line was the load-bearing one, and it resolved against the guess.
+
+The two sets are different bodies of work that overlap at two names: `catherine` and `andrea-fagan`
+exist as both 2026-07-09 DB drafts and hand-authored registry files — the drafts look like the
+generator runs those files were authored from.
+
+## Integrity probes — CLEAN
+
+```text
+soul_portraits          n_tup_ins 24   n_tup_del 6   n_live_tup 18
+soul_portrait_consents  n_tup_ins  9   n_tup_del 0   n_live_tup  9
+orphaned_ledger_rows    0
+```
+
+- **24 − 6 = 18 closes exactly.** Every insert is accounted for; nothing is unexplained.
+- **9 ledger rows = 9 `consent_state='active'` portraits**, 0 orphans. Every published portrait
+  carries its consent record.
+- The 6 deletes were therefore rows with **no ledger entries** — unconsented drafts (the surviving
+  `liveness-test-delete-me` row shows that class was being made). The NO ACTION FK could not have
+  permitted deleting a consented one.
+- **`members` counters were reset at some point**: 42 ins − 20 del = 22, but 88 live. Database-wide
+  `stats_reset` is NULL, so this was a per-table reset or a stats-file loss. `members` last
+  autovacuumed 2026-07-01; `soul_portraits` was created 2026-07-02 — one stats-loss event on or
+  before ~2026-07-01 explains both, and leaves `soul_portraits` counters covering its full life.
+  Consistent with the exact 24−6=18 close. Recorded as a caveat, not an incident.
+
+**No separate integrity investigation is warranted.**
+
+## Recovery: zero writes
+
+`/api/soul-portrait/mine` filters `owner_member_id = <session member>`. Signing in as
+**kelly@soullab.life** makes all 16 appear. That is the whole fix — no ownership move, no
+reconciliation, no migration.
+
+One thing to check on sign-in: whether `ce284751` carries practitioner status. `/studio/*` gates on
+`getCurrentPractitioner`; the current session (`49ae4717`) is the one with `practitionerId
+717da53c-…` and Team Soullab. If `ce284751` is not a practitioner, the portraits are readable but
+the Studio shell may not open for it — and *that*, not the portraits, becomes the real question.
+
+```bash
+# read-only, after signing in as kelly@soullab.life
+curl -s https://soullab.life/api/studio/whoami        # expect memberId ce284751…
+curl -s https://soullab.life/api/soul-portrait/mine   # expect 16 portraits
+```
+
+Only if `ce284751` cannot serve as the working practitioner account — or if `soullab1@gmail.com`
+must be canonical for other reasons — does an ownership move become a Phase 2 candidate. That would
+be a founder decision about which identity is canonical, with its own plan and rollback. It is not
+authorized here, and it is not needed to see the portraits.
+
+**No account merge. No member deletion.** Six Kelly-adjacent member records exist; consolidating
+them is a separate, larger question that this incident does not settle.
