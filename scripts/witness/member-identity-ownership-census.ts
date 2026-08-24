@@ -22,9 +22,15 @@
  *   What the 6 counted soul_portraits deletes were — the trace section narrows, not answers.
  *
  * DATA DISCIPLINE
- *   COUNTS AND SCHEMA NAMES ONLY. No row content, no member text, no conversation
- *   material is read or printed. The whole run executes inside a READ ONLY transaction,
- *   so a write is refused by Postgres itself rather than by this script's good manners.
+ *   No arbitrary member-scoped content is read. Output is limited to schema/count
+ *   information PLUS identity/account metadata (username, email, name, onboarding state,
+ *   created_at, last_sign_in) for the two explicitly supplied candidate member ids — the
+ *   two identities being reconciled, and nothing else. No conversation, journal, portrait,
+ *   or Sanctuary-governed material is selected or printed, for any member.
+ *   The whole run executes inside a READ ONLY transaction, so a write is refused by
+ *   Postgres itself rather than by this script's good manners. Every fallible probe runs
+ *   inside its own SAVEPOINT, so one failing column cannot abort the transaction and
+ *   silently collapse the rest of the census into false zeros.
  *
  * Run (production, inside the container on minisforum):
  *   docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx \
@@ -106,16 +112,26 @@ async function main() {
     );
 
     // 2 ─ declared foreign keys to members(id)
+    // The referenced attribute is constrained to members.id explicitly: a FK pointing at
+    // another unique member column (email, username, passkey) is a DIFFERENT relationship
+    // and must not be counted as an id reference. The local column's real type is read from
+    // the catalog rather than assumed to be uuid — assuming uuid is what would make such a
+    // column throw on cast, which is precisely the error the savepoints now contain.
     const fks = await c.query(`
-      SELECT con.conrelid::regclass::text AS table_name,
-             att.attname                  AS column_name,
-             con.conname                  AS constraint_name,
-             con.confdeltype              AS on_delete
+      SELECT cl.relname::text                    AS table_name,
+             att.attname::text                   AS column_name,
+             att.atttypid::regtype::text         AS data_type,
+             con.conname::text                   AS constraint_name,
+             con.confdeltype                     AS on_delete
         FROM pg_constraint con
-        JOIN unnest(con.conkey) WITH ORDINALITY AS k(attnum, ord) ON TRUE
-        JOIN pg_attribute att ON att.attrelid = con.conrelid AND att.attnum = k.attnum
+        JOIN pg_class cl ON cl.oid = con.conrelid
+        JOIN pg_namespace n ON n.oid = cl.relnamespace AND n.nspname = 'public'
+        JOIN unnest(con.conkey, con.confkey) WITH ORDINALITY AS k(attnum, fattnum, ord) ON TRUE
+        JOIN pg_attribute att  ON att.attrelid  = con.conrelid  AND att.attnum  = k.attnum
+        JOIN pg_attribute fatt ON fatt.attrelid = con.confrelid AND fatt.attnum = k.fattnum
        WHERE con.contype = 'f'
          AND con.confrelid = 'public.members'::regclass
+         AND fatt.attname = 'id'
        ORDER BY 1, 2`);
 
     // 3 ─ undeclared candidates: member-shaped columns with no FK to members
@@ -141,7 +157,7 @@ async function main() {
         table: String(r.table_name).replace(/^public\./, ''),
         column: r.column_name,
         declaredFk: true,
-        dataType: 'uuid',
+        dataType: r.data_type,
       })),
       ...heur.rows
         .filter((r: any) => !fkKeys.has(`${r.table_name}.${r.column_name}`) && !fkKeys.has(`public.${r.table_name}.${r.column_name}`))
@@ -173,15 +189,21 @@ async function main() {
     // 5 ─ counts + collisions, one candidate column at a time
     const rows: Row[] = [];
     for (const cand of candidates) {
-      const q = (id: string) => `SELECT count(*)::int AS n FROM ${qi(cand.table)} WHERE ${qi(cand.column)} = ${cast(cand.dataType)}`;
       let rowsA: number | null = null;
       let rowsB: number | null = null;
       let note: string | undefined;
-      try {
-        rowsA = (await c.query(q(A), [A])).rows[0].n;
-        rowsB = (await c.query(q(B), [B])).rows[0].n;
-      } catch (e: any) {
-        note = `count failed: ${String(e.message || e).split('\n')[0]}`;
+      const lhs = cast(cand.dataType);
+      if (!lhs) {
+        // catalog type we cannot compare a member uuid against — reported, never assumed zero
+        note = `not counted: unsupported column type ${cand.dataType}`;
+      } else {
+        const countSql = `SELECT count(*)::int AS n FROM ${qi(cand.table)} WHERE ${qi(cand.column)} = ${lhs}`;
+        const ra = await probe(c, () => c.query(countSql, [A]));
+        if (ra.ok) rowsA = ra.value.rows[0].n;
+        else note = `count failed (A): ${ra.error}`;
+        const rb = await probe(c, () => c.query(countSql, [B]));
+        if (rb.ok) rowsB = rb.value.rows[0].n;
+        else note = [note, `count failed (B): ${rb.error}`].filter(Boolean).join('; ');
       }
 
       const uniqueKeys: string[] = [];
@@ -203,19 +225,18 @@ async function main() {
             continue;
           }
           const sel = others.map(qi).join(', ');
-          try {
-            const hit = await c.query(
+          const hit = await probe(c, () =>
+            c.query(
               `SELECT count(*)::int AS n FROM (
                  SELECT ${sel} FROM ${qi(cand.table)} WHERE ${qi(cand.column)} = ${cast(cand.dataType)}
                  INTERSECT
                  SELECT ${sel} FROM ${qi(cand.table)} WHERE ${qi(cand.column)} = ${cast(cand.dataType, 2)}
                ) x`,
               [A, B]
-            );
-            if (hit.rows[0].n > 0) collisions.push(`${label} — ${hit.rows[0].n} overlapping key(s)`);
-          } catch (e: any) {
-            collisions.push(`${label} — collision test failed: ${String(e.message || e).split('\n')[0]}`);
-          }
+            )
+          );
+          if (!hit.ok) collisions.push(`${label} — collision test failed: ${hit.error}`);
+          else if (hit.value.rows[0].n > 0) collisions.push(`${label} — ${hit.value.rows[0].n} overlapping key(s)`);
         }
       }
 
@@ -232,38 +253,35 @@ async function main() {
 
     // 6 ─ OPEN QUESTION (separate from the census): soul_portraits delete trace
     const trace: Record<string, any> = {};
-    try {
-      trace.portrait_table_stats = (
-        await c.query(`SELECT relname, n_tup_ins, n_tup_upd, n_tup_del, n_live_tup
-                         FROM pg_stat_user_tables
-                        WHERE relname IN ('soul_portraits','soul_portrait_consents','member_guardians')`)
-      ).rows;
+    // Each trace query is savepoint-isolated too: this section is an OPEN QUESTION probe,
+    // and it must never be able to abort the transaction and take the census down with it.
+    const traceQueries: Array<[string, string, any[]]> = [
+      ['portrait_table_stats',
+       `SELECT relname, n_tup_ins, n_tup_upd, n_tup_del, n_live_tup
+          FROM pg_stat_user_tables
+         WHERE relname IN ('soul_portraits','soul_portrait_consents','member_guardians')`, []],
       // Owner identities other than the two candidates are shown by uuid prefix only —
       // a diagnostic must not spill other members' usernames or emails.
-      trace.portraits_by_owner = (
-        await c.query(
-          `SELECT left(p.owner_member_id::text, 8) || '…'                              AS owner_prefix,
-                  (p.owner_member_id = $1::uuid)                                        AS is_canonical_candidate,
-                  (p.owner_member_id = $2::uuid)                                        AS is_legacy_candidate,
-                  count(*)::int                                                         AS portraits
-             FROM soul_portraits p
-            GROUP BY 1,2,3 ORDER BY 4 DESC LIMIT 20`,
-          [A, B]
-        )
-      ).rows;
-      trace.orphaned_consent_rows = (
-        await c.query(`SELECT count(*)::int AS n FROM soul_portrait_consents sc
-                        WHERE NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id)`)
-      ).rows[0].n;
-      trace.consent_rows_for_missing_portraits_detail = (
-        await c.query(`SELECT sc.portrait_id::text, min(sc.created_at) AS first_event, max(sc.created_at) AS last_event,
-                              count(*)::int AS events
-                         FROM soul_portrait_consents sc
-                        WHERE NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id)
-                        GROUP BY 1 ORDER BY 2`)
-      ).rows;
-    } catch (e: any) {
-      trace.error = String(e.message || e).split('\n')[0];
+      ['portraits_by_owner',
+       `SELECT left(p.owner_member_id::text, 8) || '…' AS owner_prefix,
+               (p.owner_member_id = $1::uuid)          AS is_canonical_candidate,
+               (p.owner_member_id = $2::uuid)          AS is_legacy_candidate,
+               count(*)::int                           AS portraits
+          FROM soul_portraits p
+         GROUP BY 1,2,3 ORDER BY 4 DESC LIMIT 20`, [A, B]],
+      ['orphaned_consent_rows',
+       `SELECT count(*)::int AS n FROM soul_portrait_consents sc
+         WHERE NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id)`, []],
+      ['consent_rows_for_missing_portraits_detail',
+       `SELECT sc.portrait_id::text, min(sc.created_at) AS first_event,
+               max(sc.created_at) AS last_event, count(*)::int AS events
+          FROM soul_portrait_consents sc
+         WHERE NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id)
+         GROUP BY 1 ORDER BY 2`, []],
+    ];
+    for (const [key, sql, params] of traceQueries) {
+      const r = await probe(c, () => c.query(sql, params));
+      trace[key] = r.ok ? r.value.rows : { error: r.error };
     }
 
     await c.query('ROLLBACK');
@@ -291,11 +309,42 @@ async function main() {
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Run one fallible probe inside its own SAVEPOINT.
+ *
+ * Without this, the per-probe try/catch below is decorative: every query shares one
+ * transaction, so the FIRST error puts Postgres into aborted state and every later probe
+ * fails with `current transaction is aborted`. The census would then read as a wall of
+ * zeros/errors caused by a single exotic column — the exact `ERROR != zero` failure this
+ * instrument exists to avoid. The SAVEPOINT keeps the failure local; the outer
+ * READ ONLY transaction is untouched, so the no-write guarantee still holds.
+ */
+async function probe(
+  c: any,
+  fn: () => Promise<any>
+): Promise<{ ok: true; value: any } | { ok: false; error: string }> {
+  await c.query('SAVEPOINT census_probe');
+  try {
+    const value = await fn();
+    await c.query('RELEASE SAVEPOINT census_probe');
+    return { ok: true, value };
+  } catch (e: any) {
+    await c.query('ROLLBACK TO SAVEPOINT census_probe');
+    await c.query('RELEASE SAVEPOINT census_probe');
+    return { ok: false, error: String(e?.message || e).split('\n')[0] };
+  }
+}
+
 function qi(ident: string): string {
   return '"' + String(ident).replace(/"/g, '""') + '"';
 }
-function cast(dataType: string, param = 1): string {
-  return dataType === 'uuid' ? `$${param}::uuid` : `$${param}::text`;
+/** Comparison operand for a member id against a column of the given catalog type. */
+function cast(dataType: string, param = 1): string | null {
+  const t = String(dataType).toLowerCase();
+  if (t === 'uuid') return `$${param}::uuid`;
+  if (t === 'text' || t === 'varchar' || t.startsWith('character varying')) return `$${param}::text`;
+  return null; // not guessed — the column is reported uncounted instead
 }
 function classify(
   table: string,

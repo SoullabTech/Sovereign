@@ -47,10 +47,29 @@ column it counts rows under A and under B, then — only where **both** are non-
 table's unique indexes and tests whether a blind rebind would violate one, by intersecting the
 non-member columns of the unique key across the two identities.
 
-**What it refuses to do.** It reads counts and schema names only: no row content, no member
-text, no conversation material is selected or printed. The whole run is inside
-`BEGIN; SET TRANSACTION READ ONLY`, so a write is refused by Postgres itself rather than by the
-script's good manners. It proposes no SQL to execute.
+**What it refuses to do.** No arbitrary member-scoped content is read. Output is limited to
+schema/count information **plus identity/account metadata** (username, email, name, onboarding
+state, `created_at`, `last_sign_in`) **for the two explicitly supplied candidate member ids** —
+the two identities being reconciled, and nothing else. No conversation, journal, portrait, or
+Sanctuary-governed material is selected or printed, for any member; non-candidate portrait
+owners appear by uuid prefix only. The whole run is inside `BEGIN; SET TRANSACTION READ ONLY`,
+so a write is refused by Postgres itself rather than by the script's good manners. It proposes
+no SQL to execute.
+
+**Failure isolation.** Every fallible probe (each count, each collision test, each trace query)
+runs inside its own `SAVEPOINT`. Without that, the per-column error handling is decorative:
+all probes share one transaction, so the first failure puts Postgres into aborted state and
+every later probe returns `current transaction is aborted` — a single exotic column would
+collapse the census into a wall of false zeros, defeating the `ERROR ≠ zero` rule this
+instrument exists to hold. The savepoints keep failures local; the outer READ ONLY transaction
+is untouched, so the no-write guarantee is unweakened.
+
+**FK precision.** The declared-FK sweep constrains the *referenced* attribute to `members.id`,
+not merely "references the members table" — a FK pointing at another unique member column
+(`email`, `username`, `passkey`) is a different relationship and is not counted as an id
+reference. Each column's comparison type is read from the catalog rather than assumed to be
+`uuid`; a type the instrument cannot compare a member id against is reported uncounted, never
+as zero.
 
 **Output.** A markdown table (table · column · fk? · rows A · rows B · collision risk · merge
 rule), a rule tally, and a JSON report at `/tmp/member-identity-census-<ts>.json`.
@@ -152,10 +171,13 @@ are currently true and separate.
 
 - **Agency:** consolidation returns Kelly's own artifacts to the identity she signs in as. It
   adds no capability the system did not have.
-- **Provenance:** the census reads counts only; the plan forbids rewriting ledger actors, so
-  the record of *who did what, under which identity* survives consolidation intact.
+- **Provenance:** the census reads schema/count information plus account metadata for the two
+  named candidate ids only; the plan forbids rewriting ledger actors, so the record of *who did
+  what, under which identity* survives consolidation intact.
 - **Uncertainty preserved:** the delete question is named as open rather than closed by
-  convenience; `ERROR` rows are never read as zero; §4 stays empty until measured.
+  convenience; `ERROR` and uncounted rows are never read as zero — and the savepoint isolation
+  is what makes that rule structurally true rather than merely intended; §4 stays empty until
+  measured.
 - **New responsibility created:** one canonical identity means one blast radius. Hence the
   dump-before-write, the transaction-per-table discipline, and the soft retirement of the
   duplicate rather than deletion.
