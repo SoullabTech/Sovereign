@@ -176,7 +176,7 @@ ephemeral session state. It is not. B holds thousands of rows of real MAIA histo
 B is a smaller but genuinely inhabited identity, not a shell. "Move the login, leave the data"
 would strand this material.
 
-### 4.2 Probable mechanism of the split — one row
+### 4.2 Probable mechanism of the split — one row ⛔ **FALSIFIED 2026-08-24, see §4.10**
 
 | table | column | A | B | rule |
 |---|---|---:|---:|---|
@@ -313,6 +313,65 @@ Also newly confirmed zero (previously unknown, now counted): `encounter_particip
 `circle_inquiry_responses`, `symbol_meanings`, `ledger_member_annotations`,
 `practitioner_client_reconciliation`, `commons_*` reviewer columns, and the `comms_safety_flags`
 / `safety_concern_logs` reviewer columns. None of them holds a row for either identity.
+
+---
+
+### 4.10 OAuth linkage read — the minting hypothesis is FALSIFIED
+
+Run 2026-08-24, read-only, ended in ROLLBACK. No token or secret selected.
+
+| fact | value |
+|---|---|
+| B's linkage provider | **google** |
+| B's linkage created | **2026-07-24 14:59:23** |
+| B's member row created | **2026-02-03 18:05:28** |
+| linkage − member creation | **+170 days 20:53:55** |
+| A's linkage | **none** |
+| tokens stored on B's linkage | **none** — `access_token` and `refresh_token` both absent |
+| `updated_at` vs `created_at` | identical — the row has never been updated since insert |
+| all Google linkages, database-wide | 3 linkages · 3 distinct members · earliest **2026-07-06** |
+| members created within 5 min of B | **1** (B itself — no minting cluster) |
+
+**§4.2 does not survive this.** The hypothesis was that a Google sign-in minted B. The linkage
+post-dates B's member row by nearly six months, so it cannot have created it. Two independent
+facts kill it:
+
+1. **Order.** B existed on 2026-02-03. Its Google linkage appeared 2026-07-24.
+2. **Feature age.** The *earliest linkage in the entire table*, across all members, is
+   2026-07-06 — five months after B was created. B cannot have been minted by a mechanism that
+   produced no rows at all until July.
+
+So the honest ladder now reads:
+
+```
+PROVEN          B is Google-linked. A is not. The linkage carries no stored tokens.
+PROVEN          The linkage post-dates B's creation by ~171 days.
+FALSIFIED       Google sign-in created B.
+UNKNOWN         What did create B on 2026-02-03 18:05:28.
+```
+
+**The Google OAuth source trace is therefore NOT warranted** and is not being run. Tracing that
+callback would now be following a theory the evidence has already excluded.
+
+One caveat that does not rescue the hypothesis, stated for completeness: `created_at` records
+when *this row* was inserted, so a hypothetical earlier linkage that was deleted and re-inserted
+would read as recent. `updated_at` equalling `created_at` argues against any re-link, and the
+database-wide July floor makes an earlier linkage of any kind implausible.
+
+### 4.11 Where the lead actually points now
+
+B's own row is the evidence: `username = soullab13cab` — an email local-part (`soullab1`) with a
+short random suffix — with `onboarded = false` and `last_sign_in = NULL`. That is the shape of a
+**machine-provisioned** member, not one created by a person completing the onboarding flow.
+
+The census also shows B holds **6 `magic_link_tokens`**. A magic-link path that provisions a
+member from a verified email address would produce exactly this: an auto-generated username,
+no onboarding, no recorded sign-in, and real accumulated history afterward.
+
+**This is a hypothesis, not a finding** — the same status §4.2 had before it was falsified, and
+it deserves the same skepticism. It is testable read-only: compare B's earliest
+`magic_link_token` to B's `created_at`, and check whether the username-generation shape recurs
+across members created by that path. **Not run; awaiting ruling.**
 
 ---
 
