@@ -151,7 +151,11 @@ export async function POST(request: NextRequest) {
         } catch (wlErr) {
           console.warn('[EMAIL-CODE] waitlist capture failed (non-fatal):', wlErr);
         }
-        console.log(`[EMAIL-CODE] Not admitted → waitlist: ${normalizedEmail}`);
+        // Same boundary as the send logs below: the address is already recorded
+        // in `beta_waitlist` (inserted immediately above), so the log line does
+        // not need to carry it. Preference order 1 in lib/privacy/memberRef.ts —
+        // emit no identifier when correlation is not actually needed.
+        console.log('[EMAIL-CODE] Not admitted → waitlist');
         return NextResponse.json({ status: 'waitlist' });
       }
     }
@@ -285,7 +289,27 @@ export async function POST(request: NextRequest) {
     }
 
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/email-code', metadata: { isExistingMember, channel: 'code' } });
-    console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember}, id: ${sendResult.id ?? 'none'})`);
+    // NO RAW ADDRESS ON THE SUCCESS PATH.
+    //
+    // The refusal path at the top of this block was redacted in #1074; the
+    // success path — which is the path almost every send actually takes — was
+    // still interpolating the member's real email address into container
+    // stdout, where `docker logs` makes it readable to anyone with host access.
+    // A redacted failure log beside a raw success log is not a privacy boundary.
+    //
+    // `memberRef()` is pseudonymous and correlatable, NOT anonymous (see
+    // lib/privacy/memberRef.ts): it gives operators one stable token to follow a
+    // member through a log window, and it is still member-linked data. For an
+    // address with no member row yet it renders `anonymous`; the address itself
+    // remains recorded in `magic_link_tokens` and `onboarding_events`, which is
+    // where an identified record belongs.
+    //
+    // `sendResult.id` is deliberately KEPT. It is provider-issued, not
+    // member-derived, and it is the only way to distinguish "provider accepted
+    // and issued a message ID" from "provider accepted but returned nothing".
+    console.log(
+      `[EMAIL-CODE] Code sent for member=${memberRef(memberId)} (existing: ${isExistingMember}, id: ${sendResult.id ?? 'none'})`
+    );
 
     // NO `isExistingMember` IN THE RESPONSE. Returning it told any anonymous
     // caller whether an address has a Soullab account BEFORE that caller had
