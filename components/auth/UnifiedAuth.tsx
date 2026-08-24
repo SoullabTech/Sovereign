@@ -30,6 +30,12 @@
  * a member holding a valid password should not be stranded while we decide whether
  * the failure was permanent. Email remains the default the moment sending works.
  *
+ * 2026-08-24 (third pass): the card also REMEMBERS a failed send, per browser, for
+ * 30 minutes. Without that, every fresh visit reopened on the email field and walked
+ * the member back into the same wall. It now opens on username + password instead —
+ * still one click from email via "← Back to email", cleared the instant a send
+ * succeeds, and expiring on its own since an outage ends without telling us.
+ *
  * Both app/signin/page.tsx and app/signup/page.tsx render this. Visual language:
  * dark navy + holoflower, matching /welcome-back. No teal, no induction.
  */
@@ -89,6 +95,39 @@ function generatePassword(): string {
 
 type Phase = 'email' | 'code' | 'name' | 'password' | 'waitlist';
 
+/**
+ * Remember, per browser, that email-code sending is currently failing.
+ *
+ * The failure state already reorganizes the card once a send fails. But without
+ * memory, every subsequent visit opens on the email field again and walks the
+ * member back into the same wall — type address, wait, read the same refusal.
+ * A door known to be shut should not be the one the page opens on.
+ *
+ * Deliberately short-lived and per-browser: a provider outage ends without
+ * telling us, so this expires on its own and any successful send clears it
+ * immediately. Storage is best-effort — a private window or blocked site data
+ * just means the member gets the pre-existing behavior, never an error.
+ */
+const EMAIL_DOWN_KEY = 'maia_email_transport_down';
+const EMAIL_DOWN_TTL_MS = 30 * 60 * 1000;
+
+function markEmailTransportDown(): void {
+  try { localStorage.setItem(EMAIL_DOWN_KEY, String(Date.now())); } catch { /* best-effort */ }
+}
+function clearEmailTransportDown(): void {
+  try { localStorage.removeItem(EMAIL_DOWN_KEY); } catch { /* best-effort */ }
+}
+function emailTransportRecentlyDown(): boolean {
+  try {
+    const at = Number(localStorage.getItem(EMAIL_DOWN_KEY));
+    if (!at || Number.isNaN(at)) return false;
+    if (Date.now() - at > EMAIL_DOWN_TTL_MS) { clearEmailTransportDown(); return false; }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function UnifiedAuthInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -112,6 +151,18 @@ function UnifiedAuthInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
+
+  // If this browser hit an email-send failure recently, open on username + password
+  // instead of walking the member back into the door we know is shut. Runs after
+  // mount (never in the useState initializer) so the server-rendered markup and the
+  // first client render agree — localStorage does not exist during SSR.
+  useEffect(() => {
+    if (preVerified || usernameParam) return; // an explicit intent already chose the phase
+    // Only the opening phase changes. sendBlocked stays false so that "← Back to
+    // email" shows an ordinary, retryable card rather than a demoted Continue with
+    // no error beside it explaining the demotion.
+    if (emailTransportRecentlyDown()) setPhase('password');
+  }, [preVerified, usernameParam]);
   const arrivalSignin = isFeatureEnabled('arrivalSignin'); // Arrival remodel — fully transitioned (default on; flag is a kill-switch). Presentation only.
   // Arrival remodel — navy cosmos + subtle plum atmosphere; the controls stay the original navy (plum reverted per brand
   // direction 2026-07-22: navy foundation, plum only as the bloom). Only card + field + holoflower + copy differ. Presentation only.
@@ -206,15 +257,18 @@ function UnifiedAuthInner() {
       if (!res.ok) {
         setError(data?.error || 'Could not send the code. Please try again.');
         setSendBlocked(true);
+        markEmailTransportDown();
         return;
       }
       // Private beta: a non-admitted email is waitlisted server-side (no code sent).
       if (data?.status === 'waitlist') { setPhase('waitlist'); return; }
+      clearEmailTransportDown();
       setCode('');
       setPhase('code');
     } catch {
       setError('Could not send the code. Please try again.');
       setSendBlocked(true);
+      markEmailTransportDown();
     } finally {
       setIsLoading(false);
     }
