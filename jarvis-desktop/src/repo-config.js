@@ -21,6 +21,30 @@ const CONFIG_VERSION = 1;
 const CONFIG_DIRNAME = 'JARVIS';
 const CONFIG_FILENAME = 'config.json';
 
+// The base directory is injected because the Desktop gets it from Electron
+// (`app.getPath('appData')`), which is authoritative there and must stay so.
+//
+// The JARVIS runtime has no Electron and still has to read the binding the
+// founder chose in Preferences — otherwise "the repository I named" would mean
+// one thing on screen and nothing at all to the process that routes work. This
+// mirrors Electron's own appData mapping for that case, and is deliberately a
+// SEPARATE function rather than a default parameter: a non-Electron caller is
+// making a mirroring assumption, and the evidence it emits should be able to
+// say so and print the path it actually read.
+//
+// If Electron's mapping ever diverges from this one, the symptom is the runtime
+// reading a config file the Desktop never wrote. That is why every binding
+// report carries `config_path` — the divergence surfaces as two named paths
+// rather than as an unexplained absence.
+function defaultAppSupportDir(env, platform, homedir) {
+  const e = env || process.env;
+  const plat = platform || process.platform;
+  const home = homedir || require('node:os').homedir();
+  if (plat === 'darwin') return path.join(home, 'Library', 'Application Support');
+  if (plat === 'win32') return e.APPDATA || path.join(home, 'AppData', 'Roaming');
+  return e.XDG_CONFIG_HOME || path.join(home, '.config');
+}
+
 /** ~/Library/Application Support/JARVIS/config.json, given the OS app-support dir. */
 function configDir(appSupportDir) {
   return path.join(appSupportDir, CONFIG_DIRNAME);
@@ -141,5 +165,6 @@ function clearConfig(appSupportDir) {
 
 module.exports = {
   CONFIG_VERSION, configDir, configPath, readConfig, writeConfig, clearConfig,
+  defaultAppSupportDir,
   promptSeen, markPromptSeen,
 };

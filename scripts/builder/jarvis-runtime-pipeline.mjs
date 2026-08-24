@@ -26,15 +26,35 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { lintLeakage, bindSelector, headOf } from './jarvis-packet-guard.mjs';
 import { validateWorkerGate } from './jarvis-governance-gate.mjs';
 import { materializePacket, budget } from './jarvis-context.mjs';
 import { AIN_HOME, nowISO } from './jarvis-runtime-store.mjs';
+import { resolveBinding, BINDING_UNRESOLVED } from './jarvis-binding.mjs';
 
-export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const DELEGATE = path.join(REPO_ROOT, 'scripts', 'ain-delegate.sh');
-const SESSION = path.join(REPO_ROOT, 'scripts', 'builder', 'session.mjs');
+// ── JEM-00: the runtime knows which repository it is bound to, and can say so ──
+//
+// This used to be `path.resolve(__dirname, '..', '..')` — an unverified
+// inference from where this file happens to sit, carrying no provenance and
+// consulting neither JARVIS_REPO_ROOT nor the repository the founder named in
+// Preferences. It is now the same resolution the Desktop performs, through the
+// same modules, with the same vocabulary. For every checkout that was already
+// resolving correctly the answer is byte-identical: the walk still wins, and
+// this file lives inside the checkout it belongs to. What changed is the two
+// cases that used to be silent — a checkout that has lost the canonical markers
+// now falls THROUGH to the explicit ladder instead of binding anyway, and a
+// runtime that cannot resolve at all now refuses by name instead of routing
+// work into a directory nobody vouched for.
+export const BINDING = resolveBinding();
+export const REPO_ROOT = BINDING.root;
+
+// Null-safe on purpose. An unresolved binding must reach the founder as
+// REPO_BINDING_UNRESOLVED at the moment routing is attempted — not as a
+// TypeError thrown while this module is still loading, which would take down
+// every importer including the proofs that exist to diagnose it.
+const inRepo = (...parts) => (REPO_ROOT ? path.join(REPO_ROOT, ...parts) : null);
+const DELEGATE = inRepo('scripts', 'ain-delegate.sh');
+const SESSION = inRepo('scripts', 'builder', 'session.mjs');
 const PACKETS_DIR = path.join(AIN_HOME, 'packets');
 const RESULTS_DIR = path.join(AIN_HOME, 'results');
 const LOGS_DIR = path.join(AIN_HOME, 'logs');
@@ -259,6 +279,20 @@ export async function executeRun(run, ctx) {
 
   // ── CONTEXT_ROUTING ────────────────────────────────────────────────────────
   T('CONTEXT_ROUTING', {});
+
+  // Everything below this line claims a worktree, spawns a worker and writes to
+  // a filesystem. None of it may proceed on an unverified repository. The
+  // refusal is named rather than left to surface downstream as WORKTREE_CLAIM_
+  // FAILED, because "I do not know which repository I am" and "I know, and the
+  // claim failed" are different conditions with different fixes.
+  if (!REPO_ROOT || !BINDING.markers_verified) {
+    return fail(BINDING_UNRESOLVED, BINDING.config_problem
+      || `no repository carrying the canonical Builder OS markers (${BINDING.markers.join(', ')}) resolved from ${BINDING.launched_from}; set JARVIS_REPO_ROOT or bind one in JARVIS Preferences`);
+  }
+  // A divergence is not a refusal — binding two planes to two checkouts can be
+  // deliberate. It is recorded on the run so the evidence says which repository
+  // this work actually landed in, rather than leaving it to be assumed.
+  if (BINDING.divergence) T('CONTEXT_ROUTING', { binding_divergence: BINDING.divergence });
 
   // Leakage is a property of the packet alone — it needs no repository. Lint FIRST
   // so a leaking packet is refused before it can claim a worktree or a Builder slot.

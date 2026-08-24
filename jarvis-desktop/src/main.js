@@ -51,26 +51,15 @@ if (!app.isPackaged) {
 // A candidate root is valid only if ALL FOUR canonical markers are present —
 // existence of a directory alone is not accepted as AVAILABLE.
 // ---------------------------------------------------------------------------
-const CANONICAL_MARKERS = [
-  ['scripts', 'builder', 'session.mjs'],
-  ['scripts', 'builder', 'deterministic.mjs'],
-  ['scripts', 'builder', 'router.mjs'],
-  ['package.json'],
-];
-function isValidRepoRoot(dir) {
-  return CANONICAL_MARKERS.every((parts) => fs.existsSync(path.join(dir, ...parts)));
-}
+//
+// The marker set and the two operations over it moved to repo-markers.js at
+// JEM-00, so the JARVIS runtime asks the same question with the same answer
+// rather than inferring a repository from where a source file happens to sit.
+// Nothing about the Desktop's behaviour changes: this is the same definition,
+// relocated so it can have exactly one implementation.
+const { CANONICAL_MARKERS, isValidRepoRoot, findRepoRootByWalk } = require('./repo-markers');
 
-function findRepoRootDevMode(start) {
-  let dir = start;
-  for (let i = 0; i < 8; i++) {
-    if (isValidRepoRoot(dir)) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return null;
-}
+const findRepoRootDevMode = (start) => findRepoRootByWalk(start);
 
 // The installed app must find its substrate without Terminal help, so the
 // order below is: what the founder explicitly named (env, then persisted
