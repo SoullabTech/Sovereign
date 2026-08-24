@@ -150,16 +150,66 @@ meaningless. Fixed before any measurement was taken.
 add` is an interactive command in a Claude Code client. This work ran in a non-interactive
 remote container that cannot install a plugin into its own running session.
 
-**Step 4 — differential benchmark: NOT RUN.** It requires two comparable interactive sessions
-on a machine with the real toolchain (iOS simulator, browser, minisforum access). None of
-that exists here. The protocol and the verified instrument are ready:
-`benchmark/PROTOCOL.md` + `benchmark/measure-session.py`.
+**Step 4 — differential benchmark: NOT RUN. Attempted 2026-08-24; blocked by environment.**
+Measured constraints of the container this lane ran in:
+
+```
+uname -srm            Linux 6.18.44-fc-v21 x86_64      -> not the Mac Studio
+command -v xcrun      absent                            -> no iOS simulator
+command -v ssh        No such file or directory         -> minisforum unreachable
+~/.claude/projects    1 transcript (this session's own) -> no A/B corpus exists
+```
+
+The protocol requires a task that "naturally requires orientation **plus at least one
+visual/image-producing verification step**". That step is the entire bucket under test, and
+it cannot be exercised here: there is no simulator, and a headless screenshot written to a
+file never enters the main context the way an MCP image result does.
+
+⛔ **A degraded run was deliberately not substituted.** Benchmarking the adapter without the
+image bucket would produce a real number about the least important part, which would then be
+generalized. Reporting a measurement whose provenance does not match the claim is the exact
+failure this whole lane is disciplined against — the same shape as the `~121k` bucket
+standing in for a measured effect.
+
+### Static input to the benchmark (NOT a result)
+
+One thing IS measurable without a session: what the adapter **costs**. Measured on this
+commit — the cost side of the ledger the differential must beat.
+
+| | Bytes | ~tok | Resident |
+|---|---:|---:|---|
+| `SessionStart` hook output | 904 | **226** | every session |
+| 4 skill descriptions (frontmatter) | 1,597 | **399** | every session |
+| **Always-resident total** | **2,501** | **~625** | every session |
+| Skill bodies + references | 20,699 | ~5,175 | **only on trigger** |
+
+So the adapter must recover more than **~625 tokens/session** to be worth its own weight —
+before any argument about correctness. This is arithmetic on file sizes, not a session
+measurement, and it says nothing about whether the recovery happens.
+
+The protocol and the verified instrument are ready: `benchmark/PROTOCOL.md` +
+`benchmark/measure-session.py`.
 
 **Claims that remain forbidden until the differential runs:**
 
 - ⛔ "Image isolation recovers ~121k tokens/session." Measured bucket ≠ measured effect.
 - ⛔ "Context cost dropped ~54%." A projection from measured inputs, not a result.
 - ⛔ "Governance is enforced." A committed hook is a file. Enforcement starts at install.
+
+## Open items — separate units, deliberately not built here
+
+1. **Protected-branch force-push has no control underneath the hook.** The other three
+   prohibitions each sit on a real boundary (`flock`, the Dockerfile tripwire,
+   `check:no-supabase` in pre-commit + CI). This one does not, unless GitHub branch
+   protection / rulesets are configured on `SoullabTech/Sovereign`. **Do not describe that
+   prohibition as mechanically secure.** The correct proof is a GitHub-side ruleset, not
+   another Claude hook. Unverified as of 2026-08-24.
+
+2. **Correction-dependency propagation.** Recorded as a learning episode at
+   `docs/ops/JARVIS_LEARNING_EPISODE_CORRECTION_PROPAGATION_2026-08-24.md`. A verified
+   correction could not identify the operational instructions depending on the corrected
+   fact, so a mandatory gate stayed executably false for ~a month while four documents
+   recorded the right answer. **Evidence for a future capability; not authorized here.**
 
 ## To close this ruling
 
