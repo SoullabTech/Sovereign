@@ -51,6 +51,12 @@ than inheriting the conclusion.**
 
 **`PRESERVE`** — and correct the census conclusion when it is re-authored.
 
+> **CORRECTION (same day, capability census).** The line above overstated the wiring. The
+> handlers and the preload bindings exist, but `renderer.js` makes **zero** calls to them and
+> `index.html` has no runs surface. Recall is reachable at the IPC layer and stops there —
+> nothing in the Desktop asks. The accurate disposition is **`RECONNECT`**, not `PRESERVE`.
+> See `JARVIS_01_CAPABILITY_CENSUS_2026-08-24.md` §10.
+
 ### 2. `epistemic-guard.mjs` — capabilities confirmed, **as reported**
 
 Present at the base (33,692 bytes). Provides a real status lattice
