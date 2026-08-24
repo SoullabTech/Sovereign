@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getEntitlements } from '@/lib/entitlements';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 export const revalidate = false;
 
@@ -27,9 +29,9 @@ export async function GET(request: NextRequest) {
   }
 
   // Auth check
-  const memberId = request.headers.get('x-member-id');
+  const memberId = await getMemberIdFromRequest(request);
   if (!memberId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return unauthenticatedResponse();
   }
 
   // Entitlement check

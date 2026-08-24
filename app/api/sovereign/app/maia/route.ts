@@ -43,6 +43,8 @@ import { probeAuthPosture } from '@/lib/auth/authPostureProbe';
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 // Serverless platform config (prevents platform killing long-running DEEP requests)
 export const runtime = 'nodejs';
@@ -142,10 +144,42 @@ export async function POST(req: NextRequest) {
 
     const session = await ensureSession(sessionId);
 
+    // ─── AUTH-01-D · IDENTITY BOUNDARY ────────────────────────────────────────
+    // Before this unit, `userId` came straight out of the request BODY and became
+    // member identity with no credential anywhere in the handler. Any unauthenticated
+    // caller could name any member and this route would read their developmental
+    // memory into the prompt and write relational entries attributed to them — on the
+    // route carrying ~99.6% of live conversation traffic.
+    //
+    // Anonymous conversation is preserved and is now STRUCTURALLY separate from member
+    // identity:
+    //   · member identity comes only from a verified session (getMemberIdFromRequest);
+    //   · body `userId` is a CLAIM — it never selects a member, and a mismatch against
+    //     the verified session fails closed;
+    //   · no verified session ⇒ guest, and a guest reads no member material and writes
+    //     nothing member-attributed.
+    const verifiedMemberId = await getMemberIdFromRequest(req);
+    const claimedUserId = typeof userId === 'string' ? userId.trim() : '';
+    const isGuestMarker =
+      claimedUserId === '' || claimedUserId === 'guest' || claimedUserId.startsWith('anon:');
+
+    if (verifiedMemberId && claimedUserId && !isGuestMarker && claimedUserId !== verifiedMemberId) {
+      console.warn(
+        '[MAIA/sovereign] AUTH-01-D: body userId does not match the authenticated session — refusing (possible impersonation attempt)'
+      );
+      return unauthenticatedResponse('identity_mismatch');
+    }
+
+    // `memberId` is null for guests. Every member-scoped read/write below keys off it.
+    const memberId: string | null = verifiedMemberId;
+    // A stable conversation label that is NOT an identity assertion.
+    const identityRef: string = memberId ?? (isGuestMarker && claimedUserId ? claimedUserId : 'guest');
+    // ──────────────────────────────────────────────────────────────────────────
+
     // Touch active session for maintenance mode tracking
     await touchActiveSession({
       sessionId: session.id,
-      memberId: userId,
+      memberId: memberId ?? undefined,
       anonId: null,
     });
 
@@ -153,9 +187,13 @@ export async function POST(req: NextRequest) {
     let cognitiveProfile = null;
     let fieldSafety = null;
 
-    if (userId || session.id) {
+    // AUTH-01-D: for a member this is keyed to the VERIFIED member. For a guest it
+    // falls back to the conversation session id — which is the guest's own session,
+    // not member material — so the protective field-safety gate still runs for guests
+    // rather than being silently disabled for them.
+    if (memberId || session.id) {
       try {
-        cognitiveProfile = await getCognitiveProfile(userId || session.id);
+        cognitiveProfile = await getCognitiveProfile(memberId ?? session.id);
 
         if (cognitiveProfile) {
           fieldSafety = enforceFieldSafety({
@@ -220,15 +258,18 @@ export async function POST(req: NextRequest) {
     const isSanctuary = !!(meta as any)?.sanctuary;
     let memoryInfluenceAddendum: string | undefined;
     let forwardReadinessAddendum: string | undefined;
-    if (!isSanctuary && userId && userId !== 'guest' && !userId.startsWith('anon:')) {
+    // AUTH-01-D: gated on the VERIFIED member. The old guest/anon string checks are
+    // gone because `memberId` is null for guests by construction — a guest can no
+    // longer reach member developmental memory or theme signals by naming a member.
+    if (!isSanctuary && memberId) {
       try {
         const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
-          loadRecentDevelopmentalMemories(userId, 3),
-          loadRecentThemeSignals(userId, 10),
+          loadRecentDevelopmentalMemories(memberId, 3),
+          loadRecentThemeSignals(memberId, 10),
         ]);
         const memoryPlan = buildMemoryInfluencePlan({
           message,
-          userId,
+          userId: memberId,
           conversationHistory: [],
           recentDevelopmentalMemories,
           recentThemeSignals,
@@ -246,7 +287,7 @@ export async function POST(req: NextRequest) {
           console.log('[MAIA/sovereign] memory-plan', summarizePlanForLog(memoryPlan));
         } else {
           console.log('[MAIA/sovereign] memory-plan inactive', {
-            userId: memberRef(userId),
+            userId: memberRef(memberId),
             developmentalCount: recentDevelopmentalMemories.length,
             themeCount: recentThemeSignals.length,
             msgLen: message.length,
@@ -267,8 +308,8 @@ export async function POST(req: NextRequest) {
       }
     } else {
       console.log('[MAIA/sovereign] memory orchestrator skipped', {
-        reason: isSanctuary ? 'sanctuary' : !userId ? 'no-userid' : 'anon-or-guest',
-        userId: userId ?? null,
+        reason: isSanctuary ? 'sanctuary' : 'guest-or-unauthenticated',
+        userId: memberId ? memberRef(memberId) : null,
       });
     }
 
@@ -289,7 +330,8 @@ export async function POST(req: NextRequest) {
           chatType: 'sovereign-interface',
           endpoint: '/api/sovereign/app/maia',
           safeMode: SAFE_MODE,
-          userId: userId, // 🧠 Pass userId for Dialectical Scaffold logging
+          // AUTH-01-D: verified member id, or a guest marker — never a caller-chosen member.
+          userId: identityRef, // 🧠 Pass identity ref for Dialectical Scaffold logging
           cognitiveProfile, // 🧠 Pass cognitive profile for downstream use
           fieldRouting: fieldSafety?.fieldRouting, // 🛡️ Pass field routing decision
           fieldWorkSafe: fieldSafety?.allowed ?? true, // 🛡️ Pass safety flag
@@ -364,7 +406,11 @@ export async function POST(req: NextRequest) {
     // sanctuary-origin row could not be identified — let alone removed — afterwards.
     // Enforced by app/api/sovereign/app/maia/__tests__/relationalSanctuaryGuard.test.ts.
     probeAuthPosture(req); // [auth-posture] Phase 0 — log-only, high-traffic sample point
-    const observerMemberId = userId || req.headers.get('x-member-id') || session?.id;
+    // AUTH-01-D: relational entries are MEMBER-ATTRIBUTED, so they are written only for
+    // a verified member. The old fallback chain (body userId → x-member-id header →
+    // session id) let an unauthenticated caller write into another member's relational
+    // field, and let a guest's material be attributed to a member.
+    const observerMemberId = memberId;
     if (observerMemberId && message && orchestratorResult.text && !isSanctuary) {
       observeRelationalContent(observerMemberId, message, orchestratorResult.text, {
         isSanctuary,

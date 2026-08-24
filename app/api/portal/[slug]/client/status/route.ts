@@ -7,6 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -23,7 +25,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
-    const memberId = request.headers.get('x-member-id');
+    const memberId = await getMemberIdFromRequest(request);
 
     if (!memberId) {
       return NextResponse.json({

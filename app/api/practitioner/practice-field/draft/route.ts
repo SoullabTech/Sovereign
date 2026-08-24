@@ -14,6 +14,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 const HAIKU_MODEL = 'claude-haiku-4-5';
 
@@ -39,9 +41,9 @@ function getAnthropicClient(): Anthropic | null {
 }
 
 export async function POST(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id');
+  const memberId = await getMemberIdFromRequest(request);
   if (!memberId) {
-    return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+    return unauthenticatedResponse();
   }
 
   const body = await request.json().catch(() => null);

@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -93,30 +94,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get identity from multiple sources (priority order):
-    // 1. Session cookie (web browsers)
-    // 2. x-member-id header (Capacitor/iOS apps where cookies don't work cross-origin)
-    // 3. id query param (legacy fallback)
-    const session = await getCurrentSession();
-    let memberId = session?.memberId ?? null;
-
-    // For Capacitor apps, accept x-member-id header (cookies don't work cross-origin)
-    if (!memberId) {
-      const memberIdHeader = request.headers.get('x-member-id');
-      if (memberIdHeader && isValidUUID(memberIdHeader)) {
-        memberId = memberIdHeader;
-        console.log(`[/api/members/me] Using x-member-id header: ${memberId.substring(0, 8)}...`);
-      }
-    }
-
-    // Legacy fallback: id query param
-    if (!memberId) {
-      const idParam = request.nextUrl.searchParams.get('id');
-      if (idParam && isValidUUID(idParam)) {
-        memberId = idParam;
-        console.log(`[/api/members/me] Using id query param: ${memberId.substring(0, 8)}...`);
-      }
-    }
+    // AUTH-01-D: identity comes ONLY from a verified credential.
+    //
+    // Two fallbacks were removed here, both of which let a caller name any member:
+    //   - `x-member-id` header, accepted on nothing more than well-formed UUID shape
+    //     (not even an existence check), and
+    //   - `?id=<uuid>` query param, which made this route readable by URL alone.
+    // Member UUIDs are exposed to clients, so neither was ever evidence of identity.
+    //
+    // Mobile/Capacitor is NOT losing its path: getMemberIdFromRequest accepts the
+    // `x-session-token` header that apiFetch already sends from localStorage when
+    // iOS blocks cross-origin cookies, and validates it against auth_sessions.
+    const memberId = await getMemberIdFromRequest(request);
 
     if (!memberId) {
       return NextResponse.json(
