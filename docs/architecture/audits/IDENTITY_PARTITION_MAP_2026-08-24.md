@@ -156,3 +156,18 @@ produced no migration policy. Further table-counting on this question is **not**
 
 Succeeded by design-only unit **IDENTITY-CONTINUITY-01**
 (`IDENTITY_CONTINUITY_DESIGN_2026-08-24.md`) — no SQL, no writes.
+
+---
+
+## UNIT STATE (founder, 2026-08-24)
+
+PRESERVATION COMPLETE · CANONICAL ADMISSION OPEN · IMPLEMENTATION CLOSED
+
+### Admission rule (standing)
+
+- **Measured facts** must be **re-witnessed against current canonical** where §1 identifies mutable
+  substrate — OAuth resolution, minting sites, relation census, and current disagreement states.
+- **Founder ruling + Architecture C preference are governance authority.** A changed implementation
+  path may require updating the *substrate description*; it does **not** reopen the ruling.
+
+⛔ Otherwise *"the code moved"* accidentally becomes *"the decision is unsettled."*
