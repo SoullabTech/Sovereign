@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Send magic link email
     try {
-      await getResend().emails.send({
+      const { data: sendData, error: sendError } = await getResend().emails.send({
         from: 'Soullab <noreply@soullab.life>',
         to: normalizedEmail,
         subject,
@@ -220,7 +220,24 @@ The Soullab Team
         `.trim()
       });
 
-      console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember})`);
+      // Resend RESOLVES with { data, error } when the provider rejects a send —
+      // it does not throw, so the catch below never saw a refusal. Discarding
+      // this result is what let this route report success for mail Resend
+      // never accepted (2026-08-24 quota incident; same defect proven and
+      // fixed on /api/members/email-code).
+      //
+      // The provider's `name` is logged as its own field: "quota exhausted"
+      // and "domain not verified" are indistinguishable once flattened into a
+      // sentence, and they need opposite responses from an operator.
+      if (sendError) {
+        console.error('[MAGIC-LINK] Resend REFUSED the send:', { providerCode: sendError.name ?? 'unnamed', message: sendError.message });
+        return NextResponse.json(
+          { error: 'Failed to send magic link email. Please try again.' },
+          { status: 500 }
+        );
+      }
+
+      console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember}, resendId: ${sendData?.id ?? 'none'})`);
     } catch (emailError) {
       console.error('[MAGIC-LINK] Failed to send email:', emailError);
       return NextResponse.json(
