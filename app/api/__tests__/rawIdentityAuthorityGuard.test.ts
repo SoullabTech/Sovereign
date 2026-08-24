@@ -187,6 +187,24 @@ describe('AUTH-01-D · /api/sovereign/app/maia identity boundary', () => {
     expect(code).not.toMatch(/observerMemberId\s*=\s*userId/);
   });
 
+  it('guest cognition uses an EXPLICIT namespace, never a bare caller-supplied id', () => {
+    // cognitive_turn_events is keyed by a bare `user_id` string with a namespace-agnostic
+    // predicate, and session.id is upserted from the request BODY. Keying a guest read on
+    // a bare session.id would be a caller-controlled identity channel by another name.
+    expect(code).toContain('const guestKey = `guest:${session.id}`');
+    expect(code).toContain('const identityRef: string = memberId ?? guestKey;');
+    expect(code).toContain('await getCognitiveProfile(identityRef)');
+    // The bare forms must not return.
+    expect(code).not.toMatch(/getCognitiveProfile\(\s*session\.id/);
+    expect(code).not.toMatch(/getCognitiveProfile\(memberId \?\? session\.id/);
+  });
+
+  it('the guest namespace cannot collide with a member id', () => {
+    // Member ids are bare UUIDs; the prefix guarantees disjointness by construction.
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    expect(uuid.test('guest:11111111-1111-4111-8111-111111111111')).toBe(false);
+  });
+
   it('body userId never independently selects a member', () => {
     // `userId` may be destructured (it is a claim) but must not reach a member-scoped call.
     expect(code).not.toMatch(/loadRecent\w+\(userId/);

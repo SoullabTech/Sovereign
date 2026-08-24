@@ -172,8 +172,32 @@ export async function POST(req: NextRequest) {
 
     // `memberId` is null for guests. Every member-scoped read/write below keys off it.
     const memberId: string | null = verifiedMemberId;
+
+    // ⚠️ EXPLICIT GUEST NAMESPACE — required, not cosmetic.
+    //
+    // `cognitive_turn_events` is keyed by a bare `user_id` string
+    // (lib/consciousness/cognitiveEventsService.ts:137 — `WHERE user_id = $1`). That
+    // predicate is namespace-AGNOSTIC: it matches whatever string it is handed, with
+    // nothing distinguishing a member id from a session id.
+    //
+    // And `session.id` is NOT trusted input — `ensureSession()` upserts whatever
+    // `sessionId` arrived in the request BODY (lib/sovereign/sessionManager.ts:27).
+    // So keying a guest's cognitive read on a bare `session.id` would hand the caller
+    // an identity channel by another name: send `sessionId: "<a member's uuid>"` and the
+    // profile read resolves to that member's rows.
+    //
+    // The `guest:` prefix makes collision with a member id structurally impossible —
+    // member ids are bare UUIDs, and a prefixed string is not one. It is applied to the
+    // WRITE path too (via `identityRef` below), so guest turns stay partitioned per
+    // session instead of pooling into one shared bucket.
+    //
+    // ⚠️ Known and NOT closed here: `sessionId` itself is caller-supplied, so a caller
+    // who knows another guest's session UUID can still join that conversation's guest
+    // namespace. That is pre-existing session behaviour, out of AUTH-01-D's scope, and
+    // it can no longer reach MEMBER material.
+    const guestKey = `guest:${session.id}`;
     // A stable conversation label that is NOT an identity assertion.
-    const identityRef: string = memberId ?? (isGuestMarker && claimedUserId ? claimedUserId : 'guest');
+    const identityRef: string = memberId ?? guestKey;
     // ──────────────────────────────────────────────────────────────────────────
 
     // Touch active session for maintenance mode tracking
@@ -187,13 +211,12 @@ export async function POST(req: NextRequest) {
     let cognitiveProfile = null;
     let fieldSafety = null;
 
-    // AUTH-01-D: for a member this is keyed to the VERIFIED member. For a guest it
-    // falls back to the conversation session id — which is the guest's own session,
-    // not member material — so the protective field-safety gate still runs for guests
-    // rather than being silently disabled for them.
+    // AUTH-01-D: keyed to the VERIFIED member, or to the explicit guest namespace above
+    // — never to a bare caller-supplied identifier. The protective field-safety gate
+    // still runs for guests rather than being silently disabled for them.
     if (memberId || session.id) {
       try {
-        cognitiveProfile = await getCognitiveProfile(memberId ?? session.id);
+        cognitiveProfile = await getCognitiveProfile(identityRef);
 
         if (cognitiveProfile) {
           fieldSafety = enforceFieldSafety({
