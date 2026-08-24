@@ -1,5 +1,12 @@
 # Writer's Studio Phase 1 — Walk Evidence Record 002
 
+> **Standing, as of the v1.1 amendment (founder, 2026-08-24).** This run was judged against
+> specification **v1.0**, where P0 was a single criterion, and its findings stand exactly as
+> recorded — §3.3 judges a run against the version frozen before it began, and this record is not
+> re-judged. Under **v1.1** the verdict below reads as **P0-M PASS** (mechanism). **P0-D**, the
+> deployed-candidate witness, is owed, and **P0 as a whole is therefore not yet closed.** Nothing
+> in this record is withdrawn; what it did not prove is now named rather than assumed.
+
 > **This is the evidence record, not the specification and not an acceptance decision.**
 > It supersedes nothing in record 001; 001 recorded P0 against canonical, this records P0
 > against an assembled candidate. It authorizes nothing.
