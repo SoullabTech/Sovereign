@@ -46,21 +46,42 @@
 /**
  * Addresses as they appear inside prose.
  *
- * The local part is matched two ways, quoted form FIRST:
+ * DELIBERATELY OVER-INCLUSIVE. This is a privacy boundary, not a validator.
+ * The governing rule: if something looks enough like an address for a provider
+ * to have echoed it as a recipient, over-redact rather than preserve part of
+ * the local identity. Eating a stray quotation mark costs nothing; leaving
+ * `o'` behind is a real leak.
  *
+ * That rule was learned twice, from cases the earlier regexes half-matched —
+ * a partial match is worse than no match, because it silently satisfies a
+ * `not.toContain(WHOLE_ADDRESS)` assertion while a fragment of the local part
+ * survives:
+ *
+ *   o'connor@example.com                  -> `o'` survived (apostrophe excluded)
+ *   weird!#$%&'*+-/=?^_`{|}~@example.com  -> `weird!#$%&'` survived (same cause)
+ *   foo@localhost                         -> untouched (domain required a dot)
+ *   foo@[192.168.0.1]                     -> untouched (domain required a letter)
+ *
+ * LOCAL PART, quoted form first:
  *   1. `"anything"@domain` — RFC 5321 permits a quoted local part, and it may
- *      contain SPACES. A character class that excludes whitespace (as the
- *      unquoted branch must, to avoid swallowing surrounding prose) cannot see
- *      it, so `"weird name"@example.com` would pass through untouched. Caught
- *      by the sanitiser's own unit test, not by inspection.
- *   2. Anything not whitespace or prose punctuation — deliberately permissive,
- *      because providers echo back MALFORMED addresses, and an
- *      `invalid_recipient` message is by definition about one of those. A
- *      strictly RFC-conformant matcher would miss the exact class of message
- *      most likely to be carrying an address.
+ *      contain SPACES, which the unquoted branch cannot see (it must exclude
+ *      whitespace or it would swallow the surrounding prose).
+ *   2. Everything up to whitespace or the punctuation that actually WRAPS an
+ *      address in prose: <> () [] , ; : and the double quote. Apostrophe is NOT
+ *      excluded — it is valid atext, and excluding it truncated the match. If a
+ *      provider wraps an address in single quotes we now eat the quote too;
+ *      that is the intended direction of the error.
+ *
+ * DOMAIN:
+ *   1. A bracketed literal `[192.168.0.1]` / `[IPv6:...]` — RFC 5321 address
+ *      literals, which providers do echo in rejection prose.
+ *   2. Otherwise dot-separated labels, with the dot OPTIONAL — so `localhost`
+ *      and other single-label destinations match. `invalid_recipient` prose is
+ *      by definition about malformed addresses; a matcher that only accepted
+ *      well-formed ones would miss the class most likely to carry an address.
  */
 const ADDRESS_IN_TEXT =
-  /(?:"[^"\n]*"|[^\s<>()[\],;:"']+)@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+/g;
+  /(?:"[^"\n]*"|[^\s<>()[\],;:"]+)@(?:\[[^\]\s]*\]|[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*)/g;
 
 /**
  * Replace every email address in `text` with `<redacted@domain>`.
