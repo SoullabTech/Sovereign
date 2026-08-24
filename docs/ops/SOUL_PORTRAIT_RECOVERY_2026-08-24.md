@@ -238,3 +238,45 @@ authorized here, and it is not needed to see the portraits.
 
 **No account merge. No member deletion.** Six Kelly-adjacent member records exist; consolidating
 them is a separate, larger question that this incident does not settle.
+
+---
+
+## Held state after the witness
+
+```text
+SOUL PORTRAITS LOST?          NO — 16 intact under ce284751
+WHY STUDIO SHOWS ZERO?        PROVEN — current member owns zero
+TWO-ACCOUNT SPLIT?            PROVEN
+OWNERSHIP RECONCILIATION?     CANDIDATE — not authorized
+MOVE 16 PORTRAITS NOW?        NO
+MERGE ACCOUNTS?               NO
+DB DELETE ACTIVITY            SEPARATE OPEN QUESTION
+```
+
+Two read-only follow-ups, both verified against a live PostgreSQL 16 fixture before shipping:
+
+**`scripts/kelly-identity-footprint.sh`** — answers *which identity is canonical*. It does not guess
+table names: it discovers every FK into `members(id)` from `pg_constraint` and counts rows per
+identity per table via `query_to_xml()`, so it covers surfaces nobody thought to list and cannot cite
+a column that does not exist. Also reports practitioner status (the `/studio/*` gate) and session
+recency. Encodes no decision — if the history is split across both identities there is no cheap act,
+and canonical identity is a founder ruling, not a query result.
+
+**`scripts/soul-portrait-delete-trace.sh`** — the six deletes get their own trace rather than a
+dismissal. Its first question is whether evidence survives at all: if `log_statement = 'none'`, the
+six cannot be identified from logs and no further searching will change that. The bounded finding
+stands without any log — six *unconsented draft* rows, at an unrecorded time, with no consented or
+published portrait possible among them (the NO ACTION FK refuses that delete) and the arithmetic
+closing exactly. A hit in its §4 would contradict the Phase 1 "no code deletes portraits" finding and
+re-open it.
+
+### Note for whoever runs the reconciliation
+
+`practitioners.member_id` is declared `ON DELETE CASCADE` in one of its three competing definitions.
+Deleting a member would silently take their practitioner record with it. Another reason member
+deletion is not on the table.
+
+Unauthenticated `curl` against `/api/studio/whoami` and `/api/soul-portrait/mine` returns 401 and
+proves nothing about `ce284751` — those routes need a real session. Test by signing into the browser
+as kelly@soullab.life, or read practitioner status from §2 of the footprint census.
+
