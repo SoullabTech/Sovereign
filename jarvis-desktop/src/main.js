@@ -777,19 +777,59 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
-      const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
+      // REPO_ROOT was a free variable here — declared nowhere in this file, in
+      // every revision since JOP-00. Reading it threw ReferenceError on the
+      // first line of this lane, so the evidence substrate below had never once
+      // run in the app. The C1 test passed throughout because it defines its own
+      // REPO_ROOT and exercises the canonical modules directly, never this
+      // wiring. Bound through currentRoot() now, like every other consumer, so a
+      // Preferences rebind is honoured without a relaunch.
+      const evidenceRoot = currentRoot();
+      const ctxPath = path.join(evidenceRoot, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(evidenceRoot, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const derivePath = path.join(evidenceRoot, 'scripts', 'builder', 'jarvis-context-derive.mjs');
+      const { materializePacket, renderFragments, budget } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
-      const selectors = Array.isArray(task.context_selectors) ? task.context_selectors : [];
+      // ── evidence selection ────────────────────────────────────────────────
+      // A declared packet always wins: a task author who named their selectors
+      // gets exactly those, untouched. Only an undeclared task is derived for,
+      // because the founder should not have to know this field exists to ask
+      // JARVIS about the repository it is bound to.
+      const declared = Array.isArray(task.context_selectors) ? task.context_selectors : [];
+      let selectors = declared;
+      let context_origin = declared.length ? 'declared' : 'none';
+      let derivation_error = null;
+      if (!declared.length && task.prompt) {
+        try {
+          const { deriveContextSelectors } = await import(`file://${derivePath}?t=${Date.now()}`);
+          const derived = deriveContextSelectors(task.prompt, evidenceRoot);
+          if (derived.length) { selectors = derived; context_origin = 'derived'; }
+        } catch (e) {
+          // Derivation is allowed to fail. It must never fabricate, and its
+          // failure must not read as a broken evidence request: no selectors
+          // means UNVERIFIED below, which is the honest outcome either way.
+          derivation_error = e.message;
+        }
+      }
+
       let fragments = [];
       let materialization_error = null;
       if (selectors.length) {
         // Fail closed: an unresolvable selector must not silently degrade into
         // "no evidence required". materializeOne throws on any invalid selector.
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, evidenceRoot);
+          // Derived evidence is trimmed to the worker's window rather than
+          // overflowing it — the Unit 7 failure this substrate was built for.
+          // A DECLARED packet is never trimmed: silently dropping a selector the
+          // author asked for would be a different kind of dishonesty.
+          if (context_origin === 'derived') {
+            while (selectors.length > 1 && !budget({ context_selectors: selectors }, evidenceRoot).within_budget) {
+              selectors = selectors.slice(0, -1);
+            }
+            fragments = materializePacket({ context_selectors: selectors }, evidenceRoot);
+          }
         } catch (e) {
           materialization_error = e.message;
         }
@@ -827,6 +867,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         materialization_error,
         fragmentCount: fragments.length,
         evidence,
+        contextOrigin: context_origin,
       });
 
       // C1: this checks that the local worker actually ran and identified
@@ -843,6 +884,12 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         correctness,
         correctness_reason,
         correctness_method: fragments.length ? 'canonical verifyEvidence() — materialized-fragment containment' : null,
+        // Where the evidence came from is part of the result, not a detail:
+        // a VERIFIED answer built on derived selectors was checked against
+        // fragments JARVIS chose, and the operator is entitled to see that.
+        context_origin,
+        context_selectors: selectors.map((sel) => ({ ref: sel.ref, selector: sel.selector, why: sel.why })),
+        derivation_error,
         fragments_offered: fragments.length,
         evidence,
       };

@@ -19,9 +19,10 @@
  * @param {string|null} input.materialization_error  message if selectors failed to resolve
  * @param {number}      input.fragmentCount          how many fragments were materialized
  * @param {object|null} input.evidence               canonical verifyEvidence() result
+ * @param {string}      [input.contextOrigin]         'declared' | 'derived' | 'none'
  * @returns {{correctness:'verified'|'failed'|'unverified', correctness_reason:string|null}}
  */
-function decideCorrectness({ materialization_error, fragmentCount, evidence }) {
+function decideCorrectness({ materialization_error, fragmentCount, evidence, contextOrigin }) {
   // Fail closed. An unresolvable selector must not degrade into "nothing to
   // check, therefore fine" — that would turn a broken evidence request into a
   // silent pass.
@@ -32,13 +33,20 @@ function decideCorrectness({ materialization_error, fragmentCount, evidence }) {
     };
   }
 
-  // No evidence context was requested. Honest state is UNVERIFIED, never
-  // VERIFIED: there is nothing for a claim to be contained by.
+  // No evidence context. Honest state is UNVERIFIED, never VERIFIED: there is
+  // nothing for a claim to be contained by. Since selectors can now be derived
+  // for an undeclared task, the reason distinguishes "nobody asked for
+  // evidence" from "we looked and this repository had nothing to offer" — the
+  // second is a finding about the question, not a missing field. The
+  // NO_EVIDENCE_CONTEXT code is stable across both: what must never vary is
+  // that neither becomes VERIFIED.
   if (!fragmentCount) {
     return {
       correctness: 'unverified',
       correctness_reason:
-        'NO_EVIDENCE_CONTEXT — task declared no context_selectors, so there is nothing to verify claims against',
+        contextOrigin === 'derived' || contextOrigin === 'none'
+          ? 'NO_EVIDENCE_CONTEXT — no repository evidence could be derived for this task, so there is nothing to verify claims against'
+          : 'NO_EVIDENCE_CONTEXT — task declared no context_selectors, so there is nothing to verify claims against',
     };
   }
 
