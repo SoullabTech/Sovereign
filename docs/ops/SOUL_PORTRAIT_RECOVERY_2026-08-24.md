@@ -4,12 +4,26 @@
 
 ## Verdict
 
-**B — FOUND IN LEGACY STORAGE. All 12 Soul Portraits are intact. Nothing was deleted, and no
-recovery write is required.**
+**B — FOUND IN LEGACY STORAGE. All 12 Soul Portraits are intact, and no recovery write is
+required.**
 
-`{"portraits":[]}` from `/api/soul-portrait/mine` is **correct behavior**, not data loss. Kelly's
-portraits have never lived in the `soul_portraits` table that the Studio index reads. They live in
-the repository, in the file-based registry, and are served by a different route.
+The claim is narrowed to exactly what the evidence supports (founder correction, 2026-08-24):
+
+```text
+Registry portraits       NOT LOST / NOT DELETED
+DB-backed portraits      NO DELETION FOUND IN CODE
+                         out-of-band DB history still UNKNOWN
+```
+
+"Nothing was deleted" is too broad. Code and git history are decisive about the registry and about
+what the *application* can do; they cannot speak to manual SQL, a restore, or volume loss. Only the
+DB witness closes that.
+
+`{"portraits":[]}` from `/api/soul-portrait/mine` is the **expected** result for the 12 portraits
+Kelly is looking for: they have never lived in the `soul_portraits` table the Studio index reads.
+They live in the repository, in the file-based registry, and are served by a different route. The
+empty array is not evidence that those 12 were lost. Whether *other*, DB-backed drafts once existed
+and are now absent is a separate question, still open below.
 
 ## The two disjoint portrait universes
 
@@ -48,7 +62,7 @@ index. They were never in it — the Studio index has only ever had two commits 
 Reachable now at `https://soullab.life/soul-portrait/<slug>` (unauthenticated, statically generated,
 unlisted — not linked from navigation).
 
-## Evidence that nothing was destroyed
+## Evidence — decisive for the registry, code-scope only for the DB
 
 1. **No portrait file was ever deleted, on any branch, in the entire history**
    (`git log --all --diff-filter=D -- '*soul*ortrait*'` → empty).
@@ -70,38 +84,40 @@ unlisted — not linked from navigation).
    soft-delete, archive, consent, published, or team filter, and the `studio_people` join is a
    LEFT JOIN, so it cannot drop rows.
 
-## Residual question (needs DB access — not available from this container)
+## Residual question — OPEN (needs the DB witness)
 
-This session has no SSH to minisforum and no `DATABASE_URL`, so the DB layer was not queried
-directly. The finding above rests on code and git history, which are decisive about the registry
-portraits. One question remains open: whether Kelly *additionally* created DB-backed drafts through
-`/soul-portrait/generate` that are now missing.
+This session has no SSH client (`ssh` absent, `~/.ssh` empty), no `DATABASE_URL`, and no route to
+the LAN — `192.168.0.104:5432` is unreachable from this cloud container, though `soullab.life:443`
+is. The three queries were therefore **not run**. This is environmental, not a permissions refusal.
 
-Given (2) and (3), if such rows were ever created they can only be missing via an out-of-band event
-(manual SQL, restore, volume loss) or — more likely — because they were generated against the
-**Mac Studio parallel dev stack** rather than production. Read-only confirmation:
+They are packaged as **`scripts/soul-portrait-db-witness.sh`** — run it from the Mac Studio:
 
 ```bash
-ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \"
-  SELECT owner_member_id, count(*), min(created_at), max(created_at)
-    FROM soul_portraits GROUP BY 1 ORDER BY 2 DESC;\""
-
-ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \"
-  SELECT sp.id, sp.slug, sp.portrait_kind, sp.owner_member_id, sp.subject_member_id,
-         sp.consent_state, sp.published_at, sp.created_at,
-         sp.immutable_text->'person'->>'name' AS subject_name
-    FROM soul_portraits sp ORDER BY sp.created_at DESC;\""
-
-ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \"
-  SELECT id, username, email, name, created_at FROM members
-   WHERE email ILIKE '%soullab1%' OR name ILIKE '%kelly%' OR username ILIKE '%kelly%'
-   ORDER BY created_at;\""
+scripts/soul-portrait-db-witness.sh
 ```
 
-If the first query returns **zero rows overall**, no practitioner has ever generated a DB portrait
-in production, and the Studio index has been empty since it shipped — closing the question with
-no incident. If it returns rows under a *different* Kelly `members.id`, that is a genuine
-Hypothesis-A ownership repair and warrants a scoped Phase 2 plan.
+Structurally read-only: every statement runs inside `BEGIN READ ONLY` with
+`default_transaction_read_only = on`, so a write would abort rather than execute. It covers the
+three recorded queries plus two integrity probes that speak directly to out-of-band deletion:
+
+- **§4 `pg_stat_user_tables.n_tup_del`** — lifetime physical deletes on `soul_portraits`.
+  `> 0` proves rows were deleted at some point. (`0` is weaker evidence than `> 0`: the counters
+  reset on `pg_stat_reset()` and are lost on crash recovery.)
+- **§5 orphaned consent-ledger rows** — the ledger is append-only and FK-references
+  `soul_portraits(id)`, so a portrait carrying ledger rows cannot be deleted without also removing
+  them or dropping the FK. An orphan is hard evidence of an out-of-band deletion.
+
+### Classification (founder ruling, 2026-08-24)
+
+| Result | Conclusion |
+|---|---|
+| `total_rows = 0` and `n_tup_del = 0` | **Architecture mismatch, not recovery.** Studio has never indexed the static registry. Close it. No Phase 2. |
+| Rows exist, none under another Kelly identity | **No recovery incident.** Same conclusion. |
+| Rows exist under another Kelly member ID | **Narrow Phase 2 — ownership reconciliation.** Still no write until the canonical identity is established and what moves is agreed. No account merge. |
+| `n_tup_del > 0`, orphaned ledger rows, or rows visibly absent | **Separate database integrity incident.** Not portrait recovery. Establish when, by what, and what else that operation touched, before any restore. |
+
+If the third row is what comes back, that is the only branch that opens a Phase 2, and it opens a
+scoped one: repair `owner_member_id` linkage on existing rows. Nothing is recreated from memory.
 
 ## Why no write was made
 
