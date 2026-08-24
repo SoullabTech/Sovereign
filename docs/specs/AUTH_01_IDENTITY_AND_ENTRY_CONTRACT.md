@@ -322,7 +322,7 @@ remain functional but are not where the person was sent.
 This is the finding the front-door redesign exists to fix. Nothing shipped so far
 touches it.
 
-### F10 — 27 routes read `x-member-id` without the hardened resolver · UNKNOWN
+### F10 — 27 routes read `x-member-id` without the hardened resolver · **RESOLVED → 20 UNSAFE**
 
 Census of `app/api/**/route.ts` (923 routes):
 
@@ -335,10 +335,24 @@ Census of `app/api/**/route.ts` (923 routes):
 Includes `app/api/sovereign/app/maia/route.ts` (the primary conversation route) and
 `app/api/members/me/route.ts`.
 
-**Not a vulnerability claim.** Some of these will verify identity by another sound path.
-But 27 routes decide identity without the one resolver hardened against header
-impersonation, and none has been read. This is the single largest unmeasured area in the
-auth surface and it needs its own bounded census — AUTH-01-C below.
+⚠️ **Censused 2026-08-24 — see `AUTH_01_C_XMEMBERID_AUTHORITY_CENSUS.md`. No longer UNKNOWN.**
+
+```
+🔴 UNSAFE AUTHORITY          20
+✅ SAFE — verified credential  2
+✅ SAFE — claim cross-checked  2
+⚪ NON-AUTHORITY USE           3
+❓ UNKNOWN                     0
+```
+
+Middleware does not mitigate: its `isAuthenticated()` accepts the caller's own header, unmapped API
+routes are allowed by default (`ACCESS_CONTROL_MODE` defaults to permissive), and tier/roles come
+from caller-controlled cookies. Highest-severity: `sovereign/app/maia` takes `userId` from the
+**request body** with no auth gate, on the route carrying ~99.6% of conversation traffic, and both
+reads developmental memory and writes `relationship_entries` with it.
+
+⛔ Classifications are **source-read**, not runtime-witnessed. Exploitation was deliberately not
+attempted.
 
 ### F11 — The server already honours the ruling. The client discards it. · VERIFIED
 
@@ -615,10 +629,9 @@ half of F4 with the smallest diff in the lane.
 **AUTH-01-B · Fix `|| true` at `webauthn/authenticate/verify:145`** — one token. Closes
 F6's acute form. (The cached-flag issue remains, and is fixed by the model in §4.)
 
-**AUTH-01-C · Census the 27 `x-member-id` routes** — read-only, no code change.
-Produces the finding that either closes F10 or escalates it. **This is the highest-value
-unit in the lane and it is pure inspection** — it should probably run first in parallel
-with A and B.
+**AUTH-01-C · Census the 27 `x-member-id` routes** — ✅ **COMPLETE, 2026-08-24.** It escalated:
+20 UNSAFE AUTHORITY. Remediation is now the lane's first priority and outranks every UX unit
+below, including E2. See `AUTH_01_C_XMEMBERID_AUTHORITY_CENSUS.md` §6.
 
 **AUTH-01-D · Production duplicate census** — run F2's two queries. Read-only. Tells us
 whether duplicate persons already exist, which determines whether §5 is a migration or
@@ -671,8 +684,8 @@ census before anyone touches them).
 
 ## 9. Standing
 
-**PROVEN:** ROOT CAUSE, F1, F2 (structure), F3, F4, F5, F6, F7 (bounded), F8, F9, F11, F12, F13, F14.
-**UNKNOWN:** F2 (live blast radius), F10, A11, A12 beyond `register-email`, and the
+**PROVEN:** ROOT CAUSE, F10 (resolved — 20 UNSAFE), F1, F2 (structure), F3, F4, F5, F6, F7 (bounded), F8, F9, F11, F12, F13, F14.
+**UNKNOWN:** F2 (live blast radius), A11, A12 beyond `register-email`, and the
 ~900 routes outside this census.
 **NOT CLAIMED:** that the entry paths censused here are the whole auth surface. They
 are not.
