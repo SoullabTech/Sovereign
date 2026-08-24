@@ -12,13 +12,30 @@ function setView(v) {
   render();
 }
 
+// ── VISUAL CANON: state badges read as language, not as enum tokens ──────────
+// Founder ruling 2026-08-17. The raw value is retained VERBATIM in the title
+// attribute so provenance is one hover away and nothing is lost — the token is
+// demoted from the surface, not deleted from the record.
+const STATE_COPY = Object.freeze({
+  READY:'operating', AVAILABLE:'operating', WORKING:'in progress',
+  NEEDS_SETUP:'needs setup', DEGRADED:'partly working',
+  NEEDS_AUTHORITY:'not authorized', BLOCKED:'blocked', FAILED:'failed',
+  UNAVAILABLE:'unavailable', UNVERIFIED:'not checked', UNKNOWN:'not checked',
+  HELD:'held', STALE:'gone quiet', CAPACITY:'queued',
+  AMBIGUOUS_OWNERSHIP:'two owners', LIVE:'live',
+});
+function stateBadge(raw) {
+  const v = String(raw || 'UNVERIFIED');
+  return `<span class="state ${v}" title="${v}">${STATE_COPY[v] || v.replace(/_/g,' ').toLowerCase()}</span>`;
+}
+
 function stateRow(label, s) {
   return `<div class="row">
     <div>
       <div class="label">${label}</div>
       ${s.detail ? `<div class="detail">${typeof s.detail === 'string' ? s.detail : JSON.stringify(s.detail).slice(0, 200)}</div>` : ''}
     </div>
-    <span class="state ${s.state}">${s.state}</span>
+    ${stateBadge(s.state)}
   </div>`;
 }
 
@@ -50,9 +67,16 @@ function provenanceRows(p) {
     </div>`;
 }
 
-// JOP-01 — every non-ready organ renders STATE · REASON · REMEDIATION · SOURCE.
-// A state badge with no reason is not an acceptable founder-facing fact; that
-// is the whole defect this unit exists to remove.
+// JOP-01 — every non-ready organ renders STATE · REASON · REMEDIATION.
+// A state badge with no reason is not an acceptable founder-facing fact.
+//
+// VISUAL-CANON REPAIR 2026-08-17: this used to synthesise a remediation row for
+// BY_DESIGN nodes reading "No operator action grants this." The data layer
+// deliberately sets remediation to null there, and the renderer invented copy to
+// fill the empty field — so the surface offered a Fix line for something no act
+// can grant. Presentation may not supply what the assertion withholds. If
+// remediation is null, NO row is drawn. The by-design meaning is already carried
+// by the badge and the reason.
 function organRow(o) {
   // Order matters: WHAT IT IS, then what's wrong, then what to do. A row must
   // never bottom out at an internal identifier — that is a legible-looking
@@ -63,10 +87,9 @@ function organRow(o) {
       ${o.describes ? `<div class="why">${o.describes}</div>` : ''}
       ${o.note ? `<div class="why">${o.note}</div>` : ''}
       ${o.reason ? `<div class="why">${o.reason}</div>` : ''}
-      ${o.remediation ? `<div class="fix">→ ${o.remediation}</div>`
-        : (o.state !== 'READY' && o.by_design ? '<div class="fix">→ No operator action grants this. It is absent by design.</div>' : '')}
+      ${o.remediation ? `<div class="fix">→ ${o.remediation}</div>` : ''}
     </div>
-    <span class="state ${o.state}">${o.state.replace('_', ' ')}</span>
+    ${stateBadge(o.state)}
   </div>`;
 }
 
@@ -93,7 +116,7 @@ function renderActiveWorkspace(ws, b) {
     return `<div class="card"><h3>Active workspace</h3>
       <div class="row"><div><div class="label">${b.bound ? b.root : 'No repository connected'}</div>
       <div class="src">source: live status · workspace detail unavailable from this build</div></div>
-      <span class="state ${b.state}">${b.state.replace('_', ' ')}</span></div></div>`;
+      ${stateBadge(b.state)}</div></div>`;
   }
 
   const actions = `
@@ -116,7 +139,7 @@ function renderActiveWorkspace(ws, b) {
           <div class="fix">→ Choose a repository to bind. It must be a git worktree carrying the canonical Builder OS markers.</div>
           <div class="src">source: live status · resolution ${ws.resolution}</div>
         </div>
-        <span class="state NEEDS_SETUP">NEEDS SETUP</span>
+        ${stateBadge('NEEDS_SETUP')}
       </div>
       ${actions}
     </div>`;
@@ -138,7 +161,7 @@ function renderActiveWorkspace(ws, b) {
         <div class="ws-git">Git: ${ws.git_connected ? 'connected' : 'not connected'} · ${gitLine}</div>
         <div class="src">source: live status · resolution ${ws.resolution}</div>
       </div>
-      <span class="state ${ws.git_connected ? 'READY' : 'DEGRADED'}">${ws.git_connected ? 'READY' : 'DEGRADED'}</span>
+      ${stateBadge(ws.git_connected ? 'READY' : 'DEGRADED')}
     </div>
     ${actions}
   </div>`;
@@ -185,7 +208,7 @@ function renderHome() {
               <div class="why">${h.means}</div>
               <div class="fix">→ ${h.remediation}</div>
             </div>
-            <span class="state HELD">${h.claim_state || 'HELD'}</span>
+            ${stateBadge(h.claim_state || 'HELD')}
           </div>`).join('')
         : `<div class="hint">${v.needs_founder.summary}</div>`}
     </div>
@@ -221,7 +244,7 @@ function renderSessionActions(sessions) {
           <div class="label">${sess.session_id} — ${sess.work_unit}</div>
           <div class="detail">${sess.mode || '?'} · ${sess.branch || '?'} · heartbeat ${lv.heartbeat_age_s ?? '?'}s</div>
         </div>
-        <span class="state ${lv.claim_state === 'LIVE' ? 'AVAILABLE' : 'HELD'}">${lv.claim_state || '?'}</span>
+        ${stateBadge(lv.claim_state || 'UNVERIFIED')}
       </div>
       <div class="acts">
         ${acts.map(a => `<button class="act" data-act="${a}" data-session="${sess.session_id}">${a}</button>`).join('')}
