@@ -9,7 +9,7 @@
 | `Superseded` | replaced by a later version; prior evidence remains judged against it | no |
 | `Withdrawn` | retired without replacement | no |
 
-**Current status: `Frozen` — version 1.0, frozen 2026-08-24. See the Freeze Record (§3).**
+**Current status: `Frozen` — version 1.1, frozen 2026-08-24. See the Freeze Records (§3).**
 
 ⭐ This field is authoritative. **Executability is read from it, never inferred from prose,
 completeness, or the presence of steps.** A specification that looks finished but is not
@@ -106,6 +106,20 @@ The specification is unfrozen between the two commits, and nothing is executed t
 produces a **new version with its own freeze record**; this one stays as the history of the
 version it froze.
 
+### Freeze Record — version 1.1
+
+| Field | Value |
+|---|---|
+| Status | `Frozen` |
+| Version | 1.1 |
+| Frozen by | Kelly (founder) — amendment authored by the founder, 2026-08-24; transcribed by Claude, who authored none of it |
+| Date | 2026-08-24 |
+| Reason | Run 001 judged P0 against canonical (FAIL). Run 002 judged it against an assembled candidate and passed it on a real PostgreSQL and a real file vault — but through the library code paths, on a local database, not on the deployed candidate. P0 is a **candidate** precondition, so the evidentiary referent must be exact: proving the mechanism is real is not the same as proving it is present in the environment the human walk will judge. v1.1 therefore splits P0 into **P0-M** (mechanism) and **P0-D** (deployed candidate witness), and P0 passes only when both do. This narrows nothing that was proven; it names what was not. |
+| Commit SHA of the frozen text | `PENDING_SEAL_V11` — filled by the sealing commit; see §3.1 |
+
+⛔ Per §3.3 this version **applies to subsequent runs only.** Evidence record 002 was judged
+against v1.0 and is not re-judged; its findings stand exactly as recorded.
+
 ## 4. Release candidate
 
 The walk evaluates **one named assembled object — never "the current branch."**
@@ -165,6 +179,19 @@ standing in for the member's actual path.
 ### Steps
 
 ### P0 — Source custody *(static precondition; evaluated before any member step)*
+
+> **v1.1 — P0 is satisfied by two witnesses, and passes only when both do.**
+>
+> | | Witness | Proves |
+> |---|---|---|
+> | **P0-M** | Mechanism | The custody mechanism is real: a durable artifact recovers byte-for-byte, a hash without recoverable bytes is refused, a paste cannot claim artifact provenance, and no arriving line is silently discarded. Admissible on a real database and a real vault, through the real migration and the real code paths. |
+> | **P0-D** | Deployed candidate | The **same** mechanism is present in the environment the human walk will judge: at least one real file-backed arrival through the actual ingest HTTP path on the deployed candidate, plus one pasted arrival, verified server-side. |
+>
+> ⛔ **P0-D may not be satisfied locally**, by an agent-driven browser, or by re-running the
+> mechanism controls. It exists to prove **deployment correspondence** — that what was proven
+> is what is deployed — and nothing else. It does not require repeating the destructive
+> negative leg: that was already proven against a real vault and database, and production is
+> not the place to prove it twice.
 
 > **For an imported Work, the candidate must preserve what actually arrived independently of any
 > segmentation or interpretation, and no arriving text may be silently discarded before the
