@@ -97,12 +97,17 @@ ids, not by overwriting the actor.
 
 ## 2. Recommended consolidation shape (to be confirmed against census output)
 
-The prior witness already shows the asymmetry that matters: the legacy identity's mass is
-**35 live sessions** — ephemeral auth state — while the canonical identity holds the 16
-portraits, which are the irreplaceable artifacts. So the cheapest safe consolidation moves
-*credentials*, not *content*.
+> ⚠️ **SUPERSEDED 2026-08-24 by §4.1.** This section's premise — that the legacy identity's
+> mass was ephemeral session state — did not survive the census. It holds thousands of content
+> rows plus 24 practitioner contacts that exist nowhere else. Option A is withdrawn as a
+> recommendation and kept below only as a superseded option. §4 is the current evidence.
 
-**Option A — move the login, not the data (recommended).**
+The prior witness suggested an asymmetry: the legacy identity's visible mass was **35 live
+sessions** — ephemeral auth state — while the canonical identity held the 16 portraits. On that
+reading the cheapest safe consolidation moved *credentials*, not *content*. The census disproved
+the premise.
+
+**Option A — move the login, not the data.** ~~(recommended)~~ **WITHDRAWN.**
 Point the credential Kelly actually signs in with at `ce284751…`, and retire `49ae4717…` as a
 person. Data rows move only where the census proves real Kelly content sits under the legacy
 id (`REBIND_CLEAN` rows). Portraits never move. Ledgers never move.
@@ -139,13 +144,131 @@ provenance of every ledger row that names it stays resolvable.
 
 ---
 
-## 4. Census result — NOT YET RUN
+## 4. Census result — RUN 2026-08-24 against production (`maia-postgres`)
 
-_Paste the census table here. Do not fill from memory or inference._
+Read-only, ended in ROLLBACK. **557 relations examined · 336 NO_OP · 86 UNCOUNTED · 0 ERROR.**
+A = `ce284751…` (`kelly@soullab.life`) · B = `49ae4717…` (`soullab1@gmail.com`).
 
-| table | column | fk | rows ce284751… | rows 49ae4717… | collision risk | merge rule |
-|---|---|---|---|---|---|---|
-| _(pending run on minisforum)_ | | | | | | |
+### 4.1 The finding that changes the plan
+
+**§2's recommendation was wrong on the facts, and is withdrawn.** It assumed B's mass was
+ephemeral session state. It is not. B holds thousands of rows of real MAIA history:
+
+| table | A | B |
+|---|---:|---:|
+| `conversation_memory_uses` | 45,425 | **2,155** |
+| `agent_runs` | 18,660 | **907** |
+| `conversation_turns` | 27,189 | **257** |
+| `memory_transition_records` | 316 | **244** |
+| `runtime_consent_state` | 492 | **110** |
+| `field_orchestrator_telemetry` | 1,967 | **108** |
+| `integration_passes` | 1,535 | **107** |
+| `trust_observations` | 353 | **52** |
+| `world_telemetry` | 376 | **35** |
+| `member_theme_signals` | 1,268 | **34** |
+| `developmental_memories` | 913 | **34** |
+| `relationship_entries` | 806 | **32** |
+| `breakthrough_moments` | 617 | **21** |
+| `reflection_capsules` | 275 | **19** |
+| `state_vectors` | 655 | **17** |
+| `episodic_memories` | 81 | **14** |
+
+B is a smaller but genuinely inhabited identity, not a shell. "Move the login, leave the data"
+would strand this material.
+
+### 4.2 Probable mechanism of the split — one row
+
+| table | column | A | B | rule |
+|---|---|---:|---:|---|
+| `oauth_accounts` | `member_id` | **0** | **1** | REBIND_CLEAN |
+
+B is the OAuth-linked identity and A is linked to no OAuth account. B's email is a Google
+address; B's `onboarded` is **false** and its `last_sign_in` is **NULL** — no record of ever
+completing the sign-in flow — while A signed in on 2026-08-24 20:47. The consistent reading is
+that a Google sign-in **minted a second member** instead of linking to the existing passkey
+member. **Candidate, not proven**: confirming it needs one narrow read of that row's `provider`
+(not the provider id). If it holds, the durable fix is at the OAuth-link layer, and it is a
+single row.
+
+Corroborating: `admin_role_grants` shows `actor_id` A=2 and `target_id` B=2 — A has already
+granted admin roles *to* B. The system has been treating them as two people, deliberately.
+
+### 4.3 Rows that live ONLY under B (REBIND_CLEAN)
+
+| table | column | A | B |
+|---|---|---:|---:|
+| `marketing_contacts` | `practitioner_id` | 0 | **24** |
+| `admin_role_grants` | `target_id` | 0 | 2 |
+| `oauth_accounts` | `member_id` | 0 | 1 |
+| `manifestation_corpus` | `member_id` | 0 | 1 |
+| `studio_team_members` | `invited_by` | 0 | 1 |
+
+`marketing_contacts` is the substantive one: 24 practitioner contacts exist **only** under the
+legacy identity and are invisible to the canonical login. Compare `practitioners.member_id`
+A=1 / B=2 — the practitioner side of the account is itself split across both identities.
+
+### 4.4 Uniqueness collisions — a blind rebind FAILS here (COLLISION_MANUAL — 9)
+
+| table | column | A | B | violated unique key |
+|---|---|---:|---:|---|
+| `usage_daily` | `member_id` | 93 | 11 | `(member_id, usage_date)` |
+| `team_channel_members` | `member_id` | 21 | 1 | pkey |
+| `studio_team_members` | `member_id` | 3 | 2 | `(team_id, member_id)` |
+| `member_settings` | `member_id` | 1 | 1 | `member_id` unique |
+| `member_spiral_state` | `member_id` | 1 | 1 | pkey |
+| `team_presence` | `member_id` | 1 | 1 | pkey |
+| `usage_voice_demo` | `member_id` | 1 | 1 | `member_id` unique |
+| `consciousness_evolution` | `user_id` | 1 | 1 | `user_id` unique |
+| `relationship_essences` | `user_id` | 1 | 1 | `user_id` unique |
+
+Each needs a human ruling: one row survives, the other must be preserved somewhere, and for the
+one-row-per-member tables (`member_settings`, `member_spiral_state`) that choice **changes
+MAIA's behavior** for the reconciled member. `pattern_ledger` (A=3, B=2) carries the same
+overlap on `(member, pattern_key)` but is a ledger — see below.
+
+### 4.5 Ledgers — ~20 relations, NOT rebindable
+
+`agent_runs`, `integration_passes`, `admin_access_log`, `expansion_events`, `field_activity_log`,
+`onboarding_events`, `oracle_usage_events`, `socratic_validator_events`, `living_encounter_events`,
+`voice_fallback_events`, `pattern_ledger`, `interpretive_guide_events`, `member_field_note_events`,
+`member_idea_recognition_events`, `story_timeline_events`, `audio_usage_events`, `calendar_events`,
+`comms_events`. The actor recorded is a historical fact. B genuinely acted; rewriting those rows
+would manufacture a past in which it never existed.
+
+### 4.6 Soul Portraits — confirmed, and one thing we did not know
+
+`soul_portraits.owner_member_id`: **A = 16, B = 0.** The portraits are intact under the
+canonical identity, and the legacy identity owns none. The Studio symptom is fully explained.
+
+But the owner census shows **18 live portraits across three owners**:
+
+| owner | portraits |
+|---|---:|
+| `ce284751…` (A) | 16 |
+| `877cd939…` | 1 |
+| `3946706a…` | 1 |
+
+Two portraits belong to two **other** member identities — neither candidate. Whether those are
+further Kelly identities or genuinely other people is **unknown** and outside this census.
+
+### 4.7 The 86 UNCOUNTED — and a defect in the instrument
+
+86 relations were not probed and are **not zeros**. The status label
+`UNCOUNTED_LARGE_NO_INDEX` is **wrong for most of them**: the gate treats a `reltuples` of `-1`
+(never analyzed, size unknown) identically to "estimated large". `soul_portrait_consents` sits in
+this set with 9 total rows — trivially countable. The label conflates two different states and
+should be split (`UNCOUNTED_UNANALYZED` vs `UNCOUNTED_LARGE`), after which those relations can be
+probed directly. Until then no ruling may rest on any of the 86 — including
+`soul_portrait_consents.actor_member_id`, `encounter_participants`, `case_memory_chunks`, and
+`session_consent_events`.
+
+### 4.8 Delete trace (open question, unchanged)
+
+`soul_portraits`: `n_tup_ins=24 · n_tup_upd=24 · n_tup_del=6 · n_live_tup=18`. Consent ledger:
+9 rows, **0** orphans, and no consent events pointing at portraits that no longer exist. So no
+consented portrait lost its ledger — consistent with the six deletes having been drafts or
+duplicates, and equally consistent with six consent-less portraits being gone. Still
+undetermined; still not answerable from `pg_stat` counters.
 
 ---
 
