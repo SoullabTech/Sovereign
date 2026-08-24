@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import {
   checkRateLimit,
   getClientIP,
@@ -28,15 +28,6 @@ import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/magic-link';
-
-// Lazy init Resend
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 // Generate secure token
 function generateToken(): string {
@@ -158,9 +149,9 @@ export async function POST(request: NextRequest) {
     const buttonText = isExistingMember ? 'Sign In' : 'Continue Signup';
 
     // Send magic link email
-    try {
-      const { data: sendData, error: sendError } = await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
+    const delivery = await sendEmail({
+      purpose: 'auth:magic-link',
+      from: SENDERS.noreply,
         to: normalizedEmail,
         subject,
         html: `
@@ -229,29 +220,47 @@ The Soullab Team
       // The provider's `name` is logged as its own field: "quota exhausted"
       // and "domain not verified" are indistinguishable once flattened into a
       // sentence, and they need opposite responses from an operator.
-      if (sendError) {
-        console.error('[MAGIC-LINK] Resend REFUSED the send:', { providerCode: sendError.name ?? 'unnamed', message: sendError.message });
+    if (!delivery.success) {
+      console.error(
+        `[MAGIC-LINK] Provider REFUSED the send for ${normalizedEmail} — status=${delivery.status} failureKind=${delivery.failureKind ?? 'unclassified'} providerCode=${delivery.providerCode ?? 'unnamed'} retryable=${delivery.retryable === true} error=${delivery.error ?? 'none'}`
+      );
+
+      // `retryable` governs the advice, not tone. Telling someone to retry a
+      // refusal that cannot succeed is the loop this lane exists to remove.
+      if (!delivery.ourFault) {
         return NextResponse.json(
-          { error: 'Failed to send magic link email. Please try again.' },
-          { status: 500 }
+          {
+            error: "We couldn't send to that address. Please check it and try again.",
+            reason: 'email_address_rejected',
+            retryable: false,
+          },
+          { status: 400 }
         );
       }
 
-      console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember}, resendId: ${sendData?.id ?? 'none'})`);
-    } catch (emailError) {
-      console.error('[MAGIC-LINK] Failed to send email:', emailError);
       return NextResponse.json(
-        { error: 'Failed to send magic link email. Please try again.' },
-        { status: 500 }
+        {
+          error: delivery.retryable
+            ? "Failed to send magic link email. That's a problem on our side, not yours. Please try again in a few minutes."
+            : "Failed to send magic link email. That's a problem on our side, not yours, and retrying won't help. Please contact hello@soullab.life and we'll get you in.",
+          reason: 'email_provider_refused',
+          retryable: delivery.retryable === true,
+        },
+        { status: 502 }
       );
     }
 
+    console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember}, resendId: ${delivery.id ?? 'none'})`);
+
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/magic-link', metadata: { isExistingMember } });
 
+    // NO `isExistingMember` IN THE RESPONSE. It told an anonymous caller whether
+    // an address has a Soullab account before that caller had proved they own
+    // it. It still shapes the email body and server-side telemetry; it no longer
+    // crosses the wire. Existing-vs-new is resolved when the link is followed.
     return NextResponse.json({
       success: true,
       message: 'Check your email for a sign-in link.',
-      isExistingMember
     });
   } catch (error) {
     console.error('[MAGIC-LINK] Request error:', error);

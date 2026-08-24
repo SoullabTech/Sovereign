@@ -11,19 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { betaConfig } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
-import { Resend } from 'resend';
-
-// Lazy initialization to avoid build-time errors
-let resend: Resend | null = null;
-function getResend(): Resend {
-  if (!resend) {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY is not configured');
-    }
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
+import { sendEmail } from '@/lib/email/sendEmail';
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,7 +73,8 @@ export async function POST(request: NextRequest) {
     const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
 
     // Send verification email
-    const { error: sendError } = await getResend().emails.send({
+    const delivery = await sendEmail({
+      purpose: 'auth:email-verification',
       from: 'Kelly Nezat <kelly@soullab.life>',
       to: targetEmail,
       subject: 'Verify your Soullab email',
@@ -130,15 +119,33 @@ export async function POST(request: NextRequest) {
       `,
     });
 
-    if (sendError) {
-      console.error('[SendVerification] Email send error:', sendError);
+    if (!delivery.success) {
+      console.error(
+        `[SendVerification] Provider REFUSED the send for ${targetEmail} — status=${delivery.status} failureKind=${delivery.failureKind ?? 'unclassified'} providerCode=${delivery.providerCode ?? 'unnamed'} retryable=${delivery.retryable === true} error=${delivery.error ?? 'none'}`
+      );
+      if (!delivery.ourFault) {
+        return NextResponse.json(
+          {
+            error: "We couldn't send to that address. Please check it and try again.",
+            reason: 'email_address_rejected',
+            retryable: false,
+          },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
-        { error: 'Failed to send verification email' },
-        { status: 500 }
+        {
+          error: delivery.retryable
+            ? "Failed to send verification email. That's a problem on our side, not yours. Please try again in a few minutes."
+            : "Failed to send verification email. That's a problem on our side, not yours, and retrying won't help. Please contact hello@soullab.life and we'll get you in.",
+          reason: 'email_provider_refused',
+          retryable: delivery.retryable === true,
+        },
+        { status: 502 }
       );
     }
 
-    console.log(`[SendVerification] Email sent to ${targetEmail} for ${member.username}`);
+    console.log(`[SendVerification] Email sent to ${targetEmail} for ${member.username} (resendId: ${delivery.id ?? 'none'})`);
 
     return NextResponse.json({
       success: true,

@@ -11,7 +11,10 @@ export const dynamic = 'force-dynamic';
  * email-scanner pre-opening. The member stays on the page and types 6 digits.
  *
  * DESIGN
- * - Works for both existing members and new signups (no enumeration leak).
+ * - Works for both existing members and new signups. The RESPONSE is identical
+ *   either way: `isExistingMember` is computed for the email body and for
+ *   server-side telemetry, and never crosses the wire to a caller who has not
+ *   yet proved they own the address.
  * - Reuses the magic_link_tokens table (adds a `code` column, self-healing) so
  *   /api/members/register-email's "recently verified email" check keeps working.
  * - 10-minute expiry, attempt-capped on verify, rate-limited on request.
@@ -162,11 +165,13 @@ export async function POST(request: NextRequest) {
       [normalizedEmail]
     );
 
-    await query(
+    const inserted = await query(
       `INSERT INTO magic_link_tokens (email, member_id, token, code, expires_at, attempts)
-       VALUES ($1, $2, $3, $4, $5, 0)`,
+       VALUES ($1, $2, $3, $4, $5, 0)
+       RETURNING id`,
       [normalizedEmail, memberId, token, code, expiresAt]
     );
+    const codeRowId = (inserted.rows[0]?.id as string) || null;
 
     // Send the code by email.
     //
@@ -224,23 +229,56 @@ export async function POST(request: NextRequest) {
           channel: 'code',
           status: sendResult.status,
           providerCode: sendResult.providerCode ?? null,
+          failureKind: sendResult.failureKind ?? 'unclassified',
+          retryable: sendResult.retryable === true,
         },
       });
+
+      // The code exists in the database but is in nobody's inbox. INVALIDATE it
+      // (used = true) rather than delete it: a credential nobody received must
+      // not remain a usable outstanding credential, and the row is also the
+      // only record that this person tried — which is how the 2026-08-24
+      // incident was reconstructed at all. Marking, not deleting, keeps both.
+      if (codeRowId) {
+        await safeQuery('UPDATE magic_link_tokens SET used = true WHERE id = $1', [codeRowId]);
+      }
       console.error(
-        `[EMAIL-CODE] Provider REFUSED the send for ${normalizedEmail} — status=${sendResult.status} providerCode=${sendResult.providerCode ?? 'unnamed'} error=${sendResult.error ?? 'none'}`
+        `[EMAIL-CODE] Provider REFUSED the send for ${normalizedEmail} — status=${sendResult.status} failureKind=${sendResult.failureKind ?? 'unclassified'} providerCode=${sendResult.providerCode ?? 'unnamed'} retryable=${sendResult.retryable === true} error=${sendResult.error ?? 'none'}`
       );
 
-      // Deliberately NOT "please try again". On 2026-08-24 a quota refusal was
-      // reported to the member as a retryable error, and the logs show the
-      // consequence: six attempts across two days, none of which could ever
-      // have worked, and no way for the person to tell that the failure was
-      // ours. `reason` is a stable machine-readable field for the signup UI
-      // and telemetry; the provider's own wording is NOT leaked to members.
+      // WHAT WE TELL THE PERSON IS GOVERNED BY `retryable`, NOT BY TONE.
+      //
+      // On 2026-08-24 a quota refusal was reported as a retryable error and one
+      // person made six attempts across two days, none of which could ever have
+      // worked. Softening the wording while still saying "try again in a few
+      // minutes" would rebuild that loop in kinder language. So a refusal we
+      // cannot retry our way out of routes the person to a human instead.
+      //
+      // `ourFault` decides whose problem it is; `retryable` decides whether a
+      // retry is honest advice. Everything unattributable is ours and is not
+      // retryable (see FAILURE_POLICY in lib/email/sendEmail.ts).
+      //
+      // `reason` is a stable machine-readable field for the signup UI and
+      // telemetry. Neither the provider's wording nor our internal failure
+      // taxonomy is leaked to the member.
+      if (!sendResult.ourFault) {
+        return NextResponse.json(
+          {
+            error: "We couldn't send a code to that address. Please check it and try again.",
+            reason: 'email_address_rejected',
+            retryable: false,
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
-          error:
-            "We couldn't send your code — that's a problem on our side, not yours. It isn't worth retrying right now. Please contact hello@soullab.life and we'll get you in.",
+          error: sendResult.retryable
+            ? "We couldn't send your code — that's a problem on our side, not yours. Please try again in a few minutes."
+            : "We can't send codes right now. That's a problem on our side, not yours, and retrying won't help. Please contact hello@soullab.life and we'll get you in.",
           reason: 'email_provider_refused',
+          retryable: sendResult.retryable === true,
         },
         { status: 502 }
       );
@@ -249,7 +287,13 @@ export async function POST(request: NextRequest) {
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/email-code', metadata: { isExistingMember, channel: 'code' } });
     console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember}, id: ${sendResult.id ?? 'none'})`);
 
-    return NextResponse.json({ success: true, isExistingMember });
+    // NO `isExistingMember` IN THE RESPONSE. Returning it told any anonymous
+    // caller whether an address has a Soullab account BEFORE that caller had
+    // proved they own the address — account enumeration, in the route whose own
+    // header promised there was none. Existing-vs-new is resolved after the
+    // code is verified, at POST /api/members/email-code/verify, where ownership
+    // has been proved.
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[EMAIL-CODE] Request error:', error);
     return NextResponse.json({ error: 'Could not send the code. Please try again.' }, { status: 500 });

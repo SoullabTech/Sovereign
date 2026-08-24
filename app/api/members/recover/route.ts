@@ -1,7 +1,6 @@
 // Production requires force-dynamic for database access
 export const dynamic = 'force-dynamic'
 
-
 /**
  * Passkey Recovery via Email
  * Sends member their passkey if email matches
@@ -9,20 +8,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 
 export const revalidate = false;
 
 // Skip during static export (Capacitor builds)
-
-// Lazy init to avoid build-time errors
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 export async function POST(request: NextRequest) {
   // During static export, return placeholder response
@@ -57,9 +47,9 @@ export async function POST(request: NextRequest) {
     const member = result.rows[0];
 
     // Send recovery email
-    try {
-      const { data: sendData, error: sendError } = await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
+    const delivery = await sendEmail({
+      purpose: 'auth:passkey-recovery',
+      from: SENDERS.noreply,
         to: email,
         subject: 'Your Soullab Passkey',
         html: `
@@ -131,22 +121,37 @@ The Soullab Team
       // The provider's `name` is logged as its own field: "quota exhausted"
       // and "domain not verified" are indistinguishable once flattened into a
       // sentence, and they need opposite responses from an operator.
-      if (sendError) {
-        console.error('[MEMBERS] Resend REFUSED the recovery email:', { providerCode: sendError.name ?? 'unnamed', message: sendError.message });
+    if (!delivery.success) {
+      console.error(
+        `[MEMBERS] Provider REFUSED the send for ${email} — status=${delivery.status} failureKind=${delivery.failureKind ?? 'unclassified'} providerCode=${delivery.providerCode ?? 'unnamed'} retryable=${delivery.retryable === true} error=${delivery.error ?? 'none'}`
+      );
+
+      // `retryable` governs the advice, not tone. Telling someone to retry a
+      // refusal that cannot succeed is the loop this lane exists to remove.
+      if (!delivery.ourFault) {
         return NextResponse.json(
-          { error: 'Failed to send recovery email' },
-          { status: 500 }
+          {
+            error: "We couldn't send to that address. Please check it and try again.",
+            reason: 'email_address_rejected',
+            retryable: false,
+          },
+          { status: 400 }
         );
       }
 
-      console.log('[MEMBERS] Recovery email sent to:', email, 'resendId:', sendData?.id ?? 'none');
-    } catch (emailError) {
-      console.error('[MEMBERS] Failed to send recovery email:', emailError);
       return NextResponse.json(
-        { error: 'Failed to send recovery email' },
-        { status: 500 }
+        {
+          error: delivery.retryable
+            ? "Failed to send recovery email. That's a problem on our side, not yours. Please try again in a few minutes."
+            : "Failed to send recovery email. That's a problem on our side, not yours, and retrying won't help. Please contact hello@soullab.life and we'll get you in.",
+          reason: 'email_provider_refused',
+          retryable: delivery.retryable === true,
+        },
+        { status: 502 }
       );
     }
+
+    console.log('[MEMBERS] Recovery email sent to:', email, 'resendId:', delivery.id ?? 'none');
 
     return NextResponse.json({
       success: true,

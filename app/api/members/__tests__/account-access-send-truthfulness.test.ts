@@ -158,34 +158,116 @@ describe('magic-link — the funnel must not record a send that never happened',
 
 describe('all four account-access routes — no discarded send result remains', () => {
   // "No code path exists" cannot be proven by exercising paths. This reads the
-  // shipping sources: email-code went through lib/email/sendEmail under its own
-  // incident and is asserted differently from the three that check inline. The
-  // shapes differ on purpose; the property they must share is that no send
-  // result is thrown away.
+  // shipping sources.
+  //
+  // SHAPE CHANGE (auth consolidation lane). When this was written, email-code
+  // routed through lib/email/sendEmail and the other three checked their own
+  // inline `{ data, error }` — "the shapes differ on purpose". All four now go
+  // through the central helper. The incident's structural lesson was that five
+  // routes held five subtly different understandings of what `Resend.send()`
+  // means; one understanding, in one place, is the fix. The PROPERTY these
+  // assertions defend is unchanged and is what matters: no route holds a
+  // provider client, and no route discards a send result.
   const ROOT = path.resolve(__dirname, '..');
+  const AUTH_SENDERS = ['magic-link', 'recover', 'reset-password', 'email-code'];
 
-  it.each(['magic-link', 'recover', 'reset-password'])(
-    '%s captures the result instead of discarding it',
-    (name) => {
-      const src = fs.readFileSync(path.join(ROOT, name, 'route.ts'), 'utf8');
-      // Anchored to line start: the defective form is a BARE statement, and
-      // `await getResend().emails.send(` is a substring of the fixed form too,
-      // so an unanchored negative would pass against the bug it is meant to
-      // catch. (It did, until this was corrected.)
-      expect(src).not.toMatch(/^\s*await\s+getResend\(\)\.emails\.send\(/m);
-      expect(src).toMatch(/const\s*\{\s*data:\s*sendData,\s*error:\s*sendError\s*\}\s*=\s*await\s+getResend\(\)\.emails\.send\(/);
-      expect(src).toMatch(/if\s*\(\s*sendError\s*\)/);
-    },
-  );
-
-  it('email-code routes through the central helper and gates on its result', () => {
-    const src = fs.readFileSync(path.join(ROOT, 'email-code', 'route.ts'), 'utf8');
-    // This route holds no Resend client at all — it delegates to the central
-    // helper. Asserting the absence of `emails.send(` as a bare string would
-    // match the prose in its own comments, so the fact checked is the one that
-    // matters: no provider client is constructed here.
+  it.each(AUTH_SENDERS)('%s constructs no provider client of its own', (name) => {
+    const src = fs.readFileSync(path.join(ROOT, name, 'route.ts'), 'utf8');
+    // The original negative here was `await getResend().emails.send(` UNANCHORED,
+    // which is a substring of the fixed form and so passed against the very bug
+    // it existed to catch. That correction is why these are written as the
+    // absence of the client itself rather than the absence of a call shape:
+    // there is no form of `getResend()` that is compatible with centralization.
     expect(src).not.toMatch(/getResend\(\)/);
+    expect(src).not.toMatch(/new\s+Resend\(/);
+  });
+
+  it.each(AUTH_SENDERS)('%s sends through the central helper and gates on the result', (name) => {
+    const src = fs.readFileSync(path.join(ROOT, name, 'route.ts'), 'utf8');
     expect(src).toMatch(/await sendEmail\(/);
-    expect(src).toMatch(/if\s*\(!sendResult\.success\)/);
+    // Gating on `.success` — not merely receiving the result and ignoring it.
+    // Asserting the absence of `emails.send(` as a bare string would match the
+    // prose in these routes' own comments, so the fact checked is the one that
+    // matters: the result is read.
+    expect(src).toMatch(/if\s*\(\s*!\s*(?:sendResult|delivery)\.success\s*\)/);
+  });
+});
+
+describe('failure attribution — a refusal we caused is never blamed on the member', () => {
+  // THE DEFECT THIS CLOSES. The first version of the failure taxonomy mapped
+  // any `validation_error` to `invalid_recipient`. But `validation_error` is
+  // also what Resend returns for "The from address is not verified" — OUR
+  // configuration problem, and one of the refusals this suite already tests.
+  // Under that rule the person was told, with a 400, that their own address
+  // was the problem. Exactly inverted, and worse than the silence it replaced.
+  //
+  // The rule now: `invalid_recipient` requires evidence naming the RECIPIENT.
+  // Anything unattributed stays ours.
+
+  it('an unverified FROM address is ours (502), not the member’s (400)', async () => {
+    refuse('validation_error', 'The from address is not verified.');
+    const res = await magicLinkPOST(req('/api/members/magic-link', { email: MEMBER.email }));
+    const body = await res.json().catch(() => ({}));
+
+    expect(res.status).toBe(502);
+    expect(body.reason).toBe('email_provider_refused');
+    expect(body.error).toMatch(/on our side/i);
+    // And it must not tell them to check an address that is fine.
+    expect(body.error).not.toMatch(/check it/i);
+  });
+
+  it('a bare validation_error stays ours — unattributed is not the member’s fault', async () => {
+    refuse('validation_error', 'Something did not validate.');
+    const res = await magicLinkPOST(req('/api/members/magic-link', { email: MEMBER.email }));
+    const body = await res.json().catch(() => ({}));
+
+    expect(res.status).toBe(502);
+    expect(body.reason).toBe('email_provider_refused');
+  });
+
+  it('CONTROL: a refusal that DOES name the recipient is attributed to the address', async () => {
+    // Without this control the two assertions above would also pass against a
+    // taxonomy that had been broken into never blaming the recipient at all.
+    refuse('validation_error', 'Invalid `to` field: not a deliverable recipient.');
+    const res = await magicLinkPOST(req('/api/members/magic-link', { email: MEMBER.email }));
+    const body = await res.json().catch(() => ({}));
+
+    expect(res.status).toBe(400);
+    expect(body.reason).toBe('email_address_rejected');
+  });
+});
+
+describe('retry advice — `retryable` governs what we tell the person', () => {
+  // The 2026-08-24 loop was built out of retry advice that could not work: six
+  // attempts across two days against an exhausted quota. Softer wording that
+  // still says "try again" rebuilds it. So the copy is asserted, not just the
+  // status code.
+
+  it('a quota refusal does NOT tell the person to try again', async () => {
+    refuse('monthly_quota_exceeded', 'You have reached your monthly email sending quota.');
+    const res = await magicLinkPOST(req('/api/members/magic-link', { email: MEMBER.email }));
+    const body = await res.json().catch(() => ({}));
+
+    expect(body.retryable).toBe(false);
+    expect(body.error).not.toMatch(/try again/i);
+    expect(body.error).toMatch(/hello@soullab\.life/);
+  });
+
+  it('an unverified sender does NOT tell the person to try again either', async () => {
+    refuse('validation_error', 'The from address is not verified.');
+    const res = await magicLinkPOST(req('/api/members/magic-link', { email: MEMBER.email }));
+    const body = await res.json().catch(() => ({}));
+
+    expect(body.retryable).toBe(false);
+    expect(body.error).not.toMatch(/try again/i);
+  });
+
+  it('CONTROL: a genuine throttle DOES tell the person to try again', async () => {
+    refuse('rate_limit_exceeded', 'Too many requests.');
+    const res = await magicLinkPOST(req('/api/members/magic-link', { email: MEMBER.email }));
+    const body = await res.json().catch(() => ({}));
+
+    expect(body.retryable).toBe(true);
+    expect(body.error).toMatch(/try again in a few minutes/i);
   });
 });
