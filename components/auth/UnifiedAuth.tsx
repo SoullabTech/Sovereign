@@ -423,7 +423,7 @@ function UnifiedAuthInner() {
                 <button type="submit" disabled={isLoading || !username || !password} className={primaryBtn}>{isLoading ? 'Signing in…' : 'Sign in'}</button>
               </form>
               <p className="mt-4 text-xs text-slate-500/80 text-center leading-relaxed">
-                Signed up with an emailed code? You don&apos;t have a password — go back and we&apos;ll send one.
+                Usually sign in with an emailed code? Go back and use your email instead.
               </p>
               <div className="mt-3 text-center">
                 <button type="button" onClick={() => { setPhase('email'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">← Back to email</button>
