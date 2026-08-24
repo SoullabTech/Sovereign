@@ -22,6 +22,12 @@
 
 export type PractitionerRow = { id: string; status: string | null };
 
+/** A conflict that could not be reconciled to this member. Named by constraint, never guessed. */
+export type CollisionConflict =
+  | { action: 'slug_conflict'; constraint: string }
+  | { action: 'email_conflict'; constraint: string }
+  | { action: 'unique_conflict'; constraint: string | null };
+
 export type ProvisionDecision =
   | { action: 'use_existing'; practitionerId: string }
   | { action: 'refuse_suspended'; practitionerId: string }
@@ -56,6 +62,20 @@ export function isUniqueViolation(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && (error as { code?: string }).code === '23505');
 }
 
+/**
+ * Which unique constraint actually fired.
+ *
+ * The creation INSERT carries at least TWO deterministic unique values —
+ * `slug = personal-<member8>` and `email = <slug>@soullab.life` — so a 23505
+ * does not identify itself. Returns null when the driver did not say, and a
+ * null constraint must NOT be narrated as a slug problem.
+ */
+export function constraintNameOf(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  const c = (error as { constraint?: unknown }).constraint;
+  return typeof c === 'string' && c.length > 0 ? c : null;
+}
+
 /** The deterministic slug. Same input always yields the same slug — hence the collision. */
 export function personalSlugFor(memberId: string): string {
   return `personal-${memberId.slice(0, 8)}`;
@@ -69,8 +89,25 @@ export function personalSlugFor(memberId: string): string {
  * nothing, the slug belongs to somebody else, and that is a real conflict that
  * must be named rather than surfaced as an unexplained 500.
  */
-export function classifyCollision(rowsAfterReread: PractitionerRow[]): ProvisionDecision | { action: 'slug_conflict' } {
+export function classifyCollision(
+  rowsAfterReread: PractitionerRow[],
+  constraint?: string | null,
+): ProvisionDecision | CollisionConflict {
+  // The re-read is STRONGER evidence than the constraint name: if the member now
+  // owns a practitioner, a concurrent request won and the conflict is resolved,
+  // whichever unique index happened to fire. Recovery is deliberately
+  // constraint-agnostic.
   const decision = decideProvisioning(rowsAfterReread);
-  if (decision.action === 'create') return { action: 'slug_conflict' };
-  return decision;
+  if (decision.action !== 'create') return decision;
+
+  // Member still owns nothing, so the conflicting row belongs to something else.
+  // Name only what the constraint actually says. Reporting every unresolved
+  // 23505 as a slug problem is a more specific claim than the evidence carries —
+  // the same over-attribution this module was written to remove.
+  switch (constraint) {
+    case 'practitioners_slug_key':  return { action: 'slug_conflict', constraint };
+    case 'practitioners_email_key': return { action: 'email_conflict', constraint };
+    default:
+      return { action: 'unique_conflict', constraint: constraint ?? null };
+  }
 }

@@ -14,7 +14,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query, transaction } from '@/lib/db/postgres';
 import { v4 as uuid } from 'uuid';
 import {
-  decideProvisioning, classifyCollision, isUniqueViolation, personalSlugFor,
+  decideProvisioning, classifyCollision, isUniqueViolation, constraintNameOf, personalSlugFor,
   type PractitionerRow,
 } from '@/lib/studio/personalStudioProvisioning';
 
@@ -175,7 +175,9 @@ export async function POST(request: NextRequest) {
         'SELECT id, status FROM practitioners WHERE member_id = $1',
         [memberId]
       );
-      const after = classifyCollision(reread.rows);
+      // The re-read decides first; the constraint name only names an
+      // unresolvable conflict. Recovery is constraint-agnostic on purpose.
+      const after = classifyCollision(reread.rows, constraintNameOf(err));
 
       if (after.action === 'use_existing') {
         await query('UPDATE members SET studio_mode = $1 WHERE id = $2', ['personal', memberId]);
@@ -187,10 +189,23 @@ export async function POST(request: NextRequest) {
           error: 'A practitioner already exists for this member and is not active.',
         }, { status: 409 });
       }
+
+      // Unresolvable. The INSERT carries two deterministic unique values, so
+      // report the one that actually fired rather than assuming the slug.
+      const conflictCopy: Record<string, string> = {
+        slug_conflict: 'The personal Studio address for this member is already taken by another record.',
+        email_conflict: 'The personal Studio email for this member is already taken by another record.',
+        unique_conflict: 'A uniqueness constraint blocked creation, and the conflicting record does not belong to this member.',
+      };
       return NextResponse.json({
-        ok: false, state: 'slug_conflict', slug,
-        error: 'The personal Studio address for this member is already taken by another record.',
-        detail: 'This is a naming conflict that cannot be reconciled to this member, not a transient failure.',
+        ok: false,
+        state: after.action,
+        constraint: after.constraint,
+        slug,
+        error: conflictCopy[after.action],
+        detail: after.constraint
+          ? `Blocked by ${after.constraint}. This is a naming conflict that cannot be reconciled to this member, not a transient failure.`
+          : 'The database did not name the constraint, so the specific conflicting field is unidentified. Not assumed to be the slug.',
       }, { status: 409 });
     }
 

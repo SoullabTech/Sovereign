@@ -9,7 +9,7 @@
  * shows the repaired code passing would not establish that anything was wrong.
  */
 import {
-  decideProvisioning, classifyCollision, isUniqueViolation, personalSlugFor,
+  decideProvisioning, classifyCollision, isUniqueViolation, constraintNameOf, personalSlugFor,
   type PractitionerRow,
 } from '@/lib/studio/personalStudioProvisioning';
 
@@ -99,12 +99,59 @@ describe('RACE / COLLISION CONTROL — a unique conflict is recovered or named',
   });
 
   it('a conflict that cannot be reconciled to this member is a NAMED conflict, not a 500', () => {
-    // Re-read shows the member still owns nothing ⇒ the slug belongs elsewhere.
-    expect(classifyCollision(NONE).action).toBe('slug_conflict');
+    // Re-read shows the member still owns nothing ⇒ the conflict is real.
+    expect(classifyCollision(NONE, 'practitioners_slug_key').action).toBe('slug_conflict');
   });
 
   it('a suspended row found on re-read is refused, not replaced', () => {
     expect(classifyCollision(SUSPENDED).action).toBe('refuse_suspended');
+  });
+});
+
+describe('COLLISION ATTRIBUTION — name the constraint that actually fired', () => {
+  // The creation INSERT carries TWO deterministic unique values:
+  //   slug  = personal-<member8>
+  //   email = <slug>@soullab.life
+  // A 23505 therefore does not identify itself, and calling every unresolved
+  // one a "slug conflict" is a more specific claim than the evidence supports.
+
+  it('slug constraint ⇒ slug_conflict', () => {
+    const c = classifyCollision(NONE, 'practitioners_slug_key');
+    expect(c.action).toBe('slug_conflict');
+  });
+
+  it('email constraint ⇒ NOT slug_conflict — it is a typed email conflict', () => {
+    const c = classifyCollision(NONE, 'practitioners_email_key');
+    expect(c.action).not.toBe('slug_conflict');
+    expect(c.action).toBe('email_conflict');
+  });
+
+  it('any other unique constraint ⇒ a neutral unique_conflict, still named', () => {
+    const c = classifyCollision(NONE, 'practitioners_pkey');
+    expect(c.action).toBe('unique_conflict');
+    if (c.action === 'unique_conflict') expect(c.constraint).toBe('practitioners_pkey');
+  });
+
+  it('an UNNAMED constraint is not narrated as a slug problem', () => {
+    const c = classifyCollision(NONE, null);
+    expect(c.action).toBe('unique_conflict');
+    if (c.action === 'unique_conflict') expect(c.constraint).toBeNull();
+  });
+
+  it('recovery stays constraint-agnostic: the re-read is stronger evidence', () => {
+    // Whichever index fired, if the member now owns an active row a concurrent
+    // request won and the conflict is resolved.
+    for (const con of ['practitioners_slug_key', 'practitioners_email_key', 'other', null]) {
+      expect(classifyCollision(ACTIVE, con).action).toBe('use_existing');
+      expect(classifyCollision(SUSPENDED, con).action).toBe('refuse_suspended');
+    }
+  });
+
+  it('constraintNameOf reads the driver field, and invents nothing', () => {
+    expect(constraintNameOf({ code: '23505', constraint: 'practitioners_email_key' })).toBe('practitioners_email_key');
+    expect(constraintNameOf({ code: '23505' })).toBeNull();
+    expect(constraintNameOf(new Error('boom'))).toBeNull();
+    expect(constraintNameOf(null)).toBeNull();
   });
 });
 
