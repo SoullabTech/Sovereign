@@ -11,6 +11,22 @@ if [ -z "${TOKENROUTER_API_KEY:-}" ]; then
   exit 1
 fi
 echo "credential: PRESENT (len=${#TOKENROUTER_API_KEY}, not shown)"
+
+# Preflight: refuse a value that is not API-key shaped, BEFORE transmitting it.
+if ! python3 -c "
+import os,sys
+k=os.environ['TOKENROUTER_API_KEY']
+bad=[]
+if len(k)<32: bad.append('shorter than 32 chars')
+if any(c in k for c in '!@#\$%^&*()+={}[]|;:,<>?/~\`\'\"'): bad.append('contains punctuation unusual for an API key')
+if k!=k.strip(): bad.append('leading/trailing whitespace')
+if bad:
+    print('REFUSED — value does not look like an API key: '+'; '.join(bad), file=sys.stderr)
+    print('Nothing was transmitted. Copy the key from the TokenRouter dashboard.', file=sys.stderr)
+    print('If you pasted an account password, rotate it now.', file=sys.stderr)
+    sys.exit(1)
+"; then exit 3; fi
+echo "preflight : shape looks like an API key"
 AUTH="Authorization: Bearer ${TOKENROUTER_API_KEY}"
 
 echo; echo "=== 3. AUTHENTICATED CATALOG ==="

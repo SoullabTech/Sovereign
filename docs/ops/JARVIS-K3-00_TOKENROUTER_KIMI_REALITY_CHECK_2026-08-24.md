@@ -156,6 +156,34 @@ and whose signup flow does not complete, is a thin foundation to build a JARVIS
 lane on. That is a reason to spend no further effort here without a specific
 motivating need — it is not evidence of anything wrong with the provider.
 
+## Operator run 1 — 2026-08-24, Mac Studio (egress available)
+
+`scripts/jarvis-k3-00-probe.sh` executed successfully as tooling. Result:
+
+```
+GET /v1/models -> HTTP 401  {"error":{"message":"Invalid token", ...}}
+CATALOG UNAVAILABLE
+```
+
+Tokens spent: 0. Credit spent: $0. The free-alias guard never had to fire —
+the run stopped at authentication, before any billable call.
+
+`scripts/jarvis-k3-00-keyshape.sh` then indicated the supplied value was **not
+in API-key format**: 27 characters, no vendor prefix marker, and a character
+composition typical of a human-chosen password rather than an issued
+credential. No whitespace damage, so the paste was not truncated in transit —
+the wrong secret was supplied, not a damaged one.
+
+**Security consequence, actioned**: because the probe authenticates with
+whatever it is given, that value was transmitted to `api.tokenrouter.com` as a
+bearer token and is expected to appear in TokenRouter's server-side logs as a
+rejected token (their 401 carried a request id). Operator advised to rotate it,
+and to change it anywhere it is reused.
+
+**Tooling defect this exposed**: the shape check ran *after* the authenticated
+call. It should run *before*, so a non-key value is refused locally and never
+transmitted. Fixed by folding the shape gate into the probe's preflight.
+
 ## Re-run conditions
 
 **Precondition (blocker 0)**: a working TokenRouter account must exist.
