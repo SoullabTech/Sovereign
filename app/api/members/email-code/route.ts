@@ -215,10 +215,9 @@ export async function POST(request: NextRequest) {
     });
 
     // The provider REFUSED. Nothing below this point may describe the code as
-    // sent: no magic_link_sent, no "Code sent" line, no 200. The stored code
-    // is left in place deliberately — it is already invalidated on the next
-    // request, and deleting it here would destroy the only record that this
-    // person tried.
+    // sent: no magic_link_sent, no "Code sent" line, no 200. The stored code is
+    // invalidated immediately rather than left live until the next request —
+    // see the UPDATE below for why it is marked used and not deleted.
     if (!sendResult.success) {
       trackOnboarding({
         event: 'magic_link_send_failed',
