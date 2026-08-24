@@ -240,11 +240,28 @@ against a genuine Resend `monthly_quota_exceeded` refusal:
 | No enumeration | no `isExistingMember` in the body |
 | Operator signal | `TRANSPORT_DOWN kind=quota_exceeded providerCode=monthly_quota_exceeded` |
 | Raw provider name preserved beside our class | `providerCode` and `failureKind` both present on one line |
-| No address in logs | `member=anonymous` |
+| No address in logs, anonymous branch | `member=anonymous` |
+| No address in logs, member branch | `member=88099bb1977c` |
 | No false success line | no `[EMAIL-CODE] Code sent` emitted |
 | Code invalidated, not deleted | row present with `used = t` |
 
-Two requests landed 8s apart and were handled identically. Which row proves
+**Both branches of PII-safe logging are covered.** A non-member address
+exercises `memberRef(null) → 'anonymous'`; a member address exercises
+`memberRef(member.id)`, and that line carried `member=88099bb1977c` — twelve hex
+characters, matching `REF_LENGTH = 12` in `lib/privacy/memberRef.ts` — with the
+address absent from the line. Precisely: the log proves **no address leaked**;
+the *code* is what establishes the token is a SHA-256 derivation rather than an
+id fragment, since a truncated UUID would also render as bare hex. The gate that
+forbids `.slice()` guards that separately.
+
+The member line is from the post-`73106dc90` container by construction rather
+than by timestamp: the deploy ran `--force-recreate`, and `docker logs` is
+per-container, so a line surviving in the running container's buffer cannot
+predate the swap. (`docker logs -t` plus `docker inspect --format
+'{{.State.StartedAt}}'` would confirm it directly if the inference is ever
+doubted.)
+
+Two anonymous requests landed 8s apart and were handled identically. Which row proves
 *which* claim matters: the route invalidates outstanding codes for an address at
 the START of each request, so the earlier row could have been marked `used` by
 the second request rather than by the failure burn. **The later row is the one
@@ -258,11 +275,6 @@ that proves the burn** — nothing followed it to invalidate it.
 - `magic-link`, `recover`, `reset-password`, `send-verification` — centralised
   and unit-proven, never exercised in production.
 - The **session-is-authentication** invariant.
-- The **member** branch of PII-safe logging. The witness used a non-member
-  address, so it exercised `memberRef(null) → 'anonymous'`. The branch where
-  `memberRef(member.id)` must produce a hash — the branch where a real address
-  would surface if that call were wired wrong — is a different code path and was
-  not observed.
 - Every remaining cell of the launch gate (§7).
 
 One green witness, on one route, for one failure class, in one attempt shape.
@@ -492,9 +504,9 @@ unset in production and every `beta_waitlist` row is from July.
   (deliverability, spam placement), and §5's webhook work becomes urgent rather
   than next. *Still open — cannot be tested until capacity is restored, since no
   send is currently being accepted at all.*
-- A member-address refusal logging anything other than a `memberRef` hash → the
-  PII-safe logging claim holds only for the anonymous branch witnessed in
-  §2.6.1, and the member branch needs its own fix.
+- ~~A member-address refusal logging anything other than a `memberRef` hash.~~
+  *Answered 2026-08-24: a member-address refusal on the live image logged
+  `member=88099bb1977c` with no address present. Both branches witnessed.*
 - The Better Auth spike failing question 2 (iOS WebView) → invariant 7 needs a
   different mechanism, and §4 is withdrawn rather than deferred.
 - Members proving able to sign in on the live commit → the transport bug was not
