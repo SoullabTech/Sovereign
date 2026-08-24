@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
         {
           error: sendResult.retryable
             ? "We couldn't send your code — that's a problem on our side, not yours. Please try again in a few minutes."
-            : "We can't send codes right now. That's a problem on our side, not yours, and retrying won't help. Please contact hello@soullab.life and we'll get you in.",
+            : "We can't send codes right now. That's a problem on our side, not yours, and retrying won't help. Please contact support@soullab.life and we'll get you in.",
           reason: 'email_provider_refused',
           retryable: sendResult.retryable === true,
         },

@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         {
           error: delivery.retryable
             ? "Failed to send verification email. That's a problem on our side, not yours. Please try again in a few minutes."
-            : "Failed to send verification email. That's a problem on our side, not yours, and retrying won't help. Please contact hello@soullab.life and we'll get you in.",
+            : "Failed to send verification email. That's a problem on our side, not yours, and retrying won't help. Please contact support@soullab.life and we'll get you in.",
           reason: 'email_provider_refused',
           retryable: delivery.retryable === true,
         },

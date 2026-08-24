@@ -149,7 +149,7 @@ The Soullab Team
         {
           error: delivery.retryable
             ? "Failed to send recovery email. That's a problem on our side, not yours. Please try again in a few minutes."
-            : "Failed to send recovery email. That's a problem on our side, not yours, and retrying won't help. Please contact hello@soullab.life and we'll get you in.",
+            : "Failed to send recovery email. That's a problem on our side, not yours, and retrying won't help. Please contact support@soullab.life and we'll get you in.",
           reason: 'email_provider_refused',
           retryable: delivery.retryable === true,
         },

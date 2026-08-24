@@ -148,7 +148,7 @@ a quota, but applied to every refusal. The rule now:
 ```
 retryable = true   → "…that's on our side, not yours. Please try again in a few minutes."
 retryable = false  → "We can't send codes right now. That's on our side, not yours,
-                      and retrying won't help. Please contact hello@soullab.life…"
+                      and retrying won't help. Please contact support@soullab.life…"
 ```
 
 `retryable` **fails safe**: only `rate_limited` and `exception` are retryable.
@@ -222,6 +222,48 @@ re-baselined).
 not restore delivery — that needs provider capacity, which is an account action.
 It makes every auth path report what the provider actually said, to the right
 party, with honest advice about what to do next.
+
+### 2.7 Sibling sweep after structural moves — method
+
+Centralising the five auth senders produced two kinds of drift, each found only
+after the fact, and each *adjacent* to the change rather than remote from it.
+Comments in four files still described the inline `{ data, error }` machinery
+that centralisation had deleted. New log lines written alongside a helper that
+already enforced a logging policy broke that policy one layer up. Neither was
+caught by writing the change; both were caught afterwards, by review and by a
+gate.
+
+The method that would have caught them at the time:
+
+- **After moving a call site, re-read the adjacent comments against the new
+  machinery.** A comment that explains code which no longer exists is worse than
+  no comment: the next reader trusts it.
+- **Check every newly introduced log line against the policy and gates the old
+  implementation already satisfied.** Moved code inherits its obligations; code
+  written *beside* moved code does not inherit them automatically.
+- **A green heuristic gate is evidence about that heuristic's aperture, not
+  about the underlying property.** The member-identifier log gate flagged two of
+  the four routes carrying a raw address, because its pattern matches a variable
+  named `email` and not one named `normalizedEmail`. Passing it would not have
+  meant the property held.
+- **Where the property matters, add a direct or structural assertion rather than
+  broadening the heuristic until it happens to pass.** Widening a detector to
+  cover today's miss leaves the same class of gap one rename away.
+
+This generalises a distinction the lane keeps meeting. `npm run typecheck` green
+means nothing got *worse*, not that everything typechecks (CLAUDE.md states this
+explicitly). PR #1073's structural check passed against the very bug it existed
+to catch, because its negative was an unanchored substring of the fixed form. A
+passing check reports on what the check can see.
+
+The same shape appeared once more at the end of this PR, in copy rather than
+code: the non-retryable failure path routed people to `hello@soullab.life`, an
+address not set up for it. Every gate was green and every test passed, because
+nothing in the suite knew which mailboxes exist. The lane exists to stop sending
+people into dead ends, and had built one at the last step. The assertion added
+in response is direct — the non-retryable path must return `support@soullab.life`
+and must not return `hello@soullab.life` — rather than a general rule about
+addresses, for the reason above.
 
 ---
 

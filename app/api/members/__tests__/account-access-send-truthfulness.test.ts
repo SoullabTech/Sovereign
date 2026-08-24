@@ -250,7 +250,11 @@ describe('retry advice — `retryable` governs what we tell the person', () => {
 
     expect(body.retryable).toBe(false);
     expect(body.error).not.toMatch(/try again/i);
-    expect(body.error).toMatch(/hello@soullab\.life/);
+    // A dead end one step later is still a dead end: the address a
+    // non-retryable failure hands someone must be one that is actually
+    // monitored. `support@` is; `hello@` was never set up for this.
+    expect(body.error).toMatch(/support@soullab\.life/);
+    expect(body.error).not.toMatch(/hello@soullab\.life/);
   });
 
   it('an unverified sender does NOT tell the person to try again either', async () => {

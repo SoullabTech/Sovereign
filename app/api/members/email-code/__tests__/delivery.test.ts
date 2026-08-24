@@ -116,7 +116,11 @@ describe('retry advice — governed by `retryable`, not by tone', () => {
     expect(body.success).toBeFalsy();
     expect(body.retryable).toBe(false);
     expect(body.error).not.toMatch(/try again/i);
-    expect(body.error).toMatch(/hello@soullab\.life/);
+    // The address handed to someone we cannot help by retrying must be a
+    // mailbox that exists and is monitored — otherwise the non-retryable
+    // path just relocates the dead end.
+    expect(body.error).toMatch(/support@soullab\.life/);
+    expect(body.error).not.toMatch(/hello@soullab\.life/);
   });
 
   it('an unverified sender is ours and is not retryable', async () => {
