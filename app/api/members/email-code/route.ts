@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes, randomInt } from 'crypto';
 import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
+import { memberRef } from '@/lib/privacy/memberRef';
 import {
   checkRateLimit,
   getClientIP,
@@ -242,7 +243,7 @@ export async function POST(request: NextRequest) {
         await safeQuery('UPDATE magic_link_tokens SET used = true WHERE id = $1', [codeRowId]);
       }
       console.error(
-        `[EMAIL-CODE] Provider REFUSED the send for ${normalizedEmail} — status=${sendResult.status} failureKind=${sendResult.failureKind ?? 'unclassified'} providerCode=${sendResult.providerCode ?? 'unnamed'} retryable=${sendResult.retryable === true} error=${sendResult.error ?? 'none'}`
+        `[EMAIL-CODE] Provider REFUSED the send for member=${memberRef(memberId)} — status=${sendResult.status} failureKind=${sendResult.failureKind ?? 'unclassified'} providerCode=${sendResult.providerCode ?? 'unnamed'} retryable=${sendResult.retryable === true} error=${sendResult.error ?? 'none'}`
       );
 
       // WHAT WE TELL THE PERSON IS GOVERNED BY `retryable`, NOT BY TONE.

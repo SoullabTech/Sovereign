@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
 import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
+import { memberRef } from '@/lib/privacy/memberRef';
 import {
   checkRateLimit,
   getClientIP,
@@ -211,18 +212,23 @@ The Soullab Team
         `.trim()
       });
 
-      // Resend RESOLVES with { data, error } when the provider rejects a send —
-      // it does not throw, so the catch below never saw a refusal. Discarding
-      // this result is what let this route report success for mail Resend
-      // never accepted (2026-08-24 quota incident; same defect proven and
-      // fixed on /api/members/email-code).
-      //
-      // The provider's `name` is logged as its own field: "quota exhausted"
-      // and "domain not verified" are indistinguishable once flattened into a
-      // sentence, and they need opposite responses from an operator.
+    // Resend RESOLVES with { data, error } when the provider rejects a send — it
+    // does not throw — so an `await` in a bare try/catch reported success for
+    // mail that never left (2026-08-24 quota incident). `sendEmail` reads that
+    // result and never throws, so this is a value to be read, not an exception
+    // that may be ignored.
+    //
+    // The provider's own name is logged as its own field: "quota exhausted" and
+    // "domain not verified" are indistinguishable once flattened into a
+    // sentence, and they need opposite responses from an operator.
+    //
+    // NO EMAIL ADDRESS IN THE LOG LINE. Correlation during an outage is
+    // genuine — you need to know whose send failed — but a raw address is not
+    // how to get it. memberRef() is the sanctioned derivation
+    // (lib/privacy/memberRef.ts); a truncated id would not be.
     if (!delivery.success) {
       console.error(
-        `[MAGIC-LINK] Provider REFUSED the send for ${normalizedEmail} — status=${delivery.status} failureKind=${delivery.failureKind ?? 'unclassified'} providerCode=${delivery.providerCode ?? 'unnamed'} retryable=${delivery.retryable === true} error=${delivery.error ?? 'none'}`
+        `[MAGIC-LINK] Provider REFUSED the send for member=${memberRef(memberId)} — status=${delivery.status} failureKind=${delivery.failureKind ?? 'unclassified'} providerCode=${delivery.providerCode ?? 'unnamed'} retryable=${delivery.retryable === true} error=${delivery.error ?? 'none'}`
       );
 
       // `retryable` governs the advice, not tone. Telling someone to retry a
