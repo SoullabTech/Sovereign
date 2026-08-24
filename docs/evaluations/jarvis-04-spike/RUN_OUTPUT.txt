@@ -1,0 +1,55 @@
+
+=== A. WHAT THE CANDIDATE'S HISTORY STORE CAN CARRY ===
+  history columns: ['id', 'memory_id', 'old_memory', 'new_memory', 'event', 'created_at', 'updated_at', 'is_deleted', 'actor_id', 'role']
+  PASS  A1. an event history exists at all — corrections are not simply lost
+          10 columns
+  PASS  A2. an actor is recorded
+  PASS  A3.source: NO 'provenance / source' column — the schema cannot express it
+          absent from ['id', 'memory_id', 'old_memory', 'new_memory', 'event', 'created_at', 'updated_at', 'is_deleted', 'actor_id', 'role']
+  PASS  A3.evidence: NO 'evidence class' column — the schema cannot express it
+          absent from ['id', 'memory_id', 'old_memory', 'new_memory', 'event', 'created_at', 'updated_at', 'is_deleted', 'actor_id', 'role']
+  PASS  A3.status: NO 'standing / status' column — the schema cannot express it
+          absent from ['id', 'memory_id', 'old_memory', 'new_memory', 'event', 'created_at', 'updated_at', 'is_deleted', 'actor_id', 'role']
+  PASS  A3.supersedes: NO 'supersession pointer' column — the schema cannot express it
+          absent from ['id', 'memory_id', 'old_memory', 'new_memory', 'event', 'created_at', 'updated_at', 'is_deleted', 'actor_id', 'role']
+  PASS  A3.checksum: NO 'integrity chain' column — the schema cannot express it
+          absent from ['id', 'memory_id', 'old_memory', 'new_memory', 'event', 'created_at', 'updated_at', 'is_deleted', 'actor_id', 'role']
+
+=== B. ADVERSARIAL CASES — CANDIDATE HISTORY STORE ===
+  PASS  B1. corrected memory — the prior value is retained
+          2 history rows
+  PASS  B2. conflicting memories — both texts survive in history
+  PASS  B3. history preservation — a DELETE event is soft, the row remains
+          3 rows after DELETE
+  PASS  B4. same text from different authorities is NOT distinguishable by standing
+          actor_id records WHO asserted; nothing records with what STANDING or on what EVIDENCE
+  PASS  B5. no-evidence case — a memory with no support is stored identically to a supported one
+          the schema has nowhere to put support, so 'unsupported' is unrepresentable
+  PASS  B6. missing provenance cannot even be flagged as missing
+
+=== C. WHAT CANNOT BE MEASURED WITHOUT MANUFACTURING THE ANSWER ===
+  UNKNOWN  model-authored unsupported recollection
+           FACT_RETRIEVAL_PROMPT decides what becomes a memory. Requires a live LLM; stubbing it would author the verdict rather than measure it.
+  UNKNOWN  irrelevant but semantically similar retrieval
+           retrieval is embedding similarity over a vector store; needs an embedding model and credentials. UNKNOWN, not assumed.
+  UNKNOWN  stale memory / correction cascade
+           mem0 has no dependency edges between memories, so a cascade has nothing to traverse — but whether the LLM would notice staleness is model behaviour, UNKNOWN.
+  UNKNOWN  restart recall quality / project portability
+           recall quality is a function of the embedding model and store; not exercisable here.
+
+=== D. THE SAME ADVERSARIAL CASES AGAINST THE JARVIS BASELINE ===
+  PASS  D1. no-evidence case — JARVIS REFUSES the claim
+          exit=1 — refusal is a verdict, not an error
+  PASS  D2. model-authored recollection is classed WEAK and cannot carry OBSERVATION
+          exit=1 — 'project_memory' is a declared WEAK evidence kind
+  PASS  D3. the SAME assertion with probative evidence is PERMITTED
+          exit=0 — standing follows the evidence, not the text
+  PASS  D4. an incomplete correction is REFUSED — all seven rungs required
+          exit=1 — missing general_failure_pattern / candidate_recognition_rule / future_test
+  PASS  D5. same text from different authorities IS distinguishable
+          identical-shaped claims separated purely by evidence class — the candidate cannot do this
+
+================================================================
+JARVIS-04 ADVERSARIAL RECORD: 18 passed · 0 failed · 4 UNKNOWN
+================================================================
+
