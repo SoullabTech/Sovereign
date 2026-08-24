@@ -347,3 +347,69 @@ GUI-shaped request → deterministic aperture → materialization → containmen
 stays `NO_EVIDENCE_CONTEXT`; coincidental single-word matches are declined; an uncited
 answer and an out-of-fragment citation both fail to verify; invalid and out-of-range
 selectors fail closed; C0/C1/C3 routing unregressed.
+
+---
+
+# GATE ZERO — ACCEPTED (founder witness, 2026-08-24)
+
+Witnessed through the packaged application. **Frozen. No further Gate Zero repair work.**
+
+| Acceptance | Result |
+|---|---|
+| Packaged C1 execution | **PASS** |
+| Automatic persistence | **PASS** |
+| Restart retrieval | **PASS** |
+| Provenance | **PASS** |
+| Artifact identity | **PASS** |
+| B1 persistence · B2 binding · B4 GUI evidence | **PASS · PASS · PASS** |
+
+Witness run **`r-473d9742ed`** — verified independently from the store, not transcribed:
+
+```
+state COMPLETED · disposition verified · lane C1 · model qwen2.5:7b
+repository        /Users/soullab/MAIA-SOVEREIGN/.git
+operated worktree /Users/soullab/jarvis-reconcile  @ 84f38f89d  (fix/jarvis-00-reconciliation, clean)
+build worktree    /Users/soullab/jarvis-reconcile  @ 84f38f89d
+running artifact  84f38f89d
+relationship      ALIGNED
+citation          scripts/builder/router.mjs:23  in_context  fragment 11-65 @84f38f89d
+```
+
+The seven identities were carried on the record separately and never collapsed into
+"the repo". That was the point of the gate.
+
+---
+
+# EP-01 — semantic answerfulness gap
+
+**Status: DISCOVERED — ACTIVE APERTURE. Not a Gate Zero failure. Not to be fixed here.**
+
+The accepted witness run asked:
+
+> What is the value of `C1_MAX_INPUT_CHARS`?
+
+and the worker's complete response was:
+
+```
+scripts/builder/router.mjs:23
+```
+
+`verifyEvidence` scored this **1/1 citations contained**, and correctness read
+**VERIFIED**. Both are literally true and the mechanism behaved exactly as designed —
+the citation *is* grounded in a materialized fragment at the operated commit.
+
+But a citation is not an answer. The requested value (`4000`) never appears in the
+response. So:
+
+> **citation containment ≠ semantic correctness / answerfulness**
+
+The verifier proves a claim is *grounded*. It does not prove the response *answers the
+question*, nor that any claim was made at all. A response consisting solely of a valid
+reference passes containment vacuously.
+
+This is adjacent to, but distinct from, the aperture the existing design already names
+(containment is not relevance). This one is narrower and sharper: containment is not
+even *assertion*.
+
+Belongs to the epistemic/correctness work, alongside `decideCorrectness` and
+`verifyEvidence`. Recorded here only because the accepted witness is where it surfaced.
