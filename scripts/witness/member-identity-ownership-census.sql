@@ -33,12 +33,26 @@
 --   end the run rather than a single probe. Any status containing 'canceling' means the run
 --   was cut short there — re-probe that column narrowed; do not read the rest as complete.
 --
--- THE FOUR STATES ARE KEPT DISTINCT — a count column shows '-' whenever it is not a count:
---   count_a/count_b = 0          -> status OK      : measured, genuinely zero
---   count_a/count_b = N          -> status OK      : measured
---   count_a/count_b = '-'        -> status UNCOUNTED_TYPE | UNCOUNTED_LARGE_NO_INDEX
---                                                   : not probed. NOT a zero.
---   count_a/count_b = '-'        -> status ERROR:… : probe failed. NOT a zero.
+-- THE STATES ARE KEPT DISTINCT — a count column shows '-' whenever it is not a count:
+--   0                        status OK                          measured, genuinely zero
+--   N                        status OK                          measured
+--   '-'                      status UNCOUNTED_LARGE             heap larger than :maxmb and no
+--                                                               usable index — size KNOWN, scan
+--                                                               declined. NOT a zero.
+--   '-'                      status UNCOUNTED_UNANALYZED        size could not be established at
+--                                                               all. NOT a zero.
+--   '-'                      status UNCOUNTED_TYPE_INCOMPATIBLE cannot compare a member id to
+--                                                               this column type. NOT a zero.
+--   '-'                      status ERROR:…                     probe failed. NOT a zero.
+--
+-- SIZE IS MEASURED, NOT ESTIMATED (repaired 2026-08-24)
+--   The first production run bucketed 86 relations as UNCOUNTED_LARGE_NO_INDEX, which conflated
+--   two different epistemic states: a genuinely large relation, and a relation whose reltuples
+--   is -1 because it has never been ANALYZEd — size simply unknown. soul_portrait_consents, a
+--   9-row table, landed in that bucket. The gate now reads pg_relation_size(), which is exact
+--   and cheap and does not depend on analyze state, so 'never analyzed' no longer implies
+--   'assume large'. reltuples is retained only as a reported fact (the anlz column), never as a
+--   gate.
 --
 -- Run (from the Mac Studio checkout; nothing is written to the shared worktree):
 --   git fetch origin claude/member-identity-portrait-split-y4zhaq && \
@@ -54,14 +68,18 @@
 --   cancel, so partial output is real output.
 --
 --   :a = canonical candidate.  :b = legacy candidate.  Labels only; this file makes no ruling.
---   Optional: -v maxscan=2000000  (row-estimate ceiling for probing an unindexed column)
+--   Optional: -v maxmb=64   (heap-size ceiling, in MB, for scanning a column with no usable
+--                            index; relations above it are reported UNCOUNTED_LARGE with their
+--                            actual size, never silently skipped)
 --
 -- VALIDATED BEFORE FIRST PRODUCTION USE
 --   Run against a synthetic Postgres 16 fixture built to fire every branch: FK→members.id,
 --   FK→members.email (correctly NOT counted as an id reference), an un-FK'd member-shaped
 --   column, one-row-per-member unique collision, composite unique with and without overlap,
 --   expression unique index, partial unique index, ledger table, session table, both-zero,
---   domain-typed column (UNCOUNTED_TYPE), and never-analyzed table (UNCOUNTED_LARGE_NO_INDEX).
+--   domain-typed column (UNCOUNTED_TYPE_INCOMPATIBLE), a never-analyzed table (which must now be
+--   COUNTED, not bucketed as large), and an over-ceiling relation (UNCOUNTED_LARGE with its
+--   measured size).
 --   Per-probe isolation separately proven: a probe against a nonexistent relation reports
 --   ERROR while the probes on either side of it return real counts and the transaction stays
 --   usable. The instrument was not handed over untested.
@@ -72,9 +90,9 @@
 \set VERBOSITY terse
 \timing off
 
-\if :{?maxscan}
+\if :{?maxmb}
 \else
-\set maxscan 2000000
+\set maxmb 64
 \endif
 
 BEGIN;
@@ -82,9 +100,9 @@ SET TRANSACTION READ ONLY;
 SET LOCAL statement_timeout = '900s';   -- bounds the whole run; the index/size gate below is
                                         -- what actually keeps it short. NOTICEs already
                                         -- emitted survive a timeout, so partial output is real.
-SET LOCAL census.a       = :'a';
-SET LOCAL census.b       = :'b';
-SET LOCAL census.maxscan = :'maxscan';
+SET LOCAL census.a     = :'a';
+SET LOCAL census.b     = :'b';
+SET LOCAL census.maxmb = :'maxmb';
 
 \echo ''
 \echo '════════ 1. THE TWO CANDIDATE IDENTITIES ════════'
@@ -106,7 +124,7 @@ DO $CENSUS$
 DECLARE
   v_a        text   := current_setting('census.a');
   v_b        text   := current_setting('census.b');
-  v_maxscan  bigint := current_setting('census.maxscan')::bigint;
+  v_maxbytes bigint := current_setting('census.maxmb')::bigint * 1024 * 1024;
   r          record;
   ur         record;
   na         bigint;
@@ -118,14 +136,18 @@ DECLARE
   othercols  text;
   cmptype    text;
   n_total    int := 0;
-  n_noop     int := 0;
   n_error    int := 0;
   n_uncnt    int := 0;
+  tally      jsonb := '{}'::jsonb;
+  -- NOT named `t`: a plpgsql record variable shadows a same-named SQL alias, and the discovery
+  -- query below aliases information_schema.tables as t. That collision fails the whole block
+  -- with "record t is not assigned yet".
+  tally_row  record;
 BEGIN
   RAISE NOTICE '%', rpad('table',30) || ' | ' || rpad('column',24) || ' | ' || rpad('fk→id',5)
                  || ' | ' || rpad('type',18) || ' | ' || lpad('A',8) || ' | ' || lpad('B',8)
-                 || ' | ' || rpad('collision evidence',36) || ' | ' || rpad('status',28)
-                 || ' | ' || 'rule';
+                 || ' | ' || rpad('collision evidence',36) || ' | ' || rpad('status',30)
+                 || ' | ' || rpad('anlz',5) || ' | ' || lpad('heap',9) || ' | ' || 'rule';
   RAISE NOTICE '%', repeat('-', 200);
 
   FOR r IN
@@ -170,6 +192,8 @@ BEGIN
            (ty.typname = 'uuid')                         AS is_uuid,
            (ty.typname IN ('uuid','text','varchar','bpchar')) AS comparable,
            cl.reltuples::bigint                          AS est_rows,
+           (cl.reltuples >= 0)                           AS analyzed,
+           pg_relation_size(cl.oid)                      AS heap_bytes,
            EXISTS (SELECT 1 FROM pg_index ix
                     WHERE ix.indrelid = cl.oid AND ix.indkey[0] = a.attnum) AS leading_indexed
       FROM cands c
@@ -186,10 +210,14 @@ BEGIN
     cmptype := CASE WHEN r.is_uuid THEN 'uuid' ELSE 'text' END;
 
     IF NOT r.comparable THEN
-      status := 'UNCOUNTED_TYPE';                 -- cannot compare a member id to this type
+      status := 'UNCOUNTED_TYPE_INCOMPATIBLE';    -- cannot compare a member id to this type
       n_uncnt := n_uncnt + 1;
-    ELSIF NOT (r.leading_indexed OR (r.est_rows >= 0 AND r.est_rows < v_maxscan)) THEN
-      status := 'UNCOUNTED_LARGE_NO_INDEX';       -- refused a seq scan on a large prod table
+    ELSIF r.heap_bytes IS NULL THEN
+      status := 'UNCOUNTED_UNANALYZED';           -- size could not be established at all
+      n_uncnt := n_uncnt + 1;
+    ELSIF NOT (r.leading_indexed OR r.heap_bytes <= v_maxbytes) THEN
+      -- size is KNOWN (measured, not estimated) and the scan is declined on cost
+      status := 'UNCOUNTED_LARGE(' || pg_size_pretty(r.heap_bytes) || ')';
       n_uncnt := n_uncnt + 1;
     ELSE
       -- Each probe gets its own subtransaction: a failure here cannot abort the census.
@@ -259,7 +287,7 @@ BEGIN
       WHEN coll IS NOT NULL                        THEN 'COLLISION_MANUAL'
       ELSE                                              'REBIND_CHECK'
     END;
-    IF rule = 'NO_OP' THEN n_noop := n_noop + 1; END IF;
+    tally := tally || jsonb_build_object(rule, coalesce((tally ->> rule)::int, 0) + 1);
 
     -- every field is truncated and '|'-separated: a long index name must never bleed into the
     -- next column and make a status unreadable
@@ -269,13 +297,18 @@ BEGIN
                    || ' | ' || lpad(coalesce(na::text, '-'), 8)
                    || ' | ' || lpad(coalesce(nb::text, '-'), 8)
                    || ' | ' || rpad(left(coalesce(coll, '-'), 36), 36)
-                   || ' | ' || rpad(left(status, 28), 28)
+                   || ' | ' || rpad(left(status, 30), 30)
+                   || ' | ' || rpad(CASE WHEN r.analyzed THEN 'anlz' ELSE '-' END, 5)
+                   || ' | ' || lpad(pg_size_pretty(r.heap_bytes), 9)
                    || ' | ' || rule;
   END LOOP;
 
   RAISE NOTICE '%', repeat('-', 190);
-  RAISE NOTICE 'relations examined: %   NO_OP (both zero): %   UNCOUNTED: %   ERROR: %',
-               n_total, n_noop, n_uncnt, n_error;
+  RAISE NOTICE 'relations examined: %   UNCOUNTED: %   ERROR: %', n_total, n_uncnt, n_error;
+  RAISE NOTICE 'tally by rule:';
+  FOR tally_row IN SELECT key, value::int AS n FROM jsonb_each_text(tally) ORDER BY 2 DESC, 1 LOOP
+    RAISE NOTICE '    % : %', rpad(tally_row.key, 24), tally_row.n;
+  END LOOP;
   RAISE NOTICE 'UNCOUNTED and ERROR are NOT zeros. Re-probe them narrowed before any ruling.';
 END
 $CENSUS$;
@@ -308,7 +341,8 @@ RELEASE SAVEPOINT p;
 SAVEPOINT p;
 SELECT count(*) AS consent_rows_for_portraits_that_no_longer_exist
   FROM soul_portrait_consents sc
- WHERE NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id);
+ WHERE sc.portrait_id IS NOT NULL   -- a NULL reference is not an orphan; NOT EXISTS would say it is
+   AND NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id);
 ROLLBACK TO SAVEPOINT p;
 RELEASE SAVEPOINT p;
 
@@ -316,7 +350,8 @@ SAVEPOINT p;
 SELECT sc.portrait_id::text, min(sc.created_at) AS first_event,
        max(sc.created_at) AS last_event, count(*) AS events
   FROM soul_portrait_consents sc
- WHERE NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id)
+ WHERE sc.portrait_id IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM soul_portraits p WHERE p.id = sc.portrait_id)
  GROUP BY 1 ORDER BY 2;
 ROLLBACK TO SAVEPOINT p;
 RELEASE SAVEPOINT p;

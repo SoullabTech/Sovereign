@@ -262,6 +262,15 @@ probed directly. Until then no ruling may rest on any of the 86 — including
 `soul_portrait_consents.actor_member_id`, `encounter_participants`, `case_memory_chunks`, and
 `session_consent_events`.
 
+> **REPAIRED 2026-08-24, awaiting re-run.** The gate now reads `pg_relation_size()` — exact,
+> cheap, independent of analyze state — so "never analyzed" no longer implies "assume large";
+> `reltuples` survives only as a reported fact (the `anlz` column). Statuses are now
+> `UNCOUNTED_LARGE(<measured size>)`, `UNCOUNTED_UNANALYZED`, `UNCOUNTED_TYPE_INCOMPATIBLE`,
+> `ERROR`, and the run prints a tally by rule. Verified on a fixture: a never-analyzed 3-row
+> table that the old gate bucketed as `UNCOUNTED_LARGE_NO_INDEX` now returns A=2 / B=1.
+> **§4.1–4.6 stand on counted relations and are unaffected; the 86 remain unknown until the
+> re-run.**
+
 ### 4.8 Delete trace (open question, unchanged)
 
 `soul_portraits`: `n_tup_ins=24 · n_tup_upd=24 · n_tup_del=6 · n_live_tup=18`. Consent ledger:
