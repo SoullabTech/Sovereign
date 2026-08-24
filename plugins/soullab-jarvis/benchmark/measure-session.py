@@ -230,6 +230,20 @@ def main():
     if args[0] == "--compare":
         if len(args) != 3:
             sys.exit("usage: --compare BASE.jsonl CAND.jsonl")
+        # A missing or empty path here almost always means the arms were never run
+        # and a shell expansion produced ''. Say that, rather than throwing.
+        for label, path in (("BASE (arm A)", args[1]), ("CAND (arm B)", args[2])):
+            if not path or not os.path.isfile(path):
+                sys.stderr.write(
+                    f"\ncannot compare: {label} path is "
+                    f"{'empty' if not path else 'not a file'}: {path!r}\n\n"
+                    "Both arms must have been RUN first -- each arm is one Claude Code\n"
+                    "session in which you performed the benchmark task. List what exists:\n\n"
+                    "  ls -lt ~/.claude/projects/<project-slug>/*.jsonl\n\n"
+                    "If that shows fewer than two transcripts, there is nothing to compare\n"
+                    "yet. See PROTOCOL.md.\n"
+                )
+                sys.exit(2)
         compare(measure(args[1]), measure(args[2]))
         return
     as_json = args[0] == "--json"
