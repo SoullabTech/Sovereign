@@ -18,6 +18,7 @@ const MECH = require('./builder-mechanism.js');
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
+const { buildC1RunRecord } = require('./c1-run-record');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -910,6 +911,46 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         fragments_offered: fragments.length,
         evidence,
       };
+
+      // ── C1 result persistence ────────────────────────────────────────────
+      // The SAME canonical jarvis-runtime-store.mjs the work-unit mechanism
+      // uses, imported from the operated root. Not a second persistence
+      // mechanism — the store is a generic primitive; only the work-unit lane
+      // owns RUN_STATES.
+      //
+      // Written only AFTER correctness has been decided, so a persisted record
+      // can never carry a verdict the verifier did not give.
+      //
+      // The record SHAPE (and why C1 does not reuse the pipeline's RUN_STATES)
+      // lives in c1-run-record.js so it is testable without Electron. Records
+      // are never written in an in-flight state, so reconcileOrphanedRuns —
+      // which only rewrites runs whose state is in the in-flight set it is
+      // given — cannot reach them.
+      try {
+        const storePath = path.join(root, 'scripts', 'builder', 'jarvis-runtime-store.mjs');
+        const store = await import(`file://${storePath}?t=${Date.now()}`);
+        store.initStore();
+        const run_id = store.newRunId();
+        store.saveRun(buildC1RunRecord({
+          run_id,
+          now: store.nowISO(),
+          root,
+          task: task.prompt,
+          model: body.model,
+          executionVerified: response.verification.pass,
+          correctness,
+          correctness_reason,
+          fragments,
+          evidence,
+          answer: body.response,
+        }));
+        response.run_id = run_id;
+        response.persisted = true;
+      } catch (e) {
+        // A persistence failure must never rewrite the verdict. Report it.
+        response.persisted = false;
+        response.persistence_error = String(e.message).slice(0, 300);
+      }
     } catch (e) {
       response.status = 'failed';
       response.result = { error: e.message };
