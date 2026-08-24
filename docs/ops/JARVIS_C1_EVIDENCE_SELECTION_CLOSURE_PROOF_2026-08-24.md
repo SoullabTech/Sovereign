@@ -27,7 +27,7 @@ REFUSAL PROPERTY:
 C1 wiring                 PASS   witnessed
 Materialization           PASS   witnessed
 Evidence selection        PASS   witnessed
-Verifier path identity    PASS   witnessed
+Verifier path identity    PASS   acceptance leg witnessed
 
 C1 ACCEPTANCE:  CLOSED
 ```
