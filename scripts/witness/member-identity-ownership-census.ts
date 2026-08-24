@@ -169,7 +169,10 @@ async function main() {
       SELECT t.relname AS table_name,
              i.relname AS index_name,
              ix.indpred IS NOT NULL AS partial,
-             array_agg(a.attname ORDER BY k.ord) AS cols,
+             -- ::text matters: array_agg(attname) yields name[] (oid 1003), for which node-pg
+             -- has no array parser, so it arrives as the raw string '{a,b}' rather than an
+             -- array. text[] (oid 1009) is parsed. asArray() below is the belt to this brace.
+             array_agg(a.attname::text ORDER BY k.ord) AS cols,
              bool_or(k.attnum = 0)               AS has_expression
         FROM pg_index ix
         JOIN pg_class i ON i.oid = ix.indexrelid
@@ -189,6 +192,9 @@ async function main() {
     // 5 ─ counts + collisions, one candidate column at a time
     const rows: Row[] = [];
     for (const cand of candidates) {
+      // A JS-level throw here would abort the whole census exactly the way an unisolated
+      // SQL error would — the same false-zero failure class, one layer up. Contained.
+      try {
       let rowsA: number | null = null;
       let rowsB: number | null = null;
       let note: string | undefined;
@@ -210,7 +216,7 @@ async function main() {
       const collisions: string[] = [];
       if (rowsA !== null && rowsB !== null && rowsA > 0 && rowsB > 0) {
         for (const u of uniqByTable.get(cand.table) || []) {
-          const cols: string[] = (u.cols || []).filter(Boolean);
+          const cols: string[] = asArray(u.cols).filter((x): x is string => Boolean(x));
           if (!cols.includes(cand.column)) continue;
           const label = `${u.index_name}(${cols.join(',')})${u.partial ? ' [partial]' : ''}`;
           uniqueKeys.push(label);
@@ -249,6 +255,17 @@ async function main() {
         rule: classify(cand.table, rowsA, rowsB, collisions, note),
         note,
       });
+      } catch (e: any) {
+        rows.push({
+          ...cand,
+          rowsA: null,
+          rowsB: null,
+          uniqueKeys: [],
+          collisions: [],
+          rule: 'ERROR',
+          note: `probe crashed: ${String(e?.message || e).split('\n')[0]}`,
+        });
+      }
     }
 
     // 6 ─ OPEN QUESTION (separate from the census): soul_portraits delete trace
@@ -334,6 +351,25 @@ async function probe(
     await c.query('RELEASE SAVEPOINT census_probe');
     return { ok: false, error: String(e?.message || e).split('\n')[0] };
   }
+}
+
+/**
+ * Postgres array -> JS array, tolerating a driver that hands back the raw '{a,b}' literal.
+ * Fallback only; the ::text cast above means the driver normally parses this itself. The naive
+ * split is lossy for a quoted identifier containing a comma — such a name would yield a bogus
+ * column, whose collision probe then fails and is reported ERROR rather than read as zero.
+ */
+function asArray(v: any): Array<string | null> {
+  if (Array.isArray(v)) return v;
+  if (typeof v === 'string' && v.startsWith('{') && v.endsWith('}')) {
+    const body = v.slice(1, -1);
+    if (body === '') return [];
+    return body.split(',').map((x) => {
+      const t = x.replace(/^"|"$/g, '');
+      return t === 'NULL' ? null : t;
+    });
+  }
+  return [];
 }
 
 function qi(ident: string): string {
