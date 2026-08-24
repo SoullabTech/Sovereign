@@ -212,6 +212,10 @@ function PressManuscriptRoom() {
   const [saveError, setSaveError] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [ingesting, setIngesting] = useState(false);
+  /* WS-01 — the identity of the arrival taken into custody at ingest. Held so
+     the save act can bind the manuscript to what actually arrived. Null for a
+     paste, which has no artifact and must never be given one. */
+  const [sourceArrivalId, setSourceArrivalId] = useState<string | null>(null);
 
   const [sectionCursor, setSectionCursor] = useState(0);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -332,12 +336,22 @@ function PressManuscriptRoom() {
       const res = await apiFetch('/api/sovereign/manuscripts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: draftTitle, sections: preview }),
+        body: JSON.stringify({
+          title: draftTitle,
+          sections: preview,
+          /* One of these binds the manuscript to its source. A file-backed
+             import claims the arrival already in custody; a paste records the
+             exact text the member is confirming, right now, at this act. */
+          ...(sourceArrivalId
+            ? { sourceArrivalId }
+            : { confirmedText: draftText }),
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setPreview(null);
       setDraftText('');
+      setSourceArrivalId(null);
       setDraftTitle('');
       setImporting(false); // intent spent — do not pin the member on the form
       // Import is a threshold, not a destination — and since the Writer
@@ -365,15 +379,18 @@ function PressManuscriptRoom() {
       ]);
       return;
     }
-    // Plain text / markdown read in the browser (unchanged, transparent).
-    if (/\.(txt|md|markdown)$/i.test(f.name)) {
-      const text = await f.text();
-      setDraftText(text);
-      if (!draftTitle.trim()) setDraftTitle(f.name.replace(/\.(txt|md|markdown)$/i, ''));
-      return;
-    }
-    // .docx / .pdf — extracted server-side, then shown to the member to review
-    // before anything is saved. The author's words, unchanged.
+    /* WS-01 — every uploaded file takes the same path, including .txt and .md.
+     *
+     * They used to be read in the browser, so their bytes never reached the
+     * server and no artifact could be kept. That was an implementation
+     * accident, not an ontological difference: a .md a writer uploads is still
+     * an artifact, even though decoding it is trivial. Routing them through
+     * ingest puts those bytes into custody like any other file.
+     *
+     * Nothing about this is visible to the member — same control, same result
+     * in the field, same title. Only the transport changed. */
+    // Extracted server-side, then shown to the member to review before anything
+    // is saved. The author's words, unchanged.
     setIngesting(true);
     try {
       const form = new FormData();
@@ -389,6 +406,7 @@ function PressManuscriptRoom() {
         return;
       }
       setDraftText(data.text || '');
+      setSourceArrivalId(typeof data.sourceArrivalId === 'string' ? data.sourceArrivalId : null);
       setWarnings(Array.isArray(data.warnings) ? data.warnings : []);
       if (!draftTitle.trim() && data.title) setDraftTitle(data.title);
     } catch {
