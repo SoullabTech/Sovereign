@@ -1,0 +1,1489 @@
+{
+  "unit": "JEM-01",
+  "kind": "census",
+  "authorized_scope": "CENSUS ONLY \u2014 no repair, consolidation, migration, deletion, rename, normalization or redesign",
+  "generated_at": "2026-08-24",
+  "repo": "SoullabTech/Sovereign",
+  "binding": {
+    "root": "/home/user/Sovereign",
+    "resolution": "dev-walk",
+    "head": "d5d3a15",
+    "branch": "claude/jarvis-agent-memory-build-988kqw"
+  },
+  "verification_rule": "every mechanism is bound to a file, runtime artifact, persisted record or executable behaviour; anything unproven is marked UNKNOWN",
+  "mechanism_count": 42,
+  "persistence_homes": {
+    "AIN_HOME": {
+      "path": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)",
+      "versioned": false,
+      "portable": false,
+      "contents": [
+        "packets/",
+        "results/",
+        "logs/",
+        "sessions/",
+        "sessions.jsonl",
+        "episodes.jsonl",
+        "concurrency.json",
+        "runtime/runs/",
+        "runtime/events.jsonl",
+        "runtime/runtime.json",
+        "runtime/binding.json"
+      ]
+    },
+    "IN_REPO": {
+      "path": ".ain/",
+      "versioned": true,
+      "portable": true,
+      "contents": [
+        "claims/*.json",
+        "epistemic-ledger.jsonl"
+      ],
+      "note": "git-tracked \u2014 the ONLY JARVIS memory that travels between machines"
+    },
+    "APP_SUPPORT": {
+      "path": "<appData>/JARVIS/",
+      "versioned": false,
+      "portable": false,
+      "contents": [
+        "config.json",
+        "first-run-prompted.json"
+      ],
+      "note": "the only explicit-founder-choice persistence"
+    },
+    "WORKTREES": {
+      "path": "~/.claude/worktrees/ain-<work_unit_id>",
+      "versioned": false,
+      "portable": false
+    },
+    "DOCS": {
+      "path": "docs/**, .claude/**, CLAUDE.md",
+      "versioned": true,
+      "portable": true,
+      "note": "unindexed prose \u2014 the dominant JARVIS memory in practice"
+    },
+    "POSTGRES": {
+      "path": null,
+      "note": "ABSENT for JARVIS. agent_runs / integration_passes are MAIA Corpus Callosum tables, not JARVIS. No JARVIS mechanism in this census reads or writes PostgreSQL."
+    }
+  },
+  "mechanisms": [
+    {
+      "name": "repo-markers",
+      "location": "jarvis-desktop/src/repo-markers.js",
+      "purpose": "The single definition of what makes a directory a canonical Sovereign checkout (four markers).",
+      "writer": "none (constant)",
+      "readers": [
+        "jarvis-desktop/src/main.js",
+        "scripts/builder/jarvis-binding.mjs"
+      ],
+      "persistence_medium": "source constant",
+      "identity_key": "n/a",
+      "scope": "global",
+      "authority": "definitional \u2014 not a governance authority",
+      "provenance": "extracted from main.js at JEM-00 (commit d5d3a15)",
+      "lifetime": "repo lifetime",
+      "restart_survival": "n/a (source)",
+      "cross_session_survival": "n/a (source)",
+      "current_consumers": [
+        "Desktop resolution",
+        "runtime binding"
+      ],
+      "overlaps": [],
+      "known_limits": [
+        "marker presence is existence-only; it does not prove the checkout is functional"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jarvis-desktop/src/repo-markers.js",
+        "scripts/builder/__tests__/jem-00-binding-proof.mjs \u00a78"
+      ],
+      "group": "binding"
+    },
+    {
+      "name": "desktop-repo-resolution",
+      "location": "jarvis-desktop/src/repo-resolution.js (ORDER) + main.js findRepoRootPackagedMode/findRepoRootDevMode (SOURCES)",
+      "purpose": "Decide which repository the Desktop operates against; report which rung answered.",
+      "writer": "none (pure derivation)",
+      "readers": [
+        "jarvis-desktop/src/main.js",
+        "preferences.js",
+        "provenance.js"
+      ],
+      "persistence_medium": "in-memory per launch (RESOLVED), rebindable at runtime",
+      "identity_key": "absolute repo root path",
+      "scope": "Desktop process",
+      "authority": "binds the READ plane; cannot grant execution authority",
+      "provenance": "RESOLUTION vocabulary: explicit-env | explicit-config | implicit-default | dev-walk | unresolved",
+      "lifetime": "process, mutable via Preferences",
+      "restart_survival": "re-derived each launch; durable only via repo-config",
+      "cross_session_survival": "only through repo-config",
+      "current_consumers": [
+        "Desktop Home/System panels",
+        "Preferences",
+        "all jarvis:* IPC"
+      ],
+      "overlaps": [
+        "jarvis-binding"
+      ],
+      "known_limits": [
+        "ends at a hard-coded DEFAULT candidate reported DEGRADED \u2014 deliberate for a viewer"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jarvis-desktop/test/jop-04-dev-resolution.test.mjs (6/6)",
+        "jarvis-desktop/test/jop-04b-node-resolution.test.mjs (7/7)"
+      ],
+      "group": "binding"
+    },
+    {
+      "name": "jarvis-binding",
+      "location": "scripts/builder/jarvis-binding.mjs",
+      "purpose": "The runtime's canonical repository binding: verified, provenance-carrying, refusing.",
+      "writer": "recordBinding()",
+      "readers": [
+        "scripts/builder/jarvis-runtime-pipeline.mjs"
+      ],
+      "persistence_medium": "derivation + JSON record at $AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/runtime/binding.json",
+      "identity_key": "absolute repo root path",
+      "scope": "runtime process",
+      "authority": "binds the WRITE plane; refuses rather than defaulting (REPO_BINDING_UNRESOLVED)",
+      "provenance": "reuses Desktop RESOLUTION vocabulary; reports divergence from the Desktop's saved binding as a fact",
+      "lifetime": "process; record is durable",
+      "restart_survival": "YES \u2014 binding.json read by a later process",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "runtime pipeline CONTEXT_ROUTING gate"
+      ],
+      "overlaps": [
+        "desktop-repo-resolution",
+        "repo-config"
+      ],
+      "known_limits": [
+        "no DEFAULT rung by design",
+        "appData mapping mirrors Electron rather than sharing it \u2014 drift would surface as a differing config_path"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/__tests__/jem-00-binding-proof.mjs (43/43)",
+        "docs/ops/JEM_00_BINDING_PROOF_2026-08-24.md"
+      ],
+      "group": "binding"
+    },
+    {
+      "name": "repo-config",
+      "location": "jarvis-desktop/src/repo-config.js -> <appData>/JARVIS/config.json",
+      "purpose": "Persist the founder's explicit repository choice across launches and reboots.",
+      "writer": "Desktop Preferences (jarvis:choose-repo / jarvis:clear-repo)",
+      "readers": [
+        "Desktop resolution ladder",
+        "scripts/builder/jarvis-binding.mjs"
+      ],
+      "persistence_medium": "JSON file on local disk, atomic temp+rename",
+      "identity_key": "single-valued (one binding per machine)",
+      "scope": "machine / OS user",
+      "authority": "FOUNDER CHOICE \u2014 the only explicit-founder persistence in JARVIS",
+      "provenance": "version, repo_root, set_at, set_by; re-verified against markers on every read",
+      "lifetime": "until changed or cleared",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "Desktop",
+        "runtime binding"
+      ],
+      "overlaps": [
+        "jarvis-binding"
+      ],
+      "known_limits": [
+        "outside the repo \u2014 not versioned, not portable, not backed up",
+        "one binding per machine, no per-project bindings"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jarvis-desktop/src/repo-config.js:66 readConfig",
+        "jem-00-binding-proof.mjs \u00a77"
+      ],
+      "group": "binding"
+    },
+    {
+      "name": "first-run-prompt-ack",
+      "location": "<appData>/JARVIS/first-run-prompted.json",
+      "purpose": "Record that the founder was asked to bind a repository, separately from whether they did.",
+      "writer": "Desktop markPromptSeen()",
+      "readers": [
+        "Desktop startup"
+      ],
+      "persistence_medium": "JSON file",
+      "identity_key": "singleton",
+      "scope": "machine / OS user",
+      "authority": "none \u2014 acknowledgement only",
+      "provenance": "prompted_at, outcome",
+      "lifetime": "permanent once written",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "Desktop startup dialog suppression"
+      ],
+      "overlaps": [
+        "repo-config"
+      ],
+      "known_limits": [
+        "deliberately NOT merged into config: a declined prompt is not a binding"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jarvis-desktop/src/repo-config.js PROMPT_FILENAME"
+      ],
+      "group": "binding"
+    },
+    {
+      "name": "binding-record",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/runtime/binding.json",
+      "purpose": "What this runtime bound to, so a later process can answer what an earlier one believed.",
+      "writer": "scripts/builder/jarvis-binding.mjs recordBinding()",
+      "readers": [
+        "readBindingRecord()"
+      ],
+      "persistence_medium": "JSON file, atomic temp+rename",
+      "identity_key": "singleton (latest binding)",
+      "scope": "AIN_HOME",
+      "authority": "evidentiary only",
+      "provenance": "root, resolution, explicit, markers_verified, config_path, divergence, substrate{head,branch,dirty}, pid, previous_root, rebound_since_last_run",
+      "lifetime": "overwritten each record",
+      "restart_survival": "YES (proven, separate processes)",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "JEM-00 proof; no production consumer yet"
+      ],
+      "overlaps": [
+        "runtime-process-record"
+      ],
+      "known_limits": [
+        "keeps only the latest + previous root, not a full binding history",
+        "no consumer reads it at runtime yet \u2014 written for evidence, not yet for behaviour"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jem-00-binding-proof.mjs \u00a75,\u00a76"
+      ],
+      "group": "binding"
+    },
+    {
+      "name": "work-packet",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/packets/<work_unit_id>.json ; contract: docs AIN_WORK_PACKET_CONTRACT.md",
+      "purpose": "The canonical, attempt-invariant definition of one bounded piece of intended work.",
+      "writer": "human/orchestrator authoring; runtime pipeline stamps runtime_run_id + worktree",
+      "readers": [
+        "scripts/ain-delegate.sh",
+        "work-unit.mjs",
+        "jarvis-context.mjs",
+        "jarvis-packet-guard.mjs",
+        "runtime pipeline"
+      ],
+      "persistence_medium": "JSON file",
+      "identity_key": "work_unit_id",
+      "scope": "one work unit",
+      "authority": "AUTHORITATIVE \u2014 carries governing_authority, authorized_acts, not_authorized_acts, autonomy_ceiling",
+      "provenance": "canonical_sha binds the packet to a commit; established_facts[] carries prior knowledge",
+      "lifetime": "durable; survives worker change, retry, escalation, transcript loss",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "delegate lane",
+        "runtime pipeline",
+        "Desktop run-work-unit"
+      ],
+      "overlaps": [
+        "builder-session-records",
+        "context-materialization"
+      ],
+      "known_limits": [
+        "AUTHORED, never retrieved \u2014 established_facts[] is hand-written per packet; nothing assembles it from prior work",
+        "'proposed' vs 'ready' folded; deployment states unreachable"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/work-unit.mjs:1-70",
+        "scripts/builder/__tests__/work-unit-proof.mjs"
+      ],
+      "group": "work"
+    },
+    {
+      "name": "work-unit-derivation",
+      "location": "scripts/builder/work-unit.mjs",
+      "purpose": "Assemble packet + session + result(s) into one deterministic answer to 'what is this Work Unit right now', with no transcript.",
+      "writer": "none (derivation) except record-attempt",
+      "readers": [
+        "CLI",
+        "Desktop builder-mechanism.js"
+      ],
+      "persistence_medium": "derivation over three files",
+      "identity_key": "work_unit_id",
+      "scope": "one work unit",
+      "authority": "derives lifecycle; derivePermissionEnvelope() is provider-agnostic and never widens authority",
+      "provenance": "each derived state names the files it was derived from",
+      "lifetime": "per query",
+      "restart_survival": "YES (inputs durable)",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "work-unit CLI",
+        "Desktop mechanism panel"
+      ],
+      "overlaps": [
+        "runtime-run-records"
+      ],
+      "known_limits": [
+        "documented folds: proposed/ready, claimed/running, verifying/review/ready-to-integrate",
+        "dependencies recorded but do not drive lifecycle",
+        "deployment + superseded states UNREACHABLE by derivation"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/work-unit.mjs:44-66 (fold documentation)"
+      ],
+      "group": "work"
+    },
+    {
+      "name": "result-record",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/results/<work_unit_id>.json",
+      "purpose": "The latest execution attempt's structured outcome.",
+      "writer": "scripts/ain-delegate.sh",
+      "readers": [
+        "work-unit.mjs",
+        "runtime pipeline",
+        "Desktop correctness.js"
+      ],
+      "persistence_medium": "JSON file (single-file latest)",
+      "identity_key": "work_unit_id",
+      "scope": "one work unit, latest attempt",
+      "authority": "evidentiary",
+      "provenance": "escalation_required, test_results, exit_code, duration_s, ts",
+      "lifetime": "OVERWRITTEN by each new attempt",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "work-unit status",
+        "Desktop C1 console"
+      ],
+      "overlaps": [
+        "attempts-history",
+        "runtime-run-records",
+        "episodes-ledger"
+      ],
+      "known_limits": [
+        "single-file: the previous attempt is lost unless record-attempt was run first",
+        "worker self-report (escalation_required) is explicitly treated as worthless by the pipeline"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/ain-delegate.sh:38,48,280-367"
+      ],
+      "group": "work"
+    },
+    {
+      "name": "attempts-history",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/results/<work_unit_id>.attempts.jsonl",
+      "purpose": "Additive history of every recorded attempt at a Work Unit.",
+      "writer": "work-unit.mjs record-attempt (MANUAL invocation)",
+      "readers": [
+        "work-unit.mjs list-attempts"
+      ],
+      "persistence_medium": "append-only JSONL",
+      "identity_key": "work_unit_id + append order",
+      "scope": "one work unit",
+      "authority": "evidentiary",
+      "provenance": "snapshot of result.json at record time",
+      "lifetime": "permanent",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "work-unit list-attempts"
+      ],
+      "overlaps": [
+        "result-record",
+        "episodes-ledger",
+        "runtime-run-records"
+      ],
+      "known_limits": [
+        "APERTURE: population requires an explicit manual `record-attempt` call \u2014 nothing in the delegate or runtime path invokes it, so history is empty unless someone remembers"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/work-unit.mjs:69,87,170"
+      ],
+      "group": "work"
+    },
+    {
+      "name": "episodes-ledger",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/episodes.jsonl",
+      "purpose": "Append-only ledger of delegate runs.",
+      "writer": "scripts/ain-delegate.sh",
+      "readers": [
+        "UNKNOWN \u2014 no reader located in scripts/builder or jarvis-desktop"
+      ],
+      "persistence_medium": "append-only JSONL",
+      "identity_key": "ts + work_unit_id",
+      "scope": "AIN_HOME",
+      "authority": "evidentiary",
+      "provenance": "ts, work_unit_id, lane, escalation_required, test_results, exit_code, duration_s",
+      "lifetime": "permanent",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "UNKNOWN"
+      ],
+      "overlaps": [
+        "runtime-events",
+        "attempts-history",
+        "builder-session-ledger"
+      ],
+      "known_limits": [
+        "named 'episodes' but is a run log, NOT a JEM Work Episode: no objective, no starting state, no actions, no evidence refs",
+        "no located consumer \u2014 write-only as far as this census can prove"
+      ],
+      "standing": "OBSERVED (writer) / UNKNOWN (readers)",
+      "bound_to": [
+        "scripts/ain-delegate.sh:40,364"
+      ],
+      "group": "work"
+    },
+    {
+      "name": "delegate-logs",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/logs/",
+      "purpose": "Raw worker transport logs per delegate run.",
+      "writer": "scripts/ain-delegate.sh",
+      "readers": [
+        "human"
+      ],
+      "persistence_medium": "log files",
+      "identity_key": "work_unit_id / run",
+      "scope": "AIN_HOME",
+      "authority": "raw evidence",
+      "provenance": "unstructured",
+      "lifetime": "permanent",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "human inspection"
+      ],
+      "overlaps": [
+        "episodes-ledger"
+      ],
+      "known_limits": [
+        "unstructured; not machine-adjudicated"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/ain-delegate.sh:45"
+      ],
+      "group": "work"
+    },
+    {
+      "name": "runtime-run-records",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/runtime/runs/<run_id>.json",
+      "purpose": "One file per runtime-driven run: state machine position, packet ref, worktree, evidence refs.",
+      "writer": "scripts/builder/jarvis-runtime-store.mjs saveRun()",
+      "readers": [
+        "loadRun",
+        "listRuns",
+        "the API the runtime serves"
+      ],
+      "persistence_medium": "JSON file, atomic temp+rename",
+      "identity_key": "run_id (r-<10 hex>)",
+      "scope": "AIN_HOME",
+      "authority": "evidentiary; run state is not authority",
+      "provenance": "REFERENCES packet/result/log paths rather than copying them \u2014 one audit artifact per run",
+      "lifetime": "permanent",
+      "restart_survival": "YES \u2014 explicitly designed for it ('restarting must not destroy durable run history')",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "runtime API",
+        "reconcileOrphanedRuns"
+      ],
+      "overlaps": [
+        "result-record",
+        "attempts-history",
+        "builder-session-records"
+      ],
+      "known_limits": [
+        "listRuns loads every run file to sort \u2014 unbounded read cost as history grows",
+        "no index, no query beyond newest-first"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/jarvis-runtime-store.mjs:1-20,45-70"
+      ],
+      "group": "runtime"
+    },
+    {
+      "name": "runtime-events",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/runtime/events.jsonl",
+      "purpose": "Append-only transition log for run state changes.",
+      "writer": "appendEvent()",
+      "readers": [
+        "UNKNOWN \u2014 no located reader"
+      ],
+      "persistence_medium": "append-only JSONL",
+      "identity_key": "at + run_id",
+      "scope": "AIN_HOME",
+      "authority": "telemetry \u2014 explicitly 'never load-bearing' (write failures swallowed)",
+      "provenance": "timestamped transitions",
+      "lifetime": "permanent",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "UNKNOWN"
+      ],
+      "overlaps": [
+        "episodes-ledger",
+        "builder-session-ledger"
+      ],
+      "known_limits": [
+        "writes are best-effort and silently dropped on failure \u2014 cannot be relied on as evidence",
+        "no located reader"
+      ],
+      "standing": "OBSERVED (writer) / UNKNOWN (readers)",
+      "bound_to": [
+        "scripts/builder/jarvis-runtime-store.mjs:83-88"
+      ],
+      "group": "runtime"
+    },
+    {
+      "name": "runtime-process-record",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/runtime/runtime.json",
+      "purpose": "Current/last runtime process record.",
+      "writer": "writeRuntimeRecord()",
+      "readers": [
+        "readRuntimeRecord()"
+      ],
+      "persistence_medium": "JSON file",
+      "identity_key": "singleton",
+      "scope": "AIN_HOME",
+      "authority": "liveness signal only",
+      "provenance": "process record",
+      "lifetime": "overwritten; cleared on clean stop",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "runtime start/stop"
+      ],
+      "overlaps": [
+        "binding-record",
+        "builder-session-records"
+      ],
+      "known_limits": [
+        "a killed runtime cannot rewrite its own record \u2014 hence orphan reconciliation"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/jarvis-runtime-store.mjs:90-105"
+      ],
+      "group": "runtime"
+    },
+    {
+      "name": "orphan-reconciliation",
+      "location": "scripts/builder/jarvis-runtime-store.mjs reconcileOrphanedRuns()",
+      "purpose": "At next start, mark runs left mid-flight by a hard stop as FAILED/RUNTIME_STOPPED_MID_RUN.",
+      "writer": "saveRun via reconcile",
+      "readers": [
+        "runtime start"
+      ],
+      "persistence_medium": "mutates run records",
+      "identity_key": "run_id",
+      "scope": "AIN_HOME",
+      "authority": "corrective",
+      "provenance": "sets reconciled_at + failure_class",
+      "lifetime": "one pass per start",
+      "restart_survival": "IS the restart mechanism",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "runtime start"
+      ],
+      "overlaps": [
+        "runtime-run-records"
+      ],
+      "known_limits": [
+        "'an in-flight state is not evidence of a running worker once the owning process is gone' \u2014 correct, but the underlying worker is not actually killed"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/jarvis-runtime-store.mjs:107-125"
+      ],
+      "group": "runtime"
+    },
+    {
+      "name": "builder-session-records",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/sessions/<session_id>.json",
+      "purpose": "One governed Builder session: ownership of a branch/worktree, model recorded, heartbeat, collision state.",
+      "writer": "scripts/builder/session.mjs (open/heartbeat/sync/close/recover)",
+      "readers": [
+        "session.mjs status/report/check",
+        "rate.mjs",
+        "work-unit.mjs",
+        "Desktop governance.js"
+      ],
+      "persistence_medium": "JSON file",
+      "identity_key": "session_id",
+      "scope": "AIN_HOME",
+      "authority": "CLAIM AUTHORITY \u2014 governs ownership; refuses, never kills",
+      "provenance": "unit, branch, worktree, model, read-only flag, state, timestamps",
+      "lifetime": "until closed/recovered",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "Builder OS governance",
+        "Desktop F2 governed action"
+      ],
+      "overlaps": [
+        "worktree-claim",
+        "work-packet",
+        "runtime-run-records"
+      ],
+      "known_limits": [
+        "only sessions that explicitly `open` are governed \u2014 an ungoverned `claude` process is invisible by design",
+        "does not know subscription quota units"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/session.mjs:1-38,56-58",
+        "scripts/builder/__tests__/session-proof.mjs"
+      ],
+      "group": "claim"
+    },
+    {
+      "name": "builder-session-ledger",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/sessions.jsonl",
+      "purpose": "Append-only ledger of Builder session lifecycle events.",
+      "writer": "session.mjs",
+      "readers": [
+        "session.mjs report"
+      ],
+      "persistence_medium": "append-only JSONL",
+      "identity_key": "ts + session_id",
+      "scope": "AIN_HOME",
+      "authority": "evidentiary",
+      "provenance": "event stream",
+      "lifetime": "permanent",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "jarvis:report"
+      ],
+      "overlaps": [
+        "episodes-ledger",
+        "runtime-events"
+      ],
+      "known_limits": [
+        "session-scoped only; carries no work content"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/session.mjs:58"
+      ],
+      "group": "claim"
+    },
+    {
+      "name": "concurrency-state",
+      "location": "$AIN_DELEGATION_HOME (default ~/.claude/ain-delegation)/concurrency.json",
+      "purpose": "Current concurrency governance state (lanes active, bands).",
+      "writer": "session.mjs / rate.mjs",
+      "readers": [
+        "session.mjs",
+        "rate.mjs"
+      ],
+      "persistence_medium": "JSON file",
+      "identity_key": "singleton",
+      "scope": "AIN_HOME",
+      "authority": "CAPABILITY/CAPACITY state \u2014 distinct from claim state",
+      "provenance": "derived from session records",
+      "lifetime": "continuously updated",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "open refusal/queue decisions"
+      ],
+      "overlaps": [
+        "builder-session-records"
+      ],
+      "known_limits": [
+        "measures sessions/hours/rate, not provider quota units"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/session.mjs:56",
+        "scripts/builder/rate.mjs"
+      ],
+      "group": "claim"
+    },
+    {
+      "name": "worktree-claim",
+      "location": "scripts/ain-worktree-claim.sh -> ~/.claude/worktrees/ain-<work_unit_id> + PID lockfile",
+      "purpose": "One active write lane -> one branch -> one worktree -> one owner.",
+      "writer": "ain-worktree-claim.sh claim/release",
+      "readers": [
+        "ain-delegate.sh",
+        "runtime pipeline",
+        "session.mjs"
+      ],
+      "persistence_medium": "git worktree on disk + PID lockfile",
+      "identity_key": "work_unit_id",
+      "scope": "machine",
+      "authority": "EXCLUSIVE WRITE LANE",
+      "provenance": "branch + base_sha at claim",
+      "lifetime": "until released",
+      "restart_survival": "YES (worktree + lock persist)",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "delegation lane",
+        "runtime CONTEXT_ROUTING"
+      ],
+      "overlaps": [
+        "builder-session-records"
+      ],
+      "known_limits": [
+        "PID-file fallback rather than flock (no flock on the Mac Studio dev host) \u2014 a stale PID needs explicit recovery",
+        "worktrees are development substrates and are expected to disappear"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/ain-worktree-claim.sh:1-18"
+      ],
+      "group": "claim"
+    },
+    {
+      "name": "rate-observability",
+      "location": "scripts/builder/rate.mjs",
+      "purpose": "Measure request RATE (the variable that actually failed on 2026-08-09), not concurrency weight.",
+      "writer": "none (derivation) + concurrency.json",
+      "readers": [
+        "session.mjs",
+        "jarvis:rate"
+      ],
+      "persistence_medium": "derived from session records",
+      "identity_key": "rolling window",
+      "scope": "AIN_HOME",
+      "authority": "observability",
+      "provenance": "measured from ledger timestamps",
+      "lifetime": "per query",
+      "restart_survival": "YES (inputs durable)",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "jarvis:rate",
+        "session open decisions"
+      ],
+      "overlaps": [
+        "concurrency-state"
+      ],
+      "known_limits": [
+        "local proxy; provider-side quota not observable"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/rate.mjs:1-12",
+        "scripts/builder/__tests__/rate-proof.mjs"
+      ],
+      "group": "claim"
+    },
+    {
+      "name": "context-materialization",
+      "location": "scripts/builder/jarvis-context.mjs",
+      "purpose": "Select LESS THAN A WHOLE FILE, materialize the bytes with provenance, refuse when the packet would not fit.",
+      "writer": "materializePacket() (in-memory fragments handed to the worker)",
+      "readers": [
+        "runtime pipeline",
+        "ain-delegate.sh"
+      ],
+      "persistence_medium": "EPHEMERAL \u2014 fragments are not persisted; re-derived on demand",
+      "identity_key": "ref + selector + source_sha",
+      "scope": "one packet execution",
+      "authority": "gates worker invocation via budget()",
+      "provenance": "file, start, end, selector, source_sha (SHA-bound), sha256 of content",
+      "lifetime": "one run",
+      "restart_survival": "NO \u2014 re-derived, not stored",
+      "cross_session_survival": "NO (but deterministically reproducible from packet + sha)",
+      "current_consumers": [
+        "worker prompt assembly",
+        "verifyEvidence"
+      ],
+      "overlaps": [
+        "packet-guard"
+      ],
+      "known_limits": [
+        "selectors are lines/symbol/file \u2014 no semantic or dependency-aware selection",
+        "budget is a token estimate, not a measurement"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/jarvis-context.mjs:1-20,69-124"
+      ],
+      "group": "evidence"
+    },
+    {
+      "name": "evidence-verification",
+      "location": "scripts/builder/jarvis-runtime-pipeline.mjs verifyEvidence()",
+      "purpose": "Mechanically re-derive the fragments the worker was shown and check every citation against them.",
+      "writer": "none (verdict on run record)",
+      "readers": [
+        "runtime pipeline VERIFYING_EVIDENCE state"
+      ],
+      "persistence_medium": "verdict stored on the run record",
+      "identity_key": "run_id",
+      "scope": "one run",
+      "authority": "DETERMINES run disposition (VERIFIED vs ESCALATION_REQUIRED)",
+      "provenance": "each citation -> in_context bool + fragment + source_sha",
+      "lifetime": "with the run record",
+      "restart_survival": "YES (verdict persisted)",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "run state machine",
+        "Desktop correctness.js"
+      ],
+      "overlaps": [
+        "epistemic-guard"
+      ],
+      "known_limits": [
+        "proves a citation was IN the shown context \u2014 not that the conclusion drawn from it is correct",
+        "never consults the worker's self-assessment (deliberate: 'the self-report is worthless')"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/jarvis-runtime-pipeline.mjs:182-210"
+      ],
+      "group": "evidence"
+    },
+    {
+      "name": "packet-guard",
+      "location": "scripts/builder/jarvis-packet-guard.mjs",
+      "purpose": "Refuse answer-leaking packets and bind every selector to a SHA before a worker is invoked.",
+      "writer": "none",
+      "readers": [
+        "runtime pipeline",
+        "ain-delegate.sh"
+      ],
+      "persistence_medium": "n/a (gate)",
+      "identity_key": "packet",
+      "scope": "one packet",
+      "authority": "REFUSES execution (exit 7 leakage / 8 sha mismatch)",
+      "provenance": "bindSelector + headOf",
+      "lifetime": "per invocation",
+      "restart_survival": "n/a",
+      "cross_session_survival": "n/a",
+      "current_consumers": [
+        "runtime pipeline (lints FIRST, before any worktree claim)"
+      ],
+      "overlaps": [
+        "context-materialization"
+      ],
+      "known_limits": [
+        "lexical leakage detection \u2014 a semantically leaking packet that avoids the patterns would pass"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/jarvis-packet-guard.mjs:1-20"
+      ],
+      "group": "evidence"
+    },
+    {
+      "name": "deterministic-registry",
+      "location": "scripts/builder/deterministic.mjs CAPABILITIES",
+      "purpose": "C0 lane: answer a task with a deterministic capability, zero LLM.",
+      "writer": "none (registry)",
+      "readers": [
+        "router.mjs",
+        "Desktop capability-form.js",
+        "jarvis:capabilities IPC"
+      ],
+      "persistence_medium": "source registry",
+      "identity_key": "capability name (e.g. git.rev_parse)",
+      "scope": "global",
+      "authority": "executes bounded read-only capabilities",
+      "provenance": "each capability declares its own args schema",
+      "lifetime": "repo lifetime",
+      "restart_survival": "n/a",
+      "cross_session_survival": "n/a",
+      "current_consumers": [
+        "router C0 decisions",
+        "Desktop C0 form"
+      ],
+      "overlaps": [],
+      "known_limits": [
+        "small fixed registry; no code-graph or repo-structure capability"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/deterministic.mjs:5+",
+        "scripts/builder/__tests__/deterministic-registry-proof.mjs"
+      ],
+      "group": "evidence"
+    },
+    {
+      "name": "run-check",
+      "location": "scripts/builder/run-check.mjs",
+      "purpose": "Structured deterministic verification wrapper: status from exit_code, never from stdout text.",
+      "writer": "emits JSON result attachable to a Work Unit",
+      "readers": [
+        "work unit verification",
+        "proofs"
+      ],
+      "persistence_medium": "JSON on stdout; attached by caller",
+      "identity_key": "check name + work_unit",
+      "scope": "one check",
+      "authority": "evidentiary",
+      "provenance": "exit_code, status, sha, duration_ms, work_unit",
+      "lifetime": "as attached",
+      "restart_survival": "depends on caller",
+      "cross_session_survival": "depends on caller",
+      "current_consumers": [
+        "proof harnesses",
+        "work unit verification_commands"
+      ],
+      "overlaps": [
+        "evidence-verification"
+      ],
+      "known_limits": [
+        "no automatic attachment \u2014 the caller must persist it"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/run-check.mjs",
+        "scripts/builder/__tests__/run-check-proof.mjs"
+      ],
+      "group": "evidence"
+    },
+    {
+      "name": "epistemic-claim-records",
+      "location": ".ain/claims/*.json  (IN-REPO, git-tracked)",
+      "purpose": "A durable, versioned claim: assertion + status + cited evidence.",
+      "writer": "human/PR author",
+      "readers": [
+        "epistemic-guard.mjs adjudicate",
+        "epistemic-ci.mjs",
+        "CI workflow"
+      ],
+      "persistence_medium": "JSON files committed to git",
+      "identity_key": "claim id (e.g. JARVIS-ADMISSION-001)",
+      "scope": "repository \u2014 travels with the checkout",
+      "authority": "claims carry epistemic STANDING, not execution authority",
+      "provenance": "evidence[] entries with kind + detail + ref",
+      "lifetime": "permanent, versioned",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES \u2014 and cross-MACHINE, via git",
+      "current_consumers": [
+        "jarvis-epistemic-guard CI workflow"
+      ],
+      "overlaps": [
+        "ops-proof-records",
+        "living-spiral-semantic-contract"
+      ],
+      "known_limits": [
+        "ONE claim exists today (.ain/claims/001-guard-proof-at-admission.json) \u2014 the mechanism is proven, the corpus is empty",
+        "authored by hand; nothing derives a claim from a completed run"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        ".ain/claims/001-guard-proof-at-admission.json",
+        "git ls-files .ain"
+      ],
+      "group": "epistemic"
+    },
+    {
+      "name": "epistemic-ledger",
+      "location": ".ain/epistemic-ledger.jsonl  (IN-REPO, git-tracked)",
+      "purpose": "Append-only record of status transitions and corrections.",
+      "writer": "epistemic-guard.mjs transition/correction",
+      "readers": [
+        "epistemic-ci.mjs (prior epistemic history)"
+      ],
+      "persistence_medium": "append-only JSONL committed to git",
+      "identity_key": "ts + claim",
+      "scope": "repository",
+      "authority": "the canonical prior-history source for CI adjudication",
+      "provenance": "type, ts, prior_authoritative_rows, begins_at, enforcement_mode, reason, scope",
+      "lifetime": "permanent, versioned",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES \u2014 cross-MACHINE",
+      "current_consumers": [
+        "epistemic CI"
+      ],
+      "overlaps": [
+        "episodes-ledger",
+        "runtime-events"
+      ],
+      "known_limits": [
+        "2 rows today \u2014 mechanism proven, corpus effectively empty"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        ".ain/epistemic-ledger.jsonl (2 rows)",
+        "scripts/builder/epistemic-ci.mjs:40"
+      ],
+      "group": "epistemic"
+    },
+    {
+      "name": "epistemic-guard",
+      "location": "scripts/builder/epistemic-guard.mjs",
+      "purpose": "Adjudicate ONE claim: refuse promotion when cited evidence cannot carry the requested status.",
+      "writer": "appends to ledger on transition/correction",
+      "readers": [
+        "epistemic-ci.mjs (subprocess)",
+        "CI"
+      ],
+      "persistence_medium": "logic + ledger append",
+      "identity_key": "claim id",
+      "scope": "one claim",
+      "authority": "REFUSES promotion (exit 1 is a verdict, not an error). Not a fact checker, not a ratifier.",
+      "provenance": "8 statuses (OBSERVATION/PROVEN/CORRECTION/HEURISTIC/INVARIANT/HYPOTHESIS/STALE/SUPERSEDED); RANK{HYPOTHESIS0,OBSERVATION1,PROVEN2,INVARIANT3}; 22 evidence kinds split WEAK/PROBATIVE; standing PROBATIVE|WEAK|NON_PROBATIVE|STALE; 7 guards G1-G7; 7 correction rungs",
+      "lifetime": "repo lifetime",
+      "restart_survival": "n/a",
+      "cross_session_survival": "n/a",
+      "current_consumers": [
+        "epistemic CI workflow"
+      ],
+      "overlaps": [
+        "living-spiral-semantic-contract \u00a79",
+        "evidence-verification"
+      ],
+      "known_limits": [
+        "adjudicates one claim at a time \u2014 no cross-claim dependency or cascade",
+        "`scan` is advisory prose triage, deliberately weaker",
+        "correction->doctrine promotion is candidate-only by directive"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/epistemic-guard.mjs:50-80,319-332",
+        "scripts/builder/__tests__/epistemic-guard-proof.mjs (49/49)"
+      ],
+      "group": "epistemic"
+    },
+    {
+      "name": "epistemic-ci",
+      "location": "scripts/builder/epistemic-ci.mjs + .github/workflows/jarvis-epistemic-guard.yml",
+      "purpose": "Authoritative admission gate: PR supplies the claim, canonical supplies prior history, CI recomputes adjudication.",
+      "writer": "CI verdict",
+      "readers": [
+        "GitHub PR checks"
+      ],
+      "persistence_medium": "CI run + ledger",
+      "identity_key": "PR + claim",
+      "scope": "repository admission",
+      "authority": "ADMISSION GATE \u2014 founder ruling 2026-08-16",
+      "provenance": "invokes epistemic-guard as a subprocess so the admitted guard blob stays byte-identical",
+      "lifetime": "per PR",
+      "restart_survival": "n/a",
+      "cross_session_survival": "YES (verdicts on PRs)",
+      "current_consumers": [
+        "GitHub Actions"
+      ],
+      "overlaps": [
+        "epistemic-guard"
+      ],
+      "known_limits": [
+        "gates claims that are OFFERED; nothing requires a claim to be offered for a given change"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/epistemic-ci.mjs:1-20",
+        ".github/workflows/jarvis-epistemic-guard.yml"
+      ],
+      "group": "epistemic"
+    },
+    {
+      "name": "desktop-provenance",
+      "location": "jarvis-desktop/src/provenance.js",
+      "purpose": "Two independent identity facts, never collapsed: ARTIFACT ('I am build X') and SUBSTRATE ('I operate against root@head, dirty').",
+      "writer": "none (pure)",
+      "readers": [
+        "main.js",
+        "renderer.js",
+        "proofs"
+      ],
+      "persistence_medium": "derived per launch",
+      "identity_key": "n/a",
+      "scope": "Desktop",
+      "authority": "reporting discipline; DEGRADED for an unnamed binding",
+      "provenance": "RESOLUTION vocabulary is defined here and reused by the runtime binding",
+      "lifetime": "process",
+      "restart_survival": "re-derived",
+      "cross_session_survival": "NO",
+      "current_consumers": [
+        "Desktop Home/System",
+        "jarvis-binding (vocabulary)"
+      ],
+      "overlaps": [
+        "binding-record"
+      ],
+      "known_limits": [
+        "build stamp is null in dev by design (guard: unpackaged returns null before touching disk)"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jarvis-desktop/src/provenance.js:24-37"
+      ],
+      "group": "epistemic"
+    },
+    {
+      "name": "governance-gate",
+      "location": "scripts/builder/jarvis-governance-gate.mjs",
+      "purpose": "Let a worker say in structured form: 'I cannot truthfully continue because this requires authority I do not possess.'",
+      "writer": "worker emission -> run state PAUSED_FOR_GOVERNANCE",
+      "readers": [
+        "runtime pipeline validateWorkerGate()"
+      ],
+      "persistence_medium": "run record state",
+      "identity_key": "run_id",
+      "scope": "one run",
+      "authority": "PAUSES, does not fail \u2014 non-terminal by design; the objective stays open",
+      "provenance": "structured gate emission, not harness-manufactured",
+      "lifetime": "until authority arrives",
+      "restart_survival": "YES (state on run record)",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "runtime state machine"
+      ],
+      "overlaps": [
+        "work-packet authorized_acts"
+      ],
+      "known_limits": [
+        "Unit 18 earned Classification C on this seam \u2014 the 'ask' used to be manufactured by the harness"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/jarvis-governance-gate.mjs:1-14",
+        "jarvis-runtime-pipeline.mjs RUN_STATES"
+      ],
+      "group": "epistemic"
+    },
+    {
+      "name": "legibility-derivation",
+      "location": "jarvis-desktop/src/legibility.js deriveOperatorView()",
+      "purpose": "Pure derivation of the founder-facing view from the status object the mechanism already produces.",
+      "writer": "none",
+      "readers": [
+        "renderer.js",
+        "spiral.js",
+        "proofs"
+      ],
+      "persistence_medium": "NONE \u2014 computes nothing about the world",
+      "identity_key": "n/a",
+      "scope": "Desktop view",
+      "authority": "none \u2014 promotes facts, never invents them",
+      "provenance": "every fact promoted from jarvis:status",
+      "lifetime": "per render",
+      "restart_survival": "NO",
+      "cross_session_survival": "NO",
+      "current_consumers": [
+        "Desktop renderer",
+        "Living Spiral"
+      ],
+      "overlaps": [
+        "living-spiral-projection"
+      ],
+      "known_limits": [
+        "cannot show what jarvis:status does not carry \u2014 renders UNKNOWN instead"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jarvis-desktop/src/legibility.js:160,395",
+        "jarvis-desktop/test/jop-01-legibility.test.mjs (39/39)"
+      ],
+      "group": "projection"
+    },
+    {
+      "name": "living-spiral-projection",
+      "location": "jarvis-desktop/src/spiral.js",
+      "purpose": "Render the governed derivation as a spiral. PROJECTION ONLY.",
+      "writer": "none",
+      "readers": [
+        "renderer.js"
+      ],
+      "persistence_medium": "NONE \u2014 'not a verifier, not an authority source, not a telemetry source, and not a state store'",
+      "identity_key": "n/a",
+      "scope": "Desktop view",
+      "authority": "none",
+      "provenance": "single input: legibility.deriveOperatorView(); renders an APERTURE when it cannot know",
+      "lifetime": "per render",
+      "restart_survival": "NO",
+      "cross_session_survival": "NO",
+      "current_consumers": [
+        "Desktop renderer"
+      ],
+      "overlaps": [
+        "legibility-derivation"
+      ],
+      "known_limits": [
+        "implements the operational_element vocabulary only \u2014 the semantic contract's \u00a79 epistemic grammar is NOT implemented here",
+        "motion renders UNOBSERVED: JOP-05A (lawful temporal source) is unbound"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "jarvis-desktop/src/spiral.js:1-19,42",
+        "jarvis-desktop/test/jop-02-spiral-projection.test.mjs (39/39)"
+      ],
+      "group": "projection"
+    },
+    {
+      "name": "living-spiral-semantic-contract",
+      "location": "docs/architecture/JARVIS_LIVING_SPIRAL_SEMANTIC_CONTRACT_2026-08-16.md (679 lines) + JURISDICTION + FORWARD_PORT_RECONCILIATION",
+      "purpose": "Ratified semantics for operational element/layer, motion, stillness, disturbance, absence, temporal, EPISTEMIC and PROVENANCE grammar.",
+      "writer": "human (ratified doctrine)",
+      "readers": [
+        "humans; spiral.js implements only part"
+      ],
+      "persistence_medium": "markdown in git",
+      "identity_key": "byte identity 0d9c1d6a\u2026",
+      "scope": "JARVIS operator domain ONLY (R1); a member is never an inferred node (R2)",
+      "authority": "RATIFIED semantics; implementation authority granted by later founder ruling 2026-08-16",
+      "provenance": "\u00a710 requires every assertion to carry source, resolver, binding_method",
+      "lifetime": "permanent, versioned",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "spiral.js (partial)",
+        "human design"
+      ],
+      "overlaps": [
+        "epistemic-guard (two epistemic vocabularies)"
+      ],
+      "known_limits": [
+        "\u00a79 epistemic grammar (established/provisional/emerging/ambiguous/contradicted/superseded/unknown + 5 evidence_classes) has NO executable implementation",
+        "header still stamps 'IMPLEMENTATION NOT AUTHORIZED', preserved as history and superseded by later ruling \u2014 two coexisting facts"
+      ],
+      "standing": "OBSERVED (document) / UNKNOWN (runtime effect)",
+      "bound_to": [
+        "docs/architecture/JARVIS_LIVING_SPIRAL_SEMANTIC_CONTRACT_2026-08-16.md \u00a79,\u00a710",
+        "docs/architecture/JARVIS_LIVING_SPIRAL_FORWARD_PORT_RECONCILIATION_2026-08-16.md:207-239"
+      ],
+      "group": "projection"
+    },
+    {
+      "name": "router",
+      "location": "scripts/builder/router.mjs",
+      "purpose": "C0 (deterministic) / C1 (bounded local) / C3 (escalate). Deliberately NOT an intent classifier.",
+      "writer": "none",
+      "readers": [
+        "runtime pipeline",
+        "Desktop submit-task"
+      ],
+      "persistence_medium": "none",
+      "identity_key": "task",
+      "scope": "one task",
+      "authority": "routing decision; never widens authority",
+      "provenance": "a task states its own capability (checked against the real registry) or declares bounded_for_local",
+      "lifetime": "per decision",
+      "restart_survival": "n/a",
+      "cross_session_survival": "n/a",
+      "current_consumers": [
+        "jarvis:submit-task"
+      ],
+      "overlaps": [
+        "deterministic-registry"
+      ],
+      "known_limits": [
+        "no C2 lane exists at this stage",
+        "routes on declared properties, never on prior experience \u2014 nothing consults history to decide a lane"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "scripts/builder/router.mjs:1-14",
+        "scripts/builder/__tests__/router-alpha-proof.mjs"
+      ],
+      "group": "routing"
+    },
+    {
+      "name": "ops-proof-records",
+      "location": "docs/ops/JARVIS_*.md (10 files) + docs/architecture/JARVIS_* + docs/governance/JARVIS_*",
+      "purpose": "Durable narrative record of proofs, corrections, reconciliations and rulings.",
+      "writer": "human/agent at unit completion",
+      "readers": [
+        "humans; agents via CLAUDE.md pointers"
+      ],
+      "persistence_medium": "markdown in git",
+      "identity_key": "filename (TITLE_YYYY-MM-DD)",
+      "scope": "repository",
+      "authority": "records founder rulings; some are ratified canon",
+      "provenance": "each names its own evidence and date",
+      "lifetime": "permanent, versioned",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES \u2014 cross-machine",
+      "current_consumers": [
+        "human reading",
+        "agent grep"
+      ],
+      "overlaps": [
+        "epistemic-claim-records"
+      ],
+      "known_limits": [
+        "THE dominant JARVIS memory today, and it is unindexed prose: retrievable only by filename guess or grep",
+        "no machine link between a doc and the claim/run it attests"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "ls docs/ops/JARVIS_*.md"
+      ],
+      "group": "documentary"
+    },
+    {
+      "name": "claude-agents",
+      "location": ".claude/agents/*.md (6, git-tracked) + .claude/AGENTS_MANUAL.md",
+      "purpose": "Named agent role definitions (ain-architect, maia-dev, maia-ops, maia-ios, ain-growth, security-auditor).",
+      "writer": "human",
+      "readers": [
+        "Claude Code harness Agent tool"
+      ],
+      "persistence_medium": "markdown in git",
+      "identity_key": "agent name",
+      "scope": "repository",
+      "authority": "scopes an agent's tools; does not grant JARVIS authority",
+      "provenance": "frontmatter",
+      "lifetime": "permanent, versioned",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "Claude Code Agent tool"
+      ],
+      "overlaps": [
+        "claude-commands"
+      ],
+      "known_limits": [
+        "harness-level, NOT JARVIS: no JARVIS runtime reads these",
+        "no procedure, no STOP conditions, no validation, no version history \u2014 a role, not a JEM Skill"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "git ls-files .claude/agents"
+      ],
+      "group": "documentary"
+    },
+    {
+      "name": "claude-commands",
+      "location": ".claude/commands/*.md (12, git-tracked)",
+      "purpose": "Reusable prompt templates invoked as slash commands (oracle-*, db, migration-upgrade, testing-pattern\u2026).",
+      "writer": "human",
+      "readers": [
+        "Claude Code harness Skill tool"
+      ],
+      "persistence_medium": "markdown in git",
+      "identity_key": "command name",
+      "scope": "repository",
+      "authority": "none",
+      "provenance": "none recorded",
+      "lifetime": "permanent, versioned",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "Claude Code slash commands"
+      ],
+      "overlaps": [
+        "claude-agents"
+      ],
+      "known_limits": [
+        "THE CLOSEST EXISTING THING TO A JEM SKILL, and it is a prompt: no trigger conditions, prerequisites, authority requirements, hazards, STOP conditions, validation procedure, expected evidence, examples, version, or provenance",
+        "not derived from verified work \u2014 hand-authored"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "git ls-files .claude/commands"
+      ],
+      "group": "documentary"
+    },
+    {
+      "name": "claude-plans",
+      "location": ".claude/plans/*.md (4)",
+      "purpose": "Build plans authored during planning sessions.",
+      "writer": "agent/human",
+      "readers": [
+        "humans"
+      ],
+      "persistence_medium": "markdown",
+      "identity_key": "generated slug (e.g. dreamy-drifting-brook)",
+      "scope": "repository",
+      "authority": "none",
+      "provenance": "none recorded",
+      "lifetime": "until deleted",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "human reading"
+      ],
+      "overlaps": [
+        "ops-proof-records"
+      ],
+      "known_limits": [
+        "random-slug filenames carry no subject \u2014 unaddressable without opening each",
+        "no link to any Work Unit, run, or claim"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "ls .claude/plans"
+      ],
+      "group": "documentary"
+    },
+    {
+      "name": "claude-project-memory",
+      "location": ".claude/projects/-Users-soullab-MAIA-SOVEREIGN/memory/*.md (2 files present)",
+      "purpose": "Named project memories referenced by key from CLAUDE.md (e.g. project_sacred_learning).",
+      "writer": "Claude Code harness memory tool",
+      "readers": [
+        "Claude Code harness"
+      ],
+      "persistence_medium": "markdown files under a machine-path-derived directory",
+      "identity_key": "project_<name>",
+      "scope": "one machine path (-Users-soullab-MAIA-SOVEREIGN)",
+      "authority": "none",
+      "provenance": "none recorded in the files",
+      "lifetime": "until deleted",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES",
+      "current_consumers": [
+        "Claude Code sessions"
+      ],
+      "overlaps": [
+        "ops-proof-records",
+        "CLAUDE.md session anchor"
+      ],
+      "known_limits": [
+        "CLAUDE.md cites memory keys NOT present here (project_anchor_consent_gate_live, project_corpus_callosum_substrate_cat6, project_six_category_artifact_typology) \u2014 the full store is elsewhere and UNPROVEN by this census",
+        "directory name hard-codes a machine path, so it does not travel",
+        "harness-level, NOT JARVIS: no JARVIS runtime reads it"
+      ],
+      "standing": "PARTIALLY OBSERVED / UNKNOWN (full store)",
+      "bound_to": [
+        "find .claude/projects -type f"
+      ],
+      "group": "documentary"
+    },
+    {
+      "name": "session-anchor",
+      "location": "CLAUDE.md",
+      "purpose": "The re-entry document: what the project is, invariants, current priority thread, ops diagnostics, known traps.",
+      "writer": "human/agent at session end",
+      "readers": [
+        "every Claude Code session (auto-loaded)"
+      ],
+      "persistence_medium": "markdown in git",
+      "identity_key": "singleton",
+      "scope": "repository",
+      "authority": "states project invariants and vows; overrides default agent behaviour",
+      "provenance": "dated entries; explicit six-category artifact typology",
+      "lifetime": "permanent, versioned, continuously edited",
+      "restart_survival": "YES",
+      "cross_session_survival": "YES \u2014 cross-machine",
+      "current_consumers": [
+        "every session"
+      ],
+      "overlaps": [
+        "claude-project-memory",
+        "ops-proof-records"
+      ],
+      "known_limits": [
+        "MAIA-dominant: JARVIS appears only via 'Known recurring traps' and the builder scripts, not in the priority thread",
+        "hand-maintained; grows monotonically; no mechanism marks an entry stale"
+      ],
+      "standing": "OBSERVED",
+      "bound_to": [
+        "CLAUDE.md"
+      ],
+      "group": "documentary"
+    }
+  ]
+}

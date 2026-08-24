@@ -134,7 +134,7 @@ Each bounded unit: orient → verify current repository/runtime state → declar
 | Unit | Scope | Status |
 |---|---|---|
 | JEM-00 | Canonical repository/runtime binding | **COMPLETE** — `docs/ops/JEM_00_BINDING_PROOF_2026-08-24.md` |
-| JEM-01 | Existing memory and knowledge census | not started |
+| JEM-01 | Existing memory and knowledge census | **COMPLETE** — `docs/census/JEM_01_ARCHITECTURE_MAP.md` + `JEM_01_CENSUS.json` (42 mechanisms) |
 | JEM-02 | Delta architecture and Memory Asset contract | not started |
 | JEM-03 | Work Episode + Decision + Known Failure persistence | not started |
 | JEM-04 | Provenance and derivation graph | not started |
