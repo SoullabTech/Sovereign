@@ -262,7 +262,7 @@ probed directly. Until then no ruling may rest on any of the 86 — including
 `soul_portrait_consents.actor_member_id`, `encounter_participants`, `case_memory_chunks`, and
 `session_consent_events`.
 
-> **REPAIRED 2026-08-24, awaiting re-run.** The gate now reads `pg_relation_size()` — exact,
+> **REPAIRED AND RE-RUN 2026-08-24 — the gap is closed. See §4.9.** The gate now reads `pg_relation_size()` — exact,
 > cheap, independent of analyze state — so "never analyzed" no longer implies "assume large";
 > `reltuples` survives only as a reported fact (the `anlz` column). Statuses are now
 > `UNCOUNTED_LARGE(<measured size>)`, `UNCOUNTED_UNANALYZED`, `UNCOUNTED_TYPE_INCOMPATIBLE`,
@@ -270,6 +270,51 @@ probed directly. Until then no ruling may rest on any of the 86 — including
 > table that the old gate bucketed as `UNCOUNTED_LARGE_NO_INDEX` now returns A=2 / B=1.
 > **§4.1–4.6 stand on counted relations and are unaffected; the 86 remain unknown until the
 > re-run.**
+
+### 4.9 Re-run on the repaired instrument — 0 UNCOUNTED, 0 ERROR
+
+Second production run, read-only, ended in ROLLBACK. **All 557 relations counted.**
+
+| rule | relations |
+|---|---:|
+| NO_OP (both zero) | 417 |
+| CANONICAL_ONLY | 66 |
+| REBIND_CHECK | 32 |
+| PROVENANCE_PRESERVE | 19 |
+| COLLISION_MANUAL | 9 |
+| SESSION_NO_REBIND | 9 |
+| REBIND_CLEAN | 5 |
+
+**The collision set is unchanged at 9.** The repair neither hid nor manufactured a collision —
+the same nine relations, the same unique keys, the same counts. §4.4 stands as written.
+
+**What the 86 resolved into.** Most were genuinely empty. Four carried rows, two of them new:
+
+| table | column | A | B | rule | note |
+|---|---|---:|---:|---|---|
+| `working_draft_revisions` | `saved_by` | 1 | **3** | REBIND_CHECK | **new** — B holds the majority |
+| `scheduled_sends` | `author_member_id` | 2 | 1 | REBIND_CHECK | **new** |
+| `studio_team_invites` | `invited_by` | 2 | 0 | CANONICAL_ONLY | |
+| `session_events` | `facilitator_id` | 2 | 0 | PROVENANCE_PRESERVE | |
+
+`working_draft_revisions` matters: it is the first relation found where the **legacy** identity
+holds more rows than the canonical one. It reinforces §4.1 — B is inhabited, not residual.
+
+**The consent-ledger answer that motivated the repair.**
+`soul_portrait_consents.actor_member_id`: **A = 0, B = 0.** The 9 consent rows record **neither
+candidate** as the acting member. Given the schema's `actor_type IN ('guardian','subject',
+'system')` with a nullable `actor_member_id`, the consistent reading is system-authored consent
+events — but *which* actor those 9 rows carry is **not established by this census** and would
+need its own narrow read. Do not read "A owns 16 portraits" as "A consented to them"; those are
+different facts and only the first is measured.
+
+Also newly confirmed zero (previously unknown, now counted): `encounter_participants`,
+`encounter_moments`, `encounter_reflections`, `case_memory_chunks`, `session_consent_events`,
+`circle_inquiry_responses`, `symbol_meanings`, `ledger_member_annotations`,
+`practitioner_client_reconciliation`, `commons_*` reviewer columns, and the `comms_safety_flags`
+/ `safety_concern_logs` reviewer columns. None of them holds a row for either identity.
+
+---
 
 ### 4.8 Delete trace (open question, unchanged)
 
