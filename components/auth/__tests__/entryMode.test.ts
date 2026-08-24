@@ -100,3 +100,28 @@ describe('neither door is a dead end', () => {
     expect(COMPONENT).toContain('Sign in with username and password');
   });
 });
+
+// Founder ruling 2026-08-24: the waitlist is removed as a product state. The
+// route can no longer emit { status: 'waitlist' } (proved in
+// app/api/members/email-code/__tests__/route.test.ts). These keep the CLIENT
+// half removed too — otherwise a divert could be reintroduced as dead code and
+// silently wait for a server that starts emitting the shape again.
+//
+// Added after falsification: reinstating the client divert left the component
+// suite green, because nothing here was watching for it.
+describe('the waitlist is gone from the card', () => {
+  it('has no waitlist phase in the Phase union', () => {
+    const union = COMPONENT.match(/type Phase =[^;]+;/)?.[0] ?? '';
+    expect(union).toBeTruthy();
+    expect(union).not.toContain('waitlist');
+  });
+
+  it('never diverts on a waitlist response', () => {
+    expect(COMPONENT).not.toContain("'waitlist'");
+    expect(COMPONENT).not.toMatch(/status\s*===\s*['"]waitlist['"]/);
+  });
+
+  it('renders no waitlist screen', () => {
+    expect(COMPONENT.toLowerCase()).not.toContain('waitlist');
+  });
+});

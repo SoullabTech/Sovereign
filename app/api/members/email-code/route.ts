@@ -119,42 +119,18 @@ export async function POST(request: NextRequest) {
     const memberName = (member?.name as string) || 'Beautiful Soul';
     const isExistingMember = !!member;
 
-    // ── Private-beta gate (OFF by default — signup is open) ────────────────
-    // Founder decision 2026-07-28: MAIA moved from a stewarded private beta to
-    // active onboarding. Signup is now open — anyone who enters an email gets a
-    // code and can join. The beta_allowlist / beta_waitlist tables are KEPT for
-    // history but are no longer consulted at sign-in.
+    // ── No beta gate ───────────────────────────────────────────────────────
+    // Removed 2026-08-24 (Kelly ruling): signup is open and unconditional.
+    // Anyone who enters a valid email gets a code. There is no allowlist check,
+    // no waitlist capture, and no waitlist response — an eligible person is
+    // either authenticated or shown a real, actionable authentication error.
+    // They are never silently diverted into a beta waitlist.
     //
-    // Re-gate switch: set BETA_ALLOWLIST_ENABLED=1 (env, then restart the
-    // container) to restore the private beta — new emails not on beta_allowlist
-    // get no code, are captured to beta_waitlist, and the client shows a warm
-    // "small groups" message. Existing members are ALWAYS admitted either way.
-    // Fails CLOSED (waitlist) if the allowlist read errors while gating is on.
-    const betaGateOn = process.env.BETA_ALLOWLIST_ENABLED === '1';
-    if (!isExistingMember && betaGateOn) {
-      let admitted = false;
-      try {
-        const allow = await query('SELECT 1 FROM beta_allowlist WHERE LOWER(email) = $1 LIMIT 1', [normalizedEmail]);
-        admitted = allow.rows.length > 0;
-      } catch (gateErr) {
-        console.error('[EMAIL-CODE] beta_allowlist check failed — failing closed (waitlist):', gateErr);
-        admitted = false;
-      }
-      if (!admitted) {
-        try {
-          await query(
-            `INSERT INTO beta_waitlist (email) VALUES ($1)
-             ON CONFLICT (LOWER(email)) DO UPDATE
-               SET request_count = beta_waitlist.request_count + 1, requested_at = NOW()`,
-            [normalizedEmail],
-          );
-        } catch (wlErr) {
-          console.warn('[EMAIL-CODE] waitlist capture failed (non-fatal):', wlErr);
-        }
-        console.log(`[EMAIL-CODE] Not admitted → waitlist: ${normalizedEmail}`);
-        return NextResponse.json({ status: 'waitlist' });
-      }
-    }
+    // The beta_allowlist / beta_waitlist TABLES ARE PRESERVED (migrations
+    // 20260707000001 / 20260707000002) so previously stranded requests remain
+    // recoverable. They are no longer read or written by this route.
+    // Re-gating is deliberately not a config switch: restoring a private beta
+    // requires a reviewed code change, not an env var.
 
     const code = generateCode();
     const token = generateToken();

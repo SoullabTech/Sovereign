@@ -1,25 +1,35 @@
 /**
- * EMAIL-CODE GATE TESTS — open-signup posture
+ * EMAIL-CODE TESTS — open signup, no waitlist pathway
  *
- * MAIA moved from a stewarded private beta to open onboarding (2026-07-28).
- * The private-beta allowlist gate in POST /api/members/email-code is now OFF
- * by default; it re-engages only when BETA_ALLOWLIST_ENABLED === '1'. The
- * beta_allowlist / beta_waitlist tables are preserved for history but are no
- * longer consulted at sign-in unless the flag re-gates.
+ * Kelly ruling 2026-08-24: the beta waitlist is removed as a product state.
+ * The invariant these tests hold:
+ *
+ *   An eligible person attempting signup is either authenticated into MAIA or
+ *   shown a real, actionable authentication error. They are NEVER silently
+ *   diverted into a beta waitlist.
  *
  * RESPONSE SHAPE NOTE. These assertions used to read
  * `{ success: true, isExistingMember: <bool> }`. The field was removed: it told
  * an anonymous caller whether an address has a Soullab account before that
  * caller had proved they own the address. A known and an unknown email now
  * return byte-identical responses — asserted directly in ./delivery.test.ts
- * ("no account enumeration"). The gate assertions below are unaffected: what
- * they prove is which addresses reach the send, not what the body says.
+ * ("no account enumeration"). That fix POSTDATES the waitlist-removal commit
+ * this file was reconciled with, so the body assertions below are trunk's
+ * `{ success: true }`, never the older two-field shape.
  *
- * Proves (Kelly's scope, 2026-07-28):
- *   1. A new email receives a code when the flag is absent/off (open signup).
- *   2. A new, non-allowlisted email is gated (waitlisted, no code) when the flag is '1'.
- *   3. Existing members always receive a code — unaffected by the flag.
- *   4. No beta_waitlist row is created in open-signup mode.
+ * Proves:
+ *   1. A new email proceeds through normal auth (a code is sent).
+ *   2. No beta_waitlist insertion occurs — under any env, including the
+ *      formerly-live BETA_ALLOWLIST_ENABLED='1'.
+ *   3. No waitlist response is reachable — the route can never emit
+ *      { status: 'waitlist' }, which was the sole trigger for the waitlist UI.
+ *   4. An auth/delivery failure surfaces an explicit error, not a waitlist.
+ *   5. An existing member signs in normally.
+ *
+ * The beta_allowlist / beta_waitlist TABLES are intentionally preserved in the
+ * schema (migrations 20260707000001 / 20260707000002) so previously stranded
+ * requests remain recoverable; these tests prove the route no longer reads or
+ * writes them.
  */
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 
@@ -46,7 +56,7 @@ jest.mock('resend', () => ({
   })),
 }));
 
-// Rate limiting always allows here — proven separately; keep it out of the gate proof.
+// Rate limiting always allows here — proven separately; keep it out of this proof.
 jest.mock('@/lib/auth/rateLimiter', () => ({
   checkRateLimit: jest.fn(async () => ({ allowed: true })),
   getClientIP: jest.fn(() => '127.0.0.1'),
@@ -66,25 +76,21 @@ import { NextRequest } from 'next/server';
 // Route the mocked DB by inspecting SQL so incidental query-order changes
 // (ensureSchema DDL, token invalidate/insert) never break these assertions.
 function installDb(
-  { member = null, allowlisted = false }:
-  { member?: Record<string, unknown> | null; allowlisted?: boolean } = {},
+  { member = null }: { member?: Record<string, unknown> | null } = {},
 ) {
   mockQuery.mockImplementation(async (sql: string) => {
     if (/from\s+members\s+where\s+lower\(email\)/i.test(sql)) {
       return { rows: member ? [member] : [] };
     }
-    if (/from\s+beta_allowlist/i.test(sql)) {
-      return { rows: allowlisted ? [{ ok: 1 }] : [] };
-    }
     return { rows: [] };
   });
 }
 
-const waitlistInserted = () =>
-  mockQuery.mock.calls.some(([sql]) => /insert\s+into\s+beta_waitlist/i.test(String(sql)));
+const waitlistTouched = () =>
+  mockQuery.mock.calls.some(([sql]) => /beta_waitlist/i.test(String(sql)));
 
-const allowlistChecked = () =>
-  mockQuery.mock.calls.some(([sql]) => /from\s+beta_allowlist/i.test(String(sql)));
+const allowlistTouched = () =>
+  mockQuery.mock.calls.some(([sql]) => /beta_allowlist/i.test(String(sql)));
 
 const req = (email: string) =>
   new NextRequest('http://localhost/api/members/email-code', {
@@ -93,7 +99,7 @@ const req = (email: string) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENABLED)', () => {
+describe('POST /api/members/email-code — open signup, no waitlist pathway', () => {
   const ORIGINAL_FLAG = process.env.BETA_ALLOWLIST_ENABLED;
 
   beforeEach(() => {
@@ -110,74 +116,97 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     else process.env.BETA_ALLOWLIST_ENABLED = ORIGINAL_FLAG;
   });
 
-  // 1 + 4 — open signup by default
-  it('sends a code to a NEW email when the flag is ABSENT (open signup, no waitlist row)', async () => {
+  // 1 + 2 + 3 — a new person proceeds through normal auth
+  it('sends a code to a NEW email — no waitlist row, no allowlist read', async () => {
     installDb({ member: null });
     const res = await POST(req('newperson@example.com'));
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body).toEqual({ success: true });
-    expect(mockSend).toHaveBeenCalledTimes(1);      // code delivered
-    expect(waitlistInserted()).toBe(false);          // proof #4: no waitlist row
-    expect(allowlistChecked()).toBe(false);          // gate short-circuited, allowlist not consulted
+    expect(mockSend).toHaveBeenCalledTimes(1);   // code delivered
+    expect(waitlistTouched()).toBe(false);
+    expect(allowlistTouched()).toBe(false);
   });
 
-  it('sends a code to a NEW email when the flag is explicitly OFF ("0")', async () => {
-    process.env.BETA_ALLOWLIST_ENABLED = '0';
+  // 2 + 3 — the removal is unconditional, not a flag flip. This is the
+  // regression guard: the env var that used to strand people is now inert.
+  it.each(['1', '0', 'true', 'yes'])(
+    'ignores BETA_ALLOWLIST_ENABLED=%s entirely — new email still gets a code',
+    async (flag) => {
+      process.env.BETA_ALLOWLIST_ENABLED = flag;
+      installDb({ member: null });
+      const res = await POST(req(`flag-${flag}@example.com`));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body).toEqual({ success: true });
+      expect(body).not.toHaveProperty('status');   // never { status: 'waitlist' }
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      expect(waitlistTouched()).toBe(false);
+      expect(allowlistTouched()).toBe(false);
+    },
+  );
+
+  // 3 — the waitlist UI branch was reachable only via this response shape.
+  it('never emits a waitlist response, even when the allowlist table errors', async () => {
+    process.env.BETA_ALLOWLIST_ENABLED = '1';
+    // Any beta_* read would now throw — proving none is attempted, and proving
+    // the old fail-closed-to-waitlist behavior can no longer trigger.
+    mockQuery.mockImplementation(async (sql: string) => {
+      if (/beta_(allowlist|waitlist)/i.test(sql)) throw new Error('beta table unavailable');
+      if (/from\s+members\s+where\s+lower\(email\)/i.test(sql)) return { rows: [] };
+      return { rows: [] };
+    });
+
+    const res = await POST(req('would-have-been-stranded@example.com'));
+    const body = await res.json();
+
+    expect(body).toEqual({ success: true });
+    expect(mockSend).toHaveBeenCalledTimes(1);
+  });
+
+  // 4 — failures are explicit auth/delivery errors, never a soft waitlist
+  it('returns an explicit 400 error for an invalid email — not a waitlist', async () => {
+    const res = await POST(req('not-an-email'));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBeTruthy();
+    expect(body).not.toHaveProperty('status');
+    expect(waitlistTouched()).toBe(false);
+  });
+
+  // Written against 500 when the waitlist was removed; the route now answers a
+  // provider refusal with 502 + `reason: 'email_provider_refused'` (the delivery
+  // -truthfulness work POSTDATES that commit). The invariant is unchanged and is
+  // what is asserted: a delivery failure surfaces a real, actionable error and
+  // never a waitlist.
+  it('returns an explicit error when code delivery fails — not a waitlist', async () => {
     installDb({ member: null });
-    const res = await POST(req('another@example.com'));
+    mockSend.mockRejectedValue(new Error('resend down'));
+
+    const res = await POST(req('delivery-fails@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true });
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    expect(waitlistInserted()).toBe(false);
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(502);
+    expect(body.error).toBeTruthy();
+    expect(body.reason).toBe('email_provider_refused');
+    expect(body).not.toHaveProperty('status');
+    expect(waitlistTouched()).toBe(false);
   });
 
-  // 2 — re-gating switch still works
-  it('GATES a NEW, non-allowlisted email when the flag is "1" (waitlist, no code sent)', async () => {
-    process.env.BETA_ALLOWLIST_ENABLED = '1';
-    installDb({ member: null, allowlisted: false });
-    const res = await POST(req('gated@example.com'));
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(body).toEqual({ status: 'waitlist' });
-    expect(mockSend).not.toHaveBeenCalled();         // no code sent when gated
-    expect(waitlistInserted()).toBe(true);           // captured to waitlist
-  });
-
-  it('admits a NEW allowlisted email even when the flag is "1" (re-gate honors the allowlist)', async () => {
-    process.env.BETA_ALLOWLIST_ENABLED = '1';
-    installDb({ member: null, allowlisted: true });
-    const res = await POST(req('vip@example.com'));
-    const body = await res.json();
-
-    expect(body).toEqual({ success: true });
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    expect(waitlistInserted()).toBe(false);
-  });
-
-  // 3 — existing members are never gated, either flag state
-  it('ALWAYS sends a code to an EXISTING member — unaffected by the gate flag ON', async () => {
-    process.env.BETA_ALLOWLIST_ENABLED = '1'; // gate ON, yet the member must pass through
-    installDb({ member: { id: 'member-123', name: 'Existing Soul' }, allowlisted: false });
-    const res = await POST(req('existing@example.com'));
-    const body = await res.json();
-
-    expect(body).toEqual({ success: true });
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    expect(waitlistInserted()).toBe(false);
-  });
-
-  it('sends a code to an EXISTING member with the flag OFF (unchanged behavior)', async () => {
+  // 5 — existing members sign in normally
+  it('sends a code to an EXISTING member (normal sign-in)', async () => {
     installDb({ member: { id: 'member-777', name: 'Returning Soul' } });
     const res = await POST(req('returning@example.com'));
     const body = await res.json();
 
+    expect(res.status).toBe(200);
     expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
-    expect(waitlistInserted()).toBe(false);
+    expect(waitlistTouched()).toBe(false);
   });
 });
 
