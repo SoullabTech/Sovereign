@@ -1,5 +1,5 @@
 {
-  "unit": "JEM-01",
+  "unit": "JARVIS-01",
   "kind": "census",
   "authorized_scope": "CENSUS ONLY \u2014 no repair, consolidation, migration, deletion, rename, normalization or redesign",
   "generated_at": "2026-08-24",
@@ -81,7 +81,7 @@
       "identity_key": "n/a",
       "scope": "global",
       "authority": "definitional \u2014 not a governance authority",
-      "provenance": "extracted from main.js at JEM-00 (commit d5d3a15)",
+      "provenance": "extracted from main.js at JARVIS-00 (commit d5d3a15)",
       "lifetime": "repo lifetime",
       "restart_survival": "n/a (source)",
       "cross_session_survival": "n/a (source)",
@@ -166,7 +166,7 @@
       "standing": "OBSERVED",
       "bound_to": [
         "scripts/builder/__tests__/jem-00-binding-proof.mjs (43/43)",
-        "docs/ops/JEM_00_BINDING_PROOF_2026-08-24.md"
+        "docs/ops/JARVIS_00_BINDING_PROOF_2026-08-24.md"
       ],
       "group": "binding"
     },
@@ -253,7 +253,7 @@
       "restart_survival": "YES (proven, separate processes)",
       "cross_session_survival": "YES",
       "current_consumers": [
-        "JEM-00 proof; no production consumer yet"
+        "JARVIS-00 proof; no production consumer yet"
       ],
       "overlaps": [
         "runtime-process-record"
@@ -438,7 +438,7 @@
         "builder-session-ledger"
       ],
       "known_limits": [
-        "named 'episodes' but is a run log, NOT a JEM Work Episode: no objective, no starting state, no actions, no evidence refs",
+        "named 'episodes' but is a run log, NOT a Work Episode in the directive’s sense: no objective, no starting state, no actions, no evidence refs",
         "no located consumer \u2014 write-only as far as this census can prove"
       ],
       "standing": "OBSERVED (writer) / UNKNOWN (readers)",
@@ -1346,7 +1346,7 @@
       ],
       "known_limits": [
         "harness-level, NOT JARVIS: no JARVIS runtime reads these",
-        "no procedure, no STOP conditions, no validation, no version history \u2014 a role, not a JEM Skill"
+        "no procedure, no STOP conditions, no validation, no version history \u2014 a role, not a Skill primitive"
       ],
       "standing": "OBSERVED",
       "bound_to": [
@@ -1377,7 +1377,7 @@
         "claude-agents"
       ],
       "known_limits": [
-        "THE CLOSEST EXISTING THING TO A JEM SKILL, and it is a prompt: no trigger conditions, prerequisites, authority requirements, hazards, STOP conditions, validation procedure, expected evidence, examples, version, or provenance",
+        "THE CLOSEST EXISTING THING TO A SKILL PRIMITIVE, and it is a prompt: no trigger conditions, prerequisites, authority requirements, hazards, STOP conditions, validation procedure, expected evidence, examples, version, or provenance",
         "not derived from verified work \u2014 hand-authored"
       ],
       "standing": "OBSERVED",

@@ -1,8 +1,65 @@
-# JARVIS Agent Experience Memory — Master Build Directive
+# JARVIS Agent Experience Memory — preserved directive
 
-**Status:** program of record. Authored 2026-08-24.
-**Execution:** bounded units, one at a time. This document is a destination, **not** permission for an unbounded implementation run.
-**Gate 0 (JEM-00):** COMPLETE — see `docs/ops/JEM_00_BINDING_PROOF_2026-08-24.md`.
+> ## ⚠️ NAMING RECONCILIATION — founder correction, 2026-08-24
+>
+> This document was authored as a standalone `JEM-00…JEM-18` programme. **That was
+> wrong.** There is one JARVIS ladder, and units belong to it:
+>
+> | governing unit | was recorded as | status |
+> |---|---|---|
+> | **JARVIS-00** — canonical runtime/repository binding | JEM-00 | COMPLETE — `docs/ops/JARVIS_00_BINDING_PROOF_2026-08-24.md` |
+> | **JARVIS-01** — existing-system census | JEM-01 | COMPLETE — `docs/census/JARVIS_01_*` |
+> | **JARVIS-02** — Deep Agents / LangGraph evaluation | — | COMPLETE — `docs/evaluations/JARVIS_02_DEEP_AGENTS_EVALUATION_2026-08-24.md` |
+> | **JARVIS-03** — outside graph machinery | — | not started |
+> | **JARVIS-04** — outside memory machinery | — | not started |
+> | **JARVIS-05** — smallest final architecture | — | not started |
+>
+> ⛔ **The `JEM-02 … JEM-18` sequence below is DE-AUTHORIZED as a programme.** No
+> parallel memory programme is to be created. Its *content* is preserved as
+> design input to **JARVIS-04/05**, where any outside memory machinery must beat
+> the substrate JARVIS-01 found — not as a ladder to be executed.
+>
+> ⛔ Two code artifacts still carry the old label and are **deliberately not
+> renamed**: `scripts/builder/jarvis-binding.mjs`'s `JEM-00` header comment and
+> `scripts/builder/__tests__/jem-00-binding-proof.mjs` (wired into
+> `npm run jarvis:proof`). Renaming working, proven, CI-wired code for a labelling
+> correction buys nothing and risks a break. The mapping above is the record.
+>
+> ⚠️ **This ladder exists only in founder direction.** No document in this
+> repository defines `JARVIS-00…05`; the table above is the first written record
+> of it. If a master directive exists elsewhere, it should supersede this table.
+
+---
+
+## ⭐ Preserved hypothesis for JARVIS-04/05 — falsifiable, NOT implemented
+
+From the JARVIS-01 census, accepted as the canonical baseline:
+
+> **JARVIS may not need a new memory system. It may need a retrieval, derivation,
+> promotion, and recall path over mechanisms that already exist.**
+
+Carried alongside it, also as hypothesis and **not** canonized:
+
+```text
+AIN_HOME   machine-local operational history — raw runs, transient state, high-volume events
+     ↓ promotion
+.ain/      portable, project-bound, versioned knowledge — decisions, established
+           facts, validated patterns, possibly skills and durable project state
+```
+
+*Experience happens locally; validated knowledge becomes portable.* JARVIS must
+prove the existing architecture supports that reading before it is ratified.
+
+**Consequence for JARVIS-04:** TencentDB / AIVM / Semantica are no longer default
+candidates to *be* JARVIS memory. They must beat or complement an existing
+substrate that already implements eight epistemic statuses, evidence standing,
+correction anatomy, supersession, and CI-adjudicated claim promotion.
+
+---
+
+## Original directive (preserved below as design input)
+
+**Authored:** 2026-08-24. **Not a programme.** Content for JARVIS-04/05.
 
 ---
 
@@ -129,13 +186,16 @@ Persistence · Skill reuse · Project continuity · Provenance · Correction · 
 
 Each bounded unit: orient → verify current repository/runtime state → declare intended delta → claim appropriate scope → implement only that delta → test → independently verify where required → persist evidence → release claim/worktree → report completion → **STOP**. Do not silently continue into the next major unit.
 
-## XX. Build sequence
+## XX. Build sequence — ⛔ DE-AUTHORIZED as a programme (preserved as design input)
+
+*See the naming reconciliation above. These are not units to execute.*
+
 
 | Unit | Scope | Status |
 |---|---|---|
-| JEM-00 | Canonical repository/runtime binding | **COMPLETE** — `docs/ops/JEM_00_BINDING_PROOF_2026-08-24.md` |
-| JEM-01 | Existing memory and knowledge census | **COMPLETE** — `docs/census/JEM_01_ARCHITECTURE_MAP.md` + `JEM_01_CENSUS.json` (42 mechanisms) |
-| JEM-02 | Delta architecture and Memory Asset contract | not started |
+| ~~JEM-00~~ → **JARVIS-00** | Canonical repository/runtime binding | **COMPLETE** — `docs/ops/JARVIS_00_BINDING_PROOF_2026-08-24.md` |
+| ~~JEM-01~~ → **JARVIS-01** | Existing-system census | **COMPLETE** — `docs/census/JARVIS_01_ARCHITECTURE_MAP.md` + `JARVIS_01_CENSUS.json` (42 mechanisms) |
+| JEM-02 | Delta architecture and Memory Asset contract | ⛔ de-authorized — folded into JARVIS-04/05 |
 | JEM-03 | Work Episode + Decision + Known Failure persistence | not started |
 | JEM-04 | Provenance and derivation graph | not started |
 | JEM-05 | Correction/supersession/cascade semantics | not started |

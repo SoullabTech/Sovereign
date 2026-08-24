@@ -1,6 +1,6 @@
-# JEM-00 — Canonical repository/runtime binding: evidence
+# JARVIS-00 — Canonical repository/runtime binding: evidence
 
-**Unit:** JEM-00, Gate 0 of the JARVIS Agent Experience Memory program
+**Unit:** JARVIS-00, Gate 0 of the JARVIS Agent Experience Memory program
 (`docs/programs/JARVIS_AGENT_EXPERIENCE_MEMORY.md` §III).
 **Date:** 2026-08-24 · **Verdict:** Gate 0 **PASSED** on the substrate proven below.
 **Proof:** `scripts/builder/__tests__/jem-00-binding-proof.mjs` — **43 passed · 0 failed**, wired into `npm run jarvis:proof`.
@@ -33,7 +33,7 @@ export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url
 
 Three things were missing from it, and Gate 0 names all three:
 
-| Gate 0 requirement | Pre-JEM-00 runtime behaviour |
+| Gate 0 requirement | Pre-JARVIS-00 runtime behaviour |
 |---|---|
 | identity **not** inferred from working directory / stale config | inferred from where a source file happens to sit; **no marker verification at all** |
 | binding established from runtime behaviour **and configuration** | `JARVIS_REPO_ROOT` and the repository named in Preferences meant *nothing* to the runtime |
@@ -56,7 +56,7 @@ no new resolver was written. The Desktop's resolver was made shared.
 | `jarvis-desktop/src/repo-config.js` | adds `defaultAppSupportDir()` so a non-Electron process can read the same `config.json` Preferences writes. | COMPLETE |
 | `scripts/builder/jarvis-binding.mjs` | **new** — the runtime's canonical binding. Reuses the Desktop's marker module, config module, resolution **order** module and provenance vocabulary. Contributes only the runtime's own ladder and its refusal. | BUILD (delta only) |
 | `scripts/builder/jarvis-runtime-pipeline.mjs` | `REPO_ROOT` now comes from `resolveBinding()`; a named `REPO_BINDING_UNRESOLVED` refusal gates `CONTEXT_ROUTING` **before** any worktree claim; divergence recorded on the run. | REPAIR |
-| `package.json` | `jarvis:binding` added; JEM-00 proof appended to `jarvis:proof`. | — |
+| `package.json` | `jarvis:binding` added; JARVIS-00 proof appended to `jarvis:proof`. | — |
 
 **One deliberate difference from the Desktop.** The Desktop's ladder ends at a
 hard-coded candidate reported `implicit-default`. That is right for a viewer: a
@@ -112,7 +112,7 @@ call inside one process proves memory, not durability.
 
 **Read-only execution** (Gate 0 item 4) was **not re-proven here** — it is already
 covered by `checkAuthority()` in the pipeline (`READ_ONLY_LANES`, write-authority
-refusal) and by the existing suites. JEM-00 changed nothing in that path.
+refusal) and by the existing suites. JARVIS-00 changed nothing in that path.
 
 ## 4. Regression state
 
@@ -140,5 +140,5 @@ the delegate path whose proof is environmentally blocked here (§4). Re-running
 `npm run jarvis:proof` on minisforum or the Mac Studio is the outstanding
 confirmation.
 
-**JEM-00 is complete. Per §XIX the unit STOPS here.** JEM-01 (existing memory
+**JARVIS-00 is complete. Per §XIX the unit STOPS here.** JARVIS-01 (existing memory
 and knowledge census) is the next command and is not begun.

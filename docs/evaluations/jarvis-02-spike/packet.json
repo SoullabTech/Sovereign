@@ -1,0 +1,16 @@
+{
+  "work_unit_id": "jarvis-02-adapter-spike",
+  "title": "Report the canonical marker count",
+  "objective": "State how many canonical Builder OS markers repo-markers.js defines. Cite the line you read it from.",
+  "execution_lane": "local-native",
+  "canonical_sha": "PLACEHOLDER",
+  "governing_authority": "JARVIS-02 evaluation spike — disposable",
+  "context_selectors": [
+    { "ref": "jarvis-desktop/src/repo-markers.js", "selector": { "type": "lines", "start": 41, "end": 47 } }
+  ],
+  "allowed_files": [],
+  "prohibited_files_actions": ["any write to the repository"],
+  "acceptance_criteria": ["names the count", "cites a line inside the materialized fragment"],
+  "expected_output": "one sentence plus one citation of the form path:line",
+  "max_attempts": 1
+}
