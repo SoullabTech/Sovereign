@@ -169,7 +169,7 @@ describe('NEGATIVE CONTROLS', () => {
         commonDir: B.git('rev-parse', '--path-format=absolute', '--git-common-dir'),
       });
       assert.equal(view.relation.state, PROV.RELATION.BUILD_SOURCE_MOVED);
-      assert.match(view.relation.detail, /not the same code/);
+      assert.match(view.relation.detail, /different local git object store/);
     } finally { A.cleanup(); B.cleanup(); }
   });
 
@@ -200,6 +200,28 @@ describe('NEGATIVE CONTROLS', () => {
     assert.equal(view.artifact.app_build_sha, 'aaaa111');
     assert.equal(view.substrate.resolved_repo_head, 'bbbb222');
     assert.notEqual(view.artifact.app_build_sha, view.substrate.resolved_repo_head);
+  });
+});
+
+describe('PROVENANCE APERTURE — the limit is stated, not silently carried', () => {
+  test('BUILD_SOURCE_MOVED never claims to be a lineage comparison', () => {
+    const moved = runtimeView(
+      { app_build_sha: 'aaaa111', build_commit: 'aaaa111', build_repo_common_dir: '/repo-one/.git', build_dirty: false },
+      { root: '/p', head: 'aaaa111', dirty: false, commonDir: '/repo-two/.git' },
+    );
+    // Two clones of one upstream also read as moved. The rendered sentence must
+    // say so, or a reader will take this state for a lineage claim it cannot make.
+    assert.match(moved.relation.detail, /local git object store/);
+    assert.match(moved.relation.detail, /not repository lineage/);
+  });
+
+  test('the aperture is documented at the comparison itself', () => {
+    // Structural: the caveat must survive in the source a maintainer reads.
+    // If someone widens this state's meaning, they have to delete this first.
+    const src = readFileSync(join(HERE, '..', 'src', 'provenance.js'), 'utf8');
+    assert.match(src, /PROVENANCE APERTURE/);
+    assert.match(src, /LOCAL repository-INSTANCE identity/);
+    assert.match(src, /lineage identity = NOT YET REPRESENTED/i);
   });
 });
 

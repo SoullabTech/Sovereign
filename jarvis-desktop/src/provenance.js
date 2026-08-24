@@ -177,6 +177,23 @@
    * worktrees share one repo and hold different content at identical paths.
    * When either common dir is unknown, repo identity is NOT asserted — the
    * comparison degrades to UNKNOWN rather than guessing from paths.
+   *
+   * PROVENANCE APERTURE — read this before trusting BUILD_SOURCE_MOVED.
+   *
+   *   common_dir = LOCAL repository-INSTANCE identity.
+   *   cross-machine repository-LINEAGE identity = NOT YET REPRESENTED.
+   *
+   * `/Users/soullab/MAIA-SOVEREIGN/.git` and `/another-machine/Sovereign/.git`
+   * can be two clones of the SAME GitHub repository, and this comparison will
+   * call them different. That is correct for the question it actually answers
+   * — "same local git object store?" — and wrong for the question someone may
+   * assume it answers.
+   *
+   * So BUILD_SOURCE_MOVED means *different local git object store*. It does
+   * NOT mean *different repository lineage*. Representing lineage would need a
+   * separately bound identity (normalised remote / repository id), and is a
+   * different requirement, deliberately not built here. Do not widen the
+   * meaning of this state without building that.
    */
   function buildSubstrateRelation({ artifact, substrate, buildInfo }) {
     const facts = {
@@ -218,7 +235,7 @@
     if (facts.repo_matches === false) {
       return {
         state: RELATION.BUILD_SOURCE_MOVED, facts,
-        detail: `This artifact was built from ${facts.build_repo}, but it is operating against ${facts.operated_repo}. Same paths in two repositories are not the same code.`,
+        detail: `This artifact was built from ${facts.build_repo}, but it is operating against ${facts.operated_repo} — a different local git object store. Same paths in two repositories are not the same code. (This compares local repository instances, not repository lineage: two clones of one upstream would also read as moved.)`,
       };
     }
 
