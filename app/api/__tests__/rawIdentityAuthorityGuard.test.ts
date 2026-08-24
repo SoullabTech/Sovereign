@@ -56,22 +56,10 @@ const ALLOWED: Record<string, string> = {
  * `x-member-id` as identity after an existence check. Owned by the follow-up unit.
  * This list must SHRINK, never grow.
  */
-const KNOWN_UNREPAIRED_SHADOW_RESOLVER: string[] = [
-  'app/api/practitioner/containers/[containerId]/route.ts',
-  'app/api/practitioner/containers/[containerId]/transition/route.ts',
-  'app/api/practitioner/practices/[practiceId]/dashboard/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/dashboard/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/meetings/[meetingId]/action-items/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/meetings/[meetingId]/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/meetings/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/opportunities/[opportunityId]/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/opportunities/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/people/[personId]/timeline/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/ventures/[ventureId]/route.ts',
-  'app/api/practitioner/practices/[practiceId]/labtools/ventures/route.ts',
-  'app/api/practitioner/practices/[practiceId]/people/route.ts',
-  'app/api/practitioner/practices/[practiceId]/route.ts',
-];
+// ✅ EMPTIED BY AUTH-01-D3. All 14 practitioner routes that defined a route-local
+// existence-check resolver now use the canonical resolver under its own name. This list
+// must stay empty; the assertions below make a new one impossible to add quietly.
+const KNOWN_UNREPAIRED_SHADOW_RESOLVER: string[] = [];
 
 /**
  * `?memberId=` is a second caller-controlled identity channel that the AUTH-01-C
@@ -130,8 +118,28 @@ describe('AUTH-01-D · raw identity authority guard', () => {
     expect(shadows.sort()).toEqual([...KNOWN_UNREPAIRED_SHADOW_RESOLVER].sort());
   });
 
-  it('the quarantine does not grow', () => {
-    expect(KNOWN_UNREPAIRED_SHADOW_RESOLVER.length).toBeLessThanOrEqual(14);
+  it('the shadow quarantine is empty and stays empty', () => {
+    expect(KNOWN_UNREPAIRED_SHADOW_RESOLVER).toEqual([]);
+  });
+
+  it('no route defines a LOCAL existence-check resolver, under any name', () => {
+    // The generalised form of the D3 defect. A route-local helper that reads a
+    // caller-controlled identifier and treats "a members row exists" as identity is the
+    // primitive, whatever it is called — naming the ban after one function name is what
+    // let 14 routes hide from the first census.
+    const EXISTENCE_CHECK = /SELECT\s+id\s+FROM\s+members\s+WHERE\s+id\s*=\s*\$1/i;
+    const CALLER_READ =
+      /headers\s*\.?\s*get\(\s*['"]x-[\w-]*id['"]|searchParams\.get\(\s*['"](memberId|userId|id)['"]/;
+
+    const offenders = files.filter((rel) => {
+      const code = stripComments(readFileSync(path.join(repoRoot, rel), 'utf8'));
+      return (
+        EXISTENCE_CHECK.test(code) &&
+        CALLER_READ.test(code) &&
+        !code.includes("from '@/lib/auth/getMemberFromRequest'")
+      );
+    });
+    expect(offenders).toEqual([]);
   });
 
   it('the ?memberId= identity surface does not grow while the follow-up census is pending', () => {
