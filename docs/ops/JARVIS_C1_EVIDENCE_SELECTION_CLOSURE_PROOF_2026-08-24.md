@@ -13,13 +13,16 @@
 ## §1 — VERDICT
 
 ```
-PROPOSITION:
+PROPOSITION WITNESSED:
   A C1 task that asks JARVIS to inspect its bound repository receives real,
   bounded implementation evidence from that repository, and an answer citing
-  it can be certified — while a citation that does not resolve to materialized
-  source cannot.
+  it can be certified.
 
 RESULT:  ✅ WITNESSED
+
+REFUSAL PROPERTY:
+  A citation that does not resolve to materialized source cannot be certified.
+  Verified by controls 8, 9 and 24; NOT LIVE-WITNESSED in this run (see §5).
 
 C1 wiring                 PASS   witnessed
 Materialization           PASS   witnessed
