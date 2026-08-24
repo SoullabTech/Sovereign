@@ -125,3 +125,14 @@ describe('the waitlist is gone from the card', () => {
     expect(COMPONENT.toLowerCase()).not.toContain('waitlist');
   });
 });
+
+// Trunk's failed-send presentation (PR #1079) demotes Continue to outline so the
+// username+password button can carry primary weight. #1080 gates that button to
+// /signin, so on /signup the demotion would leave the card with no primary action
+// and nothing promoted in its place.
+describe('a failed send never leaves /signup without a primary action', () => {
+  it('Continue is only demoted where a password door exists to promote', () => {
+    expect(COMPONENT).toContain("sendBlocked && mode === 'signin' ? outlineBtn : primaryBtn");
+    expect(COMPONENT).not.toContain('sendBlocked ? outlineBtn : primaryBtn');
+  });
+});
