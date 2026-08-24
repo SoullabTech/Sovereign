@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id')
+  const memberId = await getMemberIdFromRequest(request)
 
   if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 })
+    return unauthenticatedResponse()
   }
 
   try {

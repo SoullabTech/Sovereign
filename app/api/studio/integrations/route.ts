@@ -11,11 +11,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 import { MicrosoftGraphService } from '@/lib/calendar/MicrosoftGraphService';
 import db from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId') || request.headers.get('x-member-id');
+    // AUTH-01-D: identity comes from the verified session only. The `?memberId=`
+    // query parameter and the `x-member-id` header previously let any caller name
+    // another member and read back their connected calendar email addresses.
+    const memberId = await getMemberIdFromRequest(request);
 
     if (!memberId) {
       return NextResponse.json({

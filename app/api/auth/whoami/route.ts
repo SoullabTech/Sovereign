@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession, getSessionFromCookie } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -98,11 +99,18 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
     const sessionToken = await getSessionFromCookie();
     const hasCookie = !!sessionToken;
 
-    // For Capacitor/mobile apps: Also check x-member-id header
-    // (iOS blocks cross-origin cookies, so we use header-based auth)
-    const memberIdHeader = request.headers.get('x-member-id');
+    // AUTH-01-D: `x-member-id` is NO LONGER an authentication path here.
+    // It previously returned `authed: true` after a bare `SELECT id FROM members
+    // WHERE id = $1` — the exact impersonation pattern lib/auth/getMemberFromRequest.ts
+    // documents as fixed elsewhere, in the one route whose entire job is to answer
+    // "am I authenticated?". Existence of a member row is never authentication.
+    //
+    // Capacitor/iOS keeps a working path: getMemberIdFromRequest validates the
+    // `x-session-token` header against auth_sessions, and rejects an x-member-id
+    // claim that disagrees with it.
+    const verifiedMemberId = await getMemberIdFromRequest(request);
 
-    if (!sessionToken && !memberIdHeader) {
+    if (!sessionToken && !verifiedMemberId) {
       return NextResponse.json({
         authed: false,
         reason: 'no_cookie',
@@ -110,16 +118,17 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
       }, { headers: corsHeaders });
     }
 
-    // If we have a member ID header but no cookie, look up member directly
-    // (Capacitor apps use header-based auth since iOS blocks cross-origin cookies)
-    if (memberIdHeader && !sessionToken) {
+    // Header-token path (Capacitor/iOS): the member is already VERIFIED against
+    // auth_sessions above. The lookup below hydrates the profile; it is not the
+    // authentication step.
+    if (verifiedMemberId && !sessionToken) {
       const memberResult = await query(
         `SELECT
            id, username, name, preferred_name, tier,
            is_practitioner, onboarded, onboarding_step
          FROM members
          WHERE id = $1`,
-        [memberIdHeader]
+        [verifiedMemberId]
       );
 
       if (memberResult.rows.length === 0) {
@@ -132,7 +141,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
 
       const member = memberResult.rows[0];
 
-      console.log(`[WHOAMI] Authenticated via x-member-id header: ${member.username} (${Date.now() - startTime}ms)`);
+      console.log(`[WHOAMI] Authenticated via verified session token: ${member.username} (${Date.now() - startTime}ms)`);
 
       return NextResponse.json({
         authed: true,

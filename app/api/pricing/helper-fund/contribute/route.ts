@@ -8,6 +8,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createContribution, getMemberContribution } from '@/lib/pricing';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 // Stripe would be imported here in production
 // import Stripe from 'stripe';
@@ -15,12 +17,9 @@ import { createContribution, getMemberContribution } from '@/lib/pricing';
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = request.headers.get('x-member-id');
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return unauthenticatedResponse();
     }
 
     const body = await request.json();
@@ -98,12 +97,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const memberId = request.headers.get('x-member-id');
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return unauthenticatedResponse();
     }
 
     const contribution = await getMemberContribution(memberId);
