@@ -8,8 +8,15 @@
  *     ├ existing email → code verifies → straight in
  *     └ new email      → code verifies → ask name → account created
  *   Return       Continue with Face ID / Touch ID (biometric)
+ *   Peer         username + password (visible button, not a footnote — 2026-08-24)
  *   Secondary    Google / Apple
- *   Recovery     password (quiet)
+ *
+ * 2026-08-24: username + password was a 12px link under a hairline at the bottom
+ * of the card. Members who set a password during induction (and anyone arriving
+ * from /signin?from=signout) had to hunt for their own sign-in path. It is now a
+ * full-width peer button in the same stack as biometric. The DEFAULT is unchanged
+ * and deliberately so: accounts created through the email-code flow are assigned a
+ * generated password the member never sees, so password-first would strand them.
  *
  * Both app/signin/page.tsx and app/signup/page.tsx render this. Visual language:
  * dark navy + holoflower, matching /welcome-back. No teal, no induction.
@@ -96,7 +103,6 @@ function UnifiedAuthInner() {
   const primaryBtn = PRIMARY_BTN;
   const outlineBtn = OUTLINE_BTN;
   const dividerCls = 'bg-maia-navy-700/30';
-  const hairlineCls = 'border-maia-navy-700/30';
   const oauthChrome = 'bg-maia-navy-850/50 hover:bg-maia-navy-700/60 border-maia-navy-700/60';
   const appleBorder = 'border-maia-navy-700/60';
   const codeInputCls = 'w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-4 text-center text-2xl tracking-[0.5em] text-white placeholder:text-slate-600 outline-none focus:border-maia-navy-600 transition-all';
@@ -416,7 +422,10 @@ function UnifiedAuthInner() {
                 </div>
                 <button type="submit" disabled={isLoading || !username || !password} className={primaryBtn}>{isLoading ? 'Signing in…' : 'Sign in'}</button>
               </form>
-              <div className="mt-5 text-center">
+              <p className="mt-4 text-xs text-slate-500/80 text-center leading-relaxed">
+                Signed up with an emailed code? You don&apos;t have a password — go back and we&apos;ll send one.
+              </p>
+              <div className="mt-3 text-center">
                 <button type="button" onClick={() => { setPhase('email'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">← Back to email</button>
               </div>
             </motion.div>
@@ -471,6 +480,16 @@ function UnifiedAuthInner() {
                 </button>
               )}
 
+              {/* Username + password is a peer sign-in path, not a footnote. It used to be a
+                  12px link below a hairline, which read as "hidden" to members who set a
+                  password during induction and return expecting to use it. It is NOT the
+                  default: accounts created through the email-code flow are given a generated
+                  password the member never sees, so defaulting them here would strand them.
+                  Equal visibility, unchanged default. */}
+              <button type="button" onClick={() => { setPhase('password'); setError(''); }} disabled={isLoading} className={`${outlineBtn} mt-3`}>
+                Sign in with username and password
+              </button>
+
               <div className="mt-6 flex items-center gap-3">
                 <div className={`flex-1 h-px ${dividerCls}`} />
                 <span className="text-xs text-slate-500 uppercase tracking-wide">or</span>
@@ -491,10 +510,6 @@ function UnifiedAuthInner() {
                     <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                 </button>
-              </div>
-
-              <div className={`mt-6 pt-4 border-t ${hairlineCls} text-center`}>
-                <button type="button" onClick={() => { setPhase('password'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Use a password instead</button>
               </div>
             </motion.div>
           )}
