@@ -281,3 +281,69 @@ action in §6, and the instrument to convert that action into a verdict exists.
 | `jarvis-desktop/test/repository-topology-invariant.test.mjs` | **new** — invariant + negative control, 12/12 |
 | `jarvis-desktop/test/harness/` | **new** — headless Electron harness + restart phases |
 | `docs/ops/JARVIS_REPOSITORY_TOPOLOGY_INVARIANT.md` | **new** — the invariant |
+
+---
+
+# JARVIS-00 RECONCILIATION (founder ruling: RECONCILE)
+
+Two sessions worked the same JARVIS surface concurrently and produced two tips,
+neither a superset of the other. Ruling: reconcile by **mechanism**, not by branch;
+keep no parallel implementations; freeze both source lines as evidence.
+
+## Frozen source lines — untouched, recoverable
+
+| Line | Tip | Worktree | Carries |
+|---|---|---|---|
+| A | `23c2f4501` `fix/jarvis-c1-result-persistence` | `/Users/soullab/jarvis-fix` | B4 evidence aperture; a simpler B1 (**discarded**) |
+| B | `7b1c21db4` `claude/jarvis-worktree-identity-9ikm0u` | `/Users/soullab/jarvis-runtime` | B1 lifecycle + repo topology + witness harness; signup/Resend fix |
+
+Common ancestor of both: `1bda3a023` (trunk `be5b3b802` + the packaged-binding fix).
+
+## Reconciliation decisions, by mechanism
+
+| Mechanism | Chosen | Why |
+|---|---|---|
+| **B1 — C1 persistence** | **Line B** | Strictly more complete: opens a RUNNING record before the worker and closes it on every exit path (a crash leaves a reconcilable record, not nothing); carries repository topology on the record; keeps `state` and `disposition` separate so COMPLETED never implies the answer was right. Line A only wrote on success and used one field for both facts. Line A's implementation is **discarded**, not kept alongside. |
+| **B2 — repository binding** | **merge-base `1bda3a023`** | Already correct in the common ancestor and in the adopted tree. No bare `REPO_ROOT` on the C1 path. |
+| **B4 — GUI evidence binding** | **Line A** | Exists nowhere else. Deterministic aperture over the existing `repo.grep`/`repo.find_file` C0 capabilities, canonical `budget()`, canonical selector schema. |
+| **Signup / Resend fix** | **Not imported** | Real work, but unrelated to Gate Zero and not on trunk. Preserved on line B for separate integration. Zero files under `app/`, `lib/email`, `lib/onboarding` were touched here. |
+
+Adoption from line B was **file-scoped** (`jarvis-desktop/` plus the two JARVIS-00
+records), not a branch merge — which is what kept the signup work out.
+
+## Repair made during reconciliation
+
+The adopted topology proof asserted `operated.is_linked_worktree === false`. That
+holds only when the suite runs from the repository's **main** checkout. Every JARVIS
+worktree is a *linked* one (`MAIA-SOVEREIGN` false; `jarvis-runtime`, `jarvis-fix`,
+`jarvis-reconcile` all true), so the assertion failed wherever JARVIS actually lives —
+including the line it came from. Ground truth now comes from git: `.git` is a file in
+a linked worktree, a directory in the main checkout. The assertion had reproduced,
+inside the proof, the same *"the repo is one place"* collapse the invariant exists to
+refuse.
+
+## Repository / worktree invariant — never collapse these
+
+| Identity | Value |
+|---|---|
+| Git repository | `github.com/SoullabTech/Sovereign.git` (common git dir `/Users/soullab/MAIA-SOVEREIGN/.git`) |
+| Canonical trunk | `origin/clean-main-no-secrets` @ `be5b3b802` |
+| Build worktree | `/Users/soullab/jarvis-reconcile` |
+| Build commit | `0ec2c5e07` (`fix/jarvis-00-reconciliation`) |
+| Operated worktree | **founder decision — see witness step 1** |
+| Operated commit | follows from the above |
+| Running artifact | `1bda3a023` until the witness installs the new build |
+
+## Combined suite on the reconciled line — ALL GREEN
+
+`c1-evidence-containment` 17/17 · `gate-zero-c1-restart` 10/10 ·
+`repository-topology-invariant` 12/12 · `jop-08-gui-evidence-binding` 12/12 ·
+`jop-00/01/02/04/04b/05` and `wire-local-native` all pass.
+
+JOP-08 proves, through the real registered handler against the real bound repository:
+GUI-shaped request → deterministic aperture → materialization → containment →
+`VERIFIED` with the real `qwen2.5:7b` → automatic persistence → retrieval by canonical
+`run_id` with sha, path and line range intact. Plus the negative controls: no-evidence
+stays `NO_EVIDENCE_CONTEXT`; coincidental single-word matches are declined; an uncited
+answer and an out-of-fragment citation both fail to verify; invalid and out-of-range
+selectors fail closed; C0/C1/C3 routing unregressed.
