@@ -56,12 +56,52 @@ export function segment(text: string): SectionInput[] {
   if (preamble.trim().length > 0) {
     sections.push({ position: 0, heading: null, body: preamble });
   }
+
+  /* WS-01 — orphan headings are carried forward, never dropped.
+   *
+   * A heading immediately followed by another heading produces an empty body,
+   * and `manuscript_sections` forbids one (CHECK (length(body) > 0)). This loop
+   * used to `continue` past that case — which skipped the section AND took its
+   * heading line with it, silently, before the member ever opened the Work. On a
+   * print manuscript whose front matter is a stack of capitalised lines, that is
+   * several arriving lines gone with no record they existed.
+   *
+   * The constraint was exposing a missing representation, not causing the error:
+   * a heading with no body is an interpretation fact, not a malformed section. So
+   * the constraint stays, and the orphan is carried into the body of the next
+   * section that has one — where it remains the member's words, in order, and
+   * reachable. The member can re-cut it; they cannot recover what was deleted.
+   */
+  let carried: string[] = [];
   for (let h = 0; h < headingIdx.length && sections.length < MAX_SECTIONS; h++) {
     const start = headingIdx[h].line + 1;
     const end = h + 1 < headingIdx.length ? headingIdx[h + 1].line : lines.length;
     const body = lines.slice(start, end).join('\n');
-    if (body.trim().length === 0) continue;
+    if (body.trim().length === 0) {
+      carried.push(headingIdx[h].heading);
+      continue;
+    }
+    if (carried.length > 0) {
+      sections.push({
+        position: sections.length,
+        heading: carried[0],
+        body: [...carried.slice(1), headingIdx[h].heading, body].join('\n'),
+      });
+      carried = [];
+      continue;
+    }
     sections.push({ position: sections.length, heading: headingIdx[h].heading, body });
+  }
+  /* Headings trailing the document with nothing after them. They arrived, so
+     they are kept — appended to the last section, or standing as their own if
+     there is none. */
+  if (carried.length > 0) {
+    const last = sections[sections.length - 1];
+    if (last) {
+      last.body = [last.body, ...carried].join('\n');
+    } else {
+      sections.push({ position: 0, heading: carried[0], body: carried.slice(1).join('\n') || text });
+    }
   }
   return sections.length > 0 ? sections : [{ position: 0, heading: null, body: text }];
 }
