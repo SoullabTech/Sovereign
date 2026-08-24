@@ -201,12 +201,26 @@ const REPO_ROOT_MODE = app.isPackaged ? 'packaged' : 'dev';
 //
 // The second guard is the load-bearing one: it is a fact about THIS process
 // rather than about what happens to be on disk near it.
+//
+// MISSING and MALFORMED are different packaging failures and must not collapse.
+// Returning null for both meant a corrupted stamp read as "this build was never
+// stamped" — concealing a packaging defect behind a milder one. Both still fail
+// CLOSED (neither can produce a build identity); only the reason differs, and
+// the parse error is logged rather than swallowed.
 function readBuildInfo() {
   if (!app.isPackaged) return null;
+  const stampPath = path.join(process.resourcesPath, 'build-info.json');
+  let raw;
   try {
-    return JSON.parse(fs.readFileSync(path.join(process.resourcesPath, 'build-info.json'), 'utf8'));
+    raw = fs.readFileSync(stampPath, 'utf8');
   } catch {
-    return null;
+    return null;                       // absent — the app was packaged without a stamp
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error('[PROVENANCE] build stamp present but unparseable:', stampPath, err);
+    return { __stamp_malformed: true }; // present and unreadable — a different defect
   }
 }
 
@@ -222,7 +236,7 @@ function readBuildInfo() {
 // `branch` is empty on a detached HEAD, which is a legitimate state for a
 // worktree cut at a SHA — reported as 'detached' rather than as a failure.
 function readSubstrateVersion(root) {
-  const unread = { head: null, dirty: null, branch: null, git_connected: false };
+  const unread = { head: null, dirty: null, branch: null, common_dir: null, git_connected: false };
   if (!root) return unread;
   const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', env: childEnv(process.env).env }).trim();
   try {
@@ -233,10 +247,20 @@ function readSubstrateVersion(root) {
     const head = git(['rev-parse', '--short', 'HEAD']);
     const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
     const porcelain = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', env: childEnv(process.env).env });
+    // The common git dir, not the worktree path, is what identifies a
+    // REPOSITORY. Linked worktrees share one common dir and hold different
+    // content at identical paths, so comparing paths would answer the wrong
+    // question. Read leniently: an older git without --path-format still
+    // yields a usable answer, and failing to get one leaves it null (unknown)
+    // rather than substituting the path.
+    let commonDir = null;
+    try { commonDir = git(['rev-parse', '--path-format=absolute', '--git-common-dir']); } catch { /* older git */ }
+    if (!commonDir) { try { commonDir = path.resolve(root, git(['rev-parse', '--git-common-dir'])); } catch { commonDir = null; } }
     return {
       head,
       dirty: porcelain.trim().length > 0,
       branch: branch === 'HEAD' ? 'detached' : branch,
+      common_dir: commonDir,
       git_connected: true,
     };
   } catch {
@@ -254,6 +278,7 @@ function currentProvenance() {
     conflictingConfigRoot: RESOLVED.conflictingConfigRoot || null,
     head: sub.head,
     dirty: sub.dirty,
+    commonDir: sub.common_dir,
   });
 }
 

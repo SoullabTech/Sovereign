@@ -29,6 +29,21 @@
     NONE: 'unresolved',
   };
 
+  // BUILD-vs-OPERATED relationship. The two identities above are facts; this is
+  // the only place they are RELATED. Deriving it here — once, purely — is what
+  // stops each surface inventing its own comparison and quietly disagreeing.
+  //
+  // Absence is never a relationship: without both identities the answer is
+  // UNKNOWN, never ALIGNED. "I could not compare" and "they match" are the two
+  // things most worth never confusing.
+  const RELATION = {
+    ALIGNED: 'ALIGNED',                       // same repo, same commit, nothing dirty
+    COMMIT_DIVERGED: 'COMMIT_DIVERGED',       // same repo, the operated checkout moved
+    WORKTREE_DIRTY: 'WORKTREE_DIRTY',         // commit matches but a tree carries uncommitted work
+    BUILD_SOURCE_MOVED: 'BUILD_SOURCE_MOVED', // operated repo is not the repo that built this
+    UNKNOWN: 'UNKNOWN',                       // one or both identities unavailable
+  };
+
   // CONFIG ranks with ENV, not with DEFAULT. The distinction this module exists
   // to protect is not "how many hops did it take" but "did anyone CHOOSE this
   // substrate". A persisted Preferences selection is a founder's explicit act
@@ -90,10 +105,10 @@
   /**
    * SUBSTRATE IDENTITY — the checkout whose code actually executes.
    */
-  function substrateIdentity({ repoRoot, resolution, head, dirty, conflictingConfigRoot }) {
+  function substrateIdentity({ repoRoot, resolution, head, dirty, commonDir, conflictingConfigRoot }) {
     if (!repoRoot) {
       return {
-        resolved_repo_root: null, resolved_repo_head: null, resolved_repo_dirty: null,
+        resolved_repo_root: null, resolved_repo_head: null, resolved_repo_dirty: null, resolved_repo_common_dir: null,
         resolution: RESOLUTION.NONE, state: 'UNAVAILABLE',
         detail: 'No execution substrate resolved — choose a repository in JARVIS ▸ Preferences (⌘,). It must be a checkout carrying the canonical Builder OS markers. The selection is remembered across launches; JARVIS_REPO_ROOT still works but is no longer required.',
       };
@@ -116,7 +131,7 @@
       resolution === RESOLUTION.ENV && conflictingConfigRoot && conflictingConfigRoot !== repoRoot;
     if (conflicted) {
       return {
-        resolved_repo_root: repoRoot, resolved_repo_head: head || null,
+        resolved_repo_common_dir: commonDir || null, resolved_repo_root: repoRoot, resolved_repo_head: head || null,
         resolved_repo_dirty: dirty === undefined ? null : dirty,
         resolution, state: 'DEGRADED', conflict: { governing: repoRoot, overridden_config_root: conflictingConfigRoot },
         detail: `${base} — GOVERNED BY JARVIS_REPO_ROOT, which is overriding your saved choice (${conflictingConfigRoot}). The environment wins by design; this is flagged because your explicit selection is not in effect. Clear it with:  launchctl unsetenv JARVIS_REPO_ROOT  (then quit and relaunch JARVIS).`,
@@ -125,22 +140,107 @@
 
     if (resolution === RESOLUTION.DEFAULT) {
       return {
-        resolved_repo_root: repoRoot, resolved_repo_head: head || null, resolved_repo_dirty: dirty === undefined ? null : dirty,
+        resolved_repo_common_dir: commonDir || null, resolved_repo_root: repoRoot, resolved_repo_head: head || null, resolved_repo_dirty: dirty === undefined ? null : dirty,
         resolution, state: 'DEGRADED',
         detail: `${base} — reached by IMPLICIT DEFAULT, not by explicit configuration. This Desktop is executing a sibling checkout it was not told to use. Choose it deliberately in Preferences (⌘,) to make the binding explicit and persistent.`,
       };
     }
     if (head && dirty) {
       return {
-        resolved_repo_root: repoRoot, resolved_repo_head: head, resolved_repo_dirty: true,
+        resolved_repo_common_dir: commonDir || null, resolved_repo_root: repoRoot, resolved_repo_head: head, resolved_repo_dirty: true,
         resolution, state: 'DEGRADED',
         detail: `${base} — the substrate checkout has uncommitted changes, so its HEAD does not fully describe the code being run.`,
       };
     }
     return {
-      resolved_repo_root: repoRoot, resolved_repo_head: head || null, resolved_repo_dirty: dirty === undefined ? null : !!dirty,
+      resolved_repo_common_dir: commonDir || null, resolved_repo_root: repoRoot, resolved_repo_head: head || null, resolved_repo_dirty: dirty === undefined ? null : !!dirty,
       resolution, state: head ? 'AVAILABLE' : 'DEGRADED',
       detail: head ? base : `${base} — could not read HEAD; substrate version unknown.`,
+    };
+  }
+
+  /**
+   * BUILD vs OPERATED.
+   *
+   * The artifact's identity is HISTORICAL — bound when it was packaged. The
+   * substrate's is CURRENT — read from the checkout executing now. They are
+   * allowed to differ; that is not a fault, and the observed case that motivated
+   * this is exactly it: jarvis-reconcile moved from 84f38f89d to later
+   * documentation commits while the installed app correctly stayed 84f38f89d.
+   *
+   * The defect would be REWRITING the artifact's identity to match the current
+   * checkout. So this function only ever LABELS the difference. It never feeds
+   * anything back into `artifact`.
+   *
+   * Repository identity is compared by git common dir, not by worktree path: a
+   * path alone never establishes which repository it is, because linked
+   * worktrees share one repo and hold different content at identical paths.
+   * When either common dir is unknown, repo identity is NOT asserted — the
+   * comparison degrades to UNKNOWN rather than guessing from paths.
+   */
+  function buildSubstrateRelation({ artifact, substrate, buildInfo }) {
+    const facts = {
+      build_commit: null, operated_commit: null,
+      build_repo: null, operated_repo: null,
+      repo_matches: null, commit_matches: null,
+      build_dirty: null, operated_dirty: null,
+    };
+
+    const haveArtifact = artifact && artifact.state === 'AVAILABLE' && artifact.app_build_sha;
+    const haveSubstrate = substrate && substrate.resolved_repo_root && substrate.resolved_repo_head;
+
+    if (!haveArtifact || !haveSubstrate) {
+      return {
+        state: RELATION.UNKNOWN, facts,
+        detail: !haveArtifact
+          ? 'No build identity to compare against — this process cannot say which build it is, so it cannot say whether the checkout has moved.'
+          : 'No operated checkout identity to compare — the build identity stands alone.',
+      };
+    }
+
+    const stamp = buildInfo || {};
+    facts.build_commit = stamp.build_commit || artifact.app_build_sha;
+    facts.operated_commit = substrate.resolved_repo_head;
+    facts.build_repo = stamp.build_repo_common_dir || null;
+    facts.operated_repo = substrate.resolved_repo_common_dir || null;
+    facts.build_dirty = typeof stamp.build_dirty === 'boolean' ? stamp.build_dirty : null;
+    facts.operated_dirty = typeof substrate.resolved_repo_dirty === 'boolean' ? substrate.resolved_repo_dirty : null;
+
+    // Short vs full sha: compare by prefix in whichever direction is shorter.
+    const a = String(facts.build_commit), b = String(facts.operated_commit);
+    const n = Math.min(a.length, b.length);
+    facts.commit_matches = n > 0 && a.slice(0, n) === b.slice(0, n);
+
+    // Repo identity is asserted ONLY when both sides named a common dir.
+    facts.repo_matches =
+      facts.build_repo && facts.operated_repo ? facts.build_repo === facts.operated_repo : null;
+
+    if (facts.repo_matches === false) {
+      return {
+        state: RELATION.BUILD_SOURCE_MOVED, facts,
+        detail: `This artifact was built from ${facts.build_repo}, but it is operating against ${facts.operated_repo}. Same paths in two repositories are not the same code.`,
+      };
+    }
+
+    if (!facts.commit_matches) {
+      return {
+        state: RELATION.COMMIT_DIVERGED, facts,
+        detail: `Built at ${facts.build_commit}; the checkout it operates against is now at ${facts.operated_commit}. The artifact is unchanged — the source moved. Repackage to bring them level.`,
+      };
+    }
+
+    if (facts.build_dirty || facts.operated_dirty) {
+      const which = facts.build_dirty && facts.operated_dirty ? 'both trees'
+        : facts.build_dirty ? 'the tree it was built from' : 'the tree it operates against';
+      return {
+        state: RELATION.WORKTREE_DIRTY, facts,
+        detail: `Commit ${facts.build_commit} matches, but ${which} carried uncommitted work, so that commit does not fully describe the code.`,
+      };
+    }
+
+    return {
+      state: RELATION.ALIGNED, facts,
+      detail: `Built from and operating against ${facts.build_commit}, clean.`,
     };
   }
 
@@ -148,9 +248,14 @@
   function describeProvenance(input) {
     const artifact = artifactIdentity(input || {});
     const substrate = substrateIdentity(input || {});
+    const relation = buildSubstrateRelation({ artifact, substrate, buildInfo: (input || {}).buildInfo });
     return {
       artifact,
       substrate,
+      // BUILD vs OPERATED, derived once. Additive: `artifact` and `substrate`
+      // are byte-for-byte what they were before this member existed, because a
+      // comparison must never be able to edit its operands.
+      relation,
       // An explicit, testable assertion that the two were not collapsed.
       identities_distinct: true,
       // True when the Desktop can name BOTH facts. This is the F3 condition —
@@ -174,5 +279,5 @@
     return 'JARVIS — unstamped build';
   }
 
-  return { RESOLUTION, artifactIdentity, substrateIdentity, describeProvenance, windowTitle };
+  return { RESOLUTION, RELATION, artifactIdentity, substrateIdentity, buildSubstrateRelation, describeProvenance, windowTitle };
 });
