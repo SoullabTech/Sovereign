@@ -114,6 +114,44 @@ c = measure(C)
 chk("malformed line counted, not fatal",       c["parse_failures"], 1)
 chk("valid records still measured",            c["tool_calls"], 1)
 
+# --- the two failure modes a real run surfaced on 2026-08-24 -------------------
+# Both produce a table that LOOKS like a result. Both must refuse instead.
+
+def compare_rc(a, b):
+    r = subprocess.run([sys.executable, MEASURE, "--compare", a, b],
+                       capture_output=True, text=True, timeout=60)
+    return r.returncode, (r.stderr or "")
+
+# A session that opened and did nothing: file exists, non-empty, zero assistant turns.
+EMPTY = write([
+    rec(type="user", isSidechain=False, message={"role": "user", "content": "hi"}),
+    rec(type="system", isSidechain=False, subtype="mode"),
+])
+e = measure(EMPTY)
+chk("empty arm: zero assistant turns detected", e["assistant_turns"], 0)
+rc, err = compare_rc(EMPTY, B)
+chk("empty arm refused (exit 2)",              rc, 2)
+chk("empty arm names the real problem",        "never ran" in err, True)
+
+# A session measuring itself: its transcript contains the measure-session.py call.
+SELF = write([
+    head(),
+    use("m1", "Bash", {"command": "python3 plugins/soullab-jarvis/benchmark/measure-session.py --compare a b"}),
+    result("m1", "some table"),
+])
+sm = measure(SELF)
+chk("self-measurement detected",               sm["measures_itself"], True)
+rc, err = compare_rc(A, SELF)
+chk("self-measurement refused (exit 2)",       rc, 2)
+chk("self-measurement explains why",           "grows with every turn" in err, True)
+
+# A genuine pair must still pass through.
+rc, _ = compare_rc(A, B)
+chk("valid pair still compares (exit 0)",      rc, 0)
+
+for p_ in (EMPTY, SELF):
+    os.unlink(p_)
+
 # An empty transcript must not fabricate a startup figure.
 D = write(["{}"])
 d = measure(D)

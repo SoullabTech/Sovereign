@@ -94,6 +94,8 @@ def measure(path):
         "elapsed_seconds": None,
         "records": 0,
         "parse_failures": 0,
+        "assistant_turns": 0,
+        "measures_itself": False,
     }
     stamps = []
 
@@ -114,6 +116,8 @@ def measure(path):
             msg = rec.get("message") or {}
             usage = msg.get("usage") or {}
 
+            if rec.get("type") == "assistant":
+                m["assistant_turns"] += 1
             if rec.get("type") == "assistant" and usage:
                 if m["startup_context_tokens"] is None and not side:
                     b = {
@@ -141,6 +145,8 @@ def measure(path):
                             m["subagent_invocations"] += 1
                         inp = c.get("input") or {}
                         blob = json.dumps(inp)
+                        if "measure-session.py" in blob:
+                            m["measures_itself"] = True
                         if ORIENT.search(blob):
                             m["orientation_calls"] += 1
                         if name == "Read" and isinstance(inp, dict) and inp.get("file_path"):
@@ -200,6 +206,7 @@ ROWS = [
     ("output_tokens", "output tokens (recorded)"),
     ("tool_calls", "tool calls"),
     ("elapsed_seconds", "elapsed seconds"),
+    ("assistant_turns", "assistant turns (0 = arm never ran)"),
 ]
 
 
@@ -232,6 +239,7 @@ def main():
             sys.exit("usage: --compare BASE.jsonl CAND.jsonl")
         # A missing or empty path here almost always means the arms were never run
         # and a shell expansion produced ''. Say that, rather than throwing.
+        arms = []
         for label, path in (("BASE (arm A)", args[1]), ("CAND (arm B)", args[2])):
             if not path or not os.path.isfile(path):
                 sys.stderr.write(
@@ -244,7 +252,37 @@ def main():
                     "yet. See PROTOCOL.md.\n"
                 )
                 sys.exit(2)
-        compare(measure(args[1]), measure(args[2]))
+            arms.append((label, path, measure(path)))
+
+        # An existing, non-empty transcript is NOT evidence that an arm ran. A session
+        # that opened and did nothing yields zeros -- and zeros subtracted from real
+        # numbers render as a delta, which reads as a result. Refuse it.
+        for label, path, m in arms:
+            if m["assistant_turns"] == 0:
+                sys.stderr.write(
+                    f"\ncannot compare: {label} has ZERO assistant turns -- "
+                    "that arm never ran.\n"
+                    f"  {os.path.basename(path)}: {m['records']} records, no work performed.\n\n"
+                    "Its metrics would all be 0, and 0 is 'no data' here, not 'measured\n"
+                    "zero'. Every delta would be the other arm restated. Run the task in\n"
+                    "that arm first. See PROTOCOL.md.\n"
+                )
+                sys.exit(2)
+
+        # A session cannot measure itself: its transcript is still being written by the
+        # very turns that invoke this tool, so it is not a fixed observation.
+        for label, path, m in arms:
+            if m["measures_itself"]:
+                sys.stderr.write(
+                    f"\ncannot compare: {label} is the session running this comparison\n"
+                    f"  ({os.path.basename(path)} contains a call to measure-session.py).\n\n"
+                    "A live transcript grows with every turn, including the turns that\n"
+                    "measure it. Run the comparison from a session that is NOT one of the\n"
+                    "two arms. See PROTOCOL.md.\n"
+                )
+                sys.exit(2)
+
+        compare(arms[0][2], arms[1][2])
         return
     as_json = args[0] == "--json"
     files = args[1:] if as_json else args
