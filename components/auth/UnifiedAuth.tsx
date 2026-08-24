@@ -18,6 +18,13 @@
  * and deliberately so: accounts created through the email-code flow are assigned a
  * generated password the member never sees, so password-first would strand them.
  *
+ * 2026-08-24 (second pass): a code-send that fails for a reason retrying cannot fix
+ * — provider outage, exhausted send quota — used to leave the member at a dead end:
+ * a truthful "retrying won't help" banner and no way forward. The failure now flips
+ * the hierarchy instead of adding to it. Continue drops to outline, the peer
+ * username+password button takes primary weight, and the card points at the door
+ * that still opens. One password button in every state, by construction.
+ *
  * Both app/signin/page.tsx and app/signup/page.tsx render this. Visual language:
  * dark navy + holoflower, matching /welcome-back. No teal, no induction.
  */
@@ -92,6 +99,10 @@ function UnifiedAuthInner() {
   const [password, setPassword] = useState('');
   const [showPasswordText, setShowPasswordText] = useState(false);
   const [error, setError] = useState('');
+  // The code-send failed for a reason the member cannot fix by retrying (provider
+  // outage, exhausted send quota). Email is the DEFAULT door, so when it is shut
+  // the card must hand over a working one rather than leaving a dead end.
+  const [sendBlocked, setSendBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
@@ -174,6 +185,7 @@ function UnifiedAuthInner() {
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
     setError('');
+    setSendBlocked(false);
     const clean = email.toLowerCase().trim();
     if (!clean.includes('@')) { setError('Please enter a valid email address.'); return; }
     // Normalize the displayed/stored email to lowercase so the code screen and
@@ -185,13 +197,18 @@ function UnifiedAuthInner() {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: clean }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(data?.error || 'Could not send the code. Please try again.'); return; }
+      if (!res.ok) {
+        setError(data?.error || 'Could not send the code. Please try again.');
+        setSendBlocked(true);
+        return;
+      }
       // Private beta: a non-admitted email is waitlisted server-side (no code sent).
       if (data?.status === 'waitlist') { setPhase('waitlist'); return; }
       setCode('');
       setPhase('code');
     } catch {
       setError('Could not send the code. Please try again.');
+      setSendBlocked(true);
     } finally {
       setIsLoading(false);
     }
@@ -469,9 +486,10 @@ function UnifiedAuthInner() {
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center" style={arrivalSignin ? { fontFamily: 'Spectral, Georgia, serif' } : undefined}>{arrivalSignin ? 'Welcome.' : 'Welcome'}</h1>
               <p className={`text-sm font-light mb-6 text-center leading-relaxed ${arrivalSignin ? 'text-slate-300/95' : 'text-slate-300/80'}`}>{arrivalSignin ? 'Sign in to enter.' : 'Enter your email to continue.'}</p>
               {errorBlock}
+
               <form onSubmit={sendCode} className="space-y-3">
                 <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={inputCls} />
-                <button type="submit" disabled={isLoading || !email} className={primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
+                <button type="submit" disabled={isLoading || !email} className={sendBlocked ? outlineBtn : primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
               </form>
 
               {bioAvailable && (
@@ -485,8 +503,13 @@ function UnifiedAuthInner() {
                   password during induction and return expecting to use it. It is NOT the
                   default: accounts created through the email-code flow are given a generated
                   password the member never sees, so defaulting them here would strand them.
-                  Equal visibility, unchanged default. */}
-              <button type="button" onClick={() => { setPhase('password'); setError(''); }} disabled={isLoading} className={`${outlineBtn} mt-3`}>
+                  Equal visibility, unchanged default.
+
+                  2026-08-24 (second pass): when the code-send fails for a reason retrying
+                  cannot fix, this button carries primary weight and Continue drops to
+                  outline. The card then points at the door that still opens, without
+                  growing a second password button to say the same thing twice. */}
+              <button type="button" onClick={() => { setPhase('password'); setError(''); setSendBlocked(false); }} disabled={isLoading} className={`${sendBlocked ? primaryBtn : outlineBtn} mt-3`}>
                 Sign in with username and password
               </button>
 
