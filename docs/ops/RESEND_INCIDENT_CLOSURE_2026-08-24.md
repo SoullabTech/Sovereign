@@ -291,3 +291,96 @@ Either way, `0e7b8ce` is not landed whole and PR #1072 is not un-merged. Billing
 UNKNOWN until the witness reports `providerCode`.
 
 **Nothing further executed. No deploy, no push to `clean-main-no-secrets`, no PR action.**
+
+---
+
+# ADDENDUM 2 — CANONICAL IS `e56e502f`. BOTH SIBLINGS ARE HISTORICAL.
+
+PR #1073 landed the three-route remainder on top of #1072. The option 1 / option 2
+decision point in Addendum 1 is **superseded** — neither sibling is a deploy target.
+
+```text
+e56e502ff  Merge PR #1073   <- CANONICAL, current clean-main-no-secrets tip
+7c3b13ad9    the other three account-access routes stop claiming refused sends
+e01d4a7e9  Merge PR #1072
+aae10b014    signup: never report a code as sent when the provider refused
+be5b3b802  (base)
+```
+
+## Verified at `e56e502f`
+
+**All four account-access routes are truthful. Zero bare discarding awaits:**
+
+| route | bare discarding `await` | result inspected |
+|---|---|---|
+| `email-code` | 0 | ✅ via `sendEmail()` (#1072) |
+| `magic-link` | 0 | ✅ (#1073) |
+| `recover` | 0 | ✅ (#1073) |
+| `reset-password` | 0 | ✅ (#1073) |
+
+**#1073 preserves #1072.** `7c3b13ad9` touches only the three routes plus one new test
+file — it does not touch `email-code`, which still routes through `sendEmail()`.
+
+**Gates:**
+
+- New suite `app/api/members/__tests__/account-access-send-truthfulness.test.ts`:
+  **24 passed, 0 failed.**
+- Full `app/api/members/` suite: **76 passed, 1 failed, 77 total.**
+- The single failure is `delete-account` › *"the delete request body carries no memberId"*.
+  It fails **in isolation** and **identically at baseline `be5b3b8`** — pre-existing, and
+  unrelated to any communications work. Not introduced here, not fixed here.
+- Test count across this line: **43 → 77.** Zero new failures.
+
+`0e7b8ce` is now **historical evidence only**: it proved the defect and reproduced the
+incident, and its three-route delta has been superseded by the canonical `7c3b13ad9`.
+Do not deploy it. Do not create another reconciliation commit.
+
+## Remaining act — production side only, still not executable from here
+
+`ssh` remains absent from this environment. Unchanged.
+
+```bash
+# 1. Let any legitimate deploy lock finish. Do NOT delete the lockfile.
+ssh soullab@minisforum 'fuser -v ~/MAIA-SOVEREIGN/.deploy.lock'
+
+# 2. What is actually live
+ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
+
+# 3. If not e56e502f or a descendant containing it, deploy canonical
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
+  && git fetch origin clean-main-no-secrets \
+  && scripts/pre-deploy-gate.sh deploy-maia "$(git rev-parse --short origin/clean-main-no-secrets)"'
+ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'   # must equal it
+```
+
+### Witness A — while quota is still exhausted
+
+One signup request. Required outcome: a **truthful non-200 refusal** carrying the actual
+provider code, and **no `Code sent` line**.
+
+```bash
+ssh soullab@minisforum \
+  'docker logs maia-sovereign --since 10m 2>&1 | grep -E "EMAIL-CODE.*(Code sent|Provider REFUSED)"'
+```
+
+- Expect `[EMAIL-CODE] Provider REFUSED the send for <addr> — status=… providerCode=… error=…`
+- HTTP **502** on this implementation, not 500.
+- A `Code sent` line here means the deploy did not take. Re-check `GIT_COMMIT`.
+- Record `providerCode` verbatim. It is the only thing that turns the quota inference into
+  a fact. **Do not retry blindly.**
+
+### Witness B — after Resend capacity is restored
+
+Second signup request. Required outcome: `[EMAIL-CODE] Code sent to <addr> (… id: <msg-id>)`
+**and** the code actually arriving in the test inbox. Acceptance is not delivery — the
+inbox check is the half that makes it end-to-end.
+
+```text
+WITNESS A   deployed SHA ______  refusal? ______  providerCode ______
+WITNESS B   deployed SHA ______  message id ______  inbox arrival ______
+```
+
+Billing stays UNKNOWN until Witness A reports `providerCode`.
+
+**Still closed:** COMMS-02 enforcement · `messages@soullab.life` sender switch · Proton
+transport · waitlist cleanup · JARVIS.app · recovery-passkey review.
