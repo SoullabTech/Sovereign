@@ -14,7 +14,8 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query, transaction } from '@/lib/db/postgres';
 import { v4 as uuid } from 'uuid';
 import {
-  decideProvisioning, classifyCollision, isUniqueViolation, constraintNameOf, personalSlugFor,
+  decideProvisioning, classifyCollision, isUniqueViolation, constraintNameOf,
+  publicConflictBody, personalSlugFor,
   type PractitionerRow,
 } from '@/lib/studio/personalStudioProvisioning';
 
@@ -190,23 +191,17 @@ export async function POST(request: NextRequest) {
         }, { status: 409 });
       }
 
-      // Unresolvable. The INSERT carries two deterministic unique values, so
-      // report the one that actually fired rather than assuming the slug.
-      const conflictCopy: Record<string, string> = {
-        slug_conflict: 'The personal Studio address for this member is already taken by another record.',
-        email_conflict: 'The personal Studio email for this member is already taken by another record.',
-        unique_conflict: 'A uniqueness constraint blocked creation, and the conflicting record does not belong to this member.',
-      };
-      return NextResponse.json({
-        ok: false,
+      // Unresolvable. The constraint name is EVIDENCE — it belongs in operator
+      // telemetry, not in the member's response. `practitioners_slug_key` is
+      // internal schema; the client needs the classified state only.
+      console.warn('[Studio Personal Enter] unresolved unique conflict', {
         state: after.action,
-        constraint: after.constraint,
+        constraint: after.constraint ?? 'unnamed',
+        member: memberId.slice(0, 8),
         slug,
-        error: conflictCopy[after.action],
-        detail: after.constraint
-          ? `Blocked by ${after.constraint}. This is a naming conflict that cannot be reconciled to this member, not a transient failure.`
-          : 'The database did not name the constraint, so the specific conflicting field is unidentified. Not assumed to be the slug.',
-      }, { status: 409 });
+      });
+
+      return NextResponse.json(publicConflictBody(after.action), { status: 409 });
     }
 
     return NextResponse.json({ ok: true, existed: false });

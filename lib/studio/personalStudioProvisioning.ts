@@ -111,3 +111,36 @@ export function classifyCollision(
       return { action: 'unique_conflict', constraint: constraint ?? null };
   }
 }
+
+/**
+ * The PUBLIC shape of an unresolvable conflict.
+ *
+ * The server may know precisely which index refused the write. The client needs
+ * the truthful, actionable class and nothing more: a constraint name like
+ * `practitioners_slug_key` is internal schema, and shipping it to a member is
+ * evidence leaking out of the operator boundary.
+ *
+ * The constraint is deliberately NOT a parameter here. It cannot be returned by
+ * accident, because this function never receives it.
+ */
+export function publicConflictBody(action: CollisionConflict['action']): {
+  ok: false; state: CollisionConflict['action']; error: string; detail: string;
+} {
+  switch (action) {
+    case 'slug_conflict':
+      return { ok: false, state: action,
+        error: 'That personal Studio address is already in use.',
+        detail: 'The address for this personal Studio is taken by another record. This is a naming conflict, not a transient failure.' };
+    case 'email_conflict':
+      return { ok: false, state: action,
+        error: 'That personal Studio email is already in use.',
+        detail: 'The email for this personal Studio is taken by another record. This is not a transient failure.' };
+    default:
+      // No speculation about WHICH field. Saying "naming conflict" here would
+      // reintroduce the over-specificity that was just removed from
+      // classification — in prose instead of in a state token.
+      return { ok: false, state: 'unique_conflict',
+        error: 'Creation was blocked by an existing conflicting record.',
+        detail: 'An existing record prevents creating this personal Studio. This is not a transient failure.' };
+  }
+}

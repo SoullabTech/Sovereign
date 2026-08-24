@@ -9,9 +9,12 @@
  * shows the repaired code passing would not establish that anything was wrong.
  */
 import {
-  decideProvisioning, classifyCollision, isUniqueViolation, constraintNameOf, personalSlugFor,
+  decideProvisioning, classifyCollision, isUniqueViolation, constraintNameOf,
+  publicConflictBody, personalSlugFor,
   type PractitionerRow,
 } from '@/lib/studio/personalStudioProvisioning';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 /** The historical predicate, verbatim in behaviour: `WHERE member_id AND status='active'`. */
 function legacyWouldCreate(rows: PractitionerRow[]): boolean {
@@ -152,6 +155,61 @@ describe('COLLISION ATTRIBUTION — name the constraint that actually fired', ()
     expect(constraintNameOf({ code: '23505' })).toBeNull();
     expect(constraintNameOf(new Error('boom'))).toBeNull();
     expect(constraintNameOf(null)).toBeNull();
+  });
+});
+
+describe('PUBLIC SURFACE — the server may know why; the member gets the class', () => {
+  // A constraint name like `practitioners_slug_key` is internal schema. The
+  // client needs the truthful actionable class and nothing more.
+  const SCHEMA_LEAKS = ['practitioners_slug_key', 'practitioners_email_key', 'practitioners_pkey', '23505', 'constraint'];
+
+  it('email constraint ⇒ email_conflict, and the schema name is NOT in the body', () => {
+    const body = publicConflictBody(classifyCollision(NONE, 'practitioners_email_key').action as never);
+    expect(body.state).toBe('email_conflict');
+    const json = JSON.stringify(body);
+    for (const leak of SCHEMA_LEAKS) expect(json).not.toContain(leak);
+  });
+
+  it('email conflict is NOT described as a slug or naming conflict', () => {
+    const body = publicConflictBody('email_conflict');
+    expect(JSON.stringify(body).toLowerCase()).not.toContain('naming conflict');
+    expect(JSON.stringify(body).toLowerCase()).not.toContain('address');
+    expect(body.error.toLowerCase()).toContain('email');
+  });
+
+  it('unnamed/unknown constraint ⇒ unique_conflict with NO field speculation', () => {
+    const body = publicConflictBody(classifyCollision(NONE, null).action as never);
+    expect(body.state).toBe('unique_conflict');
+    const lower = JSON.stringify(body).toLowerCase();
+    for (const leak of SCHEMA_LEAKS) expect(lower).not.toContain(leak.toLowerCase());
+    // must not guess WHICH field
+    expect(lower).not.toContain('address');
+    expect(lower).not.toContain('email');
+    expect(lower).not.toContain('naming conflict');
+  });
+
+  it('no public body carries a raw schema identifier, for any class', () => {
+    for (const a of ['slug_conflict', 'email_conflict', 'unique_conflict'] as const) {
+      const json = JSON.stringify(publicConflictBody(a));
+      for (const leak of SCHEMA_LEAKS) expect(json).not.toContain(leak);
+      expect(json).not.toContain('_key');
+    }
+  });
+
+  it('publicConflictBody cannot leak a constraint: it never receives one', () => {
+    expect(publicConflictBody.length).toBe(1); // action only
+  });
+
+  it('ROUTE: the 409 body is publicConflictBody(action), and the constraint only reaches the log', () => {
+    const route = readFileSync(
+      path.join(process.cwd(), 'app/api/studio/personal/enter/route.ts'), 'utf8');
+    // the constraint appears exactly once, inside the operator warn
+    const warnBlock = route.slice(route.indexOf('unresolved unique conflict'));
+    expect(warnBlock).toContain('constraint: after.constraint');
+    // and the 409 response is the pure body helper
+    expect(route).toContain('NextResponse.json(publicConflictBody(after.action), { status: 409 })');
+    // no response object spreads the constraint
+    expect(route).not.toMatch(/NextResponse\.json\(\{[^}]*constraint/);
   });
 });
 
