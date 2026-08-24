@@ -777,8 +777,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const ctxPath = path.join(currentRoot(), 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(currentRoot(), 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
       const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
@@ -789,7 +789,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         // Fail closed: an unresolvable selector must not silently degrade into
         // "no evidence required". materializeOne throws on any invalid selector.
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, currentRoot());
         } catch (e) {
           materialization_error = e.message;
         }
