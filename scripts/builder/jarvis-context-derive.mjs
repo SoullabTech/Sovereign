@@ -377,12 +377,23 @@ export function deriveContextSelectors(prompt, repo, opts = {}) {
   // substitution happens again. Proofs still reach the worker as secondary
   // evidence when implementation does not fill the slots, and when the author
   // asked about proofs they are the subject and this ordering does not apply.
-  const ranked = asksAboutProofs(terms, compounds)
+  // EXCLUSION, not a tier. Ordering was tried first and witnessed to fail on
+  // 2026-08-24: with the implementation ranked first and the proof artifact
+  // last, the worker read the proof anyway and answered from it. "Available as
+  // secondary evidence" is not a safe state for a proof artifact — anything
+  // placed in the packet is authorized source as far as the worker is
+  // concerned, and a proof reads as an authoritative statement ABOUT the
+  // subject, which is exactly what a worker looking for an answer will prefer.
+  //
+  // So for an implementation question, if any implementation evidence
+  // qualifies, proof artifacts do not enter the packet at all. They become
+  // eligible again when the author asks about a proof, or when nothing else
+  // matched — evidence that is only a proof still beats no evidence, and the
+  // verifier remains the thing that decides truth either way.
+  const implementation = byWeight.filter((r) => !isProofArtifact(r.file));
+  const ranked = (asksAboutProofs(terms, compounds) || implementation.length === 0)
     ? byWeight.slice(0, maxFiles)
-    : [
-        ...byWeight.filter((r) => !isProofArtifact(r.file)),
-        ...byWeight.filter((r) => isProofArtifact(r.file)),
-      ].slice(0, maxFiles);
+    : implementation.slice(0, maxFiles);
 
   const selectors = [];
   for (const r of ranked) {

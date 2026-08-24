@@ -236,5 +236,53 @@ t('20. THIS proof carries none of the literals it exists to detect', () => {
   }
 });
 
+console.log('\nWITNESS CONTROLS — 2026-08-24 rerun on 0da9cfa');
+
+// The proof file that the live worker answered from, addressed without ever
+// writing a literal that could pull it into a search.
+const PROOF_FILE = path.relative(REPO_ROOT, fileURLToPath(import.meta.url));
+
+t('21. the proof file is IN the repository and reachable when asked for', () => {
+  assert.ok(existsSync(path.join(REPO_ROOT, PROOF_FILE)));
+  const asked = deriveContextSelectors(
+    asm('What does the c1 derived evidence ', 'test', ' assert?'), REPO_ROOT);
+  assert.ok(asked.some((s) => isProofArtifact(s.ref)),
+    'proofs must stay reachable when they are the subject');
+});
+
+t('22. NO proof artifact enters the packet for an implementation question', () => {
+  // Ordering was not enough: witnessed 0da9cfa, the worker was handed the
+  // implementation first and the proof last, and answered from the proof.
+  const offending = selectors.filter((s) => isProofArtifact(s.ref));
+  assert.deepEqual(offending.map((s) => s.ref), [],
+    `proof artifacts reached the packet:\n      ${offending.map((s) => s.ref).join('\n      ')}`);
+});
+
+t('23. the implementation is still there once proofs are excluded', () => {
+  assert.ok(selectors.some((s) => s.ref === REAL_ROUTE), 'exclusion emptied the packet');
+});
+
+t('24. a fabricated DIRECTORY with a real basename is NOT contained', () => {
+  // The exact shape of the witness: the worker cited scripts/<name> for a file
+  // that lives at jarvis-desktop/test/<name>, and containment blessed it.
+  const proofFragments = materializePacket(
+    { context_selectors: [{ ref: PROOF_FILE, why: 'control', selector: { type: 'lines', start: 1, end: 100 } }] },
+    REPO_ROOT);
+  const wrongDir = asm('scripts/', path.basename(PROOF_FILE));
+  const ev = verifyEvidence(`stated at ${wrongDir}:73`, proofFragments);
+  assert.equal(ev.total, 1, 'the citation must be extracted before it can be judged');
+  assert.equal(ev.valid, 0, `basename match certified a fabricated directory: ${wrongDir}`);
+  assert.equal(ev.ok, false);
+});
+
+t('25. the REAL path of that same file still verifies', () => {
+  const proofFragments = materializePacket(
+    { context_selectors: [{ ref: PROOF_FILE, why: 'control', selector: { type: 'lines', start: 1, end: 100 } }] },
+    REPO_ROOT);
+  const ev = verifyEvidence(`stated at ${PROOF_FILE}:73`, proofFragments);
+  assert.equal(ev.valid, 1, 'closing the hole must not reject the true path');
+  assert.equal(ev.ok, true);
+});
+
 console.log(`\n${pass} passed · ${fail} failed\n`);
 process.exit(fail === 0 ? 0 : 1);

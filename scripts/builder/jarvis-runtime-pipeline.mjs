@@ -166,7 +166,7 @@ const CITATION_RE = /([A-Za-z0-9_./-]+\.(?:ts|tsx|js|jsx|mjs|cjs|json|md|sh)):(\
  */
 export function verifyEvidence(output, fragments) {
   const index = fragments.map((f) => ({
-    file: f.source_file, base: path.basename(f.source_file),
+    file: f.source_file,
     start: f.start_line, end: f.end_line, sha: f.source_sha,
   }));
   const seen = new Set();
@@ -178,8 +178,20 @@ export function verifyEvidence(output, fragments) {
       const key = `${ref}:${line}`;
       if (seen.has(key)) continue;
       seen.add(key);
+      // Path identity, never basename. `f.base === path.basename(ref)` used to
+      // stand here, and it certified a citation whose DIRECTORY was invented so
+      // long as the filename matched something materialized — witnessed
+      // 2026-08-24, when scripts/<name>.test.mjs:73 was scored "contained"
+      // against a fragment of jarvis-desktop/test/<name>.test.mjs. In a tree
+      // holding 1,069 paths matching *route*, and in a packet routinely
+      // carrying two fragments both named route.ts, that is a wide hole in the
+      // one check that decides whether an answer is true.
+      //
+      // The remaining forms are segment-anchored suffix matches: a citation may
+      // omit leading directories, or carry extra ones, but every segment it
+      // does state must line up with the materialized path.
       const frag = index.find((f) =>
-        (f.file === ref || f.file.endsWith(`/${ref}`) || ref.endsWith(`/${f.file}`) || f.base === path.basename(ref))
+        (f.file === ref || f.file.endsWith(`/${ref}`) || ref.endsWith(`/${f.file}`))
         && line >= f.start && line <= f.end);
       citations.push(frag
         ? { citation: key, in_context: true, fragment: `${frag.file}:${frag.start}-${frag.end}`, source_sha: frag.sha }
