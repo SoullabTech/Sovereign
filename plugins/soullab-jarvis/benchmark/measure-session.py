@@ -269,16 +269,21 @@ def main():
                 )
                 sys.exit(2)
 
-        # A session cannot measure itself: its transcript is still being written by the
-        # very turns that invoke this tool, so it is not a fixed observation.
+        # A transcript that ran the measurement tool did benchmark bookkeeping, not the
+        # task. It cannot serve as an arm -- and if it is still live, its numbers grow
+        # with the very turns that read them.
+        #
+        # State only what the evidence shows: the file CONTAINS a measure-session.py
+        # call. Whether that call is this one is not knowable from here.
         for label, path, m in arms:
             if m["measures_itself"]:
                 sys.stderr.write(
-                    f"\ncannot compare: {label} is the session running this comparison\n"
+                    f"\ncannot compare: {label} ran the measurement tool itself\n"
                     f"  ({os.path.basename(path)} contains a call to measure-session.py).\n\n"
-                    "A live transcript grows with every turn, including the turns that\n"
-                    "measure it. Run the comparison from a session that is NOT one of the\n"
-                    "two arms. See PROTOCOL.md.\n"
+                    "That session did benchmark bookkeeping, not the task, so it is not an\n"
+                    "arm -- and if it is still live, its numbers grow with every turn that\n"
+                    "reads them. Pick the transcripts of the two sessions in which you\n"
+                    "actually performed the task. See PROTOCOL.md.\n"
                 )
                 sys.exit(2)
 

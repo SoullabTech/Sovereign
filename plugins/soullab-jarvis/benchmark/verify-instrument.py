@@ -143,7 +143,8 @@ sm = measure(SELF)
 chk("self-measurement detected",               sm["measures_itself"], True)
 rc, err = compare_rc(A, SELF)
 chk("self-measurement refused (exit 2)",       rc, 2)
-chk("self-measurement explains why",           "grows with every turn" in err, True)
+chk("self-measurement explains why",           "benchmark bookkeeping, not the task" in err, True)
+chk("self-measurement claims only what it saw", "is the session running" in err, False)
 
 # A genuine pair must still pass through.
 rc, _ = compare_rc(A, B)
