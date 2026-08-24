@@ -51,14 +51,14 @@ if (!app.isPackaged) {
 // A candidate root is valid only if ALL FOUR canonical markers are present —
 // existence of a directory alone is not accepted as AVAILABLE.
 // ---------------------------------------------------------------------------
-const CANONICAL_MARKERS = [
-  ['scripts', 'builder', 'session.mjs'],
-  ['scripts', 'builder', 'deterministic.mjs'],
-  ['scripts', 'builder', 'router.mjs'],
-  ['package.json'],
-];
+// The markers themselves, the inspection that reports WHY a candidate fails,
+// and the bounded default-candidate list all live in repo-candidates.js so
+// they can be proven against real directories without Electron. main.js keeps
+// exactly one way to ask "is this bindable".
+const CAND = require('./repo-candidates.js');
+const CANONICAL_MARKERS = CAND.CANONICAL_MARKERS;
 function isValidRepoRoot(dir) {
-  return CANONICAL_MARKERS.every((parts) => fs.existsSync(path.join(dir, ...parts)));
+  return CAND.inspectCandidate(dir).usable;
 }
 
 function findRepoRootDevMode(start) {
@@ -119,10 +119,35 @@ function findRepoRootPackagedMode() {
       ? `configured repository no longer carries the canonical markers: ${cfg.repo_root}`
       : null;
 
-  if (isValidRepoRoot('/Users/soullab/MAIA-SOVEREIGN')) {
-    return { root: '/Users/soullab/MAIA-SOVEREIGN', resolution: PROV.RESOLUTION.DEFAULT, configProblem, conflictingConfigRoot: null };
+  // Implicit default. Previously this was one hard-coded path checked with a
+  // boolean: if it did not verify, resolution returned NONE carrying a NULL
+  // problem, and the founder got "repo root not found — cannot route" with no
+  // statement of what was looked at or what was wrong with it. That is the
+  // defect this replaces. The bar for binding is unchanged — all four markers,
+  // still reported DEGRADED because nobody chose it — but the looking is now
+  // bounded-and-plural and the not-finding is now explained.
+  const inspected = CAND.defaultCandidates(os.homedir()).map((d) => CAND.inspectCandidate(d));
+  const picked = CAND.chooseDefaultCandidate(inspected);
+  const join = (...parts) => parts.filter(Boolean).join(' — and ');
+
+  if (picked.root) {
+    return {
+      root: picked.root,
+      resolution: PROV.RESOLUTION.DEFAULT,
+      configProblem: join(configProblem, picked.problem),
+      conflictingConfigRoot: null,
+    };
   }
-  return { root: null, resolution: PROV.RESOLUTION.NONE, configProblem, conflictingConfigRoot: null };
+
+  // Nothing bound. `picked.problem` covers the refuse-to-guess case (several
+  // checkouts verified and none is canonical); describeUnbound covers the
+  // ordinary case and names the most actionable candidate it saw.
+  return {
+    root: null,
+    resolution: PROV.RESOLUTION.NONE,
+    configProblem: join(configProblem, picked.problem || CAND.describeUnbound(inspected)),
+    conflictingConfigRoot: null,
+  };
 }
 
 // Dev mode resolves by upward walk FIRST, because running `npm start` from
@@ -406,12 +431,21 @@ function buildMenu() {
 async function ensureBindingOnFirstRun() {
   if (!app.isPackaged) return;
   if (currentRoot() && RESOLVED.resolution !== PROV.RESOLUTION.DEFAULT) return;
-  // Asked once. A founder who declined keeps the fallback and can still bind
-  // it any time from Preferences — the DEGRADED state stays visible there and
-  // on the console, so declining hides nothing.
-  if (RepoConfig.promptSeen(app.getPath('appData'))) return;
 
   const degraded = RESOLVED.resolution === PROV.RESOLUTION.DEFAULT;
+  // Asked once — but only when there is something to continue INTO. A founder
+  // who declined on a DEGRADED binding keeps that fallback and can rebind any
+  // time from Preferences, so declining hides nothing and re-asking would be a
+  // nag that trains people to dismiss the dialog unread.
+  //
+  // Unbound is not that state. With no root, every panel reads UNKNOWN and
+  // every submitted task is refused, so suppressing the prompt leaves the app
+  // permanently unable to do the one thing it exists for — recoverable only by
+  // a founder who happens to know about ⌘,. A once-only record made on some
+  // earlier launch must not be allowed to silence the only affordance that
+  // fixes the current one, so the unbound case asks every launch until it is
+  // answered.
+  if (degraded && RepoConfig.promptSeen(app.getPath('appData'))) return;
   const { response } = await dialog.showMessageBox(mainWindow || null, {
     type: degraded ? 'question' : 'warning',
     message: degraded
@@ -420,8 +454,8 @@ async function ensureBindingOnFirstRun() {
     detail: [
       RESOLVED.configProblem ? `${RESOLVED.configProblem}\n` : '',
       degraded
-        ? `It found ${currentRoot()} by falling back to a hard-coded candidate. That checkout was never named by you, so JARVIS is reporting it as DEGRADED rather than treating it as chosen.`
-        : 'No checkout carrying the canonical Builder OS markers was found.',
+        ? `It found ${currentRoot()} by looking in the usual places. That checkout was never named by you, so JARVIS is reporting it as DEGRADED rather than treating it as chosen.`
+        : 'Until a repository is bound, JARVIS cannot route work: every task will be refused and every System row will read UNKNOWN.',
       '',
       'Choosing a repository stores it under ~/Library/Application Support/JARVIS/ and it will be remembered on every future launch.',
     ].filter(Boolean).join('\n'),
@@ -472,7 +506,12 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 ipcMain.handle('jarvis:status', async () => {
   const result = {
     observed_at: new Date().toISOString(),
-    repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
+    // The advice used to be Terminal advice ("set JARVIS_REPO_ROOT") given to
+    // an installed app launched from the Dock, where no Terminal is involved.
+    // It now leads with the resolver's own account of what it looked at, and
+    // points at the affordance that exists inside the window.
+    repo_root: currentRoot()
+      || `UNKNOWN (${REPO_ROOT_MODE} mode) — ${RESOLVED.configProblem || 'no repository is bound'}. Bind one from Home → Change Workspace…, or Preferences (⌘,).`,
     repo_root_mode: REPO_ROOT_MODE,
     provenance: currentProvenance(),
     // The Home ACTIVE WORKSPACE panel reads this and nothing else. It is the
@@ -725,9 +764,26 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 // not overlap, and neither is a route into the other.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
-  if (!currentRoot()) return { status: 'error', reason: 'repo root not found — cannot route' };
-  const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
-  const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
+  // Resolved ONCE, for the whole routing decision and its execution. Reading
+  // currentRoot() again per lane would let a Preferences rebind land between
+  // the router's decision and the lane that carries it out, so a task could be
+  // routed against one substrate and executed against another.
+  const root = currentRoot();
+  if (!root) {
+    // The reason is the resolver's own sentence, not a restatement of the
+    // symptom. "repo root not found" told the founder only that the thing that
+    // was missing was missing; the resolver already knows WHICH condition this
+    // is — never configured, configured-but-moved, launched from a checkout
+    // without the markers, or several candidates and no way to choose.
+    return {
+      status: 'error',
+      reason: RESOLVED.configProblem
+        ? `no repository is bound — ${RESOLVED.configProblem}`
+        : 'no repository is bound — choose one from Home → Change Workspace…, or Preferences (⌘,)',
+    };
+  }
+  const routerPath = path.join(root, 'scripts', 'builder', 'router.mjs');
+  const detPath = path.join(root, 'scripts', 'builder', 'deterministic.mjs');
 
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
   const decision = route(task);
@@ -748,7 +804,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   if (decision.execution_lane === 'C0') {
     try {
       const { runCapability } = await import(`file://${detPath}?t=${Date.now()}`);
-      const r = runCapability(task.capability, task.args || {}, currentRoot());
+      const r = runCapability(task.capability, task.args || {}, root);
       response.result = r;
       response.status = 'completed';
       // Independent verification: a second, structurally different check —
@@ -777,8 +833,16 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      // `root`, not a module-scope constant. These three lines used to read a
+      // bare identifier this module never declares, so EVERY C1 task died in
+      // the catch below with "... is not defined" and was reported as a failed
+      // run rather than as the Desktop-side fault it was. It went unnoticed
+      // because the C1 proof (test/c1-evidence-containment) builds these paths
+      // itself instead of exercising this handler: a sibling implementation
+      // testing its own copy, which is the exact failure mode this codebase
+      // keeps paying for.
+      const ctxPath = path.join(root, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(root, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
       const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
@@ -789,7 +853,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         // Fail closed: an unresolvable selector must not silently degrade into
         // "no evidence required". materializeOne throws on any invalid selector.
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, root);
         } catch (e) {
           materialization_error = e.message;
         }

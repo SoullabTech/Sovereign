@@ -5,6 +5,7 @@
   "main": "src/main.js",
   "private": true,
   "scripts": {
+    "test": "node --test test/*.test.mjs",
     "start": "electron .",
     "pack": "npm run stamp && electron-builder --mac --dir",
     "install:app": "npm run pack && rm -rf /Applications/JARVIS.app && ditto dist/mac-arm64/JARVIS.app /Applications/JARVIS.app && echo 'installed -> /Applications/JARVIS.app'",
