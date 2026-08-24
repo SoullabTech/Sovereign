@@ -77,22 +77,43 @@ SELECT m.id, m.username, m.email, m.name, m.created_at,
 COMMIT;"
 
 echo; echo "── 4. INTEGRITY PROBE — was anything ever deleted out of band? ───────"
-echo "     n_tup_del > 0 means rows were physically deleted from this table at"
-echo "     some point. Caveat: these counters reset on pg_stat_reset() and are"
-echo "     lost on crash recovery, so 0 is weaker evidence than >0 is."
+echo "     n_tup_del > 0 means PostgreSQL counted deletes on that table since the"
+echo "     applicable stats reset. It is DELETION ACTIVITY DETECTED — not proof"
+echo "     that a missing Kelly portrait was the row deleted. Investigate before"
+echo "     classifying the portrait incident."
+# NOTE: pg_stat_user_tables has NO stats_reset column (verified against PG 16.13 —
+# selecting it aborts the query, and with ON_ERROR_STOP/set -e that would kill this
+# witness before §5, the strongest probe, ever ran). stats_reset lives on
+# pg_stat_database, so it is reported separately below.
 psql_ro "BEGIN READ ONLY;
 SELECT relname, n_live_tup, n_tup_ins, n_tup_upd, n_tup_del,
-       last_vacuum, last_autovacuum, stats_reset
+       last_vacuum, last_autovacuum
   FROM pg_stat_user_tables
  WHERE relname IN ('soul_portraits','soul_portrait_consents','members')
  ORDER BY relname;
 COMMIT;"
 
+echo
+echo "     Database-wide stats reset, for context only. This does NOT prove an"
+echo "     individual table's counters were never reset separately —"
+echo "     pg_stat_reset_single_table_counters() zeroes one table without"
+echo "     touching this timestamp. A recent reset weakens a low n_tup_del;"
+echo "     it never weakens a high one."
+psql_ro "BEGIN READ ONLY;
+SELECT datname, stats_reset
+  FROM pg_stat_database
+ WHERE datname = current_database();
+COMMIT;"
+
 echo; echo "── 5. Consent ledger — activity that outlives a deleted portrait ─────"
-echo "     The ledger is append-only and FK-references soul_portraits(id), so a"
-echo "     portrait with ledger rows cannot be deleted without also removing them"
-echo "     or dropping the FK. Ledger rows whose portrait_id is gone = hard"
-echo "     evidence of an out-of-band deletion."
+echo "     The FK is NO ACTION (confdeltype='a', verified live), so a plain parent"
+echo "     DELETE is REFUSED while ledger rows reference it. An orphan therefore"
+echo "     proves referential integrity was violated at some point — but not by"
+echo "     what: a dropped/disabled constraint, a migration anomaly, a restore, or"
+echo "     historical bad data all produce one. ESCALATION SIGNAL, not a"
+echo "     reconstruction of the event."
+echo "     Corollary: because the FK blocks it, any n_tup_del in §4 most likely"
+echo "     reflects portraits that never had ledger rows — i.e. unconsented drafts."
 psql_ro "BEGIN READ ONLY;
 SELECT (SELECT count(*) FROM soul_portrait_consents) AS ledger_rows,
        (SELECT count(*) FROM soul_portrait_consents c
@@ -124,9 +145,12 @@ cat <<'EOT'
      to Kelly. Do not merge accounts.
 
  §4 n_tup_del > 0, or §5 orphaned_ledger_rows > 0, or rows visibly absent
-   → SEPARATE DATABASE INTEGRITY INCIDENT. Do not treat as portrait
-     recovery. Escalate on its own track: establish when, by what, and
-     what else that operation touched, before any restore.
+   → DELETION ACTIVITY / INTEGRITY VIOLATION DETECTED. Investigate BEFORE
+     classifying the portrait incident — neither signal names which row,
+     or proves a Kelly portrait was the row affected. Establish when, by
+     what, and what else that operation touched, before any restore, and
+     keep it on its own track rather than folding it into portrait
+     recovery.
 
  NO BACKFILL in any branch. Moving the static registry into soul_portraits
  is new product behavior, not restoration — those portraits concern named

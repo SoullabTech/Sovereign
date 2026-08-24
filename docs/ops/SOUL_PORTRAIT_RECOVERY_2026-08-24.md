@@ -96,16 +96,44 @@ They are packaged as **`scripts/soul-portrait-db-witness.sh`** — run it from t
 scripts/soul-portrait-db-witness.sh
 ```
 
+Held state:
+
+```text
+PHASE 1                 COMPLETE
+REGISTRY PORTRAITS      INTACT / NOT DELETED
+DB-BACKED HISTORY       UNKNOWN
+REGISTRY RECOVERY       NOT NEEDED
+DB RECOVERY             NOT AUTHORIZED / NOT ESTABLISHED
+NEXT                    corrected read-only DB witness
+```
+
 Structurally read-only: every statement runs inside `BEGIN READ ONLY` with
 `default_transaction_read_only = on`, so a write would abort rather than execute. It covers the
 three recorded queries plus two integrity probes that speak directly to out-of-band deletion:
 
-- **§4 `pg_stat_user_tables.n_tup_del`** — lifetime physical deletes on `soul_portraits`.
-  `> 0` proves rows were deleted at some point. (`0` is weaker evidence than `> 0`: the counters
-  reset on `pg_stat_reset()` and are lost on crash recovery.)
-- **§5 orphaned consent-ledger rows** — the ledger is append-only and FK-references
-  `soul_portraits(id)`, so a portrait carrying ledger rows cannot be deleted without also removing
-  them or dropping the FK. An orphan is hard evidence of an out-of-band deletion.
+- **§4 `pg_stat_user_tables.n_tup_del`** — deletes counted on `soul_portraits` since the applicable
+  stats reset. `> 0` is **deletion activity detected**, not proof that a missing Kelly portrait was
+  the row deleted. `0` is weaker evidence than `> 0`: counters are lost on crash recovery, and
+  `pg_stat_reset_single_table_counters()` zeroes one table without touching the database-wide
+  `stats_reset` timestamp — which is why that timestamp is reported separately, for context only.
+- **§5 orphaned consent-ledger rows** — an orphan proves referential integrity was violated at some
+  point, but not by what: a dropped or disabled constraint, a migration anomaly, a restore, or
+  historical bad data all produce one. **Escalation signal, not a reconstruction of the event.**
+
+Both were **verified against a live PostgreSQL 16.13 instance** built from the actual migrations
+(`20260702000004`, `20260704000001`, `20260709000002`), not read off the schema:
+
+- `pg_stat_user_tables` has **no** `stats_reset` column — confirmed `0` matching columns in
+  `information_schema`, and selecting it raises `ERROR: column "stats_reset" does not exist`. With
+  `set -e` + `ON_ERROR_STOP=1` the original script would have **died at §4, before §5 — the
+  strongest probe — ever ran.** Now split across `pg_stat_user_tables` and `pg_stat_database`.
+- The consent-ledger FK is **`confdeltype = 'a'` (NO ACTION)**, and a plain parent `DELETE` is
+  refused: `violates foreign key constraint "soul_portrait_consents_portrait_id_fkey"`. **Corollary:**
+  because the FK blocks it, any `n_tup_del` most likely reflects portraits that never had ledger
+  rows — unconsented drafts.
+- All **7 SQL blocks** in the script execute clean, exit 0, under `default_transaction_read_only`.
+- The read-only guard **bites**: an `UPDATE` inside it fails with
+  `ERROR: cannot execute UPDATE in a read-only transaction`, row unchanged.
 
 ### Classification (founder ruling, 2026-08-24)
 
@@ -114,7 +142,7 @@ three recorded queries plus two integrity probes that speak directly to out-of-b
 | `total_rows = 0` and `n_tup_del = 0` | **Architecture mismatch, not recovery.** Studio has never indexed the static registry. Close it. No Phase 2. |
 | Rows exist, none under another Kelly identity | **No recovery incident.** Same conclusion. |
 | Rows exist under another Kelly member ID | **Narrow Phase 2 — ownership reconciliation.** Still no write until the canonical identity is established and what moves is agreed. No account merge. |
-| `n_tup_del > 0`, orphaned ledger rows, or rows visibly absent | **Separate database integrity incident.** Not portrait recovery. Establish when, by what, and what else that operation touched, before any restore. |
+| `n_tup_del > 0`, orphaned ledger rows, or rows visibly absent | **Deletion activity / integrity violation detected — investigate before classifying the portrait incident.** Neither signal names which row, or proves a Kelly portrait was affected. Establish when, by what, and what else that operation touched, before any restore; keep it on its own track. |
 
 If the third row is what comes back, that is the only branch that opens a Phase 2, and it opens a
 scoped one: repair `owner_member_id` linkage on existing rows. Nothing is recreated from memory.
