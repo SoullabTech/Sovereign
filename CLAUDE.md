@@ -24,6 +24,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **Sovereign API surface**: `app/api/sovereign/*` and related routes
 - **iOS / Capacitor pipeline**: `scripts/capacitor-patch-routes.sh`, `scripts/build-ios.sh`, `ios/*`
 - **Deployment & ops**: `docker-compose.production.yml`, `Caddyfile`, `scripts/deploy-production.sh`
+- **Writer's Studio programme**: `docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md` — **read this before touching any Writer's Studio / Author Studio / Writer Canvas / Press surface.** Founder-directed programme brief (2026-08-24). Sessions execute *only* the currently authorized unit (WS-01 … WS-07). The Canvas implementation lane is under a **binding freeze**; the acceptance walk is frozen at `docs/product/WRITERS_STUDIO_PHASE_1_WALK_SPECIFICATION.md` v1.0 and its precondition **P0 Source Custody currently FAILS**.
 - **Canon**: `docs/canon/MAIA_CANON_v1.1.md`
 - **Oath**: `docs/canon/MAIA_OATH.md` — the irreducible standard
 - **Sovereignty Invariants**: `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` — relational constitution (constraints on relational power when the system works well enough that people start relating to it)
