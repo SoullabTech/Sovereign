@@ -31,10 +31,15 @@
  * the failure was permanent. Email remains the default the moment sending works.
  *
  * 2026-08-24 (third pass): the card also REMEMBERS a failed send, per browser, for
- * 30 minutes. Without that, every fresh visit reopened on the email field and walked
- * the member back into the same wall. It now opens on username + password instead —
- * still one click from email via "← Back to email", cleared the instant a send
- * succeeds, and expiring on its own since an outage ends without telling us.
+ * 30 minutes, so a fresh visit during an outage does not pretend everything is
+ * normal and walk the member back into the same wall. What is remembered is the
+ * PRESENTATION, not a destination: the full card still renders, with Continue
+ * demoted, password recovery prominent, and Google / Apple / biometric all reachable.
+ * It deliberately does NOT open the password phase — see the paragraph above: an
+ * email-code member's password is generated and never seen, so a password-first
+ * card would strand precisely the people an email outage hurts most. Cleared the
+ * instant a send succeeds, and expiring on its own since an outage ends without
+ * telling us.
  *
  * Both app/signin/page.tsx and app/signup/page.tsx render this. Visual language:
  * dark navy + holoflower, matching /welcome-back. No teal, no induction.
@@ -158,10 +163,16 @@ function UnifiedAuthInner() {
   // first client render agree — localStorage does not exist during SSR.
   useEffect(() => {
     if (preVerified || usernameParam) return; // an explicit intent already chose the phase
-    // Only the opening phase changes. sendBlocked stays false so that "← Back to
-    // email" shows an ordinary, retryable card rather than a demoted Continue with
-    // no error beside it explaining the demotion.
-    if (emailTransportRecentlyDown()) setPhase('password');
+    if (!emailTransportRecentlyDown()) return;
+    // Restore the failed-transport PRESENTATION on the full card — never jump the
+    // member into the password phase. Accounts created through the email-code flow
+    // hold a generated password they have never seen; opening them directly onto a
+    // password form would strand exactly the people this is meant to help. They keep
+    // every door: Google, Apple, biometric, and a retry of email itself.
+    setSendBlocked(true);
+    // sendBlocked demotes Continue, so say why. Hedged deliberately: we know email
+    // failed recently, not that it is failing now.
+    setError('A few minutes ago we couldn’t send sign-in codes. You can try again, or use another way in below.');
   }, [preVerified, usernameParam]);
   const arrivalSignin = isFeatureEnabled('arrivalSignin'); // Arrival remodel — fully transitioned (default on; flag is a kill-switch). Presentation only.
   // Arrival remodel — navy cosmos + subtle plum atmosphere; the controls stay the original navy (plum reverted per brand
