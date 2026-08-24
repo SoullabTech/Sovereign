@@ -41,7 +41,14 @@ Per the Marketing Claim Discipline: social-media reports are claims about claims
 | Does model ID `moonshotai/kimi-k3-free` exist? | **PROBABLE** | multiple independent third-party reports list it at $0/$0, OpenAI-compatible at `https://api.tokenrouter.com/v1` |
 | Is there a 50,000,000-token free allocation? | ⚠️ **UNVERIFIED** | reported widely; traced to one promotional thread, not a vendor page |
 | Paid `moonshotai/kimi-k3` price | ⚠️ **CONFLICTING** | one source $1.50/$7.50 per M in/out; another $3/$15 (cache read $0.30). Not reconciled. |
+| **Which ID do the vendor's own snippets use?** | ⛔ **THE PAID ONE** | both the Python SDK quickstart and the `curl` quickstart supplied by the vendor call `model: "moonshotai/kimi-k3"` — **not** `-free`. Recorded 2026-08-24. |
 | Is the promotion still open? | ⛔ **CONTESTED — CHECK FIRST** | one report says the free tier ran **through 2026-08-05**, which is **19 days before this issuance**. Against that, TokenRouter's own account posted that the free tier "got bigger." Unresolved. |
+
+⚠️ **Consequence of the snippet row — read before running anything.** The vendor's copy-paste
+quickstarts are wired to the **billable** ID. Running either as given does not test the free
+allocation; it spends money (or credits) at the paid rate. The `-free` suffix must be substituted
+deliberately. This is the same distinction the founder flagged at §2(b), now confirmed to matter in
+practice and not only in the catalog.
 
 ⛔ **Do not treat any row above as fact.** The **account dashboard is the only settling evidence**,
 and it is founder-side. This table exists to be replaced by §4.
@@ -110,6 +117,25 @@ Report each row with the observation that produced it.
 | 3 | **Successful API call** | one round-trip against `https://api.tokenrouter.com/v1`, non-sensitive prompt, response captured |
 | 4 | **Latency** | wall-clock, several samples, spread reported — not a single best case |
 | 5 | **Token accounting** | tokens the response reports vs. what the dashboard decrements · do they agree? |
+
+### Execution
+
+```text
+scripts/experiments/jma01_tokenrouter_probe.py
+```
+
+⛔ **Must be run founder-side.** `api.tokenrouter.com` is egress-blocked from the JARVIS execution
+container (`403 Forbidden` from the proxy, verified 2026-08-24), as is `www.tokenrouter.com`. No
+part of §4 is measurable from here.
+
+The probe reads `TOKENROUTER_API_KEY` from the environment and refuses to accept it as an argument;
+it prints only the last four characters. It probes the **free ID only** — `--include-paid` is
+required to touch the billable one, and is off by default for the reason recorded in §1. It is
+stdlib-only on purpose: the OpenAI SDK normalises the response, and this probe exists to read the
+`model` field the gateway actually returned, which is what detects silent paid fallback.
+
+⚠️ Rows 2 and 5 are **not answerable from the API**. Quota, expiry, and the dashboard decrement are
+founder-side observations. The probe says so rather than inferring them.
 
 ### Test material
 
