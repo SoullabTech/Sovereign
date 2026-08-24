@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Send recovery email
     try {
-      await getResend().emails.send({
+      const { data: sendResult, error: sendError } = await getResend().emails.send({
         from: 'Soullab <noreply@soullab.life>',
         to: email,
         subject: 'Your Soullab Passkey',
@@ -122,7 +122,17 @@ The Soullab Team
         `.trim()
       });
 
-      console.log('[MEMBERS] Recovery email sent to:', email);
+      // resend@6 RESOLVES with { data, error } when the provider rejects a send --
+      // it does not throw. Discarding this result is what let the route report
+      // success for mail Resend never accepted.
+      if (sendError) {
+        console.error('[MEMBERS] Resend rejected the recovery email:', sendError);
+        return NextResponse.json(
+          { error: 'Failed to send recovery email' },
+          { status: 500 }
+        );
+      }
+      console.log('[MEMBERS] Recovery email sent to:', email, 'resendId:', sendResult?.id ?? 'none');
     } catch (emailError) {
       console.error('[MEMBERS] Failed to send recovery email:', emailError);
       return NextResponse.json(

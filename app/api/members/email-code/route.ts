@@ -177,8 +177,9 @@ export async function POST(request: NextRequest) {
     );
 
     // Send the code by email.
+    let sentMessageId: string | null = null;
     try {
-      await getResend().emails.send({
+      const { data: sendResult, error: sendError } = await getResend().emails.send({
         from: 'Soullab <noreply@soullab.life>',
         to: normalizedEmail,
         subject: `Your Soullab code: ${code}`,
@@ -206,6 +207,17 @@ export async function POST(request: NextRequest) {
         `,
         text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
       });
+      // resend@6 RESOLVES with { data, error } when the provider rejects a send --
+      // it does not throw. Discarding this result is what let the route report
+      // success for mail Resend never accepted.
+      if (sendError) {
+        console.error('[EMAIL-CODE] Resend rejected the send:', sendError);
+        return NextResponse.json(
+          { error: 'Could not send the code. Please try again.' },
+          { status: 500 }
+        );
+      }
+      sentMessageId = sendResult?.id ?? null;
     } catch (emailError) {
       console.error('[EMAIL-CODE] Failed to send email:', emailError);
       return NextResponse.json(
@@ -215,7 +227,7 @@ export async function POST(request: NextRequest) {
     }
 
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/email-code', metadata: { isExistingMember, channel: 'code' } });
-    console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember})`);
+    console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember}, resendId: ${sentMessageId ?? 'none'})`);
 
     return NextResponse.json({ success: true, isExistingMember });
   } catch (error) {

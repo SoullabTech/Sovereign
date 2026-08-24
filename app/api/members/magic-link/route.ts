@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Send magic link email
     try {
-      await getResend().emails.send({
+      const { data: sendResult, error: sendError } = await getResend().emails.send({
         from: 'Soullab <noreply@soullab.life>',
         to: normalizedEmail,
         subject,
@@ -220,7 +220,17 @@ The Soullab Team
         `.trim()
       });
 
-      console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember})`);
+      // resend@6 RESOLVES with { data, error } when the provider rejects a send --
+      // it does not throw. Discarding this result is what let the route report
+      // success for mail Resend never accepted.
+      if (sendError) {
+        console.error('[MAGIC-LINK] Resend rejected the send:', sendError);
+        return NextResponse.json(
+          { error: 'Failed to send magic link email. Please try again.' },
+          { status: 500 }
+        );
+      }
+      console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember}, resendId: ${sendResult?.id ?? 'none'})`);
     } catch (emailError) {
       console.error('[MAGIC-LINK] Failed to send email:', emailError);
       return NextResponse.json(
