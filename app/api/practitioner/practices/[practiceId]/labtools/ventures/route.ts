@@ -8,13 +8,22 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
-async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) return null;
-  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
-  return result.rows.length > 0 ? { id: memberId } : null;
-}
+// AUTH-01-D3: the route-local `getMemberFromRequest` that stood here is REMOVED.
+// It read a bare `x-member-id` and treated `SELECT id FROM members WHERE id = $1`
+// returning a row as proof of identity — the impersonation pattern
+// lib/auth/getMemberFromRequest.ts:19-22 documents as fixed. Member UUIDs are exposed
+// to clients, so "the row exists" was never evidence that the caller is that member.
+//
+// Its NAME also collided with the hardened module, which is how these routes escaped
+// the first census. Identity now comes from the canonical resolver directly, under its
+// own name, so a name-based search can never again hide a route from a census.
+//
+// ⭐ Authentication only. `verifyPracticeOwnership()` and every other practitioner
+// authorization check below are UNCHANGED: authentication answers who the member is,
+// ownership answers what that authenticated member may do.
 
 async function verifyPracticeOwnership(practiceId: string, memberId: string): Promise<boolean> {
   const result = await query(
@@ -34,12 +43,12 @@ const VALID_VENTURE_TYPES = [
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId } = await context.params;
-    const member = await getMemberFromRequest(request);
-    if (!member) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return unauthenticatedResponse();
     }
 
-    if (!await verifyPracticeOwnership(practiceId, member.id)) {
+    if (!await verifyPracticeOwnership(practiceId, memberId)) {
       return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
     }
 
@@ -123,12 +132,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId } = await context.params;
-    const member = await getMemberFromRequest(request);
-    if (!member) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return unauthenticatedResponse();
     }
 
-    if (!await verifyPracticeOwnership(practiceId, member.id)) {
+    if (!await verifyPracticeOwnership(practiceId, memberId)) {
       return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
     }
 
