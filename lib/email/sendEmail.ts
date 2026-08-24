@@ -81,6 +81,19 @@ export interface SendEmailResult {
   id?: string;
   /** Human-readable error on failure. */
   error?: string;
+  /**
+   * The PROVIDER's own name for the failure, verbatim — e.g.
+   * 'monthly_quota_exceeded', 'validation_error', 'not_found'. Present only
+   * when Resend returned a typed error.
+   *
+   * Carried separately from `error` because the message is prose and the name
+   * is the thing an operator acts on: a quota failure means top up the
+   * account, a validation failure means fix the payload, and the two are
+   * indistinguishable once flattened to a sentence. During the 2026-08-24
+   * signup incident the only fact that identified the boundary was the name
+   * `monthly_quota_exceeded`, and it was being discarded here.
+   */
+  providerCode?: string;
   /** Machine-readable outcome. */
   status: 'sent' | 'error' | 'not_configured' | 'exception';
 }
@@ -126,6 +139,7 @@ function logSend(
     status: result.status,
     ...(result.id ? { id: result.id } : {}),
     ...(result.error ? { error: result.error } : {}),
+    ...(result.providerCode ? { providerCode: result.providerCode } : {}),
   };
   if (result.success) {
     console.log('[MAIA/email] sent', line);
@@ -178,6 +192,14 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       const result: SendEmailResult = {
         success: false,
         error: error.message,
+        // `name` is Resend's typed discriminator. Read defensively: the SDK's
+        // error shape is not guaranteed across versions, and losing the code
+        // must degrade to "unnamed failure", never to a thrown TypeError on
+        // the path whose whole job is to report a failure.
+        providerCode:
+          typeof (error as { name?: unknown }).name === 'string'
+            ? (error as { name: string }).name
+            : undefined,
         status: 'error',
       };
       logSend(opts.purpose, from, toLog, domain, result);
