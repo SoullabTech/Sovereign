@@ -86,8 +86,26 @@ The canonical account's credentials at the time of the incident:
 username Kelly · has_webauthn = t · preferred_auth_method = password · must_reset_password = f
 ```
 
-Both non-email paths were open, and the usernameless passkey flow
-(`authenticate/options/route.ts:51`, discoverable credentials when no username is supplied) required
-typing nothing at all. Neither was surfaced from the state the member was actually in. That gap is
-the defect this ruling exists to close.
+### Corrected once the credential count came back
 
+`has_webauthn = t` — **with `SELECT count(*) FROM webauthn_credentials = 0`.** The flag is true and
+there is no credential behind it. The passkey path was NOT open; only the password path was.
+
+**This is a second defect, and it compounds the first.** A member with `has_webauthn = true` and zero
+credentials is shown "Continue with Face ID or Touch ID" — a button that cannot succeed. During this
+outage the founder was therefore offered two apparently-live paths, email code and passkey, and
+**both were dead ends.** The only working door was "Use a password instead", the least prominent
+element on the screen.
+
+So the ruling's scope is wider than transport-vs-identity: **the front door must not advertise a
+credential the account cannot actually present.** Any credential-choice state built under this ruling
+must derive its options from real credential availability — while still returning identical options
+to an unauthenticated caller regardless of whether the email exists (constraint 3). Those two
+requirements are in tension, and resolving that tension is part of the work, not a detail: the honest
+answer is likely to gate on availability only *after* an authentication attempt, never before.
+
+### Deployment state at the time of the incident
+
+`docker exec maia-sovereign printenv GIT_COMMIT` → **`e56e502ff`** (PR #1073). #1074 is merged at
+`73106dc90` and **was not live**. The `hello@soullab.life` in the member-facing error is confirmed
+runtime evidence of the gap, not a message-copy discrepancy. Merged is not deployed.
