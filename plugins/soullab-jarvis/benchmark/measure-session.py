@@ -9,6 +9,10 @@ it. It reads the same corpus the 2026-08-16 context audit read
     measure-session.py --json A.jsonl                   # machine-readable
     measure-session.py --compare BASE.jsonl CAND.jsonl  # A/B delta table
 
+An arm is refused, never reported, when it cannot honestly be measured: zero
+assistant turns (it never ran), a transcript that measures itself, or a file that
+CHANGES SIZE WHILE BEING READ (the session is still open and still writing).
+
 Estimation note, stated once and honestly: tool-result inflow is estimated at
 **4 bytes/token**, the same convention the context audit used, because transcripts do
 not record per-result token counts. Startup context and output tokens are NOT estimates
@@ -28,6 +32,20 @@ ORIENT = re.compile(
     r"docker\s+(ps|inspect)|printenv\s+GIT_COMMIT"
 )
 DENIAL = re.compile(r"\[JARVIS/(T3|trap)\]")
+
+
+class ArmNotStable(Exception):
+    """The transcript changed on disk while it was being read."""
+
+    def __init__(self, path, before, after):
+        self.path, self.before, self.after = path, before, after
+        super().__init__(path)
+
+
+def _stat_sig(path):
+    """Inode + length + mtime. A session still being written changes all three."""
+    st = os.stat(path)
+    return (st.st_ino, st.st_size, st.st_mtime_ns)
 
 
 def image_patterns():
@@ -98,6 +116,7 @@ def measure(path):
         "measures_itself": False,
     }
     stamps = []
+    sig_before = _stat_sig(path)
 
     with open(path, encoding="utf-8", errors="replace") as fh:
         for line in fh:
@@ -178,6 +197,13 @@ def measure(path):
             if rec.get("type") == "system" and DENIAL.search(flat):
                 m["hook_denials"] += 1
 
+    # If the file moved under the read, these numbers describe no single state of
+    # it. Detecting that requires the file itself; no marker inside the transcript
+    # can reveal a session that is merely still open.
+    sig_after = _stat_sig(path)
+    if sig_after != sig_before:
+        raise ArmNotStable(path, sig_before, sig_after)
+
     m["repeated_reads"] = sum(v - 1 for v in read_paths.values() if v > 1)
     m["distinct_read_paths"] = len(read_paths)
     if len(stamps) >= 2:
@@ -229,6 +255,25 @@ def compare(a, b):
     print("A delta on ONE session pair is an observation, not a result. Run >=3 pairs.\n")
 
 
+def _measure_or_refuse(label, path):
+    """measure(), except a transcript that moves under the read is refused."""
+    try:
+        return measure(path)
+    except ArmNotStable as e:
+        sys.stderr.write(
+            "\nARM NOT STABLE / SESSION MAY STILL BE ACTIVE\n\n"
+            f"  {label}: {os.path.basename(e.path)}\n"
+            f"  size {e.before[1]:,} -> {e.after[1]:,} bytes "
+            f"({e.after[1] - e.before[1]:+,}) while it was being read.\n\n"
+            "The transcript changed during measurement, so the figures describe no\n"
+            "single state of it. That is what an arm looks like while its session is\n"
+            "still open and still writing. Close that session, or run the comparison\n"
+            "from a third session that is neither arm, and measure again.\n"
+            "See PROTOCOL.md.\n"
+        )
+        sys.exit(2)
+
+
 def main():
     args = sys.argv[1:]
     if not args:
@@ -252,7 +297,7 @@ def main():
                     "yet. See PROTOCOL.md.\n"
                 )
                 sys.exit(2)
-            arms.append((label, path, measure(path)))
+            arms.append((label, path, _measure_or_refuse(label, path)))
 
         # An existing, non-empty transcript is NOT evidence that an arm ran. A session
         # that opened and did nothing yields zeros -- and zeros subtracted from real
@@ -292,7 +337,7 @@ def main():
     as_json = args[0] == "--json"
     files = args[1:] if as_json else args
     for f in files:
-        m = measure(f)
+        m = _measure_or_refuse(os.path.basename(f), f)
         if as_json:
             print(json.dumps(m, indent=2))
         else:

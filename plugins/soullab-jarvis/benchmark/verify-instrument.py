@@ -4,7 +4,7 @@
 The instrument that measures the adapter must itself be verified, or the A/B is
 just two numbers with a story attached.
 """
-import json, os, subprocess, sys, tempfile
+import json, os, subprocess, sys, tempfile, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MEASURE = os.path.join(HERE, "measure-session.py")
@@ -145,6 +145,42 @@ rc, err = compare_rc(A, SELF)
 chk("self-measurement refused (exit 2)",       rc, 2)
 chk("self-measurement explains why",           "benchmark bookkeeping, not the task" in err, True)
 chk("self-measurement claims only what it saw", "is the session running" in err, False)
+
+# A transcript still being APPENDED by a live session. Nothing inside it names
+# this tool, so the self-measurement marker cannot see it -- the only witness is
+# the file moving under the read. Big enough that the read window is unambiguous.
+LIVE = write([head()] + [
+    use(f"g{i}", "Read", {"file_path": f"/repo/f{i}.ts"}) for i in range(9000)
+])
+_stop = threading.Event()
+
+
+def _churn():
+    while not _stop.is_set():
+        with open(LIVE, "a", encoding="utf-8") as fh:
+            fh.write(result("g1", "appended while being measured") + "\n")
+            fh.flush()
+        time.sleep(0.001)
+
+
+_before = os.path.getsize(LIVE)
+_t = threading.Thread(target=_churn, daemon=True)
+_t.start()
+time.sleep(0.02)
+rc_live, err_live = compare_rc(A, LIVE)
+_stop.set()
+_t.join(timeout=5)
+
+chk("live arm: file did grow during the run",  os.path.getsize(LIVE) > _before, True)
+# The decisive one: the pre-existing guard is blind here, so it cannot be the
+# thing that refuses this arm.
+chk("live arm carries no self-measure marker", measure(LIVE)["measures_itself"], False)
+chk("live arm refused (exit 2)",               rc_live, 2)
+chk("live arm named ARM NOT STABLE",           "ARM NOT STABLE" in err_live, True)
+chk("live arm says session may be active",
+    "SESSION MAY STILL BE ACTIVE" in err_live, True)
+
+os.unlink(LIVE)
 
 # A genuine pair must still pass through.
 rc, _ = compare_rc(A, B)
