@@ -23,7 +23,15 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 // Resend is mocked so no real email is ever sent; mockSend records delivery.
-const mockSend = jest.fn<(...args: unknown[]) => Promise<{ id: string }>>();
+//
+// The fixture returns Resend's REAL result shape — `{ data, error }` — not a
+// bare `{ id }`. That detail is load-bearing: `emails.send()` resolves on a
+// provider refusal rather than throwing, and a fixture that always resolved to
+// a truthy object made a route which ignored `error` look correct under test
+// for as long as the defect existed. A mock that cannot express failure cannot
+// prove the handling of failure.
+type ResendResult = { data: { id: string } | null; error: { name: string; message: string } | null };
+const mockSend = jest.fn<(...args: unknown[]) => Promise<ResendResult>>();
 jest.mock('resend', () => ({
   Resend: jest.fn().mockImplementation(() => ({
     emails: { send: (...args: unknown[]) => mockSend(...args) },
@@ -37,9 +45,12 @@ jest.mock('@/lib/auth/rateLimiter', () => ({
   buildRateLimitHeaders: jest.fn(() => ({})),
 }));
 
+const mockTrack = jest.fn<(payload: { event: string; metadata?: Record<string, unknown> }) => void>();
 jest.mock('@/lib/onboarding/telemetry', () => ({
-  trackOnboarding: jest.fn(),
+  trackOnboarding: (payload: { event: string }) => mockTrack(payload),
 }));
+
+const trackedEvents = () => mockTrack.mock.calls.map(([p]) => p.event);
 
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
@@ -79,7 +90,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSend.mockResolvedValue({ id: 'email-mock' });
+    mockSend.mockResolvedValue({ data: { id: 'email-mock' }, error: null });
     installDb();
     delete process.env.BETA_ALLOWLIST_ENABLED;
     delete process.env.CAPACITOR_BUILD;
@@ -159,5 +170,132 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     expect(body).toEqual({ success: true, isExistingMember: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
+  });
+});
+
+/**
+ * PROVIDER-REFUSAL TESTS — the 2026-08-24 signup incident.
+ *
+ * WHAT HAPPENED. Resend's monthly quota was exhausted. Every signup send came
+ * back `{ data: null, error: { statusCode: 429, name: 'monthly_quota_exceeded' } }`.
+ * `emails.send()` RESOLVES on that — it does not throw — so the route's
+ * try/catch never fired, `magic_link_sent` was recorded, `[EMAIL-CODE] Code
+ * sent` was logged, and the caller got a 200. A real person made six attempts
+ * across two days, received nothing, and could not create an account. Every
+ * observable surface said the email had been sent.
+ *
+ * WHAT THESE PROVE. Not that the quota is fixed — that is an account action,
+ * not a code one. They prove the route can no longer CLAIM a send the provider
+ * refused, whatever the reason. The refusal is named, the funnel records the
+ * drop, and the member is told the truth: it is ours, and retrying will not
+ * help.
+ */
+describe('POST /api/members/email-code — provider refusal is never reported as success', () => {
+  const ORIGINAL_FLAG = process.env.BETA_ALLOWLIST_ENABLED;
+
+  const refuse = (name: string, message: string) =>
+    mockSend.mockResolvedValue({ data: null, error: { name, message } });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockSend.mockResolvedValue({ data: { id: 'email-mock' }, error: null });
+    installDb();
+    delete process.env.BETA_ALLOWLIST_ENABLED;
+    delete process.env.CAPACITOR_BUILD;
+    process.env.RESEND_API_KEY = 'test-key';
+  });
+
+  afterEach(() => {
+    if (ORIGINAL_FLAG === undefined) delete process.env.BETA_ALLOWLIST_ENABLED;
+    else process.env.BETA_ALLOWLIST_ENABLED = ORIGINAL_FLAG;
+  });
+
+  // THE INCIDENT, exactly.
+  it('does NOT report success when Resend returns 429 monthly_quota_exceeded', async () => {
+    refuse('monthly_quota_exceeded', 'You have reached your monthly email sending quota.');
+    const res = await POST(req('courtney@example.com'));
+    const body = await res.json();
+
+    expect(res.status).not.toBe(200);
+    expect(body.success).toBeUndefined();
+    expect(body.reason).toBe('email_provider_refused');
+  });
+
+  it('does NOT record magic_link_sent when the provider refuses', async () => {
+    refuse('monthly_quota_exceeded', 'You have reached your monthly email sending quota.');
+    await POST(req('courtney@example.com'));
+
+    // The funnel must not show a send that never happened. This single
+    // assertion is the difference between "delivery is broken" and "people
+    // stopped signing up" as a reading of the data.
+    expect(trackedEvents()).not.toContain('magic_link_sent');
+  });
+
+  it('DOES record the failure, so the drop is visible in the funnel', async () => {
+    refuse('monthly_quota_exceeded', 'You have reached your monthly email sending quota.');
+    await POST(req('courtney@example.com'));
+
+    expect(trackedEvents()).toContain('magic_link_send_failed');
+    const failure = mockTrack.mock.calls.map(([p]) => p).find((p) => p.event === 'magic_link_send_failed');
+    // The provider's own name for the fault reaches telemetry. "Quota" and
+    // "unverified domain" need different responses from an operator and are
+    // indistinguishable once flattened to "email failed".
+    expect(failure?.metadata?.providerCode).toBe('monthly_quota_exceeded');
+  });
+
+  it('does not tell the member to try again — retrying a quota refusal cannot work', async () => {
+    refuse('monthly_quota_exceeded', 'You have reached your monthly email sending quota.');
+    const res = await POST(req('courtney@example.com'));
+    const body = await res.json();
+
+    expect(String(body.error)).not.toMatch(/try again/i);
+    expect(String(body.error)).toMatch(/our side|problem on our side/i);
+  });
+
+  it('does not leak the provider\'s own wording to the member', async () => {
+    refuse('monthly_quota_exceeded', 'You have reached your monthly email sending quota.');
+    const res = await POST(req('courtney@example.com'));
+    const body = await res.json();
+
+    expect(String(body.error)).not.toMatch(/quota/i);
+    expect(String(body.error)).not.toMatch(/resend/i);
+  });
+
+  // The class, not just the instance: any typed refusal must behave the same.
+  it.each([
+    ['validation_error', 'The from address is not verified.'],
+    ['not_found', 'Domain not found.'],
+    ['rate_limit_exceeded', 'Too many requests.'],
+  ])('refuses to claim success for %s', async (name, message) => {
+    refuse(name, message);
+    const res = await POST(req('someone@example.com'));
+    const body = await res.json();
+
+    expect(body.success).toBeUndefined();
+    expect(trackedEvents()).not.toContain('magic_link_sent');
+    expect(trackedEvents()).toContain('magic_link_send_failed');
+  });
+
+  // A thrown transport fault must still be caught — the fix must not trade one
+  // silent failure for another.
+  it('still handles a THROWN transport fault without claiming success', async () => {
+    mockSend.mockRejectedValue(new Error('socket hang up'));
+    const res = await POST(req('someone@example.com'));
+    const body = await res.json();
+
+    expect(body.success).toBeUndefined();
+    expect(trackedEvents()).not.toContain('magic_link_sent');
+  });
+
+  // CONTROL: these tests can distinguish. Without this, every assertion above
+  // would also pass against a route that never reports success at all.
+  it('CONTROL: a genuine send still succeeds and still records magic_link_sent', async () => {
+    const res = await POST(req('works@example.com'));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(trackedEvents()).toContain('magic_link_sent');
+    expect(trackedEvents()).not.toContain('magic_link_send_failed');
   });
 });

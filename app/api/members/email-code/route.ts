@@ -23,7 +23,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes, randomInt } from 'crypto';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import {
   checkRateLimit,
   getClientIP,
@@ -32,14 +32,6 @@ import {
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/email-code';
-
-let resendClient: InstanceType<typeof Resend> | null = null;
-function getResend(): InstanceType<typeof Resend> {
-  if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resendClient;
-}
 
 function generateToken(): string {
   return randomBytes(32).toString('hex');
@@ -177,12 +169,22 @@ export async function POST(request: NextRequest) {
     );
 
     // Send the code by email.
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
-        to: normalizedEmail,
-        subject: `Your Soullab code: ${code}`,
-        html: `
+    //
+    // Through the CENTRAL helper, not a local Resend client. `emails.send()`
+    // RESOLVES on a provider rejection — it does not throw — so the previous
+    // `await`-inside-try/catch could never observe a refusal, and the catch
+    // below fired only on transport faults. On 2026-08-24 that turned a
+    // Resend `429 monthly_quota_exceeded` into six consecutive
+    // "[EMAIL-CODE] Code sent" log lines for a real person who received
+    // nothing and could not create an account. lib/email/sendEmail.ts was
+    // written to close exactly this bug class; this route simply was not
+    // using it.
+    const sendResult = await sendEmail({
+      purpose: 'auth:email-code',
+      from: SENDERS.noreply,
+      to: normalizedEmail,
+      subject: `Your Soullab code: ${code}`,
+      html: `
           <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 28px;">
               <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="140" style="max-width: 140px;" />
@@ -204,18 +206,48 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-        text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
+      text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
+    });
+
+    // The provider REFUSED. Nothing below this point may describe the code as
+    // sent: no magic_link_sent, no "Code sent" line, no 200. The stored code
+    // is left in place deliberately — it is already invalidated on the next
+    // request, and deleting it here would destroy the only record that this
+    // person tried.
+    if (!sendResult.success) {
+      trackOnboarding({
+        event: 'magic_link_send_failed',
+        email: normalizedEmail,
+        path: 'POST /api/members/email-code',
+        metadata: {
+          isExistingMember,
+          channel: 'code',
+          status: sendResult.status,
+          providerCode: sendResult.providerCode ?? null,
+        },
       });
-    } catch (emailError) {
-      console.error('[EMAIL-CODE] Failed to send email:', emailError);
+      console.error(
+        `[EMAIL-CODE] Provider REFUSED the send for ${normalizedEmail} — status=${sendResult.status} providerCode=${sendResult.providerCode ?? 'unnamed'} error=${sendResult.error ?? 'none'}`
+      );
+
+      // Deliberately NOT "please try again". On 2026-08-24 a quota refusal was
+      // reported to the member as a retryable error, and the logs show the
+      // consequence: six attempts across two days, none of which could ever
+      // have worked, and no way for the person to tell that the failure was
+      // ours. `reason` is a stable machine-readable field for the signup UI
+      // and telemetry; the provider's own wording is NOT leaked to members.
       return NextResponse.json(
-        { error: 'Could not send the code. Please try again.' },
-        { status: 500 }
+        {
+          error:
+            "We couldn't send your code — that's a problem on our side, not yours. It isn't worth retrying right now. Please contact hello@soullab.life and we'll get you in.",
+          reason: 'email_provider_refused',
+        },
+        { status: 502 }
       );
     }
 
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/email-code', metadata: { isExistingMember, channel: 'code' } });
-    console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember})`);
+    console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember}, id: ${sendResult.id ?? 'none'})`);
 
     return NextResponse.json({ success: true, isExistingMember });
   } catch (error) {
