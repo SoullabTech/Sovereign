@@ -8,6 +8,13 @@
 > **Identity selection, credential verification, account creation, session creation, and delivery transport are five separate steps.**
 > Today they are entangled. Every defect below is a symptom of that entanglement.
 
+> **Second governing invariant — founder ruling, 2026-08-24:**
+> **AUTH EXPERIENCE INVARIANT — NO DEAD-END ERRORS.**
+> No member-facing sign-in or signup state may terminate in an error-only state.
+> The server preserves the exact operational failure for diagnosis; the member-facing
+> layer translates it into truthful, actionable recovery choices.
+> **Launch acceptance: zero known dead-end auth states.**
+
 ---
 
 ## 0. What this document is, and what it is not
@@ -56,6 +63,9 @@ CREDENTIALS         members.password_hash
 TRANSPORT           Resend, via lib/email/sendEmail.ts
 ```
 
+⭐ Read this block as the root cause made visible: four kinds of login identifier, no layer that
+joins them to one person.
+
 `members.passkey` is doing duty as a NOT NULL identity column while every modern path
 fabricates a synthetic value to satisfy it — `EMAIL-<USER>-<ts>`
 (`app/api/members/register-email/route.ts:100`), `GOOGLE-<hex>`
@@ -89,12 +99,91 @@ are not similarly consolidated.
 
 ---
 
+## 1A. The dead-end ruling — founder, 2026-08-24
+
+**Status: RULED. Binding on this lane.** Not a design preference — an acceptance condition.
+
+A failure response must distinguish three things, and the member-facing layer must carry all three:
+
+```
+what happened  ·  whether retry can help  ·  what the member can do now
+```
+
+### The rules
+
+1. **Never dead-end.** Every unsuccessful attempt exposes at least one viable next action, or a
+   human-support path when none exists.
+2. **Never advertise a method that cannot work.** A stale `has_webauthn = true` is not evidence
+   the platform can attempt a passkey.
+3. **Never blame the member for our failure.** Provider quota, configuration, deployment drift,
+   session failure and outage are ours, and are said to be ours.
+4. **Preserve privacy.** Pre-auth choices must not reveal whether an email exists, its roles, or
+   its credential inventory. *(This constrains rule 2: capability may narrow the menu only
+   **after** authentication.)*
+5. **Keep the person's input.** A delivery failure must not erase the email they typed.
+6. **Offer recovery in context.** "Try again" appears only for `retryable = true`. A quota refusal
+   never says "try again."
+7. **Signup behaves the same way.** A failed signup path yields another path or a clear return —
+   never an opaque error page.
+8. **Session creation is part of success.** Never celebrate "you're in" before the durable
+   authenticated session exists.
+9. **Support is an action, not a footer.** For genuinely blocked states, "Get help" is visible and
+   carries a non-sensitive correlation reference.
+
+### Worked example — the current quota refusal
+
+Today's terminal red box becomes:
+
+```
+Email sign-in is temporarily unavailable.
+You can still enter another way.
+
+  → Sign in with username and password
+  → Use a passkey on this device        (only when actually available)
+  → Try email again later
+  → Get help                            (carries reference 8cc73…)
+```
+
+### ⚠️ Tension this ruling creates with §3, named not hidden
+
+Rule 2 (never advertise what cannot work) and rule 4 (never disclose credential inventory
+pre-auth) pull against each other. **The resolution is the phase boundary, not a compromise:**
+*platform* capability may gate a button pre-auth (does this device support WebAuthn at all — a
+fact about the browser, not the account); *account* capability may only narrow the menu after
+authentication. A method the account lacks fails at verification, where failure discloses nothing.
+
+---
+
 ## 2. Findings
 
 Each finding is classed. **VERIFIED** = read in source, cited. **UNKNOWN** = the
 structural condition is verified, the live consequence is not measured.
 
-### F1 — `members.email` has no uniqueness constraint · VERIFIED · **root cause**
+### ROOT CAUSE — durable person identity and login identifiers are conflated · VERIFIED
+
+> **There is no canonical person / login-identifier layer.** `members` is simultaneously the
+> person and one of that person's identifiers. Nothing in the system guarantees that multiple
+> **verified** identifiers for one human resolve to one durable member.
+
+This — not F1 — is the defect that produced the split we lived through:
+
+```
+kelly@soullab.life   →  member A
+soullab1@gmail.com   →  member B          ← both addresses valid, both verified
+Google identity      →  A or B, decided by a string comparison (F2/F3)
+username "Kelly"     →  A
+```
+
+Every finding below is a symptom of this one. F1 and F2 are how the *same* identifier splits a
+person; F3 is how a *different* identifier fails to rejoin one. Fixing F1 and F2 alone would leave
+the observed failure fully reproducible, because both addresses above are legitimate and neither
+duplicates the other.
+
+**Consequence for scope:** the identity model in §4 is not an optimization of the current schema —
+it is the only change in this lane that addresses the root cause. F1/F2/F3 remediation (AUTH-01-E)
+stops the bleeding; it does not close this.
+
+### F1 — `members.email` has no uniqueness constraint · VERIFIED · **duplicate-person enabling defect**
 
 `database/migrations/20260103000001_members.sql:10` declares `email VARCHAR(255)` —
 nullable, no `UNIQUE`. Lines 6–7 make `passkey` and `username` `UNIQUE NOT NULL`.
@@ -104,6 +193,11 @@ The only index touching email anywhere in `database/migrations/` is on
 **The database permits N durable members per email address.** Nothing at the storage
 layer can catch a duplicate person. Every guard against duplication is application
 code, and that code disagrees with itself — see F2.
+
+⚠️ **This is an enabler, not the root cause.** Correction accepted 2026-08-24. A unique
+constraint on `members.email` would close the *same-identifier* subclass and nothing more.
+It would not have prevented the identity split actually observed, which involved **different
+valid identifiers for the same person** — see the root cause below.
 
 ### F2 — Email matching is case-inconsistent across the doors · VERIFIED
 
@@ -245,6 +339,88 @@ Includes `app/api/sovereign/app/maia/route.ts` (the primary conversation route) 
 But 27 routes decide identity without the one resolver hardened against header
 impersonation, and none has been read. This is the single largest unmeasured area in the
 auth surface and it needs its own bounded census — AUTH-01-C below.
+
+### F11 — The server already honours the ruling. The client discards it. · VERIFIED
+
+This is the most important correction in this revision, and it inverts the obvious assumption.
+
+`app/api/members/email-code/route.ts:264-284` already implements most of the ruling:
+
+```ts
+if (!sendResult.ourFault) {
+  return NextResponse.json({ error: "We couldn't send a code to that address…",
+                             reason: 'email_address_rejected', retryable: false }, { status: 400 });
+}
+return NextResponse.json({
+  error: sendResult.retryable
+    ? "We couldn't send your code — that's a problem on our side, not yours. Please try again in a few minutes."
+    : "We can't send codes right now. That's a problem on our side, not yours, and retrying won't help. Please contact support@soullab.life and we'll get you in.",
+  reason: 'email_provider_refused',
+  retryable: sendResult.retryable === true,
+}, { status: 502 });
+```
+
+It distinguishes what happened (`reason`), whether retry helps (`retryable`), refuses to blame the
+member, refuses "try again" on a non-retryable refusal, and routes to support instead. It leaks
+neither the provider's wording nor the internal taxonomy. **Rules 3 and 6 are already satisfied
+server-side.**
+
+`components/auth/UnifiedAuth.tsx:188` then does this:
+
+```ts
+if (!res.ok) { setError(data?.error || 'Could not send the code. Please try again.'); return; }
+```
+
+**`reason` and `retryable` are read by nothing.** The structured contract exists, is correct, and
+dies at the client boundary — flattened into one red string. The work here is not to build the
+contract; it is to stop throwing it away.
+
+### F12 — Six client paths give retry advice the server did not authorize · VERIFIED
+
+Every `setError` in `UnifiedAuth.tsx` that is not the biometric handler:
+
+| Line | String | Defect |
+|---|---|---|
+| `:194` | `'Could not send the code. Please try again.'` | exception path — unconditional retry advice, overrides `retryable:false` |
+| `:223` | `'Could not verify the code. Please try again.'` | same |
+| `:254`, `:263` | `'Could not complete signup. Please try again.'` | same |
+| `:324` | `'Sign in succeeded but memberId missing.'` | internal state to the member; no action offered |
+| `:364`, `:390` | `'Google sign-in failed: ' + e.message` | raw exception text to the member |
+| `email-code:299` | `'Could not send the code. Please try again.'` | 500 fallback contradicts the 502 handler above it |
+
+`:324` is the ruling's rule 8 working correctly — it refuses to proceed without a resolvable
+member — and simultaneously failing rule 1, because it hands the person nothing to do.
+
+⭐ **The positive precedent is already in the file.** `continueWithBiometric` (`:283-288`) maps
+failure codes to actionable member copy:
+
+```ts
+if (code === 'CREDENTIAL_NOT_FOUND') msg = 'No Face ID set up here yet — enter your email and we'll send a code.';
+else if (code === 'DEVICE_NOT_TRUSTED') msg = 'This device isn't set up yet — continue with your email.';
+else if (code === 'USER_CANCELLED') msg = 'Cancelled. Tap again when you're ready.';
+```
+
+That is the ruling, already implemented, in one handler. **Generalize it; do not invent it.**
+
+### F13 — Dead-end exposure differs by phase · VERIFIED
+
+On the **email** phase, the error renders above a form that still shows password, biometric and
+OAuth — so a quota refusal is *not* a total dead-end there (as of the field-order fix). On the
+**code**, **password**, **name** and **waitlist** phases the only other control is a 12px
+`← Back to email`. Those four phases are where `dead_end_rate` will actually be non-zero.
+
+### F14 — Biometric availability is platform evidence, not credential evidence · VERIFIED
+
+The button renders on `bioAvailable`, from `biometricAuth.getAvailability()` — whether the
+*browser/device* supports WebAuthn. Nothing checks that this account has a live credential.
+Combined with F6's `has_webauthn || true`, this is the `false_option_rate` mechanism: a button
+presented as usable that the system already knows it cannot honour.
+
+Note the resolution is **not** to consult the account pre-auth — rule 4 forbids that. It is that
+platform availability alone may render the button, and the *account* check happens at
+verification. See the tension note in §1A.
+
+---
 
 ---
 
@@ -400,6 +576,7 @@ Nothing here is claimed as passing. This is the bar, not a report.
 
 | # | Acceptance criterion | Closes | Status |
 |---|---|---|---|
+| A0 | **All verified identifiers for one human resolve to one durable `members.id`** | ROOT CAUSE | ☐ NOT MET |
 | A1 | No email resolves to more than one `members.id` | F1, F2 | ☐ NOT MET |
 | A2 | Identifier uniqueness enforced by a DB constraint, not by callers | F1, F2 | ☐ NOT MET |
 | A3 | OAuth first sign-in links to the existing person for the same human | F3 | ☐ NOT MET |
@@ -414,9 +591,15 @@ Nothing here is claimed as passing. This is the bar, not a report.
 | A12 | Account creation occurs only after ownership proof, at every one of the 10 creation sites | — | ◐ PARTIAL (`register-email` proves via `magic_link_tokens`; other 9 unaudited) |
 | A13 | At least one recovery route does not depend on the primary path's infrastructure | — | ☐ NOT MET (email is both) |
 | A14 | Every major route has comparable visual dignity | F9 | ✔ MET on `/signin` (interim branch); unverified elsewhere |
+| A15 | **Zero known dead-end auth states** — every failure exposes ≥1 viable action or a support path | F11–F13 | ☐ NOT MET |
+| A16 | No client path offers retry when the server returned `retryable:false` | F11, F12 | ☐ NOT MET |
+| A17 | No member-facing string carries raw exception text or internal state | F12 | ☐ NOT MET |
+| A18 | No method is presented as available without evidence the platform can attempt it | F6, F14 | ☐ NOT MET |
+| A19 | Entered identity context survives a method switch | rule 5 | ◐ PARTIAL (`email` state persists across phases; unverified on OAuth round-trip) |
+| A20 | Blocked states surface "Get help" with a non-sensitive correlation reference | rule 9 | ☐ NOT MET (support address is in copy; no reference id) |
 
-A14 is the only row the shipped work touches. That ratio is the honest summary of where
-this lane stands.
+A14 is the only row the shipped work touches. **1 of 21.** That ratio is the honest summary of
+where this lane stands.
 
 ---
 
@@ -444,6 +627,12 @@ a rescue.
 **AUTH-01-E · Normalize email comparison at all six doors** — make every predicate
 `LOWER(email) = LOWER($1)` and lowercase at every insert. Does not fix F1, but stops the
 bleeding while the model is decided. Behavioural change, needs verification per door.
+
+**AUTH-01-E2 · Carry `reason` + `retryable` through the client** — the server contract already
+exists (F11). Stop discarding it: read both fields, choose copy from `reason`, and render "try
+again" only on `retryable:true`. Then generalize the biometric handler's shape (F12) to every
+failure path, and replace raw exception strings. No schema, no new endpoint, no pre-auth
+disclosure. **This is the cheapest route to A15/A16/A17 and it should probably run before F.**
 
 **AUTH-01-F · Front-door state machine (§3), old data model** — identify → choose →
 verify, with Continue firing no transport. Deliverable is the UI + route contract, still
@@ -482,7 +671,7 @@ census before anyone touches them).
 
 ## 9. Standing
 
-**PROVEN:** F1, F2 (structure), F3, F4, F5, F6, F7 (bounded), F8, F9.
+**PROVEN:** ROOT CAUSE, F1, F2 (structure), F3, F4, F5, F6, F7 (bounded), F8, F9, F11, F12, F13, F14.
 **UNKNOWN:** F2 (live blast radius), F10, A11, A12 beyond `register-email`, and the
 ~900 routes outside this census.
 **NOT CLAIMED:** that the entry paths censused here are the whole auth surface. They
