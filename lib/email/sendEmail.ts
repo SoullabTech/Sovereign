@@ -11,7 +11,8 @@
  *   account owner). This wrapper closes the bug class once:
  *
  *     - ALWAYS inspects `result.error`
- *     - ALWAYS logs purpose / sender / recipient / domain / status
+ *     - ALWAYS logs purpose / sender / recipient REFERENCE / domain / status
+ *       (the recipient address itself is never logged — see logSend)
  *     - returns a typed success|failure result
  *     - never throws (safe for fire-and-forget notification callers)
  *
@@ -33,6 +34,8 @@
  */
 
 import { Resend, type CreateEmailOptions } from 'resend';
+import { memberRef } from '@/lib/privacy/memberRef';
+import { redactEmails } from '@/lib/privacy/redactEmails';
 
 // ============================================================================
 // VERIFIED SENDERS
@@ -283,14 +286,33 @@ function logSend(
 ): void {
   // Structural metadata only — never log subject or body (Sanctuary: minimal
   // metadata, never content).
+  //
+  // AND NEVER THE RECIPIENT ADDRESS. This is the transport layer under every
+  // auth code, invite and password reset in the system, so a raw `to` here
+  // defeats redaction done in any calling route: the route can stop printing
+  // the address and this line will print it one call lower down, on both the
+  // success and the failure path. That is exactly what happened — the
+  // email-code route's logs were redacted while this line kept emitting the
+  // address for every send.
+  //
+  // `toRef` is `memberRef()` over the address: pseudonymous and correlatable,
+  // NOT anonymous (lib/privacy/memberRef.ts). Operators keep the ability to
+  // follow one recipient through a log window. `domain` is retained separately
+  // and unredacted — it is coarse, it is what deliverability triage actually
+  // needs, and it was already being logged as its own field.
   const line = {
     purpose,
     from,
-    to,
+    toRef: memberRef(to),
     domain,
     status: result.status,
     ...(result.id ? { id: result.id } : {}),
-    ...(result.error ? { error: result.error } : {}),
+    // REDACTED, not dropped. The provider echoes back the address it rejected
+    // ("Invalid recipient a.real.person@example.com"), which would re-enter
+    // stdout through this field and bypass `toRef` above and every route-level
+    // redaction below it. `result.error` itself stays raw for callers that
+    // need it; only what crosses the logging boundary is sanitised.
+    ...(result.error ? { error: redactEmails(result.error) } : {}),
     ...(result.providerCode ? { providerCode: result.providerCode } : {}),
     ...(result.failureKind ? { failureKind: result.failureKind } : {}),
   };

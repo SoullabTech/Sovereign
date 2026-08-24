@@ -24,6 +24,7 @@ import {
   buildRateLimitHeaders,
 } from '@/lib/auth/rateLimiter';
 import { createSession } from '@/lib/auth/serverSessions';
+import { memberRef } from '@/lib/privacy/memberRef';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
@@ -130,7 +131,12 @@ export async function POST(request: NextRequest) {
 
     if (!memberId) {
       // New email — verified. Client collects a name and calls register-email.
-      console.log(`[EMAIL-CODE/verify] New email verified: ${normalizedEmail}`);
+      // No raw address in container stdout. There is no member row to correlate
+      // against yet, and the verified address is already recorded in
+      // `magic_link_tokens` and `onboarding_events` — preference order 1 in
+      // lib/privacy/memberRef.ts: emit no identifier when correlation is not
+      // actually needed.
+      console.log('[EMAIL-CODE/verify] New email verified');
       return NextResponse.json({ success: true, verified: true, email: normalizedEmail });
     }
 
@@ -196,7 +202,11 @@ export async function POST(request: NextRequest) {
     response.cookies.set('maia_tier', String(record.tier || 'free'), cookieOpts);
     response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
     trackOnboarding({ event: 'session_created', memberId, path: ENDPOINT });
-    console.log(`[EMAIL-CODE/verify] Session created for existing member: ${record.username}`);
+    // A username is a login identifier, not an opaque handle — printing it to
+    // container stdout is the same disclosure as printing the email address.
+    // `memberRef()` is pseudonymous and correlatable, NOT anonymous, and matches
+    // the token used by the send path in ../route.ts for the same member.
+    console.log(`[EMAIL-CODE/verify] Session created for existing member=${memberRef(memberId)}`);
 
     return response;
   } catch (error) {
