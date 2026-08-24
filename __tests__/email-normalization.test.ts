@@ -49,16 +49,24 @@ const MIXED_CASE_EMAIL = 'Nathan.Kane@thermofisher.com';
 const LOWER_EMAIL = MIXED_CASE_EMAIL.toLowerCase();
 
 describe('Magic link — recognizes existing member regardless of email case', () => {
-  test('mixed-case stored email returns isExistingMember: true', async () => {
+  // The case-sensitivity regression is now guarded WITHOUT a live server, in
+  // app/api/members/email-code/__tests__/delivery.test.ts ("email lookup is
+  // case-insensitive"): it asserts the LOWER(email) lookup receives a
+  // lowercased parameter, and that the issued code is linked to the member
+  // found under a different case.
+  //
+  // It can no longer be asserted from the response here, because the response
+  // no longer carries `isExistingMember`: telling an unproved caller whether an
+  // address has an account is account enumeration. A leak is not a test
+  // fixture — the observation moved; the invariant did not.
+  test('mixed-case stored email is accepted (and leaks nothing)', async () => {
     const { status, data } = await post('/api/members/magic-link', {
       email: MIXED_CASE_EMAIL,
     });
     if (skipIfRateLimited(status)) return;
     expect(status).toBe(200);
     expect(data.success).toBe(true);
-    // If email lookup is case-sensitive, this returns isExistingMember: false
-    // and routes Nathan to /begin instead of /maia — the regression this guards.
-    expect(data.isExistingMember).toBe(true);
+    expect(data).not.toHaveProperty('isExistingMember');
   });
 });
 

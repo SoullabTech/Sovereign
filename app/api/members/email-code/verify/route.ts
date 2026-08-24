@@ -148,6 +148,30 @@ export async function POST(request: NextRequest) {
       onboarding_step: record.onboarding_step as string,
     });
 
+    // ── SESSION IS AUTHENTICATION (invariant) ──────────────────────────────
+    // Session creation used to be caught and treated as non-fatal: the route
+    // still returned success and a member payload, and the client stored a
+    // localStorage session with no server session behind it. That is the
+    // "signed in here but not there / MAIA thinks I'm someone else" class of
+    // bug — the client believes it is authenticated while the server does not.
+    //
+    // No valid server session means authentication has NOT completed. The
+    // session is therefore created BEFORE any success is reported, and a
+    // failure is returned as a failure.
+    let session: Awaited<ReturnType<typeof createSession>>;
+    try {
+      const userAgent = request.headers.get('user-agent') || '';
+      session = await createSession({ memberId, ipAddress: clientIP, userAgent });
+    } catch (sessionErr) {
+      console.error('[EMAIL-CODE/verify] Session creation FAILED — authentication not completed:', sessionErr);
+      trackOnboarding({ event: 'session_missing_after_verify', memberId, path: ENDPOINT });
+      // The code was already burned above, so a retry starts from a fresh code.
+      return NextResponse.json(
+        { error: "We verified your email but couldn't sign you in. Please request a new code." },
+        { status: 500 }
+      );
+    }
+
     const response = NextResponse.json({
       success: true,
       member: {
@@ -160,26 +184,19 @@ export async function POST(request: NextRequest) {
       redirect: onboardingTarget.path,
     });
 
-    try {
-      const userAgent = request.headers.get('user-agent') || '';
-      const session = await createSession({ memberId, ipAddress: clientIP, userAgent });
-      const cookieOpts = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax' as const,
-        path: '/',
-        expires: session.expiresAt,
-      };
-      response.cookies.set('maia_session', session.sessionToken, cookieOpts);
-      response.cookies.set('maia_member_id', String(memberId), cookieOpts);
-      response.cookies.set('maia_tier', String(record.tier || 'free'), cookieOpts);
-      response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
-      trackOnboarding({ event: 'session_created', memberId, path: ENDPOINT });
-      console.log(`[EMAIL-CODE/verify] Session created for existing member: ${record.username}`);
-    } catch (sessionErr) {
-      console.error('[EMAIL-CODE/verify] Session creation failed (non-fatal):', sessionErr);
-      trackOnboarding({ event: 'session_missing_after_verify', memberId, path: ENDPOINT });
-    }
+    const cookieOpts = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+      expires: session.expiresAt,
+    };
+    response.cookies.set('maia_session', session.sessionToken, cookieOpts);
+    response.cookies.set('maia_member_id', String(memberId), cookieOpts);
+    response.cookies.set('maia_tier', String(record.tier || 'free'), cookieOpts);
+    response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
+    trackOnboarding({ event: 'session_created', memberId, path: ENDPOINT });
+    console.log(`[EMAIL-CODE/verify] Session created for existing member: ${record.username}`);
 
     return response;
   } catch (error) {

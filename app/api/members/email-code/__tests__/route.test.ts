@@ -7,6 +7,14 @@
  * beta_allowlist / beta_waitlist tables are preserved for history but are no
  * longer consulted at sign-in unless the flag re-gates.
  *
+ * RESPONSE SHAPE NOTE. These assertions used to read
+ * `{ success: true, isExistingMember: <bool> }`. The field was removed: it told
+ * an anonymous caller whether an address has a Soullab account before that
+ * caller had proved they own the address. A known and an unknown email now
+ * return byte-identical responses — asserted directly in ./delivery.test.ts
+ * ("no account enumeration"). The gate assertions below are unaffected: what
+ * they prove is which addresses reach the send, not what the body says.
+ *
  * Proves (Kelly's scope, 2026-07-28):
  *   1. A new email receives a code when the flag is absent/off (open signup).
  *   2. A new, non-allowlisted email is gated (waitlisted, no code) when the flag is '1'.
@@ -109,7 +117,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);      // code delivered
     expect(waitlistInserted()).toBe(false);          // proof #4: no waitlist row
     expect(allowlistChecked()).toBe(false);          // gate short-circuited, allowlist not consulted
@@ -121,7 +129,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('another@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
@@ -145,7 +153,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('vip@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
@@ -157,7 +165,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('existing@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: true });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
@@ -167,7 +175,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('returning@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: true });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
@@ -294,7 +302,7 @@ describe('POST /api/members/email-code — provider refusal is never reported as
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(body).toEqual({ success: true });
     expect(trackedEvents()).toContain('magic_link_sent');
     expect(trackedEvents()).not.toContain('magic_link_send_failed');
   });
