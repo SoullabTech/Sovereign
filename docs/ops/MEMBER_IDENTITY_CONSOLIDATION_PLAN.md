@@ -316,7 +316,12 @@ Also newly confirmed zero (previously unknown, now counted): `encounter_particip
 
 ---
 
-### 4.10 OAuth linkage read — the minting hypothesis is FALSIFIED
+### 4.10 OAuth linkage read — ⚠️ this section's verdict was WRONG, see `AUTH_IDENTITY_ORIGIN_01.md` §0
+
+> The facts below are correct. The inference drawn from them — "FALSIFIED: Google sign-in created
+> B" — is not. It assumed member creation and linkage insertion are atomic. They are two separate
+> un-transacted statements, so the 171-day gap is explained by a failed linkage INSERT rather
+> than by a different creator. The minting reading is now **strongly supported**, not falsified.
 
 Run 2026-08-24, read-only, ended in ROLLBACK. No token or secret selected.
 
