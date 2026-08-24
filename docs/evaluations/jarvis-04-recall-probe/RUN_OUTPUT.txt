@@ -1,0 +1,25 @@
+
+====================================================================================================
+JARVIS-04 RECALL PROBE
+====================================================================================================
+A1   runs persist (saveRun)                                     PASS   5 runs written
+B1   recall by run_id (get-run)                                 ✔      loadRun(id) works
+B2   enumerate all runs (list-runs)                             ✔      listRuns -> total=5
+B3   recall by PREDICATE (which runs used capability X)         ✖      NO predicate/query API — caller must load all runs and filter by hand
+B4   recall by TIME RANGE                                       ✖      NO temporal query — listRuns takes only limit/offset
+B5   recall by CONTENT / what a run was about                   ✖      NO content retrieval — objective/task are stored but not indexed
+B6   ordering is deterministic                                  ✔      stable (created_at desc)
+C1   listRuns has a caller outside the module                   ✖      ZERO callers — recall API is unreferenced
+C2   loadRun has a caller outside the module                    ✖      ZERO callers — recall API is unreferenced
+C3   an operator surface exposes runs (CLI/API/IPC)             ✖      NO operator surface — recall is library-only
+C4   runtime/events.jsonl has a located READER                  ✖      no reader — 1 file(s) name it, all in comments or write-only; census A2 OPEN
+D1   a derivation path exists: run -> candidate claim           ✖      NO module reads runs AND writes claims — the promotion path does not exist
+D2   adjudicated-knowledge corpus size                          ✔      1 claim(s) on record
+NC1  model-authored recollection is REFUSED standing            PASS   verdict=REFUSED (refused)
+NC2  governance answers with REASONS, not a boolean             PASS   3 refusal(s) with rule+required_test
+NC3  similarity cannot manufacture relevance                    ✔      VACUOUS — no similarity/vector retrieval exists to be abused
+NC4  SUPERSEDED is terminal — replaced knowledge cannot be revived PASS   SUPERSEDED + STALE in vocabulary; G5 forbids revival
+NC5  retrieval EXPOSES conflict rather than picking a winner    ✖      2 records on one subject with 2 incompatible claims (red,green), returned as equally valid — no conflict signal
+====================================================================================================
+established: 9 · unmet: 9
+NOTE: ✖/FAIL here means "capability absent", which is the measurement — not a defect in the probe.
